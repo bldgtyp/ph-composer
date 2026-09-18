@@ -1,0 +1,294 @@
+/* Everything that floats: notices, anchored bubbles, action menus, form and confirmation dialogs. */
+.phc-notice { padding: 10px 16px; background: #fff6df; border-bottom: 1px solid #ecd399; }
+.phc-notice:empty { display: none; }
+.phc-notice-layer {
+  position: absolute;
+  z-index: 50;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: 0;
+  pointer-events: none;
+}
+.phc-floating-notice {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(680px, calc(100% - 32px));
+  height: auto;
+  min-height: max-content;
+  margin-top: 10px;
+  padding: 10px 44px 10px 14px;
+  border: 1px solid #cfd8db;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 8px 24px #1e293126;
+  color: var(--ink);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.phc-floating-notice.is-dismissing { opacity: 0; transform: translateY(-4px); pointer-events: none; }
+.phc-workspace .phc-floating-notice-dismiss {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 4px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  transform: translateY(-50%);
+}
+.phc-floating-notice[data-tone="warning"] { border-color: var(--warning-border); background: #fff8df; color: #4f3a0b; }
+.phc-workspace .phc-floating-notice[data-tone="warning"] .phc-floating-notice-dismiss { color: #6b5220; }
+.phc-floating-notice[data-tone="error"] { border-color: #e3a79d; background: var(--error-surface); color: #7a2418; }
+.phc-workspace .phc-floating-notice[data-tone="error"] .phc-floating-notice-dismiss { color: #7a2418; }
+.row-tooltip {
+  position: fixed;
+  z-index: 100;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 7px 10px;
+  background: #233c43;
+  color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px #0002;
+  font-size: 12px;
+  white-space: normal;
+}
+.phc-dialog {
+  box-sizing: border-box;
+  width: 560px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+  color: var(--ink);
+  background: #fff;
+}
+.phc-dialog::backdrop { background: rgba(20, 35, 40, .35); }
+.phc-dialog h2 { margin: 0 32px 18px 0; font-size: 20px; }
+.phc-dialog h3 { margin: 16px 0 6px; font-size: 14px; }
+.phc-dialog p, .phc-dialog li { line-height: 1.5; }
+.phc-dialog .phc-dialog-close { position: absolute; top: 12px; right: 12px; }
+/* Shared anchored bubbles: non-modal editors with an explicit pointing edge. */
+.phc-bubble-anchor { position: relative; display: inline-block; }
+.phc-workspace .phc-bubble {
+  --bubble-pointer: 24px;
+  --bubble-border: #7b858e;
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  width: 310px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  padding: 16px;
+  border: 1px solid var(--bubble-border);
+  border-radius: 9px;
+  background: #fff;
+  color: #1e2931;
+  box-shadow: 0 5px 22px #22343c26;
+  text-align: left;
+}
+.phc-bubble[hidden] { display: none; }
+.phc-bubble::before {
+  content: '';
+  position: absolute;
+  left: var(--bubble-pointer);
+  top: -7px;
+  width: 12px;
+  height: 12px;
+  border-left: 1px solid var(--bubble-border);
+  border-top: 1px solid var(--bubble-border);
+  background: #fff;
+  transform: rotate(45deg);
+}
+.phc-bubble.is-above::before { top: auto; bottom: -7px; transform: rotate(225deg); }
+.phc-bubble.pointer-hidden::before { display: none; }
+.phc-bubble-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.phc-workspace .phc-bubble-heading > button {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+}
+.phc-bubble-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+.phc-bubble-content label { display: flex; flex-direction: column; gap: 5px; }
+.phc-workspace .phc-bubble-content button {
+  position: static;
+  width: auto;
+  min-height: 30px;
+  padding: 5px 10px;
+  text-align: left;
+}
+.phc-bubble-content input:not([type=checkbox]), .phc-bubble-content select { width: 100%; box-sizing: border-box; }
+.phc-bubble-content input[type=checkbox] { align-self: flex-start; }
+.phc-workspace .phc-danger-action { color: var(--red); }
+.phc-workspace .phc-action-menu { width: 230px; padding: 10px; }
+.phc-action-menu .phc-bubble-heading { margin: 0 0 6px; padding: 0 2px 6px; border-bottom: 1px solid var(--line); }
+.phc-action-menu .phc-bubble-content { gap: 2px; }
+.phc-action-menu > .phc-bubble-content { overflow: visible; }
+.phc-action-menu .phc-bubble-anchor { display: block; }
+.phc-action-menu-item > span:not(.phc-glyph) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phc-action-menu-item .phc-menu-state { flex: 0 0 auto; margin: 0; }
+.phc-workspace .phc-action-menu .phc-action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border-color: transparent;
+  background: transparent;
+}
+.phc-workspace .phc-action-menu .phc-action-menu-item:hover:enabled,
+.phc-workspace .phc-action-menu .phc-action-menu-item:focus:enabled {
+  border-color: var(--interaction-highlight);
+  background: var(--interaction-highlight-tint);
+}
+.phc-workspace .phc-bubble-content input[type=checkbox] {
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  padding: 0;
+  accent-color: var(--interaction-highlight);
+}
+.phc-workspace .phc-bubble-content .phc-danger-action {
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  padding-top: 12px;
+  background: transparent;
+}
+.phc-menu-state { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+.phc-bubble.is-submenu::before { top: var(--bubble-pointer-y); left: -7px; transform: rotate(-45deg); }
+.phc-bubble.is-submenu.opens-left::before { left: auto; right: -7px; transform: rotate(135deg); }
+.phc-workspace .phc-confirm-delete { background: var(--red); border-color: var(--red); color: #fff; }
+.phc-workspace .phc-confirm-delete:hover:enabled { background: #84291f; }
+/* App-wide confirmation buttons: Cancel left, primary action right. */
+.phc-workspace .phc-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+}
+.phc-workspace .phc-dialog-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 90px;
+  flex: 0 0 auto;
+}
+.phc-workspace .phc-dialog-actions .primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.phc-workspace .phc-dialog-actions .phc-action-delete { background: #b42318; border-color: #b42318; }
+.phc-action-apply::before { content: '✓'; }
+.phc-action-cancel::before { content: '×'; }
+.phc-action-delete::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  vertical-align: -2px;
+  margin-right: 6px;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.phc-property-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.phc-property-value { margin-left: auto; white-space: nowrap; }
+.phc-workspace .phc-property-row .phc-inline-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1;
+  font-size: 12px;
+}
+.phc-workspace .phc-inline-field input:not([type=checkbox]) { width: 90px; }
+.phc-workspace .phc-inline-field input[type=checkbox] { align-self: auto; flex: 0 0 16px; }
+.phc-workspace .phc-bubble-content .phc-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  color: var(--muted);
+}
+/* Keep help control outlines inside the scrollable bubble content. */
+.phc-workspace .phc-bubble-content .phc-help:hover:enabled,
+.phc-workspace .phc-bubble-content .phc-help:focus {
+  color: var(--interaction-highlight-hover);
+  border-color: var(--interaction-highlight);
+  outline: 2px solid var(--interaction-highlight);
+  outline-offset: -2px;
+  background: var(--interaction-highlight-tint);
+  box-shadow: none;
+}
+.phc-workspace .phc-dialog-actions .primary:hover:enabled,
+.phc-workspace .phc-dialog-actions .primary:focus:enabled {
+  background: var(--interaction-highlight-hover);
+  border-color: var(--interaction-highlight);
+}
+
+/* Record forms open in the shared modal; fields wrap into two columns at the dialog width. */
+.phc-form-dialog h2 { margin: 0 0 16px; }
+.phc-form-dialog form { display: flex; flex-wrap: wrap; gap: 12px 16px; }
+.phc-form-dialog form > :not(label), .phc-form-dialog label.phc-checkbox { flex-basis: 100%; }
+.phc-form-dialog label {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.phc-form-dialog label.phc-checkbox { flex-direction: row; align-items: center; gap: 8px; color: inherit; }
+.phc-form-dialog input:not([type=checkbox]), .phc-form-dialog select { width: 100%; color: #1e2931; font-size: 13px; }
+.phc-form-dialog .phc-unit-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; width: 100%; }
+.phc-form-dialog p { margin: 0; }
+.phc-form-dialog > .cell-error { margin-top: 10px; color: #8f2f27; }
+.phc-form-dialog > .cell-error:empty { display: none; }
