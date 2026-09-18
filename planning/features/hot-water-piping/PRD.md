@@ -166,6 +166,7 @@ Click a row to select its lines.
 | Q9 | Is insulation kept on the Pipe Type though METr's tree ignores it? | Yes. The recirculation heat loss coefficient uses it and honeybee-ph carries it |
 | Q10 | Are Pipe Types a library kind? | Not now. Same answer as Thermal Bridge Types |
 | Q11 | Rename: Pipe-Segment qualified, role word Fixture or Twig? | Pipe-Segment. Twig on screen, matching METr, as Assemblies matched METr |
+| Q12 | Where does piping live in primary navigation? | Confirmed in D4: under Systems, with Equipment, ERV ducting and Hot-water piping as peer subtabs |
 
 ## Non-goals
 

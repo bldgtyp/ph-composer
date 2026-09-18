@@ -59,9 +59,10 @@ repository: `screens/` is gitignored (U4).
 | Yellow banner under the page heading for warnings | Keep the pattern. Its designPH messages go |
 | Enum values as coloured chips with a chevron | Keep. The values change where a packet says so |
 
-The tab row (U1):
-Overview, Spaces, Assemblies, Window Types, Thermal Bridges · Planned, Equipment · Planned,
-Library, Export.
+The tab row accepted in U1 was:
+Overview, Spaces, Assemblies, Window Types, Thermal Bridges · Planned, Systems · Planned,
+Library, Export. D4 confirms Equipment, ERV ducting and Hot-water piping as peer subtabs under
+Systems, with one work surface at a time. Do not add separate primary Ducting or Piping tabs.
 
 ## 1. Spaces
 
@@ -199,6 +200,7 @@ in the polish skill's `patterns.md` once Ed accepts it.
 | Window Schedule for our own units | The predecessor's Schedule layout, minus adoption | window-types |
 | Preferences / Libraries | The predecessor's Library setup surface | libraries |
 | Attached zones subtab and its inline creation from the boundary condition chip | A Library subtab with `formDialog` | face-assignment Q20, Q21 |
+| Systems: Equipment, ERV ducting and Hot-water piping peer subtabs | Shared subtabs nav, one work surface at a time | confirmed by D4; equipment Q9, ducting Q8, piping Q12 |
 
 ## Decisions recorded
 
@@ -206,7 +208,7 @@ in the polish skill's `patterns.md` once Ed accepts it.
 
 | # | Decision | Answer |
 | --- | --- | --- |
-| U1 | Primary tab row | Overview, Spaces, Assemblies, Window Types, Thermal Bridges · Planned, Equipment · Planned, Library, Export. The Zone tree and the faces table live under Overview. No new primary tab |
+| U1 | Primary tab row | Overview, Spaces, Assemblies, Window Types, Thermal Bridges · Planned, Systems · Planned, Library, Export. The Zone tree and faces table live under Overview. Systems contains Equipment, ERV ducting and Hot-water piping peer subtabs; no extra primary tab is proposed |
 | U2 | Chip words | Chips show the palette's short words, such as Roof. Records hold honeybee's, such as `RoofCeiling` |
 | U3 | U-value in the Assemblies inventory | One column, with films. Both values appear in the Builder header |
 | U4 | Screenshots | Kept out of the repository. `screens/` is gitignored and the files stay in Dropbox |

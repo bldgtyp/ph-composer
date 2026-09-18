@@ -14,6 +14,10 @@ that a linter cannot express is here because a reader has to apply it.
 
 ## Layering
 
+Contributor-facing boundaries are governed by [EXTENSIBILITY.md](EXTENSIBILITY.md). Built-in
+features use those same public contracts. Separate pure Ruby domain behavior from SketchUp
+adapters so calculations and validation can be exercised without the host.
+
 Four layers, one dependency direction. The founding brief names them; this is what each may do.
 
 - **JavaScript is the interface and UI layer.** The panel derives, formats and routes. It does not
@@ -76,13 +80,36 @@ Four layers, one dependency direction. The founding brief names them; this is wh
   runtime's load order, so every other module of the package imports without the stack.
 - The tool scripts under `tools/` are `uv run` entry points with a PEP 723 block each.
 
+## Readability and public interfaces
+
+- **Name the domain meaning.** Prefer `assigned_assembly_id` to `aid`, `item` or `value` when the
+  value has that specific role. Use glossary terminology and consistent names across languages.
+  Short conventional names are fine in a small, unambiguous scope; do not abbreviate to save space.
+- **Make units and identity visible.** Prefer `area_m2` for a stored SI quantity. Distinguish a
+  record, its ID and its occurrence path in names and types. Convert units at declared boundaries.
+- **Prefer explicit control flow.** Intermediate values and straightforward branches are welcome.
+  Do not compress several decisions into a clever expression or hide business behavior in dynamic
+  method construction. A reader should be able to follow an operation in execution order.
+- **Expose side effects.** Read operations do not repair records, write attributes or open dialogs.
+  Named mutation operations own validation and transactions; UI and scripts reuse them.
+- **Declare dependencies.** Use documented imports or supplied dependencies. Do not reach into
+  another feature's internals or retrieve hidden business dependencies from global state.
+- **Document public contracts.** State inputs, outputs, units, mutation and transaction ownership,
+  failure behavior and a small working example. Identify supported APIs and compatibility changes.
+- **Justify abstractions by what the reader can stop knowing.** Similar syntax is insufficient.
+  A little duplication is preferable to a generic framework with unrelated options and callbacks.
+- **Distinguish failure states.** Absent, invalid, unsupported and unavailable data have different
+  consequences. Preserve the distinction and explain a recovery path at the user-facing boundary.
+- **Optimize measured bottlenecks.** Use representative models and record the evidence. Keep a
+  readable implementation and preserve correctness and usable interaction times.
+
 ## Comments
 
-A comment states the rule and cites the evidence that fixed it. It never cites the phase that
-happened to discover it. "Phase 3b found this" tells a later reader nothing they can check; a
-path into `context/`, `planning/` or the predecessor's archive does. A comment that only restates
-the line below it is noise, and a comment carrying a measured host fact is the most valuable
-thing in the file.
+Comments explain intent, domain assumptions, units and non-obvious behavior. Ordinary explanations
+need no historical citation. A measured host claim cites the evidence that established it, rather
+than the phase that discovered it. "Phase 3b found this" tells a later reader nothing they can
+check; a path into `context/`, `planning/` or the predecessor's archive does. Avoid comments that
+only restate the line below them.
 
 ## Tests
 
@@ -98,7 +125,11 @@ thing in the file.
 
 ## Line and size limits
 
-The predecessor carried two burn-down registers for files that exceeded its limits before the
-limits existed. This repository starts without them. The ceiling is 120 characters a line and the
-default rubocop method and class lengths, for every file from the first commit, transplanted files
-included. A transplanted file that does not meet the ceiling is reformatted as it lands.
+The line ceiling is 120 characters, including transplanted code. Method and class sizes are review
+signals, not a reason to fragment a cohesive operation. Prefer a readable operation over several
+tiny helpers that force readers to jump between files. Assess responsibility, branching and the
+amount of context a reader must retain alongside size and complexity measurements.
+
+When lint tooling lands, configure size rules consistently with this policy. A justified local
+exception records why the longer unit is easier to understand; it does not disable unrelated
+checks. Do not weaken an existing gate opportunistically to pass a feature change.

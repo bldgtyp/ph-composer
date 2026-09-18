@@ -15,7 +15,8 @@ for the record kinds it serves.
    file format, the sidebar, copy identity, the connection, and the 21 decisions recorded in the interview.
 2. [STATUS.md](STATUS.md).
 
-No PLAN.md yet. It follows the interview and the foundation transplant.
+No PLAN.md yet. The interview, D6 and authorized architecture corrections are incorporated in the
+PRD. The implementation plan follows the foundation transplant and binds these requirements to its APIs.
 
 ## Scope
 

@@ -30,3 +30,5 @@ None. Nothing is implemented.
 | Date | Event |
 | --- | --- |
 | 2026-09-18 | PRD drafted. |
+| 2026-09-18 | Scoping review moved point-bridge support to central decision D3 and rejected a fake 1 m linear proxy as the recommendation. |
+| 2026-09-18 | D3 confirmed: the MVP is linear-only; point thermal bridges and chi-values are wholly out. |

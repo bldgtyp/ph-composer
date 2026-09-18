@@ -1,7 +1,7 @@
 # Libraries: behavior contract
 
 DATE: 2026-09-18
-STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 21 decisions recorded below, one of them unconfirmed. PLAN.md follows the foundation transplant.
+STATUS: Scoped. Interviewed 2026-09-18; 21 decisions recorded, Q21 confirmed by D6. Architecture corrections incorporated. PLAN.md follows the foundation transplant.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (no remote)
 
@@ -54,7 +54,8 @@ Behavior detail lives in `../ph-navigator-sketchup/planning/archive/shared-mater
 - Every copy is an editable model-local record with source attribution. The provider has no
   authority over it, nothing updates automatically, and the file never needs the provider again.
 - The SKP stores attribution only: provider name, library id, record id, revision, fingerprint,
-  copy time and the source row snapshot. It never stores an address, a path or a credential.
+  copy time and an allowlisted source row snapshot. It never stores a connection address, a local
+  path or a credential. Arbitrary provider fields are not admitted through the snapshot.
 - Everything on the wire is SI with the unit in the key name. IP exists only in user-facing
   display and entry (Q14).
 - The user-facing rules from the predecessor's interviews carry over: copy one record on first
@@ -85,8 +86,8 @@ preferences. The word "organization" goes, since a provider may be a vendor or a
 
 ```
 Provider                                   Record kind adapter
-  id            stable, e.g. "file", or      kind           "materials"
-                a connection's host name     wire_fields    names, types, SI units
+  id            configured-provider id;       kind           "materials"
+                never a path or address        wire_fields    names, types, SI units
   label         shown in the sidebar         map(row)       wire row to model-library record
   kinds         which kinds it serves        fingerprint    hash of the mapped fields
   list(kind)    every row, every field       in_file(local, rows)   the "In this file" projection
@@ -95,18 +96,59 @@ Provider                                   Record kind adapter
 
 - Rows arrive in the same wire shape from every provider. The kind adapter never learns which
   provider it is talking to.
+- Source identity is the tuple `(provider kind, library id, record kind, record id)`. A file path
+  or connection address is never identity and never enters the SKP. Provider configuration has a
+  separate per-machine id so two files or two connections can be open at once without collision.
+- A library id must be stable across exports. Duplicate record ids within one library and kind are
+  refused as ambiguous; they never collapse to the first row. This check spans every file in a
+  folder, not just each envelope. Refuse the affected library/kind catalog rather than silently
+  choosing by directory order. Different library ids retain separate provenance in the folder view.
+- `provider kind` is a stable registered contract identifier, not its label or configuration id.
+  Two configurations serving the same tuple refer to the same source; different provider kinds,
+  including file and connection, do not become identical just because record ids match. Cross-source
+  reuse follows the explicit same-name/value rule below. A library publisher owns a unique stable
+  library id; conflicting content claiming the same identity is reported, never merged arbitrarily.
 - There is no per-record fetch. The list carries every field, as the predecessor's does, so a
   copy needs no second request (Q6).
 - With four bare kinds no record depends on another, so the contract has no dependency rule. A
   later Assembly or Window Type library adds one, and each dependency then goes through its own
   kind's reuse rule so a bundle never makes a second copy of a material already in the file.
 - Adding a record kind is one adapter file plus the owning feature handing over its local
-  records. Adding a provider is one provider file. Neither touches the other or the core. This is
-  the second of the four contribution seams.
+  records through public queries and mutation operations. Adding a provider adds its implementation
+  and explicit registration. Neither needs provider-specific branches in a kind or kind-specific
+  branches in the shared library orchestration. This is the second of the four contribution seams.
 - A contributor's provider lives in its own repository and registers from a separate SketchUp
   extension (Q11). Since PH-Navigator needs no code of its own, a tiny **example provider**, a
   hard-coded list of records in its own repository, is the contributor template and the test that
   outside registration works without a core change (Q17).
+
+### Registration and mutation ownership
+
+These are required contracts, not implemented APIs. Each registration declares a stable id,
+contract version, capabilities and dependencies. Diagnose duplicates, missing dependencies and
+unsupported versions explicitly; outside registration must not depend on incidental load order.
+Q11 authorizes a separately registered example provider, not a dynamic loader or marketplace.
+
+Providers list immutable catalog values and never read or write model dictionaries. Kind adapters
+own pure wire validation, mapping, semantic fingerprints and a reverse projection for library-file
+export. The feature owning each record kind supplies public local-record queries and validated
+create, replace and assign operations. The library coordinator prepares a proposal and invokes
+those operations under one caller-owned transaction. Copy plus assignment is atomic; an assignment
+failure rolls back the new definition too. No transaction remains open during network access or review.
+
+List/details/in-file queries never copy, repair or open a review dialog. A review-required result
+returns structured candidates and differences. UI and scripts submit the same explicit choice
+to apply it. Requests bind to the model session, local revision, assignment occurrence references
+and immutable catalog generation; commit rechecks them and refuses stale proposals without writing.
+Reuse the foundation retry/idempotency contract so a lost response cannot create another copy.
+Return affected local ids, assignments, findings and the resulting revision for read-back with
+the panel closed. External adapters carry no provider or record-kind business logic.
+
+Representative contributor task: add a synthetic provider serving Materials through registration,
+then use public queries to list a row, preview Add to this file, apply it and read the resulting
+record with the panel closed. Only the provider implementation, registration and contract tests
+are new; the existing Materials adapter and model operations are reused. PLAN.md names the actual
+entrypoints and includes this example beside the separately registered extension walkthrough.
 
 ## The library file
 
@@ -117,6 +159,7 @@ folder (Q3):
 {
   "format": "passive-builder.library",
   "schema_version": 1,
+  "kind_schema_versions": { "materials": 1, "glazings": 1 },
   "library": { "id": "bldgtyp-shared", "name": "BLDGTYP shared library" },
   "exported_at": "2026-09-18T14:00:00Z",
   "kinds": {
@@ -133,9 +176,21 @@ folder (Q3):
 - Field names and units are the model-library record's own, so the format is documented by the
   record schemas and a contributor can write a file by hand.
 - Record ids are the provider's and must be stable across exports. Reuse depends on them.
-- The reader keeps the predecessor's tolerance: an envelope problem refuses the file with a
-  reason, a bad row is skipped with a warning, a bad field is nulled with a warning, and one bad
-  value never blocks a library. The 32 MB limit carries over.
+- Envelope validation precedes row normalization. Unsupported envelope versions refuse the file;
+  unknown kinds are reported as unavailable and skipped without preventing supported kinds from
+  loading. Each kind declares its supported wire schema version and migrations. No version is
+  inferred from field names and no unsupported version is coerced into the current schema.
+- A malformed required field, id, unit or number skips that row with a structured warning. Only
+  optional fields whose schema permits absence may become absent with a warning. Never null a
+  required property into an apparently usable record. The documented category fallback remains
+  the explicit exception. Missing, invalid, unsupported and unavailable are distinct outcomes.
+- The 32 MB limit applies to each file and connection response. A folder reads only its immediate
+  JSON files; unrelated files are ignored and malformed candidate files are reported. Enforce a
+  bounded aggregate catalog budget and row count as well; PLAN.md sets and tests those limits.
+  An over-budget catalog is refused, never presented as complete after silent truncation.
+- Publish a new immutable catalog generation only after validation. Failed refreshes retain the
+  last valid generation with its age and failure state visible; an empty successful response is
+  distinct from failure. No copy can mix rows or fingerprints from different generations.
 - The format is public and versioned. It is the easiest thing for an outside team to produce, so
   it is the real interface of this seam.
 
@@ -162,10 +217,38 @@ From the predecessor's shared material library interviews. Not reopened here.
 - Connection states are distinct and named: signed out, waiting for approval, denied or expired,
   loading, connected, no results, offline, access revoked, library file open.
 
+### Copy, reuse and replacement rules
+
+Resolve exact source identity before same-name matching. Zero exact local matches proceeds to the
+same-name rule; one reuses that local record even if it was renamed or edited. More than one is an
+ambiguous-source result: show the candidates and require an explicit local choice, never the first
+match or an additional import. The In this file projection uses the same resolver and distinguishes
+unique reuse from ambiguity. Choosing one does not delete or merge other records.
+
+With no exact match, zero same-name matches permits creation; one with equal normalized mapped
+values permits reuse; one with different values requires source review; multiple matches require
+explicit resolution. Cross-source reuse does not overwrite existing attribution merely to make a
+badge appear. Only an explicit replacement adopts the incoming source attribution. Fingerprints
+have a declared version and canonical field/unit ordering, and cover mapped semantic properties,
+not timestamps, labels of the configured provider or arbitrary metadata. Comparing fingerprints
+from incompatible versions requires recomputation or an unavailable comparison, not a change claim.
+
+Use library copy replaces only the reviewed mapped fields of the chosen local record, preserving
+its local id, existing references, evidence, `user_data` and structured extension payloads. It updates
+the approved attribution snapshot in the same transaction. A field or extension version that cannot
+be edited safely refuses replacement without dropping data. Incoming metadata is never merged over
+local metadata implicitly. New copies admit only schema-declared data; source-only fields stay in
+the sanitized attribution snapshot when allowed, otherwise their omission is disclosed.
+
+Unavailable-extension payloads already in the model remain intact through ordinary edits and
+save/reopen. Preservation does not validate them or permit their export. Kind-owned validation
+decides whether missing extension capability affects the record's use or canonical export.
+
 ### Changed by the pivot
 
 - **Providers are set up by the user.** A Libraries section in preferences lists configured
-  providers: add a library file or folder, add a connection by typing its address, remove one.
+  providers: add a library file or folder, add a connection, remove one. Address and credential
+  entry use host-owned setup controls so neither passes through the HtmlDialog protocol.
   Nothing is listed on first run. Setup is per machine and never stored in the SKP.
 - **Several providers at a time.** The sidebar's source selector lists every configured provider
   that serves the current kind, plus **In this file**. The user switches between them and pulls
@@ -176,10 +259,15 @@ From the predecessor's shared material library interviews. Not reopened here.
   was copied shows a quiet mark in the inventory. The source review opens on request. Nothing
   updates automatically and nothing blocks (Q8).
 - **Export model library to file.** Writes the model's Materials, Frames, Glazings and
-  Psi-Install Types as a library file, all of them by default or the selected inventory rows. It
-  is a local file write and involves no provider. Each record is published under its own local id,
-  with any earlier source carried as informational origin text, because the new file is a new
-  library with its own identity (Q15, Q20, Q21).
+  Psi-Install Types as a library file. An explicit choice dialog defaults to all supported kinds
+  and offers selected records only when a selection exists. Filters and hidden rows never define
+  export scope. It is a local file write and involves no provider. Each record is published under
+  its own local id, with earlier source carried only as approved informational origin text
+  (Q15, Q20, Q21). A new library export receives a fresh library UUID. Explicitly updating an
+  existing library file retains that file's validated library UUID; Save as a new library creates
+  a fresh one. Paths do not define identity and source attribution on model records is unchanged.
+  Review the destination and identity choice before writing; failed or cancelled writes leave an
+  existing file intact. This is local file export, not publishing back to a connected provider.
 - **Starter library.** A separate download from the project site, never in the RBZ. Ten to fifteen
   generic records with round typical values, each citing a public source in its notes, none
   transcribed as a table from ISO 10456, ASHRAE or any other copyrighted compilation. Named
@@ -204,6 +292,12 @@ Written up as a one-page spec in `docs/` when this packet is planned (Q6, Q18).
   panel boundary.
 - HTTPS or loopback only, per `context/TECH_STACK.md`. An intranet library on plain HTTP is
   refused; the firm serves it over HTTPS or mounts it as a folder and uses the library file.
+- Discovery and list results carry configuration revision and catalog generation. Ignore late
+  responses after reconfiguration, removal or session disposal. Network callbacks publish catalog
+  state through the host-safe boundary and never apply model mutations or open the panel.
+  Separate cached availability from access state: a previously loaded generation remains usable
+  during an ordinary offline failure; explicit access revocation or provider removal discards that
+  provider's session catalog. Existing model-local copies remain usable independently.
 
 ### Security rules
 
@@ -219,6 +313,19 @@ A provider never appears in validation. A copied record is a local record and is
 one. Export writes no provider data beyond what the record kinds already export. The Export
 report lists, per copied record, the provider and record id it came from, never an address or a
 path (Q10).
+
+Library-file export uses each adapter's declared reverse mapping, not a raw dump of model records
+or source snapshots. Admit only supported wire fields and sanitized origin labels/ids. Exclude
+credentials, connection addresses, local paths, evidence bytes and arbitrary metadata by default.
+Namespaced metadata or structured extension data needs an explicit versioned export mapping and
+privacy declaration before inclusion. Disclose omitted fields, payloads and unsupported records
+before committing the file. Local copies remain unchanged. The supported round trip preserves
+declared semantic fields and published ids, not every local field or the original source identity.
+
+The feature owning the local record contributes permitted attribution to canonical translation
+and the Export report through its registered declarations. Export never loads a provider or asks
+the library sidebar for state. Library-file serialization is a separate record interchange operation;
+HBJSON exporters still consume HBJSON alone.
 
 ## Non-goals
 
@@ -259,7 +366,7 @@ Round 2, 2026-09-18.
 | Q18 | Sign-in | Three methods declared by the server: none, static token, device-code |
 | Q19 | Starter library data | Generic records citing public sources, no table transcribed from a standard, CC0 |
 | Q20 | Ids in an exported library | The record's own local id, with origin as informational text |
-| Q21 | What Export model library writes | Unconfirmed. Recorded as the recommendation: everything by default, or the selected rows |
+| Q21 | What Export model library writes | Confirmed in D6: an explicit choice dialog, all supported kinds by default, selected records only when a selection exists, and never filtered or hidden rows implicitly |
 
 ## Acceptance shape
 
@@ -269,9 +376,35 @@ same-name review and replacement; Export model library and reading the result ba
 unit-less value refused. On the host: add a
 library file in preferences, copy and assign by drag, Add to this file, Undo removes the copy and
 the assignment together, reopen the SKP on a machine with no providers and edit the copy. With a
-second provider configured: switch sources in the sidebar and see "In this file" hold across both.
+second provider configured: verify identity-scoped In this file state and explicit cross-source reuse.
 The example provider, registered from outside the repository, lists and copies without a core
 change. Against a server: each of the three sign-in methods, and a static file host as a server.
+
+Additional acceptance required by the architecture corrections:
+
+- Two local records claiming one source identity produce ambiguity, including after duplication
+  and rename. Different libraries with the same record id never collide. File/connection copies
+  follow the documented cross-source rule; source changes do not overwrite local edits.
+- Copy plus assignment failure rolls back both changes. Replace an in-use record and assert its
+  actual assignment references, evidence, metadata and unavailable-extension payloads survive
+  native Undo/Redo and fresh-process save/reopen. Unsupported edits refuse without mutation.
+- Unsupported envelope/kind versions, required-field errors, optional-field absence, duplicate ids
+  across folder files, conflicting library identities and catalog budget overflow have distinct
+  outcomes. Failed refresh and a valid empty catalog cannot be confused. No half-generation copies.
+- Export, read back, update the same library file and export a new library: verify semantic fields,
+  local record ids, retained versus new library UUIDs and subsequent reuse. Exercise explicit selected
+  scope, hidden rows, declined omission disclosure and failed writes preserving the prior file.
+  Include synthetic secret/address/path and metadata fields to verify snapshot and export filtering.
+- With the panel closed, run list, preview, apply and read-back through public operations. Test stale
+  revisions, wrong sessions and duplicate retries. Remove or reconfigure a provider during loading;
+  late responses must not resurrect it or mutate a model. Exercise offline and revoked states.
+- The outside example runs the same reusable provider contract tests as the shipped providers;
+  duplicate registration, unavailable kinds and incompatible contract versions fail explicitly.
+
+PLAN.md must settle exact operation signatures, wire schemas, fingerprint canonicalization, migration
+dispatch and aggregate catalog budgets against the transplanted contracts. These are implementation
+details still to specify, not evidence that the interfaces already work. Outside registration,
+Windows credentials, protocol interoperability and native lifecycle behavior remain unverified.
 
 ## Prior art and evidence
 

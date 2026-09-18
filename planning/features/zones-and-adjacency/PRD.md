@@ -56,7 +56,7 @@ becomes in the HBJSON export. `context/UBIQUITOUS_LANGUAGE.md` carries the same 
 | **Building-Segment** | A tag on one or more Zones naming the part of the building that becomes one METr model: a residential tower, a commercial podium. Every Zone belongs to exactly one Building-Segment; a model with one Building-Segment never shows the field. | `honeybee_ph` `BldgSegment` on `Room.properties.ph.ph_bldg_segment` | PHX builds one variant per Building-Segment, merges its Zones, and drops the interior faces between them (`PHX/from_HBJSON/create_project.py`, `cleanup.py`). |
 | **Space** | A division inside a Zone for iCFA, ventilation airflows and occupancy: one SketchUp group containing Volumes, each holding Floor Segments. | `honeybee_ph` `Space` on `Room.properties.ph.spaces` | Unchanged from the predecessor. |
 | **Level** | An optional classifier tag on a Zone, used for query, sort and group. A Space inherits its Zone's Level with no override. | `Room.story` | The predecessor kept Floor level on the Space; this packet moves it to the Zone (Q6). |
-| **Adjacency** | A recorded pairing of one face in Zone A with one face in Zone B: same plane, opposite normals, overlapping, stored with both persistent ids and a stamp of the geometry it was solved against. | `Surface` boundary condition naming the paired face and its Room | The predecessor had no equivalent. |
+| **Adjacency** | A reciprocal pairing of two path-qualified face endpoints in different Zones, with Zone UUIDs, face persistent ids and solved world-geometry stamps. | `Surface` boundary condition naming the paired face and its Room, only while current | The predecessor had no equivalent. |
 | **Interior face** | A face of a Zone whose other side is another Zone, whether or not its adjacency has been solved. | `Surface` when solved, or `Adiabatic` when the user marks it **To neighbour** | Distinct from an envelope face whose boundary condition is Outdoors or Ground. |
 | **Closed Zone** | A Zone whose group is a manifold solid. | Required by EnergyPlus; not required by honeybee itself or by METr | `Sketchup::Group#manifold?` |
 | **To neighbour** | The on-screen label for the boundary condition a user sets on a face whose other side is not modeled or does not matter: a party wall, a floor over an unmodeled podium. | `Adiabatic` | WUFI and METr vocabulary on screen, honeybee's in the stored value (Q22). |
@@ -89,10 +89,12 @@ Rules the hierarchy fixes:
   `entityID`, and read through its occurrence path. Only Groups are Zones in the MVP; a component
   instance marked as a Zone is a finding (Q2). A Zone inside another Zone is a finding (Q15).
 - Every face classified inside a Zone, and every Space group, also carries a small stamp naming
-  its Zone id, Building-Segment and Level, so a Zone can be rebuilt after its group is exploded (Q14).
+  its Zone id, Building-Segment and Level. These support the limited Restore Zone repair below,
+  not reconstruction of the complete Zone record (Q14).
 - Spaces cannot span Zones. A Space group directly under the model root is a finding.
 - Window units glue to the Zone's Outdoors faces. A window on an interior face is a blocking
-  finding in this packet (Q12).
+  finding (Q12), owned by the window-types packet's "Unit on a Surface face" row. A window unit
+  carries no Zone stamp: its Zone is the group that contains it (window-types Q25).
 
 ## Behaviors
 
@@ -106,14 +108,27 @@ Rules the hierarchy fixes:
 - A Zone is required. A model with no Zone shows one call to action on the Overview and cannot
   export (Q3).
 - Predecessor models are not recognized and there is no migration (Q11).
-- **Exploding a Zone group** cannot be intercepted; SketchUp has no pre-explode hook and locking
-  the group would also block editing inside it. What survives is every face's own dictionary and
-  the Zone stamp on each face and Space. The deferred pass detects classified faces and Spaces
-  whose Zone is gone and shows one finding whose text says first that one native Undo restores
-  everything, and offers **Restore Zone**, which regroups them and rewrites the Zone record from
-  the stamp (Q14).
-- Deleting a Zone group leaves its contents to normal SketchUp behavior; the same finding and
-  repair apply.
+- **Exploding a Zone group** is detected from surviving stamped faces and Spaces whose Zone is
+  gone. Native Undo is the full recovery route while the explode remains in the Undo history;
+  immediately after explode it is one Undo step. Do not promise one-step recovery after later edits.
+- **Restore Zone** is a limited, explicit repair (Q14). Its non-mutating preview lists surviving
+  stamped members and necessary bounding edges in one parent entities context, the recovered Zone
+  id, Building-Segment and Level, and what cannot be recovered. It does not infer membership from
+  proximity or sweep up unstamped faces, windows or other groups. Refuse ambiguous or conflicting
+  stamps, a Zone id already in use, mixed parent contexts, or geometry that cannot be regrouped
+  without affecting unstamped contents. Nothing is written on refusal.
+- Restore retains each surviving member's fields, `user_data` and structured extension payloads,
+  including unavailable-extension data. It creates the Zone with the recovered fields and a new
+  default name. The former Zone name, Zone metadata, extension payloads and other unstamped fields
+  are unavailable, not recovered or silently represented as preserved. The preview discloses this
+  loss and requires acceptance of the limited repair. References needing new paths are handled
+  by the endpoint rules below. The repair is one atomic Undo step.
+- An entirely unclassified Zone with no Spaces has no recovery stamp. The extension cannot promise
+  detection after reopening or offer Restore Zone for it; use native Undo or Make Zone manually.
+  A session observation may explain the loss but is not durable recovery data.
+- **Deleting a Zone group** is distinct from exploding it. If no contents survive, there is nothing
+  to regroup and Restore Zone is unavailable. Surviving neighbours report unresolved references;
+  use native Undo if available or re-solve them. Offer Restore only for eligible surviving contents.
 
 ### Building-Segments and Levels
 
@@ -143,25 +158,47 @@ is stale. It also runs as an opt-out step in the export dialog, "Solve N stale a
 export", checked by default, as its own Undo step before the artifact is written. It never runs
 from an observer (Q9). Scope: the selected Zones if any are selected, otherwise all Zones (Q18).
 
+Resolve that scope once into explicit Zone occurrence references. All Zones may be read to identify
+candidates and existing counterparts, but only the resolved mutation set may be changed. If making
+or retiring a pair requires a surviving endpoint outside that set, refuse the whole operation with
+both Zone references and offer retry with both included. Never silently expand selection scope.
+A confirmed deleted endpoint requires no write; an ambiguous endpoint is a refusal, not a deletion.
+Export preflight uses an explicit all-Zone scope independent of viewport selection.
+
+The operation first prepares a non-mutating proposal, including old pairs to retire, splits,
+skips and affected references. Revalidate model/session, geometry revision and edit context at
+commit. Apply the proposal atomically in one transaction: a runtime failure aborts every split and
+record change. Expected geometric skips are reported proposal outcomes, not partially failed
+transactions. An unchanged solve creates no write or Undo entry.
+All candidate, sliver and overlap decisions below are settled in the proposal before its geometry
+and record writes begin. A failed native split aborts the transaction rather than becoming a skip.
+
 1. Collect every face of every Zone with its world plane and world outline, read once through
    the occurrence path with transforms accumulated exactly once.
 2. Pair faces across Zones whose planes coincide within SketchUp's tolerance with opposite
    normals and whose outlines overlap in the shared plane.
-3. Where the overlap is a proper subset of either face, draw the overlap outline onto that face
-   inside its Zone group. SketchUp splits the face along edges that lie on it, so the split is
-   native; the solver only computes the 2D clip. Repeat on the other side.
-4. Record one Adjacency per matched pair: both persistent ids, both Zone ids, the overlap area
-   and a stamp of both outlines.
-5. Skip any split that would create a face narrower than 10 mm or smaller than 0.01 m². Record
-   no adjacency for it and report it, naming both Zones (Q17).
+3. Plan splits and reject any that would create a face narrower than 10 mm or smaller than
+   0.01 m² before changing geometry (Q17). Where an accepted overlap is a proper subset of a face,
+   draw the overlap outline onto that face inside its Zone group. The intended native split and
+   attribute behavior must pass the host gate below; the solver computes the 2D clip. Repeat on
+   the other side.
+4. Retire superseded or invalid old pairs on both surviving endpoints, then record one Adjacency
+   per matched pair using the endpoint contract below, overlap area in m² and world-geometry stamps.
+5. Record no new adjacency for a skipped split and report it, naming both Zones. A skipped match
+   does not preserve an invalid old pair as current.
 6. Report coplanar overlapping faces whose normals point the same way as overlapping Zones, a
    modeling error, and pair nothing (Q19).
 7. Report faces that overlap more than one neighbour and could not be split cleanly.
 
 The Adjacency lives on both faces' own dictionaries, each naming the other face and its Zone,
 with the geometry stamp. There is no Model-level table (Q20). Solving records Surface on the
-matched portion only; the unpaired remainder keeps whatever classification it had, and assigning
-Outdoors, Ground or an assembly is the face assignment packet's job (Q21).
+matched portion only. An unpaired remainder retains its non-Surface classification (Q21).
+A formerly paired portion that becomes unmatched loses the old adjacency and Surface boundary
+condition; its boundary condition is absent and it needs classification. Preserve face type,
+assembly, metadata and extension payloads. Do not restore an old boundary condition by inference
+or silently substitute Outdoors or Adiabatic. Face assignment owns the user's new classification.
+Both sides of a retired pair follow this rule unless replaced by a new valid pair in the same
+operation. A copied dictionary on a split face is not proof of a valid adjacency.
 
 What it never does: move geometry, change a face's plane, edit a Zone the user did not include,
 or run from an observer. `intersect_with` is not used for the coplanar case because it skips
@@ -169,16 +206,50 @@ coplanar geometry; it may be used later for non-coplanar intersections if a feat
 
 ### Staleness
 
-- An Adjacency is current when both faces still exist, still lie on the recorded plane and still
-  have the recorded outlines. The reconciler checks this on the deferred pass after a Zone
-  changes and marks the affected Adjacencies stale.
-- A stale Adjacency is a finding with one repair: Solve adjacencies. Validation lists the count.
-- A stale Adjacency blocks nothing on the HBJSON or METr paths. It blocks the EnergyPlus path.
+- An Adjacency is current only when both endpoint references resolve uniquely, both reciprocal
+  records agree, and both world planes, normals and outlines still match the solved geometry.
+  Reconciliation checks wrapper transforms and endpoint changes as well as edits inside a Zone.
+  It reports stale or unresolved pairs without solving or assigning a replacement condition.
+- Solve adjacencies repairs the relationship or retires it; retirement can leave faces needing
+  classification. Validation distinguishes these outcomes and names each surviving affected face.
+- Staleness alone is warning-only on the HBJSON and METr paths. It blocks the EnergyPlus path.
 - PHX's existing behavior decides what METr sees: a Surface face whose neighbour is in the same
   Building-Segment is omitted; a Surface face whose neighbour is in another Building-Segment, and a To neighbour
-  face, both export as a to-neighbour surface (Q10). So an unsolved cross-Building-Segment face is a
-  classification gap the user closes by solving or by marking To neighbour, and once classified
-  either way its staleness no longer matters to METr.
+  face, both export as a to-neighbour surface (Q10). The Surface mapping requires a current
+  reciprocal pair; an explicitly assigned To neighbour face needs no adjacency.
+  A stale or unresolved Surface reference, including one naming a deleted target, is never passed
+  to PHX as a valid Surface. Translation omits each affected face with a finding naming its area,
+  Zone and reason. A retired face with no boundary condition is likewise a reported omission until
+  classified. These states alone do not block HBJSON or METr; independent blocking findings still
+  apply. A usable remaining model is required by translation and conformance checks.
+- Whether preflight repair is run or skipped, exported Surface references must target faces and
+  Rooms actually emitted in the same HBJSON. If one endpoint cannot be emitted, omit its paired
+  counterpart with a reference finding rather than emit a dangling Surface. Export is read-only;
+  omission does not remove records from the SKP. The report accounts for every omission.
+
+### Endpoint identity and persistence
+
+Each persisted endpoint contains the owning Zone UUID, its root-to-Zone occurrence path, and the
+face's persistent id plus any remaining path within the Zone. Reuse the foundation's reference
+types and schema versioning; PLAN.md selects their exact serialized representation. Both face
+records name the same two endpoints. Geometry stamps check freshness and never identify a target.
+
+- Preserve Zone UUIDs for the same logical Zone when the foundation can establish continuity.
+  Path or persistent-id changes invalidate the old adjacency reference until an explicit solve
+  creates a new pair. Never recover a face reference by name, proximity or coincident geometry.
+- Duplicate Zone UUIDs are ambiguous, not aliases. Refuse pair mutation involving them and report
+  them. An explicit identity repair identifies the copied Zone occurrence, assigns it a fresh
+  foundation UUID, updates its member stamps and retires copied adjacency data without rewriting
+  the original Zone's pairs. Preserve copied metadata and extension payloads; unresolved extension
+  references are reported, not guessed. Refuse if the original cannot be identified or shared
+  storage prevents an independent repair; the user must resolve the ambiguity or make it unique.
+- A native split or merge invalidates affected pairs, even when dictionaries were copied. The
+  explicit solver reacquires resulting face references and establishes only valid reciprocal
+  pairs. Classifications other than Surface and surviving payloads are preserved; conflicting
+  payloads that cannot be retained must be reported and resolved before a plugin-owned edit.
+- Restore Zone preserves an unambiguous recovered Zone UUID, but new paths do not make old pairs
+  current. Report them unresolved and require an explicit solve. Undo/Redo restores the matching
+  geometry and record state together; save/reopen must not turn unresolved pairs into current ones.
 
 ### Closure
 
@@ -194,7 +265,7 @@ coplanar geometry; it may be used later for non-coplanar intersections if a feat
 
 | Consumer | Zones | Interior faces | Closure |
 | --- | --- | --- | --- |
-| HBJSON artifact | one Room per Zone, `story` from Level, `zone` unset | Surface where solved, Adiabatic where marked To neighbour, otherwise a reported omission | disclosed |
+| HBJSON artifact | one Room per Zone, `story` from Level, `zone` unset | Surface only for current reciprocal pairs with emitted targets; Adiabatic where marked To neighbour; unresolved or absent conditions are reported omissions | disclosed |
 | METr exporter (PHX) | one variant per Building-Segment; Zones merged | intra-Building-Segment Surface omitted; cross-Building-Segment Surface and To neighbour both written as to-neighbour | disclosed |
 | EnergyPlus (REVIVE, later) | one Room per Zone | every interior face solved or Adiabatic, blocking | required, blocking |
 
@@ -210,24 +281,47 @@ Each is one row in the rules table with a severity, per the durable delivery rul
 | Zone not closed | info; blocking for EnergyPlus | Fix geometry |
 | Candidate interior face unsolved (multi-Zone model only) | warning; blocking for EnergyPlus | Solve adjacencies or mark To neighbour |
 | Adjacency stale | warning; blocking for EnergyPlus | Solve adjacencies |
+| Adjacency endpoint unresolved or ambiguous | warning; blocking for EnergyPlus | Resolve identity ambiguity, then Solve adjacencies |
+| Retired adjacency needs boundary classification | warning; blocking for EnergyPlus | Classify or Solve adjacencies |
 | Sliver skipped by the solver | warning | Named with both Zones |
 | Overlapping Zones (same-normal coplanar faces) | warning | Named with both Zones |
 | Face overlaps more than one neighbour and could not be split | warning | Named with both neighbours |
-| Zone group exploded or deleted with classified contents | warning | Undo, or Restore Zone |
+| Orphaned stamped contents | warning | Native Undo if available, or limited Restore Zone when eligible |
 | Zone inside a Zone, or a component marked as a Zone | warning | Regroup |
-| Interior window | blocking for export | Move the window to an Outdoors face |
+| Interior window | blocking for export; raised by the window-types packet, listed here for the reader | Move the window to an Outdoors face |
 
-## Why SketchUp makes this tractable
+## Contribution ownership
 
-Three host facts, all measured in the predecessor or in SketchUp's own documentation:
+The zones feature owns Zone records, endpoint references, pair validation and pair creation/removal.
+Its public queries and operations register through one feature install entrypoint, with explicit
+dependencies. Make Zone, Solve adjacencies, Restore Zone and identity repair use the same validated
+operations from UI and scripts with the panel closed. Calls carry explicit session and occurrence
+references, expected revisions and the affected mutation set. Results return changed references,
+findings and the resulting revision, distinguishing refusal, rollback and success.
 
-- Faces are planar by construction and the inference engine snaps to existing geometry, so two
-  Zones drawn against each other share a plane exactly. The internal tolerance is a thousandth
-  of an inch and is not user-configurable. The tolerance and mesh problems that make adjacency
-  hard in Rhino do not arise.
-- Adding edges that lie on a face, inside that face's entities context, splits the face. The
-  solver computes the overlap polygon and draws it; SketchUp performs the split.
-- `Group#manifold?` answers closure directly.
+Pure overlap calculations take explicit SI geometry; the SketchUp adapter reads paths, applies
+splits and persists records. Face assignment calls the public pair-removal contract when changing
+a Surface condition; it never edits adjacency dictionaries itself. The caller owns one enclosing
+transaction for pair removal and classification, with no nested transaction or out-of-scope write.
+Preflight invokes the same solve operation before the export snapshot. The feature contributes its
+snapshot and findings through the export contributor and translation-section contracts. Shared
+shell, session and export orchestration contain no Zone-specific branch.
+
+PLAN.md must name the transplanted entrypoints and record schemas and include a small script that
+reads two Zone occurrences, previews and applies a solve, then reads back reciprocal references
+with the panel closed. Test the same operation and failure outcomes through UI and scripts.
+These are contract requirements, not claims that those APIs have been implemented.
+
+## Host assumptions and evidence gates
+
+The solver intends to use planar faces, native edge insertion for splits and `Group#manifold?`
+for closure. These do not establish numerical robustness, dictionary survival or recovery behavior.
+Before implementation relies on them, record precise API references and fresh-host evidence for
+coplanar splitting, new face identity, attribute survival, explode/delete and closure with the
+supported Zone hierarchy. Measure the supported tolerance cases, including nested, scaled and
+mirrored transforms, holes and near-coincident faces. Inference snapping alone is not proof that
+independently authored faces coincide. The old blanket claim that tolerance problems do not arise
+is not an implementation premise.
 
 What the predecessor already proved that this packet reuses: reading geometry through
 occurrence paths with transforms accumulated once, protecting Volumes across context changes,
@@ -267,30 +361,55 @@ Interviewed 2026-09-18, three rounds, Ed's answers. Each is cited where it appli
 | Q11 | Predecessor models | No recognition, no migration |
 | Q12 | Interior windows | Refused in this packet |
 | Q13 | Where Zones appear | Overview only until a second Zone exists, then a Zones section atop Spaces with the tree grouped by Zone |
-| Q14 | Exploded Zone | Detect on the deferred pass; say Undo first; offer Restore Zone from a stamp on every face and Space |
+| Q14 | Exploded Zone | Native Undo first; limited Restore Zone from surviving classified-face and Space stamps, with recovery limits disclosed |
 | Q15 | Zone nesting | At root or under plain wrapper groups; never inside another Zone |
 | Q16 | Loads and schedules | On the Zone, as honeybee; Space fresh-air flow rates override when present, as honeybee-ph |
 | Q17 | Slivers | Skip splits under 10 mm or 0.01 m², record nothing, report with both Zones |
-| Q18 | Solver scope | Selected Zones if any, else all |
+| Q18 | Solver scope | Selected Zones if any, else all; refuse required reciprocal writes outside the explicit mutation set; export preflight explicitly targets all Zones |
 | Q19 | Same-normal coplanar faces | Report as overlapping Zones, pair nothing |
 | Q20 | Adjacency storage | On both faces' dictionaries; no Model-level table |
-| Q21 | Unpaired remainder after a split | Untouched; classification is the face assignment packet's job |
+| Q21 | Unpaired remainder after a split | Keep non-Surface classification; retire invalid Surface pairs and leave the condition absent for user classification |
 | Q22 | On-screen label for Adiabatic | "To neighbour", tooltip names honeybee Adiabatic |
 | Q23 | Make Zone entry points | Toolbar, right-click on a group, and inline from the classification tool; names "Zone 1", "Zone 2" |
 | Q24 | Zone volume | Not shown, not exported; Vn50 and iCFA stay Space-derived |
 
 ## Acceptance shape
 
+The 2026-09-18 architecture-review corrections were authorized after the interview. Q14, Q18 and
+Q21 above include those clarifications; consumer-specific blocking remains Q10's policy.
+
 Offline: fixtures for a single-Zone box, two Zones sharing a full wall, two Zones sharing a
 partial wall that needs a split on both sides, a Zone nested in a rotated group, a repeated Zone
 component, and a podium under a tower in two Building-Segments. Each proves the classification, the solver
 output, the staleness detection after an edit, and the export mapping row by row.
+
+Extend those fixtures with the following contract checks:
+
+- Solve, separate completely, re-solve; repeat with partial overlap and a deleted neighbour.
+  Verify reciprocal retirement, retained non-adjacency fields and metadata, and absence of inferred
+  replacement conditions. Export with preflight enabled and disabled and reconcile every omitted
+  face and area; no emitted Surface may reference an omitted face or Room.
+- Select only A from an A-B pair; select A-B with an existing B-C pair; reclassify one endpoint.
+  Verify refusal outside the mutation set and no writes. Inject failure after the first proposed
+  endpoint write and verify full rollback, including geometry and one-step Undo behavior on success.
+- Move through wrappers, cut/paste, duplicate, split and restore paired Zones. Assert actual
+  endpoint references and UUID uniqueness, not record counts. Ambiguity is never resolved through
+  geometry matching. Include unavailable extension data and unsupported schema preservation.
+- Explode an unclassified Zone and a named Zone with metadata; test conflicting survivor stamps,
+  mixed contexts and deletion with no survivors. Verify limited-repair eligibility, disclosed lost
+  Zone fields, retained member payloads and rejection without mutation when membership is unsafe.
+- Run the representative public-operation script with the panel closed and compare UI outcomes,
+  including wrong sessions, stale revisions and read-back of successful writes.
 
 Host gate, fresh process: draw two Zones against each other by hand with inference, solve, edit
 one, see the stale finding, re-solve, Undo once and see both the split and the records revert,
 explode one Zone and recover it with Restore Zone, save, reopen, export HBJSON and the METr
 model, and confirm PHX omitted the intra-Building-Segment faces and wrote the cross-Building-Segment one as a
 to-neighbour surface.
+
+Extend the fresh-process gate to the lifecycle cases above, with native Undo/Redo and save/reopen.
+Record exact host and runtime versions and the split/attribute/tolerance evidence required above.
+Offline checks cannot establish native identity or payload survival. No such evidence exists here yet.
 
 ## Prior art and evidence
 
@@ -301,5 +420,8 @@ to-neighbour surface.
 - PHX grouping by Building-Segment and interior-face handling:
   `PHX/PHX/from_HBJSON/create_project.py` (`sort_hb_rooms_by_bldg_segment`) and
   `PHX/PHX/from_HBJSON/cleanup.py` (`merge_rooms`, `_get_thermal_envelope_faces`).
+  Local source inspected 2026-09-18: `_get_thermal_envelope_faces` omits Surface faces by referenced
+  Room membership in the merge set, without testing contact. This is source evidence, not a
+  pinned-runtime test; the translation gate must exclude stale references before calling PHX.
 - honeybee-grasshopper-core Solve Adjacency and Intersect Solids components, as the reference for
   what a matched model must satisfy, not for how to build one in SketchUp.

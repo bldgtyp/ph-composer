@@ -33,9 +33,9 @@ files.
 
 ## Contributor
 
-Read the founding brief and the three contribution seams. Add a feature folder with one install,
-a library provider that answers the provider contract, or an exporter that reads HBJSON. Run the
-offline gate. Nothing in the core changes.
+Read the founding brief and the four contribution seams. Add a feature folder with one install,
+a library provider that answers the provider contract, an export contributor or exporter, or a
+Colour-by mode. Run the offline gate. Nothing in the core changes.
 
 ## Reviewer or certifier
 

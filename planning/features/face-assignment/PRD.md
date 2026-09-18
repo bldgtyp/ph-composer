@@ -46,8 +46,8 @@ simulation-ready one does not. The reasoning is in the founding brief's decision
   a legend in the panel, and a heads-up legend drawn in the viewport while a mode is active. Any
   feature registers a mode. Overlay only; SketchUp materials are never written (Q15, Q16).
 - Validation reports unclassified faces only in a multi-Zone model or when the user asks;
-  incomplete records (a face with a type and no assembly) are findings that block export only
-  when the face is Outdoors or Ground.
+  every opaque face emitted to HBJSON requires a valid authored assembly. Missing references and
+  omitted adjacency states follow the explicit validation and export matrix below.
 
 ## Vocabulary
 
@@ -59,12 +59,12 @@ Carried from `context/UBIQUITOUS_LANGUAGE.md`; new terms this packet adds are ma
 | Face type | honeybee face type | `Wall`, `RoofCeiling`, `Floor`, `AirBoundary` | Wall, Roof (tooltip: also ceilings between Zones), Floor, Air boundary |
 | Boundary condition | What is on the other side | `Outdoors`, `Ground`, `Adiabatic`, `Surface`, honeybee-ph `PhAdditionalZone` | Outdoors, Ground, To neighbour, Surface, Attached zone |
 | Attached zone (new) | A named unconditioned space outside the envelope (garage, attic, crawlspace) with one temperature reduction factor; a Library record kind, assigned to faces as a boundary condition | `PhAdditionalZone` with `zone_name`, `zone_type`, `temperature_reduction_factor` | Attached zone |
-| Colour-by (new) | The shared component: one overlay, one panel legend, one viewport HUD legend, and a registry of modes any feature adds. A mode names an entity kind (face or Zone), a colour function and a label | | Colour by |
+| Colour-by (new) | The shared component: one overlay, one panel legend, one viewport HUD legend, and a registry of modes any feature adds. A mode names an entity kind, a colour function and a label, and may supply derived geometry. Readouts register separately | | Colour by |
 | Face record (new) | The classification record on one face: type, boundary condition, assembly id, Zone stamp, timestamps | | |
 | Classify tool (new) | The modal viewport tool that writes face records | | Classify |
 | Suggested classification (new) | The type and boundary condition the tool proposes for a hovered face from its normal and position; shown, never written without a click | | |
 | Unclassified face (new) | A face inside a Zone with no face record | | shown only in the overlay's legend as a count |
-| Incomplete face (new) | A face record missing its assembly, or naming an assembly that no longer exists | | amber in the overlay and in the faces table |
+| Incomplete face (new) | A face record missing a required type, boundary reference or assembly, or naming an invalid or unavailable referenced record; export severity follows the consumer matrix | | amber in the overlay and in the faces table |
 | Classification overlay (new) | The Colour-by overlay in its three face modes: type, boundary condition, assembly | | |
 | Faces table (new) | The panel inventory of face records for the current Zone or the whole model, with Locate | | |
 
@@ -75,8 +75,8 @@ trip it, but the tool does not offer it in this packet. See the decisions.
 
 ```
 face_type            "Wall" | "RoofCeiling" | "Floor" | "AirBoundary"
-boundary_condition   "Outdoors" | "Ground" | "Adiabatic" | "Surface" | "AttachedZone"
-attached_zone_id     record id of an Attached zone; present only when boundary_condition is "AttachedZone"
+boundary_condition   "Outdoors" | "Ground" | "Adiabatic" | "Surface" | "AttachedZone", or absent after pair retirement
+attached_zone_id     Attached zone record id; allowed only for "AttachedZone"; absence is an incomplete authoring state
 assembly_id          record id of a model-library assembly, or absent
 adjacency            present only when boundary_condition is "Surface"; written by Solve adjacencies
 zone_id, segment, level   the Zone stamp, per the zones packet
@@ -87,17 +87,27 @@ No `source` field: nothing reads it (Q14).
 
 Rules:
 
-- The record lives on the face's own attribute dictionary, so it survives explode, cut, paste and
-  Restore Zone with the face.
+- The record lives on the face's own attribute dictionary. Supported explode, cut/paste and
+  Restore Zone paths must preserve surviving payloads, subject to the zones packet's host gate;
+  preserved payloads do not imply that adjacency references remain current.
 - A face inside a repeated component shares its record across occurrences, as the zones packet
   and the predecessor's window reader already require. Independent classification requires
   explicit uniqueness, which PassiveBuilder never applies.
-- Splitting a face in SketchUp gives the new faces copies of the original's dictionary. That is
-  SketchUp's behavior and it is the right one here: both halves keep the classification.
-- Merging faces keeps one dictionary. The deferred pass notices a record whose face area changed
-  materially and marks the assembly usage stale, nothing more.
-- `Surface` is never set by the tool. It is written by Solve adjacencies and cleared when the user
-  reclassifies the face, which also removes the adjacency on both sides.
+- Splitting must retain non-Surface classifications and surviving metadata. Copied adjacency data
+  is invalid until explicitly re-solved under the zones packet's endpoint rules. Native dictionary
+  survival and new face identity require host evidence; a copied dictionary is not a valid pair.
+- A merge checks area-dependent assembly usage and invalidates affected pairs. Plugin-owned edits
+  preserve payloads or refuse unresolved conflicts; native merge survival requires host evidence.
+- `Surface` is never set by the tool. It is written by Solve adjacencies and cleared only when the
+  boundary condition changes away from Surface, through the zones feature's public pair-removal contract. The operation's
+  preview includes both surviving endpoints in its explicit mutation set; without that scope it
+  refuses without writing. One caller-owned transaction removes the pair and applies the requested
+  classification. The other endpoint retains its type, assembly and payloads but has no boundary
+  condition until classified or re-solved. Retired faces remain visible with a needs-classification
+  finding; they are not treated as untouched unclassified faces in a single-Zone model.
+- Type-only and assembly-only edits preserve the boundary condition and reciprocal pair. A no-op
+  writes nothing and creates no Undo entry. An explicit Reverse face geometry repair is separate;
+  it must trigger the zones packet's geometry-staleness checks even though it preserves the record.
 - Deleting an assembly that faces use requires a replacement, per the predecessor's accepted rule;
   a record naming a missing assembly is an incomplete face, never a silent drop.
 
@@ -123,6 +133,11 @@ Rules:
   boundary condition from its `exterior_condition`. Both hold the palette's own words (assemblies
   Q2), so the fill is a copy: Attached zone leaves the zone to choose, and a blank hint fills
   nothing. A mismatch on an already-typed face is an info finding, never a refusal (Q7).
+- All routes use explicit keep/set intent per field. Explicit palette values take precedence;
+  keep preserves an authored value, and only an absent value eligible under Q7 receives an assembly
+  hint. Assembly-only painting does not adopt geometric hover suggestions or overwrite an existing
+  boundary condition. Auto-classify explicitly proposes geometric values instead. The preview shows
+  the resolved patch, including missing references; application uses exactly that proposal.
 - Click applies to one face. Click-drag paints every face the cursor crosses. Shift-click applies
   to all connected coplanar faces in the same Zone. Double-click keeps SketchUp's native meaning
   and is not overridden (Q9). A right-click item, **Select all faces of this type in Zone**,
@@ -132,6 +147,21 @@ Rules:
   nothing until a Zone exists.
 - Every application is one named Model operation, so one Undo reverts one gesture, including a
   drag over forty faces.
+
+During click-drag, collect a deduplicated, bounded set of occurrence references and preview the
+resolved changes without writing. Mouse-up completes the gesture; click and Shift-click use the
+same completion boundary. Freeze palette intent for that gesture. Escape, tool deactivation or a
+model/edit-context change cancels the pending gesture without writes. Escape first dismisses an
+open bubble/dialog, then ends the tool and cancels its pending gesture, then clears selection.
+Report a target-limit refusal instead of silently painting only part of the gesture; PLAN.md sets
+and tests the bound.
+
+Resolve Make Zone, inline creation and reciprocal-scope choices before opening a write transaction.
+A target outside a Zone refuses the entire pending classification; Make Zone is its own explicit
+action and the user then retries classification. If any target or precondition is invalid at
+commit, refuse the entire batch. A failure during application rolls back every changed face and
+paired endpoint. No transaction remains open while awaiting a dialog or further pointer input.
+
 ### Auto-classify a Zone
 
 One action on the Zone row: **Suggest classification for this Zone**. It walks the Zone's faces
@@ -150,7 +180,63 @@ assemblies.
 - An assembly's `exterior` and `type` fields, which the predecessor's Assembly Builder already
   carries, are hints for the picker (walls first for a Wall face) and never a constraint.
 
+### Operations other features use
+
+Face records belong to this feature. The assemblies packet, and later window placement and
+thermal bridges, reach them only through these registered operations (assemblies Q23). PLAN.md
+fixes the action names and schemas against the transplanted APIs. Each works with the panel
+closed and returns the same outcome to the panel, a console script and an external client.
+
+| Operation | Contract |
+| --- | --- |
+| Face read | Face references with occurrence path, gross area in m2 (the face's own polygon; whether SketchUp's cut opening changes `Face#area` is measured in the window-types component spike, Q26), type, boundary condition and `assembly_id`. Read-only: it repairs nothing and marks nothing stale. The faces table and the assemblies usage scan share it, so there is one scan |
+| Locate | Selects and reveals an explicit set of face references |
+| Activate Classify with a preset | Starts the tool with the given palette choices, used by Paint onto faces |
+| Reassign | An explicit face set, the new `assembly_id` and the expected current value per face. All or nothing. It opens its own `ModelOperation.perform` when called alone and joins the caller's when the assemblies delete command calls it, so delete with replacement is one Undo step |
+| Classify | Explicit occurrence references, per-field keep/set intent, expected values, model/session and geometry/edit-context revision. Preview returns changed fields, required references and reciprocal scope; apply revalidates and commits all or nothing through the same transaction primitives as Reassign |
+| Attached zone operations | Read, create, edit, duplicate and guarded delete/reassign through this feature's registered record kind and validated operations; no caller accesses dictionaries |
+
+Reassign is the assembly-only operation: it preserves type and boundary fields. Classify may apply
+the documented hint policy. Tool, table and scripts share Classify's validation and patch logic;
+Auto-classify supplies explicit suggestions to that logic and never overwrites an existing record.
+Requests target an explicit session and bind to the preview revision, including referenced records.
+Use foundation retry/idempotency semantics; a duplicate retry cannot create another Undo entry.
+Return changed references, findings and the resulting revision, distinguishing refusal, rollback,
+no-op and success. Reads never mutate, start tools or open review dialogs.
+
+PLAN.md includes a panel-closed script that reads face occurrences and an assembly, applies an
+assembly-only change, then reads both endpoints of any Surface pairs back. Exact action schemas
+bind to the transplanted APIs; these are required contracts, not implemented interfaces.
+
+The assembly picker, the assembly Colour-by mode, the hint fill and the mismatch finding read
+assemblies through that feature's assembly read, never its dictionary.
+
+Opaque area net of windows is gross area less the glazed area the window-types packet reports per
+host face reference. This feature declares that read as a dependency when window-types lands and
+never reads window units itself. Until then the faces table and assembly usage show gross area
+and say so.
+
 ### Attached zones
+
+This feature owns the Attached zone record kind, registered through the foundation record engine.
+Each record has a durable local UUID, schema version, timestamps, the fields below, `user_data`
+and versioned extension payloads. Ordinary edits preserve metadata and unavailable-extension data;
+unsupported schema edits refuse without rewriting or dropping payloads. Duplicate creates a new
+UUID without reassigning existing faces. Library-provider import of this kind is outside the
+four-kind libraries packet; hand entry remains complete.
+
+An AttachedZone condition with no selected record is a visible incomplete authoring state.
+Missing id, dangling id, invalid record and unavailable required schema/capability are distinct
+findings and block canonical export. The default factor never manufactures a referenced record.
+Cancelling inline creation writes neither a record nor the pending assignment; a previously
+committed incomplete face stays incomplete. Successful inline create-and-assign is one atomic
+operation, validated against the pending face proposal before either write.
+
+Deleting a used Attached zone requires an explicit valid replacement or explicit reclassification
+of every affected face in the same transaction. Preview actual references; refusal or cancellation
+writes nothing. Changing away from AttachedZone clears `attached_zone_id`; changing only an
+assembly or type preserves it. Replacing the referenced record preserves face identity, other
+fields and payloads. No raw dictionary writes or hidden cross-feature scans are allowed.
 
 - A Library tab beside Materials, Frames, Glazings and Psi-Install Types, plus inline creation
   from the boundary condition chip (Q21). A record is name, kind (garage, attic, crawlspace,
@@ -170,10 +256,25 @@ assemblies.
 One component, built in this packet, that every later feature adds to (Q16, Q19). It is the
 fourth contribution seam beside feature, provider and exporter.
 
-- **Registry.** A mode is a name, the entity kind it colours (face or Zone), a colour function
-  from entity to colour and label, and an optional sort for the legend. This packet registers
+- **Registry.** A mode is a name, the entity kind it colours, a colour function from entity to
+  colour and label, and an optional sort for the legend. The entity kind is open: face and Zone
+  here, Volume from the spaces packet, and any kind a later feature names through its public
+  reader. A mode may also supply **derived geometry**, drawn by the service in the mode's colours
+  and never added to the SKP; the spaces packet's Volume preview is the first. A **readout** is a
+  separate registration for viewport text or a HUD block that does not depend on the active mode:
+  the spaces packet registers Space labels and Selection totals (spaces Q22). The Classify tool
+  has no mode registry. A feature that needs its own paint gesture ships its own
+  `Sketchup::Tool` on the shared `core/` pick and drag primitives, as Mark floor does (spaces
+  Q19). This packet registers
   face type, boundary condition and assembly. The zones packet registers Zone, Building-Segment and Level.
   Ventilation later registers served-by-unit and has-supply-air. One mode is active at a time.
+- **Ownership and contract.** The shared Colour-by service owns registration and host drawing;
+  features own pure mode projections and register explicit dependencies. Projections expose
+  occurrence references, values, labels and unavailable states from public readers, with bounded
+  entity enumeration and revision/invalidation rules. No mode reads another feature's internals.
+  Store service state through generic session feature state; ModelSession names no mode or feature.
+  PLAN.md names the service entrypoint and proves the contract with Zone modes and a synthetic
+  outside mode, without new branches in the shell, session or shared renderer.
 - **Overlay.** One `Sketchup::Overlay` owned by the ModelSession, following the predecessor's
   window overlay rules: built incrementally from the same reader as the faces table, cleared when
   geometry, tag, scene or active context invalidates it, republished only when coherent.
@@ -190,7 +291,7 @@ fourth contribution seam beside feature, provider and exporter.
   boundary 255,255,200. Boundary condition: Outdoors 64,180,255; Ground 165,82,0; To neighbour
   255,128,128; Surface 0,128,0; Attached zone takes honeybee's Other, 255,255,200, until the
   interview on ventilation colours gives it a distinct hue. Assembly mode uses each assembly's
-  display colour, a new field defaulting from its outermost layer's material colour. Zone modes
+  display colour, a field defaulted from a ramp by record id and editable (assemblies Q6). Zone modes
   use a categorical ramp. In every mode, unclassified is hatched and incomplete is amber.
 - **Default (Q12).** Off at rest, remembered per user; forced on while the Classify tool is
   active, in the mode the palette last touched.
@@ -213,8 +314,11 @@ fourth contribution seam beside feature, provider and exporter.
 
 | Finding | Severity | Repair |
 | --- | --- | --- |
-| Envelope face without an assembly | blocking for export | Assign an assembly |
+| Opaque face to be emitted without a valid assembly/construction | blocking for canonical export | Assign or repair an assembly |
 | Face record names a missing assembly | blocking for export | Choose a replacement |
+| AttachedZone reference absent, dangling, invalid or required capability unavailable | blocking for canonical export; distinct finding codes | Choose or repair an Attached zone |
+| Face to be emitted has no valid type | blocking for canonical export | Classify |
+| Retired adjacency needs boundary classification | warning; blocking for EnergyPlus | Classify or Solve adjacencies |
 | Unclassified faces in a multi-Zone model | warning | Suggest classification, or Classify |
 | Unclassified faces in a single-Zone model | none; count in the legend only | |
 | Face type disagrees with the suggested type by more than the thresholds (a "wall" facing up) | info | Reclassify or keep |
@@ -227,14 +331,41 @@ fourth contribution seam beside feature, provider and exporter.
 
 ### Export mapping
 
+Assembly requirements apply before writing the canonical HBJSON/report pair. Every emitted opaque
+face receives an explicit valid construction from its authored assembly; this packet supports no
+assembly-less emitted opaque face. Intra-Building-Segment Surface faces still need constructions
+because they exist in the canonical HBJSON even though PHX later drops them. This deliberately
+replaces the earlier Outdoors/Ground-only wording under the authorized architecture correction.
+
+| Face state | Canonical HBJSON requirement | METr consequence |
+| --- | --- | --- |
+| Outdoors or Ground | Valid authored assembly required | Retained component uses that construction |
+| AttachedZone | Valid authored assembly and Attached zone reference required | Retained component uses that construction and zone data |
+| Adiabatic / To neighbour | Valid authored assembly required | Retained to-neighbour component uses that construction |
+| Current reciprocal Surface, same Building-Segment | Valid authored assembly on both emitted faces required | PHX omits intra-segment faces |
+| Current reciprocal Surface, different Building-Segments | Valid authored assembly on both emitted faces required | Retained to-neighbour components use those constructions |
+| Stale/unresolved Surface, or condition absent after retirement | Omit with the zones packet's findings; absence of an assembly alone adds no block to an omitted face | No component; omission reported |
+| AirBoundary | Unsupported and blocking in this packet | Not exported |
+
+An explicit dangling assembly id remains an independent blocking finding, including on an omitted
+face. Unclassified faces retain their existing omission rule. Never let honeybee defaults or the
+development fixture construction substitute for a missing authored value. Construction lookup
+failures carry a subject-specific finding and block the canonical pair; no exporter repairs them.
+
 | Field | HBJSON | METr, via PHX |
 | --- | --- | --- |
 | face type | `Face.type` | PHX component colour and type from the same mapping PHX already applies |
 | boundary condition | `Face.boundary_condition`; Surface carries the adjacency's face and Room identifiers; Attached zone becomes honeybee-ph `PhAdditionalZone` with the record's name, kind and factor | exposure exterior: Outdoors, Ground, to-neighbour for Adiabatic and cross-Building-Segment Surface, attached zone with its factor; intra-Building-Segment Surface omitted |
-| assembly | `Face.properties.energy.construction`, built by the existing assembly translation | PHX construction |
+| assembly | `Face.properties.energy.construction`. The face section declares the assemblies builder's `constructions_by_assembly_id` result as a dependency and assigns from it (assemblies Q23). Failed required lookup produces a blocking incomplete-face finding | PHX construction |
 | area and geometry | from the face through the occurrence path, transforms accumulated once | |
 | unclassified face | not exported; count in the report | |
-| incomplete face | export blocked; named in the report | |
+| incomplete face | consumer matrix and validation determine block versus reported omission; named in the report | no inferred construction or boundary data |
+
+The zones packet owns pair freshness, reciprocal integrity and emitted-target checks. Stale or
+unresolved Surface faces and faces awaiting classification after retirement are reported omissions,
+not emitted with guessed conditions. Their missing boundary condition alone is warning-only for
+HBJSON and METr, unlike the independent blocking assembly findings above. The contributor accounts
+for paired counterparts withheld when one endpoint cannot be emitted.
 
 The Export report gets a faces section: counts by type and boundary condition per Zone, the
 envelope area per assembly, and every finding above with its face and Zone.
@@ -281,6 +412,10 @@ Interviewed 2026-09-18, two rounds, Ed's answers. Each is cited where it applies
 
 ## Acceptance shape
 
+Architecture corrections authorized 2026-09-18 supplement the interview: Attached zone reference
+lifecycle, the assembly matrix, field-level intent and atomic gesture completion are now part of
+this contract. Q22's spike remains deferred under the later instruction recorded in STATUS.
+
 Offline: fixtures for a single-Zone box (six faces, one gesture per type), a Zone under a rotated
 wrapper group, a Zone that is a repeated component (shared records, finding), a face split after
 classification (both halves keep the record), an assembly deletion with replacement, a Ground
@@ -288,12 +423,33 @@ suggestion at and above z=0, and a two-Zone model after Solve adjacencies where 
 Surface face clears the adjacency on both sides. Each proves the record, the overlay projection,
 the validation rows and the export mapping.
 
+Add these focused contract cases:
+
+- AttachedZone hints with no selected record, cancelled inline creation, successful create-and-assign,
+  two faces sharing one Attached zone, delete with replacement, and switching away from AttachedZone.
+  Assert actual references, distinct incomplete states and atomic outcomes. Exercise unsupported
+  schemas and preservation of `user_data` and unavailable-extension payloads.
+- Every boundary condition with a valid, absent and dangling assembly reference; both intra- and
+  cross-Building-Segment Surface pairs. Check the matrix, construction references and blocking
+  versus omission accounting. No downstream default may hide a missing authored construction.
+- Assembly-only and type-only changes on a current pair, explicit choices conflicting with hints,
+  no-ops and boundary changes retiring a pair. Check both endpoints, retained fields and metadata.
+- Escape, deactivation, changed context/model, an invalid target, target-limit overflow, failure
+  after the first write and duplicate retry. Assert no partial writes and correct Undo grouping.
+- Panel-closed read/preview/apply/read-back through the public operations, with stale and wrong-session
+  refusal. Register Zone modes and a synthetic outside Colour-by mode without private hooks.
+
 Host gate, fresh process: draw a box, Make Zone, run Suggest classification, paint one assembly
 onto four walls by drag, a second onto the roof by click, Undo twice and see each gesture revert
 whole, switch the overlay through all three modes and read the HUD legend from a window capture,
 Locate from the panel legend, mark one wall Attached zone from a garage record, split a wall and
 see both halves classified, Reverse face on an inward wall, export HBJSON and the METr model and
 confirm the face types, boundary conditions, attached zone and constructions arrive.
+
+Extend that fresh-process walkthrough with the reference and gesture cases above, native Undo/Redo,
+save/reopen, cancellation with focus in the panel and a dialog opened before commit. Check that no
+transaction spans a review dialog, and that rejected/cancelled gestures change no face. Record
+overlay capability and capture evidence only after the deferred spike is authorized and passes.
 
 ## Prior art and evidence
 

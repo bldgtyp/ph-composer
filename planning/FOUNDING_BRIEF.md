@@ -75,7 +75,13 @@ Measured on the predecessor at `f358ebf`, excluding the vendored payload.
 
 ## Architecture
 
-Four layers, each with one dependency direction, and four seams where contributors plug in.
+The contributor-facing principles are governed by
+[`context/EXTENSIBILITY.md`](../context/EXTENSIBILITY.md), accepted on 2026-09-18. They extend the
+initial seams below with record-kind and importer contracts, scripting and metadata affordances.
+The exact APIs remain design work; no implementation is implied.
+
+Four layers, each with one dependency direction. The initial four contribution seams are below;
+the contributor architecture extends their contracts.
 
 | Layer | Language | Owns | Depends on |
 | --- | --- | --- | --- |
@@ -106,20 +112,21 @@ the licensing door open for a separable kit later.
 
 ## Scope
 
-Core, in order:
+Core follows the walking-skeleton order in `ROADMAP.md`:
 
-1. Zones and adjacency, then face assignment: what a zone is, which faces are envelope, which
-   boundary condition, which assembly. Zones come first because a boundary condition names what
-   is on the other side. Packet: `features/zones-and-adjacency/`. Groups, components, nested edit paths, back faces and coplanar overlaps,
-   with assignments stable through Undo and across saves.
-2. Assembly Builder and the Library, carried over.
-3. Windows: types, frames, glazings and install types carried over, window geometry authoring new.
-4. Thermal bridge assignment to edges.
-5. Spaces, carried over and extended.
-6. HBJSON export and validation.
-7. METr export through PHX.
+1. Zones and adjacency, then face assignment: what a Zone is, which faces are envelope and what
+   is on the other side. Zones come first because a boundary condition may name another Zone.
+2. Validation and the canonical HBJSON/report handoff, with the METr exporter through PHX when
+   its Pyodide gate passes. The Phase 1 construction is a development-only fixture, never a user
+   fallback.
+3. Assembly Builder and the file-library seam, carried over and generalized.
+4. Windows: types, Frames, Glazings and Psi-Install Types carried over; window geometry authoring
+   new.
+5. Spaces, carried over and extended, then linear thermal bridges assigned to edges.
+6. Mechanical equipment, ERV ducting and hot-water piping.
 
-Planned after core: HVAC, ventilation, ducting, piping, hot water, PV, shading, climate and site.
+Post-MVP: climate, sun path, window performance overlays, further providers, PV and site work.
+PassiveBuilder authors no window shading; METr handles it after export.
 
 Out of scope: designPH in any form, PHI certification workflows, PHPP export, hosted projects,
 accounts, subscriptions and database services. An organization library remains optional and is
@@ -136,27 +143,25 @@ never required to author or export a model.
 | AGPL-3.0. | 2026-09-17 | Matches the vendored ladybug and honeybee wheels and the predecessor. |
 | Strong separation between UI and business logic. Clear, modular boundaries as the first architectural goal. | 2026-09-17 | Ed. The project exists to be extended by other people. |
 | Library provider contract, flat file first, PH-Navigator second. | 2026-09-17 | No hosted requirement. Many vendors, none privileged. |
-| Name: PassiveBuilder, assumed. | 2026-09-18 | See naming record. Checks passed 2026-09-18: GitHub, RubyGems, PyPI, npm, domains, Extension Warehouse and USPTO all clear; only the X handle is taken, by an Irish contractor. Ed will keep thinking; `PassiveBuilder-SKP` is a fallback if the SketchUp-specific nature needs stating. |
+| Development name and home: PassiveBuilder under PH-Tools. | 2026-09-18 | D8. Keep the current name and repository location during development. Neither is the final launch decision; move deliberately later if the product name or organization changes. Namespace checks passed 2026-09-18; only the X handle was taken. |
 | No commercial license. DCO instead of a CLA. | 2026-09-18 | Ed: a foundation library like OpenPH, not a revenue generator. Products may connect to it or build on it under AGPL. |
+| UI kit remains AGPL for MVP; closed systems use file, HBJSON or HTTPS boundaries. | 2026-09-18 | D5. Reconsider a separately licensed package only for a real embedder. |
 | The authored model is honeybee-shaped Ruby records in the SKP, translated to honeybee at export; honeybee is never run live. | 2026-09-18 | Ed, face-assignment interview Q1. The model must live in Ruby-written dictionaries regardless; authoring is partial where simulation is resolved; the panel needs sub-100 ms updates and native Undo; a contributor who knows honeybee recognizes every field. honeybee's names and enumerations are used wherever honeybee has them. |
 | Colour-by is a shared component and the fourth contribution seam. | 2026-09-18 | Ed, face-assignment interview Q16. One overlay, one legend, one HUD; features register modes. |
 
 ## Open questions and first gates
 
+The cross-cutting choices are consolidated in [`DECISIONS.md`](DECISIONS.md); feature-local
+questions remain in their packet PRDs.
+
 - **PHX in Pyodide.** PHX pulls openpyxl and xlwings for its PHPP path. Those must become optional
   extras so the wheel loads without them, and the payload growth against the predecessor's 20 MB
   must be measured. This is a small spike in the PHX repository and the first technical gate.
-- **Namespaces to claim.** All clear as of 2026-09-18 (see the decisions table). Register the
-  GitHub organization, the gem name and the domains before the name is public.
-- **GitHub home.** PH-Tools (public, existing community) or a new organization under the product
-  name.
+- **Public name, organization and namespaces.** Development remains PassiveBuilder under PH-Tools.
+  Before public announcement, decide whether to keep that name and home, then claim only the
+  namespaces that decision requires.
 - **The contribution unit.** What a contributor's piece is called, and the worked example that
-  shows how to add one at each of the four seams.
-- **AGPL and "built into" commercial products.** Ed wants PassivSure and PH-Navigator to be able
-  to build on PassiveBuilder. Under AGPL, connecting (reading its HBJSON, serving it a library) is
-  free, but shipping its code inside a closed product makes that product AGPL. If closed embedding
-  of the UI kit is a goal, the kit needs its own permissive or weak-copyleft license and a package
-  boundary free of the AGPL stack. Recorded in `docs/LICENSING.md`.
+  shows how to add one through each supported contribution contract.
 
 ## Naming record
 

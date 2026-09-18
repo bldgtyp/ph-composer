@@ -77,9 +77,9 @@ assembly. A face inside a repeated component is shared by every occurrence, and 
 classification requires the user to make the parent unique first. PassiveBuilder never does that
 automatically. Unclassified faces are visible in validation and never silently exported.
 
-Thermal bridges are identified on the model as edges or points, assigned a type carrying a
-psi-value or chi-value, and exported with their measured length or count. Detailed rules await
-the feature interview.
+Thermal bridges are identified on the model as edges, assigned a type carrying a psi-value, and
+exported with their measured length. Point bridges and chi-values are outside the MVP. They can
+return as later scope only after the canonical honeybee-ph artifact has a real carrier for them.
 
 ## Window Types and placement
 

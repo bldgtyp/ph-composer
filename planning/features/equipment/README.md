@@ -26,8 +26,8 @@ The order is a proposal. Families 1 and 2 go first because two other packets wai
 
 ## Scope
 
-In: a record per equipment item, assignment to Zones, an Equipment tab with one sub-table per
-family, validation, export.
+In: a record per equipment item, assignment to Zones, an Equipment subtab under Systems with one
+family view at a time, validation, export.
 
 Out: data sheet hosting, specification status, procurement tracking, equipment sizing, load
 calculations, schedules.

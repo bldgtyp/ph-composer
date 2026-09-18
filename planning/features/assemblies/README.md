@@ -3,12 +3,12 @@
 The fourth feature packet. It carries the predecessor's Assembly Builder, Assemblies inventory and
 Library / Materials into PassiveBuilder with the designPH half removed. It depends on
 [face-assignment](../face-assignment/README.md) for the face record's `assembly_id`, and
-[libraries](../libraries/README.md) depends on it for the Material and Assembly record kinds.
+[libraries](../libraries/README.md) depends on it for the Material record kind.
 
 ## Read order
 
 1. [PRD.md](PRD.md): what ports, what drops, the records, behaviors, validation, the honeybee
-   export mapping, and the 18 decisions recorded in the interview.
+   export mapping, the contracts with face-assignment, and the 21 decisions recorded.
 2. [STATUS.md](STATUS.md).
 
 No PLAN.md yet. It follows the interview and the foundation transplant.

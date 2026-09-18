@@ -39,25 +39,24 @@ the payload is assembled.
 - **Licensed documents.** No PHPP workbooks, designPH files, or PHI- or Phius-derived data enter
   this repository. Use synthetic fixtures and the private corpus conventions in `AGENTS.md`.
 
-## The UI kit and the open question
+## The UI kit
 
-The panel JavaScript and CSS carry no honeybee dependency. Under AGPL they are reusable with
-source, which serves an open sibling such as an AGPL PassivSure build. If the goal is instead
-that closed or differently licensed products embed the kit, the kit needs a permissive or weak
-copyleft license of its own (MIT, MPL-2.0 or LGPL) and a package boundary that keeps it free of
-the AGPL stack. That is a decision for Ed, and it only stays available while the kit imports
-nothing from honeybee, ladybug or PHX. It is recorded in the founding brief as open.
+The panel JavaScript and CSS carry no honeybee dependency, but D5 confirms that the UI kit remains
+AGPL for the MVP. It is reusable with source, including by an open sibling. Closed or differently
+licensed products do not embed it. If a real adopter later needs that use, reconsider a separate
+permissive or weak-copyleft package with a boundary free of the AGPL stack; do not pre-build that
+boundary now.
 
-## Library providers and the open question
+## Library providers
 
 A library file is data. A vendor or a firm that publishes one, or runs a server that answers the
 connection protocol, writes no PassiveBuilder code and the license does not reach them. A firm's
 intranet or company library is an intended use.
 
-A provider written as a SketchUp extension that registers with PassiveBuilder is code loaded into
-an AGPL host. Whether a closed-source provider of that kind is compatible with the license is an
-open question for Ed, recorded beside the UI kit question above. The file format and the
-connection protocol exist so that almost no provider needs to be code.
+A provider written as a SketchUp extension that registers in-process with PassiveBuilder is code
+loaded into the AGPL host and closed-source in-process providers are not an MVP requirement.
+Closed systems use the library file or HTTPS connection protocol. Almost no provider should need
+to be code.
 
 ## Icons
 

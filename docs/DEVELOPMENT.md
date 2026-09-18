@@ -84,6 +84,9 @@ validation.
 
 ## Driving SketchUp from a terminal
 
+This section concerns development tooling. The separate supported interface for users' agents is
+planned in [AGENT_ACCESS.md](AGENT_ACCESS.md); development `eval` is not its public API.
+
 Host work defaults to the development bridge, not to a person at the Ruby Console.
 `make bridge-install` places the bridge in the SketchUp Plugins folder, never in the RBZ.
 `uv run tools/hostkit/host_bridge.py launch <model.skp> --fresh-from <accepted.skp>` quits any

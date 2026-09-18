@@ -24,6 +24,8 @@ not a dependency. Its designPH integration is retired and is never reintroduced 
 | Product language | [`context/UBIQUITOUS_LANGUAGE.md`](context/UBIQUITOUS_LANGUAGE.md) |
 | Architecture, host behavior, transactions, seams, runtime | [`context/TECH_STACK.md`](context/TECH_STACK.md) and [`context/SKETCHUP_HOST_BEHAVIOR.md`](context/SKETCHUP_HOST_BEHAVIOR.md) |
 | Coding and compatibility rules | [`context/CODING_STANDARDS.md`](context/CODING_STANDARDS.md) |
+| Contributor architecture, scripting and extension contracts | [`context/EXTENSIBILITY.md`](context/EXTENSIBILITY.md) |
+| External agent access, discovery, model reads and writes | [`context/AGENT_INTERFACE.md`](context/AGENT_INTERFACE.md) |
 | Build, install, test and host procedures | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md), target state until the tooling lands |
 | Current delivery state or next authorized work | [`planning/STATUS.md`](planning/STATUS.md), then the owning packet |
 | Planning documents or status changes | [`planning/.instructions.md`](planning/.instructions.md) |
@@ -42,10 +44,10 @@ the owning packet.
 - The model is the authoring authority. Library records become editable local copies. No provider
   is privileged, and no provider address is a default the software ships.
 - Four layers, one dependency direction: Ruby model, JavaScript UI kit, Python translation,
-  Python exporters. The UI kit carries no calculation and no honeybee dependency. Four seams for
-  contributors: a feature folder, a library provider, an export contributor or exporter, a
-  Colour-by mode. A change
-  that makes any seam need a core edit is wrong until the seam is fixed.
+  Python exporters. The UI kit carries no calculation and no honeybee dependency. Contributor
+  contracts are defined in `context/EXTENSIBILITY.md`. Built-in features use those same public
+  interfaces. A contribution needing a special case in core orchestration exposes a contract
+  defect; explicit composition-root registration is permitted.
 - Face types and boundary conditions are honeybee's. Do not coin a third vocabulary.
 - Link measured host claims to the predecessor's evidence or to current host evidence instead of
   restating them. Restated technical facts drift. Predecessor evidence lives under
@@ -83,6 +85,18 @@ the owning packet.
   the bridge and native controls cannot reach the necessary step.
 - Keep context, planning and status documents synchronized with verified work. Distinguish
   implemented, host-verified, merged, released and publicly supported.
+
+## Architecture and code review
+
+Before designing contribution boundaries or making substantive code changes, load
+`.agents/skills/passive-builder-architecture-review/SKILL.md`. Apply it during design and use it
+as the rubric for the existing coherent-diff review. This applies when using `implement`,
+`implement-loop`, `simplify` or direct implementation. Reuse loaded context within a coherent task.
+
+Keep the shared implementation skills unchanged. Use the established review ladder and give its
+reviewer this project rubric; do not add a second equivalent review. Record the outcome and
+remaining acceptance evidence in the owning packet. Documentation-only edits use a focused
+consistency review; they do not trigger code or host gates.
 
 ## UI and UX work
 

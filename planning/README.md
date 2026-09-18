@@ -4,9 +4,9 @@ Working plans for PassiveBuilder. See [`.instructions.md`](.instructions.md) for
 the rules and folder contract (canon lives in the `planning-conventions`
 skill).
 
-**Read order:** [`STATUS.md`](STATUS.md) first, then [`ROADMAP.md`](ROADMAP.md) for the sequence, then
-[`FOUNDING_BRIEF.md`](FOUNDING_BRIEF.md) for why the repository exists and what
-it inherits.
+**Read order:** [`STATUS.md`](STATUS.md) first, then [`ROADMAP.md`](ROADMAP.md) for the sequence,
+[`DECISIONS.md`](DECISIONS.md) for the open cross-cutting choices, then
+[`FOUNDING_BRIEF.md`](FOUNDING_BRIEF.md) for why the repository exists and what it inherits.
 
 ## Layout
 
@@ -15,6 +15,7 @@ planning/
   README.md            # this file
   STATUS.md            # master index of active work
   ROADMAP.md           # phase order of the core features, high level
+  DECISIONS.md         # cross-cutting choices that need Ed's answer
   FOUNDING_BRIEF.md    # origin, transplant tables, decisions, naming record
   ui-baseline/         # the predecessor's screens, ruled on part by part
   features/            # new-capability packets     (features/<slug>/)

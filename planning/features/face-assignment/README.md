@@ -8,10 +8,11 @@ classified in and the Zone stamp every face record carries.
 ## Read order
 
 1. [PRD.md](PRD.md): the face record, the Classify tool, suggestions, the overlay, the faces
-   table, validation, export mapping, and the decisions the interview must record.
+   table, validation, export mapping, and the twenty-two recorded decisions.
 2. [STATUS.md](STATUS.md): current state, next step, blockers.
 
-No PLAN.md yet. It follows the interview and the foundation transplant.
+No PLAN.md yet. The authorized architecture corrections are incorporated in the PRD. The plan
+follows the deferred overlay spike and the foundation transplant, with their acceptance gates intact.
 
 ## Scope
 

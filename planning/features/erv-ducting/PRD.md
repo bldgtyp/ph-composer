@@ -79,7 +79,7 @@ differences.
 - "New Ducting group" asks for the Ventilator it serves.
 - Assign sets a Duct Type and a direction. There is no tree and no parent. Connection between
   lines does not matter, only the sum.
-- A Ventilator's row in the Equipment tab shows its two duct lengths, so a missing run is
+- A Ventilator's row in the Systems > Equipment subtab shows its two duct lengths, so a missing run is
   visible where the ventilator is edited.
 - A Ducting group may be copied with its Ventilator link intact. Forty identical units need one
   drawn pair and either forty copies or a quantity. Q4 chooses.
@@ -115,7 +115,7 @@ differences.
 | Q5 | Same native Line tool and group rule as piping? | Yes |
 | Q6 | Do Ducts belong to a Zone? | No. They belong to a Ventilator |
 | Q7 | Are Duct Types a library kind? | Not now |
-| Q8 | One tab for piping and ducting, or two? | Two. The UI baseline reserved separate entries and the tables differ |
+| Q8 | One primary tab for piping and ducting, two primary tabs, or peer subtabs under a Systems home? | Confirmed in D4: Systems is the primary tab, with Equipment, ERV ducting and Hot-water piping as peer subtabs |
 
 ## Non-goals
 

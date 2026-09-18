@@ -16,7 +16,15 @@ subscription or database service is required to author and export a supported mo
 The project exists to be extended. BLDGTYP builds the foundation and the core patterns; anyone can
 add a feature, a library provider or an exporter without touching the core.
 
+The accepted [contributor architecture](../context/EXTENSIBILITY.md) also defines scripting,
+namespaced metadata and the contracts for record kinds and importers. These are implementation
+requirements; their APIs and worked examples have not landed yet.
+
 ## Product principles
+
+- Users' agents can inspect, view and edit through documented public operations. Agent access is
+  a foundation requirement; PassiveBuilder builds no agent of its own. The planned interface and
+  current availability are described in [AGENT_ACCESS.md](AGENT_ACCESS.md).
 
 - The SKP file carries authored definitions, instances, assignments and values, including unused
   definitions deliberately retained for this building. Moving the file to another computer
@@ -42,28 +50,29 @@ A recipient uses HBJSON or the METr model without becoming an upstream authoring
 BLDGTYP is the first internal user.
 
 A second audience is contributors: consultants and developers who add a feature, a provider or an
-exporter. The founding brief names the four seams they plug into.
+exporter. The contributor architecture names the supported kinds of contribution and their contracts.
 
 ## Proposed feature scope
 
-In build order. The first four are what designPH provided in the predecessor and PassiveBuilder
-must provide itself.
+The phase numbers follow the proposed roadmap and are not implementation authorization.
 
-| Feature | User outcome |
-| --- | --- |
-| Face assignment | Classify envelope faces by face type and boundary condition and assign an assembly; stable through Undo, save and nested contexts |
-| Assemblies and materials | Graphically build assemblies; enter or bookshelf materials; edit, rename, duplicate, delete and assign local definitions. Carried over from the predecessor |
-| Window Types and placement | Compose Window Types from frames, glazings and Psi-Install Types; place and resize window units on envelope faces. Type authoring carried over; placement new |
-| Thermal bridges | Identify linear and point thermal bridges on the model and assign psi-values and chi-values |
-| Spaces and airflows | Author Spaces and Volumes, classify iCFA floors, assign Space Types and enter ventilation rates. Hierarchy carried over |
-| Validation and export | Export HBJSON with actionable findings and stable identity; run the METr exporter |
-| Optional library import | Reuse curated definitions from any provider as editable model-local copies. Carried over and generalized |
-| Space Types | Maintain a local collection of reusable Space definitions |
-| Equipment | Author ventilators, heat pumps, pumps, fans, hot-water tanks and heaters, electrical heaters and appliances |
-| Piping and ducting | Describe measured runs and their system relationships using honeybee-ph concepts |
-| Climate and site | PV and the site data METr needs. Window shading is METr's job after export |
-| Optional linked evidence | Open and repair links from records to external PDFs and photos |
-| Optional transmission package | Share a fixed model and its selected linked evidence together |
+| Phase | Feature | User outcome |
+| --- | --- | --- |
+| 1 | Zones and adjacency | Define the geometry units, Building-Segments and Levels; solve or explicitly classify interior relationships |
+| 1 | Face assignment | Classify envelope faces by face type and boundary condition; stable through Undo, save and nested contexts |
+| 1 | Validation and export | Produce a canonical HBJSON and coordinated report with complete accounting; optionally run the METr exporter |
+| 2 | Assemblies and materials | Graphically build layered assemblies; enter, reuse, edit and assign model-local materials and assemblies |
+| 2 | Optional library import | Copy curated definitions from interchangeable file or connection providers into editable model-local records |
+| 2 | Window Types and placement | Compose Window Types from Frames, Glazings and Psi-Install Types; place and resize window units on classified envelope faces |
+| 3 | Spaces and airflows | Author Spaces and Volumes, classify iCFA floors, and enter ventilation rates. Space Types remain later scope |
+| 3 | Thermal bridges | Identify linear thermal bridges on the model and assign psi-values. Point bridges and chi-values are not part of the MVP |
+| 4 | Equipment | Author ventilators, heat pumps, pumps, fans, hot-water tanks and heaters, electrical heaters and appliances |
+| 4 | Piping and ducting | Describe measured runs and their system relationships using honeybee-ph concepts |
+| 5 | Climate and site | Author or import site and climate data. Accept user-owned monthly files and local EPWs converted to a model-owned monthly snapshot; ship no datasets. METr export additionally requires user-supplied peak-load climate data |
+| Later | Space Types | Maintain a local collection of reusable Space definitions |
+| Later | PV | Add the renewable data supported by the canonical export stack |
+| Later | Optional linked evidence | Open and repair links from records to external PDFs and photos |
+| Later | Optional transmission package | Share a fixed model and its selected linked evidence together |
 
 Agreed behaviors carried over from the predecessor's interviews, which still hold because they do
 not depend on designPH, are in [PRODUCT.md](PRODUCT.md).
@@ -94,9 +103,10 @@ linked file does not prevent model editing, calculation or ordinary export.
 ## Exclusions
 
 No designPH integration, no PHI certification workflow and no PHPP export. No hosted datasheet or
-photo storage, specification-status editor, certification roadmap, climate map, built-in model
-viewer, review conversation or automatic model-version service. No HBJSON-to-SketchUp
-reconstruction. Optional linked evidence is in proposed scope and adds none of those services.
+photo storage, specification-status editor, certification roadmap, hosted climate map, bundled or redistributed climate datasets, built-in
+model viewer, review conversation or automatic model-version service. Local climate files,
+manual entry and EPW-derived monthly climate are post-MVP scope. No HBJSON-to-SketchUp reconstruction. Optional
+linked evidence is in proposed scope and adds none of those services.
 
 ## Current capability and release boundary
 

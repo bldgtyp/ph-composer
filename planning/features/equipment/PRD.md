@@ -55,7 +55,7 @@ family 7.
 
 ### Behaviors
 
-- The Equipment tab has a sub-tab per family. Each is an inventory table with inline edit, Add,
+- The Equipment subtab under the primary Systems tab has a family selector. Each family is an inventory table with inline edit, Add,
   Duplicate and Delete with a usage warning.
 - A "Serves" column lists Zones as chips. Editing it opens a Zone picker. The Zone's row in the
   Overview tree shows the same links from the other side.
@@ -174,7 +174,7 @@ Shared shape first. Each family gets its own round later.
 | Q6 | Fans: exhaust ventilators, supportive devices, or both under one tab? | Exhaust ventilators under "Fans", since kitchen hoods and dryers are what Phius asks for. Anything else is a Pump-tab "Other" device |
 | Q7 | Boilers, wood boilers, district heat and PV are in honeybee-ph and not on the list. In or out? | Out for MVP, recorded as later. PV waits for the climate and site packet |
 | Q8 | Are equipment items a library kind? | Later. The libraries interview named Ventilators and Heat Pumps as likely future kinds |
-| Q9 | One Equipment tab with sub-tabs, or the predecessor's reserved "HVAC" tab plus others? | One Equipment tab, as the UI baseline tab row has it |
+| Q9 | One Equipment tab with sub-tabs, or the predecessor's reserved "HVAC" tab plus others? | Confirmed in D4: one Systems primary tab, with Equipment, ERV ducting and Hot-water piping as peer subtabs. Equipment owns the seven family views |
 
 ## Non-goals
 

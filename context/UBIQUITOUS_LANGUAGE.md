@@ -22,7 +22,7 @@ predecessor's designPH terms (adoption, push, origin row, designPH difference, T
 | Starter library | A small CC0 library file of generic records, downloaded separately. Never inside the extension |
 | Library record | One definition as a provider publishes it, carrying a stable record id from that provider |
 | Bookshelfing | Copying a library record and its needed dependencies into the Model so they remain usable and editable offline |
-| In this file | Sidebar state for a library record that already has a local copy. Reuse takes that copy, never a second import. The copy is found by the record id its source carries, so a renamed copy keeps the state |
+| In this file | Sidebar state resolved by source identity: provider kind, library id, record kind and record id. One match reuses the local copy even after rename; multiple matches require explicit resolution. Cross-source reuse follows the same-name/value rule |
 | Source attribution | Where a Model-library record came from: hand entry, a named library provider, or another record in this Model. Recorded on the record. It is not a live dependency and grants the provider no authority |
 | Definition source | The stored form of source attribution: `manual`, `derived` (duplicate or variant of another record), or `library` with the provider and record id |
 | Source update review | Proposed per-record comparison of a copy against its provider's current record, with a per-field choice to take the source value, keep the local value or enter another |
@@ -48,13 +48,13 @@ right column is what the export writes. The rules are in the zones-and-adjacency
 | Zone | The fundamental geometry unit: one SketchUp Group, at Model root or inside plain wrapper groups and never inside another Zone, carrying envelope faces, Spaces, loads and schedules. A building may be one Zone; a Zone is required before export | `honeybee.room.Room` | honeybee calls this a Room. PassiveBuilder never uses Room for it, and honeybee's own `Room.zone` text tag is a different thing that PassiveBuilder does not surface |
 | Building-Segment | A tag on one or more Zones naming the part of the building that becomes one METr model. Every Zone belongs to exactly one Building-Segment; a Model with one Building-Segment never shows the field | honeybee-ph `BldgSegment` | PHX builds one variant per Building-Segment and merges its Zones |
 | Level | An optional classifier tag on a Zone for query, sort and group. A Space inherits its Zone's Level and has none of its own | `Room.story` | Replaces the predecessor's Space-owned Floor level (zones packet, Q6) |
-| Adjacency | A recorded pairing of one face in a Zone with one face in another Zone: same plane, opposite normals, overlapping, stored with both persistent ids and a stamp of the geometry it was solved against | `Surface` boundary condition | Solved on demand, never live |
+| Adjacency | A reciprocal pairing of path-qualified face endpoints in different Zones, carrying Zone UUIDs, face persistent ids and solved world-geometry stamps | `Surface` boundary condition while current | Solved on demand, never live; identity and freshness are separate |
 | Interior face | A face of a Zone whose other side is another Zone, solved or not | `Surface` when solved, `Adiabatic` when marked To neighbour | Distinct from an envelope face facing Outdoors or Ground |
 | To neighbour | The on-screen boundary condition for a face whose other side is not modeled or does not matter: a party wall, a floor over an unmodeled podium | `Adiabatic` | WUFI and METr vocabulary on screen, honeybee's in the stored value (zones packet, Q22) |
-| Restore Zone | The repair offered when classified faces and Spaces have lost their Zone group to an explode or delete; regroups them and rewrites the Zone record from the stamp each carries | | The finding says first that one native Undo also restores everything |
+| Restore Zone | A limited repair regrouping eligible surviving stamped contents and recovering Zone id, Building-Segment and Level; other Zone fields are unavailable and disclosed | | Native Undo is the full recovery route while available; no surviving stamps means no Restore Zone |
 | Closed Zone | A Zone whose group is a manifold solid | Required by EnergyPlus only | `Group#manifold?` |
 | Solve adjacencies | The explicit action that pairs interior faces across Zones, splits them to match, and records the Adjacencies as one Undo step | | Validation offers it again whenever an Adjacency is stale |
-| Stale adjacency | An Adjacency whose faces no longer match the recorded planes and outlines because a Zone was edited | | A finding with one repair |
+| Stale adjacency | An Adjacency whose reciprocal endpoints or world geometry no longer match the solved state | | Re-solving replaces or retires it; unresolved Surface references are omitted from export with findings |
 
 ## Envelope
 
@@ -68,14 +68,14 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Boundary condition | What is on the other side of an envelope face: honeybee's `Outdoors`, `Ground`, `Adiabatic`, `Surface`, and honeybee-ph's `PhAdditionalZone`. Shown as Outdoors, Ground, To neighbour, Surface (set only by Solve adjacencies) and Attached zone |
 | Attached zone | A named unconditioned space outside the envelope (garage, attic, crawlspace) with one temperature reduction factor, default 0.95 per Phius guidebook 6.9.1. A Library record kind, assigned to faces as a boundary condition. Maps to honeybee-ph `PhAdditionalZone` |
 | Ground depth | A per-Zone height, default the Model's z=0, below which the Classify tool suggests Ground |
-| Face record | The classification record on one face: face type, boundary condition, assembly id and the Zone stamp, in PassiveBuilder's own dictionary on the face. Survives split, explode, cut and paste with the face |
+| Face record | The classification record on one face: face type, boundary condition, assembly id and Zone stamp. A retired pair can leave the boundary condition absent. Payload preservation and endpoint validity are distinct requirements, subject to native-host acceptance |
 | Face assignment | The act and the packet: writing face records with the Classify tool, the faces table or Suggest classification (`planning/features/face-assignment/`) |
 | Classify tool | The modal viewport tool that writes face records: palette in the panel, click, drag, Shift-click for connected coplanar faces, one Undo step per gesture |
 | Suggested classification | The face type and boundary condition the tool proposes for a hovered face from its normal and position, using honeybee's thresholds; shown, never written without a click |
 | Unclassified face | A face inside a Zone with no face record. Ignored in a single-Zone model; a finding in a multi-Zone one |
-| Incomplete face | A face record with no assembly, or naming an assembly that no longer exists |
+| Incomplete face | A face record missing a required type, boundary reference or assembly, or naming an invalid or unavailable referenced record. Face assignment's consumer matrix determines blocking versus reported omission |
 | Colour-by | The shared visualization component: one viewport overlay, one panel legend with counts, Locate and Show only this, and one viewport HUD legend drawn while a mode is active. Features register modes; it is the fourth contribution seam. Never writes a SketchUp material |
-| Colour-by mode | One registered way of colouring faces or Zones: a name, an entity kind, a colour function and a label. Face type, boundary condition and assembly come from face assignment; Zone, Building-Segment and Level from the zones packet |
+| Colour-by mode | One registered way of colouring the model: a name, an entity kind (a face, a Zone, a Volume or another kind a feature names), a colour function, a label and optionally derived geometry such as the Volume preview. A readout, such as Space labels or Selection totals, registers separately and does not depend on the active mode. Face type, boundary condition and assembly come from face assignment; Zone, Building-Segment and Level from the zones packet |
 | HUD legend | The compact text legend the Colour-by overlay draws in the upper left of the viewport while a mode is active, so a screenshot carries its own key |
 | Classification overlay | The Colour-by overlay in its three face modes |
 | Faces table | The panel inventory of face records with editable type, boundary condition and assembly cells, area, state and Locate |
@@ -87,8 +87,8 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Layer-Segment | One side-by-side strip of a Layer: a Material and a width. Always written with its qualifier, as Building-Segment is. Exports as one column of the layer's honeybee-ph `PhDivisionGrid` |
 | SD assembly | A placeholder assembly for early design: three real layers sized to a target U-value, after honeybee-grasshopper-ph's SD constructions. Planned, not in the first assemblies phase. PassiveBuilder has no assembly without layers |
 | Assembly usage | The set of envelope faces assigned to a Model-library assembly, measured by a scan and reported as of the scan time |
-| Thermal bridge | A linear or point junction the user identifies on the Model, with a psi-value or chi-value and a measured length or count |
-| Thermal bridge assignment | The record binding an edge or point in the Model to a thermal bridge type. Planned after face assignment |
+| Thermal bridge | A linear junction the user identifies on the Model, with a psi-value and measured length. Point bridges and chi-values are outside the MVP because honeybee-ph has no canonical carrier |
+| Thermal bridge assignment | The record binding an edge in the Model to a Thermal Bridge Type. The MVP has no point assignment |
 
 ## Windows
 
@@ -96,9 +96,9 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | --- | --- |
 | Frame | One reusable head, jamb, sill or mullion profile with its product properties. A window element references four. The predecessor said Frame segment |
 | Glazing | A reusable glazing definition with its product properties |
-| Psi-Install Type | A reusable installation-junction definition assigned to Window Type perimeter edges. Unset edges visibly inherit the user-selected Model default. honeybee-ph calls the serialized concept Install Type |
+| Psi-Install Type | A reusable installation-junction definition assigned to Window Type perimeter edges. Unset edges visibly inherit the user-selected Model default. It is an authoring layer over the Frame, so one Frame product serves every wall it is installed in without a copy per wall. On export its value is written to that side of the frame, honeybee-ph's `PhWindowFrameElement.psi_install` |
 | Window Type | A reusable exact-size and layout configuration defined by size, glazing, frames, operation and handedness, and perimeter Psi-Install Type assignments. Installation differences use explicit named variants; placements follow their type with no per-instance overrides |
-| Window unit | One placed use of a Window Type: an instance of the type's flat component, which PassiveBuilder generates with one face per glazed element, glued to and cutting an envelope face |
+| Window unit | One placed use of a Window Type: an instance of the type's flat component, which PassiveBuilder generates with one face per glazed element, glued to and cutting an envelope face. Each unit has its own identity, and a copied unit receives its own the next time the feature changes the Model |
 | Install depth | The reveal depth from the wall's outer surface to the glass. A model default with a Window Type override. Exports to honeybee-ph `install_depth` |
 | Window occurrence | A placed window reached through its full SketchUp parent path. Repeated parents expose the same child through different occurrences, and its stored attributes are not independent per occurrence. Independent edits require explicit parent uniqueness; PassiveBuilder never makes a parent unique automatically |
 | Window anchor | The fixed point for placement and resize, named by row and column on the opening: `sill_left`, `sill_center`, `sill_right`, `center_left`, `center`, `center_right`, `head_left`, `head_center`, `head_right`. Sill center is the default |
@@ -123,6 +123,8 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Selection totals | The HUD readout of summed iCFA, net volume and airflows for the selected Spaces |
 | Airflow balance view | The grouped totals table of supply, extract and transfer airflows with an imbalance warning label, grouped by Zone until ventilators exist and by ventilator with Zones underneath afterwards |
 | Move Space to Zone | The action that relocates one whole Space group into another Zone group, keeping world position and records |
+| Mark floor | The Spaces tool that marks a face inside a Volume as a Floor Segment and sets whether it counts toward iCFA. A separate tool beside Classify, not a mode of it |
+| Make independent | The repair for a copied Space, Volume or Floor Segment: the copy and everything inside it receive new identities, as one Undo step. Until it runs, the shared identity blocks export |
 | iCFA | Interior conditioned floor area, Phius's reference floor area: drywall-to-drywall of the thermal boundary, including interior walls and stairs, at least 7 ft clear height, open-to-below excluded (guidebook 4.4.1.4). It replaces the predecessor's TFA and carries no PHI reduction factors |
 | Net volume | Net floor area times average clear ceiling height, summed over Volumes. Shown as Vn50 where a consumer calls it that. Phius does not require it for certification (guidebook 6.4.3); METr and WUFI still take it |
 | Space default height | Explicit Space value copied to new Volumes; not inferred from floor geometry |
@@ -131,7 +133,7 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Authoring context | The active Space or Volume editing path that determines structural ownership |
 | Reconciliation | Updating PassiveBuilder structure and protection after external geometry changes |
 | Volume protection | Contextual locking that prevents independent Volume movement outside its edit context |
-| Supply, Extract and Transfer airflow | Separate optional Space inputs; missing is different from explicitly zero. When present they override the Zone's ventilation load for that Space; when absent the Zone's load applies, as honeybee-ph does |
+| Supply, Extract and Transfer airflow | Separate optional Space inputs, stored so that unset is different from explicitly zero. When all three are unset the Zone's ventilation load applies. When any one is set the Space is user-specified: its values override the Zone's load and an unset rate counts as zero |
 | Ventilation assignment | Relationship from a Space to serving ventilation equipment |
 
 ## Systems
@@ -140,6 +142,15 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | --- | --- |
 | Equipment | Product definitions and installed equipment records; their exact distinction awaits the equipment interview |
 | Piping / Ducting | Authored runs, segments and system relationships guided by honeybee-ph; details await interviews |
+
+## Site and climate
+
+| Term | Meaning |
+| --- | --- |
+| Climate snapshot | The model-owned monthly and, when supplied, peak-load climate values plus provenance. It remains readable without its source file or provider |
+| EPW-derived monthly climate | Preliminary monthly climate produced from a user-selected annual EPW by honeybee-ph. It is not certification approved and has no peak-load cases |
+| Monthly-demand ready | The climate has the complete monthly values required by preliminary demand calculations and overlays |
+| METr-climate ready | The climate has both monthly values and the user-supplied peak-load cases required by the current PHX METr exporter |
 
 ## Export
 

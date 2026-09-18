@@ -12,6 +12,14 @@ is in the predecessor's archive at `../../ph-navigator-sketchup/planning/archive
 Nothing here is implemented yet. The founding brief's transplant tables say which predecessor code
 carries each rule; until that code lands, this file describes the target and the reasons for it.
 
+[EXTENSIBILITY.md](EXTENSIBILITY.md) owns the accepted contributor architecture, including the
+separation of pure Ruby domain behavior from SketchUp adapters, public scripting, metadata and
+registered extension data. Exact new API contracts remain for the owning implementation plans.
+
+[AGENT_INTERFACE.md](AGENT_INTERFACE.md) governs external clients of those public operations.
+Their results and confirmation handling must work without an open panel. The development eval
+bridge remains separate from the proposed shipped agent interface.
+
 ## Proposed scope versus implemented contracts
 
 The product direction is in [`../docs/PRD.md`](../docs/PRD.md). Three technical decisions are
@@ -40,9 +48,11 @@ export do not admit arbitrary local paths or attachment bytes.
 
 ## Namespace
 
-Working assumption, open in the founding brief until the name checks close: the Ruby module is
-`PassiveBuilder`, the attribute dictionaries are prefixed `passive_builder`, and the RBZ is
-`passive_builder.rbz`. Where this file names a module, read it as that assumption.
+The name checks closed on 2026-09-18. D8 confirms the following working development namespace; it
+does not settle the final public name or organization. The Ruby
+module is `PassiveBuilder`, the attribute dictionaries are prefixed `passive_builder`, and the RBZ
+is `passive_builder.rbz`. Treat these as the working implementation namespace; changing the public
+name later requires an explicit migration decision rather than a partial rename.
 
 ## SketchUp Model and transaction rules
 
@@ -117,7 +127,8 @@ remain path-qualified. Session `entityID` is never durable identity.
 
 The predecessor read envelope classification, TFA and shading from designPH and never wrote them.
 PassiveBuilder owns all of it, in its own attribute namespace, through its own tools. The unit
-that owns a face is the Zone, one closed group per honeybee Room, with Spaces inside it; the
+that owns a face is the Zone, one Group per honeybee Room, with Spaces inside it. Closure is a
+consumer-specific validation rule, not a requirement for creating or exporting every Zone. The
 rules are the zones-and-adjacency packet's to settle
 (`../planning/features/zones-and-adjacency/PRD.md`), and these are the constraints it starts from:
 
@@ -217,6 +228,14 @@ The contract, carried over from the predecessor's organization library and gener
   provider-kind contract, including its "In this file" projection. The feature that imports the
   kind hands over its local records. The library feature names no other feature.
 
+The libraries packet defines source identity, ambiguity, catalog generations and copy/replacement
+semantics. Providers only return catalog values. Pure kind adapters validate, map, fingerprint and
+project library-file exports; owning features supply public record queries and mutation operations.
+The library coordinator applies a reviewed proposal through those operations in one transaction,
+including assignment when requested. Reads never copy or open dialogs. UI and scripts use the same
+revision-checked operations with explicit model targets. Registration diagnoses duplicate ids,
+missing dependencies and incompatible versions. These remain requirements pending implementation.
+
 The core holds the library file provider and one generic connection provider. PH-Navigator web,
 METr's own catalog and a firm's intranet server are each an address that implements the published
 protocol, with sign-in by none, a static token or device-code approval as the server declares.
@@ -236,12 +255,16 @@ dispatcher, an observer callback, a task tick, or the Export run. Input coercion
 
 ## Panel protocol
 
-`shell/protocol.rb` is the single list of panel message types, their direction, body kind, owner
+`shell/protocol.rb` is the single list of common transport message types, their direction, body kind, owner
 and payload keys. Add a type there before publishing or handling it. `shell/message.rb` refuses an
 outbound payload key its type does not declare. A type is handled and published only inside its
 owner's package, which a test checks. Types a host probe alone uses are marked `development_only`.
 A generated fixture pins the table and the Node agreement test fails when the panel handles or
 sends a type the table does not declare.
+
+Feature-specific action schemas register through the action interface, without new feature-specific
+transport types in this table. The shell validates the common envelope and dispatches against the
+registered schema. The exact schema registration API is pending foundation design.
 
 Every feature's panel request travels one channel: the panel sends `action.invoke` with `action`,
 `params`, `request_id` and `model_session`, and `shell/action_channel.rb` answers a correlated
@@ -307,10 +330,10 @@ eslint. The 2023 host's CEF version is confirmed when a 2023 host is available.
 
 What a new feature owns and where each rule is enforced. The predecessor's restructuring made
 these true of every feature it had, so a new one that follows them needs no change to `shell/`,
-`session/`, the composition root or another feature's folder.
+`session/` or another feature's folder. A composition-root registration is permitted.
 
-- **One folder.** `features/<name>/`, listed in the composition root's `FEATURES`. Nothing outside
-  it names the feature, and it names no other feature's internals.
+- **One folder.** `features/<name>/`, listed in the composition root's `FEATURES`. Outside that
+  registration, shared orchestration names no feature, and features name no other feature's internals.
 - **One `install`.** Every registration happens there: actions, the snapshot section, inbound
   panel handlers, close and ready work, host-event subscriptions, the export contributor.
 - **One feature flag**, read through the snapshot so the panel can hide or lock the whole surface,

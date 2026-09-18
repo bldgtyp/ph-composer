@@ -12,7 +12,7 @@ Type record kinds.
 
 1. [PRD.md](PRD.md): what ports, what drops, the three candidate representations for a placed
    window and the one chosen, the records, placement and resize, validation, the honeybee-ph export
-   mapping, and the 20 decisions recorded in the interview.
+   mapping, and the 26 decisions recorded.
 2. [STATUS.md](STATUS.md).
 
 No PLAN.md yet. It follows the interview, a host spike on the chosen representation and the
@@ -22,7 +22,8 @@ foundation transplant.
 
 In: Frame, Glazing, Psi-Install Type and Window Type records; the graphical Builder;
 Installs; the U-Values report; the window unit; Place, Swap type and type-driven resize; the
-Schedule; export to honeybee Apertures with honeybee-ph frames, glazings and install types.
+Schedule; export to honeybee Apertures with honeybee-ph frames and glazings, psi-install written into the
+frame elements.
 
 Out: designPH reading, adoption, push, preview reference, difference review and shading handoff;
 shading of any kind, which METr handles after export; frame and reveal geometry; curtain wall

@@ -10,8 +10,8 @@ interior faces between Zones are found, recorded and kept honest.
    by consumer, and the decisions the interview must record.
 2. [STATUS.md](STATUS.md): current state, next step, blockers.
 
-No PLAN.md yet. The implementation sequence is written after the interview closes the eight
-decisions in the PRD and after the foundation transplant lands, because the Zone record and the
+No PLAN.md yet. The interview and authorized architecture corrections are recorded in the PRD.
+The implementation sequence follows the foundation transplant, because the Zone record and the
 solver sit on the record engine and reconciler that arrive with it.
 
 ## Scope

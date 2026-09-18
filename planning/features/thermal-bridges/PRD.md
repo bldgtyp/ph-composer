@@ -49,8 +49,8 @@ and PHX `to_METr_JSON/metr_schemas.py`.
   on a Room or a Face.
 - METr receives `n`, `typeTbZ` (the group number, negated), `lengthTbZ` and `psiTbZ` per zone.
   `fRsi_value` and `is_interior_pipe` are not written to METr.
-- There is no point thermal bridge class. A chi-value exists only on a window frame element.
-  `docs/PRD.md` currently promises "linear and point thermal bridges" and chi-values. See Q3.
+- There is no point thermal bridge class. A chi-value exists only on a window frame element. D3
+  confirms that point thermal bridges and chi-values are wholly outside the MVP. See Q3.
 
 ## Records
 
@@ -149,7 +149,7 @@ the dictionary on which resulting edges. It runs with the two deferred host spik
 | --- | --- | --- |
 | Q1 | Does the assignment live on the edge, with no separate thermal bridge record? | Yes. The edge is the record. Fewer things to keep in step |
 | Q2 | One psi-value per type, or may an assignment override it? | Per type only. A second value is a second type, the same rule Window Types follow |
-| Q3 | Point thermal bridges and chi-values: `docs/PRD.md` promises them, honeybee-ph has no carrier | Linear only for MVP. Change the PRD line. A point bridge can be entered as a type with quantity and an equivalent psi times a 1 m length if a project needs one before honeybee-ph grows a class |
+| Q3 | Point thermal bridges and chi-values: honeybee-ph has no carrier | Confirmed in D3: linear only for MVP. Point bridges and chi-values are not authored, assigned or exported, and are never encoded as fake 1 m linear bridges |
 | Q4 | Group words: METr's or honeybee-ph's? | METr's screen words, as Assemblies did. Confirm the third word against METr's screen |
 | Q5 | Do connected same-type edges merge into one exported thermal bridge? | Yes. A parapet of 40 edges should be one METr row |
 | Q6 | Is `quantity` exposed? | Yes, on the assignment, default 1. It covers a detail repeated on floors that are not modelled |
@@ -160,6 +160,9 @@ the dictionary on which resulting edges. It runs with the two deferred host spik
 | Q11 | Window install edges: can a user assign a Thermal Bridge Type to a window perimeter? | No. Psi-Install Types own those edges. A finding if both exist would double count |
 
 ## Non-goals
+
+Point thermal bridges and chi-values in any MVP surface or artifact. They may be reconsidered only
+as later scope after the canonical data model has a real point-bridge carrier.
 
 No psi-value calculation. No fRsi. No automatic junction detection. No Flixo link.
 

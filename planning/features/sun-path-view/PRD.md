@@ -57,8 +57,9 @@ comparison is defined and passed, no writes to SketchUp's location, north or tim
 
 ## Dependencies
 
-The deferred overlay spike. [climate-data](../climate-data/README.md) for the site location,
-optional under Q1.
+The foundation's overlay lifecycle and a current-host line-drawing proof. The filled-face overlay
+spike does not gate this line-only view. [climate-data](../climate-data/README.md) supplies the site
+location when present and is optional under Q1.
 
 ## Acceptance shape
 
