@@ -1,7 +1,7 @@
 # Phase 0 implementation plan
 
 DATE: 2026-09-18
-STATUS: Scoped. Implementation plan; no implementation authorization.
+STATUS: In progress. Implementation authorized 2026-09-18 on branch `phase-zero-foundation`.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

@@ -13,7 +13,7 @@ The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Phase 0 implementation planning and handoff | refactor | Scoped | none (local planning draft) | [refactor/phase-zero/](refactor/phase-zero/README.md); detailed stages, contracts and acceptance prepared; execution unauthorized |
+| Phase 0 implementation planning and handoff | refactor | In progress | none (local planning draft) | [refactor/phase-zero/](refactor/phase-zero/README.md); authorized 2026-09-18 on `phase-zero-foundation`; P0-A complete, P0-C next |
 | Zones and adjacency | feature | Scoped, interviewed | none (no remote) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
 | Face assignment | feature | Scoped, interviewed | none (no remote) | [features/face-assignment/](features/face-assignment/README.md) |
 | Validation and export | feature | Requested, PRD drafted | none (no remote) | [features/validation-and-export/](features/validation-and-export/README.md); owns the Phase 1 handoff |
@@ -33,7 +33,7 @@ The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 | Window component host spike (glue, cut, select, rewrite, no-scale) | spike | Deferred | none (no remote) | window-types STATUS; runs with the overlay spike |
 | Edge identity spike (attribute survival across split, weld, move, cut, Undo, reopen) | spike | Requested | none (no remote) | thermal-bridges PRD, "Edge tagging rules"; gates thermal bridges, piping and ducting |
 | Overlay fill spike (alpha, depth, cost) | spike | Deferred | none (no remote) | face-assignment PRD, Q22; runs after the feature packets are drafted |
-| Foundation transplant from the predecessor | refactor | Scoped | none (local planning draft) | [refactor/foundation-transplant.md](refactor/foundation-transplant.md); detailed Phase 0 plan prepared |
+| Foundation transplant from the predecessor | refactor | In progress | none (local planning draft) | [refactor/foundation-transplant.md](refactor/foundation-transplant.md); executed through the phase-zero packet, P0-A complete |
 | PHX without Excel (spike) | external | Requested | [PH-Tools/PHX#157](https://github.com/PH-Tools/PHX/issues/157) | founding brief, open questions |
 | Cross-cutting decisions | decision register | D1-D11 confirmed; contributor architecture and external-agent priority recorded | none (no remote) | [DECISIONS.md](DECISIONS.md); [contributor architecture](../context/EXTENSIBILITY.md); [agent interface](../context/AGENT_INTERFACE.md) |
 

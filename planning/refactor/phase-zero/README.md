@@ -1,14 +1,15 @@
 # Phase 0: gates and foundation
 
 DATE: 2026-09-18
-STATUS: Scoped. Detailed planning packet prepared; implementation is not authorized.
+STATUS: In progress. Implementation authorized 2026-09-18; P0-A complete, P0-C next.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft; origin exists, issue not created)
 
 Phase 0 is planned for agent handoff. Ed's scope and behavior decisions are recorded; the packet
 now supplies contract designs, source disposition, seven stage plans and an acceptance register.
-Implementation and spike execution still require authorization. The first execution stage checks
-the handoff against the target checkout instead of reopening the interviews.
+Ed authorized implementation on 2026-09-18; work proceeds on branch `phase-zero-foundation` with
+one commit per completed unit. P0-A checked the handoff against the frozen source. Spike execution
+(P0-B) still needs Ed's scheduling and an available host.
 
 ## Read order
 

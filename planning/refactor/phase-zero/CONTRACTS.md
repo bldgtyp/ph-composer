@@ -1,7 +1,7 @@
 # Foundation contract design
 
 DATE: 2026-09-18
-STATUS: Scoped. Implementation plan; no implementation authorization.
+STATUS: Scoped. Implementation authorized 2026-09-18; P0-A refinements recorded below.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
@@ -21,7 +21,7 @@ root lists features explicitly. No dynamic plugin loader or separately installed
 | Feature | Stable namespaced id, contract version, declared feature dependencies, install entrypoint |
 | Record kind | Kind id, schema version, validator, SI field descriptors, declared references, persistence adapter |
 | Query/action | Namespaced id, description, input/output schemas, examples, units, required capabilities, handler |
-| Action additions | Side effects, affected-data dependencies, preconditions, confirmation policy, atomicity |
+| Action additions | Side effects, affected-data dependencies, preconditions, confirmation policy, atomicity, optional menu/context-menu placement |
 | Snapshot section | Owner id, query-backed projection, schema |
 | Export contributor | Owner/version, prepare and contract callbacks, report fields and privacy declarations |
 | Translation section | Id/version, typed input/result, required section ids/versions, translate callback |
@@ -37,6 +37,11 @@ Use contract version 1 initially, exact declared major compatibility, and explic
 schema-version ranges. Unknown fields in operation envelopes are rejected to catch caller errors;
 record `user_data` remains intentionally extensible. Declarative schemas drive Ruby validation,
 discovery and the JS contract fixture. Do not add a second hand-maintained action catalog.
+
+Menu and context-menu entries are part of an action declaration, with the entity test supplied by
+the owning feature. The shell renders declared placements and never branches on a feature's
+entities (P0-A found `shell/commands.rb` doing so for Spaces). Phase 0 registers no menu entry.
+Registration diagnostics use the `registration.*` codes listed under C2.
 
 No library provider, importer, Colour-by feature or product exporter is implemented here. Their
 future registrations must use the same pattern but need not acquire speculative APIs in Phase 0.
@@ -68,6 +73,41 @@ affected references, resulting revision and validation findings. Internal diagno
 in the log. A no-write user refusal ends with `Nothing was written.` A rollback warning says
 that no changes were retained. Never claim rollback succeeded without verifying the boundary.
 
+`query` and `invoke` take a required `context:`; nothing defaults to `Sketchup.active_model` or the
+selection. Only the panel client chooses its own session. Dispatch presents nothing: it returns the
+outcome, and the calling client shows the message (the panel as a persistent warning). Result
+fields are nested and named. A handler's value never merges into the envelope.
+
+### Outcome vocabulary (pinned by P0-A)
+
+| `status` | Meaning | Allowed `effect` |
+| --- | --- | --- |
+| `completed` | The operation ran; a no-change edit completes with no Undo entry | `committed`, `none` |
+| `refused` | Rejected before any transaction: validation, stale state, wrong session, missing capability | `none` |
+| `failed` | An error after the transaction opened | `rolled_back` (verified), `unknown` |
+| `busy` | Host state prevents safe execution now; the caller may retry after inspecting state | `none` |
+| `pending` | A retry of a request that is still running | `none` |
+| `cancelled` | The user or caller cancelled before anything was written | `none` |
+
+`effect: unknown` names the case C2 already forbids hiding: abort ran, but the unchanged-data check
+failed or could not run. Codes are stable `noun.condition` strings, following TECH_STACK's
+`payload.contract`. One code per outcome; `effect` carries what happened to the Model.
+
+| Area | Codes |
+| --- | --- |
+| Envelope | `request.malformed` (unknown field, wrong type), `request.unknown_operation`, `request.api_version`, `request.capability_denied` |
+| Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |
+| Session and host | `session.unknown` (closed, reopened or never issued), `session.busy` (modal tool, transition, unsettled work; reason in detail) |
+| Preconditions | `revision.stale`, `edit_path.stale`, `target.not_found`, `target.changed` |
+| Validation | `params.invalid`, `validation.failed` (findings attached), `reference.invalid` |
+| Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_failed`, `copy.rule_missing` |
+| Query | `query.limit_invalid`, `query.cursor_expired` |
+| Operation | `operation.failed`, `operation.rollback_unverified` |
+| Registration (diagnostics) | `registration.duplicate_id`, `registration.missing_dependency`, `registration.cycle`, `registration.contract_major`, `registration.schema_invalid` |
+| Translation and export | `payload.contract`, `section.missing_dependency`, `section.cycle`, `section.version_unsupported`, `object.unavailable`, `dependency.unavailable`, `export.unavailable`, `export.privacy_undeclared`, `export.relevance_unknown` |
+
+New codes are added here, with a test, before a caller relies on them.
+
 ## C3: revision, transaction and host execution
 
 Use one monotonically increasing revision per open Model session in Phase 0. It advances on
@@ -88,7 +128,9 @@ Phase 0 adds no durable queue of ordinary edits. Revalidate a scheduled callback
 Validate the full change set before opening the transaction. One operation owns one native Undo
 step. Feature helpers can join an explicit caller-owned transaction context; they may not open
 nested independent operations or publish intermediate snapshots. On failure, abort and restore
-suppression state, then verify unchanged data and references. No-change edits add no Undo entry.
+suppression state, then verify unchanged data and references. The operation boundary captures a
+pre-image of its declared targets before the transaction and compares it after abort; the
+predecessor's `ModelOperation.perform` aborted without this check. No-change edits add no Undo entry.
 Return a final authoritative snapshot/revision before settling the matching panel action result.
 
 Preview of a compound/destructive change is read-only, bound to its exact inputs and revision.
@@ -104,13 +146,25 @@ Clients serialize their own mutations; two clients have separate handles.
 Remember each caller's highest accepted sequence until the session ends. Retain up to 256 recent
 outcomes for 15 minutes, bound to the canonical request payload. Same sequence and same payload
 returns the retained outcome without another transaction. Same sequence with different payload
-is refused. An older sequence whose result expired is refused as `outcome_unavailable`; it is
+is refused. An older sequence whose result expired is refused as `request.outcome_unavailable`; it is
 never treated as a new request. A running request returns pending, not a second execution.
 
 Caller/session handles do not survive restart. A lost handle requires fresh discovery and state
 inspection before issuing new work. Do not claim exactly-once behavior across process failure.
 Expiry cannot make a previously used sequence writable again. These bounds are implementation
 defaults to document and test, not a user-facing setting.
+
+### Pinned bounds (P0-A)
+
+| Item | Value |
+| --- | --- |
+| Session id | Random UUID per opened Model; never a path or persistent entity id |
+| Revision | Integer, 1 at session creation, compared for equality only; extends the session's existing `generation` counter |
+| Caller handle | Opaque random string issued by the application per session; invalid after session end |
+| Sequence | Integer from 1, strictly increasing per handle; gaps allowed. A sequence at or below the highest accepted one is a retry, never new work |
+| Retained outcomes | Up to 256 per session across all handles, oldest evicted first, each for at most 15 minutes |
+| Payload binding | Canonical JSON of operation name, params and preconditions (`core/canonical_json.rb`) |
+| Query page | Default 100, maximum 500; 0, above 500 and non-integers are `query.limit_invalid` |
 
 ## C5: record and extension-data lifecycle
 

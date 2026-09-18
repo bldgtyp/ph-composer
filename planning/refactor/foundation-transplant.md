@@ -1,7 +1,7 @@
 # Foundation transplant: scope
 
 DATE: 2026-09-18
-STATUS: Scoped. Detailed Phase 0 planning packet prepared; no implementation authorization.
+STATUS: In progress. Implementation authorized 2026-09-18; executed through the phase-zero packet.
 AUTHOR: Ed May, BLDGTYP, with Codex review
 ISSUE: none (local planning draft)
 

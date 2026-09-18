@@ -1,7 +1,7 @@
 # Phase 0 stage index
 
 DATE: 2026-09-18
-STATUS: Scoped. Detailed stage plans prepared; no implementation authorization.
+STATUS: In progress. Implementation authorized 2026-09-18; see STATUS.md for stage states.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

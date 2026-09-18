@@ -1,7 +1,7 @@
 # P0-B: four technical investigations
 
 DATE: 2026-09-18
-STATUS: Scoped. Not executed; implementation authorization required.
+STATUS: Scoped. Not executed; spike execution needs Ed's scheduling and an available host.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

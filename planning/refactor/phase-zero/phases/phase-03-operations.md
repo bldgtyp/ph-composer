@@ -1,7 +1,7 @@
 # P0-D: records, sessions and public operations
 
 DATE: 2026-09-18
-STATUS: Scoped. Not executed; implementation authorization required.
+STATUS: Scoped. Implementation authorized 2026-09-18; not started.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

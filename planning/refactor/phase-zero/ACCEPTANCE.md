@@ -1,7 +1,7 @@
 # Phase 0 acceptance register
 
 DATE: 2026-09-18
-STATUS: Scoped. Implementation plan; no implementation authorization.
+STATUS: In progress. Implementation authorized 2026-09-18; A01 inventory portion evidenced by P0-A.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
@@ -11,7 +11,7 @@ without a linked result. No code or host gate was run during planning.
 
 | ID | Required evidence | Owner |
 | --- | --- | --- |
-| A01 | Frozen source inventory and explicit disposition of every transplanted dependency | P0-A/C |
+| A01 | Frozen source inventory and explicit disposition of every transplanted dependency. Inventory portion: [P0-A](evidence/phase-00-handoff.md); transplanted-file dispositions pending P0-C | P0-A/C |
 | A02 | Ruby 2.7.2 and 3.2.2 full offline gates, Chromium 88 syntax/API checks, typed Python checks | P0-G |
 | A03 | RBZ inventory, license notices, no private fixtures, development bridge/examples excluded | P0-C/G |
 | A04 | Shipping namespace/designPH deny checks; empty extension loads with exact installed identity | P0-C/G |

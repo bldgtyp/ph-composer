@@ -1,7 +1,7 @@
 # P0-A: verify the implementation handoff
 
 DATE: 2026-09-18
-STATUS: Scoped. Not executed; implementation authorization required.
+STATUS: Complete 2026-09-18. Evidence: [evidence/phase-00-handoff.md](../evidence/phase-00-handoff.md).
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

@@ -1,21 +1,22 @@
 # Phase 0 status
 
 DATE: 2026-09-18
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft; origin exists, issue not created)
 
 ## Current handoff
 
-Detailed PLAN, CONTRACTS, SOURCE_INVENTORY, seven phase files and ACCEPTANCE are prepared.
-Ed's scope/behavior decisions are resolved. Start implementation at P0-A after authorization;
-P0-B needs spike execution scope. No code, host spike or cross-repository change ran.
+Ed authorized Phase 0 implementation on 2026-09-18. Work runs on branch `phase-zero-foundation`
+from `152e796`, one commit per completed unit. P0-A is complete: source closure verified against
+the frozen SHA, inventory corrected, outcome vocabulary and bounds pinned in CONTRACTS. Next: P0-C.
+P0-B needs Ed's spike scheduling and an available host. No code or host spike has run.
 
 | Stage | State | Next action |
 | --- | --- | --- |
-| P0-A handoff check | Scoped | Verify source closure and pin contract fixtures after authorization |
-| P0-B investigations | Scoped | Execute the four documented procedures when authorized |
-| P0-C tooling/bootstrap | Scoped | Await P0-A and implementation authorization |
+| P0-A handoff check | Complete | [Evidence](evidence/phase-00-handoff.md); A01 inventory portion satisfied |
+| P0-B investigations | Scoped | Execute the four documented procedures once Ed schedules them and a host is available |
+| P0-C tooling/bootstrap | Scoped | Next stage: empty extension, test helpers, packaging and namespace checks |
 | P0-D records/operations | Scoped | Implement C1 through C5 after P0-C |
 | P0-E panel/units | Scoped | Await P0-D |
 | P0-F runtime/export shell | Scoped | Implement C6 after P0-D/P0-E |
@@ -30,8 +31,12 @@ Reviewed ROADMAP, foundation scope, Units packet, decision register and applicab
 authorities. Verified predecessor SHA resolution, the configured remote and PHX #157's open status.
 Reviewed this packet for scope/dependency consistency and checked local Markdown link targets.
 Reviewed the detailed plans against accepted decisions and the architecture rubric. Source inventory
-was checked against the frozen tree. Local links and whitespace checks passed. No implementation
-or host acceptance evidence exists; A01 through A21 remain pending.
+was checked against the frozen tree. Local links and whitespace checks passed.
+
+P0-A (2026-09-18): the frozen SHA resolves; every listed path exists except one misnamed test;
+JavaScript, Ruby and Python references out of the listed files were followed and each real coupling
+dispositioned. See [evidence/phase-00-handoff.md](evidence/phase-00-handoff.md). Paper verification
+only. A01's inventory portion is satisfied; A02 through A21 remain pending.
 
 ## Ledger
 
@@ -48,3 +53,5 @@ or host acceptance evidence exists; A01 through A21 remain pending.
 | 2026-09-18 | Ed confirmed all-or-nothing ordinary edits/batches, one native Undo step, stale refusal and clear failure warnings confirming no change. Recorded in TECH_STACK and AGENT_INTERFACE |
 | 2026-09-18 | Ed confirmed `bldgtyp/ph-composer` as the development home. Updated D8 and related documents; the repository-home discrepancy is resolved. Any future move requires an explicit decision |
 | 2026-09-18 | Prepared detailed contract design, source inventory, seven execution-stage plans and acceptance register. Documentation-only consistency review; implementation remains unauthorized |
+| 2026-09-18 | Ed authorized Phase 0 implementation. Branch `phase-zero-foundation` created from `152e796` |
+| 2026-09-18 | P0-A Complete. Closure verified at `f358ebf`; Python shell reclassified as pattern reference; Spaces session candidates stay deferred; outcome vocabulary, rollback verification and bounds pinned in CONTRACTS |

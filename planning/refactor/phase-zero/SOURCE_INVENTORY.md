@@ -1,7 +1,7 @@
 # Phase 0 source inventory
 
 DATE: 2026-09-18
-STATUS: Evidence complete for planning. Inventory only; no source has been transplanted or verified in PH-Composer.
+STATUS: Closure verified by P0-A on 2026-09-18. No source has been transplanted or verified in PH-Composer.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft; origin exists, issue not created)
 
@@ -16,7 +16,8 @@ not implementation claims.
 
 Shipping paths without a `src/` prefix are relative to the frozen
 `src/ph_navigator_sketchup/` directory. Tooling paths are relative to the predecessor root.
-Brace expressions identify source groups; P0-A verifies the complete transitive copy list.
+Brace expressions identify source groups. P0-A verified the transitive closure on 2026-09-18; its
+corrections are applied below and detailed in [evidence/phase-00-handoff.md](evidence/phase-00-handoff.md).
 
 ## Shipping foundation
 
@@ -26,14 +27,14 @@ Brace expressions identify source groups; P0-A verifies the complete transitive 
 | `core/{canonical_json,coerce,deep_copy,diagnostics,dictionaries,errors,geometry_reference,json_walk,local_file_url,model_fingerprint,model_operation,model_walker,polygon2d,units,vec3}.rb` | Adapt | `core/`. Keep primitives; remove designPH diagnostics, dictionary assumptions and export-fingerprint semantics. `material_categories.rb` defers to Assemblies/materials. |
 | `core/records/{identity,schema}.rb` | Adapt | `core/records/`. Foundation identity/schema seam, redesigned for PH-Composer kinds, `user_data`, extension data and references. |
 | `core/records/sources.rb` | Adapt | `core/records/`. Retain only accepted neutral manual/derived/library provenance; drop `DesignPhModel`. Provider provenance may not privilege a source. |
-| `session/{model_session,sessions,host_observers,timer}.rb` | Adapt | `session/`. One ModelSession, generation and host events. Extract only generic deferred reconciliation/Undo support from `features/spaces/{pending_work,reconciler,undo_ledger}.rb`. |
-| `shell/{action_channel,actions,message,panel,preferences,protocol,commands,feature_flags}.rb` | Adapt | `shell/`. One action/transport boundary and preferences; replace predecessor callback, designPH gate/snapshot and feature flags with the accepted public-operation contract. The contract proof's synthetic feature is a development-only composition entry. |
-| `html/{module,dom,fields,icons,panel,request,snapshot,workspace,table,view_controls,overlay,record_edits,record_form}.js`, `html/{base,shell,table,overlay}.css`, `html/index.html`, `html/sections/{shell,export}.js` | Adapt | `html/`. Shared kit and empty Overview/Export shells. Regenerate module/style inventory and remove `Phn`, `phn_message`, product sections and designPH gating. |
+| `session/{model_session,sessions,host_observers,timer}.rb` | Adapt | `session/`. One ModelSession, generation and host events. P0-A found nothing generic to extract from `features/spaces/{pending_work,reconciler,undo_ledger}.rb`; the C3 dirty flag and suppression depth are new session code, and the three files defer with Spaces. |
+| `shell/{action_channel,actions,message,panel,preferences,protocol,commands,feature_flags}.rb` | Adapt | `shell/`. One action/transport boundary and preferences; replace predecessor callback, designPH gate/snapshot and feature flags with the accepted public-operation contract. Drop every `VersionGate` call and the Spaces context-menu branch in `commands.rb`. The contract proof's synthetic feature is a development-only composition entry. |
+| `html/{module,dom,fields,icons,panel,request,snapshot,workspace,table,view_controls,overlay,record_edits,record_form}.js`, `html/{base,shell,table,overlay}.css`, `html/index.html`, `html/sections/{shell,export}.js` | Adapt | `html/`. Shared kit and empty Overview/Export shells. Regenerate module/style inventory and remove `Phn`, `phn_message`, product sections and designPH gating. `workspace.js` drops its `domain_options` dependency; `domain_options.js` defers to Assemblies. |
 | `core/units.rb`, `html/{units,unit_tables,unit_numbers,unit_field,unit_preferences,length_expression}.js` | Adapt | `core/units.rb`, flat `html/` files. Shared Units infrastructure only: SI storage, display preferences, parser/formatter and inherited registry rows. |
 | `export/{artifact_hygiene,artifact_pair,contributors,export_attribute_snapshot,export_change_guard,export_privacy,export_report,report_html,reporter,result,workflow_run}.rb`, `export/export_report.css` | Adapt | `export/`. Empty run, contributor registry, guard, hygiene and report shell. No user file output. |
 | `export/{container_index,export_collector,export_workflow}.rb` | Adapt | `export/`, after collection is redesigned around PH-Composer records and synthetic contributors. These files directly call designPH extraction/tables. |
 | `runtime/{asset_server,http,runtime_gate,runtime_manifest,task_runner}.rb`, `html/runtime.js` | Adapt | `runtime/`, `html/runtime.js`. Lazy manifest-enforced development probe and teardown; rename globals/package. Empty Export neither boots runtime nor writes artifacts. |
-| `python/ph_navigator_translation/{__init__,contract/{__init__,coerce,parse,records},result/{__init__,account,candidates,reconciliation,summary}}.py` | Adapt | `python/ph_composer_translation/`. Shell, typed result and parsing patterns only. Section registration/dependency behavior follows C6 in `CONTRACTS.md`. |
+| `python/ph_navigator_translation/{__init__,contract/{__init__,coerce,parse,records},result/{__init__,account,candidates,reconciliation,summary}}.py` | Pattern reference | `python/ph_composer_translation/`, written fresh. `contract/` imports the feature sections and `result/` imports `build`, `kinds`, `report`, `evidence` and `cause_codes`, so stripping cannot work. Only `contract/coerce.py` is a near-verbatim candidate. Section registration/dependency behavior follows C6 in `CONTRACTS.md`. |
 
 ## Tooling and verification
 
@@ -41,7 +42,7 @@ Brace expressions identify source groups; P0-A verifies the complete transitive 
 | --- | --- | --- |
 | `Makefile`, `.github/workflows/ci.yml`, `.ruby-version`, `Gemfile{,.lock}`, `.rubocop*`, `package.json`, `eslint.config.mjs`, `pyproject.toml`, `uv.lock`, `.npmrc` | Adapt | Repository root. Preserve matrix/pins, revise roots and package names. |
 | `tools/rbz/build.py`, `tools/panel_manifest.js`, `tools/runtime/{vendor.py,browser_check.py}` | Adapt | `tools/`. RBZ allowlist, generated panel manifest, vendor hashes and Chromium runtime gate. Exclude bridge/private/non-manifest assets. |
-| Conceptual foundation test groups: loader, JSON, core, session, shell, runtime and export; exact JS examples `tests/{dom_stub,coverage_js,css_selectors,icons,load_order,panel_app,protocol_agreement,request,runtime_js,snapshot,snapshot_reader,record_edits_units}_test.js`; exact Python examples `tests/python/{synthetic,test_contract,test_imports,test_tools_ship_gates}.py` | Adapt | `tests/`. Rewrite fixtures/actions/snapshots for one synthetic record and feature. No designPH data or feature behavior survives. |
+| Conceptual foundation test groups: loader, JSON, core, session, shell, runtime and export; exact JS examples `tests/{dom_stub,coverage_js,css_selectors,icons,load_order,panel_app,protocol_agreement,request,runtime_js,snapshot_reader,record_edits_units}_test.js` (no `snapshot_test.js` exists at the SHA; the Ruby `snapshot_test.rb` belongs to the shell group); exact Python examples `tests/python/{synthetic,test_contract,test_imports,test_tools_ship_gates}.py` | Adapt | `tests/`. Rewrite fixtures/actions/snapshots for one synthetic record and feature. No designPH data or feature behavior survives. |
 | `tests/support/sketchup/`, `tests/support/dom_stub.js`, `tests/support/panel_files.js`, `tests/support/panel_source.js`, `tests/support/sketchup_stub.rb`, `tests/support/units_vectors.json`, `tests/sketchup_stub_deviations_test.rb` | Adapt | `tests/support/`. Offline host double and shared vectors; cannot replace native fresh-process proof. |
 | `tools/hostkit/{host_bridge.py,host_bridge.rb,host_gate.py,host_helpers.rb,model_storage.rb,probe_verdict.rb,runtime_probe.rb}` and tests | Adapt | `tools/hostkit/`. Development-only bridge/probe. Remove library/designPH actions; never ship it. |
 | `tools/{coverage_ruby.rb,coverage_js.js}`, coverage test | Keep | `tools/`, `tests/`. Preserve measurement; set Phase 0 thresholds in the detailed plan. |

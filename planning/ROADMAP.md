@@ -48,8 +48,9 @@ is the complete MVP Ed described. Ed confirmed both boundaries in D1 on 2026-09-
 ## Phase 0: gates and foundation
 
 The [Phase 0 planning packet](refactor/phase-zero/README.md) supplies seven stage plans, contract
-designs, frozen source disposition and acceptance checks. Product decisions are resolved;
-implementation remains unauthorized. The four spikes are work within Phase 0.
+designs, frozen source disposition and acceptance checks. Product decisions are resolved.
+Ed authorized implementation on 2026-09-18; progress is tracked in the packet's STATUS. The four
+spikes are work within Phase 0 and still need scheduling.
 
 | # | Item | Kind | State | Why here |
 | --- | --- | --- | --- | --- |
