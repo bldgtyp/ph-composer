@@ -2,8 +2,9 @@
    system, and the computer's regional number format. The numerical unit core remains stateless.
 
    A dimension scope is one editor's remembered length format (a graphical builder remembers mm in SI and
-   feet and inches in IP separately). Features declare their scopes in Ruby; the snapshot carries every
-   declared scope, so this store holds no scope vocabulary of its own. */
+   feet and inches in IP separately). A screen names its scope, a dotted name under its feature's id; the
+   snapshot carries every scope a format has been chosen for, and any other scope takes the system
+   default. This store holds no scope vocabulary of its own. */
 PhComposerUI.define("unit_preferences", ["units"], function (units) {
   "use strict";
 

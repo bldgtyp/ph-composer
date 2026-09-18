@@ -13,10 +13,18 @@ module PhComposer
     MIN_WIDTH = 360
     MIN_HEIGHT = 520
     PAGE = File.join(ROOT, "html", "index.html")
-    # Host events after which the shown Model's snapshot is stale.
-    REFRESH_EVENTS = %i[transaction_committed transaction_undone transaction_redone active_path_changed].freeze
+    # Host events after which the shown Model's snapshot is stale. A new session matters where activation
+    # is not reported (SketchUp documents onActivateModel for macOS only).
+    REFRESH_EVENTS = %i[
+      session_created transaction_committed transaction_undone transaction_redone active_path_changed
+    ].freeze
     MAX_PENDING_NOTICES = 20
     SESSION_CHANGED = "The panel now shows a different Model."
+    # The panel could not tell whether an action ran, so it does not claim the Model is unchanged.
+    UNEXPECTED = Outcome.build(
+      "failed", "operation.failed",
+      "The panel could not complete that request. Check the Model before continuing.", "unknown", nil
+    ).freeze
 
     class << self
       def install
@@ -24,7 +32,9 @@ module PhComposer
 
         Sessions.on_refresh { |session| refresh(session) }
         Sessions.on_notice { |session, message, tone| notice(session, message, tone) }
-        REFRESH_EVENTS.each { |kind| Sessions.on_host_event(kind) { |session| session.request_refresh } }
+        REFRESH_EVENTS.each do |kind|
+          Sessions.on_host_event(kind) { |session| session.request_refresh if showing?(session) }
+        end
         @installed = true
       end
 
@@ -43,24 +53,28 @@ module PhComposer
         !@dialog.nil?
       end
 
-      # A development composition entry adds a script that runs in the page each time it opens, after
-      # the kit has started. Shipping features declare their modules in html/ instead.
+      # Development only: a development composition entry (tools/examples/) adds a script that runs in the
+      # page each time it opens, after the kit has started. Shipping features declare their modules in
+      # html/ instead; nothing in the shipping build calls this.
       def add_development_script(path)
         development_scripts << File.expand_path(path) unless development_scripts.include?(File.expand_path(path))
       end
 
       # Republishes the shown Model's snapshot when `session` is that Model.
       def refresh(session)
-        return unless @ready && session && session.equal?(Sessions.current)
+        publish_snapshot(session) if showing?(session)
+      end
 
-        publish("panel.snapshot", snapshot(session))
+      # Whether an open, started panel shows this session's Model.
+      def showing?(session)
+        @ready && !session.nil? && session.equal?(Sessions.current)
       end
 
       # A session's notice reaches the open panel if it shows that session; otherwise it waits, bounded,
       # until the panel next shows it. It never opens the panel.
       def notice(session, message, tone)
         item = { "session" => session.id, "message" => message.to_s, "tone" => tone.to_s }
-        if @ready && session.equal?(Sessions.current)
+        if showing?(session)
           publish("panel.notice", item)
         else
           pending_notices << item
@@ -105,25 +119,37 @@ module PhComposer
         return unless @dialog.equal?(dialog)
 
         type, payload = PanelMessages.parse(raw)
+      rescue PanelMessages::Malformed => error
+        publish("panel.failure", "message" => error.message)
+      else
+        handle(type, payload)
+      end
+
+      # A request the page is waiting on is always answered in its own shape, so the view that asked can
+      # settle; an unexpected error is logged and answered as a failure.
+      def handle(type, payload)
         case type
         when "panel.ready" then ready
         when "action.invoke" then invoke(payload)
         when "preferences.set" then set_preference(payload)
         end
-      rescue PanelMessages::Malformed => error
-        publish("panel.failure", "message" => error.message)
       rescue StandardError => error
         Diagnostics.exception("panel_message", error)
-        publish("panel.failure", "message" => "The panel could not complete that request.")
+        case type
+        when "action.invoke" then publish_result(payload, UNEXPECTED)
+        when "preferences.set"
+          publish_preferences(payload, "failed", "The display preference could not be saved.")
+        else publish("panel.failure", "message" => "The panel could not complete that request.")
+        end
       end
 
       def ready
         @ready = true
-        development_scripts.each { |path| @dialog.execute_script(File.read(path)) }
+        development_scripts.each { |path| run_development_script(path) }
         session = Sessions.current
         return unless session
 
-        publish("panel.snapshot", snapshot(session))
+        publish_snapshot(session)
         delivered, waiting = pending_notices.partition { |item| item["session"] == session.id }
         @pending_notices = waiting
         delivered.each { |item| publish("panel.notice", item) }
@@ -135,7 +161,14 @@ module PhComposer
         session = Sessions.current
         unless session && payload["session"] == session.id
           outcome = Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil, :mutation => true)
-          return publish_result(payload, outcome)
+          publish_result(payload, outcome)
+          # The page was showing another Model than the active one: bring it up to date and say why the
+          # change it sent was not applied.
+          return unless session
+
+          publish_snapshot(session)
+          return publish("panel.notice", "session" => session.id, "message" => outcome.fetch("message"),
+                                         "tone" => "warning")
         end
 
         outcome = API.invoke(
@@ -143,8 +176,22 @@ module PhComposer
           :request => { "sequence" => next_sequence(session), "expected_revision" => payload["expected_revision"] }
         )
         session.refresh.cancel
-        publish("panel.snapshot", snapshot(session))
+        publish_snapshot(session)
         publish_result(payload, outcome)
+      end
+
+      # A snapshot that cannot be built is logged and skipped; the result that follows still settles the
+      # request, and the next refresh tries again.
+      def publish_snapshot(session)
+        publish("panel.snapshot", snapshot(session))
+      rescue StandardError => error
+        Diagnostics.exception("panel_snapshot", error)
+      end
+
+      def run_development_script(path)
+        @dialog.execute_script(File.read(path))
+      rescue StandardError => error
+        Diagnostics.exception("panel_development_script", error)
       end
 
       def publish_result(payload, outcome)

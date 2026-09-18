@@ -10,10 +10,20 @@ module PhComposer
     def build(context)
       registry = Registry.current
       sections = registry.snapshot_sections.values.to_h do |section|
-        [section.name, API.query(:context => context, :name => section.query, :params => section.params)]
+        [section.name, section_outcome(context, section)]
       end
       session = Sessions.find(context.session_id)
       { "session" => context.session_id, "revision" => session&.revision, "sections" => sections }
+    end
+
+    # A section whose query raises (a handler bug, a value that misses its declared result schema) reports
+    # a failed outcome of its own; the error goes to the log.
+    def section_outcome(context, section)
+      API.query(:context => context, :name => section.query, :params => section.params)
+    rescue StandardError => error
+      Diagnostics.exception("snapshot_section", error)
+      Outcome.build("failed", "operation.failed", "This section could not be read.", "none",
+                    Sessions.find(context.session_id)&.revision)
     end
   end
 end

@@ -167,3 +167,18 @@ test("a host failure is shown as an error; an unknown message type changes nothi
   p.receive("panel.failure", { message: "The panel message is not JSON." });
   assert.strictEqual(p.notice().getAttribute("data-tone"), "error");
 });
+
+test("a section that throws does not hide the refusal warning or stop the other sections", function () {
+  var p = page(), later = [];
+  p.receive("panel.snapshot", snapshot("session-a", 2));
+  p.context.console = { error: function () {} };
+  p.panel.section("broken.section", function () { throw new Error("render bug"); });
+  p.panel.section("later.section", function (root, state) { later.push(state.revision); });
+  p.receive("action.result", { request_id: "r1", session: "session-a", outcome: {
+    status: "refused", code: "revision.stale", message: "The Model changed. Nothing was written." } });
+
+  assert.strictEqual(p.notice().hidden, false);
+  assert.strictEqual(p.notice().getAttribute("data-tone"), "warning");
+  assert.deepStrictEqual(later, [2, 2]);
+  assert.strictEqual(p.panel.state.ui.actionResult.request_id, "r1");
+});

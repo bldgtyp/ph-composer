@@ -1,7 +1,18 @@
 # frozen_string_literal: true
 
+require "minitest/mock"
 require_relative "test_helper"
 require_relative "support/test_feature"
+
+# A feature whose snapshot section fails to read, as a buggy query or a result off its schema would.
+module BrokenSectionFeature
+  def self.install(registry)
+    feature = registry.feature("test.broken", :contract_version => 1)
+    feature.query("test.broken.read", :description => "Always fails.", :params => { "type" => "object" },
+                                      :result => { "type" => "object" }) { |_request| raise "section bug" }
+    feature.snapshot_section("test.broken.section", :query => "test.broken.read")
+  end
+end
 
 # The panel as one client of the public interface: the dialog's lifecycle, the snapshot it shows, the
 # mutations it sends on the user's behalf, and what it refuses to do (planning/refactor/phase-zero/
@@ -115,7 +126,56 @@ class PanelTest < PhComposerTestCase
     assert_equal %w[refused session.inactive none], result.fetch("outcome").values_at("status", "code", "effect")
     assert_match(/Nothing was written\.\z/, result.dig("outcome", "message"))
     assert_equal operations, @model.operations.length
-    refute_equal other_session.id, @session.id
+    assert_equal other_session.id, messages(dialog, "panel.snapshot").last.fetch("session"),
+                 "the page is brought up to the Model it should show"
+    assert_equal ["warning", other_session.id], messages(dialog, "panel.notice").last.values_at("tone", "session"),
+                 "and told why its change was not applied"
+  end
+
+  def test_a_new_model_that_becomes_active_repaints_the_panel_without_an_activation_event
+    dialog = open_panel
+    other = Sketchup::Model.new
+    Sketchup.active_model = other
+    other_session = PhComposer::Sessions.for(other)
+
+    UI.run_timers
+    assert_equal other_session.id, messages(dialog, "panel.snapshot").last.fetch("session")
+  end
+
+  # ------------------------------------------------------------------ failures while answering
+
+  def test_a_section_that_fails_to_read_reports_itself_and_the_action_result_still_arrives
+    PhComposer::Registry.install([BrokenSectionFeature])
+    dialog = open_panel
+    create(dialog, "r1")
+
+    snapshot = messages(dialog, "panel.snapshot").last
+    assert_equal "failed", snapshot.dig("sections", "test.broken.section", "status")
+    assert_equal "completed", snapshot.dig("sections", "test.fixture.parts", "status"), "other sections unaffected"
+    assert_equal %w[r1 completed], messages(dialog, "action.result").last.then { |result|
+      [result.fetch("request_id"), result.dig("outcome", "status")]
+    }
+  end
+
+  def test_an_unexpected_error_still_answers_the_request_that_is_waiting
+    dialog = open_panel
+    PhComposer::API.stub(:invoke, ->(**) { raise "dispatcher bug" }) { create(dialog, "r1") }
+    PhComposer::Preferences.stub(:set, ->(*, **) { raise IOError, "store unavailable" }) do
+      send_message(dialog, "preferences.set", "request_id" => "p1", "key" => "unit_system", "value" => "IP")
+    end
+
+    outcome = messages(dialog, "action.result").last
+    assert_equal ["r1", "failed", "unknown"], [outcome.fetch("request_id")] + outcome.fetch("outcome").values_at(
+      "status", "effect"
+    ), "a failure the panel cannot account for never claims the Model is unchanged"
+    assert_equal %w[p1 failed], messages(dialog, "preferences.result").last.values_at("request_id", "status")
+  end
+
+  def test_a_missing_development_script_does_not_keep_the_first_snapshot_from_the_page
+    Panel.add_development_script("/nonexistent/editor.js")
+    dialog = open_panel
+
+    assert_equal 1, messages(dialog, "panel.snapshot").length
   end
 
   # ------------------------------------------------------------------ lifecycle

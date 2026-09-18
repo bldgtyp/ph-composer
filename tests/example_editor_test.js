@@ -162,3 +162,30 @@ test("a refused edit leaves the Model's value in the field and a warning on scre
   assert.match(e.notice().message.textContent, /Nothing was written\.$/);
   assert.strictEqual(e.input("Sill length").value, "1500", "the next snapshot repaints what the Model holds");
 });
+
+test("a Model switch during a draft sends nothing to either Model", function () {
+  var e = editor();
+  var head = e.input("Head length");
+  e.type("Head length", "13");
+  e.host.session = "preview-session-b";
+  e.host.revision = 1;
+  e.host.snapshot();
+  head.listeners.blur({});
+
+  assert.strictEqual(e.invokes().length, 0);
+  assert.strictEqual(e.host.parts[1].length_mm, 1231.9);
+});
+
+test("a part removed elsewhere leaves the focused draft where it is, untouched and unsent", function () {
+  var e = editor();
+  var head = e.input("Head length"), row = head.parentNode.parentNode;
+  e.type("Head length", "13");
+  e.host.parts.shift();
+  e.host.revision += 1;
+  e.host.snapshot();
+
+  assert.strictEqual(e.section.querySelector(".example-parts").children[0], row, "the row was not moved");
+  assert.strictEqual(e.input("Head length").value, "13");
+  assert.strictEqual(e.input("Sill length"), undefined);
+  assert.strictEqual(e.invokes().length, 0);
+});

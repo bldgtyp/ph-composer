@@ -157,3 +157,50 @@ test.describe("dimension format control", function () {
     assert.deepStrictEqual(chosen, [["m", "SI"]]);
   });
 });
+
+test.describe("a field the page takes away", function () {
+  var document = dom.buildDocument("");
+  var context = { document: document, Intl: Intl };
+  context.window = context;
+  dom.attachEvents(context);
+  var modules = panelSource.start(context, ["unit_field"]);
+
+  function field(commits) {
+    var control = new modules.unit_field.UnitField({ field: { quantity: "length_mm", unit: "mm", label: "Length" },
+      value: 1200, commitOnBlur: true, onCommit: function (value) { commits.push(value); } });
+    document.body.appendChild(control.root);
+    return control;
+  }
+  function type(control, text) { control.input.value = text; control.input.listeners.input({}); }
+
+  test("a blur caused by removing the input keeps the draft and sends nothing", function () {
+    var commits = [], control = field(commits);
+    type(control, "13");
+    document.body.removeChild(control.root);
+    control.input.listeners.blur({});
+    assert.deepStrictEqual(commits, []);
+    assert.strictEqual(control.input.value, "13");
+  });
+
+  test("a disposed field never commits, however it is left", function () {
+    var commits = [], control = field(commits);
+    type(control, "13");
+    control.dispose();
+    control.input.listeners.blur({});
+    control.input.listeners.keydown({ key: "Enter", preventDefault: function () {} });
+    assert.deepStrictEqual(commits, []);
+  });
+
+  test("Escape belongs to the field only while a draft is open", function () {
+    var control = field([]), prevented = 0;
+    function escape() {
+      control.input.listeners.keydown({ key: "Escape", preventDefault: function () { prevented += 1; } });
+    }
+    escape();
+    assert.strictEqual(prevented, 0, "an untouched field lets Escape close the dialog around it");
+    type(control, "13");
+    escape();
+    assert.strictEqual(prevented, 1);
+    assert.strictEqual(control.input.value, "1200");
+  });
+});

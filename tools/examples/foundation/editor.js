@@ -56,7 +56,7 @@
 
   /* A new Model session starts clean: its fields, pending requests and any open form belong to the old one.
      The section's nodes are built once per session and then patched, never re-parented: moving a focused
-     input would blur it and commit a half-typed draft. */
+     input would take the user's focus away. */
   function resetFor(root, state, send) {
     Object.keys(view.fields).forEach(function (id) { view.fields[id].dispose(); });
     if (view.form) view.form.withdraw();
@@ -91,10 +91,12 @@
   }
 
   function partRow(part) {
+    // Bound to the session the row was built for, so a row can never send to another Model.
+    var requests = view.requests;
     var field = new unitField.UnitField({
       field: lengthField(part.values.label + " length"), value: part.values.length_mm, commitOnBlur: true,
       onCommit: function (value) {
-        view.requests.send(ID + ".update_parts", { edits: [{ id: part.id, values: { length_mm: value },
+        requests.send(ID + ".update_parts", { edits: [{ id: part.id, values: { length_mm: value },
           expected_values: { length_mm: field.readValue } }] });
       }
     });
@@ -106,9 +108,18 @@
     return row;
   }
 
-  /* Rows follow the snapshot's order; a row already in place is not touched. */
+  /* Rows follow the snapshot's order. Rows that are gone leave first, so a row already in place, perhaps
+     holding the focused draft, is not moved. */
   function paintParts(parts) {
     var live = {};
+    parts.forEach(function (part) { live[part.id] = true; });
+    Object.keys(view.rows).forEach(function (id) {
+      if (live[id]) return;
+      view.fields[id].dispose();
+      view.list.removeChild(view.rows[id]);
+      delete view.fields[id];
+      delete view.rows[id];
+    });
     parts.forEach(function (part, index) {
       var row = view.rows[part.id] || partRow(part);
       var field = view.fields[part.id];
@@ -116,14 +127,6 @@
       field.readValue = part.values.length_mm;
       field.setValue(part.values.length_mm);
       if (view.list.children[index] !== row) view.list.insertBefore(row, view.list.children[index] || null);
-      live[part.id] = true;
-    });
-    Object.keys(view.rows).forEach(function (id) {
-      if (live[id]) return;
-      view.fields[id].dispose();
-      view.list.removeChild(view.rows[id]);
-      delete view.fields[id];
-      delete view.rows[id];
     });
   }
 

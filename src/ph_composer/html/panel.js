@@ -115,16 +115,22 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     return root;
   }
 
+  /* One section's failure stays in that section: the shell, the notices and every other section still
+     paint, so a refusal warning is never hidden by an unrelated error. */
   function renderSection(entry) {
-    entry.render(mount(entry), state, send);
+    try {
+      entry.render(mount(entry), state, send);
+    } catch (error) {
+      if (window.console) window.console.error("panel section \"" + entry.name + "\" failed to render", error);
+    }
   }
 
   function render() {
-    if (state.session !== null) sections.forEach(renderSection);
+    api.state = state;
     renderNotice();
     renderUnitToggle();
     applyTab();
-    api.state = state;
+    if (state.session !== null) sections.forEach(renderSection);
   }
 
   /* One floating notice above the panes, so a late message never reflows the page. Warnings and errors stay
@@ -163,6 +169,10 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   /* `options.pane` names the tab the section belongs to (default "overview"). */
   function section(name, renderFunction, options) {
     var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview" };
+    if (!document.querySelector("[data-section='" + name + "']") &&
+        !document.querySelector("[data-pane='" + entry.pane + "']")) {
+      throw new Error("panel section \"" + name + "\" names no pane \"" + entry.pane + "\"");
+    }
     sections.push(entry);
     if (state.session !== null) renderSection(entry);
   }

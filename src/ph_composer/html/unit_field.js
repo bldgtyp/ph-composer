@@ -45,11 +45,16 @@ PhComposerUI.define("unit_field", ["unit_preferences", "units", "workspace"], fu
     this.root.appendChild(this.input); this.root.appendChild(this.unit); this.root.appendChild(this.error);
     this.input.addEventListener("input", function () { self.begin(); self.clearError(); });
     this.input.addEventListener("paste", function () { self.begin(); });
+    // Escape is the field's only while a draft is open; otherwise it reaches the dialog or bubble around it.
     this.input.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") { event.preventDefault(); self.cancel(); }
+      if (event.key === "Escape" && self.editing) { event.preventDefault(); self.cancel(); }
       if (event.key === "Enter") { event.preventDefault(); self.commit(); }
     });
-    this.input.addEventListener("blur", function () { if (self.commitOnBlur) self.commit(); });
+    // Leaving the field applies the draft, but a blur caused by the page removing or moving the input (a
+    // repaint, a Model switch) is not the user leaving it: the draft stays and nothing is sent.
+    this.input.addEventListener("blur", function () {
+      if (self.commitOnBlur && self.input.isConnected) self.commit();
+    });
     this.unsubscribe = preferences.subscribe(function () { if (!self.editing) self.repaint(); });
     this.repaint();
   }
@@ -79,6 +84,7 @@ PhComposerUI.define("unit_field", ["unit_preferences", "units", "workspace"], fu
 
   Field.prototype.commit = function () {
     var parsed;
+    if (this.disposed) return { ok: true, changed: false, value: this.baseline };
     if (!this.editing || this.input.value === this.seed) {
       this.editing = false; this.startProfile = null; this.repaint();
       return { ok: true, changed: false, value: this.baseline };
@@ -106,7 +112,12 @@ PhComposerUI.define("unit_field", ["unit_preferences", "units", "workspace"], fu
   };
 
   Field.prototype.setDisabled = function (disabled) { this.input.disabled = Boolean(disabled); };
-  Field.prototype.dispose = function () { if (this.unsubscribe) this.unsubscribe(); this.unsubscribe = null; };
+  /* A disposed field belongs to a view that is gone (another Model, a removed record): it never commits. */
+  Field.prototype.dispose = function () {
+    this.disposed = true;
+    if (this.unsubscribe) this.unsubscribe();
+    this.unsubscribe = null;
+  };
 
   /* The dimension format chooser for one declared dimension scope. The owning toolbar chooses placement; this
      helper owns the active-system choices, accessible state and focus return. `choose(format, system)` records
