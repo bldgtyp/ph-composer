@@ -11,7 +11,7 @@ predecessor's designPH terms (adoption, push, origin row, designPH difference, T
 
 | Term | Meaning |
 | --- | --- |
-| PassiveBuilder | The free, open-source SketchUp extension for authoring Phius passive building models |
+| PH-Composer | The free, open-source SketchUp extension for authoring Phius passive building models |
 | Predecessor | PH-Navigator for SketchUp, the designPH companion this project grew out of. Prior art and evidence, never a dependency |
 | Model | The SKP file carrying the authored building and its local definitions |
 | Project | The real building job. It does not imply a hosted project record |
@@ -39,13 +39,13 @@ predecessor's designPH terms (adoption, push, origin row, designPH difference, T
 ## Geometry units and the honeybee mapping
 
 honeybee's names for its geometry units collide with ordinary building words, so this table is
-exact. The left column is what PassiveBuilder says on screen, in code and in this repository; the
+exact. The left column is what PH-Composer says on screen, in code and in this repository; the
 right column is what the export writes. The rules are in the zones-and-adjacency packet
 (`planning/features/zones-and-adjacency/PRD.md`), which is provisional until it lands.
 
 | Term | Meaning | honeybee object | Note |
 | --- | --- | --- | --- |
-| Zone | The fundamental geometry unit: one SketchUp Group, at Model root or inside plain wrapper groups and never inside another Zone, carrying envelope faces, Spaces, loads and schedules. A building may be one Zone; a Zone is required before export | `honeybee.room.Room` | honeybee calls this a Room. PassiveBuilder never uses Room for it, and honeybee's own `Room.zone` text tag is a different thing that PassiveBuilder does not surface |
+| Zone | The fundamental geometry unit: one SketchUp Group, at Model root or inside plain wrapper groups and never inside another Zone, carrying envelope faces, Spaces, loads and schedules. A building may be one Zone; a Zone is required before export | `honeybee.room.Room` | honeybee calls this a Room. PH-Composer never uses Room for it, and honeybee's own `Room.zone` text tag is a different thing that PH-Composer does not surface |
 | Building-Segment | A tag on one or more Zones naming the part of the building that becomes one METr model. Every Zone belongs to exactly one Building-Segment; a Model with one Building-Segment never shows the field | honeybee-ph `BldgSegment` | PHX builds one variant per Building-Segment and merges its Zones |
 | Level | An optional classifier tag on a Zone for query, sort and group. A Space inherits its Zone's Level and has none of its own | `Room.story` | Replaces the predecessor's Space-owned Floor level (zones packet, Q6) |
 | Adjacency | A reciprocal pairing of path-qualified face endpoints in different Zones, carrying Zone UUIDs, face persistent ids and solved world-geometry stamps | `Surface` boundary condition while current | Solved on demand, never live; identity and freshness are separate |
@@ -58,12 +58,12 @@ right column is what the export writes. The rules are in the zones-and-adjacency
 
 ## Envelope
 
-Face vocabulary follows honeybee, because the export writes honeybee objects. PassiveBuilder does
+Face vocabulary follows honeybee, because the export writes honeybee objects. PH-Composer does
 not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zone.
 
 | Term | Meaning |
 | --- | --- |
-| Envelope face | A SketchUp face the user has classified as part of the thermal envelope. Classification is PassiveBuilder's own record in its own attribute namespace; the face carries no designPH data |
+| Envelope face | A SketchUp face the user has classified as part of the thermal envelope. Classification is PH-Composer's own record in its own attribute namespace; the face carries no designPH data |
 | Face type | The honeybee face type of an envelope face: `Wall`, `RoofCeiling`, `Floor` or `AirBoundary` |
 | Boundary condition | What is on the other side of an envelope face: honeybee's `Outdoors`, `Ground`, `Adiabatic`, `Surface`, and honeybee-ph's `PhAdditionalZone`. Shown as Outdoors, Ground, To neighbour, Surface (set only by Solve adjacencies) and Attached zone |
 | Attached zone | A named unconditioned space outside the envelope (garage, attic, crawlspace) with one temperature reduction factor, default 0.95 per Phius guidebook 6.9.1. A Library record kind, assigned to faces as a boundary condition. Maps to honeybee-ph `PhAdditionalZone` |
@@ -85,7 +85,7 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Assembly | A reusable construction definition of ordered layers. METr's own screen word. Maps to honeybee `OpaqueConstruction` |
 | Layer | A position in an assembly owning thickness and containing one or more Layer-Segments. Exports as one honeybee `EnergyMaterial` |
 | Layer-Segment | One side-by-side strip of a Layer: a Material and a width. Always written with its qualifier, as Building-Segment is. Exports as one column of the layer's honeybee-ph `PhDivisionGrid` |
-| SD assembly | A placeholder assembly for early design: three real layers sized to a target U-value, after honeybee-grasshopper-ph's SD constructions. Planned, not in the first assemblies phase. PassiveBuilder has no assembly without layers |
+| SD assembly | A placeholder assembly for early design: three real layers sized to a target U-value, after honeybee-grasshopper-ph's SD constructions. Planned, not in the first assemblies phase. PH-Composer has no assembly without layers |
 | Assembly usage | The set of envelope faces assigned to a Model-library assembly, measured by a scan and reported as of the scan time |
 | Thermal bridge | A linear junction the user identifies on the Model, with a psi-value and measured length. Point bridges and chi-values are outside the MVP because honeybee-ph has no canonical carrier |
 | Thermal bridge assignment | The record binding an edge in the Model to a Thermal Bridge Type. The MVP has no point assignment |
@@ -98,9 +98,9 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Glazing | A reusable glazing definition with its product properties |
 | Psi-Install Type | A reusable installation-junction definition assigned to Window Type perimeter edges. Unset edges visibly inherit the user-selected Model default. It is an authoring layer over the Frame, so one Frame product serves every wall it is installed in without a copy per wall. On export its value is written to that side of the frame, honeybee-ph's `PhWindowFrameElement.psi_install` |
 | Window Type | A reusable exact-size and layout configuration defined by size, glazing, frames, operation and handedness, and perimeter Psi-Install Type assignments. Installation differences use explicit named variants; placements follow their type with no per-instance overrides |
-| Window unit | One placed use of a Window Type: an instance of the type's flat component, which PassiveBuilder generates with one face per glazed element, glued to and cutting an envelope face. Each unit has its own identity, and a copied unit receives its own the next time the feature changes the Model |
+| Window unit | One placed use of a Window Type: an instance of the type's flat component, which PH-Composer generates with one face per glazed element, glued to and cutting an envelope face. Each unit has its own identity, and a copied unit receives its own the next time the feature changes the Model |
 | Install depth | The reveal depth from the wall's outer surface to the glass. A model default with a Window Type override. Exports to honeybee-ph `install_depth` |
-| Window occurrence | A placed window reached through its full SketchUp parent path. Repeated parents expose the same child through different occurrences, and its stored attributes are not independent per occurrence. Independent edits require explicit parent uniqueness; PassiveBuilder never makes a parent unique automatically |
+| Window occurrence | A placed window reached through its full SketchUp parent path. Repeated parents expose the same child through different occurrences, and its stored attributes are not independent per occurrence. Independent edits require explicit parent uniqueness; PH-Composer never makes a parent unique automatically |
 | Window anchor | The fixed point for placement and resize, named by row and column on the opening: `sill_left`, `sill_center`, `sill_right`, `center_left`, `center`, `center_right`, `head_left`, `head_center`, `head_right`. Sill center is the default |
 | Empty panel | A layout cell representing excluded wall area. Retained for layout editing and excluded from window thermal contributions |
 | Install edge source | Where one element edge's installation value comes from: `explicit`, `default`, `derived_zero` (an edge shared with a neighbouring element), `unsupported_partial`, `dangling` or `missing` |
@@ -113,7 +113,7 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Space | One unique SketchUp Group inside a Zone, containing one or more Volumes and Space-level data: iCFA, ventilation airflows, occupancy. Maps to a honeybee-ph `Space` on its Zone's Room. Do not call it Room in product copy, and do not confuse it with honeybee's Room, which is a Zone |
 | Volume | A protected structural Group directly inside a Space, holding one logical Space Floor |
 | Space Floor | Logical grouping of Floor Segments in a Volume; not another SketchUp Group |
-| Floor Segment | A face inside a Volume that the user has marked as floor area, carrying PassiveBuilder identity, an iCFA factor and a net area factor. In the predecessor this identity sat on a designPH TFA face; here PassiveBuilder owns the classification. Maps to honeybee-ph `SpaceFloorSegment` |
+| Floor Segment | A face inside a Volume that the user has marked as floor area, carrying PH-Composer identity, an iCFA factor and a net area factor. In the predecessor this identity sat on a designPH TFA face; here PH-Composer owns the classification. Maps to honeybee-ph `SpaceFloorSegment` |
 | iCFA factor | Whether a Floor Segment counts toward iCFA: Counts or Does not count on screen, stored as 1.0 or 0 in a float field. honeybee-ph calls it `weighting_factor`. What counts is the user's to decide from the Phius rule; nothing enforces it |
 | Net area factor | The share of a Floor Segment's area that counts toward net volume, default 1 |
 | Average clear ceiling height | The one height a Volume carries. Net volume is net floor area times this height, as honeybee-ph's `SpaceVolume` computes it |
@@ -131,7 +131,7 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Floor level | Shown on a Space and read from its Zone's Level; see Level above. Not editable on the Space. A blank value is shown as Unassigned |
 | Space Type | A reusable Space definition; labels, defaults and inheritance await their interview |
 | Authoring context | The active Space or Volume editing path that determines structural ownership |
-| Reconciliation | Updating PassiveBuilder structure and protection after external geometry changes |
+| Reconciliation | Updating PH-Composer structure and protection after external geometry changes |
 | Volume protection | Contextual locking that prevents independent Volume movement outside its edit context |
 | Supply, Extract and Transfer airflow | Separate optional Space inputs, stored so that unset is different from explicitly zero. When all three are unset the Zone's ventilation load applies. When any one is set the Space is user-specified: its values override the Zone's load and an unset rate counts as zero |
 | Ventilation assignment | Relationship from a Space to serving ventilation equipment |

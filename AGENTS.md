@@ -1,11 +1,11 @@
-# PassiveBuilder: agent guidance
+# PH-Composer: agent guidance
 
 This is the canonical, tool-neutral guidance for the repository. Tool-specific files import it and
 add only their own mechanics.
 
 ## Scope and product boundary
 
-PassiveBuilder is a free, open-source SketchUp extension for authoring Phius passive building
+PH-Composer is a free, open-source SketchUp extension for authoring Phius passive building
 models. The SKP file owns working definitions, instances, assignments and values. Hand entry is a
 complete workflow. Library providers are optional and interchangeable. Hosted projects, accounts,
 subscriptions and database services are not required for core use. The canonical output is
@@ -89,7 +89,7 @@ the owning packet.
 ## Architecture and code review
 
 Before designing contribution boundaries or making substantive code changes, load
-`.agents/skills/passive-builder-architecture-review/SKILL.md`. Apply it during design and use it
+`.agents/skills/ph-composer-architecture-review/SKILL.md`. Apply it during design and use it
 as the rubric for the existing coherent-diff review. This applies when using `implement`,
 `implement-loop`, `simplify` or direct implementation. Reuse loaded context within a coherent task.
 
@@ -101,13 +101,13 @@ consistency review; they do not trigger code or host gates.
 ## UI and UX work
 
 Before changing or reviewing an HtmlDialog screen, load
-`.agents/skills/passive-builder-ui-polish/SKILL.md` and its linked reference. The owning feature
+`.agents/skills/ph-composer-ui-polish/SKILL.md` and its linked reference. The owning feature
 plan and current source remain authoritative for behavior and acceptance; the skill governs the
 shared review and polish process without widening scope.
 
 ## Repository map
 
-Target layout. `src/passive_builder/` will be the shipping extension, with the module name a
+Target layout. `src/ph_composer/` will be the shipping extension, with the module name a
 working assumption until the namespace decision closes:
 
 | Path | Owns |

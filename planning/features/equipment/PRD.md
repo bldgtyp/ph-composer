@@ -69,7 +69,7 @@ family 7.
 
 honeybee-ph attaches mechanical equipment per Room through `room.properties.ph_hvac`:
 one ventilation system, one hot water system, and sets of heating systems, heat pump systems,
-exhaust devices, supportive devices and renewable devices. A PassiveBuilder Zone is one Room,
+exhaust devices, supportive devices and renewable devices. A PH-Composer Zone is one Room,
 so the Zone's ids map straight onto those slots. An item serving three Zones is the same
 honeybee-ph object, same identifier, set on three Rooms. Whether PHX then writes one METr
 device or three is part of the round trip proof in STATUS.
@@ -86,7 +86,7 @@ fields for subsoil heat exchange and preheated intake temperature. It sits insid
 `PhVentilationSystem` with `sys_type` (default 1, balanced with heat recovery) and the two duct
 lists. A Room holds one ventilation system.
 
-PassiveBuilder records one Ventilator and builds the system around it at export. The user never
+PH-Composer records one Ventilator and builds the system around it at export. The user never
 sees a separate "system" record.
 
 Open for this family's interview: the one-ventilator-per-Zone limit and what a Zone with two
@@ -106,7 +106,7 @@ condensing, efficiencies, return and boiler temperatures); Wood boiler; District
 monthly (two COPs at two ambient temperatures); Heat pump annual (`total_system_perf_ratio`);
 Heat pump inside (`annual_energy_factor`).
 
-PassiveBuilder records a Hot Water System with tanks and heaters as child rows. The piping
+PH-Composer records a Hot Water System with tanks and heaters as child rows. The piping
 packet links its Piping groups to it.
 
 Open: which heater variants ship first. Recommendation: Electric and the three heat pump

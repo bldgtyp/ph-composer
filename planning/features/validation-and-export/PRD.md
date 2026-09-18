@@ -13,7 +13,7 @@ declared outside scope; write a coherent HBJSON and human-readable account; and 
 one optional consumer from changing the canonical artifact.
 
 The predecessor proved the workflow, report, complete-accounting rule, cancellable Model walk,
-privacy allowlist and recoverable two-file replacement. PassiveBuilder removes every designPH
+privacy allowlist and recoverable two-file replacement. PH-Composer removes every designPH
 collector and makes feature contributors and downstream exporters the explicit seams.
 
 ## Product boundary
@@ -140,7 +140,7 @@ and exporter results. It is self-contained and escapes every Model-authored stri
   a failed replacement must never leave one new canonical final beside one old final. Optional
   output replacement is separately recoverable and is rolled back if the canonical pair fails.
 - Startup or the next run performs bounded recovery only for staging and backup names owned by
-  PassiveBuilder. It never deletes unrelated files.
+  PH-Composer. It never deletes unrelated files.
 
 ## Exporter contract
 

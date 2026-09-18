@@ -20,7 +20,7 @@ predecessor's Q1 rule.
 ## Blockers
 
 - B4's open proof: two Zones with two different ventilators through HBJSON and PHX to METr.
-  PassiveBuilder exports one honeybee Room per Zone, not the predecessor's single Room, so the
+  PH-Composer exports one honeybee Room per Zone, not the predecessor's single Room, so the
   case is simpler than B4 feared. It still needs one round trip before the PLAN is written.
 - The foundation transplant.
 - No GitHub remote, so no issue yet.

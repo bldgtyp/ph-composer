@@ -10,7 +10,7 @@ rebuildable caches may be local to a computer but cannot be required to interpre
 
 ## Envelope, spaces and windows
 
-PassiveBuilder owns envelope classification, floor-area classification, window units and thermal
+PH-Composer owns envelope classification, floor-area classification, window units and thermal
 bridge identification, in its own attribute namespace, through its own tools. Nothing in the
 model belongs to another extension. The predecessor deferred all of this to designPH; that
 boundary is gone, and with it every rule about reading or writing another product's data.
@@ -22,7 +22,7 @@ runtime. The extension does not write PHPP or drive Excel. Producer defects rema
 defects remain with the reader. HBJSON carries only the fields honeybee-ph defines; native
 product snapshots and full source evidence stay inside the model.
 
-METr is the calculator and the destination. PassiveBuilder makes no claim about METr's results,
+METr is the calculator and the destination. PH-Composer makes no claim about METr's results,
 Phius's acceptance of a model, or certification.
 
 ## Library providers
@@ -34,9 +34,9 @@ enters the model, a log or an export.
 
 ## Sibling projects
 
-PassivSure is building a PHI-focused designPH companion. PassiveBuilder encourages reuse of its UI
+PassivSure is building a PHI-focused designPH companion. PH-Composer encourages reuse of its UI
 kit and record engine there, under the repository license. PassivSure is not a destination for
-PassiveBuilder's output and PassiveBuilder does not read PassivSure's.
+PH-Composer's output and PH-Composer does not read PassivSure's.
 
 PH-Navigator web is prior art for editors and calculations, and one library provider among
 several. No web service shutdown or production-data migration is authorized here.

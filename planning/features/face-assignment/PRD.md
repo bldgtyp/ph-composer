@@ -8,7 +8,7 @@ ISSUE: none (no remote)
 ## Problem
 
 designPH owned envelope classification in the predecessor: which faces are the thermal envelope,
-what each one is, what is on the other side, and which construction it carries. PassiveBuilder
+what each one is, what is on the other side, and which construction it carries. PH-Composer
 has to do this itself, and it is the first thing a user does in every model. Everything downstream
 reads it: assembly usage, window placement, thermal bridges, iCFA, the HBJSON Room faces and the
 METr envelope.
@@ -21,7 +21,7 @@ tool that writes it, what the model shows, and what validation and export do wit
 ## The domain model this packet rests on
 
 Confirmed by Ed 2026-09-18 (Q1): the authored model is a set of honeybee-shaped Ruby records in
-the SKP, translated to honeybee objects at export. PassiveBuilder does not run honeybee live and
+the SKP, translated to honeybee objects at export. PH-Composer does not run honeybee live and
 does not invent its own vocabulary where honeybee has one. A face record therefore uses
 honeybee's face types and boundary conditions by their honeybee names as stored values, and adds
 only what authoring needs: identity, the Zone stamp, and the states a partial model has that a
@@ -29,7 +29,7 @@ simulation-ready one does not. The reasoning is in the founding brief's decision
 
 ## Decision
 
-- One **face record** per classified face, in PassiveBuilder's own dictionary on the face,
+- One **face record** per classified face, in PH-Composer's own dictionary on the face,
   carrying face type, boundary condition, assembly id and the Zone stamp. A face without a
   record is unclassified and, in a single-Zone model, ignored.
 - One **Classify tool** in the viewport, modal like SketchUp's Paint Bucket: pick a face type and
@@ -92,7 +92,7 @@ Rules:
   preserved payloads do not imply that adjacency references remain current.
 - A face inside a repeated component shares its record across occurrences, as the zones packet
   and the predecessor's window reader already require. Independent classification requires
-  explicit uniqueness, which PassiveBuilder never applies.
+  explicit uniqueness, which PH-Composer never applies.
 - Splitting must retain non-Surface classifications and surviving metadata. Copied adjacency data
   is invalid until explicitly re-solved under the zones packet's endpoint rules. Native dictionary
   survival and new face identity require host evidence; a copied dictionary is not a valid pair.
@@ -245,7 +245,7 @@ fields and payloads. No raw dictionary writes or hidden cross-feature scans are 
   factor allowed without further evidence. A lower value is accepted, since Phius publishes a
   Temperature Reduction Factor and Auxiliary Space Heating Estimator (Excel, v26.1.3 as of
   August 2026) that justifies one with an auxiliary heating penalty; a value below 0.95 shows a
-  warning naming that tool and expects its output linked as a datasheet. PassiveBuilder does not
+  warning naming that tool and expects its output linked as a datasheet. PH-Composer does not
   reimplement the estimator.
 - An occupied residential or always-conditioned neighbour is To neighbour, not an Attached zone,
   per the same guidebook section. The tooltip on To neighbour says so.

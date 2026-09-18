@@ -8,8 +8,8 @@ ISSUE: none (no remote)
 ## Problem
 
 Phius consultants in the United States read and enter most values in IP. METr, honeybee-ph and
-every PassiveBuilder record are SI. The predecessor solved this once, across every screen, and
-the solution has no designPH dependency. PassiveBuilder should not redo the interview or the
+every PH-Composer record are SI. The predecessor solved this once, across every screen, and
+the solution has no designPH dependency. PH-Composer should not redo the interview or the
 code. It should port both and add the quantities that piping, ducting, equipment and climate bring.
 
 ## The rule this packet serves

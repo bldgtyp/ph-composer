@@ -4,9 +4,9 @@ DATE: 2026-09-18
 STATUS: Agent access is an accepted product priority. Contracts below are design requirements;
 transport, packaging and exact APIs remain proposed. No implementation or host proof yet.
 
-Users bring their own agents. PassiveBuilder supplies documented access to inspect, view and edit
+Users bring their own agents. PH-Composer supplies documented access to inspect, view and edit
 the authored model without requiring an agent to understand private Ruby internals or operate
-every control by pixels. PassiveBuilder does not build an agent, select an LLM, store model-provider
+every control by pixels. PH-Composer does not build an agent, select an LLM, store model-provider
 keys or require an AI subscription. Hand authoring remains complete without agent access.
 
 This document extends [EXTENSIBILITY.md](EXTENSIBILITY.md). It owns external-agent contracts;

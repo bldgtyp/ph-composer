@@ -1,7 +1,7 @@
 # Units: SI and IP display
 
 A carry-over packet. The predecessor delivered app-wide SI and IP display with alternate-unit
-input as its U1 phase, merged on 2026-09-15 after a 20-round interview. PassiveBuilder takes that
+input as its U1 phase, merged on 2026-09-15 after a 20-round interview. PH-Composer takes that
 contract whole and extends the quantity table to the features the predecessor never built.
 
 ## Read order

@@ -1,9 +1,9 @@
 ---
-name: passive-builder-architecture-review
-description: Assess PassiveBuilder architecture plans and code changes against its contributor extensibility and readability standards. Use before designing contribution boundaries and within the existing implementation review; complements the UI polish skill.
+name: ph-composer-architecture-review
+description: Assess PH-Composer architecture plans and code changes against its contributor extensibility and readability standards. Use before designing contribution boundaries and within the existing implementation review; complements the UI polish skill.
 ---
 
-# PassiveBuilder architecture review
+# PH-Composer architecture review
 
 Assess whether a contributor can understand and extend the affected capability without learning
 the whole application. Apply this rubric during design and the existing coherent-diff review.

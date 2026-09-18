@@ -3,7 +3,7 @@
 DATE: 2026-09-18
 STATUS: Accepted architectural direction. No implementation yet.
 
-PassiveBuilder exists to support an open-source community in the Phius sphere. A contributor
+PH-Composer exists to support an open-source community in the Phius sphere. A contributor
 should be able to understand and extend one part without understanding the whole application.
 Optimize for the amount a reader must learn before making a safe, useful change. Prefer explicit
 code and stable boundaries even when they take more work or modestly more runtime resources.
@@ -135,7 +135,7 @@ goal or to invent all interfaces in advance.
 ## Development review
 
 Use the repository-local
-[architecture review skill](../.agents/skills/passive-builder-architecture-review/SKILL.md)
+[architecture review skill](../.agents/skills/ph-composer-architecture-review/SKILL.md)
 when designing an affected boundary and as the rubric for the existing coherent-diff review.
 Review findings cite the rule, source evidence and contributor consequence. Readability concerns
 need a concrete explanation; metric scores do not replace judgment.

@@ -2,7 +2,7 @@
 
 **DATE:** 2026-09-18
 
-PassiveBuilder is free and open source, a foundation in the way OpenPH is. Core authoring and
+PH-Composer is free and open source, a foundation in the way OpenPH is. Core authoring and
 export require no hosted application, database service, account, subscription or paid library
 access. BLDGTYP sells no commercial license for it. The repository license is AGPL-3.0-or-later;
 see [licensing](LICENSING.md) for what that means for products that connect to it or build on it.

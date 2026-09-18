@@ -1,11 +1,11 @@
-# Using PassiveBuilder with your agent
+# Using PH-Composer with your agent
 
 DATE: 2026-09-18
 STATUS: Planned capability. No supported connection endpoint or client setup is available yet.
 
-PassiveBuilder will let users' agents inspect and edit building models through documented public
+PH-Composer will let users' agents inspect and edit building models through documented public
 operations. Users choose their agent. No built-in LLM, model-provider account or AI subscription is
-required by PassiveBuilder, and ordinary hand authoring remains complete.
+required by PH-Composer, and ordinary hand authoring remains complete.
 
 The intended workflow is to discover the installed capabilities and target model, read relevant
 records or visual context, propose changes where appropriate, apply validated operations, and

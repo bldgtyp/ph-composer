@@ -19,7 +19,7 @@ exists to live with that: reading designPH's components, adopting them, grouping
 mulled unit, choosing one element as designPH's preview, manufacturing frame and install
 combination rows and pushing them, reviewing differences, relaying designPH's shading result, and
 staging every change as a reviewed propagation so records, rows and native windows never
-disagreed. PassiveBuilder owns the placed window, so none of that has a job.
+disagreed. PH-Composer owns the placed window, so none of that has a job.
 
 This packet keeps the definition half as it is and replaces the placed half with something much
 smaller.
@@ -35,7 +35,7 @@ interaction contract for every row marked Port.
 | `model/` (types, constituents, grid, operations, thermal, edge_resolution, anchors, guards) | 1,170 | Port. Drop `preview_id` and the adoption source kind |
 | `reviews/install_draft`, `reviews/install_review` | 416 | Port. The staged Installs session and its Save and Cancel |
 | `export/export_contract`, `export_report` | 354 | Adapt. Reads window units, not designPH rows. Drops shading provenance |
-| `assign/schedule` and the occurrence reader | about 300 | Adapt. The Schedule lists PassiveBuilder's own units |
+| `assign/schedule` and the occurrence reader | about 300 | Adapt. The Schedule lists PH-Composer's own units |
 | `panel/overlay/` | 397 | Adapt. Becomes a Colour-by mode on the shared service: component instances as the entity kind, element outlines and operation marks as derived geometry (spaces Q22) |
 | `placement/placement_geometry`, anchors, the Tool's pick and preview | about 400 | Adapt. The plane, axes and anchor arithmetic hold. The designPH template and the Dynamic Components commit go |
 | `designph/`, `compare/`, the rest of `assign/`, the rest of `reviews/`, `workflow/`, `export/ppp_shading_parser`, the rest of `placement/` | about 5,600 | Drop |
@@ -51,7 +51,7 @@ WUX12, the designPH preview reference, drops. WUX17 is rewritten by this packet.
   predecessor's "Frame segment" becomes **Frame** (Q15). The Library stays their one home. The
   model default Psi-Install Type carries over.
 - A **window unit** is an instance of one plain component definition per Window Type, authored by
-  PassiveBuilder in code, glued to its host face and cutting it (Q1, Q3, Q17). It is not a
+  PH-Composer in code, glued to its host face and cutting it (Q1, Q3, Q17). It is not a
   Dynamic Component and no file ships with the extension.
 - The definition is flat: one face per glazed element, in the host face's plane, and nothing
   else. No frame thickness, no backset, no reveal geometry (Q1, Q16). designPH's one opening per
@@ -65,10 +65,10 @@ WUX12, the designPH preview reference, drops. WUX17 is rewritten by this packet.
   depth and the type name go to the honeybee-ph properties that PHX already reads.
 - A **Psi-Install Type is an authoring layer**, not a second place psi-install lives. honeybee-ph
   holds psi-install on the construction's frame elements, and its aperture install types are an
-  override that PassiveBuilder does not need, because installs belong to the Window Type. The
+  override that PH-Composer does not need, because installs belong to the Window Type. The
   layer exists so one Frame product serves a wood wall and a brick wall without a copy per wall.
   The export writes the value into the frame element (Q24).
-- PassiveBuilder authors no shading of any kind. METr and WUFI-Passive handle shading after
+- PH-Composer authors no shading of any kind. METr and WUFI-Passive handle shading after
   export (Q10).
 - Everything in the type editor ports except designPH interactions (Q11).
 
@@ -121,7 +121,7 @@ Model             default_psi_install_id, default_install_depth_m
 The window unit record, new, on the component instance:
 
 ```
-id (wun_)          a UUID-based id in PassiveBuilder's dictionary on the instance
+id (wun_)          a UUID-based id in PH-Composer's dictionary on the instance
 window_type_id     the Window Type this unit follows
 anchor             one of the nine anchors; sill_center by default
 user_data
@@ -154,7 +154,7 @@ a fixed prefix plus the Window Type name and is rewritten with the type; a user 
 Components browser is overwritten without a finding (Q19). Its behavior is set to glue to any
 face, cut an opening, and refuse scaling (`no_scale_mask` with every handle off, Q8).
 
-Faces inside a definition carry one PassiveBuilder glass material, translucent, so a window reads
+Faces inside a definition carry one PH-Composer glass material, translucent, so a window reads
 as a window with every overlay off. It is applied only inside window definitions. A user who
 repaints a unit keeps their paint (Q18).
 
@@ -163,7 +163,7 @@ is stored and no finding is raised (Q5, Q20). The export writes `shgc` 0, which 
 accepts and honeybee-schema's range (`gt=0, lt=1`) does not. That deviation is disclosed, not
 hidden (Q23): the Export report names each such construction, `docs/` states it, and local
 conformance carries it as its one documented schema exception. A g-value of exactly 1 is treated
-the same way. PassiveBuilder never writes a nearby number on the user's behalf.
+the same way. PH-Composer never writes a nearby number on the user's behalf.
 
 ## Behaviors
 
@@ -225,7 +225,7 @@ Settled in the predecessor's interviews and recorded in its `UI_UX_SPEC.md`. Not
 
 ### Native edits the tool did not make
 
-| The user does | PassiveBuilder |
+| The user does | PH-Composer |
 | --- | --- |
 | Moves, Move-copies or pastes a unit | The unit and its opening move natively and the record copies with it. A copy receives its own id at this feature's next mutation (Q21). Its Zone is its parent, read when needed (Q7) |
 | Moves a unit off its face or onto another | The unit shows as unhosted in the Schedule until it is glued again. **Re-host** does it |
@@ -269,7 +269,7 @@ Checked against `honeybee_ph/honeybee_ph/properties/aperture.py`,
 `honeybee_energy_ph/construction/window.py`, `honeybee_ph_utils/aperture_psi_install.py` and
 `PHX/from_HBJSON/create_building.py` and `create_assemblies.py` on 2026-09-18.
 
-| PassiveBuilder | honeybee |
+| PH-Composer | honeybee |
 | --- | --- |
 | Glazed element of a unit | One `Aperture` on the host `Face`. Identifier from the unit id and the element id, display name from unit and element names. The host `Face` exports as its gross polygon with the Apertures as sub-faces, which is honeybee's shape (Q26) |
 | Empty element | Nothing. The area stays wall |
@@ -280,7 +280,7 @@ Checked against `honeybee_ph/honeybee_ph/properties/aperture.py`,
 | Window Type name | `properties.ph.variant_type` |
 | Operation | `Aperture.is_operable` is true for swing and slide |
 | Install depth | `properties.ph.install_depth`, from the type or the model default. PHX writes it to METr as `depthWRevC` |
-| Shading | Nothing authored. honeybee-ph serializes its own default factors, and the Export report says PassiveBuilder sets no shading (Q10) |
+| Shading | Nothing authored. honeybee-ph serializes its own default factors, and the Export report says PH-Composer sets no shading (Q10) |
 
 honeybee-ph holds psi-install on the construction's frame elements. Its aperture install types
 are a per-aperture override, there so one construction can serve apertures installed differently
@@ -288,7 +288,7 @@ are a per-aperture override, there so one construction can serve apertures insta
 the frame element's value applies. METr and WUFI hold psi-install on the window type's frame, so
 PHX's `synthesize_window_type_psi_variants` (`PHX/model/transforms.py`) creates a variant window
 type wherever an aperture's resolved values differ from its type's frame, and never removes the
-base. In PassiveBuilder installs belong to the Window Type and no unit overrides them, so the
+base. In PH-Composer installs belong to the Window Type and no unit overrides them, so the
 override layer has no job. Writing the values into the frame elements means no aperture differs,
 PHX synthesizes nothing, and METr receives one window type per distinct combination. Writing 0.0
 on the frames and every value on the Apertures would have sent M unused base types plus M
@@ -336,7 +336,7 @@ Interviewed 2026-09-18 in two rounds. Answers are Ed's.
 | Q15 | Words | Window Type, Glazing, Psi-Install Type. Frame segment becomes Frame |
 | Q16 | Faces in the definition | One face per glazed element. Empty panels stay wall |
 | Q17 | Source of the component | Generated in Ruby from the Window Type record. No shipped .skp. Reset to type is the same routine |
-| Q18 | Look at rest | One PassiveBuilder glass material inside window definitions only |
+| Q18 | Look at rest | One PH-Composer glass material inside window definitions only |
 | Q19 | Definition naming | Prefix plus type name, rewritten with the type. Identity is `window_type_id` |
 | Q20 | g-value 0 | No finding |
 

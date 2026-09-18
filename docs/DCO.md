@@ -1,6 +1,6 @@
 # Developer Certificate of Origin
 
-PassiveBuilder uses the Developer Certificate of Origin, version 1.1, reproduced below from
+PH-Composer uses the Developer Certificate of Origin, version 1.1, reproduced below from
 https://developercertificate.org. Sign off each commit with `git commit -s`, which adds a
 `Signed-off-by:` line carrying your name and email. By signing off you certify the statements
 below for that commit. You keep your copyright. Why the project uses this rather than a

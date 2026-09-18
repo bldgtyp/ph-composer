@@ -1,7 +1,7 @@
 # Zones and adjacency
 
 The first feature packet. It settles what the fundamental unit of geometry is, the vocabulary
-that keeps PassiveBuilder's Zone distinct from honeybee's Room and honeybee's zone tag, and how
+that keeps PH-Composer's Zone distinct from honeybee's Room and honeybee's zone tag, and how
 interior faces between Zones are found, recorded and kept honest.
 
 ## Read order

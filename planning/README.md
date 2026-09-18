@@ -1,6 +1,6 @@
 # planning/
 
-Working plans for PassiveBuilder. See [`.instructions.md`](.instructions.md) for
+Working plans for PH-Composer. See [`.instructions.md`](.instructions.md) for
 the rules and folder contract (canon lives in the `planning-conventions`
 skill).
 

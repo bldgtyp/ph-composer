@@ -70,7 +70,7 @@ Zone per room.
 - The Space record maps field for field to honeybee-ph's `Space`, `SpaceVolume`, `SpaceFloor` and
   `SpaceFloorSegment`. No new concepts. The predecessor's hierarchy, protection, reconciler,
   recovery states and table carry over unchanged in behavior.
-- PassiveBuilder owns floor classification. **Mark floor** writes the Floor Segment record on a
+- PH-Composer owns floor classification. **Mark floor** writes the Floor Segment record on a
   face the user drew inside a Volume, replacing the predecessor's dependence on designPH. It is a
   `Sketchup::Tool` that this feature owns, a sibling of the Classify tool and not a mode of it
   (Q19).
@@ -85,7 +85,7 @@ Zone per room.
 - An **airflow balance view** lists supply and extract totals per Zone with an imbalance warning,
   and regroups by ventilator when the equipment packet lands (Q9, Q16).
 - Drawing the floors correctly and choosing what counts toward iCFA is the user's job.
-  PassiveBuilder states the Phius rule and enforces nothing (Q3, Q15).
+  PH-Composer states the Phius rule and enforces nothing (Q3, Q15).
 - Airflows are entered per Space in the table and the inspector. Unset is stored distinct from
   zero, and the any-set rule decides what an unset rate means (Q21).
 
@@ -125,7 +125,7 @@ Floor Segment   identifier, display_name, icfa_factor (default 1.0),
                 net_area_factor (default 1.0), user_data
 ```
 
-- **Identity.** Each `identifier` is a UUID in PassiveBuilder's own dictionary on the entity, as
+- **Identity.** Each `identifier` is a UUID in PH-Composer's own dictionary on the entity, as
   the predecessor's `identifiers.rb` issues it. It is the durable identity that
   [TECH_STACK.md](../../../context/TECH_STACK.md) requires, because cut and paste can replace a
   `persistent_id`. References to a Space from the table, the overlay, the report and the export
@@ -136,7 +136,7 @@ Floor Segment   identifier, display_name, icfa_factor (default 1.0),
   inside it receive new identifiers and the Space the next free number, as one Undo step.
   Nothing reissues an identifier silently, because a deferred pass cannot tell a copy from a cut
   and paste. A Space inside a repeated component is the same finding with no repair offered:
-  PassiveBuilder never makes a parent unique.
+  PH-Composer never makes a parent unique.
 - **`user_data`.** All three records carry the `user_data` mapping and structured extension
   payloads that [EXTENSIBILITY.md](../../../context/EXTENSIBILITY.md) requires, under the
   foundation's storage contract. Move Space to Zone keeps it. Make independent keeps it, since a

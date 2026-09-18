@@ -1,0 +1,4 @@
+interface:
+  display_name: "PH-Composer architecture review"
+  short_description: "Review contributor extensibility and code clarity"
+  default_prompt: "Use $ph-composer-architecture-review to assess the current plan or diff against PH-Composer's contributor architecture and coding standards."

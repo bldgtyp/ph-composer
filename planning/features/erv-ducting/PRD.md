@@ -43,7 +43,7 @@ Verified in `honeybee_phhvac/ducting.py`, `ventilation.py`, PHX `model/hvac/duct
 
 - `PhDuctSegment`: `geometry`, `diameter`, `height`, `width`, `insulation_thickness`,
   `insulation_conductivity`, `insulation_reflective`. The honeybee-ph names carry no unit
-  suffix. PHX's carry `_mm`. PassiveBuilder records carry the suffix and the translation maps them.
+  suffix. PHX's carry `_mm`. PH-Composer records carry the suffix and the translation maps them.
 - A segment with height and width is rectangular. Otherwise it is round and uses diameter.
 - `PhDuctElement`: `display_name`, `duct_type` (1 supply, 2 exhaust), and its segments.
 - `PhVentilationSystem` holds `supply_ducting` and `exhaust_ducting` lists, and validates that
@@ -97,7 +97,7 @@ differences.
 
 ### Export mapping
 
-| PassiveBuilder | honeybee-ph |
+| PH-Composer | honeybee-ph |
 | --- | --- |
 | Duct, one line | `PhDuctSegment` with the type's fields and the line as `geometry` |
 | Duct run | `PhDuctElement` with `duct_type` from direction |

@@ -1,9 +1,9 @@
 ---
-name: passive-builder-ui-polish
-description: Polish, refactor, or review PassiveBuilder HtmlDialog screens using the app's established visual hierarchy, page-header actions, toolbars, sidebars, notices, progressive disclosure, and real-host acceptance loop. Use for UI and UX work in passive-builder, especially when applying the Assembly Builder, Library, or Window Types patterns to a new screen such as face assignment or thermal bridges.
+name: ph-composer-ui-polish
+description: Polish, refactor, or review PH-Composer HtmlDialog screens using the app's established visual hierarchy, page-header actions, toolbars, sidebars, notices, progressive disclosure, and real-host acceptance loop. Use for UI and UX work in ph-composer, especially when applying the Assembly Builder, Library, or Window Types patterns to a new screen such as face assignment or thermal bridges.
 ---
 
-# PassiveBuilder UI Polish
+# PH-Composer UI Polish
 
 Treat each screen as another view of one application, not a standalone visual redesign. Preserve behavior and domain language while making the initial state quiet, legible, and predictable.
 

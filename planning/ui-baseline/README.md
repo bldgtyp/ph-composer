@@ -6,15 +6,15 @@ AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (no remote)
 
 Ed's direction on 2026-09-18: the UI and UX of PH-Navigator for SketchUp is the basis for
-PassiveBuilder. Copy and match it wherever possible. He supplied six screenshots of the
+PH-Composer. Copy and match it wherever possible. He supplied six screenshots of the
 predecessor at 0.4.0-b2 as the reference.
 
 This document reads those six screens and rules on every visible part: what is kept as it is,
 what changes because of a recorded packet decision, what is removed with designPH, and what is
-added. It then lists the screens PassiveBuilder needs that have no predecessor to copy.
+added. It then lists the screens PH-Composer needs that have no predecessor to copy.
 
 It does not restate how the UI is built or polished. That is
-`.agents/skills/passive-builder-ui-polish/` and its `references/patterns.md`, which name the
+`.agents/skills/ph-composer-ui-polish/` and its `references/patterns.md`, which name the
 predecessor's source files for every pattern below. Behavior belongs to the feature packets; where
 this document and a packet PRD disagree, the PRD wins and this document is corrected.
 
@@ -147,7 +147,7 @@ icon, and a star toggle at the top right of the card.
 | Place, shown disabled | Change. It starts the Place tool with this type chosen (window-types, Place) |
 | "Before placing" alert | Keep. Its steps lose the designPH items |
 | Installs button and its staged session | Keep (window-types Q12) |
-| Schedule subtab | Change. It lists PassiveBuilder's own units by type, with Zone, host, Level and Locate |
+| Schedule subtab | Change. It lists PH-Composer's own units by type, with Zone, host, Level and Locate |
 | Install depth | Add: a model default beside the Psi-Install model default in Library, and a type override in the header "…" menu (window-types Q9) |
 | "Frame" as the row label | Keep. It already matches the rename (window-types Q15) |
 
@@ -217,4 +217,4 @@ in the polish skill's `patterns.md` once Ed accepts it.
 ## Next step
 
 Ed drops the six files into `screens/`. After the foundation transplant, each
-screen's first PassiveBuilder build is reviewed against its table here with the polish skill.
+screen's first PH-Composer build is reviewed against its table here with the polish skill.

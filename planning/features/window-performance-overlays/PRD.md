@@ -18,7 +18,7 @@ The predecessor's V2 brief had two modes. One does not survive.
 | V2 part | Disposition | Note |
 | --- | --- | --- |
 | Solar Radiation mode | Adapt | Same coarse monthly method. The data source is now the climate-data snapshot, cited from honeybee-ph, not PHPP |
-| Shading Factor mode | Drop | It relayed designPH's computed factors. PassiveBuilder authors no shading of any kind (window-types Q10), and METr computes shading after export. There is nothing to show |
+| Shading Factor mode | Drop | It relayed designPH's computed factors. PH-Composer authors no shading of any kind (window-types Q10), and METr computes shading after export. There is nothing to show |
 | Read-only overlay, legend, missing and stale states, fixed or user ramp limits | Port | |
 | Occurrence-safe identity, no material mutation | Port | Simpler now: a window unit is one generated component instance with a `window_type_id` |
 | Own overlay and legend code | Drop | Use the shared Colour-by component and HUD legend from face-assignment. This packet registers a mode |
@@ -37,7 +37,7 @@ not a METr result. The legend says "Unshaded incident radiation, monthly climate
 reads it as more.
 
 The interpolation rule is the open technical question. METr and WUFI-Passive do one internally.
-PassiveBuilder must either match a published rule or label its own as approximate. See Q2.
+PH-Composer must either match a published rule or label its own as approximate. See Q2.
 
 ## Behaviors
 

@@ -58,7 +58,7 @@ no standalone review file is retained.
 | Date | Event |
 | --- | --- |
 | 2026-09-18 | PRD drafted. |
-| 2026-09-18 | Interview complete: 21 decisions. Notable: PassiveBuilder sets the format and providers accommodate it, no translators; one generic connection provider, PH-Navigator is just an address; file format equals wire format; four bare kinds only; three sign-in methods; SI only on the wire; Export model library to file; CC0 starter library from public sources; an example provider as the contributor template. |
+| 2026-09-18 | Interview complete: 21 decisions. Notable: PH-Composer sets the format and providers accommodate it, no translators; one generic connection provider, PH-Navigator is just an address; file format equals wire format; four bare kinds only; three sign-in methods; SI only on the wire; Export model library to file; CC0 starter library from public sources; an example provider as the contributor template. |
 | 2026-09-18 | Scoping review made source identity independent of file paths and addresses, refused duplicate record ids as ambiguous, and moved Q21 to central decision D6. |
 | 2026-09-18 | D6 confirmed: the export dialog defaults to all supported kinds, offers selected records when applicable, and ignores filters and hidden rows when determining scope. |
 | 2026-09-18 | Authorized architecture corrections incorporated into PRD and shared library contracts; documentation reviewed, implementation and acceptance evidence pending. |

@@ -7,10 +7,10 @@ ISSUE: none (no remote)
 
 ## Outcome
 
-Establish the empty PassiveBuilder extension, its development and verification loop, and the
+Establish the empty PH-Composer extension, its development and verification loop, and the
 feature seams on which the roadmap depends by transplanting the proven, product-neutral foundation
 from PH-Navigator for SketchUp at `f358ebf`. The result loads in SketchUp and is ready for feature
-work, but authors no PassiveBuilder building data and makes no release claim.
+work, but authors no PH-Composer building data and makes no release claim.
 
 This is a selective transplant, not a repository copy. The predecessor remains evidence. Every
 designPH, PHI, adoption, push, compare and propagation path stays behind.
@@ -28,7 +28,7 @@ designPH, PHI, adoption, push, compare and propagation path stays behind.
 - The UI kit module graph and shared styles, tables, overlays, forms, bubbles, notices, unit fields
   and view controls, with product-specific screens omitted.
 - Pyodide loader, pinned vendor manifest, export-run shell, contributor registry, attribute guard,
-  artifact-pair hygiene and report shell. No PassiveBuilder translation section and no METr
+  artifact-pair hygiene and report shell. No PH-Composer translation section and no METr
   exporter land in this packet.
 - Development documentation and a fresh-process current-host smoke gate.
 
@@ -49,9 +49,9 @@ designPH, PHI, adoption, push, compare and propagation path stays behind.
 | `core/`, product-neutral `session/` and `shell/` | Transplant, rename and remove designPH source kinds |
 | `html/` workspace toolkit and shared styles | Transplant the shared modules; omit feature screens and designPH words |
 | `runtime/`, export workflow, artifact hygiene and report infrastructure | Transplant as an empty extensible shell |
-| `tools/`, tests and SketchUp stub | Transplant, then make the clean PassiveBuilder namespace and no-designPH boundary executable checks |
+| `tools/`, tests and SketchUp stub | Transplant, then make the clean PH-Composer namespace and no-designPH boundary executable checks |
 | `features/spaces/`, assemblies, windows and organization library | Do not land as features here. Their packets decide their adapted transplants |
-| `python/ph_navigator_translation/` | Do not copy wholesale. Start the PassiveBuilder package shell; feature sections arrive with their owners |
+| `python/ph_navigator_translation/` | Do not copy wholesale. Start the PH-Composer package shell; feature sections arrive with their owners |
 
 ## Acceptance
 

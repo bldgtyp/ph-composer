@@ -1,7 +1,7 @@
 # Assemblies and materials
 
 The fourth feature packet. It carries the predecessor's Assembly Builder, Assemblies inventory and
-Library / Materials into PassiveBuilder with the designPH half removed. It depends on
+Library / Materials into PH-Composer with the designPH half removed. It depends on
 [face-assignment](../face-assignment/README.md) for the face record's `assembly_id`, and
 [libraries](../libraries/README.md) depends on it for the Material record kind.
 

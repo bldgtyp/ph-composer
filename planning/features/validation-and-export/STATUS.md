@@ -7,7 +7,7 @@ ISSUE: none (no remote)
 
 ## State
 
-PRD drafted from the PassiveBuilder product boundary, the predecessor's completed E1 export
+PRD drafted from the PH-Composer product boundary, the predecessor's completed E1 export
 contract and the contributor/exporter seams already recorded in `context/TECH_STACK.md`. Not
 interviewed. Nothing is implemented.
 

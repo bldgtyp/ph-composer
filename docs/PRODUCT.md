@@ -2,7 +2,7 @@
 
 **DATE:** 2026-09-18
 
-PassiveBuilder is a free, open-source authoring tool for Phius passive building models. The SKP
+PH-Composer is a free, open-source authoring tool for Phius passive building models. The SKP
 file holds the working building data. A consultant can enter every supported definition by hand,
 assign it in the model, and export without an account or network service.
 
@@ -72,9 +72,9 @@ drafts and never changes the model or the export scope.
 
 ## Envelope
 
-The user classifies faces with PassiveBuilder's own tool: face type, boundary condition and
+The user classifies faces with PH-Composer's own tool: face type, boundary condition and
 assembly. A face inside a repeated component is shared by every occurrence, and independent
-classification requires the user to make the parent unique first. PassiveBuilder never does that
+classification requires the user to make the parent unique first. PH-Composer never does that
 automatically. Unclassified faces are visible in validation and never silently exported.
 
 Thermal bridges are identified on the model as edges, assigned a type carrying a psi-value, and
@@ -94,8 +94,8 @@ as a glazing with a g-value of 0.
 Placement and resizing use sill center as the default fixed point; the user can choose another
 anchor per unit, shown before changes and retained for later resizes.
 
-A window unit is a flat component PassiveBuilder generates from its Window Type, with one face
-per glazed element, glued to and cutting an envelope face. PassiveBuilder authors no window
+A window unit is a flat component PH-Composer generates from its Window Type, with one face
+per glazed element, glued to and cutting an envelope face. PH-Composer authors no window
 shading; METr handles it after export.
 
 Incomplete types can be saved and, with sufficient size and layout, assigned. Missing required

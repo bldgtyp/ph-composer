@@ -15,7 +15,7 @@ copy with attribution. It shipped for Materials, Frames and Glazings, and it pas
 production.
 
 It was written for one vendor. Each record kind's adapter names PH-Navigator as its provider, its
-catalog URL path and its file format in constants. One source can be open per kind. PassiveBuilder
+catalog URL path and its file format in constants. One source can be open per kind. PH-Composer
 promises the opposite: a folder of files on disk, a firm's server, METr's catalog, PassivSure and
 PH-Navigator are equal, none is required, and no address ships in the code. This packet keeps the
 predecessor's user-facing behavior almost unchanged and separates the two things its adapters
@@ -29,7 +29,7 @@ Behavior detail lives in `../ph-navigator-sketchup/planning/archive/shared-mater
 | Part | Lines | Disposition |
 | --- | --- | --- |
 | `organization_library` (actions, snapshot, in-file projection), `store` | 181 | Adapt. Keyed by provider and kind, not kind alone |
-| `catalog_file` (envelope checks, row normalization, size limit, skip with warning) | 166 | Adapt. Reads PassiveBuilder's library file format |
+| `catalog_file` (envelope checks, row normalization, size limit, skip with warning) | 166 | Adapt. Reads PH-Composer's library file format |
 | `kinds/kinds`, `kinds/materials`, `kinds/window_products` | 328 | Split. The field mapping, fingerprint and in-file projection stay a kind adapter. The provider name, library id, URL path and file kind leave it |
 | `connection`, `transport`, `credentials` | 464 | Port as the connection provider. The address is entered by the user and nothing is prefilled |
 | Panel: sidebar, source selector, details bubble, drag and drop, "In this file", same-name review | not counted | Port |
@@ -39,9 +39,9 @@ Behavior detail lives in `../ph-navigator-sketchup/planning/archive/shared-mater
 - There are two contracts. A **library provider** says where records come from. A **record kind
   adapter** says what a record of one kind looks like on the wire, how it becomes a model-library
   record, and how a local copy is recognised. Any provider can serve any kind.
-- PassiveBuilder sets one neutral format and providers accommodate it (Q5). The same JSON
+- PH-Composer sets one neutral format and providers accommodate it (Q5). The same JSON
   envelope is the library file on disk and the response of a connection, so a static file host is
-  a valid server (Q6). No translator for any vendor's format lives anywhere in PassiveBuilder.
+  a valid server (Q6). No translator for any vendor's format lives anywhere in PH-Composer.
 - The core holds two providers. The **library file** comes first. The **generic connection**
   comes second: the user types an address and signs in the way that server declares. PH-Navigator
   is one such address, optional, for a user who has an account there, and PH-Navigator changes its
@@ -157,7 +157,7 @@ folder (Q3):
 
 ```
 {
-  "format": "passive-builder.library",
+  "format": "ph-composer.library",
   "schema_version": 1,
   "kind_schema_versions": { "materials": 1, "glazings": 1 },
   "library": { "id": "bldgtyp-shared", "name": "BLDGTYP shared library" },
@@ -345,7 +345,7 @@ Round 1, 2026-09-18. Answers are Ed's. The body above is folded when the intervi
 | Q2 | Record kinds | The four bare kinds only: Materials, Frames, Glazings, Psi-Install Types. Assembly, Window Type and equipment libraries (ventilator, heat pump) may come later and are not in this packet |
 | Q3 | File layout | One envelope that may hold many kinds. A folder is every such file inside it |
 | Q4 | Several providers | Yes. The user switches between providers in the sidebar and pulls records into the SKP |
-| Q5 | PH-Navigator's export | No translator. PassiveBuilder sets the contract and providers accommodate it. PH-Navigator's endpoint and export change to match |
+| Q5 | PH-Navigator's export | No translator. PH-Composer sets the contract and providers accommodate it. PH-Navigator's endpoint and export change to match |
 | Q7 | Order and shipping | The library file first, the PH-Navigator connection second. The pair establishes the patterns, contracts and infrastructure. The connection does not ship as part of the extension's defaults: it is an optional setup for a user who has a PH-Navigator account, through a token and an approve flow |
 | Q8 | Source changed | A quiet mark while that provider is loaded, manual review on request |
 | Q9 | Starter library | A separate download. Very small, built from publicly accessible data, a handful of records to put the structure in place |

@@ -17,7 +17,7 @@ skill and workflow routing below.
 | The PHX model classes the METr exporter builds | `phx-model` |
 | The WUFI-shaped model METr reads | `wufi-xml` |
 | honeybee-ph fields and HBJSON round trips | `hbjson-serialization-contract` |
-| Changing or reviewing an HtmlDialog screen | `passive-builder-ui-polish` |
+| Changing or reviewing an HtmlDialog screen | `ph-composer-ui-polish` |
 
 Use these skills only when the task matches them. Shared scope, vocabulary, host, verification and
 documentation rules remain in `AGENTS.md` and their linked project authorities.

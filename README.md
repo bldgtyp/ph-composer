@@ -1,4 +1,4 @@
-# PassiveBuilder
+# PH-Composer
 
 A free, open-source Passive House authoring environment that runs inside SketchUp, for Phius
 passive building projects.
@@ -37,7 +37,7 @@ rules. Point a coding agent at [AGENTS.md](AGENTS.md).
 
 Contributions are welcome once the foundation lands. There is no CLA: sign off each commit under
 the [Developer Certificate of Origin](docs/DCO.md). [docs/LICENSING.md](docs/LICENSING.md) explains
-what AGPL means for products that connect to or build on PassiveBuilder.
+what AGPL means for products that connect to or build on PH-Composer.
 
 ## License
 

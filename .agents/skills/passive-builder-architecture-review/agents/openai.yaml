@@ -1,4 +1,0 @@
-interface:
-  display_name: "PassiveBuilder architecture review"
-  short_description: "Review contributor extensibility and code clarity"
-  default_prompt: "Use $passive-builder-architecture-review to assess the current plan or diff against PassiveBuilder's contributor architecture and coding standards."

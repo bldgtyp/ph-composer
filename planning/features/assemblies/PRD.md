@@ -15,7 +15,7 @@ Materials inventory, shared material records, usage, guarded delete and an HBJSO
 About a third of that feature existed to live beside designPH. designPH held the face-to-assembly
 assignment, so the predecessor pushed each assembly into designPH's library as an equivalent
 single layer, adopted assemblies designPH already had, and reviewed differences when a designPH
-row changed. PassiveBuilder owns the face record, so that whole loop has no job. This packet is
+row changed. PH-Composer owns the face record, so that whole loop has no job. This packet is
 the predecessor's feature with the loop removed and the honeybee mapping tightened.
 
 ## Port disposition
@@ -31,7 +31,7 @@ lives in `../ph-navigator-sketchup/planning/archive/assembly-builder/`; this tab
 | `usage/` (scan, row_index, task) | 416 | Adapt. The scan reads face records, not designPH tables |
 | `export_contract`, `export_report` | 178 | Adapt. Drops the push, difference and packed sections |
 | `push/`, `adoption/`, `designph/`, `states`, `origin`, `designph_cell` | 1,291 | Drop |
-| Python: `constructions/`, `phn_assemblies/`, `contract/sections/assemblies.py` and `assembly_records.py` in the translation package | about 900 | Port. This is the code that writes `OpaqueConstruction` and the division grid. Drop the declared-U sandwich and the designPH table resolution in `constructions/tables.py`. Adapt the `ph_nav` construction side channel in `phn_assemblies/values.py`: it becomes the `passive_builder` block under Export mapping and loses `air_barrier`, `kind` and the hint fields |
+| Python: `constructions/`, `phn_assemblies/`, `contract/sections/assemblies.py` and `assembly_records.py` in the translation package | about 900 | Port. This is the code that writes `OpaqueConstruction` and the division grid. Drop the declared-U sandwich and the designPH table resolution in `constructions/tables.py`. Adapt the `ph_nav` construction side channel in `phn_assemblies/values.py`: it becomes the `ph_composer` block under Export mapping and loses `air_barrier`, `kind` and the hint fields |
 | Panel: Builder SVG, toolbar, property bubbles, inventories, library sidebar | not counted | Port. Drop the push chip, the difference banner and the adoption view |
 
 The predecessor's panel is the starting UI, as Ed directed on 2026-09-18. Port from the frozen
@@ -43,7 +43,7 @@ as an explicit change to this table.
 - An **Assembly** is a model-local record of ordered **Layers**. A Layer owns a thickness and one
   or more **Layer-Segments**. A Layer-Segment names one shared **Material**, a width, and
   optionally a steel stud spacing. One Material record serves every assembly that uses it.
-- Assembly, Layer and Material are METr's own screen words and PassiveBuilder uses them on screen
+- Assembly, Layer and Material are METr's own screen words and PH-Composer uses them on screen
   and in records. honeybee says `OpaqueConstruction` and `EnergyMaterial`; the mapping is recorded
   the way Zone maps to `Room` (Q1).
 - Every assembly has real layers. The predecessor's declared-U kind is removed (Q4). What is
@@ -54,7 +54,7 @@ as an explicit change to this table.
   and store the face record's own values, shown in the Classify palette's words (Q2).
 - U-values are computed in Ruby for display. The Builder header shows two, with surface films and
   without, as the predecessor does (Q8). The exported model carries the layers, and METr computes
-  its own result. PassiveBuilder claims nothing about METr's number.
+  its own result. PH-Composer claims nothing about METr's number.
 - An assigned incomplete assembly blocks export. An unused incomplete assembly does not.
 
 ## Vocabulary
@@ -207,23 +207,23 @@ designPH rows, difference review, the digest migration, and every finding that n
 Checked against `honeybee_ph/honeybee_energy_ph/properties/materials/opaque.py` and
 `PHX/from_HBJSON/create_assemblies.py` on 2026-09-18. The reference method is PH-Navigator's
 Grasshopper route, `ph-navigator-v2/backend/features/gh_api/constructions_export.py`, whose output
-"HBPH+ - PH-Nav Get Constructions" rebuilds with `OpaqueConstruction.from_dict`. PassiveBuilder
+"HBPH+ - PH-Nav Get Constructions" rebuilds with `OpaqueConstruction.from_dict`. PH-Composer
 matches it for mixed layers, steel stud layers and thermal-mass defaults (Q22). The predecessor's
 `phn_assemblies/layered.py` already follows the same method.
 
-| PassiveBuilder | honeybee |
+| PH-Composer | honeybee |
 | --- | --- |
 | Assembly | `OpaqueConstruction`, identifier from the record id, display name from the name |
 | Layer order | Material list, outside first. `orientation` decides whether the stored order is reversed on write. Membrane layers are left out of the list |
 | Single-segment layer | One `EnergyMaterial` with the layer's thickness and the Material's properties |
 | Mixed layer | One host `EnergyMaterial` carrying a `PhDivisionGrid`: one row, one column per segment, column widths from `width_mm`, a cell material per segment. The host is a duplicate of the grid's base material, the cell with the largest area, with its conductivity replaced by `get_equivalent_conductivity()`. Density and specific heat stay the base material's. PHX reads `properties.ph.divisions`, takes the base cell as the METr layer material and writes the divisions |
 | Steel stud layer | The same host and grid, with the grid's `steel_stud_spacing_mm` set from the one Layer-Segment that carries a spacing. `is_a_steel_stud_cavity` is derived from that value and is never written. For this grid PHX takes the host, with its equivalent conductivity, as the METr layer material |
-| Membrane layer | No `EnergyMaterial`. Carried in the construction's `user_data["passive_builder"]` block (Q21) |
+| Membrane layer | No `EnergyMaterial`. Carried in the construction's `user_data["ph_composer"]` block (Q21) |
 | Material identifiers | Keyed by layer, never by Material and thickness: one for a single-segment layer, one per column for a cell, one for a host. The prefix follows the namespace decision. One Material at two thicknesses is two `EnergyMaterial` objects, and honeybee refuses two different materials under one identifier |
 | Material colour | `properties.ph.ph_color` |
 | Face assignment | `Face.properties.energy.construction` |
 
-**The `passive_builder` block (Q21).** `OpaqueConstruction.user_data["passive_builder"]` carries
+**The `ph_composer` block (Q21).** `OpaqueConstruction.user_data["ph_composer"]` carries
 `assembly_id` and `membrane_layers`. Each membrane entry holds `outside_index` (its position in
 the full outside-to-inside layer list, membranes included), `layer_id`, `segment_id`,
 `thickness_mm`, and the Material's id, name, category, colour, density, specific heat and
@@ -240,7 +240,7 @@ honeybee-ph's `get_base_material` sums area by identifier, so with one identifie
 base is the widest single column. In a stud and cavity layer that is the cavity.
 
 **Steel stud check.** The host of a steel stud layer reaches METr with a steel-weighted
-conductivity. That is the reference method and PassiveBuilder matches it (Q22). The "Through PHX"
+conductivity. That is the reference method and PH-Composer matches it (Q22). The "Through PHX"
 acceptance step reads the METr layer back and compares it with a steel stud layer built by hand
 in METr. A difference there is a PHX issue and changes this table only by a recorded decision.
 
@@ -322,7 +322,7 @@ accepted with the instruction to fold the review in.
 
 | # | Decision | Answer |
 | --- | --- | --- |
-| Q21 | Membranes in HBJSON | Carried under a PassiveBuilder namespace on the construction's `user_data`, declared by the export contributor. Never an `EnergyMaterial`. `air_barrier` stays local, per Q9 |
+| Q21 | Membranes in HBJSON | Carried under a PH-Composer namespace on the construction's `user_data`, declared by the export contributor. Never an `EnergyMaterial`. `air_barrier` stays local, per Q9 |
 | Q22 | Mixed and steel stud layers | Match PH-Navigator's Grasshopper route: a base-material duplicate as host with the grid's equivalent conductivity, one spacing per grid, thermal-mass defaults of 600 kg/m3 and 1000 J/kgK |
 | Q23 | Cross-feature seams | Face-assignment owns the face read, Locate, Classify activation and Reassign. Assemblies owns the assembly read and the delete transaction. The face section declares the constructions result as a dependency |
 
@@ -333,7 +333,7 @@ predecessor's fixtures; the usage scan against synthetic face records; the expor
 single Layer-Segment, a mixed and a steel stud layer, validated by loading the HBJSON in honeybee and
 reading the division grid back. The same projection for a membrane between two thermal layers, an
 all-membrane assembly, one Material at two thicknesses and a stud, cavity, stud, cavity layer:
-assert the material list, the identifiers, the `passive_builder` block, the finding severity and
+assert the material list, the identifiers, the `ph_composer` block, the finding severity and
 a passing allowlist check. A translation test with two faces sharing one assembly, one face
 naming an absent id and one unused assembly. `user_data` and an unknown extension payload through
 edit, Duplicate, Undo/Redo and save and reopen. Delete with replacement across direct, nested and

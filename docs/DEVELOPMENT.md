@@ -73,7 +73,7 @@ sits outside `make ci`; run it before a phase gate. Thresholds ratchet upward on
 ## Install and reload
 
 ```sh
-make rbz       # dist/passive_builder.rbz, install through Extension Manager
+make rbz       # dist/ph_composer.rbz, install through Extension Manager
 make install   # replace only this extension's loader and folder in the Plugins directory
 ```
 

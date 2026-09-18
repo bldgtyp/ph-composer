@@ -141,7 +141,7 @@ Click a row to select its lines.
 
 ### Export mapping
 
-| PassiveBuilder | honeybee-ph |
+| PH-Composer | honeybee-ph |
 | --- | --- |
 | Pipe, one line | `PhHvacPipeSegment` with the type's fields and the line as `geometry` |
 | Run | `PhHvacPipeElement` |

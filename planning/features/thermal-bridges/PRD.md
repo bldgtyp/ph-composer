@@ -114,7 +114,7 @@ draw nothing, since most edges in a model are not thermal bridges.
 
 ### Export mapping
 
-| PassiveBuilder | honeybee-ph |
+| PH-Composer | honeybee-ph |
 | --- | --- |
 | Run of edges | `PhThermalBridge.geometry`, a `Polyline3D`, or a `LineSegment3D` for one edge |
 | Type `name` plus counter | `display_name` |

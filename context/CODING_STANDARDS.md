@@ -1,4 +1,4 @@
-# Coding standards: PassiveBuilder
+# Coding standards: PH-Composer
 
 **DATE:** 2026-09-18
 

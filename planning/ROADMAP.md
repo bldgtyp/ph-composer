@@ -20,7 +20,7 @@ should need regular edits.
 Build the part nobody has built before first, and prove it end to end before adding breadth.
 
 The predecessor already proved the Assembly Builder, the Window Type editor, the Library tab,
-Spaces and units. Those are ports with known cost. What PassiveBuilder has never done is what
+Spaces and units. Those are ports with known cost. What PH-Composer has never done is what
 designPH used to do: decide what a Zone is, which faces are envelope, and turn that into a
 honeybee model METr accepts. If that fails or turns out slow, every other packet changes. So the
 first milestone is one box, drawn in SketchUp, opened in METr, with default constructions.
@@ -55,10 +55,10 @@ is the complete MVP Ed described. Ed confirmed both boundaries in D1 on 2026-09-
 | 0.4 | Overlay fill spike | spike | Deferred | Gates Colour-by, which face-assignment needs in phase 1 |
 | 0.5 | Window component host spike | spike | Deferred | Gates window-types. Cheap to run with 0.4 |
 | 0.6 | Edge identity spike | spike | Requested | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
-| 0.7 | Development repository home and MVP license boundary | decisions | Confirmed | D5 keeps the UI kit AGPL and external integrations at file/HTTPS seams. D8 keeps PassiveBuilder under PH-Tools during development; final public naming and organization remain a launch decision |
+| 0.7 | Development repository home and MVP license boundary | decisions | Confirmed | D5 keeps the UI kit AGPL and external integrations at file/HTTPS seams. D8 keeps PH-Composer under PH-Tools during development; final public naming and organization remain a launch decision |
 
 The three host spikes are one session against the predecessor's bridge. They need no
-PassiveBuilder code, so they can run before or beside the transplant.
+PH-Composer code, so they can run before or beside the transplant.
 
 ## Phase 1: walking skeleton
 

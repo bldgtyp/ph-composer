@@ -1,4 +1,4 @@
-# Current PassiveBuilder UI reference points
+# Current PH-Composer UI reference points
 
 These paths identify accepted patterns. Reinspect them before reuse and extract shared components when the behavior truly matches.
 

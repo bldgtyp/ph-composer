@@ -13,9 +13,9 @@ two later views, the sun path and the window radiation overlay.
 
 ## Product boundary
 
-D7 confirms the narrow boundary. PassiveBuilder ships and distributes no climate datasets. A user
+D7 confirms the narrow boundary. PH-Composer ships and distributes no climate datasets. A user
 may import or link a climate dataset they are entitled to use, manually enter or paste values, or
-select a local EPW obtained from a public source such as the Ladybug EPW Map. PassiveBuilder keeps
+select a local EPW obtained from a public source such as the Ladybug EPW Map. PH-Composer keeps
 a self-contained model snapshot after import. It does not host a climate map, mirror EPW files or
 ship a catalog.
 
@@ -80,7 +80,7 @@ until the user supplies the required peak-load cases.
 - **Use local climate file** accepts a user-owned monthly climate file through the provider seam.
 - **Use EPW** accepts a local annual EPW and calls honeybee-ph `Site.from_epw()`; it does not
   implement another converter. **Find an EPW** opens the Ladybug EPW Map in the user's browser so
-  the user can obtain and select a file. PassiveBuilder does not scrape, mirror or redistribute it.
+  the user can obtain and select a file. PH-Composer does not scrape, mirror or redistribute it.
 - The UI labels EPW results **EPW-derived monthly climate** and **not certification approved**. It
   shows monthly-demand readiness separately from peak-load/METr-export readiness.
 - Site location is separate from the climate station, and the distance between them is shown.
@@ -98,7 +98,7 @@ until the user supplies the required peak-load cases.
 | Q1 | Confirm the narrowed climate-picker boundary in D7? | Confirmed: local/user-owned inputs and manual entry are in; hosted map tiles and distributed datasets are out |
 | Q2 | Which dataset kinds? | Confirmed in part: user-owned monthly climate data and EPW-derived monthly data. Any future PHI or Phius format is an adapter, not bundled content |
 | Q3 | Where do datasets come from? | User-selected local files, manual entry/paste, or an optional provider through the `climates` record kind. **Find an EPW** links to the Ladybug EPW Map; the user obtains the file. No catalog or provider address ships |
-| Q4 | May any Phius climate data be redistributed? | Not by PassiveBuilder for now, regardless of whether permission might later be available. User-supplied data remains local and the repository's public fixtures are synthetic |
+| Q4 | May any Phius climate data be redistributed? | Not by PH-Composer for now, regardless of whether permission might later be available. User-supplied data remains local and the repository's public fixtures are synthetic |
 | Q5 | What sets the site location? | An explicit value in the Climate section, with a "Read from SketchUp geolocation" button. No silent sync in either direction |
 | Q6 | Does the site location write back to SketchUp's geolocation and north? | No |
 | Q7 | Manual entry of a full monthly table? | Yes, by paste from a spreadsheet. It keeps the no-provider workflow whole |

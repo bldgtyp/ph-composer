@@ -1,4 +1,4 @@
-# PassiveBuilder: founding brief
+# PH-Composer: founding brief
 
 **DATE:** 2026-09-18 | **STATUS:** Draft for review. Repository initialized with `docs/` and
 `context/` ported from the predecessor on 2026-09-18; no code. First feature packet scoped the same
@@ -7,14 +7,14 @@ day: `features/zones-and-adjacency/`.
 
 ## The idea
 
-PassiveBuilder is a free, open-source SketchUp extension for authoring Phius passive building
+PH-Composer is a free, open-source SketchUp extension for authoring Phius passive building
 models. The consultant draws in SketchUp, assigns assemblies, windows, thermal bridges, spaces and
 systems to the geometry inside SketchUp, and exports a complete, valid HBJSON model. A second
 exporter converts that HBJSON to the WUFI-shaped JSON that METr reads.
 
 The METr development team has no plan or capacity to build a graphical front end for METr, and on
 2026-09-17 they endorsed a free, open-source SketchUp extension that exports to HBJSON and on to
-METr. PassiveBuilder is to METr what the OpenStudio Application was to EnergyPlus: a community
+METr. PH-Composer is to METr what the OpenStudio Application was to EnergyPlus: a community
 front end for a calculator maintained by someone else.
 
 The project is 100 percent free and 100 percent open source, licensed AGPL-3.0. Its purpose is not
@@ -28,7 +28,7 @@ predecessor. It was built as a companion to designPH for PHI projects: it adopte
 assemblies and windows, pushed edits back, propagated geometry to designPH windows, and exported
 HBJSON through honeybee-ph running in Pyodide. It works, and the affordances are good.
 
-PassiveBuilder drops designPH and PHI, and with them the whole adopt, compare, push and propagate
+PH-Composer drops designPH and PHI, and with them the whole adopt, compare, push and propagate
 machinery. It keeps the foundation that machinery sat on. The decision to start a fresh repository
 rather than edit the predecessor down rests on four points:
 
@@ -61,7 +61,7 @@ Measured on the predecessor at `f358ebf`, excluding the vendored payload.
 | Transfers stripped | Lines | Notes |
 | --- | --- | --- |
 | `features/spaces/` | 2,678 | 7 of 28 files touch designPH. |
-| `python/ph_navigator_translation/` | 6,034 | Already produces HBJSON through honeybee-ph. The contract layer is shaped around designPH face types and bridges and is rewritten around PassiveBuilder's own records. |
+| `python/ph_navigator_translation/` | 6,034 | Already produces HBJSON through honeybee-ph. The contract layer is shaped around designPH face types and bridges and is rewritten around PH-Composer's own records. |
 | `export/` | 1,517 | Export run, attribute guard, artifact hygiene, report. |
 | `features/assemblies/` builder, thermal, schema | ~1,600 | The Assembly Builder itself. |
 | `features/windows/model/`, `panel/`, `export/` | ~2,000 | Window types, frames, glazings, install types. |
@@ -126,7 +126,7 @@ Core follows the walking-skeleton order in `ROADMAP.md`:
 6. Mechanical equipment, ERV ducting and hot-water piping.
 
 Post-MVP: climate, sun path, window performance overlays, further providers, PV and site work.
-PassiveBuilder authors no window shading; METr handles it after export.
+PH-Composer authors no window shading; METr handles it after export.
 
 Out of scope: designPH in any form, PHI certification workflows, PHPP export, hosted projects,
 accounts, subscriptions and database services. An organization library remains optional and is
@@ -143,7 +143,7 @@ never required to author or export a model.
 | AGPL-3.0. | 2026-09-17 | Matches the vendored ladybug and honeybee wheels and the predecessor. |
 | Strong separation between UI and business logic. Clear, modular boundaries as the first architectural goal. | 2026-09-17 | Ed. The project exists to be extended by other people. |
 | Library provider contract, flat file first, PH-Navigator second. | 2026-09-17 | No hosted requirement. Many vendors, none privileged. |
-| Development name and home: PassiveBuilder under PH-Tools. | 2026-09-18 | D8. Keep the current name and repository location during development. Neither is the final launch decision; move deliberately later if the product name or organization changes. Namespace checks passed 2026-09-18; only the X handle was taken. |
+| Development name and home: PH-Composer under PH-Tools. | 2026-09-18 | D8. Keep the current name and repository location during development. Neither is the final launch decision; move deliberately later if the product name or organization changes. Namespace checks passed 2026-09-18; only the X handle was taken. |
 | No commercial license. DCO instead of a CLA. | 2026-09-18 | Ed: a foundation library like OpenPH, not a revenue generator. Products may connect to it or build on it under AGPL. |
 | UI kit remains AGPL for MVP; closed systems use file, HBJSON or HTTPS boundaries. | 2026-09-18 | D5. Reconsider a separately licensed package only for a real embedder. |
 | The authored model is honeybee-shaped Ruby records in the SKP, translated to honeybee at export; honeybee is never run live. | 2026-09-18 | Ed, face-assignment interview Q1. The model must live in Ruby-written dictionaries regardless; authoring is partial where simulation is resolved; the panel needs sub-100 ms updates and native Undo; a contributor who knows honeybee recognizes every field. honeybee's names and enumerations are used wherever honeybee has them. |
@@ -157,7 +157,7 @@ questions remain in their packet PRDs.
 - **PHX in Pyodide.** PHX pulls openpyxl and xlwings for its PHPP path. Those must become optional
   extras so the wheel loads without them, and the payload growth against the predecessor's 20 MB
   must be measured. This is a small spike in the PHX repository and the first technical gate.
-- **Public name, organization and namespaces.** Development remains PassiveBuilder under PH-Tools.
+- **Public name, organization and namespaces.** Development remains PH-Composer under PH-Tools.
   Before public announcement, decide whether to keep that name and home, then claim only the
   namespaces that decision requires.
 - **The contribution unit.** What a contributor's piece is called, and the worked example that
@@ -180,7 +180,7 @@ repeated.
 | Stoa, Truss, Armature | Crowded. |
 | Colonnade | Clean namespace, civic scale, many members holding one roof. Kept as the alternative if a brand matters more than findability. |
 | PassiveMaker | "Maker" is coded hobbyist. Wrong register for a certification instrument. |
-| PassiveBuilder | Chosen. Uses Phius's own term "passive building", found by search, "builder" says authoring. Cost: shares a search page with general contractors and carries no community signal. The tagline and README carry that. |
+| PH-Composer | Chosen. Uses Phius's own term "passive building", found by search, "builder" says authoring. Cost: shares a search page with general contractors and carries no community signal. The tagline and README carry that. |
 
 ## References
 

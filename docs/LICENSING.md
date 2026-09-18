@@ -2,12 +2,12 @@
 
 **DATE:** 2026-09-18
 
-PassiveBuilder is copyright BLDGTYP, LLC and its contributors and is released under the GNU
+PH-Composer is copyright BLDGTYP, LLC and its contributors and is released under the GNU
 Affero General Public License, version 3 or later (`AGPL-3.0-or-later`). The full text is in
 [`LICENSE`](../LICENSE). The license applies to the extension code and product documentation in
 this repository.
 
-PassiveBuilder is a foundation, like OpenPH. It is not a revenue generator and BLDGTYP sells no
+PH-Composer is a foundation, like OpenPH. It is not a revenue generator and BLDGTYP sells no
 commercial license for it. Products such as PassivSure or PH-Navigator may connect to it and build
 on it under the terms below.
 
@@ -30,10 +30,10 @@ the payload is assembled.
 - **Install and use freely.** Core authoring and export require no account or subscription.
 - **Modify and redistribute: keep it open.** A modified build handed to other people, or run for
   them over a network, must come with its source under the same license.
-- **Connecting is free.** A product that reads PassiveBuilder's HBJSON or METr output, or serves
+- **Connecting is free.** A product that reads PH-Composer's HBJSON or METr output, or serves
   it a library through the provider contract over HTTPS, is a separate program. AGPL places no
   obligation on it.
-- **Building in is copyleft.** A product that ships PassiveBuilder's Ruby, JavaScript or Python
+- **Building in is copyleft.** A product that ships PH-Composer's Ruby, JavaScript or Python
   inside itself, or links to it in one process, is a derivative work and must itself be AGPL. A
   team that wants the UI kit inside a closed product cannot have it under this license.
 - **Licensed documents.** No PHPP workbooks, designPH files, or PHI- or Phius-derived data enter
@@ -50,10 +50,10 @@ boundary now.
 ## Library providers
 
 A library file is data. A vendor or a firm that publishes one, or runs a server that answers the
-connection protocol, writes no PassiveBuilder code and the license does not reach them. A firm's
+connection protocol, writes no PH-Composer code and the license does not reach them. A firm's
 intranet or company library is an intended use.
 
-A provider written as a SketchUp extension that registers in-process with PassiveBuilder is code
+A provider written as a SketchUp extension that registers in-process with PH-Composer is code
 loaded into the AGPL host and closed-source in-process providers are not an MVP requirement.
 Closed systems use the library file or HTTPS connection protocol. Almost no provider should need
 to be code.

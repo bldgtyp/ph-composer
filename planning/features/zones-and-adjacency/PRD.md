@@ -7,7 +7,7 @@ ISSUE: none (no remote)
 
 ## Problem
 
-PassiveBuilder has to decide what the fundamental unit of building geometry is before face
+PH-Composer has to decide what the fundamental unit of building geometry is before face
 assignment can say what a boundary condition means. The two established answers pull apart:
 
 - designPH, WUFI-Passive and METr are single-zone. One envelope, nothing inside, no interzonal
@@ -47,12 +47,12 @@ recorded as an assignment, and made strict only for the consumer that needs it.
 ## Vocabulary
 
 honeybee's names are the problem, so this section is exact. The left column is what
-PassiveBuilder says on screen, in code and in this repository. The right column is what it
+PH-Composer says on screen, in code and in this repository. The right column is what it
 becomes in the HBJSON export. `context/UBIQUITOUS_LANGUAGE.md` carries the same table.
 
-| PassiveBuilder term | Meaning here | honeybee object it maps to | Note |
+| PH-Composer term | Meaning here | honeybee object it maps to | Note |
 | --- | --- | --- | --- |
-| **Zone** | The fundamental geometry unit: one SketchUp Group carrying envelope faces, Spaces, loads and schedules. A building may be one Zone. | `honeybee.room.Room` | honeybee calls this a Room. It is not a room; it is an arbitrary chunk of building, up to the whole building. PassiveBuilder never uses the word Room for it. |
+| **Zone** | The fundamental geometry unit: one SketchUp Group carrying envelope faces, Spaces, loads and schedules. A building may be one Zone. | `honeybee.room.Room` | honeybee calls this a Room. It is not a room; it is an arbitrary chunk of building, up to the whole building. PH-Composer never uses the word Room for it. |
 | **Building-Segment** | A tag on one or more Zones naming the part of the building that becomes one METr model: a residential tower, a commercial podium. Every Zone belongs to exactly one Building-Segment; a model with one Building-Segment never shows the field. | `honeybee_ph` `BldgSegment` on `Room.properties.ph.ph_bldg_segment` | PHX builds one variant per Building-Segment, merges its Zones, and drops the interior faces between them (`PHX/from_HBJSON/create_project.py`, `cleanup.py`). |
 | **Space** | A division inside a Zone for iCFA, ventilation airflows and occupancy: one SketchUp group containing Volumes, each holding Floor Segments. | `honeybee_ph` `Space` on `Room.properties.ph.spaces` | Unchanged from the predecessor. |
 | **Level** | An optional classifier tag on a Zone, used for query, sort and group. A Space inherits its Zone's Level with no override. | `Room.story` | The predecessor kept Floor level on the Space; this packet moves it to the Zone (Q6). |
@@ -61,10 +61,10 @@ becomes in the HBJSON export. `context/UBIQUITOUS_LANGUAGE.md` carries the same 
 | **Closed Zone** | A Zone whose group is a manifold solid. | Required by EnergyPlus; not required by honeybee itself or by METr | `Sketchup::Group#manifold?` |
 | **To neighbour** | The on-screen label for the boundary condition a user sets on a face whose other side is not modeled or does not matter: a party wall, a floor over an unmodeled podium. | `Adiabatic` | WUFI and METr vocabulary on screen, honeybee's in the stored value (Q22). |
 
-Two honeybee names PassiveBuilder does not use on screen:
+Two honeybee names PH-Composer does not use on screen:
 
 - **honeybee's `Room.zone`** is a free-text classifier grouping Rooms into what honeybee calls a
-  zone. PassiveBuilder does not expose it and leaves it unset on export, so it defaults to the
+  zone. PH-Composer does not expose it and leaves it unset on export, so it defaults to the
   Room identifier (Q7).
 - **honeybee's Room** appears only in the export report's audit surface and in code that talks
   to honeybee. A panel label, a validation message and a tooltip say Zone.
@@ -85,7 +85,7 @@ Rules the hierarchy fixes:
 
 - A face is classified in the context of the Zone group that owns it. A face at model root, or
   in a group that is not a Zone, is not an envelope face and validation says so.
-- A Zone is identified by PassiveBuilder's durable UUID in its own dictionary, never by
+- A Zone is identified by PH-Composer's durable UUID in its own dictionary, never by
   `entityID`, and read through its occurrence path. Only Groups are Zones in the MVP; a component
   instance marked as a Zone is a finding (Q2). A Zone inside another Zone is a finding (Q15).
 - Every face classified inside a Zone, and every Space group, also carries a small stamp naming
@@ -142,7 +142,7 @@ Rules the hierarchy fixes:
 ### Interior faces
 
 - In a single-Zone model an unclassified face is ignored completely: no finding, no prompt.
-  designPH users do not draw partitions and PassiveBuilder does not ask them to (Q8).
+  designPH users do not draw partitions and PH-Composer does not ask them to (Q8).
 - In a multi-Zone model, a face whose plane and extent coincide with a face of another Zone is a
   candidate interior face. Solve adjacencies confirms it. Until then it is unclassified.
 - The user can mark a face **To neighbour** without solving. That is the escape hatch for a Zone

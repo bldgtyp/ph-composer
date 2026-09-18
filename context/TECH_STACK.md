@@ -50,8 +50,8 @@ export do not admit arbitrary local paths or attachment bytes.
 
 The name checks closed on 2026-09-18. D8 confirms the following working development namespace; it
 does not settle the final public name or organization. The Ruby
-module is `PassiveBuilder`, the attribute dictionaries are prefixed `passive_builder`, and the RBZ
-is `passive_builder.rbz`. Treat these as the working implementation namespace; changing the public
+module is `PhComposer`, the attribute dictionaries are prefixed `ph_composer`, and the RBZ
+is `ph_composer.rbz`. Treat these as the working implementation namespace; changing the public
 name later requires an explicit migration decision rather than a partial rename.
 
 ## SketchUp Model and transaction rules
@@ -119,25 +119,25 @@ Transforms accumulate from Model root to the entity exactly once. This must rema
 Groups, nested Groups and repeated component placements. A visually correct direct case does not
 prove nested geometry.
 
-SketchUp cut and paste can replace a `persistent_id`. PassiveBuilder's durable UUID therefore
+SketchUp cut and paste can replace a `persistent_id`. PH-Composer's durable UUID therefore
 survives the operation when the object is still logically the same, while placement references
 remain path-qualified. Session `entityID` is never durable identity.
 
-## Envelope: what PassiveBuilder owns that the predecessor did not
+## Envelope: what PH-Composer owns that the predecessor did not
 
 The predecessor read envelope classification, TFA and shading from designPH and never wrote them.
-PassiveBuilder owns all of it, in its own attribute namespace, through its own tools. The unit
+PH-Composer owns all of it, in its own attribute namespace, through its own tools. The unit
 that owns a face is the Zone, one Group per honeybee Room, with Spaces inside it. Closure is a
 consumer-specific validation rule, not a requirement for creating or exporting every Zone. The
 rules are the zones-and-adjacency packet's to settle
 (`../planning/features/zones-and-adjacency/PRD.md`), and these are the constraints it starts from:
 
-- Classification is a record on the face in PassiveBuilder's dictionary, carrying face type,
+- Classification is a record on the face in PH-Composer's dictionary, carrying face type,
   boundary condition and the assigned assembly's record id. The face's geometry is SketchUp's.
 - A face is identified by its persistent id plus its occurrence path, never by `entityID`.
   Repeated components expose one face through many occurrences, and a classification stored on
   the shared child is shared by every occurrence. Independent classification requires explicit
-  parent uniqueness, and PassiveBuilder never makes a parent unique automatically.
+  parent uniqueness, and PH-Composer never makes a parent unique automatically.
 - Back faces, coplanar overlaps and faces inside nested edit contexts are the cases a happy path
   at Model root does not cover. Test them before claiming face assignment works.
 - Floor Segments are floor faces the user classifies as iCFA. There is no reduction factor.
@@ -208,7 +208,7 @@ The contract, carried over from the predecessor's organization library and gener
 - A provider answers `kinds` (which record kinds it publishes) and `list(kind)`. The list carries
   every field, so there is no per-record fetch. Records arrive in the same wire shape regardless
   of provider, and each carries the provider's stable record id.
-- PassiveBuilder sets one neutral JSON envelope. It is the library file on disk and the response
+- PH-Composer sets one neutral JSON envelope. It is the library file on disk and the response
   of a connection. Providers accommodate it; no vendor translator lives in the code. Every number
   on the wire is SI with the unit in its key name.
 - The first provider is a **library file**: a folder or single JSON file on disk. It needs no

@@ -1,4 +1,4 @@
-# PassiveBuilder
+# PH-Composer
 
 **DATE:** 2026-09-18 | **STATUS:** Proposed product scope. No code yet.
 **OWNER:** Ed May, BLDGTYP
@@ -23,7 +23,7 @@ requirements; their APIs and worked examples have not landed yet.
 ## Product principles
 
 - Users' agents can inspect, view and edit through documented public operations. Agent access is
-  a foundation requirement; PassiveBuilder builds no agent of its own. The planned interface and
+  a foundation requirement; PH-Composer builds no agent of its own. The planned interface and
   current availability are described in [AGENT_ACCESS.md](AGENT_ACCESS.md).
 
 - The SKP file carries authored definitions, instances, assignments and values, including unused
@@ -89,12 +89,12 @@ linked file does not prevent model editing, calculation or ordinary export.
 ## Integration boundaries
 
 - honeybee-ph supplies the domain vocabulary and the typed export structures. Face types and
-  boundary conditions are honeybee's; PassiveBuilder does not coin a third vocabulary.
+  boundary conditions are honeybee's; PH-Composer does not coin a third vocabulary.
 - PHX converts HBJSON to the METr model. It runs inside the shipped runtime as the first exporter.
   The extension does not operate Excel and does not write PHPP.
-- METr is the calculator. PassiveBuilder produces its input and claims nothing about its results.
+- METr is the calculator. PH-Composer produces its input and claims nothing about its results.
 - PassivSure is a sibling project building a PHI-focused designPH companion. It may reuse the UI
-  kit and the record engine. It is not a destination for PassiveBuilder's output.
+  kit and the record engine. It is not a destination for PH-Composer's output.
 - PH-Navigator web is prior art for editors, tables and calculations, and one library provider
   among several. It is not a required service.
 - The predecessor, PH-Navigator for SketchUp, is prior art and evidence. Its designPH integration
