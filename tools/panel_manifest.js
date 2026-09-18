@@ -28,8 +28,10 @@ var MARKUP_END = "<!-- panel-markup:end -->";
 var INDENT = "    ";
 var INDEX = path.join(panelFiles.html, "index.html");
 
-/* The development pages, each with the path from the page to html/. None exists yet. */
-var DEVELOPMENT_PAGES = [];
+/* The development pages, each with the path from the page to html/. */
+var DEVELOPMENT_PAGES = [
+  { path: path.join(panelFiles.root, "tools", "ui-preview", "index.html"), prefix: "../../src/ph_composer/html/" }
+];
 
 function moduleName(file) {
   return path.relative(panelFiles.html, file).split(path.sep).join("/").replace(/\.js$/, "");

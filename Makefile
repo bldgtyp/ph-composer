@@ -1,5 +1,6 @@
 .PHONY: ci ci-pending syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage hostkit-test python-check \
-        panel-manifest panel-manifest-check rbz rbz-check install clean bridge-install bridge-uninstall
+        panel-manifest panel-manifest-check ui-preview ui-checks rbz rbz-check install clean bridge-install \
+        bridge-uninstall
 
 # `.ruby-version` pins 3.2.2, the Ruby the current proving host embeds. rbenv resolves it when it
 # is installed; without rbenv this falls back to whatever `ruby` is on PATH, and the suite's own
@@ -96,6 +97,34 @@ panel-manifest:
 
 panel-manifest-check:
 	@node tools/panel_manifest.js
+
+# The panel preview (tools/ui-preview/.index.md): the real panel, a stand-in host and the synthetic editor.
+# Serves the repository root so the page can load the panel files; ctrl-c stops it.
+UI_PREVIEW_PORT ?= 8765
+
+ui-preview:
+	@echo "preview on http://127.0.0.1:$(UI_PREVIEW_PORT)/tools/ui-preview/; ctrl-c stops it"
+	@uv run --no-project python -m http.server $(UI_PREVIEW_PORT) --bind 127.0.0.1
+
+# The browser checks in tools/ui-preview/ against the preview, on a loopback server this target starts and
+# stops. Playwright is never a project dependency: it resolves from NODE_PATH (a scratch `pnpm add
+# playwright` outside the repository) and drives the installed Chrome. Without it the target skips by name.
+# Not part of `ci`: it launches a browser. A browser pass is not host acceptance.
+ui-checks:
+	@if ! node -e "require.resolve('playwright')" >/dev/null 2>&1; then \
+	  echo "ui-checks: skipped, Playwright is not resolvable (see tools/ui-preview/.index.md)"; exit 0; \
+	fi; \
+	if curl -s -o /dev/null "http://127.0.0.1:$(UI_PREVIEW_PORT)/"; then \
+	  echo "ui-checks: port $(UI_PREVIEW_PORT) is already serving; stop that server or set UI_PREVIEW_PORT"; exit 1; \
+	fi; \
+	uv run --no-project python -m http.server $(UI_PREVIEW_PORT) --bind 127.0.0.1 >/dev/null 2>&1 & server=$$!; \
+	trap 'kill $$server 2>/dev/null; wait $$server 2>/dev/null' EXIT; \
+	for attempt in $$(seq 50); do curl -s -o /dev/null "http://127.0.0.1:$(UI_PREVIEW_PORT)/" && break; sleep 0.2; done; \
+	status=0; \
+	for script in $(sort $(wildcard tools/ui-preview/*.cjs)); do \
+	  UI_PREVIEW_PORT=$(UI_PREVIEW_PORT) node "$$script" || status=1; \
+	done; \
+	exit $$status
 
 # The development host bridge and helpers: Ruby tests against the stub, then the Python client.
 hostkit-test:

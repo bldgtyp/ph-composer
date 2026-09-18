@@ -19,18 +19,24 @@ PhComposerUI.define("request", [], function () {
     this.session = session; this.transport = send; this.label = label;
     this.pending = null; this.action = null; this.handlers = null;
   }
-  Channel.prototype.send = function (action, params, label) {
-    var id = this.session + ":" + (label || this.label) + ":" + (++sequence);
+  Channel.prototype.nextId = function (label) {
+    return this.session + ":" + (label || this.label) + ":" + (++sequence);
+  };
+  Channel.prototype.dispatch = function (id, action, params) {
     this.transport("action.invoke", { request_id: id, session: this.session, name: action, params: params || {} });
     return id;
   };
+  Channel.prototype.send = function (action, params, label) {
+    return this.dispatch(this.nextId(label), action, params);
+  };
   /* Sends unless a request is pending; returns the new id, or false when busy. `handlers.label` overrides the
-     channel label; `onDone(outcome)` and `onFail(outcome)` run from consume. */
+     channel label; `onDone(outcome)` and `onFail(outcome)` run from consume. The request is pending before it
+     leaves, so a host that answers at once is still recognised. */
   Channel.prototype.run = function (action, params, handlers) {
     if (this.pending) return false;
     this.handlers = handlers || null; this.action = action;
-    this.pending = this.send(action, params, handlers && handlers.label);
-    return this.pending;
+    this.pending = this.nextId(handlers && handlers.label);
+    return this.dispatch(this.pending, action, params);
   };
   Channel.prototype.busy = function () { return Boolean(this.pending); };
   Channel.prototype.matches = function (result, id) {

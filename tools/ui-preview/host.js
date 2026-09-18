@@ -1,0 +1,113 @@
+/* A stand-in host for the preview page and the editor tests: it answers the panel's messages the way
+   shell/panel.rb does, for the example feature's parts only. It keeps one synthetic Model session with a
+   revision, refuses a stale revision or a changed expected value with nothing written, and remembers
+   display preferences. It is not the contract: tests/panel_test.rb checks the real host.
+
+   PhComposerPreviewHost.install(window, { parts, locale, decimal }) sets `window.sketchup` and returns the
+   host, whose `sent` lists every message the page sent. */
+(function (global) {
+  "use strict";
+
+  var PARTS = "example.foundation.parts";
+  var NOTHING_WRITTEN = "Nothing was written.";
+
+  function Host(window, options) {
+    var settings = options || {};
+    this.window = window;
+    this.sent = [];
+    this.session = "preview-session";
+    this.revision = 1;
+    this.sequence = 0;
+    this.parts = (settings.parts || []).map(function (part) { return JSON.parse(JSON.stringify(part)); });
+    this.preferences = { unit_system: settings.unitSystem || "SI", dimension_formats: {},
+      number_format: { decimal: settings.decimal || ".", locale: settings.locale || "en-US" } };
+  }
+
+  Host.prototype.publish = function (type, payload) {
+    this.window.PhComposerUI.get("panel").receive({ type: type, payload: payload });
+  };
+
+  Host.prototype.snapshot = function () {
+    var records = this.parts.map(function (part) {
+      return { kind: "example.foundation.part", id: part.id, values: { label: part.label, length_mm: part.length_mm } };
+    });
+    this.publish("panel.snapshot", {
+      product: "PH-Composer", version: "preview", session: this.session, revision: this.revision,
+      file_name: "preview.skp", edit_path: [], preferences: JSON.parse(JSON.stringify(this.preferences)),
+      sections: { [PARTS]: { status: "completed", code: "ok", revision: this.revision,
+        value: { records: records, units: { length_mm: "mm" }, next_cursor: null, total: records.length } } }
+    });
+  };
+
+  Host.prototype.receive = function (message) {
+    this.sent.push(message);
+    if (message.type === "panel.ready") this.snapshot();
+    if (message.type === "action.invoke") this.invoke(message.payload);
+    if (message.type === "preferences.set") this.setPreference(message.payload);
+  };
+
+  Host.prototype.invoke = function (payload) {
+    var outcome = this.apply(payload);
+    this.snapshot();
+    this.publish("action.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
+  };
+
+  Host.prototype.apply = function (payload) {
+    var host = this;
+    if (payload.session !== this.session) {
+      return refused("session.inactive", "The panel now shows a different Model. " + NOTHING_WRITTEN, null);
+    }
+    if (payload.expected_revision !== this.revision) {
+      return refused("revision.stale", "The Model changed since it was read. " + NOTHING_WRITTEN, this.revision);
+    }
+    if (payload.name === "example.foundation.update_parts") {
+      var edits = payload.params.edits;
+      var conflict = edits.filter(function (edit) {
+        var part = host.find(edit.id);
+        return !part || (edit.expected_values && edit.expected_values.length_mm !== part.length_mm);
+      })[0];
+      if (conflict) return refused("target.changed", "The part changed since it was read. " + NOTHING_WRITTEN,
+        this.revision);
+      edits.forEach(function (edit) { host.find(edit.id).length_mm = edit.values.length_mm; });
+    } else if (payload.name === "example.foundation.create_parts") {
+      payload.params.parts.forEach(function (values) {
+        host.sequence += 1;
+        host.parts.push({ id: "exp_preview" + String(host.sequence).padStart(5, "0"), label: values.label,
+          length_mm: values.length_mm });
+      });
+    } else {
+      return refused("request.unknown_operation", "The preview host does not run " + payload.name + ".", this.revision);
+    }
+    this.revision += 1;
+    return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
+      value: {}, affected: [], findings: [], detail: null };
+  };
+
+  Host.prototype.find = function (id) {
+    return this.parts.filter(function (part) { return part.id === id; })[0];
+  };
+
+  Host.prototype.setPreference = function (payload) {
+    if (payload.key === "unit_system") this.preferences.unit_system = payload.value;
+    if (payload.key === "dimension_format") {
+      var formats = this.preferences.dimension_formats[payload.scope] || { SI: "mm", IP: "in" };
+      formats[payload.system] = payload.value;
+      this.preferences.dimension_formats[payload.scope] = formats;
+    }
+    this.publish("preferences.result", { request_id: payload.request_id, status: "completed",
+      message: "Display preference saved.", preferences: JSON.parse(JSON.stringify(this.preferences)) });
+  };
+
+  function refused(code, message, revision) {
+    return { status: "refused", code: code, message: message, effect: "none", revision: revision, value: null,
+      affected: [], findings: [], detail: null };
+  }
+
+  global.PhComposerPreviewHost = {
+    install: function (window, options) {
+      var host = new Host(window, options);
+      window.sketchup = { ph_composer_message: function (text) { host.receive(JSON.parse(text)); } };
+      return host;
+    }
+  };
+}(typeof window !== "undefined" ? window : this));

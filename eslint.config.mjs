@@ -100,8 +100,23 @@ export default [
     },
   },
   {
+    // Development pages and scripts that run in the panel's browser, held to the shipped panel's floor.
+    files: ["tools/examples/**/*.js", "tools/ui-preview/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2020,
+      sourceType: "script",
+      globals: { ...BROWSER_GLOBALS, ...PANEL_GLOBALS },
+    },
+    rules: {
+      ...SHARED_RULES,
+      "no-restricted-properties": ["error", ...AFTER_CHROMIUM_88_STATICS],
+      "no-restricted-syntax": ["error", AFTER_CHROMIUM_88_METHODS],
+    },
+  },
+  {
     // The offline suite and the Node tools.
     files: ["tests/**/*.js", "tools/**/*.js"],
+    ignores: ["tools/examples/**/*.js", "tools/ui-preview/**/*.js"],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: "script",

@@ -26,6 +26,19 @@ class ExampleFoundationTest < PhComposerTestCase
     assert_empty PhComposer::FEATURES, "the shipping composition root still lists no feature"
   end
 
+  # The synthetic editor reaches the panel only through the development entry: the page runs it after the
+  # kit starts and before the first snapshot, and the shipped page names no example file.
+  def test_the_development_entry_hands_the_synthetic_editor_to_the_panel
+    dialog = PhComposer::Panel.show
+    dialog.fire("ph_composer_message", JSON.generate("type" => "panel.ready", "payload" => {}))
+
+    editor = File.read(File.expand_path("../tools/examples/foundation/editor.js", __dir__))
+    assert_equal editor, dialog.scripts.first
+    assert_match(/panel\.snapshot/, dialog.scripts[1])
+    assert_includes dialog.scripts[1], "example.foundation.parts"
+    refute_match(/example/, File.read(PhComposer::Panel::PAGE))
+  end
+
   def test_loading_the_example_twice_installs_it_once
     load File.expand_path("../tools/examples/foundation/load.rb", __dir__)
 

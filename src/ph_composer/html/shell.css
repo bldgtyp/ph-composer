@@ -1,6 +1,9 @@
-/* The panel shell: the panes under the tab row, the notice layer and the status bar. */
+/* The panel shell: the tab row, the panes under it, the notice layer and the status bar. */
 .live-panel .panel-panes { position: relative; flex: 1; min-height: 0; overflow: auto; padding: 0; }
 .live-panel section { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .live-panel button { width: auto; font-weight: 400; }
 .live-panel [data-pane] { min-height: 100%; }
-.live-panel .phc-tabs button:disabled { background: transparent; }
+/* Tabs are flat at rest; only the current one is filled. */
+.live-panel .phc-tabs button:not([aria-pressed="true"]) { background: transparent; }
+/* In the flow under the tab row, zero height: a notice floats over the panes without moving them. */
+.live-panel > .phc-notice-layer { position: relative; flex-shrink: 0; }

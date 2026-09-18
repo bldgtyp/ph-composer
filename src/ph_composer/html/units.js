@@ -173,7 +173,8 @@ PhComposerUI.define("units", ["length_expression", "unit_numbers", "unit_tables"
   function formatEdit(value, field, profile, options) { return render(value, field, profile, options, true); }
 
   /* Convert the preference-store shape into the stateless formatter/parser profile. A field that names
-     a dimension scope (`field.scope`) takes that scope's remembered format, for length quantities only. */
+     a dimension scope (`field.scope`) takes that scope's remembered format, or the system's default format
+     when the scope has none yet; the format applies to length quantities only. */
   function profile(field, preferences) {
     var current;
     var system;
@@ -186,8 +187,7 @@ PhComposerUI.define("units", ["length_expression", "unit_numbers", "unit_tables"
     return {
       system: system,
       numberFormat: current.numberFormat,
-      dimensionFormat: scope && current.dimensionFormats && current.dimensionFormats[scope] ?
-        current.dimensionFormats[scope][system] : undefined
+      dimensionFormat: scope ? ((current.dimensionFormats || {})[scope] || api.dimensionDefaults)[system] : undefined
     };
   }
 
