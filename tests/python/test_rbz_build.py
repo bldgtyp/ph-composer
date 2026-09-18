@@ -6,6 +6,11 @@ These exercise the pure half, `shipping_problems`, over in-memory entries. `make
 
 from __future__ import annotations
 
+import zipfile
+from pathlib import Path
+
+import pytest
+
 import build
 
 LOADER = {"ph_composer.rb": b"# loader\n"}
@@ -51,6 +56,7 @@ def test_designph_and_the_predecessor_namespace_are_refused_in_any_case() -> Non
             "ph_composer/html/b.js": b'Phn.define("x", [], f);\n',
             "ph_composer/shell/c.rb": b'callback = "phn_message"\n',
             "ph_composer/shell/d.rb": b"# PH-Navigator for SketchUp\n",
+            "ph_composer/shell/e.rb": b"Phn::Panel.show\n",
         }
     )
     assert found == [
@@ -58,6 +64,7 @@ def test_designph_and_the_predecessor_namespace_are_refused_in_any_case() -> Non
         'denied name ph_composer/html/b.js:1: Phn.define("x", [], f);',
         'denied name ph_composer/shell/c.rb:1: callback = "phn_message"',
         "denied name ph_composer/shell/d.rb:1: # PH-Navigator for SketchUp",
+        "denied name ph_composer/shell/e.rb:1: Phn::Panel.show",
     ]
 
 
@@ -93,3 +100,28 @@ def test_a_blocking_api_scan_skips_vendored_code_and_lookalike_names() -> None:
     assert build.blocking_api_tokens("ph_composer/vendor/pyodide/pyodide.js", "alert(") == []
     assert build.blocking_api_tokens("ph_composer/shell/panel.rb", "alert(") == []
     assert build.blocking_api_tokens("ph_composer/html/panel.js", "showAlert(1); myprompt(2)") == []
+
+
+def test_install_replaces_only_this_extension_and_leaves_other_plugins(tmp_path: Path) -> None:
+    plugins = tmp_path / "Plugins"
+    (plugins / "ph_composer").mkdir(parents=True)
+    (plugins / "ph_composer" / "removed_since.rb").write_text("stale")
+    (plugins / "other_extension.rb").write_text("theirs")
+    archive = tmp_path / "ph_composer.rbz"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr("ph_composer.rb", "# loader")
+        bundle.writestr("ph_composer/extension.rb", "# root")
+
+    build.install_into(plugins, archive)
+
+    assert (plugins / "ph_composer.rb").read_text() == "# loader"
+    assert (plugins / "ph_composer" / "extension.rb").read_text() == "# root"
+    assert not (plugins / "ph_composer" / "removed_since.rb").exists()
+    assert (plugins / "other_extension.rb").read_text() == "theirs"
+
+
+def test_the_plugins_directory_needs_a_four_digit_sketchup_year() -> None:
+    assert build.plugins_directory("2026").parts[-4:] == ("Application Support", "SketchUp 2026", "SketchUp", "Plugins")
+    for version in ("26", "2026.1", "../..", "abcd"):
+        with pytest.raises(SystemExit):
+            build.plugins_directory(version)

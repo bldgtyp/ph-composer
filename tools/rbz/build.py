@@ -41,8 +41,8 @@ SHIPPED_SUFFIXES = frozenset({".rb", ".js", ".css", ".html", ".svg", ".json", ".
 DEVELOPMENT_PARTS = frozenset({"_private", "hostkit", "examples", "fixtures", "tests"})
 
 # The retired designPH integration and the predecessor's namespace. Case-insensitive, so `Phn.`,
-# `phn_message`, `DesignPH_dict` and `PH-Navigator` all match, while "design phase" does not.
-DENIED_PATTERN = re.compile(r"design[_ ]?ph(?![a-z])|ph[_ -]?navigator|\bphn[._]", re.IGNORECASE)
+# `Phn::`, `phn_message`, `DesignPH_dict` and `PH-Navigator` all match, while "design phase" does not.
+DENIED_PATTERN = re.compile(r"design[_ ]?ph(?![a-z])|ph[_ -]?navigator|\bphn(?:[._]|::)", re.IGNORECASE)
 
 # A blocking dialog freezes the HtmlDialog and the SketchUp main thread with it.
 BLOCKING_BROWSER_APIS = ("alert(", "confirm(", "prompt(")
@@ -172,16 +172,21 @@ def plugins_directory(sketchup_version: str) -> Path:
 
 
 def install(sketchup_version: str) -> None:
-    """Replaces only this extension's loader and folder in the Plugins directory."""
     plugins = plugins_directory(sketchup_version)
     if not plugins.is_dir():
         raise SystemExit(f"SketchUp {sketchup_version} Plugins directory not found: {plugins}")
+    install_into(plugins, ARCHIVE)
+    print(f"Installed into {plugins}")
+
+
+def install_into(plugins: Path, archive: Path) -> None:
+    """Replaces only this extension's loader and folder in `plugins`, so a file removed from the
+    extension does not linger from an earlier install. Every other plugin is left untouched."""
     support = plugins / EXTENSION_ID
     if support.exists():
         shutil.rmtree(support)
-    with zipfile.ZipFile(ARCHIVE) as bundle:
+    with zipfile.ZipFile(archive) as bundle:
         bundle.extractall(plugins)
-    print(f"Installed into {plugins}")
 
 
 def clean() -> None:
