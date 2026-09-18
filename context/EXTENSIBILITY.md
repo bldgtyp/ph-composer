@@ -1,7 +1,8 @@
 # Contributor architecture
 
 DATE: 2026-09-18
-STATUS: Accepted architectural direction. No implementation yet.
+STATUS: Accepted architectural direction. Registration, record kinds, metadata and extension data are
+implemented on branch in Phase 0 P0-D; see the example under `tools/examples/foundation/`.
 
 PH-Composer exists to support an open-source community in the Phius sphere. A contributor
 should be able to understand and extend one part without understanding the whole application.

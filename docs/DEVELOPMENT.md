@@ -123,6 +123,17 @@ From there `eval`, `state`, `save`, `shot`, `key`, `console` and `quit` cover th
 loop. `tools/hostkit/.index.md` lists what each does. The measured host facts the bridge depends
 on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
 
+## The development example
+
+`tools/examples/foundation/` is a complete feature built only from the public contracts, with a
+script that drives it through `PhComposer::API` as two clients with the panel closed. Its README
+lists each file. It never ships. To run it in a host with the bridge:
+
+```sh
+uv run tools/hostkit/host_bridge.py eval \
+  'load "/absolute/path/to/ph-composer/tools/examples/foundation/load.rb"; ExampleWalkthrough.run'
+```
+
 ## Not yet available
 
 These arrive with the parts they verify. Until then no command exists and none may be cited as a

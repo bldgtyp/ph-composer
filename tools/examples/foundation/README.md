@@ -34,7 +34,8 @@ The offline test is `tests/example_foundation_test.rb`.
 With PH-Composer installed and the development bridge running:
 
 ```sh
-uv run tools/hostkit/host_bridge.py eval 'load "'$PWD'/tools/examples/foundation/load.rb"; ExampleWalkthrough.run'
+uv run tools/hostkit/host_bridge.py eval \
+  'load "/absolute/path/to/ph-composer/tools/examples/foundation/load.rb"; ExampleWalkthrough.run'
 ```
 
 The result lists each step, what happened and whether it matches the contract. The steps: create

@@ -2,9 +2,10 @@
 
 **DATE:** 2026-09-18
 
-Every fact here was measured in the predecessor, PH-Navigator for SketchUp, on SketchUp Pro
-2026.1 build 26.1.188 (macOS, embedded Ruby 3.2.2) between 2026-09-06 and 2026-09-17, through its
-development host bridge. designPH 2.2.29 was installed and loaded on that host throughout.
+Unless a row says otherwise, every fact here was measured in the predecessor, PH-Navigator for
+SketchUp, on SketchUp Pro 2026.1 build 26.1.188 (macOS, embedded Ruby 3.2.2) between 2026-09-06 and
+2026-09-17, through its development host bridge. Rows marked "Measured in PH-Composer" come from this
+repository's own bridge on the same host. designPH 2.2.29 was installed and loaded on that host throughout.
 Re-measuring the observer-ordering facts on a host without designPH is a pending gate for this
 project; until then treat them as likely and pin them in the stub as the predecessor did.
 
@@ -19,6 +20,8 @@ and Dynamic Components facts this file drops, is
 | Fact | Consequence | Pinned by |
 | --- | --- | --- |
 | Observer callbacks for one user action arrive after the Ruby call that caused them returns, and in a fixed order: `onTransactionCommit`, then `onActivePathChanged`. On leaving a Volume with Escape (or `Model#close_active`), the commit callback arrives with `active_path` already outside the Volume. | A reconciler that rebaselines on commit loses the Volume it needs to protect. Either callback must queue the exit protection from the baseline. | `test_exit_protects_when_commit_arrives_before_path_change` |
+| For an operation Ruby opens and commits itself, `Model#commit_operation` delivers `onTransactionCommit` synchronously, before the call returns. Measured in PH-Composer on 26.1.188, 2026-09-18. | The session recognizes its own commit inside the operation; it still handles a callback that arrives later. | Stub `Model#commit_operation`; `tests/sessions_test.rb` |
+| `Model#abort_operation` fires `onTransactionUndo`, synchronously, and no `onTransactionAbort`. Measured in PH-Composer on 26.1.188, 2026-09-18. | An observer cannot tell an aborted operation from a user Undo by the callback alone. The session ignores the Undo callback inside its own operation, so a rolled-back change leaves the revision. | Stub `Model#abort_operation`; `test_abort_reports_an_undo_as_the_host_does` |
 | Leaving or entering a group edit context is itself a transaction: `onTransactionCommit` fires on Escape, and a context change marks the Model modified. | Do not read a commit as "geometry changed"; a save followed by a context close leaves the title marked modified. | Recorded; no stub rule |
 | Inside `onPreSaveModel`, `Model#active_path` is empty although the edit context is still open on screen. SketchUp restores the context after the save. | Pre-save work cannot read the Volume from the path; the reconciler uses its baseline Volume. | Stub `Model#save` (`fire_pre_save`) |
 | Setting `Model#active_path` inside `onPreSaveModel` makes SketchUp serialize the reopened context in world coordinates: the reopened file has the Space transform baked into its Volumes. In memory nothing has moved. | Never change the path during pre-save. Protect in `onPreSaveModel`; close the boundary in `onSaveModel`. | Stub `Model#save` raises on a pre-save path change |
@@ -55,6 +58,8 @@ and Dynamic Components facts this file drops, is
 | Fact | Consequence |
 | --- | --- |
 | `open -a "SketchUp 2026"` fails; the bundle path works: `open -a "/Applications/SketchUp 2026/SketchUp.app" <model>`. | The bridge launcher uses the bundle path. |
+| `Model#close` raises "Only the active model can be closed" for any other open Model. `Sketchup.file_new` fires `onNewModel` for the new document but leaves `Sketchup.active_model` on the previous one until the new window activates, which did not happen while SketchUp was in the background. Measured in PH-Composer on 26.1.188, 2026-09-18. | Drive a multi-document check by closing the active Model; never assume `file_new` switched the active Model. |
+| Launched with no document, SketchUp waited at its Welcome screen and no bridge or extension code ran within two minutes. Observed once in PH-Composer on 26.1.188, 2026-09-18. | `host_bridge.py launch` always opens a Model. |
 | A killed SketchUp restores its previous documents on the next launch, so the requested file may not be the active Model. | Quit cleanly: discard-save a modified Model to a scratch path, then `Sketchup.send_action("terminate:")`. Verify the active Model's file name. |
 | AppleScript `tell application "SketchUp 2026" to quit` did not complete from a terminal; `terminate:` through the bridge does. | Do not use AppleScript to quit. |
 | `osascript` System Events keystrokes to `process "SketchUp"` work once Accessibility is granted. `screencapture -x` captures the whole screen. | Send keys only to SketchUp. For evidence, prefer `View#write_image` for the viewport and a window-by-title capture for one SketchUp window. |

@@ -1,7 +1,7 @@
 # Foundation contract design
 
 DATE: 2026-09-18
-STATUS: Scoped. Implementation authorized 2026-09-18; P0-A refinements recorded below.
+STATUS: In progress. C1 to C5 implemented on branch in P0-D (2026-09-18); C6 pending P0-F. Refinements recorded in place.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
@@ -82,9 +82,9 @@ fields are nested and named. A handler's value never merges into the envelope.
 
 | `status` | Meaning | Allowed `effect` |
 | --- | --- | --- |
-| `completed` | The operation ran; a no-change edit completes with no Undo entry | `committed`, `none` |
+| `completed` | The operation ran; a no-change edit completes with no Undo entry. Code `ok` | `committed`, `none` |
 | `refused` | Rejected before any transaction: validation, stale state, wrong session, missing capability | `none` |
-| `failed` | An error after the transaction opened | `rolled_back` (verified), `unknown` |
+| `failed` | An unexpected error. `none` when it came before any operation opened | `rolled_back` (verified), `unknown`, `none` |
 | `busy` | Host state prevents safe execution now; the caller may retry after inspecting state | `none` |
 | `pending` | A retry of a request that is still running | `none` |
 | `cancelled` | The user or caller cancelled before anything was written | `none` |
@@ -98,9 +98,9 @@ failed or could not run. Codes are stable `noun.condition` strings, following TE
 | Envelope | `request.malformed` (unknown field, wrong type), `request.unknown_operation`, `request.api_version`, `request.capability_denied` |
 | Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |
 | Session and host | `session.unknown` (closed, reopened or never issued), `session.busy` (modal tool, transition, unsettled work; reason in detail) |
-| Preconditions | `revision.stale`, `edit_path.stale`, `target.not_found`, `target.changed` |
+| Preconditions | `revision.stale`, `edit_path.stale`, `target.not_found`, `target.changed`, `record.unreadable` |
 | Validation | `params.invalid`, `validation.failed` (findings attached), `reference.invalid` |
-| Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_failed`, `copy.rule_missing` |
+| Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_required`, `extension.migration_failed`, `copy.rule_missing` |
 | Query | `query.limit_invalid`, `query.cursor_expired` |
 | Operation | `operation.failed`, `operation.rollback_unverified` |
 | Registration (diagnostics) | `registration.duplicate_id`, `registration.missing_dependency`, `registration.cycle`, `registration.contract_major`, `registration.schema_invalid` |
@@ -164,7 +164,8 @@ defaults to document and test, not a user-facing setting.
 | Sequence | Integer from 1, strictly increasing per handle; gaps allowed. A sequence at or below the highest accepted one is a retry, never new work |
 | Retained outcomes | Up to 256 per session across all handles, oldest evicted first, each for at most 15 minutes |
 | Payload binding | Canonical JSON of operation name, params and preconditions (`core/canonical_json.rb`) |
-| Query page | Default 100, maximum 500; 0, above 500 and non-integers are `query.limit_invalid` |
+| Query page | Default 100, maximum 500; 0, above 500 and non-integer numbers are `query.limit_invalid` |
+| Sequence acceptance | Refusals before acceptance (malformed envelope, unknown session or caller, unknown operation, missing capability, busy) are not retained and do not consume the sequence. Everything after acceptance, including `params.invalid` and `revision.stale`, is retained |
 
 ## C5: record and extension-data lifecycle
 
@@ -248,3 +249,33 @@ reference remapping and metadata preservation. A synthetic editor follows the sa
 Passing this walkthrough requires no feature-specific branch in shell, session, export or UI kit.
 Document exact files and one runnable example when implemented. Until then this is a design trace,
 not verified extensibility.
+
+## Implemented in P0-D
+
+Where the implementation refines the design above. Evidence:
+[evidence/phase-03-operations.md](evidence/phase-03-operations.md).
+
+- **Registration (C1).** `install(registry)` only declares, through a feature scope from
+  `registry.feature(id, contract_version:, requires:)`. Host-event subscriptions are declared
+  (`on_host_event`) and attached at publish; record-kind dictionaries register at publish. Every
+  declared name must start with its feature id. Menu placement arrives with the first action that
+  needs one. Files: `shell/registry.rb`, `shell/registry_validation.rb`, `shell/declarations.rb`.
+- **Entrypoints (C2).** `PhComposer::API` adds `describe(name:)` for full schemas and
+  `preview(context:, name:, params:)`, which runs a handler's proposal without writing and needs only
+  `read`. The request envelope holds exactly `sequence` and `expected_revision`; an expected edit path
+  arrives with the first geometry operation. Schemas are a JSON Schema subset (`core/json_schema.rb`)
+  with `x-unit`.
+- **Execution (C3).** A change runs inside `ModelSession#exclusive` from handler to recorded outcome,
+  so a handler cannot start a second change. Handlers propose into a `Records::ChangeSet`; only the
+  dispatcher applies it, inside one `ModelOperation`. A proposal that raises marks the set refused,
+  and a refused set is never applied even if the handler rescued the error.
+- **Revision (C3).** Advances on committed own operations (once, whether the commit callback arrives
+  inside the operation or later), external commits, Undo, Redo and edit-path changes. SketchUp
+  26.1.188 reports an abort as `onTransactionUndo`; inside the session's own operation that callback
+  is ignored. A commit followed by an exception still advances the revision.
+- **Sessions.** Every open Model keeps its session until it closes; activation no longer detaches the
+  previous one, as it did in the predecessor. Closed sessions are dropped on the next registry read.
+- **Records (C5).** Ids are the kind prefix plus twelve alphanumerics (`exp_Ab12Cd34Ef56`), not UUIDs;
+  they are random, durable and never reused by a duplicate. A stored record is flat JSON with reserved
+  keys `id`, `schema_version`, `user_data`, `extension_data`; values cannot set a reserved key.
+  Extension envelope statuses are `understood`, `outdated`, `unsupported` and `unavailable`.

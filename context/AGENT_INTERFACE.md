@@ -1,8 +1,10 @@
 # External agent interface
 
 DATE: 2026-09-18
-STATUS: Agent access is an accepted product priority. Contracts below are design requirements;
-transport, packaging and exact APIs remain proposed. No implementation or host proof yet.
+STATUS: Agent access is an accepted product priority. The in-process programming interface
+(`PhComposer::API`: discover, describe, connect, query, preview, invoke, outcome) is implemented on
+branch in Phase 0 P0-D with a panel-closed synthetic client. Transport, packaging, grants and the
+external adapter remain proposed.
 
 Users bring their own agents. PH-Composer supplies documented access to inspect, view and edit
 the authored model without requiring an agent to understand private Ruby internals or operate

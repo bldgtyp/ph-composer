@@ -15,10 +15,10 @@ without a linked result. No code or host gate was run during planning.
 | A02 | Ruby 2.7.2 and 3.2.2 full offline gates, Chromium 88 syntax/API checks, typed Python checks | P0-G |
 | A03 | RBZ inventory, license notices, no private fixtures, development bridge/examples excluded. Provisional: [P0-C](evidence/phase-02-bootstrap.md) | P0-C/G |
 | A04 | Shipping namespace/designPH deny checks; empty extension loads with exact installed identity. Provisional: [P0-C](evidence/phase-02-bootstrap.md) | P0-C/G |
-| A05 | Record JSON round trip, actual reference preservation/remapping, unknown payloads and migration rollback | P0-D |
-| A06 | All-or-nothing batch, no-write stale refusal, failure warning, no extra Undo from failures/no-ops | P0-D/G |
-| A07 | Discovery/read/write/read-back with panel closed; two clients, duplicate retry and expired outcome tests | P0-D |
-| A08 | Synthetic outside feature adds action/snapshot/export contributor without shared-orchestration edits | P0-D/F |
+| A05 | Record JSON round trip, actual reference preservation/remapping, unknown payloads and migration rollback. Passed: [P0-D](evidence/phase-03-operations.md) | P0-D |
+| A06 | All-or-nothing batch, no-write stale refusal, failure warning, no extra Undo from failures/no-ops. Passed offline and on 26.1.188: [P0-D](evidence/phase-03-operations.md); P0-G re-runs at final acceptance | P0-D/G |
+| A07 | Discovery/read/write/read-back with panel closed; two clients, duplicate retry and expired outcome tests. Passed: [P0-D](evidence/phase-03-operations.md) | P0-D |
+| A08 | Synthetic outside feature adds action/snapshot/export contributor without shared-orchestration edits. Action and snapshot portion passed: [P0-D](evidence/phase-03-operations.md); export portion P0-F | P0-D/F |
 | A09 | Multi-Model isolation, active path, deferred observer cleanup, fresh-process native Undo/Redo/save/reopen | P0-G |
 | A10 | Applicable Units numerical, parser, draft, locale, preference and no-SKP-mutation checks | P0-E |
 | A11 | Empty panel lifecycle, accessible controls, warnings and current-asset native visual evidence | P0-E/G |

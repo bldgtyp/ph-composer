@@ -9,8 +9,10 @@ SketchUp facts behind these rules, with what pins each one, are in
 [`SKETCHUP_HOST_BEHAVIOR.md`](SKETCHUP_HOST_BEHAVIOR.md). Where a rule cites evidence, the evidence
 is in the predecessor's archive at `../../ph-navigator-sketchup/planning/archive/`.
 
-Nothing here is implemented yet. The founding brief's transplant tables say which predecessor code
-carries each rule; until that code lands, this file describes the target and the reasons for it.
+The foundation is partly implemented on the `phase-zero-foundation` branch: sessions, revisions,
+transactions, the record engine and the public operation contract (Phase 0 stages P0-C and P0-D).
+Everything else here still describes the target and the reasons for it. The Phase 0 packet under
+`planning/refactor/phase-zero/` records which rules have implementation and host evidence.
 
 [EXTENSIBILITY.md](EXTENSIBILITY.md) owns the accepted contributor architecture, including the
 separation of pure Ruby domain behavior from SketchUp adapters, public scripting, metadata and
@@ -76,8 +78,10 @@ reloaded `install` does not subscribe twice.
 ### Per-Model state lives on the session
 
 Every open Model has one `ModelSession`, created and dropped by the `Sessions` registry, which is
-the only code that keys anything by `model.object_id`. The session carries the Model's identity,
-generation, refresh timer and observers, and names no feature. A feature keeps its per-Model state
+the only code that keys anything by `model.object_id`. The session carries a random session id, the
+whole-Model revision, issued caller handles, retained mutation outcomes, the refresh timer and
+observers, and names no feature. A session lasts while its Model is open; activating another Model
+does not end it, and reopening a file creates a new one. A feature keeps its per-Model state
 in one state object, `session.feature_state(:name) { ... }`. A module never holds a Model-keyed
 hash. The session detaches and settles every state object that responds to `detach` or `settle`,
 so a new feature adds no line to the session.

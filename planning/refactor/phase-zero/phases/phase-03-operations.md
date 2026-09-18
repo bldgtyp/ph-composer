@@ -1,7 +1,7 @@
 # P0-D: records, sessions and public operations
 
 DATE: 2026-09-18
-STATUS: Scoped. Implementation authorized 2026-09-18; not started.
+STATUS: Implemented on branch 2026-09-18; host-verified on 26.1.188. Evidence: [evidence/phase-03-operations.md](../evidence/phase-03-operations.md).
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
