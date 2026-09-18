@@ -27,6 +27,7 @@ class PhComposerTestCase < Minitest::Test
   def setup
     Sketchup.reset
     PhComposer.reset_for_test
+    PhComposer::Diagnostics.strict = true
     # Last, so a test measuring host timers measures its own and none that setup started.
     UI.reset
   end
