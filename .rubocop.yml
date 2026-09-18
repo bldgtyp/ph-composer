@@ -1,0 +1,39 @@
+# A deliberately small rule set, carried from the predecessor's 2026-09-15 review. Every department
+# is off; the cops below are the ones enabled, and widening the list is a separate decision.
+# There is no burn-down register: this repository starts at the ceilings, so every file is held.
+
+AllCops:
+  DisabledByDefault: true
+  TargetRubyVersion: 2.7
+  SuggestExtensions: false
+  Exclude:
+    # `_private/` is the gitignored corpus and `vendor/` is other people's code. `syntax` in the
+    # Makefile draws the same boundary: src, tests and tools.
+    - "_private/**/*"
+    - "vendor/**/*"
+    - "src/ph_composer/vendor/**/*"
+    - "tests/fixtures/**/*"
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+
+Style/Semicolon:
+  Enabled: true
+
+# context/CODING_STANDARDS.md "Line and size limits": 120, including transplanted code.
+Layout/LineLength:
+  Enabled: true
+  Max: 120
+
+# Size limits are review signals, not a reason to fragment a cohesive operation. A justified local
+# exception says why the longer unit is easier to understand.
+Metrics/MethodLength:
+  Enabled: true
+  Max: 40
+
+Metrics/ClassLength:
+  Enabled: true
+  Max: 300
+  # A test class is one scenario file, not a unit of production design.
+  Exclude:
+    - "tests/**/*_test.rb"

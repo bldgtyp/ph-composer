@@ -35,6 +35,16 @@ class LoaderTest < PhComposerTestCase
     assert_empty PhComposer::FEATURES
   end
 
+  def test_reset_for_test_clears_every_registered_state_once_per_name
+    cleared = []
+    PhComposer.on_reset(:loader_test) { cleared << :first }
+    PhComposer.on_reset(:loader_test) { cleared << :reregistered }
+
+    PhComposer.reset_for_test
+
+    assert_equal [:reregistered], cleared
+  end
+
   def test_reloading_the_composition_root_keeps_its_constants
     features = PhComposer::FEATURES
     load File.join(EXTENSION_ROOT, "extension.rb")

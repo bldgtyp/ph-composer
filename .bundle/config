@@ -1,0 +1,6 @@
+---
+# Rubocop's gems install into the repo, not the interpreter's shared gemset, so adding a linter
+# cannot change what `require` resolves for the suite. This is hygiene rather than a fix: the
+# golden format itself is pinned in `tests/support/fixture_files.rb`, which is what stops a
+# `gem install` from anywhere restaging `tests/fixtures/`.
+BUNDLE_PATH: "vendor/bundle"
