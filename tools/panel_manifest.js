@@ -94,16 +94,12 @@ function renderDevelopmentPage(page, index, order, prefix) {
 function main() {
   var write = process.argv.indexOf("--write") !== -1;
   var order = graph().order;
-  var pages = [];
-  var index;
-  if (fs.existsSync(INDEX)) {
-    index = fs.readFileSync(INDEX, "utf8");
-    pages.push([INDEX, index, render(index, order)]);
-    DEVELOPMENT_PAGES.forEach(function (entry) {
-      var page = fs.readFileSync(entry.path, "utf8");
-      pages.push([entry.path, page, renderDevelopmentPage(page, pages[0][2], order, entry.prefix)]);
-    });
-  }
+  var index = fs.readFileSync(INDEX, "utf8");
+  var pages = [[INDEX, index, render(index, order)]];
+  DEVELOPMENT_PAGES.forEach(function (entry) {
+    var page = fs.readFileSync(entry.path, "utf8");
+    pages.push([entry.path, page, renderDevelopmentPage(page, pages[0][2], order, entry.prefix)]);
+  });
   var stale = pages.filter(function (page) { return page[1] !== page[2]; });
   if (write) {
     stale.forEach(function (page) { fs.writeFileSync(page[0], page[2]); });

@@ -2,7 +2,7 @@
 
 /* The DOM stub the panel tests share: enough of Element and Document for the ES5 panel code.
 
-   Supported selector forms, and only these: a tag name (`button`), one class (`.row-target`), an
+   Supported selector forms, and only these: a tag name (`button`, `h1`), one class (`.row-target`), an
    attribute (`[data-tab]`), an attribute with a value (`[data-section='library']`), `:hover`
    against `document.hoverTarget`, and any comma-separated list of those (`button, select`). A
    compound like `button.primary` is not supported and never silently half-matches: it returns
@@ -184,7 +184,7 @@ function matchesOne(node, selector) {
   var identifier = /^#([a-z0-9_-]+)$/i.exec(selector); if (identifier) return node.id === identifier[1];
   var className = /^\.([a-z0-9_-]+)$/.exec(selector);
   if (className) return node.className.split(/\s+/).indexOf(className[1]) >= 0;
-  if (/^[a-z]+$/.test(selector)) return node.tagName === selector;
+  if (/^[a-z][a-z0-9]*$/.test(selector)) return node.tagName === selector;
   var attribute = /^\[([^=\]]+)(?:=['"]?([^'"\]]+)['"]?)?\]$/.exec(selector); if (!attribute) return false;
   return attribute[2] === undefined ?
     node.getAttribute(attribute[1]) !== null : node.getAttribute(attribute[1]) === attribute[2];

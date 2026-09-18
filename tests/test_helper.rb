@@ -28,6 +28,8 @@ class PhComposerTestCase < Minitest::Test
     Sketchup.reset
     PhComposer.reset_for_test
     PhComposer::Diagnostics.strict = true
+    # Hermetic: the real reader asks macOS `defaults`, which a test must not depend on.
+    PhComposer::Preferences.apple_locale_reader = -> {}
     # Last, so a test measuring host timers measures its own and none that setup started.
     UI.reset
   end

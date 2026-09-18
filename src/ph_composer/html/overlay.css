@@ -79,7 +79,6 @@
 .phc-dialog h2 { margin: 0 32px 18px 0; font-size: 20px; }
 .phc-dialog h3 { margin: 16px 0 6px; font-size: 14px; }
 .phc-dialog p, .phc-dialog li { line-height: 1.5; }
-.phc-dialog .phc-dialog-close { position: absolute; top: 12px; right: 12px; }
 /* Shared anchored bubbles: non-modal editors with an explicit pointing edge. */
 .phc-bubble-anchor { position: relative; display: inline-block; }
 .phc-workspace .phc-bubble {
@@ -199,8 +198,6 @@
 .phc-menu-state { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
 .phc-bubble.is-submenu::before { top: var(--bubble-pointer-y); left: -7px; transform: rotate(-45deg); }
 .phc-bubble.is-submenu.opens-left::before { left: auto; right: -7px; transform: rotate(135deg); }
-.phc-workspace .phc-confirm-delete { background: var(--red); border-color: var(--red); color: #fff; }
-.phc-workspace .phc-confirm-delete:hover:enabled { background: #84291f; }
 /* App-wide confirmation buttons: Cancel left, primary action right. */
 .phc-workspace .phc-dialog-actions {
   display: flex;
@@ -233,17 +230,6 @@
 }
 .phc-property-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .phc-property-value { margin-left: auto; white-space: nowrap; }
-.phc-workspace .phc-property-row .phc-inline-field {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex: 1;
-  font-size: 12px;
-}
-.phc-workspace .phc-inline-field input:not([type=checkbox]) { width: 90px; }
-.phc-workspace .phc-inline-field input[type=checkbox] { align-self: auto; flex: 0 0 16px; }
 .phc-workspace .phc-bubble-content .phc-help {
   display: inline-flex;
   align-items: center;
@@ -272,11 +258,10 @@
   background: var(--interaction-highlight-hover);
   border-color: var(--interaction-highlight);
 }
-
 /* Record forms open in the shared modal; fields wrap into two columns at the dialog width. */
 .phc-form-dialog h2 { margin: 0 0 16px; }
 .phc-form-dialog form { display: flex; flex-wrap: wrap; gap: 12px 16px; }
-.phc-form-dialog form > :not(label), .phc-form-dialog label.phc-checkbox { flex-basis: 100%; }
+.phc-form-dialog form > :not(label) { flex-basis: 100%; }
 .phc-form-dialog label {
   display: flex;
   flex: 1 1 220px;
@@ -286,7 +271,6 @@
   color: var(--muted);
   font-size: 12px;
 }
-.phc-form-dialog label.phc-checkbox { flex-direction: row; align-items: center; gap: 8px; color: inherit; }
 .phc-form-dialog input:not([type=checkbox]), .phc-form-dialog select { width: 100%; color: #1e2931; font-size: 13px; }
 .phc-form-dialog .phc-unit-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; width: 100%; }
 .phc-form-dialog p { margin: 0; }

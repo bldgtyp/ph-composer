@@ -53,7 +53,10 @@ PhComposerUI.define("unit_preferences", ["units"], function (units) {
 
   function apply(next, key, value, extra) {
     if (key === "unit_system") next.unitSystem = value;
-    if (key === "dimension_format" && extra && next.dimensionFormats[extra.scope]) {
+    if (key === "dimension_format" && extra && extra.scope) {
+      if (!next.dimensionFormats[extra.scope]) {
+        next.dimensionFormats[extra.scope] = { SI: units.dimensionDefaults.SI, IP: units.dimensionDefaults.IP };
+      }
       next.dimensionFormats[extra.scope][extra.system] = value;
     }
   }

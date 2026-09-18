@@ -1,0 +1,6 @@
+/* The panel shell: the panes under the tab row, the notice layer and the status bar. */
+.live-panel .panel-panes { position: relative; flex: 1; min-height: 0; overflow: auto; padding: 0; }
+.live-panel section { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.live-panel button { width: auto; font-weight: 400; }
+.live-panel [data-pane] { min-height: 100%; }
+.live-panel .phc-tabs button:disabled { background: transparent; }

@@ -27,6 +27,7 @@ test("a tag, a class, an attribute and an attribute value each match", function 
   assert.strictEqual(dom.matches(node, "[data-row-action='edit']"), true);
   assert.strictEqual(dom.matches(node, "[data-row-action='delete']"), false);
   assert.strictEqual(dom.matches(node, "select"), false);
+  assert.strictEqual(dom.matches(dom.element("h1"), "h1"), true, "a tag name may carry a digit");
 });
 
 test("a comma list matches when any of its parts does", function () {

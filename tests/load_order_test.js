@@ -51,3 +51,31 @@ test("every panel file declares one module named after its path, and the graph b
   });
   assert.deepStrictEqual(Array.from(graph.order).sort(), Object.keys(graph.definitions).sort());
 });
+
+var dom = require("./support/dom_stub");
+var markup = panelSource.markup("index.html");
+var scripts = [];
+markup.replace(/<script src="([^"]+)"><\/script>/g, function (tag, src) { scripts.push(src); return tag; });
+
+test("index.html's script list is the generated order of every declared module", function () {
+  var graph = manifest.graph();
+  assert.strictEqual(manifest.render(markup, graph.order), markup, "run 'make panel-manifest' after a define changes");
+  assert.deepStrictEqual(scripts, ["module.js"].concat(Array.from(graph.order).map(function (name) {
+    return name + ".js";
+  })));
+});
+
+test("the page's scripts, run in their listed order, start every module and announce the panel", function () {
+  var sent = [];
+  var context = {
+    document: dom.buildDocument(markup), Intl: Intl, setTimeout: setTimeout, clearTimeout: clearTimeout,
+    sketchup: { ph_composer_message: function (message) { sent.push(JSON.parse(message)); } }
+  };
+  context.window = context;
+  dom.attachEvents(context);
+  scripts.forEach(function (src) { panelSource.load(context, src); });
+  require("vm").runInNewContext(/<script>([\s\S]*?)<\/script>/.exec(markup)[1], context);
+  assert.deepStrictEqual(Object.keys(context.PhComposerUI.start()).sort(),
+    Object.keys(manifest.graph().definitions).sort());
+  assert.deepStrictEqual(sent.map(function (message) { return message.type; }), ["panel.ready"]);
+});
