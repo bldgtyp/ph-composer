@@ -10,11 +10,17 @@ ISSUE: none (local planning draft; origin exists, issue not created)
 Ed authorized Phase 0 implementation on 2026-09-18. Work runs on branch `phase-zero-foundation`
 from `152e796`, one commit per completed unit. P0-A and P0-C are complete. P0-D is implemented on
 branch and host-verified: record engine, sessions and revisions, registry and the public API, with a
-development example driven by two clients with the panel closed. Next: P0-E. P0-B needs Ed's spike
-scheduling. No spike has run.
+development example driven by two clients with the panel closed. P0-E is implemented on branch and
+host-verified: the panel as one API client with empty Overview and Export, its UI kit, display
+preferences and shared Units, with a development-only synthetic editor. Next: P0-F. P0-B needs Ed's
+spike scheduling. No spike has run.
 
-Open decision for Ed: the wording of the `effect: unknown` warning (`Outcome::UNVERIFIED` in
-`shell/outcome.rb`), shown when an abort ran but the unchanged-data check failed or could not run.
+Open decisions for Ed:
+
+- The wording of the `effect: unknown` warning (`Outcome::UNVERIFIED` in `shell/outcome.rb`), shown
+  when an abort ran but the unchanged-data check failed or could not run.
+- The six muted "Planned" tabs the UI baseline keeps. They name features in the shell page and are
+  hidden below 600 px; the review recommends dropping them until tab registration lands.
 
 | Stage | State | Next action |
 | --- | --- | --- |
@@ -22,7 +28,7 @@ Open decision for Ed: the wording of the `effect: unknown` warning (`Outcome::UN
 | P0-B investigations | Scoped | Execute the four documented procedures once Ed schedules them and a host is available |
 | P0-C tooling/bootstrap | Complete | [Evidence](evidence/phase-02-bootstrap.md); A03/A04 provisional until P0-G |
 | P0-D records/operations | Implemented on branch | [Evidence](evidence/phase-03-operations.md); A05 to A07 and the A08 action/snapshot portion passed |
-| P0-E panel/units | Scoped | Next stage |
+| P0-E panel/units | Implemented on branch | [Evidence](evidence/phase-04-panel-units.md); A10 and the A11 stage portion passed |
 | P0-F runtime/export shell | Scoped | Implement C6 after P0-D/P0-E |
 | P0-G acceptance | Scoped | Await implementation and investigation dispositions |
 
@@ -52,8 +58,16 @@ P0-D (2026-09-18): `make ci` exits 0 on both Rubies (135 Ruby runs); Ruby covera
 independent high-assurance review found three reproduced defects and five smaller issues, all fixed
 with regression tests. Host runs on 26.1.188 covered the walkthrough, native Undo/Redo, an injected
 write failure with verified rollback, save and fresh-process reopen (identical record digest) and
-two open Models. See [evidence/phase-03-operations.md](evidence/phase-03-operations.md). A02 and
-A08 (export portion) through A21 remain pending.
+two open Models. See [evidence/phase-03-operations.md](evidence/phase-03-operations.md).
+
+P0-E (2026-09-18): `make ci` exits 0 on both Rubies (167 Ruby runs, 103 JavaScript tests); coverage
+Ruby 96.6%, JavaScript 97.3%; browser checks pass. One independent high-assurance review reproduced
+two high and three medium defects, all fixed with regression tests; the host walkthrough found one
+more, fixed. Host runs on 26.1.188 covered the empty panel, unit switches that leave the Model
+untouched, a draft through a switch, Undo/Redo of a panel edit, invalid input, the New part form, a
+refused edit, restart restoration and a narrow panel. See
+[evidence/phase-04-panel-units.md](evidence/phase-04-panel-units.md). A02, A08 (export portion),
+A09 and A12 through A21 remain pending.
 
 ## Ledger
 
@@ -74,3 +88,4 @@ A08 (export portion) through A21 remain pending.
 | 2026-09-18 | P0-A Complete. Closure verified at `f358ebf`; Python shell reclassified as pattern reference; Spaces session candidates stay deferred; outcome vocabulary, rollback verification and bounds pinned in CONTRACTS |
 | 2026-09-18 | P0-C Complete. Empty extension, offline harness, RBZ shipping checks, lint/CI gate and host bridge in `db00b48`..`12ebc3c`; one bounded review, findings fixed; host load verified on SketchUp 26.1.188 |
 | 2026-09-18 | P0-D Implemented on branch, `4c6cd19`..`689e464`. High-assurance review findings fixed; host evidence on 26.1.188 including two new measured host facts (synchronous commit callback, abort reported as Undo) |
+| 2026-09-18 | P0-E Implemented on branch, `fe28acb`..`4206e19`. Table, inventory controls and cell drafts deferred to the first table screen; review and host findings fixed; `session.inactive` added to CONTRACTS |

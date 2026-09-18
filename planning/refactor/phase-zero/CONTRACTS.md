@@ -97,7 +97,7 @@ failed or could not run. Codes are stable `noun.condition` strings, following TE
 | --- | --- |
 | Envelope | `request.malformed` (unknown field, wrong type), `request.unknown_operation`, `request.api_version`, `request.capability_denied` |
 | Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |
-| Session and host | `session.unknown` (closed, reopened or never issued), `session.busy` (modal tool, transition, unsettled work; reason in detail) |
+| Session and host | `session.unknown` (closed, reopened or never issued), `session.busy` (modal tool, transition, unsettled work; reason in detail), `session.inactive` (the panel client only: the request names a Model the panel no longer shows) |
 | Preconditions | `revision.stale`, `edit_path.stale`, `target.not_found`, `target.changed`, `record.unreadable` |
 | Validation | `params.invalid`, `validation.failed` (findings attached), `reference.invalid` |
 | Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_required`, `extension.migration_failed`, `copy.rule_missing` |
@@ -279,3 +279,20 @@ Where the implementation refines the design above. Evidence:
   they are random, durable and never reused by a duplicate. A stored record is flat JSON with reserved
   keys `id`, `schema_version`, `user_data`, `extension_data`; values cannot set a reserved key.
   Extension envelope statuses are `understood`, `outdated`, `unsupported` and `unavailable`.
+
+## Implemented in P0-E
+
+Evidence: [evidence/phase-04-panel-units.md](evidence/phase-04-panel-units.md).
+
+- **The panel as a client (C2, C4).** `shell/panel.rb` connects to each session it shows with its
+  own caller handle and numbers its mutations itself; the page's request ids are correlation only.
+  `action.invoke` carries the session the page showed and the revision it last rendered, and the
+  panel publishes the authoritative snapshot before `action.result` (C3).
+- **`session.inactive`.** An action naming a session other than the one the panel shows is refused
+  with nothing written, even though that session is still open and valid. The panel acts only on
+  the Model it shows, so an edit typed against one document never lands in another after a switch.
+  API callers name their session explicitly and never receive this code.
+- **Messages.** `shell/panel_messages.rb` declares the panel's eight message types and their keys;
+  features add none. Display preferences travel as `preferences.set`, never as a Model action.
+- **Presentation.** The calling client shows a refusal or failure as a persistent warning or error
+  (C2); the panel does, and a notice never opens the panel.

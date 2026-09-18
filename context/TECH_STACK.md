@@ -10,7 +10,8 @@ SketchUp facts behind these rules, with what pins each one, are in
 is in the predecessor's archive at `../../ph-navigator-sketchup/planning/archive/`.
 
 The foundation is partly implemented on the `phase-zero-foundation` branch: sessions, revisions,
-transactions, the record engine and the public operation contract (Phase 0 stages P0-C and P0-D).
+transactions, the record engine and the public operation contract (Phase 0 stages P0-C and P0-D),
+and the panel shell, its UI kit and shared Units (P0-E).
 Everything else here still describes the target and the reasons for it. The Phase 0 packet under
 `planning/refactor/phase-zero/` records which rules have implementation and host evidence.
 
@@ -274,54 +275,67 @@ dispatcher, an observer callback, a task tick, or the Export run. Input coercion
 
 ## Panel protocol
 
-`shell/protocol.rb` is the single list of common transport message types, their direction, body kind, owner
-and payload keys. Add a type there before publishing or handling it. `shell/message.rb` refuses an
-outbound payload key its type does not declare. A type is handled and published only inside its
-owner's package, which a test checks. Types a host probe alone uses are marked `development_only`.
-A generated fixture pins the table and the Node agreement test fails when the panel handles or
-sends a type the table does not declare.
+Implemented in P0-E. `shell/panel_messages.rb` declares every message between the page and Ruby,
+with the payload keys each carries: `panel.ready`, `action.invoke` and `preferences.set` inbound;
+`panel.snapshot`, `action.result`, `preferences.result`, `panel.notice` and `panel.failure`
+outbound. Ruby refuses an inbound type or payload key the table does not declare and answers with
+`panel.failure`; it refuses to publish an undeclared outbound key. `tests/panel_messages_test.rb`
+reads the page sources and fails when the page sends or handles a type the table does not declare.
 
-Feature-specific action schemas register through the action interface, without new feature-specific
-transport types in this table. The shell validates the common envelope and dispatches against the
-registered schema. The exact schema registration API is pending foundation design.
-
-Every feature's panel request travels one channel: the panel sends `action.invoke` with `action`,
-`params`, `request_id` and `model_session`, and `shell/action_channel.rb` answers a correlated
-request with `action.result`. A request naming another Model session is refused before it runs,
-and a result is published after the authoritative snapshot. Features register actions, never a
-panel handler of their own.
+Features add no transport types. A feature's panel request is `action.invoke` naming a registered
+action, and its panel data is a registered snapshot section (CONTRACTS.md C1, C2).
 
 ## Panel
 
-`shell/panel.rb` is transport only: dialog, asset server, session id, message routing and the
-shell's own snapshot keys. A feature registers inbound handlers with `Panel.on`, a snapshot section
-with `Panel.snapshot_section`, and close work with `Panel.on_close`, all in its `install`.
+The panel is one client of `PhComposer::API`, not the owner of any Model behavior (CONTRACTS.md C2).
+`shell/panel.rb` owns the dialog and nothing else a feature reaches:
 
-1. `html/panel.js` keeps the last `panel.snapshot`, task and Export state, the active tab and the
-   latest correlated action result, one slot every feature reads by its own request id.
-2. `receive(envelope)` dispatches to reducers that return state without touching the DOM. The
-   failure path is also a reducer.
-3. Every handled message renders each registered section with `render(root, state)`. A cell
-   confirms only after both its authoritative snapshot value and matching `action.result`; an
-   external change requires cancel and re-edit. Tab switches only toggle mounted panes.
-4. Section event handlers only send `action.invoke`, `command.invoke` or `task.cancel`. Render
-   derives labels, visibility and disabled states from state.
-5. Findings use snapshot severity. Tooltips work on hover and focus and dismiss with Escape.
+- It shows the active Model. For each session it shows it connects once with its own caller
+  handle and gives the panel's mutations their own sequence numbers (C4). The page's request ids
+  only correlate a result with the view that asked.
+- `action.invoke` carries the session the page showed and the revision it last rendered. An action
+  for a session the panel no longer shows is refused as `session.inactive` with nothing written.
+  The result is published after the authoritative snapshot (C3).
+- The page loads from the shipped file with `set_file`. The message callback is bound to its
+  dialog, so a closed page's late message is ignored. The panel refreshes the shown Model's
+  snapshot after committed changes, Undo, Redo, an edit-path change and activation, through the
+  session's coalesced timer.
+- A session notice reaches the open panel if it shows that session and otherwise waits, bounded,
+  for the panel to show it. Nothing a programmatic caller does opens or raises the panel; only the
+  Extensions menu command does.
+- A development composition entry may add a script the page runs after the kit starts
+  (`Panel.add_development_script`). Shipping features declare their modules in `html/`.
 
-Each panel file is one `Phn.define(name, dependencies, factory)` call in a registry, named by its
-path under `html/`. `Phn.start()` builds the modules in dependency order and throws on a missing or
-cyclic dependency. The index page's script list is generated from those declarations and a test
-fails while it is stale. A feature opens another feature's tab with `panel.navigate(tab, intent)`;
-the target section handles the intent in the `onNavigate` it registered, so no feature reads
-another section's view. The registry's `Phn` prefix is the predecessor's and is renamed with the
-namespace decision.
+The page:
 
-Every correlated panel action goes through `html/request.js`. A view creates
-`request.channel(model, send, label)`; `run(action, params, { onDone, onFail })` is single flight
-and refuses while a request is pending, and `consume(state)` settles the one action-result slot
-for that request once. Record forms are `record_form.js` specs; inline cell drafts are
-`record_edits.js`; the inventory grid takes a declared options contract; snapshot reads go through
-`snapshot.js`; unit descriptors for stored fields are `fields.js`.
+1. `html/panel.js` keeps one state: the last snapshot, the active tab, the latest correlated action
+   result, one notice and the display preferences the host has not yet confirmed.
+2. `receive(envelope)` folds each message into that state; a result or notice for another session
+   is not painted, and a snapshot for another Model drops the previous Model's result and notice.
+3. Every message re-renders each registered section with `render(root, state, send)`, after the
+   notice, unit toggle and tabs; a section that throws is logged and the others still paint. Tab
+   changes only toggle panes and send nothing.
+4. `panel.section(name, render, { pane })` registers a section. A section whose mount node is not in
+   the page is created in its pane, so a feature adds one without editing `index.html`. A section
+   owns its local drafts and resets them when `state.session` changes, and patches its nodes
+   rather than re-parenting them: moving a focused input takes the user's focus. A unit field
+   commits on blur only while its input is still in the page, and a disposed field never commits,
+   so a repaint or a Model switch cannot send a half-typed draft.
+5. A refusal or failure stays on screen as a warning or error notice until dismissed; information
+   fades on the next interaction. Notices float over the panes and never reflow them.
+
+Each panel file is one `PhComposerUI.define(name, dependencies, factory)` call, named by its path
+under `html/`. `PhComposerUI.start()` builds the modules in dependency order and throws on a missing
+or cyclic dependency. The script lists of `index.html` and the development preview are generated
+from those declarations (`make panel-manifest`), and `make ci` fails while either is stale.
+
+Every correlated panel action goes through `html/request.js`: `request.channel(session, send,
+label)`; `run(action, params, { onDone, onFail })` is single flight and pending before the message
+leaves, and `consume(state)` settles the action-result slot for that request once; `send` never
+refuses, for views that keep several requests in flight. Record forms are `record_form.js` specs,
+snapshot reads go through `snapshot.js`, and unit descriptors for stored fields are `fields.js`. The
+record table, inventory controls and inline cell drafts (`table.js`, `view_controls.js`,
+`record_edits.js`) arrive with the first screen that has a record table.
 
 **Browser floor: Chromium 88**, the engine SketchUp 2022 was measured on and the one assumed for
 the 2023 floor. Syntax is ES2020. Runtime APIs that arrived after Chromium 88 are refused by
@@ -339,8 +353,10 @@ eslint. The 2023 host's CEF version is confirmed when a 2023 host is available.
   predecessor's U1 contracts C1 to C5 (`../../ph-navigator-sketchup/planning/archive/units/PLAN.md`).
 - The first keystroke or paste fixes a draft's starting profile, so a switch never reinterprets
   text already typed.
-- The preference lives in `Sketchup.write_default`. The panel's origin is `127.0.0.1` on a random
-  port, so `localStorage` does not survive a restart.
+- The preference lives in `Sketchup.write_default` (`shell/preferences.rb`), never in page storage.
+  A dimension scope's formats are one base64 JSON value, because SketchUp 26.1 reads back a stored
+  string containing a double quote as nil. A dimension scope is a dotted name under its feature's
+  id; a scope never chosen takes the system default (mm in SI, decimal inches in IP).
 - Ruby never formats a unit-bearing value for the panel. It sends message parts with canonical
   values and the panel formats them. The Export report captures the preference once when the run
   starts; HBJSON stays SI.
@@ -353,12 +369,12 @@ these true of every feature it had, so a new one that follows them needs no chan
 
 - **One folder.** `features/<name>/`, listed in the composition root's `FEATURES`. Outside that
   registration, shared orchestration names no feature, and features name no other feature's internals.
-- **One `install`.** Every registration happens there: actions, the snapshot section, inbound
-  panel handlers, close and ready work, host-event subscriptions, the export contributor.
-- **One feature flag**, read through the snapshot so the panel can hide or lock the whole surface,
-  and **one snapshot section** whose key is the feature's own word.
-- **One action namespace.** Actions are `<namespace>.<verb>`, defined in `install` with parameters,
-  availability, confirmation and the feature flag.
+- **One `install`.** Every registration happens there: record kinds, queries, actions, snapshot
+  sections, host-event subscriptions, the export contributor. There are no feature flags and no
+  inbound panel handlers: a feature that is not composed is absent, and the panel reaches a
+  feature only through its registered actions and sections.
+- **One namespace.** Every declared name starts with the feature's id (`<feature>.<verb>`),
+  defined in `install` with its parameter and result schemas and confirmation policy.
 - **Per-Model state** is one object from `session.feature_state(:name)`.
 - **Host events** arrive by subscription from `install`; observers are for external geometry
   changes only. Plugin-owned data changes through direct Model operations.
@@ -368,18 +384,18 @@ these true of every feature it had, so a new one that follows them needs no chan
   projected to named keys on the way out.
 - **Two languages, one contract.** Anything Ruby sends to the shipped Python is pinned by a
   fixture both sides read, so a key renamed on one side fails on the other.
-- **The panel** is a module graph. A feature's section registers itself, reads the snapshot through
-  `snapshot.js`, sends correlated actions through `request.js`, and opens another feature's tab
-  with `panel.navigate`.
+- **The panel** is a module graph. A feature's section registers itself with `panel.section`,
+  reads its snapshot section through `snapshot.js` and sends correlated actions through
+  `request.js`. Cross-feature navigation is designed with the first feature that needs it.
 
 ## Durable delivery rules
 
 - A mutation ends with `session.changed(:feature)`. Nothing else rebaselines the reconciler or
   refreshes the panel, and feature code never references `Panel`; background failures reach the
   user through `session.notice`.
-- A background task that completes or fails must not call `session.notice`: the panel turns a
-  notice into `Panel.show`, which forces the panel open from a timer. Store the outcome where the
-  snapshot reads it and let the panel show the state.
+- A notice never opens the panel: it shows in an open panel that shows its Model and otherwise
+  waits for the panel to show that Model. State a user must act on belongs in the snapshot, where
+  the panel shows it whenever it opens.
 - A user-triggered operation is an action, defined in the feature's `install`. Toolbar, menu,
   context menu and panel buttons all run actions through `Actions.run`, which owns coercion,
   confirmation, error mapping and the post-action `session.changed`, and answers every run with one

@@ -1,8 +1,8 @@
 # Development
 
 **DATE:** 2026-09-18 | **STATUS:** Partly implemented. The commands below exist unless marked
-"not yet". The extension is an empty shell; tooling for the panel and the Python runtime arrives
-with those parts.
+"not yet". The extension has its foundation and an empty panel; tooling for the Python runtime
+arrives with the runtime.
 
 The development loop needs no installed dependencies beyond Ruby, Node and `uv`. Ruby source stays
 compatible with Ruby 2.7 inside the SketchUp 2023 support floor. The proving host is SketchUp
@@ -22,19 +22,17 @@ make ci
 ```
 
 `ci` runs, in order: `syntax` (every `.rb` under `src`, `tests` and `tools`), `lint`, `test`,
-`fixtures-check`, `hostkit-test`, `python-check` (mypy over the tools and their tests), `rbz` and
-`rbz-check`. It ends by printing the checks that are not yet part of the gate:
-
-- Not yet: the JavaScript suite and the generated panel script list, which arrive with the panel.
-- Not yet: `runtime-pin-check`, `runtime-check` and the installed-size gate, which arrive with the
-  Python runtime and its manifest.
+`fixtures-check`, `panel-manifest-check`, `hostkit-test`, `python-check` (mypy over the tools and
+their tests), `rbz` and `rbz-check`. It ends by printing the checks that are not yet part of the
+gate: `runtime-pin-check`, `runtime-check` and the installed-size gate, which arrive with the
+Python runtime and its manifest.
 
 A passing `make ci` is therefore not the full foundation gate until that list is empty.
 
 `test` loads the real extension code against a stub SketchUp API and runs the Ruby and Python
-suites in one pass. JavaScript tests, once they exist, are discovered by the glob
-`tests/*_test.js` and run under `node --test`. The stubs say in comments what they support and
-what they refuse to pretend to support; see `tests/support/.index.md`.
+suites in one pass. JavaScript tests are discovered by the glob `tests/*_test.js` and run under
+`node --test` against a DOM double. The stubs say in comments what they support and what they
+refuse to pretend to support; see `tests/support/.index.md`.
 
 ## Lint
 
@@ -80,9 +78,9 @@ other run compares them. Each golden has exactly one owning test, listed in `FIX
 the Makefile. There are no goldens yet. Hand-authored inputs live apart from goldens and nothing
 regenerates them.
 
-`make coverage` measures Ruby line coverage of the extension folder against a 93% minimum. It sits
-outside `make ci`; run it before a phase gate. JavaScript (94%) and Python (92%) coverage join
-when their shipped code lands. Thresholds ratchet upward only.
+`make coverage` measures Ruby line coverage of the extension folder against a 93% minimum and
+JavaScript line coverage of `html/` against 94%. It sits outside `make ci`; run it before a phase
+gate. Python coverage (92%) joins when its shipped code lands. Thresholds ratchet upward only.
 
 ## Build, install and reload
 
@@ -123,11 +121,36 @@ From there `eval`, `state`, `save`, `shot`, `key`, `console` and `quit` cover th
 loop. `tools/hostkit/.index.md` lists what each does. The measured host facts the bridge depends
 on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
 
+## The panel
+
+Each panel file is one `PhComposerUI.define(name, dependencies, factory)` call. After adding,
+renaming or re-declaring a module, regenerate the pages' script lists:
+
+```sh
+make panel-manifest
+```
+
+`make ci` fails while `html/index.html` or the preview page is stale. After installing changed panel
+assets, close and reopen the panel; an open panel keeps running the old page.
+
+The preview is the real panel in a browser, with a stand-in host and synthetic Models. It does not
+replace the SketchUp walkthrough a host gate requires.
+
+```sh
+make ui-preview                                  # http://127.0.0.1:8765/tools/ui-preview/
+NODE_PATH=/path/to/scratch/node_modules make ui-checks
+```
+
+`ui-checks` needs Playwright from `NODE_PATH`, installed outside the repository, and prints a skip
+line without it. `tools/ui-preview/.index.md` describes the page, its fixtures and the checks.
+
 ## The development example
 
 `tools/examples/foundation/` is a complete feature built only from the public contracts, with a
-script that drives it through `PhComposer::API` as two clients with the panel closed. Its README
-lists each file. It never ships. To run it in a host with the bridge:
+script that drives it through `PhComposer::API` as two clients with the panel closed, and a
+synthetic editor: a panel section for its parts that exercises the unit field and the record form.
+Its README lists each file. It never ships. Loading it registers the feature and hands the editor
+to the panel, which runs it the next time the panel opens. To run it in a host with the bridge:
 
 ```sh
 uv run tools/hostkit/host_bridge.py eval \
@@ -142,8 +165,5 @@ passing check.
 - **Runtime verification.** The runtime manifest pins the Pyodide release, versions, licenses,
   hashes, MIME types, asset allowlist and size budget. `uv run tools/runtime/vendor.py --check`
   and `uv run tools/runtime/browser_check.py` arrive with the runtime.
-- **Panel tooling.** `make panel-manifest`, which generates the panel's script list, and
-  `make ui-preview` and `make ui-checks`, which serve the panel with synthetic snapshots, arrive
-  with the panel. Neither preview replaces the SketchUp walkthrough a host gate requires.
 - **Library provider testing.** A local fixture server for connection providers arrives with the
   library provider contract.

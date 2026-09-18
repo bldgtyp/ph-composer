@@ -20,8 +20,8 @@ without a linked result. No code or host gate was run during planning.
 | A07 | Discovery/read/write/read-back with panel closed; two clients, duplicate retry and expired outcome tests. Passed: [P0-D](evidence/phase-03-operations.md) | P0-D |
 | A08 | Synthetic outside feature adds action/snapshot/export contributor without shared-orchestration edits. Action and snapshot portion passed: [P0-D](evidence/phase-03-operations.md); export portion P0-F | P0-D/F |
 | A09 | Multi-Model isolation, active path, deferred observer cleanup, fresh-process native Undo/Redo/save/reopen | P0-G |
-| A10 | Applicable Units numerical, parser, draft, locale, preference and no-SKP-mutation checks | P0-E |
-| A11 | Empty panel lifecycle, accessible controls, warnings and current-asset native visual evidence | P0-E/G |
+| A10 | Applicable Units numerical, parser, draft, locale, preference and no-SKP-mutation checks. Passed offline and on 26.1.188, with A2/A3/A13/A14 deferred to named owners: [P0-E](evidence/phase-04-panel-units.md) | P0-E |
+| A11 | Empty panel lifecycle, accessible controls, warnings and current-asset native visual evidence. Passed on 26.1.188 for P0-E; same-process Model switch not host-run: [P0-E](evidence/phase-04-panel-units.md); P0-G re-runs at final acceptance | P0-E/G |
 | A12 | Manifest enforcement, runtime probe, cancellation/teardown and lazy Python imports | P0-F/G |
 | A13 | Typed section ordering, missing/cyclic dependencies, object-level failure and independent results | P0-F |
 | A14 | Composed privacy guard, unchanged report result, synthetic artifact-pair rollback and HBJSON-only consumer | P0-F |

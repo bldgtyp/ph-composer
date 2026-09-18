@@ -1,7 +1,7 @@
 # P0-E: panel kit and shared Units
 
 DATE: 2026-09-18
-STATUS: Scoped. Implementation authorized 2026-09-18; not started.
+STATUS: Implemented on branch 2026-09-18; host-verified on 26.1.188 except a same-process Model switch. Evidence: [evidence/phase-04-panel-units.md](../evidence/phase-04-panel-units.md).
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

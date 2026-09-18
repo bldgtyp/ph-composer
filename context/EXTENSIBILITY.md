@@ -149,6 +149,11 @@ unavailable-extension examples distinguish retained data from validated behavior
 
 Land each example with its owning capability. The foundation packet starts with a synthetic
 feature and record; this list does not authorize implementing later features during transplant.
+The first two are implemented on branch: the example feature's walkthrough (P0-D) and its
+synthetic editor (P0-E, `tools/examples/foundation/editor.js`), a panel section registered with
+`panel.section` that edits through `request.js` and the unit field. Adding the editor changed no
+file in `shell/`, `session/`, `core/` or `html/`; its development entry hands the script to the
+panel.
 Do not claim an extension point is ready until its example and required host gate pass.
 
 ## Decisions still needed before API implementation
