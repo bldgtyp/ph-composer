@@ -93,15 +93,18 @@ module PhComposer
         originals.each { |record| check_copy_rules!(kind, record) }
         reserved = reserved_ids(kind, change_set)
         mapping = originals.to_h { |record| [record.fetch("id"), Identity.fresh(kind.id_prefix, reserved)] }
-        originals.each do |record|
+        copies = originals.map do |record|
           copy = kind.references.reduce(DeepCopy.call(record)) { |value, field| field.remap(value, mapping) }
           copy["id"] = mapping.fetch(record.fetch("id"))
           copy.fetch("extension_data", {}).each_value do |envelope|
             references = envelope.fetch("references", [])
             envelope["payload"] = Extension.remap(envelope.fetch("payload"), references, mapping)
           end
-          propose(kind, change_set, nil, copy)
+          propose(kind, change_set, nil, copy, :check_references => false)
+          copy
         end
+        # A copy may name a counterpart staged after it, so references are checked once all are staged.
+        copies.each { |copy| check_references!(kind, copy, change_set) }
         mapping
       end
 
@@ -149,14 +152,14 @@ module PhComposer
         raise CodedError.new("record.unreadable", "#{kind.label} #{id} is not valid JSON.")
       end
 
-      def propose(kind, change_set, before, after)
+      def propose(kind, change_set, before, after, check_references: true)
         problems = kind.problems(after)
         unless problems.empty?
           raise CodedError.new("validation.failed", "#{kind.label} #{after['id']} is not valid: #{problems.first}.",
                                "findings" => problems)
         end
 
-        check_references!(kind, after, change_set)
+        check_references!(kind, after, change_set) if check_references
         change_set.put(kind.id, :before => before, :after => after)
       end
 

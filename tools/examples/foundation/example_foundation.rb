@@ -1,0 +1,152 @@
+# frozen_string_literal: true
+
+# A complete, development-only feature built from the public contracts alone. It never ships: the RBZ
+# builder refuses any `examples` path, and the shipping composition root does not list it. Load it
+# with tools/examples/foundation/load.rb. The README beside this file walks through it.
+#
+# It declares two record kinds, one structured extension, a query, four actions and a snapshot
+# section. Nothing in shell/, session/ or core/ names it.
+module ExampleFoundation
+  ID = "example.foundation"
+  DEFINITION = "#{ID}.definition"
+  PART = "#{ID}.part"
+  REVIEW = "#{ID}.review"
+
+  Records = PhComposer::Records
+
+  # A shared definition that many parts name, like a construction many faces use.
+  DEFINITION_KIND = Records::RecordKind.new(
+    :id => DEFINITION, :label => "Example definition", :schema_version => 1, :id_prefix => "exd",
+    :fields => [Records::Field.new(:key => "label", :required => true,
+                                   :schema => { "type" => "string", "minLength" => 1 })]
+  )
+
+  # A part with a label, an SI length and a reference to its definition. Stored lengths are
+  # millimetres; the key says so and so does the schema's `x-unit`.
+  PART_KIND = Records::RecordKind.new(
+    :id => PART, :label => "Example part", :schema_version => 1, :id_prefix => "exp",
+    :fields => [
+      Records::Field.new(:key => "label", :schema => { "type" => "string", "minLength" => 1 }, :required => true),
+      Records::Field.new(:key => "length_mm", :required => true,
+                         :schema => { "type" => "number", "exclusiveMinimum" => 0, "x-unit" => "mm" }),
+      Records::Reference.new(:key => "definition_id", :target_kind => DEFINITION, :cardinality => "one",
+                             :required => true)
+    ]
+  )
+
+  # Structured review data on parts. Version 1 stored `{"status": ...}`; version 2 renamed the key
+  # and may name the part it was checked against, which a duplicated collection remaps.
+  REVIEW_EXTENSION = Records::Extension.new(
+    :namespace => REVIEW, :schema_version => 2, :export_relevance => "required",
+    :references => [{ "path" => "$.checked_against", "target_kind" => PART, "cardinality" => "one" }],
+    :migrations => { 1 => ->(payload) { { "review_status" => payload.fetch("status") } } },
+    :validate => lambda do |payload|
+      %w[draft checked].include?(payload["review_status"]) ? [] : ["review_status must be draft or checked"]
+    end
+  )
+
+  OBJECT = { "type" => "object" }.freeze
+  IDS = { "type" => "array", "items" => { "type" => "string" }, "minItems" => 1 }.freeze
+  PART_VALUES = {
+    "type" => "object", "required" => %w[label length_mm], "additionalProperties" => false,
+    "properties" => {
+      "label" => { "type" => "string", "minLength" => 1 },
+      "length_mm" => { "type" => "number", "exclusiveMinimum" => 0, "x-unit" => "mm" }
+    }
+  }.freeze
+  EDIT = {
+    "type" => "object", "required" => ["id"], "additionalProperties" => false,
+    "properties" => {
+      "id" => { "type" => "string", "description" => "The part to edit." },
+      "values" => { "type" => "object", "description" => "Values to set; null removes an optional one." },
+      "expected_values" => { "type" => "object", "description" => "The values last read; a change refuses." },
+      "user_data" => { "type" => "object", "description" => "Replaces the part's user_data." },
+      "review" => { "type" => "object", "description" => "Sets the #{REVIEW} payload." }
+    }
+  }.freeze
+
+  module_function
+
+  # The one entrypoint. It only declares; the registry validates and publishes.
+  def install(registry)
+    feature = registry.feature(ID, :contract_version => 1)
+    feature.record_kind(DEFINITION_KIND)
+    feature.record_kind(PART_KIND)
+    feature.extension(REVIEW_EXTENSION)
+    feature.snapshot_section("#{ID}.parts", :query => "ph_composer.records.list", :params => { "kind" => PART })
+    declare_summary(feature)
+    declare_create(feature)
+    declare_update(feature)
+    declare_duplicate_and_migrate(feature)
+  end
+
+  def declare_summary(feature)
+    feature.query(
+      "#{ID}.summary", :description => "Count and total length of every part.",
+      :params => { "type" => "object", "additionalProperties" => false },
+      :result => { "type" => "object", "properties" => {
+        "parts" => { "type" => "integer" }, "total_length_mm" => { "type" => "number", "x-unit" => "mm" }
+      } }
+    ) do |request|
+      lengths = request.engine.ids(PART).map { |id| request.engine.find(PART, id).fetch("length_mm") }
+      { "parts" => lengths.length, "total_length_mm" => lengths.sum }
+    end
+  end
+
+  def declare_create(feature)
+    feature.action(
+      "#{ID}.create_parts", :description => "Create one definition and parts that name it.",
+      :params => { "type" => "object", "required" => %w[definition_label parts], "additionalProperties" => false,
+                   "properties" => { "definition_label" => { "type" => "string", "minLength" => 1 },
+                                     "parts" => { "type" => "array", "items" => PART_VALUES, "minItems" => 1 } } },
+      :result => OBJECT, :undo_name => "Create Example Parts", :side_effects => "Creates records.",
+      :examples => [{ "definition_label" => "Frame", "parts" => [{ "label" => "Sill", "length_mm" => 1200 }] }]
+    ) do |request, changes|
+      engine = request.engine
+      definition = engine.propose_create(DEFINITION, changes,
+                                         :values => { "label" => request.params.fetch("definition_label") })
+      parts = request.params.fetch("parts").map do |values|
+        engine.propose_create(PART, changes, :values => values.merge("definition_id" => definition))
+      end
+      { "definition_id" => definition, "part_ids" => parts }
+    end
+  end
+
+  # All edits succeed together or none is written.
+  def declare_update(feature)
+    feature.action(
+      "#{ID}.update_parts", :description => "Edit parts' values, user_data or review, all or none.",
+      :params => { "type" => "object", "required" => ["edits"], "additionalProperties" => false,
+                   "properties" => { "edits" => { "type" => "array", "items" => EDIT, "minItems" => 1 } } },
+      :result => OBJECT, :undo_name => "Edit Example Parts", :side_effects => "Changes part values and metadata."
+    ) do |request, changes|
+      request.params.fetch("edits").each do |edit|
+        request.engine.propose_update(
+          PART, edit.fetch("id"), changes,
+          :values => edit.fetch("values", {}), :expected_values => edit.fetch("expected_values", {}),
+          :user_data => edit["user_data"],
+          :extension_payloads => edit.key?("review") ? { REVIEW => edit["review"] } : {}
+        )
+      end
+      { "updated" => changes.affected.map { |row| row.fetch("id") } }
+    end
+  end
+
+  def declare_duplicate_and_migrate(feature)
+    feature.action(
+      "#{ID}.duplicate_parts", :description => "Duplicate parts as one collection.",
+      :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
+      :result => OBJECT, :undo_name => "Duplicate Example Parts", :side_effects => "Creates records."
+    ) do |request, changes|
+      { "mapping" => request.engine.propose_duplicate(PART, request.params.fetch("ids"), changes) }
+    end
+
+    feature.action(
+      "#{ID}.migrate_review", :description => "Raise review data to the installed version.",
+      :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
+      :result => OBJECT, :undo_name => "Migrate Example Review", :side_effects => "Rewrites extension data."
+    ) do |request, changes|
+      { "results" => request.engine.propose_migration(PART, request.params.fetch("ids"), REVIEW, changes) }
+    end
+  end
+end

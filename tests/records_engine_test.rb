@@ -127,6 +127,18 @@ class RecordsEngineTest < PhComposerTestCase
     refute_same @engine.find("test.fixture.part", first).fetch("user_data"), first_copy.fetch("user_data")
   end
 
+  # The first copy names a counterpart that is staged after it.
+  def test_a_duplicated_collection_accepts_a_reference_to_a_later_copy
+    later = seed_part
+    earlier = seed_part("neighbour_ids" => [later])
+    changes = PhComposer::Records::ChangeSet.new
+
+    mapping = @engine.propose_duplicate("test.fixture.part", [earlier, later], changes)
+
+    copy = changes.find("test.fixture.part", mapping.fetch(earlier)).after
+    assert_equal [mapping.fetch(later)], copy.fetch("neighbour_ids")
+  end
+
   def test_a_copy_needing_an_unavailable_extensions_rules_is_refused_whole
     plain = seed_part
     foreign = seed_part("extension_data" => { "other.vendor" => { "schema_version" => 1, "payload" => {} } })
