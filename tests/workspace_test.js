@@ -142,3 +142,104 @@ test("a record form sends once, keeps Cancel disabled while pending and shows a 
   assert.strictEqual(form.root.hidden, true);
   assert.deepStrictEqual(changes, ["cancelled"]);
 });
+
+test("the text primitives read absent values as blank and compare numbers the way a person reads them", function () {
+  assert.strictEqual(ui.titleCase("window_type"), "Window type");
+  assert.strictEqual(ui.titleCase(null), "");
+  assert.strictEqual(ui.number(1.234), "1.23");
+  assert.strictEqual(ui.number(0.5, true), "0.5");
+  assert.strictEqual(ui.number(NaN), "-");
+  assert.deepStrictEqual([ui.blank(""), ui.blank(null), ui.blank(0)], [true, true, false]);
+  assert.deepStrictEqual(["Part 10", "part 2"].sort(ui.compareText), ["part 2", "Part 10"]);
+  var row = ui.propertyRow("Length", null, "mm");
+  assert.deepStrictEqual(row.children.map(function (node) { return node.textContent; }), ["Length", "— mm"]);
+  assert.strictEqual(ui.option("cm", "Centimetres").value, "cm");
+  assert.strictEqual(ui.svg("path", { d: "M0 0" }).getAttribute("d"), "M0 0");
+});
+
+test("a change pulse animates only where the host can and the user has not asked for less motion", function () {
+  var plain = dom.element("div");
+  assert.strictEqual(ui.pulse(plain), null, "no Web Animations, no pulse");
+  var animated = dom.element("div"), cancelled = 0;
+  animated.animate = function () { return { cancel: function () { cancelled += 1; } }; };
+  assert.strictEqual(ui.pulse(animated).length, 2);
+  ui.pulse(animated);
+  assert.strictEqual(cancelled, 2, "a second pulse replaces the first");
+  context.matchMedia = function () { return { matches: true }; };
+  assert.strictEqual(ui.pulse(animated), null, "reduced motion is honoured");
+  delete context.matchMedia;
+});
+
+test("an action menu runs its item once, closes, and marks destructive items", function () {
+  var ran = [];
+  var menu = new ui.ActionMenu("Part actions");
+  context.document.body.appendChild(menu.root);
+  var remove = menu.add("Delete", function () { ran.push("delete"); }, { destructive: true, icon: "delete" });
+  menu.trigger.listeners.click({});
+  assert.strictEqual(menu.bubble.panel.hidden, false);
+  remove.listeners.click({});
+  assert.deepStrictEqual(ran, ["delete"]);
+  assert.strictEqual(menu.bubble.panel.hidden, true);
+  assert.strictEqual(remove.classList.contains("phc-danger-action"), true);
+  assert.strictEqual(menu.trigger.getAttribute("aria-label"), "Part actions");
+});
+
+test("Escape closes a bubble and returns focus; a press outside closes it without moving focus", function () {
+  var trigger = dom.element("button");
+  context.document.body.appendChild(trigger);
+  var bubble = new ui.Bubble(trigger, "Dimension format", {});
+  context.document.body.appendChild(bubble.root);
+  var choice = dom.element("button");
+  bubble.content.appendChild(choice);
+  trigger.listeners.keydown({ key: "ArrowDown", preventDefault: function () {} });
+  assert.strictEqual(context.document.activeElement, choice, "opening moves focus to the first control");
+  assert.strictEqual(ui.Bubble.activeTitle(), "Dimension format");
+
+  bubble.root.listeners.keydown({ key: "Escape", preventDefault: function () {} });
+  assert.strictEqual(bubble.panel.hidden, true);
+  assert.strictEqual(context.document.activeElement, trigger);
+
+  bubble.open(false);
+  context.document.dispatchEvent({ type: "mousedown", target: context.document.body });
+  assert.strictEqual(bubble.panel.hidden, true);
+  assert.strictEqual(context.document.activeElement, trigger);
+});
+
+test("a submenu opens its parent, closes its siblings, and closes with the parent", function () {
+  var parentTrigger = dom.element("button"), first = dom.element("button"), second = dom.element("button");
+  [parentTrigger, first, second].forEach(function (node) { context.document.body.appendChild(node); });
+  var parent = new ui.Bubble(parentTrigger, "More", {});
+  var one = new ui.Bubble(first, "One", { parent: parent });
+  var two = new ui.Bubble(second, "Two", { parent: parent });
+  one.open(false);
+  assert.strictEqual(parent.panel.hidden, false);
+  two.open(false);
+  assert.strictEqual(one.panel.hidden, true);
+  assert.strictEqual(parent.deepest(), two);
+  parent.close(false);
+  assert.strictEqual(two.panel.hidden, true);
+  ui.Bubble.closeActive();
+});
+
+test("a help button names its explanation, and a tooltip follows the pointer and Escape", function () {
+  var help = ui.helpButton("Dimension format", "Applies to this editor only.");
+  assert.strictEqual(help.getAttribute("aria-label"), "Dimension format: Applies to this editor only.");
+
+  var root = dom.element("div");
+  context.document.body.appendChild(root);
+  ui.attachTooltip(root);
+  var target = dom.element("button", { "data-tooltip": "Set column 1 width" });
+  root.appendChild(target);
+  var tip = root.children[0];
+  root.listeners.mouseover({ target: target });
+  assert.deepStrictEqual([tip.hidden, tip.textContent], [false, "Set column 1 width"]);
+  root.listeners.keydown({ key: "Escape" });
+  assert.strictEqual(tip.hidden, true);
+});
+
+test("a popover is placed below its anchor, or above it when it would leave the window", function () {
+  var size = { width: 200, height: 100 };
+  function place(anchor) { return JSON.parse(JSON.stringify(ui.placeNear(anchor, size, 4, 8))); }
+  assert.deepStrictEqual(place({ left: 50, top: 100, bottom: 130 }), { left: 50, top: 134 });
+  assert.deepStrictEqual(place({ left: 1200, top: 740, bottom: 770 }), { left: 1072, top: 636 });
+});
