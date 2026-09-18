@@ -1,5 +1,5 @@
 .PHONY: ci ci-pending syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage hostkit-test python-check \
-        rbz rbz-check install clean bridge-install bridge-uninstall
+        panel-manifest panel-manifest-check rbz rbz-check install clean bridge-install bridge-uninstall
 
 # `.ruby-version` pins 3.2.2, the Ruby the current proving host embeds. rbenv resolves it when it
 # is installed; without rbenv this falls back to whatever `ruby` is on PATH, and the suite's own
@@ -17,13 +17,12 @@ BUNDLE := $(dir $(RUBY))bundle
 SKETCHUP_VERSION ?= 2026
 
 # Every target docs/DEVELOPMENT.md claims for the offline loop that exists today.
-ci: syntax lint test fixtures-check hostkit-test python-check rbz rbz-check ci-pending
+ci: syntax lint test fixtures-check panel-manifest-check hostkit-test python-check rbz rbz-check ci-pending
 
 # The gate is not complete until these land. Printed on every run so a green `make ci` is never
 # read as the full Phase 0 gate (planning/refactor/phase-zero/phases/phase-02-bootstrap.md).
 ci-pending:
-	@echo "Not yet in ci: JavaScript suite and panel manifest (P0-E);"
-	@echo "  runtime-pin-check, runtime-check and the RBZ footprint gate (P0-F)."
+	@echo "Not yet in ci: runtime-pin-check, runtime-check and the RBZ footprint gate (P0-F)."
 
 syntax:
 	@for file in $(RB_FILES); do $(RUBY) -c "$$file" >/dev/null || exit 1; done
@@ -34,7 +33,7 @@ syntax:
 test:
 	@$(RUBY) -Itests tests/all_tests.rb; ruby_status=$$?; \
 	 if [ -n "$(JS_TESTS)" ]; then node --test $(JS_TESTS); js_status=$$?; \
-	 else echo "JavaScript suite: no tests yet (the panel kit arrives in P0-E)"; js_status=0; fi; \
+	 else echo "JavaScript suite: no tests found"; js_status=1; fi; \
 	 uv run pytest; py_status=$$?; \
 	 exit $$((ruby_status | js_status | py_status))
 
@@ -81,12 +80,22 @@ fixtures-check:
 	fi
 	@echo "Fixtures up to date"
 
-# Separate from ci: run it before a phase gate. Thresholds ratchet upward only. JavaScript and
-# Python coverage join when their shipped code lands (P0-E, P0-F).
+# Separate from ci: run it before a phase gate. Thresholds ratchet upward only. Python coverage
+# joins when its shipped code lands (P0-F).
 RUBY_COVERAGE_MIN ?= 93
+JS_COVERAGE_MIN ?= 94
 
 coverage:
 	@$(RUBY) tools/coverage_ruby.rb $(RUBY_COVERAGE_MIN)
+	@node tools/coverage_js.js $(JS_COVERAGE_MIN)
+
+# The panel pages' <script> lists, generated from the PhComposerUI.define declarations
+# (tools/panel_manifest.js). Rewrite after adding, renaming or re-declaring a panel module.
+panel-manifest:
+	@node tools/panel_manifest.js --write
+
+panel-manifest-check:
+	@node tools/panel_manifest.js
 
 # The development host bridge and helpers: Ruby tests against the stub, then the Python client.
 hostkit-test:

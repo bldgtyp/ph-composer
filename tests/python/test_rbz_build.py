@@ -57,11 +57,13 @@ def test_designph_and_the_predecessor_namespace_are_refused_in_any_case() -> Non
             "ph_composer/shell/c.rb": b'callback = "phn_message"\n',
             "ph_composer/shell/d.rb": b"# PH-Navigator for SketchUp\n",
             "ph_composer/shell/e.rb": b"Phn::Panel.show\n",
+            "ph_composer/html/f.css": b".phn-icon-button { color: red; }\n",
         }
     )
     assert found == [
         "denied name ph_composer/core/a.rb:1: DesignPH.Version",
         'denied name ph_composer/html/b.js:1: Phn.define("x", [], f);',
+        "denied name ph_composer/html/f.css:1: .phn-icon-button { color: red; }",
         'denied name ph_composer/shell/c.rb:1: callback = "phn_message"',
         "denied name ph_composer/shell/d.rb:1: # PH-Navigator for SketchUp",
         "denied name ph_composer/shell/e.rb:1: Phn::Panel.show",

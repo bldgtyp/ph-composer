@@ -41,8 +41,9 @@ SHIPPED_SUFFIXES = frozenset({".rb", ".js", ".css", ".html", ".svg", ".json", ".
 DEVELOPMENT_PARTS = frozenset({"_private", "hostkit", "examples", "fixtures", "tests"})
 
 # The retired designPH integration and the predecessor's namespace. Case-insensitive, so `Phn.`,
-# `Phn::`, `phn_message`, `DesignPH_dict` and `PH-Navigator` all match, while "design phase" does not.
-DENIED_PATTERN = re.compile(r"design[_ ]?ph(?![a-z])|ph[_ -]?navigator|\bphn(?:[._]|::)", re.IGNORECASE)
+# `Phn::`, `phn_message`, the `phn-` CSS prefix, `DesignPH_dict` and `PH-Navigator` all match, while
+# "design phase" does not.
+DENIED_PATTERN = re.compile(r"design[_ ]?ph(?![a-z])|ph[_ -]?navigator|\bphn(?:[._-]|::)", re.IGNORECASE)
 
 # A blocking dialog freezes the HtmlDialog and the SketchUp main thread with it.
 BLOCKING_BROWSER_APIS = ("alert(", "confirm(", "prompt(")

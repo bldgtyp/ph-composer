@@ -1,0 +1,19 @@
+[
+  { "quantity": "length", "canonical_unit": "m", "canonical_value": 1.0, "expected_ip_value": 3.280839895013123, "tolerance": 1e-12 },
+  { "quantity": "length_mm", "canonical_unit": "mm", "canonical_value": 25.4, "expected_ip_value": 1.0, "tolerance": 1e-12 },
+  { "quantity": "area", "canonical_unit": "m2", "canonical_value": 1.0, "expected_ip_value": 10.76391041670972, "tolerance": 1e-12 },
+  { "quantity": "volume", "canonical_unit": "m3", "canonical_value": 1.0, "expected_ip_value": 35.31466672148858, "tolerance": 1e-12 },
+  { "quantity": "u_value", "canonical_unit": "w_m2k", "canonical_value": 1.0, "expected_ip_value": 0.17611018368230588, "tolerance": 1e-12 },
+  { "quantity": "thermal_resistance", "canonical_unit": "m2k_w", "canonical_value": 1.0, "expected_ip_value": 5.678263341113486, "tolerance": 1e-12 },
+  { "quantity": "conductivity", "canonical_unit": "w_mk", "canonical_value": 1.0, "expected_ip_value": 0.5777893165429981, "tolerance": 1e-12 },
+  { "quantity": "linear_psi", "canonical_unit": "w_mk", "canonical_value": 0.1, "expected_ip_value": 0.05777893165429981, "tolerance": 1e-12 },
+  { "quantity": "heat_loss_rate", "canonical_unit": "w_k", "canonical_value": 1.0, "expected_ip_value": 1.8956342406266342, "tolerance": 1e-12 },
+  { "quantity": "density", "canonical_unit": "kg_m3", "canonical_value": 1.0, "expected_ip_value": 0.06242796057614463, "tolerance": 1e-12 },
+  { "quantity": "specific_heat", "canonical_unit": "j_kgk", "canonical_value": 1.0, "expected_ip_value": 0.00023884589662749594, "tolerance": 1e-16 },
+  { "quantity": "airflow", "canonical_unit": "m3_h", "canonical_value": 1.0, "expected_ip_value": 0.5885777786914763, "tolerance": 1e-12 },
+  { "quantity": "temperature", "canonical_unit": "c", "canonical_value": 0.0, "expected_ip_value": 32.0, "tolerance": 1e-12 },
+  { "quantity": "temperature_difference", "canonical_unit": "k", "canonical_value": 1.0, "expected_ip_value": 1.8, "tolerance": 1e-12 },
+  { "quantity": "air_permeance", "canonical_unit": "l_s_m2_75pa", "canonical_value": 1.0, "expected_ip_value": 0.19685039370078736, "tolerance": 1e-12 },
+  { "quantity": "vapor_sd", "canonical_unit": "sd_m", "canonical_value": 3.496, "expected_ip_value": 1.0, "tolerance": 1e-12 },
+  { "quantity": "vapor_diffusion_resistance", "canonical_unit": "mu", "canonical_value": 137.6, "expected_ip_value": 1.0, "tolerance": 1e-12 }
+]
