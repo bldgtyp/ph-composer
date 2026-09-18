@@ -13,8 +13,8 @@ without a linked result. No code or host gate was run during planning.
 | --- | --- | --- |
 | A01 | Frozen source inventory and explicit disposition of every transplanted dependency. Inventory portion: [P0-A](evidence/phase-00-handoff.md); transplanted-file dispositions pending P0-C | P0-A/C |
 | A02 | Ruby 2.7.2 and 3.2.2 full offline gates, Chromium 88 syntax/API checks, typed Python checks | P0-G |
-| A03 | RBZ inventory, license notices, no private fixtures, development bridge/examples excluded | P0-C/G |
-| A04 | Shipping namespace/designPH deny checks; empty extension loads with exact installed identity | P0-C/G |
+| A03 | RBZ inventory, license notices, no private fixtures, development bridge/examples excluded. Provisional: [P0-C](evidence/phase-02-bootstrap.md) | P0-C/G |
+| A04 | Shipping namespace/designPH deny checks; empty extension loads with exact installed identity. Provisional: [P0-C](evidence/phase-02-bootstrap.md) | P0-C/G |
 | A05 | Record JSON round trip, actual reference preservation/remapping, unknown payloads and migration rollback | P0-D |
 | A06 | All-or-nothing batch, no-write stale refusal, failure warning, no extra Undo from failures/no-ops | P0-D/G |
 | A07 | Discovery/read/write/read-back with panel closed; two clients, duplicate retry and expired outcome tests | P0-D |

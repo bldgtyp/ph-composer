@@ -1,7 +1,7 @@
 # P0-C: tooling and empty extension
 
 DATE: 2026-09-18
-STATUS: Scoped. Implementation authorized 2026-09-18; not started.
+STATUS: Complete 2026-09-18. Evidence: [evidence/phase-02-bootstrap.md](../evidence/phase-02-bootstrap.md).
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

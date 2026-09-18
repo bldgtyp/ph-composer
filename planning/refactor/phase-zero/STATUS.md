@@ -8,16 +8,16 @@ ISSUE: none (local planning draft; origin exists, issue not created)
 ## Current handoff
 
 Ed authorized Phase 0 implementation on 2026-09-18. Work runs on branch `phase-zero-foundation`
-from `152e796`, one commit per completed unit. P0-A is complete: source closure verified against
-the frozen SHA, inventory corrected, outcome vocabulary and bounds pinned in CONTRACTS. Next: P0-C.
-P0-B needs Ed's spike scheduling and an available host. No code or host spike has run.
+from `152e796`, one commit per completed unit. P0-A and P0-C are complete: the empty extension,
+offline gate, RBZ shipping checks and development bridge exist, and the empty extension loads on
+SketchUp 26.1.188. Next: P0-D. P0-B needs Ed's spike scheduling. No spike has run.
 
 | Stage | State | Next action |
 | --- | --- | --- |
 | P0-A handoff check | Complete | [Evidence](evidence/phase-00-handoff.md); A01 inventory portion satisfied |
 | P0-B investigations | Scoped | Execute the four documented procedures once Ed schedules them and a host is available |
-| P0-C tooling/bootstrap | Scoped | Next stage: empty extension, test helpers, packaging and namespace checks |
-| P0-D records/operations | Scoped | Implement C1 through C5 after P0-C |
+| P0-C tooling/bootstrap | Complete | [Evidence](evidence/phase-02-bootstrap.md); A03/A04 provisional until P0-G |
+| P0-D records/operations | Scoped | Next stage: implement C1 through C5 |
 | P0-E panel/units | Scoped | Await P0-D |
 | P0-F runtime/export shell | Scoped | Implement C6 after P0-D/P0-E |
 | P0-G acceptance | Scoped | Await implementation and investigation dispositions |
@@ -36,7 +36,13 @@ was checked against the frozen tree. Local links and whitespace checks passed.
 P0-A (2026-09-18): the frozen SHA resolves; every listed path exists except one misnamed test;
 JavaScript, Ruby and Python references out of the listed files were followed and each real coupling
 dispositioned. See [evidence/phase-00-handoff.md](evidence/phase-00-handoff.md). Paper verification
-only. A01's inventory portion is satisfied; A02 through A21 remain pending.
+only. A01's inventory portion is satisfied.
+
+P0-C (2026-09-18): `make ci` exits 0 on Ruby 2.7.2 and 3.2.2 and prints the checks still pending
+(JavaScript suite and panel manifest, P0-E; runtime checks and footprint gate, P0-F). The empty
+extension loaded with identity `ph_composer` 0.1.0-dev and no features in a fresh SketchUp
+26.1.188 process through the bridge. See [evidence/phase-02-bootstrap.md](evidence/phase-02-bootstrap.md).
+A03/A04 are provisional; A02 and A05 through A21 remain pending.
 
 ## Ledger
 
@@ -55,3 +61,4 @@ only. A01's inventory portion is satisfied; A02 through A21 remain pending.
 | 2026-09-18 | Prepared detailed contract design, source inventory, seven execution-stage plans and acceptance register. Documentation-only consistency review; implementation remains unauthorized |
 | 2026-09-18 | Ed authorized Phase 0 implementation. Branch `phase-zero-foundation` created from `152e796` |
 | 2026-09-18 | P0-A Complete. Closure verified at `f358ebf`; Python shell reclassified as pattern reference; Spaces session candidates stay deferred; outcome vocabulary, rollback verification and bounds pinned in CONTRACTS |
+| 2026-09-18 | P0-C Complete. Empty extension, offline harness, RBZ shipping checks, lint/CI gate and host bridge in `db00b48`..`12ebc3c`; one bounded review, findings fixed; host load verified on SketchUp 26.1.188 |
