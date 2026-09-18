@@ -92,6 +92,13 @@ event and the deferred work.
 Observer suppression must span commit, abort, Undo and Redo paths. Suppression is not a reason to
 skip explicit recovery. Leaving it set after an exception makes later edits appear randomly dead.
 
+Ed confirmed on 2026-09-18 that ordinary edits and batches submitted as one operation are
+all-or-nothing: validate every target, commit in one native Undo step, and roll back the whole
+operation if any target fails. Stale requests write nothing. Show a clear failure warning with
+the reason and confirmation that nothing changed. Panel and programmatic callers share this
+contract; structured failures must work with the panel closed. Any later exception for a long
+operation requires an explicit accepted contract in its owning plan.
+
 `onPreSaveModel` is the bounded synchronous exception. SketchUp provides no cancellable save
 boundary, so Space protection must be restored before save returns or the file can persist an
 unprotected structural state. Inside that callback the host reports an empty `active_path` while
@@ -159,6 +166,14 @@ enters. The extraction carries every section under `sections`; `export/` knows n
 The privacy allowlist is the shell's fields plus every contributor's declaration, composed on each
 check, so a result field no declaration names fails the export at `checking`. The report embeds
 the translator's result document unchanged.
+
+Ed confirmed explicit translation-section dependencies on 2026-09-18. Each section declares the
+typed results it needs from other sections. The coordinator orders execution and supplies those
+results without feature-specific logic. Missing or circular dependencies produce explicit errors.
+If a required result fails, dependent output receives an explicit finding rather than a substitute.
+The existing record-level and contract-level failure policy still applies. Phase 0 proves the
+contract with synthetic sections; real building translation lands with its owning features.
+Exact registration shapes and failure propagation remain implementation-design work.
 
 The translation package reads the extraction into typed records in `contract/` and never reads a
 section by key after that. Every section follows one failure policy. A defect that leaves the

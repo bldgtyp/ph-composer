@@ -143,7 +143,7 @@ never required to author or export a model.
 | AGPL-3.0. | 2026-09-17 | Matches the vendored ladybug and honeybee wheels and the predecessor. |
 | Strong separation between UI and business logic. Clear, modular boundaries as the first architectural goal. | 2026-09-17 | Ed. The project exists to be extended by other people. |
 | Library provider contract, flat file first, PH-Navigator second. | 2026-09-17 | No hosted requirement. Many vendors, none privileged. |
-| Development name and home: PH-Composer under PH-Tools. | 2026-09-18 | D8. Keep the current name and repository location during development. Neither is the final launch decision; move deliberately later if the product name or organization changes. Namespace checks passed 2026-09-18; only the X handle was taken. |
+| Development name and home: PH-Composer at `bldgtyp/ph-composer`. | 2026-09-18 | D8. Ed confirmed the bldgtyp organization for development. Neither the name nor organization is permanent; a future move requires an explicit decision. Namespace checks passed 2026-09-18; only the X handle was taken. |
 | No commercial license. DCO instead of a CLA. | 2026-09-18 | Ed: a foundation library like OpenPH, not a revenue generator. Products may connect to it or build on it under AGPL. |
 | UI kit remains AGPL for MVP; closed systems use file, HBJSON or HTTPS boundaries. | 2026-09-18 | D5. Reconsider a separately licensed package only for a real embedder. |
 | The authored model is honeybee-shaped Ruby records in the SKP, translated to honeybee at export; honeybee is never run live. | 2026-09-18 | Ed, face-assignment interview Q1. The model must live in Ruby-written dictionaries regardless; authoring is partial where simulation is resolved; the panel needs sub-100 ms updates and native Undo; a contributor who knows honeybee recognizes every field. honeybee's names and enumerations are used wherever honeybee has them. |
@@ -157,7 +157,7 @@ questions remain in their packet PRDs.
 - **PHX in Pyodide.** PHX pulls openpyxl and xlwings for its PHPP path. Those must become optional
   extras so the wheel loads without them, and the payload growth against the predecessor's 20 MB
   must be measured. This is a small spike in the PHX repository and the first technical gate.
-- **Public name, organization and namespaces.** Development remains PH-Composer under PH-Tools.
+- **Public name, organization and namespaces.** Development remains PH-Composer at `bldgtyp/ph-composer`.
   Before public announcement, decide whether to keep that name and home, then claim only the
   namespaces that decision requires.
 - **The contribution unit.** What a contributor's piece is called, and the worked example that

@@ -3,7 +3,7 @@
 DATE: 2026-09-18
 STATUS: Phase 3/4 release boundaries confirmed; remaining ordering proposed. No implementation authorization.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
 
 The high-level order of the core features and where each one stands. [STATUS.md](STATUS.md) is
 the index of every tracked item. This file is the sequence. Implementation plans and phase
@@ -47,15 +47,19 @@ is the complete MVP Ed described. Ed confirmed both boundaries in D1 on 2026-09-
 
 ## Phase 0: gates and foundation
 
+The [Phase 0 planning packet](refactor/phase-zero/README.md) supplies seven stage plans, contract
+designs, frozen source disposition and acceptance checks. Product decisions are resolved;
+implementation remains unauthorized. The four spikes are work within Phase 0.
+
 | # | Item | Kind | State | Why here |
 | --- | --- | --- | --- | --- |
 | 0.1 | PHX without Excel, [PHX#157](https://github.com/PH-Tools/PHX/issues/157) | external spike | Requested | The founding brief's first technical gate. If PHX cannot run in Pyodide, METr export needs a different route and phase 1 changes |
-| 0.2 | [Foundation transplant](refactor/foundation-transplant.md) | refactor | Requested, scoped | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
-| 0.3 | [Units](features/units/README.md) | feature, port | Requested, PRD drafted | The six unit files move with the transplant. Every later table uses the unit field |
+| 0.2 | [Foundation transplant](refactor/foundation-transplant.md) | refactor | Scoped, detailed plan prepared | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
+| 0.3 | [Units](features/units/README.md) | feature, port | Scoped, Phase 0 split confirmed | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
 | 0.4 | Overlay fill spike | spike | Deferred | Gates Colour-by, which face-assignment needs in phase 1 |
 | 0.5 | Window component host spike | spike | Deferred | Gates window-types. Cheap to run with 0.4 |
 | 0.6 | Edge identity spike | spike | Requested | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
-| 0.7 | Development repository home and MVP license boundary | decisions | Confirmed | D5 keeps the UI kit AGPL and external integrations at file/HTTPS seams. D8 keeps PH-Composer under PH-Tools during development; final public naming and organization remain a launch decision |
+| 0.7 | Development repository home and MVP license boundary | decisions | Confirmed | D5 keeps the UI kit AGPL and external integrations at file/HTTPS seams. D8 keeps development at `bldgtyp/ph-composer`; the public name and any future organization move remain open |
 
 The three host spikes are one session against the predecessor's bridge. They need no
 PH-Composer code, so they can run before or beside the transplant.
@@ -133,8 +137,8 @@ wanted as a warm-up. They sit here because neither is needed for the model to op
 ## What is needed before phase 1 can be planned
 
 1. The validation and export packet is interviewed; D2 is already confirmed.
-2. Interviews for units, thermal bridges, equipment, piping and ducting. Only units blocks
-   phase 0.
+2. Units inheritance and Phase 0 scope are confirmed. Remaining quantity questions and the
+   thermal-bridge, equipment, piping and ducting interviews belong to their later feature plans.
 3. Go on the spikes and the transplant.
 
 ## Ledger

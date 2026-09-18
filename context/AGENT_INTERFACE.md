@@ -73,10 +73,17 @@ equivalent preconditions for the affected records, geometry and edit context. Re
 at commit time. Reject stale or cross-model requests with a structured conflict and no mutation.
 Do not silently resolve a reference by its display name or by whatever happens to be selected.
 
-Use named model operations with existing validation and native Undo. Define batch atomicity and
-Undo grouping explicitly. Failures report whether nothing changed, everything rolled back, or a
-documented partial result exists. Never leave a model transaction open while waiting for an LLM
-or a person's response.
+Use named model operations with existing validation and native Undo. Ed confirmed the default on
+2026-09-18: an ordinary edit, including a batch submitted as one operation, succeeds completely
+or has no effect. Validate all targets before committing, apply the changes in one native Undo
+step, and roll back the whole operation if any target fails. Refuse stale requests without writing.
+Failure produces a clear user warning explaining the reason and confirming that nothing changed;
+return the same outcome structurally to programmatic callers, without requiring the panel to open.
+
+A future long-running import may define a different contract explicitly in its owning plan;
+partial success is never the default. Failures distinguish no writes from a completed rollback,
+or a partial result only where that operation's accepted contract permits one. Never leave a model
+transaction open while waiting for an LLM or a person's response.
 
 Provide a non-mutating proposal/preview for compound or destructive edits. It reports targets,
 changed values, affected references and validation findings. A proposal binds to its inputs and
@@ -144,6 +151,16 @@ interactive geometry picking, document that limitation and the plan for an expli
 equivalent where feasible. Core data edits must not require UI scraping or arbitrary eval.
 
 ## Delivery and acceptance
+
+Ed confirmed the delivery split during Phase 0 planning on 2026-09-18. Phase 0 establishes the
+shared programming interface and a synthetic client that discovers operations, reads records,
+performs validated writes and reads back results with the panel closed. Its acceptance includes
+stale-request rejection and native Undo. Phase 0 ships no external adapter and makes no claim
+that users' agents can connect.
+
+The user-facing connection belongs to a separate delivery packet, including transport, packaging
+and connection/access controls. Its milestone remains to be scheduled. This split does not select
+MCP or authorize implementation of either part.
 
 Foundation design establishes the transport-independent query/action contracts and tests a
 synthetic feature with the panel closed. Feature implementations carry their schemas and examples

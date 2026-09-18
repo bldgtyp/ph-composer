@@ -1,15 +1,21 @@
 # Foundation transplant: scope
 
 DATE: 2026-09-18
-STATUS: Requested. Scoped for review; no implementation authorization.
+STATUS: Scoped. Detailed Phase 0 planning packet prepared; no implementation authorization.
 AUTHOR: Ed May, BLDGTYP, with Codex review
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
+
+Phase 0 coordination now lives in [the implementation planning packet](phase-zero/README.md).
+It records detailed stages and contract designs. This file remains the foundation scope;
+the new packet supplies no implementation authorization.
 
 ## Outcome
 
 Establish the empty PH-Composer extension, its development and verification loop, and the
 feature seams on which the roadmap depends by transplanting the proven, product-neutral foundation
-from PH-Navigator for SketchUp at `f358ebf`. The result loads in SketchUp and is ready for feature
+from PH-Navigator for SketchUp at the frozen commit
+`f358ebf51532046da1fa16f0ee7462df84e1ddaa`, confirmed by Ed on 2026-09-18.
+The result loads in SketchUp and is ready for feature
 work, but authors no PH-Composer building data and makes no release claim.
 
 This is a selective transplant, not a repository copy. The predecessor remains evidence. Every
@@ -79,12 +85,19 @@ Fresh-process host gate on the current macOS proving host:
 
 The SketchUp 2023 floor, Windows and public distribution remain explicit later gates.
 
-## Planning decisions before PLAN.md
+## Accepted planning decisions
+
+The [Phase 0 PLAN](phase-zero/PLAN.md) and [contract design](phase-zero/CONTRACTS.md) now specify
+the implementation handoff. The rules below remain its scope constraints.
 
 Apply [the external agent requirements](../../context/AGENT_INTERFACE.md) to the public query
 and action boundary from the start. Design discovery and panel-independent structured results;
 exercise a synthetic read/write/read-back client with explicit session and stale-state checks.
-The external transport and user-facing adapter need an owning delivery plan before implementation.
+Ed confirmed the split on 2026-09-18: Phase 0 delivers the shared programming interface and
+synthetic client, including discovery, reads, validated writes, read-back, stale-request rejection
+and native Undo with the panel closed. External transport, packaging and connection/access controls
+belong to a separate delivery packet whose milestone remains to be scheduled. Phase 0 ships no
+adapter and makes no user connection claim.
 Do not ship the development eval bridge as the user interface or expand this transplant to build
 an agent, MCP server or unrelated feature.
 
@@ -94,17 +107,25 @@ lifecycle, and registration schemas before implementing those APIs. Use the proj
 review skill for the existing design/diff review. Add contract examples as each capability lands;
 the importer, exporter and Colour-by examples do not expand this transplant into later features.
 
-Settle whether one translation section can declare another section's typed result as a
-dependency, so the entrypoint orders and passes it without naming a feature. The assemblies and
+Ed confirmed on 2026-09-18 that a translation section declares another section's typed result as
+a dependency. The coordinator orders and passes results without naming a feature, reports missing
+or circular dependencies, and records a finding for dependent output when a required result fails.
+It never silently substitutes a result. Prove this contract with synthetic sections in Phase 0;
+design the exact registration and failure propagation against TECH_STACK's failure policy.
+The assemblies and
 face-assignment packets need it for the face-to-construction join (assemblies Q23), the
 spaces packet needs it to attach each Space to its Zone's Room, and the window-types packet
 needs it to attach each Aperture to its host Face.
 
-1. Confirm the name and repository home in [DECISIONS.md](../DECISIONS.md#program-decisions).
-2. Freeze the exact predecessor source commit. Recommendation: keep `f358ebf`; update only by an
-   explicit disposition review, not by following its moving main branch.
-3. Decide whether the empty Export shell writes no files or may write a development-only probe.
-   Recommendation: no user artifact until the validation-and-export packet lands.
+1. Use the confirmed development namespace in TECH_STACK and D8's confirmed repository home,
+   `bldgtyp/ph-composer`. A future organization move requires an explicit decision; no rename
+   or remote change is authorized by this plan.
+2. Source baseline confirmed: `f358ebf51532046da1fa16f0ee7462df84e1ddaa`. Inventory and transplant
+   against this commit. Review any newer fix separately before inclusion; never follow moving main.
+3. Empty Export behavior confirmed by Ed on 2026-09-18: the Phase 0 user workflow writes no
+   files. Test destination opening and cancellation without booting the runtime. Separate
+   development probes use synthetic inputs to verify runtime and artifact handling. User-facing
+   HBJSON/report output belongs to the Phase 1 validation-and-export packet.
 
 ## Main risks
 
@@ -121,3 +142,7 @@ needs it to attach each Aperture to its host Face.
 | --- | --- |
 | 2026-09-18 | Scoped during the whole-project planning review. |
 | 2026-09-18 | Added the translation-section dependency question from the assemblies architecture review. |
+| 2026-09-18 | Ed froze the predecessor baseline at `f358ebf51532046da1fa16f0ee7462df84e1ddaa`. No implementation authorized. |
+| 2026-09-18 | Ed confirmed that empty Export writes no files; runtime and artifact probes remain separate development checks. |
+| 2026-09-18 | Ed confirmed shared programming contracts and a synthetic client in Phase 0; the user-facing external adapter belongs to a separate delivery packet. |
+| 2026-09-18 | Ed confirmed declared typed translation dependencies, generic ordering and explicit dependency failures; Phase 0 proves the contract with synthetic sections. |

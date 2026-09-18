@@ -1,7 +1,7 @@
 # Units: SI and IP display
 
 DATE: 2026-09-18
-STATUS: Requested. Draft, not interviewed.
+STATUS: Scoped. Phase 0 inheritance and scope confirmed; later quantity choices remain with their owners.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (no remote)
 
@@ -27,6 +27,7 @@ Sizes are from the predecessor at `f358ebf`.
 | --- | --- | --- | --- |
 | `core/units.rb` | 90 | Port | Host conversion between SketchUp inches and SI geometry |
 | `html/units.js` | 226 | Port | The one parser and formatter. No second parser, no second unit table |
+| `html/length_expression.js` | n/a | Port dependency | Required parser helper at the frozen source commit; include alongside the six originally listed unit modules |
 | `html/unit_tables.js` | 163 | Adapt | Quantity registry. Gains the rows in "New quantities" |
 | `html/unit_numbers.js` | 82 | Port | Regional decimal and grouping formats |
 | `html/unit_field.js` | 139 | Adapt | The unit field control. Takes on follow-up U1-F3 |
@@ -130,18 +131,23 @@ confirms each row. The IP column is a proposal until then.
 
 | ID | Item | Proposal |
 | --- | --- | --- |
-| U1-F1 | A switch on a 300-Space table repaints every cell, a median 513 ms | Repaint unit-bearing cells only. Do it when the Spaces table is transplanted |
-| U1-F3 | Assembly Builder thickness drafts keep their own draft logic outside the unit field | Move them onto the unit field during the transplant, so the draft rule has one home |
-| U1-F4 | The window editor form branches between a plain input and a unit field | A dedicated dimension form. No behavior change |
+| U1-F1 | A switch on a 300-Space table repaints every cell, a median 513 ms | Spaces owns this optimization if measurements justify it; outside Phase 0 |
+| U1-F3 | Assembly Builder thickness drafts keep their own draft logic outside the unit field | Assemblies owns moving these drafts onto the unit field; outside Phase 0 |
+| U1-F4 | The window editor form branches between a plain input and a unit field | Window Types owns the dimension-form cleanup; outside Phase 0 |
 
 ## Decisions for the interview
 
 | # | Question | Recommendation |
 | --- | --- | --- |
-| Q1 | Carry all fifteen inherited decisions without reopening them? | Yes |
+| Q1 | Carry all fifteen inherited decisions without reopening them? | Confirmed by Ed: carry I1 through I15 unchanged |
 | Q2 | Pipe diameter in IP: a converted decimal, or the nominal size list METr uses? | The nominal list in both systems, since METr snaps to it on export. Confirm with the piping packet |
 | Q3 | Power and energy in IP: W and kWh, or Btu-based? | W and kWh. US equipment data sheets and Phius targets both use them. Capacity alone shows as kBtu/h |
-| Q4 | Do the three follow-ups ride with the transplant or wait? | F3 and F4 with the transplant, since the files are open anyway. F1 waits for a measured need |
+| Q4 | Do the three follow-ups ride with the transplant or wait? | Confirmed by Ed: F3 with Assemblies, F4 with Window Types, F1 with Spaces if measurements justify it |
+
+Ed confirmed the Phase 0 split on 2026-09-18. Phase 0 owns the shared parser, quantity registry,
+unit-field control and preferences, with applicable inherited tests. New equipment, piping,
+ducting and climate quantities remain with their owning features. Q2 and Q3 remain proposals for
+those feature interviews and do not block the foundation. No feature editor lands in Phase 0.
 
 ## Non-goals
 
@@ -153,6 +159,10 @@ display. No general physical-quantity algebra.
 The predecessor's fifteen acceptance checks, A1 to A15 in `planning/archive/units/ACCEPTANCE.md`,
 rerun on the transplanted code with the designPH-specific parts of A14 removed. Each new quantity
 adds one known-value vector.
+
+Map these checks to their delivery owners: Phase 0 verifies shared infrastructure using synthetic
+controls; feature-screen checks run with the corresponding feature. Do not claim all fifteen
+checks passed when only the foundation subset has run.
 
 ## Prior art and evidence
 

@@ -13,6 +13,7 @@ The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
+| Phase 0 implementation planning and handoff | refactor | Scoped | none (local planning draft) | [refactor/phase-zero/](refactor/phase-zero/README.md); detailed stages, contracts and acceptance prepared; execution unauthorized |
 | Zones and adjacency | feature | Scoped, interviewed | none (no remote) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
 | Face assignment | feature | Scoped, interviewed | none (no remote) | [features/face-assignment/](features/face-assignment/README.md) |
 | Validation and export | feature | Requested, PRD drafted | none (no remote) | [features/validation-and-export/](features/validation-and-export/README.md); owns the Phase 1 handoff |
@@ -20,7 +21,7 @@ The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 | Assemblies and materials | feature | Scoped, interviewed | none (no remote) | [features/assemblies/](features/assemblies/README.md) |
 | Window Types and placement | feature | Scoped, interviewed | none (no remote) | [features/window-types/](features/window-types/README.md) |
 | Libraries (provider seam) | feature | Scoped, interviewed | none (no remote) | [features/libraries/](features/libraries/README.md) |
-| Units: SI and IP display | feature | Requested, PRD drafted | none (no remote) | [features/units/](features/units/README.md); a port of the predecessor's U1 |
+| Units: SI and IP display | feature | Scoped | none (local planning draft) | [features/units/](features/units/README.md); inheritance and Phase 0 split confirmed |
 | Thermal bridges | feature | Requested, PRD drafted | none (no remote) | [features/thermal-bridges/](features/thermal-bridges/README.md); owns the edge tagging rules |
 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/hot-water-piping/](features/hot-water-piping/README.md) |
 | ERV ducting | feature | Requested, PRD drafted | none (no remote) | [features/erv-ducting/](features/erv-ducting/README.md) |
@@ -32,7 +33,7 @@ The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 | Window component host spike (glue, cut, select, rewrite, no-scale) | spike | Deferred | none (no remote) | window-types STATUS; runs with the overlay spike |
 | Edge identity spike (attribute survival across split, weld, move, cut, Undo, reopen) | spike | Requested | none (no remote) | thermal-bridges PRD, "Edge tagging rules"; gates thermal bridges, piping and ducting |
 | Overlay fill spike (alpha, depth, cost) | spike | Deferred | none (no remote) | face-assignment PRD, Q22; runs after the feature packets are drafted |
-| Foundation transplant from the predecessor | refactor | Requested, scoped | none (no remote) | [refactor/foundation-transplant.md](refactor/foundation-transplant.md) |
+| Foundation transplant from the predecessor | refactor | Scoped | none (local planning draft) | [refactor/foundation-transplant.md](refactor/foundation-transplant.md); detailed Phase 0 plan prepared |
 | PHX without Excel (spike) | external | Requested | [PH-Tools/PHX#157](https://github.com/PH-Tools/PHX/issues/157) | founding brief, open questions |
 | Cross-cutting decisions | decision register | D1-D11 confirmed; contributor architecture and external-agent priority recorded | none (no remote) | [DECISIONS.md](DECISIONS.md); [contributor architecture](../context/EXTENSIBILITY.md); [agent interface](../context/AGENT_INTERFACE.md) |
 

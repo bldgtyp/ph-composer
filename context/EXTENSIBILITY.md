@@ -87,8 +87,33 @@ edits and save/reopen. Preserved data is not necessarily understood or validated
 missing capability explicitly when it affects export correctness. An unsupported schema must
 not be silently rewritten or dropped.
 
-Before implementing this storage contract, settle copy/duplicate behavior, unknown-version edits,
-reference ownership, export mapping and migration failure behavior. Test the relevant round trips
+Ed confirmed the following copy policy on 2026-09-18:
+
+- Duplicating a distinct authored object creates a new identity and an independent copy of its
+  `user_data`. References to shared definitions continue to name those definitions.
+- When an operation duplicates a collection, declared references between objects included in the
+  copy point to their new counterparts. References to definitions outside the copy remain shared.
+- Arbitrary metadata values remain unchanged. Never infer that a string in `user_data` is an
+  object reference.
+- Structured extension data declares its references and copy rules. If an unavailable extension
+  prevents safe duplication, report the limitation instead of silently changing or dropping data.
+- Another placement of a shared component follows the owning feature's identity rules. It is not
+  automatically a new authored definition.
+
+Ed also confirmed the unavailable-extension and unsupported-schema policy on 2026-09-18:
+
+- Preserve the unrecognized payload unchanged through save/reopen. Allow unrelated edits only
+  when they can safely leave it untouched.
+- Refuse operations that require interpreting or rewriting that payload, with a clear explanation
+  of the missing capability. A copy requiring unavailable reference rules is refused without a
+  partial copy.
+- A failed migration preserves the original data and rolls back the affected operation.
+- Block export when unknown data affects export correctness, following the existing export rules.
+  Merely preserving data does not establish that it can be exported correctly.
+
+Before implementing this storage contract, design the reference declaration API and explicit
+export mappings. Specify how operations declare their dependence on extension data so the
+confirmed refusal policy can be enforced. Test the relevant round trips
 and actual references. Arbitrary metadata is not a substitute for a typed core domain field.
 
 ## Scripting as an entry point

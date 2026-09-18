@@ -10,8 +10,11 @@ contract whole and extends the quantity table to the features the predecessor ne
    features add, and four decisions for the interview.
 2. [STATUS.md](STATUS.md).
 
-No PLAN.md yet. The unit files move with the foundation transplant, so most of this packet lands
-there. What is left after the transplant is the new quantity rows and the follow-ups.
+The Phase 0 portion is planned in [the panel/Units stage](../../refactor/phase-zero/phases/phase-04-panel-units.md).
+Ed confirmed that the shared unit files and applicable tests move with the
+foundation transplant. Assembly and Window editor follow-ups stay with their features; Spaces
+owns repaint optimization if measurements justify it. New quantities stay with their owning
+features. The fifteen inherited behavior decisions remain unchanged.
 
 ## Scope
 
