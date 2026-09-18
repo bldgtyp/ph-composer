@@ -27,6 +27,17 @@ class SketchupStubTest < PhComposerTestCase
     assert_equal [["Edit", false, :aborted]], model.operations
   end
 
+  def test_abort_reports_an_undo_as_the_host_does
+    model = Sketchup::Model.new
+    observer = transaction_observer
+    model.add_observer(observer)
+
+    model.start_operation("Edit")
+    model.abort_operation
+
+    assert_equal [:undo], observer.events
+  end
+
   def test_abort_restores_entities
     face = Sketchup::Face.new(1)
     model = Sketchup::Model.new(:entities => Sketchup::Entities.new([face]))

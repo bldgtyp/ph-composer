@@ -91,6 +91,20 @@ module TestFeature
       { "results" => request.engine.propose_migration("#{ID}.part", ids, "#{ID}.review", changes) }
     end
 
+    # Rescues a refusal and returns as if it had succeeded, as a careless handler might.
+    feature.action("#{ID}.swallow_refusal", :description => "Migrate, ignoring refusals.",
+                                            :params => { "type" => "object", "required" => ["ids"],
+                                                         "properties" => { "ids" => { "type" => "array" } } },
+                                            :result => OBJECT, :undo_name => "Swallow",
+                                            :side_effects => "Rewrites extension data.") do |request, changes|
+      begin
+        request.engine.propose_migration("#{ID}.part", request.params.fetch("ids"), "#{ID}.review", changes)
+      rescue PhComposer::CodedError
+        nil
+      end
+      {}
+    end
+
     # Calls the API again while its own request is still running, as a re-entrant client would.
     feature.action("#{ID}.reenter", :description => "Re-enter the dispatcher.", :params => { "type" => "object" },
                                     :result => OBJECT, :undo_name => "Re-enter",

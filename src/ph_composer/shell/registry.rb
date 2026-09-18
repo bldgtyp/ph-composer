@@ -80,6 +80,7 @@ module PhComposer
       publish_each(staging.declared_queries, @queries, :name)
       publish_each(staging.declared_actions, @actions, :name)
       publish_each(staging.declared_record_kinds, @record_kinds, :id)
+      staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
       publish_each(staging.declared_extensions, @extensions, :namespace)
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
       staging.owners.each { |name, owner| @owners[name] = owner }
@@ -104,7 +105,7 @@ module PhComposer
     # Collects one batch's declarations and checks them against each other and the live registry.
     class Staging
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_record_kinds,
-                  :declared_extensions, :declared_snapshot_sections, :declared_subscriptions, :owners
+                  :declared_extensions, :declared_snapshot_sections, :declared_subscriptions, :owners, :named
 
       def initialize(live)
         @live = live
@@ -116,6 +117,7 @@ module PhComposer
         @declared_snapshot_sections = []
         @declared_subscriptions = []
         @owners = {}
+        @named = []
         @failures = []
       end
 
@@ -134,6 +136,7 @@ module PhComposer
 
       def add(collection, owner, name, declaration)
         public_send(collection) << declaration
+        @named << [owner, name]
         @owners[name] ||= owner
       end
 

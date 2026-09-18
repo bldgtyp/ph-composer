@@ -9,6 +9,7 @@ module PhComposer
     # abort left the Model unchanged verifies that itself (shell/dispatch.rb), because only it knows
     # which data the operation could have touched.
     def self.perform(model, name, transparent: false)
+      committed = false
       started = model.start_operation(name.to_s, true, false, transparent)
       raise OperationError, "SketchUp refused to start #{name}" unless started
 
@@ -18,7 +19,8 @@ module PhComposer
 
       result
     rescue StandardError
-      model.abort_operation if started
+      # Once the commit succeeded there is nothing left to abort; aborting would act on no operation.
+      model.abort_operation if started && !committed
       raise
     end
   end

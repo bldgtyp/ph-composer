@@ -59,12 +59,15 @@ module PhComposer
       # ---------------------------------------------------------------- proposals
 
       def propose_create(kind_id, change_set, values:, user_data: nil)
-        kind = @catalog.kind(kind_id)
-        id = Identity.fresh(kind.id_prefix, reserved_ids(kind, change_set))
-        record = { "id" => id, "schema_version" => kind.schema_version }.merge(DeepCopy.call(values))
-        record["user_data"] = checked_user_data(user_data) unless user_data.nil?
-        propose(kind, change_set, nil, record)
-        id
+        staging(change_set) do
+          kind = @catalog.kind(kind_id)
+          id = Identity.fresh(kind.id_prefix, reserved_ids(kind, change_set))
+          check_value_keys!(kind, values)
+          record = { "id" => id, "schema_version" => kind.schema_version }.merge(DeepCopy.call(values))
+          record["user_data"] = checked_user_data(user_data) unless user_data.nil?
+          propose(kind, change_set, nil, record)
+          id
+        end
       end
 
       # An ordinary edit. `values` replaces the named fields (nil removes an optional one); `user_data`,
@@ -73,14 +76,17 @@ module PhComposer
       # are the values the caller last read; any that differ now refuse the edit.
       def propose_update(kind_id, id, change_set, values: {}, user_data: nil, extension_payloads: {},
                          expected_values: {})
-        kind = @catalog.kind(kind_id)
-        before = find(kind_id, id)
-        check_expected!(kind, before, expected_values)
-        after = DeepCopy.call(before)
-        values.each { |key, value| value.nil? ? after.delete(key) : after[key] = DeepCopy.call(value) }
-        after["user_data"] = checked_user_data(user_data) unless user_data.nil?
-        extension_payloads.each { |namespace, payload| set_extension_payload(after, namespace, payload) }
-        propose(kind, change_set, before, after)
+        staging(change_set) do
+          kind = @catalog.kind(kind_id)
+          before = find(kind_id, id)
+          check_expected!(kind, before, expected_values)
+          after = DeepCopy.call(before)
+          check_value_keys!(kind, values)
+          values.each { |key, value| value.nil? ? after.delete(key) : after[key] = DeepCopy.call(value) }
+          after["user_data"] = checked_user_data(user_data) unless user_data.nil?
+          extension_payloads.each { |namespace, payload| set_extension_payload(after, namespace, payload) }
+          propose(kind, change_set, before, after)
+        end
       end
 
       # Duplicates records as one collection: every new id is allocated first, then each reference
@@ -88,45 +94,49 @@ module PhComposer
       # shared. `user_data` is copied unchanged. A copy that needs copy rules the installed extensions
       # do not provide is refused whole. Returns the old-to-new id mapping.
       def propose_duplicate(kind_id, ids, change_set)
-        kind = @catalog.kind(kind_id)
-        originals = ids.uniq.map { |id| find(kind_id, id) }
-        originals.each { |record| check_copy_rules!(kind, record) }
-        reserved = reserved_ids(kind, change_set)
-        mapping = originals.to_h { |record| [record.fetch("id"), Identity.fresh(kind.id_prefix, reserved)] }
-        copies = originals.map do |record|
-          copy = kind.references.reduce(DeepCopy.call(record)) { |value, field| field.remap(value, mapping) }
-          copy["id"] = mapping.fetch(record.fetch("id"))
-          copy.fetch("extension_data", {}).each_value do |envelope|
-            references = envelope.fetch("references", [])
-            envelope["payload"] = Extension.remap(envelope.fetch("payload"), references, mapping)
+        staging(change_set) do
+          kind = @catalog.kind(kind_id)
+          originals = ids.uniq.map { |id| find(kind_id, id) }
+          originals.each { |record| check_copy_rules!(kind, record) }
+          reserved = reserved_ids(kind, change_set)
+          mapping = originals.to_h { |record| [record.fetch("id"), Identity.fresh(kind.id_prefix, reserved)] }
+          copies = originals.map do |record|
+            copy = kind.references.reduce(DeepCopy.call(record)) { |value, field| field.remap(value, mapping) }
+            copy["id"] = mapping.fetch(record.fetch("id"))
+            copy.fetch("extension_data", {}).each_value do |envelope|
+              references = envelope.fetch("references", [])
+              envelope["payload"] = Extension.remap(envelope.fetch("payload"), references, mapping)
+            end
+            propose(kind, change_set, nil, copy, :check_references => false)
+            copy
           end
-          propose(kind, change_set, nil, copy, :check_references => false)
-          copy
+          # A copy may name a counterpart staged after it, so references are checked once all are staged.
+          copies.each { |copy| check_references!(kind, copy, change_set) }
+          mapping
         end
-        # A copy may name a counterpart staged after it, so references are checked once all are staged.
-        copies.each { |copy| check_references!(kind, copy, change_set) }
-        mapping
       end
 
       # Raises one namespace's payload to the installed version on each record, through the declared
       # migrations, validating the result. Any failure refuses the whole proposal, so the stored data
       # stays as it was. Returns each record's result: migrated, current or absent.
       def propose_migration(kind_id, ids, namespace, change_set)
-        kind = @catalog.kind(kind_id)
-        extension = @catalog.extension(namespace)
-        ids.uniq.to_h do |id|
-          before = find(kind_id, id)
-          envelope = before.dig("extension_data", namespace)
-          next [id, "absent"] unless envelope
+        staging(change_set) do
+          kind = @catalog.kind(kind_id)
+          extension = @catalog.extension(namespace)
+          ids.uniq.to_h do |id|
+            before = find(kind_id, id)
+            envelope = before.dig("extension_data", namespace)
+            next [id, "absent"] unless envelope
 
-          status = Extension.status(envelope, extension)
-          refuse_extension!(namespace, id, status) unless %w[understood outdated].include?(status)
-          next [id, "current"] if status == "understood"
+            status = Extension.status(envelope, extension)
+            refuse_extension!(namespace, id, status) unless %w[understood outdated].include?(status)
+            next [id, "current"] if status == "understood"
 
-          after = DeepCopy.call(before)
-          after["extension_data"][namespace] = extension.envelope(migrated_payload(extension, envelope, id))
-          propose(kind, change_set, before, after)
-          [id, "migrated"]
+            after = DeepCopy.call(before)
+            after["extension_data"][namespace] = extension.envelope(migrated_payload(extension, envelope, id))
+            propose(kind, change_set, before, after)
+            [id, "migrated"]
+          end
         end
       end
 
@@ -145,6 +155,14 @@ module PhComposer
       end
 
       private
+
+      # Runs a proposal; a refusal it raises also marks the change set refused (ChangeSet#refuse).
+      def staging(change_set)
+        yield
+      rescue Error => error
+        change_set.refuse(error)
+        raise
+      end
 
       def read(kind, id)
         kind.store.read(@model, id)
@@ -178,6 +196,14 @@ module PhComposer
           message = "#{kind.label} #{record['id']} names #{target_kind} #{id}, which does not exist."
           raise CodedError.new("reference.invalid", message, "target_kind" => target_kind, "id" => id)
         end
+      end
+
+      # Identity and metadata change only through their own arguments, never as a value.
+      def check_value_keys!(kind, values)
+        reserved = values.keys & RecordKind::RESERVED_KEYS
+        return if reserved.empty?
+
+        raise CodedError.new("params.invalid", "#{kind.label} values cannot set #{reserved.join(', ')}.")
       end
 
       def check_expected!(kind, record, expected_values)
@@ -235,6 +261,10 @@ module PhComposer
       end
 
       def refuse_extension!(namespace, id, status)
+        if status == "outdated"
+          message = "#{namespace} data on #{id} is stored at an older version; migrate it before changing it."
+          raise CodedError.new("extension.migration_required", message, "namespace" => namespace)
+        end
         if status == "unavailable"
           raise CodedError.new("extension.unavailable", "#{namespace} is not installed, so its data on #{id} " \
                                                         "cannot be changed.", "namespace" => namespace)

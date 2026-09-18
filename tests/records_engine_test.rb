@@ -96,6 +96,40 @@ class RecordsEngineTest < PhComposerTestCase
     assert_equal ["length_mm"], error.detail.fetch("fields")
   end
 
+  def test_values_cannot_set_identity_or_metadata
+    %w[id extension_data user_data schema_version].each do |key|
+      error = assert_raises(PhComposer::CodedError) do
+        @engine.propose_update("test.fixture.part", seed_part, PhComposer::Records::ChangeSet.new,
+                               :values => { key => nil })
+      end
+      assert_equal "params.invalid", error.code, key
+    end
+  end
+
+  def test_a_refused_proposal_marks_its_change_set_even_when_the_caller_rescues
+    good = seed_part("extension_data" => { "test.fixture.review" => version_one("draft") })
+    bad = seed_part("extension_data" => { "test.fixture.review" => version_one("lost") })
+    changes = PhComposer::Records::ChangeSet.new
+
+    begin
+      @engine.propose_migration("test.fixture.part", [good, bad], "test.fixture.review", changes)
+    rescue PhComposer::CodedError
+      nil
+    end
+
+    assert_equal "extension.migration_failed", changes.refusal.code
+  end
+
+  def test_writing_outdated_extension_data_asks_for_migration_first
+    part = seed_part("extension_data" => { "test.fixture.review" => version_one("draft") })
+    error = assert_raises(PhComposer::CodedError) do
+      @engine.propose_update("test.fixture.part", part, PhComposer::Records::ChangeSet.new,
+                             :extension_payloads => { "test.fixture.review" => { "review_status" => "checked" } })
+    end
+
+    assert_equal "extension.migration_required", error.code
+  end
+
   def test_user_data_that_is_not_plain_json_is_refused
     error = assert_raises(PhComposer::CodedError) do
       @engine.propose_update("test.fixture.part", seed_part, PhComposer::Records::ChangeSet.new,

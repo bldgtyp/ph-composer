@@ -98,6 +98,35 @@ class SessionsTest < PhComposerTestCase
     assert_equal 3, session.revision
   end
 
+  # SketchUp 26.1.188 reports an aborted operation as an Undo (context/SKETCHUP_HOST_BEHAVIOR.md);
+  # inside the session's own operation that is its abort and changes nothing.
+  def test_the_undo_callback_for_an_own_abort_does_not_advance_the_revision
+    model = Sketchup.active_model
+    session = Sessions.for(model)
+
+    assert_raises(IOError) do
+      session.mutate do
+        PhComposer::ModelOperation.perform(model, "Own edit") { raise IOError, "failed" }
+      end
+    end
+
+    assert_equal 1, session.revision
+  end
+
+  def test_a_commit_followed_by_an_exception_still_advances_the_revision
+    model = Sketchup.active_model
+    session = Sessions.for(model)
+
+    assert_raises(RuntimeError) do
+      session.mutate do
+        PhComposer::ModelOperation.perform(model, "Own edit") { model.set_attribute("test", "value", 1) }
+        raise "after the commit"
+      end
+    end
+
+    assert_equal 2, session.revision
+  end
+
   def test_a_mutation_that_commits_nothing_leaves_the_revision
     session = Sessions.for(Sketchup.active_model)
 
@@ -106,12 +135,13 @@ class SessionsTest < PhComposerTestCase
     assert_equal 1, session.revision
   end
 
-  def test_a_session_is_busy_while_it_mutates_or_a_feature_state_has_pending_work
+  def test_a_session_is_busy_for_a_whole_change_or_while_a_feature_state_has_pending_work
     session = Sessions.for(Sketchup.active_model)
     assert_nil session.busy_reason
 
     during = nil
-    session.mutate { during = session.busy_reason }
+    session.exclusive { during = session.busy_reason }
+    assert_nil session.busy_reason
     assert_match(/still running/, during)
 
     work = Struct.new(:pending?).new(true)

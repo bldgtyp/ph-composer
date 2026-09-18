@@ -5,12 +5,13 @@ require "json"
 module PhComposer
   module Records
     # Model-level persistence: one attribute dictionary per record kind, one JSON string per record id.
-    # Reads never create a dictionary, so a read cannot mark the Model modified.
+    # Reads never create a dictionary, so a read cannot mark the Model modified. The registry adds the
+    # dictionary to Dictionaries when the kind is published, not when it is declared.
     class DictionaryStore
       attr_reader :dictionary
 
       def initialize(kind_id)
-        @dictionary = Dictionaries.register("#{DICTIONARY_PREFIX}.records.#{kind_id}")
+        @dictionary = "#{DICTIONARY_PREFIX}.records.#{kind_id}"
       end
 
       # The stored record as parsed JSON, or nil when absent. Raises JSON::ParserError when the stored

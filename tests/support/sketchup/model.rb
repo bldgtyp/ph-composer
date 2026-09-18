@@ -91,12 +91,18 @@ module Sketchup
       true
     end
 
+    # SketchUp 26.1.188 fires onTransactionUndo, not onTransactionAbort, for an aborted operation,
+    # synchronously inside the call (host evidence 2026-09-18,
+    # planning/refactor/phase-zero/evidence/phase-03-operations.md).
     def abort_operation
       return false unless @current_operation
       name, disable_ui, _next_transparent, _transparent, snapshot = @current_operation
       @dictionaries, @entities = Marshal.load(snapshot)
       @operations << [name, disable_ui, :aborted]
       @current_operation = nil
+      @observers.each do |observer|
+        observer.onTransactionUndo(self) if observer.respond_to?(:onTransactionUndo)
+      end
       true
     end
 

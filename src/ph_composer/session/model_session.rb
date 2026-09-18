@@ -17,7 +17,8 @@ module PhComposer
       @id = SecureRandom.uuid
       @revision = 1
       @own_commits_pending = 0
-      @mutating = false
+      @exclusive = false
+      @committing = false
       @refresh = CoalescedTimer.new
       @observers = []
       @feature_state = {}
@@ -41,27 +42,38 @@ module PhComposer
     # Why an authoritative read or write cannot run now, or nil when it can. A feature state object
     # with deferred Model work answers `pending?`; the session refuses until that work settles.
     def busy_reason
-      return "Another change to this Model is still running." if @mutating
+      return "Another change to this Model is still running." if @exclusive
 
       deferred = @feature_state.each_value.any? { |state| state.respond_to?(:pending?) && state.pending? }
       deferred ? "This Model has deferred work that has not finished." : nil
     end
 
-    # Runs the block as this session's one mutation; the block answers whether it committed. A
-    # committed operation advances the revision once, here. SketchUp may deliver the commit callback
-    # inside the block or after it returns, so the callback is recognized as ours either way instead
-    # of advancing the revision a second time.
-    def mutate
-      @mutating = true
-      @commits_during_mutation = 0
-      committed = yield
-      if committed
-        @revision += 1
-        @own_commits_pending += 1 if @commits_during_mutation.zero?
-      end
-      committed
+    # Runs one change request from its first read to its recorded outcome. While it runs the session
+    # is busy, so no other change can start, even one a handler starts itself (CONTRACTS.md C3). The
+    # dispatcher checks `busy_reason` before calling this.
+    def exclusive
+      @exclusive = true
+      yield
     ensure
-      @mutating = false
+      @exclusive = false
+    end
+
+    # Runs the block as the session's one native operation; the block answers whether it committed.
+    # The revision advances once for it here. SketchUp may deliver the commit callback inside the block
+    # (measured on 26.1.188) or after it returns, so the callback is recognized as ours either way.
+    # SketchUp 26.1.188 reports an aborted operation as `onTransactionUndo`; inside the block that is
+    # our own abort and changes nothing. A commit seen before an exception still advances the revision.
+    def mutate
+      @committing = true
+      @commits_seen = 0
+      committed = false
+      committed = yield
+    ensure
+      @committing = false
+      if committed || @commits_seen.positive?
+        @revision += 1
+        @own_commits_pending += 1 if @commits_seen.zero?
+      end
     end
 
     # Completes deferred Model work before something reads the Model as a whole.
@@ -100,14 +112,16 @@ module PhComposer
     def advance_revision_for(kind)
       case kind
       when :transaction_committed
-        if @mutating
-          @commits_during_mutation += 1
+        if @committing
+          @commits_seen += 1
         elsif @own_commits_pending.positive?
           @own_commits_pending -= 1
         else
           @revision += 1
         end
-      when :transaction_undone, :transaction_redone, :active_path_changed
+      when :transaction_undone
+        @revision += 1 unless @committing
+      when :transaction_redone, :active_path_changed
         @revision += 1
       end
     end

@@ -43,6 +43,26 @@ class RegistryTest < PhComposerTestCase
     refute Registry.current.queries.key?("probe.one.read")
   end
 
+  def test_a_record_kind_claimed_by_two_features_names_both
+    kind = PhComposer::Records::RecordKind.new(:id => "probe.one.kind", :label => "Kind", :schema_version => 1,
+                                               :id_prefix => "pok", :fields => [])
+    diagnostics = refused(
+      feature { |r| r.feature("probe.one", :contract_version => 1).record_kind(kind) },
+      feature { |r| r.feature("probe.two", :contract_version => 1).record_kind(kind) }
+    )
+
+    duplicate = diagnostics.find { |diagnostic| diagnostic.code == "registration.duplicate_id" }
+    assert_equal "probe.one.kind is declared by both probe.one and probe.two.", duplicate.message
+  end
+
+  def test_a_refused_kind_does_not_register_its_dictionary
+    kind = PhComposer::Records::RecordKind.new(:id => "probe.bad.kind", :label => "Bad", :schema_version => 1,
+                                               :id_prefix => "pbk", :fields => [])
+    refused(feature { |r| r.feature("probe.bad", :contract_version => 2).record_kind(kind) })
+
+    refute_includes PhComposer::Dictionaries.names, kind.store.dictionary
+  end
+
   def test_a_second_install_of_the_same_feature_is_refused_and_adds_no_observer
     Registry.install([TestFeature, subscriber])
     count = Registry.current.subscriptions.length

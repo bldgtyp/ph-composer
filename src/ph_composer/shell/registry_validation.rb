@@ -88,14 +88,9 @@ module PhComposer
         end
       end
 
+      # Every [owner, name] the batch declared, in declaration order, duplicates included.
       def declared_names
-        [
-          *@staging.declared_queries.map { |query| [query.owner, query.name] },
-          *@staging.declared_actions.map { |action| [action.owner, action.name] },
-          *@staging.declared_record_kinds.map { |kind| [owner(kind.id), kind.id] },
-          *@staging.declared_extensions.map { |extension| [owner(extension.namespace), extension.namespace] },
-          *@staging.declared_snapshot_sections.map { |section| [section.owner, section.name] }
-        ]
+        @staging.named
       end
 
       def check_operations

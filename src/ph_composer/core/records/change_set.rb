@@ -5,7 +5,7 @@ module PhComposer
     # The complete set of record writes one operation proposes. Handlers build it without writing;
     # the dispatcher validates it whole, then the engine applies it inside one native operation.
     # Each write keeps the record as it was, so an abort can be verified against it. A proposal that
-    # raises abandons its change set whole: nothing applies a set whose proposal was refused.
+    # raises marks the set refused, and the dispatcher never applies a refused set.
     class ChangeSet
       Write = Struct.new(:kind, :id, :before, :after, keyword_init: true) do
         def change
@@ -13,10 +13,17 @@ module PhComposer
         end
       end
 
-      attr_reader :writes
+      attr_reader :writes, :refusal
 
       def initialize
         @writes = []
+        @refusal = nil
+      end
+
+      # Marks the set as refused. The engine calls this when a proposal raises, so a handler that
+      # rescues the refusal cannot commit what was staged before it.
+      def refuse(error)
+        @refusal ||= error
       end
 
       # Records the write unless it would change nothing, so a no-change edit opens no operation.

@@ -217,6 +217,34 @@ class ApiTest < PhComposerTestCase
     assert_equal %w[pending request.pending], result.dig("value", "inner").values_at("status", "code")
   end
 
+  # A handler that starts another change, even through another caller, finds the session busy.
+  def test_a_second_change_cannot_start_while_one_is_running
+    part = create_parts(1).dig("value", "part_ids", 0)
+    other = API.connect(:session_id => @session.id)
+    TestFeature.reentry = { :context => other, :name => "test.fixture.update_parts", :params => edit(part, 10.0),
+                            :request => request(1) }
+
+    result = invoke("test.fixture.reenter", {}, 2)
+
+    assert_equal %w[busy session.busy], result.dig("value", "inner").values_at("status", "code")
+    assert_equal 1200.0, stored(part).fetch("length_mm")
+  end
+
+  def test_a_handler_that_rescues_a_refusal_commits_nothing
+    parts = create_parts(2).dig("value", "part_ids")
+    { parts.first => "draft", parts.last => "lost" }.each do |id, status|
+      review = { "schema_version" => 1, "payload" => { "status" => status } }
+      PART_KIND.store.write(@model, stored(id).merge("extension_data" => { "test.fixture.review" => review }))
+    end
+    operations = @model.operations.length
+
+    result = invoke("test.fixture.swallow_refusal", { "ids" => parts }, 2)
+
+    assert_equal %w[refused extension.migration_failed none], result.values_at("status", "code", "effect")
+    assert_equal operations, @model.operations.length
+    assert_equal 1, stored(parts.first).dig("extension_data", "test.fixture.review", "schema_version")
+  end
+
   def test_a_retained_outcome_is_retrievable_by_sequence
     created = create_parts(1)
 

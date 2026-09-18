@@ -50,7 +50,8 @@ module PhComposer
       refuse_if_busy!(session)
       caller.highest_sequence = sequence
       session.outcomes.begin(caller.handle, sequence, request_digest(name, params, expected_revision))
-      session.outcomes.finish(caller.handle, sequence, run(session, action, params, expected_revision))
+      outcome = session.exclusive { run(session, action, params, expected_revision) }
+      session.outcomes.finish(caller.handle, sequence, outcome)
     rescue CodedError => error
       coded_outcome(error, session, :mutation => true)
     end
@@ -181,6 +182,9 @@ module PhComposer
       request = request_for(session, params)
       changes = Records::ChangeSet.new
       value = action.handler.call(request, changes)
+      # A handler that rescued a refusal still proposed an incomplete change; it is refused whole.
+      raise changes.refusal if changes.refusal
+
       check_result!(action, value)
       if changes.empty?
         return Outcome.completed(:revision => session.revision, :value => value, :message => "Nothing to change.")
@@ -197,6 +201,7 @@ module PhComposer
       Outcome.refused("operation.failed", "The change could not be prepared.", :status => "failed",
                                                                                 :revision => session.revision,
                                                                                 :mutation => true)
+      # `failed` with effect `none`: the error came before any operation opened.
     end
 
     def commit(session, action, engine, changes, value)
