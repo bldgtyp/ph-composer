@@ -182,3 +182,12 @@ test("a section that throws does not hide the refusal warning or stop the other 
   assert.deepStrictEqual(later, [2, 2]);
   assert.strictEqual(p.panel.state.ui.actionResult.request_id, "r1");
 });
+
+test("the current tab is scrolled into view, so a narrow panel never hides which tab is open", function () {
+  var p = page(), scrolled = [];
+  var tab = p.query("[data-tab='export']");
+  tab.scrollIntoView = function (options) { scrolled.push(JSON.parse(JSON.stringify(options))); };
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  tab.listeners.click({});
+  assert.deepStrictEqual(scrolled[scrolled.length - 1], { block: "nearest", inline: "nearest" });
+});

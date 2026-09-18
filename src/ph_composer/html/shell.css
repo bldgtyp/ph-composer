@@ -3,7 +3,11 @@
 .live-panel section { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .live-panel button { width: auto; font-weight: 400; }
 .live-panel [data-pane] { min-height: 100%; }
-/* Tabs are flat at rest; only the current one is filled. */
+/* Tabs are flat at rest; only the current one is filled. A planned tab only says what is coming, so a
+   narrow panel drops it and keeps the working tabs in reach. */
+@media (max-width: 600px) {
+  .live-panel .phc-tabs button:disabled { display: none; }
+}
 .live-panel .phc-tabs button:not([aria-pressed="true"]) { background: transparent; }
 /* In the flow under the tab row, zero height: a notice floats over the panes without moving them. */
 .live-panel > .phc-notice-layer { position: relative; flex-shrink: 0; }

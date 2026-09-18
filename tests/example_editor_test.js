@@ -189,3 +189,17 @@ test("a part removed elsewhere leaves the focused draft where it is, untouched a
   assert.strictEqual(e.input("Sill length"), undefined);
   assert.strictEqual(e.invokes().length, 0);
 });
+
+test("a value changed elsewhere during a draft refuses the draft instead of overwriting the change", function () {
+  var e = editor();
+  e.type("Sill length", "1300");
+  e.host.parts[0].length_mm = 1500;
+  e.host.revision += 1;
+  e.host.snapshot();
+  e.press("Sill length", "Enter");
+
+  assert.strictEqual(e.invokes()[0].payload.params.edits[0].expected_values.length_mm, 1200);
+  assert.strictEqual(e.host.parts[0].length_mm, 1500, "the other change stands");
+  assert.strictEqual(e.notice().getAttribute("data-tone"), "warning");
+  assert.strictEqual(e.input("Sill length").value, "1500");
+});

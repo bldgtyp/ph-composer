@@ -155,7 +155,10 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
       pane.hidden = pane.getAttribute("data-pane") !== name;
     });
     Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function (tab) {
-      tab.setAttribute("aria-pressed", String(tab.getAttribute("data-tab") === name));
+      var current = tab.getAttribute("data-tab") === name;
+      tab.setAttribute("aria-pressed", String(current));
+      // A tab row narrower than its tabs scrolls; the current tab stays in view.
+      if (current && tab.scrollIntoView) tab.scrollIntoView({ block: "nearest", inline: "nearest" });
     });
   }
 

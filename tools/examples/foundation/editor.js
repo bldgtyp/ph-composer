@@ -123,8 +123,9 @@
     parts.forEach(function (part, index) {
       var row = view.rows[part.id] || partRow(part);
       var field = view.fields[part.id];
-      // The value last read is what an edit expects; a draft in progress keeps its text and starting unit.
-      field.readValue = part.values.length_mm;
+      // An edit expects the value its draft began from, so a change made elsewhere during the draft is
+      // refused rather than overwritten; a draft in progress also keeps its text and starting unit.
+      if (!field.editing) field.readValue = part.values.length_mm;
       field.setValue(part.values.length_mm);
       if (view.list.children[index] !== row) view.list.insertBefore(row, view.list.children[index] || null);
     });
