@@ -1,4 +1,5 @@
-.PHONY: ci ci-pending syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage python-check rbz rbz-check install clean
+.PHONY: ci ci-pending syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage hostkit-test python-check \
+        rbz rbz-check install clean bridge-install bridge-uninstall
 
 # `.ruby-version` pins 3.2.2, the Ruby the current proving host embeds. rbenv resolves it when it
 # is installed; without rbenv this falls back to whatever `ruby` is on PATH, and the suite's own
@@ -16,7 +17,7 @@ BUNDLE := $(dir $(RUBY))bundle
 SKETCHUP_VERSION ?= 2026
 
 # Every target docs/DEVELOPMENT.md claims for the offline loop that exists today.
-ci: syntax lint test fixtures-check python-check rbz rbz-check ci-pending
+ci: syntax lint test fixtures-check hostkit-test python-check rbz rbz-check ci-pending
 
 # The gate is not complete until these land. Printed on every run so a green `make ci` is never
 # read as the full Phase 0 gate (planning/refactor/phase-zero/phases/phase-02-bootstrap.md).
@@ -87,6 +88,11 @@ RUBY_COVERAGE_MIN ?= 93
 coverage:
 	@$(RUBY) tools/coverage_ruby.rb $(RUBY_COVERAGE_MIN)
 
+# The development host bridge and helpers: Ruby tests against the stub, then the Python client.
+hostkit-test:
+	@$(RUBY) -Itests -Itools/hostkit/tests tools/hostkit/tests/all.rb
+	@uv run pytest -q tools/hostkit/tests
+
 python-check:
 	@uv run mypy --config-file pyproject.toml
 
@@ -101,3 +107,14 @@ install:
 
 clean:
 	@uv run tools/rbz/build.py --clean
+
+PLUGINS_DIR := $(HOME)/Library/Application Support/SketchUp $(SKETCHUP_VERSION)/SketchUp/Plugins
+
+# Development host bridge (tools/hostkit/host_bridge.rb): never part of the RBZ.
+bridge-install:
+	@cp tools/hostkit/host_bridge.rb "$(PLUGINS_DIR)/ph_composer_host_bridge.rb"
+	@echo "host bridge installed into $(PLUGINS_DIR)"
+
+bridge-uninstall:
+	@rm -f "$(PLUGINS_DIR)/ph_composer_host_bridge.rb" "$(PLUGINS_DIR)/../ph_composer_host_bridge.json"
+	@echo "host bridge removed"
