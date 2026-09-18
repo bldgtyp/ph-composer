@@ -7,29 +7,48 @@ module RecordFixtures
   R = PhComposer::Records
 
   DEFINITION = R::RecordKind.new(
-    :id => "test.definition", :label => "Test definition", :schema_version => 1, :id_prefix => "tdf",
+    :id => "test.fixture.definition", :label => "Test definition", :schema_version => 1, :id_prefix => "tdf",
     :fields => [R::Field.new(:key => "label", :schema => { "type" => "string", "minLength" => 1 }, :required => true)]
   )
 
+  # A store that can be told to raise on a later write, to prove that a failure part-way through an
+  # operation rolls every earlier write back.
+  class FailingStore < R::DictionaryStore
+    class << self
+      attr_accessor :writes_before_failure
+    end
+
+    def write(model, record)
+      countdown = self.class.writes_before_failure
+      if countdown
+        raise IOError, "injected write failure" if countdown.zero?
+
+        self.class.writes_before_failure = countdown - 1
+      end
+      super
+    end
+  end
+
   PART = R::RecordKind.new(
-    :id => "test.part", :label => "Test part", :schema_version => 1, :id_prefix => "tpt",
+    :id => "test.fixture.part", :label => "Test part", :schema_version => 1, :id_prefix => "tpt",
+    :store => FailingStore.new("test.fixture.part"),
     :fields => [
       R::Field.new(:key => "label", :schema => { "type" => "string", "minLength" => 1 }, :required => true),
       R::Field.new(
         :key => "length_mm", :schema => { "type" => "number", "exclusiveMinimum" => 0, "x-unit" => "mm" },
         :required => true
       ),
-      R::Reference.new(:key => "definition_id", :target_kind => "test.definition", :cardinality => "one",
+      R::Reference.new(:key => "definition_id", :target_kind => "test.fixture.definition", :cardinality => "one",
                        :required => true),
-      R::Reference.new(:key => "neighbour_ids", :target_kind => "test.part", :cardinality => "many",
+      R::Reference.new(:key => "neighbour_ids", :target_kind => "test.fixture.part", :cardinality => "many",
                        :required => false)
     ]
   )
 
   # Version 1 stored `{"status": ...}`; version 2 renamed it and added a reference to another part.
   REVIEW = R::Extension.new(
-    :namespace => "test.review", :schema_version => 2, :export_relevance => "required",
-    :references => [{ "path" => "$.checked_against", "target_kind" => "test.part", "cardinality" => "one" }],
+    :namespace => "test.fixture.review", :schema_version => 2, :export_relevance => "required",
+    :references => [{ "path" => "$.checked_against", "target_kind" => "test.fixture.part", "cardinality" => "one" }],
     :migrations => { 1 => ->(payload) { { "review_status" => payload.fetch("status") } } },
     :validate => lambda do |payload|
       %w[draft checked].include?(payload["review_status"]) ? [] : ["review_status must be draft or checked"]

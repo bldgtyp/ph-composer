@@ -32,8 +32,20 @@ module PhComposer
   # module to this list; nothing else in the foundation changes. The shipping build carries none yet.
   FEATURES = [].freeze unless const_defined?(:FEATURES)
 
+  # Capabilities the foundation itself provides, registered through the same interface as a feature.
+  FOUNDATION_FEATURES = [RecordQueries].freeze unless const_defined?(:FOUNDATION_FEATURES)
+
+  # Registers the foundation and every listed feature. A registration problem fails loading here,
+  # with every diagnostic in the message, rather than leaving a partly available extension.
+  def self.compose
+    Registry.reset
+    Registry.install(FOUNDATION_FEATURES + FEATURES)
+  end
+
   unless file_loaded?(__FILE__)
     Sessions.install
+    compose
+    on_reset("composition") { compose }
     file_loaded(__FILE__)
   end
 end

@@ -1,0 +1,48 @@
+# frozen_string_literal: true
+
+module PhComposer
+  # What a feature declares in its `install(registry)` (CONTRACTS.md C1). Each is a plain value; the
+  # registry validates a feature's declarations together before any becomes available.
+  module Declarations
+    # The contract major every declaration here belongs to. A feature declares the major it was
+    # written against; an incompatible major is refused at registration.
+    CONTRACT_VERSION = 1
+
+    Feature = Struct.new(:id, :contract_version, :requires, keyword_init: true)
+
+    # A bounded read. `handler` is `->(request) { value }`; it must not write to the Model.
+    Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
+
+    # A validated Model change. `handler` is `->(request, changes) { value }`: it proposes record
+    # writes into `changes` (a Records::ChangeSet) and never writes itself. The dispatcher applies
+    # the proposal as one native operation named `undo_name`. `confirmation` is the policy every
+    # client must satisfy before the operation opens; Phase 0 supports only "none".
+    Action = Struct.new(
+      :name, :owner, :description, :params, :result, :examples, :undo_name, :side_effects, :confirmation, :handler,
+      keyword_init: true
+    )
+
+    # A panel snapshot section: the result of one registered query, under the section's name.
+    SnapshotSection = Struct.new(:name, :owner, :query, :params, keyword_init: true)
+
+    HostEventSubscription = Struct.new(:owner, :kind, :handler, keyword_init: true)
+
+    # One registration problem. `subject` is the declaration it concerns; `dependency` names what it
+    # needed, when that is the problem.
+    Diagnostic = Struct.new(:code, :owner, :subject, :message, :dependency, keyword_init: true) do
+      def to_s
+        "#{code}: #{message}"
+      end
+    end
+  end
+
+  # A feature, or a batch of features, could not be registered. Nothing in the batch was published.
+  class RegistrationError < InternalError
+    attr_reader :diagnostics
+
+    def initialize(diagnostics)
+      @diagnostics = diagnostics
+      super("Registration refused:\n  " + diagnostics.map(&:to_s).join("\n  "))
+    end
+  end
+end

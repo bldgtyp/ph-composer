@@ -14,17 +14,17 @@ class RecordsEngineTest < PhComposerTestCase
 
   def test_a_created_record_reads_back_with_empty_metadata_and_a_durable_id
     changes = PhComposer::Records::ChangeSet.new
-    definition = @engine.propose_create("test.definition", changes, :values => { "label" => "Frame" })
+    definition = @engine.propose_create("test.fixture.definition", changes, :values => { "label" => "Frame" })
     values = { "label" => "Sill", "length_mm" => 1200.0, "definition_id" => definition }
-    part = @engine.propose_create("test.part", changes, :values => values)
+    part = @engine.propose_create("test.fixture.part", changes, :values => values)
     @engine.apply(changes)
 
-    view = @engine.view("test.part", @engine.find("test.part", part))
+    view = @engine.view("test.fixture.part", @engine.find("test.fixture.part", part))
     assert_match(/\Atpt_[A-Za-z0-9]{12}\z/, part)
     assert_equal({ "label" => "Sill", "length_mm" => 1200.0, "definition_id" => definition }, view.fetch("values"))
     assert_equal({}, view.fetch("user_data"))
-    assert_equal [{ "kind" => "test.definition", "id" => definition, "change" => "created" },
-                  { "kind" => "test.part", "id" => part, "change" => "created" }], changes.affected
+    assert_equal [{ "kind" => "test.fixture.definition", "id" => definition, "change" => "created" },
+                  { "kind" => "test.fixture.part", "id" => part, "change" => "created" }], changes.affected
   end
 
   def test_reads_do_not_create_dictionaries_repair_records_or_mark_the_model_modified
@@ -32,8 +32,8 @@ class RecordsEngineTest < PhComposerTestCase
     text = stored_text(@model, DEFINITION, definition["id"])
     @model.instance_variable_set(:@modified, false)
 
-    @engine.view("test.definition", @engine.find("test.definition", definition["id"]))
-    @engine.ids("test.part")
+    @engine.view("test.fixture.definition", @engine.find("test.fixture.definition", definition["id"]))
+    @engine.ids("test.fixture.part")
 
     assert_equal text, stored_text(@model, DEFINITION, definition["id"])
     assert_nil @model.attribute_dictionary(PART.store.dictionary)
@@ -46,20 +46,20 @@ class RecordsEngineTest < PhComposerTestCase
     part = seed_part("extension_data" => { "other.vendor" => foreign })
 
     changes = PhComposer::Records::ChangeSet.new
-    @engine.propose_update("test.part", part, changes, :values => { "length_mm" => 900.0 })
+    @engine.propose_update("test.fixture.part", part, changes, :values => { "length_mm" => 900.0 })
     @engine.apply(changes)
 
-    stored = @engine.find("test.part", part)
+    stored = @engine.find("test.fixture.part", part)
     assert_equal 900.0, stored.fetch("length_mm")
     assert_equal foreign, stored.dig("extension_data", "other.vendor")
-    assert_equal "unavailable", @engine.view("test.part", stored).dig("extension_status", "other.vendor")
+    assert_equal "unavailable", @engine.view("test.fixture.part", stored).dig("extension_status", "other.vendor")
   end
 
   def test_an_edit_that_changes_nothing_proposes_nothing
     part = seed_part
     changes = PhComposer::Records::ChangeSet.new
 
-    @engine.propose_update("test.part", part, changes, :values => { "length_mm" => 1200.0 })
+    @engine.propose_update("test.fixture.part", part, changes, :values => { "length_mm" => 1200.0 })
 
     assert changes.empty?
   end
@@ -67,7 +67,8 @@ class RecordsEngineTest < PhComposerTestCase
   def test_an_invalid_value_is_refused_with_its_findings
     part = seed_part
     error = assert_raises(PhComposer::CodedError) do
-      @engine.propose_update("test.part", part, PhComposer::Records::ChangeSet.new, :values => { "length_mm" => -1 })
+      @engine.propose_update("test.fixture.part", part, PhComposer::Records::ChangeSet.new,
+          :values => { "length_mm" => -1 })
     end
 
     assert_equal "validation.failed", error.code
@@ -77,16 +78,27 @@ class RecordsEngineTest < PhComposerTestCase
   def test_a_reference_to_a_missing_record_is_refused
     part = seed_part
     error = assert_raises(PhComposer::CodedError) do
-      @engine.propose_update("test.part", part, PhComposer::Records::ChangeSet.new,
+      @engine.propose_update("test.fixture.part", part, PhComposer::Records::ChangeSet.new,
                              :values => { "definition_id" => "tdf_MISSINGMISSI" })
     end
 
     assert_equal "reference.invalid", error.code
   end
 
+  def test_an_edit_whose_expected_values_no_longer_match_is_refused
+    part = seed_part
+    error = assert_raises(PhComposer::CodedError) do
+      @engine.propose_update("test.fixture.part", part, PhComposer::Records::ChangeSet.new,
+                             :values => { "length_mm" => 900.0 }, :expected_values => { "length_mm" => 1000.0 })
+    end
+
+    assert_equal "target.changed", error.code
+    assert_equal ["length_mm"], error.detail.fetch("fields")
+  end
+
   def test_user_data_that_is_not_plain_json_is_refused
     error = assert_raises(PhComposer::CodedError) do
-      @engine.propose_update("test.part", seed_part, PhComposer::Records::ChangeSet.new,
+      @engine.propose_update("test.fixture.part", seed_part, PhComposer::Records::ChangeSet.new,
                              :user_data => { "org" => { "score" => Float::NAN } })
     end
 
@@ -97,22 +109,22 @@ class RecordsEngineTest < PhComposerTestCase
     first = seed_part("user_data" => { "org" => { "note" => "keep" } })
     second = seed_part("neighbour_ids" => [first])
     changes = PhComposer::Records::ChangeSet.new
-    @engine.propose_update("test.part", second, changes, :extension_payloads => {
-                             "test.review" => { "review_status" => "checked", "checked_against" => first }
+    @engine.propose_update("test.fixture.part", second, changes, :extension_payloads => {
+                             "test.fixture.review" => { "review_status" => "checked", "checked_against" => first }
                            })
     @engine.apply(changes)
 
     changes = PhComposer::Records::ChangeSet.new
-    mapping = @engine.propose_duplicate("test.part", [first, second], changes)
+    mapping = @engine.propose_duplicate("test.fixture.part", [first, second], changes)
     @engine.apply(changes)
 
-    copy = @engine.find("test.part", mapping.fetch(second))
+    copy = @engine.find("test.fixture.part", mapping.fetch(second))
     assert_equal [mapping.fetch(first)], copy.fetch("neighbour_ids")
     assert_equal @definition, copy.fetch("definition_id")
-    assert_equal mapping.fetch(first), copy.dig("extension_data", "test.review", "payload", "checked_against")
-    first_copy = @engine.find("test.part", mapping.fetch(first))
+    assert_equal mapping.fetch(first), copy.dig("extension_data", "test.fixture.review", "payload", "checked_against")
+    first_copy = @engine.find("test.fixture.part", mapping.fetch(first))
     assert_equal({ "org" => { "note" => "keep" } }, first_copy.fetch("user_data"))
-    refute_same @engine.find("test.part", first).fetch("user_data"), first_copy.fetch("user_data")
+    refute_same @engine.find("test.fixture.part", first).fetch("user_data"), first_copy.fetch("user_data")
   end
 
   def test_a_copy_needing_an_unavailable_extensions_rules_is_refused_whole
@@ -120,7 +132,8 @@ class RecordsEngineTest < PhComposerTestCase
     foreign = seed_part("extension_data" => { "other.vendor" => { "schema_version" => 1, "payload" => {} } })
     changes = PhComposer::Records::ChangeSet.new
 
-    error = assert_raises(PhComposer::CodedError) { @engine.propose_duplicate("test.part", [plain, foreign], changes) }
+    error = assert_raises(PhComposer::CodedError) {
+ @engine.propose_duplicate("test.fixture.part", [plain, foreign], changes) }
 
     assert_equal "copy.rule_missing", error.code
     assert_equal "unavailable", error.detail.fetch("status")
@@ -128,27 +141,29 @@ class RecordsEngineTest < PhComposerTestCase
   end
 
   def test_migration_raises_outdated_payloads_and_reports_current_and_absent_records
-    outdated = seed_part("extension_data" => { "test.review" => version_one("draft") })
-    current = seed_part("extension_data" => { "test.review" => REVIEW.envelope("review_status" => "checked") })
+    outdated = seed_part("extension_data" => { "test.fixture.review" => version_one("draft") })
+    current = seed_part("extension_data" => { "test.fixture.review" => REVIEW.envelope("review_status" => "checked") })
     absent = seed_part
     changes = PhComposer::Records::ChangeSet.new
 
-    results = @engine.propose_migration("test.part", [outdated, current, absent], "test.review", changes)
+    results = @engine.propose_migration("test.fixture.part", [outdated, current, absent], "test.fixture.review",
+        changes)
     @engine.apply(changes)
 
     assert_equal({ outdated => "migrated", current => "current", absent => "absent" }, results)
-    envelope = @engine.find("test.part", outdated).dig("extension_data", "test.review")
+    envelope = @engine.find("test.fixture.part", outdated).dig("extension_data", "test.fixture.review")
     assert_equal REVIEW.envelope("review_status" => "draft"), envelope
   end
 
   # The refusal abandons the whole change set; nothing applies a set whose proposal raised.
   def test_a_failed_migration_is_refused_and_leaves_every_stored_byte
-    good = seed_part("extension_data" => { "test.review" => version_one("draft") })
-    bad = seed_part("extension_data" => { "test.review" => version_one("lost") })
+    good = seed_part("extension_data" => { "test.fixture.review" => version_one("draft") })
+    bad = seed_part("extension_data" => { "test.fixture.review" => version_one("lost") })
     before = [stored_text(@model, PART, good), stored_text(@model, PART, bad)]
 
     error = assert_raises(PhComposer::CodedError) do
-      @engine.propose_migration("test.part", [good, bad], "test.review", PhComposer::Records::ChangeSet.new)
+      @engine.propose_migration("test.fixture.part", [good, bad], "test.fixture.review",
+          PhComposer::Records::ChangeSet.new)
     end
 
     assert_equal "extension.migration_failed", error.code
@@ -156,14 +171,15 @@ class RecordsEngineTest < PhComposerTestCase
   end
 
   def test_newer_and_unavailable_payloads_are_refused_distinctly
-    newer = seed_part("extension_data" => { "test.review" => { "schema_version" => 3, "payload" => {} } })
+    newer = seed_part("extension_data" => { "test.fixture.review" => { "schema_version" => 3, "payload" => {} } })
     engine_without = PhComposer::Records::Engine.new(@model, record_catalog(:extensions => []))
 
     newer_error = assert_raises(PhComposer::CodedError) do
-      @engine.propose_migration("test.part", [newer], "test.review", PhComposer::Records::ChangeSet.new)
+      @engine.propose_migration("test.fixture.part", [newer], "test.fixture.review", PhComposer::Records::ChangeSet.new)
     end
     missing_error = assert_raises(PhComposer::CodedError) do
-      engine_without.propose_migration("test.part", [newer], "test.review", PhComposer::Records::ChangeSet.new)
+      engine_without.propose_migration("test.fixture.part", [newer], "test.fixture.review",
+          PhComposer::Records::ChangeSet.new)
     end
 
     assert_equal "extension.schema_unsupported", newer_error.code
@@ -177,20 +193,20 @@ class RecordsEngineTest < PhComposerTestCase
       "unsupported" => { "schema_version" => 3, "payload" => {} },
       "unreadable" => { "payload" => {} }
     }
-    part = seed_part("extension_data" => statuses.transform_keys { |key| "test.review.#{key}" }
-                                                .merge("test.review" => statuses["outdated"]))
+    part = seed_part("extension_data" => statuses.transform_keys { |key| "test.fixture.review.#{key}" }
+                                                .merge("test.fixture.review" => statuses["outdated"]))
 
-    view = @engine.view("test.part", @engine.find("test.part", part)).fetch("extension_status")
+    view = @engine.view("test.fixture.part", @engine.find("test.fixture.part", part)).fetch("extension_status")
 
-    assert_equal "outdated", view.fetch("test.review")
-    assert_equal "unavailable", view.fetch("test.review.understood")
-    assert_equal "unsupported", view.fetch("test.review.unreadable")
+    assert_equal "outdated", view.fetch("test.fixture.review")
+    assert_equal "unavailable", view.fetch("test.fixture.review.understood")
+    assert_equal "unsupported", view.fetch("test.fixture.review.unreadable")
   end
 
   def test_a_stored_record_that_fails_its_schema_is_unreadable_not_repaired
     store_record(@model, DEFINITION, "id" => "tdf_AAAAAAAAAAAA", "schema_version" => 1)
 
-    error = assert_raises(PhComposer::CodedError) { @engine.find("test.definition", "tdf_AAAAAAAAAAAA") }
+    error = assert_raises(PhComposer::CodedError) { @engine.find("test.fixture.definition", "tdf_AAAAAAAAAAAA") }
 
     assert_equal "record.unreadable", error.code
   end
@@ -198,7 +214,7 @@ class RecordsEngineTest < PhComposerTestCase
   def test_unchanged_compares_every_named_record_with_its_before_state
     part = seed_part
     changes = PhComposer::Records::ChangeSet.new
-    @engine.propose_update("test.part", part, changes, :values => { "label" => "Head" })
+    @engine.propose_update("test.fixture.part", part, changes, :values => { "label" => "Head" })
     assert @engine.unchanged?(changes)
 
     @engine.apply(changes)

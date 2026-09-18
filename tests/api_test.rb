@@ -1,0 +1,338 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+require_relative "support/test_feature"
+
+# The public interface with no panel: discovery, reads, validated writes, retries and lifecycle,
+# as planning/refactor/phase-zero/phases/phase-03-operations.md "Required cases" lists them.
+class ApiTest < PhComposerTestCase
+  API = PhComposer::API
+  PART = "test.fixture.part"
+
+  def setup
+    super
+    PhComposer::Registry.install([TestFeature])
+    @model = Sketchup.active_model
+    @session = PhComposer::Sessions.for(@model)
+    @context = API.connect(:session_id => @session.id)
+  end
+
+  def teardown
+    RecordFixtures::FailingStore.writes_before_failure = nil
+    TestFeature.reentry = nil
+    super
+  end
+
+  # ------------------------------------------------------------------ discovery and reads
+
+  def test_discovery_lists_the_session_and_every_registration_by_name
+    found = API.discover
+
+    assert_equal({ "major" => 1, "minor" => 0 }, found.fetch("api"))
+    assert_equal [@session.id], found.fetch("sessions").map { |session| session.fetch("id") }
+    assert_includes found.fetch("actions").map { |action| action.fetch("name") }, "test.fixture.update_parts"
+    assert_includes found.fetch("queries").map { |query| query.fetch("name") }, "ph_composer.records.list"
+    assert_equal ["test.fixture.review"], found.fetch("extensions").map { |extension| extension.fetch("namespace") }
+    assert_equal "mm", API.describe(:name => PART).dig("values", "properties", "length_mm", "x-unit")
+    assert_equal "action", API.describe(:name => "test.fixture.update_parts").fetch("kind")
+  end
+
+  def test_a_script_creates_edits_and_reads_back_with_the_panel_closed
+    created = create_parts(2)
+    first = created.dig("value", "part_ids", 0)
+
+    updated = invoke("test.fixture.update_parts", edit(first, 950.0), 2, created.fetch("revision"))
+    read = records(:ids => [first])
+
+    assert_equal %w[completed committed], [updated.fetch("status"), updated.fetch("effect")]
+    assert_equal [{ "kind" => PART, "id" => first, "change" => "updated" }], updated.fetch("affected")
+    assert_equal updated.fetch("revision"), read.fetch("revision")
+    assert_equal 950.0, read.dig("value", "records", 0, "values", "length_mm")
+    assert_equal({ "length_mm" => "mm" }, read.dig("value", "units"))
+  end
+
+  def test_reads_do_not_write_allocate_identities_or_mark_the_model_modified
+    create_parts(1)
+    @model.instance_variable_set(:@modified, false)
+    operations = @model.operations.length
+    revision = @session.revision
+
+    records
+    API.query(:context => @context, :name => "test.fixture.total_length")
+    API.preview(:context => @context, :name => "test.fixture.create", :params => { "parts" => [part_values] })
+
+    refute @model.modified?
+    assert_equal [operations, revision], [@model.operations.length, @session.revision]
+  end
+
+  def test_pages_are_bounded_and_bound_to_their_revision
+    create_parts(101)
+
+    first = records.fetch("value")
+    second = records(:cursor => first.fetch("next_cursor")).fetch("value")
+    assert_equal [100, 1, 101], [first.fetch("records").length, second.fetch("records").length, first.fetch("total")]
+    assert_nil second.fetch("next_cursor")
+    assert_equal 101, records(:limit => 500).dig("value", "records").length
+
+    [0, 501, 2.5].each { |limit| assert_equal "query.limit_invalid", records(:limit => limit).fetch("code") }
+    create_parts(1, 2)
+    assert_equal "query.cursor_expired", records(:cursor => first.fetch("next_cursor")).fetch("code")
+  end
+
+  def test_a_projection_returns_only_the_named_values_and_reports_unreadable_records
+    create_parts(1)
+    PART_KIND.store.write(@model, "id" => "tpt_BROKENBROKEN", "schema_version" => 1)
+
+    page = records(:fields => ["length_mm"]).fetch("value")
+
+    assert_equal [{ "length_mm" => 1200.0 }], page.fetch("records").map { |record| record.fetch("values") }
+    unreadable = page.fetch("unreadable").map { |row| row.values_at("id", "code") }
+    assert_equal [%w[tpt_BROKENBROKEN record.unreadable]], unreadable
+  end
+
+  # ------------------------------------------------------------------ refusals and staleness
+
+  def test_a_second_caller_with_an_old_revision_is_refused_without_writing
+    first = create_parts(1)
+    part = first.dig("value", "part_ids", 0)
+    other = API.connect(:session_id => @session.id)
+    read_revision = first.fetch("revision")
+    invoke("test.fixture.update_parts", edit(part, 900.0), 2, read_revision)
+    operations = @model.operations.length
+
+    stale = API.invoke(:context => other, :name => "test.fixture.update_parts", :params => edit(part, 800.0),
+                       :request => { "sequence" => 1, "expected_revision" => read_revision })
+
+    assert_equal %w[refused revision.stale none], stale.values_at("status", "code", "effect")
+    assert stale.fetch("message").end_with?("Nothing was written.")
+    assert_equal operations, @model.operations.length
+    assert_equal 900.0, stored(part).fetch("length_mm")
+  end
+
+  def test_a_failure_on_the_last_target_leaves_every_target_unchanged
+    parts = create_parts(3).dig("value", "part_ids")
+    edits = parts.map { |id| { "id" => id, "values" => { "length_mm" => 500.0 } } }
+    edits.last["values"]["length_mm"] = -1
+
+    refused = invoke("test.fixture.update_parts", { "edits" => edits }, 2, @session.revision)
+
+    assert_equal %w[refused validation.failed none], refused.values_at("status", "code", "effect")
+    assert_equal [1200.0] * 3, parts.map { |id| stored(id).fetch("length_mm") }
+  end
+
+  def test_a_write_failure_after_the_first_write_rolls_back_and_reports_it
+    parts = create_parts(3).dig("value", "part_ids")
+    revision = @session.revision
+    undo_steps = @model.instance_variable_get(:@undo_stack).length
+    RecordFixtures::FailingStore.writes_before_failure = 1
+
+    failed = invoke("test.fixture.update_parts", { "edits" => parts.map { |id| edit(id, 400.0)["edits"].first } },
+                    2, revision)
+
+    assert_equal %w[failed operation.failed rolled_back], failed.values_at("status", "code", "effect")
+    assert_equal PhComposer::Outcome::ROLLED_BACK, failed.fetch("message")
+    assert_equal [1200.0] * 3, parts.map { |id| stored(id).fetch("length_mm") }
+    assert_equal [revision, undo_steps], [@session.revision, @model.instance_variable_get(:@undo_stack).length]
+    assert_nil @session.busy_reason, "no mutation or suppression is left behind"
+  end
+
+  # A host abort that leaves the first write in place: the dispatcher must not claim a rollback.
+  def test_an_abort_that_cannot_be_verified_is_reported_as_unknown
+    parts = create_parts(2).dig("value", "part_ids")
+    RecordFixtures::FailingStore.writes_before_failure = 1
+    @model.define_singleton_method(:abort_operation) { true }
+
+    edits = parts.map { |id| edit(id, 400.0)["edits"].first }
+    failed = invoke("test.fixture.update_parts", { "edits" => edits }, 2, @session.revision)
+
+    assert_equal %w[failed operation.rollback_unverified unknown], failed.values_at("status", "code", "effect")
+  end
+
+  def test_a_no_change_edit_completes_with_no_operation
+    part = create_parts(1).dig("value", "part_ids", 0)
+    operations = @model.operations.length
+
+    result = invoke("test.fixture.update_parts", edit(part, 1200.0), 2, @session.revision)
+
+    assert_equal %w[completed ok none], result.values_at("status", "code", "effect")
+    assert_equal operations, @model.operations.length
+  end
+
+  def test_envelope_problems_are_refused_before_anything_runs
+    reader = API.connect(:session_id => @session.id, :capabilities => ["read"])
+    wrong_major = PhComposer::OperationContext.new(:api_major => 2, :session_id => @session.id,
+        :caller => @context.caller)
+
+    assert_equal "request.capability_denied", API.invoke(:context => reader, :name => "test.fixture.create",
+                                                         :params => {}, :request => request(1)).fetch("code")
+    assert_equal "request.api_version",
+        API.query(:context => wrong_major, :name => "test.fixture.total_length").fetch("code")
+    assert_equal "request.unknown_operation",
+        API.query(:context => @context, :name => "test.fixture.absent").fetch("code")
+    assert_equal "request.malformed", API.invoke(:context => @context, :name => "test.fixture.create",
+                                                 :params => { "parts" => [] },
+                                                 :request => request(1).merge("preview" => true)).fetch("code")
+    assert_equal "params.invalid", invoke("test.fixture.create", { "parts" => "none" }, 1).fetch("code")
+  end
+
+  # ------------------------------------------------------------------ retries
+
+  def test_a_retry_with_the_same_payload_returns_the_first_outcome_without_running_again
+    first = create_parts(1, 1, 1)
+    operations = @model.operations.length
+
+    again = create_parts(1, 1, 1)
+
+    assert_equal first, again
+    assert_equal operations, @model.operations.length
+    assert_equal 1, records.dig("value", "total")
+  end
+
+  def test_a_reused_sequence_with_a_different_payload_is_refused
+    create_parts(1, 1, 1)
+
+    assert_equal "request.sequence_conflict", create_parts(2, 1, 1).fetch("code")
+  end
+
+  def test_an_expired_or_lower_sequence_is_never_treated_as_new_work
+    now = 0.0
+    @session.outcomes.clock = -> { now }
+    create_parts(1)
+    now = PhComposer::OutcomeStore::LIFETIME_SECONDS + 1
+
+    expired = create_parts(1)
+
+    assert_equal "request.outcome_unavailable", expired.fetch("code")
+    assert_equal "request.outcome_unavailable",
+        API.outcome(:context => @context, :request => { "sequence" => 1 }).fetch("code")
+    assert_equal 1, records.dig("value", "total")
+  end
+
+  def test_a_retry_while_the_first_attempt_runs_is_pending
+    TestFeature.reentry = { :context => @context, :name => "test.fixture.reenter", :params => {},
+        :request => request(1) }
+
+    result = invoke("test.fixture.reenter", {}, 1)
+
+    assert_equal %w[pending request.pending], result.dig("value", "inner").values_at("status", "code")
+  end
+
+  def test_a_retained_outcome_is_retrievable_by_sequence
+    created = create_parts(1)
+
+    assert_equal created, API.outcome(:context => @context, :request => { "sequence" => 1 })
+  end
+
+  def test_a_busy_session_refuses_without_consuming_the_sequence
+    work = Struct.new(:pending?).new(true)
+    @session.feature_state(:api_test) { work }
+
+    busy = create_parts(1)
+    work.define_singleton_method(:pending?) { false }
+
+    assert_equal %w[busy session.busy], busy.values_at("status", "code")
+    assert_equal "completed", create_parts(1).fetch("status")
+  end
+
+  # ------------------------------------------------------------------ Models and lifecycle
+
+  def test_two_models_with_identical_record_ids_stay_isolated
+    other_model = Sketchup::Model.new
+    other_session = PhComposer::Sessions.for(other_model)
+    part = create_parts(1).dig("value", "part_ids", 0)
+    other_model.attribute_dictionary(PART_KIND.store.dictionary, true)[part] =
+      @model.attribute_dictionary(PART_KIND.store.dictionary)[part]
+    other_context = API.connect(:session_id => other_session.id)
+
+    invoke("test.fixture.update_parts", edit(part, 300.0), 2, @session.revision)
+
+    other_page = API.query(:context => other_context, :name => "ph_composer.records.list",
+        :params => { "kind" => PART })
+    assert_equal 1200.0, other_page.dig("value", "records", 0, "values", "length_mm")
+    assert_equal 300.0, stored(part).fetch("length_mm")
+  end
+
+  def test_a_closed_or_reopened_model_refuses_its_old_context
+    create_parts(1)
+    @model.save("/tmp/ph-composer-api.skp")
+
+    Sketchup.open_file("/tmp/ph-composer-api.skp")
+    reopened = PhComposer::Sessions.for(Sketchup.active_model)
+    @model.close
+
+    assert_equal "session.unknown", records.fetch("code")
+    refute_equal @session.id, reopened.id
+    fresh = API.connect(:session_id => reopened.id)
+    assert_equal 1, API.query(:context => fresh, :name => "ph_composer.records.list",
+                                                 :params => { "kind" => PART }).dig("value", "total")
+  end
+
+  def test_undo_and_redo_restore_values_and_advance_the_revision
+    part = create_parts(1).dig("value", "part_ids", 0)
+    invoke("test.fixture.update_parts", edit(part, 700.0), 2, @session.revision)
+    revision = @session.revision
+
+    @model.undo
+    assert_equal [1200.0, revision + 1], [stored(part).fetch("length_mm"), @session.revision]
+    @model.redo
+    assert_equal [700.0, revision + 2], [stored(part).fetch("length_mm"), @session.revision]
+  end
+
+  def test_duplicate_preview_and_snapshot_use_the_same_operations
+    parts = create_parts(2).dig("value", "part_ids")
+
+    preview = API.preview(:context => @context, :name => "test.fixture.duplicate_parts", :params => { "ids" => parts })
+    assert_equal [%w[created] * 2, 2], [preview.fetch("affected").map { |row|
+ row.fetch("change") }, records.dig("value", "total")]
+
+    duplicated = invoke("test.fixture.duplicate_parts", { "ids" => parts }, 2, @session.revision)
+    assert_equal 4, records.dig("value", "total")
+    assert_equal parts.sort, duplicated.dig("value", "mapping").keys.sort
+
+    snapshot = PhComposer::Snapshot.build(@context)
+    assert_equal 4, snapshot.dig("sections", "test.fixture.parts", "value", "total")
+  end
+
+  def test_a_handler_result_outside_its_schema_fails_before_anything_is_written
+    PhComposer::Registry.current.actions.fetch("test.fixture.create").result = { "type" => "array" }
+
+    failed = create_parts(1)
+
+    assert_equal %w[failed operation.failed none], failed.values_at("status", "code", "effect")
+    assert_equal 0, records.dig("value", "total")
+  end
+
+  private
+
+  PART_KIND = RecordFixtures::PART
+
+  def part_values(length = 1200.0)
+    { "label" => "Sill", "length_mm" => length }
+  end
+
+  # A retry repeats the whole request, so a test that retries passes the revision it first read.
+  def create_parts(count, sequence = 1, revision = @session.revision)
+    invoke("test.fixture.create", { "parts" => Array.new(count) { part_values } }, sequence, revision)
+  end
+
+  def edit(id, length)
+    { "edits" => [{ "id" => id, "values" => { "length_mm" => length } }] }
+  end
+
+  def request(sequence, revision = @session.revision)
+    { "sequence" => sequence, "expected_revision" => revision }
+  end
+
+  def invoke(name, params, sequence, revision = @session.revision)
+    API.invoke(:context => @context, :name => name, :params => params, :request => request(sequence, revision))
+  end
+
+  def records(**params)
+    API.query(:context => @context, :name => "ph_composer.records.list",
+              :params => { "kind" => PART }.merge(params.transform_keys(&:to_s)))
+  end
+
+  def stored(id)
+    PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).find(PART, id)
+  end
+end

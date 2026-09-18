@@ -31,6 +31,10 @@ module PhComposer
                              "findings" => problems)
       end
 
+      def kind(kind_id)
+        @catalog.kind(kind_id)
+      end
+
       def ids(kind_id)
         @catalog.kind(kind_id).store.ids(@model)
       end
@@ -65,10 +69,13 @@ module PhComposer
 
       # An ordinary edit. `values` replaces the named fields (nil removes an optional one); `user_data`,
       # when given, replaces the whole mapping. Extension payloads the edit does not name are carried
-      # through as they were stored, whether or not their extension is installed.
-      def propose_update(kind_id, id, change_set, values: {}, user_data: nil, extension_payloads: {})
+      # through as they were stored, whether or not their extension is installed. `expected_values`
+      # are the values the caller last read; any that differ now refuse the edit.
+      def propose_update(kind_id, id, change_set, values: {}, user_data: nil, extension_payloads: {},
+                         expected_values: {})
         kind = @catalog.kind(kind_id)
         before = find(kind_id, id)
+        check_expected!(kind, before, expected_values)
         after = DeepCopy.call(before)
         values.each { |key, value| value.nil? ? after.delete(key) : after[key] = DeepCopy.call(value) }
         after["user_data"] = checked_user_data(user_data) unless user_data.nil?
@@ -168,6 +175,14 @@ module PhComposer
           message = "#{kind.label} #{record['id']} names #{target_kind} #{id}, which does not exist."
           raise CodedError.new("reference.invalid", message, "target_kind" => target_kind, "id" => id)
         end
+      end
+
+      def check_expected!(kind, record, expected_values)
+        changed = expected_values.keys.reject { |key| record[key] == expected_values[key] }
+        return if changed.empty?
+
+        raise CodedError.new("target.changed", "#{kind.label} #{record['id']} has changed since it was read " \
+                                               "(#{changed.join(', ')}).", "fields" => changed)
       end
 
       def check_copy_rules!(kind, record)
