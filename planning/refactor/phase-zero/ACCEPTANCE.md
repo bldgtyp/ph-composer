@@ -1,7 +1,7 @@
 # Phase 0 acceptance register
 
 DATE: 2026-09-18
-STATUS: In progress. Foundation milestone met in P0-G (A01 to A15, A20, A21); A16 to A19 await P0-B.
+STATUS: In progress. Foundation milestone met in P0-G (A01 to A15, A20, A21); A16 passed (B1); A17 to A19 await P0-B.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
@@ -26,7 +26,7 @@ without a linked result. No code or host gate was run during planning.
 | A13 | Typed section ordering, missing/cyclic dependencies, object-level failure and independent results. Passed offline: [P0-F](evidence/phase-05-runtime.md) | P0-F |
 | A14 | Composed privacy guard, unchanged report result, synthetic artifact-pair rollback and HBJSON-only consumer. Passed offline: [P0-F](evidence/phase-05-runtime.md) | P0-F |
 | A15 | Empty Export cancel and destination acceptance both write no files and start no runtime. Passed offline and with a scripted dialog: [P0-F](evidence/phase-05-runtime.md); with the native destination dialog operated by Ed: [P0-G](evidence/phase-06-acceptance.md) | P0-F/G |
-| A16 | PHX/Pyodide report, payload/license assessment and route disposition. No result; P0-B not scheduled | P0-B |
+| A16 | PHX/Pyodide report, payload/license assessment and route disposition. Passed: PHX 1.57.1 converts in Pyodide 0.24.1 under Chromium 88, byte-identical to native; route viable with conditions: [B1](evidence/spike-phx.md) | P0-B |
 | A17 | Overlay report including transparent fill, depth, interaction and measured cost. No result; P0-B not scheduled | P0-B |
 | A18 | Window report including host gross/net area/loops, cutting/splitting/explode and native lifecycle. No result; P0-B not scheduled | P0-B |
 | A19 | Edge report including dictionary values, logical references, topology and native lifecycle. No result; P0-B not scheduled | P0-B |

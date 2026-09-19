@@ -19,8 +19,8 @@ honeybee-core, honeybee-energy, ladybug-core, ladybug-geometry and ladybug-geome
 GPL-3.0-or-later for honeybee-ph, and GPL-3.0 for honeybee-standards. PHX is GPL-3.0-or-later.
 Shipping that payload is conveying, and AGPL-3.0-or-later is the license that matches it.
 
-The ph-units wheel declared no license metadata in the predecessor's manifest. ph-units is a
-PH-Tools package, so the fix is a classifier in that repository.
+The predecessor's manifest recorded no license for the ph-units wheel. The wheel does declare
+`GPL-3.0-or-later`, in its `License-Expression` field, which that manifest's reader did not read.
 
 Exact versions, source URLs, hashes and declared licenses live in the runtime manifest,
 `src/ph_composer/vendor/manifest.json`, and the shipped notice,

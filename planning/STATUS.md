@@ -13,7 +13,7 @@ The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Phase 0 implementation planning and handoff | refactor | In progress | none (local planning draft) | [refactor/phase-zero/](refactor/phase-zero/README.md); authorized 2026-09-18 on `phase-zero-foundation`; P0-A and P0-C complete, P0-D to P0-G implemented on branch; foundation milestone met, P0-B spikes unscheduled |
+| Phase 0 implementation planning and handoff | refactor | In progress | none (local planning draft) | [refactor/phase-zero/](refactor/phase-zero/README.md); authorized 2026-09-18 on `phase-zero-foundation`; P0-A and P0-C complete, P0-D to P0-G implemented on branch; foundation milestone met; P0-B in progress, B1 complete |
 | Zones and adjacency | feature | Scoped, interviewed | none (no remote) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
 | Face assignment | feature | Scoped, interviewed | none (no remote) | [features/face-assignment/](features/face-assignment/README.md) |
 | Validation and export | feature | Requested, PRD drafted | none (no remote) | [features/validation-and-export/](features/validation-and-export/README.md); owns the Phase 1 handoff |
