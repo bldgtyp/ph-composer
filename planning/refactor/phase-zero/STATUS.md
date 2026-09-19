@@ -125,3 +125,4 @@ Model switch and the runtime probe. Two new host facts: `open_file` activation f
 | 2026-09-18 | B2 Complete: filled overlays pass the frozen criteria (1,000 triangles: added p95 8.7 ms, no stall); outline-only fallback not needed |
 | 2026-09-18 | B3 Complete: flat cutting component holds; the cut is rendered, not topological; glue survives splits and explodes stale; `no_scale_mask` is UI-only |
 | 2026-09-18 | B4 Complete: edge dictionaries survive split, weld, move, push-pull, window cut and explode, paste, Undo/Redo and reopen, and copy onto new edges; a registry scan separates the outcomes. P0-B Complete; A01 to A21 met |
+| 2026-09-18 | Ed held the Pyodide 0.24.1 pin. It follows from the Chromium 88 floor assumption (predecessor decisions 10 and 22); SketchUp 2023's engine is unmeasured and no 2023 host is available. Revisit when one is |
