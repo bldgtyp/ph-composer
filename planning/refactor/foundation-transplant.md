@@ -1,7 +1,8 @@
 # Foundation transplant: scope
 
 DATE: 2026-09-18
-STATUS: In progress. Implementation authorized 2026-09-18; executed through the phase-zero packet.
+STATUS: Implemented on branch. Foundation milestone met in P0-G on 2026-09-18
+([evidence](phase-zero/evidence/phase-06-acceptance.md)); executed through the phase-zero packet.
 AUTHOR: Ed May, BLDGTYP, with Codex review
 ISSUE: none (local planning draft)
 

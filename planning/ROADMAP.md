@@ -55,7 +55,7 @@ spikes are work within Phase 0 and still need scheduling.
 | # | Item | Kind | State | Why here |
 | --- | --- | --- | --- | --- |
 | 0.1 | PHX without Excel, [PHX#157](https://github.com/PH-Tools/PHX/issues/157) | external spike | Requested | The founding brief's first technical gate. If PHX cannot run in Pyodide, METr export needs a different route and phase 1 changes |
-| 0.2 | [Foundation transplant](refactor/foundation-transplant.md) | refactor | Scoped, detailed plan prepared | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
+| 0.2 | [Foundation transplant](refactor/foundation-transplant.md) | refactor | Implemented on branch, foundation milestone met 2026-09-18 | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
 | 0.3 | [Units](features/units/README.md) | feature, port | Scoped, Phase 0 split confirmed | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
 | 0.4 | Overlay fill spike | spike | Deferred | Gates Colour-by, which face-assignment needs in phase 1 |
 | 0.5 | Window component host spike | spike | Deferred | Gates window-types. Cheap to run with 0.4 |

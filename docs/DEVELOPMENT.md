@@ -143,7 +143,9 @@ uv run tools/hostkit/host_bridge.py quit
 
 `launch` quits any running SketchUp, opens the Model as the only document and loads the helpers.
 From there `eval`, `state`, `save`, `shot`, `key`, `console` and `quit` cover the fresh-process
-loop. `tools/hostkit/.index.md` lists what each does. The measured host facts the bridge depends
+loop. `tools/hostkit/.index.md` lists what each does. Every `eval` runs in one shared binding, so
+a local variable assigned in one call survives into the next and keeps its object alive. Set such
+locals to nil before checking that a closed Model's session was collected. The measured host facts the bridge depends
 on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
 
 ## The panel

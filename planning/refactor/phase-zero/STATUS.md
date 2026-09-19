@@ -15,8 +15,10 @@ host-verified: the panel as one API client with empty Overview and Export, its U
 preferences and shared Units, with a development-only synthetic editor. P0-F is implemented on
 branch and host-verified: the pinned Pyodide payload and loopback server, the typed translation
 package with C6 ordering, export contributors with the privacy guard, report and artifact pair, the
-empty Export, and the runtime page with its development probe. Next: P0-G, once P0-B is scheduled.
-P0-B needs Ed's spike scheduling. No spike has run.
+empty Export, and the runtime page with its development probe. P0-G ran as the foundation
+milestone at Ed's choice: the offline gate and the fresh-process host gate passed at `0e71b2e`, and
+A01 to A15, A20 and A21 are met. Phase 0 stays open: P0-B needs Ed's spike scheduling, and no spike
+has run.
 
 Open decisions for Ed:
 
@@ -25,7 +27,9 @@ Open decisions for Ed:
 - The six muted "Planned" tabs the UI baseline keeps. They name features in the shell page and are
   hidden below 600 px; the review recommends dropping them until tab registration lands.
 - The Pyodide notice: the repository license file says MPL-2.0 and the release's `package.json`
-  says Apache-2.0. Both are recorded; the licensing gate settles the shipped notice.
+  says Apache-2.0. Both are recorded; the licensing gate settles the shipped notice. The RBZ also
+  lacks the extension's own LICENSE.
+- Where Phase 1 Export hosts Pyodide: its own window, as now, or the panel on the token origin.
 
 | Stage | State | Next action |
 | --- | --- | --- |
@@ -35,7 +39,7 @@ Open decisions for Ed:
 | P0-D records/operations | Implemented on branch | [Evidence](evidence/phase-03-operations.md); A05 to A07 and the A08 action/snapshot portion passed |
 | P0-E panel/units | Implemented on branch | [Evidence](evidence/phase-04-panel-units.md); A10 and the A11 stage portion passed |
 | P0-F runtime/export shell | Implemented on branch | [Evidence](evidence/phase-05-runtime.md); A12 to A14 and the A08 export portion passed; A15 passed with the destination dialog scripted, native step at P0-G |
-| P0-G acceptance | Scoped | Await implementation and investigation dispositions |
+| P0-G acceptance | Implemented on branch | [Evidence](evidence/phase-06-acceptance.md); foundation milestone met (A01 to A15, A20, A21); A16 to A19 await P0-B |
 
 The existing roadmap spike statuses remain authoritative until execution is scheduled. Scoping
 their work here does not turn a deferred spike into an authorized task.
@@ -79,8 +83,16 @@ browser checks pass. One independent high-assurance review reproduced eight find
 all fixed with tests; the host run found one more (a favicon request), fixed. Host runs on 26.1.188
 covered panel-ready time, Export cancel and accept with no file written and no runtime started, the
 runtime probe (cold boot about 1.3 s), teardown, cancel during boot, close and reopen, and a
-tampered install. See [evidence/phase-05-runtime.md](evidence/phase-05-runtime.md). A02, A09, A15's
-native dialog step and A16 through A21 remain pending.
+tampered install. See [evidence/phase-05-runtime.md](evidence/phase-05-runtime.md).
+
+P0-G (2026-09-18), foundation milestone: `make ci` exits 0 on both Rubies at `0e71b2e`, coverage
+and browser checks pass, and the RBZ inventory holds no development or private path. A fresh
+26.1.188 process loaded the candidate without the synthetic feature. Host steps covered the
+panel-closed walkthrough, native Undo/Redo, native Export cancel and accept with nothing written, save and fresh-process reopen, two
+Models, old handles after close and reopen, drafts through a unit switch, a native same-process
+Model switch and the runtime probe. Two new host facts: `open_file` activation fires no
+`onActivateModel`, and the save dialog ignored the Model's folder. See
+[evidence/phase-06-acceptance.md](evidence/phase-06-acceptance.md). A16 to A19 remain open.
 
 ## Ledger
 
@@ -103,3 +115,4 @@ native dialog step and A16 through A21 remain pending.
 | 2026-09-18 | P0-D Implemented on branch, `4c6cd19`..`689e464`. High-assurance review findings fixed; host evidence on 26.1.188 including two new measured host facts (synchronous commit callback, abort reported as Undo) |
 | 2026-09-18 | P0-E Implemented on branch, `fe28acb`..`4206e19`. Table, inventory controls and cell drafts deferred to the first table screen; review and host findings fixed; `session.inactive` added to CONTRACTS |
 | 2026-09-18 | P0-F Implemented on branch, `87d0326`..`f74e16f`. Runtime page kept apart from the panel; `TaskRunner` and the export run's guard, reporter and workflow deferred; export and runtime codes added to CONTRACTS; review and host findings fixed |
+| 2026-09-18 | P0-G Implemented on branch as the foundation milestone (Ed chose it over waiting for P0-B). Gates passed at `0e71b2e`; two host facts added; A16 to A19 open |
