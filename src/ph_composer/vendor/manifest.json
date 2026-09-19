@@ -61,9 +61,9 @@
       "sha256": "9abc3b7332b40c579190ef39e20005c44b68a664dd32587b7d0d38f02ba4a4bf"
     },
     "html/runtime/index.html": {
-      "bytes": 452,
+      "bytes": 580,
       "mime": "text/html; charset=utf-8",
-      "sha256": "995653f266679e42cddac6a08ee37a1908a902238d63fc3ceb8dbc1fcf470092"
+      "sha256": "0d1f14371ea0932c0c1d0c793bed9573858c3d2c5ff0553f6867caf1d798bfd1"
     },
     "html/runtime/runtime.js": {
       "bytes": 6990,
