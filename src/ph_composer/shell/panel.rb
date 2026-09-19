@@ -20,6 +20,10 @@ module PhComposer
     ].freeze
     MAX_PENDING_NOTICES = 20
     SESSION_CHANGED = "The panel now shows a different Model."
+    # Export reads nothing and writes nothing yet, so a failure there leaves the Model as it was.
+    EXPORT_FAILED = Outcome.build(
+      "failed", "operation.failed", "Export could not start. Nothing was written.", "none", nil
+    ).freeze
     # The panel could not tell whether an action ran, so it does not claim the Model is unchanged.
     UNEXPECTED = Outcome.build(
       "failed", "operation.failed",
@@ -132,11 +136,13 @@ module PhComposer
         when "panel.ready" then ready
         when "action.invoke" then invoke(payload)
         when "preferences.set" then set_preference(payload)
+        when "export.start" then export(payload)
         end
       rescue StandardError => error
         Diagnostics.exception("panel_message", error)
         case type
         when "action.invoke" then publish_result(payload, UNEXPECTED)
+        when "export.start" then publish_export(payload, EXPORT_FAILED)
         when "preferences.set"
           publish_preferences(payload, "failed", "The display preference could not be saved.")
         else publish("panel.failure", "message" => "The panel could not complete that request.")
@@ -178,6 +184,23 @@ module PhComposer
         session.refresh.cancel
         publish_snapshot(session)
         publish_result(payload, outcome)
+      end
+
+      # Export acts on the Model the panel shows, like an action, but it is the shell's command: it opens a
+      # native destination dialog, so it never runs inside a Model operation.
+      def export(payload)
+        session = Sessions.current
+        outcome = if session && payload["session"] == session.id
+                    Export::Workflow.start(session)
+                  else
+                    Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
+                  end
+        publish_export(payload, outcome)
+      end
+
+      def publish_export(payload, outcome)
+        publish("export.result", "request_id" => payload["request_id"], "session" => payload["session"],
+                                 "outcome" => outcome)
       end
 
       # A snapshot that cannot be built is logged and skipped; the result that follows still settles the

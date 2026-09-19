@@ -11,3 +11,7 @@
 .live-panel .phc-tabs button:not([aria-pressed="true"]) { background: transparent; }
 /* In the flow under the tab row, zero height: a notice floats over the panes without moving them. */
 .live-panel > .phc-notice-layer { position: relative; flex-shrink: 0; }
+/* The Export pane: one command and the host's answer under it. */
+.live-panel .phc-export-actions { padding: 0 24px; }
+.live-panel .phc-export-status { margin: 0; padding: 12px 24px; color: var(--muted); }
+.live-panel .phc-export-status:empty { display: none; }

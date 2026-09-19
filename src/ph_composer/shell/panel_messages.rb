@@ -11,13 +11,16 @@ module PhComposer
       "panel.ready" => [],
       # `session` names the Model session the panel showed; `expected_revision` the revision it rendered.
       "action.invoke" => %w[request_id session name params expected_revision],
-      "preferences.set" => %w[request_id key value scope system]
+      "preferences.set" => %w[request_id key value scope system],
+      # The Export command for the Model the panel showed. It is the shell's own command, not a Model action.
+      "export.start" => %w[request_id session]
     }.freeze
 
     OUTBOUND = {
       "panel.snapshot" => %w[product version session revision file_name edit_path preferences sections],
       "action.result" => %w[request_id session outcome],
       "preferences.result" => %w[request_id status message preferences],
+      "export.result" => %w[request_id session outcome],
       "panel.notice" => %w[session message tone],
       "panel.failure" => %w[message]
     }.freeze

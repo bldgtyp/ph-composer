@@ -191,3 +191,41 @@ test("the current tab is scrolled into view, so a narrow panel never hides which
   tab.listeners.click({});
   assert.deepStrictEqual(scrolled[scrolled.length - 1], { block: "nearest", inline: "nearest" });
 });
+
+test("Export asks the host for a destination once, then shows the host's answer and allows another", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 4));
+  var pane = function () { return p.query("[data-section='export']"); };
+  var button = function () { return pane().querySelector("button"); };
+
+  button().listeners.click({});
+  button().listeners.click({});
+
+  assert.deepStrictEqual(p.sent, [{ type: "export.start", payload: { request_id: "export:1", session: "session-a" } }]);
+  assert.strictEqual(button().disabled, true);
+  assert.strictEqual(button().textContent, "Choosing destination…");
+
+  p.receive("export.result", { request_id: "export:1", session: "session-b", outcome: { message: "Other Model." } });
+  assert.strictEqual(button().disabled, true, "an answer for another Model is not this request's");
+
+  var message = "No exporter is installed in this build, so nothing was written.";
+  p.receive("export.result", { request_id: "export:1", session: "session-a",
+    outcome: { status: "refused", code: "export.unavailable", message: message } });
+
+  assert.strictEqual(button().disabled, false);
+  assert.strictEqual(pane().querySelector(".phc-export-status").textContent, message);
+  assert.strictEqual(p.notice().hidden, true, "export writes nothing to the Model, so no warning is raised");
+});
+
+test("a new Model clears the Export answer and any pending request", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  var pane = function () { return p.query("[data-section='export']"); };
+  pane().querySelector("button").listeners.click({});
+  p.receive("export.result", { request_id: "export:1", session: "session-a", outcome: { message: "Answered." } });
+  pane().querySelector("button").listeners.click({});
+  p.receive("panel.snapshot", snapshot("session-b", 1));
+
+  assert.strictEqual(pane().querySelector("button").disabled, false);
+  assert.strictEqual(pane().querySelector(".phc-export-status").textContent, "");
+});

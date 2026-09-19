@@ -44,6 +44,14 @@
     if (message.type === "panel.ready") this.snapshot();
     if (message.type === "action.invoke") this.invoke(message.payload);
     if (message.type === "preferences.set") this.setPreference(message.payload);
+    if (message.type === "export.start") this.exportStart(message.payload);
+  };
+
+  /* Like the shipped build: a destination is "accepted" and nothing is written. */
+  Host.prototype.exportStart = function (payload) {
+    this.publish("export.result", { request_id: payload.request_id, session: payload.session,
+      outcome: refused("export.unavailable", "No exporter is installed in this build, so nothing was written.",
+        this.revision) });
   };
 
   Host.prototype.invoke = function (payload) {

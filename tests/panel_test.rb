@@ -257,7 +257,73 @@ class PanelTest < PhComposerTestCase
     assert_equal "SI", PhComposer::Preferences.unit_system
   end
 
+  # ------------------------------------------------------------------ export
+
+  def test_cancelling_the_export_destination_writes_nothing
+    dialog = open_panel
+
+    send_message(dialog, "export.start", "request_id" => "export:1", "session" => @session.id)
+
+    assert_equal ["Export HBJSON", nil, "model.hbjson"], UI.last_savepanel
+    outcome = messages(dialog, "export.result").last.fetch("outcome")
+    assert_equal %w[cancelled export.cancelled none], outcome.values_at("status", "code", "effect")
+    assert_equal "Export cancelled. Nothing was written.", outcome.fetch("message")
+  end
+
+  # Accepting a destination answers that export is unavailable; the chosen file, its neighbours and
+  # the folder are exactly as they were, and no runtime server, timer or dialog started.
+  def test_accepting_a_destination_writes_nothing_and_starts_no_runtime
+    dialog = open_panel
+    Dir.mktmpdir("phc-export-destination") do |directory|
+      destination = File.join(directory, "existing.hbjson")
+      File.write(destination, "prior export")
+      File.write(File.join(directory, "existing-export-report.html"), "prior report")
+      before = destination_contents(directory)
+      timers = UI.timer_count
+      UI.selected_save_path = destination
+
+      PhComposer::AssetServer.stub(:new, ->(*) { flunk "Export started the runtime server" }) do
+        send_message(dialog, "export.start", "request_id" => "export:2", "session" => @session.id)
+      end
+
+      outcome = messages(dialog, "export.result").last
+      assert_equal "export:2", outcome.fetch("request_id")
+      assert_equal %w[refused export.unavailable none],
+                   outcome.fetch("outcome").values_at("status", "code", "effect")
+      assert_equal before, destination_contents(directory)
+      assert_equal timers, UI.timer_count
+    end
+  end
+
+  def test_export_for_a_model_the_panel_no_longer_shows_is_refused_without_a_dialog
+    dialog = open_panel
+
+    send_message(dialog, "export.start", "request_id" => "export:3", "session" => "another-session")
+
+    assert_nil UI.last_savepanel
+    assert_equal "session.inactive", messages(dialog, "export.result").last.dig("outcome", "code")
+  end
+
+  def test_an_export_that_fails_to_start_is_answered_as_a_failure_that_wrote_nothing
+    dialog = open_panel
+    PhComposer::Diagnostics.strict = false
+
+    PhComposer::Export::Workflow.stub(:start, ->(_session) { raise IOError, "dialog failed" }) do
+      send_message(dialog, "export.start", "request_id" => "export:4", "session" => @session.id)
+    end
+
+    outcome = messages(dialog, "export.result").last.fetch("outcome")
+    assert_equal %w[failed operation.failed none], outcome.values_at("status", "code", "effect")
+  end
+
   private
+
+  def destination_contents(directory)
+    Dir.children(directory).sort.to_h do |name|
+      path = File.join(directory, name)
+      [name, [File.binread(path), File.mtime(path)]]
+    end
+  end
 
   def open_panel
     dialog = Panel.show

@@ -24,12 +24,13 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     "action.result": reduceActionResult,
     "preferences.result": reducePreferenceResult,
     "panel.notice": reduceNotice,
-    "panel.failure": reduceFailure
+    "panel.failure": reduceFailure,
+    "export.result": reduceExportResult
   };
 
   function initialState() {
     return { session: null, revision: null, sections: {},
-      ui: { activeTab: "overview", actionResult: null, notice: null, preferencePending: {} } };
+      ui: { activeTab: "overview", actionResult: null, exportResult: null, notice: null, preferencePending: {} } };
   }
 
   function copy(object) {
@@ -51,6 +52,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     next.ui = copy(previous.ui);
     if (previous.session !== next.session) {
       next.ui.actionResult = null;
+      next.ui.exportResult = null;
       next.ui.notice = null;
     }
     preferences.replace(next.preferences, next.ui.preferencePending);
@@ -68,6 +70,12 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
         tone: outcome.status === "failed" ? "error" : "warning" };
     }
     return withUI(previous, changes);
+  }
+
+  /* The Export pane reads it; Export writes nothing to the Model, so no notice is raised. */
+  function reduceExportResult(previous, payload) {
+    if (payload.session !== previous.session) return previous;
+    return withUI(previous, { exportResult: payload });
   }
 
   function reducePreferenceResult(previous, payload) {
