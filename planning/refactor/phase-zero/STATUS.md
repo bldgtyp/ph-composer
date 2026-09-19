@@ -1,7 +1,7 @@
 # Phase 0 status
 
 DATE: 2026-09-18
-STATUS: In progress
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft; origin exists, issue not created)
 
@@ -17,8 +17,9 @@ branch and host-verified: the pinned Pyodide payload and loopback server, the ty
 package with C6 ordering, export contributors with the privacy guard, report and artifact pair, the
 empty Export, and the runtime page with its development probe. P0-G ran as the foundation
 milestone at Ed's choice: the offline gate and the fresh-process host gate passed at `0e71b2e`, and
-A01 to A15, A20 and A21 are met. Phase 0 stays open: P0-B needs Ed's spike scheduling, and no spike
-has run.
+A01 to A15, A20 and A21 are met. Ed then authorized P0-B, and all four investigations ran the same
+day; A16 to A19 are met, so every acceptance row is met. Phase 0 is implemented on branch and not
+merged. Phase 1 has not started.
 
 Open decisions for Ed:
 
@@ -30,16 +31,20 @@ Open decisions for Ed:
   says Apache-2.0. Both are recorded; the licensing gate settles the shipped notice. The RBZ also
   lacks the extension's own LICENSE.
 - Where Phase 1 Export hosts Pyodide: its own window, as now, or the panel on the token origin.
+- The honeybee-ph pin moves from the predecessor's 1.33.48 to 1.33.65, the lowest version PHX
+  1.57.1 accepts (B1).
+- Whether to comment on PHX#157 with B1's result: the METr path needs none of `xlwings`,
+  `pydantic`, `rich` or `lxml`.
 
 | Stage | State | Next action |
 | --- | --- | --- |
 | P0-A handoff check | Complete | [Evidence](evidence/phase-00-handoff.md); A01 inventory portion satisfied |
-| P0-B investigations | In progress | Ed authorized P0-B 2026-09-18. B1 complete: [spike-phx](evidence/spike-phx.md). B2 complete: [spike-overlay](evidence/spike-overlay.md). B3 complete: [spike-window](evidence/spike-window.md). B4 next |
-| P0-C tooling/bootstrap | Complete | [Evidence](evidence/phase-02-bootstrap.md); A03/A04 provisional until P0-G |
+| P0-B investigations | Complete | Ed authorized 2026-09-18. [B1 PHX](evidence/spike-phx.md), [B2 overlay](evidence/spike-overlay.md), [B3 window](evidence/spike-window.md), [B4 edge](evidence/spike-edge.md); dispositions in the owning packets |
+| P0-C tooling/bootstrap | Complete | [Evidence](evidence/phase-02-bootstrap.md); A03/A04 confirmed at P0-G |
 | P0-D records/operations | Implemented on branch | [Evidence](evidence/phase-03-operations.md); A05 to A07 and the A08 action/snapshot portion passed |
 | P0-E panel/units | Implemented on branch | [Evidence](evidence/phase-04-panel-units.md); A10 and the A11 stage portion passed |
 | P0-F runtime/export shell | Implemented on branch | [Evidence](evidence/phase-05-runtime.md); A12 to A14 and the A08 export portion passed; A15 passed with the destination dialog scripted, native step at P0-G |
-| P0-G acceptance | Implemented on branch | [Evidence](evidence/phase-06-acceptance.md); foundation milestone met (A01 to A15, A20, A21); A16 to A19 await P0-B |
+| P0-G acceptance | Implemented on branch | [Evidence](evidence/phase-06-acceptance.md); foundation milestone met; with P0-B, A01 to A21 met |
 
 The existing roadmap spike statuses remain authoritative until execution is scheduled. Scoping
 their work here does not turn a deferred spike into an authorized task.
@@ -119,3 +124,4 @@ Model switch and the runtime probe. Two new host facts: `open_file` activation f
 | 2026-09-18 | Ed authorized P0-B. B1 Complete: PHX 1.57.1 in Pyodide 0.24.1 matches native byte for byte; route viable without dependency resolution, honeybee-ph pin to 1.33.65, Spaces question for Export |
 | 2026-09-18 | B2 Complete: filled overlays pass the frozen criteria (1,000 triangles: added p95 8.7 ms, no stall); outline-only fallback not needed |
 | 2026-09-18 | B3 Complete: flat cutting component holds; the cut is rendered, not topological; glue survives splits and explodes stale; `no_scale_mask` is UI-only |
+| 2026-09-18 | B4 Complete: edge dictionaries survive split, weld, move, push-pull, window cut and explode, paste, Undo/Redo and reopen, and copy onto new edges; a registry scan separates the outcomes. P0-B Complete; A01 to A21 met |

@@ -12,12 +12,12 @@ honeybee-ph's `PhThermalBridge` and PHX's METr writer. Not interviewed.
 
 ## Next step
 
-Interview. Then the edge identity spike, which also gates piping and ducting.
+Interview. The edge identity spike ran in P0-B on 2026-09-18 ([B4](../../refactor/phase-zero/evidence/spike-edge.md)). Edge dictionaries survive
+every tested operation, Undo and reopen, but copy themselves onto new edges. The plan carries the
+four terms in its disposition.
 
 ## Blockers
 
-- Edge identity spike: whether an assignment stored on a SketchUp edge survives split, join,
-  move, a window cutting the face, Undo, and save and reopen. Not started.
 - The foundation transplant and the Colour-by component from face-assignment.
 - No GitHub remote, so no issue yet.
 

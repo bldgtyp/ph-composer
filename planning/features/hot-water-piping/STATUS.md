@@ -17,7 +17,7 @@ Interview. Q1, how the trunk, branch and fixture tree is authored, decides most 
 
 ## Blockers
 
-- The edge identity spike in the thermal-bridges packet.
+- None from the edge identity spike: it passed on 2026-09-18 ([B4](../../refactor/phase-zero/evidence/spike-edge.md)); its terms apply to this plan.
 - The Hot Water System record, which the equipment packet owns.
 - The foundation transplant.
 - No GitHub remote, so no issue yet.

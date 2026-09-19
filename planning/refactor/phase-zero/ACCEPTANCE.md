@@ -1,7 +1,7 @@
 # Phase 0 acceptance register
 
 DATE: 2026-09-18
-STATUS: In progress. Foundation milestone met in P0-G (A01 to A15, A20, A21); A16 to A18 passed (B1 to B3); A19 awaits P0-B.
+STATUS: Complete on branch. Foundation milestone met in P0-G (A01 to A15, A20, A21); A16 to A19 passed in P0-B.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
@@ -29,9 +29,9 @@ without a linked result. No code or host gate was run during planning.
 | A16 | PHX/Pyodide report, payload/license assessment and route disposition. Passed: PHX 1.57.1 converts in Pyodide 0.24.1 under Chromium 88, byte-identical to native; route viable with conditions: [B1](evidence/spike-phx.md) | P0-B |
 | A17 | Overlay report including transparent fill, depth, interaction and measured cost. Passed on 26.1.188: [B2](evidence/spike-overlay.md) | P0-B |
 | A18 | Window report including host gross/net area/loops, cutting/splitting/explode and native lifecycle. Passed on 26.1.188: [B3](evidence/spike-window.md) | P0-B |
-| A19 | Edge report including dictionary values, logical references, topology and native lifecycle. No result; P0-B not scheduled | P0-B |
+| A19 | Edge report including dictionary values, logical references, topology and native lifecycle. Passed on 26.1.188: [B4](evidence/spike-edge.md) | P0-B |
 | A20 | Required coverage, available complexity results, architecture review and resolved findings. Passed: coverage and metrics at `0e71b2e`, slice reviews P0-C to P0-F with findings resolved: [P0-G](evidence/phase-06-acceptance.md) | P0-G |
-| A21 | DEVELOPMENT, public contract examples, packet status and downstream spike dispositions agree. Passed for the foundation; spike dispositions pending with A16 to A19: [P0-G](evidence/phase-06-acceptance.md) | P0-G |
+| A21 | DEVELOPMENT, public contract examples, packet status and downstream spike dispositions agree. Passed; spike dispositions recorded in the owning packets by P0-B: [P0-G](evidence/phase-06-acceptance.md) | P0-G |
 
 ## Evidence format
 

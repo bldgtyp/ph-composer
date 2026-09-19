@@ -49,8 +49,9 @@ is the complete MVP Ed described. Ed confirmed both boundaries in D1 on 2026-09-
 
 The [Phase 0 planning packet](refactor/phase-zero/README.md) supplies seven stage plans, contract
 designs, frozen source disposition and acceptance checks. Product decisions are resolved.
-Ed authorized implementation on 2026-09-18; progress is tracked in the packet's STATUS. The four
-spikes are work within Phase 0 and still need scheduling.
+Ed authorized implementation on 2026-09-18; progress is tracked in the packet's STATUS. All seven
+stages and the four spikes ran on 2026-09-18, and every acceptance row is met on branch
+`phase-zero-foundation`, not yet merged.
 
 | # | Item | Kind | State | Why here |
 | --- | --- | --- | --- | --- |
@@ -59,7 +60,7 @@ spikes are work within Phase 0 and still need scheduling.
 | 0.3 | [Units](features/units/README.md) | feature, port | Scoped, Phase 0 split confirmed | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
 | 0.4 | Overlay fill spike | spike | Complete 2026-09-18, [pass](refactor/phase-zero/evidence/spike-overlay.md) | Gates Colour-by, which face-assignment needs in phase 1 |
 | 0.5 | Window component host spike | spike | Complete 2026-09-18, [flat component holds, five plan consequences](refactor/phase-zero/evidence/spike-window.md) | Gates window-types. Cheap to run with 0.4 |
-| 0.6 | Edge identity spike | spike | Requested | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
+| 0.6 | Edge identity spike | spike | Complete 2026-09-18, [dictionaries survive, and multiply](refactor/phase-zero/evidence/spike-edge.md) | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
 | 0.7 | Development repository home and MVP license boundary | decisions | Confirmed | D5 keeps the UI kit AGPL and external integrations at file/HTTPS seams. D8 keeps development at `bldgtyp/ph-composer`; the public name and any future organization move remain open |
 
 The three host spikes are one session against the predecessor's bridge. They need no

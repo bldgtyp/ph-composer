@@ -2,7 +2,8 @@
 
 DATE: 2026-09-18
 STATUS: Implemented on branch and host-verified on SketchUp 26.1.188 as the foundation milestone. Ed
-chose to run P0-G before P0-B, so A16 to A19 have no result and Phase 0 cannot close here.
+chose to run P0-G before P0-B. P0-B then ran the same day, and A16 to A19 passed (see "Spike
+outcomes"), so every row A01 to A21 is met.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; origin exists, issue not created)
 
@@ -161,22 +162,27 @@ here.
 | A13 | Passed | [P0-F](phase-05-runtime.md) |
 | A14 | Passed | [P0-F](phase-05-runtime.md) |
 | A15 | Passed | Host steps 5 and 11, native dialog |
-| A16 | No result | P0-B B1 not scheduled |
-| A17 | No result | P0-B B2 not scheduled |
-| A18 | No result | P0-B B3 not scheduled |
-| A19 | No result | P0-B B4 not scheduled |
+| A16 | Passed in P0-B | [B1](spike-phx.md) |
+| A17 | Passed in P0-B | [B2](spike-overlay.md) |
+| A18 | Passed in P0-B | [B3](spike-window.md) |
+| A19 | Passed in P0-B | [B4](spike-edge.md) |
 | A20 | Passed | Coverage and metrics above; five slice reviews (P0-C to P0-F), every finding resolved; no new code in P0-G |
-| A21 | Passed for the foundation | DEVELOPMENT, the example README and CONTRACTS match the code at `0e71b2e`; spike dispositions pending with A16 to A19 |
+| A21 | Passed | DEVELOPMENT, the example README and CONTRACTS match the code at `0e71b2e`; P0-B recorded each spike's disposition in its owning packet |
 
-The foundation milestone (A01 to A15, A20, A21) is met. Roadmap Phase 0 stays open until A16 to
-A19 have results and dispositions.
+The foundation milestone (A01 to A15, A20, A21) was met at P0-G. With P0-B, A16 to A19 are met too.
 
 ## Spike outcomes
 
-None of B1 to B4 has run. Their owning packets are unchanged: the PHX route (validation and export),
-overlay fill (face assignment's Colour-by, Spaces' volume preview), window component (window types)
-and edge identity (thermal bridges, ducting, piping) keep the assumptions their plans state. No
-fallback has been triggered.
+P0-B ran after this gate, on 2026-09-18. Each result is recorded in its owning packet:
+
+| Spike | Result | Owning packets |
+| --- | --- | --- |
+| [B1 PHX in Pyodide](spike-phx.md) | Route viable. PHX 1.57.1 matches native byte for byte in Pyodide 0.24.1. Nine wheels (2.04 MB) installed without dependency resolution while PHX#157 is open; honeybee-ph pin to 1.33.65 | Validation and export: also decide how a model without Spaces supplies METr floor area |
+| [B2 overlay fill](spike-overlay.md) | Pass. 1,000 triangles add 8.7 ms p95 (limit 16) and no stall; occlusion and picking correct | Face assignment (Colour-by filled modes), Spaces (volume preview) |
+| [B3 window component](spike-window.md) | The flat cutting component holds, with five plan consequences: panes face out, net area from outlines, glue verified geometrically, `no_scale_mask` is UI-only, type edits re-validate | Window types |
+| [B4 edge identity](spike-edge.md) | Dictionaries survive every tested operation and copy onto new edges; a registry scan separates the outcomes | Thermal bridges, ERV ducting, hot water piping |
+
+No fallback was triggered. The PHX route holds, so Phase 1's success boundary is unchanged.
 
 ## Phase 1 handoff
 

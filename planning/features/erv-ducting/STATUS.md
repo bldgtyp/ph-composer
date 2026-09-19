@@ -18,7 +18,7 @@ Interview, after hot-water-piping, since most draw and assign answers carry over
 ## Blockers
 
 - The Ventilator record in the equipment packet. A duct run with no Ventilator cannot export.
-- The edge identity spike in the thermal-bridges packet.
+- None from the edge identity spike: it passed on 2026-09-18 ([B4](../../refactor/phase-zero/evidence/spike-edge.md)); its terms apply to this plan.
 - The foundation transplant.
 - No GitHub remote, so no issue yet.
 
