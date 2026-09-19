@@ -118,6 +118,27 @@ class ArtifactPairTest < PhComposerTestCase
     end
   end
 
+  # Process loss between staging the committed journal and renaming it leaves the prepared journal and
+  # the new stage file. The next run rolls back from the journal and must also clear that stage.
+  def test_next_commit_recovers_a_process_lost_while_marking_the_journal_committed
+    Dir.mktmpdir("phc-export-pair") do |directory|
+      hbjson = File.join(directory, "model.hbjson")
+      report = Pair.report_path(hbjson)
+      File.write(hbjson, model("old"))
+      File.write(report, report_html("old"))
+      fault = proc { |point| raise Crash, "simulated process loss" if point == :after_committed_journal_stage }
+
+      assert_raises(Crash) do
+        Pair::Transaction.new(hbjson, :run_id => "crash", :fault => fault).commit(model("new"), report_html("crash"))
+      end
+      Pair::Transaction.new(hbjson, :run_id => "next").commit(model("next"), report_html("next"))
+
+      assert_equal model("next"), File.read(hbjson)
+      assert_equal report_html("next"), File.read(report)
+      assert_empty owned_files(directory)
+    end
+  end
+
   def test_cleanup_interruption_keeps_the_verified_new_pair
     Dir.mktmpdir("phc-export-pair") do |directory|
       hbjson = File.join(directory, "model.hbjson")

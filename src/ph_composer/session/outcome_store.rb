@@ -36,10 +36,17 @@ module PhComposer
       )
     end
 
+    # Keeps its own copy, so nothing a caller does to the returned outcome reaches a later retry.
     def finish(caller, sequence, outcome)
       entry = @entries[[caller, sequence]]
-      entry.outcome = outcome if entry
+      entry.outcome = DeepCopy.call(outcome) if entry
       outcome
+    end
+
+    # A copy of the retained outcome for `caller` and `sequence`, or nil.
+    def retained(caller, sequence)
+      outcome = lookup(caller, sequence)&.outcome
+      outcome && DeepCopy.call(outcome)
     end
 
     def count

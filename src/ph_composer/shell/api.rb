@@ -22,10 +22,11 @@ module PhComposer
     module_function
 
     # Versions, open Model sessions and everything registered, by name. Full schemas come from
-    # `describe`, so discovery stays small however many operations are installed.
+    # `describe`, so discovery stays small however many operations are installed. Like `describe`,
+    # it answers with a copy: a caller that edits what it was given changes nothing registered.
     def discover
       registry = Registry.current
-      {
+      DeepCopy.call(
         "api" => { "major" => MAJOR, "minor" => MINOR },
         "extension" => { "id" => EXTENSION_ID, "version" => VERSION },
         "contract_versions" => [Declarations::CONTRACT_VERSION],
@@ -46,24 +47,25 @@ module PhComposer
             "schema_version" => extension.schema_version, "export_relevance" => extension.export_relevance }
         end,
         "snapshot_sections" => registry.snapshot_sections.values.map { |section| section.name }
-      }
+      )
     end
 
     # The full declaration of one registered query, action or record kind, or nil when none has the name.
+    # The schemas are copies; validation keeps its own.
     def describe(name:)
       registry = Registry.current
       if (operation = registry.queries[name] || registry.actions[name])
-        return operation_description(operation)
+        return DeepCopy.call(operation_description(operation))
       end
 
       kind = registry.record_kinds[name]
-      kind && {
+      kind && DeepCopy.call(
         "kind" => "record_kind", "id" => kind.id, "owner" => registry.owner_of(kind.id), "label" => kind.label,
         "schema_version" => kind.schema_version, "values" => kind.values_schema,
         "references" => kind.references.map do |reference|
           { "key" => reference.key, "target_kind" => reference.target_kind, "cardinality" => reference.cardinality }
         end
-      }
+      )
     end
 
     # Issues a caller handle for an open Model session and returns the context to call with. This is

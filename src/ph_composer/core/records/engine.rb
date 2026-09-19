@@ -219,6 +219,7 @@ module PhComposer
           extension = @catalog.extension(namespace)
           status = Extension.status(envelope, extension)
           next if status == "understood" && extension.copy == :remap
+          refuse_extension!(namespace, record["id"], status) if status == "invalid"
 
           raise CodedError.new(
             "copy.rule_missing",
@@ -232,7 +233,8 @@ module PhComposer
         extension = @catalog.extension(namespace)
         current = record.dig("extension_data", namespace)
         status = current && Extension.status(current, extension)
-        writable = extension && [nil, "understood"].include?(status)
+        # Replacing an invalid payload with a valid one depends on nothing stored, so it repairs it.
+        writable = extension && [nil, "understood", "invalid"].include?(status)
         refuse_extension!(namespace, record["id"], status || "unavailable") unless writable
         problems = extension.problems(payload)
         unless problems.empty?
@@ -268,6 +270,11 @@ module PhComposer
         if status == "unavailable"
           raise CodedError.new("extension.unavailable", "#{namespace} is not installed, so its data on #{id} " \
                                                         "cannot be changed.", "namespace" => namespace)
+        end
+        if status == "invalid"
+          message = "#{namespace} data on #{id} does not meet the installed extension's contract, so it cannot " \
+                    "be copied or migrated. Replace it with valid data first."
+          raise CodedError.new("extension.invalid", message, "namespace" => namespace, "status" => status)
         end
 
         message = "#{namespace} data on #{id} uses a version the installed extension cannot read."

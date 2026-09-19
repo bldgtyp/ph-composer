@@ -249,6 +249,53 @@ class RecordsEngineTest < PhComposerTestCase
     assert_equal "unsupported", view.fetch("test.fixture.review.unreadable")
   end
 
+  # A readable envelope at the installed version is understood only when its payload passes the
+  # installed validator and it declares the installed references (CONTRACTS.md C5).
+  def test_current_extension_data_failing_its_payload_or_reference_contract_is_invalid
+    target = seed_part
+    bad_payload = seed_part("extension_data" => { "test.fixture.review" => REVIEW.envelope("review_status" => "lost") })
+    bad_references = seed_part("extension_data" => { "test.fixture.review" => review_without_references(target) })
+
+    statuses = [bad_payload, bad_references].map do |id|
+      @engine.view("test.fixture.part", @engine.find("test.fixture.part", id)).dig("extension_status",
+                                                                                "test.fixture.review")
+    end
+
+    assert_equal %w[invalid invalid], statuses
+  end
+
+  def test_invalid_extension_data_survives_unrelated_edits_and_refuses_dependent_operations
+    target = seed_part
+    invalid = review_without_references(target)
+    part = seed_part("extension_data" => { "test.fixture.review" => invalid })
+
+    edit = PhComposer::Records::ChangeSet.new
+    @engine.propose_update("test.fixture.part", part, edit, :values => { "length_mm" => 900.0 })
+    @engine.apply(edit)
+    copy_error = assert_raises(PhComposer::CodedError) do
+      @engine.propose_duplicate("test.fixture.part", [part, target], PhComposer::Records::ChangeSet.new)
+    end
+    migration_error = assert_raises(PhComposer::CodedError) do
+      @engine.propose_migration("test.fixture.part", [part], "test.fixture.review", PhComposer::Records::ChangeSet.new)
+    end
+
+    assert_equal invalid, @engine.find("test.fixture.part", part).dig("extension_data", "test.fixture.review")
+    assert_equal %w[extension.invalid extension.invalid], [copy_error.code, migration_error.code]
+  end
+
+  # Replacing the whole payload with a valid one does not depend on the invalid data, so it repairs it.
+  def test_a_valid_payload_replaces_invalid_extension_data
+    part = seed_part("extension_data" => { "test.fixture.review" => REVIEW.envelope("review_status" => "lost") })
+    changes = PhComposer::Records::ChangeSet.new
+
+    @engine.propose_update("test.fixture.part", part, changes,
+                           :extension_payloads => { "test.fixture.review" => { "review_status" => "checked" } })
+    @engine.apply(changes)
+
+    stored = @engine.find("test.fixture.part", part)
+    assert_equal "understood", @engine.view("test.fixture.part", stored).dig("extension_status", "test.fixture.review")
+  end
+
   def test_a_stored_record_that_fails_its_schema_is_unreadable_not_repaired
     store_record(@model, DEFINITION, "id" => "tdf_AAAAAAAAAAAA", "schema_version" => 1)
 
@@ -269,6 +316,11 @@ class RecordsEngineTest < PhComposerTestCase
   end
 
   private
+
+  # A current-version review whose stored references omit the installed `checked_against` declaration.
+  def review_without_references(target)
+    REVIEW.envelope("review_status" => "draft", "checked_against" => target).merge("references" => [])
+  end
 
   def version_one(status)
     { "schema_version" => 1, "payload" => { "status" => status } }

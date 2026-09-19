@@ -106,7 +106,8 @@ module PhComposer
       return nil if cursor.nil?
 
       decoded = JSON.parse(cursor.unpack1("m0"))
-      raise ArgumentError, "not a cursor" unless decoded.is_a?(Hash) && decoded.key?("after")
+      # Record ids are strings; a cursor this query issued always names one.
+      raise ArgumentError, "not a cursor" unless decoded.is_a?(Hash) && decoded["after"].is_a?(String)
       unless decoded["revision"] == revision
         raise CodedError.new("query.cursor_expired", "The Model changed since this page was read; start again " \
                                                      "from the first page.")

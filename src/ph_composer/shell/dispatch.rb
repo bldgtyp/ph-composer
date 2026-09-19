@@ -24,6 +24,8 @@ module PhComposer
       Outcome.completed(:revision => session.revision, :value => value)
     rescue CodedError => error
       coded_outcome(error, session)
+    rescue StandardError => error
+      unexpected_outcome(error, session, name)
     end
 
     # What an operation would change, without changing anything. The result is bound to the revision
@@ -39,6 +41,8 @@ module PhComposer
                         :message => "Preview only.")
     rescue CodedError => error
       coded_outcome(error, session)
+    rescue StandardError => error
+      unexpected_outcome(error, session, name)
     end
 
     def invoke(context, name, params, request)
@@ -64,7 +68,7 @@ module PhComposer
 
       entry = session.outcomes.lookup(caller.handle, sequence)
       return pending(session) if entry&.pending?
-      return entry.outcome if entry
+      return session.outcomes.retained(caller.handle, sequence) if entry
 
       raise CodedError.new("request.outcome_unavailable", "No retained outcome for sequence #{sequence}; " \
                                                           "inspect the Model before issuing new work.")
@@ -122,7 +126,8 @@ module PhComposer
       entry = session.outcomes.lookup(caller.handle, sequence)
       if entry
         return pending(session) if entry.pending?
-        return entry.outcome if entry.digest == request_digest(name, params, expected_revision)
+        same_request = entry.digest == request_digest(name, params, expected_revision)
+        return session.outcomes.retained(caller.handle, sequence) if same_request
 
         raise CodedError.new("request.sequence_conflict", "Sequence #{sequence} was already used for a different " \
                                                           "request.")
@@ -223,6 +228,15 @@ module PhComposer
       engine.unchanged?(changes)
     rescue StandardError
       false
+    end
+
+    # A read that failed unexpectedly (a handler bug, a result outside its schema) answers every client
+    # with the same failed outcome; the error goes to the log. Reads open no operation, so nothing changed.
+    def unexpected_outcome(error, session, name)
+      Diagnostics.log("operation_failed", "operation" => name, "code" => "operation.failed",
+                                          "error_class" => error.class.name)
+      Outcome.refused("operation.failed", "The request could not be answered.", :status => "failed",
+                                                                                 :revision => session&.revision)
     end
 
     def coded_outcome(error, session, mutation: false)

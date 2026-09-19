@@ -84,7 +84,10 @@ lossless round trips through formats that cannot preserve it.
 
 Maintained extensions can register structured extension data with a namespace, schema version,
 validator and migrations. Preserve payloads belonging to unavailable extensions during ordinary
-edits and save/reopen. Preserved data is not necessarily understood or validated. Report the
+edits and save/reopen. Preserved data is not necessarily understood or validated: even at the
+installed version, an envelope is understood only when its payload passes the installed validator
+and it declares the installed references. Otherwise it is invalid, kept as stored for unrelated
+edits and refused for copy, migration and export until valid data replaces it. Report the
 missing capability explicitly when it affects export correctness. An unsupported schema must
 not be silently rewritten or dropped.
 

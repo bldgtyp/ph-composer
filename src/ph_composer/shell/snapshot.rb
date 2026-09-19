@@ -16,14 +16,10 @@ module PhComposer
       { "session" => context.session_id, "revision" => session&.revision, "sections" => sections }
     end
 
-    # A section whose query raises (a handler bug, a value that misses its declared result schema) reports
-    # a failed outcome of its own; the error goes to the log.
+    # A section whose query fails (a handler bug, a value that misses its declared result schema) reports
+    # the failed outcome the dispatcher gives every client; the error goes to the log there.
     def section_outcome(context, section)
       API.query(:context => context, :name => section.query, :params => section.params)
-    rescue StandardError => error
-      Diagnostics.exception("snapshot_section", error)
-      Outcome.build("failed", "operation.failed", "This section could not be read.", "none",
-                    Sessions.find(context.session_id)&.revision)
     end
   end
 end

@@ -64,7 +64,9 @@ module PhComposer
       def declared_payload(id, namespace, envelope, fields)
         status = Records::Extension.status(envelope, @catalog.extension(namespace))
         unless status == "understood"
-          block(status == "unavailable" ? "extension.unavailable" : "extension.schema_unsupported",
+          code = { "unavailable" => "extension.unavailable", "invalid" => "extension.invalid" }
+                 .fetch(status, "extension.schema_unsupported")
+          block(code,
                 "#{namespace} data on #{id} is #{status}, so it cannot be exported. Nothing was written.")
         end
         DeepCopy.call(envelope.fetch("payload").slice(*fields))

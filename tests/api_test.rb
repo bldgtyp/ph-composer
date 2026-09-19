@@ -90,6 +90,50 @@ class ApiTest < PhComposerTestCase
     assert_equal [%w[tpt_BROKENBROKEN record.unreadable]], unreadable
   end
 
+  # A script that adapts a discovered schema must not change what the next write accepts.
+  def test_discovery_and_descriptions_are_detached_from_what_validation_uses
+    part = create_parts(1).dig("value", "part_ids", 0)
+    described = API.describe(:name => PART)
+    described.dig("values", "properties", "length_mm")["exclusiveMinimum"] = -1000
+    described.dig("values", "required") << "extra"
+    API.describe(:name => "test.fixture.update_parts").fetch("params")["properties"].clear
+    API.discover.fetch("features").first.fetch("requires") << "mutated"
+
+    refused = invoke("test.fixture.update_parts", edit(part, -5.0), 2)
+
+    assert_equal %w[refused validation.failed], refused.values_at("status", "code")
+    assert_equal 0, API.describe(:name => PART).dig("values", "properties", "length_mm", "exclusiveMinimum")
+    refute_includes API.describe(:name => PART).dig("values", "required"), "extra"
+    refute_empty API.describe(:name => "test.fixture.update_parts").dig("params", "properties")
+    refute_includes API.discover.fetch("features").first.fetch("requires"), "mutated"
+  end
+
+  def test_a_malformed_cursor_is_refused_as_an_outcome
+    create_parts(2)
+    forged = [JSON.generate("revision" => @session.revision, "after" => 7)].pack("m0")
+
+    [forged, [JSON.generate("revision" => @session.revision)].pack("m0"), "not base64 json"].each do |cursor|
+      refused = records(:cursor => cursor)
+      assert_equal %w[refused params.invalid], refused.values_at("status", "code"), cursor
+    end
+  end
+
+  # Scripts get the same failure envelope the panel's snapshot relies on, with nothing written.
+  def test_an_unexpected_query_or_preview_failure_is_a_failed_outcome
+    PhComposer::Registry.current.queries.fetch("test.fixture.total_length").result = { "type" => "array" }
+    PhComposer::Registry.current.actions.fetch("test.fixture.create").result = { "type" => "array" }
+    operations = @model.operations.length
+
+    failed_query = API.query(:context => @context, :name => "test.fixture.total_length")
+    failed_preview = API.preview(:context => @context, :name => "test.fixture.create",
+                                 :params => { "parts" => [part_values] })
+
+    [failed_query, failed_preview].each do |outcome|
+      assert_equal %w[failed operation.failed none], outcome.values_at("status", "code", "effect")
+    end
+    assert_equal operations, @model.operations.length
+  end
+
   # ------------------------------------------------------------------ refusals and staleness
 
   def test_a_second_caller_with_an_old_revision_is_refused_without_writing
@@ -243,6 +287,23 @@ class ApiTest < PhComposerTestCase
     assert_equal %w[refused extension.migration_failed none], result.values_at("status", "code", "effect")
     assert_equal operations, @model.operations.length
     assert_equal 1, stored(parts.first).dig("extension_data", "test.fixture.review", "schema_version")
+  end
+
+  # CONTRACTS.md C4: a retry returns the original outcome, whatever a caller did to its copy.
+  def test_a_retained_outcome_is_isolated_from_every_returned_copy
+    created = create_parts(2, 1, 1)
+    part_ids = created.dig("value", "part_ids").dup
+    created.dig("value", "part_ids").clear
+    created["status"] = "refused"
+
+    retried = create_parts(2, 1, 1)
+    retried.dig("value", "part_ids").clear
+    retried["effect"] = "none"
+    looked_up = API.outcome(:context => @context, :request => { "sequence" => 1 })
+
+    assert_equal part_ids, looked_up.dig("value", "part_ids")
+    assert_equal %w[completed committed], looked_up.values_at("status", "effect")
+    assert_equal part_ids, create_parts(2, 1, 1).dig("value", "part_ids")
   end
 
   def test_a_retained_outcome_is_retrievable_by_sequence

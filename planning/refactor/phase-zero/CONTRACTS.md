@@ -63,8 +63,12 @@ adapter must establish authenticated grants before it can construct an authorize
 Queries return current revision, values, field units and capability findings. A records query
 supports kind/id filters, field projection, stable id ordering and revision-bound pagination.
 Default page size 100, maximum 500. Reject invalid limits; never silently return the whole model.
-An expired revision invalidates the cursor. Discovery lists schemas by id; full schemas are
-retrieved explicitly rather than embedding every record or geometry payload.
+An expired revision invalidates the cursor; a cursor this query did not issue is refused as
+`params.invalid`. Discovery lists schemas by id; full schemas are
+retrieved explicitly rather than embedding every record or geometry payload. Discovery and
+descriptions are detached copies: a caller that edits what it received changes nothing that
+validation uses. A query or preview that fails unexpectedly (a handler error, a result outside its
+declared schema) answers every client with a `failed` outcome, code `operation.failed`, effect `none`.
 
 Mutations require explicit targets, expected model revision, expected active occurrence path
 where geometry matters, and any feature-specific expected values. No selection-based fallback.
@@ -100,7 +104,7 @@ failed or could not run. Codes are stable `noun.condition` strings, following TE
 | Session and host | `session.unknown` (closed, reopened or never issued), `session.busy` (modal tool, transition, unsettled work; reason in detail), `session.inactive` (the panel client only: the request names a Model the panel no longer shows) |
 | Preconditions | `revision.stale`, `edit_path.stale`, `target.not_found`, `target.changed`, `record.unreadable` |
 | Validation | `params.invalid`, `validation.failed` (findings attached), `reference.invalid` |
-| Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_required`, `extension.migration_failed`, `copy.rule_missing` |
+| Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_required`, `extension.migration_failed`, `extension.invalid` (current version, fails the installed payload or reference contract), `copy.rule_missing` |
 | Query | `query.limit_invalid`, `query.cursor_expired` |
 | Operation | `operation.failed`, `operation.rollback_unverified` |
 | Registration (diagnostics) | `registration.duplicate_id`, `registration.missing_dependency`, `registration.cycle`, `registration.contract_major`, `registration.schema_invalid` |
@@ -146,7 +150,9 @@ Clients serialize their own mutations; two clients have separate handles.
 
 Remember each caller's highest accepted sequence until the session ends. Retain up to 256 recent
 outcomes for 15 minutes, bound to the canonical request payload. Same sequence and same payload
-returns the retained outcome without another transaction. Same sequence with different payload
+returns the retained outcome without another transaction. The store keeps its own copy and every
+read returns a detached one, so a caller that edits a returned outcome cannot change what a later
+retry or `outcome` lookup returns. Same sequence with different payload
 is refused. An older sequence whose result expired is refused as `request.outcome_unavailable`; it is
 never treated as a new request. A running request returns pending, not a second execution.
 
@@ -181,7 +187,7 @@ boundary. An absent legacy mapping reads as empty without repairing the stored r
 | Duplicate object | New UUID; external shared definitions retained | Independent metadata copy, no inferred references |
 | Duplicate collection | Allocate all new UUIDs first; remap declared internal references | Apply registered copy rules; unknown required rules refuse the whole copy |
 | Save/reopen | Preserve durable UUIDs and path-qualified reference meaning | Retain unavailable/newer payloads without normalization or migration |
-| Read/query | No repair, allocation or mutation | Return understood/unsupported/unavailable status separately |
+| Read/query | No repair, allocation or mutation | Return understood/invalid/outdated/unsupported/unavailable status separately |
 | Migrate | Explicit version path, validate proposed result before write | One atomic operation; failure keeps original data |
 | Export | Include only declared supported fields and references | No arbitrary metadata admission; correctness-relevant unknown payload blocks |
 
@@ -189,6 +195,10 @@ Use a proposed record-level `extension_data` mapping keyed by namespace. Each va
 `schema_version`, `payload`, `references` and `export_relevance`. Reference descriptors name a
 JSON path within the payload, target kind and single/list cardinality. The registered validator
 checks them; the envelope's versioned shape must itself be readable before they can be used.
+A current-version envelope whose payload fails the installed validator, or whose reference
+declarations differ from the installed ones, is `invalid`. It is preserved on unrelated edits and
+may be replaced by a valid payload, but copying, migrating or exporting it is refused as
+`extension.invalid`.
 `export_relevance` is `required`, `local_only` or `unknown`; absent legacy declarations mean unknown.
 Structured payloads therefore retain their reference declarations when an extension is unavailable.
 Never trust that declaration to grant file access or bypass privacy validation. Each operation
@@ -279,7 +289,8 @@ Where the implementation refines the design above. Evidence:
 - **Records (C5).** Ids are the kind prefix plus twelve alphanumerics (`exp_Ab12Cd34Ef56`), not UUIDs;
   they are random, durable and never reused by a duplicate. A stored record is flat JSON with reserved
   keys `id`, `schema_version`, `user_data`, `extension_data`; values cannot set a reserved key.
-  Extension envelope statuses are `understood`, `outdated`, `unsupported` and `unavailable`.
+  Extension envelope statuses are `understood`, `invalid`, `outdated`, `unsupported` and `unavailable`
+  (`invalid` added in the Phase 0 PR review).
 
 ## Implemented in P0-E
 

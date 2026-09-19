@@ -103,6 +103,17 @@ class ExportTest < PhComposerTestCase
     assert_includes error.message, "is outdated"
   end
 
+  def test_an_exported_extension_failing_its_installed_validator_blocks_the_export
+    store_part("extension_data" => { REVIEW => { "schema_version" => 2, "payload" => {}, "references" => [
+                 { "path" => "$.checked_against", "target_kind" => PART, "cardinality" => "one" }
+               ], "export_relevance" => "required" } })
+
+    error = assert_raises(Export::Blocked) { Export::Collection.build(@model, :run_id => "r") }
+
+    assert_equal "extension.invalid", error.code
+    assert_includes error.message, "is invalid"
+  end
+
   # ------------------------------------------------------------------ privacy and report
 
   def test_the_shared_result_passes_the_composed_allowlist_and_is_embedded_unchanged

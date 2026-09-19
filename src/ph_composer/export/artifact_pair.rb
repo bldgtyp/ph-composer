@@ -145,7 +145,9 @@ module PhComposer
             safe_delete(@hbjson_path)
             safe_delete(@report_path)
           end
-          %w[hbjson_stage report_stage hbjson_backup report_backup].each do |key|
+          # The journal stage too: a run lost while marking the journal committed leaves one beside the
+          # prepared journal. The journal goes last, so an interruption here is recovered again.
+          %w[hbjson_stage report_stage hbjson_backup report_backup journal_stage].each do |key|
             safe_delete(paths[key])
           end
           safe_delete(journal_path)
@@ -221,6 +223,7 @@ module PhComposer
         def mark_committed(paths, journal)
           committed = journal.merge("state" => "committed")
           write_exclusive(paths.fetch("journal_stage"), JSON.generate(committed))
+          trip(:after_committed_journal_stage)
           File.rename(paths.fetch("journal_stage"), paths.fetch("journal"))
         end
 

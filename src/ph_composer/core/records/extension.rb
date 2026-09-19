@@ -16,11 +16,15 @@ module PhComposer
       RELEVANCE = %w[required local_only unknown].freeze
 
       # How a record's envelope for one namespace stands against what is installed.
-      #   understood   registered, and the stored version is the current one
+      #   understood   registered, stored at the current version, and its payload and reference
+      #                declarations meet the installed contract
+      #   invalid      registered and current, but the payload fails the installed validator or the
+      #                envelope does not declare the installed references. Kept as stored; nothing
+      #                that depends on it (copy, migration, export) may use it
       #   outdated     registered, stored at an older version that migrations can raise
       #   unsupported  a newer version than installed, or an envelope that cannot be read
       #   unavailable  no extension with this namespace is installed
-      STATUSES = %w[understood outdated unsupported unavailable].freeze
+      STATUSES = %w[understood invalid outdated unsupported unavailable].freeze
 
       attr_reader :namespace, :schema_version, :references, :export_relevance, :copy, :migrations
 
@@ -44,6 +48,17 @@ module PhComposer
         found
       end
 
+      # Every reason a current-version envelope does not meet this installed contract. Empty means it is
+      # understood. A validator that raises counts as a finding, never as a pass.
+      def envelope_problems(envelope)
+        canonical = ->(list) { list.map { |reference| CanonicalJson.generate(reference) }.sort }
+        declared = canonical.call(Array(envelope.fetch("references", [])))
+        found = declared == canonical.call(references) ? [] : ["references differ from the installed declaration"]
+        found + problems(envelope.fetch("payload"))
+      rescue StandardError => error
+        ["the installed validator failed (#{error.class})"]
+      end
+
       # A current-version envelope for `payload`, carrying this declaration's references.
       def envelope(payload)
         {
@@ -58,7 +73,9 @@ module PhComposer
         return "unavailable" unless installed
 
         version = envelope.fetch("schema_version")
-        return "understood" if version == installed.schema_version
+        if version == installed.schema_version
+          return installed.envelope_problems(envelope).empty? ? "understood" : "invalid"
+        end
         return "unsupported" if version > installed.schema_version
 
         migratable = (version...installed.schema_version).all? { |step| installed.migrations.key?(step) }
