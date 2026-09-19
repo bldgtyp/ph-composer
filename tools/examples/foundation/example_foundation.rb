@@ -4,8 +4,9 @@
 # builder refuses any `examples` path, and the shipping composition root does not list it. Load it
 # with tools/examples/foundation/load.rb. The README beside this file walks through it.
 #
-# It declares two record kinds, one structured extension, a query, four actions and a snapshot
-# section. Nothing in shell/, session/ or core/ names it.
+# It declares two record kinds, one structured extension, a query, four actions, a snapshot section
+# and two export contributors. Nothing in shell/, session/, core/ or export/ names it; its translation
+# sections are in example_translation.py beside this file.
 module ExampleFoundation
   ID = "example.foundation"
   DEFINITION = "#{ID}.definition"
@@ -78,6 +79,7 @@ module ExampleFoundation
     declare_create(feature)
     declare_update(feature)
     declare_duplicate_and_migrate(feature)
+    declare_export(feature)
   end
 
   def declare_summary(feature)
@@ -148,5 +150,27 @@ module ExampleFoundation
     ) do |request, changes|
       { "results" => request.engine.propose_migration(PART, request.params.fetch("ids"), REVIEW, changes) }
     end
+  end
+
+  # Definitions, then parts with their review status. Parts name their definition by durable id, which
+  # the translation's parts section resolves through its requirement on definitions. User data never
+  # leaves the Model; the reader says so in a finding.
+  def declare_export(feature)
+    feature.export_contributor("#{ID}.export.definitions", :section_version => 1) do |reader|
+      reader.records(DEFINITION)
+    end
+    feature.export_contributor(
+      "#{ID}.export.parts", :section_version => 1,
+      :result => { "example_parts" => PhComposer::Export::Privacy.fields(%w[count total_length_mm]) },
+      :report => method(:parts_report)
+    ) { |reader| reader.records(PART, :extensions => { REVIEW => ["review_status"] }) }
+  end
+
+  def parts_report(result, display_units)
+    parts = result.fetch("example_parts")
+    length = PhComposer::Units.format(parts.fetch("total_length_mm"), :quantity => "length_mm",
+                                                                      :system => display_units)
+    html = PhComposer::Export::ReportHtml
+    [html.section("Example parts", html.table(%w[Parts Total\ length], [[parts.fetch("count"), length]]))]
   end
 end

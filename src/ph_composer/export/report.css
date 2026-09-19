@@ -1,0 +1,9 @@
+body { margin: 0; background: #fff; color: #1d2329; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 960px; margin: 0 auto; padding: 32px 16px; }
+.eyebrow { margin: 0; color: #5b6570; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+h1 { margin: 4px 0 8px; font-size: 24px; }
+h2 { margin: 24px 0 8px; font-size: 16px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 6px 8px; border-bottom: 1px solid #d9dee3; text-align: left; vertical-align: top; }
+th { color: #5b6570; font-weight: 600; }
+footer { margin-top: 32px; color: #5b6570; font-size: 12px; }

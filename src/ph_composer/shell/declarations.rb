@@ -27,6 +27,13 @@ module PhComposer
 
     HostEventSubscription = Struct.new(:owner, :kind, :handler, keyword_init: true)
 
+    # One section of the export extraction (CONTRACTS.md C6). `contract` is `->(reader) { [record, ...] }`:
+    # it reads through an Export::RecordReader, which applies the metadata and extension-data rules, and
+    # never writes. `name` is the section id the translation package reads, at `section_version`.
+    # `result` declares the top-level result fields the feature's translation adds, in Export::Privacy's
+    # schema form; `report` is `->(result, display_units) { [html_section, ...] }` over those fields.
+    ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, keyword_init: true)
+
     # One registration problem. `subject` is the declaration it concerns; `dependency` names what it
     # needed, when that is the problem.
     Diagnostic = Struct.new(:code, :owner, :subject, :message, :dependency, keyword_init: true) do

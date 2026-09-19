@@ -19,6 +19,7 @@ module PhComposer
         check_record_kinds
         check_extensions
         check_snapshot_sections
+        check_export_contributors
         check_subscriptions
         @diagnostics
       end
@@ -148,6 +149,30 @@ module PhComposer
 
           add("registration.missing_dependency", section.owner, section.name,
               "#{section.name} projects query #{section.query}, which is not registered.", section.query)
+        end
+      end
+
+      # A contributor needs a contract and a positive section version, and each result field it declares
+      # must be a valid privacy schema that neither the shell nor another contributor owns.
+      def check_export_contributors
+        owned = @live.export_contributors.values.flat_map { |contributor| contributor.result.keys }
+        @staging.declared_export_contributors.each do |contributor|
+          version = contributor.section_version
+          unless contributor.contract && version.is_a?(Integer) && version.positive?
+            add("registration.schema_invalid", contributor.owner, contributor.name,
+                "#{contributor.name} needs a contract block and a positive section version.")
+          end
+          Export::Privacy.schema_problems(contributor.result).each do |problem|
+            add("registration.schema_invalid", contributor.owner, contributor.name,
+                "#{contributor.name} result: #{problem}.")
+          end
+          contributor.result.each_key do |field|
+            next unless Export::Privacy::SHELL.key?(field) || owned.include?(field)
+
+            add("registration.duplicate_id", contributor.owner, contributor.name,
+                "#{contributor.name} declares result field #{field}, which is already owned.")
+          end
+          owned.concat(contributor.result.keys)
         end
       end
 

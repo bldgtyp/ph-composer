@@ -16,7 +16,8 @@ module PhComposer
   class Registry
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
-    attr_reader :features, :queries, :actions, :record_kinds, :extensions, :snapshot_sections, :subscriptions
+    attr_reader :features, :queries, :actions, :record_kinds, :extensions, :snapshot_sections, :export_contributors,
+                :subscriptions
 
     class << self
       def current
@@ -50,6 +51,7 @@ module PhComposer
       @record_kinds = {}
       @extensions = {}
       @snapshot_sections = {}
+      @export_contributors = {}
       @subscriptions = []
       @unsubscribers = []
       @owners = {}
@@ -83,6 +85,7 @@ module PhComposer
       staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
       publish_each(staging.declared_extensions, @extensions, :namespace)
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
+      publish_each(staging.declared_export_contributors, @export_contributors, :name)
       staging.owners.each { |name, owner| @owners[name] = owner }
       staging.declared_subscriptions.each do |subscription|
         @subscriptions << subscription
@@ -105,7 +108,8 @@ module PhComposer
     # Collects one batch's declarations and checks them against each other and the live registry.
     class Staging
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_record_kinds,
-                  :declared_extensions, :declared_snapshot_sections, :declared_subscriptions, :owners, :named
+                  :declared_extensions, :declared_snapshot_sections, :declared_export_contributors,
+                  :declared_subscriptions, :owners, :named
 
       def initialize(live)
         @live = live
@@ -115,6 +119,7 @@ module PhComposer
         @declared_record_kinds = []
         @declared_extensions = []
         @declared_snapshot_sections = []
+        @declared_export_contributors = []
         @declared_subscriptions = []
         @owners = {}
         @named = []
@@ -184,6 +189,15 @@ module PhComposer
       def snapshot_section(name, query:, params: {})
         declaration = Declarations::SnapshotSection.new(:name => name, :owner => id, :query => query, :params => params)
         @staging.add(:declared_snapshot_sections, id, name, declaration)
+      end
+
+      # Adds a section to the export extraction and declares the result fields its translation adds.
+      def export_contributor(name, section_version:, result: {}, report: nil, &contract)
+        declaration = Declarations::ExportContributor.new(
+          :name => name, :owner => id, :section_version => section_version, :contract => contract,
+          :result => result, :report => report
+        )
+        @staging.add(:declared_export_contributors, id, name, declaration)
       end
 
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).
