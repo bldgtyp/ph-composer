@@ -58,7 +58,7 @@ spikes are work within Phase 0 and still need scheduling.
 | 0.2 | [Foundation transplant](refactor/foundation-transplant.md) | refactor | Implemented on branch, foundation milestone met 2026-09-18 | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
 | 0.3 | [Units](features/units/README.md) | feature, port | Scoped, Phase 0 split confirmed | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
 | 0.4 | Overlay fill spike | spike | Complete 2026-09-18, [pass](refactor/phase-zero/evidence/spike-overlay.md) | Gates Colour-by, which face-assignment needs in phase 1 |
-| 0.5 | Window component host spike | spike | Deferred | Gates window-types. Cheap to run with 0.4 |
+| 0.5 | Window component host spike | spike | Complete 2026-09-18, [flat component holds, five plan consequences](refactor/phase-zero/evidence/spike-window.md) | Gates window-types. Cheap to run with 0.4 |
 | 0.6 | Edge identity spike | spike | Requested | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
 | 0.7 | Development repository home and MVP license boundary | decisions | Confirmed | D5 keeps the UI kit AGPL and external integrations at file/HTTPS seams. D8 keeps development at `bldgtyp/ph-composer`; the public name and any future organization move remain open |
 
