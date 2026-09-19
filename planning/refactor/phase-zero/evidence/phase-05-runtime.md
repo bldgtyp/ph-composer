@@ -152,8 +152,8 @@ are in ignored `_private/host/p0f/`.
 ## Review
 
 One independent high-assurance review (single agent) of `80a54d5..2b14456` against the architecture
-rubric, the P0-F plan and C5/C6. It reproduced six actionable findings, none high; all are fixed
-with tests in `d2965e8`:
+rubric, the P0-F plan and C5/C6. It reproduced eight findings, none high (three medium, one low-medium,
+four low); all are fixed with tests in `d2965e8`:
 
 1. Medium: a runtime whose page or window raised during `stop` kept its server alive and could not
    be stopped again. `stop` now always stops the server.
@@ -185,7 +185,8 @@ does not enforce.
 - Only the result document passes the privacy guard; the extraction is internal and there is no
   HBJSON yet.
 - The Export pane repeats "nothing written" in its description and its answer; a copy review
-  belongs with the first exporter.
+  belongs with the first exporter. The pane was reviewed against the architecture rubric only, not
+  the UI-polish rubric.
 
 ## Acceptance
 

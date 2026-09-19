@@ -75,8 +75,8 @@ refused edit, restart restoration and a narrow panel. See
 
 P0-F (2026-09-18): `make ci` exits 0 on both Rubies (220 Ruby runs, 112 JavaScript tests, 77 Python
 tests); coverage Ruby 96.6%, JavaScript 97.5%, Python 100%; the Chromium 88 runtime check and the
-browser checks pass. One independent high-assurance review reproduced six findings, none high, all
-fixed with tests; the host run found one more (a favicon request), fixed. Host runs on 26.1.188
+browser checks pass. One independent high-assurance review reproduced eight findings, none high,
+all fixed with tests; the host run found one more (a favicon request), fixed. Host runs on 26.1.188
 covered panel-ready time, Export cancel and accept with no file written and no runtime started, the
 runtime probe (cold boot about 1.3 s), teardown, cancel during boot, close and reopen, and a
 tampered install. See [evidence/phase-05-runtime.md](evidence/phase-05-runtime.md). A02, A09, A15's

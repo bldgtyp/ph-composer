@@ -8,13 +8,16 @@ any `examples` path.
 
 | File | What it shows |
 | --- | --- |
-| `example_foundation.rb` | The feature: two record kinds, one structured extension, one query, four actions and one snapshot section, all declared in `install(registry)` |
+| `example_foundation.rb` | The feature: two record kinds, one structured extension, one query, four actions, one snapshot section and two export contributors, all declared in `install(registry)` |
+| `example_translation.py` | The feature's translation sections: definitions, and parts that require definitions by durable id |
 | `load.rb` | The development composition entry: registers the feature and hands the editor to the panel |
 | `walkthrough.rb` | Two clients driving the feature through `PhComposer::API` with the panel closed |
 | `editor.js` | The synthetic editor: a panel section for the parts, built from the shared unit field, record form and request channel |
 
-The offline tests are `tests/example_foundation_test.rb` and `tests/example_editor_test.js`; the
-browser preview (`tools/ui-preview/`) loads the editor too.
+The offline tests are `tests/example_foundation_test.rb`, `tests/example_editor_test.js`,
+`tests/export_test.rb` and `tests/python/test_example_translation.py`; the browser preview
+(`tools/ui-preview/`) loads the editor too. `tests/fixtures/foundation/{extraction,result}.json`
+is one extraction the export contributors produce and the result the sections translate it to.
 
 ## What a contributor writes
 
@@ -37,6 +40,14 @@ browser preview (`tools/ui-preview/`) loads the editor too.
    keeps SI in storage and follows the display preference. A shipping feature declares its section
    as a module in `html/`; this development editor is a plain script the panel runs after the kit
    starts.
+6. **Export.** `feature.export_contributor(name, section_version:, result:, report:) { |reader|
+   records }` adds a section to the export extraction. The block reads through `reader.records(kind,
+   extensions: { namespace => fields })`, which exports declared values and the named extension
+   fields only, leaves `user_data` out with a finding, and blocks on data it cannot safely leave
+   out. `result` declares the result fields the translation adds, which the privacy check then
+   admits; `report` renders them. The matching Python `Section` (`example_translation.py`) reads
+   the section one record at a time and declares the other sections it requires with a typed
+   `Requirement`; a build lists it in `python/ph_composer_translation/composition.py`.
 
 ## Try it in a host
 
