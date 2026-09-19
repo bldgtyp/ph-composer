@@ -34,7 +34,7 @@ Open decisions for Ed:
 | Stage | State | Next action |
 | --- | --- | --- |
 | P0-A handoff check | Complete | [Evidence](evidence/phase-00-handoff.md); A01 inventory portion satisfied |
-| P0-B investigations | In progress | Ed authorized P0-B 2026-09-18. B1 complete: [spike-phx](evidence/spike-phx.md). B2 to B4 need a host session with Ed |
+| P0-B investigations | In progress | Ed authorized P0-B 2026-09-18. B1 complete: [spike-phx](evidence/spike-phx.md). B2 complete: [spike-overlay](evidence/spike-overlay.md). B3, B4 next |
 | P0-C tooling/bootstrap | Complete | [Evidence](evidence/phase-02-bootstrap.md); A03/A04 provisional until P0-G |
 | P0-D records/operations | Implemented on branch | [Evidence](evidence/phase-03-operations.md); A05 to A07 and the A08 action/snapshot portion passed |
 | P0-E panel/units | Implemented on branch | [Evidence](evidence/phase-04-panel-units.md); A10 and the A11 stage portion passed |
@@ -117,3 +117,4 @@ Model switch and the runtime probe. Two new host facts: `open_file` activation f
 | 2026-09-18 | P0-F Implemented on branch, `87d0326`..`f74e16f`. Runtime page kept apart from the panel; `TaskRunner` and the export run's guard, reporter and workflow deferred; export and runtime codes added to CONTRACTS; review and host findings fixed |
 | 2026-09-18 | P0-G Implemented on branch as the foundation milestone (Ed chose it over waiting for P0-B). Gates passed at `0e71b2e`; two host facts added; A16 to A19 open |
 | 2026-09-18 | Ed authorized P0-B. B1 Complete: PHX 1.57.1 in Pyodide 0.24.1 matches native byte for byte; route viable without dependency resolution, honeybee-ph pin to 1.33.65, Spaces question for Export |
+| 2026-09-18 | B2 Complete: filled overlays pass the frozen criteria (1,000 triangles: added p95 8.7 ms, no stall); outline-only fallback not needed |

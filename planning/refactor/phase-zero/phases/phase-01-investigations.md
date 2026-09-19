@@ -1,8 +1,8 @@
 # P0-B: four technical investigations
 
 DATE: 2026-09-18
-STATUS: In progress. Ed authorized execution 2026-09-18. B1 complete
-([../evidence/spike-phx.md](../evidence/spike-phx.md)); B2 to B4 not run.
+STATUS: In progress. Ed authorized execution 2026-09-18. B1 and B2 complete
+([../evidence/spike-phx.md](../evidence/spike-phx.md), [../evidence/spike-overlay.md](../evidence/spike-overlay.md)); B3 and B4 not run.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
