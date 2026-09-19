@@ -1,0 +1,224 @@
+/* Tokens, page defaults, typography and the shared controls every screen uses.
+   Load first: every other sheet builds on these. */
+:root {
+  color-scheme: light;
+  --interaction-highlight: #075360;
+  --interaction-highlight-tint: #07536014;
+  --interaction-highlight-hover: #064550;
+  --drawing-highlight: #bf5560;
+  --drawing-highlight-tint: #bf556014;
+  --drawing-highlight-hover: #a53f52;
+  --drawing-highlight-halo: #bf556033;
+  --ink: #132a2b;
+  --muted: #5e6e6c;
+  --paper: #f4f1e9;
+  --card: #fffdf7;
+  --line: #d7d2c6;
+  --green: #0d735c;
+  --green-dark: #075140;
+  --amber: #a45d05;
+  --red: #a43a2d;
+  /* Semantic roles that repeat across the screens. */
+  --warning-ink: #785400;
+  --warning-surface: #fff0c2;
+  /* The second amber of a warning row, so a run of flagged rows keeps the zebra that separates them. */
+  --warning-surface-alt: #ffe6a0;
+  --warning-border: #d8b45c;
+  --error-surface: #fff0ed;
+  --muted-strong: #53676e;
+  --interaction-highlight-outline: #07536040;
+  --interaction-highlight-soft: #e5effb;
+  /* Opaque backing for sticky table columns (table.css). */
+  --surface: #fff;
+}
+/* The live panel repaints the shell's paper and green for the workspace screens. */
+.live-panel { --paper: #fff; --card: #fff; --green: #075360; --green-dark: #075360; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+h1, h2, p { margin-top: 0; }
+h1 { margin-bottom: 0; font-size: 27px; letter-spacing: -0.03em; }
+h2 { margin-bottom: 0; font-size: 15px; }
+h3 { margin: 0 0 6px; font-size: 15px; }
+main { padding: 16px; }
+section {
+  margin-bottom: 12px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+}
+section p { margin: 10px 0 14px; color: var(--muted); line-height: 1.45; }
+label { display: grid; gap: 4px; color: var(--muted); font-size: 11px; font-weight: 600; }
+input {
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+}
+input:focus {
+  border-color: var(--interaction-highlight);
+  outline: 2px solid var(--interaction-highlight);
+  outline-offset: -2px;
+}
+button {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #8d9996;
+  border-radius: 5px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:hover, button:focus {
+  border-color: var(--interaction-highlight);
+  outline: 2px solid var(--interaction-highlight);
+  outline-offset: -2px;
+}
+button.primary { border-color: var(--green); color: #fff; background: var(--green); }
+button.primary:hover, button.primary:focus { background: var(--interaction-highlight-hover); }
+footer { padding: 0 20px 18px; color: var(--muted); font-size: 11px; }
+/* The persistent panel shell. */
+html { height: 100%; }
+.phc-workspace {
+  --accent: var(--interaction-highlight);
+  --line: #dce2e5;
+  --muted: #67747c;
+  color: #1e2931;
+  background: #fff;
+  font: 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.phc-workspace * { box-sizing: border-box; }
+.phc-workspace button, .phc-workspace input, .phc-workspace select {
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 4px;
+  min-height: 30px;
+  padding: 4px 9px;
+}
+.phc-workspace button { cursor: pointer; }
+.phc-workspace button:hover:enabled { background: var(--interaction-highlight-tint); }
+.phc-workspace :focus-visible { outline: 2px solid var(--interaction-highlight); outline-offset: -2px; }
+.phc-workspace :disabled { color: #7b858c; background: #f5f7f8; cursor: not-allowed; }
+.phc-workspace .primary { color: white; background: var(--accent); border-color: var(--accent); }
+.phc-workspace button.primary:hover:enabled, .phc-workspace button.primary:focus:enabled,
+.phc-workspace button[aria-pressed="true"]:hover:enabled, .phc-workspace button[aria-pressed="true"]:focus:enabled {
+  color: #fff;
+  background: var(--interaction-highlight-hover);
+  border-color: var(--interaction-highlight);
+}
+/* The current choice in a setting list reads like the active sidebar row: teal tint, teal text, at rest
+   and on hover. */
+.phc-workspace button[data-dimension-format][aria-pressed="true"],
+.phc-workspace button[data-dimension-format][aria-pressed="true"]:hover:enabled,
+.phc-workspace button[data-dimension-format][aria-pressed="true"]:focus:enabled {
+  color: var(--interaction-highlight);
+  background: var(--interaction-highlight-tint);
+  border-color: var(--interaction-highlight);
+  font-weight: 600;
+}
+.phc-workspace .phc-icon-button[aria-pressed="true"] {
+  color: #fff;
+  background: var(--interaction-highlight);
+  border-color: var(--interaction-highlight);
+}
+.phc-workspace .primary:disabled { color: #7b858c; background: #e9edef; border-color: var(--line); }
+.phc-app-header {
+  display: flex;
+  min-width: 0;
+  flex-shrink: 0;
+  align-items: stretch;
+  border-bottom: 1px solid var(--line);
+  background: #f8f9fa;
+}
+.phc-tabs { display: flex; min-width: 0; flex: 1 1 auto; gap: 12px; padding: 10px 24px; overflow-x: auto; }
+.phc-tabs button { flex: 1 0 100px; border: 0; }
+.phc-tabs [aria-pressed=true] { background: var(--accent); color: white; }
+.phc-unit-toggle { display: flex; flex: 0 0 auto; align-items: center; align-self: center; margin: 0 16px 0 8px; }
+.phc-workspace .phc-unit-toggle button { min-width: 34px; min-height: 26px; padding: 2px 8px; border-radius: 0; }
+.phc-workspace .phc-unit-toggle button:first-child { border-radius: 4px 0 0 4px; }
+.phc-workspace .phc-unit-toggle button:last-child { margin-left: -1px; border-radius: 0 4px 4px 0; }
+.phc-workspace .phc-unit-toggle button[aria-pressed="true"] {
+  position: relative;
+  color: #fff;
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.phc-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.phc-heading h1 { margin: 0; font-size: 20px; font-weight: 600; }
+.phc-heading .primary { margin-left: auto; }
+.phc-heading-note { margin: 0; color: var(--muted); }
+.phc-footer {
+  display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  gap: 8px 24px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  background: #f8f9fa;
+  font-size: 12px;
+}
+.phc-form { padding: 16px; border-bottom: 1px solid var(--line); background: #f5f9fa; }
+.phc-form form { display: flex; flex-wrap: wrap; gap: 12px; }
+.phc-form label { display: flex; flex-direction: column; gap: 5px; max-width: 100%; }
+.phc-form input, .phc-form select { width: 160px; max-width: 100%; }
+.phc-unit-field {
+  display: inline-grid;
+  grid-template-columns: minmax(0, 160px) auto;
+  align-items: center;
+  gap: 4px 6px;
+  max-width: 100%;
+}
+.phc-unit-field .phc-unit-label { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.phc-unit-field .phc-unit-error { grid-column: 1 / -1; }
+.cell-error { display: block; color: #9c3028; font-size: 11px; white-space: normal; }
+/* An invalid entry keeps a red edge while it has focus and after it loses it. */
+.phc-workspace input[aria-invalid="true"],
+.phc-workspace input[aria-invalid="true"]:focus-visible { border-color: var(--red); outline-color: var(--red); }
+.phc-form h2 { font-size: 16px; margin: 0 0 12px; }
+.phc-workspace .empty { padding: 24px; color: var(--muted); }
+@media (max-width: 900px) {
+  .phc-tabs { padding: 8px; gap: 6px; }
+  .phc-unit-toggle { margin-right: 8px; }
+}
+@media (max-width: 500px) {
+  .phc-heading { padding: 8px; }
+  .phc-heading h1 { font-size: 17px; }
+  .phc-form { max-height: 220px; overflow: auto; }
+}
+.phc-glyph, .phc-glyph svg { display: block; flex: none; }
+/* The shared icon button. */
+.phc-workspace .phc-icon-button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:32px;
+  height:32px;
+  min-height:32px;
+  padding:5px;
+}
+.phc-icon-button svg { display:block; }

@@ -15,19 +15,17 @@ behavior sections. Shared understanding reached, pending Ed's confirmation of th
 
 ## Next step
 
-A host spike on the flat component: glue and cut inside a Zone group, clicking and selecting a
-flat glued instance, a definition rewrite as one Undo step, `no_scale_mask`, and how a mirrored
-instance reads from its transformation. Added by the architecture review: `Face#loops` and
-`Face#area` on the host face before placement, after placement, after a type resize and after
-explode; what explode leaves behind; and what happens to glued units when Solve adjacencies splits
-their host face. Then PLAN.md after the
-foundation transplant.
+The component host spike ran in P0-B on 2026-09-18 ([B3](../../archive/phase-zero/evidence/spike-window.md)). The flat cutting component
+stays. PLAN.md must carry five consequences:
+1. panes authored facing out;
+2. net area never read from `Face#area`;
+3. glue verified geometrically, since splits and explodes leave stale glue;
+4. `no_scale_mask` is UI-only;
+5. a type edit re-validates placements.
+Then PLAN.md.
 
 ## Blockers
 
-- The component host spike. Ed's fallback if a flat component is hard to manage is more geometry.
-- The overlay spike, deferred by Ed on 2026-09-18, for the Window Type Colour-by mode and the
-  placement preview's fill. Placement itself can preview with edges.
 - The foundation transplant has not started.
 - No GitHub remote, so no issue yet.
 

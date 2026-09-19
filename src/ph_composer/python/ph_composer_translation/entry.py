@@ -1,0 +1,22 @@
+"""The call the runtime page makes: extraction JSON text in, result document JSON text out."""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Sequence
+from typing import Any
+
+from .composition import SECTIONS
+from .coordinator import translate
+from .result import Failure, Translation
+from .sections import Section
+
+
+def translate_json(text: str, sections: Sequence[Section[Any, Any]] = SECTIONS) -> str:
+    """Never raises for an unreadable document: the result says `failed` with `payload.contract`."""
+    try:
+        document = json.loads(text)
+    except ValueError as error:
+        translation = Translation(run_id="", failure=Failure("reading", "payload.contract", f"not JSON: {error}"))
+        return json.dumps(translation.to_document())
+    return json.dumps(translate(document, sections).to_document())

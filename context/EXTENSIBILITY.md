@@ -1,7 +1,8 @@
 # Contributor architecture
 
 DATE: 2026-09-18
-STATUS: Accepted architectural direction. No implementation yet.
+STATUS: Accepted architectural direction. Registration, record kinds, metadata and extension data are
+implemented on branch in Phase 0 P0-D; see the example under `tools/examples/foundation/`.
 
 PH-Composer exists to support an open-source community in the Phius sphere. A contributor
 should be able to understand and extend one part without understanding the whole application.
@@ -83,7 +84,10 @@ lossless round trips through formats that cannot preserve it.
 
 Maintained extensions can register structured extension data with a namespace, schema version,
 validator and migrations. Preserve payloads belonging to unavailable extensions during ordinary
-edits and save/reopen. Preserved data is not necessarily understood or validated. Report the
+edits and save/reopen. Preserved data is not necessarily understood or validated: even at the
+installed version, an envelope is understood only when its payload passes the installed validator
+and it declares the installed references. Otherwise it is invalid, kept as stored for unrelated
+edits and refused for copy, migration and export until valid data replaces it. Report the
 missing capability explicitly when it affects export correctness. An unsupported schema must
 not be silently rewritten or dropped.
 
@@ -148,6 +152,15 @@ unavailable-extension examples distinguish retained data from validated behavior
 
 Land each example with its owning capability. The foundation packet starts with a synthetic
 feature and record; this list does not authorize implementing later features during transplant.
+The first two are implemented on branch: the example feature's walkthrough (P0-D) and its
+synthetic editor (P0-E, `tools/examples/foundation/editor.js`), a panel section registered with
+`panel.section` that edits through `request.js` and the unit field. Adding the editor changed no
+file in `shell/`, `session/`, `core/` or `html/`; its development entry hands the script to the
+panel. P0-F added the example's export contributors (`export_contributor` in its `install`) and
+their Python sections (`tools/examples/foundation/example_translation.py`), checked end to end
+against one shared extraction and result fixture, and a test-only exporter that receives only the
+HBJSON text and a copy of its options (`tests/python/test_exporters.py`). Neither changed a file in
+`export/` or the translation package.
 Do not claim an extension point is ready until its example and required host gate pass.
 
 ## Decisions still needed before API implementation

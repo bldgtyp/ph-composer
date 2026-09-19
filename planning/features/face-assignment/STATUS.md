@@ -12,11 +12,10 @@ into its behavior sections. Shared understanding reached, pending Ed's confirmat
 
 ## Next step
 
-Deferred by Ed 2026-09-18 until the other feature packets are drafted: the overlay spike (Q22), a
-probe through the predecessor's bridge measuring overlay fill alpha, depth testing and the cost
-of a few thousand filled faces. It gates the filled-face Colour-by modes and the Spaces volume
-preview. Line-only overlays such as the sun path need the overlay lifecycle but not this fill
-result. Then PLAN.md after the foundation transplant.
+The overlay spike (Q22) ran in P0-B on 2026-09-18 and passed ([B2](../../archive/phase-zero/evidence/spike-overlay.md)). Filled, translucent,
+depth-tested fills work, picking is unaffected, and 1,000 triangles add no measurable median cost.
+Colour-by may plan filled modes. The plan owns cache invalidation from observers and a budget past
+about 10,000 overlaid triangles, where marshalling adds 4 to 5 ms a frame. Next: PLAN.md.
 
 The four authorized architecture corrections are incorporated in the PRD: Attached zone reference
 lifecycle, assembly requirements by export consumer, field-level edit intent and atomic gesture

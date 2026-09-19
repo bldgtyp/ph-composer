@@ -8,9 +8,9 @@ Rules about the product and its language live in `../docs/` and this folder, chi
 Read [TECH_STACK.md](TECH_STACK.md) before work that touches observers, transactions, the pinned
 runtime or the real-host loop.
 
-The lint rule sets that will enforce part of this are `.rubocop.yml`, `eslint.config.mjs` and
-`[tool.ruff.lint]` in `pyproject.toml`, carried over with the tooling transplant. Everything below
-that a linter cannot express is here because a reader has to apply it.
+The lint rule sets that enforce part of this are `.rubocop.yml`, `eslint.config.mjs` and
+`[tool.ruff.lint]` in `pyproject.toml`; `make lint` runs all three. Everything below that a linter
+cannot express is here because a reader has to apply it.
 
 ## Layering
 
@@ -130,6 +130,7 @@ signals, not a reason to fragment a cohesive operation. Prefer a readable operat
 tiny helpers that force readers to jump between files. Assess responsibility, branching and the
 amount of context a reader must retain alongside size and complexity measurements.
 
-When lint tooling lands, configure size rules consistently with this policy. A justified local
-exception records why the longer unit is easier to understand; it does not disable unrelated
-checks. Do not weaken an existing gate opportunistically to pass a feature change.
+The lint configuration sets the 120 ceiling in all three languages and carries method and class
+size limits as review signals. A justified local exception records why the longer unit is easier
+to understand; it does not disable unrelated checks. Do not weaken an existing gate
+opportunistically to pass a feature change.

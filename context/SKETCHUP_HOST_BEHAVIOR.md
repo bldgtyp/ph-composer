@@ -2,9 +2,10 @@
 
 **DATE:** 2026-09-18
 
-Every fact here was measured in the predecessor, PH-Navigator for SketchUp, on SketchUp Pro
-2026.1 build 26.1.188 (macOS, embedded Ruby 3.2.2) between 2026-09-06 and 2026-09-17, through its
-development host bridge. designPH 2.2.29 was installed and loaded on that host throughout.
+Unless a row says otherwise, every fact here was measured in the predecessor, PH-Navigator for
+SketchUp, on SketchUp Pro 2026.1 build 26.1.188 (macOS, embedded Ruby 3.2.2) between 2026-09-06 and
+2026-09-17, through its development host bridge. Rows marked "Measured in PH-Composer" come from this
+repository's own bridge on the same host. designPH 2.2.29 was installed and loaded on that host throughout.
 Re-measuring the observer-ordering facts on a host without designPH is a pending gate for this
 project; until then treat them as likely and pin them in the stub as the predecessor did.
 
@@ -19,6 +20,8 @@ and Dynamic Components facts this file drops, is
 | Fact | Consequence | Pinned by |
 | --- | --- | --- |
 | Observer callbacks for one user action arrive after the Ruby call that caused them returns, and in a fixed order: `onTransactionCommit`, then `onActivePathChanged`. On leaving a Volume with Escape (or `Model#close_active`), the commit callback arrives with `active_path` already outside the Volume. | A reconciler that rebaselines on commit loses the Volume it needs to protect. Either callback must queue the exit protection from the baseline. | `test_exit_protects_when_commit_arrives_before_path_change` |
+| For an operation Ruby opens and commits itself, `Model#commit_operation` delivers `onTransactionCommit` synchronously, before the call returns. Measured in PH-Composer on 26.1.188, 2026-09-18. | The session recognizes its own commit inside the operation; it still handles a callback that arrives later. | Stub `Model#commit_operation`; `tests/sessions_test.rb` |
+| `Model#abort_operation` fires `onTransactionUndo`, synchronously, and no `onTransactionAbort`. Measured in PH-Composer on 26.1.188, 2026-09-18. | An observer cannot tell an aborted operation from a user Undo by the callback alone. The session ignores the Undo callback inside its own operation, so a rolled-back change leaves the revision. | Stub `Model#abort_operation`; `test_abort_reports_an_undo_as_the_host_does` |
 | Leaving or entering a group edit context is itself a transaction: `onTransactionCommit` fires on Escape, and a context change marks the Model modified. | Do not read a commit as "geometry changed"; a save followed by a context close leaves the title marked modified. | Recorded; no stub rule |
 | Inside `onPreSaveModel`, `Model#active_path` is empty although the edit context is still open on screen. SketchUp restores the context after the save. | Pre-save work cannot read the Volume from the path; the reconciler uses its baseline Volume. | Stub `Model#save` (`fire_pre_save`) |
 | Setting `Model#active_path` inside `onPreSaveModel` makes SketchUp serialize the reopened context in world coordinates: the reopened file has the Space transform baked into its Volumes. In memory nothing has moved. | Never change the path during pre-save. Protect in `onPreSaveModel`; close the boundary in `onSaveModel`. | Stub `Model#save` raises on a pre-save path change |
@@ -43,9 +46,16 @@ and Dynamic Components facts this file drops, is
 | `Model#save` fires `onPreSaveModel`, writes, then `onSaveModel`. On SketchUp 2026 it shows the Purge Unused prompt when the Model has unused assets; the prompt blocks the main thread until dismissed. Escape keeps the save without purging. | Scripted saves need a dialog guard (the bridge sends Escape after three seconds). |
 | `Sketchup.send_action("saveDocument:")` from Ruby was ignored when SketchUp was not the frontmost application. | Use `Model#save` for scripted saves. |
 | Cmd-S while the HtmlDialog panel has focus does not save the Model. | A user save must come from the Model window or the File menu. Worth a line in user-facing docs. |
-| `UI::HtmlDialog#close` returns immediately; `set_on_closed` runs a moment later. | Poll the panel state after closing. |
-| The Pyodide runtime boots on first use (Export, probe), not when the panel opens; the panel reports `idle` until then. | `idle` after `Panel.show` is normal, not a failure. |
+| `UI::HtmlDialog#close` returns immediately; `set_on_closed` runs a moment later. | Poll the panel state after closing. A `show` in the same eval as `close` reaches the closing dialog, and the close then clears it (PH-Composer, 26.1.188, 2026-09-18). |
+| A callback added with `add_action_callback` after the page had loaded was not reachable from that page's `sketchup` object; the same callback added before `show` was. Observed once in PH-Composer on 26.1.188, 2026-09-18. | Register every callback while building the dialog. A development probe that reports from the page adds its callback there too. |
+| Choosing SI or IP in the PH-Composer panel wrote `Sketchup.write_default` and left the Model unmodified, its session revision unchanged and `UnitsOptions` untouched; the choice read back after a fresh-process restart (26.1.188, 2026-09-18). | Display preferences never go through a Model operation. |
+| The Pyodide runtime boots on first use (Export, probe), not when the panel opens; the panel reports `idle` until then. | `idle` after `Panel.show` is normal, not a failure. In PH-Composer the runtime has its own page and window and the panel never loads it. |
+| An `HtmlDialog` page loaded with `set_url` from a loopback server requested `/favicon.ico` at the server root on each load. PH-Composer, 26.1.188, 2026-09-18. | A token-path server logs it as a refused request. The runtime page declares an inline empty icon. |
+| Pyodide 0.24.1 booted in a PH-Composer `HtmlDialog` on the token origin in 1,275 to 1,300 ms cold, round trips of 0.3 to 0.5 ms, with the asset server's UI-timer pump never over 7.4 ms. 26.1.188, 2026-09-18. | The manifest's 6,000 ms cold and 50 ms pump ceilings hold on the proving host with no wheels installed. |
+| After `Model#close(true)` on the only open Model, `Sketchup.open_file` of the same path in the same process loaded it again with a new session; no `ModelSession` for the old id survived `GC.start`. 26.1.188, 2026-09-18. | A same-process close and reopen is reachable from the bridge; the earlier note about reopening an open path applies only while it is still open. |
 | `Sketchup.open_file` on an already open path in the same process activates the existing document rather than reloading the file. | A real reopen needs a fresh SketchUp process. |
+| Two instrumented `open_file` activations of an already open document changed `Sketchup.active_model` but fired no `onActivateModel`, to the session's subscriber or to a fresh `AppObserver`. One earlier `open_file` activation, of a document with an open group edit context, did move the panel by a path not identified. A native click in another document's window fired `onActivateModel` every time. Observed in PH-Composer on 26.1.188, 2026-09-18. | Do not rely on `open_file` to exercise a Model switch; a same-process switch check needs native window clicks. |
+| `UI.savepanel(title, directory, filename)` opened in `~/Documents` on this host, with `directory` naming the Model's folder, both under `/private/tmp` and under a normal user folder. The proposed file name was kept. Observed in PH-Composer on 26.1.188, macOS 26, 2026-09-18. | Phase 1 Export cannot rely on the `directory` argument to start in the Model's folder; the cause and a working form are unverified. |
 | `Sketchup.write_default` accepts a string containing a double quote and returns true, but `read_default` returns nil for it. Plain strings, base64 text, arrays and hashes read back intact. | Store structured preferences as base64 JSON. The Ruby stub's `read_default` returns nil for such strings so the offline tests catch a regression. |
 | A panel that is hidden or behind other windows throttles its timers. | Bring the dialog to the front before a scripted run. |
 | `Sketchup.redo` replays a panel edit from the bridge; `Sketchup.send_action("editRedo:")` does not redo. | Use `Sketchup.redo`, or raise the document window by title and send the keystroke. |
@@ -55,6 +65,8 @@ and Dynamic Components facts this file drops, is
 | Fact | Consequence |
 | --- | --- |
 | `open -a "SketchUp 2026"` fails; the bundle path works: `open -a "/Applications/SketchUp 2026/SketchUp.app" <model>`. | The bridge launcher uses the bundle path. |
+| `Model#close` raises "Only the active model can be closed" for any other open Model. `Sketchup.file_new` fires `onNewModel` for the new document but leaves `Sketchup.active_model` on the previous one until the new window activates, which did not happen while SketchUp was in the background. Measured in PH-Composer on 26.1.188, 2026-09-18. | Drive a multi-document check by closing the active Model; never assume `file_new` switched the active Model. |
+| Launched with no document, SketchUp waited at its Welcome screen and no bridge or extension code ran within two minutes. Observed once in PH-Composer on 26.1.188, 2026-09-18. | `host_bridge.py launch` always opens a Model. |
 | A killed SketchUp restores its previous documents on the next launch, so the requested file may not be the active Model. | Quit cleanly: discard-save a modified Model to a scratch path, then `Sketchup.send_action("terminate:")`. Verify the active Model's file name. |
 | AppleScript `tell application "SketchUp 2026" to quit` did not complete from a terminal; `terminate:` through the bridge does. | Do not use AppleScript to quit. |
 | `osascript` System Events keystrokes to `process "SketchUp"` work once Accessibility is granted. `screencapture -x` captures the whole screen. | Send keys only to SketchUp. For evidence, prefer `View#write_image` for the viewport and a window-by-title capture for one SketchUp window. |
@@ -77,10 +89,22 @@ and Dynamic Components facts this file drops, is
 | Retained DOM nodes with transient Saving/Queued text still increased row height from 38.5 to 50 pixels. | Keep routine pending feedback out of row flow, preserve control focus, and measure geometry in the host. |
 | An 8-percent background tint fading in 200 ms was effectively invisible as a context-change cue; a 200 ms list fade with 4 px movement plus a separate 650 ms primary-blue outline fade was visible. | Use the measured cue for context swaps only; honor reduced-motion preferences. |
 
+## Components, glue and edge attributes
+
+Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/archive/phase-zero/evidence/spike-window.md), [B4](../planning/archive/phase-zero/evidence/spike-edge.md)).
+
+| Fact | Consequence |
+| --- | --- |
+| A glued `cuts_opening` component opens its host face in the view but leaves the face's loops unchanged. `Face#area` then subtracts each pane that lies wholly inside the face at its full area, so overlapping panes count twice, and subtracts nothing for a pane crossing the face boundary. | Never read net area from `Face#area`; derive openings from unit outlines and the gross outer loop. |
+| After a host face is split, glued instances stay glued to the original face even when they lie wholly on the new one, and the new face is not cut. After an explode, `glued_to` can name an unrelated scrap face that still reports valid. | Verify glue geometrically: coplanar, containing the unit's outline. |
+| `no_scale_mask` hides the Scale tool's handles; `Transformation` scaling from Ruby applies anyway. | Detect scaling from `xscale`/`yscale`; a mirror from a negative determinant. |
+| `Edge#split`, an explode that splits edges, and native cut, copy and paste all put the source edge's full attribute dictionary on the new edges. `Entities#weld`, moves and push-pull keep edge persistent ids. Undo, Redo and save and reopen restore dictionaries and ids exactly. | Edge tags multiply rather than vanish; a Model-level registry and a scan tell a split from a copy or a replacement. |
+
 ## Overlays
 
 | Fact | Consequence |
 | --- | --- |
+| A filled, translucent overlay (`GL_TRIANGLES`, alpha 110) is depth-tested against Model geometry, leaves native picking unaffected and adds no measurable median frame cost at 1,000 triangles; at 10,000 it adds about 4 to 5 ms a frame, mostly Ruby marshalling in `draw`. Measured in PH-Composer on 26.1.188, M1 Max, 2026-09-18 ([B2](../planning/archive/phase-zero/evidence/spike-overlay.md)). | Filled Colour-by modes and the volume preview are available; cache per instance and budget past about 10,000 triangles. |
 | A `Sketchup::Overlay` drawing through the accumulated world transform lands on the right geometry under rotated parents; 44 items drew in 0.17 ms median with a one-off 1.4 s walk. `View#write_image` does not render overlays; `view.invalidate` inside an eval does not repaint before the eval returns. | Cache per instance and invalidate from the observers; capture overlay evidence with a window capture. |
 | SketchUp 2023 to 2025 require a child drawing element appended to a component or group leaf path for `Model#drawing_element_visible?`; SketchUp 2026 accepts the occurrence path directly. | Branch on the host version in the visibility reader. |
 | `Sketchup::Overlay` is a 2023.0 API. | It is why SketchUp 2023 is the compatibility floor. |

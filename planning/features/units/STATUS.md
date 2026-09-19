@@ -1,7 +1,7 @@
 # Units: status
 
 DATE: 2026-09-18
-STATUS: Scoped
+STATUS: In progress. Phase 0 shared portion implemented on branch (P0-E); feature quantities remain with their owners.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -14,7 +14,7 @@ answers do not block the foundation.
 
 ## Next step
 
-Execute the [shared Units stage](../../refactor/phase-zero/phases/phase-04-panel-units.md) when
+Execute the [shared Units stage](../../archive/phase-zero/phases/phase-04-panel-units.md) when
 implementation is authorized. It includes the six listed modules, their length-expression parser
 dependency and applicable tests. Keep F3 with
 Assemblies, F4 with Window Types and F1 with Spaces if measurements justify it. Resolve new
@@ -29,7 +29,10 @@ quantity rows through the owning feature interviews.
 
 ## Verification
 
-None. Nothing is implemented.
+The Phase 0 portion is implemented on branch `phase-zero-foundation` (P0-E): the six shared unit
+modules, the length-expression reader, the Ruby mirror and the shared vectors, with the A1 to A15
+allocation in [the P0-E evidence](../../archive/phase-zero/evidence/phase-04-panel-units.md).
+New quantity rows and the feature follow-ups remain with their owners.
 
 ## Ledger
 
@@ -37,3 +40,4 @@ None. Nothing is implemented.
 | --- | --- |
 | 2026-09-18 | PRD drafted from the predecessor's U1 record. |
 | 2026-09-18 | Ed confirmed inherited behavior and the shared-infrastructure-only Phase 0 scope. No implementation authorized. |
+| 2026-09-18 | Phase 0 portion implemented on branch in P0-E. Builder names became dimension scopes a screen names; table-layout preferences defer to the first table screen. |

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  offline:
+    name: make ci (Ruby ${{ matrix.ruby-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 2.7.2 is what SketchUp 2023 embeds, the support floor; 3.2.2 is the current proving
+        # host. Ruby 3 keyword separation is invisible to a loop that runs on only one of them.
+        ruby-version: ["2.7.2", "3.2.2"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          # Installs the `Gemfile.lock` so `make lint` runs rubocop rather than taking its skip
+          # path. A skipped linter in CI is a rule that is not enforced.
+          bundler-cache: true
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10.33.0"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      # Same reason as `bundler-cache`: without it `make lint` skips eslint.
+      - run: pnpm install --frozen-lockfile
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: make ci
+        run: make ci RUBY=$(which ruby)
