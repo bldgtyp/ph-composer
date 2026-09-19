@@ -158,15 +158,21 @@ rules are the zones-and-adjacency packet's to settle
 
 The embedded runtime is served from a token-qualified loopback HTTP origin. `file://` and an
 unqualified loopback URL are not valid shortcuts. The manifest controls the allow-list, MIME type,
-hash, source URL, version and installed size of every runtime asset.
+hash, source URL, version and installed size of every runtime asset. The runtime runs in its own
+page, `html/runtime/`, which `runtime/runtime_host.rb` opens on that origin for one Model session;
+the panel never loads Pyodide, and nothing starts the runtime when the extension loads or the panel
+opens. The server's token authorizes loading runtime assets and nothing else; it is not an agent
+credential.
 
-A feature adds export coverage by registering an `Export::Contributors` contributor in its
-`install` and a section module under the translation package's `contract/sections/`. The
-contributor supplies a `prepare` that settles the Model and a `contract` that returns its section.
-When the translator adds result fields for the feature, the contributor also declares them and
-renders them as report sections. When the collector must read one of the feature's component
-instances whole, the contributor supplies `relevant`, which the collector indexes, visits and never
-enters. The extraction carries every section under `sections`; `export/` knows no feature.
+A feature adds export coverage with `feature.export_contributor(name, section_version:, result:,
+report:)` in its `install`, whose block returns the section's records, and a Python `Section` with
+the same id listed in `python/ph_composer_translation/composition.py`. The block reads through
+`Export::RecordReader`, which exports only declared values and named extension fields, leaves
+`user_data` and `local_only` data out with a finding, and blocks on data whose export relevance is
+unknown or required but unexported. When the translator adds result fields for the feature, the
+contributor declares them in `result` and renders them in `report`. The extraction carries every
+section under `sections`; `export/` knows no feature. The development example
+(`tools/examples/foundation/`) is the working pattern.
 
 The privacy allowlist is the shell's fields plus every contributor's declaration, composed on each
 check, so a result field no declaration names fails the export at `checking`. The report embeds
@@ -177,15 +183,17 @@ typed results it needs from other sections. The coordinator orders execution and
 results without feature-specific logic. Missing or circular dependencies produce explicit errors.
 If a required result fails, dependent output receives an explicit finding rather than a substitute.
 The existing record-level and contract-level failure policy still applies. Phase 0 proves the
-contract with synthetic sections; real building translation lands with its owning features.
-Exact registration shapes and failure propagation remain implementation-design work.
+contract with synthetic sections; real building translation lands with its owning features. A
+section declares typed `Requirement`s; missing, mistyped, duplicate and cyclic requirements stop the
+run before any record is read, and a record whose required object did not translate gets a
+`dependency.unavailable` finding and no object.
 
 The translation package reads the extraction into typed records in `contract/` and never reads a
 section by key after that. Every section follows one failure policy. A defect that leaves the
 document or a section unreadable fails the export as `payload.contract`. A defect in one field of
 one record costs only that record: translation reports it as a finding on that object and the rest
 of the Model translates. honeybee and ladybug are imported only through one module, on first use
-and in the panel runtime's load order, so every module of the package imports without the stack.
+through `stack.load`, so every module of the package imports without the stack.
 
 After changing the shipped Python package or panel assets, refresh the manifest before CI:
 
@@ -212,10 +220,11 @@ writer to produce the METr model. Two facts gate it:
   every asset and CI enforces the budget; the METr exporter's cost is measured before it is
   accepted.
 
-An exporter registers with the export run the way a contributor does: a name, the format it
-writes, a `run` that takes the HBJSON document, and a `report` that renders its own findings. The
-Export report lists every exporter that ran and what each omitted. A third exporter adds one
-registration and no change to `export/`, the translation package or any feature.
+An exporter registers in `python/ph_composer_translation/composition.py`: a name, the format it
+writes, a file suffix, the options it accepts and a `run(hbjson, options)` that returns its output
+and findings. It receives a copy of the options and nothing else. The Export report will list every
+exporter that ran and what each omitted. A third exporter adds one registration and no change to
+`export/`, the translation package or any feature.
 
 ## The library provider seam
 
@@ -432,9 +441,9 @@ extends these seams rather than inventing a second pattern.
 - **Panel.** The inventory table, view controls, row projection and anchored bubbles come from the
   `workspace` toolkit; inline cell editing comes from `record_edits`, configured with an action
   name and a field list. The library sidebar is generic, driven by a per-kind adapter object.
-- **Export.** One contributor registration with a prepare and a contract lambda, a key slice that
-  is the versioned wire contract, a section module in Python's `contract/sections/`, and a builder
-  package. The contract lambda is also where an export block lives.
+- **Export.** One `export_contributor` declaration whose block is the versioned wire contract, a
+  Python `Section` listed in `composition.py`, and a builder package. A block that must refuse
+  raises `Export::Blocked`.
 
 ### UI kit conventions carried over
 
@@ -482,7 +491,7 @@ the exception.
 | `conformance_failed` after a Python change | Shipped Python changed without matching manifest hashes | Refresh the manifest, run the native Python tests and linters, then inspect the cause |
 | `volume_moved` after switching editing context | The new active path was read before closing the previous Volume | Preserve the previous path and run the boundary reconciliation first |
 | Nested output is translated or offset twice | Parent and child transforms were both applied at more than one layer | Trace one root-to-leaf path and prove each transform is accumulated once |
-| Panel opens blank or the runtime refuses its payload after an `html/` or `python/` edit | Manifest hashes no longer match the shipped assets | `uv run tools/runtime/vendor.py --refresh-manifest`, then `--check`, then `make ci` |
+| The runtime refuses to start (`RuntimeManifest::Invalid` naming a file) or `make ci` fails `runtime-check` after an `html/` or `python/` edit | Manifest hashes no longer match the shipped assets | `make panel-manifest`, then `make runtime-manifest`, then `make ci` |
 | Offline tests pass but the feature fails in SketchUp | Stub behavior, host lifecycle, CEF or Pyodide differs from the offline environment | Run the numbered real-host gate in a fresh process through the bridge |
 | Every Volume reads `volume_moved` after reopening a saved file | The active path was changed inside `onPreSaveModel` | Protect in pre-save only; close the boundary in `onSaveModel` |
 | A Volume stays unlocked after Escape | The commit callback arrived before the path-change callback and the baseline was rebaselined to nil | Queue the exit protection from the baseline in both callbacks |

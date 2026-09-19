@@ -1,7 +1,9 @@
 # P0-F: runtime and export contracts
 
 DATE: 2026-09-18
-STATUS: Scoped. Implementation authorized 2026-09-18; not started.
+STATUS: Implemented on branch 2026-09-18 (`87d0326`..`f74e16f`); evidence in
+[../evidence/phase-05-runtime.md](../evidence/phase-05-runtime.md). The native Export destination
+dialog step remains for P0-G.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

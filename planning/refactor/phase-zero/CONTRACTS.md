@@ -1,7 +1,7 @@
 # Foundation contract design
 
 DATE: 2026-09-18
-STATUS: In progress. C1 to C5 implemented on branch in P0-D (2026-09-18); C6 pending P0-F. Refinements recorded in place.
+STATUS: In progress. C1 to C5 implemented on branch in P0-D, C6 in P0-F (2026-09-18). Refinements recorded in place.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
@@ -104,7 +104,8 @@ failed or could not run. Codes are stable `noun.condition` strings, following TE
 | Query | `query.limit_invalid`, `query.cursor_expired` |
 | Operation | `operation.failed`, `operation.rollback_unverified` |
 | Registration (diagnostics) | `registration.duplicate_id`, `registration.missing_dependency`, `registration.cycle`, `registration.contract_major`, `registration.schema_invalid` |
-| Translation and export | `payload.contract`, `section.missing_dependency`, `section.cycle`, `section.version_unsupported`, `object.unavailable`, `dependency.unavailable`, `export.unavailable`, `export.privacy_undeclared`, `export.relevance_unknown` |
+| Translation and export | `payload.contract`, `section.missing_dependency`, `section.cycle`, `section.duplicate`, `section.version_unsupported`, `object.unavailable`, `dependency.unavailable`, `export.unavailable`, `export.cancelled`, `export.privacy_undeclared`, `export.relevance_unknown`, `export.metadata_omitted` (a finding: local-only data left out) |
+| Runtime page (development probe results) | `runtime.asset_refused`, `runtime.boot_timeout`, `runtime.boot_failed`, `runtime.translation_failed`, `runtime.stopped` |
 
 New codes are added here, with a test, before a caller relies on them.
 
@@ -292,7 +293,43 @@ Evidence: [evidence/phase-04-panel-units.md](evidence/phase-04-panel-units.md).
   with nothing written, even though that session is still open and valid. The panel acts only on
   the Model it shows, so an edit typed against one document never lands in another after a switch.
   API callers name their session explicitly and never receive this code.
-- **Messages.** `shell/panel_messages.rb` declares the panel's eight message types and their keys;
+- **Messages.** `shell/panel_messages.rb` declares the panel's message types and their keys;
   features add none. Display preferences travel as `preferences.set`, never as a Model action.
 - **Presentation.** The calling client shows a refusal or failure as a persistent warning or error
   (C2); the panel does, and a notice never opens the panel.
+
+## Implemented in P0-F
+
+Evidence: [evidence/phase-05-runtime.md](evidence/phase-05-runtime.md).
+
+- **Export contributors (C1, C6).** A feature declares `feature.export_contributor(name,
+  section_version:, result:, report:) { |reader| records }` in its `install`. `name` is the section
+  id the translation package reads; `result` declares the top-level result fields in
+  `Export::Privacy`'s schema form; `report` renders them. Registration refuses a missing contract,
+  a malformed schema, or a field the shell or another contributor owns. The predecessor's global
+  `Export::Contributors.register` and its `prepare`/`relevant` hooks did not transplant; `relevant`
+  arrives with geometry collection.
+- **Record reading for export (C5).** Contributors read through `Export::RecordReader`: declared
+  values only, `user_data` left out with an `export.metadata_omitted` finding, a named extension's
+  named payload fields only when understood, other envelopes left out when `local_only` and
+  blocking (`export.relevance_unknown`, `extension.unavailable`) otherwise.
+- **Sections (C6).** A Python `Section` declares `id`, `versions`, `object_type`, `requires`
+  (typed `Requirement`s) and `required_for_export`, and reads and translates one record at a time.
+  Structural failures stop the run at `planning`; contract failures at `reading`. A record id
+  appearing twice is `payload.contract`. Sections and exporters are listed by hand in
+  `python/ph_composer_translation/composition.py`, the Python counterpart of the composition root.
+- **Exporters.** Registered in Python, where they run: `Exporter(name, format, suffix, run,
+  options)`, with `run(hbjson, options)`. Unknown options are refused before the exporter runs.
+  No Ruby-side exporter declaration exists until the first exporter needs one.
+- **Privacy.** A `nil` schema slot holds a scalar or a list of scalars, never an object.
+  `ArtifactHygiene` refuses `user_data`, `extension_data` and path keys and any local path,
+  whatever a declaration says.
+- **Empty Export.** A shell message pair, `export.start` / `export.result`, not a Model action: it
+  opens a native dialog, which never runs inside a Model operation. Cancel is `cancelled /
+  export.cancelled`; accepting is `refused / export.unavailable`; both have effect `none`. A request
+  for a Model the panel no longer shows is `session.inactive`.
+- **Runtime.** The runtime page is `html/runtime/`, outside the panel; the panel never loads
+  Pyodide. `RuntimeHost` opens it on the token server for one session id and holds no Model or
+  session object. `stop` reports `before` and `after` resource counts and whether the window
+  closed. Where Phase 1's Export hosts the runtime (this page, or the panel served from the token
+  origin) is decided with the first exporter.

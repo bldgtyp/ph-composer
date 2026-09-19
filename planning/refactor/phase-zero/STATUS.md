@@ -12,8 +12,11 @@ from `152e796`, one commit per completed unit. P0-A and P0-C are complete. P0-D 
 branch and host-verified: record engine, sessions and revisions, registry and the public API, with a
 development example driven by two clients with the panel closed. P0-E is implemented on branch and
 host-verified: the panel as one API client with empty Overview and Export, its UI kit, display
-preferences and shared Units, with a development-only synthetic editor. Next: P0-F. P0-B needs Ed's
-spike scheduling. No spike has run.
+preferences and shared Units, with a development-only synthetic editor. P0-F is implemented on
+branch and host-verified: the pinned Pyodide payload and loopback server, the typed translation
+package with C6 ordering, export contributors with the privacy guard, report and artifact pair, the
+empty Export, and the runtime page with its development probe. Next: P0-G, once P0-B is scheduled.
+P0-B needs Ed's spike scheduling. No spike has run.
 
 Open decisions for Ed:
 
@@ -21,6 +24,8 @@ Open decisions for Ed:
   when an abort ran but the unchanged-data check failed or could not run.
 - The six muted "Planned" tabs the UI baseline keeps. They name features in the shell page and are
   hidden below 600 px; the review recommends dropping them until tab registration lands.
+- The Pyodide notice: the repository license file says MPL-2.0 and the release's `package.json`
+  says Apache-2.0. Both are recorded; the licensing gate settles the shipped notice.
 
 | Stage | State | Next action |
 | --- | --- | --- |
@@ -29,7 +34,7 @@ Open decisions for Ed:
 | P0-C tooling/bootstrap | Complete | [Evidence](evidence/phase-02-bootstrap.md); A03/A04 provisional until P0-G |
 | P0-D records/operations | Implemented on branch | [Evidence](evidence/phase-03-operations.md); A05 to A07 and the A08 action/snapshot portion passed |
 | P0-E panel/units | Implemented on branch | [Evidence](evidence/phase-04-panel-units.md); A10 and the A11 stage portion passed |
-| P0-F runtime/export shell | Scoped | Implement C6 after P0-D/P0-E |
+| P0-F runtime/export shell | Implemented on branch | [Evidence](evidence/phase-05-runtime.md); A12 to A14 and the A08 export portion passed; A15 passed with the destination dialog scripted, native step at P0-G |
 | P0-G acceptance | Scoped | Await implementation and investigation dispositions |
 
 The existing roadmap spike statuses remain authoritative until execution is scheduled. Scoping
@@ -66,8 +71,16 @@ two high and three medium defects, all fixed with regression tests; the host wal
 more, fixed. Host runs on 26.1.188 covered the empty panel, unit switches that leave the Model
 untouched, a draft through a switch, Undo/Redo of a panel edit, invalid input, the New part form, a
 refused edit, restart restoration and a narrow panel. See
-[evidence/phase-04-panel-units.md](evidence/phase-04-panel-units.md). A02, A08 (export portion),
-A09 and A12 through A21 remain pending.
+[evidence/phase-04-panel-units.md](evidence/phase-04-panel-units.md).
+
+P0-F (2026-09-18): `make ci` exits 0 on both Rubies (220 Ruby runs, 112 JavaScript tests, 77 Python
+tests); coverage Ruby 96.6%, JavaScript 97.5%, Python 100%; the Chromium 88 runtime check and the
+browser checks pass. One independent high-assurance review reproduced six findings, none high, all
+fixed with tests; the host run found one more (a favicon request), fixed. Host runs on 26.1.188
+covered panel-ready time, Export cancel and accept with no file written and no runtime started, the
+runtime probe (cold boot about 1.3 s), teardown, cancel during boot, close and reopen, and a
+tampered install. See [evidence/phase-05-runtime.md](evidence/phase-05-runtime.md). A02, A09, A15's
+native dialog step and A16 through A21 remain pending.
 
 ## Ledger
 
@@ -89,3 +102,4 @@ A09 and A12 through A21 remain pending.
 | 2026-09-18 | P0-C Complete. Empty extension, offline harness, RBZ shipping checks, lint/CI gate and host bridge in `db00b48`..`12ebc3c`; one bounded review, findings fixed; host load verified on SketchUp 26.1.188 |
 | 2026-09-18 | P0-D Implemented on branch, `4c6cd19`..`689e464`. High-assurance review findings fixed; host evidence on 26.1.188 including two new measured host facts (synchronous commit callback, abort reported as Undo) |
 | 2026-09-18 | P0-E Implemented on branch, `fe28acb`..`4206e19`. Table, inventory controls and cell drafts deferred to the first table screen; review and host findings fixed; `session.inactive` added to CONTRACTS |
+| 2026-09-18 | P0-F Implemented on branch, `87d0326`..`f74e16f`. Runtime page kept apart from the panel; `TaskRunner` and the export run's guard, reporter and workflow deferred; export and runtime codes added to CONTRACTS; review and host findings fixed |

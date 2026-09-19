@@ -153,7 +153,11 @@ The first two are implemented on branch: the example feature's walkthrough (P0-D
 synthetic editor (P0-E, `tools/examples/foundation/editor.js`), a panel section registered with
 `panel.section` that edits through `request.js` and the unit field. Adding the editor changed no
 file in `shell/`, `session/`, `core/` or `html/`; its development entry hands the script to the
-panel.
+panel. P0-F added the example's export contributors (`export_contributor` in its `install`) and
+their Python sections (`tools/examples/foundation/example_translation.py`), checked end to end
+against one shared extraction and result fixture, and a test-only exporter that receives only the
+HBJSON text and a copy of its options (`tests/python/test_exporters.py`). Neither changed a file in
+`export/` or the translation package.
 Do not claim an extension point is ready until its example and required host gate pass.
 
 ## Decisions still needed before API implementation

@@ -22,8 +22,12 @@ Shipping that payload is conveying, and AGPL-3.0-or-later is the license that ma
 The ph-units wheel declared no license metadata in the predecessor's manifest. ph-units is a
 PH-Tools package, so the fix is a classifier in that repository.
 
-Exact versions, source URLs, hashes and declared licenses will live in the runtime manifest once
-the payload is assembled.
+Exact versions, source URLs, hashes and declared licenses live in the runtime manifest,
+`src/ph_composer/vendor/manifest.json`, and the shipped notice,
+`src/ph_composer/vendor/THIRD_PARTY_NOTICES.md`. The current build ships the Pyodide 0.24.1 core,
+which embeds CPython 3.11.3, and no wheels. The Pyodide repository's license file is MPL-2.0, while
+the release's `package.json` declares Apache-2.0; both are recorded, and the notice is settled
+before any public release.
 
 ## What it means in practice
 

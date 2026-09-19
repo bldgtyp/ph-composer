@@ -1,8 +1,8 @@
 # Development
 
 **DATE:** 2026-09-18 | **STATUS:** Partly implemented. The commands below exist unless marked
-"not yet". The extension has its foundation and an empty panel; tooling for the Python runtime
-arrives with the runtime.
+"not yet". The extension has its foundation, an empty panel, the Python runtime payload and the
+export infrastructure, with no exporter yet.
 
 The development loop needs no installed dependencies beyond Ruby, Node and `uv`. Ruby source stays
 compatible with Ruby 2.7 inside the SketchUp 2023 support floor. The proving host is SketchUp
@@ -22,12 +22,11 @@ make ci
 ```
 
 `ci` runs, in order: `syntax` (every `.rb` under `src`, `tests` and `tools`), `lint`, `test`,
-`fixtures-check`, `panel-manifest-check`, `hostkit-test`, `python-check` (mypy over the tools and
-their tests), `rbz` and `rbz-check`. It ends by printing the checks that are not yet part of the
-gate: `runtime-pin-check`, `runtime-check` and the installed-size gate, which arrive with the
-Python runtime and its manifest.
-
-A passing `make ci` is therefore not the full foundation gate until that list is empty.
+`fixtures-check`, `panel-manifest-check`, `runtime-check` (the tree, the Pyodide pin, the gates
+and the installed-size budget against `src/ph_composer/vendor/manifest.json`), `runtime-pin-check`
+(shipped wheels against `pyproject.toml`), `hostkit-test`, `python-check` (mypy over the
+translation package, the tools and their tests), `rbz` and `rbz-check`, which also refuses an
+installed extension over the manifest's 24,000,000-byte ceiling.
 
 `test` loads the real extension code against a stub SketchUp API and runs the Ruby and Python
 suites in one pass. JavaScript tests are discovered by the glob `tests/*_test.js` and run under
@@ -50,7 +49,8 @@ installs both. A local skip is not gate evidence.
 - `lint-js` runs eslint from `package.json` at `ecmaVersion: 2020`, the floor host's Chromium 88
   level, with post-88 runtime APIs refused. Install with `pnpm install`; the repository keeps
   pnpm's one-day minimum release age and refuses non-registry subdependencies.
-- `lint-python` runs ruff over `tools/` and `tests/python`, lint and format check.
+- `lint-python` runs ruff over `tools/`, `tests/python` and the translation package, lint and
+  format check.
 
 The line ceiling is 120 characters in every language. What the linters cannot express is in
 [`context/CODING_STANDARDS.md`](../context/CODING_STANDARDS.md).
@@ -78,9 +78,34 @@ other run compares them. Each golden has exactly one owning test, listed in `FIX
 the Makefile. There are no goldens yet. Hand-authored inputs live apart from goldens and nothing
 regenerates them.
 
-`make coverage` measures Ruby line coverage of the extension folder against a 93% minimum and
-JavaScript line coverage of `html/` against 94%. It sits outside `make ci`; run it before a phase
-gate. Python coverage (92%) joins when its shipped code lands. Thresholds ratchet upward only.
+`make coverage` measures Ruby line coverage of the extension folder against a 93% minimum,
+JavaScript line coverage of `html/` (the runtime page included) against 94%, and Python coverage of
+the translation package against 92%. It sits outside `make ci`; run it before a phase gate.
+Thresholds ratchet upward only.
+
+`tests/fixtures/foundation/{extraction,result}.json` are hand-reviewed contract examples, not
+generated goldens: the Ruby suite checks that the example feature collects to the extraction, and
+the Python suite that its sections translate that to the result.
+
+## The Python runtime
+
+The runtime payload is the Pyodide core pinned in `tools/runtime/vendor.py`, plus the shipped
+`html/` and `python/` files, each listed with its size and SHA-256 in the manifest. After editing
+anything under `html/` or `python/`:
+
+```sh
+make panel-manifest      # when a panel module was added, renamed or re-declared
+make runtime-manifest    # re-hashes html/ and python/; never adopts a changed Pyodide file
+make ci
+```
+
+`uv run tools/runtime/vendor.py` without flags downloads the pinned Pyodide release, checks its
+hash and rewrites the manifest. `make runtime-browser-check` boots the shipped runtime page in the
+Chromium 88 snapshot (downloaded once with `uv run tools/runtime/browser_check.py
+--download-chromium`) and checks isolation, single-flight boot, that no stack module loads, and the
+manifest's cold-boot and round-trip ceilings. It launches a browser, so it is not part of `make
+ci`, and a browser pass is not host evidence. On the host, `tools/hostkit/runtime_probe.rb` runs the
+same probe and reports teardown (see `tools/hostkit/.index.md`).
 
 ## Build, install and reload
 
@@ -162,8 +187,5 @@ uv run tools/hostkit/host_bridge.py eval \
 These arrive with the parts they verify. Until then no command exists and none may be cited as a
 passing check.
 
-- **Runtime verification.** The runtime manifest pins the Pyodide release, versions, licenses,
-  hashes, MIME types, asset allowlist and size budget. `uv run tools/runtime/vendor.py --check`
-  and `uv run tools/runtime/browser_check.py` arrive with the runtime.
 - **Library provider testing.** A local fixture server for connection providers arrives with the
   library provider contract.
