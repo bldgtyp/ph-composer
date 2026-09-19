@@ -1,6 +1,6 @@
 .PHONY: ci syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage hostkit-test python-check \
         panel-manifest panel-manifest-check ui-preview ui-checks rbz rbz-check install clean bridge-install \
-        bridge-uninstall runtime-check runtime-pin-check runtime-manifest
+        bridge-uninstall runtime-check runtime-pin-check runtime-manifest runtime-browser-check
 
 # `.ruby-version` pins 3.2.2, the Ruby the current proving host embeds. rbenv resolves it when it
 # is installed; without rbenv this falls back to whatever `ruby` is on PATH, and the suite's own
@@ -144,6 +144,11 @@ runtime-check:
 
 runtime-pin-check:
 	@uv run tools/runtime/vendor.py --pins-check
+
+# The shipped runtime page, booted in Chromium 88 (tools/runtime/browser_check.py). Not part of `ci`: it
+# launches a browser, and a browser pass is not host evidence.
+runtime-browser-check:
+	@uv run tools/runtime/browser_check.py
 
 rbz:
 	@uv run tools/rbz/build.py

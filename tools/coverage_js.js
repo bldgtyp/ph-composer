@@ -118,7 +118,7 @@ function score(byFile) {
   var totalHit = 0;
   var totalRelevant = 0;
   var perFile = [];
-  panelFiles.panelFiles().forEach(function (file) {
+  panelFiles.panelFiles().concat(panelFiles.runtimeFiles()).forEach(function (file) {
     var counts = lineCoverage(fs.readFileSync(file, "utf8"), byFile[file] || []);
     totalHit += counts.hit;
     totalRelevant += counts.relevant;

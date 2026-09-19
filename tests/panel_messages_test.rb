@@ -33,7 +33,9 @@ class PanelMessagesTest < PhComposerTestCase
 
   private
 
+  # The panel's own scripts. The runtime page (html/runtime/) speaks to RuntimeHost, not the panel.
   def sources
-    Dir[File.join(HTML, "**", "*.js")].sort.map { |path| File.read(path) }
+    panel_files = Dir[File.join(HTML, "**", "*.js")].reject { |path| path.include?("/html/runtime/") }
+    panel_files.sort.map { |path| File.read(path) }
   end
 end
