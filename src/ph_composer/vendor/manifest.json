@@ -1,0 +1,197 @@
+{
+  "assets": {
+    "html/base.css": {
+      "bytes": 8120,
+      "mime": "text/css; charset=utf-8",
+      "sha256": "33d0b00feab72c07ca044888d7a919c8ee7dd264b57dd0ea3a2e6b71e8d090bb"
+    },
+    "html/dom.js": {
+      "bytes": 4030,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "77a81a0114b32f260947f2325752b020736d2e5e3eeacd2768e20bdc64cc32f3"
+    },
+    "html/fields.js": {
+      "bytes": 1690,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "1e831a89b95a06ed1d97aa4b155b708ccdc700d3addaff7216493fdbb2e01241"
+    },
+    "html/icons.js": {
+      "bytes": 8897,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "1f8738bd0700e56306c2d82a21bc23133b0dc8f8508ff0c9a4f7c301f00b54cb"
+    },
+    "html/index.html": {
+      "bytes": 2532,
+      "mime": "text/html; charset=utf-8",
+      "sha256": "4ca5c0deebc21fbc87b4efa8709b14ebfe30f3b7e124f480a31525144b61294d"
+    },
+    "html/length_expression.js": {
+      "bytes": 10498,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "590223183863b9d702d93a450978d8fe072d72563c0cde99514feef6fad452cf"
+    },
+    "html/module.js": {
+      "bytes": 2942,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "884ea2b3e0312b660d13517ae33cb7cb5cf6c60fd602f7dee624543bfac9cde2"
+    },
+    "html/overlay.css": {
+      "bytes": 9240,
+      "mime": "text/css; charset=utf-8",
+      "sha256": "4af9f93f210d246d3da89b2a86a8f1d3e3b20272c5ee48bdeca6dd3c24f5aebf"
+    },
+    "html/overlay.js": {
+      "bytes": 17480,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "d04ec25b95305a45ab69cbabd9a18a5e4c8ba9ff382d37618c596665e5d360ad"
+    },
+    "html/panel.js": {
+      "bytes": 10131,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "4bc86508a0e17d3e67bcdf55104da0123b5f48d8331354aeb9e2eb2b5c1e6c77"
+    },
+    "html/record_form.js": {
+      "bytes": 4121,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "c330b1b8f7e17ccfc16bf9c1f86d8e91acd41fa91b4d9625aafb6967b312a91a"
+    },
+    "html/request.js": {
+      "bytes": 3479,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "9abc3b7332b40c579190ef39e20005c44b68a664dd32587b7d0d38f02ba4a4bf"
+    },
+    "html/sections/export.js": {
+      "bytes": 587,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "decc5ac0ff975320b6450d24df950251135ad4279a12ad7914d9ccc533797c9d"
+    },
+    "html/sections/shell.js": {
+      "bytes": 1276,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "6f0089590c96a1c10c5ac812852b26104791d30ce9b243670c2d7a9a5d1664c9"
+    },
+    "html/shell.css": {
+      "bytes": 911,
+      "mime": "text/css; charset=utf-8",
+      "sha256": "d55f6f640f0858aa483b1c881dfa0c8b1f1a15d8fc924cddf101c602a9c85b98"
+    },
+    "html/snapshot.js": {
+      "bytes": 1462,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "ebd42866e75a1c4ba916861e9dfef089f80463ad8ce7ef7184ba459cd3da4fd7"
+    },
+    "html/unit_field.js": {
+      "bytes": 7928,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "32cf802bf709f773f39c94d5a94fa5b1e755e1f3c3d280c0debd90cbc287840a"
+    },
+    "html/unit_numbers.js": {
+      "bytes": 4112,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "60737dd197f679fdfc99a22948ff48438a2d00e940b843163af2569c59a9e267"
+    },
+    "html/unit_preferences.js": {
+      "bytes": 4796,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "bc56c03a4b3c49cda3ae812465de485180c0f56c348e412123e6f745e5f99450"
+    },
+    "html/unit_tables.js": {
+      "bytes": 11057,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "8681095484b685b9c67105244b370b55859f9070beea9ad8c89d6814d225f16a"
+    },
+    "html/units.js": {
+      "bytes": 12528,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "a092c02f3cc376b33177db3c9f90180f51aca82465f6ae7b85b99d38e8b57539"
+    },
+    "html/workspace.js": {
+      "bytes": 1099,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "3ea0d2929b882fad80da8fb48d2998874bb265f59f72dd5599812dbae02b82a8"
+    },
+    "vendor/pyodide/pyodide-lock.json": {
+      "bytes": 84412,
+      "mime": "application/json",
+      "sha256": "e313a21e0717839411cecf6f5bb74a92124239a2dffa80ec7ed1b712d621380f"
+    },
+    "vendor/pyodide/pyodide.asm.js": {
+      "bytes": 1157891,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "71250bb1cf7216d1f848505f1056f351bd02187fbb112e966f6e9745465d0c4f"
+    },
+    "vendor/pyodide/pyodide.asm.wasm": {
+      "bytes": 8995509,
+      "mime": "application/wasm",
+      "sha256": "f7141d4928ef91480c6080e2746ebb93fd4f3567bf0077f6a7f65b0ad11b9da5"
+    },
+    "vendor/pyodide/pyodide.js": {
+      "bytes": 17417,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "b67a1e4ed23ed8c3ee0b50f3b054f4fccf2cb9dda2f6db0cb69a531bd21107da"
+    },
+    "vendor/pyodide/python_stdlib.zip": {
+      "bytes": 8882369,
+      "mime": "application/zip",
+      "sha256": "573b362d25c0ade9f5c2c2d2313fae9a92bc46adf66dd2374130d1f80b5ec9ca"
+    }
+  },
+  "gates": {
+    "boot_deadline_ms": 15000,
+    "cold_boot_ceiling_ms": 6000,
+    "cold_boot_target_ms": 4000,
+    "installed_ceiling_bytes": 24000000,
+    "installed_target_bytes": 22000000,
+    "panel_ready_ceiling_ms": 2000,
+    "panel_ready_target_ms": 1000,
+    "platform_win": {
+      "cold_boot_ceiling_ms": 12000
+    },
+    "pump_ceiling_ms": 50,
+    "pump_target_ms": 20,
+    "warm_round_trip_ceiling_ms": 100,
+    "warm_round_trip_target_ms": 20
+  },
+  "manifest_asset": "vendor/manifest.json",
+  "packages": [],
+  "pyodide": {
+    "assets": {
+      "pyodide-lock.json": {
+        "bytes": 84412,
+        "mime": "application/json",
+        "sha256": "e313a21e0717839411cecf6f5bb74a92124239a2dffa80ec7ed1b712d621380f"
+      },
+      "pyodide.asm.js": {
+        "bytes": 1157891,
+        "mime": "text/javascript; charset=utf-8",
+        "sha256": "71250bb1cf7216d1f848505f1056f351bd02187fbb112e966f6e9745465d0c4f"
+      },
+      "pyodide.asm.wasm": {
+        "bytes": 8995509,
+        "mime": "application/wasm",
+        "sha256": "f7141d4928ef91480c6080e2746ebb93fd4f3567bf0077f6a7f65b0ad11b9da5"
+      },
+      "pyodide.js": {
+        "bytes": 17417,
+        "mime": "text/javascript; charset=utf-8",
+        "sha256": "b67a1e4ed23ed8c3ee0b50f3b054f4fccf2cb9dda2f6db0cb69a531bd21107da"
+      },
+      "python_stdlib.zip": {
+        "bytes": 8882369,
+        "mime": "application/zip",
+        "sha256": "573b362d25c0ade9f5c2c2d2313fae9a92bc46adf66dd2374130d1f80b5ec9ca"
+      }
+    },
+    "cpython_license": "PSF-2.0",
+    "license": "MPL-2.0",
+    "package_json_license": "Apache-2.0",
+    "python_version": "3.11.3",
+    "source": "https://github.com/pyodide/pyodide/releases/download/0.24.1/pyodide-core-0.24.1.tar.bz2",
+    "source_bytes": 4604614,
+    "source_sha256": "7470bde4b38aa1fcc82d7f64d23b938510f10d7ff349b7a309d4e43a0e143443",
+    "version": "0.24.1"
+  },
+  "schema_version": 1,
+  "translation_assets": [],
+  "wheel_order": []
+}

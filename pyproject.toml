@@ -18,11 +18,11 @@ testpaths = ["tests/python"]
 addopts = "-q"
 # Each tool script is a `uv run` entry point with its own PEP 723 block, so it is importable by
 # module name only through these entries.
-pythonpath = ["tools/rbz", "tools/hostkit"]
+pythonpath = ["tools/rbz", "tools/hostkit", "tools/runtime"]
 
 [tool.ruff]
 line-length = 120
-src = [".", "tools/rbz", "tools/hostkit"]
+src = [".", "tools/rbz", "tools/hostkit", "tools/runtime"]
 
 # The pycodestyle/pyflakes core, import order, the modernizations 3.11 makes free, and three
 # families carried from the predecessor's review: `BLE` makes a broad `except` a decision,
@@ -34,6 +34,6 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["tools/rbz", "tools/hostkit", "tests/python"]
-mypy_path = "tools/rbz:tools/hostkit"
+files = ["tools/rbz", "tools/hostkit", "tools/runtime", "tests/python"]
+mypy_path = "tools/rbz:tools/hostkit:tools/runtime"
 disallow_untyped_defs = true

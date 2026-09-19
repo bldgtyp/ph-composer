@@ -1,6 +1,6 @@
 .PHONY: ci ci-pending syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage hostkit-test python-check \
         panel-manifest panel-manifest-check ui-preview ui-checks rbz rbz-check install clean bridge-install \
-        bridge-uninstall
+        bridge-uninstall runtime-check runtime-pin-check runtime-manifest
 
 # `.ruby-version` pins 3.2.2, the Ruby the current proving host embeds. rbenv resolves it when it
 # is installed; without rbenv this falls back to whatever `ruby` is on PATH, and the suite's own
@@ -18,12 +18,13 @@ BUNDLE := $(dir $(RUBY))bundle
 SKETCHUP_VERSION ?= 2026
 
 # Every target docs/DEVELOPMENT.md claims for the offline loop that exists today.
-ci: syntax lint test fixtures-check panel-manifest-check hostkit-test python-check rbz rbz-check ci-pending
+ci: syntax lint test fixtures-check panel-manifest-check runtime-check runtime-pin-check hostkit-test python-check rbz \
+    rbz-check ci-pending
 
 # The gate is not complete until these land. Printed on every run so a green `make ci` is never
 # read as the full Phase 0 gate (planning/refactor/phase-zero/phases/phase-02-bootstrap.md).
 ci-pending:
-	@echo "Not yet in ci: runtime-pin-check, runtime-check and the RBZ footprint gate (P0-F)."
+	@echo "Not yet in ci: the translation package's typing and coverage (P0-F)."
 
 syntax:
 	@for file in $(RB_FILES); do $(RUBY) -c "$$file" >/dev/null || exit 1; done
@@ -133,6 +134,19 @@ hostkit-test:
 
 python-check:
 	@uv run mypy --config-file pyproject.toml
+
+# The runtime manifest (src/ph_composer/vendor/manifest.json) pins every asset the loopback server may
+# serve. Regenerate it after editing anything under html/ or python/: panel-manifest first, since
+# the runtime manifest hashes the pages it writes, then this, then rbz.
+runtime-manifest:
+	@uv run tools/runtime/vendor.py --refresh-manifest
+
+# Offline: the tree, the Pyodide pin, the gates and the installed-size budget agree with the manifest.
+runtime-check:
+	@uv run tools/runtime/vendor.py --check
+
+runtime-pin-check:
+	@uv run tools/runtime/vendor.py --pins-check
 
 rbz:
 	@uv run tools/rbz/build.py

@@ -32,9 +32,10 @@ LOADER = f"{EXTENSION_ID}.rb"
 ARCHIVE = DIST / f"{EXTENSION_ID}.rbz"
 ALLOWLIST = Path(__file__).with_name("shipping_allowlist.json")
 ZIP_EPOCH = (1980, 1, 1, 0, 0, 0)
+RUNTIME_MANIFEST = f"{EXTENSION_ID}/vendor/manifest.json"
 
 # What the extension ships. A new kind of asset is a packaging decision, made here.
-SHIPPED_SUFFIXES = frozenset({".rb", ".js", ".css", ".html", ".svg", ".json", ".py", ".md", ".txt"})
+SHIPPED_SUFFIXES = frozenset({".rb", ".js", ".css", ".html", ".svg", ".json", ".py", ".md", ".txt", ".wasm", ".zip"})
 
 # Development material never ships, whatever its suffix: the host bridge and probes, synthetic
 # examples and fixtures, tests and the private corpus.
@@ -126,6 +127,17 @@ def shipping_problems(entries: Mapping[str, bytes], allowed: list[AllowedLine]) 
     return problems
 
 
+def footprint_problems(entries: Mapping[str, bytes]) -> list[str]:
+    """The installed extension against the runtime manifest's installed-size ceiling. The budget covers
+    everything the archive unpacks, not only the runtime payload the manifest lists."""
+    manifest = entries.get(RUNTIME_MANIFEST)
+    if manifest is None:
+        return [f"{RUNTIME_MANIFEST}: missing, so the installed-size budget cannot be checked"]
+    ceiling = json.loads(manifest)["gates"]["installed_ceiling_bytes"]
+    installed = sum(len(content) for content in entries.values())
+    return [f"installed size {installed} bytes exceeds the {ceiling}-byte ceiling"] if installed > ceiling else []
+
+
 def _stripped_lines(content: bytes) -> set[str]:
     return {line.strip() for line in content.decode("utf-8", errors="replace").splitlines()}
 
@@ -161,9 +173,10 @@ def check_archive() -> None:
         missing = sorted(expected - set(entries))
         extra = sorted(set(entries) - expected)
         raise SystemExit(f"archive is stale; run make rbz. missing={missing}, extra={extra}")
-    if problems := shipping_problems(entries, load_allowlist()):
+    if problems := shipping_problems(entries, load_allowlist()) + footprint_problems(entries):
         raise SystemExit("archive may not ship:\n  " + "\n  ".join(problems))
-    print(f"RBZ verified: {len(entries)} files, {ARCHIVE.stat().st_size} bytes")
+    installed = sum(len(content) for content in entries.values())
+    print(f"RBZ verified: {len(entries)} files, {ARCHIVE.stat().st_size} bytes, {installed} bytes installed")
 
 
 def plugins_directory(sketchup_version: str) -> Path:

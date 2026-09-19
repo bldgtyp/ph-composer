@@ -127,3 +127,12 @@ def test_the_plugins_directory_needs_a_four_digit_sketchup_year() -> None:
     for version in ("26", "2026.1", "../..", "abcd"):
         with pytest.raises(SystemExit):
             build.plugins_directory(version)
+
+
+def test_the_installed_extension_must_fit_the_runtime_budget() -> None:
+    manifest = b'{"gates": {"installed_ceiling_bytes": 100}}'
+    fits = {**LOADER, build.RUNTIME_MANIFEST: manifest}
+    assert build.footprint_problems(fits) == []
+    over = {**fits, "ph_composer/vendor/pyodide/pyodide.asm.wasm": b"x" * 50}
+    assert build.footprint_problems(over) == ["installed size 102 bytes exceeds the 100-byte ceiling"]
+    assert build.footprint_problems(LOADER)[0].endswith("the installed-size budget cannot be checked")
