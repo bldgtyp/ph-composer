@@ -33,3 +33,6 @@ uv run tools/spikes/phx_pyodide/pyodide_run.py "$W"
 `--no-deps` is deliberate: PHX 1.57.1 still declares `xlwings`, `pydantic>=2`, `rich` and `lxml`
 (PHX#157), and the METr path imports none of them. Chromium 88 comes from the shared cache
 `tools/runtime/browser_check.py` uses; run that once with `--download-chromium` if it is absent.
+
+Spike tooling is checked by ruff only; it is outside the mypy file list because it imports the
+honeybee stack, which the development environment does not install.
