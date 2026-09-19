@@ -31,7 +31,7 @@ ISSUE: none (local planning draft)
 | --- | --- | --- | --- | --- |
 | Before placement | 1 | 15.0 m² | none | outer-loop area 15.0 m² |
 | Two 2-element units per wall | 1 | 10.2 m² (15.0 − 2 × 2.4) | each unit to its wall | outer-loop area 15.0 m²; the mirrored unit reads determinant sign −1 |
-| First layout: one unit overhanging the wall end by 50 mm | 1 | 11.4 m² on that wall | glued | the overhanging unit subtracted nothing |
+| First layout: one unit overhanging the wall end by 50 mm | 1 | 11.4 m² on that wall | glued | the pane crossing the wall end subtracted nothing; the unit's other pane subtracted 1.2 m² |
 | First layout: two units overlapping by 1.1 m | 1 | 10.2 m² | glued | both full areas subtracted; the overlap counted twice |
 | Definition rewritten to 3 elements (one operation) | 1 | `zone_a` 9.0, `zone_b` 7.8 m² | unchanged | all four instances changed; they now overhang and overlap, with no refusal |
 | `transform!` scaling 1.5 in X on one unit | 1 | 9.6 m² | unchanged | `no_scale_mask` did not stop it; `xscale` reads 1.5 |
@@ -69,8 +69,9 @@ five consequences:
    face shows outside. A definition that gets this wrong looks uncut.
 2. **Never read net area from `Face#area`.** The cut does not change host topology, and
    `Face#area` subtracts each pane wholly inside the face at full area, so an overlap counts twice,
-   and subtracts nothing for a pane that crosses the face boundary. Export uses the host's outer loop as the gross polygon, which is
-   honeybee's shape (Q26), plus Apertures from each unit's outline. Overlap and overhang are
+   and subtracts nothing for a pane that crosses the face boundary. Export uses the host's outer
+   loop as the gross polygon, which is honeybee's shape (Q26), plus Apertures from each unit's
+   outline. Overlap and overhang are
    refused or reported from those outlines.
 3. **Verify glue geometrically.** A split host face leaves its units glued to the original face
    even when they lie on the new one, and that new face is not cut. An explode can leave glue on
