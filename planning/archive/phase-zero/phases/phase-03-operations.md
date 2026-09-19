@@ -1,7 +1,7 @@
 # P0-D: records, sessions and public operations
 
 DATE: 2026-09-18
-STATUS: Implemented on branch 2026-09-18; host-verified on 26.1.188. Evidence: [evidence/phase-03-operations.md](../evidence/phase-03-operations.md).
+STATUS: Complete 2026-09-18; archived after PR #1. At the last stage update: Implemented on branch 2026-09-18; host-verified on 26.1.188. Evidence: [evidence/phase-03-operations.md](../evidence/phase-03-operations.md).
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

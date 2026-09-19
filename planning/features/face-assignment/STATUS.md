@@ -12,7 +12,7 @@ into its behavior sections. Shared understanding reached, pending Ed's confirmat
 
 ## Next step
 
-The overlay spike (Q22) ran in P0-B on 2026-09-18 and passed ([B2](../../refactor/phase-zero/evidence/spike-overlay.md)). Filled, translucent,
+The overlay spike (Q22) ran in P0-B on 2026-09-18 and passed ([B2](../../archive/phase-zero/evidence/spike-overlay.md)). Filled, translucent,
 depth-tested fills work, picking is unaffected, and 1,000 triangles add no measurable median cost.
 Colour-by may plan filled modes. The plan owns cache invalidation from observers and a budget past
 about 10,000 overlaid triangles, where marshalling adds 4 to 5 ms a frame. Next: PLAN.md.

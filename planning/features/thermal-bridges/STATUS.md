@@ -12,7 +12,7 @@ honeybee-ph's `PhThermalBridge` and PHX's METr writer. Not interviewed.
 
 ## Next step
 
-Interview. The edge identity spike ran in P0-B on 2026-09-18 ([B4](../../refactor/phase-zero/evidence/spike-edge.md)). Edge dictionaries survive
+Interview. The edge identity spike ran in P0-B on 2026-09-18 ([B4](../../archive/phase-zero/evidence/spike-edge.md)). Edge dictionaries survive
 every tested operation, Undo and reopen, but copy themselves onto new edges. The plan carries the
 four terms in its disposition.
 

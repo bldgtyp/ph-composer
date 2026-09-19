@@ -1,7 +1,7 @@
 # P0-G: integrated acceptance and Phase 1 handoff
 
 DATE: 2026-09-18
-STATUS: Implemented on branch 2026-09-18 as the foundation milestone: offline and fresh-process host
+STATUS: Complete 2026-09-18. Implemented first as the foundation milestone: offline and fresh-process host
 gates passed at `0e71b2e`; A16 to A19 await P0-B. Evidence in
 [../evidence/phase-06-acceptance.md](../evidence/phase-06-acceptance.md).
 AUTHOR: Ed May, BLDGTYP, with Codex

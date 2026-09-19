@@ -21,7 +21,7 @@ then preview, modes, labels and totals; then Height from solid; the drag handle 
 
 ## Blockers
 
-- None from the overlay spike: it passed on 2026-09-18 ([B2](../../refactor/phase-zero/evidence/spike-overlay.md)), and translucent
+- None from the overlay spike: it passed on 2026-09-18 ([B2](../../archive/phase-zero/evidence/spike-overlay.md)), and translucent
   depth-tested fills work on the proving host, so the volume preview needs no edge fallback.
 - The foundation transplant. This packet is mostly a carry-over of the predecessor's Spaces
   feature with the designPH dependency replaced.

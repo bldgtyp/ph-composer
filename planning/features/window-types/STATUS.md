@@ -15,7 +15,7 @@ behavior sections. Shared understanding reached, pending Ed's confirmation of th
 
 ## Next step
 
-The component host spike ran in P0-B on 2026-09-18 ([B3](../../refactor/phase-zero/evidence/spike-window.md)). The flat cutting component
+The component host spike ran in P0-B on 2026-09-18 ([B3](../../archive/phase-zero/evidence/spike-window.md)). The flat cutting component
 stays. PLAN.md must carry five consequences:
 1. panes authored facing out;
 2. net area never read from `Face#area`;

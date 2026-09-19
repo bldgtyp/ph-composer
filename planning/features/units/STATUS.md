@@ -14,7 +14,7 @@ answers do not block the foundation.
 
 ## Next step
 
-Execute the [shared Units stage](../../refactor/phase-zero/phases/phase-04-panel-units.md) when
+Execute the [shared Units stage](../../archive/phase-zero/phases/phase-04-panel-units.md) when
 implementation is authorized. It includes the six listed modules, their length-expression parser
 dependency and applicable tests. Keep F3 with
 Assemblies, F4 with Window Types and F1 with Spaces if measurements justify it. Resolve new
@@ -31,7 +31,7 @@ quantity rows through the owning feature interviews.
 
 The Phase 0 portion is implemented on branch `phase-zero-foundation` (P0-E): the six shared unit
 modules, the length-expression reader, the Ruby mirror and the shared vectors, with the A1 to A15
-allocation in [the P0-E evidence](../../refactor/phase-zero/evidence/phase-04-panel-units.md).
+allocation in [the P0-E evidence](../../archive/phase-zero/evidence/phase-04-panel-units.md).
 New quantity rows and the feature follow-ups remain with their owners.
 
 ## Ledger

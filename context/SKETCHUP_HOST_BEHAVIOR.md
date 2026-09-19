@@ -91,7 +91,7 @@ and Dynamic Components facts this file drops, is
 
 ## Components, glue and edge attributes
 
-Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/refactor/phase-zero/evidence/spike-window.md), [B4](../planning/refactor/phase-zero/evidence/spike-edge.md)).
+Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/archive/phase-zero/evidence/spike-window.md), [B4](../planning/archive/phase-zero/evidence/spike-edge.md)).
 
 | Fact | Consequence |
 | --- | --- |
@@ -104,7 +104,7 @@ Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/refactor/phase
 
 | Fact | Consequence |
 | --- | --- |
-| A filled, translucent overlay (`GL_TRIANGLES`, alpha 110) is depth-tested against Model geometry, leaves native picking unaffected and adds no measurable median frame cost at 1,000 triangles; at 10,000 it adds about 4 to 5 ms a frame, mostly Ruby marshalling in `draw`. Measured in PH-Composer on 26.1.188, M1 Max, 2026-09-18 ([B2](../planning/refactor/phase-zero/evidence/spike-overlay.md)). | Filled Colour-by modes and the volume preview are available; cache per instance and budget past about 10,000 triangles. |
+| A filled, translucent overlay (`GL_TRIANGLES`, alpha 110) is depth-tested against Model geometry, leaves native picking unaffected and adds no measurable median frame cost at 1,000 triangles; at 10,000 it adds about 4 to 5 ms a frame, mostly Ruby marshalling in `draw`. Measured in PH-Composer on 26.1.188, M1 Max, 2026-09-18 ([B2](../planning/archive/phase-zero/evidence/spike-overlay.md)). | Filled Colour-by modes and the volume preview are available; cache per instance and budget past about 10,000 triangles. |
 | A `Sketchup::Overlay` drawing through the accumulated world transform lands on the right geometry under rotated parents; 44 items drew in 0.17 ms median with a one-off 1.4 s walk. `View#write_image` does not render overlays; `view.invalidate` inside an eval does not repaint before the eval returns. | Cache per instance and invalidate from the observers; capture overlay evidence with a window capture. |
 | SketchUp 2023 to 2025 require a child drawing element appended to a component or group leaf path for `Model#drawing_element_visible?`; SketchUp 2026 accepts the occurrence path directly. | Branch on the host version in the visibility reader. |
 | `Sketchup::Overlay` is a 2023.0 API. | It is why SketchUp 2023 is the compatibility floor. |

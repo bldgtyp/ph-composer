@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# B4 spike: edge identity (planning/refactor/phase-zero/phases/phase-01-investigations.md). Development only,
+# B4 spike: edge identity (planning/archive/phase-zero/phases/phase-01-investigations.md). Development only,
 # never shipped. Loaded into SketchUp through the development bridge after the B3 spike file:
 #
 #   load "<repo>/tools/spikes/window/window_spike.rb"

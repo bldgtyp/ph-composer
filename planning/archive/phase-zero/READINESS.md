@@ -1,7 +1,7 @@
 # Readiness review
 
 DATE: 2026-09-18
-STATUS: Scoped. Product decisions resolved; implementation design supplied in CONTRACTS.md.
+STATUS: Complete 2026-09-18; archived after PR #1. At the last stage update: Scoped. Product decisions resolved; implementation design supplied in CONTRACTS.md.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft; origin exists, issue not created)
 

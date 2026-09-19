@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# The contributor walkthrough (planning/refactor/phase-zero/CONTRACTS.md) as a script: two clients
+# The contributor walkthrough (planning/archive/phase-zero/CONTRACTS.md) as a script: two clients
 # drive the example feature through PhComposer::API with the panel closed. Every step records what
 # happened and whether it is what the contract says. Run it against an open Model:
 #

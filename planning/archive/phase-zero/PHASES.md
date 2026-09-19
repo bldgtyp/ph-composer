@@ -1,7 +1,7 @@
 # Phase 0 stage index
 
 DATE: 2026-09-18
-STATUS: In progress. Implementation authorized 2026-09-18; see STATUS.md for stage states.
+STATUS: Complete 2026-09-18; archived after PR #1. At the last stage update: In progress. Implementation authorized 2026-09-18; see STATUS.md for stage states.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

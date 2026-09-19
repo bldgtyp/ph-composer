@@ -1,7 +1,7 @@
 # Phase 0 source inventory
 
 DATE: 2026-09-18
-STATUS: Closure verified by P0-A on 2026-09-18. No source has been transplanted or verified in PH-Composer.
+STATUS: Complete 2026-09-18; archived after PR #1. At the last stage update: Closure verified by P0-A on 2026-09-18. No source has been transplanted or verified in PH-Composer.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft; origin exists, issue not created)
 

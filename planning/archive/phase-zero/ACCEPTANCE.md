@@ -1,7 +1,7 @@
 # Phase 0 acceptance register
 
 DATE: 2026-09-18
-STATUS: Implemented on branch. Every row A01 to A21 met: A01 to A15, A20 and A21 in P0-G, A16 to A19 in P0-B.
+STATUS: Complete. Every row A01 to A21 met: A01 to A15, A20 and A21 in P0-G, A16 to A19 in P0-B.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

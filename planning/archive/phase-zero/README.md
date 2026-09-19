@@ -1,7 +1,7 @@
 # Phase 0: gates and foundation
 
 DATE: 2026-09-18
-STATUS: In progress. Implementation authorized 2026-09-18; P0-A and P0-C complete, P0-D implemented on branch, P0-E next.
+STATUS: Complete 2026-09-18; archived after PR #1. At the last stage update: In progress. Implementation authorized 2026-09-18; P0-A and P0-C complete, P0-D implemented on branch, P0-E next.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft; origin exists, issue not created)
 

@@ -210,3 +210,33 @@ No fallback was triggered. The PHX route holds, so Phase 1's success boundary is
   - the validation-and-export interview (PRD drafted, not interviewed).
 - **Later gates:** SketchUp 2023 native proof, Windows, public packaging and distribution, METr
   opening a real export, and the external-agent adapter packet.
+
+## PR review (PR #1)
+
+An independent review of PR #1 at `bb00db9` reproduced five P2 findings. The review ran against
+CODING_STANDARDS, EXTENSIBILITY, the architecture rubric and CONTRACTS. All five were accepted and
+fixed in `0c3144d`, each with a regression test that failed before its fix:
+
+| Finding | Fix | Regression |
+| --- | --- | --- |
+| Discovery and descriptions returned live schemas; editing one changed write validation | Detached copies from `discover` and `describe` | `test_discovery_and_descriptions_are_detached_from_what_validation_uses` |
+| Returned outcomes shared the retained object, so a caller could change what a retry returned (C4) | The store keeps its own copy; every read returns a detached one | `test_a_retained_outcome_is_isolated_from_every_returned_copy` |
+| A current-version extension envelope counted as understood without the installed validator or reference check; invalid data copied and exported | New status `invalid` and code `extension.invalid`: kept for unrelated edits, replaceable with valid data, refused for copy, migration and export | three engine tests and `test_an_exported_extension_failing_its_installed_validator_blocks_the_export` |
+| A forged cursor raised out of `API.query`; unexpected query and preview failures relied on a panel-only rescue | The cursor position must be a string id (`params.invalid`); query and preview answer unexpected failures as `failed` / `operation.failed` for every client | `test_a_malformed_cursor_is_refused_as_an_outcome`, `test_an_unexpected_query_or_preview_failure_is_a_failed_outcome` |
+| Rollback recovery left the journal stage after a process was lost while marking the journal committed, so the next commit failed with `EEXIST` | Rollback also clears the journal stage, before the journal | `test_next_commit_recovers_a_process_lost_while_marking_the_journal_committed` |
+
+In the discovery regression, before the fix, the test's edit to the "detached" schema also broke a
+later test through the shared part kind. That confirmed the finding.
+
+**Gate at `0c3144d`:**
+- `make ci` exits 0 on Ruby 3.2.2 and 2.7.2: 229 Ruby runs, 1,056 assertions, 112 JavaScript
+  tests, 77 Python tests.
+- `make coverage`: Ruby 96.5%, JavaScript 97.5%, Python 100%.
+
+**Host smoke on SketchUp 26.1.188, fresh process, RBZ built from `0c3144d`:**
+- the shipping build loads without the example feature;
+- `ExampleWalkthrough.run` passes all eight steps;
+- a described schema edited by the caller reads back unchanged;
+- a forged cursor is refused as `params.invalid`.
+
+The earlier host steps covered behaviour these fixes do not touch, and were not rerun.

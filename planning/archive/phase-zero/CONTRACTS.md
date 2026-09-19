@@ -1,7 +1,7 @@
 # Foundation contract design
 
 DATE: 2026-09-18
-STATUS: In progress. C1 to C5 implemented on branch in P0-D, C6 in P0-F (2026-09-18). Refinements recorded in place.
+STATUS: Complete 2026-09-18; archived after PR #1. At the last stage update: In progress. C1 to C5 implemented on branch in P0-D, C6 in P0-F (2026-09-18). Refinements recorded in place.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 

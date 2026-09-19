@@ -47,20 +47,20 @@ is the complete MVP Ed described. Ed confirmed both boundaries in D1 on 2026-09-
 
 ## Phase 0: gates and foundation
 
-The [Phase 0 planning packet](refactor/phase-zero/README.md) supplies seven stage plans, contract
+The [Phase 0 planning packet](archive/phase-zero/README.md) supplies seven stage plans, contract
 designs, frozen source disposition and acceptance checks. Product decisions are resolved.
 Ed authorized implementation on 2026-09-18; progress is tracked in the packet's STATUS. All seven
-stages and the four spikes ran on 2026-09-18, and every acceptance row is met on branch
-`phase-zero-foundation`, not yet merged.
+stages and the four spikes ran on 2026-09-18, every acceptance row is met, and Phase 0 was merged
+through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1). The packet is archived.
 
 | # | Item | Kind | State | Why here |
 | --- | --- | --- | --- | --- |
-| 0.1 | PHX without Excel, [PHX#157](https://github.com/PH-Tools/PHX/issues/157) | external spike | Complete 2026-09-18, [route viable](refactor/phase-zero/evidence/spike-phx.md) | The founding brief's first technical gate. If PHX cannot run in Pyodide, METr export needs a different route and phase 1 changes |
-| 0.2 | [Foundation transplant](refactor/foundation-transplant.md) | refactor | Implemented on branch, foundation milestone met 2026-09-18 | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
+| 0.1 | PHX without Excel, [PHX#157](https://github.com/PH-Tools/PHX/issues/157) | external spike | Complete 2026-09-18, [route viable](archive/phase-zero/evidence/spike-phx.md) | The founding brief's first technical gate. If PHX cannot run in Pyodide, METr export needs a different route and phase 1 changes |
+| 0.2 | [Foundation transplant](archive/foundation-transplant.md) | refactor | Complete 2026-09-18, merged through PR #1 | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
 | 0.3 | [Units](features/units/README.md) | feature, port | Scoped, Phase 0 split confirmed | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
-| 0.4 | Overlay fill spike | spike | Complete 2026-09-18, [pass](refactor/phase-zero/evidence/spike-overlay.md) | Gates Colour-by, which face-assignment needs in phase 1 |
-| 0.5 | Window component host spike | spike | Complete 2026-09-18, [flat component holds, five plan consequences](refactor/phase-zero/evidence/spike-window.md) | Gates window-types. Cheap to run with 0.4 |
-| 0.6 | Edge identity spike | spike | Complete 2026-09-18, [dictionaries survive, and multiply](refactor/phase-zero/evidence/spike-edge.md) | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
+| 0.4 | Overlay fill spike | spike | Complete 2026-09-18, [pass](archive/phase-zero/evidence/spike-overlay.md) | Gates Colour-by, which face-assignment needs in phase 1 |
+| 0.5 | Window component host spike | spike | Complete 2026-09-18, [flat component holds, five plan consequences](archive/phase-zero/evidence/spike-window.md) | Gates window-types. Cheap to run with 0.4 |
+| 0.6 | Edge identity spike | spike | Complete 2026-09-18, [dictionaries survive, and multiply](archive/phase-zero/evidence/spike-edge.md) | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
 | 0.7 | Development repository home and MVP license boundary | decisions | Confirmed | D5 keeps the UI kit AGPL and external integrations at file/HTTPS seams. D8 keeps development at `bldgtyp/ph-composer`; the public name and any future organization move remain open |
 
 The three host spikes are one session against the predecessor's bridge. They need no

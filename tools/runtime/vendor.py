@@ -57,7 +57,7 @@ class PackagePin:
 
 # The wheels the runtime installs, in install order. Phase 0 ships none: the foundation's package
 # shell imports without them, and the predecessor's eight honeybee-family pins stay recorded as
-# evidence in planning/refactor/phase-zero/SOURCE_INVENTORY.md until a package decision adds them.
+# evidence in planning/archive/phase-zero/SOURCE_INVENTORY.md until a package decision adds them.
 PACKAGE_PINS: tuple[PackagePin, ...] = ()
 
 MIME_TYPES = {

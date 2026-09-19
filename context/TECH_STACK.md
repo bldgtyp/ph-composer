@@ -13,7 +13,7 @@ The foundation is partly implemented on the `phase-zero-foundation` branch: sess
 transactions, the record engine and the public operation contract (Phase 0 stages P0-C and P0-D),
 and the panel shell, its UI kit and shared Units (P0-E).
 Everything else here still describes the target and the reasons for it. The Phase 0 packet under
-`planning/refactor/phase-zero/` records which rules have implementation and host evidence.
+`planning/archive/phase-zero/` records which rules have implementation and host evidence.
 
 [EXTENSIBILITY.md](EXTENSIBILITY.md) owns the accepted contributor architecture, including the
 separation of pure Ruby domain behavior from SketchUp adapters, public scripting, metadata and

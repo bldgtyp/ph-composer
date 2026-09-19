@@ -133,7 +133,7 @@ Host work defaults to the development bridge, not to a person at the Ruby Consol
 `make bridge-install` places the bridge in the SketchUp Plugins folder, never in the RBZ, and
 `make bridge-uninstall` removes it. `launch` always opens a document, because the bridge did not
 start while SketchUp waited at its Welcome screen
-([host evidence](../planning/refactor/phase-zero/evidence/phase-02-bootstrap.md)):
+([host evidence](../planning/archive/phase-zero/evidence/phase-02-bootstrap.md)):
 
 ```sh
 uv run tools/hostkit/host_bridge.py launch _private/host/run.skp --fresh-from _private/host/blank.skp
@@ -145,8 +145,8 @@ uv run tools/hostkit/host_bridge.py quit
 From there `eval`, `state`, `save`, `shot`, `key`, `console` and `quit` cover the fresh-process
 loop. `tools/hostkit/.index.md` lists what each does. Every `eval` runs in one shared binding, so
 a local variable assigned in one call survives into the next and keeps its object alive. Set such
-locals to nil before checking that a closed Model's session was collected. The measured host facts the bridge depends
-on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
+locals to nil before checking that a closed Model's session was collected. The measured host facts
+the bridge depends on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
 
 ## The panel
 

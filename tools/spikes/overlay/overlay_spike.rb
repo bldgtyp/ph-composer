@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# B2 spike: overlay fill (planning/refactor/phase-zero/phases/phase-01-investigations.md). Development only,
+# B2 spike: overlay fill (planning/archive/phase-zero/phases/phase-01-investigations.md). Development only,
 # never shipped. Loaded into SketchUp through the development bridge:
 #
 #   load "<repo>/tools/spikes/overlay/overlay_spike.rb"

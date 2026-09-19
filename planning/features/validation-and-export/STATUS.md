@@ -21,7 +21,7 @@ HBJSON/report planning does not wait on it.
 
 - The foundation transplant has not started.
 - Phase 1 needs the Zones and face-assignment contracts.
-- The PHX-in-Pyodide gate passed on 2026-09-18 ([B1](../../refactor/phase-zero/evidence/spike-phx.md)), with conditions
+- The PHX-in-Pyodide gate passed on 2026-09-18 ([B1](../../archive/phase-zero/evidence/spike-phx.md)), with conditions
   for this plan: pin nine wheels installed without dependency resolution while PHX#157 is open,
   honeybee-ph 1.33.65, and decide how a model without honeybee-ph Spaces supplies METr floor area.
 - No GitHub remote, so no issue yet.
