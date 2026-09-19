@@ -89,10 +89,22 @@ and Dynamic Components facts this file drops, is
 | Retained DOM nodes with transient Saving/Queued text still increased row height from 38.5 to 50 pixels. | Keep routine pending feedback out of row flow, preserve control focus, and measure geometry in the host. |
 | An 8-percent background tint fading in 200 ms was effectively invisible as a context-change cue; a 200 ms list fade with 4 px movement plus a separate 650 ms primary-blue outline fade was visible. | Use the measured cue for context swaps only; honor reduced-motion preferences. |
 
+## Components, glue and edge attributes
+
+Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/refactor/phase-zero/evidence/spike-window.md), [B4](../planning/refactor/phase-zero/evidence/spike-edge.md)).
+
+| Fact | Consequence |
+| --- | --- |
+| A glued `cuts_opening` component opens its host face in the view but leaves the face's loops unchanged. `Face#area` then subtracts every glued cutting instance's full area: overlapping units are counted twice, and an overhanging unit may subtract nothing. | Never read net area from `Face#area`; derive openings from unit outlines and the gross outer loop. |
+| After a host face is split, glued instances stay glued to the original face even when they lie wholly on the new one, and the new face is not cut. After an explode, `glued_to` can name an unrelated scrap face that still reports valid. | Verify glue geometrically: coplanar, containing the unit's outline. |
+| `no_scale_mask` hides the Scale tool's handles; `Transformation` scaling from Ruby applies anyway. | Detect scaling from `xscale`/`yscale`; a mirror from a negative determinant. |
+| `Edge#split`, an explode that splits edges, and native cut, copy and paste all put the source edge's full attribute dictionary on the new edges. `Entities#weld`, moves and push-pull keep edge persistent ids. Undo, Redo and save and reopen restore dictionaries and ids exactly. | Edge tags multiply rather than vanish; a Model-level registry and a scan tell a split from a copy or a replacement. |
+
 ## Overlays
 
 | Fact | Consequence |
 | --- | --- |
+| A filled, translucent overlay (`GL_TRIANGLES`, alpha 110) is depth-tested against Model geometry, leaves native picking unaffected and adds no measurable median frame cost at 1,000 triangles; at 10,000 it adds about 4 to 5 ms a frame, mostly Ruby marshalling in `draw`. Measured in PH-Composer on 26.1.188, M1 Max, 2026-09-18 ([B2](../planning/refactor/phase-zero/evidence/spike-overlay.md)). | Filled Colour-by modes and the volume preview are available; cache per instance and budget past about 10,000 triangles. |
 | A `Sketchup::Overlay` drawing through the accumulated world transform lands on the right geometry under rotated parents; 44 items drew in 0.17 ms median with a one-off 1.4 s walk. `View#write_image` does not render overlays; `view.invalidate` inside an eval does not repaint before the eval returns. | Cache per instance and invalidate from the observers; capture overlay evidence with a window capture. |
 | SketchUp 2023 to 2025 require a child drawing element appended to a component or group leaf path for `Model#drawing_element_visible?`; SketchUp 2026 accepts the occurrence path directly. | Branch on the host version in the visibility reader. |
 | `Sketchup::Overlay` is a 2023.0 API. | It is why SketchUp 2023 is the compatibility floor. |
