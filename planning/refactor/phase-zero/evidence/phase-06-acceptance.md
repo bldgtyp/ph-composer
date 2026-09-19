@@ -1,8 +1,8 @@
 # P0-G integrated acceptance: evidence
 
 DATE: 2026-09-18
-STATUS: In progress. Foundation-only milestone: Ed chose to run P0-G before P0-B, so A16 to A19
-have no result and Phase 0 cannot close here.
+STATUS: Implemented on branch and host-verified on SketchUp 26.1.188 as the foundation milestone. Ed
+chose to run P0-G before P0-B, so A16 to A19 have no result and Phase 0 cannot close here.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; origin exists, issue not created)
 
@@ -86,7 +86,8 @@ Model was open at any point. Driven through the bridge; Ed operated the native c
    titled "Export HBJSON", proposing `run-a.hbjson`. Cancel answered "Export cancelled. Nothing was
    written." (`export.cancelled`, effect `none`). Save, twice, answered `export.unavailable` with
    effect `none`. The Model's folder, which held a previous `run-a.hbjson` and report, was byte-
-   and time-identical afterwards. `~/Documents`, where the dialog opened, gained no file. No
+   and time-identical afterwards. `~/Documents`, where the dialog opened, gained no file. Because of that, the accepted destination
+   was not the folder holding the previous files; the workflow never reads the destination. No
    runtime host, asset server or extra thread existed.
 6. **Save and fresh-process reopen.** Saved through the bridge, quit, relaunched: the same digest
    `518340fd…`, a new session id, revision 1, the Model unmodified.
@@ -106,8 +107,10 @@ Model was open at any point. Driven through the bridge; Ed operated the native c
    The Model stayed unmodified. The IP preference survived a panel close and reopen.
 10. **Same-process Model switch.** Switching to B through `open_file` moved the panel to B, dropped
     the draft with "The panel now shows a different Model. Nothing was written." and showed B's edit
-    path ("Editing: Group1#1"). Neither Model changed. Switching back through `open_file` fired no
-    `onActivateModel`, not even to a fresh `AppObserver`, so the panel stayed on B. Native window
+    path ("Editing: Group1#1"). Neither Model changed; the path by which this activation reached the
+    panel was not identified. Switching back through `open_file`, and two later instrumented
+    switches, fired no `onActivateModel`, to the session's subscriber or to a fresh `AppObserver`,
+    so the panel stayed on B. Native window
     clicks (Ed) fired it every time, and the panel followed A, B, A, B, with the right parts and
     footer. This is a new host fact.
 11. **Export from a normal folder (Ed).** With B saved in `_private/host/`, the save dialog again
