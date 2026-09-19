@@ -89,6 +89,18 @@ class DiagnosticsTest < PhComposerTestCase
     assert_equal "moved to /outside", Diagnostics.redact("moved to /outside")
   end
 
+  # Forms the P0-F review found passing: Ruby's own Windows spelling, a share, a home path, and a path
+  # after punctuation. A web address and a ratio are not paths.
+  def test_finds_paths_in_other_spellings_and_after_punctuation
+    ["C:/Users/example/model.skp", "\\\\server\\share\\model.skp", "~/Desktop/model.skp",
+     "(/Users/example/x)", "path=/Users/example/x", "saved to:/Users/example/x"].each do |text|
+      assert Diagnostics.absolute_path?(text), text
+    end
+    ["https://example.com/a/b", "3:1 ratio", "Type A/B", "Roof /2"].each do |text|
+      refute Diagnostics.absolute_path?(text), text
+    end
+  end
+
   def test_keeps_a_slash_used_inside_a_name
     assert_equal "Wall /exterior", Diagnostics.redact("Wall /exterior")
     assert_equal "Roof /2", Diagnostics.redact("Roof /2")

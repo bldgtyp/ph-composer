@@ -36,6 +36,7 @@ class ExportTest < PhComposerTestCase
     feature = feature_declaring do |scope|
       scope.export_contributor("test.export.bad", :section_version => 0, :result => { "state" => nil, "x" => 3 })
       scope.export_contributor("test.export.twin", :section_version => 1, :result => { "example_parts" => nil }) { [] }
+      scope.export_contributor("test.export.odd", :section_version => 1, :result => nil) { [] }
     end
 
     error = assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([feature]) }
@@ -45,6 +46,7 @@ class ExportTest < PhComposerTestCase
     assert_includes messages, "test.export.bad result: result.x: Integer is not a schema."
     assert_includes messages, "test.export.bad declares result field state, which is already owned."
     assert_includes messages, "test.export.twin declares result field example_parts, which is already owned."
+    assert_includes messages, "test.export.odd result: result must be an object schema."
     refute PhComposer::Registry.current.export_contributors.key?("test.export.twin"), "nothing in the batch publishes"
   end
 
@@ -129,11 +131,15 @@ class ExportTest < PhComposerTestCase
     nested = shared_result.tap { |result| result["example_parts"]["label"] = "Sill" }
     path = shared_result.tap { |result| result["findings"] = [finding("/Users/someone/model.skp")] }
     metadata = shared_result.tap { |result| result["example_parts"]["user_data"] = {} }
+    hidden = shared_result.tap { |result| result["run_id"] = { "designer_note" => "client pricing" } }
+    listed = shared_result.tap { |result| result["summary"]["objects"] = [{ "anything" => "goes" }] }
 
     {
       nested => "result.example_parts contains undeclared fields: label.",
       path => "The artifact contains a local file path.",
-      metadata => "result.example_parts contains undeclared fields: user_data."
+      metadata => "result.example_parts contains undeclared fields: user_data.",
+      hidden => "result.run_id must be a value, not an object.",
+      listed => "result.summary.objects must be a value, not an object."
     }.each do |result, message|
       error = assert_raises(PhComposer::CodedError) { Export::Privacy.validate!(result) }
       assert_equal ["export.privacy_undeclared", message], [error.code, error.message]

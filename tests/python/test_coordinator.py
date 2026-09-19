@@ -81,6 +81,11 @@ def test_two_sections_with_one_id_are_structural() -> None:
         (document(synthetic_a={"version": 7, "records": []}), "section.version_unsupported", "version 7 is not read"),
         (document(synthetic_a={"version": 1, "records": {}}), "payload.contract", "records are not a list"),
         (document(synthetic_a={"version": 1, "records": [{"width_m": 1}]}), "payload.contract", "without an id"),
+        (
+            document(synthetic_a={"version": 1, "records": [{"id": "a1", "width_m": 1}, {"id": "a1", "width_m": -1}]}),
+            "payload.contract",
+            "names record a1 twice",
+        ),
         ({**document(), "sections": {**document()["sections"], "other.x": {}}}, "payload.contract", "other.x"),  # type: ignore[dict-item]
     ],
 )

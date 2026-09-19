@@ -66,9 +66,9 @@
       "sha256": "995653f266679e42cddac6a08ee37a1908a902238d63fc3ceb8dbc1fcf470092"
     },
     "html/runtime/runtime.js": {
-      "bytes": 6677,
+      "bytes": 6990,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "333236d424bca33073db4264697519f1b92f8a53f1bddf4624c9904338e165e6"
+      "sha256": "83ff4bf06c2b9cc0fbe63814466f31a7e53bd5ff44056df8b05c4104a794fbf9"
     },
     "html/sections/export.js": {
       "bytes": 1944,
@@ -136,9 +136,9 @@
       "sha256": "011c27edad6b9c98656c359be77f92a7e92bdb69be5161d09177242bf494a6b4"
     },
     "python/ph_composer_translation/coordinator.py": {
-      "bytes": 8127,
+      "bytes": 8421,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "be22bacbf98463968c8642f90a3ddb7816cb2850516f9bb72e6c396f75d1a728"
+      "sha256": "9bf200d5e7372f9f2b8eefe6e159e5998968b042ce95a1c6e4de4c040bbcedce"
     },
     "python/ph_composer_translation/entry.py": {
       "bytes": 848,

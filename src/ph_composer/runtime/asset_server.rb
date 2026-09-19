@@ -140,10 +140,12 @@ module PhComposer
 
     private
 
+    # The listening socket is captured here, so `stop` clearing the field cannot race the loop.
     def start_acceptor
+      listener = @socket
       @acceptor = Thread.new do
         loop do
-          session = @socket.accept
+          session = listener.accept
           @lock.synchronize { admit(session) }
         end
       rescue IOError, Errno::EBADF

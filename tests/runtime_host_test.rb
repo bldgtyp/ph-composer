@@ -75,6 +75,26 @@ class RuntimeHostTest < PhComposerTestCase
     assert_same report, @runtime.stop, "a second stop changes nothing and reports the first"
   end
 
+  def test_a_window_that_fails_to_close_still_releases_the_server_and_is_reported_open
+    PhComposer::Diagnostics.strict = false
+    @runtime.start
+    @dialog.define_singleton_method(:execute_script) { |_script| raise IOError, "page gone" }
+    @dialog.define_singleton_method(:close) { raise IOError, "window busy" }
+
+    report = @runtime.stop
+
+    assert report.fetch("dialog_open"), "the window never closed, and the report says so"
+    assert_equal 1, report.dig("after", "dialog")
+    assert_equal({ "timer" => 0, "acceptor" => 0, "clients" => 0, "socket" => 0 },
+                 report.fetch("after").reject { |key, _value| key == "dialog" })
+  end
+
+  def test_a_runtime_starts_once
+    @runtime.start
+
+    assert_raises(ArgumentError) { @runtime.start }
+  end
+
   def test_closing_the_runtime_window_stops_it
     @runtime.start
 

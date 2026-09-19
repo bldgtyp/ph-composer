@@ -30,6 +30,7 @@ module PhComposer
 
     # Opens the runtime page. Refuses a payload whose files differ from the manifest before serving any.
     def start
+      raise ArgumentError, "A runtime starts once; build a new one." unless @state == "idle"
       raise RuntimeManifest::Invalid, "runtime assets differ from the manifest: #{@server.invalid_assets.join(', ')}" \
         unless @server.invalid_assets.empty?
 
@@ -65,13 +66,18 @@ module PhComposer
       state_at_stop = @state
       @state = "stopped"
       dialog = @dialog
-      @dialog = nil
-      deliver_to(dialog, "type" => "runtime.stop", "payload" => {}) if dialog
-      dialog&.close
-      @server.stop
-      @queued.clear
-      @stopped = { "state_at_stop" => state_at_stop, "before" => before, "after" => resources,
-                   "dialog_open" => !@dialog.nil?, "session" => @session_id }
+      begin
+        close(dialog) if dialog
+      ensure
+        # The server stops whatever the dialog did, and the report measures the dialog itself.
+        @server.stop
+        @queued.clear
+        dialog_open = dialog.respond_to?(:visible?) && dialog.visible? ? true : false
+        @dialog = nil unless dialog_open
+        @stopped = { "state_at_stop" => state_at_stop, "before" => before, "after" => resources,
+                     "dialog_open" => dialog_open, "session" => @session_id }
+      end
+      @stopped
     end
 
     def stopped?
@@ -88,6 +94,19 @@ module PhComposer
     end
 
     private
+
+    # A page or window that cannot be told to stop must not keep the server alive: each step is logged
+    # and the next still runs.
+    def close(dialog)
+      begin
+        deliver_to(dialog, "type" => "runtime.stop", "payload" => {})
+      rescue StandardError => error
+        Diagnostics.exception("runtime_stop_message", error)
+      end
+      dialog.close
+    rescue StandardError => error
+      Diagnostics.exception("runtime_dialog_close", error)
+    end
 
     def build_dialog
       UI::HtmlDialog.new(

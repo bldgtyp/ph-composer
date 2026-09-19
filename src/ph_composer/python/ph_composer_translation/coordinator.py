@@ -115,11 +115,16 @@ def read_section(section: Section[Any, Any], raw: object) -> list[tuple[str, Map
     if isinstance(records, (str, bytes)) or not isinstance(records, Sequence):
         raise ContractError("payload.contract", f"section {section.id} records are not a list")
     identified: list[tuple[str, Mapping[str, object]]] = []
+    seen: set[str] = set()
     for record in records:
         record_id = record.get("id") if isinstance(record, Mapping) else None
         # A record nothing can name cannot be reported on; that is a document defect, not a record one.
         if not isinstance(record, Mapping) or not isinstance(record_id, str) or not record_id:
             raise ContractError("payload.contract", f"section {section.id} has a record without an id")
+        # One id names one object; a second record under it would silently replace or contradict it.
+        if record_id in seen:
+            raise ContractError("payload.contract", f"section {section.id} names record {record_id} twice")
+        seen.add(record_id)
         identified.append((record_id, record))
     return identified
 

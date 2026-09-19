@@ -124,21 +124,30 @@
     return boot;
   }
 
+  /* A failure before the runtime is ready is the boot's; one after it is the translation's. */
   function probe(payload) {
     start(payload.deadline_ms).then(function (info) {
-      var began = window.performance.now();
-      pyodide.globals.set("_phc_document", PROBE_DOCUMENT);
-      var result = JSON.parse(pyodide.runPython(
-        "from ph_composer_translation.entry import translate_json\ntranslate_json(_phc_document)"
-      ));
-      send("runtime.result", {
-        request_id: payload.request_id, session: session, boot_count: bootCount, python: info.python,
-        stack_loaded: info.stack_loaded, cold_boot_ms: info.cold_boot_ms, stages_ms: info.stages_ms,
-        warm_round_trip_ms: Math.round((window.performance.now() - began) * 10) / 10, translation_state: result.state
-      });
+      try {
+        roundTrip(payload, info);
+      } catch (error) {
+        throw failure("runtime.translation_failed", "The translation package failed: " + (error.message || error));
+      }
     }).catch(function (error) {
       send("runtime.result", { request_id: payload.request_id, session: session,
         error: { code: error.code || "runtime.boot_failed", message: error.message || "The runtime did not start." } });
+    });
+  }
+
+  function roundTrip(payload, info) {
+    var began = window.performance.now();
+    pyodide.globals.set("_phc_document", PROBE_DOCUMENT);
+    var result = JSON.parse(pyodide.runPython(
+      "from ph_composer_translation.entry import translate_json\ntranslate_json(_phc_document)"
+    ));
+    send("runtime.result", {
+      request_id: payload.request_id, session: session, boot_count: bootCount, python: info.python,
+      stack_loaded: info.stack_loaded, cold_boot_ms: info.cold_boot_ms, stages_ms: info.stages_ms,
+      warm_round_trip_ms: Math.round((window.performance.now() - began) * 10) / 10, translation_state: result.state
     });
   }
 

@@ -155,7 +155,7 @@ module PhComposer
       # A contributor needs a contract and a positive section version, and each result field it declares
       # must be a valid privacy schema that neither the shell nor another contributor owns.
       def check_export_contributors
-        owned = @live.export_contributors.values.flat_map { |contributor| contributor.result.keys }
+        owned = @live.export_contributors.values.flat_map { |contributor| Array(contributor.result&.keys) }
         @staging.declared_export_contributors.each do |contributor|
           version = contributor.section_version
           unless contributor.contract && version.is_a?(Integer) && version.positive?
@@ -166,6 +166,8 @@ module PhComposer
             add("registration.schema_invalid", contributor.owner, contributor.name,
                 "#{contributor.name} result: #{problem}.")
           end
+          next unless contributor.result.is_a?(Hash)
+
           contributor.result.each_key do |field|
             next unless Export::Privacy::SHELL.key?(field) || owned.include?(field)
 

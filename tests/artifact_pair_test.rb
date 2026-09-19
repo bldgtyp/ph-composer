@@ -24,6 +24,17 @@ class ArtifactPairTest < PhComposerTestCase
     end
   end
 
+  def test_the_pair_gets_the_users_ordinary_file_permissions
+    Dir.mktmpdir("phc-export-pair") do |directory|
+      hbjson = File.join(directory, "model.hbjson")
+      Pair::Transaction.new(hbjson, :run_id => "one").commit(model("one"), report_html("one"))
+
+      expected = 0o666 & ~File.umask
+      assert_equal expected, File.stat(hbjson).mode & 0o777
+      assert_equal expected, File.stat(Pair.report_path(hbjson)).mode & 0o777
+    end
+  end
+
   def test_refuses_an_incomplete_prior_pair
     Dir.mktmpdir("phc-export-pair") do |directory|
       hbjson = File.join(directory, "model.hbjson")

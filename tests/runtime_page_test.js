@@ -23,7 +23,10 @@ function fakePyodide(log) {
     },
     runPython: function (code) {
       log.push(["run", code]);
-      if (code.indexOf("translate_json") >= 0) return JSON.stringify({ state: "complete" });
+      if (code.indexOf("translate_json") >= 0) {
+        if (log.translationFails) throw new Error("StackUnavailable: honeybee.model");
+        return JSON.stringify({ state: "complete" });
+      }
       return JSON.stringify({ python: "3.11.3", stack_loaded: [] });
     }
   };
@@ -32,6 +35,7 @@ function fakePyodide(log) {
 function page(options) {
   var settings = options || {};
   var sent = [], log = [], boots = 0, fetched = [], timers = [];
+  log.translationFails = Boolean(settings.translationFails);
   var pyodide = fakePyodide(log);
   pyodide.FS.owner = pyodide;
   var context = {
@@ -149,4 +153,15 @@ test("once stopped, a boot in flight reports nothing to the host", async functio
   assert.strictEqual(p.context.PhComposerRuntime.state(), "stopped");
   p.context.unload();
   assert.strictEqual(p.context.PhComposerRuntime.state(), "stopped");
+});
+
+test("a failure after the boot is the translation's, not the boot's", async function () {
+  var p = page({ translationFails: true });
+  p.probe("one");
+  await settle();
+
+  var result = p.sent[p.sent.length - 1].payload;
+  assert.strictEqual(result.error.code, "runtime.translation_failed");
+  assert.strictEqual(result.error.message, "The translation package failed: StackUnavailable: honeybee.model");
+  assert.strictEqual(p.context.PhComposerRuntime.state(), "ready");
 });

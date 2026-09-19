@@ -184,7 +184,8 @@ module PhComposer
         end
 
         def write_exclusive(path, content)
-          File.open(path, File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
+          # The final files take the user's ordinary permissions (0666 less the umask), like any saved file.
+          File.open(path, File::WRONLY | File::CREAT | File::EXCL, 0o666) do |file|
             file.write(content)
             file.flush
             file.fsync
