@@ -53,8 +53,9 @@ snapshot after it.
 | Component definition `asg_pipe` placed twice | Two definition edges, four occurrences (distinct paths) | Resolves (2) | Kept, shared by instancing |
 | Save, quit, fresh-process reopen | All 14 tagged edge records identical: pids, paths, endpoints, lengths, dictionaries. The Model opened unmodified | As before | As before |
 
-Ed also used Edit › Undo and Redo natively once after the paste steps. The scan afterwards matches
-the table.
+Ed was asked to use Edit › Undo and Redo once natively after the paste steps. He reported done but
+not the menu names. The scan afterwards shows both pasted edges present, which is consistent with
+an Undo followed by a Redo, and also with neither having run.
 
 ## What a scan can and cannot tell
 

@@ -95,7 +95,7 @@ Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/refactor/phase
 
 | Fact | Consequence |
 | --- | --- |
-| A glued `cuts_opening` component opens its host face in the view but leaves the face's loops unchanged. `Face#area` then subtracts every glued cutting instance's full area: overlapping units are counted twice, and an overhanging unit may subtract nothing. | Never read net area from `Face#area`; derive openings from unit outlines and the gross outer loop. |
+| A glued `cuts_opening` component opens its host face in the view but leaves the face's loops unchanged. `Face#area` then subtracts each pane that lies wholly inside the face at its full area, so overlapping panes count twice, and subtracts nothing for a pane crossing the face boundary. | Never read net area from `Face#area`; derive openings from unit outlines and the gross outer loop. |
 | After a host face is split, glued instances stay glued to the original face even when they lie wholly on the new one, and the new face is not cut. After an explode, `glued_to` can name an unrelated scrap face that still reports valid. | Verify glue geometrically: coplanar, containing the unit's outline. |
 | `no_scale_mask` hides the Scale tool's handles; `Transformation` scaling from Ruby applies anyway. | Detect scaling from `xscale`/`yscale`; a mirror from a negative determinant. |
 | `Edge#split`, an explode that splits edges, and native cut, copy and paste all put the source edge's full attribute dictionary on the new edges. `Entities#weld`, moves and push-pull keep edge persistent ids. Undo, Redo and save and reopen restore dictionaries and ids exactly. | Edge tags multiply rather than vanish; a Model-level registry and a scan tell a split from a copy or a replacement. |

@@ -9,10 +9,11 @@ ISSUE: none (local planning draft; origin exists, issue not created)
 
 ## Scope
 
-Branch `phase-zero-foundation`. Tested source commit `0e71b2e`; every later P0-G commit changes
-planning documents only (checked with `git diff --stat 0e71b2e..HEAD -- src tools tests Makefile`
-at closure). No new code, so no new code review: the five coherent-slice reviews of P0-C through
-P0-F stand, with every finding resolved in their evidence files.
+Branch `phase-zero-foundation`. Tested source commit `0e71b2e`. Later commits, through P0-B, touch planning, context, docs and
+the development-only `tools/spikes/`. Shipped source, tests and the Makefile are unchanged:
+`git diff --stat 0e71b2e..HEAD -- src tests Makefile` is empty at closure. With no shipped code
+changed, there is no new code review. The five coherent-slice reviews of P0-C through P0-F stand,
+with every finding resolved in their evidence files.
 
 ## Offline gate
 

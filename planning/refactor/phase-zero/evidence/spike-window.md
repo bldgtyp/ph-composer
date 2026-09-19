@@ -68,8 +68,8 @@ five consequences:
 1. **Author panes facing out.** Each element face's normal is the definition's +Z, so the front
    face shows outside. A definition that gets this wrong looks uncut.
 2. **Never read net area from `Face#area`.** The cut does not change host topology, and
-   `Face#area` subtracts every glued cutting instance's full area: an overlap counts twice and an
-   overhang can count as nothing. Export uses the host's outer loop as the gross polygon, which is
+   `Face#area` subtracts each pane wholly inside the face at full area, so an overlap counts twice,
+   and subtracts nothing for a pane that crosses the face boundary. Export uses the host's outer loop as the gross polygon, which is
    honeybee's shape (Q26), plus Apertures from each unit's outline. Overlap and overhang are
    refused or reported from those outlines.
 3. **Verify glue geometrically.** A split host face leaves its units glued to the original face
@@ -90,5 +90,8 @@ five consequences:
 - Picking and the placement tool were not built. Selection was checked by Ed's clicks.
 - Where a glued, cutting instance sits exactly on a split line was not measured. The split in this
   run fell between the two units.
-- The overhang case subtracted nothing on one run and part of the area after the rewrite. The
-  rule SketchUp applies was not isolated; the plan relies on none of it.
+- The overhang readings follow one rule, applied per pane. A pane wholly inside the face
+  subtracts its full area, even where it overlaps another. A pane crossing the face boundary
+  subtracts nothing. First layout: 15 − 3 × 1.2 = 11.4 m². After the rewrite:
+  15 − 5 × 1.2 = 9.0 and 15 − 6 × 1.2 = 7.8 m². The rule was inferred from these three readings,
+  not tested separately.
