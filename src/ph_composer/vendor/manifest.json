@@ -110,6 +110,51 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "3ea0d2929b882fad80da8fb48d2998874bb265f59f72dd5599812dbae02b82a8"
     },
+    "python/ph_composer_translation/__init__.py": {
+      "bytes": 1234,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "884e2725e72e1d8e08c345067699790718ca70c6a0a3c83ae241abb9dce64dbd"
+    },
+    "python/ph_composer_translation/composition.py": {
+      "bytes": 464,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "80c816a0363cd80a43dbfae4943cfeb27cb6295389d77ac4b52293840f1612cb"
+    },
+    "python/ph_composer_translation/contract.py": {
+      "bytes": 1487,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "011c27edad6b9c98656c359be77f92a7e92bdb69be5161d09177242bf494a6b4"
+    },
+    "python/ph_composer_translation/coordinator.py": {
+      "bytes": 8127,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "be22bacbf98463968c8642f90a3ddb7816cb2850516f9bb72e6c396f75d1a728"
+    },
+    "python/ph_composer_translation/entry.py": {
+      "bytes": 848,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "4f4cdfc98a7ed355aed9e36ed3f4e11a0394bc95ff03d0790e7a0a7e912df2ca"
+    },
+    "python/ph_composer_translation/exporters.py": {
+      "bytes": 1952,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "deaae8b808bf827dfc8911cbcea2d41458efa573b3d541d35cd076fbb6c0f00a"
+    },
+    "python/ph_composer_translation/result.py": {
+      "bytes": 3162,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "1ba3b6a6ee723d7c79dbb3db223aefb42ba7f27155a09b54ccdf396ce9ec501d"
+    },
+    "python/ph_composer_translation/sections.py": {
+      "bytes": 3867,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "3100514ba701652eedc340118d78013e6cb7588f7056fd19d1b014e126dde365"
+    },
+    "python/ph_composer_translation/stack.py": {
+      "bytes": 1246,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "709f687a67d1ecfa5739908b495d61b81d2f9d0aa88d90da854486786271fef2"
+    },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,
       "mime": "application/json",
@@ -192,6 +237,16 @@
     "version": "0.24.1"
   },
   "schema_version": 1,
-  "translation_assets": [],
+  "translation_assets": [
+    "python/ph_composer_translation/__init__.py",
+    "python/ph_composer_translation/composition.py",
+    "python/ph_composer_translation/contract.py",
+    "python/ph_composer_translation/coordinator.py",
+    "python/ph_composer_translation/entry.py",
+    "python/ph_composer_translation/exporters.py",
+    "python/ph_composer_translation/result.py",
+    "python/ph_composer_translation/sections.py",
+    "python/ph_composer_translation/stack.py"
+  ],
   "wheel_order": []
 }

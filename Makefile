@@ -1,4 +1,4 @@
-.PHONY: ci ci-pending syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage hostkit-test python-check \
+.PHONY: ci syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage hostkit-test python-check \
         panel-manifest panel-manifest-check ui-preview ui-checks rbz rbz-check install clean bridge-install \
         bridge-uninstall runtime-check runtime-pin-check runtime-manifest
 
@@ -19,12 +19,7 @@ SKETCHUP_VERSION ?= 2026
 
 # Every target docs/DEVELOPMENT.md claims for the offline loop that exists today.
 ci: syntax lint test fixtures-check panel-manifest-check runtime-check runtime-pin-check hostkit-test python-check rbz \
-    rbz-check ci-pending
-
-# The gate is not complete until these land. Printed on every run so a green `make ci` is never
-# read as the full Phase 0 gate (planning/refactor/phase-zero/phases/phase-02-bootstrap.md).
-ci-pending:
-	@echo "Not yet in ci: the translation package's typing and coverage (P0-F)."
+    rbz-check
 
 syntax:
 	@for file in $(RB_FILES); do $(RUBY) -c "$$file" >/dev/null || exit 1; done
@@ -60,8 +55,8 @@ lint-js:
 
 # No skip: `test` and `python-check` already require `uv`.
 lint-python:
-	@uv run ruff check tools tests/python
-	@uv run ruff format --check tools tests/python
+	@uv run ruff check tools tests/python src/ph_composer/python
+	@uv run ruff format --check tools tests/python src/ph_composer/python
 
 # The owning tests, one per golden: exactly one test may write each file. None exist yet; the
 # first golden adds its owner here (docs/DEVELOPMENT.md "Fixtures and coverage").
@@ -83,13 +78,15 @@ fixtures-check:
 	@echo "Fixtures up to date"
 
 # Separate from ci: run it before a phase gate. Thresholds ratchet upward only. Python coverage
-# joins when its shipped code lands (P0-F).
+# measures the shipped translation package.
 RUBY_COVERAGE_MIN ?= 93
 JS_COVERAGE_MIN ?= 94
+PYTHON_COVERAGE_MIN ?= 92
 
 coverage:
 	@$(RUBY) tools/coverage_ruby.rb $(RUBY_COVERAGE_MIN)
 	@node tools/coverage_js.js $(JS_COVERAGE_MIN)
+	@uv run pytest -q --cov=src/ph_composer/python --cov-report=term --cov-fail-under=$(PYTHON_COVERAGE_MIN) tests/python
 
 # The panel pages' <script> lists, generated from the PhComposerUI.define declarations
 # (tools/panel_manifest.js). Rewrite after adding, renaming or re-declaring a panel module.
