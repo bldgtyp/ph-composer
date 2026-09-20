@@ -149,7 +149,7 @@ from 10,368 ms to 182 ms, the 50-target gesture from 3,352 ms to 164 ms, and the
 pins the property that the Model is walked a fixed number of times however many Faces a gesture
 names. See [the gesture cost evidence](evidence/p1-d-gesture-cost.md).
 
-P1-D D6 brings the offline suite to 410 Ruby tests with 1,650 assertions, green on both Ruby 3.2.2
+P1-D D6 brings the offline suite to 412 Ruby tests with 1,658 assertions, green on both Ruby 3.2.2
 and the 2.7.2 compatibility floor, with `make ci` green and Ruby coverage at 96.4%. It adds the
 Classify tool, the shared `core/` pick and drag primitives Spaces' Mark floor will reuse, Locate,
 and a fifth contribution seam. The tool calls D1's operation through the public interface with its
@@ -170,7 +170,9 @@ nothing afterwards, the over-ceiling refusal, the palette frozen at button-down 
 tool, Q12 forcing a mode on without remembering it and releasing only the mode it forced, a Face
 inside a nested Zone belonging to the inner Zone, a picked path composing the same world transform
 and the same shared-storage answer as a walk, Locate skipping a reference the Model no longer has,
-and an outside feature reaching the native menus through the new seam with no line in `shell/`.
+an outside feature reaching the native menus through the new seam with no line in `shell/`, and
+the palette offered on a right-click only where a Face is under the cursor, by the selection with
+no tool running and by the tool's own `getMenu` while one is.
 
 A bounded independent review found and the slice fixed six things. A Face inside a Zone nested in
 another Zone was attributed to the outer Zone, which the resolver accepts because it descends a

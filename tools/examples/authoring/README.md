@@ -185,10 +185,13 @@ Run `setup(251)` and drag over the lot: the gesture must refuse in the viewport 
 through the API, with nothing painted. That is D1's deferred native check, kept here because a real
 gesture is what it needs.
 
-Right-click over a Face and then over empty space. The Classify submenu is offered only when a Face
-is under the cursor, which the handler decides from the selection SketchUp makes before it builds
-the menu. Record whether SketchUp really does select the right-clicked Face first, because the
-submenu appearing on every right-click, or on none, is what a wrong answer looks like.
+Right-click over a Face and then over empty space, once with no tool running and once with the
+Classify tool running. The submenu is offered only where a Face is under the cursor, but the two
+cases reach that answer differently: with no tool, a global handler reads the selection SketchUp
+makes before it builds the menu; with the tool running, SketchUp hands the right-click to the tool
+and its `getMenu` picks the coordinates directly. Record whether SketchUp really does select the
+right-clicked Face first, and whether the global handlers fire as well while the tool is running,
+which would offer the submenu twice.
 
 Finally, turn a Colour-by mode on by hand, run the tool and stop it, and confirm the mode the user
 chose is still the remembered one (PRD Q12). Do it the other way too: start the tool, pick a

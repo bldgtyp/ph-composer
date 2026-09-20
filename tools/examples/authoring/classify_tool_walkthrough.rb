@@ -25,9 +25,10 @@
 #   6. Does a gesture of 251 refuse in the viewport the way it refuses through the API? Also D1's.
 #   7. Does forcing Colour-by on and off with the tool leave the user's remembered mode alone?
 #   8. Does Locate select and reveal a Face inside a Zone that is not the active edit context?
-#   9. Does SketchUp select the right-clicked Face before it builds the context menu? The Classify
-#      submenu is offered only when a Face is selected, and that is the only signal a context-menu
-#      handler gets about what the cursor was over.
+#   9. Two context-menu questions. With no tool running, does SketchUp select the right-clicked
+#      Face before it builds the menu? That selection is the only signal a global handler gets
+#      about what the cursor was over. With the tool running, does `getMenu` fire instead, and do
+#      the global handlers fire as well, which would offer the submenu twice?
 module ClassifyToolWalkthrough
   API = PhComposer::API
   PREFIX = "p1d_classify_"

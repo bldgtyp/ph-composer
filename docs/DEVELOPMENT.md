@@ -154,8 +154,10 @@ P1-A Zone geometry probe and its stepwise bridge commands are documented in
 in [`planning/phase-one/evidence/p1-a-geometry.md`](../planning/phase-one/evidence/p1-a-geometry.md).
 The panel-closed walkthroughs are in
 [`tools/examples/authoring/`](../tools/examples/authoring/README.md): P1-B's Zone and Face
-authoring, P1-C's adjacency, P1-D's Zone repairs and P1-D's adjacency cut. Their accepted
-current-host results are in
+authoring, P1-C's adjacency, P1-D's Zone repairs, P1-D's adjacency cut, P1-D's Colour-by overlay
+and P1-D's Classify tool. The last two have not been run; the Classify tool's cannot be run
+without an operator at the mouse, because SketchUp delivers pointer events to the active tool and
+the Ruby API synthesizes none. Accepted current-host results are in
 [`p1-b-authoring.md`](../planning/phase-one/evidence/p1-b-authoring.md),
 [`p1-c-adjacency-hbjson.md`](../planning/phase-one/evidence/p1-c-adjacency-hbjson.md) and
 [`p1-d-repairs-and-cut.md`](../planning/phase-one/evidence/p1-d-repairs-and-cut.md).

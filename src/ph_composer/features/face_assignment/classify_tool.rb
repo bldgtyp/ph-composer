@@ -127,7 +127,7 @@ module PhComposer
         @intent = DeepCopy.call(@palette).freeze
         # The revision is frozen with the palette. An external client committing a change mid-drag
         # fires no cancel this tool hears, so the gesture is applied against the revision it began
-        # at and refuses as `target.changed` rather than painting paths that no longer describe the
+        # at and refuses as `revision.stale` rather than painting paths that no longer describe the
         # Model.
         @revision = @session.revision
         @collected = DragSet.new(:limit => FaceAssignment.gesture_face_limit)
@@ -148,6 +148,16 @@ module PhComposer
       def draw(view)
         draw_occurrences(view, @collected ? @collected.values : [], COLLECTED_COLOUR)
         draw_occurrences(view, @hover ? [@hover] : [], HOVER_COLOUR) unless collecting?
+      end
+
+      # SketchUp hands a right-click to the active tool rather than selecting what is under it, so
+      # the context-menu handler in `shell/` cannot fire while this tool runs, and its
+      # selection-based test for "is a Face under the cursor" would answer no in any case. This is
+      # the same menu built by the same code, with the coordinates that route never had.
+      def getMenu(menu, _flags = 0, x_value = nil, y_value = nil, view = nil)
+        return unless view && Zones::Occurrences.occurrence_for_path(Pick.face_path(view, x_value, y_value) || [])
+
+        Commands.install_feature_menus(menu)
       end
 
       def getInstructorContentDirectory

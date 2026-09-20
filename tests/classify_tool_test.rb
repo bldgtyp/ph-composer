@@ -306,6 +306,35 @@ class ClassifyToolTest < PhComposerTestCase
     assert_nil @model.active_tool
   end
 
+  # The viewport context menu offers the palette only where it applies. With no tool running,
+  # SketchUp has selected what was right-clicked, so the selection is the signal.
+  def test_the_context_menu_offers_the_palette_over_a_face_and_not_elsewhere
+    zone(1_170)
+    PhComposer::Commands.install
+
+    assert_empty submenu_names(UI.build_context_menu), "nothing selected means nothing was clicked"
+
+    @model.selection.add(@faces.fetch(0))
+
+    assert_includes submenu_names(UI.build_context_menu), PhComposer::FaceAssignment::ClassifyMenu::MENU
+  end
+
+  # While the tool is running, SketchUp hands the right-click to the tool instead of selecting, so
+  # the tool builds the same menu from the coordinates the handler route never had.
+  def test_the_running_tool_offers_the_palette_where_the_pointer_is_over_a_face
+    zone(1_180)
+    tool.start
+    point_at([10, 10], @faces.fetch(0))
+    over_face = UI::Menu.new("Context")
+    over_nothing = UI::Menu.new("Context")
+
+    tool.getMenu(over_face, 0, 10, 10, @view)
+    tool.getMenu(over_nothing, 0, 99, 99, @view)
+
+    assert_includes submenu_names(over_face), PhComposer::FaceAssignment::ClassifyMenu::MENU
+    assert_empty submenu_names(over_nothing)
+  end
+
   # The words on the menu are the glossary's, and they come from the same tables the Colour-by
   # legend reads rather than a second copy inside `shell/`.
   def test_the_menu_shows_honeybee_values_by_their_glossary_words
@@ -462,6 +491,10 @@ class ClassifyToolTest < PhComposerTestCase
 
   def item(menu, label)
     menu.entries.find { |entry| entry.is_a?(Array) && entry.first == label }.last
+  end
+
+  def submenu_names(menu)
+    menu.entries.grep(UI::Menu).map(&:name)
   end
 
   def checked(menu, label)
