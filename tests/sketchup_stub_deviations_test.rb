@@ -2,7 +2,7 @@
 
 require_relative "test_helper"
 
-# The stub deliberately deviates from the host API in three places, each because a measured host
+# The stub deliberately deviates from the host API in four places, each because a measured host
 # fact makes the naive behaviour a lie. Every deviation is pinned here beside the evidence, so a
 # later edit to the stub cannot quietly restore the naive behaviour and take a regression with it.
 class SketchupStubDeviationsTest < PhComposerTestCase
@@ -72,5 +72,27 @@ class SketchupStubDeviationsTest < PhComposerTestCase
   def test_the_default_host_version_is_the_support_floor
     assert_equal "23.0.0", Sketchup.version
     assert_operator Sketchup.version.to_i, :>=, 23, "the overlay is available by default"
+  end
+
+  # SketchUp has no `Sketchup::Model#undo`: native Undo is a menu action, and an extension reaches
+  # it with `Sketchup.send_action("editUndo:")`, which runs on the UI queue. The stub provides
+  # `undo`/`redo` because an offline test has no UI queue to run an action on and has to step the
+  # Model itself. Measured on 26.1.188, 2026-09-20, when a walkthrough written against the stub's
+  # method raised `NoMethodError` on the host.
+  #
+  # Anything that runs on the host uses `send_action` and reads the result in a later call. The
+  # walkthroughs under `tools/examples/authoring/` are the worked examples.
+  def test_the_stub_steps_undo_itself_because_the_host_has_no_model_undo
+    model = Sketchup.active_model
+    model.start_operation("deviation", true)
+    model.entities << Sketchup::Face.new(9_001)
+    model.commit_operation
+
+    assert_equal 1, model.entities.to_a.length
+    assert model.respond_to?(:undo), "the stub keeps Model#undo; the host does not have it"
+
+    model.undo
+
+    assert_empty model.entities.to_a
   end
 end

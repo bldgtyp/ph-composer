@@ -44,15 +44,34 @@ module RepairWalkthrough
   # storage, which repair must refuse; a Ctrl-drag copy is what produces the independent duplicate
   # repair is for. Run `copy_shared` for the refusal case and copy by hand for the other, then run
   # `adopt_copy` to name what you made.
+  # Shared storage means the Zone Group itself living inside a definition more than one instance
+  # uses, so both occurrences read and write the same dictionaries. Instancing the Zone Group's own
+  # definition does not do that: the Zone record sits on the Group, not inside it. So the Group is
+  # wrapped, the wrapper is made a component, and a second instance of that component is added.
   def copy_shared
     model = Sketchup.active_model
     source = named_group("#{PREFIX}source")
     model.start_operation("P1-D walkthrough shared copy", true)
-    instance = model.entities.add_instance(source.definition, Geom::Transformation.new([8000.mm, 0, 0]))
-    instance.name = "#{PREFIX}shared"
-    raise "SketchUp refused the instance." unless model.commit_operation
+    wrapper = model.entities.add_group([source])
+    component = wrapper.to_component
+    component.definition.name = "#{PREFIX}shared_definition"
+    second = model.entities.add_instance(component.definition, Geom::Transformation.new([12_000.mm, 0, 0]))
+    raise "SketchUp refused the shared copy." unless model.commit_operation
 
-    verify.merge("shared_instance_persistent_id" => instance.persistent_id)
+    verify.merge("instances" => [component.persistent_id, second.persistent_id])
+  end
+
+  # The Zone inside shared storage, by the path through one of its instances.
+  def repair_shared
+    client = Client.new
+    # By definition name: a stock template ships with components of its own.
+    instance = Sketchup.active_model.entities.grep(Sketchup::ComponentInstance)
+      .find { |candidate| candidate.definition.name.start_with?(PREFIX) }
+    inner = instance.definition.entities.grep(Sketchup::Group)
+      .find { |group| PhComposer::Zones::ZONE_STORE.read(group) }
+    params = { "zone_path" => [instance.persistent_id, inner.persistent_id] }
+    result = client.invoke("ph_composer.zones.repair_identity", params)
+    verify.merge("repair" => result.values_at("status", "code", "effect"))
   end
 
   # Ed: select the source Zone, Ctrl-drag it clear of the original, then run this. It names the new
@@ -60,8 +79,8 @@ module RepairWalkthrough
   # dictionaries rather than share them.
   def adopt_copy
     model = Sketchup.active_model
-    named = ["#{PREFIX}source", "#{PREFIX}shared", "#{PREFIX}copy"]
-    fresh = model.entities.grep(Sketchup::Group).reject { |group| named.include?(group.name) }
+    known = ["#{PREFIX}source", "#{PREFIX}shared", "#{PREFIX}copy", "Source", "source"]
+    fresh = model.entities.grep(Sketchup::Group).reject { |group| known.include?(group.name) }
     raise "No new Group found. Ctrl-drag a copy of the source Zone first." if fresh.empty?
     raise "More than one new Group; leave only the copy." if fresh.length > 1
 
@@ -112,13 +131,15 @@ module RepairWalkthrough
                  "unrecoverable" => restored.dig("value", "unrecoverable"))
   end
 
+  # Native Undo goes through the menu action, not through the Model: SketchUp has no Model#undo.
+  # It runs on the UI queue, so read the result in a later call, never in this one.
   def undo
-    Sketchup.active_model.undo
+    Sketchup.send_action("editUndo:")
     verify
   end
 
   def redo_last
-    Sketchup.active_model.redo
+    Sketchup.send_action("editRedo:")
     verify
   end
 
@@ -161,8 +182,12 @@ module RepairWalkthrough
     group
   end
 
+  # Make Zone renames a Group to its Zone name, so the walkthrough's own prefix is gone after the
+  # first step. Both spellings are accepted.
   def named_group(name)
-    Sketchup.active_model.entities.grep(Sketchup::Group).find { |group| group.name == name }
+    short = name.sub(PREFIX, "")
+    Sketchup.active_model.entities.grep(Sketchup::Group)
+      .find { |group| [name, short, short.capitalize].include?(group.name) }
   end
 
   class Client
