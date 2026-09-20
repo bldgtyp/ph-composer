@@ -237,6 +237,16 @@ records name the same two endpoints. Geometry stamps check freshness and never i
 - Preserve Zone UUIDs for the same logical Zone when the foundation can establish continuity.
   Path or persistent-id changes invalidate the old adjacency reference until an explicit solve
   creates a new pair. Never recover a face reference by name, proximity or coincident geometry.
+- **A copied Zone is shared storage, and Make Unique comes first (Q25).** Measured on 26.1.188,
+  2026-09-20: copying a Group makes both Groups instances of one definition sharing every Face,
+  while each keeps its own Zone record. So a plain copy is ambiguous and shared at once, and
+  identity repair refuses it, because giving the copy new Face ids would rewrite the original's.
+  The Zones read reports shared storage ahead of the ambiguity, since that is what blocks every
+  repair and names the fix. The user makes the copy unique with SketchUp's own Make Unique, and
+  identity repair is then available on an occurrence that genuinely has its own members.
+  PH-Composer does not make a Group unique on the user's behalf inside a repair: that is a native
+  edit with its own consequences for every other instance, and hiding it inside an identity repair
+  would change more of the Model than the repair names. Ed confirmed this on 2026-09-20.
 - Duplicate Zone UUIDs are ambiguous, not aliases. Refuse pair mutation involving them and report
   them. An explicit identity repair identifies the copied Zone occurrence, assigns it a fresh
   foundation UUID, updates its member stamps and retires copied adjacency data without rewriting
@@ -372,6 +382,7 @@ Interviewed 2026-09-18, three rounds, Ed's answers. Each is cited where it appli
 | Q22 | On-screen label for Adiabatic | "To neighbour", tooltip names honeybee Adiabatic |
 | Q23 | Make Zone entry points | Toolbar, right-click on a group, and inline from the classification tool; names "Zone 1", "Zone 2" |
 | Q24 | Zone volume | Not shown, not exported; Vn50 and iCFA stay Space-derived |
+| Q25 | A copied Zone | Shared storage; repair refuses until the user runs SketchUp's Make Unique. PH-Composer never makes a Group unique inside a repair |
 
 ## Acceptance shape
 

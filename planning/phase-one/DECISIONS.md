@@ -47,6 +47,12 @@ record together with these choices rather than repeat its 22-question interview.
 - **Deferred METr milestone:** confirm the file extension and floor-area requirements in its
   actual import UI when work resumes. B1 produced JSON but did not open it there.
 
+- **P1-D, settled 2026-09-20 on the host:** a plain copy of a Zone Group is shared storage, not
+  just a duplicated id, so identity repair refuses it and the user runs SketchUp's Make Unique
+  first. Ed confirmed leaving it as two explicit steps rather than having repair make the Group
+  unique itself, because that is a native edit affecting every other instance and hiding it inside
+  a repair would change more of the Model than the repair names. Recorded as Q25 in the Zones PRD.
+
 ## Carryovers outside this milestone
 
 The Phase 0 archive also records the unknown-outcome warning wording, Pyodide license notice
