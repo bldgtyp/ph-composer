@@ -1,7 +1,7 @@
 # Phase 1 status
 
 DATE: 2026-09-20
-STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized, with D1, D2 and D3 implemented.
+STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized, with D1 to D3 implemented and D4 partly implemented.
 ISSUE: none (local implementation packet)
 
 ## Current handoff
@@ -30,7 +30,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
   development and its floor-area/import questions. P1-E still owns the shipped HBJSON wheel set.
 - Create/link the implementation issue during authorized issue intake. The configured remote is
   `bldgtyp/ph-composer`; P1-A created no external issue or PR.
-- P1-D is authorized. Its slices are tracked in [PLAN.md](PLAN.md); D4 to D7 remain.
+- P1-D is authorized. Its slices are tracked in [PLAN.md](PLAN.md). D4's geometry cut and D5 to D7 remain; see "What D4 still owes" in the plan.
 
 ## Stages
 
@@ -39,7 +39,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 | P1-A: geometry contracts and host investigation | Complete | [Contract](CONTRACTS.md); [host evidence](evidence/p1-a-geometry.md); A01 met |
 | P1-B: Zone and face authoring core | Complete | [Authoring evidence](evidence/p1-b-authoring.md); A02/A03 and the P1-B portion of A04 met |
 | P1-C: adjacency and early HBJSON proof | Complete on branch | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
-| P1-D: complete Phase 1 authoring UI and repairs | In progress | D1, D2 and D3 implemented; the offline portions of A04, A06 and A07 pass. Slice table in [PLAN.md](PLAN.md) |
+| P1-D: complete Phase 1 authoring UI and repairs | In progress | D1 to D3 implemented, D4 partly; the offline portions of A04, A06 and A07 pass. Slice table in [PLAN.md](PLAN.md) |
 | P1-E: HBJSON/report export workflow | Scoped | Pending; remaining canonical-export choices open |
 | P1-F: acceptance and handoff | Scoped | Pending |
 
@@ -91,6 +91,15 @@ is checked in so that gate can be run as soon as Ed is at the bridge. One step i
 the viewport: how SketchUp copies a Group is the thing being measured, so the walkthrough asks for
 a Ctrl-drag copy rather than scripting an assumption about it.
 
+P1-D D4 brings the offline suite to 325 Ruby tests with 1,398 assertions, green on both Rubies with
+`make ci` and Ruby coverage at 95.9%. The pure overlap geometry is covered case by case: full,
+partial, contained, disjoint, off-plane, both sliver thresholds independently, a sliver left behind
+by an otherwise acceptable cut, same-normal overlapping Zones, a holed Face, concave outlines, and
+winding independence. The solver is covered for whole-scope pairing, the Q18 refusal naming both
+Zones, a retry that includes them, an unscoped neighbour still being read, and each reported case.
+The geometry cut itself is not implemented; a partial overlap reports and pairs nothing. See
+"What D4 still owes" in [PLAN.md](PLAN.md).
+
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition
 reloaded the exact two-Zone HBJSON with reconciled identifiers, one reciprocal Surface pair and
@@ -111,3 +120,4 @@ post-commit CI close this branch slice; merge remains pending.
 | 2026-09-20 | P1-D D1: Classify became a bounded, deduplicated, all-or-nothing gesture; Zones' retire_pair participant became the plan-returning retire_pairs; Suggest classification and Reverse face landed. |
 | 2026-09-20 | P1-D D2: the Attached zone record kind, its reference lifecycle on a Face, and delete with an explicit replacement landed. |
 | 2026-09-20 | P1-D D3: explicit copied-Zone identity repair and limited Restore Zone landed, with the restore offer and its disclosed losses on the Zones read. |
+| 2026-09-20 | P1-D D4 part one: pure overlap geometry with remainder thresholds, whole-scope Solve, the Q18 out-of-scope refusal and a finding for every case the solver will not pair. The geometry cut remains. |

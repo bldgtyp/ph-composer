@@ -1,7 +1,7 @@
 # Phase 1 delivery plan
 
 DATE: 2026-09-20
-STATUS: P1-A through P1-C complete on the implementation branch. P1-D is authorized and in progress; D1, D2 and D3 are implemented.
+STATUS: P1-A through P1-C complete on the implementation branch. P1-D is authorized and in progress; D1 to D3 are implemented and D4 is partly implemented.
 ISSUE: none (local planning draft)
 
 ## Outcome and scope
@@ -157,12 +157,38 @@ focused tests; the stage closes only when A04 to A09 all have evidence.
 | D1 | Bounded Classify gesture and its ceiling, Suggest classification for this Zone, Reverse face | Implemented on branch |
 | D2 | Attached zone record kind, reference lifecycle and guarded delete with replacement | Implemented on branch |
 | D3 | Explicit copied-Zone identity repair and limited Restore Zone | Implemented on branch |
-| D4 | Partial-overlap splitting, sliver skips and out-of-scope reciprocal refusal | Pending |
+| D4 | Partial-overlap splitting, sliver skips and out-of-scope reciprocal refusal | Partly implemented; the geometry cut remains |
 | D5 | Shared Colour-by registry, overlay, HUD and cache invalidation | Pending |
 | D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Pending |
 | D7 | Overview Zone tree and faces table | Pending |
 
 D6 is the gesture itself, distinct from D1's operation. A04's atomic-gesture row needs both.
+
+### What D4 still owes
+
+The decision half is done and tested: `Zones::Overlap` settles every candidate, sliver,
+same-normal, unsupported-shape and remainder-threshold case in pure SI geometry, and the solver
+applies a whole scope with the Q18 out-of-scope refusal and a finding for everything it will not
+pair. Full-wall matches pair as before.
+
+What remains is the cut itself. A partial overlap currently reports
+`adjacency.split_not_applied` and pairs nothing, because recording a pair without cutting would
+claim Surface over a whole Face when only part of it is shared (Q21). Finishing it needs:
+
+1. A geometry step that draws the shared outline onto the Face inside its own Zone, on both sides,
+   in one transaction. `Overlap` already supplies the outline and each Face's remainder pieces.
+2. Identifying the results: which piece kept the original native persistent id, per the split rules
+   in [CONTRACTS.md](CONTRACTS.md). That piece keeps its `fac_` id; each other piece takes a fresh
+   one and a copy of the non-Surface fields, `user_data` and extension payloads. If the original
+   persistent id does not survive, every piece is new and the old endpoint retires.
+3. Pairing the shared pieces only, after both cuts, so the endpoints name Faces that exist.
+4. Offline stub support for a Face split, which the stub does not model today. P1-A measured the
+   real split on the host; the stub only has to be faithful enough to test the record consequences,
+   and a comment should say that it does not validate the geometry.
+
+A Face meeting more than one neighbour stays reported rather than cut even after that work: it
+needs one cut per neighbour, and the solver does one. Revisit it when a stacked-Zone model needs
+it; it is a normal multifamily shape, so it should not stay open indefinitely.
 
 D6 also owns the occurrence-resolution cost the gesture will hit on every drag. `resolve_face`
 walks the whole Model once per Face, through `zones` and `faces_with_id`, so a 500-Face gesture
