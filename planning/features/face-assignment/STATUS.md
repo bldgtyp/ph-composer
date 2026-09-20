@@ -1,7 +1,7 @@
 # Face assignment: status
 
 DATE: 2026-09-20
-STATUS: In progress; P1-B authoring core complete.
+STATUS: In progress; P1-B authoring core and P1-C export contribution complete on the implementation branch.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -14,12 +14,13 @@ into its behavior sections. Shared understanding reached, pending Ed's confirmat
 
 Follow [PLAN.md](PLAN.md), which separates Phase 1 classification/Colour-by from Phase 2
 assembly assignment. P1-B implements explicit Face reads, single-Face keep/set/clear intent,
-suggestions and the minimal panel controls. P1-D completes gestures, Auto-classify, Reverse,
-Attached zones and Colour-by after P1-C proves adjacency and early HBJSON.
+suggestions and the minimal panel controls. P1-C now supplies the detached geometry contributor,
+typed Python Face section and emitted Surface reference checks. P1-D completes gestures,
+Auto-classify, Reverse, Attached zones and Colour-by.
 
 ## Blockers
 
-- P1-C and later feature implementation are not authorized by the completed P1-B instruction.
+- P1-D and later feature implementation are not authorized by the completed P1-C instruction.
 - The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
 
 ## Verification
@@ -27,8 +28,10 @@ Attached zones and Colour-by after P1-C proves adjacency and early HBJSON.
 Documentation consistency checked against the authorized zones-and-adjacency corrections:
 pair removal, absent conditions after retirement, payload preservation and export omissions.
 The P1-B subset is implemented. Offline tests and the current-host walkthrough verify panel-closed
-classification, metadata preservation, native Undo/Redo and fresh-process reopen. P1-D lifecycle,
-gesture and overlay gates remain outstanding.
+classification, metadata preservation, native Undo/Redo and fresh-process reopen. P1-C verifies
+the face extraction schema, complete world geometry, reciprocal emitted targets and strict
+development-construction boundary in the exact reloaded HBJSON. P1-D lifecycle, gesture and
+overlay gates remain outstanding.
 
 Documentation-only architecture review completed 2026-09-18; all four findings addressed in the
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.
@@ -49,3 +52,4 @@ spike passed; it does not satisfy this feature's native lifecycle gate.
 | 2026-09-18 | Window-types architecture review folded in: the face read's area is stated as gross, and net opaque area comes from a declared window-types read once that packet lands. |
 | 2026-09-20 | Post-Phase-0 refresh: added PLAN.md, removed completed foundation blockers and linked the shared Phase 1 stages and decisions. Planning only; feature implementation remains pending. |
 | 2026-09-20 | P1-B authoring core complete: explicit Face reads, geometric suggestions, keep/set/clear assignment, stamps and minimal Overview controls passed current-host acceptance. |
+| 2026-09-20 | P1-C export contribution complete on the implementation branch: detached face geometry and typed Python sections produced the exact two-Zone HBJSON with reciprocal Surface targets. |

@@ -3,6 +3,9 @@
 require_relative "schema"
 require_relative "occurrences"
 require_relative "steps"
+require_relative "adjacency"
+require_relative "adjacency_steps"
+require_relative "export"
 
 module PhComposer
   module Zones
@@ -26,6 +29,15 @@ module PhComposer
         "reference" => ZONE_REFERENCE, "values" => ZONE_VALUES, "expected_values" => ZONE_VALUES
       }
     }.freeze
+    SOLVE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => ["zones"],
+      "properties" => { "zones" => { "type" => "array", "items" => ZONE_REFERENCE,
+                                      "minItems" => 2, "maxItems" => 2 } }
+    }.freeze
+    RETIRE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => ["face"],
+      "properties" => { "face" => { "type" => "object" } }
+    }.freeze
 
     module_function
 
@@ -47,8 +59,35 @@ module PhComposer
                                                   request, proposal|
         update(request, proposal)
       end
+      declare_adjacency(feature)
       feature.snapshot_section("#{FEATURE_ID}.overview", :query => "#{FEATURE_ID}.list")
       feature.on_host_event(:selection_changed) { |session| session.request_refresh }
+    end
+
+    def declare_adjacency(feature)
+      feature.action("#{FEATURE_ID}.solve_adjacency",
+                     :description => "Pair complete shared Faces between two explicit Zones.",
+                     :params => SOLVE_PARAMS, :result => OBJECT, :undo_name => "Solve Zone Adjacency",
+                     :side_effects => "Writes reciprocal Surface endpoints to matched Faces.") do |request, proposal|
+        solve_adjacency(request, proposal)
+      end
+      feature.action("#{FEATURE_ID}.retire_adjacency", :description => "Retire one reciprocal Surface pair.",
+                     :params => RETIRE_PARAMS, :result => OBJECT, :undo_name => "Retire Zone Adjacency",
+                     :side_effects => "Removes both endpoints and leaves their boundary condition unassigned.") do |
+                       request, proposal|
+        retire_adjacency(request, proposal)
+      end
+      feature.proposal_participant("#{FEATURE_ID}.retire_pair") do |request, proposal, occurrence, record|
+        retire_pair(request, proposal, occurrence, record, :include_local => false)
+      end
+      feature.export_contributor(
+        ExportProjection::SECTION, :section_version => 1,
+        :result => {
+          "canonical_model" => Export::Privacy::Optional.new(
+            Export::Privacy.fields(%w[hbjson rooms faces surface_pairs omitted])
+          )
+        }
+      ) { |reader| ExportProjection.records(reader) }
     end
 
     def list(request)
@@ -100,6 +139,45 @@ module PhComposer
       proposal.add_step(UpdateZoneStep.new(:reference => reference, :before => before, :after => after),
                         :scopes => [scope])
       { "zone_id" => after.fetch("id") }
+    end
+
+    def solve_adjacency(request, proposal)
+      pairs = Adjacency.solve(request.model, request.params.fetch("zones"))
+      pair_ids = []
+      pairs.each do |left, right|
+        left_after, right_after, pair_id = Adjacency.pair(left, right)
+        pair_ids << pair_id
+        next if left_after == left.fetch(:record) && right_after == right.fetch(:record)
+
+        updates = [left, right].zip([left_after, right_after]).map do |side, after|
+          occurrence = side.fetch(:occurrence)
+          [occurrence.reference(side.fetch(:record).fetch("id")), side.fetch(:record), after]
+        end
+        scopes = updates.map do |reference, _before, _after|
+          Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
+        end
+        proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "updated"), :scopes => scopes)
+      end
+      { "pair_ids" => pair_ids.sort }
+    end
+
+    def retire_adjacency(request, proposal)
+      occurrence = Occurrences.resolve_face(request.model, request.params.fetch("face"), :mutable => true)
+      record = FaceAssignment::FACE_STORE.read(occurrence.entity)
+      pair_id = record&.dig("adjacency", "pair_id")
+      retire_pair(request, proposal, occurrence, record, :include_local => true)
+      { "pair_id" => pair_id }
+    end
+
+    def retire_pair(request, proposal, occurrence, record, include_local:)
+      local_after, counterpart, other, other_after = Adjacency.retire_records(request.model, occurrence, record)
+      updates = [[counterpart.reference(other.fetch("id")), other, other_after]]
+      updates.unshift([occurrence.reference(record.fetch("id")), record, local_after]) if include_local
+      scopes = updates.map do |reference, _before, _after|
+        Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
+      end
+      proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "retired"), :scopes => scopes)
+      local_after
     end
 
     def zone_view(zone, ambiguous)
@@ -167,6 +245,7 @@ module PhComposer
 
       "found"
     end
-    private_class_method :zone_view, :make_target, :validate_make_target!, :default_name, :zone_state
+    private_class_method :declare_adjacency, :zone_view, :make_target, :validate_make_target!, :default_name,
+                         :zone_state
   end
 end

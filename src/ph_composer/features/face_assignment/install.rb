@@ -3,6 +3,7 @@
 require_relative "schema"
 require_relative "geometry"
 require_relative "steps"
+require_relative "export"
 
 module PhComposer
   module FaceAssignment
@@ -51,11 +52,14 @@ module PhComposer
         classify(request, proposal)
       end
       feature.snapshot_section("#{FEATURE_ID}.faces", :query => "#{FEATURE_ID}.list")
+      feature.export_contributor(ExportProjection::SECTION, :section_version => 1) do |reader|
+        ExportProjection.records(reader)
+      end
     end
 
     def list(request)
       rows = Zones::Occurrences.zones(request.model).flat_map do |zone|
-        Zones::Occurrences.faces(zone).map { |face| face_view(face) }
+        Zones::Occurrences.faces(zone).map { |face| face_view(request.model, face) }
       end
       { "faces" => rows, "units" => { "area_m2" => "m2" } }
     end
@@ -71,7 +75,15 @@ module PhComposer
         )
         before = FACE_STORE.read(occurrence.entity)
         check_expected!(before, expected)
-        after = patched_record(request, occurrence, before, intent)
+        base = before
+        boundary_intent = intent["boundary_condition"]
+        retiring = before && before["boundary_condition"] == "Surface" && boundary_intent &&
+                   !(boundary_intent["mode"] == "keep" ||
+                     (boundary_intent["mode"] == "set" && boundary_intent["value"] == "Surface"))
+        if retiring
+          base = request.participant("#{Zones::FEATURE_ID}.retire_pair").call(request, proposal, occurrence, before)
+        end
+        after = patched_record(request, occurrence, base, intent)
         next unless after
 
         stamp = Zones::Schema.stamp(occurrence.zone.record)
@@ -86,7 +98,7 @@ module PhComposer
       { "face_ids" => changed }
     end
 
-    def face_view(occurrence)
+    def face_view(model, occurrence)
       record = FACE_STORE.read(occurrence.entity)
       Schema.validate!(record) if record
       id = record&.fetch("id", nil)
@@ -95,7 +107,8 @@ module PhComposer
         "area_m2" => Geometry.area_m2(occurrence), "values" => record ? Schema.values(record) : {},
         "user_data" => record ? DeepCopy.call(record.fetch("user_data", {})) : {},
         "extension_data" => record ? DeepCopy.call(record.fetch("extension_data", {})) : {},
-        "suggested" => Geometry.suggested_values(occurrence)
+        "suggested" => Geometry.suggested_values(occurrence),
+        "adjacency_state" => Zones::Adjacency.state(model, occurrence, record)
       }
     end
 

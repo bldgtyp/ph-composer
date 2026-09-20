@@ -1,7 +1,7 @@
 # Validation and export: implementation plan
 
 DATE: 2026-09-20
-STATUS: Scoped draft, pending remaining interview decisions. No implementation authorized.
+STATUS: In progress; P1-C HBJSON development proof complete, P1-E workflow not authorized.
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md) owns the proposed workflow and the accepted D2 failure policy. The
@@ -13,16 +13,17 @@ the accepted METr deferral are in [Phase 1 decisions](../../phase-one/DECISIONS.
 Phase 0 supplies contributor/result declarations, the Python coordinator/exporter registry,
 privacy checks, report rendering and recoverable canonical-pair primitives. The user command in
 `src/ph_composer/export/workflow.rb` still chooses a destination and refuses without writing.
-`Collection.build` reads records synchronously; it is not the bounded geometry walk. The Python
-composition registers no building sections or exporters. The runtime ships its core without the
-nine B1 wheels. None of these partial contracts proves a real building export.
+P1-C adds one detached Model traversal and registered Zone/face contributors, but not the bounded
+or cancellable P1-E run. The Python composition registers the building sections while withholding
+Rooms when no authored construction provider exists. The runtime still ships its core without
+translation wheels. The development-only proof does not implement a user export.
 
 ## Delivery allocation
 
 | Stage | Deliverable | Acceptance |
 | --- | --- | --- |
 | P1-A | Shared snapshot/geometry reader and proposal/preflight boundary design | One coherent read, no feature-specific orchestration or hidden repair |
-| P1-C | Two-Zone HBJSON development proof through registered sections | Typed dependencies, exact document reload, references/areas/result accounting, strict fixture isolation |
+| P1-C | Complete 2026-09-20: two-Zone HBJSON development proof through registered sections | [Typed dependencies, exact reload, references/areas/accounting and fixture isolation](../../phase-one/evidence/p1-c-adjacency-hbjson.md) |
 | P1-E | Run coordinator, Export UI, progress/cancellation, snapshot guard and conformance | Clean/warning/blocking/cancelled/changed-Model outcomes; destination-first behavior and report consistency |
 | P1-E | Pinned HBJSON translation wheels | Native/Pyodide parity and manifest/footprint |
 | P1-E/F | Fresh-process canonical export gate | Exact HBJSON/report reconciled against authoring |

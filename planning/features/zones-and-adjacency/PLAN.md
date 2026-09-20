@@ -1,7 +1,7 @@
 # Zones and adjacency: implementation plan
 
 DATE: 2026-09-20
-STATUS: P1-A and P1-B complete; P1-C adjacency is next and not authorized.
+STATUS: P1-A through P1-C complete on the implementation branch; P1-D is next and not authorized.
 ISSUE: none (local implementation packet)
 
 The [PRD](PRD.md) owns behavior. The [Phase 1 plan](../../phase-one/PLAN.md) owns shared sequencing
@@ -14,7 +14,7 @@ available, but entity-owned records and compound geometry operations still need 
 | --- | --- | --- |
 | P1-A | Entity-owned Zone store, occurrence/endpoint schema and geometry proposal design; host investigation | Complete 2026-09-20: [contract](../../phase-one/CONTRACTS.md), [evidence](../../phase-one/evidence/p1-a-geometry.md) |
 | P1-B | Complete 2026-09-20: feature install, Zone records, Make Zone, details, hierarchy/identity findings and focused public reads | [Script/UI and host evidence](../../phase-one/evidence/p1-b-authoring.md) |
-| P1-C | Full-wall solve/retire, stamps and stale findings; Zone extraction and Python Room section | Reciprocal emitted references, no-op solve and reference round trip |
+| P1-C | Complete 2026-09-20: full-wall solve/retire, stamps and stale findings; Zone extraction and Python Room section | [Reciprocal references, no-op solve and round-trip evidence](../../phase-one/evidence/p1-c-adjacency-hbjson.md) |
 | P1-D | Partial splitting, scope refusal, limited Restore, lifecycle reconciliation and Zone Colour-by registrations | Complete applicable PRD cases, native Undo/Redo, copy/path ambiguity and metadata preservation |
 | P1-E/F | Explicit all-Zone export preflight and integrated HBJSON proof | Room/Face references and Building-Segment metadata; METr mapping deferred |
 

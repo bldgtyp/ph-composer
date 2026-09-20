@@ -142,7 +142,7 @@
     var began = window.performance.now();
     pyodide.globals.set("_phc_document", PROBE_DOCUMENT);
     var result = JSON.parse(pyodide.runPython(
-      "from ph_composer_translation.entry import translate_json\ntranslate_json(_phc_document)"
+      "from ph_composer_translation.entry import probe_json\nprobe_json(_phc_document)"
     ));
     send("runtime.result", {
       request_id: payload.request_id, session: session, boot_count: bootCount, python: info.python,

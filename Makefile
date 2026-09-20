@@ -1,6 +1,6 @@
 .PHONY: ci syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage hostkit-test python-check \
         panel-manifest panel-manifest-check ui-preview ui-checks rbz rbz-check install clean bridge-install \
-        bridge-uninstall runtime-check runtime-pin-check runtime-manifest runtime-browser-check
+        bridge-uninstall runtime-check runtime-pin-check runtime-manifest runtime-browser-check phase-one-proof
 
 # `.ruby-version` pins 3.2.2, the Ruby the current proving host embeds. rbenv resolves it when it
 # is installed; without rbenv this falls back to whatever `ruby` is on PATH, and the suite's own
@@ -60,7 +60,7 @@ lint-python:
 
 # The owning tests, one per golden: exactly one test may write each file. None exist yet; the
 # first golden adds its owner here (docs/DEVELOPMENT.md "Fixtures and coverage").
-FIXTURE_OWNERS :=
+FIXTURE_OWNERS := phase_one_export
 FIXTURE_PATHS := tests/fixtures tests/python/fixtures
 
 fixtures:
@@ -87,6 +87,11 @@ coverage:
 	@$(RUBY) tools/coverage_ruby.rb $(RUBY_COVERAGE_MIN)
 	@node tools/coverage_js.js $(JS_COVERAGE_MIN)
 	@uv run pytest -q --cov=src/ph_composer/python --cov-report=term --cov-fail-under=$(PYTHON_COVERAGE_MIN) tests/python
+
+# Development-only P1-C proof. Inline dependency pins isolate the accepted Honeybee stack from
+# the zero-wheel shipping composition until P1-E vendors the selected runtime payload.
+phase-one-proof:
+	@uv run tools/examples/phase_one/translate_two_zones.py
 
 # The panel pages' <script> lists, generated from the PhComposerUI.define declarations
 # (tools/panel_manifest.js). Rewrite after adding, renaming or re-declaring a panel module.

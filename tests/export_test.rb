@@ -26,8 +26,8 @@ class ExportTest < PhComposerTestCase
   def test_the_example_adds_its_sections_through_the_registry_alone
     registry = PhComposer::Registry.current
 
-    assert_equal %w[example.foundation.export.definitions example.foundation.export.parts],
-                 registry.export_contributors.keys.sort
+    names = registry.export_contributors.values.select { |item| item.owner == "example.foundation" }.map(&:name)
+    assert_equal %w[example.foundation.export.definitions example.foundation.export.parts], names.sort
     assert_equal "example.foundation", registry.owner_of("example.foundation.export.parts")
     assert_includes Export::Privacy.schema(registry).keys, "example_parts"
   end
@@ -57,7 +57,7 @@ class ExportTest < PhComposerTestCase
   def test_the_example_model_collects_to_the_shared_extraction
     seed_example
 
-    extraction = Export::Collection.build(@model, :run_id => "run-example-1")
+    extraction = example_collection("run-example-1")
 
     assert_equal JSON.parse(File.read(File.join(FIXTURES, "extraction.json"))), extraction.document
     assert_equal [{ "code" => "export.metadata_omitted", "section" => "example.foundation.export.parts",
@@ -69,7 +69,7 @@ class ExportTest < PhComposerTestCase
     seed_example
     revision = @session.revision
 
-    Export::Collection.build(@model, :run_id => "r")
+    example_collection("r")
 
     assert_equal revision, @session.revision
     refute @model.modified_since_mark? if @model.respond_to?(:modified_since_mark?)
@@ -78,7 +78,7 @@ class ExportTest < PhComposerTestCase
   def test_a_local_only_envelope_is_left_out_with_a_finding
     id = store_part("extension_data" => { "other.org.notes" => envelope("local_only") })
 
-    extraction = Export::Collection.build(@model, :run_id => "r")
+    extraction = example_collection("r")
 
     part = extraction.document.dig("sections", "example.foundation.export.parts", "records", 0)
     refute part.key?("extensions")
@@ -97,7 +97,7 @@ class ExportTest < PhComposerTestCase
     store_part("extension_data" => { REVIEW => { "schema_version" => 1, "payload" => { "status" => "draft" },
                                                 "references" => [], "export_relevance" => "required" } })
 
-    error = assert_raises(Export::Blocked) { Export::Collection.build(@model, :run_id => "r") }
+    error = assert_raises(Export::Blocked) { example_collection("r") }
 
     assert_equal "extension.schema_unsupported", error.code
     assert_includes error.message, "is outdated"
@@ -108,7 +108,7 @@ class ExportTest < PhComposerTestCase
                  { "path" => "$.checked_against", "target_kind" => PART, "cardinality" => "one" }
                ], "export_relevance" => "required" } })
 
-    error = assert_raises(Export::Blocked) { Export::Collection.build(@model, :run_id => "r") }
+    error = assert_raises(Export::Blocked) { example_collection("r") }
 
     assert_equal "extension.invalid", error.code
     assert_includes error.message, "is invalid"
@@ -173,6 +173,12 @@ class ExportTest < PhComposerTestCase
 
   private
 
+  def example_collection(run_id)
+    names = PhComposer::Registry.current.export_contributors.values
+      .select { |contributor| contributor.owner == "example.foundation" }.map(&:name)
+    Export::Collection.build(@model, :run_id => run_id, :contributors => names)
+  end
+
   # Two parts under one definition, as a script would create them, with the fixture's ids. The Sill
   # carries user data and a checked review.
   def seed_example
@@ -209,7 +215,7 @@ class ExportTest < PhComposerTestCase
   def assert_blocked(relevance, code)
     store_part("extension_data" => { "other.org.review" => envelope(relevance) })
 
-    error = assert_raises(Export::Blocked) { Export::Collection.build(@model, :run_id => "r") }
+    error = assert_raises(Export::Blocked) { example_collection("r") }
 
     assert_equal code, error.code
     assert_equal({ "section" => "example.foundation.export.parts" }, error.detail)

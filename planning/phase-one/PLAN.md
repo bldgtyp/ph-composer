@@ -1,7 +1,7 @@
 # Phase 1 delivery plan
 
 DATE: 2026-09-20
-STATUS: P1-A and P1-B complete; P1-C is next and not authorized.
+STATUS: P1-A through P1-C complete on the implementation branch; P1-D is next and not authorized.
 ISSUE: none (local planning draft)
 
 ## Outcome and scope
@@ -36,7 +36,7 @@ baseline at `f1e9a98`, not a substitute for the durable contracts in `context/`.
 | `session/model_session.rb`, `host_observers.rb` | Per-Model state, events, revision and lifecycle | Feature reconciliation, endpoint/geometry stamps, copy ambiguity and cache invalidation |
 | `html/` panel sections, request channel, forms and units | One client of the public operations | First model tree/table, table drafts/preferences deferred by P0-E, feature navigation and viewport tool state |
 | `export/collection.rb`, record reader, privacy, report and artifact pair | Contributor declarations, allowlist and recoverable pair primitives | Bounded geometry collection, coherent snapshot guard, cancellable task/run coordinator and optional-artifact recovery |
-| Python section coordinator and exporter registry | Typed dependencies, result accounting and HBJSON-only exporter isolation | Real Zone/face sections and honeybee document assembly; both composition lists are empty; METr remains deferred |
+| Python section coordinator and exporter registry | Typed dependencies, result accounting and HBJSON-only exporter isolation; P1-C adds Zone/face sections and early honeybee model assembly | P1-E completes the user export workflow and shipped runtime composition; METr remains deferred |
 | Runtime host, server and manifest | Separate token-origin runtime page, lazy boot and integrity checks | HBJSON translation wheel set, loader and real translation requests; refresh manifest and measured footprint; PHX payload deferred |
 
 The [foundation example](../../tools/examples/foundation/README.md) is the entrypoint pattern.
@@ -121,6 +121,9 @@ world-normal suggestions use SI geometry; UI units only affect display/input.
 construction or thermal-performance claim is made. The public-operation walkthrough is checked in.
 
 ## P1-C: adjacency and early HBJSON proof
+
+**State:** Complete 2026-09-20 on the implementation branch. See
+[acceptance evidence](evidence/p1-c-adjacency-hbjson.md).
 
 **Depends on:** P1-B, the development-fixture decision and accepted runtime pins for real
 translation. Owners: Zones and export contributors.

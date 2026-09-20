@@ -209,6 +209,90 @@ class ZoneFaceTest < PhComposerTestCase
     assert_nil PhComposer::FaceAssignment::FACE_STORE.read(face)
   end
 
+  def test_full_wall_solve_is_reciprocal_idempotent_and_native_undoable
+    left_group, right_group = adjacent_face_groups(800)
+    @model.entities << left_group << right_group
+    left_zone = make_group_zone(left_group)
+    right_zone = make_group_zone(right_group)
+    left_face = classify_only_face(left_zone, "Outdoors")
+    right_face = classify_only_face(right_zone, "Outdoors")
+    params = { "zones" => [left_zone.fetch("reference"), right_zone.fetch("reference")] }
+
+    preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params)
+    result = invoke("ph_composer.zones.solve_adjacency", params, preview.fetch("proposal_digest"))
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    pair_id = result.dig("value", "pair_ids", 0)
+    assert_match(/^adj_/, pair_id)
+    rows = query("ph_composer.face_assignment.list").dig("value", "faces")
+    paired = rows.select { |row| row.dig("values", "adjacency", "pair_id") == pair_id }
+    assert_equal 2, paired.length
+    assert_equal %w[current current], paired.map { |row| row.fetch("adjacency_state") }
+    assert_equal [left_face.dig("reference", "entity_id"), right_face.dig("reference", "entity_id")].sort,
+                 paired.map { |row| row.dig("reference", "entity_id") }.sort
+
+    operation_count = @model.operations.length
+    again = invoke("ph_composer.zones.solve_adjacency", params)
+    assert_equal %w[completed none], again.values_at("status", "effect")
+    assert_equal operation_count, @model.operations.length
+
+    @model.undo
+    assert_equal %w[Outdoors Outdoors], query("ph_composer.face_assignment.list").dig("value", "faces")
+      .map { |row| row.dig("values", "boundary_condition") }.sort
+    @model.redo
+    assert_equal %w[current current], query("ph_composer.face_assignment.list").dig("value", "faces")
+      .map { |row| row.fetch("adjacency_state") }
+  end
+
+  def test_moved_zone_is_stale_until_explicit_retire_and_resolve
+    left_group, right_group = adjacent_face_groups(900)
+    @model.entities << left_group << right_group
+    left_zone = make_group_zone(left_group)
+    right_zone = make_group_zone(right_group)
+    classify_only_face(left_zone, "Outdoors")
+    classify_only_face(right_zone, "Outdoors")
+    solve = { "zones" => [left_zone.fetch("reference"), right_zone.fetch("reference")] }
+    invoke("ph_composer.zones.solve_adjacency", solve)
+
+    right_group.transformation = Geom::Transformation.translation([1, 0, 0])
+    rows = query("ph_composer.face_assignment.list").dig("value", "faces")
+    assert_equal %w[stale stale], rows.map { |row| row.fetch("adjacency_state") }
+
+    retired = invoke("ph_composer.zones.retire_adjacency", { "face" => rows.first.fetch("reference") })
+    assert_equal %w[completed committed], retired.values_at("status", "effect")
+    unpaired = query("ph_composer.face_assignment.list").dig("value", "faces")
+    assert unpaired.all? { |row| !row.fetch("values").key?("boundary_condition") }
+    assert unpaired.all? { |row| row["adjacency_state"].nil? }
+
+    right_group.transformation = Geom::Transformation.new
+    resolved = invoke("ph_composer.zones.solve_adjacency", solve)
+    assert_equal %w[completed committed], resolved.values_at("status", "effect")
+  end
+
+  def test_classifying_one_surface_face_retires_its_reciprocal_in_the_same_operation
+    left_group, right_group = adjacent_face_groups(950)
+    @model.entities << left_group << right_group
+    left_zone = make_group_zone(left_group)
+    right_zone = make_group_zone(right_group)
+    classify_only_face(left_zone, "Outdoors")
+    classify_only_face(right_zone, "Outdoors")
+    invoke("ph_composer.zones.solve_adjacency",
+           { "zones" => [left_zone.fetch("reference"), right_zone.fetch("reference")] })
+    rows = query("ph_composer.face_assignment.list").dig("value", "faces")
+    edited = rows.first
+
+    result = invoke("ph_composer.face_assignment.classify", {
+      "faces" => [edited.fetch("reference")],
+      "intent" => { "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } },
+      "expected_values" => edited.fetch("values")
+    })
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    after = query("ph_composer.face_assignment.list").dig("value", "faces")
+    assert_equal [nil, "Outdoors"], after.map { |row| row.dig("values", "boundary_condition") }.sort_by(&:to_s)
+    assert after.all? { |row| row["adjacency_state"].nil? }
+  end
+
   private
 
   def invoke(name, params, proposal_digest = nil)
@@ -248,6 +332,24 @@ class ZoneFaceTest < PhComposerTestCase
                                                            point(2, 2, index)])
     end
     Sketchup::Group.new(base, Sketchup::Entities.new(faces))
+  end
+
+  def adjacent_face_groups(base)
+    metres = 1.0 / 0.0254
+    loop = [point(0, 0, 0), point(0, 4 * metres, 0), point(0, 4 * metres, 3 * metres),
+            point(0, 0, 3 * metres)]
+    left = Sketchup::Face.new(base + 1, {}, :points => loop, :normal => Geom::Vector3d.new(1, 0, 0))
+    right = Sketchup::Face.new(base + 2, {}, :points => loop.reverse, :normal => Geom::Vector3d.new(-1, 0, 0))
+    [Sketchup::Group.new(base, Sketchup::Entities.new([left])),
+     Sketchup::Group.new(base + 10, Sketchup::Entities.new([right]))]
+  end
+
+  def classify_only_face(zone, boundary)
+    face = query("ph_composer.face_assignment.list").dig("value", "faces")
+      .find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
+    invoke("ph_composer.face_assignment.classify", classify_params(face, "Wall", boundary))
+    query("ph_composer.face_assignment.list").dig("value", "faces")
+      .find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
   end
 
   def point(x, y, z)

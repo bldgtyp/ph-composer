@@ -1,7 +1,7 @@
 # Face assignment: implementation plan
 
 DATE: 2026-09-20
-STATUS: In progress; P1-B authoring core complete, P1-C next and not authorized.
+STATUS: In progress; P1-B authoring core and P1-C export contribution complete, P1-D next and not authorized.
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md) owns behavior; the [Phase 1 plan](../../phase-one/PLAN.md) coordinates delivery.
@@ -29,9 +29,10 @@ record/reference operations independent of provider integration.
 - **P1-B, complete 2026-09-20:** registered Face reads, single-Face classification and a minimal
   palette for the two-Zone proof. See [authoring evidence](../../phase-one/evidence/p1-b-authoring.md).
   Includes typed/boundary views and suggestions using world geometry with metadata preservation.
-- **P1-C:** contributor and Python face section with complete accounting, emitted-target checks
-  and construction dependency. The development construction is a declared test composition;
-  absent/dangling authored construction references never fall through to it.
+- **P1-C, complete 2026-09-20:** contributor and Python face section with complete accounting,
+  emitted-target checks and explicit construction dependency. The development construction is a
+  tools-only composition; normal builds withhold the canonical model when no provider exists.
+  See the [P1-C evidence](../../phase-one/evidence/p1-c-adjacency-hbjson.md).
 - **P1-D:** complete Classify gestures and the named Suggest classification for this Zone action,
   table/drafts, local Attached zones and their delete/replace
   lifecycle, Reverse face, Colour-by modes/HUD and invalidation. Zones adds its own registered

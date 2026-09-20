@@ -20,3 +20,8 @@ def translate_json(text: str, sections: Sequence[Section[Any, Any]] = SECTIONS) 
         translation = Translation(run_id="", failure=Failure("reading", "payload.contract", f"not JSON: {error}"))
         return json.dumps(translation.to_document())
     return json.dumps(translate(document, sections).to_document())
+
+
+def probe_json(text: str) -> str:
+    """Exercise the contract shell without loading feature stacks or their wheels."""
+    return translate_json(text, ())

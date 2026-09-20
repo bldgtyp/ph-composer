@@ -1,7 +1,7 @@
 # Decision register
 
 DATE: 2026-09-20
-STATUS: D1-D11 confirmed 2026-09-18; D12 confirmed 2026-09-20. P1-A and P1-B complete; P1-C not authorized.
+STATUS: D1-D11 confirmed 2026-09-18; D12 confirmed 2026-09-20. P1-A through P1-C complete on the implementation branch.
 AUTHOR: Ed May, BLDGTYP, with Codex review
 
 This register collects only choices that change the product boundary, architecture, roadmap or

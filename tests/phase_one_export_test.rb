@@ -1,0 +1,168 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+
+class PhaseOneExportTest < PhComposerTestCase
+  include FixtureFiles
+  FIXTURE = File.join(TESTS_ROOT, "fixtures", "phase_one", "two_zones_extraction.json")
+
+  def setup
+    super
+    @model = Sketchup.active_model
+    @session = PhComposer::Sessions.for(@model)
+    @context = PhComposer::API.connect(:session_id => @session.id)
+    @sequence = 0
+  end
+
+  def test_two_zone_extraction_uses_one_snapshot_and_owns_the_golden
+    zones = seed_two_boxes
+    invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
+    names = [PhComposer::FaceAssignment::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+    before = @model.entities.each_count
+
+    extraction = PhComposer::Export::Collection.build(
+      @model, :run_id => "run-phase-one-two-zones", :contributors => names
+    )
+
+    assert_equal before + 1, @model.entities.each_count
+    assert_empty extraction.findings
+    assert_equal [6, 6], extraction.document.dig("sections", PhComposer::Zones::ExportProjection::SECTION, "records")
+      .map { |zone| zone.fetch("face_ids").length }
+    faces = extraction.document.dig("sections", PhComposer::FaceAssignment::ExportProjection::SECTION, "records")
+    assert_equal 12, faces.length
+    assert_equal 2, faces.count { |face| face["boundary_condition"] == "Surface" }
+    write_or_compare(FIXTURE, extraction.document)
+  end
+
+  def test_stale_surface_geometry_blocks_collection_without_repair
+    zones = seed_two_boxes
+    invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
+    right = @model.entities.to_a.find { |entity| entity.persistent_id == 2000 }
+    right.transformation = Geom::Transformation.translation([1, 0, 0])
+    names = [PhComposer::FaceAssignment::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+
+    error = assert_raises(PhComposer::Export::Blocked) do
+      PhComposer::Export::Collection.build(@model, :run_id => "stale", :contributors => names)
+    end
+
+    assert_equal "adjacency.stale", error.code
+    records = right.entities.to_a.map { |face| PhComposer::FaceAssignment::FACE_STORE.read(face) }
+    assert_equal 1, records.count { |record| record["boundary_condition"] == "Surface" }
+  end
+
+  def test_face_stamp_must_agree_with_detached_zone_containment
+    seed_two_boxes
+    face = @model.entities.to_a.first.entities.to_a.first
+    stamp = PhComposer::Zones::STAMP_STORE.read(face).merge("zone_id" => "zon_#{'Z' * 12}")
+    PhComposer::Zones::STAMP_STORE.write(face, stamp)
+
+    error = assert_raises(PhComposer::Export::Blocked) do
+      PhComposer::Export::Collection.build(@model, :run_id => "wrong-zone", :contributors => contributor_names)
+    end
+
+    assert_equal "face.wrong_zone", error.code
+  end
+
+  def test_classified_face_outside_every_zone_blocks_collection
+    seed_two_boxes
+    face = Sketchup::Face.new(9001, {}, :points => box_faces(10, 11).first.fetch(3),
+                                        :normal => Geom::Vector3d.new(0, 0, -1))
+    record = {
+      "id" => "fac_Z00000000001", "schema_version" => 1, "face_type" => "Floor",
+      "boundary_condition" => "Ground", "user_data" => {}, "extension_data" => {}
+    }
+    PhComposer::FaceAssignment::FACE_STORE.write(face, record)
+    PhComposer::Zones::STAMP_STORE.write(
+      face, "schema_version" => 1, "zone_id" => "zon_#{'A' * 12}",
+            "building_segment" => "Main Building", "level" => "L1"
+    )
+    @model.entities << face
+
+    error = assert_raises(PhComposer::Export::Blocked) do
+      PhComposer::Export::Collection.build(@model, :run_id => "orphan", :contributors => contributor_names)
+    end
+
+    assert_equal "face.wrong_zone", error.code
+  end
+
+  def test_deleted_surface_counterpart_blocks_collection
+    zones = seed_two_boxes
+    invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
+    right = @model.entities.to_a.find { |entity| entity.persistent_id == 2000 }
+    counterpart = right.entities.to_a.find do |face|
+      PhComposer::FaceAssignment::FACE_STORE.read(face)["boundary_condition"] == "Surface"
+    end
+    right.entities.delete(counterpart)
+
+    error = assert_raises(PhComposer::Export::Blocked) do
+      PhComposer::Export::Collection.build(@model, :run_id => "deleted", :contributors => contributor_names)
+    end
+
+    assert_equal "adjacency.unresolved", error.code
+  end
+
+  private
+
+  def contributor_names
+    [PhComposer::FaceAssignment::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+  end
+
+  def seed_two_boxes
+    left = box_group(1000, 0, 5, "A")
+    right = box_group(2000, 5, 9, "B")
+    @model.entities << left << right
+    [left, right].map do |group|
+      zone = PhComposer::Zones::ZONE_STORE.read(group)
+      { "zone_id" => zone.fetch("id"), "zone_path" => [group.persistent_id] }
+    end
+  end
+
+  def box_group(base, x_min, x_max, letter)
+    points = box_faces(x_min, x_max)
+    faces = points.each_with_index.map do |(face_type, boundary, normal, loop), index|
+      face_id = format("fac_%<letter>s%<number>011d", :letter => letter, :number => index + 1)
+      face = Sketchup::Face.new(base + index + 1, {}, :points => loop, :normal => Geom::Vector3d.new(*normal))
+      record = {
+        "id" => face_id, "schema_version" => 1, "face_type" => face_type,
+        "boundary_condition" => boundary, "user_data" => {}, "extension_data" => {}
+      }
+      PhComposer::FaceAssignment::FACE_STORE.write(face, record)
+      face
+    end
+    group = Sketchup::Group.new(base, Sketchup::Entities.new(faces))
+    zone = {
+      "id" => "zon_#{letter * 12}", "schema_version" => 1, "name" => "Zone #{letter}",
+      "building_segment" => "Main Building", "level" => "L1", "ground_depth_mm" => 0.0,
+      "user_data" => {}, "extension_data" => {}
+    }
+    PhComposer::Zones::ZONE_STORE.write(group, zone)
+    stamp = PhComposer::Zones::Schema.stamp(zone)
+    faces.each { |face| PhComposer::Zones::STAMP_STORE.write(face, stamp) }
+    group
+  end
+
+  def box_faces(x_min, x_max)
+    m = 1.0 / 0.0254
+    x0, x1, y0, y1, z0, z1 = [x_min, x_max, 0, 4, 0, 3].map { |value| value * m }
+    [
+      ["Floor", "Ground", [0, 0, -1], [point(x0, y0, z0), point(x0, y1, z0), point(x1, y1, z0), point(x1, y0, z0)]],
+      ["RoofCeiling", "Outdoors", [0, 0, 1],
+       [point(x0, y0, z1), point(x1, y0, z1), point(x1, y1, z1), point(x0, y1, z1)]],
+      ["Wall", "Outdoors", [-1, 0, 0], [point(x0, y0, z0), point(x0, y0, z1), point(x0, y1, z1), point(x0, y1, z0)]],
+      ["Wall", "Outdoors", [1, 0, 0], [point(x1, y0, z0), point(x1, y1, z0), point(x1, y1, z1), point(x1, y0, z1)]],
+      ["Wall", "Outdoors", [0, -1, 0], [point(x0, y0, z0), point(x1, y0, z0), point(x1, y0, z1), point(x0, y0, z1)]],
+      ["Wall", "Outdoors", [0, 1, 0], [point(x0, y1, z0), point(x0, y1, z1), point(x1, y1, z1), point(x1, y1, z0)]]
+    ]
+  end
+
+  def point(x, y, z)
+    Geom::Point3d.new(x, y, z)
+  end
+
+  def invoke(name, params)
+    PhComposer::API.invoke(
+      :context => @context, :name => name, :params => params,
+      :request => { "sequence" => @sequence += 1, "expected_revision" => @session.revision }
+    )
+  end
+end

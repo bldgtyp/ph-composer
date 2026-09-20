@@ -66,9 +66,9 @@
       "sha256": "0d1f14371ea0932c0c1d0c793bed9573858c3d2c5ff0553f6867caf1d798bfd1"
     },
     "html/runtime/runtime.js": {
-      "bytes": 6990,
+      "bytes": 6982,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "83ff4bf06c2b9cc0fbe63814466f31a7e53bd5ff44056df8b05c4104a794fbf9"
+      "sha256": "62ecfbf1a36e2d99e2f4a6758f00f32a080a77113b396fd7fa7e6803077bf0cb"
     },
     "html/sections/export.js": {
       "bytes": 1944,
@@ -136,9 +136,9 @@
       "sha256": "884e2725e72e1d8e08c345067699790718ca70c6a0a3c83ae241abb9dce64dbd"
     },
     "python/ph_composer_translation/composition.py": {
-      "bytes": 464,
+      "bytes": 545,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "80c816a0363cd80a43dbfae4943cfeb27cb6295389d77ac4b52293840f1612cb"
+      "sha256": "94ea5ad9bffede7100cc544e6e8150cb1a8f95cbc39af1940ab0ced74448be4a"
     },
     "python/ph_composer_translation/contract.py": {
       "bytes": 1487,
@@ -151,14 +151,19 @@
       "sha256": "9bf200d5e7372f9f2b8eefe6e159e5998968b042ce95a1c6e4de4c040bbcedce"
     },
     "python/ph_composer_translation/entry.py": {
-      "bytes": 848,
+      "bytes": 1006,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "4f4cdfc98a7ed355aed9e36ed3f4e11a0394bc95ff03d0790e7a0a7e912df2ca"
+      "sha256": "bdc8ed7e711e49666ca481b36709eb92b516528244b1924a1f8da68b5c4f3185"
     },
     "python/ph_composer_translation/exporters.py": {
       "bytes": 1952,
       "mime": "text/plain; charset=utf-8",
       "sha256": "deaae8b808bf827dfc8911cbcea2d41458efa573b3d541d35cd076fbb6c0f00a"
+    },
+    "python/ph_composer_translation/model_sections.py": {
+      "bytes": 11591,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "ae69ecb2773747192e0ac292b4f05c4b239679bd201fcd02a186f14083b1e1fb"
     },
     "python/ph_composer_translation/result.py": {
       "bytes": 3162,
@@ -171,9 +176,9 @@
       "sha256": "3100514ba701652eedc340118d78013e6cb7588f7056fd19d1b014e126dde365"
     },
     "python/ph_composer_translation/stack.py": {
-      "bytes": 1246,
+      "bytes": 1346,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "709f687a67d1ecfa5739908b495d61b81d2f9d0aa88d90da854486786271fef2"
+      "sha256": "fc06b80a14e19c86d814dfd9d67c735bf43f4f83bcfc2d8212a79c7e48567a85"
     },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,
@@ -264,6 +269,7 @@
     "python/ph_composer_translation/coordinator.py",
     "python/ph_composer_translation/entry.py",
     "python/ph_composer_translation/exporters.py",
+    "python/ph_composer_translation/model_sections.py",
     "python/ph_composer_translation/result.py",
     "python/ph_composer_translation/sections.py",
     "python/ph_composer_translation/stack.py"

@@ -1,0 +1,250 @@
+"""Zone and Face sections for the canonical HBJSON model.
+
+Faces translate first to detached typed specifications. Zones declare that dependency, create each
+Room once, and the Zone result hook resolves Surface references only after every emitted Room exists.
+The module imports no Ladybug Tools package until translation begins.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any, Protocol
+
+from . import stack
+from .contract import JSONValue, RecordError, as_number, as_text
+from .sections import Inputs, Requirement, Section
+
+FACE_SECTION_ID = "ph_composer.face_assignment.export.faces"
+ZONE_SECTION_ID = "ph_composer.zones.export.zones"
+
+
+class ConstructionProvider(Protocol):
+    """An explicitly composed source for a face construction."""
+
+    def resolve(self, assembly_id: str | None) -> Any: ...
+
+
+@dataclass(frozen=True)
+class FaceSpec:
+    identifier: str
+    zone_id: str
+    face_type: str
+    boundary_condition: str
+    assembly_id: str | None
+    loops_m: tuple[tuple[tuple[float, float, float], ...], ...]
+    adjacency: Mapping[str, object] | None
+
+
+@dataclass(frozen=True)
+class ZoneRecord:
+    identifier: str
+    name: str
+    building_segment: str
+    level: str | None
+    face_ids: tuple[str, ...]
+
+
+@dataclass
+class TranslatedZone:
+    source: ZoneRecord
+    room: Any
+    faces: dict[str, Any]
+    specifications: dict[str, FaceSpec]
+
+
+FACES = Requirement(FACE_SECTION_ID, FaceSpec)
+
+
+class FaceSection(Section[FaceSpec, FaceSpec]):
+    id = FACE_SECTION_ID
+    versions = frozenset({1})
+    object_type = FaceSpec
+
+    def read(self, raw: Mapping[str, object]) -> FaceSpec:
+        identifier = as_text(raw.get("id"), "face id")
+        zone_id = as_text(raw.get("zone_id"), f"face {identifier} zone_id")
+        face_type = as_text(raw.get("face_type"), f"face {identifier} face_type")
+        boundary = as_text(raw.get("boundary_condition"), f"face {identifier} boundary_condition")
+        assembly = raw.get("assembly_id")
+        if assembly is not None and not isinstance(assembly, str):
+            raise RecordError(f"face {identifier} assembly_id must be text or null")
+        geometry = raw.get("geometry")
+        if not isinstance(geometry, Mapping):
+            raise RecordError(f"face {identifier} geometry must be an object")
+        loops = self._loops(geometry.get("loops_m"), identifier)
+        adjacency = raw.get("adjacency")
+        if adjacency is not None and not isinstance(adjacency, Mapping):
+            raise RecordError(f"face {identifier} adjacency must be an object")
+        return FaceSpec(identifier, zone_id, face_type, boundary, assembly, loops, adjacency)
+
+    def translate(self, record: FaceSpec, inputs: Inputs) -> FaceSpec:
+        return record
+
+    @staticmethod
+    def _loops(value: object, identifier: str) -> tuple[tuple[tuple[float, float, float], ...], ...]:
+        if isinstance(value, (str, bytes)) or not isinstance(value, Sequence) or not value:
+            raise RecordError(f"face {identifier} loops_m must be a non-empty list")
+        loops: list[tuple[tuple[float, float, float], ...]] = []
+        for loop in value:
+            if isinstance(loop, (str, bytes)) or not isinstance(loop, Sequence) or len(loop) < 3:
+                raise RecordError(f"face {identifier} loop must have at least three points")
+            points: list[tuple[float, float, float]] = []
+            for point in loop:
+                if isinstance(point, (str, bytes)) or not isinstance(point, Sequence) or len(point) != 3:
+                    raise RecordError(f"face {identifier} point must have three coordinates")
+                points.append(
+                    (
+                        as_number(point[0], f"face {identifier} coordinate"),
+                        as_number(point[1], f"face {identifier} coordinate"),
+                        as_number(point[2], f"face {identifier} coordinate"),
+                    )
+                )
+            loops.append(tuple(points))
+        return tuple(loops)
+
+
+class ZoneSection(Section[ZoneRecord, TranslatedZone]):
+    id = ZONE_SECTION_ID
+    versions = frozenset({1})
+    object_type = TranslatedZone
+    requires = (FACES,)
+
+    def __init__(self, construction_provider: ConstructionProvider | None = None) -> None:
+        self._construction_provider = construction_provider
+
+    def read(self, raw: Mapping[str, object]) -> ZoneRecord:
+        identifier = as_text(raw.get("id"), "zone id")
+        name = as_text(raw.get("name"), f"zone {identifier} name")
+        segment = as_text(raw.get("building_segment"), f"zone {identifier} building_segment")
+        level = raw.get("level")
+        if level is not None and not isinstance(level, str):
+            raise RecordError(f"zone {identifier} level must be text or null")
+        face_ids = raw.get("face_ids")
+        if isinstance(face_ids, (str, bytes)) or not isinstance(face_ids, Sequence) or not face_ids:
+            raise RecordError(f"zone {identifier} face_ids must be a non-empty list")
+        return ZoneRecord(identifier, name, segment, level, tuple(as_text(value, "face id") for value in face_ids))
+
+    def translate(self, record: ZoneRecord, inputs: Inputs) -> TranslatedZone:
+        if self._construction_provider is None:
+            raise RecordError("no authored construction provider is installed")
+
+        hb_face = stack.load("honeybee.face")
+        hb_room = stack.load("honeybee.room")
+        hb_types = stack.load("honeybee.facetype")
+        hb_boundaries = stack.load("honeybee.boundarycondition")
+        lb_face = stack.load("ladybug_geometry.geometry3d.face")
+        lb_point = stack.load("ladybug_geometry.geometry3d.pointvector")
+        stack.load("honeybee_energy._extend_honeybee")
+        stack.load("honeybee_ph")
+
+        faces: dict[str, Any] = {}
+        specifications: dict[str, FaceSpec] = {}
+        for face_id in record.face_ids:
+            specification = inputs.get(FACES, face_id)
+            if specification.zone_id != record.identifier:
+                raise RecordError(f"face {face_id} names Zone {specification.zone_id}, not {record.identifier}")
+            if specification.boundary_condition == "Surface":
+                _validate_surface(specification, inputs)
+            points = [[lb_point.Point3D(*point) for point in loop] for loop in specification.loops_m]
+            geometry = lb_face.Face3D(points[0], holes=points[1:] or None)
+            try:
+                face_type = getattr(hb_types.face_types, _face_type_name(specification.face_type))
+                boundary = hb_boundaries.boundary_conditions.outdoors
+                if specification.boundary_condition != "Surface":
+                    boundary = getattr(
+                        hb_boundaries.boundary_conditions, _boundary_name(specification.boundary_condition)
+                    )
+                face = hb_face.Face(specification.identifier, geometry, face_type, boundary)
+                face.properties.energy.construction = self._construction_provider.resolve(specification.assembly_id)
+            except (AssertionError, AttributeError, KeyError, ValueError) as error:
+                raise RecordError(f"face {face_id} could not be built: {error}") from error
+            faces[face_id] = face
+            specifications[face_id] = specification
+        try:
+            room = hb_room.Room(record.identifier, list(faces.values()))
+        except (AssertionError, ValueError) as error:
+            raise RecordError(f"Zone {record.identifier} could not be built: {error}") from error
+        room.display_name = record.name
+        room.user_data = {"ph_composer": {"level": record.level, "building_segment": record.building_segment}}
+        return TranslatedZone(record, room, faces, specifications)
+
+    def result_fields(self, objects: Mapping[str, TranslatedZone]) -> Mapping[str, JSONValue]:
+        if not objects:
+            return {}
+        hb_model = stack.load("honeybee.model")
+        stack.load("honeybee_energy._extend_honeybee")
+        stack.load("honeybee_ph")
+        zones = list(objects.values())
+        segment_objects: dict[str, Any] = {}
+        emitted_faces = {identifier: face for zone in zones for identifier, face in zone.faces.items()}
+        specifications = {identifier: spec for zone in zones for identifier, spec in zone.specifications.items()}
+        omitted = 0
+        paired: set[str] = set()
+        for zone in zones:
+            ph = zone.room.properties.ph
+            segment = segment_objects.setdefault(zone.source.building_segment, ph.ph_bldg_segment)
+            segment.identifier = _segment_identifier(zone.source.building_segment)
+            segment.display_name = zone.source.building_segment
+            ph.ph_bldg_segment = segment
+        for identifier, specification in specifications.items():
+            if specification.boundary_condition != "Surface" or identifier in paired:
+                continue
+            counterpart_id = _counterpart_id(specification)
+            counterpart = specifications.get(counterpart_id)
+            reciprocal = counterpart is not None and _counterpart_id(counterpart) == identifier
+            if not reciprocal or counterpart_id not in emitted_faces:
+                omitted += 1
+                continue
+            emitted_faces[identifier].set_adjacency(emitted_faces[counterpart_id])
+            paired.update((identifier, counterpart_id))
+        if omitted:
+            return {}
+        model = hb_model.Model("ph_composer_model", rooms=[zone.room for zone in zones], units="Meters")
+        hbjson = json.dumps(model.to_dict(), sort_keys=True, separators=(",", ":"))
+        return {
+            "canonical_model": {
+                "hbjson": hbjson,
+                "rooms": len(zones),
+                "faces": len(emitted_faces),
+                "surface_pairs": len(paired) // 2,
+                "omitted": omitted,
+            }
+        }
+
+
+def _face_type_name(value: str) -> str:
+    return {"Wall": "wall", "RoofCeiling": "roof_ceiling", "Floor": "floor", "AirBoundary": "air_boundary"}[value]
+
+
+def _boundary_name(value: str) -> str:
+    return {"Outdoors": "outdoors", "Ground": "ground", "Adiabatic": "adiabatic"}[value]
+
+
+def _counterpart_id(specification: FaceSpec) -> str:
+    if not specification.adjacency:
+        return ""
+    counterpart = specification.adjacency.get("counterpart")
+    if not isinstance(counterpart, Mapping):
+        return ""
+    value = counterpart.get("entity_id")
+    return value if isinstance(value, str) else ""
+
+
+def _validate_surface(specification: FaceSpec, inputs: Inputs) -> None:
+    counterpart_id = _counterpart_id(specification)
+    if not counterpart_id:
+        raise RecordError(f"Surface face {specification.identifier} has no counterpart id")
+    counterpart = inputs.get(FACES, counterpart_id)
+    if counterpart.boundary_condition != "Surface" or _counterpart_id(counterpart) != specification.identifier:
+        raise RecordError(f"Surface face {specification.identifier} has no reciprocal counterpart")
+    endpoint = specification.adjacency.get("counterpart") if specification.adjacency else None
+    counterpart_zone = endpoint.get("zone_id") if isinstance(endpoint, Mapping) else None
+    if counterpart.zone_id != counterpart_zone:
+        raise RecordError(f"Surface face {specification.identifier} counterpart names the wrong Zone")
+
+
+def _segment_identifier(name: str) -> str:
+    return "bseg_" + hashlib.sha256(name.encode("utf-8")).hexdigest()[:16]

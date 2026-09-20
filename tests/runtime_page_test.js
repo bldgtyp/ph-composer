@@ -23,7 +23,7 @@ function fakePyodide(log) {
     },
     runPython: function (code) {
       log.push(["run", code]);
-      if (code.indexOf("translate_json") >= 0) {
+      if (code.indexOf("probe_json") >= 0) {
         if (log.translationFails) throw new Error("StackUnavailable: honeybee.model");
         return JSON.stringify({ state: "complete" });
       }

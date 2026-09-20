@@ -1,7 +1,7 @@
 # Zones and adjacency: status
 
 DATE: 2026-09-20
-STATUS: In progress; P1-A and P1-B complete, P1-C next.
+STATUS: In progress; P1-A through P1-C complete on the implementation branch, P1-D next.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -17,11 +17,13 @@ P1-A is complete: [CONTRACTS.md](../../phase-one/CONTRACTS.md) binds entity-owne
 occurrence references and compound geometry transactions, and the
 [host evidence](../../phase-one/evidence/p1-a-geometry.md) establishes the native premises.
 P1-B implemented entity stores, the proposal boundary, Make Zone, Zone details, occurrence reads
-and the minimal Overview UI. P1-C is the next delivery stage: adjacency and the early HBJSON proof.
+and the minimal Overview UI. P1-C implemented whole-wall adjacency, stale/retire behavior, the
+Zone extraction contributor and the early pinned-stack HBJSON proof. P1-D next completes partial
+overlap, identity repair, limited Restore and the remaining authoring/UI behavior.
 
 ## Blockers
 
-- P1-C implementation is not authorized by the completed P1-B instruction.
+- P1-D implementation is not authorized by the completed P1-C instruction.
 - The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
 
 ## Verification
@@ -30,8 +32,10 @@ Documentation-only architecture review completed 2026-09-18; all four findings a
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.
 P1-A's current-host probe passed grouping, face splitting with a hole, explode/limited Restore,
 closure, scaled/mirrored wrappers, Undo/Redo and fresh-process reopen. The 0.001 in native merge
-boundary is recorded. P1-B's public operations and current-host gates pass; adjacency, identity
-repair, Restore and the remaining PRD host gates remain outstanding.
+boundary is recorded. P1-B's public operations and current-host gates pass. P1-C's whole-wall
+solve, measured plane and normal tolerances, stale/retire lifecycle, no-op repeat solve, native
+Undo/Redo, reopen and exact HBJSON reference round trip pass. Partial adjacency, identity repair,
+Restore and the remaining PRD host gates remain outstanding.
 
 ## Ledger
 
@@ -45,3 +49,4 @@ repair, Restore and the remaining PRD host gates remain outstanding.
 | 2026-09-20 | Post-Phase-0 refresh: added PLAN.md, removed completed foundation blockers and linked the shared Phase 1 stages and decisions. Planning only; feature implementation remains pending. |
 | 2026-09-20 | P1-A complete. Bound entity/endpoint/proposal contracts and passed the native geometry investigation; Make Zone and solver implementation remain in later stages. |
 | 2026-09-20 | P1-B complete. Make Zone, Zone details, explicit occurrence reads and entity persistence passed offline and on SketchUp 26.1.188 through Undo/Redo and reopen. |
+| 2026-09-20 | P1-C complete on the implementation branch. Whole-wall adjacency, stale/retire behavior and the exact two-Zone HBJSON proof passed offline and on SketchUp 26.1.188. |

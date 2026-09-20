@@ -36,6 +36,7 @@ module PhComposer
         elsif record.key?("adjacency") && record["boundary_condition"] != "Surface"
           found << "adjacency is only valid for Surface"
         end
+        found.concat(Zones::Adjacency.validate_envelope(record["adjacency"])) if record["adjacency"].is_a?(Hash)
         found.concat(metadata_problems(record))
         found
       end

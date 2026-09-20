@@ -44,6 +44,15 @@ module PhComposer
         @engine.ids(kind_id).sort.map { |id| record(kind_id, @engine.find(kind_id, id), extensions) }
       end
 
+      # Entity-owned feature records use the same metadata boundary. `fields` is an explicit
+      # contributor allowlist; an omitted core field never leaves under an opaque value slot.
+      def entity_record(stored, fields:)
+        id = stored.fetch("id")
+        omit_metadata(id) unless stored.fetch("user_data", {}).empty?
+        stored.fetch("extension_data", {}).each { |namespace, envelope| leave_out(id, namespace, envelope) }
+        { "id" => id }.merge(DeepCopy.call(stored.slice(*fields)))
+      end
+
       private
 
       def record(kind_id, stored, extensions)
