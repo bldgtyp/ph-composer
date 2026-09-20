@@ -30,7 +30,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
   development and its floor-area/import questions. P1-E still owns the shipped HBJSON wheel set.
 - Create/link the implementation issue during authorized issue intake. The configured remote is
   `bldgtyp/ph-composer`; P1-A created no external issue or PR.
-- P1-D is authorized. Its slices are tracked in [PLAN.md](PLAN.md). D4's geometry cut and D5 to D7 remain; see "What D4 still owes" in the plan.
+- P1-D is authorized. Its slices are tracked in [PLAN.md](PLAN.md); D5 to D7 remain. See "What D4 left open" in the plan for the two shapes the solver reports rather than cuts.
 
 ## Stages
 
@@ -91,7 +91,7 @@ is checked in so that gate can be run as soon as Ed is at the bridge. One step i
 the viewport: how SketchUp copies a Group is the thing being measured, so the walkthrough asks for
 a Ctrl-drag copy rather than scripting an assumption about it.
 
-P1-D D4 brings the offline suite to 334 Ruby tests with 1,428 assertions, green on both Rubies with
+P1-D D4 brings the offline suite to 337 Ruby tests with 1,435 assertions, green on both Rubies with
 `make ci` and Ruby coverage at 96.0%. The pure overlap geometry is covered case by case: full,
 partial, contained, disjoint, off-plane, both sliver thresholds independently, a sliver left behind
 by an otherwise acceptable cut, same-normal overlapping Zones, a holed Face, concave outlines, and

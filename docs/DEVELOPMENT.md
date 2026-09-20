@@ -152,9 +152,18 @@ Phase-specific native probes live under [`tools/spikes/`](../tools/spikes/) and 
 P1-A Zone geometry probe and its stepwise bridge commands are documented in
 [`tools/spikes/geometry/README.md`](../tools/spikes/geometry/README.md); its accepted results are
 in [`planning/phase-one/evidence/p1-a-geometry.md`](../planning/phase-one/evidence/p1-a-geometry.md).
-The P1-B panel-closed Zone/Face walkthrough is in
-[`tools/examples/authoring/`](../tools/examples/authoring/README.md); its accepted current-host
-result is recorded in [`planning/phase-one/evidence/p1-b-authoring.md`](../planning/phase-one/evidence/p1-b-authoring.md).
+The panel-closed walkthroughs are in
+[`tools/examples/authoring/`](../tools/examples/authoring/README.md): P1-B's Zone and Face
+authoring, P1-C's adjacency, P1-D's Zone repairs and P1-D's adjacency cut. Their accepted
+current-host results are in
+[`p1-b-authoring.md`](../planning/phase-one/evidence/p1-b-authoring.md),
+[`p1-c-adjacency-hbjson.md`](../planning/phase-one/evidence/p1-c-adjacency-hbjson.md) and
+[`p1-d-repairs-and-cut.md`](../planning/phase-one/evidence/p1-d-repairs-and-cut.md).
+
+Native Undo and Redo are menu actions: a walkthrough sends `Sketchup.send_action("editUndo:")`
+and reads the result in a later call. There is no `Sketchup::Model#undo` on the host, although the
+offline stub has one; that and the other measured facts these walkthroughs depend on are in
+[`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
 
 ## The panel
 
