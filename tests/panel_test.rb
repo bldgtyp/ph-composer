@@ -113,6 +113,36 @@ class PanelTest < PhComposerTestCase
     assert_equal revision, @session.revision
   end
 
+  # Changing the selection raises a host event that would schedule a second identical snapshot; one
+  # viewport click is one Model read.
+  def test_a_view_command_that_changed_the_selection_leaves_no_second_snapshot_queued
+    dialog = open_panel
+    before = dialog.scripts.length
+
+    send_message(dialog, "view.invoke", "request_id" => "a:look:1", "session" => @session.id,
+                                        "name" => "test.fixture.look", "params" => { "count" => 1 })
+
+    refute_predicate @session.refresh, :pending?
+    assert_equal 1, dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
+                              .count("panel.snapshot")
+  end
+
+  # A section reading through a busy session refuses with the same reason, so republishing would
+  # replace every section's good data with that refusal.
+  def test_a_refused_view_command_publishes_no_snapshot
+    dialog = open_panel
+    work = Struct.new(:pending?).new(true)
+    @session.feature_state(:api_test) { work }
+    before = dialog.scripts.length
+
+    send_message(dialog, "view.invoke", "request_id" => "a:look:1", "session" => @session.id,
+                                        "name" => "test.fixture.look", "params" => { "count" => 1 })
+
+    published = dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
+    assert_equal ["view.result"], published
+    assert_equal "busy", messages(dialog, "view.result").last.dig("outcome", "status")
+  end
+
   def test_a_view_command_for_a_model_the_panel_no_longer_shows_is_refused
     dialog = open_panel
 

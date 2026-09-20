@@ -346,6 +346,21 @@ class ApiTest < PhComposerTestCase
     assert_equal "There is nothing to look at.", outcome.fetch("message")
   end
 
+  # `effect` is a statement about the Model, which nothing here touched. The viewport may be half
+  # moved, which is why a client re-reads what it shows rather than assuming.
+  def test_a_view_command_that_fails_after_moving_the_view_still_reports_the_model_unchanged
+    outcome = API.view(:context => @context, :name => "test.fixture.look", :params => { "count" => -1 })
+
+    assert_equal %w[failed operation.failed none], outcome.values_at("status", "code", "effect")
+    refute @model.modified?
+  end
+
+  def test_a_query_name_is_not_a_view_command
+    outcome = API.view(:context => @context, :name => "test.fixture.total_length", :params => {})
+
+    assert_equal %w[refused request.unknown_operation], outcome.values_at("status", "code")
+  end
+
   def test_a_caller_without_view_access_cannot_move_the_view
     reader = API.connect(:session_id => @session.id, :capabilities => ["read"])
 

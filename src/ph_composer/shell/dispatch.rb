@@ -24,16 +24,7 @@ module PhComposer
     end
 
     def query(context, name, params)
-      session, _caller, query = resolve(context, "read", name, @registry.queries)
-      check_params!(query, params, session)
-      refuse_if_busy!(session)
-      value = query.handler.call(request_for(session, params))
-      check_result!(query, value)
-      Outcome.completed(:revision => session.revision, :value => value)
-    rescue CodedError => error
-      coded_outcome(error, session)
-    rescue StandardError => error
-      unexpected_outcome(error, session, name)
+      answer(context, "read", name, @registry.queries, params)
     end
 
     # A change to what the host shows and nothing else (Declarations::ViewCommand). It carries no
@@ -41,20 +32,7 @@ module PhComposer
     # It refuses while the session is busy, as a read does, so it cannot move the camera or the
     # selection out from under an operation that is still running.
     def view(context, name, params)
-      session, _caller, command = resolve(context, "view", name, @registry.view_commands)
-      check_params!(command, params, session)
-      refuse_if_busy!(session)
-      value = command.handler.call(request_for(session, params))
-      check_result!(command, value)
-      Outcome.completed(:revision => session.revision, :value => value)
-    rescue CodedError => error
-      coded_outcome(error, session)
-    rescue UserError => error
-      # A command that refuses what it was asked for says why, as an operation does: "There is no
-      # Colour-by mode named ..." is the answer, not a generic failure.
-      Outcome.refused("validation.failed", error.message, :revision => session&.revision)
-    rescue StandardError => error
-      unexpected_outcome(error, session, name)
+      answer(context, "view", name, @registry.view_commands, params)
     end
 
     # What an operation would change, without changing anything. The result is bound to the revision
@@ -110,6 +88,26 @@ module PhComposer
     private
 
     # ---------------------------------------------------------------- acceptance
+
+    # A read and a view command run the same way: validate, refuse while busy, call the handler, check
+    # the result against its declared schema. They differ in the capability they need and in what the
+    # handler is allowed to touch, which is the declaration's business rather than this method's.
+    def answer(context, capability, name, declarations, params)
+      session, _caller, declaration = resolve(context, capability, name, declarations)
+      check_params!(declaration, params, session)
+      refuse_if_busy!(session)
+      value = declaration.handler.call(request_for(session, params))
+      check_result!(declaration, value)
+      Outcome.completed(:revision => session.revision, :value => value)
+    rescue CodedError => error
+      coded_outcome(error, session)
+    rescue UserError => error
+      # A handler that refuses what it was asked for says why, as an operation does: "There is no
+      # Colour-by mode named ..." is the answer, not a generic failure.
+      Outcome.refused("validation.failed", error.message, :revision => session&.revision)
+    rescue StandardError => error
+      unexpected_outcome(error, session, name)
+    end
 
     def resolve(context, capability, name, declarations)
       unless context.is_a?(OperationContext)
@@ -276,8 +274,10 @@ module PhComposer
       false
     end
 
-    # A read that failed unexpectedly (a handler bug, a result outside its schema) answers every client
-    # with the same failed outcome; the error goes to the log. Reads open no operation, so nothing changed.
+    # A read or a view command that failed unexpectedly (a handler bug, a result outside its schema)
+    # answers every client with the same failed outcome; the error goes to the log. Neither opens an
+    # operation, so `effect` is "none": the Model is unchanged. A view command may still have moved the
+    # viewport part-way, which is why a client re-reads what it shows rather than assuming.
     def unexpected_outcome(error, session, name)
       Diagnostics.log("operation_failed", "operation" => name, "code" => "operation.failed",
                                           "error_class" => error.class.name)

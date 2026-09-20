@@ -100,7 +100,7 @@ test("a view result settles in its own slot and says why the viewport did not ch
   p.receive("view.result", { request_id: "v1", session: "session-a", outcome: {
     status: "completed", value: { found: 4, missing: 0 } } });
 
-  assert.strictEqual(p.panel.state.ui.viewResult.request_id, "v1");
+  assert.strictEqual(p.panel.state.ui.viewResults.v1.request_id, "v1");
   assert.strictEqual(p.panel.state.ui.actionResult, null, "a view command is not an edit");
   assert.strictEqual(p.notice().hidden, true, "a viewport change that worked says nothing");
 

@@ -31,7 +31,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   function initialState() {
     return { session: null, revision: null, sections: {},
-      ui: { activeTab: "overview", actionResult: null, viewResult: null, exportResult: null, notice: null,
+      ui: { activeTab: "overview", actionResult: null, viewResults: {}, exportResult: null, notice: null,
         preferencePending: {} } };
   }
 
@@ -54,7 +54,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     next.ui = copy(previous.ui);
     if (previous.session !== next.session) {
       next.ui.actionResult = null;
-      next.ui.viewResult = null;
+      next.ui.viewResults = {};
       next.ui.exportResult = null;
       next.ui.notice = null;
     }
@@ -76,10 +76,12 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   }
 
   /* A viewport-state command changes what the host shows and never the Model, so a refusal is a warning
-     about the view, never about an edit the user should check. */
+     about the view, never about an edit the user should check. Results are kept by request id, because
+     several views send them independently; the oldest are dropped once the page is clearly done with
+     them, which is a bound on the map rather than a promise about any one entry. */
   function reduceViewResult(previous, payload) {
     var outcome = payload.outcome || {};
-    var changes = { viewResult: payload };
+    var changes = { viewResults: recentResults(previous.ui.viewResults, payload) };
     if (payload.session !== previous.session) return previous;
     if (outcome.status !== "completed") {
       changes.notice = { message: outcome.message || "The viewport did not change.",
@@ -118,6 +120,14 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   function reduceFailure(previous, payload) {
     return withUI(previous, { notice: { message: payload.message || "The panel request failed.", tone: "error" } });
+  }
+
+  var MAX_VIEW_RESULTS = 8;
+  function recentResults(previous, payload) {
+    var kept = copy(previous), ids = Object.keys(kept);
+    kept[payload.request_id] = payload;
+    ids.slice(0, Math.max(0, ids.length + 1 - MAX_VIEW_RESULTS)).forEach(function (id) { delete kept[id]; });
+    return kept;
   }
 
   function receive(envelope) {
@@ -254,8 +264,12 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   /* Sent once the page has started, so the first snapshot has somewhere to render. */
   function ready() { send("panel.ready", {}); }
 
+  /* A presentation-only change: a section that owns local view state (a selection, a filter, an open
+     row) repaints every section from the state already in hand. It never reaches the host. */
+  function repaint() { render(); }
+
   api = { receive: receive, section: section, ready: ready, state: state, showTab: showTab, send: send,
-    setPreference: setPreference };
+    setPreference: setPreference, repaint: repaint };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function (tab) {
     tab.addEventListener("click", function () { showTab(tab.getAttribute("data-tab")); });
   });

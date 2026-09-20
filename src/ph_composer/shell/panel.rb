@@ -192,9 +192,14 @@ module PhComposer
         publish_result(payload, outcome)
       end
 
-      # Selection, camera and the active Colour-by mode, for the Model the panel shows. The snapshot follows
-      # because a section may read what the command changed; the revision does not move, so nothing the page
-      # has in flight goes stale.
+      # Selection, camera and the active Colour-by mode, for the Model the panel shows. A section may read
+      # what the command changed, so a snapshot follows; the revision does not move, so nothing the page has
+      # in flight goes stale.
+      #
+      # Changing the selection raises a host event, which schedules a refresh that would publish the same
+      # snapshot again a tick later: cancelling it first keeps one viewport click to one Model read. A
+      # refusal publishes nothing, because a section that refused with it would replace good data with the
+      # same refusal.
       def view(payload)
         session = Sessions.current
         unless session && payload["session"] == session.id
@@ -203,7 +208,10 @@ module PhComposer
 
         outcome = API.view(:context => context_for(session), :name => payload["name"].to_s,
                            :params => payload.fetch("params", {}))
-        publish_snapshot(session)
+        if outcome.fetch("status") == "completed"
+          session.refresh.cancel
+          publish_snapshot(session)
+        end
         publish_view(payload, outcome)
       end
 

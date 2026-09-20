@@ -1,9 +1,11 @@
 # External agent interface
 
-DATE: 2026-09-18
+DATE: 2026-09-20
 STATUS: Agent access is an accepted product priority. The in-process programming interface
-(`PhComposer::API`: discover, describe, connect, query, preview, invoke, outcome) merged through PR #1 from Phase 0 P0-D with a panel-closed synthetic client. Transport, packaging, grants and the
-external adapter remain proposed.
+(`PhComposer::API`: discover, describe, connect, query, preview, invoke, outcome) merged through
+PR #1 from Phase 0 P0-D with a panel-closed synthetic client. `view`, the selection, reveal and
+camera verb, was added in Phase 1 P1-D. Transport, packaging, grants and the external adapter
+remain proposed.
 
 Users bring their own agents. PH-Composer supplies documented access to inspect, view and edit
 the authored model without requiring an agent to understand private Ruby internals or operate
@@ -120,7 +122,9 @@ restart. Cancellation only rolls back work where the operation explicitly guaran
 ## User-controlled local access
 
 External access is explicit and revocable, with a visible connection/access state. Separate read,
-model-write and file/import/export capabilities so the user can grant useful scope. Enforce grants
+view, model-write and file/import/export capabilities so the user can grant useful scope. `view`
+is the selection, reveal and camera operations below: it moves nothing in the SKP, so it is granted
+apart from model-write, and a read never carries it. Enforce grants
 at dispatch; an action description or a client-supplied confirmation flag is not authorization.
 Do not require renewed permission for every request already covered by a valid grant.
 

@@ -54,6 +54,9 @@ module TestFeature
       raise PhComposer::UserError, "There is nothing to look at." if request.params.fetch("count").zero?
 
       request.model.selection.clear
+      # A negative count changes the view and then fails, which is what a half-moved viewport looks like.
+      raise "the camera could not be placed" if request.params.fetch("count").negative?
+
       { "selected" => request.params.fetch("count") }
     end
   end

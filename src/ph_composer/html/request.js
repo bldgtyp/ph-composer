@@ -8,9 +8,11 @@
    A result is `{ request_id, session, outcome }`, where `outcome` is the public operation outcome
    (`status`, `code`, `message`, `effect`, `revision`, `value`, ...).
 
-   A channel carries one host message. The default is `action.invoke`, whose result lands in
-   `state.ui.actionResult`; `view.invoke` is the viewport-state channel (selection, camera, the active
-   Colour-by mode), whose result lands in `state.ui.viewResult`. Both settle the same way.
+   A channel carries one host message. The default is `action.invoke`, whose result lands in the single
+   `state.ui.actionResult` slot; `view.invoke` is the viewport-state channel (selection, camera, the
+   active Colour-by mode), whose results land in `state.ui.viewResults` keyed by request id. Several
+   views send viewport commands independently, so one slot would let the second answer strand the first
+   in a pending state it could never settle out of.
 
    Two shapes: `run` is single flight (refuses while a request is pending, and `consume` settles it once);
    `send` never refuses and returns the id, for callers that keep several requests in flight, which match
@@ -18,13 +20,15 @@
 PhComposerUI.define("request", [], function () {
   "use strict";
   var sequence = 0;
-  var SLOTS = { "action.invoke": "actionResult", "view.invoke": "viewResult" };
+  var SLOTS = { "action.invoke": { slot: "actionResult", keyed: false },
+    "view.invoke": { slot: "viewResults", keyed: true } };
 
   function Channel(session, send, label, message) {
     this.session = session; this.transport = send; this.label = label;
     this.message = message || "action.invoke";
-    this.slot = SLOTS[this.message];
-    if (!this.slot) throw new Error("request channel does not carry \"" + this.message + "\"");
+    var carried = SLOTS[this.message];
+    if (!carried) throw new Error("request channel does not carry \"" + this.message + "\"");
+    this.slot = carried.slot; this.keyed = carried.keyed;
     this.pending = null; this.action = null; this.handlers = null;
   }
   Channel.prototype.nextId = function (label) {
@@ -54,7 +58,9 @@ PhComposerUI.define("request", [], function () {
   /* The pending request's outcome, if this state carries its result: clears pending, runs the handler, and
      returns the outcome so the caller can use it for the rest of the render. Null otherwise. */
   Channel.prototype.consume = function (state) {
-    var result = state && state.ui && state.ui[this.slot], handlers = this.handlers, outcome;
+    var held = state && state.ui && state.ui[this.slot];
+    var result = this.keyed ? (held && this.pending && held[this.pending]) : held;
+    var handlers = this.handlers, outcome;
     if (!this.matches(result)) return null;
     outcome = result.outcome;
     this.reset();

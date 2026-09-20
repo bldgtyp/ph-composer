@@ -55,6 +55,7 @@
     this.sent.push(message);
     if (message.type === "panel.ready") this.snapshot();
     if (message.type === "action.invoke") this.invoke(message.payload);
+    if (message.type === "view.invoke") this.viewCommand(message.payload);
     if (message.type === "preferences.set") this.setPreference(message.payload);
     if (message.type === "export.start") this.exportStart(message.payload);
   };
@@ -64,6 +65,16 @@
     this.publish("export.result", { request_id: payload.request_id, session: payload.session,
       outcome: refused("export.unavailable", "No exporter is installed in this build, so nothing was written.",
         this.revision) });
+  };
+
+  /* A viewport-state command: nothing to write and no revision to guard, so the preview answers that it
+     ran and leaves its Model alone. There is no viewport here to move. */
+  Host.prototype.viewCommand = function (payload) {
+    var outcome = payload.session === this.session
+      ? { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
+        value: {}, affected: [], findings: [], detail: null }
+      : refused("session.inactive", "The panel now shows a different Model.", null);
+    this.publish("view.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
   };
 
   Host.prototype.invoke = function (payload) {
@@ -111,6 +122,14 @@
         var intent = payload.params.intent[field];
         if (intent.mode === "set") face.values[field] = intent.value;
         if (intent.mode === "clear") delete face.values[field];
+      });
+      face.state = face.values.face_type && face.values.boundary_condition ? "classified" : "incomplete";
+    } else if (payload.name === "ph_composer.face_assignment.auto_classify") {
+      this.faces.filter(function (item) {
+        return item.reference.zone_id === payload.params.zone.zone_id && item.state === "unclassified";
+      }).forEach(function (item) {
+        item.values = JSON.parse(JSON.stringify(item.suggested));
+        item.state = "classified";
       });
     } else {
       return refused("request.unknown_operation", "The preview host does not run " + payload.name + ".", this.revision);

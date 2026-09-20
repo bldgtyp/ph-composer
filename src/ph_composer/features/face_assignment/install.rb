@@ -339,7 +339,7 @@ module PhComposer
       record = FACE_STORE.read(occurrence.entity)
       Schema.validate!(record) if record
       id = record&.fetch("id", nil)
-      {
+      view = {
         "reference" => occurrence.reference(id), "zone_name" => occurrence.zone.record.fetch("name"),
         "area_m2" => Geometry.area_m2(occurrence), "values" => record ? Schema.values(record) : {},
         "user_data" => record ? DeepCopy.call(record.fetch("user_data", {})) : {},
@@ -348,6 +348,23 @@ module PhComposer
         "attached_zone_state" => AttachedZone.reference_state(request.engine, record),
         "adjacency_state" => Zones::Adjacency.state(request.model, occurrence, record, :index => index)
       }
+      view.merge("state" => row_state(view))
+    end
+
+    # The three words every surface that shows a Face uses, the same ones a Colour-by legend row
+    # carries: no record at all, a record that cannot be exported as it stands, or a complete one.
+    # The faces table and the overlay have to agree, so this is derived here and never in a view.
+    #
+    # It is not the validation register, which owns severities and finding codes and is a later
+    # packet. It answers one question: is this row amber (face-assignment PRD, "The faces table").
+    def row_state(view)
+      values = view.fetch("values")
+      return "unclassified" if values.empty?
+
+      incomplete = values["face_type"].nil? || values["boundary_condition"].nil? ||
+                   (view["attached_zone_state"] && view["attached_zone_state"] != "resolved") ||
+                   (view["adjacency_state"] && view["adjacency_state"] != "current")
+      incomplete ? "incomplete" : "classified"
     end
 
     def deduplicate(references)

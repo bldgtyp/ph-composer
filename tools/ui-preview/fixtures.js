@@ -7,20 +7,32 @@
     { id: "exp_Dd44Ee55Ff66", label: "Head", length_mm: 1231.9 },
     { id: "exp_Gg77Hh88Ii99", label: "Jamb", length_mm: 2438.4 }
   ];
+  function zone(id, name, level, faceCount) {
+    return { id: id, schema_version: 1, user_data: {}, extension_data: {},
+      reference: { zone_id: id, zone_path: [100] }, state: "found", face_count: faceCount,
+      values: { name: name, building_segment: "House", level: level, ground_depth_mm: 0 } };
+  }
+  function face(zoneId, path, id, area, values, state) {
+    return { reference: { zone_id: zoneId, zone_path: [100], entity_path: [path], entity_id: id },
+      zone_name: "", area_m2: area, values: values, state: state,
+      suggested: { face_type: "Wall", boundary_condition: "Outdoors" } };
+  }
+  // Two Zones, so the tree has something to be a tree of: one fully classified, one with an
+  // incomplete Face and two the user has not reached yet.
   var AUTHORING = {
-    zones: [{
-      id: "zon_Aa11Bb22Cc33", reference: { zone_id: "zon_Aa11Bb22Cc33", zone_path: [100] },
-      state: "found", face_count: 2,
-      values: { name: "Living Zone", building_segment: "House", level: "Ground", ground_depth_mm: 0 }
-    }],
+    zones: [zone("zon_Aa11Bb22Cc33", "Living Zone", "Ground", 3),
+      zone("zon_Dd44Ee55Ff66", "Attic Zone", "Upper", 3)],
     faces: [
-      { reference: { zone_id: "zon_Aa11Bb22Cc33", zone_path: [100], entity_path: [101], entity_id: null },
-        zone_name: "Living Zone", area_m2: 12, values: {},
-        suggested: { face_type: "Wall", boundary_condition: "Outdoors" } },
-      { reference: { zone_id: "zon_Aa11Bb22Cc33", zone_path: [100], entity_path: [102],
-          entity_id: "fac_Aa11Bb22Cc33" }, zone_name: "Living Zone", area_m2: 20,
-        values: { face_type: "Floor", boundary_condition: "Ground" },
-        suggested: { face_type: "Floor", boundary_condition: "Ground" } }
+      face("zon_Aa11Bb22Cc33", 101, "fac_Aa11Bb22Cc33", 12,
+        { id: "fac_Aa11Bb22Cc33", face_type: "Wall", boundary_condition: "Outdoors" }, "classified"),
+      face("zon_Aa11Bb22Cc33", 102, "fac_Dd44Ee55Ff66", 20.5,
+        { id: "fac_Dd44Ee55Ff66", face_type: "Floor", boundary_condition: "Ground" }, "classified"),
+      face("zon_Aa11Bb22Cc33", 103, null, 8, {}, "unclassified"),
+      face("zon_Dd44Ee55Ff66", 201, "fac_Gg77Hh88Ii99", 31.25,
+        { id: "fac_Gg77Hh88Ii99", face_type: "RoofCeiling", boundary_condition: "Surface" }, "classified"),
+      face("zon_Dd44Ee55Ff66", 202, "fac_Jj00Kk11Ll22", 14,
+        { id: "fac_Jj00Kk11Ll22", face_type: "Wall" }, "incomplete"),
+      face("zon_Dd44Ee55Ff66", 203, null, 9, {}, "unclassified")
     ]
   };
 

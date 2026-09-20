@@ -142,6 +142,10 @@ The handler takes the same `request` a query's does and returns a JSON value aga
 result schema. What it must not do is write a record, open a `ModelOperation` or advance the session
 revision; a handler that needs to wants `action`.
 
+A view command that fails part-way leaves viewport state unspecified. Its outcome reports `effect`
+`none`, which is a statement about the Model: the SKP is untouched, because nothing here opens an
+operation. A client that needs to know what the viewport now shows re-reads it rather than assuming.
+
 Every client reaches one the same way: `API.view(context:, name:, params:)` with no sequence number
 and no expected revision, because there is nothing to retry and nothing for a stale revision to
 protect. It refuses while the session is busy, as a read does, so it cannot move the camera out from

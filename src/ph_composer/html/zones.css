@@ -1,27 +1,16 @@
-.phc-zones,
-.phc-faces { padding: 18px 24px 24px; border-top: 1px solid var(--line); }
-.phc-zone-heading,
-.phc-face-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.phc-zone-heading h2,
-.phc-face-heading h2 { margin: 0; font-size: 17px; }
-.phc-zone-list,
-.phc-face-list { display: grid; gap: 8px; }
-.phc-zone-card,
-.phc-face-row { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px; }
-.phc-zone-card { display: grid; grid-template-columns: minmax(140px, 2fr) minmax(120px, 1fr) minmax(90px, 1fr)
+/* The Overview screen: its heading row, the tree table's mounts and the Zone details form. The table
+   itself is styled by table.css, which names no screen. */
+.phc-overview { padding: 18px 24px 24px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.phc-zone-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.phc-zone-heading h2 { margin: 0; font-size: 17px; }
+.phc-table-mount { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 6px; }
+.phc-details-mount:empty { display: none; }
+.phc-zone-card { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px;
+  display: grid; grid-template-columns: minmax(140px, 2fr) minmax(120px, 1fr) minmax(90px, 1fr)
   minmax(110px, 1fr) auto; gap: 8px; align-items: end; }
-.phc-zone-card label,
-.phc-face-row label { display: grid; gap: 4px; color: var(--muted); font-size: 11px; }
-.phc-zone-card input,
-.phc-face-row select { min-width: 0; }
-.phc-face-row { display: grid; grid-template-columns: minmax(130px, 1fr) 90px minmax(125px, 1fr)
-  minmax(125px, 1fr) auto; gap: 8px; align-items: end; }
-.phc-face-identity { align-self: center; }
-.phc-face-identity strong,
-.phc-face-identity span { display: block; }
-.phc-face-identity span { color: var(--muted); font-size: 11px; }
-.phc-empty { margin: 0; color: var(--muted); }
+.phc-zone-card label { display: grid; gap: 4px; color: var(--muted); font-size: 11px; }
+.phc-zone-card input { min-width: 0; }
+.phc-empty { margin: 0; padding: 12px; color: var(--muted); }
 @media (max-width: 720px) {
-  .phc-zone-card,
-  .phc-face-row { grid-template-columns: 1fr; }
+  .phc-zone-card { grid-template-columns: 1fr; }
 }
