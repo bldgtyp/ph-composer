@@ -106,19 +106,6 @@ module PhComposer
         }
       end
 
-      # A partial overlap is a real pairing, but recording it would claim Surface over the whole
-      # Face when only part of it is shared (Q21). Until the solver cuts the Faces, it says so and
-      # pairs nothing, rather than overstating the boundary. This is the tracked D4 remainder.
-      def split_not_applied(match)
-        zones = [:left, :right].map { |side| match.fetch(side).fetch(:occurrence).zone }
-        {
-          "code" => "adjacency.split_not_applied", "severity" => "warning",
-          "zones" => zones.map(&:reference), "area_m2" => match.fetch(:overlap).area_m2,
-          "message" => "#{zones.map { |zone| zone.record.fetch('name') }.join(' and ')} share part of a Face. " \
-                       "Cutting the shared region is not implemented yet, so no adjacency was recorded."
-        }
-      end
-
       REPORTED_CODES = {
         :same_normal => "adjacency.overlapping_zones",
         :sliver => "adjacency.sliver_skipped",

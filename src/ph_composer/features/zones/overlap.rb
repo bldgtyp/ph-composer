@@ -45,8 +45,12 @@ module PhComposer
         end
 
         shared = shared_region(left, right)
-        return shared unless shared.kind == :partial
-        return Result.new(:kind => :same_normal, :area_m2 => shared.area_m2) if aligned == :same
+        # Two coplanar Faces pointing the same way are overlapping Zones whatever the size of the
+        # region they share (Q19). Judging the size first would report a real modelling error as an
+        # ordinary skip, and "skipped" implies the solver would otherwise have paired them.
+        # An unsupported shape is left alone: there the solver never learned whether they overlap.
+        return Result.new(:kind => :same_normal, :area_m2 => shared.area_m2) if aligned == :same &&
+                                                                               %i[partial sliver].include?(shared.kind)
 
         shared
       end
@@ -86,7 +90,7 @@ module PhComposer
         left_rest = difference(subject, polygon)
         right_rest = difference(clip, polygon)
         return sliver(area) if too_small?(polygon)
-        return sliver(area) if remainder_too_small?(subject, area) || remainder_too_small?(clip, area)
+        return sliver(area) if remainder_too_small?(left_rest) || remainder_too_small?(right_rest)
         return sliver(area) if (left_rest + right_rest).any? { |piece| minimum_width(piece) < MINIMUM_WIDTH_M }
 
         Result.new(:kind => :partial, :polygon_m => unproject(polygon, basis), :area_m2 => area,
@@ -94,11 +98,42 @@ module PhComposer
                    :right_remainders_m => right_rest.map { |piece| unproject(piece, basis) })
       end
 
-      # What one side keeps. A cut that takes the whole Face leaves no remainder and no threshold
-      # to meet; anything left over has to be a Face worth having.
-      def remainder_too_small?(outline, shared_area)
-        remainder = polygon_area(outline) - shared_area
-        remainder > 1.0e-9 && remainder < MINIMUM_AREA_M2
+      # What one side keeps, judged per Face the host will actually make.
+      #
+      # The convex decomposition is not that list. A shared region sitting wholly inside a Face
+      # leaves a ring of pieces that touch each other, and the host makes one Face with a hole out
+      # of it; a region cutting clean across leaves pieces that touch nothing, and the host makes
+      # one Face each. So the pieces are grouped by whether they touch, and the area floor is
+      # applied to each group.
+      def remainder_too_small?(pieces)
+        return false if pieces.empty?
+
+        connected(pieces).any? { |group| group.sum { |piece| polygon_area(piece) } < MINIMUM_AREA_M2 }
+      end
+
+      # Pieces that share a boundary belong to the same Face. Two convex pieces of one decomposition
+      # meet along a whole edge when they touch, so sharing two distinct corners is the test; one
+      # shared corner is a touch at a point, which does not join two Faces.
+      def connected(pieces)
+        groups = pieces.map { |piece| [piece] }
+        merged = true
+        while merged
+          merged = false
+          groups.combination(2).each do |left, right|
+            next unless left.any? { |a| right.any? { |b| adjacent?(a, b) } }
+
+            left.concat(right)
+            groups.delete(right)
+            merged = true
+            break
+          end
+        end
+        groups
+      end
+
+      def adjacent?(left, right)
+        shared = left.count { |point| right.any? { |other| same_point?(point, other) } }
+        shared >= 2
       end
 
       def too_small?(polygon)
@@ -293,7 +328,8 @@ module PhComposer
         Result.new(:kind => :unsupported, :reason => reason)
       end
 
-      private_class_method :shared_region, :cut, :remainder_too_small?, :too_small?,
+      private_class_method :shared_region, :cut, :remainder_too_small?, :connected,
+                           :adjacent?, :too_small?,
                            :counter_clockwise, :clip_against_edge, :inside?, :intersection, :cross,
                            :polygon_area, :minimum_width, :distance_to_segment, :distance,
                            :same_point?, :dedupe, :plane_basis, :project, :unproject, :coplanar?,

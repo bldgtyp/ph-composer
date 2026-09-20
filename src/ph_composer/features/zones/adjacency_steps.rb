@@ -96,7 +96,8 @@ module PhComposer
       end
 
       # The split rules: the piece that kept the original native persistent id keeps the Face id.
-      # If none did, every piece is new and the old endpoint is retired with the record it replaced.
+      # If none did, every piece is a new Face. Nothing has to be retired in that case here,
+      # because a Face still holding a Surface pair is refused before the cut is ever proposed.
       def assign(side, occurrence, before, shared, rest)
         survivor = [shared, *rest].find { |piece| piece.persistent_id == side.fetch("persistent_id") }
         fresh = side.fetch("fresh_ids").dup
@@ -105,7 +106,7 @@ module PhComposer
           [piece, carried(before, id)]
         end
         { :occurrence => occurrence, :shared => shared, :pieces => records,
-          :retired => survivor.nil?, :before => before, :affected => [] }
+          :survivor => survivor, :before => before, :affected => [] }
       end
 
       # Non-Surface fields, user_data and extension payloads follow every piece. A copied adjacency
@@ -160,7 +161,7 @@ module PhComposer
         side.fetch(:pieces).each do |piece, record|
           FaceAssignment::FACE_STORE.write(piece.entity, record)
           STAMP_STORE.write(piece.entity, stamp)
-          change = piece.persistent_id == side.fetch(:occurrence).entity.persistent_id ? "split" : "created"
+          change = piece.equal?(side.fetch(:survivor)) ? "split" : "created"
           side.fetch(:affected) << {
             "kind" => "face_assignment", "id" => record.fetch("id"), "change" => change,
             "reference" => {

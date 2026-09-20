@@ -133,6 +133,34 @@ class ZoneOverlapTest < PhComposerTestCase
     assert_equal :sliver, result.kind
   end
 
+  # The area floor is per Face the host will make, not per convex piece and not on the sum. A cut
+  # clean across a Face leaves pieces that touch nothing, so each is its own Face and each has to
+  # clear the floor on its own; here two 0.0075 m2 strips sum to 0.015 and must still be refused.
+  def test_a_cut_leaving_two_disjoint_under_floor_pieces_is_refused
+    result = between(wall(0, 10, 0, 0.15), wall(0.05, 9.95, 0, 0.15, :facing => :west))
+
+    assert_equal :sliver, result.kind
+  end
+
+  # The same floor must not refuse a ring, which the host makes as one Face with a hole. Four
+  # pieces of 0.54 m2 each, none of which would clear the floor alone if they were separate Faces
+  # at this size, but which together are one Face of 2.16 m2.
+  def test_a_cut_leaving_a_ring_is_allowed_because_the_host_makes_one_face_of_it
+    result = between(wall(0, 10, 0, 1), wall(0.1, 9.9, 0.1, 0.9, :facing => :west))
+
+    assert_equal :partial, result.kind
+    assert_equal 4, result.left_remainders_m.length
+    assert_in_delta 7.84, result.area_m2
+  end
+
+  # Q19 is about which way the Faces point, not how much they share. Reporting a same-normal
+  # overlap as a skip would call a modelling error an ordinary width or area problem.
+  def test_a_same_normal_overlap_too_small_to_cut_is_still_overlapping_zones
+    result = between(wall(0, 4, 0, 3), wall(3.999, 8, 0, 3))
+
+    assert_equal :same_normal, result.kind
+  end
+
   def test_the_clip_is_independent_of_which_way_each_outline_is_wound
     forward = between(wall(0, 4, 0, 3), wall(2, 6, 0, 3, :facing => :west))
     reversed = between(wall(2, 6, 0, 3, :facing => :west), wall(0, 4, 0, 3))
