@@ -91,7 +91,7 @@ is checked in so that gate can be run as soon as Ed is at the bridge. One step i
 the viewport: how SketchUp copies a Group is the thing being measured, so the walkthrough asks for
 a Ctrl-drag copy rather than scripting an assumption about it.
 
-P1-D D4 brings the offline suite to 330 Ruby tests with 1,420 assertions, green on both Rubies with
+P1-D D4 brings the offline suite to 334 Ruby tests with 1,428 assertions, green on both Rubies with
 `make ci` and Ruby coverage at 96.0%. The pure overlap geometry is covered case by case: full,
 partial, contained, disjoint, off-plane, both sliver thresholds independently, a sliver left behind
 by an otherwise acceptable cut, same-normal overlapping Zones, a holed Face, concave outlines, and
@@ -101,7 +101,12 @@ The cut
 is implemented: a partial overlap is cut on both sides and paired on the shared pieces only, with
 the remainder keeping its own classification, payloads following every piece, the piece holding the
 native persistent id keeping its Face id, a region covering a whole Face needing no cut at all, and
-a failure on the second side leaving neither Face cut. A Face meeting more than one neighbour, a
+a failure on the second side leaving neither Face cut. A bounded review found and the slice fixed
+three things: Q17's area floor was applied to the summed remainder rather than per Face the host
+will make, so a cut leaving two under-floor pieces could pass; Q19 was decided after the size of
+the shared region, so a same-normal sliver was reported as an ordinary skip; and a Face still
+holding a Surface pair could be cut, stripping that pair and leaving its counterpart naming a Face
+that was gone. A Face meeting more than one neighbour, a
 concave outline and a holed Face stay reported rather than cut; see "What D4 left open" in
 [PLAN.md](PLAN.md). The offline stub models a Face split to make the record consequences testable
 and is not evidence about SketchUp; the host gate is outstanding.
