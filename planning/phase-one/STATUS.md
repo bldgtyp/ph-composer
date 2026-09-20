@@ -91,7 +91,7 @@ is checked in so that gate can be run as soon as Ed is at the bridge. One step i
 the viewport: how SketchUp copies a Group is the thing being measured, so the walkthrough asks for
 a Ctrl-drag copy rather than scripting an assumption about it.
 
-P1-D D4 brings the offline suite to 337 Ruby tests with 1,435 assertions, green on both Rubies with
+P1-D D4 brings the offline suite to 343 Ruby tests with 1,444 assertions, green on both Rubies with
 `make ci` and Ruby coverage at 96.0%. The pure overlap geometry is covered case by case: full,
 partial, contained, disjoint, off-plane, both sliver thresholds independently, a sliver left behind
 by an otherwise acceptable cut, same-normal overlapping Zones, a holed Face, concave outlines, and
@@ -133,3 +133,4 @@ post-commit CI close this branch slice; merge remains pending.
 | 2026-09-20 | P1-D D3: explicit copied-Zone identity repair and limited Restore Zone landed, with the restore offer and its disclosed losses on the Zones read. |
 | 2026-09-20 | P1-D D4 part one: pure overlap geometry with remainder thresholds, whole-scope Solve, the Q18 out-of-scope refusal and a finding for every case the solver will not pair. The geometry cut remains. |
 | 2026-09-20 | P1-D D4 part two: partial overlaps are cut on both sides and paired on the shared region only, under the split rules, in one aborting step. |
+| 2026-09-20 | The Ground suggestion was corrected to honeybee's rule after the host gate showed it setting five of a plain box's six Faces to Ground. |

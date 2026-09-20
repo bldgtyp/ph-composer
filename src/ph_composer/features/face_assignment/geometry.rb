@@ -19,10 +19,14 @@ module PhComposer
                     else
                       "Wall"
                     end
-        lowest_mm = occurrence.entity.loops.flat_map(&:vertices).map do |vertex|
+        # Ground only when the whole Face is at or below the Zone's ground depth, which is
+        # honeybee's own rule: `get_bc_from_position` returns Outdoors as soon as one vertex is
+        # above it. Asking whether the lowest vertex is at or below instead made every wall
+        # standing on grade read as Ground, since such a wall starts exactly at the depth.
+        highest_mm = occurrence.entity.loops.flat_map(&:vertices).map do |vertex|
           vertex.position.transform(occurrence.transform).z.to_f * 25.4
-        end.min
-        boundary = lowest_mm <= occurrence.zone.record.fetch("ground_depth_mm") ? "Ground" : "Outdoors"
+        end.max
+        boundary = highest_mm <= occurrence.zone.record.fetch("ground_depth_mm") ? "Ground" : "Outdoors"
         { "face_type" => face_type, "boundary_condition" => boundary }
       end
 

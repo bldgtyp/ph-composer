@@ -22,11 +22,6 @@ The Classify tool itself, Locate, the faces table and Colour-by remain, in D5 to
 
 ## Blockers
 
-- The Ground suggestion reads "lowest point at or below the Zone's ground depth", which makes
-  every ground-floor wall read as Ground. honeybee's own `get_bc_from_position`, which the PRD
-  cites as its source, returns Ground only when *every* vertex is at or below that depth.
-  Confirmed against honeybee-core on 2026-09-20 and seen on the host: Suggest classification on a
-  plain box set five of six Faces to Ground. Needs a PRD correction and a one-line fix.
 - The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
 
 ## Verification
