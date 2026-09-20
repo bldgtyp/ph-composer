@@ -195,9 +195,13 @@ Model. A proposal contains detached value objects only:
   `AttributeDictionary#delete_key` in the store.
 - `geometry_steps`: named steps with explicit occurrence targets, input values, created-entity
   slots and an apply adapter. Feature code supplies the adapter; the shell knows no Zone action.
-- `participants`: declared feature callbacks that add changes to the same proposal. When Surface
-  adjacency lands, Face classification uses the Zones participant for pair retirement without a
-  nested operation.
+- `participants`: declared feature callbacks the acting feature calls inside its own handler, so a
+  cross-feature effect stays in one proposal and never opens a nested operation. A participant
+  either adds its changes to the proposal directly or, when the acting feature must compose the
+  result with its own writes to the same entities, returns a detached plan for the caller to fold
+  in. Face classification uses the Zones `retire_pairs` participant in the second shape: Zones owns
+  every adjacency rule and computes the retired records, and face assignment writes each Face once
+  even when one gesture classifies both endpoints of a pair.
 - `mutation_scope`: entity collections, entities and Model-level record kinds whose pre-image is
   captured and whose post-abort state can be checked.
 - `affected`: stable references plus `created`, `updated`, `deleted`, `split`, `grouped`,

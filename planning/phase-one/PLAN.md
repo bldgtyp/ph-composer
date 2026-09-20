@@ -1,7 +1,7 @@
 # Phase 1 delivery plan
 
 DATE: 2026-09-20
-STATUS: P1-A through P1-C complete on the implementation branch; P1-D is next and not authorized.
+STATUS: P1-A through P1-C complete on the implementation branch. P1-D is authorized and in progress; D1 and D2 are implemented.
 ISSUE: none (local planning draft)
 
 ## Outcome and scope
@@ -148,6 +148,21 @@ the shared pipeline before the complete Export UI lands; it does not satisfy the
 METr conversion and import are deferred; neither is required for this gate.
 
 ## P1-D: complete Phase 1 authoring behavior
+
+**State:** In progress, authorized 2026-09-20. Delivered in slices so each lands with its own
+focused tests; the stage closes only when A04 to A09 all have evidence.
+
+| Slice | Delivers | State |
+| --- | --- | --- |
+| D1 | Bounded Classify gesture and its ceiling, Suggest classification for this Zone, Reverse face | Implemented on branch |
+| D2 | Attached zone record kind, reference lifecycle and guarded delete with replacement | Implemented on branch |
+| D3 | Explicit copied-Zone identity repair and limited Restore Zone | Pending |
+| D4 | Partial-overlap splitting, sliver skips and out-of-scope reciprocal refusal | Pending |
+| D5 | Shared Colour-by registry, overlay, HUD and cache invalidation | Pending |
+| D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Pending |
+| D7 | Overview Zone tree and faces table | Pending |
+
+D6 is the gesture itself, distinct from D1's operation. A04's atomic-gesture row needs both.
 
 **Depends on:** P1-C. Owners: Zones and face assignment.
 

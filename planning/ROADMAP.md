@@ -1,7 +1,7 @@
 # Roadmap
 
 DATE: 2026-09-20
-STATUS: Phase 0 merged; Phase 1 P1-A and P1-B complete. P1-C is next and not authorized.
+STATUS: Phase 0 merged; Phase 1 P1-A through P1-C complete. P1-D is authorized and in progress.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -76,8 +76,8 @@ The early proof does not mark the full feature packets complete.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 1.1 | [Zones and adjacency](features/zones-and-adjacency/README.md) | In progress; P1-B core implemented | First, because a boundary condition names what is on the other side |
-| 1.2 | [Face assignment](features/face-assignment/README.md) | In progress; P1-B core implemented | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
+| 1.1 | [Zones and adjacency](features/zones-and-adjacency/README.md) | In progress; P1-C adjacency implemented | First, because a boundary condition names what is on the other side |
+| 1.2 | [Face assignment](features/face-assignment/README.md) | In progress; P1-D gestures and Attached zones implemented | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
 | 1.3 | [Validation and export](features/validation-and-export/README.md) | Scoped draft, interview decisions open | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
 
 Exit: draw two boxes, make them Zones, classify the faces, export and reload the exact HBJSON. Constructions
@@ -148,10 +148,11 @@ wanted as a warm-up. They sit here because neither is needed for the Phase 1 can
 
 ## What remains before the next Phase 1 stage
 
-P1-A and P1-B are complete. P1-C is the next proposed stage: adjacency plus the early canonical
-HBJSON proof. Before authorizing it, review the [Phase 1 decisions](phase-one/DECISIONS.md),
-including HBJSON translation pins, development construction isolation and the remaining
-canonical-export interview choices. METr decisions wait until that work is separately scheduled.
+P1-A through P1-C are complete. P1-D is authorized and in progress: its slice table is in the
+[execution plan](phase-one/PLAN.md). P1-E follows and still needs the shipped HBJSON translation
+wheel selection and the remaining canonical-export interview choices in
+[Phase 1 decisions](phase-one/DECISIONS.md). METr decisions wait until that work is separately
+scheduled.
 
 B1 proved PHX conversion, not import into METr. Keep its evidence for the deferred exporter.
 Phase 1 needs no METr floor-area workaround. Revisit consumer requirements against the authoring
@@ -170,3 +171,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-09-18 | D9 confirmed the EPW monthly-work boundary and the user-supplied peak-load gate for METr climate export. |
 | 2026-09-20 | Ed deferred METr exporter development and consumer acceptance until further feature development. Phase 1 closes on canonical HBJSON/report; return milestone unscheduled. |
 | 2026-09-20 | P1-B implemented the Zone/Face authoring core, public operations and minimal Overview UI; native save/reopen and Undo/Redo acceptance passed. |
+| 2026-09-20 | P1-C implemented whole-wall adjacency and the two-Zone HBJSON proof. Ed authorized P1-D, which is delivered in slices; D1 and D2 are implemented. |

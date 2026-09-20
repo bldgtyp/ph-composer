@@ -1,7 +1,7 @@
 # Phase 1 decisions and evidence still needed
 
 DATE: 2026-09-20
-STATUS: METr deferral and P1-C fixture composition resolved; P1-E runtime-wheel selection remains open.
+STATUS: METr deferral and P1-C fixture composition resolved; the P1-D gesture bound is settled pending host measurement; P1-E runtime-wheel selection remains open.
 ISSUE: none (local planning draft)
 
 ## Product decisions
@@ -27,6 +27,13 @@ record together with these choices rather than repeat its 22-question interview.
 - **P1-D:** confirm the proposed 1,000-affected-face Classify ceiling against host measurements,
   including reciprocal retirement targets. Test the accepted limit and one above it. This is an
   engineering bound to settle before the gesture is accepted, not a new product interview.
+  Implemented in D1 as a feature bound, not a schema bound, so one Face over it refuses the whole
+  gesture with `gesture.too_large`; the offline suite covers exactly 1,000 and 1,001. The host
+  measurement is outstanding.
+- **P1-D, settled in D1:** the ceiling applies to the Classify gesture only. Suggest classification
+  for this Zone carries no ceiling, because it is a separate named batch over one Zone the user has
+  already chosen rather than a pointer gesture whose target set the user cannot see. A Zone with
+  more Faces than the gesture ceiling can still be suggested in one step.
 - **P1-D:** first Zone/face screen layout, table components and feature navigation. Apply the
   accepted UI baseline and local polish skill. Phase 0's muted Planned tabs are an open carryover;
   any change to their accepted presence needs a recorded UI decision.
