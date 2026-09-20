@@ -9,6 +9,7 @@
   "use strict";
 
   var PARTS = "example.foundation.parts";
+  var LEGEND = "ph_composer.colour_by.legend";
   var ZONES = "ph_composer.zones.overview";
   var FACES = "ph_composer.face_assignment.faces";
   var NOTHING_WRITTEN = "Nothing was written.";
@@ -24,6 +25,7 @@
     this.zones = JSON.parse(JSON.stringify(settings.zones || []));
     this.faces = JSON.parse(JSON.stringify(settings.faces || []));
     this.makeZone = settings.makeZone || null;
+    this.colourBy = { mode: null, isolated: null };
     this.preferences = { unit_system: settings.unitSystem || "SI", dimension_formats: {},
       number_format: { decimal: settings.decimal || ".", locale: settings.locale || "en-US" } };
   }
@@ -46,9 +48,36 @@
           value: { zones: JSON.parse(JSON.stringify(this.zones)), make_zone: this.makeZone,
             units: { ground_depth_mm: "mm" } } },
         [FACES]: { status: "completed", code: "ok", revision: this.revision,
-          value: { faces: JSON.parse(JSON.stringify(this.faces)), units: { area_m2: "m2" } } }
+          value: { faces: JSON.parse(JSON.stringify(this.faces)), units: { area_m2: "m2" } } },
+        [LEGEND]: { status: "completed", code: "ok", revision: this.revision, value: this.legend() }
       }
     });
+  };
+
+  /* The legend the shared service would build, counted from the preview's own Faces so the rows move
+     when the panel classifies one. */
+  Host.prototype.legend = function () {
+    var isolated = this.colourBy.isolated, rows = [];
+    var counts = {};
+    if (this.colourBy.mode) {
+      this.faces.forEach(function (face) {
+        var value = face.values.face_type || null;
+        var state = value ? (face.state === "incomplete" ? "incomplete" : "classified") : "unclassified";
+        var key = value + "|" + state;
+        counts[key] = counts[key] || { value: value, label: value || "Unclassified", state: state, count: 0,
+          colour: value ? [230, 180, 60] : [130, 130, 130] };
+        counts[key].count += 1;
+      });
+      rows = Object.keys(counts).map(function (key) {
+        var row = counts[key];
+        row.isolated = Boolean(isolated && isolated.value === row.value && isolated.state === row.state);
+        return row;
+      });
+    }
+    return { mode: this.colourBy.mode, label: this.colourBy.mode ? "Face type" : null,
+      entity_kind: this.colourBy.mode ? "face" : null, isolated: isolated, rows: rows,
+      modes: [{ name: "ph_composer.face_assignment.by_face_type", label: "Face type", entity_kind: "face" },
+        { name: "ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone" }] };
   };
 
   Host.prototype.receive = function (message) {
@@ -70,10 +99,18 @@
   /* A viewport-state command: nothing to write and no revision to guard, so the preview answers that it
      ran and leaves its Model alone. There is no viewport here to move. */
   Host.prototype.viewCommand = function (payload) {
-    var outcome = payload.session === this.session
-      ? { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
-        value: {}, affected: [], findings: [], detail: null }
-      : refused("session.inactive", "The panel now shows a different Model.", null);
+    var outcome;
+    if (payload.session !== this.session) {
+      outcome = refused("session.inactive", "The panel now shows a different Model.", null);
+    } else {
+      if (payload.name === "ph_composer.colour_by.activate") {
+        this.colourBy = { mode: payload.params.mode, isolated: null };
+      }
+      if (payload.name === "ph_composer.colour_by.isolate") this.colourBy.isolated = payload.params.row || null;
+      outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
+        value: {}, affected: [], findings: [], detail: null };
+      this.snapshot();
+    }
     this.publish("view.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
   };
 

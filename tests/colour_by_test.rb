@@ -59,6 +59,75 @@ class ColourByTest < PhComposerTestCase
     assert_includes outcome.fetch("message"), "outside.probe.missing"
   end
 
+  # ------------------------------------------------------------------ the panel legend
+
+  def test_a_legend_row_selects_and_zooms_to_exactly_what_it_counts
+    zone_group(1_700, %w[Wall Floor Wall])
+    activate("ph_composer.face_assignment.by_face_type")
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.select_row",
+                                   :params => { "row" => { "value" => "Wall", "state" => "classified" } })
+
+    assert_equal 2, outcome.dig("value", "selected")
+    assert_equal 2, @model.selection.to_a.length
+    refute @model.modified?
+  end
+
+  def test_a_legend_row_that_is_no_longer_drawn_refuses_by_name
+    zone_group(1_710, ["Wall"])
+    activate("ph_composer.face_assignment.by_face_type")
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.select_row",
+                                   :params => { "row" => { "value" => "Floor", "state" => "classified" } })
+
+    assert_equal %w[refused validation.failed], outcome.values_at("status", "code")
+    assert_empty @model.selection.to_a
+  end
+
+  # Show only this keeps every row in the legend, with its own colour, and mutes what the viewport
+  # draws for the others: the legend still tells the truth about the Model.
+  def test_showing_one_row_on_its_own_mutes_the_rest_and_is_released_by_asking_for_none
+    zone_group(1_720, %w[Wall Floor])
+    service = activate("ph_composer.face_assignment.by_face_type")
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    on = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.isolate",
+                              :params => { "row" => { "value" => "Wall", "state" => "classified" } })
+
+    assert_equal({ "value" => "Wall", "state" => "classified" }, on.dig("value", "isolated"))
+    assert_equal [["Floor", false], ["Wall", true]],
+                 on.dig("value", "rows").map { |row| row.values_at("label", "isolated") }
+    assert_includes service.fills.keys, Palette::MUTED
+    assert_includes service.fills.keys, [230, 180, 60]
+
+    off = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.isolate", :params => {})
+
+    assert_nil off.dig("value", "isolated")
+    refute_includes service.fills.keys, Palette::MUTED
+  end
+
+  def test_turning_a_different_mode_on_shows_every_row_again
+    zone_group(1_730, %w[Wall Floor])
+    service = activate("ph_composer.face_assignment.by_face_type")
+    service.isolate(["Wall", "classified"])
+
+    activate("ph_composer.zones.by_zone")
+
+    assert_nil service.isolated
+    refute_includes service.fills.keys, Palette::MUTED
+  end
+
+  def test_showing_one_row_on_its_own_while_colour_by_is_off_refuses
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.isolate",
+                                   :params => { "row" => { "value" => "Wall", "state" => "classified" } })
+
+    assert_equal %w[refused validation.failed], outcome.values_at("status", "code")
+  end
+
   def test_a_mode_missing_its_colour_function_refuses_the_whole_batch
     probe = Module.new do
       define_singleton_method(:name) { "Probe" }
@@ -329,9 +398,10 @@ class ColourByTest < PhComposerTestCase
     assert_equal "ph_composer.face_assignment.by_face_type", value.fetch("mode")
     assert_equal "Face type", value.fetch("label")
     assert_equal [{ "value" => "Wall", "label" => "Wall", "colour" => [230, 180, 60], "count" => 1,
-                    "state" => "classified" },
+                    "state" => "classified", "isolated" => false },
                   { "value" => nil, "label" => "Unclassified", "colour" => Palette::UNCLASSIFIED,
-                    "count" => 1, "state" => "unclassified" }], value.fetch("rows")
+                    "count" => 1, "state" => "unclassified", "isolated" => false }], value.fetch("rows")
+    assert_nil value.fetch("isolated")
     assert_includes value.fetch("modes").map { |mode| mode.fetch("name") }, "ph_composer.zones.by_zone"
   end
 

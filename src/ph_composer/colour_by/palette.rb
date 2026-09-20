@@ -10,6 +10,9 @@ module PhComposer
       INCOMPLETE = [255, 176, 0].freeze
       # No record at all. Drawn as a stippled outline rather than a fill, so it reads as absent.
       UNCLASSIFIED = [130, 130, 130].freeze
+      # Everything the user set aside while one legend row is shown on its own (PRD Q18). It is the
+      # same grey in every mode, because "not the one I am looking at" is not a value any mode owns.
+      MUTED = [200, 200, 200].freeze
       FILL_ALPHA = 110
       OUTLINE_ALPHA = 220
 

@@ -14,3 +14,18 @@
 @media (max-width: 720px) {
   .phc-zone-card { grid-template-columns: 1fr; }
 }
+
+/* The Colour-by legend. One row per colour: the row itself selects and zooms to what it counts,
+   and the control beside it sets every other row aside. */
+.phc-colour-by { padding: 18px 24px 24px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.phc-legend { display: grid; gap: 2px; }
+.phc-legend-row { display: flex; align-items: center; gap: 8px; }
+.phc-legend-locate { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 4px 8px;
+  border: 1px solid transparent; background: transparent; text-align: left; }
+.phc-legend-locate:hover:enabled { border-color: var(--line); background: var(--interaction-highlight-tint); }
+.phc-legend-swatch { flex: 0 0 14px; width: 14px; height: 14px; border: 1px solid #0003; border-radius: 3px; }
+.phc-legend-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phc-legend-count { color: var(--muted); font-variant-numeric: tabular-nums; }
+.phc-legend-only { flex: 0 0 auto; font-size: 11px; }
+.phc-legend-only[aria-pressed="true"] { border-color: var(--interaction-highlight);
+  background: var(--interaction-highlight-tint); color: var(--interaction-highlight); }

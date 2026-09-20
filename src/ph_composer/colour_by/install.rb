@@ -53,6 +53,25 @@ module PhComposer
       }
     }.freeze
 
+    ROW = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[value state],
+      "properties" => {
+        "value" => { "type" => %w[string null], "description" => "The legend row's value; null is unclassified." },
+        "state" => { "type" => "string", "enum" => %w[classified incomplete unclassified] }
+      }
+    }.freeze
+    SELECT_ROW_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => ["row"], "properties" => { "row" => ROW }
+    }.freeze
+    SELECT_ROW_RESULT = {
+      "type" => "object", "additionalProperties" => false, "required" => ["selected"],
+      "properties" => { "selected" => { "type" => "integer" } }
+    }.freeze
+    # No row shows everything again, which is what leaving "Show only this" means.
+    ISOLATE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "properties" => { "row" => ROW }
+    }.freeze
+
     module_function
 
     def install(registry)
@@ -68,6 +87,20 @@ module PhComposer
                            :examples => [{ "mode" => nil }]) do |request|
         activate(request.session, request.params.fetch("mode"))
       end
+      feature.view_command("#{FEATURE_ID}.select_row",
+                           :description => "Select and zoom to the entities one legend row stands for.",
+                           :params => SELECT_ROW_PARAMS, :result => SELECT_ROW_RESULT) do |request|
+        row = request.params.fetch("row")
+        { "selected" => self.for(request.session).select_row(row.fetch("value"), row.fetch("state")) }
+      end
+      feature.view_command("#{FEATURE_ID}.isolate",
+                           :description => "Show one legend row on its own, or show every row again.",
+                           :params => ISOLATE_PARAMS, :result => STATE_RESULT, :examples => [{}]) do |request|
+        row = request.params["row"]
+        self.for(request.session).isolate(row && [row.fetch("value"), row.fetch("state")])
+        state(request.session)
+      end
+      feature.snapshot_section("#{FEATURE_ID}.legend", :query => STATE)
       INVALIDATING_EVENTS.each do |kind|
         feature.on_host_event(kind) { |session| self.for(session).invalidate! }
       end

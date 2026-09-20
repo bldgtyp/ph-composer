@@ -29,7 +29,7 @@ module PhComposer
     # a question for the host gate, with the walkthrough written to ask it; if it leaves the drawing
     # stale, the mechanism is a frame change observer.
     class Service
-      attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines
+      attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines, :isolated
       # How many times the drawing has been rebuilt for this Model. The host walkthrough reads it to
       # tell an invalidating event that fired from one that did not.
       attr_reader :rebuilds
@@ -59,6 +59,8 @@ module PhComposer
         raise UserError, "There is no Colour-by mode named #{name}." unless declaration
 
         @mode_name = name
+        # A row belongs to the mode it came from, so a new mode starts showing everything.
+        @isolated = nil
         Preferences.set("colour_by_mode", name) if remember
         attach_overlay
         rebuild
@@ -93,11 +95,40 @@ module PhComposer
       def legend
         {
           "mode" => @mode_name, "label" => mode&.label, "entity_kind" => mode&.entity_kind,
+          "isolated" => @isolated && { "value" => @isolated.first, "state" => @isolated.last.to_s },
           "rows" => rows.map do |row|
             { "value" => row.value, "label" => row.label, "colour" => row.colour.dup,
-              "count" => row.count, "state" => row.state.to_s }
+              "count" => row.count, "state" => row.state.to_s,
+              "isolated" => @isolated == [row.value, row.state] }
           end
         }
+      end
+
+      # Selects the entities one legend row stands for and brings them into view: the legend's own
+      # Locate (PRD Q18). It counts an entity the drawing omits, a hidden Face or one on a hidden
+      # tag, because the legend tells the truth about the Model rather than about the viewport. Such
+      # an entity is still selected here; SketchUp shows the selection where it can, and a count the
+      # user can reach nothing from would be worse than one that reaches a hidden thing.
+      def select_row(value, state)
+        entities = @entities.fetch([value, state.to_sym], [])
+        model = live_model
+        raise UserError, "That legend row is no longer part of this drawing." if entities.empty? || model.nil?
+
+        model.selection.clear
+        model.selection.add(entities)
+        view = model.respond_to?(:active_view) ? model.active_view : nil
+        view.zoom(entities) if view.respond_to?(:zoom)
+        entities.length
+      end
+
+      # Shows one row on its own, everything else muted, or clears that with nil. It repaints rather
+      # than filtering at draw time, because a draw callback repairs nothing.
+      def isolate(row)
+        raise UserError, "Colour by is off, so there is nothing to show on its own." unless active?
+
+        @isolated = row && [row.first, row.last.to_sym]
+        rebuild
+        self
       end
 
       private
@@ -108,6 +139,8 @@ module PhComposer
         @fills = {}
         @outlines = {}
         @unclassified_outlines = []
+        @entities = {}
+        @isolated = nil
         @built_revision = nil
       end
 
@@ -116,12 +149,13 @@ module PhComposer
         return deactivate unless declaration
 
         rows = {}
+        entities = Hash.new { |table, key| table[key] = [] }
         fills = Hash.new { |table, colour| table[colour] = [] }
         outlines = Hash.new { |table, colour| table[colour] = [] }
         unclassified = []
         begin
           Array(declaration.projection.call(@session.model)).each do |entry|
-            add_entry(declaration, entry, rows, fills, outlines, unclassified)
+            add_entry(declaration, entry, rows, entities, fills, outlines, unclassified)
           end
         rescue StandardError => error
           # A rebuild runs inside the host observer that reported the change, and an error there
@@ -130,6 +164,7 @@ module PhComposer
           return failed(declaration, error)
         end
         @rows = order(declaration, rows.values)
+        @entities = settled(entities)
         # The default block is only for building; a reader must not create a batch by asking for one.
         @fills = settled(fills)
         @outlines = settled(outlines)
@@ -151,18 +186,26 @@ module PhComposer
         batches.each_with_object({}) { |(colour, points), table| table[colour] = points }
       end
 
-      def add_entry(declaration, entry, rows, fills, outlines, unclassified)
+      def add_entry(declaration, entry, rows, entities, fills, outlines, unclassified)
         state, colour = paint(declaration, entry)
         row = rows[[entry.value, state]] ||= Row.new(:value => entry.value, :label => label_for(entry),
                                                      :colour => colour, :count => 0, :state => state)
         row.count += 1
+        entities[[entry.value, state]] << entry.entity
         triangles, segments = Tessellation.call(entry.entity, entry.transform)
-        if state == :unclassified
+        # A row set aside while another is shown on its own keeps its legend colour and loses its
+        # drawing colour, so the legend still reads while the viewport shows one thing.
+        drawn = set_aside?(entry.value, state) ? Palette::MUTED : colour
+        if state == :unclassified && !set_aside?(entry.value, state)
           unclassified.concat(segments)
         else
-          fills[colour].concat(triangles)
-          outlines[colour].concat(segments)
+          fills[drawn].concat(triangles)
+          outlines[drawn].concat(segments)
         end
+      end
+
+      def set_aside?(value, state)
+        !@isolated.nil? && @isolated != [value, state]
       end
 
       # The three states every mode shares: no record, a record the mode cannot colour, and a value
