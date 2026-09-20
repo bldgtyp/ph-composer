@@ -33,6 +33,7 @@ module PhComposer
     # `result` declares the top-level result fields the feature's translation adds, in Export::Privacy's
     # schema form; `report` is `->(result, display_units) { [html_section, ...] }` over those fields.
     ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, keyword_init: true)
+    ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)
 
     # One registration problem. `subject` is the declaration it concerns; `dependency` names what it
     # needed, when that is the problem.

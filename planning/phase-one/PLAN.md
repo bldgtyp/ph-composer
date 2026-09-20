@@ -1,7 +1,7 @@
 # Phase 1 delivery plan
 
 DATE: 2026-09-20
-STATUS: P1-A complete; P1-B and later stages proposed and not authorized.
+STATUS: P1-A and P1-B complete; P1-C is next and not authorized.
 ISSUE: none (local planning draft)
 
 ## Outcome and scope
@@ -102,6 +102,8 @@ measured. SketchUp 2023 and Windows remain support gates. This stage adds no plu
 external agent adapter.
 
 ## P1-B: Zone and face authoring core
+
+**State:** Complete 2026-09-20. See [acceptance evidence](evidence/p1-b-authoring.md).
 
 **Depends on:** P1-A. Owners: Zones, face assignment.
 

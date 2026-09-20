@@ -7,11 +7,10 @@ You define the building while you work on its geometry. Envelope faces, assembli
 windows, thermal bridges and spaces all live in the SKP file. The extension exports HBJSON and,
 from that, the model METr reads.
 
-**Status: foundation merged.** [PR #1](https://github.com/bldgtyp/ph-composer/pull/1) landed the
-foundation, panel and units, runtime shell and four investigations. Building-authoring features
-and real exports are not implemented yet. The [Phase 1 plan](planning/phase-one/README.md) covers
-Zones, face classification and canonical HBJSON/report export. Its P1-A contract and native-host
-investigation are complete; P1-B and later feature implementation are not authorized.
+**Status: Phase 1 authoring core implemented on branch.** [PR #1](https://github.com/bldgtyp/ph-composer/pull/1)
+landed the foundation, panel and units, runtime shell and four investigations. P1-A established
+the geometry contracts; P1-B adds Zone creation/details and single-Face classification through
+the panel and public operations. Adjacency and real exports remain future Phase 1 stages.
 METr export is deferred until feature development is further along.
 
 ## What it will do

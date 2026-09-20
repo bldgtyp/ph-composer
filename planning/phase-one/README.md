@@ -1,7 +1,7 @@
 # Phase 1: walking skeleton
 
 DATE: 2026-09-20
-STATUS: Scoped. Planning only; implementation has not been authorized.
+STATUS: In progress. P1-A and P1-B complete; P1-C is next and not authorized.
 ISSUE: none (local planning draft)
 
 Phase 0 merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1), local merge
@@ -22,5 +22,5 @@ The feature PRDs remain the behavior authorities. Their plans allocate work with
 [faces](../features/face-assignment/PLAN.md), and
 [export](../features/validation-and-export/PLAN.md).
 
-This packet coordinates those owners. It does not replace their accepted interviews, authorize
-implementation, or move the Phase 3 internal-release and Phase 4 MVP boundaries.
+This packet coordinates those owners. Each stage still requires its own implementation scope; the
+packet does not replace accepted interviews or move the Phase 3 internal-release and Phase 4 MVP boundaries.

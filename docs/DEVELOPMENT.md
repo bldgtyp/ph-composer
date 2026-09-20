@@ -152,6 +152,9 @@ Phase-specific native probes live under [`tools/spikes/`](../tools/spikes/) and 
 P1-A Zone geometry probe and its stepwise bridge commands are documented in
 [`tools/spikes/geometry/README.md`](../tools/spikes/geometry/README.md); its accepted results are
 in [`planning/phase-one/evidence/p1-a-geometry.md`](../planning/phase-one/evidence/p1-a-geometry.md).
+The P1-B panel-closed Zone/Face walkthrough is in
+[`tools/examples/authoring/`](../tools/examples/authoring/README.md); its accepted current-host
+result is recorded in [`planning/phase-one/evidence/p1-b-authoring.md`](../planning/phase-one/evidence/p1-b-authoring.md).
 
 ## The panel
 

@@ -89,6 +89,16 @@ module PhComposer
         end
       end
 
+      def propose_delete(kind_id, id, change_set, expected_values: {})
+        staging(change_set) do
+          kind = @catalog.kind(kind_id)
+          before = find(kind_id, id)
+          check_expected!(kind, before, expected_values)
+          change_set.delete(kind.id, :before => before)
+          check_delete_references!(kind.id, id, change_set)
+        end
+      end
+
       # Duplicates records as one collection: every new id is allocated first, then each reference
       # between copied records points to the new counterpart while references outside the copy stay
       # shared. `user_data` is copied unchanged. A copy that needs copy rules the installed extensions
@@ -143,7 +153,10 @@ module PhComposer
       # ---------------------------------------------------------------- writes
 
       def apply(change_set)
-        change_set.writes.each { |write| @catalog.kind(write.kind).store.write(@model, write.after) }
+        change_set.writes.each do |write|
+          store = @catalog.kind(write.kind).store
+          write.after ? store.write(@model, write.after) : store.delete(@model, write.id)
+        end
       end
 
       # Whether every record the change set names is stored exactly as it was before. The dispatcher
@@ -196,6 +209,36 @@ module PhComposer
           message = "#{kind.label} #{record['id']} names #{target_kind} #{id}, which does not exist."
           raise CodedError.new("reference.invalid", message, "target_kind" => target_kind, "id" => id)
         end
+      end
+
+      def check_delete_references!(deleted_kind, deleted_id, change_set)
+        @catalog.kinds.each do |kind|
+          ids = kind.store.ids(@model) + change_set.writes.select { |write| write.kind == kind.id }.map(&:id)
+          ids.uniq.each do |id|
+            staged = change_set.find(kind.id, id)
+            record = staged ? staged.after : read(kind, id)
+            next unless record
+
+            references = referenced_targets(kind, record)
+            next unless references.include?([deleted_kind, deleted_id])
+
+            message = "#{kind.label} #{id} still refers to #{deleted_kind} #{deleted_id}."
+            raise CodedError.new("reference.in_use", message, "target_kind" => deleted_kind,
+                                                                "id" => deleted_id)
+          end
+        end
+      end
+
+      def referenced_targets(kind, record)
+        targets = kind.references.flat_map do |reference|
+          reference.ids(record).map { |id| [reference.target_kind, id] }
+        end
+        record.fetch("extension_data", {}).each do |namespace, envelope|
+          next unless Extension.status(envelope, @catalog.extension(namespace)) == "understood"
+
+          targets.concat(Extension.referenced_ids(envelope.fetch("payload"), envelope.fetch("references", [])))
+        end
+        targets
       end
 
       # Identity and metadata change only through their own arguments, never as a value.

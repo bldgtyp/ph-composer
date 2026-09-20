@@ -21,7 +21,7 @@ closes on HBJSON/report; actual METr import and floor-area policy remain deferre
 
 ## Blockers
 
-- P1-B and later feature implementation are not authorized; remaining export interview choices
+- P1-C and later feature implementation are not authorized; remaining export interview choices
   gate P1-E.
 - Zone/face geometry contributors and the real export run are not implemented.
 - Select and verify the HBJSON translation wheel set. PHX-specific pin acceptance and the

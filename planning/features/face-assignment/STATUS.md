@@ -1,7 +1,7 @@
 # Face assignment: status
 
 DATE: 2026-09-20
-STATUS: Scoped
+STATUS: In progress; P1-B authoring core complete.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -13,22 +13,22 @@ into its behavior sections. Shared understanding reached, pending Ed's confirmat
 ## Next step
 
 Follow [PLAN.md](PLAN.md), which separates Phase 1 classification/Colour-by from Phase 2
-assembly assignment. Phase 0 B2 passed; use its filled-overlay evidence and implement the
-feature cache invalidation and scale checks. Bind field intent and reciprocal retirement to
-P1-A's operation contract before writing the Classify tool.
+assembly assignment. P1-B implements explicit Face reads, single-Face keep/set/clear intent,
+suggestions and the minimal panel controls. P1-D completes gestures, Auto-classify, Reverse,
+Attached zones and Colour-by after P1-C proves adjacency and early HBJSON.
 
 ## Blockers
 
-- P1-B and later feature implementation are not authorized; confirm the recorded interview answers
-  before the first face-assignment implementation stage.
-- Zone occurrence/geometry operation contracts must land before dependent classification.
+- P1-C and later feature implementation are not authorized by the completed P1-B instruction.
 - The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
 
 ## Verification
 
 Documentation consistency checked against the authorized zones-and-adjacency corrections:
 pair removal, absent conditions after retirement, payload preservation and export omissions.
-This feature is not implemented; runtime and host gates remain outstanding.
+The P1-B subset is implemented. Offline tests and the current-host walkthrough verify panel-closed
+classification, metadata preservation, native Undo/Redo and fresh-process reopen. P1-D lifecycle,
+gesture and overlay gates remain outstanding.
 
 Documentation-only architecture review completed 2026-09-18; all four findings addressed in the
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.
@@ -48,3 +48,4 @@ spike passed; it does not satisfy this feature's native lifecycle gate.
 | 2026-09-18 | Spaces architecture review folded in: the Colour-by registry now takes an open entity kind, optional derived geometry and separate readouts; the Classify tool has no mode registry and Mark floor is a sibling tool owned by Spaces. |
 | 2026-09-18 | Window-types architecture review folded in: the face read's area is stated as gross, and net opaque area comes from a declared window-types read once that packet lands. |
 | 2026-09-20 | Post-Phase-0 refresh: added PLAN.md, removed completed foundation blockers and linked the shared Phase 1 stages and decisions. Planning only; feature implementation remains pending. |
+| 2026-09-20 | P1-B authoring core complete: explicit Face reads, geometric suggestions, keep/set/clear assignment, stamps and minimal Overview controls passed current-host acceptance. |

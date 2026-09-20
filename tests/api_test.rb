@@ -382,6 +382,31 @@ class ApiTest < PhComposerTestCase
     assert_equal 4, snapshot.dig("sections", "test.fixture.parts", "value", "total")
   end
 
+  def test_a_preview_digest_revalidates_a_create_without_retaining_its_random_ids
+    params = { "parts" => [part_values] }
+    preview = API.preview(:context => @context, :name => "test.fixture.create", :params => params)
+
+    created = API.invoke(
+      :context => @context, :name => "test.fixture.create", :params => params,
+      :request => request(1).merge("proposal_digest" => preview.fetch("proposal_digest"))
+    )
+
+    assert_equal %w[completed committed], created.values_at("status", "effect")
+  end
+
+  def test_a_mismatched_preview_digest_refuses_before_opening_an_operation
+    params = { "parts" => [part_values] }
+    operations = @model.operations.length
+
+    result = API.invoke(
+      :context => @context, :name => "test.fixture.create", :params => params,
+      :request => request(1).merge("proposal_digest" => "not-the-preview")
+    )
+
+    assert_equal %w[refused proposal.changed none], result.values_at("status", "code", "effect")
+    assert_equal operations, @model.operations.length
+  end
+
   def test_a_handler_result_outside_its_schema_fails_before_anything_is_written
     PhComposer::Registry.current.actions.fetch("test.fixture.create").result = { "type" => "array" }
 

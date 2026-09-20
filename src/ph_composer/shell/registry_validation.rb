@@ -20,6 +20,7 @@ module PhComposer
         check_extensions
         check_snapshot_sections
         check_export_contributors
+        check_proposal_participants
         check_subscriptions
         @diagnostics
       end
@@ -183,6 +184,13 @@ module PhComposer
                 .each do |subscription|
           add("registration.schema_invalid", subscription.owner, subscription.kind.to_s,
               "#{subscription.owner} subscribes to unknown host event #{subscription.kind.inspect}.")
+        end
+      end
+
+      def check_proposal_participants
+        @staging.declared_proposal_participants.reject(&:handler).each do |participant|
+          add("registration.schema_invalid", participant.owner, participant.name,
+              "#{participant.name} has no handler.")
         end
       end
 

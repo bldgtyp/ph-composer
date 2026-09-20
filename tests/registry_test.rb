@@ -82,6 +82,20 @@ class RegistryTest < PhComposerTestCase
     assert_equal [:selection_changed], received
   end
 
+  def test_a_feature_can_publish_a_named_proposal_participant
+    handler = ->(_request, _proposal, _payload) {}
+    participant = feature("Participant") do |registry|
+      registry.feature("test.participant", :contract_version => 1)
+        .proposal_participant("test.participant.retire", &handler)
+    end
+
+    Registry.install([participant])
+
+    declaration = Registry.current.proposal_participants.fetch("test.participant.retire")
+    assert_equal "test.participant", declaration.owner
+    assert_same handler, declaration.handler
+  end
+
   def test_missing_dependencies_cycles_and_contract_majors_are_diagnosed
     diagnostics = refused(
       feature { |r| r.feature("probe.alpha", :contract_version => 1, :requires => ["probe.beta"]) },

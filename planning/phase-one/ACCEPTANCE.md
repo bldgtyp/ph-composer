@@ -1,7 +1,7 @@
 # Phase 1 acceptance register
 
 DATE: 2026-09-20
-STATUS: Planned. Active rows are pending; A15 is deferred outside Phase 1 by Ed.
+STATUS: In progress. P1-A/P1-B rows have evidence; remaining active rows are pending. A15 is deferred outside Phase 1 by Ed.
 ISSUE: none (local planning draft)
 
 Record a source-controlled evidence summary per completed stage with commit/build, fixtures,
@@ -11,9 +11,9 @@ The owning PRDs supply the detailed cases; this register supplies the closure ga
 | ID | Owner/stage | Required evidence | State |
 | --- | --- | --- | --- |
 | A01 | Zones / P1-A | Versioned entity records and geometry proposal contract; split/group/explode/tolerance host investigation; no unsupported host premise left implicit | Pass 2026-09-20: [contract](CONTRACTS.md), [evidence](evidence/p1-a-geometry.md) |
-| A02 | Zones / P1-B | Make Zone on selected group and loose geometry; wrappers and forbidden hierarchy; independent copy identities; correct occurrence references and SI geometry | Pending |
-| A03 | Shared operations / P1-B | Panel-closed discover/read/preview/write/read-back; stale/wrong-model refusal, retry outcome, unknown rollback outcome; geometry plus record creation/update/deletion atomic under injected failure, with truthful rollback results | Pending |
-| A04 | Faces / P1-B/D | Keep/set/clear intent, suggestions, Ground depth, atomic Classify gesture at the accepted target limit and refusal at limit + 1; Auto-classify only unrecorded faces in one Undo step; Reverse face and metadata preservation | Pending |
+| A02 | Zones / P1-B | Make Zone on selected group and loose geometry; wrappers and forbidden hierarchy; independent copy identities; correct occurrence references and SI geometry | Pass for P1-B 2026-09-20: [evidence](evidence/p1-b-authoring.md) |
+| A03 | Shared operations / P1-B | Panel-closed discover/read/preview/write/read-back; stale/wrong-model refusal, retry outcome, unknown rollback outcome; geometry plus record creation/update/deletion atomic under injected failure, with truthful rollback results | Pass 2026-09-20: [evidence](evidence/p1-b-authoring.md) |
+| A04 | Faces / P1-B/D | Keep/set/clear intent, suggestions, Ground depth, atomic Classify gesture at the accepted target limit and refusal at limit + 1; Auto-classify only unrecorded faces in one Undo step; Reverse face and metadata preservation | P1-B subset passes: single-Face intent, suggestions, Ground depth and metadata. P1-D gesture limit, Auto-classify and Reverse pending |
 | A05 | Zones / P1-C/D | Whole/partial matches, holes/transforms; measured plane-offset and normal-angle boundaries distinct from point coincidence; sliver and same-normal skips; explicit scope refusal; pair retirement, deleted versus ambiguous endpoints; unchanged solve has no Undo entry | Pending |
 | A06 | Zones / P1-D | Explode/limited Restore, copy/split/cut-paste references; explicit identity repair changes copied UUID/stamps and retires copied pairs while preserving original pairs; ambiguity refuses; disclosed unrecoverable fields; native Undo/Redo and fresh reopen preserve records and reference meaning | Pending |
 | A07 | Faces / P1-D | Attached-zone local creation/edit/replacement/delete rules including delete/reassign failure rollback and Undo; references and unknown extension data preserved or safely refused as the PRD requires | Pending |

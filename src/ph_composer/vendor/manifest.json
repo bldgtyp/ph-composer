@@ -21,9 +21,9 @@
       "sha256": "1f8738bd0700e56306c2d82a21bc23133b0dc8f8508ff0c9a4f7c301f00b54cb"
     },
     "html/index.html": {
-      "bytes": 2532,
+      "bytes": 2623,
       "mime": "text/html; charset=utf-8",
-      "sha256": "4ca5c0deebc21fbc87b4efa8709b14ebfe30f3b7e124f480a31525144b61294d"
+      "sha256": "dc6e92be3e87b64ff519e1d5ac21a2446d9f901738d4f25887761713e3dc6e6d"
     },
     "html/length_expression.js": {
       "bytes": 10498,
@@ -80,6 +80,11 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "6f0089590c96a1c10c5ac812852b26104791d30ce9b243670c2d7a9a5d1664c9"
     },
+    "html/sections/zones.js": {
+      "bytes": 7083,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "daa917a87d71e42bd6ddf3f7de111c8e314bfce56260c29deff2b0589deacf64"
+    },
     "html/shell.css": {
       "bytes": 1174,
       "mime": "text/css; charset=utf-8",
@@ -119,6 +124,11 @@
       "bytes": 1099,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "3ea0d2929b882fad80da8fb48d2998874bb265f59f72dd5599812dbae02b82a8"
+    },
+    "html/zones.css": {
+      "bytes": 1306,
+      "mime": "text/css; charset=utf-8",
+      "sha256": "e70ec69bba68f7b49e049351b825ada0cc75a21c0e0949586c7055ea4a76da5d"
     },
     "python/ph_composer_translation/__init__.py": {
       "bytes": 1234,

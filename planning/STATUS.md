@@ -17,9 +17,9 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Phase 1 walking skeleton | delivery plan | In progress; P1-A complete | none (local implementation packet) | [phase-one/](phase-one/README.md); Phase 0 merged through PR #1, P1-B not authorized |
-| Zones and adjacency | feature | Scoped, plan drafted | none (local planning draft) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
-| Face assignment | feature | Scoped, plan drafted | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
+| Phase 1 walking skeleton | delivery plan | In progress; P1-A and P1-B complete | none (local implementation packet) | [phase-one/](phase-one/README.md); P1-C next and not authorized |
+| Zones and adjacency | feature | In progress; P1-B authoring core implemented | none (local planning draft) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
+| Face assignment | feature | In progress; P1-B authoring core implemented | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
 | Validation and export | feature | Scoped draft, interview decisions open | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); owns the Phase 1 handoff |
 | METr exporter and consumer acceptance | feature | Deferred; return milestone unscheduled | none (local planning draft) | [validation/export plan](features/validation-and-export/PLAN.md); Ed deferred until further feature development on 2026-09-20 |
 | Spaces | feature | Scoped, interviewed | none (no remote) | [features/spaces/](features/spaces/README.md) |

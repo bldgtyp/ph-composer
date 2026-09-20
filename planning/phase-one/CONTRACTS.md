@@ -1,12 +1,14 @@
 # Phase 1 geometry and persistence contracts
 
 DATE: 2026-09-20
-STATUS: P1-A contract design complete. Implementation begins in P1-B.
+STATUS: P1-A contract design complete; P1-B entity storage and proposal subset implemented.
 ISSUE: none (local implementation packet)
 
 This document binds the Zone, face-assignment and compound-operation contracts to the merged
-Phase 0 foundation. It defines the implementation boundary; it does not claim the APIs below are
-already present. The owning PRDs remain authoritative for product behavior.
+Phase 0 foundation. P1-B implements entity stores, record deletion, compound proposals, Zone/Face
+occurrence references and the authoring subset described below. Adjacency, reconciliation and the
+shared export snapshot remain later-stage contracts. The owning PRDs remain authoritative for
+product behavior.
 
 ## Storage and identity
 
@@ -185,7 +187,7 @@ remain disclosed as unavailable.
 
 ## Compound operation proposal
 
-P1-B extends dispatch with `Operations::Proposal`; it does not make feature handlers write the
+P1-B extends dispatch with `Operations::Proposal`; feature handlers do not write the
 Model. A proposal contains detached value objects only:
 
 - `record_changes`: create, update and delete entries with kind/store target, before and after.
@@ -193,8 +195,9 @@ Model. A proposal contains detached value objects only:
   `AttributeDictionary#delete_key` in the store.
 - `geometry_steps`: named steps with explicit occurrence targets, input values, created-entity
   slots and an apply adapter. Feature code supplies the adapter; the shell knows no Zone action.
-- `participants`: declared feature callbacks that add changes to the same proposal. Face
-  classification uses the Zones participant for pair retirement without a nested operation.
+- `participants`: declared feature callbacks that add changes to the same proposal. When Surface
+  adjacency lands, Face classification uses the Zones participant for pair retirement without a
+  nested operation.
 - `mutation_scope`: entity collections, entities and Model-level record kinds whose pre-image is
   captured and whose post-abort state can be checked.
 - `affected`: stable references plus `created`, `updated`, `deleted`, `split`, `grouped`,
@@ -277,6 +280,6 @@ A Zones contributor changes these places:
 5. The composition root lists the feature; shell, session, export orchestration and UI-kit core
    gain no Zone branch.
 
-The representative P1-C walkthrough reads two Zone occurrences, previews one solve, invokes it
-with the preview digest, reads both endpoints and verifies reciprocal ids. P1-A does not implement
-that walkthrough because no Zone feature exists yet.
+The checked-in P1-B walkthrough creates two Zone occurrences, previews/invokes authoring actions
+and verifies persisted Face records with the panel closed. The representative P1-C walkthrough
+will preview one solve, invoke it with the preview digest, then verify reciprocal endpoints.

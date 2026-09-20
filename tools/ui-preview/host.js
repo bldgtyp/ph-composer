@@ -9,6 +9,8 @@
   "use strict";
 
   var PARTS = "example.foundation.parts";
+  var ZONES = "ph_composer.zones.overview";
+  var FACES = "ph_composer.face_assignment.faces";
   var NOTHING_WRITTEN = "Nothing was written.";
 
   function Host(window, options) {
@@ -19,6 +21,9 @@
     this.revision = 1;
     this.sequence = 0;
     this.parts = (settings.parts || []).map(function (part) { return JSON.parse(JSON.stringify(part)); });
+    this.zones = JSON.parse(JSON.stringify(settings.zones || []));
+    this.faces = JSON.parse(JSON.stringify(settings.faces || []));
+    this.makeZone = settings.makeZone || null;
     this.preferences = { unit_system: settings.unitSystem || "SI", dimension_formats: {},
       number_format: { decimal: settings.decimal || ".", locale: settings.locale || "en-US" } };
   }
@@ -34,8 +39,15 @@
     this.publish("panel.snapshot", {
       product: "PH-Composer", version: "preview", session: this.session, revision: this.revision,
       file_name: "preview.skp", edit_path: [], preferences: JSON.parse(JSON.stringify(this.preferences)),
-      sections: { [PARTS]: { status: "completed", code: "ok", revision: this.revision,
-        value: { records: records, units: { length_mm: "mm" }, next_cursor: null, total: records.length } } }
+      sections: {
+        [PARTS]: { status: "completed", code: "ok", revision: this.revision,
+          value: { records: records, units: { length_mm: "mm" }, next_cursor: null, total: records.length } },
+        [ZONES]: { status: "completed", code: "ok", revision: this.revision,
+          value: { zones: JSON.parse(JSON.stringify(this.zones)), make_zone: this.makeZone,
+            units: { ground_depth_mm: "mm" } } },
+        [FACES]: { status: "completed", code: "ok", revision: this.revision,
+          value: { faces: JSON.parse(JSON.stringify(this.faces)), units: { area_m2: "m2" } } }
+      }
     });
   };
 
@@ -82,6 +94,23 @@
         host.sequence += 1;
         host.parts.push({ id: "exp_preview" + String(host.sequence).padStart(5, "0"), label: values.label,
           length_mm: values.length_mm });
+      });
+    } else if (payload.name === "ph_composer.zones.update") {
+      var zone = this.zones.filter(function (item) {
+        return item.reference.zone_id === payload.params.reference.zone_id;
+      })[0];
+      if (!zone) return refused("target.not_found", "That Zone is unavailable. " + NOTHING_WRITTEN, this.revision);
+      zone.values = JSON.parse(JSON.stringify(payload.params.values));
+    } else if (payload.name === "ph_composer.face_assignment.classify") {
+      var reference = payload.params.faces[0];
+      var face = this.faces.filter(function (item) {
+        return item.reference.entity_path.join(",") === reference.entity_path.join(",");
+      })[0];
+      if (!face) return refused("target.not_found", "That Face is unavailable. " + NOTHING_WRITTEN, this.revision);
+      Object.keys(payload.params.intent).forEach(function (field) {
+        var intent = payload.params.intent[field];
+        if (intent.mode === "set") face.values[field] = intent.value;
+        if (intent.mode === "clear") delete face.values[field];
       });
     } else {
       return refused("request.unknown_operation", "The preview host does not run " + payload.name + ".", this.revision);

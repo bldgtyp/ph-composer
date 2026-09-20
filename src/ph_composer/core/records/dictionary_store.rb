@@ -33,6 +33,13 @@ module PhComposer
       def write(model, record)
         model.attribute_dictionary(@dictionary, true)[record.fetch("id")] = CanonicalJson.generate(record)
       end
+
+      def delete(model, id)
+        dictionary = model.attribute_dictionary(@dictionary)
+        return nil unless dictionary
+
+        dictionary.delete_key(id)
+      end
     end
   end
 end

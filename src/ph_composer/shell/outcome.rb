@@ -19,8 +19,10 @@ module PhComposer
 
     module_function
 
-    def completed(revision:, value: nil, effect: "none", affected: [], message: "Done.")
-      build("completed", "ok", message, effect, revision, :value => value, :affected => affected)
+    def completed(revision:, value: nil, effect: "none", affected: [], findings: [], proposal_digest: nil,
+                  message: "Done.")
+      build("completed", "ok", message, effect, revision, :value => value, :affected => affected,
+            :findings => findings, :proposal_digest => proposal_digest)
     end
 
     # A request turned away before anything was written. `mutation` adds the sentence that tells a
@@ -36,10 +38,12 @@ module PhComposer
       build("failed", code, message, effect, revision)
     end
 
-    def build(status, code, message, effect, revision, value: nil, affected: [], findings: [], detail: nil)
+    def build(status, code, message, effect, revision, value: nil, affected: [], findings: [], detail: nil,
+              proposal_digest: nil)
       {
         "status" => status, "code" => code, "message" => message, "effect" => effect, "revision" => revision,
-        "value" => value, "affected" => affected, "findings" => findings, "detail" => detail
+        "value" => value, "affected" => affected, "findings" => findings, "detail" => detail,
+        "proposal_digest" => proposal_digest
       }
     end
   end

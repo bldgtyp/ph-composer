@@ -1,7 +1,7 @@
 # Face assignment: implementation plan
 
 DATE: 2026-09-20
-STATUS: Scoped; implementation not authorized.
+STATUS: In progress; P1-B authoring core complete, P1-C next and not authorized.
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md) owns behavior; the [Phase 1 plan](../../phase-one/PLAN.md) coordinates delivery.
@@ -26,8 +26,9 @@ record/reference operations independent of provider integration.
 - **P1-A:** bind face/Attached-zone schemas, endpoint resolution and operation participation
   with Zones, including record deletion and atomic delete-with-replacement. Field edits use keep/set/clear intent; changing Surface composes reciprocal
   retirement in the same transaction. Define the shared snapshot geometry read with export.
-- **P1-B:** registered face reads/classification and a minimal palette for the two-Zone proof.
-  Add typed/boundary views and suggestions using world geometry, and preserve metadata.
+- **P1-B, complete 2026-09-20:** registered Face reads, single-Face classification and a minimal
+  palette for the two-Zone proof. See [authoring evidence](../../phase-one/evidence/p1-b-authoring.md).
+  Includes typed/boundary views and suggestions using world geometry with metadata preservation.
 - **P1-C:** contributor and Python face section with complete accounting, emitted-target checks
   and construction dependency. The development construction is a declared test composition;
   absent/dangling authored construction references never fall through to it.

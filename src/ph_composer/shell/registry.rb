@@ -17,7 +17,7 @@ module PhComposer
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
     attr_reader :features, :queries, :actions, :record_kinds, :extensions, :snapshot_sections, :export_contributors,
-                :subscriptions
+                :proposal_participants, :subscriptions
 
     class << self
       def current
@@ -52,6 +52,7 @@ module PhComposer
       @extensions = {}
       @snapshot_sections = {}
       @export_contributors = {}
+      @proposal_participants = {}
       @subscriptions = []
       @unsubscribers = []
       @owners = {}
@@ -86,6 +87,7 @@ module PhComposer
       publish_each(staging.declared_extensions, @extensions, :namespace)
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
+      publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
       staging.owners.each { |name, owner| @owners[name] = owner }
       staging.declared_subscriptions.each do |subscription|
         @subscriptions << subscription
@@ -109,7 +111,7 @@ module PhComposer
     class Staging
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_record_kinds,
                   :declared_extensions, :declared_snapshot_sections, :declared_export_contributors,
-                  :declared_subscriptions, :owners, :named
+                  :declared_proposal_participants, :declared_subscriptions, :owners, :named
 
       def initialize(live)
         @live = live
@@ -120,6 +122,7 @@ module PhComposer
         @declared_extensions = []
         @declared_snapshot_sections = []
         @declared_export_contributors = []
+        @declared_proposal_participants = []
         @declared_subscriptions = []
         @owners = {}
         @named = []
@@ -198,6 +201,11 @@ module PhComposer
           :result => result, :report => report
         )
         @staging.add(:declared_export_contributors, id, name, declaration)
+      end
+
+      def proposal_participant(name, &handler)
+        declaration = Declarations::ProposalParticipant.new(:name => name, :owner => id, :handler => handler)
+        @staging.add(:declared_proposal_participants, id, name, declaration)
       end
 
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).

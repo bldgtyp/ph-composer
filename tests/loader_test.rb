@@ -30,9 +30,10 @@ class LoaderTest < PhComposerTestCase
     end
   end
 
-  # Phase 0 ships an empty extension: development examples load only from the development tree.
-  def test_the_shipping_composition_root_installs_no_feature
-    assert_empty PhComposer::FEATURES
+  def test_the_shipping_composition_root_lists_the_phase_one_authoring_features
+    assert_equal [PhComposer::Zones, PhComposer::FaceAssignment], PhComposer::FEATURES
+    assert PhComposer::Registry.installed?("ph_composer.zones")
+    assert PhComposer::Registry.installed?("ph_composer.face_assignment")
   end
 
   def test_reset_for_test_clears_every_registered_state_once_per_name

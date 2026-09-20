@@ -64,6 +64,47 @@ class RecordsEngineTest < PhComposerTestCase
     assert changes.empty?
   end
 
+  def test_a_delete_reports_its_effect_and_removes_the_record
+    part = seed_part
+    changes = PhComposer::Records::ChangeSet.new
+
+    @engine.propose_delete("test.fixture.part", part, changes)
+    @engine.apply(changes)
+
+    assert_equal [{ "kind" => "test.fixture.part", "id" => part, "change" => "deleted" }], changes.affected
+    assert_raises(PhComposer::CodedError) { @engine.find("test.fixture.part", part) }
+  end
+
+  def test_a_delete_is_refused_while_a_projected_record_still_refers_to_it
+    part = seed_part
+    definition = @engine.find("test.fixture.part", part).fetch("definition_id")
+    changes = PhComposer::Records::ChangeSet.new
+
+    error = assert_raises(PhComposer::CodedError) do
+      @engine.propose_delete("test.fixture.definition", definition, changes)
+    end
+
+    assert_equal "reference.in_use", error.code
+    assert_equal "reference.in_use", changes.refusal.code
+  end
+
+  def test_a_replacement_and_delete_can_be_staged_atomically
+    part = seed_part
+    old_definition = @engine.find("test.fixture.part", part).fetch("definition_id")
+    changes = PhComposer::Records::ChangeSet.new
+    new_definition = @engine.propose_create(
+      "test.fixture.definition", changes, :values => { "label" => "Replacement" }
+    )
+    @engine.propose_update("test.fixture.part", part, changes,
+                           :values => { "definition_id" => new_definition })
+    @engine.propose_delete("test.fixture.definition", old_definition, changes)
+
+    @engine.apply(changes)
+
+    assert_equal new_definition, @engine.find("test.fixture.part", part).fetch("definition_id")
+    assert_raises(PhComposer::CodedError) { @engine.find("test.fixture.definition", old_definition) }
+  end
+
   def test_an_invalid_value_is_refused_with_its_findings
     part = seed_part
     error = assert_raises(PhComposer::CodedError) do
