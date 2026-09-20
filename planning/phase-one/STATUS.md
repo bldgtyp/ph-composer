@@ -84,7 +84,11 @@ references disclosed, refusal when the identity is already unique or the copy si
 component storage, and Restore regrouping stamped members, recovering only id, Building-Segment and
 Level, disclosing the rest, reverting in one Undo, and refusing conflicting stamps, mixed parent
 contexts and an id already back in the Model. P1-A's host probe already measured the Restore
-mechanic itself; the native checks for these two operations wait with the rest of P1-D.
+mechanic itself; the native checks for these two operations wait with the rest of P1-D, and
+[`tools/examples/authoring/repair_walkthrough.rb`](../../tools/examples/authoring/repair_walkthrough.rb)
+is checked in so that gate can be run as soon as Ed is at the bridge. One step in it needs Ed at
+the viewport: how SketchUp copies a Group is the thing being measured, so the walkthrough asks for
+a Ctrl-drag copy rather than scripting an assumption about it.
 
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition
