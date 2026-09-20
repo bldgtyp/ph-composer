@@ -121,6 +121,40 @@ A menu item is not the whole story for a feature that also needs a panel control
 client to reach the same state. What the write channel for viewport state should be is open; see
 the Overview UI slice in `planning/phase-one/PLAN.md`.
 
+### Viewport tools
+
+Implemented in P1-D. A feature that authors by pointing writes a `Sketchup::Tool` and starts it
+from a menu item. Spaces' Mark floor, window placement and the thermal-bridge edge tool are all
+this shape, so the rules below are the shared ones, learned from the Classify tool's host gate
+([evidence](../planning/phase-one/evidence/p1-d-classify-tool.md)).
+
+- **Pick, never walk.** `Pick.face_path(view, x, y)` answers what is under the pointer as a
+  root-to-leaf instance path, and a feature turns that path into an occurrence without touching the
+  Model. A pointer move happens tens of times a second; a Model walk per move costs what P1-D
+  measured a walk to cost. `core/pick.rb` and `core/drag_set.rb` name no feature.
+- **The tool owns the gesture, not the change.** It calls a registered action through `API.invoke`
+  with its own caller handle and sequence numbers, exactly as any other client does. It opens no
+  `ModelOperation` itself, so an abandoned gesture writes nothing and leaves no Undo entry, and one
+  completed gesture is one Undo step however many entities the pointer crossed.
+- **Freeze intent and revision at button-down.** Both belong to the gesture, not to the tool. A
+  palette changed mid-drag must not change what the drag in progress writes, and a gesture applied
+  against the revision it began at refuses as `revision.stale` rather than writing through a change
+  someone else committed underneath it.
+- **Bound the collection one past the limit** so the operation that owns the limit refuses, rather
+  than the tool silently applying the first N of what the pointer crossed.
+- **Talk to the status bar, not only the session.** The panel is the only subscriber to a session
+  notice, and a viewport tool is used with the panel closed, so a refusal delivered only that way
+  is silent exactly where it matters. Write `Sketchup.status_text=` as well; an open panel still
+  gets the notice.
+- **Cancel on every route, and leave nothing behind.** Escape, deactivation, a suspended context
+  and a callback that raised all abandon the pending gesture. Track whether the button is actually
+  down: a press whose release the host never delivered must not leave later hovers collecting. The
+  tool is session feature state, so `detach` must take it, and anything it forced on, with a
+  closing Model.
+- **Do not reach for gestures the host reserves.** A custom tool receives no
+  double-click-to-enter-group; that belongs to the Select tool, as it does for every native drawing
+  tool. Reach geometry inside a container through the picked path instead.
+
 ## Metadata and structured extension data
 
 Every authored domain entity supports a JSON-compatible `user_data` mapping, including definitions

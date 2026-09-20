@@ -77,7 +77,7 @@ The early proof does not mark the full feature packets complete.
 | # | Item | State | Note |
 | --- | --- | --- | --- |
 | 1.1 | [Zones and adjacency](features/zones-and-adjacency/README.md) | In progress; P1-C adjacency implemented | First, because a boundary condition names what is on the other side |
-| 1.2 | [Face assignment](features/face-assignment/README.md) | In progress; P1-D gestures and Attached zones implemented | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
+| 1.2 | [Face assignment](features/face-assignment/README.md) | In progress; the Classify tool, P1-D gestures and Attached zones implemented and host-verified | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
 | 1.3 | [Validation and export](features/validation-and-export/README.md) | Scoped draft, interview decisions open | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
 
 Exit: draw two boxes, make them Zones, classify the faces, export and reload the exact HBJSON. Constructions

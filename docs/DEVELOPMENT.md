@@ -155,12 +155,18 @@ in [`planning/phase-one/evidence/p1-a-geometry.md`](../planning/phase-one/eviden
 The panel-closed walkthroughs are in
 [`tools/examples/authoring/`](../tools/examples/authoring/README.md): P1-B's Zone and Face
 authoring, P1-C's adjacency, P1-D's Zone repairs, P1-D's adjacency cut, P1-D's Colour-by overlay
-and P1-D's Classify tool. The last two have not been run; the Classify tool's cannot be run
-without an operator at the mouse, because SketchUp delivers pointer events to the active tool and
-the Ruby API synthesizes none. Accepted current-host results are in
+and P1-D's Classify tool. The Classify tool's ran on 2026-09-20 with an operator at the mouse,
+because SketchUp delivers pointer events to the active tool and the Ruby API synthesizes none; it
+covered the parts of Colour-by's that a drawing tool exercises, and Colour-by's own remaining
+questions are still open. Accepted current-host results are in
 [`p1-b-authoring.md`](../planning/phase-one/evidence/p1-b-authoring.md),
-[`p1-c-adjacency-hbjson.md`](../planning/phase-one/evidence/p1-c-adjacency-hbjson.md) and
-[`p1-d-repairs-and-cut.md`](../planning/phase-one/evidence/p1-d-repairs-and-cut.md).
+[`p1-c-adjacency-hbjson.md`](../planning/phase-one/evidence/p1-c-adjacency-hbjson.md),
+[`p1-d-repairs-and-cut.md`](../planning/phase-one/evidence/p1-d-repairs-and-cut.md) and
+[`p1-d-classify-tool.md`](../planning/phase-one/evidence/p1-d-classify-tool.md).
+
+A gate that needs pointer input cannot be scripted and cannot be skipped. The Classify tool's gate
+found three defects that no offline test could have caught, one of them in a slice already recorded
+as implemented and reviewed, because its own host gate had not been run.
 
 Native Undo and Redo are menu actions: a walkthrough sends `Sketchup.send_action("editUndo:")`
 and reads the result in a later call. There is no `Sketchup::Model#undo` on the host, although the
