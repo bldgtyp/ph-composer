@@ -58,6 +58,28 @@ class FaceGestureTest < PhComposerTestCase
     assert_empty list_faces.reject { |face| face.fetch("values").empty? }
   end
 
+  # The ceiling counts the counterparts a gesture's retirements drag in, not just what the user
+  # pointed at. Driven at a reduced bound: reaching 1,000 through real pairs needs a thousand-Face
+  # model whose per-Face resolution makes the check take tens of seconds offline.
+  def test_reciprocal_retirement_targets_count_towards_the_ceiling
+    left = solved_pairs(900, 2).select { |face| face.dig("reference", "zone_path") == [900] }
+    # Set after the fixture, so building it is not itself bounded by the reduced ceiling.
+    PhComposer::FaceAssignment.gesture_face_limit = 3
+
+    assert_equal 2, left.length
+
+    accepted = invoke("ph_composer.face_assignment.classify", gesture(left.first(1), nil, "Ground"))
+
+    assert_equal "completed", accepted.fetch("status")
+    assert_equal 2, accepted.fetch("affected").length
+
+    @model.undo
+    refused = invoke("ph_composer.face_assignment.classify", gesture(left, nil, "Ground"))
+
+    assert_equal %w[refused gesture.too_large none], refused.values_at("status", "code", "effect")
+    assert_equal %w[Surface Surface Surface Surface], list_faces.map { |face| face.dig("values", "boundary_condition") }
+  end
+
   def test_classifying_both_endpoints_of_one_pair_writes_each_face_once
     left, right = solved_pair(300)
 
@@ -173,23 +195,33 @@ class FaceGestureTest < PhComposerTestCase
       .find { |zone| zone.dig("reference", "zone_path") == [base] }
   end
 
-  # Two Zones sharing one full wall, classified and solved, so a gesture has a real pair to retire.
-  def solved_pair(base)
+  # Two Zones sharing `count` full walls, classified and solved, so a gesture has real pairs to
+  # retire. Each wall sits at its own height so one solve produces exactly `count` pairs.
+  def solved_pairs(base, count)
     metres = 1.0 / 0.0254
-    outline = [point(0, 0, 0), point(0, 4 * metres, 0), point(0, 4 * metres, 3 * metres),
-               point(0, 0, 3 * metres)]
-    left = Sketchup::Face.new(base + 1, {}, :points => outline, :normal => Geom::Vector3d.new(1, 0, 0))
-    right = Sketchup::Face.new(base + 2, {}, :points => outline.reverse, :normal => Geom::Vector3d.new(-1, 0, 0))
-    groups = [Sketchup::Group.new(base, Sketchup::Entities.new([left])),
-              Sketchup::Group.new(base + 10, Sketchup::Entities.new([right]))]
-    groups.each do |group|
-      @model.entities << group
-      invoke("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [group.persistent_id] })
+    lefts = []
+    rights = []
+    count.times do |index|
+      low = index * 5 * metres
+      high = (index * 5 + 3) * metres
+      outline = [point(0, 0, low), point(0, 4 * metres, low), point(0, 4 * metres, high), point(0, 0, high)]
+      lefts << Sketchup::Face.new(base + 1 + index, {}, :points => outline,
+                                  :normal => Geom::Vector3d.new(1, 0, 0))
+      rights << Sketchup::Face.new(base + 101 + index, {}, :points => outline.reverse,
+                                   :normal => Geom::Vector3d.new(-1, 0, 0))
+    end
+    [[base, lefts], [base + 10, rights]].each do |persistent_id, faces|
+      @model.entities << Sketchup::Group.new(persistent_id, Sketchup::Entities.new(faces))
+      invoke("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [persistent_id] })
     end
     invoke("ph_composer.face_assignment.classify", gesture(list_faces, "Wall", "Outdoors"))
     zones = API.query(:context => @context, :name => "ph_composer.zones.list").dig("value", "zones")
     invoke("ph_composer.zones.solve_adjacency", { "zones" => zones.map { |zone| zone.fetch("reference") } })
     list_faces
+  end
+
+  def solved_pair(base)
+    solved_pairs(base, 1)
   end
 
   def point(x, y, z)

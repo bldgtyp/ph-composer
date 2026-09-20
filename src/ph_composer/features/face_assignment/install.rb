@@ -209,19 +209,31 @@ module PhComposer
     end
 
     def save_attached_zone(request, proposal)
-      values = request.params.fetch("values")
+      patch = request.params.fetch("values")
       id = request.params["id"]
       if id
-        request.engine.propose_update(AttachedZone::KIND_ID, id, proposal, :values => values,
+        # `values` is a partial patch, so the findings have to read the record the save will leave
+        # behind. Reading the patch alone drops the low-factor warning on every edit that does not
+        # happen to name the factor.
+        values = merged_values(request.engine.kind(AttachedZone::KIND_ID)
+                                 .values(request.engine.find(AttachedZone::KIND_ID, id)), patch)
+        request.engine.propose_update(AttachedZone::KIND_ID, id, proposal, :values => patch,
                                       :user_data => request.params["user_data"],
                                       :expected_values => request.params.fetch("expected_values", {}))
       else
-        values = { "temperature_reduction_factor" => AttachedZone::DEFAULT_FACTOR }.merge(values)
+        values = { "temperature_reduction_factor" => AttachedZone::DEFAULT_FACTOR }.merge(patch)
         id = request.engine.propose_create(AttachedZone::KIND_ID, proposal, :values => values,
                                            :user_data => request.params["user_data"])
       end
       AttachedZone.findings(values.merge("id" => id)).each { |finding| proposal.add_finding(finding) }
       { "id" => id }
+    end
+
+    # The engine's own patch rule: a named value replaces, and an explicit nil removes.
+    def merged_values(before, patch)
+      patch.each_with_object(DeepCopy.call(before)) do |(key, value), after|
+        value.nil? ? after.delete(key) : after[key] = DeepCopy.call(value)
+      end
     end
 
     # Delete with replacement, in one proposal: every Face naming the record moves first, then the
@@ -295,10 +307,11 @@ module PhComposer
     end
 
     def check_limit!(count)
-      return if count <= GESTURE_FACE_LIMIT
+      limit = gesture_face_limit
+      return if count <= limit
 
       raise CodedError.new("gesture.too_large",
-                           "One gesture affects at most #{GESTURE_FACE_LIMIT} Faces; this one affects #{count}.")
+                           "One gesture affects at most #{limit} Faces; this one affects #{count}.")
     end
 
     def retiring?(record, intent)
@@ -361,9 +374,17 @@ module PhComposer
         when "set" then record[field] = operation.fetch("value")
         end
       end
-      # The reference belongs to the condition: moving off AttachedZone drops it, so no Face keeps a
-      # reference its own condition no longer explains.
-      record.delete("attached_zone_id") unless record["boundary_condition"] == "AttachedZone"
+      # The reference belongs to the condition. Moving off AttachedZone drops it, so no Face keeps a
+      # reference its own condition no longer explains; but a caller asking for the reference
+      # without the condition is refused rather than having the value quietly discarded.
+      unless record["boundary_condition"] == "AttachedZone"
+        if intent.dig("attached_zone_id", "mode") == "set"
+          raise CodedError.new("params.invalid",
+                               "Setting attached_zone_id needs the AttachedZone boundary condition.")
+        end
+
+        record.delete("attached_zone_id")
+      end
       Schema.validate!(record)
     end
 

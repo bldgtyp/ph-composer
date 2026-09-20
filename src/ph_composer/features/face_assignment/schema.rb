@@ -13,8 +13,19 @@ module PhComposer
     # Surface belongs to Solve adjacencies; every other condition is the Classify tool's.
     ASSIGNABLE_BOUNDARIES = %w[Outdoors Ground Adiabatic AttachedZone].freeze
     # The proposed ceiling on Face occurrences affected by one gesture, counterparts included.
-    # Confirm or revise it against P1-D host measurements before the gesture work closes.
+    # Confirm or revise it against P1-D host measurements before the gesture work closes. It is a
+    # settable bound, not a frozen literal, because the measurement is expected to move it and
+    # because a test cannot otherwise reach the ceiling through reciprocal targets in useful time.
     GESTURE_FACE_LIMIT = 1_000
+
+    class << self
+      attr_writer :gesture_face_limit
+
+      def gesture_face_limit
+        @gesture_face_limit ||= GESTURE_FACE_LIMIT
+      end
+    end
+    PhComposer.on_reset("face_assignment") { self.gesture_face_limit = nil }
 
     module Schema
       module_function

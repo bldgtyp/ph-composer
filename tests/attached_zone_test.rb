@@ -76,6 +76,39 @@ class AttachedZoneTest < PhComposerTestCase
     assert_nil faces.first.fetch("attached_zone_state")
   end
 
+  def test_an_edit_that_does_not_name_the_factor_still_reports_the_low_factor_finding
+    id = invoke("#{KIND}.save", { "values" => { "name" => "Crawlspace", "kind" => "crawlspace",
+                                                "temperature_reduction_factor" => 0.7 } }).dig("value", "id")
+
+    renamed = invoke("#{KIND}.save", { "id" => id, "values" => { "name" => "Vented crawlspace" } })
+
+    assert_equal "completed", renamed.fetch("status")
+    assert_equal ["attached_zone.factor_below_phius_floor"], renamed.fetch("findings").map { |row| row.fetch("code") }
+  end
+
+  def test_raising_the_factor_clears_the_finding
+    id = invoke("#{KIND}.save", { "values" => { "name" => "Attic", "kind" => "attic",
+                                                "temperature_reduction_factor" => 0.7 } }).dig("value", "id")
+
+    raised = invoke("#{KIND}.save", { "id" => id, "values" => { "temperature_reduction_factor" => 0.95 } })
+
+    assert_empty raised.fetch("findings")
+  end
+
+  def test_setting_the_reference_without_the_condition_refuses_instead_of_dropping_it
+    id = create_zone_record("Garage")
+
+    result = invoke("ph_composer.face_assignment.classify", {
+      "faces" => [faces.first.fetch("reference")],
+      "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
+                    "attached_zone_id" => { "mode" => "set", "value" => id } },
+      "expected_values" => {}
+    })
+
+    assert_equal %w[refused params.invalid none], result.values_at("status", "code", "effect")
+    assert_empty faces.first.fetch("values")
+  end
+
   def test_delete_with_a_replacement_record_moves_every_referencing_face_in_one_step
     garage = create_zone_record("Garage")
     attic = create_zone_record("Attic", "attic")

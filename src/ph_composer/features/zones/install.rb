@@ -200,7 +200,7 @@ module PhComposer
       key = Occurrences.key(reference)
       existing = plan[key]
       if existing && existing.fetch(2) != after
-        raise CodedError.new("adjacency.ambiguous",
+        raise CodedError.new("gesture.retirement_conflict",
                              "Face #{before.fetch('id')} would be retired two different ways in one gesture.")
       end
 

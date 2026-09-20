@@ -28,8 +28,12 @@ record together with these choices rather than repeat its 22-question interview.
   including reciprocal retirement targets. Test the accepted limit and one above it. This is an
   engineering bound to settle before the gesture is accepted, not a new product interview.
   Implemented in D1 as a feature bound, not a schema bound, so one Face over it refuses the whole
-  gesture with `gesture.too_large`; the offline suite covers exactly 1,000 and 1,001. The host
-  measurement is outstanding.
+  gesture with `gesture.too_large`; the offline suite covers exactly 1,000 and 1,001, and a reduced
+  bound covers refusal driven by reciprocal targets. The host measurement is outstanding, and one
+  offline measurement already argues for lowering the number: a 500-Face gesture that retires 500
+  reciprocal counterparts took about 13 seconds against the stub, because occurrence resolution
+  walks the Model once per Face. Measure a real gesture on the proving host before accepting 1,000,
+  and treat resolver cost, not just Face count, as the thing the ceiling is protecting.
 - **P1-D, settled in D1:** the ceiling applies to the Classify gesture only. Suggest classification
   for this Zone carries no ceiling, because it is a separate named batch over one Zone the user has
   already chosen rather than a pointer gesture whose target set the user cannot see. A Zone with
