@@ -7,9 +7,14 @@ module PhComposer
     FACE_STORE = Records::EntityStore.new(FACE_DICTIONARY)
     ID_PATTERN = Records::Identity.pattern("fac")
     FACE_TYPES = %w[Wall RoofCeiling Floor AirBoundary].freeze
-    P1_B_FACE_TYPES = %w[Wall RoofCeiling Floor].freeze
+    # AirBoundary round trips through HBJSON but the Classify tool does not offer it (PRD Q8).
+    ASSIGNABLE_FACE_TYPES = %w[Wall RoofCeiling Floor].freeze
     BOUNDARY_CONDITIONS = %w[Outdoors Ground Adiabatic Surface AttachedZone].freeze
-    P1_B_BOUNDARIES = %w[Outdoors Ground Adiabatic].freeze
+    # Surface belongs to Solve adjacencies; AttachedZone waits for its record kind.
+    ASSIGNABLE_BOUNDARIES = %w[Outdoors Ground Adiabatic].freeze
+    # The proposed ceiling on Face occurrences affected by one gesture, counterparts included.
+    # Confirm or revise it against P1-D host measurements before the gesture work closes.
+    GESTURE_FACE_LIMIT = 1_000
 
     module Schema
       module_function

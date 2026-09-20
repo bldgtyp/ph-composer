@@ -77,8 +77,8 @@ module PhComposer
                        request, proposal|
         retire_adjacency(request, proposal)
       end
-      feature.proposal_participant("#{FEATURE_ID}.retire_pair") do |request, proposal, occurrence, record|
-        retire_pair(request, proposal, occurrence, record, :include_local => false)
+      feature.proposal_participant("#{FEATURE_ID}.retire_pairs") do |request, targets|
+        retire_pairs(request, targets)
       end
       feature.export_contributor(
         ExportProjection::SECTION, :section_version => 1,
@@ -165,20 +165,48 @@ module PhComposer
       occurrence = Occurrences.resolve_face(request.model, request.params.fetch("face"), :mutable => true)
       record = FaceAssignment::FACE_STORE.read(occurrence.entity)
       pair_id = record&.dig("adjacency", "pair_id")
-      retire_pair(request, proposal, occurrence, record, :include_local => true)
+      retire_pair(request, proposal, occurrence, record)
       { "pair_id" => pair_id }
     end
 
-    def retire_pair(request, proposal, occurrence, record, include_local:)
+    def retire_pair(request, proposal, occurrence, record)
       local_after, counterpart, other, other_after = Adjacency.retire_records(request.model, occurrence, record)
-      updates = [[counterpart.reference(other.fetch("id")), other, other_after]]
-      updates.unshift([occurrence.reference(record.fetch("id")), record, local_after]) if include_local
+      updates = [[occurrence.reference(record.fetch("id")), record, local_after],
+                 [counterpart.reference(other.fetch("id")), other, other_after]]
       scopes = updates.map do |reference, _before, _after|
         Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
       end
       proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "retired"), :scopes => scopes)
       local_after
     end
+
+    # Plans the reciprocal retirement for a whole gesture without writing anything. The caller
+    # composes the returned records into its own step, so face assignment never edits an adjacency
+    # envelope itself and one Face is written once even when both endpoints are being classified.
+    #
+    # Returns { occurrence key => [reference, before, after] } covering both targets and the
+    # counterparts they drag in.
+    def retire_pairs(request, targets)
+      plan = {}
+      targets.each do |occurrence, record|
+        local_after, counterpart, other, other_after = Adjacency.retire_records(request.model, occurrence, record)
+        add_retirement(plan, occurrence.reference(record.fetch("id")), record, local_after)
+        add_retirement(plan, counterpart.reference(other.fetch("id")), other, other_after)
+      end
+      plan
+    end
+
+    def add_retirement(plan, reference, before, after)
+      key = Occurrences.key(reference)
+      existing = plan[key]
+      if existing && existing.fetch(2) != after
+        raise CodedError.new("adjacency.ambiguous",
+                             "Face #{before.fetch('id')} would be retired two different ways in one gesture.")
+      end
+
+      plan[key] = [reference, before, after]
+    end
+    private_class_method :add_retirement
 
     def zone_view(zone, ambiguous)
       Schema.view(zone.record).merge(

@@ -2,35 +2,65 @@
 
 module PhComposer
   module FaceAssignment
+    # Every Face one gesture touches, written in one step so a drag over forty Faces, and the
+    # counterparts its retirements drag in, are one Undo entry and one all-or-nothing apply.
     class ClassifyStep
       attr_reader :affected
 
-      def initialize(reference:, before:, after:, stamp:)
-        @reference = DeepCopy.call(reference).freeze
-        @before = DeepCopy.call(before)&.freeze
-        @after = DeepCopy.call(after).freeze
-        @stamp = DeepCopy.call(stamp).freeze
-        change = before ? "updated" : "created"
-        @affected = [{ "kind" => "face_assignment", "id" => after.fetch("id"), "change" => change,
-                       "reference" => @reference.merge("entity_id" => after.fetch("id")) }]
+      def initialize(updates:)
+        @updates = updates.map { |update| DeepCopy.call(update).freeze }.freeze
+        @affected = @updates.map do |update|
+          { "kind" => "face_assignment", "id" => update.fetch("after").fetch("id"),
+            "change" => update.fetch("change"),
+            "reference" => update.fetch("reference").merge("entity_id" => update.fetch("after").fetch("id")) }
+        end
       end
 
       def descriptor
-        { "name" => "classify_face", "reference" => @reference, "before" => @before,
-          "after" => @after, "stamp" => @stamp }
+        { "name" => "classify_faces", "updates" => @updates }
       end
 
       def temporary_ids
-        @before ? [] : [@after.fetch("id")]
+        @updates.reject { |update| update.fetch("before") }.map { |update| update.fetch("after").fetch("id") }
+      end
+
+      # Resolve and check every target before writing any of them: a Face that moved since the
+      # preview must abort the gesture, not leave the first half of it painted.
+      def apply(model, _slots)
+        resolved = @updates.map do |update|
+          reference = update.fetch("reference")
+          occurrence = Zones::Occurrences.resolve_face(model, reference, :mutable => true, :allow_unassigned => true)
+          current = FACE_STORE.read(occurrence.entity)
+          unless current == update.fetch("before")
+            raise CodedError.new("target.changed", "A Face changed after the gesture was previewed.")
+          end
+
+          [occurrence, update]
+        end
+        resolved.each do |occurrence, update|
+          FACE_STORE.write(occurrence.entity, update.fetch("after"))
+          stamp = update.fetch("stamp")
+          Zones::STAMP_STORE.write(occurrence.entity, stamp) if stamp
+        end
+      end
+    end
+
+    class ReverseFaceStep
+      attr_reader :affected
+
+      def initialize(reference:)
+        @reference = DeepCopy.call(reference).freeze
+        @affected = [{ "kind" => "face_assignment", "id" => @reference["entity_id"], "change" => "updated",
+                       "reference" => @reference }]
+      end
+
+      def descriptor
+        { "name" => "reverse_face", "reference" => @reference }
       end
 
       def apply(model, _slots)
         occurrence = Zones::Occurrences.resolve_face(model, @reference, :mutable => true, :allow_unassigned => true)
-        current = FACE_STORE.read(occurrence.entity)
-        raise CodedError.new("target.changed", "The Face changed after it was previewed.") unless current == @before
-
-        FACE_STORE.write(occurrence.entity, @after)
-        Zones::STAMP_STORE.write(occurrence.entity, @stamp)
+        occurrence.entity.reverse!
       end
     end
   end

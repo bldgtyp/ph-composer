@@ -193,6 +193,10 @@ module Sketchup
     def transform!(transformation)
       @vertices.each { |vertex| vertex.transform!(transformation) }
     end
+
+    def reverse!
+      @vertices.reverse!
+    end
   end
 
   class AttributeDictionary
@@ -300,6 +304,14 @@ module Sketchup
 
     def transform!(transformation)
       @loops.each { |loop| loop.transform!(transformation) }
+    end
+
+    # The host reverses the loop winding and the normal together and keeps every attribute
+    # dictionary on the Face. Nothing else about the Face changes.
+    def reverse!
+      @loops.each(&:reverse!)
+      @normal = Geom::Vector3d.new(-@normal.x, -@normal.y, -@normal.z)
+      true
     end
   end
 

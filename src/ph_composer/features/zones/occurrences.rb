@@ -101,6 +101,12 @@ module PhComposer
         [entity, transform]
       end
 
+      # The identity of one Face occurrence inside a gesture: the full root-to-Face persistent-id
+      # path. Two references naming the same Face deduplicate to one affected target.
+      def key(reference)
+        [integer_path(reference.fetch("zone_path")), integer_path(reference.fetch("entity_path"))]
+      end
+
       def active_path(model)
         Array(model.active_path).map(&:persistent_id)
       end
