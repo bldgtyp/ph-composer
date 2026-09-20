@@ -167,18 +167,35 @@ module PhComposer
           child_path = path + [entity.persistent_id]
           child_transform = transform * entity.transformation
           record = ZONE_STORE.read(entity)
+          child_shared = shared || shared_storage?(entity)
           if record
             Schema.validate!(record)
             unless entity.is_a?(Sketchup::Group)
               raise_target("target.wrong_kind", "A Zone record is stored on a ComponentInstance.")
             end
             found << ZoneOccurrence.new(:entity => entity, :path => child_path, :transform => child_transform,
-                                        :record => record, :shared_definition => shared, :nested => inside_zone)
+                                        :record => record, :shared_definition => child_shared,
+                                        :nested => inside_zone)
           end
           child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
-          walk_zones(child_entities, child_path, child_transform,
-                     shared || entity.is_a?(Sketchup::ComponentInstance), inside_zone || !record.nil?, found)
+          walk_zones(child_entities, child_path, child_transform, child_shared,
+                     inside_zone || !record.nil?, found)
         end
+      end
+
+      # Whether this container's contents are storage more than one occurrence writes through.
+      #
+      # Copying a Group in SketchUp does not copy what is inside it: both Groups become instances of
+      # one definition and share every Face in it, while each instance keeps its own Zone record.
+      # So a copied Zone has a duplicated id and shared members at the same time, and editing either
+      # occurrence's Faces edits the other's. Measured on 26.1.188, 2026-09-20; before this, a
+      # copied Zone read as ambiguous but not shared, and repairing it rewrote the original's Faces.
+      def shared_storage?(entity)
+        return true if entity.is_a?(Sketchup::ComponentInstance)
+        return false unless entity.respond_to?(:definition)
+
+        definition = entity.definition
+        definition.respond_to?(:instances) && definition.instances.length > 1
       end
 
       def walk_faces(entities, path, transform, zone, found)
@@ -199,7 +216,7 @@ module PhComposer
       def raise_target(code, message)
         raise CodedError.new(code, message)
       end
-      private_class_method :resolve_face_path, :walk_zones, :walk_faces, :raise_target
+      private_class_method :resolve_face_path, :shared_storage?, :walk_zones, :walk_faces, :raise_target
     end
   end
 end

@@ -384,10 +384,13 @@ module PhComposer
       "Zone #{number}"
     end
 
+    # A copied Zone is ambiguous and shared at once, and shared storage is reported first: it is the
+    # condition that blocks every repair, and it names what the user has to do. Reporting only the
+    # ambiguity would point at identity repair, which is the one thing not available here.
     def zone_state(zone, ambiguous)
+      return "shared_definition" if zone.shared_definition
       return "ambiguous" if ambiguous
       return "wrong_hierarchy" if zone.nested
-      return "shared_definition" if zone.shared_definition
 
       "found"
     end

@@ -110,6 +110,39 @@ class ZoneRepairTest < PhComposerTestCase
     assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
   end
 
+  # Copying a Group on the host does not copy what is inside it: both Groups become instances of
+  # one definition and share every Face. So a copied Zone is ambiguous and shared at the same time,
+  # and repairing one would rewrite the other's Faces. Measured on SketchUp 26.1.188.
+  def test_a_zone_copied_the_way_sketchup_copies_one_reads_as_shared_storage
+    group = box_group(250, 3)
+    @model.entities << group
+    make_zone(group)
+    classify_all
+    twin = Sketchup::Group.new(260, group.entities)
+    twin.set_attribute("ph_composer.zone", "record", group.get_attribute("ph_composer.zone", "record"))
+    @model.entities << twin
+
+    states = zones_value.fetch("zones").map { |zone| zone.fetch("state") }
+
+    assert_equal %w[shared_definition shared_definition], states
+  end
+
+  def test_repairing_a_copy_that_shares_its_faces_refuses_and_leaves_both_alone
+    group = box_group(270, 3)
+    @model.entities << group
+    make_zone(group)
+    classify_all
+    before = group.entities.to_a.map { |face| FACE_STORE.read(face) }
+    twin = Sketchup::Group.new(280, group.entities)
+    twin.set_attribute("ph_composer.zone", "record", group.get_attribute("ph_composer.zone", "record"))
+    @model.entities << twin
+
+    result = invoke("ph_composer.zones.repair_identity", { "zone_path" => [280] })
+
+    assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
+    assert_equal before, group.entities.to_a.map { |face| FACE_STORE.read(face) }
+  end
+
   def test_an_exploded_zone_is_offered_for_restore_with_its_recoverable_fields
     group, zone_id = exploded_zone
 

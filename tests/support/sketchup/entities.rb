@@ -394,6 +394,15 @@ module Sketchup
     attr_accessor :root
     attr_reader :each_count, :scan_count
 
+    # The Groups drawn from this collection. A Group registers itself when it is built on one.
+    def group_instances
+      @group_instances ||= []
+    end
+
+    def register_group(group)
+      group_instances << group unless group_instances.include?(group)
+    end
+
     def initialize(values = [])
       @values = []
       @observers = []
@@ -556,6 +565,25 @@ module Sketchup
     end
   end
 
+  # What a Group's contents are, and which Groups are drawn from them. The host models this as a
+  # ComponentDefinition with instances; here it is derived from the Entities collection, so two
+  # Groups built on one collection report each other exactly as two copies do on the host.
+  class GroupDefinition
+    attr_reader :entities
+
+    def initialize(entities)
+      @entities = entities
+    end
+
+    def instances
+      @entities.group_instances
+    end
+
+    def persistent_id
+      @entities.object_id
+    end
+  end
+
   class Group < Entity
     attr_reader :entities
     attr_accessor :transformation, :name
@@ -567,6 +595,7 @@ module Sketchup
       @transformation = transformation || Geom::Transformation.new
       @name = name
       @locked = locked
+      @entities.register_group(self) if @entities.respond_to?(:register_group)
     end
 
     def locked?
@@ -575,6 +604,13 @@ module Sketchup
 
     def locked=(value)
       @locked = !!value
+    end
+
+    # Copying a Group on the host makes both Groups instances of one definition, sharing every
+    # entity in it. A fixture models that by giving two Groups the same Entities collection; the
+    # definition each reports then knows both of them.
+    def definition
+      GroupDefinition.new(@entities)
     end
 
     def explode
