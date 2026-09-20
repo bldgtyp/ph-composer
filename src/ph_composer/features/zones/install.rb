@@ -219,6 +219,7 @@ module PhComposer
     # do not exist until both Faces have been cut.
     def split_match(request, proposal, match)
       overlap = match.fetch(:overlap)
+      check_unpaired!(match)
       pair_id = Records::Identity.derived(
         "adj", "faces" => [:left, :right].map { |side| match.fetch(side).fetch(:record).fetch("id") }.sort
       )
@@ -232,6 +233,18 @@ module PhComposer
         :scopes => scopes
       )
       pair_id
+    end
+
+    # Cutting a Face that already holds a Surface pair would strip that pair from the pieces and
+    # leave its counterpart naming a Face that no longer exists. Retiring the counterpart is the
+    # user's explicit step, and it needs the counterpart's Zone in the mutation set, so the cut
+    # refuses exactly as the full-match path does rather than quietly breaking the other endpoint.
+    def check_unpaired!(match)
+      paired = [:left, :right].select { |name| match.fetch(name).fetch(:record)["boundary_condition"] == "Surface" }
+      return if paired.empty?
+
+      raise CodedError.new("adjacency.stale",
+                           "A Face that would be cut still holds a Surface pair. Retire it before solving again.")
     end
 
     # Ids for every piece the cut may need, allocated now so the preview digest is stable. Which
@@ -378,7 +391,7 @@ module PhComposer
 
       "found"
     end
-    private_class_method :pair_match, :split_match, :side_plan
+    private_class_method :pair_match, :split_match, :check_unpaired!, :side_plan
     private_class_method :declare_adjacency, :declare_repairs, :zone_view, :make_target,
                          :validate_make_target!, :zone_state
   end

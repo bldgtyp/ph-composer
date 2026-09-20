@@ -196,6 +196,33 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal %w[Outdoors Outdoors], boundary_conditions
   end
 
+  # Cutting a Face that still holds a Surface pair would strip that pair from the pieces and leave
+  # its counterpart naming a Face that is gone. The full-match path already refuses this; so does
+  # the cut, rather than quietly breaking the other endpoint.
+  def test_cutting_a_face_that_still_holds_a_pair_refuses_and_writes_nothing
+    wall(696, 0, 0, 4, 0, 3, :east)
+    wall(698, 0, 2, 6, 0, 3, :west)
+    author
+    entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 696 }.entities.to_a.first
+    store = PhComposer::FaceAssignment::FACE_STORE
+    record = store.read(entity)
+    store.write(entity, record.merge(
+      "boundary_condition" => "Surface",
+      "adjacency" => {
+        "schema_version" => 1, "pair_id" => "adj_000000000000",
+        "self" => record_reference(record.fetch("id")), "counterpart" => record_reference("fac_000000000000"),
+        "self_geometry" => { "digest" => "sha256:x", "area_m2" => 12.0 },
+        "counterpart_geometry" => { "digest" => "sha256:y", "area_m2" => 12.0 }
+      }
+    ))
+
+    result = solve(all_references)
+
+    assert_equal %w[refused adjacency.stale none], result.values_at("status", "code", "effect")
+    assert_equal 2, faces.length
+    assert_equal "Surface", store.read(entity).fetch("boundary_condition")
+  end
+
   def test_a_face_meeting_two_neighbours_is_reported_and_pairs_neither
     wall(700, 0, 0, 4, 0, 3, :east)
     wall(710, 0, 0, 4, 0, 3, :west)
@@ -282,6 +309,10 @@ class ZoneSolveScopeTest < PhComposerTestCase
                     "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } },
       "expected_values" => {}
     })
+  end
+
+  def record_reference(entity_id)
+    { "zone_id" => "zon_000000000000", "zone_path" => [1], "entity_path" => [2], "entity_id" => entity_id }
   end
 
   def metres(point)
