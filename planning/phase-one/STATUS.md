@@ -91,14 +91,20 @@ is checked in so that gate can be run as soon as Ed is at the bridge. One step i
 the viewport: how SketchUp copies a Group is the thing being measured, so the walkthrough asks for
 a Ctrl-drag copy rather than scripting an assumption about it.
 
-P1-D D4 brings the offline suite to 325 Ruby tests with 1,398 assertions, green on both Rubies with
-`make ci` and Ruby coverage at 96.1%. The pure overlap geometry is covered case by case: full,
+P1-D D4 brings the offline suite to 330 Ruby tests with 1,420 assertions, green on both Rubies with
+`make ci` and Ruby coverage at 96.0%. The pure overlap geometry is covered case by case: full,
 partial, contained, disjoint, off-plane, both sliver thresholds independently, a sliver left behind
 by an otherwise acceptable cut, same-normal overlapping Zones, a holed Face, concave outlines, and
 winding independence. The solver is covered for whole-scope pairing, the Q18 refusal naming both
 Zones, a retry that includes them, an unscoped neighbour still being read, and each reported case.
-The geometry cut itself is not implemented; a partial overlap reports and pairs nothing. See
-"What D4 still owes" in [PLAN.md](PLAN.md).
+The cut
+is implemented: a partial overlap is cut on both sides and paired on the shared pieces only, with
+the remainder keeping its own classification, payloads following every piece, the piece holding the
+native persistent id keeping its Face id, a region covering a whole Face needing no cut at all, and
+a failure on the second side leaving neither Face cut. A Face meeting more than one neighbour, a
+concave outline and a holed Face stay reported rather than cut; see "What D4 left open" in
+[PLAN.md](PLAN.md). The offline stub models a Face split to make the record consequences testable
+and is not evidence about SketchUp; the host gate is outstanding.
 
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition
@@ -121,3 +127,4 @@ post-commit CI close this branch slice; merge remains pending.
 | 2026-09-20 | P1-D D2: the Attached zone record kind, its reference lifecycle on a Face, and delete with an explicit replacement landed. |
 | 2026-09-20 | P1-D D3: explicit copied-Zone identity repair and limited Restore Zone landed, with the restore offer and its disclosed losses on the Zones read. |
 | 2026-09-20 | P1-D D4 part one: pure overlap geometry with remainder thresholds, whole-scope Solve, the Q18 out-of-scope refusal and a finding for every case the solver will not pair. The geometry cut remains. |
+| 2026-09-20 | P1-D D4 part two: partial overlaps are cut on both sides and paired on the shared region only, under the split rules, in one aborting step. |
