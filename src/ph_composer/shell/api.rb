@@ -35,6 +35,7 @@ module PhComposer
           { "id" => feature.id, "contract_version" => feature.contract_version, "requires" => feature.requires }
         end,
         "queries" => registry.queries.values.map { |query| summary(query) },
+        "view_commands" => registry.view_commands.values.map { |command| summary(command) },
         "actions" => registry.actions.values.map do |action|
           summary(action).merge("side_effects" => action.side_effects)
         end,
@@ -50,11 +51,11 @@ module PhComposer
       )
     end
 
-    # The full declaration of one registered query, action or record kind, or nil when none has the name.
-    # The schemas are copies; validation keeps its own.
+    # The full declaration of one registered query, action, view command or record kind, or nil when
+    # none has the name. The schemas are copies; validation keeps its own.
     def describe(name:)
       registry = Registry.current
-      if (operation = registry.queries[name] || registry.actions[name])
+      if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name])
         return DeepCopy.call(operation_description(operation))
       end
 
@@ -70,7 +71,10 @@ module PhComposer
 
     # Issues a caller handle for an open Model session and returns the context to call with. This is
     # the trusted in-process entry; a future external adapter must authenticate before calling it.
-    def connect(session_id:, capabilities: %w[read model_write])
+    # `view` grants the viewport-state commands: selection, camera and the active Colour-by mode. It is
+    # separate from `read` because a read never moves either (context/AGENT_INTERFACE.md), and separate
+    # from `model_write` because nothing it does reaches the SKP.
+    def connect(session_id:, capabilities: %w[read view model_write])
       session = Sessions.find(session_id)
       raise CodedError.new("session.unknown", "That Model session is closed or was never opened.") unless session
 
@@ -80,6 +84,11 @@ module PhComposer
 
     def query(context:, name:, params: {})
       Dispatch.new.query(context, name, params)
+    end
+
+    # Changes what the host shows and never the Model, so it takes no request: see Declarations::ViewCommand.
+    def view(context:, name:, params: {})
+      Dispatch.new.view(context, name, params)
     end
 
     def preview(context:, name:, params: {})
@@ -109,7 +118,7 @@ module PhComposer
 
     def operation_description(operation)
       {
-        "kind" => operation.is_a?(Declarations::Action) ? "action" : "query",
+        "kind" => operation_kind(operation),
         "name" => operation.name, "owner" => operation.owner, "description" => operation.description,
         "params" => operation.params, "result" => operation.result, "examples" => operation.examples
       }.merge(
@@ -117,6 +126,13 @@ module PhComposer
                                                    "confirmation" => operation.confirmation } : {}
       )
     end
-    private_class_method :session_summary, :summary, :operation_description
+
+    def operation_kind(operation)
+      return "action" if operation.is_a?(Declarations::Action)
+      return "view_command" if operation.is_a?(Declarations::ViewCommand)
+
+      "query"
+    end
+    private_class_method :session_summary, :summary, :operation_description, :operation_kind
   end
 end

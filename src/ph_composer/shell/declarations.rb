@@ -22,6 +22,18 @@ module PhComposer
       keyword_init: true
     )
 
+    # A change to what the host shows, and nothing else: the sixth contribution seam. `handler` is
+    # `->(request) { value }`, the same shape a query's takes, and it may change the selection, the
+    # camera, the active Colour-by mode or a running tool's palette. It never writes a record, opens
+    # a Model operation or leaves an Undo entry.
+    #
+    # It is not a query, because `context/AGENT_INTERFACE.md` says a read never changes the camera or
+    # the selection. It is not an action, because an action's contract is a named native operation the
+    # user can undo, and there is nothing here to undo. Both halves of that are why the seam exists;
+    # before it, Locate and the Colour-by mode switch could be reached from a native menu and from
+    # Ruby but from no client (planning/phase-one/PLAN.md, "What D5 left open").
+    ViewCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
+
     # A panel snapshot section: the result of one registered query, under the section's name.
     SnapshotSection = Struct.new(:name, :owner, :query, :params, keyword_init: true)
 

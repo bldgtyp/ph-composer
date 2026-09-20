@@ -16,8 +16,8 @@ module PhComposer
   class Registry
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
-    attr_reader :features, :queries, :actions, :record_kinds, :extensions, :snapshot_sections, :export_contributors,
-                :proposal_participants, :colour_modes, :menu_items, :subscriptions
+    attr_reader :features, :queries, :actions, :view_commands, :record_kinds, :extensions, :snapshot_sections,
+                :export_contributors, :proposal_participants, :colour_modes, :menu_items, :subscriptions
 
     class << self
       def current
@@ -48,6 +48,7 @@ module PhComposer
       @features = {}
       @queries = {}
       @actions = {}
+      @view_commands = {}
       @record_kinds = {}
       @extensions = {}
       @snapshot_sections = {}
@@ -84,6 +85,7 @@ module PhComposer
       staging.declared_features.each { |feature| @features[feature.id] = feature }
       publish_each(staging.declared_queries, @queries, :name)
       publish_each(staging.declared_actions, @actions, :name)
+      publish_each(staging.declared_view_commands, @view_commands, :name)
       publish_each(staging.declared_record_kinds, @record_kinds, :id)
       staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
       publish_each(staging.declared_extensions, @extensions, :namespace)
@@ -113,9 +115,10 @@ module PhComposer
 
     # Collects one batch's declarations and checks them against each other and the live registry.
     class Staging
-      attr_reader :declared_features, :declared_queries, :declared_actions, :declared_record_kinds,
-                  :declared_extensions, :declared_snapshot_sections, :declared_export_contributors,
-                  :declared_proposal_participants, :declared_colour_modes, :declared_menu_items,
+      attr_reader :declared_features, :declared_queries, :declared_actions, :declared_view_commands,
+                  :declared_record_kinds, :declared_extensions, :declared_snapshot_sections,
+                  :declared_export_contributors, :declared_proposal_participants, :declared_colour_modes,
+                  :declared_menu_items,
                   :declared_subscriptions, :owners, :named
 
       def initialize(live)
@@ -123,6 +126,7 @@ module PhComposer
         @declared_features = []
         @declared_queries = []
         @declared_actions = []
+        @declared_view_commands = []
         @declared_record_kinds = []
         @declared_extensions = []
         @declared_snapshot_sections = []
@@ -194,6 +198,16 @@ module PhComposer
           :confirmation => confirmation, :handler => handler
         )
         @staging.add(:declared_actions, id, name, declaration)
+      end
+
+      # One viewport-state command: it changes what the host shows and never the Model, so it takes
+      # no `undo_name` and no sequence number. A handler that would write a record wants `action`.
+      def view_command(name, description:, params:, result:, examples: [], &handler)
+        declaration = Declarations::ViewCommand.new(
+          :name => name, :owner => id, :description => description, :params => params, :result => result,
+          :examples => examples, :handler => handler
+        )
+        @staging.add(:declared_view_commands, id, name, declaration)
       end
 
       def snapshot_section(name, query:, params: {})

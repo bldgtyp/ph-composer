@@ -166,6 +166,34 @@ class RegistryTest < PhComposerTestCase
     assert_equal MF_CHECKED, menu.validation_procs.values.first.call
   end
 
+  # A view command is registered, described and dispatched like a query, and an outside feature
+  # declares one the same way a built-in does.
+  def test_an_outside_feature_registers_a_view_command_and_it_is_described_as_one
+    Registry.install([feature do |registry|
+      registry.feature("outside.probe", :contract_version => 1)
+              .view_command("outside.probe.look", :description => "Look.", :params => OBJECT,
+                                                  :result => OBJECT) { |_request| {} }
+    end])
+
+    assert Registry.current.view_commands.key?("outside.probe.look")
+    assert_equal "outside.probe", Registry.current.owner_of("outside.probe.look")
+    assert_equal "view_command", PhComposer::API.describe(:name => "outside.probe.look").fetch("kind")
+    assert_includes PhComposer::API.discover.fetch("view_commands").map { |one| one.fetch("name") },
+                    "outside.probe.look"
+  end
+
+  def test_a_view_command_with_no_handler_refuses_the_whole_batch
+    probe = feature do |registry|
+      registry.feature("outside.probe", :contract_version => 1)
+              .view_command("outside.probe.look", :description => "Look.", :params => OBJECT, :result => OBJECT)
+    end
+
+    error = assert_raises(PhComposer::RegistrationError) { Registry.install([probe]) }
+
+    assert_includes error.diagnostics.map(&:code), "registration.schema_invalid"
+    refute Registry.current.view_commands.key?("outside.probe.look")
+  end
+
   def test_a_menu_item_without_a_submenu_name_refuses_the_whole_batch
     probe = feature do |registry|
       registry.feature("outside.probe", :contract_version => 1)

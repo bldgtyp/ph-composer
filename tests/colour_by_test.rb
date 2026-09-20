@@ -27,6 +27,38 @@ class ColourByTest < PhComposerTestCase
     assert_equal "side", Registry.current.colour_modes.fetch("outside.probe.by_side").entity_kind
   end
 
+  # The write channel for viewport state: a client turns a mode on and off through the view seam and
+  # reads the legend back from the same answer. Nothing it does reaches the Model.
+  def test_a_client_turns_a_mode_on_and_off_without_writing_to_the_model
+    install_synthetic_mode
+    context = PhComposer::API.connect(:session_id => @session.id)
+    revision = @session.revision
+
+    on = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.activate",
+                              :params => { "mode" => "outside.probe.by_side" })
+
+    assert_equal "outside.probe.by_side", on.dig("value", "mode")
+    assert_equal %w[Inside Outside], on.dig("value", "rows").map { |row| row.fetch("label") }
+    assert_equal revision, @session.revision
+    refute @model.modified?
+
+    off = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.activate",
+                               :params => { "mode" => nil })
+
+    assert_nil off.dig("value", "mode")
+    assert_nil ColourBy.for(@session).mode_name
+  end
+
+  def test_a_mode_a_client_names_that_is_not_registered_is_refused_by_name
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.activate",
+                                   :params => { "mode" => "outside.probe.missing" })
+
+    assert_equal %w[refused validation.failed], outcome.values_at("status", "code")
+    assert_includes outcome.fetch("message"), "outside.probe.missing"
+  end
+
   def test_a_mode_missing_its_colour_function_refuses_the_whole_batch
     probe = Module.new do
       define_singleton_method(:name) { "Probe" }

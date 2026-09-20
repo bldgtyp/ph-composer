@@ -24,6 +24,10 @@ module PhComposer
     EXPORT_FAILED = Outcome.build(
       "failed", "operation.failed", "Export could not start. Nothing was written.", "none", nil
     ).freeze
+    # A view command reaches no record and opens no operation, so a failure there leaves the Model as it was.
+    VIEW_FAILED = Outcome.build(
+      "failed", "operation.failed", "The panel could not change what the viewport shows.", "none", nil
+    ).freeze
     # The panel could not tell whether an action ran, so it does not claim the Model is unchanged.
     UNEXPECTED = Outcome.build(
       "failed", "operation.failed",
@@ -135,6 +139,7 @@ module PhComposer
         case type
         when "panel.ready" then ready
         when "action.invoke" then invoke(payload)
+        when "view.invoke" then view(payload)
         when "preferences.set" then set_preference(payload)
         when "export.start" then export(payload)
         end
@@ -142,6 +147,7 @@ module PhComposer
         Diagnostics.exception("panel_message", error)
         case type
         when "action.invoke" then publish_result(payload, UNEXPECTED)
+        when "view.invoke" then publish_view(payload, VIEW_FAILED)
         when "export.start" then publish_export(payload, EXPORT_FAILED)
         when "preferences.set"
           publish_preferences(payload, "failed", "The display preference could not be saved.")
@@ -184,6 +190,26 @@ module PhComposer
         session.refresh.cancel
         publish_snapshot(session)
         publish_result(payload, outcome)
+      end
+
+      # Selection, camera and the active Colour-by mode, for the Model the panel shows. The snapshot follows
+      # because a section may read what the command changed; the revision does not move, so nothing the page
+      # has in flight goes stale.
+      def view(payload)
+        session = Sessions.current
+        unless session && payload["session"] == session.id
+          return publish_view(payload, Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil))
+        end
+
+        outcome = API.view(:context => context_for(session), :name => payload["name"].to_s,
+                           :params => payload.fetch("params", {}))
+        publish_snapshot(session)
+        publish_view(payload, outcome)
+      end
+
+      def publish_view(payload, outcome)
+        publish("view.result", "request_id" => payload["request_id"], "session" => payload["session"],
+                               "outcome" => outcome)
       end
 
       # Export acts on the Model the panel shows, like an action, but it is the shell's command: it opens a

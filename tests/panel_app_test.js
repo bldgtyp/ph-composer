@@ -94,6 +94,22 @@ test("a refusal stays on screen as a warning and a failure as an error, until di
   assert.strictEqual(notice.hidden, true);
 });
 
+test("a view result settles in its own slot and says why the viewport did not change", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 7));
+  p.receive("view.result", { request_id: "v1", session: "session-a", outcome: {
+    status: "completed", value: { found: 4, missing: 0 } } });
+
+  assert.strictEqual(p.panel.state.ui.viewResult.request_id, "v1");
+  assert.strictEqual(p.panel.state.ui.actionResult, null, "a view command is not an edit");
+  assert.strictEqual(p.notice().hidden, true, "a viewport change that worked says nothing");
+
+  p.receive("view.result", { request_id: "v2", session: "session-a", outcome: {
+    status: "refused", code: "validation.failed", message: "There is no Colour-by mode named that." } });
+  assert.strictEqual(p.notice().message.textContent, "There is no Colour-by mode named that.");
+  assert.strictEqual(p.notice().getAttribute("data-tone"), "warning");
+});
+
 test("a result or notice for another Model is not painted, and a new Model clears the old one's", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 7));

@@ -22,6 +22,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   var HANDLERS = {
     "panel.snapshot": reduceSnapshot,
     "action.result": reduceActionResult,
+    "view.result": reduceViewResult,
     "preferences.result": reducePreferenceResult,
     "panel.notice": reduceNotice,
     "panel.failure": reduceFailure,
@@ -30,7 +31,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   function initialState() {
     return { session: null, revision: null, sections: {},
-      ui: { activeTab: "overview", actionResult: null, exportResult: null, notice: null, preferencePending: {} } };
+      ui: { activeTab: "overview", actionResult: null, viewResult: null, exportResult: null, notice: null,
+        preferencePending: {} } };
   }
 
   function copy(object) {
@@ -52,6 +54,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     next.ui = copy(previous.ui);
     if (previous.session !== next.session) {
       next.ui.actionResult = null;
+      next.ui.viewResult = null;
       next.ui.exportResult = null;
       next.ui.notice = null;
     }
@@ -67,6 +70,19 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     if (payload.session !== previous.session) return previous;
     if (outcome.status !== "completed") {
       changes.notice = { message: outcome.message || "The change was not applied.",
+        tone: outcome.status === "failed" ? "error" : "warning" };
+    }
+    return withUI(previous, changes);
+  }
+
+  /* A viewport-state command changes what the host shows and never the Model, so a refusal is a warning
+     about the view, never about an edit the user should check. */
+  function reduceViewResult(previous, payload) {
+    var outcome = payload.outcome || {};
+    var changes = { viewResult: payload };
+    if (payload.session !== previous.session) return previous;
+    if (outcome.status !== "completed") {
+      changes.notice = { message: outcome.message || "The viewport did not change.",
         tone: outcome.status === "failed" ? "error" : "warning" };
     }
     return withUI(previous, changes);

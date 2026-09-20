@@ -72,3 +72,23 @@ test("send never refuses, and matches checks a given id", function () {
   assert.strictEqual(h.channel.matches({ request_id: second, session: "session-a" }, first), false);
   assert.strictEqual(h.channel.matches({ request_id: first, session: "session-a" }, null), false);
 });
+
+test("a view channel sends view.invoke and settles from its own result slot", function () {
+  var sent = [];
+  var channel = request.channel("session-a", function (type, payload) {
+    sent.push({ type: type, payload: payload });
+  }, "legend", "view.invoke");
+  var id = channel.run("ph_composer.colour_by.activate", { mode: null });
+
+  assert.strictEqual(sent[0].type, "view.invoke");
+  assert.deepStrictEqual(sent[0].payload.params, { mode: null });
+  assert.strictEqual(channel.consume(state(result(id, "session-a", "completed"))), null,
+    "an action result never settles a view request");
+  assert.strictEqual(channel.consume({ ui: { viewResult: result(id, "session-a", "completed") } }).status,
+    "completed");
+});
+
+test("a channel refuses a message the panel does not carry", function () {
+  assert.throws(function () { request.channel("session-a", function () {}, "x", "sketchup.invoke"); },
+    /does not carry/);
+});

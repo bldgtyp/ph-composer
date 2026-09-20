@@ -36,6 +36,27 @@ module PhComposer
       unexpected_outcome(error, session, name)
     end
 
+    # A change to what the host shows and nothing else (Declarations::ViewCommand). It carries no
+    # sequence number and returns no proposal, because there is nothing to retry and nothing to undo.
+    # It refuses while the session is busy, as a read does, so it cannot move the camera or the
+    # selection out from under an operation that is still running.
+    def view(context, name, params)
+      session, _caller, command = resolve(context, "view", name, @registry.view_commands)
+      check_params!(command, params, session)
+      refuse_if_busy!(session)
+      value = command.handler.call(request_for(session, params))
+      check_result!(command, value)
+      Outcome.completed(:revision => session.revision, :value => value)
+    rescue CodedError => error
+      coded_outcome(error, session)
+    rescue UserError => error
+      # A command that refuses what it was asked for says why, as an operation does: "There is no
+      # Colour-by mode named ..." is the answer, not a generic failure.
+      Outcome.refused("validation.failed", error.message, :revision => session&.revision)
+    rescue StandardError => error
+      unexpected_outcome(error, session, name)
+    end
+
     # What an operation would change, without changing anything. The result is bound to the revision
     # it reports; applying it later still revalidates everything.
     def preview(context, name, params)

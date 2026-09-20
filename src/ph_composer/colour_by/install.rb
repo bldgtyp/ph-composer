@@ -17,7 +17,8 @@ module PhComposer
   # boundary condition or a Zone, and the shared renderer has no branch per mode.
   #
   # Turning a mode on changes no record, writes no material and opens no operation, so it is not a
-  # registered action: it is reached through the native Colour by menu, and read back through the
+  # registered action. It is a view command (Declarations::ViewCommand), reached from the native
+  # Colour by menu, from the panel and from any client with `view` access, and read back through the
   # registered `ph_composer.colour_by.state` query.
   module ColourBy
     FEATURE_ID = "#{EXTENSION_ID}.colour_by"
@@ -44,6 +45,14 @@ module PhComposer
       }
     }.freeze
 
+    ACTIVATE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => ["mode"],
+      "properties" => {
+        "mode" => { "type" => %w[string null],
+                    "description" => "The mode to turn on, or null to turn Colour-by off." }
+      }
+    }.freeze
+
     module_function
 
     def install(registry)
@@ -52,6 +61,12 @@ module PhComposer
                            :params => { "type" => "object", "additionalProperties" => false, "properties" => {} },
                            :result => STATE_RESULT, :examples => [{}]) do |request|
         state(request.session)
+      end
+      feature.view_command("#{FEATURE_ID}.activate",
+                           :description => "Turn one Colour-by mode on, or turn Colour-by off.",
+                           :params => ACTIVATE_PARAMS, :result => STATE_RESULT,
+                           :examples => [{ "mode" => nil }]) do |request|
+        activate(request.session, request.params.fetch("mode"))
       end
       INVALIDATING_EVENTS.each do |kind|
         feature.on_host_event(kind) { |session| self.for(session).invalidate! }
@@ -62,6 +77,14 @@ module PhComposer
     # This Model's Colour-by state, created inert on first reach. Nothing draws until a mode is on.
     def for(session)
       session.feature_state(:colour_by) { Service.new(session) }
+    end
+
+    # The panel's route to the mode switch, and the answer it renders the legend from. A name the
+    # registry does not hold refuses through the service, naming what was asked for.
+    def activate(session, name)
+      service = self.for(session)
+      name.nil? ? service.deactivate : service.activate(name)
+      state(session)
     end
 
     def state(session)

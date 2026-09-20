@@ -323,6 +323,52 @@ class ApiTest < PhComposerTestCase
     assert_equal "completed", create_parts(1).fetch("status")
   end
 
+  # ------------------------------------------------------------------ view commands
+
+  # A view command changes what the host shows and nothing else, so it carries no sequence, opens no
+  # operation and leaves the revision where it was: there is nothing for an Undo to take back.
+  def test_a_view_command_moves_the_view_without_a_sequence_or_a_revision
+    before = @session.revision
+
+    outcome = API.view(:context => @context, :name => "test.fixture.look", :params => { "count" => 2 })
+
+    assert_equal "completed", outcome.fetch("status")
+    assert_equal 2, outcome.dig("value", "selected")
+    assert_equal before, @session.revision
+    assert_equal before, outcome.fetch("revision")
+    refute @model.modified?
+  end
+
+  def test_a_view_command_says_why_it_refused
+    outcome = API.view(:context => @context, :name => "test.fixture.look", :params => { "count" => 0 })
+
+    assert_equal %w[refused validation.failed], outcome.values_at("status", "code")
+    assert_equal "There is nothing to look at.", outcome.fetch("message")
+  end
+
+  def test_a_caller_without_view_access_cannot_move_the_view
+    reader = API.connect(:session_id => @session.id, :capabilities => ["read"])
+
+    outcome = API.view(:context => reader, :name => "test.fixture.look", :params => { "count" => 1 })
+
+    assert_equal %w[refused request.capability_denied], outcome.values_at("status", "code")
+  end
+
+  def test_a_view_command_refuses_while_the_session_is_busy
+    work = Struct.new(:pending?).new(true)
+    @session.feature_state(:api_test) { work }
+
+    outcome = API.view(:context => @context, :name => "test.fixture.look", :params => { "count" => 1 })
+
+    assert_equal %w[busy session.busy], outcome.values_at("status", "code")
+  end
+
+  def test_an_action_name_is_not_a_view_command
+    outcome = API.view(:context => @context, :name => "test.fixture.create", :params => {})
+
+    assert_equal %w[refused request.unknown_operation], outcome.values_at("status", "code")
+  end
+
   # ------------------------------------------------------------------ Models and lifecycle
 
   def test_two_models_with_identical_record_ids_stay_isolated

@@ -6,11 +6,10 @@ module PhComposer
     # PRD "Operations other features use"). It changes the selection and the camera and nothing
     # else, so it writes no record, opens no Model operation and leaves no Undo entry.
     #
-    # That is also why it is not a registered action. It is reached from the native Classify menu
-    # and from Ruby, the same position Colour-by's mode switch is in: an external client can read
-    # Face references but cannot ask for them to be selected. What the write channel for viewport
-    # state should be is the open question D5 recorded and D7's panel legend forces; nothing here
-    # invents one (planning/phase-one/PLAN.md, "What D5 left open").
+    # That is also why it is not a registered action: registering it as one would manufacture an Undo
+    # entry for a read. It is a view command instead (Declarations::ViewCommand), registered as
+    # `ph_composer.face_assignment.locate`, so the faces table, a script and any client with `view`
+    # access reach it the same way. That seam is the write channel for viewport state D5 left open.
     module Locate
       module_function
 

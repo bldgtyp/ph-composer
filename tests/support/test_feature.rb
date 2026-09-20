@@ -30,6 +30,7 @@ module TestFeature
     feature.extension(RecordFixtures::REVIEW)
     feature.snapshot_section("#{ID}.parts", :query => "ph_composer.records.list", :params => { "kind" => "#{ID}.part" })
     declare_reads(feature)
+    declare_reads_that_move_the_view(feature)
     declare_writes(feature)
     declare_record_operations(feature)
   end
@@ -40,6 +41,20 @@ module TestFeature
       engine = request.engine
       lengths = engine.ids("#{ID}.part").map { |id| engine.find("#{ID}.part", id).fetch("length_mm") }
       { "total_length_mm" => lengths.sum }
+    end
+  end
+
+  # A view command: it changes what the host shows (here, the selection) and never a record.
+  def declare_reads_that_move_the_view(feature)
+    feature.view_command("#{ID}.look", :description => "Select every part's entity.",
+                                       :params => { "type" => "object", "required" => ["count"],
+                                                    "additionalProperties" => false,
+                                                    "properties" => { "count" => { "type" => "integer" } } },
+                                       :result => OBJECT) do |request|
+      raise PhComposer::UserError, "There is nothing to look at." if request.params.fetch("count").zero?
+
+      request.model.selection.clear
+      { "selected" => request.params.fetch("count") }
     end
   end
 

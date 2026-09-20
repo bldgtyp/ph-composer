@@ -50,6 +50,7 @@ names, monkey-patching and incidental load order must not discover behavior.
 | Export contributor | Feature-owned data for canonical translation and its findings |
 | Exporter | Conversion of HBJSON to another format |
 | Colour-by mode | Values, colouring and legend information |
+| View command | A change to what the host shows: selection, camera, the active Colour-by mode |
 
 An importer does not write raw model dictionaries. The application validates its proposed
 changes and applies accepted changes through normal model operations and Undo. A model importer
@@ -117,9 +118,36 @@ so an outside feature reaches both without a line added to it. Nothing in `shell
 names a menu item, a mode or a feature, and no feature's words appear there: a label comes from the
 declaring feature, which is also where `context/UBIQUITOUS_LANGUAGE.md`'s glossary words live.
 
-A menu item is not the whole story for a feature that also needs a panel control or an external
-client to reach the same state. What the write channel for viewport state should be is open; see
-the Overview UI slice in `planning/phase-one/PLAN.md`.
+A menu item is the native-menu route to those things. The same state has to be reachable from the
+panel and from a client, and that is a view command.
+
+### View commands
+
+Implemented in P1-D. A view command changes what the host shows and nothing else: the selection, the
+camera, the active Colour-by mode, a running tool's palette. It is the write channel for viewport
+state, and it is a third verb beside `query` and `action` because neither one fits. A query cannot
+do it: `context/AGENT_INTERFACE.md` says a read never changes the camera or the selection. An action
+cannot do it either: an action's contract is a named native operation the user can undo, and there is
+nothing here to undo.
+
+```ruby
+feature.view_command("ph_composer.face_assignment.locate",
+                     description: "Select an explicit set of Faces and bring them into view.",
+                     params: LOCATE_PARAMS, result: LOCATE_RESULT) do |request|
+  FaceAssignment.locate(request)
+end
+```
+
+The handler takes the same `request` a query's does and returns a JSON value against its declared
+result schema. What it must not do is write a record, open a `ModelOperation` or advance the session
+revision; a handler that needs to wants `action`.
+
+Every client reaches one the same way: `API.view(context:, name:, params:)` with no sequence number
+and no expected revision, because there is nothing to retry and nothing for a stale revision to
+protect. It refuses while the session is busy, as a read does, so it cannot move the camera out from
+under an operation that is still running. Access is the `view` capability, separate from `read`
+because a read never moves either, and separate from `model_write` because nothing it does reaches
+the SKP. The panel sends `view.invoke` and settles the answer in its own result slot.
 
 ### Viewport tools
 

@@ -406,6 +406,23 @@ class ClassifyToolTest < PhComposerTestCase
     assert_equal [@faces.fetch(0)], @model.selection.to_a
   end
 
+  # Locate's user route. It is a view command, so it answers a client that has `view` access without
+  # opening an operation, leaving an Undo entry or moving the revision.
+  def test_locate_is_reachable_from_a_client_and_writes_nothing
+    zone(1_310, 2)
+    references = list_faces.map { |face| face.fetch("reference") }
+    context = PhComposer::API.connect(:session_id => @session.id)
+    revision = @session.revision
+
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.face_assignment.locate",
+                                   :params => { "faces" => references })
+
+    assert_equal "completed", outcome.fetch("status")
+    assert_equal({ "found" => 2, "missing" => 0 }, outcome.fetch("value"))
+    assert_equal @faces, @model.selection.to_a
+    assert_equal revision, @session.revision
+  end
+
   # The pick path and a Model walk have to agree, or the tool would paint one Face and the
   # operation resolve another.
   def test_an_occurrence_built_from_a_picked_path_matches_the_walked_one

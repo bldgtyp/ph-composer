@@ -95,6 +95,34 @@ class PanelTest < PhComposerTestCase
     assert_equal 2, PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).ids(PART).length
   end
 
+  # A view command carries no expected revision, because it changes no record. The snapshot still
+  # follows it, so a section reading what it changed repaints.
+  def test_a_view_command_answers_after_the_snapshot_and_leaves_the_revision_alone
+    dialog = open_panel
+    before = dialog.scripts.length
+    revision = @session.revision
+
+    send_message(dialog, "view.invoke", "request_id" => "a:look:1", "session" => @session.id,
+                                        "name" => "test.fixture.look", "params" => { "count" => 1 })
+
+    published = dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
+    result = messages(dialog, "view.result").last
+    assert_equal %w[panel.snapshot view.result], published
+    assert_equal ["a:look:1", @session.id], result.values_at("request_id", "session")
+    assert_equal "completed", result.dig("outcome", "status")
+    assert_equal revision, @session.revision
+  end
+
+  def test_a_view_command_for_a_model_the_panel_no_longer_shows_is_refused
+    dialog = open_panel
+
+    send_message(dialog, "view.invoke", "request_id" => "a:look:1", "session" => "another-session",
+                                        "name" => "test.fixture.look", "params" => { "count" => 1 })
+
+    assert_equal %w[refused session.inactive],
+                 messages(dialog, "view.result").last.fetch("outcome").values_at("status", "code")
+  end
+
   def test_an_action_against_an_older_revision_is_refused_and_writes_nothing
     dialog = open_panel
     stale = @session.revision

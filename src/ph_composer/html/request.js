@@ -8,22 +8,30 @@
    A result is `{ request_id, session, outcome }`, where `outcome` is the public operation outcome
    (`status`, `code`, `message`, `effect`, `revision`, `value`, ...).
 
+   A channel carries one host message. The default is `action.invoke`, whose result lands in
+   `state.ui.actionResult`; `view.invoke` is the viewport-state channel (selection, camera, the active
+   Colour-by mode), whose result lands in `state.ui.viewResult`. Both settle the same way.
+
    Two shapes: `run` is single flight (refuses while a request is pending, and `consume` settles it once);
    `send` never refuses and returns the id, for callers that keep several requests in flight, which match
    with `matches(result, id)`. */
 PhComposerUI.define("request", [], function () {
   "use strict";
   var sequence = 0;
+  var SLOTS = { "action.invoke": "actionResult", "view.invoke": "viewResult" };
 
-  function Channel(session, send, label) {
+  function Channel(session, send, label, message) {
     this.session = session; this.transport = send; this.label = label;
+    this.message = message || "action.invoke";
+    this.slot = SLOTS[this.message];
+    if (!this.slot) throw new Error("request channel does not carry \"" + this.message + "\"");
     this.pending = null; this.action = null; this.handlers = null;
   }
   Channel.prototype.nextId = function (label) {
     return this.session + ":" + (label || this.label) + ":" + (++sequence);
   };
   Channel.prototype.dispatch = function (id, action, params) {
-    this.transport("action.invoke", { request_id: id, session: this.session, name: action, params: params || {} });
+    this.transport(this.message, { request_id: id, session: this.session, name: action, params: params || {} });
     return id;
   };
   Channel.prototype.send = function (action, params, label) {
@@ -46,7 +54,7 @@ PhComposerUI.define("request", [], function () {
   /* The pending request's outcome, if this state carries its result: clears pending, runs the handler, and
      returns the outcome so the caller can use it for the rest of the render. Null otherwise. */
   Channel.prototype.consume = function (state) {
-    var result = state && state.ui && state.ui.actionResult, handlers = this.handlers, outcome;
+    var result = state && state.ui && state.ui[this.slot], handlers = this.handlers, outcome;
     if (!this.matches(result)) return null;
     outcome = result.outcome;
     this.reset();
@@ -57,5 +65,7 @@ PhComposerUI.define("request", [], function () {
   /* Forgets the pending request: its result, if it still arrives, is ignored. */
   Channel.prototype.reset = function () { this.pending = null; this.action = null; this.handlers = null; };
 
-  return { channel: function (session, send, label) { return new Channel(session, send, label); } };
+  return {
+    channel: function (session, send, label, message) { return new Channel(session, send, label, message); }
+  };
 });

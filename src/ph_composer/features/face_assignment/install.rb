@@ -52,6 +52,20 @@ module PhComposer
       "type" => "object", "additionalProperties" => false, "required" => ["face"],
       "properties" => { "face" => FACE_REFERENCE }
     }.freeze
+    LOCATE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => ["faces"],
+      "properties" => {
+        "faces" => { "type" => "array", "items" => FACE_REFERENCE, "minItems" => 1,
+                     "description" => "The Face occurrences to select and bring into view." }
+      }
+    }.freeze
+    LOCATE_RESULT = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[found missing],
+      "properties" => {
+        "found" => { "type" => "integer", "description" => "How many references still resolved." },
+        "missing" => { "type" => "integer", "description" => "How many did not, and were skipped." }
+      }
+    }.freeze
     ATTACHED_ZONE_SAVE_PARAMS = {
       "type" => "object", "additionalProperties" => false, "required" => ["values"],
       "properties" => {
@@ -111,11 +125,25 @@ module PhComposer
                      :side_effects => "Flips the Face normal; any Surface pair goes stale.") do |request, proposal|
         reverse(request, proposal)
       end
+      feature.view_command("#{FEATURE_ID}.locate",
+                           :description => "Select an explicit set of Faces and bring them into view.",
+                           :params => LOCATE_PARAMS, :result => LOCATE_RESULT) do |request|
+        locate(request)
+      end
       declare_attached_zones(feature)
       feature.snapshot_section("#{FEATURE_ID}.faces", :query => "#{FEATURE_ID}.list")
       feature.export_contributor(ExportProjection::SECTION, :section_version => 1) do |reader|
         ExportProjection.records(reader)
       end
+    end
+
+    # Locate changes the selection and the camera and nothing else, which is why it is a view command
+    # rather than an action: registering it as an action would manufacture an Undo entry for a read
+    # (context/AGENT_INTERFACE.md, "explicit selection, reveal and camera operations").
+    def locate(request)
+      references = request.params.fetch("faces")
+      found = Locate.call(request.session, references)
+      { "found" => found.length, "missing" => references.length - found.length }
     end
 
     # Attached zones are read through the foundation's own ph_composer.records.list, so this feature
