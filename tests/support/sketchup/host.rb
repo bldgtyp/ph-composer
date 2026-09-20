@@ -24,6 +24,7 @@ MB_YESNO = 4 unless defined?(MB_YESNO)
 IDYES = 6 unless defined?(IDYES)
 IDNO = 7 unless defined?(IDNO)
 GL_LINES = 1 unless defined?(GL_LINES)
+GL_TRIANGLES = 4 unless defined?(GL_TRIANGLES)
 
 $stub_loaded_files = {}
 

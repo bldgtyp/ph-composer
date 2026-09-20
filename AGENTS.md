@@ -117,6 +117,7 @@ working assumption until the namespace decision closes:
 | `session/` | One `ModelSession` per open Model, its generation, observers and per-feature state objects. Names no feature |
 | `shell/` | Transport and the action registry: the panel dialog, actions, commands, preferences. Names no feature |
 | `features/` | One folder per feature, each registering itself in one `install` |
+| `colour_by/` | The shared Colour-by service: the mode registry's consumers, the viewport overlay and HUD, and the drawing cache. Names no feature |
 | `library/` | The provider contract and the shipped providers, starting with the library file |
 | `export/` | The export run: contributors, the attribute guard, artifact hygiene, the report, and the exporter registry |
 | `html/` | The UI kit: a module graph with a generated script list and owned stylesheets |

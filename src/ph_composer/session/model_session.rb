@@ -35,8 +35,8 @@ module PhComposer
       !@detached && (!@model.respond_to?(:valid?) || @model.valid?)
     end
 
-    def add_observers(model_observer, selection_observer)
-      @observers = [model_observer, selection_observer]
+    def add_observers(*host_observers)
+      @observers = host_observers
     end
 
     # Why an authoritative read or write cannot run now, or nil when it can. A feature state object

@@ -1,7 +1,7 @@
 # Face assignment: status
 
 DATE: 2026-09-20
-STATUS: In progress; P1-B authoring, P1-C export contribution and P1-D's gestures and Attached zones implemented.
+STATUS: In progress; P1-B authoring, P1-C export contribution and P1-D's gestures, Attached zones and Colour-by implemented.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -18,7 +18,8 @@ suggestions and the minimal panel controls. P1-C now supplies the detached geome
 typed Python Face section and emitted Surface reference checks. P1-D's D1 and D2 add the bounded
 Classify gesture and its 250-occurrence ceiling, Suggest classification for this Zone, Reverse
 face, and the Attached zone record kind with its reference and delete-with-replacement lifecycle.
-The Classify tool itself, Locate, the faces table and Colour-by remain, in D5 to D7.
+D5 adds the shared Colour-by seam and its face type and boundary condition modes. The Classify
+tool itself, Locate, the faces table and the panel legend remain, in D6 and D7.
 
 ## Blockers
 
@@ -31,8 +32,10 @@ pair removal, absent conditions after retirement, payload preservation and expor
 The P1-B subset is implemented. Offline tests and the current-host walkthrough verify panel-closed
 classification, metadata preservation, native Undo/Redo and fresh-process reopen. P1-C verifies
 the face extraction schema, complete world geometry, reciprocal emitted targets and strict
-development-construction boundary in the exact reloaded HBJSON. P1-D lifecycle, gesture and
-overlay gates remain outstanding.
+development-construction boundary in the exact reloaded HBJSON. D5 verifies the Colour-by seam offline: an outside
+feature's mode, the two shipped modes, the unclassified and incomplete states, per-colour
+batching, the HUD, tag and revision invalidation, and the overlay's lifecycle. Every P1-D native
+gate, the Colour-by one included, remains outstanding.
 
 Documentation-only architecture review completed 2026-09-18; all four findings addressed in the
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.

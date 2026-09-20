@@ -1,7 +1,7 @@
 # Face assignment: implementation plan
 
 DATE: 2026-09-20
-STATUS: In progress; P1-B authoring core and P1-C export contribution complete. P1-D is authorized; its D1 gestures and D2 Attached zones are implemented.
+STATUS: In progress; P1-B authoring core and P1-C export contribution complete. P1-D is authorized; its D1 gestures, D2 Attached zones and D5 Colour-by are implemented.
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md) owns behavior; the [Phase 1 plan](../../phase-one/PLAN.md) coordinates delivery.
@@ -35,8 +35,10 @@ record/reference operations independent of provider integration.
   See the [P1-C evidence](../../phase-one/evidence/p1-c-adjacency-hbjson.md).
 - **P1-D, D1 and D2 implemented 2026-09-20:** the bounded Classify gesture with its 1,000-occurrence
   ceiling, Suggest classification for this Zone, Reverse face, the Attached zone record kind and its
-  reference and delete-with-replacement lifecycle. The Classify `Sketchup::Tool`, Locate, the table
-  and drafts, Colour-by and every native check remain in the later slices.
+  reference and delete-with-replacement lifecycle. **D5, implemented 2026-09-20:** the shared
+  Colour-by seam, its overlay, HUD and cache invalidation, with face type and boundary condition
+  registered here in honeybee's own hues. The Classify `Sketchup::Tool`, Locate, the table and
+  drafts, the panel legend and every native check remain in the later slices.
 - **P1-D:** complete Classify gestures and the named Suggest classification for this Zone action,
   table/drafts, local Attached zones and their delete/replace
   lifecycle, Reverse face, Colour-by modes/HUD and invalidation. Zones adds its own registered

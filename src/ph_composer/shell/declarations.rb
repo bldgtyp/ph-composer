@@ -33,6 +33,14 @@ module PhComposer
     # `result` declares the top-level result fields the feature's translation adds, in Export::Privacy's
     # schema form; `report` is `->(result, display_units) { [html_section, ...] }` over those fields.
     ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, keyword_init: true)
+
+    # One Colour-by mode: the fourth contribution seam (face-assignment PRD "Colour-by"). `projection`
+    # is `->(model) { [ColourBy::Entry, ...] }`: a pure read of the feature's own entities, their
+    # world transforms and the value each one carries. `colours` is `->(value) { [r, g, b] }`, nil for
+    # a value the mode cannot colour, which the service draws as incomplete. `entity_kind` is open
+    # prose naming what the mode paints; the service tessellates whatever entity an entry carries.
+    # `sort` is an optional `->(row) { key }` over legend rows.
+    ColourMode = Struct.new(:name, :owner, :label, :entity_kind, :colours, :sort, :projection, keyword_init: true)
     ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)
 
     # One registration problem. `subject` is the declaration it concerns; `dependency` names what it

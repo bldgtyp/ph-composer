@@ -5,6 +5,7 @@ require_relative "geometry"
 require_relative "attached_zone"
 require_relative "steps"
 require_relative "export"
+require_relative "colour_modes"
 
 module PhComposer
   module FaceAssignment
@@ -82,6 +83,7 @@ module PhComposer
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION,
                                   :requires => [Zones::FEATURE_ID])
+      ColourModes.install(feature)
       feature.query("#{FEATURE_ID}.list", :description => "Path-qualified Face occurrences in authored Zones.",
                                               :params => OBJECT, :result => OBJECT) { |request| list(request) }
       feature.action("#{FEATURE_ID}.classify", :description => "Apply explicit keep, set or clear intent to Faces.",

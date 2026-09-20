@@ -1,7 +1,7 @@
 # Phase 1 status
 
 DATE: 2026-09-20
-STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized, with D1 to D3 implemented and D4 partly implemented.
+STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized, with D1 to D5 implemented and D6 to D7 remaining.
 ISSUE: none (local implementation packet)
 
 ## Current handoff
@@ -30,7 +30,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
   development and its floor-area/import questions. P1-E still owns the shipped HBJSON wheel set.
 - Create/link the implementation issue during authorized issue intake. The configured remote is
   `bldgtyp/ph-composer`; P1-A created no external issue or PR.
-- P1-D is authorized. Its slices are tracked in [PLAN.md](PLAN.md); D5 to D7 remain. See "What D4 left open" in the plan for the two shapes the solver reports rather than cuts.
+- P1-D is authorized. Its slices are tracked in [PLAN.md](PLAN.md); D6 and D7 remain. See "What D4 left open" in the plan for the two shapes the solver reports rather than cuts.
 
 ## Stages
 
@@ -39,7 +39,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 | P1-A: geometry contracts and host investigation | Complete | [Contract](CONTRACTS.md); [host evidence](evidence/p1-a-geometry.md); A01 met |
 | P1-B: Zone and face authoring core | Complete | [Authoring evidence](evidence/p1-b-authoring.md); A02/A03 and the P1-B portion of A04 met |
 | P1-C: adjacency and early HBJSON proof | Complete on branch | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
-| P1-D: complete Phase 1 authoring UI and repairs | In progress | D1 to D3 implemented, D4 partly; the offline portions of A04, A06 and A07 pass. Slice table in [PLAN.md](PLAN.md) |
+| P1-D: complete Phase 1 authoring UI and repairs | In progress | D1 to D5 implemented; the offline portions of A04, A06, A07 and A08 pass and D4's host gate passed. Slice table in [PLAN.md](PLAN.md) |
 | P1-E: HBJSON/report export workflow | Scoped | Pending; remaining canonical-export choices open |
 | P1-F: acceptance and handoff | Scoped | Pending |
 
@@ -111,6 +111,30 @@ concave outline and a holed Face stay reported rather than cut; see "What D4 lef
 [PLAN.md](PLAN.md). The offline stub models a Face split to make the record consequences testable
 and is not evidence about SketchUp; the host gate is outstanding.
 
+P1-D D5 brings the offline suite to 370 Ruby tests with 1,530 assertions, green on both Ruby 3.2.2
+and the 2.7.2 compatibility floor, with `make ci` green and Ruby coverage at 96.2%. It adds the
+shared Colour-by service as a fourth contribution seam: `FeatureScope#colour_mode`, a per-Model
+service held as generic session feature state, one `Sketchup::Overlay` drawing a cache batched one
+call per legend row, the viewport HUD legend, and the native Colour by menu built from whatever
+modes are registered. Face assignment registers face type and boundary condition in honeybee's own
+hues; Zones registers Zone, Building-Segment and Level on the shared categorical ramp. The offline
+checks cover an outside feature registering a mode with no branch in the shared renderer, a mode
+missing its colour function refusing the whole batch, the unclassified and incomplete states, a
+Zone mode reaching a Group nested inside the Zone, hidden geometry and hidden tags leaving the
+drawing, per-colour batching, the overlay's whole lifecycle including model detach, a committed
+change rebuilding once a revision, a tag rebuilding without one, and a mode turning on without a
+record write or an Undo entry. A bounded independent review found and the slice fixed three
+things: the overlay teardown read `overlays` off a Model that had already closed, where the real
+close path reaches feature state after the Model is gone; the new tag observer was attached and
+never removed, so a reload cycle would stack observers and rebuild once per copy; and a mode's
+projection raising propagated out of the host observer, which would have skipped every subscriber
+registered after Colour-by. The review also found that no fixture used a non-identity
+transformation, so the world-space composition the whole overlay rests on was unverified; it is
+covered now by a translated Zone holding a translated nested Group. No host gate ran; its
+questions and the three unmeasured assumptions behind them are in "What D5 left open" in
+[PLAN.md](PLAN.md), and
+[`colour_by_walkthrough.rb`](../../tools/examples/authoring/colour_by_walkthrough.rb) asks each one.
+
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition
 reloaded the exact two-Zone HBJSON with reconciled identifiers, one reciprocal Surface pair and
@@ -133,4 +157,5 @@ post-commit CI close this branch slice; merge remains pending.
 | 2026-09-20 | P1-D D3: explicit copied-Zone identity repair and limited Restore Zone landed, with the restore offer and its disclosed losses on the Zones read. |
 | 2026-09-20 | P1-D D4 part one: pure overlap geometry with remainder thresholds, whole-scope Solve, the Q18 out-of-scope refusal and a finding for every case the solver will not pair. The geometry cut remains. |
 | 2026-09-20 | P1-D D4 part two: partial overlaps are cut on both sides and paired on the shared region only, under the split rules, in one aborting step. |
+| 2026-09-20 | P1-D D5: the shared Colour-by seam, its overlay, HUD and cache invalidation, with face-assignment and Zone modes registered through the public call. |
 | 2026-09-20 | The Ground suggestion was corrected to honeybee's rule after the host gate showed it setting five of a plain box's six Faces to Ground. |

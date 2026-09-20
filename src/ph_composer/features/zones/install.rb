@@ -9,6 +9,7 @@ require_relative "face_split"
 require_relative "adjacency_steps"
 require_relative "repair"
 require_relative "export"
+require_relative "colour_modes"
 
 module PhComposer
   module Zones
@@ -56,6 +57,7 @@ module PhComposer
 
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION)
+      ColourModes.install(feature)
       feature.query("#{FEATURE_ID}.list", :description => "Zone occurrences and the explicit Make Zone target.",
                                                :params => OBJECT, :result => OBJECT) { |request| list(request) }
       feature.action("#{FEATURE_ID}.make", :description => "Make one Zone from explicit entities in one edit context.",

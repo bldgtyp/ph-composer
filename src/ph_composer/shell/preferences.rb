@@ -28,6 +28,13 @@ module PhComposer
         UNIT_SYSTEMS.include?(stored) ? stored : DEFAULT_UNIT_SYSTEM
       end
 
+      # The Colour-by mode the user last turned on, or nil. Colour-by itself is off at rest; only the
+      # choice is remembered (face-assignment PRD Q12).
+      def colour_by_mode
+        stored = Sketchup.read_default(SECTION, "colour_by_mode", nil)
+        stored.is_a?(String) && Registry::ID_PATTERN.match?(stored) ? stored : nil
+      end
+
       # Every remembered scope's format per system; a scope never chosen is absent and takes the default.
       def dimension_formats
         raw = Sketchup.read_default(SECTION, "dimension_formats", nil)
@@ -47,6 +54,11 @@ module PhComposer
           Sketchup.write_default(SECTION, "unit_system", value)
         when "dimension_format"
           write_dimension_format(value, scope, system)
+        when "colour_by_mode"
+          raise UserError, "That Colour-by mode name is not valid." unless value.is_a?(String) &&
+                                                                          Registry::ID_PATTERN.match?(value)
+
+          Sketchup.write_default(SECTION, "colour_by_mode", value)
         else
           raise UserError, "That display preference is not recognized."
         end

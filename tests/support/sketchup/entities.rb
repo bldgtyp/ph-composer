@@ -56,10 +56,14 @@ module Sketchup
   class LayersObserver; end
 
   class Color
-    attr_reader :red, :green, :blue
+    attr_reader :red, :green, :blue, :alpha
 
-    def initialize(red, green, blue)
-      @red, @green, @blue = red, green, blue
+    def initialize(red, green, blue, alpha = 255)
+      @red, @green, @blue, @alpha = red, green, blue, alpha
+    end
+
+    def to_a
+      [@red, @green, @blue, @alpha]
     end
   end
 
@@ -105,6 +109,16 @@ module Sketchup
     end
   end
 
+  # SketchUp's tag collection. It knows its Model, so an observer can reach the session.
+  class Layers < ObservableCollection
+    attr_reader :model
+
+    def initialize(model)
+      super()
+      @model = model
+    end
+  end
+
   class OverlaysManager
     include Enumerable
 
@@ -141,18 +155,28 @@ module Sketchup
   end
 
   class View
-    attr_accessor :line_width, :drawing_color, :pick_result
-    attr_reader :model, :draws, :invalidations, :zoomed
+    attr_accessor :line_width, :drawing_color, :pick_result, :line_stipple
+    attr_reader :model, :draws, :screen_draws, :texts, :invalidations, :zoomed
 
     def initialize(model)
       @model = model
       @draws = []
+      @screen_draws = []
+      @texts = []
       @invalidations = 0
       @zoomed = []
     end
 
     def draw(mode, points)
       @draws << [mode, points.dup, @drawing_color, @line_width]
+    end
+
+    def draw2d(mode, points)
+      @screen_draws << [mode, points.dup, @drawing_color]
+    end
+
+    def draw_text(point, text, options = {})
+      @texts << [point, text, options]
     end
 
     def invalidate
@@ -233,13 +257,19 @@ module Sketchup
   class Entity
     attr_reader :persistent_id
     attr_accessor :layer, :parent_entities
+    attr_writer :hidden
 
     def initialize(persistent_id, dictionaries = {})
       @persistent_id = persistent_id
+      @hidden = false
       @dictionaries = dictionaries.each_with_object({}) do |(name, values), result|
         result[name] = AttributeDictionary.new(name, values)
       end
       @layer = Tag.new("Untagged", true)
+    end
+
+    def hidden?
+      @hidden
     end
 
     def attribute_dictionaries
@@ -354,6 +384,35 @@ module Sketchup
     def add_hole!(points)
       @loops << Loop.new(points)
       self
+    end
+
+    # The host triangulates a Face, holes and concavity included, and hands back a PolygonMesh. This
+    # stub fans the outer loop instead, which is only right for a convex outline: it exists so the
+    # Colour-by cache can be tested for what it batches and counts, never as evidence about how
+    # SketchUp tessellates. See tests/sketchup_stub_deviations_test.rb.
+    def mesh(_flags = 0)
+      PolygonMesh.new(@outer_loop.vertices.map(&:position))
+    end
+  end
+
+  # A fan over the points it was given: 1-based indices, as the host's PolygonMesh uses.
+  class PolygonMesh
+    attr_reader :points
+
+    def initialize(points)
+      @points = points
+    end
+
+    def polygons
+      (1..(@points.length - 2)).map { |index| [1, index + 1, index + 2] }
+    end
+
+    def count_polygons
+      polygons.length
+    end
+
+    def point_at(index)
+      @points[index - 1]
     end
   end
 

@@ -17,7 +17,7 @@ module Sketchup
       @selection = Selection.new(self)
       @overlays = OverlaysManager.new
       @active_view = View.new(self)
-      @layers = ObservableCollection.new
+      @layers = Layers.new(self)
       @pages = ObservableCollection.new
       @active_path = nil
       @operations = []

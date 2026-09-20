@@ -65,6 +65,34 @@ feature branch inside shell, session, export orchestration or UI-kit internals i
 defect. Explicit registration does not promise dynamic plugin loading, a marketplace or separate
 installation in the MVP.
 
+### Colour-by modes
+
+Implemented in P1-D. A feature declares a mode in its own `install`, through the same
+`FeatureScope` its queries and actions use:
+
+```ruby
+feature.colour_mode("ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone",
+                    colours: ColourBy::Palette.ramp) do |model|
+  Zones::Occurrences.zones(model).map do |zone|
+    ColourBy::Entry.new(entity: zone.entity, transform: zone.transform,
+                        value: zone.record.fetch("id"), label: zone.record.fetch("name"))
+  end
+end
+```
+
+The mode owns a pure projection over its own feature's entities and a colour function over the
+values that projection produces. `entity_kind` is open prose: the service tessellates whatever
+entity an entry carries, so a later feature may colour a kind this one never anticipated. An
+entry's `transform` maps that entity's own contents to world. A value of nil is unclassified, and
+a projection that knows a record is only half filled in says `state: :incomplete`; the service
+owns the appearance of both, so those two states look the same in every mode.
+
+The shared service owns registration, the one `Sketchup::Overlay` a Model gets, the viewport HUD
+legend and cache invalidation. It reads no record and knows no mode, and turning a mode on writes
+nothing to the Model, so it is not a registered action: it is reached through the native Colour by
+menu, which is built from whatever modes are registered, and read back through the registered
+`ph_composer.colour_by.state` query. Nothing in `shell/` or `session/` names a mode or a feature.
+
 ## Metadata and structured extension data
 
 Every authored domain entity supports a JSON-compatible `user_data` mapping, including definitions

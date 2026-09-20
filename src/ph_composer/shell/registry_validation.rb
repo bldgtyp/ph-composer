@@ -21,6 +21,7 @@ module PhComposer
         check_snapshot_sections
         check_export_contributors
         check_proposal_participants
+        check_colour_modes
         check_subscriptions
         @diagnostics
       end
@@ -192,6 +193,22 @@ module PhComposer
           add("registration.schema_invalid", participant.owner, participant.name,
               "#{participant.name} has no handler.")
         end
+      end
+
+      # A Colour-by mode needs a legend label, the entity kind it paints, a colour function and a
+      # projection. Entity kinds are open (face-assignment PRD "Colour-by"), so the kind is checked
+      # for shape alone and never against a list the shared service would have to keep.
+      def check_colour_modes
+        @staging.declared_colour_modes.each do |mode|
+          next if text?(mode.label) && text?(mode.entity_kind) && mode.colours.respond_to?(:call) && mode.projection
+
+          add("registration.schema_invalid", mode.owner, mode.name,
+              "#{mode.name} needs a label, an entity kind, a colour function and a projection block.")
+        end
+      end
+
+      def text?(value)
+        value.is_a?(String) && !value.strip.empty?
       end
 
       def require_kind(owner, subject, kind_id)

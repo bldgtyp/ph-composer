@@ -158,7 +158,7 @@ focused tests; the stage closes only when A04 to A09 all have evidence.
 | D2 | Attached zone record kind, reference lifecycle and guarded delete with replacement | Implemented on branch |
 | D3 | Explicit copied-Zone identity repair and limited Restore Zone | Implemented on branch |
 | D4 | Partial-overlap splitting, sliver skips and out-of-scope reciprocal refusal | Implemented on branch |
-| D5 | Shared Colour-by registry, overlay, HUD and cache invalidation | Pending |
+| D5 | Shared Colour-by registry, overlay, HUD and cache invalidation | Implemented on branch |
 | D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Pending |
 | D7 | Overview Zone tree and faces table | Pending |
 
@@ -188,11 +188,51 @@ piece keeps the native persistent id, that every piece keeps its dictionaries, t
 of a contained region really does come back as one Face with a hole, and that the whole cut is one
 Undo step.
 
-D6 also owns the occurrence-resolution costD6 also owns the occurrence-resolution cost the gesture will hit on every drag. `resolve_face`
+D6 also owns the occurrence-resolution cost the gesture will hit on every drag. `resolve_face`
 walks the whole Model once per Face, through `zones` and `faces_with_id`, so a 500-Face gesture
 that retires 500 reciprocal counterparts measured about 13 seconds against the offline stub.
 Measure it on the proving host, and settle whether the fix is a bounded resolution pass over one
 gesture or a lower ceiling, before the tool's drag behavior is accepted.
+
+### What D5 left open
+
+The seam, the service and the two features' modes are implemented. A feature declares a mode with
+`colour_mode` in its own `install`, hands over a pure projection of its own entities, and reaches
+the overlay, the HUD and the cache without a line in the shared renderer; `colour_by/` is a
+foundation directory that names no feature. The contract is written up in
+[`context/EXTENSIBILITY.md`](../../context/EXTENSIBILITY.md) under "Colour-by modes".
+
+Three things are deliberately not in this slice:
+
+- **The panel legend is D7's.** The PRD's Q18 legend, with click-to-select-and-zoom, hover
+  highlight and "Show only this", is Overview UI and lands with the Zone tree and faces table. D5
+  ships the viewport HUD, which is what a QA screenshot carries and needs no panel.
+- **Forced on while the Classify tool is active is D6's,** since the tool it follows lands there.
+  The mode the user last chose is already remembered (`Preferences.colour_by_mode`), which is the
+  half of Q12 that does not need the tool.
+- **The assembly mode waits for Phase 2 assemblies,** which own the display colour it would read.
+
+Two decisions D7 will build on, recorded here so it does not have to guess:
+
+- **The legend counts an entity the drawing omits.** A Face that is hidden, or on a hidden tag,
+  is still a row's count while nothing is painted for it, so the legend keeps telling the truth
+  about the Model rather than about the viewport. Q18's "click a row to select and zoom" therefore
+  has to decide what it does with an invisible entity, and that decision is D7's.
+- **Turning a mode on is not a registered action,** because it writes no record and opens no
+  operation. It is the native Colour by menu plus the `ph_composer.colour_by.state` read, so an
+  external client can see the active mode but cannot set it. D7's panel control needs a write
+  channel, and what that channel is remains open.
+
+The host gate is the outstanding evidence, and it carries three assumptions this code makes that
+nothing has measured:
+[`colour_by_walkthrough.rb`](../../tools/examples/authoring/colour_by_walkthrough.rb) asks each one.
+`Face#mesh` is assumed to triangulate a holed or concave Face into the fill's triangles, where the
+offline stub only fans an outer loop. `Sketchup::LayersObserver#onLayerChanged` is assumed to fire
+when a tag's visibility is toggled; the whole tag-invalidation path rests on it. Scene activation
+is expected to leave the drawing stale, because no observer this session subscribes to reports it,
+and whether that needs a frame change observer is a question for the gate rather than a decision
+taken here. Unclassified is drawn as a stippled outline rather than the PRD's hatch, which is a
+drawing claim B2 never tested.
 
 **Depends on:** P1-C. Owners: Zones and face assignment.
 

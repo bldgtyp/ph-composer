@@ -72,7 +72,9 @@ Make Unique inside a repair.
 
 ## Not covered here
 
-The Classify tool gesture, Colour-by and the Overview table are D5 to D7 and have no host evidence
-yet. The gesture ceiling still needs its own host measurement, which belongs with the tool. A Face
+The Classify tool gesture and the Overview table are D6 and D7 and have no host evidence yet.
+Colour-by is implemented in D5 and has none either; its own walkthrough,
+[`colour_by_walkthrough.rb`](../../../tools/examples/authoring/colour_by_walkthrough.rb), is
+checked in with the questions it has to answer. The gesture ceiling still needs its own host measurement, which belongs with the tool. A Face
 meeting more than one neighbour, a concave outline and a Face with a hole are reported rather than
 cut, as recorded in [PLAN.md](../PLAN.md).

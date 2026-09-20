@@ -2,8 +2,9 @@
 
 require_relative "test_helper"
 
-# The stub deliberately deviates from the host API in four places, each because a measured host
-# fact makes the naive behaviour a lie. Every deviation is pinned here beside the evidence, so a
+# The stub deliberately deviates from the host API in a handful of places, each because a measured
+# host fact, or a piece of host machinery an offline suite cannot have, makes the naive behaviour
+# a lie. Every deviation is pinned here beside the evidence, so a
 # later edit to the stub cannot quietly restore the naive behaviour and take a regression with it.
 class SketchupStubDeviationsTest < PhComposerTestCase
   # context/SKETCHUP_HOST_BEHAVIOR.md: `write_default` accepts a string containing a double
@@ -94,5 +95,20 @@ class SketchupStubDeviationsTest < PhComposerTestCase
     model.undo
 
     assert_empty model.entities.to_a
+  end
+
+  # SketchUp's `Face#mesh` triangulates the Face itself, holes and concavity included. The stub
+  # fans the outer loop, which is right only for a convex outline: it exists so the Colour-by cache
+  # can be tested for what it batches and counts, and it is never evidence about how SketchUp
+  # tessellates. What the host does with a holed or concave Face is a P1-D host-gate item.
+  def test_the_stub_mesh_fans_the_outer_loop_and_ignores_holes
+    square = [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(4, 0, 0), Geom::Point3d.new(4, 4, 0),
+              Geom::Point3d.new(0, 4, 0)]
+    hole = [Geom::Point3d.new(1, 1, 0), Geom::Point3d.new(2, 1, 0), Geom::Point3d.new(2, 2, 0)]
+    face = Sketchup::Face.new(9_101, {}, :points => square, :holes => [hole])
+
+    assert_equal 2, face.mesh(0).count_polygons, "a fan of the four-point outline, the hole ignored"
+    assert_equal [0.0, 0.0, 0.0], [face.mesh(0).point_at(1).x, face.mesh(0).point_at(1).y,
+                                   face.mesh(0).point_at(1).z]
   end
 end

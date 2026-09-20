@@ -1,0 +1,400 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+
+# P1-D D5: the shared Colour-by service. The registry seam, the mode projections the two shipping
+# features register, what the overlay batches and what invalidates the cache.
+class ColourByTest < PhComposerTestCase
+  ColourBy = PhComposer::ColourBy
+  Registry = PhComposer::Registry
+  Palette = PhComposer::ColourBy::Palette
+
+  def setup
+    super
+    @model = Sketchup.active_model
+    @session = PhComposer::Sessions.for(@model)
+  end
+
+  # ------------------------------------------------------------------ the seam
+
+  def test_an_outside_feature_registers_a_mode_without_touching_the_shared_service
+    install_synthetic_mode
+
+    service = activate("outside.probe.by_side")
+
+    assert_equal %w[Inside Outside], service.rows.map(&:label), "rows come back in legend order"
+    assert_equal [[40, 50, 60], [10, 20, 30]], service.rows.map(&:colour)
+    assert_equal "side", Registry.current.colour_modes.fetch("outside.probe.by_side").entity_kind
+  end
+
+  def test_a_mode_missing_its_colour_function_refuses_the_whole_batch
+    probe = Module.new do
+      define_singleton_method(:name) { "Probe" }
+      define_singleton_method(:install) do |registry|
+        registry.feature("outside.probe", :contract_version => 1)
+                .colour_mode("outside.probe.broken", :label => "Broken", :entity_kind => "side",
+                                                     :colours => nil) { |_model| [] }
+      end
+    end
+
+    error = assert_raises(PhComposer::RegistrationError) { Registry.install([probe]) }
+
+    assert_includes error.diagnostics.map(&:code), "registration.schema_invalid"
+    refute Registry.current.colour_modes.key?("outside.probe.broken")
+  end
+
+  def test_activating_an_unregistered_mode_refuses_and_leaves_the_service_off
+    service = ColourBy.for(@session)
+
+    assert_raises(PhComposer::UserError) { service.activate("ph_composer.colour_by.nonexistent") }
+    refute service.active?
+  end
+
+  # ------------------------------------------------------------------ the shipped modes
+
+  def test_face_type_colours_every_face_and_counts_the_unclassified_ones
+    zone_group(100, ["Wall", "Wall", nil])
+
+    service = activate("ph_composer.face_assignment.by_face_type")
+
+    wall, unclassified = service.rows
+    assert_equal ["Wall", 2, "classified"], [wall.label, wall.count, wall.state.to_s]
+    assert_equal ["Unclassified", 1, "unclassified"], [unclassified.label, unclassified.count,
+                                                       unclassified.state.to_s]
+    assert_equal [230, 180, 60], wall.colour, "honeybee's own Wall hue"
+  end
+
+  def test_an_attached_zone_with_no_chosen_record_reads_as_incomplete_rather_than_classified
+    group = zone_group(200, ["Wall"])
+    face = group.entities.to_a.first
+    record = PhComposer::FaceAssignment::FACE_STORE.read(face)
+    PhComposer::FaceAssignment::FACE_STORE.write(face, record.merge("boundary_condition" => "AttachedZone"))
+
+    service = activate("ph_composer.face_assignment.by_boundary_condition")
+
+    row = service.rows.first
+    assert_equal "incomplete", row.state.to_s
+    assert_equal Palette::INCOMPLETE, row.colour
+  end
+
+  def test_a_zone_mode_paints_the_zone_group_and_a_zone_with_no_level_is_unclassified
+    zone_group(300, ["Wall"], :level => nil)
+    zone_group(400, ["Wall"], :level => "L1", :name => "Upper")
+
+    service = activate("ph_composer.zones.by_level")
+
+    assert_equal %w[L1 Unclassified], service.rows.map(&:label)
+    assert_equal [1, 1], service.rows.map(&:count)
+  end
+
+  # ------------------------------------------------------------------ what is drawn
+
+  def test_fills_are_batched_one_draw_a_colour_rather_than_one_a_face
+    zone_group(500, %w[Wall Wall Wall RoofCeiling])
+
+    activate("ph_composer.face_assignment.by_face_type")
+    overlay = @model.overlays.to_a.first
+    overlay.draw(@model.active_view)
+
+    fills = @model.active_view.draws.select { |(mode, _points, _colour, _width)| mode == GL_TRIANGLES }
+    assert_equal 2, fills.length, "one batch a legend row, whatever the face count"
+    assert_equal [9, 3], fills.map { |(_mode, points, _colour, _width)| points.length }
+  end
+
+  def test_an_unclassified_face_is_outlined_rather_than_filled
+    zone_group(600, [nil])
+
+    activate("ph_composer.face_assignment.by_face_type")
+    overlay = @model.overlays.to_a.first
+    overlay.draw(@model.active_view)
+
+    modes = @model.active_view.draws.map(&:first)
+    refute_includes modes, GL_TRIANGLES
+    assert_includes modes, GL_LINES
+  end
+
+  def test_the_hud_names_the_mode_and_lists_every_legend_row
+    zone_group(700, ["Wall", nil])
+
+    activate("ph_composer.face_assignment.by_face_type")
+    @model.overlays.to_a.first.draw(@model.active_view)
+
+    texts = @model.active_view.texts.map { |(_point, text, _options)| text }
+    assert_equal ["Face type", "Wall (1)", "Unclassified (1)"], texts
+  end
+
+  def test_hidden_geometry_and_a_hidden_tag_are_not_painted
+    group = zone_group(800, %w[Wall Wall Wall])
+    faces = group.entities.to_a
+    faces[0].hidden = true
+    faces[1].layer = Sketchup::Tag.new("Roof", false)
+
+    service = activate("ph_composer.face_assignment.by_face_type")
+
+    assert_equal 3, service.rows.first.count, "the legend still counts every classified Face"
+    assert_equal 3, service.fills.values.first.length, "only the visible Face is drawn"
+  end
+
+  # ------------------------------------------------------------------ lifecycle
+
+  def test_turning_a_mode_on_adds_one_overlay_and_turning_it_off_removes_it
+    zone_group(900, ["Wall"])
+
+    service = activate("ph_composer.face_assignment.by_face_type")
+    assert_equal 1, @model.overlays.to_a.length
+
+    service.deactivate
+    assert_equal 0, @model.overlays.to_a.length
+    refute service.active?
+    assert_empty service.rows
+  end
+
+  def test_a_closed_model_takes_its_overlay_with_it
+    zone_group(1000, ["Wall"])
+    activate("ph_composer.face_assignment.by_face_type")
+
+    @session.detach
+
+    assert_equal 0, @model.overlays.to_a.length
+  end
+
+  # The close path reaches feature state after the Model is gone, and a closed Model still answers
+  # `respond_to?(:overlays)` while reading them raises. Nothing may be read from it here.
+  def test_tearing_down_a_model_that_has_already_closed_raises_nothing
+    zone_group(1050, ["Wall"])
+    activate("ph_composer.face_assignment.by_face_type")
+    @model.close
+
+    PhComposer::Sessions.detach(@model)
+
+    refute ColourBy.for(@session).active?
+  end
+
+  def test_closing_a_model_takes_its_tag_observer_with_it
+    PhComposer::Sessions.detach(@model)
+
+    assert_empty @model.layers.observers
+  end
+
+  def test_turning_a_mode_on_writes_nothing_to_the_model
+    group = zone_group(1100, ["Wall"])
+    before = PhComposer::Zones::ZONE_STORE.read(group)
+
+    activate("ph_composer.face_assignment.by_face_type")
+
+    assert_equal before, PhComposer::Zones::ZONE_STORE.read(group)
+    assert_empty @model.operations, "no native operation opens, so Undo history is unchanged"
+    assert_equal 1, @session.revision
+  end
+
+  def test_a_committed_change_rebuilds_the_drawing_once_a_revision
+    group = zone_group(1200, ["Wall"])
+    service = activate("ph_composer.face_assignment.by_face_type")
+    assert_equal 1, service.rows.length
+
+    face = group.entities.to_a.first
+    PhComposer::FaceAssignment::FACE_STORE.write(face, PhComposer::FaceAssignment::FACE_STORE.read(face)
+      .merge("face_type" => "Floor"))
+    @session.host_event(:transaction_committed)
+
+    assert_equal "Floor", service.rows.first.label
+    drawn = @model.active_view.invalidations
+    @session.host_event(:transaction_committed) && @session.host_event(:active_path_changed)
+    assert_operator @model.active_view.invalidations, :>, drawn, "a later revision redraws"
+  end
+
+  def test_a_second_event_at_the_same_revision_does_not_rebuild
+    zone_group(1300, ["Wall"])
+    service = activate("ph_composer.face_assignment.by_face_type")
+    PhComposer::Sessions.notify_host_event(@session, :transaction_committed)
+    settled = @model.active_view.invalidations
+
+    service.invalidate!
+
+    assert_equal settled, @model.active_view.invalidations
+  end
+
+  # Hiding a tag changes what may be painted and advances no revision, so it is the one event that
+  # rebuilds without one.
+  def test_hiding_a_tag_rebuilds_although_the_revision_is_unchanged
+    group = zone_group(1400, %w[Wall Wall])
+    service = activate("ph_composer.face_assignment.by_face_type")
+    assert_equal 6, service.fills.values.first.length
+
+    group.entities.to_a.first.layer = Sketchup::Tag.new("Walls", false)
+    PhComposer::HostObservers::LayersObserver.new.onLayerChanged(@model.layers, nil)
+
+    assert_equal 3, service.fills.values.first.length
+    assert_equal 2, service.rebuilds, "the tag event rebuilt once more"
+    assert_equal 1, @session.revision, "a tag is not a Model change"
+  end
+
+  # ------------------------------------------------------------------ reads
+
+  def test_a_projection_that_raises_turns_its_own_mode_off_rather_than_the_extension
+    install_raising_mode
+
+    service = ColourBy.for(@session).activate("outside.probe.broken")
+
+    refute service.active?
+    assert_equal 0, @model.overlays.to_a.length
+  end
+
+  # One mode failing must not take the rest of the extension's host-event handling with it: the
+  # session publishes to subscribers in install order and does not rescue for them.
+  def test_a_failing_projection_does_not_stop_a_later_host_event_subscriber
+    install_raising_mode
+    reached = []
+    PhComposer::Sessions.on_host_event(:transaction_committed) { |_session| reached << :ran }
+    ColourBy.for(@session).activate("outside.probe.broken")
+    ColourBy.for(@session).instance_variable_set(:@mode_name, "outside.probe.broken")
+
+    @session.host_event(:transaction_committed)
+
+    assert_equal [:ran], reached
+  end
+
+  def test_a_translated_zone_and_a_translated_nested_group_land_in_world_coordinates
+    outer = zone_group(1900, [])
+    outer.transformation = Geom::Transformation.translation([10, 0, 0])
+    inner_face = Sketchup::Face.new(1999, {}, :points => [point(0, 0, 0), point(2, 0, 0), point(2, 2, 0)])
+    inner = Sketchup::Group.new(1990, Sketchup::Entities.new([inner_face]))
+    inner.transformation = Geom::Transformation.translation([0, 5, 0])
+    outer.entities << inner
+
+    service = activate("ph_composer.zones.by_zone")
+
+    corners = service.fills.values.first.map { |corner| [corner.x, corner.y, corner.z] }
+    assert_includes corners, [10.0, 5.0, 0.0], "the Zone's own transform and the nested one compose once each"
+  end
+
+  def test_the_state_query_reports_the_active_mode_every_registered_mode_and_the_legend
+    zone_group(1500, ["Wall", nil])
+    activate("ph_composer.face_assignment.by_face_type")
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    value = PhComposer::API.query(:context => context, :name => "ph_composer.colour_by.state").fetch("value")
+
+    assert_equal "ph_composer.face_assignment.by_face_type", value.fetch("mode")
+    assert_equal "Face type", value.fetch("label")
+    assert_equal [{ "value" => "Wall", "label" => "Wall", "colour" => [230, 180, 60], "count" => 1,
+                    "state" => "classified" },
+                  { "value" => nil, "label" => "Unclassified", "colour" => Palette::UNCLASSIFIED,
+                    "count" => 1, "state" => "unclassified" }], value.fetch("rows")
+    assert_includes value.fetch("modes").map { |mode| mode.fetch("name") }, "ph_composer.zones.by_zone"
+  end
+
+  def test_the_mode_the_user_last_turned_on_is_remembered_after_it_is_turned_off
+    zone_group(1600, ["Wall"])
+    service = activate("ph_composer.zones.by_zone")
+    service.deactivate
+
+    assert_equal "ph_composer.zones.by_zone", ColourBy.remembered_mode
+  end
+
+  def test_the_menu_turns_a_mode_on_and_off_and_checks_the_active_one
+    zone_group(1700, ["Wall"])
+    PhComposer::Commands.install
+    menu = PhComposer::Commands.colour_by_menu
+    by_zone = menu.entries.find { |entry| entry.is_a?(Array) && entry.first == "Zone" }
+    off = menu.entries.find { |entry| entry.is_a?(Array) && entry.first == "Off" }
+
+    by_zone.last.call
+
+    assert_equal "ph_composer.zones.by_zone", ColourBy.for(@session).mode_name
+    assert_equal MF_CHECKED, PhComposer::Commands.colour_by_check("ph_composer.zones.by_zone")
+    assert_equal MF_UNCHECKED, PhComposer::Commands.colour_by_check(nil)
+
+    off.last.call
+
+    refute ColourBy.for(@session).active?
+    assert_equal MF_CHECKED, PhComposer::Commands.colour_by_check(nil)
+  end
+
+  def test_a_zone_paints_the_faces_of_a_group_nested_inside_it
+    outer = zone_group(1800, [])
+    inner_face = Sketchup::Face.new(1899, {}, :points => [point(0, 0, 0), point(2, 0, 0), point(2, 2, 0)])
+    outer.entities << Sketchup::Group.new(1890, Sketchup::Entities.new([inner_face]))
+
+    service = activate("ph_composer.zones.by_zone")
+
+    assert_equal 3, service.fills.values.first.length, "the nested Group's Face is reached and drawn"
+  end
+
+  def test_the_colour_by_menu_offers_every_registered_mode_and_an_off_entry
+    PhComposer::Commands.install
+    menu = PhComposer::Commands.colour_by_menu
+
+    labels = menu.entries.map { |entry| entry.is_a?(Array) ? entry.first : entry }
+
+    assert_equal ColourBy.modes.map { |mode| mode.fetch("label") } + ["Off"], labels
+  end
+
+  private
+
+  def activate(name)
+    ColourBy.for(@session).activate(name)
+  end
+
+  def install_raising_mode
+    probe = Module.new do
+      define_singleton_method(:name) { "Probe" }
+      define_singleton_method(:install) do |registry|
+        registry.feature("outside.probe", :contract_version => 1)
+                .colour_mode("outside.probe.broken", :label => "Broken", :entity_kind => "side",
+                                                     :colours => PhComposer::ColourBy::Palette.ramp) do |_model|
+          raise "the Model could not be read"
+        end
+      end
+    end
+    Registry.install([probe])
+  end
+
+  def install_synthetic_mode
+    faces = [Sketchup::Face.new(9001, {}), Sketchup::Face.new(9002, {})]
+    @model.entities << faces[0] << faces[1]
+    probe = Module.new do
+      define_singleton_method(:name) { "Probe" }
+      define_singleton_method(:install) do |registry|
+        colours = PhComposer::ColourBy::Palette.fixed("outside" => [10, 20, 30], "inside" => [40, 50, 60])
+        registry.feature("outside.probe", :contract_version => 1)
+                .colour_mode("outside.probe.by_side", :label => "Side", :entity_kind => "side",
+                                                      :colours => colours) do |model|
+          model.entities.to_a.select { |entity| entity.is_a?(Sketchup::Face) }.each_with_index.map do |face, index|
+            PhComposer::ColourBy::Entry.new(:entity => face, :transform => Geom::Transformation.new,
+                                            :value => index.zero? ? "outside" : "inside",
+                                            :label => index.zero? ? "Outside" : "Inside")
+          end
+        end
+      end
+    end
+    Registry.install([probe])
+  end
+
+  # One Zone Group with one Face per entry in `types`; a nil type leaves that Face unclassified.
+  def zone_group(base, types, level: "L1", name: "Zone")
+    faces = types.each_with_index.map do |face_type, index|
+      face = Sketchup::Face.new(base + index + 1, {}, :points => [point(0, 0, index), point(2, 0, index),
+                                                                  point(2, 2, index)])
+      next face unless face_type
+
+      PhComposer::FaceAssignment::FACE_STORE.write(face, {
+        "id" => format("fac_%<base>d%<index>07d", :base => base, :index => index), "schema_version" => 1,
+        "face_type" => face_type, "boundary_condition" => "Outdoors", "user_data" => {}, "extension_data" => {}
+      })
+      face
+    end
+    group = Sketchup::Group.new(base, Sketchup::Entities.new(faces))
+    @model.entities << group
+    PhComposer::Zones::ZONE_STORE.write(group, {
+      "id" => format("zon_%<base>012d", :base => base), "schema_version" => 1, "name" => "#{name} #{base}",
+      "building_segment" => "Main Building", "level" => level, "ground_depth_mm" => 0.0,
+      "user_data" => {}, "extension_data" => {}
+    })
+    group
+  end
+
+  def point(x_value, y_value, z_value)
+    Geom::Point3d.new(x_value, y_value, z_value)
+  end
+end

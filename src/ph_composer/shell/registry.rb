@@ -17,7 +17,7 @@ module PhComposer
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
     attr_reader :features, :queries, :actions, :record_kinds, :extensions, :snapshot_sections, :export_contributors,
-                :proposal_participants, :subscriptions
+                :proposal_participants, :colour_modes, :subscriptions
 
     class << self
       def current
@@ -53,6 +53,7 @@ module PhComposer
       @snapshot_sections = {}
       @export_contributors = {}
       @proposal_participants = {}
+      @colour_modes = {}
       @subscriptions = []
       @unsubscribers = []
       @owners = {}
@@ -88,6 +89,7 @@ module PhComposer
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
       publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
+      publish_each(staging.declared_colour_modes, @colour_modes, :name)
       staging.owners.each { |name, owner| @owners[name] = owner }
       staging.declared_subscriptions.each do |subscription|
         @subscriptions << subscription
@@ -111,7 +113,7 @@ module PhComposer
     class Staging
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_record_kinds,
                   :declared_extensions, :declared_snapshot_sections, :declared_export_contributors,
-                  :declared_proposal_participants, :declared_subscriptions, :owners, :named
+                  :declared_proposal_participants, :declared_colour_modes, :declared_subscriptions, :owners, :named
 
       def initialize(live)
         @live = live
@@ -123,6 +125,7 @@ module PhComposer
         @declared_snapshot_sections = []
         @declared_export_contributors = []
         @declared_proposal_participants = []
+        @declared_colour_modes = []
         @declared_subscriptions = []
         @owners = {}
         @named = []
@@ -201,6 +204,15 @@ module PhComposer
           :result => result, :report => report
         )
         @staging.add(:declared_export_contributors, id, name, declaration)
+      end
+
+      # One Colour-by mode. The projection reads this feature's own entities and never another's.
+      def colour_mode(name, label:, entity_kind:, colours:, sort: nil, &projection)
+        declaration = Declarations::ColourMode.new(
+          :name => name, :owner => id, :label => label, :entity_kind => entity_kind, :colours => colours,
+          :sort => sort, :projection => projection
+        )
+        @staging.add(:declared_colour_modes, id, name, declaration)
       end
 
       def proposal_participant(name, &handler)
