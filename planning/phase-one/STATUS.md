@@ -92,7 +92,7 @@ the viewport: how SketchUp copies a Group is the thing being measured, so the wa
 a Ctrl-drag copy rather than scripting an assumption about it.
 
 P1-D D4 brings the offline suite to 325 Ruby tests with 1,398 assertions, green on both Rubies with
-`make ci` and Ruby coverage at 95.9%. The pure overlap geometry is covered case by case: full,
+`make ci` and Ruby coverage at 96.1%. The pure overlap geometry is covered case by case: full,
 partial, contained, disjoint, off-plane, both sliver thresholds independently, a sliver left behind
 by an otherwise acceptable cut, same-normal overlapping Zones, a holed Face, concave outlines, and
 winding independence. The solver is covered for whole-scope pairing, the Q18 refusal naming both
