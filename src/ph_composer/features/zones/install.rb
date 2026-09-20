@@ -5,6 +5,7 @@ require_relative "occurrences"
 require_relative "steps"
 require_relative "overlap"
 require_relative "adjacency"
+require_relative "face_split"
 require_relative "adjacency_steps"
 require_relative "repair"
 require_relative "export"
@@ -209,9 +210,43 @@ module PhComposer
       plan = Adjacency.plan(request.model, request.params.fetch("zones"))
       plan.findings.each { |finding| proposal.add_finding(finding) }
       full, partial = plan.matches.partition { |match| match.fetch(:overlap).kind == :full }
-      partial.each { |match| proposal.add_finding(Adjacency.split_not_applied(match)) }
       pair_ids = full.map { |match| pair_match(proposal, match) }
+      pair_ids.concat(partial.map { |match| split_match(request, proposal, match) })
       { "pair_ids" => pair_ids.compact.sort, "reported" => proposal.findings.length }
+    end
+
+    # A partial overlap is cut on both sides and paired in one step, because the pair's endpoints
+    # do not exist until both Faces have been cut.
+    def split_match(request, proposal, match)
+      overlap = match.fetch(:overlap)
+      pair_id = Records::Identity.derived(
+        "adj", "faces" => [:left, :right].map { |side| match.fetch(side).fetch(:record).fetch("id") }.sort
+      )
+      sides = [:left, :right].map do |name|
+        side_plan(request, match.fetch(name), overlap, name == :left ? :left : :right)
+      end
+      scopes = sides.map { |side| Operations::EntityScope.new(side.fetch("reference").fetch("zone_path")) }
+      proposal.add_step(
+        SplitAndPairStep.new(:left => sides.fetch(0), :right => sides.fetch(1),
+                             :polygon_m => overlap.polygon_m, :pair_id => pair_id),
+        :scopes => scopes
+      )
+      pair_id
+    end
+
+    # Ids for every piece the cut may need, allocated now so the preview digest is stable. Which
+    # piece keeps the original id is the host's answer and is not known until it has cut.
+    def side_plan(request, side, overlap, which)
+      occurrence = side.fetch(:occurrence)
+      remainders = which == :left ? overlap.left_remainders_m : overlap.right_remainders_m
+      fresh = (remainders.length + 1).times.map do |index|
+        Records::Identity.derived("fac", "model" => request.model.guid, "revision" => request.revision,
+                                         "zone_path" => occurrence.zone.path, "entity_path" => occurrence.path,
+                                         "piece" => index)
+      end
+      { "reference" => occurrence.reference(side.fetch(:record).fetch("id")), "before" => side.fetch(:record),
+        "persistent_id" => occurrence.entity.persistent_id, "fresh_ids" => fresh,
+        "remainder_count" => remainders.length }
     end
 
     def pair_match(proposal, match)
@@ -343,7 +378,7 @@ module PhComposer
 
       "found"
     end
-    private_class_method :pair_match
+    private_class_method :pair_match, :split_match, :side_plan
     private_class_method :declare_adjacency, :declare_repairs, :zone_view, :make_target,
                          :validate_make_target!, :zone_state
   end

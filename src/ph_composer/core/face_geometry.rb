@@ -140,7 +140,7 @@ module PhComposer
       left.zip(right).sum { |a, b| a * b }
     end
 
-    private_class_method :opposite_normals?, :coplanar?, :same_loops?, :match_unordered, :loop_equal?,
+    private_class_method :opposite_normals?, :coplanar?, :same_loops?, :match_unordered,
                          :point_close?, :minimum_edge, :distance, :world_normal, :canonical_loop, :quantize, :dot
   end
 end

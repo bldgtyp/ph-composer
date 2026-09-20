@@ -289,13 +289,36 @@ module Sketchup
       points ||= [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(1, 0, 0), Geom::Point3d.new(1, 1, 0)]
       @outer_loop = Loop.new(points)
       @loops = [@outer_loop] + holes.map { |loop| Loop.new(loop) }
-      @normal = normal || Geom::Vector3d.new(0, 0, 1)
+      @normal = normal || Face.newell_normal(@outer_loop.vertices.map(&:position))
       @edges = Array(edges)
       @edges.each { |edge| edge.attach_face(self) }
     end
 
+    # The host derives a Face's normal from its winding. A fixture that says nothing about the
+    # normal gets the one its own points imply, so a Face built by add_face faces the right way.
+    def self.newell_normal(points)
+      vector = points.each_with_index.reduce([0.0, 0.0, 0.0]) do |sum, (point, index)|
+        following = points[(index + 1) % points.length]
+        [sum[0] + ((point.y - following.y) * (point.z + following.z)),
+         sum[1] + ((point.z - following.z) * (point.x + following.x)),
+         sum[2] + ((point.x - following.x) * (point.y + following.y))]
+      end
+      length = Math.sqrt(vector.sum { |value| value**2 })
+      return Geom::Vector3d.new(0, 0, 1) if length < 1.0e-12
+
+      Geom::Vector3d.new(*vector.map { |value| value / length })
+    end
+
+    # As the host does, a Face's area is its outline less its holes.
     def area(transformation = Geom::Transformation.new)
-      points = @outer_loop.vertices.map { |vertex| vertex.position.transform(transformation) }
+      @loops.each_with_index.sum do |loop, index|
+        value = loop_area(loop, transformation)
+        index.zero? ? value : -value
+      end
+    end
+
+    def loop_area(loop, transformation)
+      points = loop.vertices.map { |vertex| vertex.position.transform(transformation) }
       vector = points.each_with_index.reduce([0.0, 0.0, 0.0]) do |sum, (point, index)|
         following = points[(index + 1) % points.length]
         [
@@ -306,6 +329,7 @@ module Sketchup
       end
       Math.sqrt(vector.sum { |value| value**2 }) / 2.0
     end
+    private :loop_area
 
     def transform!(transformation)
       @loops.each { |loop| loop.transform!(transformation) }
@@ -317,6 +341,19 @@ module Sketchup
       @loops.each(&:reverse!)
       @normal = Geom::Vector3d.new(-@normal.x, -@normal.y, -@normal.z)
       true
+    end
+
+    # Used by the split model: the host reshapes a Face in place, keeping its identity and every
+    # attribute dictionary on it.
+    def replace_outline!(points)
+      @outer_loop = Loop.new(points)
+      @loops[0] = @outer_loop
+      self
+    end
+
+    def add_hole!(points)
+      @loops << Loop.new(points)
+      self
     end
   end
 
@@ -413,6 +450,20 @@ module Sketchup
       group = Group.new(self.class.allocate_persistent_id, Entities.new(members))
       self << group
       group
+    end
+
+    # A model of how the host splits a Face, not evidence about it. Drawing an outline onto a
+    # coplanar Face that contains it leaves the shared region as a new Face and the original Face
+    # holding what is left: its outline shrinks when the region touches its boundary, and it gains
+    # a hole when the region sits wholly inside it, which is what SketchUp does. The original keeps
+    # its persistent id here; on the host that is measured, not assumed, which is why the caller
+    # looks the survivor up rather than relying on it.
+    def add_face(points)
+      face = Face.new(self.class.allocate_persistent_id, {}, :points => Array(points))
+      host = to_a.grep(Face).find { |candidate| PhComposerStub.splittable?(candidate, face) }
+      PhComposerStub.split!(host, face) if host
+      self << face
+      face
     end
 
     def add_instance(definition, transformation)

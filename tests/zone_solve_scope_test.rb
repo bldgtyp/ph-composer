@@ -92,16 +92,108 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_empty result.dig("value", "pair_ids")
   end
 
-  def test_a_partial_overlap_is_reported_rather_than_claiming_surface_over_the_whole_face
+  def test_a_partial_overlap_cuts_both_faces_and_pairs_only_the_shared_part
     wall(600, 0, 0, 4, 0, 3, :east)
     wall(610, 0, 2, 6, 0, 3, :west)
     author
 
     result = solve(all_references)
 
-    assert_equal ["adjacency.split_not_applied"], finding_codes(result)
-    assert_empty result.dig("value", "pair_ids")
-    assert_empty boundary_conditions.compact.reject { |value| value == "Outdoors" }
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal 1, result.dig("value", "pair_ids").length
+    assert_equal 4, faces.length
+    shared, rest = faces.partition { |face| face.dig("values", "boundary_condition") == "Surface" }
+
+    assert_equal 2, shared.length
+    assert(shared.all? { |face| (face.fetch("area_m2") - 6.0).abs < 1.0e-6 })
+    # Q21: the unpaired remainder keeps the classification it already had.
+    assert_equal %w[Outdoors Outdoors], rest.map { |face| face.dig("values", "boundary_condition") }
+    assert(rest.all? { |face| (face.fetch("area_m2") - 6.0).abs < 1.0e-6 })
+  end
+
+  def test_the_new_pair_is_reciprocal_and_reads_current
+    wall(620, 0, 0, 4, 0, 3, :east)
+    wall(630, 0, 2, 6, 0, 3, :west)
+    author
+    solve(all_references)
+
+    shared = faces.select { |face| face.dig("values", "boundary_condition") == "Surface" }
+    envelopes = shared.map { |face| face.dig("values", "adjacency") }
+
+    assert_equal %w[current current], shared.map { |face| face.fetch("adjacency_state") }
+    assert_equal 1, envelopes.map { |envelope| envelope.fetch("pair_id") }.uniq.length
+    assert_equal shared.last.dig("reference", "entity_id"), envelopes.first.dig("counterpart", "entity_id")
+    assert_equal shared.first.dig("reference", "entity_id"), envelopes.last.dig("counterpart", "entity_id")
+  end
+
+  # The split rules: the piece that kept the native persistent id keeps the Face id, and every
+  # piece carries the payloads the Face had before the cut.
+  def test_the_piece_keeping_the_persistent_id_keeps_the_face_id_and_every_piece_keeps_the_payload
+    wall(640, 0, 0, 4, 0, 3, :east)
+    wall(650, 0, 2, 6, 0, 3, :west)
+    author
+    original = faces.find { |face| face.dig("reference", "zone_path") == [640] }
+    original_id = original.dig("reference", "entity_id")
+    entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 640 }.entities.to_a.first
+    store = PhComposer::FaceAssignment::FACE_STORE
+    store.write(entity, store.read(entity).merge("user_data" => { "firm.note" => "keep" },
+                                                 "extension_data" => { "other.ext" => { "payload" => 1 } }))
+
+    solve(all_references)
+
+    pieces = faces.select { |face| face.dig("reference", "zone_path") == [640] }
+
+    assert_equal 2, pieces.length
+    assert_includes pieces.map { |face| face.dig("reference", "entity_id") }, original_id
+    assert(pieces.all? { |face| face.fetch("user_data") == { "firm.note" => "keep" } })
+    assert(pieces.all? { |face| face.fetch("extension_data") == { "other.ext" => { "payload" => 1 } } })
+  end
+
+  def test_a_shared_region_wholly_inside_a_wall_is_cut_out_of_it
+    wall(660, 0, 0, 6, 0, 4, :east)
+    wall(670, 0, 1, 5, 1, 3, :west)
+    author
+
+    result = solve(all_references)
+
+    assert_equal "completed", result.fetch("status")
+    shared = faces.select { |face| face.dig("values", "boundary_condition") == "Surface" }
+
+    assert_equal 2, shared.length
+    assert(shared.all? { |face| (face.fetch("area_m2") - 8.0).abs < 1.0e-6 })
+    larger = faces.find do |face|
+      face.dig("reference", "zone_path") == [660] && face.dig("values", "boundary_condition") == "Outdoors"
+    end
+
+    assert_in_delta 24.0 - 8.0, larger.fetch("area_m2")
+  end
+
+  def test_undo_reverts_the_cut_and_the_records_together
+    wall(680, 0, 0, 4, 0, 3, :east)
+    wall(690, 0, 2, 6, 0, 3, :west)
+    author
+    solve(all_references)
+
+    @model.undo
+
+    assert_equal 2, faces.length
+    assert_equal %w[Outdoors Outdoors], boundary_conditions
+    assert(faces.all? { |face| (face.fetch("area_m2") - 12.0).abs < 1.0e-6 })
+  end
+
+  def test_a_failure_cutting_the_second_face_leaves_neither_face_cut
+    wall(692, 0, 0, 4, 0, 3, :east)
+    wall(694, 0, 2, 6, 0, 3, :west)
+    author
+    doomed = @model.entities.to_a.find { |entity| entity.persistent_id == 694 }
+    doomed.entities.define_singleton_method(:add_face) { |_points| raise IOError, "the host refused the cut" }
+
+    result = solve(all_references)
+
+    assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
+    assert_equal 2, faces.length
+    assert(faces.all? { |face| (face.fetch("area_m2") - 12.0).abs < 1.0e-6 })
+    assert_equal %w[Outdoors Outdoors], boundary_conditions
   end
 
   def test_a_face_meeting_two_neighbours_is_reported_and_pairs_neither

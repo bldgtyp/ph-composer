@@ -75,18 +75,30 @@ module PhComposer
         cut(basis, subject, clip, polygon, area)
       end
 
-      # Q17 applies to everything the cut would create, not only to the shared piece. A remainder
-      # too small or too narrow to draw makes the whole split a reported skip, because the
-      # alternative is asking the host to make a Face nobody can work with.
+      # Q17 applies to everything the cut would create, not only to the shared piece.
+      #
+      # The two thresholds are checked against different things, because the host makes one Face
+      # per remainder and not one per convex piece: a shared region drawn inside a wall leaves a
+      # single Face with a hole in it, not four strips. So area is judged on the Faces that will
+      # actually exist, while width is judged on the convex decomposition, which is what finds the
+      # narrowest neck of a remainder however the host chooses to represent it.
       def cut(basis, subject, clip, polygon, area)
         left_rest = difference(subject, polygon)
         right_rest = difference(clip, polygon)
-        pieces = [polygon, *left_rest, *right_rest]
-        return sliver(area) if pieces.any? { |piece| too_small?(piece) }
+        return sliver(area) if too_small?(polygon)
+        return sliver(area) if remainder_too_small?(subject, area) || remainder_too_small?(clip, area)
+        return sliver(area) if (left_rest + right_rest).any? { |piece| minimum_width(piece) < MINIMUM_WIDTH_M }
 
         Result.new(:kind => :partial, :polygon_m => unproject(polygon, basis), :area_m2 => area,
                    :left_remainders_m => left_rest.map { |piece| unproject(piece, basis) },
                    :right_remainders_m => right_rest.map { |piece| unproject(piece, basis) })
+      end
+
+      # What one side keeps. A cut that takes the whole Face leaves no remainder and no threshold
+      # to meet; anything left over has to be a Face worth having.
+      def remainder_too_small?(outline, shared_area)
+        remainder = polygon_area(outline) - shared_area
+        remainder > 1.0e-9 && remainder < MINIMUM_AREA_M2
       end
 
       def too_small?(polygon)
@@ -281,11 +293,11 @@ module PhComposer
         Result.new(:kind => :unsupported, :reason => reason)
       end
 
-      private_class_method :shared_region, :cut, :too_small?, :counter_clockwise, :clip_against_edge, :inside?,
-                           :intersection, :cross, :polygon_area, :minimum_width, :distance_to_segment,
-                           :distance, :same_point?, :dedupe, :plane_basis, :project, :unproject,
-                           :coplanar?, :alignment, :cross3, :dot3, :normalize, :none, :sliver,
-                           :unsupported
+      private_class_method :shared_region, :cut, :remainder_too_small?, :too_small?,
+                           :counter_clockwise, :clip_against_edge, :inside?, :intersection, :cross,
+                           :polygon_area, :minimum_width, :distance_to_segment, :distance,
+                           :same_point?, :dedupe, :plane_basis, :project, :unproject, :coplanar?,
+                           :alignment, :cross3, :dot3, :normalize, :none, :sliver, :unsupported
     end
   end
 end
