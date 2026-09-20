@@ -46,11 +46,15 @@ module PhComposer
     # `menu` is the submenu's label and items are grouped under it in registration order.
     # `handler` is `->(session) { }` and `state` an optional `->(session) { MF_CHECKED | MF_UNCHECKED }`
     # for an item that shows whether its choice is the current one. `separator_after` closes a group.
+    # `available` is an optional `->(session) { true }` asked only when the viewport context menu is
+    # built, so an item appears on a right-click only where it applies; `shell/` cannot decide that
+    # for a feature, because deciding it means knowing what the feature's entities are.
     #
     # A menu item writes no record and opens no operation; that is the whole difference between one
     # and an action. Starting a tool, choosing its palette and turning a Colour-by mode on are the
     # three things in Phase 1 that are reached this way.
-    MenuItem = Struct.new(:name, :owner, :label, :menu, :separator_after, :handler, :state, keyword_init: true)
+    MenuItem = Struct.new(:name, :owner, :label, :menu, :separator_after, :handler, :state, :available,
+                          keyword_init: true)
 
     ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)
 

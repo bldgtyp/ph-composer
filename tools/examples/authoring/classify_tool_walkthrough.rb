@@ -43,11 +43,15 @@ module ClassifyToolWalkthrough
     model.entities.erase_entities(zone_groups) unless zone_groups.empty?
     group = model.entities.add_group
     group.name = "#{PREFIX}zone"
+    # Upright panels in the x-z plane, in rows of ten, with a gap between them: an operator can see
+    # all of them at once and drag across a row without the pointer leaving the Zone. A flat grid
+    # lying in z = 0 is nearly edge-on from any default camera and cannot be dragged over.
+    columns = 10
     count.times do |index|
-      offset = (index % 20) * 1200.mm
-      row = (index / 20) * 1500.mm
-      group.entities.add_face([offset, row, 0], [offset + 1000.mm, row, 0],
-                              [offset + 1000.mm, row + 1000.mm, 0], [offset, row + 1000.mm, 0])
+      across = (index % columns) * 1200.mm
+      up = (index / columns) * 1200.mm
+      group.entities.add_face([across, 0, up], [across + 1000.mm, 0, up],
+                              [across + 1000.mm, 0, up + 1000.mm], [across, 0, up + 1000.mm])
     end
     raise "SketchUp refused the walkthrough geometry." unless model.commit_operation
 
@@ -55,6 +59,58 @@ module ClassifyToolWalkthrough
     target = { "parent_path" => [], "entity_ids" => [group.persistent_id], "name" => "Classify" }
     client.invoke("ph_composer.zones.make", target)
     report.merge("faces" => group.entities.grep(Sketchup::Face).length)
+  end
+
+  # Puts the camera square on the panels, so screen coordinates in this file mean what they say and
+  # an operator can reach every Face. Call it in its own bridge command: the pick helper uses the
+  # camera as it was when the frame was drawn, so a pick in the same command as a camera change
+  # picks against the old one.
+  def look
+    view = Sketchup.active_model.active_view
+    view.zoom_extents
+    bounds = zone_groups.first.bounds
+    eye = bounds.center.offset(Geom::Vector3d.new(0, -bounds.width * 1.6, 0))
+    view.camera = Sketchup::Camera.new(eye, bounds.center, Geom::Vector3d.new(0, 0, 1))
+    view.zoom_extents
+    { "vpwidth" => view.vpwidth, "vpheight" => view.vpheight }
+  end
+
+  # Where each Face is on screen, so a step can be driven or checked without guessing. Call it after
+  # `look`, in its own command.
+  def screen_points
+    view = Sketchup.active_model.active_view
+    group = zone_groups.first
+    group.entities.grep(Sketchup::Face).map do |face|
+      point = view.screen_coords(face.bounds.center.transform(group.transformation))
+      [face.persistent_id, point.x.round, point.y.round]
+    end
+  end
+
+  # A second Zone for question 2: one contiguous wall split into eight coplanar panels that share
+  # their edges, and a return wall at right angles sharing an edge with the last of them. A
+  # Shift-click on any panel must take all eight and stop at the return.
+  def shift_fixture
+    model = Sketchup::active_model
+    model.start_operation("P1-D Shift-click fixture", true)
+    group = model.entities.add_group
+    group.name = "#{PREFIX}plane"
+    group.transformation = Geom::Transformation.translation([0, 6000.mm, 0])
+    4.times do |column|
+      2.times do |row|
+        across = column * 1000.mm
+        up = row * 1000.mm
+        group.entities.add_face([across, 0, up], [across + 1000.mm, 0, up],
+                                [across + 1000.mm, 0, up + 1000.mm], [across, 0, up + 1000.mm])
+      end
+    end
+    # The return wall: perpendicular, sharing the far vertical edge of the last panel.
+    group.entities.add_face([4000.mm, 0, 0], [4000.mm, 1000.mm, 0],
+                            [4000.mm, 1000.mm, 1000.mm], [4000.mm, 0, 1000.mm])
+    raise "SketchUp refused the Shift-click fixture." unless model.commit_operation
+
+    client.invoke("ph_composer.zones.make",
+                  { "parent_path" => [], "entity_ids" => [group.persistent_id], "name" => "Plane" })
+    { "faces" => group.entities.grep(Sketchup::Face).length, "zone" => group.persistent_id }
   end
 
   # Arms the palette and starts the tool, which is what the native Classify menu does. Then the
@@ -99,7 +155,9 @@ module ClassifyToolWalkthrough
   def report
     faces = client.query("ph_composer.face_assignment.list").dig("value", "faces")
     {
-      "active_tool" => Sketchup.active_model.active_tool.class.name,
+      # There is no `Sketchup::Model#active_tool` on the host, although the offline stub has one,
+      # so the tool is asked whether it is active rather than the Model being asked what is.
+      "tool_active" => tool.active?,
       "palette" => tool.palette,
       "pending" => tool.collected&.length,
       "faces" => faces.length,
@@ -139,8 +197,12 @@ module ClassifyToolWalkthrough
     @client ||= Client.new
   end
 
+  # Make Zone renames the Group to the Zone's name, so a prefix on the name this file chose does not
+  # survive authoring. The Zone record is what identifies them.
   def zone_groups
-    Sketchup.active_model.entities.grep(Sketchup::Group).select { |group| group.name.start_with?(PREFIX) }
+    Sketchup.active_model.entities.grep(Sketchup::Group).select do |group|
+      group.name.start_with?(PREFIX) || PhComposer::Zones::ZONE_STORE.read(group)
+    end
   end
 
   class Client

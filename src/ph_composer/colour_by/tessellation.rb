@@ -66,6 +66,25 @@ module PhComposer
         end
       end
 
+      # The same points, lifted toward the camera by about `pixels` screen pixels.
+      #
+      # A fill drawn exactly on the Face it colours z-fights with that Face, and the host blinks
+      # between the Face's own colour and the fill as the camera moves; at anything but a close
+      # zoom the fill is not reliably visible at all. Measured on 26.1.188, 2026-09-20.
+      #
+      # The lift is toward the eye rather than along the Face normal, so it is correct whichever
+      # side the Face is seen from, and it is scaled from the view, so it stays one or two pixels at
+      # every zoom and never separates visibly from the Face it belongs to.
+      def lift(points, view, pixels = 2.0)
+        return points unless view.respond_to?(:camera) && view.respond_to?(:pixels_to_model)
+
+        eye = view.camera.eye
+        points.map do |point|
+          direction = eye - point
+          direction.length.to_f.zero? ? point : point.offset(direction, view.pixels_to_model(pixels, point))
+        end
+      end
+
       private_class_method :collect, :each_child, :skipped?, :add_face
     end
   end

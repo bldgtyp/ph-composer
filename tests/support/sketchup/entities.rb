@@ -73,7 +73,10 @@ module Sketchup
     def initialize(id, name, description: "")
       @overlay_id, @name, @description = id, name, description
       @valid = true
-      @enabled = true
+      # A new overlay is disabled, as the host's is: `OverlaysManager#add` accepts it, shows it
+      # unticked in the Overlays panel and never calls `draw` until something enables it. Measured
+      # on 26.1.188, 2026-09-20, when a Colour-by mode turned on drew nothing at all.
+      @enabled = false
     end
 
     def valid?
@@ -182,8 +185,11 @@ module Sketchup
     end
   end
 
+  Camera = Struct.new(:eye)
+
   class View
     attr_accessor :line_width, :drawing_color, :pick_result, :line_stipple, :tooltip
+    attr_accessor :camera, :model_units_per_pixel
     attr_reader :model, :draws, :screen_draws, :texts, :invalidations, :zoomed, :picks
 
     def initialize(model)
@@ -194,6 +200,14 @@ module Sketchup
       @invalidations = 0
       @zoomed = []
       @picks = {}
+      # Far enough above the fixtures that a lift toward it is a clean +z, and one model unit a
+      # pixel, so a test can state the lift it expects.
+      @camera = Camera.new(Geom::Point3d.new(0, 0, 1_000_000))
+      @model_units_per_pixel = 1.0
+    end
+
+    def pixels_to_model(pixels, _point)
+      pixels * @model_units_per_pixel
     end
 
     def pick_helper

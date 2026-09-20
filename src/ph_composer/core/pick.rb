@@ -19,17 +19,22 @@ module PhComposer
     # Nil means one thing here, and it is not "the pointer is over something this feature refuses".
     # A caller that must tell those apart asks this first and decides the second for itself.
     #
-    # What `path_at` returns while an edit context is open is not measured here and the host gate
-    # asks it (tools/examples/authoring/classify_tool_walkthrough.rb). A host with no pick helper,
-    # which is every offline view that does not supply one, picks nothing.
+    # `path_at` answers relative to the open edit context, not from the Model root: inside a Group,
+    # a Face's path is the Face alone. The active path is prepended, which is always right, because
+    # inside a context SketchUp picks nothing outside it: a pick over another Group's Face while a
+    # Group is open returns no hits at all. Measured on 26.1.188, 2026-09-20.
+    #
+    # A host with no pick helper, which is every offline view that does not supply one, picks
+    # nothing.
     def face_path(view, x, y)
       helper = view.respond_to?(:pick_helper) ? view.pick_helper : nil
       return nil unless helper
 
       count = helper.do_pick(x, y).to_i
+      context = view.respond_to?(:model) ? Array(view.model.active_path) : []
       (0...count).each do |index|
         path = Array(helper.path_at(index))
-        return path if path.last.is_a?(Sketchup::Face)
+        return context + path if path.last.is_a?(Sketchup::Face)
       end
       nil
     end

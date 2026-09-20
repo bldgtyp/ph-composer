@@ -79,7 +79,7 @@ module PhComposer
         @intent = nil
         @hover = nil
         force_colour_by
-        @session.notice(instructions)
+        announce(instructions)
       end
 
       def deactivate(view)
@@ -204,7 +204,7 @@ module PhComposer
           @collected = nil
           @intent = nil
           @pressed = false
-          @session.notice(OUTSIDE_ZONE, :tone => :warning)
+          announce(OUTSIDE_ZONE, :warning)
           return
         end
 
@@ -266,7 +266,7 @@ module PhComposer
         return if collected.nil? || collected.empty?
 
         if intent.empty?
-          @session.notice(NOTHING_CHOSEN, :tone => :warning)
+          announce(NOTHING_CHOSEN, :warning)
           return
         end
 
@@ -288,9 +288,9 @@ module PhComposer
 
       def report(outcome, count)
         if outcome.fetch("status") == "completed"
-          @session.notice("Classified #{count} #{count == 1 ? 'Face' : 'Faces'}.")
+          announce("Classified #{count} #{count == 1 ? 'Face' : 'Faces'}.")
         else
-          @session.notice(outcome.fetch("message"), :tone => outcome.fetch("status") == "refused" ? :warning : :error)
+          announce(outcome.fetch("message"), outcome.fetch("status") == "refused" ? :warning : :error)
         end
       end
 
@@ -307,7 +307,7 @@ module PhComposer
         @collected = nil
         @intent = nil
         @pressed = false
-        @session.notice(CANCELLED, :tone => :warning) if pending
+        announce(CANCELLED, :warning) if pending
       end
 
       # PRD Q12: Colour-by is forced on while the tool is active, so the user sees what they are
@@ -335,6 +335,15 @@ module PhComposer
 
         service = ColourBy.for(@session)
         service.deactivate if service.mode_name == forced
+      end
+
+      # A viewport tool is used with the panel closed, and the panel is the only thing that shows a
+      # session notice, so a refusal delivered that way alone is silent exactly when it matters: at
+      # the pointer, with nothing else on screen. The status bar is SketchUp's own place for a modal
+      # tool's guidance and needs no panel. The notice still goes out, so an open panel shows it too.
+      def announce(message, tone = :info)
+        @session.notice(message, :tone => tone)
+        Sketchup.status_text = message if Sketchup.respond_to?(:status_text=)
       end
 
       def instructions
@@ -366,10 +375,13 @@ module PhComposer
         end
         return if triangles.empty? && segments.empty?
 
+        # Lifted toward the camera, or it z-fights with the Face it is tinting and the host blinks
+        # between the two (colour_by/tessellation.rb). The tool's tint sits one pixel in front of
+        # Colour-by's fill, so what the pointer is over reads over what the mode painted.
         view.drawing_color = Sketchup::Color.new(*colour, FILL_ALPHA) if view.respond_to?(:drawing_color=)
-        view.draw(GL_TRIANGLES, triangles) unless triangles.empty?
+        view.draw(GL_TRIANGLES, ColourBy::Tessellation.lift(triangles, view, 3.0)) unless triangles.empty?
         view.drawing_color = Sketchup::Color.new(*colour, OUTLINE_ALPHA) if view.respond_to?(:drawing_color=)
-        view.draw(GL_LINES, segments) unless segments.empty?
+        view.draw(GL_LINES, ColourBy::Tessellation.lift(segments, view, 3.0)) unless segments.empty?
       end
 
       # A tool callback that raises reaches the host, which has nowhere to put it. Every failure is
@@ -382,9 +394,7 @@ module PhComposer
         @pressed = false
         @hover = nil
         Diagnostics.exception("classify_tool", error)
-        if pending
-          @session.notice("The Classify tool could not complete that. #{Outcome::NOTHING_WRITTEN}", :tone => :error)
-        end
+        announce("The Classify tool could not complete that. #{Outcome::NOTHING_WRITTEN}", :error) if pending
         view.tooltip = "" if view.respond_to?(:tooltip=)
         view.invalidate if view.respond_to?(:invalidate)
       end

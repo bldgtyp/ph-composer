@@ -281,6 +281,14 @@ module Sketchup
       nil
     end
 
+    # SketchUp's status bar, which is where a modal tool's guidance goes when no panel is open.
+    attr_reader :status_texts
+
+    def status_text=(value)
+      (@status_texts ||= []) << value
+      value
+    end
+
     def add_observer(observer)
       (@observers ||= []) << observer
       true
@@ -332,6 +340,7 @@ module Sketchup
       RegionalSettings.reset
       @preserve_active_on_open = false
       @reuse_active_model_on_open = false
+      @status_texts = []
     end
   end
 end

@@ -182,6 +182,10 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty values("face_type").compact
     assert_includes @notices.map(&:last), :warning
     assert(@notices.any? { |message, _tone| message.include?("at most 2 Faces") })
+    # The panel is the only subscriber to a session notice, and a viewport tool is used with the
+    # panel closed, so a refusal that went only there would be silent where it matters.
+    assert(Sketchup.status_texts.any? { |text| text.include?("at most 2 Faces") },
+           "a refusal reaches the status bar, which needs no panel")
   end
 
   # Nothing to paint is a refusal the user can act on, not a silent no-op.
@@ -306,14 +310,22 @@ class ClassifyToolTest < PhComposerTestCase
     assert_nil @model.active_tool
   end
 
-  # The viewport context menu offers the palette only where it applies. With no tool running,
-  # SketchUp has selected what was right-clicked, so the selection is the signal.
+  # The viewport context menu offers the palette only where it applies, and the feature decides
+  # where that is: `shell/` builds from whatever declined or did not. With no tool running SketchUp
+  # has selected what was right-clicked, so the selection is the signal.
   def test_the_context_menu_offers_the_palette_over_a_face_and_not_elsewhere
     zone(1_170)
     PhComposer::Commands.install
 
     assert_empty submenu_names(UI.build_context_menu), "nothing selected means nothing was clicked"
 
+    # A right-click on a Zone at the Model root selects the Group, not a Face, and the palette is
+    # not what the user is reaching for there.
+    @model.selection.add(@zone_group)
+
+    assert_empty submenu_names(UI.build_context_menu)
+
+    @model.selection.clear
     @model.selection.add(@faces.fetch(0))
 
     assert_includes submenu_names(UI.build_context_menu), PhComposer::FaceAssignment::ClassifyMenu::MENU
@@ -434,6 +446,24 @@ class ClassifyToolTest < PhComposerTestCase
     assert_equal walked.zone.transform.to_a, picked.zone.transform.to_a
     assert_equal PhComposer::FaceAssignment::Geometry.suggested_values(walked),
                  PhComposer::FaceAssignment::Geometry.suggested_values(picked)
+  end
+
+  # `PickHelper#path_at` answers relative to the open edit context, not from the Model root: inside
+  # a Group, a Face's path is the Face alone. Without the active path prepended, every Face read as
+  # being in no Zone while the user was inside the Zone, which is where they mostly are. Measured on
+  # 26.1.188, 2026-09-20.
+  def test_a_pick_inside_an_open_edit_context_still_names_the_zone
+    zone(1_490)
+    tool.choose("face_type", "Wall")
+    @model.active_path = [@zone_group]
+    # What the host returns inside the context: the Face, with no Group above it.
+    @view.picks[[10, 10]] = [@faces.fetch(0)]
+
+    assert_equal [@zone_group, @faces.fetch(0)], PhComposer::Pick.face_path(@view, 10, 10)
+
+    click([10, 10])
+
+    assert_equal ["Wall"], values("face_type").compact
   end
 
   # A Face inside a Zone nested in another Zone belongs to the inner one: a walk stops descending

@@ -29,7 +29,7 @@ module PhComposer
           next if points.empty?
 
           view.drawing_color = fill_colour(colour)
-          view.draw(GL_TRIANGLES, points)
+          view.draw(GL_TRIANGLES, Tessellation.lift(points, view))
         end
         draw_outlines(view)
         draw_hud(view)
@@ -43,14 +43,14 @@ module PhComposer
           next if points.empty?
 
           view.drawing_color = outline_colour(colour)
-          view.draw(GL_LINES, points)
+          view.draw(GL_LINES, Tessellation.lift(points, view))
         end
         return if @service.unclassified_outlines.empty?
 
         # Unclassified entities are not filled: an absent record should not read as a colour choice.
         view.line_stipple = "-" if view.respond_to?(:line_stipple=)
         view.drawing_color = outline_colour(Palette::UNCLASSIFIED)
-        view.draw(GL_LINES, @service.unclassified_outlines)
+        view.draw(GL_LINES, Tessellation.lift(@service.unclassified_outlines, view))
         view.line_stipple = "" if view.respond_to?(:line_stipple=)
       end
 

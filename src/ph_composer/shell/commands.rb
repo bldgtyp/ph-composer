@@ -26,10 +26,10 @@ module PhComposer
         submenu.add_item(@open_panel)
         install_colour_by(submenu)
         @feature_menus = install_feature_menus(submenu)
-        # The same submenus on a right-click over a Face, which is where a modal painting tool is
-        # reached from in SketchUp's own grammar. SketchUp selects what was right-clicked before it
-        # builds the menu, so the selection is what says whether a Face is under the cursor.
-        UI.add_context_menu_handler { |menu| install_feature_menus(menu) if face_selected? }
+        # The same submenus on a right-click, which is where a modal painting tool is reached from
+        # in SketchUp's own grammar. A contextual build asks each item whether it applies to what is
+        # there, and a submenu whose items all decline does not appear at all.
+        UI.add_context_menu_handler { |menu| install_feature_menus(menu, :contextual => true) }
         @installed = true
       end
 
@@ -48,8 +48,12 @@ module PhComposer
 
       # One submenu per declared `menu` name, its items in registration order. The submenu name and
       # every label come from the declaring feature; this groups them and knows nothing else.
-      def install_feature_menus(parent)
-        Registry.current.menu_items.each_value.group_by(&:menu).map do |name, declarations|
+      def install_feature_menus(parent, contextual: false)
+        session = Sessions.current if contextual
+        Registry.current.menu_items.each_value.group_by(&:menu).filter_map do |name, declarations|
+          declarations = declarations.select { |item| available?(item, session) } if contextual
+          next if declarations.empty?
+
           menu = parent.add_submenu(name)
           declarations.each do |declaration|
             item = menu.add_item(declaration.label) { with_session { |session| declaration.handler.call(session) } }
@@ -60,14 +64,18 @@ module PhComposer
         end.to_h
       end
 
+      # An item with no `available` is always offered. One that declines is left out of the
+      # viewport menu entirely rather than greyed, because a right-click menu is already long.
+      def available?(item, session)
+        return false unless session
+        return true unless item.available
+
+        item.available.call(session)
+      end
+
       def item_check(declaration)
         session = Sessions.current
         session ? declaration.state.call(session) : MF_UNCHECKED
-      end
-
-      def face_selected?
-        model = Sketchup.active_model
-        model && model.selection.to_a.any? { |entity| entity.is_a?(Sketchup::Face) }
       end
 
       def with_session

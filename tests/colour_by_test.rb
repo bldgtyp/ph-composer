@@ -135,6 +135,22 @@ class ColourByTest < PhComposerTestCase
     assert_equal 3, service.fills.values.first.length, "only the visible Face is drawn"
   end
 
+  # A fill drawn exactly on the Face it colours z-fights with that Face and the host blinks between
+  # the two, so every drawn point is lifted toward the camera. The stub's camera is high above the
+  # fixtures at one model unit a pixel, so the lift reads as a clean +z of two units.
+  def test_every_drawn_point_is_lifted_off_the_face_toward_the_camera
+    zone_group(950, ["Wall"])
+    activate("ph_composer.face_assignment.by_face_type")
+    @model.overlays.to_a.first.draw(@model.active_view)
+
+    drawn = @model.active_view.draws.flat_map { |_mode, points, _colour, _width| points }
+
+    refute_empty drawn
+    # The camera is not exactly overhead of every vertex, so the lift is two units along the line
+    # to the eye rather than exactly two units of z.
+    drawn.each { |point| assert_in_delta 2.0, point.z, 0.01, "the Face sits at z = 0, the drawing above it" }
+  end
+
   # ------------------------------------------------------------------ lifecycle
 
   def test_turning_a_mode_on_adds_one_overlay_and_turning_it_off_removes_it
@@ -142,6 +158,9 @@ class ColourByTest < PhComposerTestCase
 
     service = activate("ph_composer.face_assignment.by_face_type")
     assert_equal 1, @model.overlays.to_a.length
+    # An overlay the host accepts is not one the host draws: `add` leaves it disabled and `draw` is
+    # never called until something enables it (context/SKETCHUP_HOST_BEHAVIOR.md).
+    assert @model.overlays.to_a.first.enabled?, "an added overlay still has to be enabled to draw"
 
     service.deactivate
     assert_equal 0, @model.overlays.to_a.length

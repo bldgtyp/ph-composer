@@ -24,10 +24,11 @@ MB_YESNO = 4 unless defined?(MB_YESNO)
 IDYES = 6 unless defined?(IDYES)
 IDNO = 7 unless defined?(IDNO)
 GL_LINES = 1 unless defined?(GL_LINES)
-# The Shift mask in a tool callback's `flags`. The host's own value; which physical key carries it
-# on macOS is a question for the Classify tool's host gate.
-CONSTRAIN_MODIFIER_MASK = 1 unless defined?(CONSTRAIN_MODIFIER_MASK)
-COPY_MODIFIER_MASK = 8 unless defined?(COPY_MODIFIER_MASK)
+# The modifier masks a tool callback's `flags` carries. These are the host's own values, measured on
+# 26.1.188, 2026-09-20: a plain click arrived as 2 and a Shift-click as 131074.
+CONSTRAIN_MODIFIER_MASK = 131_072 unless defined?(CONSTRAIN_MODIFIER_MASK)
+COPY_MODIFIER_MASK = 524_288 unless defined?(COPY_MODIFIER_MASK)
+ALT_MODIFIER_MASK = 1_048_576 unless defined?(ALT_MODIFIER_MASK)
 GL_TRIANGLES = 4 unless defined?(GL_TRIANGLES)
 
 $stub_loaded_files = {}

@@ -149,7 +149,7 @@ from 10,368 ms to 182 ms, the 50-target gesture from 3,352 ms to 164 ms, and the
 pins the property that the Model is walked a fixed number of times however many Faces a gesture
 names. See [the gesture cost evidence](evidence/p1-d-gesture-cost.md).
 
-P1-D D6 brings the offline suite to 412 Ruby tests with 1,658 assertions, green on both Ruby 3.2.2
+P1-D D6 brings the offline suite to 414 Ruby tests with 1,675 assertions, green on both Ruby 3.2.2
 and the 2.7.2 compatibility floor, with `make ci` green and Ruby coverage at 96.4%. It adds the
 Classify tool, the shared `core/` pick and drag primitives Spaces' Mark floor will reuse, Locate,
 and a fifth contribution seam. The tool calls D1's operation through the public interface with its
@@ -186,11 +186,28 @@ once. And `shell/commands.rb` named a feature and carried its words, which is th
 violation the new seam removes. The review also found the Shift flood unbounded by the gesture
 ceiling, now stopped one past it.
 
-No host gate ran. The gesture is the part of it no script can perform, so
-[`classify_tool_walkthrough.rb`](../../tools/examples/authoring/classify_tool_walkthrough.rb) arms
-the tool and asks Ed to drag; its nine questions and the four unmeasured assumptions behind them
-are in "What D6 left open" in [PLAN.md](PLAN.md). D1's two deferred native checks, one drag over
-forty Faces in one Undo and a gesture of 251 refusing in the viewport, are in the same walkthrough.
+D6's host gate ran on 2026-09-20 with Ed at the mouse, because SketchUp delivers pointer events to
+the active tool and the Ruby API synthesizes none. It passed, after eight findings were fixed and
+re-verified in the same session. One sweep over forty Faces is one gesture and one native Undo step
+named "Undo Classify Faces"; Shift-click takes a whole plane and stops at it; an over-ceiling
+gesture refuses whole with its reason in the status bar; Escape cancels; a click inside an open
+Zone paints; the palette appears on a right-click over a Face and not over a Zone Group; picking a
+native tool deactivates the tool and releases the mode it forced; and Locate resolves and selects.
+That also closes D1's two deferred native checks. See
+[the Classify tool evidence](evidence/p1-d-classify-tool.md).
+
+Three of the eight findings were defects no offline test could have caught, because the stub was
+wrong about the host where it mattered. `PickHelper#path_at` answers relative to the open edit
+context, so inside a Zone every Face read as being in no Zone, which is where a user works most of
+the time. `OverlaysManager#add` leaves an overlay disabled, so Colour-by reported itself active,
+built its cache and drew nothing at all on a real SketchUp; that is a D5 defect that shipped in
+that slice and survived its own review, because D5's host gate had not been run. And a fill drawn
+exactly on the Face it colours z-fights with it, so both the tool's tint and Colour-by's fills
+blinked; every drawn point is now lifted toward the camera. The rest: a refusal reached only the
+panel, which is closed while a viewport tool is in use; `Model#active_tool` does not exist on the
+host; the context menu tested for a selected Face where a root right-click selects the Group;
+`CONSTRAIN_MODIFIER_MASK` is 131072, not 1; and the walkthrough's cleanup missed renamed Zones.
+Every one is recorded in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../../context/SKETCHUP_HOST_BEHAVIOR.md).
 
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition

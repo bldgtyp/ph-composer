@@ -247,17 +247,22 @@ flood to compose transforms per container. And the flood stops one past the gest
 the same reason the drag set does, so a wall of thousands of pieces refuses rather than capturing
 the lot and then refusing.
 
-The host gate is the outstanding evidence, and the gesture is the part of it no script can perform:
-SketchUp delivers pointer events to the active tool and the Ruby API synthesizes none.
-[`classify_tool_walkthrough.rb`](../../tools/examples/authoring/classify_tool_walkthrough.rb) arms
-the tool and asks the operator to drag. It carries nine questions, four of them assumptions this
-code makes that nothing has measured: whether `PickHelper#path_at` is root-relative inside an open
-edit context, whether `CONSTRAIN_MODIFIER_MASK` is Shift on macOS and reaches a button event's
-flags, whether `onMouseMove` arrives while the button is held and a mouse-up follows a drag that
-left the viewport, and whether SketchUp selects the right-clicked Face before it builds the context
-menu. It also picks up D1's two deferred native checks, which were deferred to D6 for want of a
-real gesture: one drag over forty Faces reverting in one Undo, and a gesture of 251 refusing in the
-viewport.
+The host gate passed on 2026-09-20 with Ed at the mouse, and closed D1's two deferred native checks
+with it. It cost eight findings, three of them defects the offline suite could not have caught: the
+pick is relative to the open edit context, an added overlay is disabled until something enables it,
+and a fill drawn on the Face it colours z-fights with it. The second of those is a D5 defect that
+meant Colour-by had never drawn on a real host. See
+[the Classify tool evidence](evidence/p1-d-classify-tool.md) and the new rows in
+[`context/SKETCHUP_HOST_BEHAVIOR.md`](../../context/SKETCHUP_HOST_BEHAVIOR.md).
+
+Two host behaviours were measured and deliberately not worked around. A custom tool does not
+receive double-click-to-enter-group, which belongs to the Select tool as it does for every native
+drawing tool; the tool reaches geometry inside a Zone through the picked path instead. And Escape
+unwinds one layer per press, the tool first and the edit context second, which is the rule the UI
+polish skill sets.
+
+A release outside the viewport and a Model switch during an active gesture were not driven. The
+tool defends against both and neither is host-verified.
 
 ### What D5 left open
 
@@ -290,7 +295,17 @@ Two decisions D7 will build on, recorded here so it does not have to guess:
   external client can see the active mode but cannot set it. D7's panel control needs a write
   channel, and what that channel is remains open.
 
-The host gate is the outstanding evidence, and it carries three assumptions this code makes that
+Part of D5's host gate ran on 2026-09-20 alongside D6's, on the same host, and it cost two defects:
+`OverlaysManager#add` leaves an overlay disabled, so a mode turned on drew nothing at all on a real
+SketchUp, and a fill drawn exactly on the Face it colours z-fights with that Face, so it blinked
+rather than reading. Colour-by had therefore never drawn on a host until D6's gate. Both are fixed
+and re-verified: the HUD is legible, the unclassified outlines and the classified fills both draw,
+and the overlay arrives and leaves with its mode
+([evidence](evidence/p1-d-classify-tool.md)). The lesson is the slice's, not the defects': D5 was
+reviewed, tested and recorded as implemented with its host gate unrun, and the gate was where both
+defects lived.
+
+The rest of that gate is still outstanding, and it carries three assumptions this code makes that
 nothing has measured:
 [`colour_by_walkthrough.rb`](../../tools/examples/authoring/colour_by_walkthrough.rb) asks each one.
 `Face#mesh` is assumed to triangulate a holed or concave Face into the fill's triangles, where the

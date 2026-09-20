@@ -204,10 +204,12 @@ module PhComposer
       def check_menu_items
         @staging.declared_menu_items.each do |item|
           next if text?(item.label) && text?(item.menu) && item.handler &&
-                  (item.state.nil? || item.state.respond_to?(:call))
+                  (item.state.nil? || item.state.respond_to?(:call)) &&
+                  (item.available.nil? || item.available.respond_to?(:call))
 
           add("registration.schema_invalid", item.owner, item.name,
-              "#{item.name} needs a label, a submenu name and a handler block; state must be callable.")
+              "#{item.name} needs a label, a submenu name and a handler block; state and available " \
+              "must be callable.")
         end
       end
 

@@ -186,11 +186,18 @@ module PhComposer
         rows.sort_by { |row| [row.state == :unclassified ? 1 : 0, -row.count, row.label] }
       end
 
+      # An overlay SketchUp accepts is not an overlay SketchUp draws. `OverlaysManager#add` leaves
+      # it disabled, so it appears unticked in the Overlays panel and `draw` is never called; a
+      # mode turned on drew nothing at all until this was measured on 26.1.188, 2026-09-20.
+      # Enabling it here is right because it is added when a mode is turned on and removed when the
+      # mode goes off, so this never overrides a choice the user made about an overlay of ours that
+      # is sitting there.
       def attach_overlay
         return unless live_model
 
         @overlay ||= Overlay.new(self)
         live_model.overlays.add(@overlay)
+        @overlay.enabled = true if @overlay.respond_to?(:enabled=)
       end
 
       # A closed Model still answers `respond_to?(:overlays)`, and reading them raises. The session

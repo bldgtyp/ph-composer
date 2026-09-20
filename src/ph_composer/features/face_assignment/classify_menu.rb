@@ -32,7 +32,8 @@ module PhComposer
           spec.fetch("values").each { |value| declare(feature, field, value, spec) }
           declare(feature, field, nil, spec)
         end
-        feature.menu_item("#{FEATURE_ID}.classify_off", :label => OFF, :menu => MENU) do |session|
+        feature.menu_item("#{FEATURE_ID}.classify_off", :label => OFF, :menu => MENU,
+                          :available => ->(session) { classifiable?(session) }) do |session|
           FaceAssignment.classify_tool(session).stop
         end
       end
@@ -41,9 +42,22 @@ module PhComposer
         label = value ? spec.fetch("labels").fetch(value, value) : "#{KEEP} (#{spec.fetch('noun')})"
         feature.menu_item("#{FEATURE_ID}.classify_#{field}_#{value ? value.downcase : "keep"}",
                           :label => label, :menu => MENU, :separator_after => value.nil?,
-                          :state => ->(session) { check(session, field, value) }) do |session|
+                          :state => ->(session) { check(session, field, value) },
+                          :available => ->(session) { classifiable?(session) }) do |session|
           FaceAssignment.classify_tool(session).choose(field, value)
         end
+      end
+
+      # Whether a right-click landed on something this palette paints, which is a Face and nothing
+      # else (PRD "a right-click on a face"). SketchUp selects what was right-clicked before it
+      # builds the menu, so the selection is the signal.
+      #
+      # At the Model root a right-click on a Zone selects the Group, not a Face, so the palette is
+      # not offered there: the Group is what the user pointed at, and Erase, Hide and Explode are
+      # what they are likely to want. Opening the Zone and right-clicking a Face offers it.
+      # Measured on 26.1.188, 2026-09-20.
+      def classifiable?(session)
+        session.model.selection.to_a.any? { |entity| entity.is_a?(Sketchup::Face) }
       end
 
       def check(session, field, value)

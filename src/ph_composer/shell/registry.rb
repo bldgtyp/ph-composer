@@ -220,10 +220,10 @@ module PhComposer
       end
 
       # One native menu item under the named submenu. The handler receives the current ModelSession.
-      def menu_item(name, label:, menu:, separator_after: false, state: nil, &handler)
+      def menu_item(name, label:, menu:, separator_after: false, state: nil, available: nil, &handler)
         declaration = Declarations::MenuItem.new(
           :name => name, :owner => id, :label => label, :menu => menu,
-          :separator_after => separator_after, :state => state, :handler => handler
+          :separator_after => separator_after, :state => state, :available => available, :handler => handler
         )
         @staging.add(:declared_menu_items, id, name, declaration)
       end
