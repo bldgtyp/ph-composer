@@ -24,16 +24,17 @@ record together with these choices rather than repeat its 22-question interview.
   copy/split identity, tolerance measurements and bounded export geometry reads. The plan sets
   requirements but does not pretend these APIs exist. Resolve through design and evidence;
   involve Ed only if the result changes accepted behavior.
-- **P1-D:** confirm the proposed 1,000-affected-face Classify ceiling against host measurements,
-  including reciprocal retirement targets. Test the accepted limit and one above it. This is an
-  engineering bound to settle before the gesture is accepted, not a new product interview.
-  Implemented in D1 as a feature bound, not a schema bound, so one Face over it refuses the whole
-  gesture with `gesture.too_large`; the offline suite covers exactly 1,000 and 1,001, and a reduced
-  bound covers refusal driven by reciprocal targets. The host measurement is outstanding, and one
-  offline measurement already argues for lowering the number: a 500-Face gesture that retires 500
-  reciprocal counterparts took about 13 seconds against the stub, because occurrence resolution
-  walks the Model once per Face. Measure a real gesture on the proving host before accepting 1,000,
-  and treat resolver cost, not just Face count, as the thing the ceiling is protecting.
+- **P1-D, settled 2026-09-20:** the Classify ceiling is 250 affected Face occurrences, reciprocal
+  retirement targets included, deduplicated before counting. The proposed 1,000 was measured and
+  rejected: a gesture affecting 1,000 Faces took about 13 seconds against the offline stub, because
+  `Occurrences.resolve_face` walks the Model once per Face. Ed accepted lowering it on 2026-09-20.
+  250 stays far above a realistic drag and bounds the worst case to roughly a quarter of that.
+  A ceiling bounds the blast radius; it cannot bound elapsed time, because the cost scales with the
+  Model as well as the gesture. The resolution cost is D6's to fix and is on that slice's
+  dependency list. Implemented as a feature bound, not a schema bound, so one Face over it refuses
+  the whole gesture with `gesture.too_large`; the offline suite covers exactly 250, 251, and
+  refusal driven by reciprocal targets. Re-measure a real drag on the proving host in D6 and
+  revise the constant if that measurement disagrees.
 - **P1-D, settled in D1:** the ceiling applies to the Classify gesture only. Suggest classification
   for this Zone carries no ceiling, because it is a separate named batch over one Zone the user has
   already chosen rather than a pointer gesture whose target set the user cannot see. A Zone with

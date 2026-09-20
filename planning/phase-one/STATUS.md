@@ -68,12 +68,13 @@ acceptance covered the P1-B UI. SketchUp 2023, Windows and public distribution r
 
 P1-D D1 and D2 pass 279 Ruby tests with 1,238 assertions on both Ruby 3.2.2 and the 2.7.2
 compatibility floor, with `make ci` green and Ruby coverage at 95.7%. The offline checks cover the
-gesture ceiling at exactly 1,000 and the refusal at 1,001, occurrence deduplication, a host write
+gesture ceiling at exactly 250 and the refusal at 251, refusal driven by reciprocal targets,
+occurrence deduplication, a host write
 failure part-way through a gesture rolling every Face back, both endpoints of one pair classified
 in a single gesture, Suggest classification leaving existing records alone, Reverse face keeping
 the record while the pair reads stale, and the Attached zone reference states and guarded delete.
-No host gate ran for these slices: the 1,000 ceiling still needs its P1-D host measurement, and
-the native gesture, Undo/Redo and reopen checks wait for the Classify tool in D6.
+No host gate ran for these slices. Ed accepted deferring them to D6, when there is a real gesture
+to perform; the ceiling's own host re-measurement belongs to the same slice.
 
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition

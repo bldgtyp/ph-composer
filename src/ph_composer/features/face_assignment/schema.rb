@@ -12,9 +12,12 @@ module PhComposer
     BOUNDARY_CONDITIONS = %w[Outdoors Ground Adiabatic Surface AttachedZone].freeze
     # Surface belongs to Solve adjacencies; every other condition is the Classify tool's.
     ASSIGNABLE_BOUNDARIES = %w[Outdoors Ground Adiabatic AttachedZone].freeze
-    # The ceiling on Face occurrences one gesture may affect, counterparts included. Confirm or
-    # revise it against P1-D host measurements before the gesture work closes.
-    GESTURE_FACE_LIMIT = 1_000
+    # The ceiling on Face occurrences one gesture may affect, counterparts included. Lowered from
+    # the proposed 1,000 on 2026-09-20: a gesture affecting 1,000 Faces measured about 13 seconds
+    # against the offline stub, because occurrence resolution walks the Model once per Face. 250 is
+    # still far above a realistic drag and bounds the worst case to roughly a quarter of that. The
+    # cost itself is D6's to fix; a ceiling bounds the blast radius, it cannot bound elapsed time.
+    GESTURE_FACE_LIMIT = 250
 
     class << self
       # The shipped bound is always GESTURE_FACE_LIMIT. The writer exists so a test can reach the
