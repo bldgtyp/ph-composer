@@ -1,16 +1,19 @@
 # frozen_string_literal: true
 
 module PhComposer
-  # The native commands: the Extensions submenu entry that opens the panel, and the Colour by menu.
-  # A feature's menu placement arrives with the first action that needs one (CONTRACTS.md
-  # "Implemented in P0-D").
+  # The native commands: the Extensions submenu entry that opens the panel, the Colour by menu built
+  # from whatever modes are registered, and the submenus built from whatever menu items are.
+  #
+  # Nothing here names a feature or carries a feature's words. A feature that wants a native menu
+  # declares `menu_item` in its own `install`, and it appears here and in the viewport context menu
+  # with no line added below (context/EXTENSIBILITY.md).
   module Commands
     OPEN_PANEL = "Open PH-Composer"
     COLOUR_BY = "Colour by"
     COLOUR_BY_OFF = "Off"
 
     class << self
-      attr_reader :open_panel, :colour_by_menu
+      attr_reader :open_panel, :colour_by_menu, :feature_menus
 
       def install
         return if @installed
@@ -22,6 +25,11 @@ module PhComposer
         submenu = UI.menu("Extensions").add_submenu(EXTENSION_NAME)
         submenu.add_item(@open_panel)
         install_colour_by(submenu)
+        @feature_menus = install_feature_menus(submenu)
+        # The same submenus on a right-click over a Face, which is where a modal painting tool is
+        # reached from in SketchUp's own grammar. SketchUp selects what was right-clicked before it
+        # builds the menu, so the selection is what says whether a Face is under the cursor.
+        UI.add_context_menu_handler { |menu| install_feature_menus(menu) if face_selected? }
         @installed = true
       end
 
@@ -38,13 +46,41 @@ module PhComposer
         @colour_by_menu.set_validation_proc(off) { colour_by_check(nil) }
       end
 
-      def colour_by
+      # One submenu per declared `menu` name, its items in registration order. The submenu name and
+      # every label come from the declaring feature; this groups them and knows nothing else.
+      def install_feature_menus(parent)
+        Registry.current.menu_items.each_value.group_by(&:menu).map do |name, declarations|
+          menu = parent.add_submenu(name)
+          declarations.each do |declaration|
+            item = menu.add_item(declaration.label) { with_session { |session| declaration.handler.call(session) } }
+            menu.set_validation_proc(item) { item_check(declaration) } if declaration.state
+            menu.add_separator if declaration.separator_after
+          end
+          [name, menu]
+        end.to_h
+      end
+
+      def item_check(declaration)
+        session = Sessions.current
+        session ? declaration.state.call(session) : MF_UNCHECKED
+      end
+
+      def face_selected?
+        model = Sketchup.active_model
+        model && model.selection.to_a.any? { |entity| entity.is_a?(Sketchup::Face) }
+      end
+
+      def with_session
         session = Sessions.current
         return unless session
 
-        yield ColourBy.for(session)
+        yield session
       rescue UserError => error
         session.notice(error.message, :tone => :warning)
+      end
+
+      def colour_by
+        with_session { |session| yield ColourBy.for(session) }
       end
 
       def colour_by_check(name)
@@ -57,6 +93,7 @@ module PhComposer
         @installed = false
         @open_panel = nil
         @colour_by_menu = nil
+        @feature_menus = nil
       end
     end
   end

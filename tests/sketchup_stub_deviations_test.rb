@@ -111,4 +111,21 @@ class SketchupStubDeviationsTest < PhComposerTestCase
     assert_equal [0.0, 0.0, 0.0], [face.mesh(0).point_at(1).x, face.mesh(0).point_at(1).y,
                                    face.mesh(0).point_at(1).z]
   end
+
+  # SketchUp's `PickHelper` ray-casts the Model from screen coordinates and orders what it hits by
+  # how good a pick each is. The stub answers from a table a fixture filled in, because an offline
+  # suite has no camera to cast through: it is how a test says "the pointer is over this Face", and
+  # it is never evidence about what the host picks. What `path_at` returns while an edit context is
+  # open is a D6 host-gate item (tools/examples/authoring/classify_tool_walkthrough.rb).
+  def test_the_stub_picks_what_a_fixture_put_at_those_coordinates_in_the_order_it_listed
+    view = Sketchup.active_model.active_view
+    face = Sketchup::Face.new(9_201, {})
+    edge = Sketchup::Edge.new(9_202, Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(1, 0, 0))
+    view.picks[[4, 5]] = [[edge], [face]]
+
+    assert_equal 2, view.pick_helper.do_pick(4, 5)
+    assert_equal edge, view.pick_helper.leaf_at(0)
+    assert_equal [face], PhComposer::Pick.face_path(view, 4, 5), "the first path ending in a Face wins"
+    assert_equal 0, view.pick_helper.do_pick(9, 9)
+  end
 end

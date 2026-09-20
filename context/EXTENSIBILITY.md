@@ -93,6 +93,34 @@ nothing to the Model, so it is not a registered action: it is reached through th
 menu, which is built from whatever modes are registered, and read back through the registered
 `ph_composer.colour_by.state` query. Nothing in `shell/` or `session/` names a mode or a feature.
 
+### Native menu items
+
+Implemented in P1-D. Some things a user asks for change no record and open no operation: starting a
+viewport tool, choosing its palette, turning a Colour-by mode on. They are not actions, because an
+action is a validated Model change, and registering them as one would manufacture an Undo entry for
+something that changed nothing. A feature declares them as menu items instead:
+
+```ruby
+feature.menu_item("ph_composer.face_assignment.classify_face_type_wall",
+                  label: "Wall", menu: "Classify faces",
+                  state: ->(session) { ... MF_CHECKED or MF_UNCHECKED }) do |session|
+  FaceAssignment.classify_tool(session).choose("face_type", "Wall")
+end
+```
+
+`menu` is the submenu's label and is open prose; items are grouped under it in registration order,
+and `separator_after` closes a group. The handler receives the current `ModelSession`. `state` is
+optional and is what makes an item show whether its choice is the current one.
+
+`shell/` builds the Extensions submenu and the viewport context menu from whatever is registered,
+so an outside feature reaches both without a line added to it. Nothing in `shell/` or `session/`
+names a menu item, a mode or a feature, and no feature's words appear there: a label comes from the
+declaring feature, which is also where `context/UBIQUITOUS_LANGUAGE.md`'s glossary words live.
+
+A menu item is not the whole story for a feature that also needs a panel control or an external
+client to reach the same state. What the write channel for viewport state should be is open; see
+the Overview UI slice in `planning/phase-one/PLAN.md`.
+
 ## Metadata and structured extension data
 
 Every authored domain entity supports a JSON-compatible `user_data` mapping, including definitions

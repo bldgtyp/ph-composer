@@ -1,7 +1,7 @@
 # Phase 1: walking skeleton
 
 DATE: 2026-09-20
-STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D's D1 to D5 implemented, D4 host-verified, D6 to D7 remain.
+STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D's D1 to D6 implemented, D4 host-verified, D7 remains.
 ISSUE: none (local planning draft)
 
 Phase 0 merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1), local merge

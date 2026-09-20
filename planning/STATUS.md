@@ -17,9 +17,9 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Phase 1 walking skeleton | delivery plan | In progress; P1-A through P1-C complete and P1-D's D1 to D4 implemented | none (local implementation packet) | [phase-one/](phase-one/README.md); D5 to D7 remain |
+| Phase 1 walking skeleton | delivery plan | In progress; P1-A through P1-C complete and P1-D's D1 to D6 implemented | none (local implementation packet) | [phase-one/](phase-one/README.md); D7 remains |
 | Zones and adjacency | feature | In progress; partial-overlap cut, repairs and whole-scope Solve host-verified | none (local planning draft) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
-| Face assignment | feature | In progress; bounded Classify gestures and Attached zones implemented | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
+| Face assignment | feature | In progress; the Classify tool, bounded gestures and Attached zones implemented | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
 | Validation and export | feature | In progress; P1-C HBJSON proof implemented | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); P1-E workflow remains |
 | METr exporter and consumer acceptance | feature | Deferred; return milestone unscheduled | none (local planning draft) | [validation/export plan](features/validation-and-export/PLAN.md); Ed deferred until further feature development on 2026-09-20 |
 | Spaces | feature | Scoped, interviewed | none (no remote) | [features/spaces/](features/spaces/README.md) |

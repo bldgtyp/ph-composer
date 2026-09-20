@@ -17,7 +17,7 @@ module PhComposer
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
     attr_reader :features, :queries, :actions, :record_kinds, :extensions, :snapshot_sections, :export_contributors,
-                :proposal_participants, :colour_modes, :subscriptions
+                :proposal_participants, :colour_modes, :menu_items, :subscriptions
 
     class << self
       def current
@@ -54,6 +54,7 @@ module PhComposer
       @export_contributors = {}
       @proposal_participants = {}
       @colour_modes = {}
+      @menu_items = {}
       @subscriptions = []
       @unsubscribers = []
       @owners = {}
@@ -90,6 +91,7 @@ module PhComposer
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
       publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
       publish_each(staging.declared_colour_modes, @colour_modes, :name)
+      publish_each(staging.declared_menu_items, @menu_items, :name)
       staging.owners.each { |name, owner| @owners[name] = owner }
       staging.declared_subscriptions.each do |subscription|
         @subscriptions << subscription
@@ -113,7 +115,8 @@ module PhComposer
     class Staging
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_record_kinds,
                   :declared_extensions, :declared_snapshot_sections, :declared_export_contributors,
-                  :declared_proposal_participants, :declared_colour_modes, :declared_subscriptions, :owners, :named
+                  :declared_proposal_participants, :declared_colour_modes, :declared_menu_items,
+                  :declared_subscriptions, :owners, :named
 
       def initialize(live)
         @live = live
@@ -126,6 +129,7 @@ module PhComposer
         @declared_export_contributors = []
         @declared_proposal_participants = []
         @declared_colour_modes = []
+        @declared_menu_items = []
         @declared_subscriptions = []
         @owners = {}
         @named = []
@@ -213,6 +217,15 @@ module PhComposer
           :sort => sort, :projection => projection
         )
         @staging.add(:declared_colour_modes, id, name, declaration)
+      end
+
+      # One native menu item under the named submenu. The handler receives the current ModelSession.
+      def menu_item(name, label:, menu:, separator_after: false, state: nil, &handler)
+        declaration = Declarations::MenuItem.new(
+          :name => name, :owner => id, :label => label, :menu => menu,
+          :separator_after => separator_after, :state => state, :handler => handler
+        )
+        @staging.add(:declared_menu_items, id, name, declaration)
       end
 
       def proposal_participant(name, &handler)

@@ -24,6 +24,10 @@ MB_YESNO = 4 unless defined?(MB_YESNO)
 IDYES = 6 unless defined?(IDYES)
 IDNO = 7 unless defined?(IDNO)
 GL_LINES = 1 unless defined?(GL_LINES)
+# The Shift mask in a tool callback's `flags`. The host's own value; which physical key carries it
+# on macOS is a question for the Classify tool's host gate.
+CONSTRAIN_MODIFIER_MASK = 1 unless defined?(CONSTRAIN_MODIFIER_MASK)
+COPY_MODIFIER_MASK = 8 unless defined?(COPY_MODIFIER_MASK)
 GL_TRIANGLES = 4 unless defined?(GL_TRIANGLES)
 
 $stub_loaded_files = {}

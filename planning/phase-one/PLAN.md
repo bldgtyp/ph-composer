@@ -159,7 +159,7 @@ focused tests; the stage closes only when A04 to A09 all have evidence.
 | D3 | Explicit copied-Zone identity repair and limited Restore Zone | Implemented on branch |
 | D4 | Partial-overlap splitting, sliver skips and out-of-scope reciprocal refusal | Implemented on branch |
 | D5 | Shared Colour-by registry, overlay, HUD and cache invalidation | Implemented on branch |
-| D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Pending |
+| D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Implemented on branch |
 | D7 | Overview Zone tree and faces table | Pending |
 
 D6 is the gesture itself, distinct from D1's operation. A04's atomic-gesture row needs both.
@@ -205,6 +205,60 @@ took it from 12,764 ms to 205 ms; that is the read D7's faces table is built on.
 at 250 and keeps its own job, which is bounding what one gesture can change; its refusal still
 costs 3.6 ms, before anything is resolved.
 
+### What D6 left open
+
+The tool is implemented and calls D1's operation through the public interface like any other
+client, with its own caller handle and sequence numbers. It opens no Model operation itself, so an
+abandoned gesture writes nothing and leaves no Undo entry, and one completed gesture is one invoke
+and therefore one Undo step however many Faces the pointer crossed. A pointer move costs no Model
+walk: `Zones::Occurrences.occurrence_for_path` builds the occurrence from the picked instance path,
+which is what makes hover affordable after what D6's own measurement found a walk to cost.
+
+The slice added a fifth contribution seam, `menu_item`, because it had to. The palette began as a
+table inside `shell/commands.rb`, which named a feature and carried honeybee's words in a second
+place; `context/EXTENSIBILITY.md` states that nothing in `shell/` or `session/` names a feature,
+and that invariant is what the contributor argument rests on. A feature now declares its native
+menu items the way it declares its Colour-by modes, and `shell/` groups them without reading one.
+
+Four things are deliberately not in this slice:
+
+- **The panel palette is D7's.** The PRD puts the face-type and boundary-condition chips, the
+  Attached zone picker and the assembly picker in the panel, and the panel is the Overview UI. Until
+  then the palette is the native Classify menu, which offers one item per assignable face type and
+  boundary condition. Attached zone is not among them: it needs a record picker and an inline
+  "New attached zone" route, which is panel work.
+- **Locate has no user route yet, and is not registered.** It changes the selection and the camera
+  and nothing else, so registering it as an action would manufacture an Undo entry for a read.
+  `context/AGENT_INTERFACE.md` names "explicit selection, reveal and camera operations for visual
+  inspection" as something to support, so this is a gap against accepted direction rather than a
+  neutral choice, and it closes with the write channel D5 left open. The PRD already puts Locate's
+  surface on the faces table, which is D7's.
+- **No toolbar button and no cursor change.** The UI polish skill's drawing-tool state rule asks for
+  a pressed button, a changed icon and a changed cursor together; the repository ships no image
+  assets at all, and adding the first is a decision of its own. The menu check mark carries the
+  state meanwhile. PRD line 118 names the toolbar button; it stays owed.
+- **Select all faces of this type in Zone** is the PRD's right-click selection command, not a paint
+  gesture, and is not built.
+
+Two narrowings worth recording rather than leaving the PRD sentence unqualified. Shift-click floods
+"every connected coplanar Face in the same container", where the PRD says "in the same Zone": the
+two differ only when a Zone holds nested plain Groups, and crossing that boundary would need the
+flood to compose transforms per container. And the flood stops one past the gesture ceiling, for
+the same reason the drag set does, so a wall of thousands of pieces refuses rather than capturing
+the lot and then refusing.
+
+The host gate is the outstanding evidence, and the gesture is the part of it no script can perform:
+SketchUp delivers pointer events to the active tool and the Ruby API synthesizes none.
+[`classify_tool_walkthrough.rb`](../../tools/examples/authoring/classify_tool_walkthrough.rb) arms
+the tool and asks the operator to drag. It carries nine questions, four of them assumptions this
+code makes that nothing has measured: whether `PickHelper#path_at` is root-relative inside an open
+edit context, whether `CONSTRAIN_MODIFIER_MASK` is Shift on macOS and reaches a button event's
+flags, whether `onMouseMove` arrives while the button is held and a mouse-up follows a drag that
+left the viewport, and whether SketchUp selects the right-clicked Face before it builds the context
+menu. It also picks up D1's two deferred native checks, which were deferred to D6 for want of a
+real gesture: one drag over forty Faces reverting in one Undo, and a gesture of 251 refusing in the
+viewport.
+
 ### What D5 left open
 
 The seam, the service and the two features' modes are implemented. A feature declares a mode with
@@ -220,7 +274,9 @@ Three things are deliberately not in this slice:
   ships the viewport HUD, which is what a QA screenshot carries and needs no panel.
 - **Forced on while the Classify tool is active is D6's,** since the tool it follows lands there.
   The mode the user last chose is already remembered (`Preferences.colour_by_mode`), which is the
-  half of Q12 that does not need the tool.
+  half of Q12 that does not need the tool. D6 implements the other half: the tool turns a mode on
+  without remembering it, and turns off only the mode it turned on, and only while that is still
+  the active one.
 - **The assembly mode waits for Phase 2 assemblies,** which own the display colour it would read.
 
 Two decisions D7 will build on, recorded here so it does not have to guess:

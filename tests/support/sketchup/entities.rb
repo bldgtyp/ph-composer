@@ -154,9 +154,37 @@ module Sketchup
     end
   end
 
+  # The host picks whatever is under the pointer; the stub picks whatever a fixture put at those
+  # coordinates. `picks` maps [x, y] to one root-to-leaf entity path, or to several when a test
+  # means to check that the best Face wins over a nearer Edge.
+  class PickHelper
+    def initialize(view)
+      @view = view
+      @paths = []
+    end
+
+    def do_pick(x_value, y_value)
+      found = @view.picks[[x_value, y_value]]
+      @paths = found.nil? ? [] : (found.first.is_a?(Array) ? found : [found])
+      @paths.length
+    end
+
+    def count
+      @paths.length
+    end
+
+    def path_at(index)
+      @paths[index]
+    end
+
+    def leaf_at(index)
+      @paths[index]&.last
+    end
+  end
+
   class View
-    attr_accessor :line_width, :drawing_color, :pick_result, :line_stipple
-    attr_reader :model, :draws, :screen_draws, :texts, :invalidations, :zoomed
+    attr_accessor :line_width, :drawing_color, :pick_result, :line_stipple, :tooltip
+    attr_reader :model, :draws, :screen_draws, :texts, :invalidations, :zoomed, :picks
 
     def initialize(model)
       @model = model
@@ -165,6 +193,11 @@ module Sketchup
       @texts = []
       @invalidations = 0
       @zoomed = []
+      @picks = {}
+    end
+
+    def pick_helper
+      @pick_helper ||= PickHelper.new(self)
     end
 
     def draw(mode, points)

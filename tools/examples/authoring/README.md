@@ -147,3 +147,51 @@ gesture or in the walk; it rebuilds the Model at every size, so expect it to tak
 Run the two curves in that order and read them together. A gesture cost that grows with the Model
 at a fixed gesture size is the Model walk, not the gesture, and no ceiling fixes it. `inventory`
 reports `list_ms` alongside, which is how the quadratic Face read was found.
+
+## P1-D D6: the Classify tool
+
+`classify_tool_walkthrough.rb` is the tool's own gate. The gesture is the part no script can
+perform: SketchUp delivers pointer events to the active tool and the Ruby API synthesizes none, so
+this arms the tool and then asks you to click and drag. A scripted gesture would only re-measure
+the operation D1 already tests and would say nothing about the pick, the modifier mask or the edit
+context, which are what this gate exists to answer.
+
+```sh
+uv run tools/hostkit/host_bridge.py eval \
+  'load "/absolute/path/to/ph-composer/tools/examples/authoring/classify_tool_walkthrough.rb"; ClassifyToolWalkthrough.setup(40)'
+uv run tools/hostkit/host_bridge.py eval 'ClassifyToolWalkthrough.arm("Wall", "Outdoors")'
+```
+
+Then, in the viewport: drag across all forty Faces in one gesture, read `report`, send
+`ClassifyToolWalkthrough.undo` and read `report` again. One drag must revert in one Undo.
+
+Run `pick(x, y)` over one Face twice, once at the Model root and once with the Zone open for
+editing, and compare `picked_reference` with `walked_reference`. Every occurrence reference the
+tool builds comes from the picked path, so the two must agree in both contexts. If they differ
+inside the edit context, `PickHelper#path_at` is context-relative and `Pick.face_path` has to
+rebase it.
+
+Shift-click one Face and read `report`'s `classified` count. More than one means
+`CONSTRAIN_MODIFIER_MASK` really is Shift on this host and really is set in the flags a button
+event carries; exactly one means neither, and the mask needs measuring. Nothing scripted can
+answer this: SketchUp reports a modifier only inside an event it delivers to the active tool.
+
+Start a drag and press Escape mid-drag, then leave the viewport mid-drag and release outside it.
+Both must leave the Model unchanged and no Undo entry behind. Then, with the tool active, activate
+another Model, open and close an edit context, and pick a native tool, recording what the host does
+to the active tool each time.
+
+Run `setup(251)` and drag over the lot: the gesture must refuse in the viewport the way it refuses
+through the API, with nothing painted. That is D1's deferred native check, kept here because a real
+gesture is what it needs.
+
+Right-click over a Face and then over empty space. The Classify submenu is offered only when a Face
+is under the cursor, which the handler decides from the selection SketchUp makes before it builds
+the menu. Record whether SketchUp really does select the right-clicked Face first, because the
+submenu appearing on every right-click, or on none, is what a wrong answer looks like.
+
+Finally, turn a Colour-by mode on by hand, run the tool and stop it, and confirm the mode the user
+chose is still the remembered one (PRD Q12). Do it the other way too: start the tool, pick a
+different mode from the Colour by menu while it runs, and stop the tool; that mode is the user's
+choice and must survive. Then `locate_unclassified` with the Zone closed and open, recording
+whether SketchUp shows a selection made outside the active edit context.

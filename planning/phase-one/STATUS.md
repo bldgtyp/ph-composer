@@ -1,7 +1,7 @@
 # Phase 1 status
 
 DATE: 2026-09-20
-STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized, with D1 to D5 implemented and D6 to D7 remaining.
+STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized, with D1 to D6 implemented and D7 remaining.
 ISSUE: none (local implementation packet)
 
 ## Current handoff
@@ -30,7 +30,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
   development and its floor-area/import questions. P1-E still owns the shipped HBJSON wheel set.
 - Create/link the implementation issue during authorized issue intake. The configured remote is
   `bldgtyp/ph-composer`; P1-A created no external issue or PR.
-- P1-D is authorized. Its slices are tracked in [PLAN.md](PLAN.md); D6 and D7 remain. See "What D4 left open" in the plan for the two shapes the solver reports rather than cuts.
+- P1-D is authorized. Its slices are tracked in [PLAN.md](PLAN.md); D7 remains. See "What D4 left open" in the plan for the two shapes the solver reports rather than cuts.
 
 ## Stages
 
@@ -39,7 +39,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 | P1-A: geometry contracts and host investigation | Complete | [Contract](CONTRACTS.md); [host evidence](evidence/p1-a-geometry.md); A01 met |
 | P1-B: Zone and face authoring core | Complete | [Authoring evidence](evidence/p1-b-authoring.md); A02/A03 and the P1-B portion of A04 met |
 | P1-C: adjacency and early HBJSON proof | Complete on branch | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
-| P1-D: complete Phase 1 authoring UI and repairs | In progress | D1 to D5 implemented; the offline portions of A04, A06, A07 and A08 pass and D4's host gate passed. Slice table in [PLAN.md](PLAN.md) |
+| P1-D: complete Phase 1 authoring UI and repairs | In progress | D1 to D6 implemented; the offline portions of A04, A06, A07 and A08 pass and D4's host gate passed. Slice table in [PLAN.md](PLAN.md) |
 | P1-E: HBJSON/report export workflow | Scoped | Pending; remaining canonical-export choices open |
 | P1-F: acceptance and handoff | Scoped | Pending |
 
@@ -149,6 +149,47 @@ from 10,368 ms to 182 ms, the 50-target gesture from 3,352 ms to 164 ms, and the
 pins the property that the Model is walked a fixed number of times however many Faces a gesture
 names. See [the gesture cost evidence](evidence/p1-d-gesture-cost.md).
 
+P1-D D6 brings the offline suite to 410 Ruby tests with 1,650 assertions, green on both Ruby 3.2.2
+and the 2.7.2 compatibility floor, with `make ci` green and Ruby coverage at 96.4%. It adds the
+Classify tool, the shared `core/` pick and drag primitives Spaces' Mark floor will reuse, Locate,
+and a fifth contribution seam. The tool calls D1's operation through the public interface with its
+own caller handle and sequence numbers and opens no Model operation itself, so an abandoned gesture
+writes nothing and one completed gesture is one Undo step. A pointer move costs no Model walk:
+`Occurrences.occurrence_for_path` builds the occurrence from the picked instance path.
+
+The seam was not planned and was added because the palette could not be built without breaking a
+contract. It began as a table in `shell/commands.rb`, which named a feature and put honeybee's
+glossary words in a second place; `context/EXTENSIBILITY.md` requires that nothing in `shell/` or
+`session/` name a feature. A feature now declares `menu_item` as it declares a Colour-by mode, and
+`shell/` builds the Extensions submenu and the viewport context menu from whatever is registered.
+
+The offline checks cover a click, a drag and a Shift-click as one gesture and one Undo step each,
+the flood stopping at the plane, every cancel route writing nothing, a drag across empty space
+painting both ends of it rather than refusing, a press whose release never arrives collecting
+nothing afterwards, the over-ceiling refusal, the palette frozen at button-down and surviving the
+tool, Q12 forcing a mode on without remembering it and releasing only the mode it forced, a Face
+inside a nested Zone belonging to the inner Zone, a picked path composing the same world transform
+and the same shared-storage answer as a walk, Locate skipping a reference the Model no longer has,
+and an outside feature reaching the native menus through the new seam with no line in `shell/`.
+
+A bounded independent review found and the slice fixed six things. A Face inside a Zone nested in
+another Zone was attributed to the outer Zone, which the resolver accepts because it descends a
+Group without checking for a Zone record, so the gesture would have stamped that Face with the
+wrong Zone. A press whose release the host never delivered left the tool collecting, so ordinary
+hovers piled into the pending gesture and the next release wrote them. A drag across empty space,
+which is any Zone with a window opening or a gable, refused the whole gesture and told the user
+something untrue about a Face they never pointed at. Stopping the tool turned off a Colour-by mode
+the user had chosen while it was running. A failing hover noticed once per pointer move rather than
+once. And `shell/commands.rb` named a feature and carried its words, which is the contract
+violation the new seam removes. The review also found the Shift flood unbounded by the gesture
+ceiling, now stopped one past it.
+
+No host gate ran. The gesture is the part of it no script can perform, so
+[`classify_tool_walkthrough.rb`](../../tools/examples/authoring/classify_tool_walkthrough.rb) arms
+the tool and asks Ed to drag; its nine questions and the four unmeasured assumptions behind them
+are in "What D6 left open" in [PLAN.md](PLAN.md). D1's two deferred native checks, one drag over
+forty Faces in one Undo and a gesture of 251 refusing in the viewport, are in the same walkthrough.
+
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition
 reloaded the exact two-Zone HBJSON with reconciled identifiers, one reciprocal Surface pair and
@@ -174,4 +215,5 @@ post-commit CI close this branch slice; merge remains pending.
 | 2026-09-20 | P1-D: `Zones::Index` gives each read phase one walk of the Model instead of about two per target. The 250-target gesture went from 10.4 s to 182 ms and the Face read from 12.8 s to 205 ms, both re-measured on the host. |
 | 2026-09-20 | P1-D D6's two measurements ran on the host: the gesture ceiling holds as a blast-radius bound, the cost is O(targets x Model Faces) in occurrence resolution, and the Face read turned out to be quadratic on its own. No code changed; the fix is Ed's call. |
 | 2026-09-20 | P1-D D5: the shared Colour-by seam, its overlay, HUD and cache invalidation, with face-assignment and Zone modes registered through the public call. |
+| 2026-09-20 | P1-D D6: the Classify tool, the shared pick and drag primitives, Locate, Q12 forcing, and the `menu_item` seam a feature reaches the native menus through. |
 | 2026-09-20 | The Ground suggestion was corrected to honeybee's rule after the host gate showed it setting five of a plain box's six Faces to Ground. |

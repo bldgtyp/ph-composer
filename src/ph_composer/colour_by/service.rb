@@ -50,12 +50,16 @@ module PhComposer
 
       # Turns a mode on, remembering it as the one the user last chose. Nothing about the Model
       # changes: no record is written, no material is assigned and no operation opens.
-      def activate(name)
+      #
+      # `remember: false` turns a mode on without recording the choice. The Classify tool forces
+      # Colour-by on while it is active (PRD Q12), and what the tool forced is not what the user
+      # chose, so it must not displace the remembered mode when the tool ends.
+      def activate(name, remember: true)
         declaration = Registry.current.colour_modes[name]
         raise UserError, "There is no Colour-by mode named #{name}." unless declaration
 
         @mode_name = name
-        Preferences.set("colour_by_mode", name)
+        Preferences.set("colour_by_mode", name) if remember
         attach_overlay
         rebuild
         self

@@ -148,6 +148,36 @@ class RegistryTest < PhComposerTestCase
     assert_equal ["Broken could not install: typo"], diagnostics.map(&:message)
   end
 
+  # The native menus are a contribution seam like the others: an outside feature declares an item
+  # and it reaches SketchUp's own menus, and the viewport context menu, with no line in `shell/`.
+  def test_an_outside_feature_reaches_the_native_menus_without_a_line_in_shell
+    reached = []
+    Registry.install([feature do |registry|
+      registry.feature("outside.probe", :contract_version => 1)
+              .menu_item("outside.probe.go", :label => "Go", :menu => "Probe",
+                                             :state => ->(_session) { MF_CHECKED }) { |session| reached << session }
+    end])
+    PhComposer::Commands.install
+    menu = PhComposer::Commands.feature_menus.fetch("Probe")
+
+    menu.entries.find { |entry| entry.is_a?(Array) && entry.first == "Go" }.last.call
+
+    assert_equal [PhComposer::Sessions.current], reached
+    assert_equal MF_CHECKED, menu.validation_procs.values.first.call
+  end
+
+  def test_a_menu_item_without_a_submenu_name_refuses_the_whole_batch
+    probe = feature do |registry|
+      registry.feature("outside.probe", :contract_version => 1)
+              .menu_item("outside.probe.go", :label => "Go", :menu => nil) { |_session| nil }
+    end
+
+    error = assert_raises(PhComposer::RegistrationError) { Registry.install([probe]) }
+
+    assert_includes error.diagnostics.map(&:code), "registration.schema_invalid"
+    refute Registry.current.menu_items.key?("outside.probe.go")
+  end
+
   private
 
   def read

@@ -58,6 +58,9 @@ module PhComposer
       dot(left, right) <= -Math.cos(tolerance_degrees * Math::PI / 180.0) + 1.0e-12
     end
 
+    # Whether two captured Faces lie in one plane, to within `tolerance` metres. Public because the
+    # Classify tool's Shift flood asks it directly: a whole wall drawn as several pieces is one
+    # plane, and the tool must not coin a second tolerance of its own for what that means.
     def coplanar?(left, right, tolerance)
       left_points = left.loops_m.flatten(1)
       right_points = right.loops_m.flatten(1)
@@ -140,7 +143,7 @@ module PhComposer
       left.zip(right).sum { |a, b| a * b }
     end
 
-    private_class_method :opposite_normals?, :coplanar?, :same_loops?, :match_unordered,
+    private_class_method :opposite_normals?, :same_loops?, :match_unordered,
                          :point_close?, :minimum_edge, :distance, :world_normal, :canonical_loop, :quantize, :dot
   end
 end

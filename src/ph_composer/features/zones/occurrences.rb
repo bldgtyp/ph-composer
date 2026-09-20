@@ -85,6 +85,44 @@ module PhComposer
         occurrence
       end
 
+      # The occurrence one picked instance path names, or nil when the path reaches no Face or the
+      # Face lies inside no Zone. Nothing here walks the Model: the pick already knows the whole
+      # root-to-leaf path, and a viewport tool picks once per pointer move.
+      #
+      # This is the read half only. It answers what the pointer is over; it proves nothing about
+      # identity, ambiguity or whether the Zone can be written to. A gesture built from these
+      # references still resolves each one through `resolve_face` before anything is written, which
+      # is where a duplicated id or a changed path is caught.
+      def occurrence_for_path(path)
+        entities = Array(path)
+        face = entities.last
+        return nil unless face.is_a?(Sketchup::Face)
+
+        # The innermost Zone on the path, because that is the one whose Faces this Face is among:
+        # `walk_faces` stops descending at a nested Zone, so an outer Zone does not own it. Taking
+        # the outer one instead would build a reference the resolver accepts, since it descends a
+        # Group without checking for a Zone record, and the gesture would stamp the Face with the
+        # wrong Zone.
+        zone_index = entities.rindex { |entity| entity.is_a?(Sketchup::Group) && ZONE_STORE.read(entity) }
+        return nil unless zone_index
+
+        zone = zone_for_path(entities[0..zone_index],
+                             entities[0...zone_index].any? { |entity| ZONE_STORE.read(entity) })
+        inside = entities[(zone_index + 1)..-1]
+        transform = inside[0...-1].reduce(zone.transform) { |carried, entity| carried * entity.transformation }
+        FaceOccurrence.new(:entity => face, :zone => zone, :path => inside.map(&:persistent_id),
+                           :transform => transform)
+      end
+
+      # The Zone occurrence for a root-to-Zone entity path, composed exactly as `walk_zones` does.
+      def zone_for_path(entities, nested)
+        transform = entities.reduce(identity) { |carried, entity| carried * entity.transformation }
+        ZoneOccurrence.new(:entity => entities.last, :path => entities.map(&:persistent_id),
+                           :transform => transform, :record => Schema.validate!(ZONE_STORE.read(entities.last)),
+                           :shared_definition => entities.any? { |entity| shared_storage?(entity) },
+                           :nested => nested)
+      end
+
       # One Face inside an already-resolved Zone occurrence, by path alone. Identity repair needs
       # this: the Zone id it is about to replace is duplicated, so the id-keyed resolver would
       # refuse the very ambiguity the repair exists to remove.
@@ -228,7 +266,8 @@ module PhComposer
       def raise_target(code, message)
         raise CodedError.new(code, message)
       end
-      private_class_method :resolve_face_path, :shared_storage?, :walk_zones, :walk_faces, :raise_target
+      private_class_method :resolve_face_path, :shared_storage?, :walk_zones, :walk_faces, :raise_target,
+                           :zone_for_path
     end
   end
 end

@@ -18,8 +18,9 @@ suggestions and the minimal panel controls. P1-C now supplies the detached geome
 typed Python Face section and emitted Surface reference checks. P1-D's D1 and D2 add the bounded
 Classify gesture and its 250-occurrence ceiling, Suggest classification for this Zone, Reverse
 face, and the Attached zone record kind with its reference and delete-with-replacement lifecycle.
-D5 adds the shared Colour-by seam and its face type and boundary condition modes. The Classify
-tool itself, Locate, the faces table and the panel legend remain, in D6 and D7.
+D5 adds the shared Colour-by seam and its face type and boundary condition modes. D6 adds the
+Classify tool itself, with its palette on a native menu, and Locate, which has no user route until
+the faces table carries one. The faces table and the panel legend remain, in D7.
 
 ## Blockers
 

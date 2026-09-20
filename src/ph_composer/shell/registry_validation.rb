@@ -22,6 +22,7 @@ module PhComposer
         check_export_contributors
         check_proposal_participants
         check_colour_modes
+        check_menu_items
         check_subscriptions
         @diagnostics
       end
@@ -198,6 +199,18 @@ module PhComposer
       # A Colour-by mode needs a legend label, the entity kind it paints, a colour function and a
       # projection. Entity kinds are open (face-assignment PRD "Colour-by"), so the kind is checked
       # for shape alone and never against a list the shared service would have to keep.
+      # A menu item's submenu label is open prose, like a mode's entity kind: `shell/` groups by it
+      # and never interprets it.
+      def check_menu_items
+        @staging.declared_menu_items.each do |item|
+          next if text?(item.label) && text?(item.menu) && item.handler &&
+                  (item.state.nil? || item.state.respond_to?(:call))
+
+          add("registration.schema_invalid", item.owner, item.name,
+              "#{item.name} needs a label, a submenu name and a handler block; state must be callable.")
+        end
+      end
+
       def check_colour_modes
         @staging.declared_colour_modes.each do |mode|
           next if text?(mode.label) && text?(mode.entity_kind) && mode.colours.respond_to?(:call) && mode.projection
