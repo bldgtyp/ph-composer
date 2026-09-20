@@ -154,8 +154,8 @@ P1-A Zone geometry probe and its stepwise bridge commands are documented in
 in [`planning/phase-one/evidence/p1-a-geometry.md`](../planning/phase-one/evidence/p1-a-geometry.md).
 The panel-closed walkthroughs are in
 [`tools/examples/authoring/`](../tools/examples/authoring/README.md): P1-B's Zone and Face
-authoring, P1-C's adjacency, P1-D's Zone repairs, P1-D's adjacency cut, P1-D's Colour-by overlay
-and P1-D's Classify tool. The Classify tool's ran on 2026-09-20 with an operator at the mouse,
+authoring, P1-C's adjacency, P1-D's Zone repairs, P1-D's adjacency cut, P1-D's Colour-by overlay,
+P1-D's Classify tool and P1-D's Overview screen. The Classify tool's ran on 2026-09-20 with an operator at the mouse,
 because SketchUp delivers pointer events to the active tool and the Ruby API synthesizes none; it
 covered the parts of Colour-by's that a drawing tool exercises, and Colour-by's own remaining
 questions are still open. Accepted current-host results are in
@@ -163,6 +163,10 @@ questions are still open. Accepted current-host results are in
 [`p1-c-adjacency-hbjson.md`](../planning/phase-one/evidence/p1-c-adjacency-hbjson.md),
 [`p1-d-repairs-and-cut.md`](../planning/phase-one/evidence/p1-d-repairs-and-cut.md) and
 [`p1-d-classify-tool.md`](../planning/phase-one/evidence/p1-d-classify-tool.md).
+
+The Overview screen's has not been run. Its walkthrough builds the Model and reads back what the
+panel's commands did, because nothing in the Ruby API clicks an HtmlDialog; the operator does the
+clicking.
 
 A gate that needs pointer input cannot be scripted and cannot be skipped. The Classify tool's gate
 found three defects that no offline test could have caught, one of them in a slice already recorded

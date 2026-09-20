@@ -198,3 +198,44 @@ chose is still the remembered one (PRD Q12). Do it the other way too: start the 
 different mode from the Colour by menu while it runs, and stop the tool; that mode is the user's
 choice and must survive. Then `locate_unclassified` with the Zone closed and open, recording
 whether SketchUp shows a selection made outside the active edit context.
+
+## P1-D D7: the Overview screen, the legend and the palette
+
+`overview_walkthrough.rb` is the panel's gate. Almost none of it can be scripted: the panel is an
+HtmlDialog and nothing in the Ruby API clicks one, so this builds a Model worth looking at and reads
+back what the panel's own commands did to it. You do the clicking.
+
+```sh
+uv run tools/hostkit/host_bridge.py eval \
+  'load "/absolute/path/to/ph-composer/tools/examples/authoring/overview_walkthrough.rb"; OverviewWalkthrough.setup'
+uv run tools/hostkit/host_bridge.py eval 'OverviewWalkthrough.read_cost'
+uv run tools/hostkit/host_bridge.py eval 'OverviewWalkthrough.report'
+```
+
+`setup` makes two Zones of six Faces each, four of them classified, so the tree has two tiers, every
+Zone row carries an unclassified marker, and each colour mode has more than one legend row. Open the
+panel and work through the screen: expand and collapse a Zone, change a type and a boundary chip,
+order and filter by the controls above the table, select a Zone row and save its details.
+
+`read_cost` times the whole snapshot, which is every section the Overview paints from. Take it on
+the two-Zone Model, then run `crowd(500)` and take it again: that is the first measurement of what
+this screen costs to paint, and nothing offline can stand in for it.
+
+Locate is the one thing D6 already asked of the native menu, and the panel is a second caller. Use a
+row's Locate with the Zone closed and again with it open, and then a legend row's, recording whether
+SketchUp shows the selection and where the camera lands while the panel has focus.
+
+For the legend: turn each mode on from the panel and confirm the viewport matches what the native
+Colour by menu gives, including the remembered mode after a restart. Press "Show only this" on one
+row and capture the window: the muted grey has to read as set aside rather than as another value,
+which is a drawing claim no offline test makes. Press it again and confirm everything comes back.
+Run `refresh_pending?` straight after one legend click; it must be false, or the panel is publishing
+the same snapshot twice per command.
+
+For the palette: choose a chip while the panel has focus and record whether the viewport's first
+click reaches the Classify tool or is spent returning focus to the Model window. Choose an Attached
+zone from the picker and confirm the boundary condition follows it; use "New attached zone" and
+confirm the new record is chosen at once. Stop classifying and confirm the viewport goes back.
+
+Last, the stale case: with the panel open, change a Face through the Ruby Console, then use that
+row's chip in the panel. The edit must refuse and the row must go back to what the Model holds.

@@ -1,7 +1,7 @@
 # Phase 1 status
 
 DATE: 2026-09-20
-STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized, with D1 to D6 implemented and D7 remaining.
+STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized and D1 to D7 are implemented, with D7's host gate outstanding.
 ISSUE: none (local implementation packet)
 
 ## Current handoff
@@ -30,7 +30,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
   development and its floor-area/import questions. P1-E still owns the shipped HBJSON wheel set.
 - Create/link the implementation issue during authorized issue intake. The configured remote is
   `bldgtyp/ph-composer`; P1-A created no external issue or PR.
-- P1-D is authorized. Its slices are tracked in [PLAN.md](PLAN.md); D7 remains. See "What D4 left open" in the plan for the two shapes the solver reports rather than cuts.
+- P1-D is authorized and every slice is implemented; its slices are tracked in [PLAN.md](PLAN.md). What remains is D7's host gate, and the open items each slice recorded under "What Dn left open".
 
 ## Stages
 
@@ -39,7 +39,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 | P1-A: geometry contracts and host investigation | Complete | [Contract](CONTRACTS.md); [host evidence](evidence/p1-a-geometry.md); A01 met |
 | P1-B: Zone and face authoring core | Complete | [Authoring evidence](evidence/p1-b-authoring.md); A02/A03 and the P1-B portion of A04 met |
 | P1-C: adjacency and early HBJSON proof | Complete on branch | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
-| P1-D: complete Phase 1 authoring UI and repairs | In progress | D1 to D6 implemented; the offline portions of A04, A06, A07 and A08 pass and D4's host gate passed. Slice table in [PLAN.md](PLAN.md) |
+| P1-D: complete Phase 1 authoring UI and repairs | Implemented on branch | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass, D4's and D6's host gates passed and D7's is outstanding. Slice table in [PLAN.md](PLAN.md) |
 | P1-E: HBJSON/report export workflow | Scoped | Pending; remaining canonical-export choices open |
 | P1-F: acceptance and handoff | Scoped | Pending |
 
@@ -236,3 +236,28 @@ post-commit CI close this branch slice; merge remains pending.
 | 2026-09-20 | P1-D D5: the shared Colour-by seam, its overlay, HUD and cache invalidation, with face-assignment and Zone modes registered through the public call. |
 | 2026-09-20 | P1-D D6: the Classify tool, the shared pick and drag primitives, Locate, Q12 forcing, and the `menu_item` seam a feature reaches the native menus through. |
 | 2026-09-20 | The Ground suggestion was corrected to honeybee's rule after the host gate showed it setting five of a plain box's six Faces to Ground. |
+
+P1-D D7 brings the offline suite to 439 Ruby tests with 1,753 assertions, green on both Ruby 3.2.2
+and the 2.7.2 compatibility floor, with `make ci` green, Ruby coverage at 96.5% and JavaScript at
+97.9%. It builds the Overview screen the phase has been working towards: the Zone tree with each
+Zone's classified Faces beneath it, editable type and boundary chips guarded by the values each row
+painted from, Locate on both tiers, Suggest classification from a Zone row, the Colour-by legend
+with click-to-select-and-zoom and "Show only this", and the Classify tool's palette with its
+Attached zone picker and inline New route.
+
+It added a sixth contribution seam, `view_command`, because the legend forced the question D5 left
+open: what channel a client uses for something that changes what the host shows and never the Model.
+A view command carries no sequence and no expected revision, needs its own `view` capability, and
+opens no operation. Locate, the Colour-by mode switch, the legend's row selection and isolation, and
+the Classify palette are the first six.
+
+`table.js`, `table.css` and `view_controls.js` are ported from the predecessor and trimmed to what
+this screen uses, which is what makes the Spaces and Assemblies tables a port rather than a rewrite.
+Neither names a feature. Two independent reviews ran, one on the seam and one on the screens.
+
+The Face read now carries the state every surface shows a Face by, unclassified, incomplete or
+classified, derived where the record is so the table and the overlay cannot disagree.
+
+The host gate is outstanding and it is the substantive one for this slice, because every affordance
+here is one the panel asks the host for. Hover-to-highlight, the fourth legend affordance Q18 names,
+is deliberately not built: Ed chose on 2026-09-20 to measure its cost rather than ship it unmeasured.

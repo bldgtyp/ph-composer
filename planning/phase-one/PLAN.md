@@ -160,7 +160,7 @@ focused tests; the stage closes only when A04 to A09 all have evidence.
 | D4 | Partial-overlap splitting, sliver skips and out-of-scope reciprocal refusal | Implemented on branch |
 | D5 | Shared Colour-by registry, overlay, HUD and cache invalidation | Implemented on branch |
 | D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Implemented on branch |
-| D7 | Overview Zone tree and faces table | Pending |
+| D7 | Overview Zone tree, faces table, panel legend and panel palette | Implemented on branch |
 
 D6 is the gesture itself, distinct from D1's operation. A04's atomic-gesture row needs both.
 
@@ -205,6 +205,49 @@ took it from 12,764 ms to 205 ms; that is the read D7's faces table is built on.
 at 250 and keeps its own job, which is bounding what one gesture can change; its refusal still
 costs 3.6 ms, before anything is resolved.
 
+### What D7 left open
+
+The Overview screen is built on the predecessor's record table rather than on a list of cards:
+`table.js`, `table.css` and `view_controls.js` are ported and trimmed to what this screen uses. The
+columns, rules and controls that named Spaces' own data went back; they return when a screen needs
+them. Neither module names a feature, which is what makes the Spaces and Assemblies tables a port
+rather than a rewrite.
+
+The slice added a sixth contribution seam, `view_command`, because the panel legend forced the
+question D5 left open. Turning a Colour-by mode on, Locate, showing one legend row on its own and
+setting a Classify chip all change what the host shows and never the Model. A query cannot carry
+them (`context/AGENT_INTERFACE.md`: a read never changes the camera or the selection) and an action
+cannot either (an action's contract is a named native operation there is nothing here to undo). The
+contract is in [`context/EXTENSIBILITY.md`](../../context/EXTENSIBILITY.md) under "View commands",
+and it closes both D5's write channel and D6's missing route for Locate.
+
+Four things are deliberately not in this slice:
+
+- **Hover-to-highlight is not built.** Q18 names four legend affordances and this is the fourth. It
+  would send one command per pointer move and rebuild the drawing each time, and whether that reads
+  or stutters is a question only a host can answer. Ed chose on 2026-09-20 to measure it rather than
+  ship it unmeasured, which is the D5 lesson applied before the fact rather than after.
+- **The assembly column and the assembly picker are Phase 2's**, with the assemblies that own the
+  display colour they would read. The faces table has no assembly cell meanwhile.
+- **The table's layout is not remembered.** Column widths live for as long as the panel shows that
+  Model. The preference store has no table registration yet; it arrives with the screen that needs a
+  saved layout, which is Spaces.
+- **Select all faces of this type in Zone** is still the PRD's right-click selection command and
+  still not built. D6 recorded it and nothing here changes that.
+
+Two narrowings worth recording. The view controls order and filter **Zones**, because a Zone is what
+the tree is built from; a Zone's Faces follow it in their own order, and filtering reads a Zone's
+Faces so a search for "Ground" keeps the Zone that has one. And an unclassified Face is not a row,
+as the PRD says: its Zone's row carries the count and the Suggest classification action, which is
+also the first panel route to that operation.
+
+The host gate is outstanding, and it is the one that matters most here, because every affordance
+this slice adds is one the panel asks the host for.
+[`overview_walkthrough.rb`](../../tools/examples/authoring/overview_walkthrough.rb) asks its eight
+questions. The two that carry real risk: what this screen costs to paint on a Model of a few
+hundred Faces, which nothing offline measures, and whether a chip chosen while the panel has focus
+leaves the viewport's first click with the tool or spends it returning focus to the Model window.
+
 ### What D6 left open
 
 The tool is implemented and calls D1's operation through the public interface like any other
@@ -222,17 +265,13 @@ menu items the way it declares its Colour-by modes, and `shell/` groups them wit
 
 Four things are deliberately not in this slice:
 
-- **The panel palette is D7's.** The PRD puts the face-type and boundary-condition chips, the
-  Attached zone picker and the assembly picker in the panel, and the panel is the Overview UI. Until
-  then the palette is the native Classify menu, which offers one item per assignable face type and
-  boundary condition. Attached zone is not among them: it needs a record picker and an inline
-  "New attached zone" route, which is panel work.
-- **Locate has no user route yet, and is not registered.** It changes the selection and the camera
-  and nothing else, so registering it as an action would manufacture an Undo entry for a read.
-  `context/AGENT_INTERFACE.md` names "explicit selection, reveal and camera operations for visual
-  inspection" as something to support, so this is a gap against accepted direction rather than a
-  neutral choice, and it closes with the write channel D5 left open. The PRD already puts Locate's
-  surface on the faces table, which is D7's.
+- **The panel palette is D7's.** Built there. The chips, the Attached zone picker and its inline
+  "New attached zone" route are in the panel; the assembly picker waits on Phase 2's assemblies. The
+  native Classify menu stays, and both reach the same tool through the same calls.
+- **Locate has no user route yet, and is not registered.** Closed in D7. It is a view command,
+  `ph_composer.face_assignment.locate`, reached from the faces table and from any client with `view`
+  access. Registering it as an action would have manufactured an Undo entry for a read, which is why
+  it waited for a seam that is neither a query nor an action.
 - **No toolbar button and no cursor change.** The UI polish skill's drawing-tool state rule asks for
   a pressed button, a changed icon and a changed cursor together; the repository ships no image
   assets at all, and adding the first is a decision of its own. The menu check mark carries the
@@ -274,9 +313,9 @@ foundation directory that names no feature. The contract is written up in
 
 Three things are deliberately not in this slice:
 
-- **The panel legend is D7's.** The PRD's Q18 legend, with click-to-select-and-zoom, hover
-  highlight and "Show only this", is Overview UI and lands with the Zone tree and faces table. D5
-  ships the viewport HUD, which is what a QA screenshot carries and needs no panel.
+- **The panel legend is D7's.** Built there, with click-to-select-and-zoom and "Show only this".
+  Hover highlight is the one affordance of Q18 still owed; see "What D7 left open". D5 ships the
+  viewport HUD, which is what a QA screenshot carries and needs no panel.
 - **Forced on while the Classify tool is active is D6's,** since the tool it follows lands there.
   The mode the user last chose is already remembered (`Preferences.colour_by_mode`), which is the
   half of Q12 that does not need the tool. D6 implements the other half: the tool turns a mode on
@@ -289,11 +328,12 @@ Two decisions D7 will build on, recorded here so it does not have to guess:
 - **The legend counts an entity the drawing omits.** A Face that is hidden, or on a hidden tag,
   is still a row's count while nothing is painted for it, so the legend keeps telling the truth
   about the Model rather than about the viewport. Q18's "click a row to select and zoom" therefore
-  has to decide what it does with an invisible entity, and that decision is D7's.
+  has to decide what it does with an invisible entity. D7 decided: the row selects it anyway.
+  SketchUp shows a selection where it can, and a count the user can reach nothing from would be
+  worse than one that reaches something hidden.
 - **Turning a mode on is not a registered action,** because it writes no record and opens no
-  operation. It is the native Colour by menu plus the `ph_composer.colour_by.state` read, so an
-  external client can see the active mode but cannot set it. D7's panel control needs a write
-  channel, and what that channel is remains open.
+  operation. D7 settled what it is instead: a view command, `ph_composer.colour_by.activate`, so
+  the native menu, the panel and any client with `view` access all reach the same switch.
 
 Part of D5's host gate ran on 2026-09-20 alongside D6's, on the same host, and it cost two defects:
 `OverlaysManager#add` leaves an overlay disabled, so a mode turned on drew nothing at all on a real

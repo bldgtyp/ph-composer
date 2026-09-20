@@ -22,7 +22,7 @@ module PhComposer
       keyword_init: true
     )
 
-    # A change to what the host shows, and nothing else: the sixth contribution seam. `handler` is
+    # A change to what the host shows, and nothing else, as a contribution seam. `handler` is
     # `->(request) { value }`, the same shape a query's takes, and it may change the selection, the
     # camera or the state of a shared viewport service. It never writes a record, opens a Model
     # operation or leaves an Undo entry.
@@ -46,7 +46,7 @@ module PhComposer
     # schema form; `report` is `->(result, display_units) { [html_section, ...] }` over those fields.
     ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, keyword_init: true)
 
-    # One Colour-by mode: the fourth contribution seam (face-assignment PRD "Colour-by"). `projection`
+    # One Colour-by mode (face-assignment PRD "Colour-by"). `projection`
     # is `->(model) { [ColourBy::Entry, ...] }`: a pure read of the feature's own entities, their
     # world transforms and the value each one carries. `colours` is `->(value) { [r, g, b] }`, nil for
     # a value the mode cannot colour, which the service draws as incomplete. `entity_kind` is open
