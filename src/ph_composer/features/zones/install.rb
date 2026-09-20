@@ -5,6 +5,7 @@ require_relative "occurrences"
 require_relative "steps"
 require_relative "adjacency"
 require_relative "adjacency_steps"
+require_relative "repair"
 require_relative "export"
 
 module PhComposer
@@ -38,6 +39,15 @@ module PhComposer
       "type" => "object", "additionalProperties" => false, "required" => ["face"],
       "properties" => { "face" => { "type" => "object" } }
     }.freeze
+    # The copy is named by path, not by id: its id is the ambiguous thing being repaired.
+    REPAIR_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => ["zone_path"],
+      "properties" => { "zone_path" => PATH }
+    }.freeze
+    RESTORE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[parent_path zone_id],
+      "properties" => { "parent_path" => PATH, "zone_id" => { "type" => "string" } }
+    }.freeze
 
     module_function
 
@@ -60,6 +70,7 @@ module PhComposer
         update(request, proposal)
       end
       declare_adjacency(feature)
+      declare_repairs(feature)
       feature.snapshot_section("#{FEATURE_ID}.overview", :query => "#{FEATURE_ID}.list")
       feature.on_host_event(:selection_changed) { |session| session.request_refresh }
     end
@@ -90,12 +101,63 @@ module PhComposer
       ) { |reader| ExportProjection.records(reader) }
     end
 
+    def declare_repairs(feature)
+      feature.action("#{FEATURE_ID}.repair_identity",
+                     :description => "Give one copied Zone occurrence an identity of its own.",
+                     :params => REPAIR_PARAMS, :result => OBJECT, :undo_name => "Repair Zone Identity",
+                     :side_effects => "Reidentifies the named occurrence and its Faces; the original is " \
+                                      "left untouched.") do |request, proposal|
+        repair_identity(request, proposal)
+      end
+      feature.action("#{FEATURE_ID}.restore",
+                     :description => "Regroup the stamped members of an exploded Zone, recovering only their stamp.",
+                     :params => RESTORE_PARAMS, :result => OBJECT, :undo_name => "Restore Zone",
+                     :side_effects => "Groups stamped Faces in one parent context and writes a Zone record.") do |
+                       request, proposal|
+        restore(request, proposal)
+      end
+    end
+
+    def repair_identity(request, proposal)
+      zone = Repair.occurrence_at(request.model, request.params.fetch("zone_path"))
+      plan = Repair.identity_plan(request.model, zone, request.revision)
+      proposal.add_step(RepairIdentityStep.new(:reference => zone.reference, :plan => plan),
+                        :scopes => [Operations::EntityScope.new(zone.path[0...-1])])
+      carried = plan.fetch(:faces).count { |face| face.fetch(:before)&.fetch("extension_data", {})&.any? }
+      if carried.positive?
+        proposal.add_finding(
+          "code" => "zone.copied_extension_data", "severity" => "warning",
+          "message" => "#{carried} copied Face records carry extension data. Their payloads are preserved as " \
+                       "they were; any reference inside them still names the original Face and is not remapped."
+        )
+      end
+      retired = plan.fetch(:faces).count { |face| face.fetch(:before)&.fetch("boundary_condition", nil) == "Surface" }
+      { "zone_id" => plan.fetch(:record).fetch("id"), "retired_pairs" => retired }
+    end
+
+    def restore(request, proposal)
+      record, offer = Repair.restore_plan(request.model, request.params.fetch("parent_path"),
+                                          request.params.fetch("zone_id"), request.revision)
+      parent_path = Occurrences.integer_path(request.params.fetch("parent_path"))
+      step = MakeZoneStep.new(:parent_path => parent_path, :entity_ids => offer.fetch("entity_ids"),
+                              :record => record)
+      proposal.add_step(step, :scopes => [Operations::EntityScope.new(parent_path)])
+      proposal.add_finding(
+        "code" => "zone.restore_is_limited", "severity" => "info",
+        "message" => "Restore recovers the Zone id, Building-Segment and Level. " \
+                     "#{offer.fetch('unrecoverable').join(', ')} went with the Group and are not recovered."
+      )
+      { "zone_id" => record.fetch("id"), "member_count" => offer.fetch("member_count"),
+        "unrecoverable" => offer.fetch("unrecoverable") }
+    end
+
     def list(request)
       zones = Occurrences.zones(request.model)
       duplicates = zones.group_by { |zone| zone.record.fetch("id") }.select { |_id, rows| rows.length > 1 }.keys
       {
         "zones" => zones.map { |zone| zone_view(zone, duplicates.include?(zone.record.fetch("id"))) },
         "make_zone" => make_target(request.model),
+        "restorable" => Repair.orphans(request.model),
         "units" => { "ground_depth_mm" => "mm" }
       }
     end
@@ -273,7 +335,7 @@ module PhComposer
 
       "found"
     end
-    private_class_method :declare_adjacency, :zone_view, :make_target, :validate_make_target!, :default_name,
-                         :zone_state
+    private_class_method :declare_adjacency, :declare_repairs, :zone_view, :make_target,
+                         :validate_make_target!, :zone_state
   end
 end

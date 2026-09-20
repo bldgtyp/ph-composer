@@ -83,5 +83,66 @@ module PhComposer
         end
       end
     end
+
+    # Gives one copied Zone occurrence an identity of its own. Every write lands inside that
+    # occurrence's path, so the Zone it was copied from and that Zone's pairs are left exactly as
+    # they were. The copy's own pairs go: a copied adjacency envelope was never a relationship.
+    class RepairIdentityStep
+      attr_reader :affected
+
+      def initialize(reference:, plan:)
+        @reference = DeepCopy.call(reference).freeze
+        @old_id = plan.fetch(:old_id)
+        @record = DeepCopy.call(plan.fetch(:record)).freeze
+        @faces = plan.fetch(:faces).map { |face| DeepCopy.call(face).freeze }.freeze
+        @affected = [{ "kind" => "zone", "id" => @record.fetch("id"), "change" => "updated",
+                       "reference" => @reference.merge("zone_id" => @record.fetch("id")) }]
+        @affected.concat(@faces.filter_map { |face| face_affected(face) })
+      end
+
+      def descriptor
+        { "name" => "repair_zone_identity", "reference" => @reference, "old_id" => @old_id,
+          "record" => @record, "faces" => @faces }
+      end
+
+      def temporary_ids
+        []
+      end
+
+      def apply(model, _slots)
+        zone = Repair.occurrence_at(model, @reference.fetch("zone_path"))
+        unless zone.record.fetch("id") == @old_id
+          raise CodedError.new("target.changed", "The Zone identity changed after the repair was previewed.")
+        end
+
+        resolved = @faces.map { |face| [resolve_member(zone, face), face] }
+        ZONE_STORE.write(zone.entity, @record)
+        resolved.each do |occurrence, face|
+          after = face.fetch(:after)
+          FaceAssignment::FACE_STORE.write(occurrence.entity, after) if after
+          STAMP_STORE.write(occurrence.entity, face.fetch(:stamp))
+        end
+      end
+
+      private
+
+      def face_affected(face)
+        after = face.fetch(:after)
+        return nil unless after
+
+        { "kind" => "face_assignment", "id" => after.fetch("id"), "change" => "updated",
+          "reference" => face.fetch(:reference).merge("entity_id" => after.fetch("id")) }
+      end
+
+      def resolve_member(zone, face)
+        occurrence = Occurrences.face_at(zone, face.fetch(:reference).fetch("entity_path"), :mutable => true)
+        current = FaceAssignment::FACE_STORE.read(occurrence.entity)
+        unless current == face.fetch(:before)
+          raise CodedError.new("target.changed", "A Face changed after the repair was previewed.")
+        end
+
+        occurrence
+      end
+    end
   end
 end

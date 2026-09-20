@@ -52,12 +52,8 @@ module PhComposer
 
       def resolve_face(model, reference, mutable: false, allow_unassigned: false)
         zone = resolve_zone(model, reference, :mutable => mutable)
-        path = integer_path(reference.fetch("entity_path"))
-        entity, transform = resolve_face_path(zone, path, mutable)
-        unless entity.is_a?(Sketchup::Face)
-          raise_target("target.wrong_kind", "The occurrence does not resolve to a Face.")
-        end
-
+        occurrence = face_at(zone, reference.fetch("entity_path"), :mutable => mutable)
+        entity = occurrence.entity
         record = face_record(entity)
         expected_id = reference["entity_id"]
         if expected_id
@@ -76,6 +72,19 @@ module PhComposer
         if mutable && zone.entity.respond_to?(:locked?) && zone.entity.locked?
           raise_target("target.locked", "The Zone is locked.")
         end
+        occurrence
+      end
+
+      # One Face inside an already-resolved Zone occurrence, by path alone. Identity repair needs
+      # this: the Zone id it is about to replace is duplicated, so the id-keyed resolver would
+      # refuse the very ambiguity the repair exists to remove.
+      def face_at(zone, entity_path, mutable: false)
+        path = integer_path(entity_path)
+        entity, transform = resolve_face_path(zone, path, mutable)
+        unless entity.is_a?(Sketchup::Face)
+          raise_target("target.wrong_kind", "The occurrence does not resolve to a Face.")
+        end
+
         FaceOccurrence.new(:entity => entity, :zone => zone, :path => path, :transform => transform)
       end
 

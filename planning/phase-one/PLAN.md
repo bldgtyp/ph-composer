@@ -1,7 +1,7 @@
 # Phase 1 delivery plan
 
 DATE: 2026-09-20
-STATUS: P1-A through P1-C complete on the implementation branch. P1-D is authorized and in progress; D1 and D2 are implemented.
+STATUS: P1-A through P1-C complete on the implementation branch. P1-D is authorized and in progress; D1, D2 and D3 are implemented.
 ISSUE: none (local planning draft)
 
 ## Outcome and scope
@@ -156,7 +156,7 @@ focused tests; the stage closes only when A04 to A09 all have evidence.
 | --- | --- | --- |
 | D1 | Bounded Classify gesture and its ceiling, Suggest classification for this Zone, Reverse face | Implemented on branch |
 | D2 | Attached zone record kind, reference lifecycle and guarded delete with replacement | Implemented on branch |
-| D3 | Explicit copied-Zone identity repair and limited Restore Zone | Pending |
+| D3 | Explicit copied-Zone identity repair and limited Restore Zone | Implemented on branch |
 | D4 | Partial-overlap splitting, sliver skips and out-of-scope reciprocal refusal | Pending |
 | D5 | Shared Colour-by registry, overlay, HUD and cache invalidation | Pending |
 | D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Pending |
