@@ -31,10 +31,11 @@ module PhComposer
         "reference" => ZONE_REFERENCE, "values" => ZONE_VALUES, "expected_values" => ZONE_VALUES
       }
     }.freeze
+    # The resolved mutation set, whatever produced it: the selected Zones, or every Zone when the
+    # caller is the export preflight. One Zone is allowed; it simply pairs with nothing.
     SOLVE_PARAMS = {
       "type" => "object", "additionalProperties" => false, "required" => ["zones"],
-      "properties" => { "zones" => { "type" => "array", "items" => ZONE_REFERENCE,
-                                      "minItems" => 2, "maxItems" => 2 } }
+      "properties" => { "zones" => { "type" => "array", "items" => ZONE_REFERENCE, "minItems" => 1 } }
     }.freeze
     RETIRE_PARAMS = {
       "type" => "object", "additionalProperties" => false, "required" => ["face"],
@@ -205,23 +206,29 @@ module PhComposer
     end
 
     def solve_adjacency(request, proposal)
-      pairs = Adjacency.solve(request.model, request.params.fetch("zones"))
-      pair_ids = []
-      pairs.each do |left, right|
-        left_after, right_after, pair_id = Adjacency.pair(left, right)
-        pair_ids << pair_id
-        next if left_after == left.fetch(:record) && right_after == right.fetch(:record)
+      plan = Adjacency.plan(request.model, request.params.fetch("zones"))
+      plan.findings.each { |finding| proposal.add_finding(finding) }
+      full, partial = plan.matches.partition { |match| match.fetch(:overlap).kind == :full }
+      partial.each { |match| proposal.add_finding(Adjacency.split_not_applied(match)) }
+      pair_ids = full.map { |match| pair_match(proposal, match) }
+      { "pair_ids" => pair_ids.compact.sort, "reported" => proposal.findings.length }
+    end
 
-        updates = [left, right].zip([left_after, right_after]).map do |side, after|
-          occurrence = side.fetch(:occurrence)
-          [occurrence.reference(side.fetch(:record).fetch("id")), side.fetch(:record), after]
-        end
-        scopes = updates.map do |reference, _before, _after|
-          Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
-        end
-        proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "updated"), :scopes => scopes)
+    def pair_match(proposal, match)
+      left = match.fetch(:left)
+      right = match.fetch(:right)
+      left_after, right_after, pair_id = Adjacency.pair(left, right)
+      return pair_id if left_after == left.fetch(:record) && right_after == right.fetch(:record)
+
+      updates = [left, right].zip([left_after, right_after]).map do |side, after|
+        occurrence = side.fetch(:occurrence)
+        [occurrence.reference(side.fetch(:record).fetch("id")), side.fetch(:record), after]
       end
-      { "pair_ids" => pair_ids.sort }
+      scopes = updates.map do |reference, _before, _after|
+        Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
+      end
+      proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "updated"), :scopes => scopes)
+      pair_id
     end
 
     def retire_adjacency(request, proposal)
@@ -336,6 +343,7 @@ module PhComposer
 
       "found"
     end
+    private_class_method :pair_match
     private_class_method :declare_adjacency, :declare_repairs, :zone_view, :make_target,
                          :validate_make_target!, :zone_state
   end

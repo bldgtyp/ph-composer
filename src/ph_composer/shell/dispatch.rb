@@ -212,7 +212,10 @@ module PhComposer
         raise CodedError.new("proposal.changed", "The proposed change no longer matches the preview.")
       end
       if proposal.empty?
-        return Outcome.completed(:revision => session.revision, :value => value, :message => "Nothing to change.")
+        # Nothing to write is not nothing to say. A handler that only had findings, such as a Solve
+        # whose every candidate was a sliver, still has to hand them back.
+        return Outcome.completed(:revision => session.revision, :value => value,
+                                 :findings => proposal.findings, :message => "Nothing to change.")
       end
 
       commit(session, action, request.engine, proposal, value)

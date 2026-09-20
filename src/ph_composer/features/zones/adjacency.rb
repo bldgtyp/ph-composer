@@ -10,27 +10,141 @@ module PhComposer
 
       module_function
 
-      def solve(model, references)
-        zones = references.map { |reference| Occurrences.resolve_zone(model, reference, :mutable => true) }
-        if zones.map(&:path).uniq.length != 2
-          raise CodedError.new("target.same_zone", "Solve needs two different Zone occurrences.")
+
+      # Everything one Solve would do, settled before a single write: which Faces pair, which cuts
+      # each pairing needs, and every case reported instead of paired. Reading is unbounded and
+      # writing is not, so a pairing that would touch a Zone outside the scope refuses the whole
+      # operation rather than quietly widening what the user selected (Q18).
+      Plan = Struct.new(:matches, :findings, keyword_init: true)
+
+      def plan(model, references)
+        scope = references.map { |reference| Occurrences.resolve_zone(model, reference, :mutable => true) }
+        if scope.map(&:path).uniq.length != scope.length
+          raise CodedError.new("target.same_zone", "Solve needs distinct Zone occurrences.")
         end
 
-        sides = zones.map { |zone| candidates(zone) }
-        matches = sides.fetch(0).filter_map do |left|
-          matching = sides.fetch(1).select { |right| matching_geometry?(left.fetch(:geometry), right.fetch(:geometry)) }
-          if matching.length > 1
-            raise CodedError.new("adjacency.ambiguous", "A Face has more than one full-wall counterpart.")
+        sides = Occurrences.zones(model).to_h { |zone| [zone.path, candidates(zone)] }
+        in_scope = scope.map(&:path)
+        found = examine(sides, in_scope)
+        Plan.new(:matches => resolve_contested(found.fetch(:matches), found.fetch(:findings)),
+                 :findings => found.fetch(:findings))
+      end
+
+      # Every cross-Zone Face pairing, classified. All Zones are read; the scope only limits writing.
+      def examine(sides, in_scope)
+        matches = []
+        findings = []
+        sides.keys.combination(2).each do |left_path, right_path|
+          next unless in_scope.include?(left_path) || in_scope.include?(right_path)
+
+          sides.fetch(left_path).each do |left|
+            sides.fetch(right_path).each do |right|
+              result = Overlap.between(left.fetch(:geometry), right.fetch(:geometry),
+                                       :plane_tolerance_m => PLANE_TOLERANCE_M,
+                                       :angle_tolerance_degrees => NORMAL_ANGLE_TOLERANCE_DEGREES,
+                                       :point_tolerance_m => POINT_TOLERANCE_M)
+              next if result.kind == :none
+
+              unless result.paired?
+                findings << reported(result, left, right)
+                next
+              end
+              check_scope!(left, right, in_scope)
+              matches << { :left => left, :right => right, :overlap => result }
+            end
           end
-
-          [left, matching.first] if matching.first
         end
-        right_ids = matches.map { |_left, right| right.fetch(:record).fetch("id") }
-        if right_ids.uniq.length != right_ids.length
-          raise CodedError.new("adjacency.ambiguous", "More than one Face resolves to the same counterpart.")
-        end
+        { :matches => matches, :findings => findings }
+      end
 
-        matches
+      # Q18: a pairing needs to write both endpoints, so both Zones must be in the mutation set.
+      # Refusing names both, so the caller can offer a retry that includes them.
+      def check_scope!(left, right, in_scope)
+        outside = [left, right].map { |side| side.fetch(:occurrence).zone }
+          .reject { |zone| in_scope.include?(zone.path) }
+        return if outside.empty?
+
+        raise CodedError.new(
+          "scope.incomplete",
+          "Pairing these Faces would change #{outside.map { |zone| zone.record.fetch('name') }.join(' and ')}, " \
+          "which is outside the Zones being solved. Include both Zones and solve again.",
+          "zones" => [left, right].map { |side| side.fetch(:occurrence).zone.reference }
+        )
+      end
+
+      # A Face that meets more than one neighbour needs its own cut per neighbour, which this solver
+      # does not do. It is reported with every Zone involved and pairs nothing, rather than pairing
+      # one neighbour arbitrarily (PRD step 7).
+      def resolve_contested(matches, findings)
+        counts = Hash.new(0)
+        matches.each { |match| [:left, :right].each { |side| counts[face_key(match.fetch(side))] += 1 } }
+        contested, clean = matches.partition do |match|
+          [:left, :right].any? { |side| counts[face_key(match.fetch(side))] > 1 }
+        end
+        contested.group_by { |match| contested_key(match, counts) }.each_value do |group|
+          findings << multiple_neighbours(group)
+        end
+        clean
+      end
+
+      def face_key(side)
+        Occurrences.key(side.fetch(:occurrence).reference)
+      end
+
+      def contested_key(match, counts)
+        [:left, :right].find { |side| counts[face_key(match.fetch(side))] > 1 }
+          .then { |side| face_key(match.fetch(side)) }
+      end
+
+      def multiple_neighbours(group)
+        zones = group.flat_map { |match| [:left, :right].map { |side| match.fetch(side).fetch(:occurrence).zone } }
+        {
+          "code" => "adjacency.multiple_neighbours", "severity" => "warning",
+          "zones" => zones.map(&:reference).uniq,
+          "message" => "A Face meets more than one neighbour and was not cut. Zones: " \
+                       "#{zones.map { |zone| zone.record.fetch('name') }.uniq.join(', ')}."
+        }
+      end
+
+      # A partial overlap is a real pairing, but recording it would claim Surface over the whole
+      # Face when only part of it is shared (Q21). Until the solver cuts the Faces, it says so and
+      # pairs nothing, rather than overstating the boundary. This is the tracked D4 remainder.
+      def split_not_applied(match)
+        zones = [:left, :right].map { |side| match.fetch(side).fetch(:occurrence).zone }
+        {
+          "code" => "adjacency.split_not_applied", "severity" => "warning",
+          "zones" => zones.map(&:reference), "area_m2" => match.fetch(:overlap).area_m2,
+          "message" => "#{zones.map { |zone| zone.record.fetch('name') }.join(' and ')} share part of a Face. " \
+                       "Cutting the shared region is not implemented yet, so no adjacency was recorded."
+        }
+      end
+
+      REPORTED_CODES = {
+        :same_normal => "adjacency.overlapping_zones",
+        :sliver => "adjacency.sliver_skipped",
+        :unsupported => "adjacency.unsupported_shape"
+      }.freeze
+
+      def reported(result, left, right)
+        zones = [left, right].map { |side| side.fetch(:occurrence).zone }
+        names = zones.map { |zone| zone.record.fetch("name") }
+        {
+          "code" => REPORTED_CODES.fetch(result.kind), "severity" => "warning",
+          "zones" => zones.map(&:reference), "area_m2" => result.area_m2,
+          "message" => message_for(result, names)
+        }.compact
+      end
+
+      def message_for(result, names)
+        case result.kind
+        when :same_normal
+          "#{names.join(' and ')} overlap: these coplanar Faces point the same way, so neither is a " \
+            "boundary of the other."
+        when :sliver
+          "A shared region between #{names.join(' and ')} was skipped because #{result.reason}."
+        else
+          "A shared region between #{names.join(' and ')} was not cut because #{result.reason}."
+        end
       end
 
       def pair(left, right)
@@ -125,16 +239,10 @@ module PhComposer
             :geometry => FaceGeometry.capture(occurrence.entity, occurrence.transform) }
         end
       end
+      private_class_method :examine, :check_scope!, :resolve_contested, :face_key, :contested_key,
+                           :multiple_neighbours, :reported, :message_for
       private_class_method :candidates
 
-      def matching_geometry?(left, right)
-        FaceGeometry.equivalent_full_face?(
-          left, right, :plane_tolerance_m => PLANE_TOLERANCE_M,
-          :angle_tolerance_degrees => NORMAL_ANGLE_TOLERANCE_DEGREES,
-          :point_tolerance_m => POINT_TOLERANCE_M
-        )
-      end
-      private_class_method :matching_geometry?
 
       def current_pair?(left, right)
         left_record = left.fetch(:record)
