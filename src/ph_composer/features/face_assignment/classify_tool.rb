@@ -46,10 +46,27 @@ module PhComposer
 
       # Sets one palette field and starts the tool, which is what a native Classify menu item does.
       # `nil` clears the field back to keeping whatever the Face has (PRD Q10, Q21).
+      #
+      # Choosing an Attached zone carries its boundary condition with it, and dropping it takes that
+      # boundary condition back: an AttachedZone boundary naming no record is an incomplete Face, so
+      # the two are one choice however the palette is reached.
       def choose(field, value)
+        set(field, value)
+        set("boundary_condition", "AttachedZone") if field == "attached_zone_id" && value
+        if field == "attached_zone_id" && value.nil? && chosen("boundary_condition") == "AttachedZone"
+          set("boundary_condition", nil)
+        end
+        set("attached_zone_id", nil) if field == "boundary_condition" && value != "AttachedZone"
+        start
+      end
+
+      def chosen(field)
+        @palette.dig(field, "value")
+      end
+
+      def set(field, value)
         @palette = @palette.merge(field => { "mode" => "set", "value" => value })
         @palette.delete(field) if value.nil?
-        start
       end
 
       def start

@@ -52,6 +52,26 @@ module PhComposer
       "type" => "object", "additionalProperties" => false, "required" => ["face"],
       "properties" => { "face" => FACE_REFERENCE }
     }.freeze
+    # What the palette lists. Surface is in it and is not assignable: the PRD asks for it to be shown
+    # and refused, because a user who looks for it and finds nothing learns nothing about why.
+    PALETTE_BOUNDARIES = (ASSIGNABLE_BOUNDARIES + %w[Surface]).freeze
+    CHOOSE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[field value],
+      "properties" => {
+        "field" => { "type" => "string", "enum" => %w[face_type boundary_condition attached_zone_id] },
+        "value" => { "type" => %w[string null],
+                     "description" => "The value to set, or null to keep whatever each Face has." }
+      }
+    }.freeze
+    TOOL_STATE = {
+      "type" => "object", "required" => %w[active palette],
+      "properties" => {
+        "active" => { "type" => "boolean", "description" => "Whether the Classify tool has the viewport." },
+        "palette" => { "type" => "object", "description" => "The chosen value per field; a field absent is kept." },
+        "face_types" => { "type" => "array", "items" => { "type" => "string" } },
+        "boundary_conditions" => { "type" => "array", "items" => { "type" => "string" } }
+      }
+    }.freeze
     LOCATE_PARAMS = {
       "type" => "object", "additionalProperties" => false, "required" => ["faces"],
       "properties" => {
@@ -125,16 +145,52 @@ module PhComposer
                      :side_effects => "Flips the Face normal; any Surface pair goes stale.") do |request, proposal|
         reverse(request, proposal)
       end
-      feature.view_command("#{FEATURE_ID}.locate",
-                           :description => "Select an explicit set of Faces and bring them into view.",
-                           :params => LOCATE_PARAMS, :result => LOCATE_RESULT) do |request|
-        locate(request)
-      end
+      declare_viewport(feature)
       declare_attached_zones(feature)
       feature.snapshot_section("#{FEATURE_ID}.faces", :query => "#{FEATURE_ID}.list")
       feature.export_contributor(ExportProjection::SECTION, :section_version => 1) do |reader|
         ExportProjection.records(reader)
       end
+    end
+
+    # What reaches the viewport rather than the Model: the Classify tool's palette, the tool itself,
+    # and Locate. None of them writes a record, so none is an action.
+    def declare_viewport(feature)
+      feature.query("#{FEATURE_ID}.classify_tool", :description => "The Classify tool's palette and whether it runs.",
+                                                   :params => OBJECT, :result => TOOL_STATE) do |request|
+        tool_state(request.session)
+      end
+      feature.snapshot_section("#{FEATURE_ID}.palette", :query => "#{FEATURE_ID}.classify_tool")
+      feature.view_command("#{FEATURE_ID}.choose",
+                           :description => "Set one Classify palette field and give the tool the viewport.",
+                           :params => CHOOSE_PARAMS, :result => TOOL_STATE) do |request|
+        classify_tool(request.session).choose(request.params.fetch("field"), request.params.fetch("value"))
+        tool_state(request.session)
+      end
+      feature.view_command("#{FEATURE_ID}.stop_classifying",
+                           :description => "Give the viewport back to whatever tool the user had.",
+                           :params => OBJECT, :result => TOOL_STATE, :examples => [{}]) do |request|
+        classify_tool(request.session).stop
+        tool_state(request.session)
+      end
+      feature.view_command("#{FEATURE_ID}.locate",
+                           :description => "Select an explicit set of Faces and bring them into view.",
+                           :params => LOCATE_PARAMS, :result => LOCATE_RESULT) do |request|
+        locate(request)
+      end
+    end
+
+    # What the palette shows: what the tool is set to, and what it may be set to. The words each
+    # value is shown by belong to whichever surface shows it; the stored honeybee string is the
+    # contract (context/UBIQUITOUS_LANGUAGE.md).
+    def tool_state(session)
+      tool = classify_tool(session)
+      {
+        "active" => tool.active?,
+        "palette" => tool.palette.each_with_object({}) { |(field, intent), chosen| chosen[field] = intent["value"] },
+        "face_types" => ASSIGNABLE_FACE_TYPES,
+        "boundary_conditions" => PALETTE_BOUNDARIES
+      }
     end
 
     # Locate changes the selection and the camera and nothing else, which is why it is a view command
@@ -150,6 +206,9 @@ module PhComposer
     # registers only the kind and the writes that need its reference rules.
     def declare_attached_zones(feature)
       feature.record_kind(AttachedZone::RECORD_KIND)
+      # Read through the foundation's own records query, so the picker needs no reader of its own.
+      feature.snapshot_section("#{AttachedZone::KIND_ID}.list", :query => "ph_composer.records.list",
+                                                                :params => { "kind" => AttachedZone::KIND_ID })
       feature.action("#{AttachedZone::KIND_ID}.save",
                      :description => "Create or edit one Attached zone.",
                      :params => ATTACHED_ZONE_SAVE_PARAMS, :result => OBJECT, :undo_name => "Save Attached Zone",

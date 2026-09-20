@@ -423,6 +423,64 @@ class ClassifyToolTest < PhComposerTestCase
     assert_equal revision, @session.revision
   end
 
+  # The panel palette: a client sets a field and the tool takes the viewport, the same thing a
+  # native menu item does, and nothing is written.
+  def test_a_client_sets_one_palette_field_and_the_tool_takes_the_viewport
+    context = PhComposer::API.connect(:session_id => @session.id)
+    revision = @session.revision
+
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.face_assignment.choose",
+                                   :params => { "field" => "face_type", "value" => "RoofCeiling" })
+
+    assert_equal true, outcome.dig("value", "active")
+    assert_equal({ "face_type" => "RoofCeiling" }, outcome.dig("value", "palette"))
+    assert_equal revision, @session.revision
+    refute @model.modified?
+
+    stopped = PhComposer::API.view(:context => context, :name => "ph_composer.face_assignment.stop_classifying",
+                                   :params => {})
+
+    assert_equal false, stopped.dig("value", "active")
+    assert_equal({ "face_type" => "RoofCeiling" }, stopped.dig("value", "palette"), "the palette is kept")
+  end
+
+  # An Attached zone boundary naming no record is an incomplete Face, so the record and the boundary
+  # condition are one choice however the palette is reached.
+  def test_choosing_an_attached_zone_carries_its_boundary_condition_and_dropping_it_takes_it_back
+    tool = PhComposer::FaceAssignment.classify_tool(@session)
+
+    tool.choose("attached_zone_id", "atz_1")
+
+    assert_equal "AttachedZone", tool.chosen("boundary_condition")
+
+    tool.choose("attached_zone_id", nil)
+
+    assert_nil tool.chosen("boundary_condition")
+  end
+
+  def test_choosing_another_boundary_condition_drops_the_attached_zone_it_replaces
+    tool = PhComposer::FaceAssignment.classify_tool(@session)
+    tool.choose("attached_zone_id", "atz_1")
+
+    tool.choose("boundary_condition", "Outdoors")
+
+    assert_nil tool.chosen("attached_zone_id")
+    assert_equal "Outdoors", tool.chosen("boundary_condition")
+  end
+
+  # The palette lists Surface although nothing may set it: the panel shows it and says why, which a
+  # missing row could not do.
+  def test_the_palette_read_lists_the_boundary_condition_the_solver_owns
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    value = PhComposer::API.query(:context => context,
+                                  :name => "ph_composer.face_assignment.classify_tool").fetch("value")
+
+    assert_equal %w[Wall RoofCeiling Floor], value.fetch("face_types")
+    assert_includes value.fetch("boundary_conditions"), "Surface"
+    assert_equal false, value.fetch("active")
+  end
+
   # The pick path and a Model walk have to agree, or the tool would paint one Face and the
   # operation resolve another.
   def test_an_occurrence_built_from_a_picked_path_matches_the_walked_one

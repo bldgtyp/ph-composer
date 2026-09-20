@@ -11,15 +11,14 @@
  * the count and the Suggest classification action that gives those Faces a record.
  */
 PhComposerUI.define("sections/overview", ["panel", "workspace", "request", "snapshot", "units", "unit_preferences",
-  "unit_field", "table", "view_controls", "fields"],
-function (panel, ui, requests, snapshot, units, preferences, unitFields, tables, viewControls, fields) {
+  "unit_field", "table", "view_controls", "fields", "sections/face_words"],
+function (panel, ui, requests, snapshot, units, preferences, unitFields, tables, viewControls, fields, words) {
   "use strict";
   var AREA = fields.AREA_M2;
-  var FACE_TYPES = [["Wall", "Wall"], ["RoofCeiling", "Roof or ceiling"], ["Floor", "Floor"]];
-  var BOUNDARIES = [["Outdoors", "Outdoors"], ["Ground", "Ground"], ["Adiabatic", "To neighbour"]];
-  // Surface is written by Solve adjacencies, and Attached zone needs a record picker, so neither is
-  // offered as a choice. A Face already holding one keeps it and its value still reads in the cell.
-  var FIXED_BOUNDARIES = { Surface: "Surface", AttachedZone: "Attached zone" };
+  // What a chip in this table offers. Surface is written by Solve adjacencies and Attached zone
+  // needs a record picker, so a Face holding either keeps it and the cell stays read only.
+  var FACE_TYPES = ["Wall", "RoofCeiling", "Floor"];
+  var BOUNDARIES = ["Outdoors", "Ground", "Adiabatic"];
   var STATE_LABELS = { classified: "", incomplete: "Incomplete", unclassified: "Unclassified" };
   var ORDER_FIELDS = [["name", "Name"], ["area_m2", "Area"]];
 
@@ -83,21 +82,16 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function faceName(face, index) {
-    return (face.values.face_type ? label(FACE_TYPES, face.values.face_type) : "Face") + " " + (index + 1);
-  }
-
-  function label(choices, chosen) {
-    var found = choices.filter(function (choice) { return choice[0] === chosen; })[0];
-    return found ? found[1] : chosen;
+    return (face.values.face_type ? words.faceType(face.values.face_type) : "Face") + " " + (index + 1);
   }
 
   function value(row, field, profile) {
     var face = row.record.face;
     if (field === "name") return row.record.name;
     if (!face) return field === "area_m2" ? area(totalArea(row.record.faces), profile) : "";
-    if (field === "face_type") return label(FACE_TYPES, face.values.face_type);
+    if (field === "face_type") return words.faceType(face.values.face_type);
     if (field === "boundary_condition") {
-      return FIXED_BOUNDARIES[face.values.boundary_condition] || label(BOUNDARIES, face.values.boundary_condition);
+      return words.boundary(face.values.boundary_condition);
     }
     if (field === "area_m2") return area(face.area_m2, profile);
     return STATE_LABELS[face.state];
@@ -131,11 +125,12 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function cell(td, row, field, text, state) {
     var face = row.record.face, chip;
     if (!face || (field !== "face_type" && field !== "boundary_condition")) return false;
-    if (field === "boundary_condition" && FIXED_BOUNDARIES[face.values.boundary_condition]) return false;
+    if (field === "boundary_condition" && words.UNCHOOSABLE[face.values.boundary_condition]) return false;
     chip = ui.element("select", "phc-cell-input");
     (field === "face_type" ? FACE_TYPES : BOUNDARIES).forEach(function (choice) {
-      var option = ui.element("option", "", choice[1]);
-      option.value = choice[0];
+      var option = ui.element("option", "",
+        field === "face_type" ? words.faceType(choice) : words.boundary(choice));
+      option.value = choice;
       chip.appendChild(option);
     });
     chip.value = face.values[field] || "";
@@ -244,8 +239,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
 
   function searchText(record) {
     return [record.name].concat(record.faces.map(function (face) {
-      return label(FACE_TYPES, face.values.face_type) + " " +
-        (FIXED_BOUNDARIES[face.values.boundary_condition] || label(BOUNDARIES, face.values.boundary_condition));
+      return words.faceType(face.values.face_type) + " " + words.boundary(face.values.boundary_condition);
     })).join(" ");
   }
 

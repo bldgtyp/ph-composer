@@ -21,9 +21,9 @@
       "sha256": "1f8738bd0700e56306c2d82a21bc23133b0dc8f8508ff0c9a4f7c301f00b54cb"
     },
     "html/index.html": {
-      "bytes": 2803,
+      "bytes": 2903,
       "mime": "text/html; charset=utf-8",
-      "sha256": "f1dc4b486a4e1178ca79b83bc0161feb9ee777cca419d90beb5d9d7c09d92a0a"
+      "sha256": "c456f07d23e43c94fe41d332e4b9eb488fb19db1be08b43cb6905b290fcbbb16"
     },
     "html/length_expression.js": {
       "bytes": 10498,
@@ -70,6 +70,11 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "62ecfbf1a36e2d99e2f4a6758f00f32a080a77113b396fd7fa7e6803077bf0cb"
     },
+    "html/sections/classify.js": {
+      "bytes": 6175,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "94b40f74baaec26a4cb149d8e04429791301a0d0635e7861a95c949946d715fa"
+    },
     "html/sections/colour_by.js": {
       "bytes": 4676,
       "mime": "text/javascript; charset=utf-8",
@@ -80,10 +85,15 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "d8cfba1d469220564d2b53327f38b7cdee1aad0d2a90441ed5f38982787fc237"
     },
-    "html/sections/overview.js": {
-      "bytes": 15395,
+    "html/sections/face_words.js": {
+      "bytes": 1391,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "095cf336455974f25b0fae12834968efc4526a45afc8dc7ce6bc7501bd99bcf4"
+      "sha256": "df76102e3142ad9ff51ad03f24648a47e1710ccfacdb830ead4dacb064708d16"
+    },
+    "html/sections/overview.js": {
+      "bytes": 15019,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "8a83d61516801218d769ac573021a57ce7df536d6a6a346c18db005bcd6e11d6"
     },
     "html/sections/shell.js": {
       "bytes": 1276,
@@ -146,9 +156,9 @@
       "sha256": "3ea0d2929b882fad80da8fb48d2998874bb265f59f72dd5599812dbae02b82a8"
     },
     "html/zones.css": {
-      "bytes": 2294,
+      "bytes": 3075,
       "mime": "text/css; charset=utf-8",
-      "sha256": "7bf3a4bd23f0b42d8812814f7e8b920753f01cb074496fc607436427b3ab07d5"
+      "sha256": "457f990ab2d95be248a49de865a8611cacc71d7fb246f534e5e312ba662cea1a"
     },
     "python/ph_composer_translation/__init__.py": {
       "bytes": 1234,

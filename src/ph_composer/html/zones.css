@@ -29,3 +29,14 @@
 .phc-legend-only { flex: 0 0 auto; font-size: 11px; }
 .phc-legend-only[aria-pressed="true"] { border-color: var(--interaction-highlight);
   background: var(--interaction-highlight-tint); color: var(--interaction-highlight); }
+
+/* The Classify tool's palette. Chips read as choices, and the chosen one is marked the way an
+   active row is; a chip the palette cannot set says why on itself. */
+.phc-classify { padding: 18px 24px 24px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.phc-classify.is-active h2 { color: var(--interaction-highlight); }
+.phc-palette { display: grid; gap: 10px; }
+.phc-palette-field h3 { margin: 0 0 4px; font-size: 12px; font-weight: 600; }
+.phc-palette-hint { color: var(--muted); font-size: 11px; font-weight: 400; }
+.phc-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.phc-chip[aria-pressed="true"] { border-color: var(--interaction-highlight);
+  background: var(--interaction-highlight-tint); color: var(--interaction-highlight); }
