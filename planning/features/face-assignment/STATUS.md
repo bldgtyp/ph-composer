@@ -1,9 +1,9 @@
 # Face assignment: status
 
-DATE: 2026-09-18
+DATE: 2026-09-20
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
 
 ## State
 
@@ -12,30 +12,29 @@ into its behavior sections. Shared understanding reached, pending Ed's confirmat
 
 ## Next step
 
-The overlay spike (Q22) ran in P0-B on 2026-09-18 and passed ([B2](../../archive/phase-zero/evidence/spike-overlay.md)). Filled, translucent,
-depth-tested fills work, picking is unaffected, and 1,000 triangles add no measurable median cost.
-Colour-by may plan filled modes. The plan owns cache invalidation from observers and a budget past
-about 10,000 overlaid triangles, where marshalling adds 4 to 5 ms a frame. Next: PLAN.md.
-
-The four authorized architecture corrections are incorporated in the PRD: Attached zone reference
-lifecycle, assembly requirements by export consumer, field-level edit intent and atomic gesture
-operations. PLAN.md binds these requirements and the Colour-by contributor contract to foundation APIs.
+Follow [PLAN.md](PLAN.md), which separates Phase 1 classification/Colour-by from Phase 2
+assembly assignment. Phase 0 B2 passed; use its filled-overlay evidence and implement the
+feature cache invalidation and scale checks. Bind field intent and reciprocal retirement to
+P1-A's operation contract before writing the Classify tool.
 
 ## Blockers
 
-- The foundation transplant has not started.
-- No GitHub remote, so no issue yet.
+- P1-B and later feature implementation are not authorized; confirm the recorded interview answers
+  before the first face-assignment implementation stage.
+- Zone occurrence/geometry operation contracts must land before dependent classification.
+- The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
 
 ## Verification
 
 Documentation consistency checked against the authorized zones-and-adjacency corrections:
 pair removal, absent conditions after retirement, payload preservation and export omissions.
-Nothing is implemented; runtime and host gates remain outstanding.
+This feature is not implemented; runtime and host gates remain outstanding.
 
 Documentation-only architecture review completed 2026-09-18; all four findings addressed in the
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.
-Local PHX construction resolution was inspected. No runtime or host tests were run; the overlay
-spike remains deferred under Ed's existing instruction.
+Local PHX construction resolution was inspected. No feature runtime or host tests were run in
+that review. The later Phase 0 B2 overlay
+spike passed; it does not satisfy this feature's native lifecycle gate.
 
 ## Ledger
 
@@ -48,3 +47,4 @@ spike remains deferred under Ed's existing instruction.
 | 2026-09-18 | Assemblies architecture review folded in: the PRD now names the four operations other features use (face read, Locate, Classify preset, Reassign), the face-to-construction dependency, and the assembly colour default per assemblies Q6. |
 | 2026-09-18 | Spaces architecture review folded in: the Colour-by registry now takes an open entity kind, optional derived geometry and separate readouts; the Classify tool has no mode registry and Mark floor is a sibling tool owned by Spaces. |
 | 2026-09-18 | Window-types architecture review folded in: the face read's area is stated as gross, and net opaque area comes from a declared window-types read once that packet lands. |
+| 2026-09-20 | Post-Phase-0 refresh: added PLAN.md, removed completed foundation blockers and linked the shared Phase 1 stages and decisions. Planning only; feature implementation remains pending. |

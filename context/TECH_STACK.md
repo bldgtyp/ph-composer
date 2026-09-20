@@ -9,11 +9,11 @@ SketchUp facts behind these rules, with what pins each one, are in
 [`SKETCHUP_HOST_BEHAVIOR.md`](SKETCHUP_HOST_BEHAVIOR.md). Where a rule cites evidence, the evidence
 is in the predecessor's archive at `../../ph-navigator-sketchup/planning/archive/`.
 
-The foundation is partly implemented on the `phase-zero-foundation` branch: sessions, revisions,
-transactions, the record engine and the public operation contract (Phase 0 stages P0-C and P0-D),
-and the panel shell, its UI kit and shared Units (P0-E).
-Everything else here still describes the target and the reasons for it. The Phase 0 packet under
-`planning/archive/phase-zero/` records which rules have implementation and host evidence.
+The Phase 0 foundation merged through PR #1: sessions, revisions, record transactions and the
+public operation contract, panel/UI kit and shared Units, the runtime shell and export contracts.
+The shipping build registers no building features or exporters. Entity-owned geometry operations
+and the real export run remain Phase 1 work. The archived Phase 0 packet records implementation
+and host evidence; later behavior below remains a requirement until its owning packet lands.
 
 [EXTENSIBILITY.md](EXTENSIBILITY.md) owns the accepted contributor architecture, including the
 separation of pure Ruby domain behavior from SketchUp adapters, public scripting, metadata and
@@ -214,8 +214,11 @@ HBJSON document and the user's export choices. It never reads the export contrac
 The METr exporter is the first. It calls PHX to build a PHX project from HBJSON and PHX's WUFI
 writer to produce the METr model. Two facts gate it:
 
-- PHX's PHPP path imports openpyxl and xlwings. Those must be optional extras so the PHX wheel
-  loads in Pyodide without them. The spike lives in the PHX repository.
+- [Phase 0 B1](../planning/archive/phase-zero/evidence/spike-phx.md) proved PHX 1.57.1
+  conversion with nine pinned wheels installed without dependency resolution. The METr path
+  does not import the omitted dependencies. D12 defers METr integration and actual import until
+  further feature development. Phase 1 selects its HBJSON translation payload independently;
+  upstream dependency cleanup is not a prerequisite for the proven PHX route.
 - The payload budget. The predecessor shipped 20 MB. The manifest records the installed size of
   every asset and CI enforces the budget; the METr exporter's cost is measured before it is
   accepted.

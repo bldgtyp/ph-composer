@@ -1,9 +1,9 @@
 # Zones and adjacency: behavior contract
 
 DATE: 2026-09-18
-STATUS: Scoped. Interviewed 2026-09-18 in three rounds, 24 decisions recorded below. PLAN.md follows the foundation transplant.
+STATUS: Scoped. Interviewed 2026-09-18 in three rounds, 24 decisions recorded below. PLAN.md now binds the Phase 1 delivery sequence after the merged foundation.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
 
 ## Problem
 
@@ -374,6 +374,11 @@ Interviewed 2026-09-18, three rounds, Ed's answers. Each is cited where it appli
 | Q24 | Zone volume | Not shown, not exported; Vn50 and iCFA stay Space-derived |
 
 ## Acceptance shape
+
+Delivery update, 2026-09-20: D12 defers METr exporter development and consumer acceptance.
+The HBJSON and authoring checks below remain Phase 1 work as allocated in PLAN.md; METr-specific
+checks wait for the exporter's separately scheduled milestone. Existing consumer mappings remain
+requirements for that future work.
 
 The 2026-09-18 architecture-review corrections were authorized after the interview. Q14, Q18 and
 Q21 above include those clarifications; consumer-specific blocking remains Q10's policy.

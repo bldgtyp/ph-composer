@@ -10,9 +10,9 @@ interior faces between Zones are found, recorded and kept honest.
    by consumer, and the decisions the interview must record.
 2. [STATUS.md](STATUS.md): current state, next step, blockers.
 
-No PLAN.md yet. The interview and authorized architecture corrections are recorded in the PRD.
-The implementation sequence follows the foundation transplant, because the Zone record and the
-solver sit on the record engine and reconciler that arrive with it.
+3. [PLAN.md](PLAN.md): delivery against the merged foundation and the shared
+   [Phase 1 plan](../../phase-one/PLAN.md). Entity storage, geometry transactions and feature
+   reconciliation still require implementation; the foundation alone does not supply them.
 
 ## Scope
 

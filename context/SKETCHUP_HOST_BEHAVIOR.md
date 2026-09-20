@@ -1,6 +1,6 @@
 # SketchUp host behavior: measured facts for agents
 
-**DATE:** 2026-09-18
+**DATE:** 2026-09-20
 
 Unless a row says otherwise, every fact here was measured in the predecessor, PH-Navigator for
 SketchUp, on SketchUp Pro 2026.1 build 26.1.188 (macOS, embedded Ruby 3.2.2) between 2026-09-06 and
@@ -99,6 +99,20 @@ Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/archive/phase-
 | After a host face is split, glued instances stay glued to the original face even when they lie wholly on the new one, and the new face is not cut. After an explode, `glued_to` can name an unrelated scrap face that still reports valid. | Verify glue geometrically: coplanar, containing the unit's outline. |
 | `no_scale_mask` hides the Scale tool's handles; `Transformation` scaling from Ruby applies anyway. | Detect scaling from `xscale`/`yscale`; a mirror from a negative determinant. |
 | `Edge#split`, an explode that splits edges, and native cut, copy and paste all put the source edge's full attribute dictionary on the new edges. `Entities#weld`, moves and push-pull keep edge persistent ids. Undo, Redo and save and reopen restore dictionaries and ids exactly. | Edge tags multiply rather than vanish; a Model-level registry and a scan tell a split from a copy or a replacement. |
+
+## Zone grouping and face topology
+
+Measured in PH-Composer on 26.1.188, 2026-09-20
+([P1-A](../planning/phase-one/evidence/p1-a-geometry.md)).
+
+| Fact | Consequence |
+| --- | --- |
+| `Entities#add_group` on one loose six-face box preserved every member persistent id and face dictionary. The resulting Group was manifold. | Make Zone can group a fully resolved same-context member set and then use those member ids under the new Zone path. It must still revalidate before commit. |
+| Drawing one coplanar line through a face with a hole kept the original face pid on one result and created a new pid for the other. Both results carried the complete original face dictionary. Native Undo/Redo restored the exact topology, ids and dictionaries. | A copied face id or adjacency is ambiguous data. Plugin splitting and explicit Solve must rebind identity and retire copied pairs; dictionary survival alone proves no valid relationship. |
+| Exploding a tagged closed Group preserved all six face pids and dictionaries in one parent context but removed the Group and its attributes. Regrouping the stamped faces and boundary edges created a new Group pid, retained every face payload and was one Undo step. | Limited Restore may recover stamped members and the Zone id, but it cannot claim the former container identity, name, metadata or extension data survived. |
+| `Group#manifold?` returned true for the six-face box and false after deleting its roof. The result survived save and fresh-process reopen. | Use it for the Zone closure finding on the proving host; other supported hosts still need their gate. |
+| Endpoints created in one Entities collection merged through 0.0254 mm (0.001 in) separation and remained distinct at 0.0255 mm. | Phase 1 freezes 0.0254 mm as its coincidence tolerance pending SketchUp 2023 and Windows evidence. Do not infer a wider tolerance from drawing inference. |
+| A nested Zone under a wrapper rotated 30 degrees and scaled -1.0, 1.5, 0.75 retained manifold geometry and produced the expected world points and negative handedness through one accumulated transform. | Geometry reads keep the complete occurrence path, accumulate transforms once and preserve mirror handedness. |
 
 ## Overlays
 

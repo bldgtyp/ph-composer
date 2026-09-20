@@ -5,7 +5,14 @@ STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft; origin exists, issue not created)
 
-## Current handoff
+## Final disposition
+
+Phase 0 is complete and merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1),
+local merge `f1e9a98`. All acceptance rows are met. The historical handoff below preserves the
+pre-closeout stage states; it is not the current merge status. Phase 1 carryovers are now tracked
+in [the next phase](../../phase-one/README.md).
+
+## Historical implementation handoff
 
 Ed authorized Phase 0 implementation on 2026-09-18. Work runs on branch `phase-zero-foundation`
 from `152e796`, one commit per completed unit. P0-A and P0-C are complete. P0-D is implemented on

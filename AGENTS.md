@@ -26,7 +26,7 @@ not a dependency. Its designPH integration is retired and is never reintroduced 
 | Coding and compatibility rules | [`context/CODING_STANDARDS.md`](context/CODING_STANDARDS.md) |
 | Contributor architecture, scripting and extension contracts | [`context/EXTENSIBILITY.md`](context/EXTENSIBILITY.md) |
 | External agent access, discovery, model reads and writes | [`context/AGENT_INTERFACE.md`](context/AGENT_INTERFACE.md) |
-| Build, install, test and host procedures | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md), target state until the tooling lands |
+| Build, install, test and host procedures | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md), implemented commands and remaining host gates |
 | Current delivery state or next authorized work | [`planning/STATUS.md`](planning/STATUS.md), then the owning packet |
 | Planning documents or status changes | [`planning/.instructions.md`](planning/.instructions.md) |
 
@@ -37,8 +37,8 @@ the owning packet.
 
 - Keep proposed product behavior distinct from implemented contracts. Product shape belongs in
   `docs/`; the durable rules that constrain code belong in `context/`; plans, decisions, status
-  and acceptance evidence belong in `planning/`. Nothing is implemented in this repository until
-  the transplant lands; every document says so where it matters.
+  and acceptance evidence belong in `planning/`. Phase 0 foundation is merged; feature behavior
+  remains proposed until its owning packet records implementation and acceptance.
 - Feature interviews establish shared understanding but do not authorize code. Follow the current
   owning plan and explicit implementation scope.
 - The model is the authoring authority. Library records become editable local copies. No provider
@@ -78,7 +78,7 @@ the owning packet.
 
 ## Verification
 
-- `make ci` is the full offline gate once the tooling lands. Use focused tests while editing.
+- `make ci` is the implemented full offline gate. Use focused tests while editing.
 - Real-host acceptance uses the development bridge plus native controls. A required host gate runs
   against the specified model and host state, often from a fresh process. Offline tests, an
   installed RBZ or a bridge command alone do not satisfy it. Ask Ed to operate the host only when

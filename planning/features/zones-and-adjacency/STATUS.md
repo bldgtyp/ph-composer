@@ -1,9 +1,9 @@
 # Zones and adjacency: status
 
-DATE: 2026-09-18
-STATUS: Scoped
+DATE: 2026-09-20
+STATUS: Scoped; P1-A complete, P1-B next.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
 
 ## State
 
@@ -12,25 +12,25 @@ PRD drafted and interviewed 2026-09-18. Three rounds, 24 decisions, all recorded
 
 ## Next step
 
-PLAN.md, once the foundation transplant has landed the record engine, sessions and generic
-reconciliation primitives. Face assignment is the next packet and depends on this one.
-
-The authorized architecture corrections are incorporated in the PRD: stale-pair retirement and
-export accounting, limited Restore Zone, atomic reciprocal scope, endpoint identity and contributor
-ownership. PLAN.md must bind these contracts to the foundation APIs and deliver the added cases.
+Follow [PLAN.md](PLAN.md) and the shared [Phase 1 sequence](../../phase-one/PLAN.md).
+P1-A is complete: [CONTRACTS.md](../../phase-one/CONTRACTS.md) binds entity-owned records,
+occurrence references and compound geometry transactions, and the
+[host evidence](../../phase-one/evidence/p1-a-geometry.md) establishes the native premises.
+P1-B is the next delivery stage: implement entity stores, the proposal boundary and Make Zone.
 
 ## Blockers
 
-- The foundation transplant from the predecessor has not started. The Zone record, reconciler
-  changes and solver all sit on its record engine, sessions and generic transaction primitives.
-- No GitHub remote, so no issue yet.
+- P1-B implementation is not authorized by the completed first-step instruction.
+- The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
 
 ## Verification
 
 Documentation-only architecture review completed 2026-09-18; all four findings addressed in the
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.
-PHX's local interior-face filter was inspected, but no runtime or host checks were run.
-Nothing is implemented; the PRD's offline and fresh-process host gates remain outstanding.
+P1-A's current-host probe passed grouping, face splitting with a hole, explode/limited Restore,
+closure, scaled/mirrored wrappers, Undo/Redo and fresh-process reopen. The 0.001 in native merge
+boundary is recorded. No Zone operation is implemented; P1-B onward and their full host gates
+remain outstanding.
 
 ## Ledger
 
@@ -41,3 +41,5 @@ Nothing is implemented; the PRD's offline and fresh-process host gates remain ou
 | 2026-09-18 | Interview complete: 24 decisions. Notable: Group only, no multipliers, Level is a Zone tag, `Room.zone` unset, To neighbour as the on-screen label for Adiabatic, Restore Zone after explode, Space ventilation override with Zone fallback. |
 | 2026-09-18 | Architecture review recorded four design findings and a contributor-operation trace; implementation and host acceptance remain pending. |
 | 2026-09-18 | Authorized corrections folded into the PRD and related contracts; focused consistency review completed. Runtime, reference round trips and native-host acceptance remain unverified. |
+| 2026-09-20 | Post-Phase-0 refresh: added PLAN.md, removed completed foundation blockers and linked the shared Phase 1 stages and decisions. Planning only; feature implementation remains pending. |
+| 2026-09-20 | P1-A complete. Bound entity/endpoint/proposal contracts and passed the native geometry investigation; Make Zone and solver implementation remain in later stages. |

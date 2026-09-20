@@ -1,7 +1,7 @@
 # Units: status
 
-DATE: 2026-09-18
-STATUS: In progress. Phase 0 shared portion implemented on branch (P0-E); feature quantities remain with their owners.
+DATE: 2026-09-20
+STATUS: In progress. Phase 0 shared portion merged through PR #1 (P0-E); feature quantities remain with their owners.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -14,22 +14,19 @@ answers do not block the foundation.
 
 ## Next step
 
-Execute the [shared Units stage](../../archive/phase-zero/phases/phase-04-panel-units.md) when
-implementation is authorized. It includes the six listed modules, their length-expression parser
-dependency and applicable tests. Keep F3 with
-Assemblies, F4 with Window Types and F1 with Spaces if measurements justify it. Resolve new
-quantity rows through the owning feature interviews.
+Reuse the merged shared modules. The first Phase 1 table owns deferred table-layout preferences
+and cell drafts. Keep F3 with Assemblies, F4 with Window Types and F1 with Spaces if measurements
+justify it. Resolve new quantity rows through their owning feature interviews.
 
 ## Blockers
 
-- The foundation transplant. Shared unit modules and their parser dependency are part of it.
 - The owning packets for the new quantities (piping, ducting, equipment, climate) are drafts, so
   their registry rows are provisional.
 - No issue created yet; D8 now confirms the existing `bldgtyp/ph-composer` development home.
 
 ## Verification
 
-The Phase 0 portion is implemented on branch `phase-zero-foundation` (P0-E): the six shared unit
+The Phase 0 portion merged through PR #1 (P0-E): the six shared unit
 modules, the length-expression reader, the Ruby mirror and the shared vectors, with the A1 to A15
 allocation in [the P0-E evidence](../../archive/phase-zero/evidence/phase-04-panel-units.md).
 New quantity rows and the feature follow-ups remain with their owners.

@@ -11,8 +11,10 @@ classified in and the Zone stamp every face record carries.
    table, validation, export mapping, and the twenty-two recorded decisions.
 2. [STATUS.md](STATUS.md): current state, next step, blockers.
 
-No PLAN.md yet. The authorized architecture corrections are incorporated in the PRD. The plan
-follows the deferred overlay spike and the foundation transplant, with their acceptance gates intact.
+3. [PLAN.md](PLAN.md): Phase 1 allocation and the assembly-dependent Phase 2 handoff.
+
+The foundation is merged and the overlay spike passed. The plan retains the feature-specific
+cache-invalidation and native acceptance gates.
 
 ## Scope
 

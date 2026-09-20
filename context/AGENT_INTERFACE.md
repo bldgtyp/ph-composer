@@ -2,8 +2,7 @@
 
 DATE: 2026-09-18
 STATUS: Agent access is an accepted product priority. The in-process programming interface
-(`PhComposer::API`: discover, describe, connect, query, preview, invoke, outcome) is implemented on
-branch in Phase 0 P0-D with a panel-closed synthetic client. Transport, packaging, grants and the
+(`PhComposer::API`: discover, describe, connect, query, preview, invoke, outcome) merged through PR #1 from Phase 0 P0-D with a panel-closed synthetic client. Transport, packaging, grants and the
 external adapter remain proposed.
 
 Users bring their own agents. PH-Composer supplies documented access to inspect, view and edit

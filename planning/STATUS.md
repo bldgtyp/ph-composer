@@ -1,6 +1,6 @@
 # Planning Status
 
-DATE: 2026-09-18
+DATE: 2026-09-20
 STATUS: Active index of tracked planning work.
 AUTHOR: Ed May, BLDGTYP
 
@@ -9,18 +9,24 @@ Master index. Every active item gets a row; archived items move to
 
 The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 
+Phase 0 and its four completed investigations are in [the archive](archive/README.md).
+The remote exists. Historical `none (no remote)` issue cells below mean no issue was recorded;
+reconcile them at each packet's intake rather than treating the old reason as a current blocker.
+
 ## Active work
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Zones and adjacency | feature | Scoped, interviewed | none (no remote) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
-| Face assignment | feature | Scoped, interviewed | none (no remote) | [features/face-assignment/](features/face-assignment/README.md) |
-| Validation and export | feature | Requested, PRD drafted | none (no remote) | [features/validation-and-export/](features/validation-and-export/README.md); owns the Phase 1 handoff |
+| Phase 1 walking skeleton | delivery plan | In progress; P1-A complete | none (local implementation packet) | [phase-one/](phase-one/README.md); Phase 0 merged through PR #1, P1-B not authorized |
+| Zones and adjacency | feature | Scoped, plan drafted | none (local planning draft) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
+| Face assignment | feature | Scoped, plan drafted | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
+| Validation and export | feature | Scoped draft, interview decisions open | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); owns the Phase 1 handoff |
+| METr exporter and consumer acceptance | feature | Deferred; return milestone unscheduled | none (local planning draft) | [validation/export plan](features/validation-and-export/PLAN.md); Ed deferred until further feature development on 2026-09-20 |
 | Spaces | feature | Scoped, interviewed | none (no remote) | [features/spaces/](features/spaces/README.md) |
 | Assemblies and materials | feature | Scoped, interviewed | none (no remote) | [features/assemblies/](features/assemblies/README.md) |
 | Window Types and placement | feature | Scoped, interviewed | none (no remote) | [features/window-types/](features/window-types/README.md) |
 | Libraries (provider seam) | feature | Scoped, interviewed | none (no remote) | [features/libraries/](features/libraries/README.md) |
-| Units: SI and IP display | feature | In progress | none (local planning draft) | [features/units/](features/units/README.md); Phase 0 shared portion implemented on branch in P0-E; feature quantities with their owners |
+| Units: SI and IP display | feature | In progress | none (local planning draft) | [features/units/](features/units/README.md); Phase 0 shared portion merged through PR #1; feature quantities with their owners |
 | Thermal bridges | feature | Requested, PRD drafted | none (no remote) | [features/thermal-bridges/](features/thermal-bridges/README.md); owns the edge tagging rules |
 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/hot-water-piping/](features/hot-water-piping/README.md) |
 | ERV ducting | feature | Requested, PRD drafted | none (no remote) | [features/erv-ducting/](features/erv-ducting/README.md) |
@@ -29,11 +35,8 @@ The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 | Sun-path view | feature, post-MVP | Requested, PRD drafted | none (no remote) | [features/sun-path-view/](features/sun-path-view/README.md) |
 | Window performance overlays | feature, post-MVP | Requested, PRD drafted | none (no remote) | [features/window-performance-overlays/](features/window-performance-overlays/README.md) |
 | UI baseline from the predecessor's six screens | reference | Scoped | none (no remote) | [ui-baseline/](ui-baseline/README.md) |
-| Window component host spike (glue, cut, select, rewrite, no-scale) | spike | Deferred | none (no remote) | window-types STATUS; runs with the overlay spike |
-| Edge identity spike (attribute survival across split, weld, move, cut, Undo, reopen) | spike | Requested | none (no remote) | thermal-bridges PRD, "Edge tagging rules"; gates thermal bridges, piping and ducting |
-| Overlay fill spike (alpha, depth, cost) | spike | Deferred | none (no remote) | face-assignment PRD, Q22; runs after the feature packets are drafted |
-| PHX without Excel (spike) | external | Requested | [PH-Tools/PHX#157](https://github.com/PH-Tools/PHX/issues/157) | founding brief, open questions |
-| Cross-cutting decisions | decision register | D1-D11 confirmed; contributor architecture and external-agent priority recorded | none (no remote) | [DECISIONS.md](DECISIONS.md); [contributor architecture](../context/EXTENSIBILITY.md); [agent interface](../context/AGENT_INTERFACE.md) |
+| PHX dependency packaging | external follow-up | Deferred; Phase 0 runtime route proved | [PH-Tools/PHX#157](https://github.com/PH-Tools/PHX/issues/157) | [B1 disposition](archive/phase-zero/evidence/spike-phx.md); METr integration deferred; retain pinned-wheel evidence for resumption |
+| Cross-cutting decisions | decision register | D1-D12 confirmed; contributor architecture and external-agent priority recorded | none (no remote) | [DECISIONS.md](DECISIONS.md); [contributor architecture](../context/EXTENSIBILITY.md); [agent interface](../context/AGENT_INTERFACE.md) |
 
 States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·
 `Implemented on branch` · `Merged to main` · `Complete` · `Deferred` ·

@@ -1,6 +1,6 @@
 # PH-Composer
 
-**DATE:** 2026-09-18 | **STATUS:** Proposed product scope. No code yet.
+**DATE:** 2026-09-20 | **STATUS:** Proposed product scope. Foundation merged; building features pending.
 **OWNER:** Ed May, BLDGTYP
 
 ## Purpose
@@ -17,8 +17,9 @@ The project exists to be extended. BLDGTYP builds the foundation and the core pa
 add a feature, a library provider or an exporter without touching the core.
 
 The accepted [contributor architecture](../context/EXTENSIBILITY.md) also defines scripting,
-namespaced metadata and the contracts for record kinds and importers. These are implementation
-requirements; their APIs and worked examples have not landed yet.
+namespaced metadata and the contracts for record kinds and importers. Phase 0 supplies
+registration, record operations and synthetic examples.
+Feature-specific and remaining contribution contracts are implementation requirements.
 
 ## Product principles
 
@@ -60,7 +61,7 @@ The phase numbers follow the proposed roadmap and are not implementation authori
 | --- | --- | --- |
 | 1 | Zones and adjacency | Define the geometry units, Building-Segments and Levels; solve or explicitly classify interior relationships |
 | 1 | Face assignment | Classify envelope faces by face type and boundary condition; stable through Undo, save and nested contexts |
-| 1 | Validation and export | Produce a canonical HBJSON and coordinated report with complete accounting; optionally run the METr exporter |
+| 1 | Validation and export | Produce canonical HBJSON and a coordinated report with complete accounting; METr exporter deferred to a later milestone |
 | 2 | Assemblies and materials | Graphically build layered assemblies; enter, reuse, edit and assign model-local materials and assemblies |
 | 2 | Optional library import | Copy curated definitions from interchangeable file or connection providers into editable model-local records |
 | 2 | Window Types and placement | Compose Window Types from Frames, Glazings and Psi-Install Types; place and resize window units on classified envelope faces |
@@ -110,14 +111,19 @@ linked evidence is in proposed scope and adds none of those services.
 
 ## Current capability and release boundary
 
-Nothing is implemented in this repository. The founding brief's transplant tables name what
-arrives from the predecessor and in what state. SketchUp 2023 is the compatibility floor and
-SketchUp 26.1.188 on macOS is the proving host. Windows support and public distribution are each
-their own gate. The first public release subset is undecided.
+The foundation merged through PR #1: records and public operations, sessions, panel/UI kit and
+shared units, the runtime shell and export infrastructure. No building feature or real exporter
+is installed yet. Phase 1 plans Zones, face classification and a development-only construction
+proof through HBJSON/report. METr export and import acceptance are deferred until further
+feature development; their return milestone is unscheduled.
+
+SketchUp 2023 is the compatibility floor; its host proof is pending. SketchUp 26.1.188 on macOS
+is the proving host. Windows support and public distribution are separate gates. The first
+public release subset is undecided.
 
 ## How scope becomes implementation
 
 Review one feature at a time in short interview rounds. Each feature plan records seed stories,
 unanswered decisions, actual answers and Ed's confirmation. Recommendations are not accepted
-decisions. Only then write a detailed implementation plan and seek the separate instruction to
-implement.
+decisions. A proposed implementation plan may identify unresolved gates, but dependent work
+waits for those decisions and a separate instruction to implement.

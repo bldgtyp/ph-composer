@@ -1,0 +1,75 @@
+# Face assignment: implementation plan
+
+DATE: 2026-09-20
+STATUS: Scoped; implementation not authorized.
+ISSUE: none (local planning draft)
+
+The [PRD](PRD.md) owns behavior; the [Phase 1 plan](../../phase-one/PLAN.md) coordinates delivery.
+The overlay investigation [B2](../../archive/phase-zero/evidence/spike-overlay.md) passed on the
+proving host. It permits filled modes but supplies no feature cache-invalidation implementation.
+
+## Scope by milestone
+
+| Phase 1 | Phase 2 or later owner |
+| --- | --- |
+| Face record and Zone stamp, path-qualified face read, gross area, Classify type/boundary intent, suggestions and Reverse face | Assembly records, assignment/pickers, assembly-derived hints and colour mode: assemblies in Phase 2 |
+| Outdoors, Ground, To neighbour; Surface only through Zones; local Attached-zone definitions and their reference lifecycle | Library providers and bookshelving: libraries in Phase 2 |
+| Overview Zone tree/faces table, shared Colour-by registry/HUD, face and Zone modes | Window net-opaque-area query and window-related cases: window-types in Phase 2 |
+| Feature findings and translation with the explicit development-fixture exception | Normal user export of constructed opaque faces: requires Phase 2 assemblies |
+
+Attached-zone hand entry lands here, including its local Library subtab/inline creation. The
+Library navigation label does not require a provider, account or network connection. Keep its
+record/reference operations independent of provider integration.
+
+## Delivery allocation
+
+- **P1-A:** bind face/Attached-zone schemas, endpoint resolution and operation participation
+  with Zones, including record deletion and atomic delete-with-replacement. Field edits use keep/set/clear intent; changing Surface composes reciprocal
+  retirement in the same transaction. Define the shared snapshot geometry read with export.
+- **P1-B:** registered face reads/classification and a minimal palette for the two-Zone proof.
+  Add typed/boundary views and suggestions using world geometry, and preserve metadata.
+- **P1-C:** contributor and Python face section with complete accounting, emitted-target checks
+  and construction dependency. The development construction is a declared test composition;
+  absent/dangling authored construction references never fall through to it.
+- **P1-D:** complete Classify gestures and the named Suggest classification for this Zone action,
+  table/drafts, local Attached zones and their delete/replace
+  lifecycle, Reverse face, Colour-by modes/HUD and invalidation. Zones adds its own registered
+  modes. Use explicit draft completion/cancellation without holding a native transaction open.
+- **P1-E/F:** report contribution and integrated authoring/export evidence.
+
+## Contribution boundaries
+
+Register the PRD's face read, Locate, Classify preset, Suggest classification for this Zone and
+Reassign operations under the feature. Auto-classify touches only faces without records, sets
+no assembly and commits in one Undo step; include it in the panel-closed example.
+
+The proposed Classify ceiling is 1,000 affected face occurrences including reciprocal targets,
+deduplicated before counting. P1-D must confirm the limit from host measurements and test exactly
+the limit and one beyond it before closing implementation. Overflow refuses the entire gesture.
+Implement construction-dependent Reassign when assemblies lands; do not advertise an unavailable
+operation as working in Phase 1. The read returns gross area now; the later window query supplies
+net opaque area. No contributor duplicates the scan or reads raw face dictionaries.
+
+Colour-by is a public contribution contract built here: open entity kind, values/colours/legend,
+optional derived geometry and separate readouts. It contains no registry of Classify tool modes.
+Use a synthetic registered mode to prove the seam without feature branches in the shared renderer.
+Cache invalidation is per Model/occurrence; draw callbacks do not repair geometry or attributes.
+
+Bind actual names/schemas during P1-A/D and document one panel-closed classification example.
+Inspect the current UI kit before porting the first table; P0-E deliberately deferred table,
+inventory and cell-draft behavior. The local UI skill and `planning/ui-baseline/README.md` govern
+the screen review. Stored enums retain honeybee names; PRD labels govern user-facing words.
+
+METr-specific checks in the PRD wait with the deferred exporter. Phase 1 verifies face mapping
+and accounting in the exact canonical HBJSON; no METr import is required.
+
+## Verification and handoff
+
+Use all applicable PRD cases and Phase 1 A03/A04/A07/A08/A09/A10/A11/A16. Prove stale and
+out-of-scope refusal, split/copy payload preservation, atomic gestures, Auto-classify preserving
+existing records, and no material painting.
+Native checks cover nested edit contexts, model switching, Escape with panel focus, Undo/Redo
+and reopen. Recheck overlay performance after implementing invalidation.
+
+Phase 1 acceptance completes this allocation only. Keep assembly-dependent acceptance open in
+this packet until Phase 2 provides real construction records and the corresponding user export.

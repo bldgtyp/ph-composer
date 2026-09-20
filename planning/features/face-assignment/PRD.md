@@ -3,7 +3,7 @@
 DATE: 2026-09-18
 STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 22 decisions recorded below. PLAN.md follows the overlay spike and the foundation transplant.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
 
 ## Problem
 
@@ -295,10 +295,10 @@ fourth contribution seam beside feature, provider and exporter.
   use a categorical ramp. In every mode, unclassified is hatched and incomplete is amber.
 - **Default (Q12).** Off at rest, remembered per user; forced on while the Classify tool is
   active, in the mode the palette last touched.
-- **Spike first (Q22).** Before PLAN.md, a probe through the predecessor's bridge measures on the
-  proving host whether an overlay polygon fill honours alpha and depth-tests against the model,
-  and the frame cost of a few thousand filled faces with batching. If fills draw through walls,
-  the design falls back to edge-plus-label and the palette work waits.
+- **Spike complete (Q22).** [Phase 0 B2](../../archive/phase-zero/evidence/spike-overlay.md)
+  passed alpha, depth, picking and performance checks on the proving host. Plan filled modes;
+  feature-specific cache invalidation and performance acceptance remain outstanding. Other
+  platforms require their own host evidence.
 
 ### The faces table
 
@@ -412,9 +412,15 @@ Interviewed 2026-09-18, two rounds, Ed's answers. Each is cited where it applies
 
 ## Acceptance shape
 
+Delivery update, 2026-09-20: D12 defers METr exporter development and consumer acceptance.
+The HBJSON and authoring checks below remain Phase 1 work as allocated in PLAN.md; METr-specific
+checks wait for the exporter's separately scheduled milestone. Existing consumer mappings remain
+requirements for that future work.
+
 Architecture corrections authorized 2026-09-18 supplement the interview: Attached zone reference
 lifecycle, the assembly matrix, field-level intent and atomic gesture completion are now part of
-this contract. Q22's spike remains deferred under the later instruction recorded in STATUS.
+this contract. Q22's spike passed in Phase 0; see [B2 evidence](../../archive/phase-zero/evidence/spike-overlay.md).
+Feature cache invalidation and native acceptance remain pending.
 
 Offline: fixtures for a single-Zone box (six faces, one gesture per type), a Zone under a rotated
 wrapper group, a Zone that is a repeated component (shared records, finding), a face split after
@@ -449,7 +455,7 @@ confirm the face types, boundary conditions, attached zone and constructions arr
 Extend that fresh-process walkthrough with the reference and gesture cases above, native Undo/Redo,
 save/reopen, cancellation with focus in the panel and a dialog opened before commit. Check that no
 transaction spans a review dialog, and that rejected/cancelled gestures change no face. Record
-overlay capability and capture evidence only after the deferred spike is authorized and passes.
+feature overlay capability and capture evidence against the completed B2 baseline.
 
 ## Prior art and evidence
 

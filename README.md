@@ -7,9 +7,12 @@ You define the building while you work on its geometry. Envelope faces, assembli
 windows, thermal bridges and spaces all live in the SKP file. The extension exports HBJSON and,
 from that, the model METr reads.
 
-**Status: founding.** There is no code in this repository yet. The founding brief, the product
-documents and the engineering authorities are written; the foundation transplants from
-[PH-Navigator for SketchUp](https://github.com/bldgtyp/ph-navigator-sketchup) next.
+**Status: foundation merged.** [PR #1](https://github.com/bldgtyp/ph-composer/pull/1) landed the
+foundation, panel and units, runtime shell and four investigations. Building-authoring features
+and real exports are not implemented yet. The [Phase 1 plan](planning/phase-one/README.md) covers
+Zones, face classification and canonical HBJSON/report export. Its P1-A contract and native-host
+investigation are complete; P1-B and later feature implementation are not authorized.
+METr export is deferred until feature development is further along.
 
 ## What it will do
 

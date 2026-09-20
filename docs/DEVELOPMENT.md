@@ -148,6 +148,11 @@ a local variable assigned in one call survives into the next and keeps its objec
 locals to nil before checking that a closed Model's session was collected. The measured host facts
 the bridge depends on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
 
+Phase-specific native probes live under [`tools/spikes/`](../tools/spikes/) and never ship. The
+P1-A Zone geometry probe and its stepwise bridge commands are documented in
+[`tools/spikes/geometry/README.md`](../tools/spikes/geometry/README.md); its accepted results are
+in [`planning/phase-one/evidence/p1-a-geometry.md`](../planning/phase-one/evidence/p1-a-geometry.md).
+
 ## The panel
 
 Each panel file is one `PhComposerUI.define(name, dependencies, factory)` call. After adding,
