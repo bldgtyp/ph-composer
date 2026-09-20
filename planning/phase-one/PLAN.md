@@ -164,6 +164,12 @@ focused tests; the stage closes only when A04 to A09 all have evidence.
 
 D6 is the gesture itself, distinct from D1's operation. A04's atomic-gesture row needs both.
 
+D6 also owns the occurrence-resolution cost the gesture will hit on every drag. `resolve_face`
+walks the whole Model once per Face, through `zones` and `faces_with_id`, so a 500-Face gesture
+that retires 500 reciprocal counterparts measured about 13 seconds against the offline stub.
+Measure it on the proving host, and settle whether the fix is a bounded resolution pass over one
+gesture or a lower ceiling, before the tool's drag behavior is accepted.
+
 **Depends on:** P1-C. Owners: Zones and face assignment.
 
 Finish partial-overlap splitting, sliver skips, out-of-scope reciprocal-write refusal, retirement,

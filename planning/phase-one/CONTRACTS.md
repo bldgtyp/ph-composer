@@ -80,7 +80,8 @@ new default name. It cannot recover Zone metadata or extension payloads lost wit
 
 `face_type` uses honeybee's stored values. `boundary_condition` is absent only after pair
 retirement; JSON `null` is not a stored substitute. `attached_zone_id` is present only for
-`AttachedZone`; `adjacency` is present only for `Surface`. The owning Zone comes from the separate
+`AttachedZone`, and may be absent there as the incomplete authoring state the export matrix
+blocks on; `adjacency` is present only for `Surface`. The owning Zone comes from the separate
 stamp and resolved containment, which must agree. Timestamps are not stored: native Undo and
 deterministic fixtures should not acquire clock-only diffs.
 
