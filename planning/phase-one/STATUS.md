@@ -82,8 +82,9 @@ one of its Faces a fresh id while the Zone it came from and that Zone's pairs st
 the copied pair retiring, copied `user_data` and extension payloads surviving with the unremapped
 references disclosed, refusal when the identity is already unique or the copy sits in shared
 component storage, and Restore regrouping stamped members, recovering only id, Building-Segment and
-Level, disclosing the rest, reverting in one Undo, and refusing conflicting stamps, mixed parent
-contexts and an id already back in the Model. P1-A's host probe already measured the Restore
+Level, disclosing the rest, reverting in one Undo, and refusing on the complete contract set:
+conflicting stamps, mixed parent contexts, an id already back in the Model, and a bounding Edge
+shared with geometry nobody stamped. P1-A's host probe already measured the Restore
 mechanic itself; the native checks for these two operations wait with the rest of P1-D, and
 [`tools/examples/authoring/repair_walkthrough.rb`](../../tools/examples/authoring/repair_walkthrough.rb)
 is checked in so that gate can be run as soon as Ed is at the bridge. One step in it needs Ed at

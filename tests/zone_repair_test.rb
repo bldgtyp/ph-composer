@@ -186,6 +186,54 @@ class ZoneRepairTest < PhComposerTestCase
     assert_equal %w[refused zone.restore_unsafe none], result.values_at("status", "code", "effect")
   end
 
+  def test_restore_refuses_when_a_bounding_edge_is_shared_with_unstamped_geometry
+    _group, zone_id = exploded_zone
+    stamped = @model.entities.to_a.select { |entity| entity.is_a?(Sketchup::Face) }
+    shared = Sketchup::Edge.new(800, point(0, 0, 0), point(2, 0, 0))
+    @model.entities << shared
+    shared.attach_face(stamped.first)
+    stamped.first.edges << shared
+    # An unstamped Face on the same Edge: regrouping would drag it along.
+    outsider = Sketchup::Face.new(801, {}, :points => [point(0, 0, 9), point(2, 0, 9), point(2, 2, 9)],
+                                           :edges => [shared])
+    @model.entities << outsider
+
+    assert_equal "shared_edge", restorable.first.fetch("refusal")
+
+    result = invoke("ph_composer.zones.restore", { "parent_path" => [], "zone_id" => zone_id })
+
+    assert_equal %w[refused zone.restore_unsafe none], result.values_at("status", "code", "effect")
+    assert_empty @model.entities.to_a.select { |entity| entity.is_a?(Sketchup::Group) }
+  end
+
+  def test_restore_accepts_an_edge_shared_only_between_stamped_members
+    _group, zone_id = exploded_zone
+    stamped = @model.entities.to_a.select { |entity| entity.is_a?(Sketchup::Face) }
+    shared = Sketchup::Edge.new(810, point(0, 0, 0), point(2, 0, 0))
+    @model.entities << shared
+    stamped.first(2).each do |face|
+      shared.attach_face(face)
+      face.edges << shared
+    end
+
+    assert_nil restorable.first.fetch("refusal")
+    assert_equal "completed", invoke("ph_composer.zones.restore",
+                                     { "parent_path" => [], "zone_id" => zone_id }).fetch("status")
+  end
+
+  def test_the_restore_offer_reports_every_remembered_member_even_when_it_refuses
+    _group, zone_id = exploded_zone
+    face = @model.entities.to_a.find { |entity| entity.is_a?(Sketchup::Face) }
+    @model.entities.delete(face)
+    @model.entities << Sketchup::Group.new(710, Sketchup::Entities.new([face]))
+
+    offer = restorable.first
+
+    assert_equal "mixed_context", offer.fetch("refusal")
+    assert_equal offer.fetch("member_count"), offer.fetch("entity_ids").length
+    assert_equal zone_id, offer.fetch("zone_id")
+  end
+
   def test_restore_refuses_a_zone_id_that_is_back_in_the_model
     _group, zone_id = exploded_zone
     invoke("ph_composer.zones.restore", { "parent_path" => [], "zone_id" => zone_id })

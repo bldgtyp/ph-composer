@@ -279,14 +279,19 @@ module Sketchup
   end
 
   class Face < Entity
-    attr_reader :loops, :outer_loop, :normal
+    attr_reader :loops, :outer_loop, :normal, :edges
 
-    def initialize(persistent_id, dictionaries = {}, points: nil, holes: [], normal: nil)
+    # `edges` is opt-in. The host always gives a Face its bounding Edges, but most fixtures here do
+    # not care about topology, so a Face built without them simply reports none and any rule that
+    # reads topology is vacuously satisfied. A fixture that means to test edge sharing passes them.
+    def initialize(persistent_id, dictionaries = {}, points: nil, holes: [], normal: nil, edges: [])
       super(persistent_id, dictionaries)
       points ||= [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(1, 0, 0), Geom::Point3d.new(1, 1, 0)]
       @outer_loop = Loop.new(points)
       @loops = [@outer_loop] + holes.map { |loop| Loop.new(loop) }
       @normal = normal || Geom::Vector3d.new(0, 0, 1)
+      @edges = Array(edges)
+      @edges.each { |edge| edge.attach_face(self) }
     end
 
     def area(transformation = Geom::Transformation.new)
@@ -316,12 +321,17 @@ module Sketchup
   end
 
   class Edge < Entity
-    attr_reader :start, :end
+    attr_reader :start, :end, :faces
 
     def initialize(persistent_id, start_point, end_point, dictionaries = {})
       super(persistent_id, dictionaries)
       @start = Vertex.new(start_point)
       @end = Vertex.new(end_point)
+      @faces = []
+    end
+
+    def attach_face(face)
+      @faces << face unless @faces.include?(face)
     end
 
     def transform!(transformation)

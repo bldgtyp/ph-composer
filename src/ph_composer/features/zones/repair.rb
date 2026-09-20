@@ -97,20 +97,35 @@ module PhComposer
           "zone_id" => zone_id,
           "building_segment" => first["building_segment"], "level" => first["level"],
           "parent_path" => entries.first.fetch(:parent_path),
-          "entity_ids" => contexts.values.first.map { |entry| entry.fetch(:persistent_id) }.sort,
+          # Always every remembered member, so the count and the ids cannot disagree. A refused
+          # offer never reaches a write, and a reader comparing the two should not be misled.
+          "entity_ids" => entries.map { |entry| entry.fetch(:persistent_id) }.sort,
           "member_count" => entries.length,
-          "refusal" => orphan_refusal(contexts, stamps),
+          "refusal" => orphan_refusal(contexts, stamps, entries),
           # Restore recovers the id, Building-Segment and Level and nothing else. Everything the
           # Group itself carried went with it, and saying so is part of the offer.
           "unrecoverable" => %w[name user_data extension_data ground_depth_mm]
         }
       end
 
-      def orphan_refusal(contexts, stamps)
+      def orphan_refusal(contexts, stamps, entries)
         return "mixed_context" if contexts.length > 1
         return "stamps_conflict" if stamps.length > 1
+        return "shared_edge" if shared_edge?(entries)
 
         nil
+      end
+
+      # Regrouping takes a Face's bounding Edges with it, so an Edge also used by a Face nobody
+      # stamped would drag unstamped geometry into the restored Zone. Restore refuses rather than
+      # move geometry the user did not ask it to move.
+      def shared_edge?(entries)
+        members = entries.map { |entry| entry.fetch(:entity) }
+        members.any? do |face|
+          next false unless face.respond_to?(:edges)
+
+          face.edges.any? { |edge| edge.faces.any? { |other| !members.include?(other) } }
+        end
       end
 
       def restore_plan(model, parent_path, zone_id, revision)
@@ -145,13 +160,13 @@ module PhComposer
             next if stamp.nil? || live.include?(stamp["zone_id"])
 
             found << { :zone_id => stamp["zone_id"], :stamp => stamp, :parent_path => path,
-                       :persistent_id => entity.persistent_id }
+                       :persistent_id => entity.persistent_id, :entity => entity }
           elsif entity.is_a?(Sketchup::Group) && ZONE_STORE.read(entity).nil?
             walk_orphans(entity.entities, path + [entity.persistent_id], live, found)
           end
         end
       end
-      private_class_method :orphan_group, :orphan_refusal, :walk_orphans, :repaired_face, :face_plans
+      private_class_method :orphan_group, :orphan_refusal, :shared_edge?, :walk_orphans, :repaired_face, :face_plans
     end
   end
 end
