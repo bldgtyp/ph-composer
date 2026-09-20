@@ -10,8 +10,8 @@ module PhComposer
     # AirBoundary round trips through HBJSON but the Classify tool does not offer it (PRD Q8).
     ASSIGNABLE_FACE_TYPES = %w[Wall RoofCeiling Floor].freeze
     BOUNDARY_CONDITIONS = %w[Outdoors Ground Adiabatic Surface AttachedZone].freeze
-    # Surface belongs to Solve adjacencies; AttachedZone waits for its record kind.
-    ASSIGNABLE_BOUNDARIES = %w[Outdoors Ground Adiabatic].freeze
+    # Surface belongs to Solve adjacencies; every other condition is the Classify tool's.
+    ASSIGNABLE_BOUNDARIES = %w[Outdoors Ground Adiabatic AttachedZone].freeze
     # The proposed ceiling on Face occurrences affected by one gesture, counterparts included.
     # Confirm or revise it against P1-D host measurements before the gesture work closes.
     GESTURE_FACE_LIMIT = 1_000
@@ -31,9 +31,9 @@ module PhComposer
         if record.key?("boundary_condition") && !BOUNDARY_CONDITIONS.include?(record["boundary_condition"])
           found << "boundary_condition is unknown"
         end
-        if record["boundary_condition"] == "AttachedZone" && record["attached_zone_id"].to_s.empty?
-          found << "AttachedZone needs attached_zone_id"
-        elsif record.key?("attached_zone_id") && record["boundary_condition"] != "AttachedZone"
+        # An AttachedZone with no chosen record is stored: it is a visible incomplete authoring
+        # state that blocks canonical export, not data the record layer refuses to keep.
+        if record.key?("attached_zone_id") && record["boundary_condition"] != "AttachedZone"
           found << "attached_zone_id is only valid for AttachedZone"
         end
         if record["boundary_condition"] == "Surface" && !record["adjacency"].is_a?(Hash)

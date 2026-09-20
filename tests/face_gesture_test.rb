@@ -86,6 +86,22 @@ class FaceGestureTest < PhComposerTestCase
     assert(list_faces.first(2).all? { |face| face.fetch("values").empty? })
   end
 
+  def test_a_host_failure_after_the_first_face_rolls_the_whole_gesture_back
+    make_box_zone(800, 3)
+    faces = list_faces
+    group = @model.entities.to_a.find { |entity| entity.persistent_id == 800 }
+    group.entities.to_a.last.define_singleton_method(:set_attribute) do |dictionary, key, value|
+      raise "the host refused the write" if dictionary == PhComposer::FaceAssignment::FACE_DICTIONARY
+
+      super(dictionary, key, value)
+    end
+
+    result = invoke("ph_composer.face_assignment.classify", gesture(faces, "Wall", "Outdoors"))
+
+    assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
+    assert_empty list_faces.reject { |face| face.fetch("values").empty? }
+  end
+
   def test_suggest_classification_writes_only_unrecorded_faces_in_one_step
     zone = make_box_zone(500, 4)
     first = list_faces.first

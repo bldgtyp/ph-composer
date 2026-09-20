@@ -2,6 +2,7 @@
 
 require_relative "schema"
 require_relative "geometry"
+require_relative "attached_zone"
 require_relative "steps"
 require_relative "export"
 
@@ -33,7 +34,8 @@ module PhComposer
                      "description" => "One gesture's deduplicated Face occurrences." },
         "intent" => {
           "type" => "object", "additionalProperties" => false,
-          "properties" => { "face_type" => INTENT, "boundary_condition" => INTENT }
+          "properties" => { "face_type" => INTENT, "boundary_condition" => INTENT,
+                            "attached_zone_id" => INTENT }
         },
         "expected_values" => { "type" => "object" }
       }
@@ -45,6 +47,34 @@ module PhComposer
     REVERSE_PARAMS = {
       "type" => "object", "additionalProperties" => false, "required" => ["face"],
       "properties" => { "face" => FACE_REFERENCE }
+    }.freeze
+    ATTACHED_ZONE_SAVE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => ["values"],
+      "properties" => {
+        "id" => { "type" => "string", "description" => "The record to edit; absent creates one." },
+        "values" => { "type" => "object" }, "user_data" => { "type" => "object" },
+        "expected_values" => { "type" => "object" }
+      }
+    }.freeze
+    ATTACHED_ZONE_DELETE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[id replacement],
+      "properties" => {
+        "id" => { "type" => "string" },
+        # Either another Attached zone every referencing Face moves to, or an explicit boundary
+        # condition they are reclassified as. There is no third, silent route.
+        "replacement" => {
+          "type" => "object", "additionalProperties" => false, "required" => ["mode"],
+          "properties" => {
+            "mode" => { "type" => "string", "enum" => %w[attached_zone boundary_condition] },
+            "attached_zone_id" => { "type" => "string" },
+            "boundary_condition" => { "type" => "string", "enum" => %w[Outdoors Ground Adiabatic] }
+          }
+        }
+      }
+    }.freeze
+    ATTACHED_ZONE_DUPLICATE_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => ["ids"],
+      "properties" => { "ids" => { "type" => "array", "items" => { "type" => "string" }, "minItems" => 1 } }
     }.freeze
 
     module_function
@@ -75,15 +105,43 @@ module PhComposer
                      :side_effects => "Flips the Face normal; any Surface pair goes stale.") do |request, proposal|
         reverse(request, proposal)
       end
+      declare_attached_zones(feature)
       feature.snapshot_section("#{FEATURE_ID}.faces", :query => "#{FEATURE_ID}.list")
       feature.export_contributor(ExportProjection::SECTION, :section_version => 1) do |reader|
         ExportProjection.records(reader)
       end
     end
 
+    # Attached zones are read through the foundation's own ph_composer.records.list, so this feature
+    # registers only the kind and the writes that need its reference rules.
+    def declare_attached_zones(feature)
+      feature.record_kind(AttachedZone::RECORD_KIND)
+      feature.action("#{AttachedZone::KIND_ID}.save",
+                     :description => "Create or edit one Attached zone.",
+                     :params => ATTACHED_ZONE_SAVE_PARAMS, :result => OBJECT, :undo_name => "Save Attached Zone",
+                     :side_effects => "Writes one Attached zone record.") do |request, proposal|
+        save_attached_zone(request, proposal)
+      end
+      feature.action("#{AttachedZone::KIND_ID}.duplicate",
+                     :description => "Copy Attached zones without reassigning any Face.",
+                     :params => ATTACHED_ZONE_DUPLICATE_PARAMS, :result => OBJECT,
+                     :undo_name => "Duplicate Attached Zone",
+                     :side_effects => "Creates Attached zone records with fresh ids.") do |request, proposal|
+        { "ids" => request.engine.propose_duplicate(AttachedZone::KIND_ID, request.params.fetch("ids"), proposal) }
+      end
+      feature.action("#{AttachedZone::KIND_ID}.delete",
+                     :description => "Delete one Attached zone, moving every Face that names it in the same step.",
+                     :params => ATTACHED_ZONE_DELETE_PARAMS, :result => OBJECT,
+                     :undo_name => "Delete Attached Zone",
+                     :side_effects => "Reassigns or reclassifies referencing Faces and deletes the record.") do |
+                       request, proposal|
+        delete_attached_zone(request, proposal)
+      end
+    end
+
     def list(request)
       rows = Zones::Occurrences.zones(request.model).flat_map do |zone|
-        Zones::Occurrences.faces(zone).map { |face| face_view(request.model, face) }
+        Zones::Occurrences.faces(zone).map { |face| face_view(request, face) }
       end
       { "faces" => rows, "units" => { "area_m2" => "m2" } }
     end
@@ -124,9 +182,9 @@ module PhComposer
     def auto_classify(request, proposal)
       zone = Zones::Occurrences.resolve_zone(request.model, request.params.fetch("zone"), :mutable => true)
       stamp = Zones::Schema.stamp(zone.record)
+      # No gesture ceiling here: Auto-classify is a separate named batch over one Zone the user
+      # already owns, not a pointer gesture whose target set the user cannot see (P1-D decision).
       unrecorded = Zones::Occurrences.faces(zone).reject { |occurrence| FACE_STORE.read(occurrence.entity) }
-      check_limit!(unrecorded.length)
-
       updates = unrecorded.map do |occurrence|
         suggested = Geometry.suggested_values(occurrence)
         record = new_record(request, occurrence).merge(suggested)
@@ -150,7 +208,74 @@ module PhComposer
       {}
     end
 
-    def face_view(model, occurrence)
+    def save_attached_zone(request, proposal)
+      values = request.params.fetch("values")
+      id = request.params["id"]
+      if id
+        request.engine.propose_update(AttachedZone::KIND_ID, id, proposal, :values => values,
+                                      :user_data => request.params["user_data"],
+                                      :expected_values => request.params.fetch("expected_values", {}))
+      else
+        values = { "temperature_reduction_factor" => AttachedZone::DEFAULT_FACTOR }.merge(values)
+        id = request.engine.propose_create(AttachedZone::KIND_ID, proposal, :values => values,
+                                           :user_data => request.params["user_data"])
+      end
+      AttachedZone.findings(values.merge("id" => id)).each { |finding| proposal.add_finding(finding) }
+      { "id" => id }
+    end
+
+    # Delete with replacement, in one proposal: every Face naming the record moves first, then the
+    # record goes. Faces are not catalog records, so the engine's reference check cannot see them and
+    # this feature owns the scan. A Face the caller cannot reach refuses the whole delete.
+    def delete_attached_zone(request, proposal)
+      id = request.params.fetch("id")
+      request.engine.find(AttachedZone::KIND_ID, id)
+      replacement = request.params.fetch("replacement")
+      validate_replacement!(request, replacement, id)
+
+      updates = referencing_faces(request.model, id).map do |occurrence, record|
+        after = DeepCopy.call(record)
+        if replacement.fetch("mode") == "attached_zone"
+          after["attached_zone_id"] = replacement.fetch("attached_zone_id")
+        else
+          after.delete("attached_zone_id")
+          after["boundary_condition"] = replacement.fetch("boundary_condition")
+        end
+        { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
+          "after" => Schema.validate!(after), "stamp" => nil, "change" => "updated" }
+      end
+      unless updates.empty?
+        scopes = updates.map do |update|
+          Operations::EntityScope.new(update.fetch("reference").fetch("zone_path")[0...-1])
+        end
+        proposal.add_step(ClassifyStep.new(:updates => updates), :scopes => scopes)
+      end
+      request.engine.propose_delete(AttachedZone::KIND_ID, id, proposal)
+      { "id" => id, "reassigned_faces" => updates.length }
+    end
+
+    def validate_replacement!(request, replacement, deleted_id)
+      return unless replacement.fetch("mode") == "attached_zone"
+
+      target = replacement["attached_zone_id"]
+      if target.to_s.empty?
+        raise CodedError.new("params.invalid", "A replacement Attached zone needs attached_zone_id.")
+      end
+      if target == deleted_id
+        raise CodedError.new("params.invalid", "The replacement cannot be the Attached zone being deleted.")
+      end
+
+      request.engine.find(AttachedZone::KIND_ID, target)
+    end
+
+    def referencing_faces(model, attached_zone_id)
+      Zones::Occurrences.zones(model).flat_map { |zone| Zones::Occurrences.faces(zone) }.filter_map do |occurrence|
+        record = FACE_STORE.read(occurrence.entity)
+        [occurrence, record] if record && record["attached_zone_id"] == attached_zone_id
+      end
+    end
+
+    def face_view(request, occurrence)
       record = FACE_STORE.read(occurrence.entity)
       Schema.validate!(record) if record
       id = record&.fetch("id", nil)
@@ -160,7 +285,8 @@ module PhComposer
         "user_data" => record ? DeepCopy.call(record.fetch("user_data", {})) : {},
         "extension_data" => record ? DeepCopy.call(record.fetch("extension_data", {})) : {},
         "suggested" => Geometry.suggested_values(occurrence),
-        "adjacency_state" => Zones::Adjacency.state(model, occurrence, record)
+        "attached_zone_state" => AttachedZone.reference_state(request.engine, record),
+        "adjacency_state" => Zones::Adjacency.state(request.model, occurrence, record)
       }
     end
 
@@ -235,6 +361,9 @@ module PhComposer
         when "set" then record[field] = operation.fetch("value")
         end
       end
+      # The reference belongs to the condition: moving off AttachedZone drops it, so no Face keeps a
+      # reference its own condition no longer explains.
+      record.delete("attached_zone_id") unless record["boundary_condition"] == "AttachedZone"
       Schema.validate!(record)
     end
 
@@ -251,7 +380,8 @@ module PhComposer
           raise CodedError.new("params.invalid", "Classify sets Wall, RoofCeiling or Floor.")
         end
         if field == "boundary_condition" && mode == "set" && !ASSIGNABLE_BOUNDARIES.include?(value)
-          raise CodedError.new("params.invalid", "Classify sets Outdoors, Ground or Adiabatic.")
+          raise CodedError.new("params.invalid",
+                               "Classify sets #{ASSIGNABLE_BOUNDARIES.join(', ')}; Surface is the solver's.")
         end
       end
     end

@@ -1,0 +1,199 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+
+# P1-D Attached zones: the record kind, its reference lifecycle on a Face, and the guarded delete
+# that moves every referencing Face and removes the definition in one step.
+class AttachedZoneTest < PhComposerTestCase
+  API = PhComposer::API
+  KIND = PhComposer::FaceAssignment::AttachedZone::KIND_ID
+
+  def setup
+    super
+    @model = Sketchup.active_model
+    @session = PhComposer::Sessions.for(@model)
+    @context = API.connect(:session_id => @session.id)
+    @sequence = 0
+    make_box_zone(100, 3)
+  end
+
+  def test_a_new_record_takes_the_phius_default_factor_and_is_readable_through_the_shared_query
+    result = invoke("#{KIND}.save", { "values" => { "name" => "Garage", "kind" => "garage" } })
+
+    assert_equal "completed", result.fetch("status")
+    record = records.first
+
+    assert_equal "Garage", record.dig("values", "name")
+    assert_in_delta 0.95, record.dig("values", "temperature_reduction_factor")
+  end
+
+  def test_a_factor_below_the_phius_floor_is_accepted_with_a_finding_naming_the_estimator
+    result = invoke("#{KIND}.save", { "values" => { "name" => "Crawlspace", "kind" => "crawlspace",
+                                                    "temperature_reduction_factor" => 0.7 } })
+
+    assert_equal "completed", result.fetch("status")
+    assert_equal ["attached_zone.factor_below_phius_floor"], result.fetch("findings").map { |row| row.fetch("code") }
+  end
+
+  def test_an_attached_zone_with_no_chosen_record_is_stored_as_an_incomplete_state
+    face = faces.first
+
+    invoke("ph_composer.face_assignment.classify", {
+      "faces" => [face.fetch("reference")],
+      "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
+                    "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" } },
+      "expected_values" => {}
+    })
+
+    assert_equal "absent", faces.first.fetch("attached_zone_state")
+  end
+
+  def test_a_face_naming_a_missing_record_reads_as_dangling_and_a_valid_one_as_resolved
+    id = create_zone_record("Garage")
+    assign(faces.first, id)
+
+    assert_equal "resolved", faces.first.fetch("attached_zone_state")
+
+    KIND_STORE.delete(@model, id)
+
+    assert_equal "dangling", faces.first.fetch("attached_zone_state")
+  end
+
+  def test_changing_away_from_attached_zone_clears_the_reference
+    id = create_zone_record("Garage")
+    face = assign(faces.first, id)
+
+    invoke("ph_composer.face_assignment.classify", {
+      "faces" => [face.fetch("reference")],
+      "intent" => { "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } },
+      "expected_values" => {}
+    })
+
+    values = faces.first.fetch("values")
+
+    assert_equal "Outdoors", values.fetch("boundary_condition")
+    refute values.key?("attached_zone_id")
+    assert_nil faces.first.fetch("attached_zone_state")
+  end
+
+  def test_delete_with_a_replacement_record_moves_every_referencing_face_in_one_step
+    garage = create_zone_record("Garage")
+    attic = create_zone_record("Attic", "attic")
+    faces.first(2).each { |face| assign(face, garage) }
+
+    result = invoke("#{KIND}.delete", { "id" => garage,
+                                        "replacement" => { "mode" => "attached_zone",
+                                                           "attached_zone_id" => attic } })
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal 2, result.dig("value", "reassigned_faces")
+    assert_equal [attic], records.map { |record| record.fetch("id") }
+    assert_equal [attic, attic], faces.first(2).map { |face| face.dig("values", "attached_zone_id") }
+
+    @model.undo
+
+    assert_equal [garage, attic].sort, records.map { |record| record.fetch("id") }.sort
+    assert_equal [garage, garage], faces.first(2).map { |face| face.dig("values", "attached_zone_id") }
+  end
+
+  def test_delete_with_a_replacement_boundary_condition_reclassifies_and_clears_the_reference
+    garage = create_zone_record("Garage")
+    assign(faces.first, garage)
+
+    result = invoke("#{KIND}.delete", { "id" => garage,
+                                        "replacement" => { "mode" => "boundary_condition",
+                                                           "boundary_condition" => "Adiabatic" } })
+
+    assert_equal "completed", result.fetch("status")
+    assert_empty records
+    values = faces.first.fetch("values")
+
+    assert_equal "Adiabatic", values.fetch("boundary_condition")
+    refute values.key?("attached_zone_id")
+  end
+
+  def test_delete_naming_a_missing_replacement_refuses_and_writes_nothing
+    garage = create_zone_record("Garage")
+    assign(faces.first, garage)
+
+    result = invoke("#{KIND}.delete", { "id" => garage,
+                                        "replacement" => { "mode" => "attached_zone",
+                                                           "attached_zone_id" => "atz_MissingRecord" } })
+
+    assert_equal %w[refused target.not_found none], result.values_at("status", "code", "effect")
+    assert_equal [garage], records.map { |record| record.fetch("id") }
+    assert_equal garage, faces.first.dig("values", "attached_zone_id")
+  end
+
+  def test_duplicate_creates_a_fresh_record_without_reassigning_any_face
+    garage = create_zone_record("Garage")
+    assign(faces.first, garage)
+
+    result = invoke("#{KIND}.duplicate", { "ids" => [garage] })
+
+    copy = result.dig("value", "ids").fetch(garage)
+
+    refute_equal garage, copy
+    assert_equal garage, faces.first.dig("values", "attached_zone_id")
+    assert_equal "Garage", records.find { |record| record.fetch("id") == copy }.dig("values", "name")
+  end
+
+  def test_an_edit_preserves_user_data_and_refuses_a_stale_expected_value
+    garage = create_zone_record("Garage")
+    invoke("#{KIND}.save", { "id" => garage, "values" => { "notes" => "Detached" },
+                             "user_data" => { "firm.note" => "keep" } })
+
+    stale = invoke("#{KIND}.save", { "id" => garage, "values" => { "name" => "Carport" },
+                                     "expected_values" => { "name" => "Garage " } })
+
+    assert_equal "refused", stale.fetch("status")
+    record = records.first
+
+    assert_equal "Garage", record.dig("values", "name")
+    assert_equal({ "firm.note" => "keep" }, record.fetch("user_data"))
+  end
+
+  private
+
+  KIND_STORE = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND.store
+
+  def invoke(name, params)
+    @sequence += 1
+    API.invoke(:context => @context, :name => name, :params => params,
+               :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
+  end
+
+  def records
+    API.query(:context => @context, :name => "ph_composer.records.list", :params => { "kind" => KIND })
+      .dig("value", "records")
+  end
+
+  def faces
+    API.query(:context => @context, :name => "ph_composer.face_assignment.list").dig("value", "faces")
+  end
+
+  def create_zone_record(name, kind = "garage")
+    invoke("#{KIND}.save", { "values" => { "name" => name, "kind" => kind } }).dig("value", "id")
+  end
+
+  def assign(face, attached_zone_id)
+    invoke("ph_composer.face_assignment.classify", {
+      "faces" => [face.fetch("reference")],
+      "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
+                    "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" },
+                    "attached_zone_id" => { "mode" => "set", "value" => attached_zone_id } },
+      "expected_values" => {}
+    })
+    faces.find { |row| row.dig("reference", "entity_path") == face.dig("reference", "entity_path") }
+  end
+
+  def make_box_zone(base, face_count)
+    entities = face_count.times.map do |index|
+      Sketchup::Face.new(base + index + 1, {},
+                         :points => [Geom::Point3d.new(0, 0, index), Geom::Point3d.new(2, 0, index),
+                                     Geom::Point3d.new(2, 2, index)])
+    end
+    @model.entities << Sketchup::Group.new(base, Sketchup::Entities.new(entities))
+    invoke("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [base] })
+  end
+end
