@@ -188,11 +188,23 @@ piece keeps the native persistent id, that every piece keeps its dictionaries, t
 of a contained region really does come back as one Face with a hole, and that the whole cut is one
 Undo step.
 
-D6 also owns the occurrence-resolution cost the gesture will hit on every drag. `resolve_face`
-walks the whole Model once per Face, through `zones` and `faces_with_id`, so a 500-Face gesture
-that retires 500 reciprocal counterparts measured about 13 seconds against the offline stub.
-Measure it on the proving host, and settle whether the fix is a bounded resolution pass over one
-gesture or a lower ceiling, before the tool's drag behavior is accepted.
+D6 also owns the occurrence-resolution cost the gesture hits on every drag, now measured on the
+proving host: [P1-D gesture cost](evidence/p1-d-gesture-cost.md). The cost is
+O(targets x Model Faces), because `resolve_face` walks the whole Model through `resolve_zone` and
+again through `faces_with_id`, about twice per target, and `retire_pairs` resolves each
+counterpart the same way. A 50-target gesture doubles in cost every time the Model doubles: 459 ms
+at 252 Faces, 3,352 ms at 2,004. A gesture at the 250 ceiling costs 10.4 s at 2,004 Faces, about
+half of it resolution. The recommendation is one bounded resolution pass per gesture, indexing the
+Model once, rather than a lower ceiling, which would hide the shape without changing it. The
+ceiling holds as the bound on blast radius it was always meant to be, and its refusal is cheap:
+251 targets refuse in 3.6 ms, before anything is resolved.
+
+The same run found a second and larger problem, which is not the gesture's.
+`ph_composer.face_assignment.list` is quadratic in Face count: 15 ms at 60 Faces, 834 ms at 504,
+12,764 ms at 2,004. It resolves nothing, so the cause is elsewhere in the per-Face read and has
+not been traced. D7's faces table and the tool both depend on that read, so it needs its own
+diagnosis in D6. Neither the resolution pass nor the `list` diagnosis was implemented on this
+evidence; both wait on Ed's decision.
 
 ### What D5 left open
 

@@ -122,3 +122,28 @@ change observer or belongs in a later slice.
 
 Finally switch to another open Model and back, and close the walkthrough Model, confirming the
 overlay leaves with it and comes back with it.
+
+## P1-D D6: what a Classify gesture costs
+
+`gesture_cost_walkthrough.rb` is the harness behind
+[the gesture cost evidence](../../../planning/phase-one/evidence/p1-d-gesture-cost.md). It answers
+two questions that decide how the Classify tool is built: whether the 250-Face ceiling is
+defensible on the host, and what occurrence resolution costs.
+
+```sh
+uv run tools/hostkit/host_bridge.py eval \
+  'load "/absolute/path/to/ph-composer/tools/examples/authoring/gesture_cost_walkthrough.rb"; GestureCostWalkthrough.build(334)'
+uv run tools/hostkit/host_bridge.py eval 'GestureCostWalkthrough.gesture_curve([1, 10, 50])'
+uv run tools/hostkit/host_bridge.py eval 'GestureCostWalkthrough.ceiling'
+uv run tools/hostkit/host_bridge.py eval 'GestureCostWalkthrough.model_curve'
+```
+
+`build` takes a box count, six Faces each, and reports how many Faces the solve paired.
+`gesture_curve` grows the gesture at one Model size, which says what a drag costs.
+`model_curve` repeats one gesture against a growing Model, which says whether the cost is in the
+gesture or in the walk; it rebuilds the Model at every size, so expect it to take minutes.
+`ceiling` runs the shipped limit and one above it.
+
+Run the two curves in that order and read them together. A gesture cost that grows with the Model
+at a fixed gesture size is the Model walk, not the gesture, and no ceiling fixes it. `inventory`
+reports `list_ms` alongside, which is how the quadratic Face read was found.

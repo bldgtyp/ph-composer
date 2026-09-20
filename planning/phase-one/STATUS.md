@@ -135,6 +135,15 @@ questions and the three unmeasured assumptions behind them are in "What D5 left 
 [PLAN.md](PLAN.md), and
 [`colour_by_walkthrough.rb`](../../tools/examples/authoring/colour_by_walkthrough.rb) asks each one.
 
+D6's two measurements ran on SketchUp 26.1.188 on 2026-09-20, before any of D6 was built, because
+both of them decide how it is built. The gesture ceiling was re-measured on the host it will run
+on and holds as a bound on blast radius, with the over-limit refusal costing 3.6 ms; it cannot
+bound elapsed time, which depends on the Model as much as the gesture. Occurrence resolution costs
+O(targets x Model Faces) and is about half of a gesture's total. `face_assignment.list` is
+separately quadratic in Face count, which nothing had measured and which D7's table depends on.
+The recommendation is one bounded resolution pass per gesture rather than a lower ceiling. No code
+changed on this evidence. See [the gesture cost evidence](evidence/p1-d-gesture-cost.md).
+
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition
 reloaded the exact two-Zone HBJSON with reconciled identifiers, one reciprocal Surface pair and
@@ -157,5 +166,6 @@ post-commit CI close this branch slice; merge remains pending.
 | 2026-09-20 | P1-D D3: explicit copied-Zone identity repair and limited Restore Zone landed, with the restore offer and its disclosed losses on the Zones read. |
 | 2026-09-20 | P1-D D4 part one: pure overlap geometry with remainder thresholds, whole-scope Solve, the Q18 out-of-scope refusal and a finding for every case the solver will not pair. The geometry cut remains. |
 | 2026-09-20 | P1-D D4 part two: partial overlaps are cut on both sides and paired on the shared region only, under the split rules, in one aborting step. |
+| 2026-09-20 | P1-D D6's two measurements ran on the host: the gesture ceiling holds as a blast-radius bound, the cost is O(targets x Model Faces) in occurrence resolution, and the Face read turned out to be quadratic on its own. No code changed; the fix is Ed's call. |
 | 2026-09-20 | P1-D D5: the shared Colour-by seam, its overlay, HUD and cache invalidation, with face-assignment and Zone modes registered through the public call. |
 | 2026-09-20 | The Ground suggestion was corrected to honeybee's rule after the host gate showed it setting five of a plain box's six Faces to Ground. |
