@@ -19,7 +19,8 @@ module PhComposer
       MINIMUM_AREA_M2 = 0.01
       MINIMUM_WIDTH_M = 0.01
 
-      Result = Struct.new(:kind, :polygon_m, :area_m2, :reason, keyword_init: true) do
+      Result = Struct.new(:kind, :polygon_m, :area_m2, :reason, :left_remainders_m, :right_remainders_m,
+                          keyword_init: true) do
         def paired?
           kind == :full || kind == :partial
         end
@@ -50,17 +51,17 @@ module PhComposer
         shared
       end
 
-      # The two outlines clipped against each other in their shared plane. Sutherland-Hodgman needs a
-      # convex clip polygon, so one side must be convex; a pair of concave outlines is reported
-      # rather than cut along a boundary this code cannot be trusted to compute.
+      # The two outlines clipped against each other in their shared plane, with what each Face would
+      # be left holding. Both outlines must be convex: the clip needs a convex polygon to run at
+      # all, and a concave remainder is a shape this code cannot be trusted to decompose. A Face
+      # whose outline is concave still pairs on a full match, which needs no cut.
       def shared_region(left, right)
         return unsupported("a Face with a hole is not cut by this solver") if left.holes.any? || right.holes.any?
 
         basis = plane_basis(left.normal, left.outer_loop.first)
         subject = project(left.outer_loop, basis)
         clip = project(right.outer_loop, basis)
-        subject, clip = clip, subject unless convex?(clip)
-        return unsupported("neither Face outline is convex") unless convex?(clip)
+        return unsupported("a Face outline is not convex") unless convex?(subject) && convex?(clip)
 
         # Sutherland-Hodgman reads "inside" from one winding. Projecting a Face onto its own plane
         # can yield either, depending on which way the plane's frame happens to fall, so the clip
@@ -70,9 +71,42 @@ module PhComposer
 
         area = polygon_area(polygon)
         return none if area <= 0.0
-        return sliver(area) if area < MINIMUM_AREA_M2 || minimum_width(polygon) < MINIMUM_WIDTH_M
 
-        Result.new(:kind => :partial, :polygon_m => unproject(polygon, basis), :area_m2 => area)
+        cut(basis, subject, clip, polygon, area)
+      end
+
+      # Q17 applies to everything the cut would create, not only to the shared piece. A remainder
+      # too small or too narrow to draw makes the whole split a reported skip, because the
+      # alternative is asking the host to make a Face nobody can work with.
+      def cut(basis, subject, clip, polygon, area)
+        left_rest = difference(subject, polygon)
+        right_rest = difference(clip, polygon)
+        pieces = [polygon, *left_rest, *right_rest]
+        return sliver(area) if pieces.any? { |piece| too_small?(piece) }
+
+        Result.new(:kind => :partial, :polygon_m => unproject(polygon, basis), :area_m2 => area,
+                   :left_remainders_m => left_rest.map { |piece| unproject(piece, basis) },
+                   :right_remainders_m => right_rest.map { |piece| unproject(piece, basis) })
+      end
+
+      def too_small?(polygon)
+        polygon_area(polygon) < MINIMUM_AREA_M2 || minimum_width(polygon) < MINIMUM_WIDTH_M
+      end
+
+      # What is left of `subject` once `clip` is taken out of it, as convex pieces. One piece per
+      # clip edge: the part of the subject outside that edge but inside every edge before it. For a
+      # convex clip that decomposition is exact and never overlaps itself.
+      def difference(subject, clip)
+        ccw = counter_clockwise(clip)
+        ccw.each_index.filter_map do |index|
+          piece = clip_against_edge(subject, ccw[index], ccw[(index + 1) % ccw.length], :outside)
+          index.times do |earlier|
+            break if piece.length < 3
+
+            piece = clip_against_edge(piece, ccw[earlier], ccw[(earlier + 1) % ccw.length])
+          end
+          piece if piece.length >= 3 && polygon_area(piece) > 0.0
+        end
       end
 
       # Sutherland-Hodgman: carry the subject through one half-plane per clip edge.
@@ -85,20 +119,21 @@ module PhComposer
         end
       end
 
-      def clip_against_edge(polygon, edge_start, edge_end)
+      def clip_against_edge(polygon, edge_start, edge_end, side = :inside)
         result = []
         polygon.each_with_index do |point, index|
           previous = polygon[index - 1]
-          inside = inside?(point, edge_start, edge_end)
-          was_inside = inside?(previous, edge_start, edge_end)
-          result << intersection(previous, point, edge_start, edge_end) if inside != was_inside
-          result << point if inside
+          keep = inside?(point, edge_start, edge_end, side)
+          kept_previous = inside?(previous, edge_start, edge_end, side)
+          result << intersection(previous, point, edge_start, edge_end) if keep != kept_previous
+          result << point if keep
         end
         dedupe(result)
       end
 
-      def inside?(point, edge_start, edge_end)
-        cross(edge_start, edge_end, point) >= -1.0e-12
+      def inside?(point, edge_start, edge_end, side = :inside)
+        value = cross(edge_start, edge_end, point)
+        side == :inside ? value >= -1.0e-12 : value <= 1.0e-12
       end
 
       def intersection(from, to, edge_start, edge_end)
@@ -246,7 +281,7 @@ module PhComposer
         Result.new(:kind => :unsupported, :reason => reason)
       end
 
-      private_class_method :shared_region, :counter_clockwise, :clip_against_edge, :inside?,
+      private_class_method :shared_region, :cut, :too_small?, :counter_clockwise, :clip_against_edge, :inside?,
                            :intersection, :cross, :polygon_area, :minimum_width, :distance_to_segment,
                            :distance, :same_point?, :dedupe, :plane_basis, :project, :unproject,
                            :coplanar?, :alignment, :cross3, :dot3, :normalize, :none, :sliver,

@@ -93,12 +93,44 @@ class ZoneOverlapTest < PhComposerTestCase
     assert_includes result.reason, "convex"
   end
 
-  # One convex side is enough: it becomes the clip polygon and the concave side is the subject.
-  def test_a_concave_outline_against_a_convex_one_is_still_cut
+  # A cut needs both outlines convex, not just the clip: the remainder of a concave Face is a
+  # shape this code will not decompose. A concave Face still pairs on a full match, which cuts
+  # nothing.
+  def test_a_concave_outline_is_not_cut_even_against_a_convex_one
     result = between(chevron, wall(0, 6, 0, 4, :facing => :west))
 
-    assert_equal :partial, result.kind
-    assert_operator result.area_m2, :>, 0.0
+    assert_equal :unsupported, result.kind
+    assert_includes result.reason, "convex"
+  end
+
+  def test_a_concave_outline_still_pairs_on_a_full_match
+    assert_equal :full, between(chevron, chevron(:facing => :west)).kind
+  end
+
+  def test_a_partial_match_reports_what_each_face_would_be_left_holding
+    result = between(wall(0, 4, 0, 3), wall(2, 6, 0, 3, :facing => :west))
+
+    assert_equal 1, result.left_remainders_m.length
+    assert_equal 1, result.right_remainders_m.length
+    assert_in_delta 6.0, area_of(result.left_remainders_m.first)
+    assert_in_delta 6.0, area_of(result.right_remainders_m.first)
+  end
+
+  def test_a_wall_inside_a_larger_one_leaves_the_larger_one_in_pieces
+    result = between(wall(0, 4, 0, 3), wall(1, 3, 0.5, 2.5, :facing => :west))
+
+    assert_in_delta 4.0, result.area_m2
+    assert_empty result.right_remainders_m
+    assert_equal 12.0 - 4.0, result.left_remainders_m.sum { |piece| area_of(piece) }.round(6)
+  end
+
+  # Q17 governs everything the cut creates. A shared region well over both thresholds is still
+  # refused when it would leave a sliver behind.
+  def test_a_split_that_would_leave_a_sliver_behind_is_skipped_whole
+    result = between(wall(0, 4, 0, 3), wall(0, 3.999, 0, 3, :facing => :west))
+
+    assert_operator result.area_m2, :>, OVERLAP::MINIMUM_AREA_M2
+    assert_equal :sliver, result.kind
   end
 
   def test_the_clip_is_independent_of_which_way_each_outline_is_wound
@@ -141,6 +173,15 @@ class ZoneOverlapTest < PhComposerTestCase
               [0, shift + 3, 4], [0, shift, 4]]
     points = points.reverse if facing == :west
     capture(points, facing == :east ? [1, 0, 0] : [-1, 0, 0])
+  end
+
+  # Shoelace on the world points, which all sit in the x = 0 plane here.
+  def area_of(polygon)
+    doubled = polygon.each_index.sum do |index|
+      following = polygon[(index + 1) % polygon.length]
+      (polygon[index][1] * following[2]) - (following[1] * polygon[index][2])
+    end
+    doubled.abs / 2.0
   end
 
   def metres(point)
