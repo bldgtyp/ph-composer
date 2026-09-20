@@ -127,7 +127,18 @@ Rules:
 - Hovering a face shows the suggestion as a tooltip and a tinted preview: the type from the
   normal with honeybee's thresholds (roof at 60 degrees from up, floor at 130; Q6), and Ground
   when the face's lowest point is at or below the Zone's ground depth, a per-Zone field defaulting
-  to the model's z=0 (Q4), else Outdoors. When the palette has an explicit choice, the preview
+  to the model's z=0 (Q4), else Outdoors.
+
+  > **Correction pending (2026-09-20).** "Lowest point" is wrong and does not match the honeybee
+  > rule this packet cites. `honeybee.boundarycondition.get_bc_from_position` returns Ground only
+  > when *every* vertex is at or below the ground depth, and Outdoors as soon as one is above it.
+  > Read as written, a ground-floor wall running from z=0 upwards has its lowest point at the
+  > ground depth and is suggested Ground. Seen on the host on 26.1.188: Suggest classification for
+  > this Zone set five of a plain box's six Faces to Ground, when only the floor belongs there.
+  > A wall standing on grade is Outdoors; only a Face lying wholly at or below grade is Ground.
+  > The rule should read "every vertex at or below the Zone's ground depth". Needs Ed's
+  > confirmation, then a one-line change in `FaceAssignment::Geometry.suggested_values` and a test
+  > per boundary. Until then, Suggest classification over-reports Ground. When the palette has an explicit choice, the preview
   shows that choice instead.
 - Painting an assembly onto a face with no type fills the type from the assembly's `type` and the
   boundary condition from its `exterior_condition`. Both hold the palette's own words (assemblies

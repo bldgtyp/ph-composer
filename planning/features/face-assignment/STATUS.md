@@ -1,7 +1,7 @@
 # Face assignment: status
 
 DATE: 2026-09-20
-STATUS: In progress; P1-B authoring core and P1-C export contribution complete on the implementation branch.
+STATUS: In progress; P1-B authoring, P1-C export contribution and P1-D's gestures and Attached zones implemented.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -15,12 +15,18 @@ into its behavior sections. Shared understanding reached, pending Ed's confirmat
 Follow [PLAN.md](PLAN.md), which separates Phase 1 classification/Colour-by from Phase 2
 assembly assignment. P1-B implements explicit Face reads, single-Face keep/set/clear intent,
 suggestions and the minimal panel controls. P1-C now supplies the detached geometry contributor,
-typed Python Face section and emitted Surface reference checks. P1-D completes gestures,
-Auto-classify, Reverse, Attached zones and Colour-by.
+typed Python Face section and emitted Surface reference checks. P1-D's D1 and D2 add the bounded
+Classify gesture and its 250-occurrence ceiling, Suggest classification for this Zone, Reverse
+face, and the Attached zone record kind with its reference and delete-with-replacement lifecycle.
+The Classify tool itself, Locate, the faces table and Colour-by remain, in D5 to D7.
 
 ## Blockers
 
-- P1-D and later feature implementation are not authorized by the completed P1-C instruction.
+- The Ground suggestion reads "lowest point at or below the Zone's ground depth", which makes
+  every ground-floor wall read as Ground. honeybee's own `get_bc_from_position`, which the PRD
+  cites as its source, returns Ground only when *every* vertex is at or below that depth.
+  Confirmed against honeybee-core on 2026-09-20 and seen on the host: Suggest classification on a
+  plain box set five of six Faces to Ground. Needs a PRD correction and a one-line fix.
 - The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
 
 ## Verification

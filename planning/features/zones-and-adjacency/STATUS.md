@@ -1,7 +1,7 @@
 # Zones and adjacency: status
 
 DATE: 2026-09-20
-STATUS: In progress; P1-A through P1-C complete on the implementation branch, P1-D next.
+STATUS: In progress; P1-A through P1-C complete on the implementation branch, and P1-D's D1 to D4 implemented and host-verified.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -18,12 +18,21 @@ occurrence references and compound geometry transactions, and the
 [host evidence](../../phase-one/evidence/p1-a-geometry.md) establishes the native premises.
 P1-B implemented entity stores, the proposal boundary, Make Zone, Zone details, occurrence reads
 and the minimal Overview UI. P1-C implemented whole-wall adjacency, stale/retire behavior, the
-Zone extraction contributor and the early pinned-stack HBJSON proof. P1-D next completes partial
-overlap, identity repair, limited Restore and the remaining authoring/UI behavior.
+Zone extraction contributor and the early pinned-stack HBJSON proof. P1-D is authorized and
+delivered in slices: the batch pair-retirement participant, explicit identity repair, limited
+Restore, the pure overlap geometry, whole-scope Solve with the Q18 out-of-scope refusal, and the
+partial-overlap cut are implemented, with a
+[host gate](../../phase-one/evidence/p1-d-repairs-and-cut.md) passed on 26.1.188. Colour-by Zone
+modes and the Overview tree remain, in D5 and D7.
 
 ## Blockers
 
-- P1-D implementation is not authorized by the completed P1-C instruction.
+- A Face meeting more than one neighbour is reported rather than cut: it needs one cut per
+  neighbour and the solver does one. This is a normal multifamily shape, a wall against two
+  stacked Zones, so it should not stay open indefinitely.
+- A concave outline and a Face with a hole are reported rather than cut. Windows arrive in Phase 2
+  and will put holes in real walls, so the holed case needs an answer before an assembly-bearing
+  model relies on it.
 - The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
 
 ## Verification
