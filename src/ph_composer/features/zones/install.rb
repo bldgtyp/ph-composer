@@ -3,6 +3,7 @@
 require_relative "schema"
 require_relative "occurrences"
 require_relative "steps"
+require_relative "overlap"
 require_relative "adjacency"
 require_relative "adjacency_steps"
 require_relative "repair"
