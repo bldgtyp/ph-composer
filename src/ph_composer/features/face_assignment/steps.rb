@@ -26,10 +26,17 @@ module PhComposer
 
       # Resolve and check every target before writing any of them: a Face that moved since the
       # preview must abort the gesture, not leave the first half of it painted.
+      #
+      # That split is also what makes one index safe here. The resolution loop runs before the
+      # first write, so the Model does not change underneath it, and the write loop uses the
+      # occurrences it already holds rather than resolving again. A step that mutates as it goes,
+      # as the adjacency cut does, must not be given one.
       def apply(model, _slots)
+        index = Zones::Index.new(model)
         resolved = @updates.map do |update|
           reference = update.fetch("reference")
-          occurrence = Zones::Occurrences.resolve_face(model, reference, :mutable => true, :allow_unassigned => true)
+          occurrence = Zones::Occurrences.resolve_face(model, reference, :mutable => true,
+                                                              :allow_unassigned => true, :index => index)
           current = FACE_STORE.read(occurrence.entity)
           unless current == update.fetch("before")
             raise CodedError.new("target.changed", "A Face changed after the gesture was previewed.")

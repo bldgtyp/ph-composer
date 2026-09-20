@@ -22,16 +22,22 @@ module PhComposer
     module Occurrences
       module_function
 
-      def zones(model)
+      # An `index` is one walk of this Model, reused across a whole read phase (see index.rb). It is
+      # always optional: without one every read walks the Model itself, exactly as before.
+      def zones(model, index: nil)
+        index ? index.check!(model).zones : scan_zones(model)
+      end
+
+      def scan_zones(model)
         found = []
         walk_zones(model.entities, [], identity, false, false, found)
         found
       end
 
-      def resolve_zone(model, reference, mutable: false)
+      def resolve_zone(model, reference, mutable: false, index: nil)
         zone_id = reference.fetch("zone_id")
         path = integer_path(reference.fetch("zone_path"))
-        matching_ids = zones(model).select { |zone| zone.record["id"] == zone_id }
+        matching_ids = zones(model, :index => index).select { |zone| zone.record["id"] == zone_id }
         raise_target("target.not_found", "Zone #{zone_id} does not exist.") if matching_ids.empty?
         raise_target("target.ambiguous", "Zone #{zone_id} occurs more than once.") if matching_ids.length > 1
 
@@ -44,14 +50,18 @@ module PhComposer
         zone
       end
 
-      def faces(zone)
+      def faces(zone, index: nil)
+        index ? index.faces(zone) : scan_faces(zone)
+      end
+
+      def scan_faces(zone)
         found = []
         walk_faces(zone.entity.entities, [], zone.transform, zone, found)
         found
       end
 
-      def resolve_face(model, reference, mutable: false, allow_unassigned: false)
-        zone = resolve_zone(model, reference, :mutable => mutable)
+      def resolve_face(model, reference, mutable: false, allow_unassigned: false, index: nil)
+        zone = resolve_zone(model, reference, :mutable => mutable, :index => index)
         occurrence = face_at(zone, reference.fetch("entity_path"), :mutable => mutable)
         entity = occurrence.entity
         record = face_record(entity)
@@ -59,7 +69,7 @@ module PhComposer
         if expected_id
           raise_target("target.not_found", "Face #{expected_id} has no assignment record.") unless record
           raise_target("target.changed", "The Face identity has changed.") unless record["id"] == expected_id
-          copies = faces_with_id(model, expected_id)
+          copies = faces_with_id(model, expected_id, :index => index)
           raise_target("target.ambiguous", "Face #{expected_id} occurs more than once.") if copies.length > 1
         elsif record && !allow_unassigned
           raise_target("target.changed", "The Face now has an assignment record.")
@@ -130,7 +140,9 @@ module PhComposer
         PhComposer::FaceAssignment::FACE_STORE.read(face)
       end
 
-      def faces_with_id(model, id)
+      def faces_with_id(model, id, index: nil)
+        return index.check!(model).faces_with_id(id) if index
+
         zones(model).flat_map { |zone| faces(zone) }.select do |face|
           face_record(face.entity)&.fetch("id", nil) == id
         end

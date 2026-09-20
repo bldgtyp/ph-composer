@@ -148,7 +148,7 @@ module PhComposer
         [with_pair(left, right, pair_id), with_pair(right, left, pair_id), pair_id]
       end
 
-      def state(model, occurrence, record)
+      def state(model, occurrence, record, index: nil)
         return nil unless record && record["boundary_condition"] == "Surface"
         envelope = record["adjacency"]
         return "invalid" unless envelope.is_a?(Hash)
@@ -156,7 +156,7 @@ module PhComposer
         current = FaceGeometry.capture(occurrence.entity, occurrence.transform)
         return "stale" unless envelope.dig("self_geometry", "digest") == current.digest
 
-        counterpart = Occurrences.resolve_face(model, envelope.fetch("counterpart"))
+        counterpart = Occurrences.resolve_face(model, envelope.fetch("counterpart"), :index => index)
         other_record = FaceAssignment::FACE_STORE.read(counterpart.entity)
         other_geometry = FaceGeometry.capture(counterpart.entity, counterpart.transform)
         reciprocal = other_record&.dig("adjacency", "pair_id") == envelope["pair_id"] &&
@@ -183,11 +183,12 @@ module PhComposer
           right.dig("counterpart_geometry", "digest") == left_entry.geometry.digest
       end
 
-      def retire_records(model, occurrence, record)
+      def retire_records(model, occurrence, record, index: nil)
         unless record && record["boundary_condition"] == "Surface" && record["adjacency"].is_a?(Hash)
           raise CodedError.new("adjacency.not_surface", "That Face has no Surface pair to retire.")
         end
-        counterpart = Occurrences.resolve_face(model, record.fetch("adjacency").fetch("counterpart"), :mutable => true)
+        counterpart = Occurrences.resolve_face(model, record.fetch("adjacency").fetch("counterpart"),
+                                               :mutable => true, :index => index)
         other = FaceAssignment::FACE_STORE.read(counterpart.entity)
         pair_id = record.dig("adjacency", "pair_id")
         unless other&.dig("adjacency", "pair_id") == pair_id &&

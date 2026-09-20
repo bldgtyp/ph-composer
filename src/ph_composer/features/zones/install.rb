@@ -2,6 +2,7 @@
 
 require_relative "schema"
 require_relative "occurrences"
+require_relative "index"
 require_relative "steps"
 require_relative "overlap"
 require_relative "adjacency"
@@ -93,8 +94,8 @@ module PhComposer
                        request, proposal|
         retire_adjacency(request, proposal)
       end
-      feature.proposal_participant("#{FEATURE_ID}.retire_pairs") do |request, targets|
-        retire_pairs(request, targets)
+      feature.proposal_participant("#{FEATURE_ID}.retire_pairs") do |request, targets, index = nil|
+        retire_pairs(request, targets, index)
       end
       feature.export_contributor(
         ExportProjection::SECTION, :section_version => 1,
@@ -306,10 +307,11 @@ module PhComposer
     #
     # Returns { occurrence key => [reference, before, after] } covering both targets and the
     # counterparts they drag in.
-    def retire_pairs(request, targets)
+    def retire_pairs(request, targets, index = nil)
       plan = {}
       targets.each do |occurrence, record|
-        local_after, counterpart, other, other_after = Adjacency.retire_records(request.model, occurrence, record)
+        local_after, counterpart, other, other_after =
+          Adjacency.retire_records(request.model, occurrence, record, :index => index)
         add_retirement(plan, occurrence.reference(record.fetch("id")), record, local_after)
         add_retirement(plan, counterpart.reference(other.fetch("id")), other, other_after)
       end

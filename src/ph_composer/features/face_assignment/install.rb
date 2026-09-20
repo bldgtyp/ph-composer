@@ -141,9 +141,13 @@ module PhComposer
       end
     end
 
+    # One walk for the whole read. Without the index this resolved every Surface Face's counterpart
+    # separately, which walked the Model again for each one and made the read quadratic in Faces.
     def list(request)
-      rows = Zones::Occurrences.zones(request.model).flat_map do |zone|
-        Zones::Occurrences.faces(zone).map { |face| face_view(request, face) }
+      index = Zones::Index.new(request.model)
+      rows = Zones::Occurrences.zones(request.model, :index => index).flat_map do |zone|
+        Zones::Occurrences.faces(zone, :index => index)
+                          .map { |face| face_view(request, face, :index => index) }
       end
       { "faces" => rows, "units" => { "area_m2" => "m2" } }
     end
@@ -157,15 +161,19 @@ module PhComposer
       references = deduplicate(request.params.fetch("faces"))
       check_limit!(references.length)
 
+      # One walk for the whole gesture. Nothing here changes the Model: the proposal is applied
+      # afterwards, by steps that resolve against the live Model themselves.
+      index = Zones::Index.new(request.model)
       targets = references.map do |reference|
         occurrence = Zones::Occurrences.resolve_face(
-          request.model, reference, :mutable => true, :allow_unassigned => reference["entity_id"].nil?
+          request.model, reference, :mutable => true, :allow_unassigned => reference["entity_id"].nil?,
+          :index => index
         )
         record = FACE_STORE.read(occurrence.entity)
         check_expected!(record, expected)
         [occurrence, record]
       end
-      retirements = plan_retirements(request, targets, intent)
+      retirements = plan_retirements(request, targets, intent, :index => index)
       check_limit!((targets.map { |occurrence, _record| Zones::Occurrences.key(occurrence.reference) } +
                     retirements.keys).uniq.length)
 
@@ -182,11 +190,16 @@ module PhComposer
     end
 
     def auto_classify(request, proposal)
-      zone = Zones::Occurrences.resolve_zone(request.model, request.params.fetch("zone"), :mutable => true)
+      # One walk for the whole batch, so the Zone it resolves is the Zone the index walked and the
+      # Faces come back from that same walk.
+      index = Zones::Index.new(request.model)
+      zone = Zones::Occurrences.resolve_zone(request.model, request.params.fetch("zone"),
+                                             :mutable => true, :index => index)
       stamp = Zones::Schema.stamp(zone.record)
       # No gesture ceiling here: Auto-classify is a separate named batch over one Zone the user
       # already owns, not a pointer gesture whose target set the user cannot see (P1-D decision).
-      unrecorded = Zones::Occurrences.faces(zone).reject { |occurrence| FACE_STORE.read(occurrence.entity) }
+      unrecorded = Zones::Occurrences.faces(zone, :index => index)
+                                     .reject { |occurrence| FACE_STORE.read(occurrence.entity) }
       updates = unrecorded.map do |occurrence|
         suggested = Geometry.suggested_values(occurrence)
         record = new_record(request, occurrence).merge(suggested)
@@ -197,7 +210,8 @@ module PhComposer
         scopes = [Operations::EntityScope.new(zone.path[0...-1])]
         proposal.add_step(ClassifyStep.new(:updates => updates), :scopes => scopes)
       end
-      { "classified" => updates.length, "kept" => Zones::Occurrences.faces(zone).length - updates.length }
+      { "classified" => updates.length,
+        "kept" => Zones::Occurrences.faces(zone, :index => index).length - updates.length }
     end
 
     # The one geometry repair this feature owns. The record survives untouched; the changed normal
@@ -289,7 +303,7 @@ module PhComposer
       end
     end
 
-    def face_view(request, occurrence)
+    def face_view(request, occurrence, index:)
       record = FACE_STORE.read(occurrence.entity)
       Schema.validate!(record) if record
       id = record&.fetch("id", nil)
@@ -300,7 +314,7 @@ module PhComposer
         "extension_data" => record ? DeepCopy.call(record.fetch("extension_data", {})) : {},
         "suggested" => Geometry.suggested_values(occurrence),
         "attached_zone_state" => AttachedZone.reference_state(request.engine, record),
-        "adjacency_state" => Zones::Adjacency.state(request.model, occurrence, record)
+        "adjacency_state" => Zones::Adjacency.state(request.model, occurrence, record, :index => index)
       }
     end
 
@@ -323,11 +337,11 @@ module PhComposer
           (boundary.fetch("mode") == "set" && boundary["value"] == "Surface"))
     end
 
-    def plan_retirements(request, targets, intent)
+    def plan_retirements(request, targets, intent, index:)
       retiring = targets.select { |_occurrence, record| retiring?(record, intent) }
       return {} if retiring.empty?
 
-      request.participant("#{Zones::FEATURE_ID}.retire_pairs").call(request, retiring)
+      request.participant("#{Zones::FEATURE_ID}.retire_pairs").call(request, retiring, index)
     end
 
     def classify_updates(request, targets, retirements, intent)

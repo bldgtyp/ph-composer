@@ -141,8 +141,13 @@ on and holds as a bound on blast radius, with the over-limit refusal costing 3.6
 bound elapsed time, which depends on the Model as much as the gesture. Occurrence resolution costs
 O(targets x Model Faces) and is about half of a gesture's total. `face_assignment.list` is
 separately quadratic in Face count, which nothing had measured and which D7's table depends on.
-The recommendation is one bounded resolution pass per gesture rather than a lower ceiling. No code
-changed on this evidence. See [the gesture cost evidence](evidence/p1-d-gesture-cost.md).
+Ed took the recommendation, and `Zones::Index` implements it: one lazily-built walk of a Model,
+reused for the length of a read phase and passed as an optional keyword, so a call that does not
+ask for one is unchanged. Re-measured on the same host and fixture, the 250-target gesture fell
+from 10,368 ms to 182 ms, the 50-target gesture from 3,352 ms to 164 ms, and the Face read from
+12,764 ms to 205 ms. The ceiling stays at 250. No mutating step takes an index; the offline suite
+pins the property that the Model is walked a fixed number of times however many Faces a gesture
+names. See [the gesture cost evidence](evidence/p1-d-gesture-cost.md).
 
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition
@@ -166,6 +171,7 @@ post-commit CI close this branch slice; merge remains pending.
 | 2026-09-20 | P1-D D3: explicit copied-Zone identity repair and limited Restore Zone landed, with the restore offer and its disclosed losses on the Zones read. |
 | 2026-09-20 | P1-D D4 part one: pure overlap geometry with remainder thresholds, whole-scope Solve, the Q18 out-of-scope refusal and a finding for every case the solver will not pair. The geometry cut remains. |
 | 2026-09-20 | P1-D D4 part two: partial overlaps are cut on both sides and paired on the shared region only, under the split rules, in one aborting step. |
+| 2026-09-20 | P1-D: `Zones::Index` gives each read phase one walk of the Model instead of about two per target. The 250-target gesture went from 10.4 s to 182 ms and the Face read from 12.8 s to 205 ms, both re-measured on the host. |
 | 2026-09-20 | P1-D D6's two measurements ran on the host: the gesture ceiling holds as a blast-radius bound, the cost is O(targets x Model Faces) in occurrence resolution, and the Face read turned out to be quadratic on its own. No code changed; the fix is Ed's call. |
 | 2026-09-20 | P1-D D5: the shared Colour-by seam, its overlay, HUD and cache invalidation, with face-assignment and Zone modes registered through the public call. |
 | 2026-09-20 | The Ground suggestion was corrected to honeybee's rule after the host gate showed it setting five of a plain box's six Faces to Ground. |
