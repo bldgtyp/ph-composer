@@ -4,6 +4,45 @@ DATE: 2026-09-20
 STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized and D1 to D7 are implemented, with D7's host gate outstanding.
 ISSUE: none (local implementation packet)
 
+## Resume here: P1-D D7, 2026-09-20
+
+D7 is implemented on the branch in five commits, `c1bf559` to `e203853`, with `make ci` green on
+Ruby 3.2.2 and the 2.7.2 floor (439 Ruby tests, 1,753 assertions, 149 JavaScript tests, rubocop
+clean over 160 files) and coverage at 96.5% Ruby, 97.9% JavaScript, 97.5% Python. Three things are
+owed before the slice closes, in this order:
+
+1. **Re-run the coherent-diff review of the three UI commits** (`51ee8e7`, `b1eb97c`, `624282b`).
+   One was launched on 2026-09-20 and did not report before the session ended, so nothing was
+   learned from it. Give it the architecture-review and UI-polish skills together, and point it at
+   the questions that matter here: the Zone and Face row projection in `html/sections/overview.js`
+   (rows keyed by entity path and index, a Zone id that repeats, a Face whose `zone_id` names no
+   Zone row), `row_state` in `features/face_assignment/install.rb` against what Colour-by calls
+   incomplete, whether anything in the ported `table.js` or `view_controls.js` now names a feature,
+   and races between the single-flight request channels and the snapshot republish.
+   The review of the seam itself (`c1bf559`) ran and its eight findings are fixed.
+2. **Run D7's host gate**, which needs Ed at the panel:
+   [`overview_walkthrough.rb`](../../tools/examples/authoring/overview_walkthrough.rb) and the
+   section at the end of [the authoring README](../../tools/examples/authoring/README.md). Nothing
+   in the Ruby API clicks an HtmlDialog, so the script builds the Model and reads back what the
+   panel's commands did; the operator does the clicking. Two of its eight questions carry real
+   risk: what this screen costs to paint on a Model of a few hundred Faces, which nothing offline
+   measures, and whether a chip chosen while the panel has focus leaves the viewport's first click
+   with the Classify tool or spends it returning focus to the Model window.
+3. **A docs pass over what the gate finds**, then P1-E is the next authorized work, and it is not
+   authorized yet.
+
+What D7 added, for a reader coming to it cold: a sixth contribution seam, `view_command`, for a
+change to what the host shows that never reaches the Model; the Overview Zone tree and faces table
+built on `table.js`, `table.css` and `view_controls.js` ported from the predecessor and trimmed; the
+panel Colour-by legend with click-to-select-and-zoom and "Show only this"; and the Classify tool's
+palette with its Attached zone picker. `state` on the Face read is new, and it is what the table and
+the overlay both call a Face by. The reasoning and the open items are in
+[PLAN.md](PLAN.md) under "What D7 left open".
+
+Hover-to-highlight, the fourth legend affordance Q18 names, is deliberately not built. Ed chose on
+2026-09-20 to measure its cost on a host rather than ship it unmeasured, because it would send one
+command per pointer move and rebuild the drawing each time.
+
 ## Current handoff
 
 Phase 0 is complete and merged at `f1e9a98` through PR #1. The four investigations passed with
