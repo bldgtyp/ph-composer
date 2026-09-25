@@ -4,62 +4,75 @@ DATE: 2026-09-25
 STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized and D1 to D7 are implemented, with D7's host gate outstanding.
 ISSUE: none (local implementation packet)
 
-## Resume here: P1-D D7, 2026-09-25
+## Resume here: P1-D D7's host gate, 2026-09-25
 
-D7 is implemented on the branch, with `make ci` green on Ruby 3.2.2 and the 2.7.2 floor (441 Ruby
-tests, 1,760 assertions, 157 JavaScript tests, rubocop clean over 160 files) and coverage at 96.6%
-Ruby, 98.0% JavaScript, 97.5% Python. Both reviews have run and their findings are fixed. What is
-owed before the slice closes:
+**State.** D7 is implemented on the branch and every offline gate is green: `make ci` on Ruby 3.2.2
+and the 2.7.2 floor, 441 Ruby tests with 1,760 assertions, 157 JavaScript tests, rubocop clean over
+160 files, coverage 96.6% Ruby, 98.0% JavaScript, 97.5% Python. Both independent reviews have run,
+one on the contribution seam and one on the three screens, and every finding is fixed and covered by
+a test. Nothing offline is outstanding. What the slice does not have is host evidence, and that is
+the whole of what remains.
 
-1. **The review of the three UI commits is answered.** Four reproduced defects, three contract
-   findings and the dead port residue are fixed and covered by tests; what each one was and why it
-   mattered is in the commit that fixed it. The four that would have reached a user:
-
-   - A copied Zone Group shares its original's dictionary until it is repaired, so two occurrences
-     can carry one record id. The tree keyed rows on that id, so the copy took the original's place,
-     its Faces and area were summed into it, and one Zone vanished from the screen. Rows are keyed on
-     the occurrence path now, and a Zone whose identity is shared, whose definition is shared, or
-     which sits inside another Zone says so on its row.
-   - A Face row was keyed and named by its index among its Zone's *classified* Faces, so classifying
-     one Face rekeyed and renamed an untouched neighbour and the table dropped that row's selection
-     and any edit in progress. A Face is now keyed by its own path and numbered among every Face of
-     its Zone.
-   - Every control was rebuilt on every snapshot, and a snapshot follows every viewport click, so an
-     open dropdown closed under the user. Cells are cached and repainted; the legend and the palette
-     repaint only when what they show has changed.
-   - "Show only this" wedged the viewport grey when the isolated row stopped existing. A row that is
-     gone now releases what it was holding.
-
-   One layout question is recorded rather than decided, in
-   [`planning/ui-baseline/README.md`](../ui-baseline/README.md): the Overview pane now shows the Zone
-   tree first, then Colour by, then the Classify palette, each with its own heading. The alternative
-   is one heading with both controls in the tree's action bar. That is Ed's ruling to make.
-
-   The review of the seam itself (`c1bf559`) ran earlier and its eight findings are fixed.
-
-2. **Run D7's host gate**, which needs Ed at the panel:
-   [`overview_walkthrough.rb`](../../tools/examples/authoring/overview_walkthrough.rb) and the
-   section at the end of [the authoring README](../../tools/examples/authoring/README.md). Nothing
-   in the Ruby API clicks an HtmlDialog, so the script builds the Model and reads back what the
-   panel's commands did; the operator does the clicking. Two of its eight questions carry real
-   risk: what this screen costs to paint on a Model of a few hundred Faces, which nothing offline
-   measures, and whether a chip chosen while the panel has focus leaves the viewport's first click
-   with the Classify tool or spends it returning focus to the Model window.
-3. **A docs pass over what the gate finds**, then P1-E is the next authorized work, and it is not
-   authorized yet.
-4. **Ed's ruling on the Overview pane's arrangement**, recorded in the UI baseline.
-
-What D7 added, for a reader coming to it cold: a sixth contribution seam, `view_command`, for a
-change to what the host shows that never reaches the Model; the Overview Zone tree and faces table
+**What D7 added**, for a reader coming to it cold: a sixth contribution seam, `view_command`, for a
+change to what the host shows that never reaches the Model; the Overview Zone tree and faces table,
 built on `table.js`, `table.css` and `view_controls.js` ported from the predecessor and trimmed; the
 panel Colour-by legend with click-to-select-and-zoom and "Show only this"; and the Classify tool's
-palette with its Attached zone picker. `state` on the Face read is new, and it is what the table and
-the overlay both call a Face by. The reasoning and the open items are in
-[PLAN.md](PLAN.md) under "What D7 left open".
+palette with its Attached zone picker and inline New route. `state` on the Face read is new, and it
+is the word both the table and the overlay call a Face by. The reasoning and the deliberate
+omissions are in [PLAN.md](PLAN.md) under "What D7 left open".
 
-Hover-to-highlight, the fourth legend affordance Q18 names, is deliberately not built. Ed chose on
-2026-09-20 to measure its cost on a host rather than ship it unmeasured, because it would send one
-command per pointer move and rebuild the drawing each time.
+### 1. Run the host gate. This is the next work.
+
+It needs an operator at the panel: nothing in the Ruby API clicks an HtmlDialog, so
+[`overview_walkthrough.rb`](../../tools/examples/authoring/overview_walkthrough.rb) builds the Model
+and reads back what the panel's own commands did to it. The prose for each step is at the end of
+[the authoring README](../../tools/examples/authoring/README.md). Fresh process, `make install`,
+quit every SketchUp, relaunch.
+
+```sh
+make install
+uv run tools/hostkit/host_bridge.py launch _private/host/run.skp --fresh-from _private/host/blank.skp
+uv run tools/hostkit/host_bridge.py eval \
+  'load "/absolute/path/to/ph-composer/tools/examples/authoring/overview_walkthrough.rb"; OverviewWalkthrough.setup'
+```
+
+Then open the panel and work the screen. The eight questions, in the order they are worth asking:
+
+| # | Question | How it is answered |
+| --- | --- | --- |
+| 1 | What does this screen cost to paint? | `read_cost` on the two-Zone Model, then `crowd(500)` and `read_cost` again |
+| 2 | Does Locate reach a Face inside a closed Zone, from a table row and from a legend row? | Both, Zone closed and open; `report` reads the selection back |
+| 3 | Where does the camera land while the panel has focus? | Watch it; `View#zoom` from an HtmlDialog is not what D6 measured |
+| 4 | Does "Show only this" repaint at once, and does the muted grey read as set aside? | A window capture, not a bridge `shot`: `write_image` renders no overlay |
+| 5 | Does the panel's mode switch leave the same state as the native Colour by menu? | Both routes, then `report` and a restart for the remembered mode |
+| 6 | Does the viewport's first click after choosing a chip reach the Classify tool? | Choose a chip with the panel frontmost, then click one Face |
+| 7 | Does a chip edit refuse cleanly when the Model changed underneath? | Change a Face from the Ruby Console, then use that row's chip |
+| 8 | Does the panel repaint once per viewport command, or twice? | `refresh_pending?` straight after one legend click; it must be false |
+
+Questions 1 and 6 are the two that carry real risk. Nothing offline measures either, and both would
+change the shape of the screen rather than just its wording.
+
+The pattern to expect, from D4, D5 and D6: a gate of this size has cost between two and eight
+findings each time, and the ones that mattered were always things the offline stub was wrong about.
+Fix what it finds and re-verify on the same host before writing the evidence file, which belongs at
+`evidence/p1-d-overview.md` beside its siblings.
+
+### 2. Two decisions that are Ed's
+
+- **The Overview pane's arrangement.** It now shows the Zone tree first, then Colour by, then the
+  Classify palette, each its own section with its own heading. The alternative is one heading with
+  both controls in the tree's action bar, which is closer to what the UI polish skill asks for. The
+  row is in [`planning/ui-baseline/README.md`](../ui-baseline/README.md) and the gate is a good
+  moment to rule on it, because that is when the screen is in front of a real Model.
+- **Hover-to-highlight**, the fourth legend affordance Q18 names, is deliberately not built. Ed chose
+  on 2026-09-20 to measure its cost rather than ship it unmeasured: it would send one command per
+  pointer move and rebuild the drawing each time. Question 1's numbers are what that decision waits
+  on.
+
+### 3. Then
+
+A docs pass over what the gate found, the evidence file, and P1-D closes. P1-E is the next stage and
+is not authorized yet.
 
 ## Current handoff
 
