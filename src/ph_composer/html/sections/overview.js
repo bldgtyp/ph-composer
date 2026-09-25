@@ -15,12 +15,23 @@ PhComposerUI.define("sections/overview", ["panel", "workspace", "request", "snap
 function (panel, ui, requests, snapshot, units, preferences, unitFields, tables, viewControls, fields, words) {
   "use strict";
   var AREA = fields.AREA_M2;
-  // What a chip in this table offers. Surface is written by Solve adjacencies and Attached zone
-  // needs a record picker, so a Face holding either keeps it and the cell stays read only.
-  var FACE_TYPES = ["Wall", "RoofCeiling", "Floor"];
-  var BOUNDARIES = ["Outdoors", "Ground", "Adiabatic"];
+  // What a chip offers comes from the host, through the same read the Classify palette uses, so this
+  // screen cannot drift from what the feature will actually accept. What it subtracts is its own:
+  // a value the palette lists but a chip cannot set on its own keeps its cell read only.
   var STATE_LABELS = { classified: "", incomplete: "Incomplete", unclassified: "Unclassified" };
   var ORDER_FIELDS = [["name", "Name"], ["area_m2", "Area"]];
+  // What the Zones read says is wrong with a Zone occurrence, in the words the user needs.
+  var ZONE_STATES = {
+    ambiguous: { text: "shared identity",
+      tooltip: "Another Zone carries the same identity, which a copy does until it is repaired. " +
+        "Repair it before classifying, or an edit here may reach the other one." },
+    shared_definition: { text: "shared definition",
+      tooltip: "This Zone is one of several instances of the same component, so editing it edits " +
+        "them all. Make it unique before classifying." },
+    wrong_hierarchy: { text: "nested",
+      tooltip: "This Zone sits inside another Zone. A Zone is one Room, so a Zone within a Zone " +
+        "cannot be exported as it stands." }
+  };
 
   var screen = null;
 
@@ -58,31 +69,46 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       ["area_m2", units.header("Area", AREA, profile)], ["state", "State"]];
   }
 
-  /* Zone rows from the Zones read, their Faces from the Faces read, matched by the Zone id every Face
-     reference carries. A Face with no record counts towards its Zone's marker, not towards a row. */
+  /* Zone rows from the Zones read, their Faces from the Faces read, matched by the path that names
+     one Zone occurrence. Not by the Zone's record id: a copied Zone Group shares its original's
+     dictionary until the copy is repaired (zones Q25), so two occurrences can carry one id, and the
+     zones read reports both and says so in `state`. Keying on the id would put the copy's Faces
+     under the original's row, sum both areas into it and drop one Zone off the screen entirely.
+
+     A Face with no record counts towards its Zone's marker rather than towards a row of its own. */
   function project(zones, faces) {
-    var byZone = Object.create(null), unclassified = Object.create(null), rows = [];
+    var byZone = Object.create(null), rows = [];
     faces.forEach(function (face) {
-      var id = face.reference.zone_id;
-      if (face.state === "unclassified") { unclassified[id] = (unclassified[id] || 0) + 1; return; }
-      (byZone[id] = byZone[id] || []).push(face);
+      var key = occurrence(face.reference.zone_path);
+      (byZone[key] = byZone[key] || []).push(face);
     });
     zones.forEach(function (zone) {
-      var own = byZone[zone.id] || [], key = JSON.stringify(["Zone", zone.id]);
+      var own = byZone[occurrence(zone.reference.zone_path)] || [];
+      var recorded = own.filter(function (face) { return face.state !== "unclassified"; });
+      var key = JSON.stringify(["Zone", zone.reference.zone_path]);
       rows.push({ key: key, parent: null, tier: "Zone", depth: 0,
-        record: { id: zone.id, name: zone.values.name, zone: zone, faces: own,
-          unclassified: unclassified[zone.id] || 0 } });
-      own.forEach(function (face, index) {
-        rows.push({ key: JSON.stringify(["Face", zone.id, face.reference.entity_path, index]), parent: key,
-          tier: "Face", depth: 1,
-          record: { id: face.reference.entity_id, name: faceName(face, index), face: face } });
+        record: { id: key, name: zone.values.name, zone: zone, faces: recorded,
+          state: zone.state, unclassified: own.length - recorded.length } });
+      recorded.forEach(function (face) {
+        rows.push({ key: JSON.stringify(["Face", zone.reference.zone_path, face.reference.entity_path]),
+          parent: key, tier: "Face", depth: 1,
+          record: { id: face.reference.entity_id, name: faceName(face, own), face: face } });
       });
     });
     return rows;
   }
 
-  function faceName(face, index) {
-    return (face.values.face_type ? words.faceType(face.values.face_type) : "Face") + " " + (index + 1);
+  function occurrence(path) {
+    return JSON.stringify(path || []);
+  }
+
+  /* A Face is named by what it is and where it sits among every Face of its Zone, counting the ones
+     with no record. Numbering the recorded ones alone would renumber and rekey a Face the user never
+     touched as soon as a neighbour was classified, which takes that row's selection and any edit in
+     progress with it. */
+  function faceName(face, all) {
+    var place = all.indexOf(face) + 1;
+    return (face.values.face_type ? words.faceType(face.values.face_type) : "Face") + " " + place;
   }
 
   function value(row, field, profile) {
@@ -105,40 +131,75 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     return units.format(square_metres, AREA, profile, { showUnit: false });
   }
 
+  /* What is wrong with the Zone comes before what is unfinished in it. A Zone that shares its
+     identity with a copy is the first thing to say, because every edit made here names one
+     occurrence and nothing else on the screen tells the user there are two. */
   function marker(row) {
-    var count = row.record.unclassified;
+    var count = row.record.unclassified, trouble = ZONE_STATES[row.record.state];
+    if (trouble) return { text: trouble.text, tooltip: trouble.tooltip };
     if (!count) return null;
     return { text: count + " unclassified",
-      tooltip: count + " Faces in this Zone have no record yet. Suggest classification gives them one." };
+      tooltip: count + " Faces in this Zone have no record yet. Suggest classification writes one " +
+        "for each of them and leaves every Face that already has one alone." };
   }
 
   function actions(row) {
-    var items = [{ id: "locate", icon: "locate", label: "Locate " + row.record.name }];
+    var locatable = row.record.face || row.record.faces.length;
+    var items = [{ id: "locate", icon: "locate", disabled: !locatable,
+      label: locatable ? "Locate " + row.record.name :
+        "Nothing to locate: no Face in " + row.record.name + " has a record yet" }];
     if (row.depth === 0 && row.record.unclassified) {
       items.push({ id: "suggest", icon: "sort", label: "Suggest classification for " + row.record.name });
     }
     return items;
   }
 
+  /* What a chip in this column offers: the values the host published, less the ones a chip cannot
+     set on its own. A Face already holding one of those keeps it and its cell stays read only. */
+  function choices(state, field) {
+    return (field === "face_type" ? state.faceTypes : state.boundaries)
+      .filter(function (value) { return !words.UNCHOOSABLE[value]; });
+  }
+
+  function chipLabel(field, value) {
+    return field === "face_type" ? words.faceType(value) : words.boundary(value);
+  }
+
   /* Type and boundary are editable chips; area and state are read only. An edit sends the values the
-     row was painted from, so a Model that changed underneath refuses rather than overwriting. */
+     row was painted from, so a Model that changed underneath refuses rather than overwriting.
+
+     The control is built once per cell and repainted afterwards. Rebuilding it on every snapshot
+     would take the user's open dropdown with it, and a snapshot follows every viewport click.
+
+     A stored value the chip does not offer is shown as text rather than silently missing from the
+     control: an `AirBoundary` Face, or one the solver paired, reads what it is and refuses the edit. */
   function cell(td, row, field, text, state) {
-    var face = row.record.face, chip;
+    var face = row.record.face, offered, chip;
     if (!face || (field !== "face_type" && field !== "boundary_condition")) return false;
-    if (field === "boundary_condition" && words.UNCHOOSABLE[face.values.boundary_condition]) return false;
-    chip = ui.element("select", "phc-cell-input");
-    (field === "face_type" ? FACE_TYPES : BOUNDARIES).forEach(function (choice) {
-      var option = ui.element("option", "",
-        field === "face_type" ? words.faceType(choice) : words.boundary(choice));
-      option.value = choice;
-      chip.appendChild(option);
-    });
+    offered = choices(state, field);
+    if (!offered.length) return false;
+    if (face.values[field] && offered.indexOf(face.values[field]) < 0) return false;
+    chip = td._chip;
+    if (!chip || td._chipValues !== offered.join(",")) {
+      chip = ui.element("select", "phc-cell-input");
+      offered.forEach(function (choice) {
+        var option = ui.element("option", "", chipLabel(field, choice));
+        option.value = choice;
+        chip.appendChild(option);
+      });
+      chip.addEventListener("change", function () {
+        apply(td._state, td._face, field, chip.value);
+      });
+      td.className = "col-" + field + " phc-editable-cell";
+      td.replaceChildren(chip);
+      td._chip = chip;
+      td._chipValues = offered.join(",");
+    }
+    td._state = state;
+    td._face = face;
     chip.value = face.values[field] || "";
     chip.disabled = state.edits.busy();
     chip.setAttribute("aria-label", row.record.name + (field === "face_type" ? " type" : " boundary"));
-    chip.addEventListener("change", function () { apply(state, face, field, chip.value); });
-    td.className = "col-" + field + " phc-editable-cell";
-    td.replaceChildren(chip);
     return true;
   }
 
@@ -181,7 +242,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function render(root, state, send) {
     var zones = snapshot.value(state, "ph_composer.zones.overview") || { zones: [], make_zone: null };
     var faces = (snapshot.value(state, "ph_composer.face_assignment.faces") || { faces: [] }).faces;
+    var tool = snapshot.value(state, "ph_composer.face_assignment.palette") || {};
     var screenState = forSession(state.session, send), profile = preferences.current();
+    screenState.faceTypes = tool.face_types || [];
+    screenState.boundaries = tool.boundary_conditions || [];
     var rows = project(zones.zones, faces);
     screenState.edits.consume(state);
     screenState.look.consume(state);
@@ -213,7 +277,6 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       id: function (record) { return record.id; },
       value: function (record, field) { return field === "area_m2" ? totalArea(record.faces) : record.name; },
       search: searchText,
-      group: function () { return { label: "" }; },
       rows: function () { return rows; }
     });
     tables.table(mount, rows, {
@@ -304,5 +367,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     return card;
   }
 
-  panel.section("ph_composer.overview", render);
+  // First in its pane: the Zone tree is the screen's work surface, and the palette and the legend
+  // are controls that act on what it shows.
+  panel.section("ph_composer.overview", render, { order: 10 });
 });

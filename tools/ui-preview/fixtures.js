@@ -42,7 +42,9 @@
     // A German regional format: comma decimals and point grouping in what the user types and reads.
     regional: { parts: PARTS, locale: "de-DE", decimal: "," },
     ip: { parts: PARTS, unitSystem: "IP" },
-    authoring: { parts: [], zones: AUTHORING.zones, faces: AUTHORING.faces }
+    authoring: { parts: [], zones: AUTHORING.zones, faces: AUTHORING.faces,
+      attachedZones: [{ kind: "ph_composer.face_assignment.attached_zone", id: "atz_Aa11Bb22Cc33",
+        values: { name: "Garage", kind: "garage", temperature_reduction_factor: 0.95 } }] }
   };
 
   global.PhComposerPreviewFixtures = {

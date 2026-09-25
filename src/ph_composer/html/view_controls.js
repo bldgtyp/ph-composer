@@ -72,9 +72,6 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     this.orderBy.value = selected;
     this._fieldSignature = signature;
   };
-  function compareText(a, b) {
-    return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
-  }
   ViewControls.prototype.project = function (records, config) {
     var self = this, query = (this.filter.value || "").trim().toLocaleLowerCase(), groupField = this.groupBy.value;
     function id(record) { return config.id ? config.id(record) : record.id; }

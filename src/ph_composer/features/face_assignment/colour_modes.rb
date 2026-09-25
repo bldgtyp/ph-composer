@@ -51,12 +51,21 @@ module PhComposer
         end
       end
 
-      # An Attached zone with no chosen record is a visible incomplete authoring state, not a
-      # classification: it blocks canonical export, so the legend shows it as incomplete.
+      # A Face the legend cannot finish colouring, as against one it has nothing to colour.
+      #
+      # A record that carries no value for this mode's field is incomplete: the user classified the
+      # Face, they just have not said this part yet. Calling it unclassified would put it in the same
+      # count as a Face with no record at all, and send them to Suggest classification, which never
+      # touches a Face that already has one. Only a Face with no record is unclassified, and the
+      # service decides that from a nil value.
+      #
+      # An Attached zone with no chosen record is the same kind of half-filled state and blocks
+      # canonical export, so it reads the same way.
       def state(record, value)
-        return nil unless value == "AttachedZone"
+        return nil unless record
+        return :incomplete if value.nil?
 
-        record["attached_zone_id"].nil? ? :incomplete : nil
+        value == "AttachedZone" && record["attached_zone_id"].nil? ? :incomplete : nil
       end
     end
   end

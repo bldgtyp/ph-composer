@@ -79,23 +79,28 @@ function (panel, ui, requests, snapshot) {
     return node;
   }
 
+  /* Repainted only when what it shows has changed. A snapshot follows every viewport command, and
+     rebuilding these controls each time would close a dropdown the user had open and take the focus
+     out of whatever they were pressing. */
   function render(root, state, send) {
     var legend = snapshot.value(state, "ph_composer.colour_by.legend") || { mode: null, modes: [], rows: [] };
     var screenState = forSession(state.session, send);
-    var heading = ui.element("div", "phc-zone-heading");
-    var body = ui.element("div", "phc-legend");
     screenState.view.consume(state);
-    heading.appendChild(ui.element("h2", "", "Colour by"));
-    heading.appendChild(modeControl(screenState, legend));
-    if (legend.mode) {
-      legend.rows.forEach(function (row) { body.appendChild(legendRow(screenState, row)); });
-      if (!legend.rows.length) body.appendChild(ui.element("p", "phc-empty", "Nothing to colour yet."));
-    } else {
-      body.appendChild(ui.element("p", "phc-empty", "Choose what to colour the model by."));
-    }
-    root.className = "phc-colour-by";
-    root.replaceChildren(heading, body);
+    ui.memoPaint(root, "legend", [state.session, legend, screenState.view.busy()], function () {
+      var heading = ui.element("div", "phc-zone-heading");
+      var body = ui.element("div", "phc-legend");
+      heading.appendChild(ui.element("h2", "", "Colour by"));
+      heading.appendChild(modeControl(screenState, legend));
+      if (legend.mode) {
+        legend.rows.forEach(function (row) { body.appendChild(legendRow(screenState, row)); });
+        if (!legend.rows.length) body.appendChild(ui.element("p", "phc-empty", "Nothing to colour yet."));
+      } else {
+        body.appendChild(ui.element("p", "phc-empty", "Choose what to colour the model by."));
+      }
+      root.className = "phc-colour-by";
+      root.replaceChildren(heading, body);
+    });
   }
 
-  panel.section("ph_composer.colour_by", render);
+  panel.section("ph_composer.colour_by", render, { order: 20 });
 });

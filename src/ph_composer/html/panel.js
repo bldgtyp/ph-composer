@@ -13,6 +13,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   "use strict";
 
   var sections = [];
+  var DEFAULT_ORDER = 100;
   var state = initialState();
   var preferenceSequence = 0;
   var notice = null;
@@ -203,15 +204,23 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     api.state = state;
   }
 
-  /* `options.pane` names the tab the section belongs to (default "overview"). */
+  /* `options.pane` names the tab the section belongs to (default "overview"). `options.order` places
+     it within that pane, low first; sections that do not ask are placed after those that do, in the
+     order they registered. A pane holds the screen's work surface first and its secondary controls
+     after it, and load order is decided by the module graph, so a section that cares says so. */
   function section(name, renderFunction, options) {
-    var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview" };
+    var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview",
+      order: (options && options.order) !== undefined ? options.order : DEFAULT_ORDER,
+      registered: sections.length };
     if (!document.querySelector("[data-section='" + name + "']") &&
         !document.querySelector("[data-pane='" + entry.pane + "']")) {
       throw new Error("panel section \"" + name + "\" names no pane \"" + entry.pane + "\"");
     }
     sections.push(entry);
-    if (state.session !== null) renderSection(entry);
+    sections.sort(function (left, right) {
+      return left.order - right.order || left.registered - right.registered;
+    });
+    if (state.session !== null) sections.forEach(renderSection);
   }
 
   function preferenceValue(key, extra) {

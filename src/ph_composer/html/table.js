@@ -10,13 +10,6 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
   var DEFAULT_WIDTH = 140;
   var ARROW_KEYS = ["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"];
 
-  /* One depth-0 row per record, keyed by tier and id. */
-  function project(records, options) {
-    var tier = (options && options.tier) || "Record", idField = (options && options.id) || "id";
-    return (records || []).map(function (record) {
-      return { key: JSON.stringify([tier, record[idField]]), parent: null, tier: tier, record: record, depth: 0 };
-    });
-  }
   function controls(entry, items, cache) {
     if (!entry.controls) entry.controls = {};
     var keep = {};
@@ -326,5 +319,5 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
   }
 
 
-  return { table: table, project: project, STICKY_WIDTHS: STICKY_WIDTHS };
+  return { table: table, STICKY_WIDTHS: STICKY_WIDTHS };
 });

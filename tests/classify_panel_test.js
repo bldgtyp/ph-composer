@@ -122,7 +122,8 @@ test("New attached zone creates one under a free name and chooses it", function 
   assert.strictEqual(p.sent[0].type, "action.invoke", "a record is a Model change, unlike the palette");
   assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.attached_zone.save");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { values: { name: "Attached zone 2", kind: "other" } });
+    { values: { name: "Attached zone 1", kind: "other" } },
+    "the first name nothing is called yet, so a delete does not make two records share one");
 
   p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
     session: "session-a", outcome: { status: "completed", value: { id: "atz_2" } } } });
@@ -131,13 +132,13 @@ test("New attached zone creates one under a free name and chooses it", function 
     { field: "attached_zone_id", value: "atz_2" });
 });
 
-test("Stop classifying is offered only while the tool has the viewport", function () {
+test("Stop classifying appears only while the tool has the viewport", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-  var idle = p.section().querySelectorAll("button")[0];
 
-  assert.strictEqual(idle.textContent, "Not classifying");
-  assert.strictEqual(idle.disabled, true);
+  assert.strictEqual(p.section().querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Stop classifying";
+  }).length, 0, "nothing to stop, so no control for it");
 
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
   var running = p.section().querySelectorAll("button")[0];
@@ -145,4 +146,18 @@ test("Stop classifying is offered only while the tool has the viewport", functio
   running.listeners.click({});
 
   assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.stop_classifying");
+});
+
+/* A snapshot arrives after every Face the user paints; the palette must not be rebuilt under them. */
+test("an unchanged snapshot leaves the controls exactly where they were", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
+  var before = chip(p, "Wall");
+
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
+
+  assert.strictEqual(chip(p, "Wall"), before, "the same control, not a replacement");
+
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" })) });
+  assert.notStrictEqual(chip(p, "Wall"), before, "and repainted once the palette really changes");
 });

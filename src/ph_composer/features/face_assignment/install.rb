@@ -412,7 +412,15 @@ module PhComposer
 
     # The three words every surface that shows a Face uses, the same ones a Colour-by legend row
     # carries: no record at all, a record that cannot be exported as it stands, or a complete one.
-    # The faces table and the overlay have to agree, so this is derived here and never in a view.
+    # Derived here and never in a view, so no screen coins a fourth word.
+    #
+    # A legend row and this are not the same verdict, and neither is wrong. A legend row answers for
+    # the one field its mode paints; this answers for the whole record. They agree where it matters
+    # to the user: a Face with no record is unclassified to both, and a record missing the field in
+    # front of them is incomplete to both. This is stricter about two things a mode cannot see
+    # without a Model walk, a dangling Attached zone reference and an adjacency that has gone stale,
+    # so a Face can read complete in the viewport and incomplete in the table. That is the table
+    # telling the user something the colours do not carry, not a disagreement about the same fact.
     #
     # It is not the validation register, which owns severities and finding codes and is a later
     # packet. It answers one question: is this row amber (face-assignment PRD, "The faces table").

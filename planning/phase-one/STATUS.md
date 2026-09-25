@@ -1,50 +1,39 @@
 # Phase 1 status
 
-DATE: 2026-09-20
+DATE: 2026-09-25
 STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized and D1 to D7 are implemented, with D7's host gate outstanding.
 ISSUE: none (local implementation packet)
 
-## Resume here: P1-D D7, 2026-09-20
+## Resume here: P1-D D7, 2026-09-25
 
-D7 is implemented on the branch in five commits, `c1bf559` to `e203853`, with `make ci` green on
-Ruby 3.2.2 and the 2.7.2 floor (439 Ruby tests, 1,753 assertions, 149 JavaScript tests, rubocop
-clean over 160 files) and coverage at 96.5% Ruby, 97.9% JavaScript, 97.5% Python. Three things are
-owed before the slice closes, in this order:
+D7 is implemented on the branch, with `make ci` green on Ruby 3.2.2 and the 2.7.2 floor (441 Ruby
+tests, 1,760 assertions, 157 JavaScript tests, rubocop clean over 160 files) and coverage at 96.6%
+Ruby, 98.0% JavaScript, 97.5% Python. Both reviews have run and their findings are fixed. What is
+owed before the slice closes:
 
-1. **Fix what the review of the three UI commits found.** It reported after the session stopped, so
-   nothing in the branch answers it yet. Four reproduced defects, in order of consequence:
+1. **The review of the three UI commits is answered.** Four reproduced defects, three contract
+   findings and the dead port residue are fixed and covered by tests; what each one was and why it
+   mattered is in the commit that fixed it. The four that would have reached a user:
 
-   - **Two Zone occurrences sharing an id collapse into one row**
-     (`html/sections/overview.js`, `project`). Zones Q25 makes a copied Zone Group share its
-     dictionary, and `features/zones/install.rb` deliberately emits one entry per occurrence and
-     flags it with `state`. The panel keys rows on `zone.id`, so the copy takes the original's
-     place: one row, the second Zone's name, both copies' Faces beneath it, both areas summed, and
-     the first Zone gone from the screen. The details form then writes through the surviving
-     occurrence only. Key rows on `zone.reference.zone_path`, bucket Faces by path, and show
-     `zone.state`, which is the one signal the read already provides for exactly this case.
-   - **A Face row's key and its name carry its index among its Zone's classified Faces**
-     (same file). Classifying one Face renames and rekeys an untouched sibling, and the table then
-     discards that row's cached entry, losing its selection and any edit in progress. Key on
-     `entity_path`, and do not name a row by its position.
-   - **Every control is rebuilt on every snapshot**, in all three sections. A viewport click
-     republishes the snapshot, so an open dropdown closes under the user and the Classify palette
-     is rebuilt on every Face they paint. Cache the node per row and field and mutate it in place,
-     which is what `table.js` already does for its row actions.
-   - **"Show only this" wedges the viewport grey** when the isolated row stops existing
-     (`colour_by/service.rb`). `@isolated` survives a rebuild that no longer holds that row, so
-     everything mutes and no row offers "Show all". Clear it in `rebuild` when nothing matches, or
-     have the panel offer "Show all" whenever `legend["isolated"]` is set and no row is.
+   - A copied Zone Group shares its original's dictionary until it is repaired, so two occurrences
+     can carry one record id. The tree keyed rows on that id, so the copy took the original's place,
+     its Faces and area were summed into it, and one Zone vanished from the screen. Rows are keyed on
+     the occurrence path now, and a Zone whose identity is shared, whose definition is shared, or
+     which sits inside another Zone says so on its row.
+   - A Face row was keyed and named by its index among its Zone's *classified* Faces, so classifying
+     one Face rekeyed and renamed an untouched neighbour and the table dropped that row's selection
+     and any edit in progress. A Face is now keyed by its own path and numbered among every Face of
+     its Zone.
+   - Every control was rebuilt on every snapshot, and a snapshot follows every viewport click, so an
+     open dropdown closed under the user. Cells are cached and repainted; the legend and the palette
+     repaint only when what they show has changed.
+   - "Show only this" wedged the viewport grey when the isolated row stopped existing. A row that is
+     gone now releases what it was holding.
 
-   Three contract findings behind them: `row_state` is whole-record while a Colour-by mode is
-   per-field, so the table and the legend disagree about the same Face and the in-code claim that
-   they cannot is wrong; `overview.js` hardcodes the assignable value lists the palette query
-   already publishes, already drifting, and a stored `AirBoundary` would render a blank cell; and a
-   Zone Locate with no classified Faces is offered, enabled, and silently does nothing.
-
-   One layout finding worth Ed's decision rather than a patch: the Overview pane now stacks three
-   page-titled sections with the Zone tree, the actual work surface, third, behind a permanently
-   mounted disabled "Not classifying" control. Either reorder and make the palette and legend
-   contextual, or update `planning/ui-baseline/README.md` to record the arrangement as accepted.
+   One layout question is recorded rather than decided, in
+   [`planning/ui-baseline/README.md`](../ui-baseline/README.md): the Overview pane now shows the Zone
+   tree first, then Colour by, then the Classify palette, each with its own heading. The alternative
+   is one heading with both controls in the tree's action bar. That is Ed's ruling to make.
 
    The review of the seam itself (`c1bf559`) ran earlier and its eight findings are fixed.
 
@@ -58,6 +47,7 @@ owed before the slice closes, in this order:
    with the Classify tool or spends it returning focus to the Model window.
 3. **A docs pass over what the gate finds**, then P1-E is the next authorized work, and it is not
    authorized yet.
+4. **Ed's ruling on the Overview pane's arrangement**, recorded in the UI baseline.
 
 What D7 added, for a reader coming to it cold: a sixth contribution seam, `view_command`, for a
 change to what the host shows that never reaches the Model; the Overview Zone tree and faces table

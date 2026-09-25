@@ -242,13 +242,10 @@ test("arrow keys walk the rows and open or close the one they are on", function 
   assert.strictEqual(expanded.a, true);
 });
 
-test("a row the caller stops sending is removed, and project keys one row per record", function () {
+test("a row the caller stops sending is removed", function () {
   var h = harness();
   paint(h);
   paint(h, { rows: rows().slice(0, 1) });
 
   assert.strictEqual(h.root.querySelectorAll("[data-row-key]").length, 1);
-  assert.deepStrictEqual(h.tables.project([{ id: "x" }], { tier: "Box" }).map(function (row) {
-    return [row.key, row.tier, row.depth];
-  }), [['["Box","x"]', "Box", 0]]);
 });

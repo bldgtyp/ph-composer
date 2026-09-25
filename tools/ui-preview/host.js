@@ -10,6 +10,8 @@
 
   var PARTS = "example.foundation.parts";
   var LEGEND = "ph_composer.colour_by.legend";
+  var PALETTE = "ph_composer.face_assignment.palette";
+  var ATTACHED = "ph_composer.face_assignment.attached_zone.list";
   var ZONES = "ph_composer.zones.overview";
   var FACES = "ph_composer.face_assignment.faces";
   var NOTHING_WRITTEN = "Nothing was written.";
@@ -26,6 +28,10 @@
     this.faces = JSON.parse(JSON.stringify(settings.faces || []));
     this.makeZone = settings.makeZone || null;
     this.colourBy = { mode: null, isolated: null };
+    this.palette = { active: false, palette: {},
+      face_types: ["Wall", "RoofCeiling", "Floor"],
+      boundary_conditions: ["Outdoors", "Ground", "Adiabatic", "AttachedZone", "Surface"] };
+    this.attachedZones = JSON.parse(JSON.stringify(settings.attachedZones || []));
     this.preferences = { unit_system: settings.unitSystem || "SI", dimension_formats: {},
       number_format: { decimal: settings.decimal || ".", locale: settings.locale || "en-US" } };
   }
@@ -49,7 +55,12 @@
             units: { ground_depth_mm: "mm" } } },
         [FACES]: { status: "completed", code: "ok", revision: this.revision,
           value: { faces: JSON.parse(JSON.stringify(this.faces)), units: { area_m2: "m2" } } },
-        [LEGEND]: { status: "completed", code: "ok", revision: this.revision, value: this.legend() }
+        [LEGEND]: { status: "completed", code: "ok", revision: this.revision, value: this.legend() },
+        [PALETTE]: { status: "completed", code: "ok", revision: this.revision,
+          value: JSON.parse(JSON.stringify(this.palette)) },
+        [ATTACHED]: { status: "completed", code: "ok", revision: this.revision,
+          value: { records: JSON.parse(JSON.stringify(this.attachedZones)), next_cursor: null,
+            total: this.attachedZones.length } }
       }
     });
   };
@@ -107,6 +118,12 @@
         this.colourBy = { mode: payload.params.mode, isolated: null };
       }
       if (payload.name === "ph_composer.colour_by.isolate") this.colourBy.isolated = payload.params.row || null;
+      if (payload.name === "ph_composer.face_assignment.choose") {
+        this.palette.active = true;
+        if (payload.params.value === null) delete this.palette.palette[payload.params.field];
+        else this.palette.palette[payload.params.field] = payload.params.value;
+      }
+      if (payload.name === "ph_composer.face_assignment.stop_classifying") this.palette.active = false;
       outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
         value: {}, affected: [], findings: [], detail: null };
       this.snapshot();

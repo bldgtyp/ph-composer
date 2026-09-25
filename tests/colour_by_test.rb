@@ -119,6 +119,41 @@ class ColourByTest < PhComposerTestCase
     refute_includes service.fills.keys, Palette::MUTED
   end
 
+  # A row the user set aside can stop existing. Keeping the isolation then mutes everything and
+  # leaves no row offering to undo it, so the viewport stays grey with no way back.
+  def test_an_isolated_row_that_stops_existing_releases_what_it_was_holding
+    zone = zone_group(1_740, %w[Wall Floor])
+    service = activate("ph_composer.face_assignment.by_face_type")
+    service.isolate(["Wall", "classified"])
+    assert_includes service.fills.keys, Palette::MUTED
+
+    wall = zone.entities.grep(Sketchup::Face).find do |face|
+      PhComposer::FaceAssignment::FACE_STORE.read(face)["face_type"] == "Wall"
+    end
+    record = PhComposer::FaceAssignment::FACE_STORE.read(wall)
+    PhComposer::FaceAssignment::FACE_STORE.write(wall, record.merge("face_type" => "Floor"))
+    service.invalidate!(:force => true)
+
+    assert_nil service.isolated
+    refute_includes service.fills.keys, Palette::MUTED
+    assert_equal [false], service.legend.fetch("rows").map { |row| row.fetch("isolated") }
+  end
+
+  # The legend and the faces table have to mean the same thing by "unclassified", or the Zone row's
+  # count and the legend's count are different numbers for one Model and the user is sent to
+  # Suggest classification, which never touches a Face that already has a record.
+  def test_a_record_missing_this_modes_field_is_incomplete_rather_than_unclassified
+    zone_group(1_750, ["Wall"])
+    face = Sketchup.active_model.entities.grep(Sketchup::Group).last.entities.grep(Sketchup::Face).first
+    record = PhComposer::FaceAssignment::FACE_STORE.read(face)
+    PhComposer::FaceAssignment::FACE_STORE.write(face, record.reject { |key, _| key == "boundary_condition" })
+
+    service = activate("ph_composer.face_assignment.by_boundary_condition")
+
+    assert_equal [%w[Unclassified incomplete]],
+                 service.rows.map { |row| [row.label, row.state.to_s] }
+  end
+
   def test_showing_one_row_on_its_own_while_colour_by_is_off_refuses
     context = PhComposer::API.connect(:session_id => @session.id)
 

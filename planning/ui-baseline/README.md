@@ -193,6 +193,7 @@ in the polish skill's `patterns.md` once Ed accepts it.
 | Screen | Closest predecessor pattern | Owning packet |
 | --- | --- | --- |
 | Overview: the model tree of Zones, with the faces table under each | The Spaces tree table and its Locate | zones-and-adjacency Q13, face-assignment Q11 |
+| Overview's pane order, built 2026-09-20 in P1-D D7 | The Zone tree first as the work surface, then Colour by, then the Classify palette. Each is its own section with its own heading, and the palette shows its Stop control only while the tool has the viewport. Needs Ed's ruling: the alternative is one heading with the two controls in the tree's action bar | ui-polish "Layout" |
 | Classify tool palette: face type chips, boundary condition chips, assembly picker | Enum chips and the Builder's floating toolbar | face-assignment |
 | Colour-by control and the viewport HUD legend | None. The legend draws in the viewport, not the panel | face-assignment Q16 to Q18 |
 | Airflow balance | An inventory table with group headings | spaces Q9, Q16 |

@@ -110,8 +110,12 @@ module PhComposer
       # an entity is still selected here; SketchUp shows the selection where it can, and a count the
       # user can reach nothing from would be worse than one that reaches a hidden thing.
       def select_row(value, state)
-        entities = @entities.fetch([value, state.to_sym], [])
         model = live_model
+        # The cache holds live entities from the last rebuild. One can be erased by something that
+        # raised no event this service subscribes to, and `Selection#add` on an erased entity raises,
+        # which would reach the client as a bare failure rather than as an answer.
+        entities = @entities.fetch([value, state.to_sym], [])
+                            .select { |entity| entity.respond_to?(:valid?) ? entity.valid? : true }
         raise UserError, "That legend row is no longer part of this drawing." if entities.empty? || model.nil?
 
         model.selection.clear
@@ -154,14 +158,21 @@ module PhComposer
         outlines = Hash.new { |table, colour| table[colour] = [] }
         unclassified = []
         begin
-          Array(declaration.projection.call(@session.model)).each do |entry|
-            add_entry(declaration, entry, rows, entities, fills, outlines, unclassified)
+          painted = Array(declaration.projection.call(@session.model)).map do |entry|
+            [entry, *paint(declaration, entry)]
           end
         rescue StandardError => error
           # A rebuild runs inside the host observer that reported the change, and an error there
           # aborts every later subscriber for that event (session/sessions.rb). A mode that cannot
           # read the Model turns itself off instead of taking the rest of the extension with it.
           return failed(declaration, error)
+        end
+        # A row the user set aside can stop existing: the last Wall becomes a Floor, or its Zone is
+        # deleted. Keeping the isolation then mutes everything and leaves no row offering to undo it,
+        # so a row that is gone releases what it was holding.
+        @isolated = nil unless painted.any? { |entry, state, _colour| [entry.value, state] == @isolated }
+        painted.each do |entry, state, colour|
+          add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified)
         end
         @rows = order(declaration, rows.values)
         @entities = settled(entities)
@@ -186,8 +197,7 @@ module PhComposer
         batches.each_with_object({}) { |(colour, points), table| table[colour] = points }
       end
 
-      def add_entry(declaration, entry, rows, entities, fills, outlines, unclassified)
-        state, colour = paint(declaration, entry)
+      def add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified)
         row = rows[[entry.value, state]] ||= Row.new(:value => entry.value, :label => label_for(entry),
                                                      :colour => colour, :count => 0, :state => state)
         row.count += 1
@@ -208,11 +218,16 @@ module PhComposer
         !@isolated.nil? && @isolated != [value, state]
       end
 
-      # The three states every mode shares: no record, a record the mode cannot colour, and a value
-      # the mode has a hue for.
+      # The three states every mode shares: no record at all, a record this mode cannot finish
+      # colouring, and a value the mode has a hue for.
+      #
+      # A projection's own `:incomplete` is asked first, before the value is looked at. An entity
+      # that carries a record but no value for this mode's field is incomplete, not unclassified:
+      # the user did classify it, and telling them otherwise sends them to Suggest classification,
+      # which never touches a Face that already has a record.
       def paint(declaration, entry)
-        return [:unclassified, Palette::UNCLASSIFIED] if entry.value.nil?
         return [:incomplete, Palette::INCOMPLETE] if entry.state == :incomplete
+        return [:unclassified, Palette::UNCLASSIFIED] if entry.value.nil?
 
         colour = declaration.colours.call(entry.value)
         colour ? [:classified, colour] : [:incomplete, Palette::INCOMPLETE]
