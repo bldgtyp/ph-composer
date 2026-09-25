@@ -11,15 +11,43 @@ Ruby 3.2.2 and the 2.7.2 floor (439 Ruby tests, 1,753 assertions, 149 JavaScript
 clean over 160 files) and coverage at 96.5% Ruby, 97.9% JavaScript, 97.5% Python. Three things are
 owed before the slice closes, in this order:
 
-1. **Re-run the coherent-diff review of the three UI commits** (`51ee8e7`, `b1eb97c`, `624282b`).
-   One was launched on 2026-09-20 and did not report before the session ended, so nothing was
-   learned from it. Give it the architecture-review and UI-polish skills together, and point it at
-   the questions that matter here: the Zone and Face row projection in `html/sections/overview.js`
-   (rows keyed by entity path and index, a Zone id that repeats, a Face whose `zone_id` names no
-   Zone row), `row_state` in `features/face_assignment/install.rb` against what Colour-by calls
-   incomplete, whether anything in the ported `table.js` or `view_controls.js` now names a feature,
-   and races between the single-flight request channels and the snapshot republish.
-   The review of the seam itself (`c1bf559`) ran and its eight findings are fixed.
+1. **Fix what the review of the three UI commits found.** It reported after the session stopped, so
+   nothing in the branch answers it yet. Four reproduced defects, in order of consequence:
+
+   - **Two Zone occurrences sharing an id collapse into one row**
+     (`html/sections/overview.js`, `project`). Zones Q25 makes a copied Zone Group share its
+     dictionary, and `features/zones/install.rb` deliberately emits one entry per occurrence and
+     flags it with `state`. The panel keys rows on `zone.id`, so the copy takes the original's
+     place: one row, the second Zone's name, both copies' Faces beneath it, both areas summed, and
+     the first Zone gone from the screen. The details form then writes through the surviving
+     occurrence only. Key rows on `zone.reference.zone_path`, bucket Faces by path, and show
+     `zone.state`, which is the one signal the read already provides for exactly this case.
+   - **A Face row's key and its name carry its index among its Zone's classified Faces**
+     (same file). Classifying one Face renames and rekeys an untouched sibling, and the table then
+     discards that row's cached entry, losing its selection and any edit in progress. Key on
+     `entity_path`, and do not name a row by its position.
+   - **Every control is rebuilt on every snapshot**, in all three sections. A viewport click
+     republishes the snapshot, so an open dropdown closes under the user and the Classify palette
+     is rebuilt on every Face they paint. Cache the node per row and field and mutate it in place,
+     which is what `table.js` already does for its row actions.
+   - **"Show only this" wedges the viewport grey** when the isolated row stops existing
+     (`colour_by/service.rb`). `@isolated` survives a rebuild that no longer holds that row, so
+     everything mutes and no row offers "Show all". Clear it in `rebuild` when nothing matches, or
+     have the panel offer "Show all" whenever `legend["isolated"]` is set and no row is.
+
+   Three contract findings behind them: `row_state` is whole-record while a Colour-by mode is
+   per-field, so the table and the legend disagree about the same Face and the in-code claim that
+   they cannot is wrong; `overview.js` hardcodes the assignable value lists the palette query
+   already publishes, already drifting, and a stored `AirBoundary` would render a blank cell; and a
+   Zone Locate with no classified Faces is offered, enabled, and silently does nothing.
+
+   One layout finding worth Ed's decision rather than a patch: the Overview pane now stacks three
+   page-titled sections with the Zone tree, the actual work surface, third, behind a permanently
+   mounted disabled "Not classifying" control. Either reorder and make the palette and legend
+   contextual, or update `planning/ui-baseline/README.md` to record the arrangement as accepted.
+
+   The review of the seam itself (`c1bf559`) ran earlier and its eight findings are fixed.
+
 2. **Run D7's host gate**, which needs Ed at the panel:
    [`overview_walkthrough.rb`](../../tools/examples/authoring/overview_walkthrough.rb) and the
    section at the end of [the authoring README](../../tools/examples/authoring/README.md). Nothing
