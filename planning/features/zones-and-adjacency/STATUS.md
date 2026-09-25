@@ -1,7 +1,9 @@
 # Zones and adjacency: status
 
-DATE: 2026-09-20
-STATUS: In progress; P1-A through P1-C complete on the implementation branch, and P1-D's D1 to D4 implemented and host-verified.
+DATE: 2026-09-25
+STATUS: In progress; P1-A through P1-C complete on the implementation branch, P1-D's D1 to D4
+implemented and host-verified, and D7's Overview Zone tree implemented with its host gate
+outstanding.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 

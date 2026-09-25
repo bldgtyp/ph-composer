@@ -1,6 +1,6 @@
 # Roadmap
 
-DATE: 2026-09-20
+DATE: 2026-09-25
 STATUS: Phase 0 merged; Phase 1 P1-A through P1-C complete. P1-D is authorized and in progress.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)

@@ -1,7 +1,9 @@
 # Face assignment: implementation plan
 
-DATE: 2026-09-20
-STATUS: In progress; P1-B authoring core and P1-C export contribution complete. P1-D is authorized; its D1 gestures, D2 Attached zones and D5 Colour-by are implemented.
+DATE: 2026-09-25
+STATUS: In progress; P1-B authoring core and P1-C export contribution complete. P1-D is authorized
+and implemented: D1 gestures, D2 Attached zones, D5 Colour-by, D6 the Classify tool and D7 the
+Overview screen, faces table, panel legend and panel palette. D7's host gate is outstanding.
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md) owns behavior; the [Phase 1 plan](../../phase-one/PLAN.md) coordinates delivery.

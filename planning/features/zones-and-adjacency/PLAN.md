@@ -1,7 +1,8 @@
 # Zones and adjacency: implementation plan
 
-DATE: 2026-09-20
-STATUS: P1-A through P1-C complete on the implementation branch; P1-D is authorized and in progress.
+DATE: 2026-09-25
+STATUS: P1-A through P1-C complete on the implementation branch; P1-D is authorized and every slice
+is implemented, with D7's host gate outstanding.
 ISSUE: none (local implementation packet)
 
 The [PRD](PRD.md) owns behavior. The [Phase 1 plan](../../phase-one/PLAN.md) owns shared sequencing

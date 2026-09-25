@@ -1,7 +1,8 @@
 # Development
 
-**DATE:** 2026-09-18 | **STATUS:** Partly implemented. The commands below exist unless marked
-"not yet". The extension has its foundation, an empty panel, the Python runtime payload and the
+**DATE:** 2026-09-25 | **STATUS:** Partly implemented. The commands below exist unless marked
+"not yet". The extension has its foundation, the Overview screen with its Zone tree and faces table,
+the Classify tool and its palette, the shared Colour-by service, the Python runtime payload and the
 export infrastructure, with no exporter yet.
 
 The development loop needs no installed dependencies beyond Ruby, Node and `uv`. Ruby source stays

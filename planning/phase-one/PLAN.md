@@ -1,6 +1,6 @@
 # Phase 1 delivery plan
 
-DATE: 2026-09-20
+DATE: 2026-09-25
 STATUS: P1-A through P1-C complete on the implementation branch. P1-D is authorized and in progress; D1 to D4 are implemented.
 ISSUE: none (local planning draft)
 

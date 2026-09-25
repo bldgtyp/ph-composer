@@ -1,6 +1,6 @@
 # Contributor architecture
 
-DATE: 2026-09-18
+DATE: 2026-09-25
 STATUS: Accepted architectural direction. Registration, record kinds, metadata and extension data are
 merged through PR #1 from Phase 0 P0-D; see the example under `tools/examples/foundation/`.
 

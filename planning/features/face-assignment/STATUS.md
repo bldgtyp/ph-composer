@@ -1,6 +1,6 @@
 # Face assignment: status
 
-DATE: 2026-09-20
+DATE: 2026-09-25
 STATUS: In progress; P1-B authoring, P1-C export contribution and P1-D's gestures, Attached zones,
 Colour-by and the Overview screen implemented. The faces table, the panel legend and the Classify
 palette await their host gate.

@@ -1,6 +1,6 @@
 # Phase 1 acceptance register
 
-DATE: 2026-09-20
+DATE: 2026-09-25
 STATUS: In progress. P1-A through P1-C have evidence; P1-D D1 to D7 met the offline portions of A04,
 A06, A07, A08 and A09, and A04, A05 and part of A08 have host evidence. A09's host gate is the
 outstanding one for P1-D. A15 is deferred outside Phase 1 by Ed.
