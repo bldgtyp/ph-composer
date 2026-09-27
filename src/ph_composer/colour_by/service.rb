@@ -30,6 +30,7 @@ module PhComposer
     # stale, the mechanism is a frame change observer.
     class Service
       attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines, :isolated
+      attr_reader :wash_triangles
       # How many times the drawing has been rebuilt for this Model. The host walkthrough reads it to
       # tell an invalidating event that fired from one that did not.
       attr_reader :rebuilds
@@ -61,9 +62,11 @@ module PhComposer
         @mode_name = name
         # A row belongs to the mode it came from, so a new mode starts showing everything.
         @isolated = nil
-        Preferences.set("colour_by_mode", name) if remember
-        attach_overlay
         rebuild
+        if active?
+          attach_overlay
+          Preferences.set("colour_by_mode", name) if remember
+        end
         self
       end
 
@@ -143,6 +146,7 @@ module PhComposer
         @fills = {}
         @outlines = {}
         @unclassified_outlines = []
+        @wash_triangles = []
         @entities = {}
         @isolated = nil
         @built_revision = nil
@@ -157,22 +161,16 @@ module PhComposer
         fills = Hash.new { |table, colour| table[colour] = [] }
         outlines = Hash.new { |table, colour| table[colour] = [] }
         unclassified = []
-        begin
-          painted = Array(declaration.projection.call(@session.model)).map do |entry|
-            [entry, *paint(declaration, entry)]
-          end
-        rescue StandardError => error
-          # A rebuild runs inside the host observer that reported the change, and an error there
-          # aborts every later subscriber for that event (session/sessions.rb). A mode that cannot
-          # read the Model turns itself off instead of taking the rest of the extension with it.
-          return failed(declaration, error)
+        wash = []
+        painted = Array(declaration.projection.call(@session.model)).map do |entry|
+          [entry, *paint(declaration, entry)]
         end
         # A row the user set aside can stop existing: the last Wall becomes a Floor, or its Zone is
         # deleted. Keeping the isolation then mutes everything and leaves no row offering to undo it,
         # so a row that is gone releases what it was holding.
         @isolated = nil unless painted.any? { |entry, state, _colour| [entry.value, state] == @isolated }
         painted.each do |entry, state, colour|
-          add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified)
+          add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified, wash)
         end
         @rows = order(declaration, rows.values)
         @entities = settled(entities)
@@ -180,9 +178,15 @@ module PhComposer
         @fills = settled(fills)
         @outlines = settled(outlines)
         @unclassified_outlines = unclassified
+        @wash_triangles = wash
         @built_revision = @session.revision
         @rebuilds += 1
         invalidate_view
+      rescue StandardError => error
+        # Projection, colour assignment, tessellation and ordering are all contributor/host reads.
+        # A failure anywhere in that pipeline must not abort later host-event subscribers or leave
+        # a partial drawing active. The next snapshot reports Off alongside the warning.
+        failed(declaration, error)
       end
 
       # The mode is off, the overlay is gone and the user is told which mode stopped drawing.
@@ -197,20 +201,21 @@ module PhComposer
         batches.each_with_object({}) { |(colour, points), table| table[colour] = points }
       end
 
-      def add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified)
+      def add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified, wash)
         row = rows[[entry.value, state]] ||= Row.new(:value => entry.value, :label => label_for(entry),
                                                      :colour => colour, :count => 0, :state => state)
         row.count += 1
         entities[[entry.value, state]] << entry.entity
         triangles, segments = Tessellation.call(entry.entity, entry.transform)
-        # A row set aside while another is shown on its own keeps its legend colour and loses its
-        # drawing colour, so the legend still reads while the viewport shows one thing.
-        drawn = set_aside?(entry.value, state) ? Palette::MUTED : colour
-        if state == :unclassified && !set_aside?(entry.value, state)
+        # Set-aside geometry has its own wash pass, with no mode outline. A grey mode value and
+        # the dashed unclassified outline therefore keep their meaning during isolation.
+        if set_aside?(entry.value, state)
+          wash.concat(triangles)
+        elsif state == :unclassified
           unclassified.concat(segments)
         else
-          fills[drawn].concat(triangles)
-          outlines[drawn].concat(segments)
+          fills[colour].concat(triangles)
+          outlines[colour].concat(segments)
         end
       end
 

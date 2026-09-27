@@ -37,16 +37,13 @@ function snapshot(session, revision, extra) {
 
 function types(sent) { return sent.map(function (message) { return message.type; }); }
 
-test("ready asks for the first snapshot, which fills the Overview and the status bar", function () {
+test("ready asks for the first snapshot, which fills the status bar", function () {
   var p = page();
   p.panel.ready();
   assert.deepStrictEqual(types(p.sent), ["panel.ready"]);
 
   p.receive("panel.snapshot", snapshot("session-a", 3, { edit_path: ["Level 1", ""] }));
 
-  var overview = p.query("[data-section='overview']");
-  assert.strictEqual(overview.querySelector("h1").textContent, "Overview");
-  assert.strictEqual(overview.querySelector(".phc-heading-note").textContent, "house.skp");
   var footer = p.query("[data-section='footer']").children.map(function (node) { return node.textContent; });
   assert.deepStrictEqual(footer, ["PH-Composer 0.1.0-dev", "Editing: Level 1 / Unnamed group"]);
 });
@@ -122,8 +119,7 @@ test("a result or notice for another Model is not painted, and a new Model clear
   assert.strictEqual(p.notice().hidden, false);
   p.receive("panel.snapshot", snapshot("session-b", 1, { file_name: "other.skp" }));
   assert.strictEqual(p.notice().hidden, true, "the other Model's notice is gone");
-  assert.strictEqual(p.query("[data-section='overview']").querySelector(".phc-heading-note").textContent,
-    "other.skp");
+  assert.strictEqual(p.panel.state.file_name, "other.skp");
 });
 
 test("the unit switch applies at once, is remembered by the host, and never becomes a Model action", function () {

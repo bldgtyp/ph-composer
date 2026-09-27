@@ -1,9 +1,9 @@
 {
   "assets": {
     "html/base.css": {
-      "bytes": 8120,
+      "bytes": 8066,
       "mime": "text/css; charset=utf-8",
-      "sha256": "33d0b00feab72c07ca044888d7a919c8ee7dd264b57dd0ea3a2e6b71e8d090bb"
+      "sha256": "83262b9ce8de9de74b0bc3b2c3d7a746574ed2ced953fc068c7c91665ce53b05"
     },
     "html/dom.js": {
       "bytes": 4030,
@@ -91,14 +91,14 @@
       "sha256": "df76102e3142ad9ff51ad03f24648a47e1710ccfacdb830ead4dacb064708d16"
     },
     "html/sections/overview.js": {
-      "bytes": 18678,
+      "bytes": 18702,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "b882262b8073d84d2c1bc05824ac68b0bed8270c9c1893f7a971e0dea22f3bd0"
+      "sha256": "f6a1fda3bbf30caccea82431e9e908fa4e689214f7d91494e299f98b80d95b72"
     },
     "html/sections/shell.js": {
-      "bytes": 1276,
+      "bytes": 758,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "6f0089590c96a1c10c5ac812852b26104791d30ce9b243670c2d7a9a5d1664c9"
+      "sha256": "8801e69e8143d6a8db6003fa2acd751e8a3b03d9a06c39f7292bf6156355088e"
     },
     "html/shell.css": {
       "bytes": 1174,
@@ -111,14 +111,14 @@
       "sha256": "ebd42866e75a1c4ba916861e9dfef089f80463ad8ce7ef7184ba459cd3da4fd7"
     },
     "html/table.css": {
-      "bytes": 5384,
+      "bytes": 5418,
       "mime": "text/css; charset=utf-8",
-      "sha256": "25c5b09e245b9deaaa284d08eb20047fce51fd0393ec9669b029bbcf90814b2d"
+      "sha256": "8f6c1a2dec7eda479cc97ea9a3836233935fcd66649f1d322aec9589038d796c"
     },
     "html/table.js": {
-      "bytes": 17484,
+      "bytes": 18281,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "35381b20399cfdd3c9ff1f0ab93dd91c272e86a14620efbda2c747474e6fdc68"
+      "sha256": "e89934af3f1c49d666739cc3a21fa2533b377b1fa583ceffb517b595c09d6213"
     },
     "html/unit_field.js": {
       "bytes": 7928,
@@ -156,9 +156,9 @@
       "sha256": "3ea0d2929b882fad80da8fb48d2998874bb265f59f72dd5599812dbae02b82a8"
     },
     "html/zones.css": {
-      "bytes": 3075,
+      "bytes": 3212,
       "mime": "text/css; charset=utf-8",
-      "sha256": "457f990ab2d95be248a49de865a8611cacc71d7fb246f534e5e312ba662cea1a"
+      "sha256": "62327c40be4e6671b57e884be0f061bf9d5b57da2be7638a846eaa67ddba56d4"
     },
     "python/ph_composer_translation/__init__.py": {
       "bytes": 1234,

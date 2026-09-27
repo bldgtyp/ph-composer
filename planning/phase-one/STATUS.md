@@ -1,96 +1,41 @@
 # Phase 1 status
 
 DATE: 2026-09-26
-STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized and D1 to D7 are implemented. D7's host gate is part run: five of eight questions answered, eight findings open, three questions outstanding.
+STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D D1 to D7
+implemented. D7's eight host questions are answered and its recorded defects are corrected on
+this branch. Broader P1-D acceptance rows remain open; P1-E has not started.
 ISSUE: none (local implementation packet)
 
-## Resume here: P1-D D7's host gate, part run 2026-09-26
+## Resume here: D7 gate continuation and corrections
 
-**Where it stands.** The gate ran on SketchUp 26.1.188 / Ruby 3.2.2 / macOS 26.6.2 on
-2026-09-26. Questions 2, 3, 6 and 8 pass, question 4 passes on repaint and fails on the palette,
-and **eight findings are open**, the worst being F4: all three Zone-kind Colour-by modes raise
-`NoMethodError` on any real Group, because `Tessellation.collect` asks an `Edge` for a
-`transformation`. What was observed, in full, is
-[evidence/p1-d-overview.md](evidence/p1-d-overview.md).
+The D7 handoff was executed with native computer use on 2026-09-26. Q1, Q7 and Q5's restart
+checks are answered in [the evidence record](evidence/p1-d-overview.md). Six F7 reproduction
+attempts stayed clean. F1 to F6 and F8 were corrected and rechecked in a fresh installed
+SketchUp 26.1.188 process. Narrow-panel checks also found and corrected sticky headers and
+compressed table columns. Native select-editor Enter and exact-reference Undo/Redo pass.
+The final installed code passes `make ci`, `make coverage` and the Ruby 2.7.2 suite.
 
-Questions 1, 7 and the restart half of 5 remain, and are written up for an operator in
-[D7-GATE-HANDOFF.md](D7-GATE-HANDOFF.md). The fix pass follows the gate, in one batch, and
-re-verifies on the same host.
+The handoff's restart premise needed correction: Colour by starts Off and remembers the mode
+Classify will use, as the owning PRD specifies. A failing tessellation now clears the mode,
+removes its overlay and displays a warning without replacing the last successful preference.
 
-Ed ruled on 2026-09-26 that `Palette::MUTED` changes to a wash or a hatch: grey is a real value
-in the palette and set-aside must not compete with it (F6).
+At 512 classified Faces, Ruby snapshot construction takes 39 to 47 ms. Discrete panel
+interactions were usable. JavaScript paint was observed rather than timed. Rebuilding a full
+snapshot on every pointer move is too expensive for hover-to-highlight; keep that feature
+deferred until a cheaper path is measured. The existing Overview pane arrangement is retained;
+Ed's pending arrangement decision has not been inferred from this verification work.
 
-The original brief for the gate follows, kept for its reasoning. Two corrections it needs are
-recorded in the evidence file: question 8 cannot be answered with `refresh_pending?`, which races
-a coalesced timer, and question 1 measures nothing until the crowd is classified.
+### Acceptance boundary
 
-**State as of implementation.** D7 is implemented on the branch and every offline gate is green: `make ci` on Ruby 3.2.2
-and the 2.7.2 floor, 441 Ruby tests with 1,760 assertions, 157 JavaScript tests, rubocop clean over
-160 files, coverage 96.6% Ruby, 98.0% JavaScript, 97.5% Python. Both independent reviews have run,
-one on the contribution seam and one on the three screens, and every finding is fixed and covered by
-a test. Nothing offline is outstanding. What the slice does not have is host evidence, and that is
-the whole of what remains.
+The older handoff said a docs pass would close P1-D. `PLAN.md` instead requires A04 to A09 to
+have evidence. `ACCEPTANCE.md` still carries unresolved cases in A05, A06, A07, A08 and A09.
+Complete those named cases before closing P1-D. The D7 results do not establish scene/tag
+invalidation, full Attached-zone lifecycle, identity-repair reopen behavior or multi-Model
+acceptance. P1-E's HBJSON/report workflow remains unimplemented and is not part of this fix pass.
 
-**What D7 added**, for a reader coming to it cold: a sixth contribution seam, `view_command`, for a
-change to what the host shows that never reaches the Model; the Overview Zone tree and faces table,
-built on `table.js`, `table.css` and `view_controls.js` ported from the predecessor and trimmed; the
-panel Colour-by legend with click-to-select-and-zoom and "Show only this"; and the Classify tool's
-palette with its Attached zone picker and inline New route. `state` on the Face read is new, and it
-is the word both the table and the overlay call a Face by. The reasoning and the deliberate
-omissions are in [PLAN.md](PLAN.md) under "What D7 left open".
-
-### 1. Run the host gate. This is the next work.
-
-It needs an operator at the panel: nothing in the Ruby API clicks an HtmlDialog, so
-[`overview_walkthrough.rb`](../../tools/examples/authoring/overview_walkthrough.rb) builds the Model
-and reads back what the panel's own commands did to it. The prose for each step is at the end of
-[the authoring README](../../tools/examples/authoring/README.md). Fresh process, `make install`,
-quit every SketchUp, relaunch.
-
-```sh
-make install
-uv run tools/hostkit/host_bridge.py launch _private/host/run.skp --fresh-from _private/host/blank-template.skp
-uv run tools/hostkit/host_bridge.py eval \
-  'load "/absolute/path/to/ph-composer/tools/examples/authoring/overview_walkthrough.rb"; OverviewWalkthrough.setup'
-```
-
-Then open the panel and work the screen. The eight questions, in the order they are worth asking:
-
-| # | Question | How it is answered |
-| --- | --- | --- |
-| 1 | What does this screen cost to paint? | `read_cost` on the two-Zone Model, then `crowd(500)` and `read_cost` again |
-| 2 | Does Locate reach a Face inside a closed Zone, from a table row and from a legend row? | Both, Zone closed and open; `report` reads the selection back |
-| 3 | Where does the camera land while the panel has focus? | Watch it; `View#zoom` from an HtmlDialog is not what D6 measured |
-| 4 | Does "Show only this" repaint at once, and does the muted grey read as set aside? | A window capture, not a bridge `shot`: `write_image` renders no overlay |
-| 5 | Does the panel's mode switch leave the same state as the native Colour by menu? | Both routes, then `report` and a restart for the remembered mode |
-| 6 | Does the viewport's first click after choosing a chip reach the Classify tool? | Choose a chip with the panel frontmost, then click one Face |
-| 7 | Does a chip edit refuse cleanly when the Model changed underneath? | Change a Face from the Ruby Console, then use that row's chip |
-| 8 | Does the panel repaint once per viewport command, or twice? | `refresh_pending?` straight after one legend click; it must be false |
-
-Questions 1 and 6 are the two that carry real risk. Nothing offline measures either, and both would
-change the shape of the screen rather than just its wording.
-
-The pattern to expect, from D4, D5 and D6: a gate of this size has cost between two and eight
-findings each time, and the ones that mattered were always things the offline stub was wrong about.
-Fix what it finds and re-verify on the same host before writing the evidence file, which belongs at
-`evidence/p1-d-overview.md` beside its siblings.
-
-### 2. Two decisions that are Ed's
-
-- **The Overview pane's arrangement.** It now shows the Zone tree first, then Colour by, then the
-  Classify palette, each its own section with its own heading. The alternative is one heading with
-  both controls in the tree's action bar, which is closer to what the UI polish skill asks for. The
-  row is in [`planning/ui-baseline/README.md`](../ui-baseline/README.md) and the gate is a good
-  moment to rule on it, because that is when the screen is in front of a real Model.
-- **Hover-to-highlight**, the fourth legend affordance Q18 names, is deliberately not built. Ed chose
-  on 2026-09-20 to measure its cost rather than ship it unmeasured: it would send one command per
-  pointer move and rebuild the drawing each time. Question 1's numbers are what that decision waits
-  on.
-
-### 3. Then
-
-A docs pass over what the gate found, the evidence file, and P1-D closes. P1-E is the next stage and
-is not authorized yet.
+The historical [D7-GATE-HANDOFF.md](D7-GATE-HANDOFF.md) is retained as the procedure that was
+executed, with its corrected assumptions noted at the top. Use the current evidence and
+acceptance register for the next work.
 
 ## Current handoff
 
@@ -127,7 +72,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 | P1-A: geometry contracts and host investigation | Complete | [Contract](CONTRACTS.md); [host evidence](evidence/p1-a-geometry.md); A01 met |
 | P1-B: Zone and face authoring core | Complete | [Authoring evidence](evidence/p1-b-authoring.md); A02/A03 and the P1-B portion of A04 met |
 | P1-C: adjacency and early HBJSON proof | Complete on branch | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
-| P1-D: complete Phase 1 authoring UI and repairs | Implemented on branch | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass, D4's and D6's host gates passed and D7's is outstanding. Slice table in [PLAN.md](PLAN.md) |
+| P1-D: complete Phase 1 authoring UI and repairs | Implemented on branch | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass. D4 and D6 host gates passed; D7's eight questions are answered and fixes rechecked. Broader A05 to A09 cases remain open. Slice table in [PLAN.md](PLAN.md) |
 | P1-E: HBJSON/report export workflow | Scoped | Pending; remaining canonical-export choices open |
 | P1-F: acceptance and handoff | Scoped | Pending |
 
@@ -197,7 +142,7 @@ holding a Surface pair could be cut, stripping that pair and leaving its counter
 that was gone. A Face meeting more than one neighbour, a
 concave outline and a holed Face stay reported rather than cut; see "What D4 left open" in
 [PLAN.md](PLAN.md). The offline stub models a Face split to make the record consequences testable
-and is not evidence about SketchUp; the host gate is outstanding.
+and is not evidence about SketchUp. The later [native cut gate](evidence/p1-d-repairs-and-cut.md) supplies that evidence.
 
 P1-D D5 brings the offline suite to 370 Ruby tests with 1,530 assertions, green on both Ruby 3.2.2
 and the 2.7.2 compatibility floor, with `make ci` green and Ruby coverage at 96.2%. It adds the
@@ -346,6 +291,5 @@ Neither names a feature. Two independent reviews ran, one on the seam and one on
 The Face read now carries the state every surface shows a Face by, unclassified, incomplete or
 classified, derived where the record is so the table and the overlay cannot disagree.
 
-The host gate is outstanding and it is the substantive one for this slice, because every affordance
-here is one the panel asks the host for. Hover-to-highlight, the fourth legend affordance Q18 names,
+The D7 host continuation and fixes are recorded in [the Overview evidence](evidence/p1-d-overview.md). Hover-to-highlight, the fourth legend affordance Q18 names,
 is deliberately not built: Ed chose on 2026-09-20 to measure its cost rather than ship it unmeasured.

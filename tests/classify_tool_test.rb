@@ -36,6 +36,16 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty values("face_type").compact
   end
 
+  def test_palette_guidance_reaches_the_status_bar_without_covering_panel_controls
+    tool.choose("face_type", "Wall")
+    tool.choose("boundary_condition", "Outdoors")
+
+    assert tool.active?
+    assert_empty @notices
+    assert_includes Sketchup.status_texts.last, "Click or drag over Faces"
+    assert_includes Sketchup.status_texts.last, "Outdoors"
+  end
+
   # A drag is one gesture however many Faces it crosses: one invoke, so one Undo entry.
   def test_a_drag_over_several_faces_is_one_gesture_and_one_undo_step
     zone(200)

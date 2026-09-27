@@ -176,8 +176,9 @@ this shape, so the rules below are the shared ones, learned from the Classify to
   than the tool silently applying the first N of what the pointer crossed.
 - **Talk to the status bar, not only the session.** The panel is the only subscriber to a session
   notice, and a viewport tool is used with the panel closed, so a refusal delivered only that way
-  is silent exactly where it matters. Write `Sketchup.status_text=` as well; an open panel still
-  gets the notice.
+  is silent exactly where it matters. Results and refusals reach both `Sketchup.status_text=`
+  and the session notice. Routine activation guidance uses the status bar alone so it does not
+  cover the panel controls; see [D7 F8](../planning/phase-one/evidence/p1-d-overview.md).
 - **Cancel on every route, and leave nothing behind.** Escape, deactivation, a suspended context
   and a callback that raised all abandon the pending gesture. Track whether the button is actually
   down: a press whose release the host never delivered must not leave later hovers collecting. The

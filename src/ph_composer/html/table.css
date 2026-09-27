@@ -36,10 +36,12 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table .phc-cell-input[aria-invalid="true"] { box-shadow: inset 0 -2px var(--red); }
 .phc-table tr:focus-within td { background: #edf6f7; }
 @media (max-width: 900px) {
-  .phc-table td.col-name, .phc-table th.col-name { position: static; }
+  .phc-table td.col-name { position: static; }
+  .phc-table th.col-name { left: auto; }
 }
 @media (max-width: 500px) {
-  .phc-table td.col-hierarchy, .phc-table th.col-hierarchy { position: static; }
+  .phc-table td.col-hierarchy { position: static; }
+  .phc-table th.col-hierarchy { left: auto; }
 }
 .phc-table .row-icon { width: 28px; height: 28px; min-height: 28px; padding: 5px; margin-right: 4px; border: 0; background: transparent; color: var(--muted-strong); vertical-align: middle; }
 .phc-table .row-icon svg { display: block; }

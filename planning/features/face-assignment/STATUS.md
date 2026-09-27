@@ -1,9 +1,9 @@
 # Face assignment: status
 
-DATE: 2026-09-25
+DATE: 2026-09-26
 STATUS: In progress; P1-B authoring, P1-C export contribution and P1-D's gestures, Attached zones,
 Colour-by and the Overview screen implemented. The faces table, the panel legend and the Classify
-palette await their host gate.
+palette have D7 current-host evidence and corrections. Broader acceptance cases remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -22,7 +22,8 @@ Classify gesture and its 250-occurrence ceiling, Suggest classification for this
 face, and the Attached zone record kind with its reference and delete-with-replacement lifecycle.
 D5 adds the shared Colour-by seam and its face type and boundary condition modes. D6 adds the
 Classify tool itself, with its palette on a native menu, and Locate, which has no user route until
-the faces table carries one. The faces table and the panel legend remain, in D7.
+the faces table carries one. D7 supplies that table and the panel legend; its host continuation
+and fixes are recorded in [the evidence](../../phase-one/evidence/p1-d-overview.md).
 
 ## Blockers
 
@@ -37,8 +38,9 @@ classification, metadata preservation, native Undo/Redo and fresh-process reopen
 the face extraction schema, complete world geometry, reciprocal emitted targets and strict
 development-construction boundary in the exact reloaded HBJSON. D5 verifies the Colour-by seam offline: an outside
 feature's mode, the two shipped modes, the unclassified and incomplete states, per-colour
-batching, the HUD, tag and revision invalidation, and the overlay's lifecycle. Every P1-D native
-gate, the Colour-by one included, remains outstanding.
+batching, the HUD, tag and revision invalidation, and the overlay's lifecycle. D6's native tool
+checks and D7's eight Overview questions have current-host evidence. The remaining Colour-by
+lifecycle and Attached-zone cases stay open in the [acceptance register](../../phase-one/ACCEPTANCE.md).
 
 Documentation-only architecture review completed 2026-09-18; all four findings addressed in the
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.

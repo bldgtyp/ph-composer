@@ -58,6 +58,8 @@ module PhComposer
         end
         set("attached_zone_id", nil) if field == "boundary_condition" && value != "AttachedZone"
         start
+        show_instructions
+        self
       end
 
       def chosen(field)
@@ -96,7 +98,7 @@ module PhComposer
         @intent = nil
         @hover = nil
         force_colour_by
-        announce(instructions)
+        show_instructions
       end
 
       def deactivate(view)
@@ -357,7 +359,8 @@ module PhComposer
       # A viewport tool is used with the panel closed, and the panel is the only thing that shows a
       # session notice, so a refusal delivered that way alone is silent exactly when it matters: at
       # the pointer, with nothing else on screen. The status bar is SketchUp's own place for a modal
-      # tool's guidance and needs no panel. The notice still goes out, so an open panel shows it too.
+      # tool's guidance and needs no panel. Results and refusals also reach the open panel;
+      # activation instructions use the status bar alone.
       def announce(message, tone = :info)
         @session.notice(message, :tone => tone)
         Sketchup.status_text = message if Sketchup.respond_to?(:status_text=)
@@ -368,6 +371,12 @@ module PhComposer
         return NOTHING_CHOSEN if chosen.empty?
 
         "Classify: #{chosen.join(', ')}. Click or drag over Faces; Shift-click takes a whole plane."
+      end
+
+      # Routine guidance stays beside the viewport, including when the host keeps the same tool
+      # active after a palette change. A floating copy covers panel controls (D7 host evidence, F8).
+      def show_instructions
+        Sketchup.status_text = instructions if Sketchup.respond_to?(:status_text=)
       end
 
       def tooltip(path)

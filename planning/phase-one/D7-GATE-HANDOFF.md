@@ -1,14 +1,15 @@
 # P1-D D7 host gate: the three runs that remain
 
 DATE: 2026-09-26
-STATUS: Handoff, for an operator who can drive SketchUp's window and the PH-Composer panel.
-Five of the eight questions are answered; see
-[evidence/p1-d-overview.md](evidence/p1-d-overview.md) for what they said and for findings F1 to
-F8. This file is the to-do for Q7, Q1 and the restart half of Q5, plus one reproduction attempt.
+STATUS: Executed 2026-09-26. Retained as the historical procedure. Results and fixes are in
+[evidence/p1-d-overview.md](evidence/p1-d-overview.md); current remaining gates are in
+[ACCEPTANCE.md](ACCEPTANCE.md).
 ISSUE: none (local implementation packet)
 
-Nothing in this file fixes anything. Every finding goes in the log; the fix pass happens
-afterwards, in one batch, and re-verifies on the same host.
+The continuation completed the remaining questions and implemented the fixes under Ed's
+2026-09-26 authorization. The instructions below describe the pre-fix state.
+Q5's premise was wrong: the accepted contract is Off at rest, with the remembered mode used
+when Classify starts. The broken preference did not prevent extension or panel startup.
 
 ## What you are driving
 
@@ -268,4 +269,4 @@ cause: record it as that, rather than supplying a plausible one.
 Update the result table at the top for Q1, Q5 and Q7, and change the file's `STATUS:` line once
 all three are answered.
 
-Leave the fixes alone.
+Historical instruction superseded by Ed's 2026-09-26 request to patch and verify the findings.

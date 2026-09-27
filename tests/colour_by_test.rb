@@ -99,13 +99,13 @@ class ColourByTest < PhComposerTestCase
     assert_equal({ "value" => "Wall", "state" => "classified" }, on.dig("value", "isolated"))
     assert_equal [["Floor", false], ["Wall", true]],
                  on.dig("value", "rows").map { |row| row.values_at("label", "isolated") }
-    assert_includes service.fills.keys, Palette::MUTED
+    refute_empty service.wash_triangles
     assert_includes service.fills.keys, [230, 180, 60]
 
     off = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.isolate", :params => {})
 
     assert_nil off.dig("value", "isolated")
-    refute_includes service.fills.keys, Palette::MUTED
+    assert_empty service.wash_triangles
   end
 
   def test_turning_a_different_mode_on_shows_every_row_again
@@ -116,7 +116,7 @@ class ColourByTest < PhComposerTestCase
     activate("ph_composer.zones.by_zone")
 
     assert_nil service.isolated
-    refute_includes service.fills.keys, Palette::MUTED
+    assert_empty service.wash_triangles
   end
 
   # A row the user set aside can stop existing. Keeping the isolation then mutes everything and
@@ -125,7 +125,7 @@ class ColourByTest < PhComposerTestCase
     zone = zone_group(1_740, %w[Wall Floor])
     service = activate("ph_composer.face_assignment.by_face_type")
     service.isolate(["Wall", "classified"])
-    assert_includes service.fills.keys, Palette::MUTED
+    refute_empty service.wash_triangles
 
     wall = zone.entities.grep(Sketchup::Face).find do |face|
       PhComposer::FaceAssignment::FACE_STORE.read(face)["face_type"] == "Wall"
@@ -135,7 +135,7 @@ class ColourByTest < PhComposerTestCase
     service.invalidate!(:force => true)
 
     assert_nil service.isolated
-    refute_includes service.fills.keys, Palette::MUTED
+    assert_empty service.wash_triangles
     assert_equal [false], service.legend.fetch("rows").map { |row| row.fetch("isolated") }
   end
 
@@ -257,6 +257,41 @@ class ColourByTest < PhComposerTestCase
 
     texts = @model.active_view.texts.map { |(_point, text, _options)| text }
     assert_equal ["Face type", "Wall (1)", "Unclassified (1)"], texts
+  end
+
+  def test_isolation_washes_geometry_without_a_mode_outline_and_names_its_scope_in_the_hud
+    zone_group(710, ["Wall", nil])
+    service = activate("ph_composer.face_assignment.by_face_type")
+    service.isolate(["Wall", "classified"])
+
+    @model.overlays.to_a.first.draw(@model.active_view)
+
+    wash, fill, outline = @model.active_view.draws
+    assert_equal GL_TRIANGLES, wash.first
+    assert_equal [255, 255, 255, Palette::ISOLATION_WASH_ALPHA], wash[2].to_a
+    assert_equal Palette::FILL_ALPHA, fill[2].alpha
+    assert_equal GL_LINES, outline.first
+    assert_equal [230, 180, 60, Palette::OUTLINE_ALPHA], outline[2].to_a
+    assert_empty service.unclassified_outlines, "the set-aside Face loses its unclassified styling"
+    assert_equal Palette::UNCLASSIFIED, service.rows.last.colour, "its legend keeps the original meaning"
+    assert_equal ["Face type", "Showing only: Wall", "Wall (1)", "Unclassified (1)"],
+                 @model.active_view.texts.map { |(_point, text, _options)| text }
+  end
+
+  def test_isolating_a_real_grey_value_keeps_its_fill_and_outline_distinct_from_the_wash
+    # Level "a" selects the real grey in the categorical ramp: 97 modulo 10 is 7.
+    zone_group(720, ["Wall"], :level => "a")
+    zone_group(730, ["Wall"], :level => nil)
+    service = activate("ph_composer.zones.by_level")
+    service.isolate(["a", "classified"])
+
+    @model.overlays.to_a.first.draw(@model.active_view)
+
+    assert_equal [[127, 127, 127]], service.fills.keys
+    assert_equal [[127, 127, 127]], service.outlines.keys
+    refute_empty service.wash_triangles
+    assert_equal [Palette::ISOLATION_WASH_ALPHA, Palette::FILL_ALPHA, Palette::OUTLINE_ALPHA],
+                 @model.active_view.draws.map { |_mode, _points, colour, _width| colour.alpha }
   end
 
   def test_hidden_geometry_and_a_hidden_tag_are_not_painted
@@ -395,6 +430,61 @@ class ColourByTest < PhComposerTestCase
     assert_equal 0, @model.overlays.to_a.length
   end
 
+  def test_failed_tessellation_returns_off_warns_and_preserves_the_last_successful_preference
+    group = zone_group(2010, ["Wall"])
+    activate("ph_composer.zones.by_zone")
+    group.entities.grep(Sketchup::Face).first.define_singleton_method(:mesh) { |*_args| raise "mesh failed" }
+    notices = []
+    PhComposer::Sessions.on_notice { |_session, message, tone| notices << [message, tone] }
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.activate",
+                                   :params => { "mode" => "ph_composer.face_assignment.by_face_type" })
+
+    assert_equal "completed", outcome.fetch("status"), "the panel receives the recovered Off snapshot"
+    assert_nil outcome.dig("value", "mode")
+    assert_empty outcome.dig("value", "rows")
+    assert_empty @model.overlays.to_a
+    assert_equal "ph_composer.zones.by_zone", ColourBy.remembered_mode
+    assert_equal [["Face type could not be drawn, so Colour by is off.", :warning]], notices
+    assert_empty @model.operations
+  end
+
+  def test_a_broken_preference_from_an_earlier_process_is_survivable_and_can_be_replaced
+    install_raising_mode
+    zone_group(2040, ["Wall"])
+    PhComposer::Preferences.set("colour_by_mode", "outside.probe.broken")
+
+    service = ColourBy::Service.new(@session).activate(ColourBy.remembered_mode)
+
+    refute service.active?
+    assert_empty @model.overlays.to_a
+    service.activate("ph_composer.zones.by_zone")
+    assert service.active?
+    assert_equal "ph_composer.zones.by_zone", ColourBy.remembered_mode
+  end
+
+  def test_tessellation_failure_during_invalidation_clears_all_caches_and_allows_later_subscribers
+    group = zone_group(2020, %w[Wall Floor])
+    service = activate("ph_composer.face_assignment.by_face_type")
+    service.isolate(["Wall", "classified"])
+    group.entities.grep(Sketchup::Face).last.define_singleton_method(:mesh) { |*_args| raise "mesh failed" }
+    reached = []
+    PhComposer::Sessions.on_host_event(:transaction_committed) { |_session| reached << :ran }
+
+    @session.host_event(:transaction_committed)
+
+    assert_equal [:ran], reached
+    refute service.active?
+    assert_nil service.isolated
+    assert_empty service.rows
+    assert_empty service.fills
+    assert_empty service.outlines
+    assert_empty service.unclassified_outlines
+    assert_empty service.wash_triangles
+    assert_empty @model.overlays.to_a
+  end
+
   # One mode failing must not take the rest of the extension's host-event handling with it: the
   # session publishes to subscribers in install order and does not rescue for them.
   def test_a_failing_projection_does_not_stop_a_later_host_event_subscriber
@@ -413,7 +503,9 @@ class ColourByTest < PhComposerTestCase
     outer = zone_group(1900, [])
     outer.transformation = Geom::Transformation.translation([10, 0, 0])
     inner_face = Sketchup::Face.new(1999, {}, :points => [point(0, 0, 0), point(2, 0, 0), point(2, 2, 0)])
-    inner = Sketchup::Group.new(1990, Sketchup::Entities.new([inner_face]))
+    # Real Groups contain Edges too; the older fixture hid the F4 host failure by containing Faces only.
+    edge = Sketchup::Edge.new(1998, point(0, 0, 0), point(2, 0, 0))
+    inner = Sketchup::Group.new(1990, Sketchup::Entities.new([edge, inner_face]))
     inner.transformation = Geom::Transformation.translation([0, 5, 0])
     outer.entities << inner
 
@@ -475,6 +567,19 @@ class ColourByTest < PhComposerTestCase
     service = activate("ph_composer.zones.by_zone")
 
     assert_equal 3, service.fills.values.first.length, "the nested Group's Face is reached and drawn"
+  end
+
+  def test_all_zone_modes_ignore_edges_alongside_faces_in_real_group_contents
+    group = zone_group(2030, ["Wall"])
+    group.entities << Sketchup::Edge.new(2032, point(0, 0, 0), point(2, 0, 0))
+
+    %w[by_zone by_building_segment by_level].each do |name|
+      service = activate("ph_composer.zones.#{name}")
+
+      assert service.active?, "#{name} must survive a Group's Edge"
+      assert_equal 3, service.fills.values.first.length
+      assert_equal 1, service.rows.first.count
+    end
   end
 
   def test_the_colour_by_menu_offers_every_registered_mode_and_an_off_entry

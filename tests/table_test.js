@@ -184,6 +184,51 @@ test("a hidden column hides its header, its column and every cell", function () 
   assert.strictEqual(cells(h, "size")[0].hidden, true);
 });
 
+test("a narrow table reserves readable widths and follows column visibility and row actions", function () {
+  var h = harness();
+  h.context.innerWidth = 480;
+  var settings = { defaultWidths: { size: 160 }, columnWidths: { name: 240 },
+    columnMinWidths: { size: 180 } };
+  paint(h, settings);
+  var table = h.root.querySelector("table");
+
+  assert.strictEqual(table.style.minWidth, "610px", "80 actions + 110 hierarchy + 240 name + 180 size");
+  assert.strictEqual(tagged(h, "col-size", "col")[0].style.width, "180px");
+  settings.hiddenColumns = { size: true };
+  paint(h, settings);
+  assert.strictEqual(table.style.minWidth, "430px", "hidden columns consume no width");
+  settings.hiddenColumns = {};
+  settings.actions = function () {
+    return ["locate", "sort", "delete"].map(function (id) { return { id: id, icon: id, label: id }; });
+  };
+  settings.actionsCell = function () {};
+  paint(h, settings);
+  assert.strictEqual(table.style.minWidth, "682px", "three row actions and the custom action cell fit too");
+  settings.hiddenColumns = { actions: true };
+  paint(h, settings);
+  assert.strictEqual(table.style.minWidth, "530px", "hidden actions also consume no width");
+  assert.strictEqual(h.root.style["--row-actions-width"], "0px",
+    "sticky identity columns leave no gutter for hidden actions");
+});
+
+test("table width follows keyboard resizing, single-column reset and all-column reset", function () {
+  var h = harness();
+  paint(h, { columnWidths: { name: 260, size: 180 } });
+  var table = h.root.querySelector("table"), handle = resizer(h, "size");
+  function key(value) {
+    handle.listeners.keydown({ key: value, preventDefault: function () {}, stopPropagation: function () {} });
+  }
+
+  assert.strictEqual(table.style.minWidth, "630px");
+  key("ArrowRight");
+  assert.strictEqual(table.style.minWidth, "642px");
+  key("Enter");
+  assert.strictEqual(table.style.minWidth, "590px", "one column returns to its 140px default");
+  h.root._table.resetColumnWidths();
+  assert.strictEqual(table.style.minWidth, "550px", "all columns return to their defaults");
+  assert.strictEqual(tagged(h, "col-size", "col")[0].style.width, "140px");
+});
+
 test("a column resizes by drag, reports its width, and resets on a double click", function () {
   var h = harness();
   var reported = [], ended = [];
@@ -198,10 +243,12 @@ test("a column resizes by drag, reports its width, and resets on a double click"
 
   assert.strictEqual(reported[0][0], "name");
   assert.ok(reported[0][1] > 220, "the column grew with the pointer");
+  assert.strictEqual(h.root.querySelector("table").style.minWidth, (330 + reported[0][1]) + "px");
   assert.deepStrictEqual(ended[0], reported[reported.length - 1]);
 
   handle.listeners.dblclick({ preventDefault: function () {}, stopPropagation: function () {} });
   assert.deepStrictEqual(reported[reported.length - 1], ["name", null], "a reset reports no width");
+  assert.strictEqual(h.root.querySelector("table").style.minWidth, "550px");
 });
 
 test("a column resizes from the keyboard and Enter puts it back", function () {

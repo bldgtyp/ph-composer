@@ -1,9 +1,9 @@
 # Zones and adjacency: status
 
-DATE: 2026-09-25
+DATE: 2026-09-26
 STATUS: In progress; P1-A through P1-C complete on the implementation branch, P1-D's D1 to D4
-implemented and host-verified, and D7's Overview Zone tree implemented with its host gate
-outstanding.
+implemented with current-host evidence for the recorded cases. D7's Overview Zone tree has
+current-host evidence and corrections; the broader acceptance cases remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -25,7 +25,8 @@ delivered in slices: the batch pair-retirement participant, explicit identity re
 Restore, the pure overlap geometry, whole-scope Solve with the Q18 out-of-scope refusal, and the
 partial-overlap cut are implemented, with a
 [host gate](../../phase-one/evidence/p1-d-repairs-and-cut.md) passed on 26.1.188. Colour-by Zone
-modes and the Overview tree remain, in D5 and D7.
+modes and the Overview tree are implemented. D7's [host continuation](../../phase-one/evidence/p1-d-overview.md)
+corrected their recorded defects and verified all three Zone modes on real Groups.
 
 ## Blockers
 
@@ -45,8 +46,10 @@ P1-A's current-host probe passed grouping, face splitting with a hole, explode/l
 closure, scaled/mirrored wrappers, Undo/Redo and fresh-process reopen. The 0.001 in native merge
 boundary is recorded. P1-B's public operations and current-host gates pass. P1-C's whole-wall
 solve, measured plane and normal tolerances, stale/retire lifecycle, no-op repeat solve, native
-Undo/Redo, reopen and exact HBJSON reference round trip pass. Partial adjacency, identity repair,
-Restore and the remaining PRD host gates remain outstanding.
+Undo/Redo, reopen and exact HBJSON reference round trip pass. The D3/D4
+[repair and cut evidence](../../phase-one/evidence/p1-d-repairs-and-cut.md) records partial-cut
+Undo/Redo, shared-copy refusal and limited Restore. Remaining cases are listed in the
+[acceptance register](../../phase-one/ACCEPTANCE.md).
 
 ## Ledger
 

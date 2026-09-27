@@ -182,11 +182,9 @@ Two things remain open and are deliberate, not oversights:
   still pair on a full match, which cuts nothing. Windows arrive in Phase 2 and will put holes in
   real walls, so the holed case needs an answer before an assembly-bearing model relies on it.
 
-The host gate is the outstanding evidence. The offline stub models a Face split so the record
-consequences can be tested; it is not evidence about SketchUp. What the host must confirm: which
-piece keeps the native persistent id, that every piece keeps its dictionaries, that the remainder
-of a contained region really does come back as one Face with a hole, and that the whole cut is one
-Undo step.
+The [native cut gate](evidence/p1-d-repairs-and-cut.md) records persistent-id survival,
+dictionary preservation, the contained-region hole and one-step Undo/Redo. The offline stub
+models a Face split so the record consequences can be tested; it is not evidence about SketchUp.
 
 D6's occurrence-resolution cost was measured on the proving host and then fixed: see
 [P1-D gesture cost](evidence/p1-d-gesture-cost.md). Resolution was O(targets x Model Faces),
@@ -241,12 +239,11 @@ Faces so a search for "Ground" keeps the Zone that has one. And an unclassified 
 as the PRD says: its Zone's row carries the count and the Suggest classification action, which is
 also the first panel route to that operation.
 
-The host gate is outstanding, and it is the one that matters most here, because every affordance
-this slice adds is one the panel asks the host for.
-[`overview_walkthrough.rb`](../../tools/examples/authoring/overview_walkthrough.rb) asks its eight
-questions. The two that carry real risk: what this screen costs to paint on a Model of a few
-hundred Faces, which nothing offline measures, and whether a chip chosen while the panel has focus
-leaves the viewport's first click with the tool or spends it returning focus to the Model window.
+The eight D7 host questions are answered in [the Overview evidence](evidence/p1-d-overview.md),
+including the current-host fixes and 512-Face measurement. The table's discrete interactions
+were usable; Ruby snapshot construction alone took 39 to 47 ms. Hover-to-highlight still needs
+a cheaper measured path. This closes the handoff's questions, with broader acceptance cases
+remaining in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 ### What D6 left open
 

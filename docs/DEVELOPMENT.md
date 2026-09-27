@@ -165,9 +165,10 @@ questions are still open. Accepted current-host results are in
 [`p1-d-repairs-and-cut.md`](../planning/phase-one/evidence/p1-d-repairs-and-cut.md) and
 [`p1-d-classify-tool.md`](../planning/phase-one/evidence/p1-d-classify-tool.md).
 
-The Overview screen's has not been run. Its walkthrough builds the Model and reads back what the
-panel's commands did, because nothing in the Ruby API clicks an HtmlDialog; the operator does the
-clicking.
+The Overview screen's eight handoff questions were completed with native computer use on
+2026-09-26. The [evidence](../planning/phase-one/evidence/p1-d-overview.md) records the fixes,
+fresh-process checks and remaining acceptance boundaries. Its walkthrough builds the Model and
+reads back what the panel's commands did; native controls drive the HtmlDialog interactions.
 
 A gate that needs pointer input cannot be scripted and cannot be skipped. The Classify tool's gate
 found three defects that no offline test could have caught, one of them in a slice already recorded

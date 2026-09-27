@@ -4,6 +4,8 @@
 .phc-zone-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .phc-zone-heading h2 { margin: 0; font-size: 17px; }
 .phc-table-mount { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 6px; }
+.phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
+  color: var(--warning-ink); background: var(--warning-surface); }
 .phc-details-mount:empty { display: none; }
 .phc-zone-card { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px;
   display: grid; grid-template-columns: minmax(140px, 2fr) minmax(120px, 1fr) minmax(90px, 1fr)

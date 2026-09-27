@@ -50,25 +50,38 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
   }
   function paintColumnWidth(cache, field) {
     var width = Number(cache.columnWidths[field]);
-    var value = isFinite(width) && width > 0 ? Math.round(width) + "px" : "";
+    var minimum = minimumColumnWidth(cache, field);
+    width = Math.max(minimum, isFinite(width) && width > 0 ? Math.round(width) : defaultColumnWidth(cache, field));
+    var value = width + "px";
     cache.columnElements[field].style.width = value;
     cache.headers[field].style.width = value;
     cache.headers[field].style.minWidth = "";
     if (Object.prototype.hasOwnProperty.call(cache.stickyWidths, field)) {
-      cache.node.style.setProperty("--col-" + field + "-width", value || defaultColumnWidth(cache, field) + "px");
+      cache.node.style.setProperty("--col-" + field + "-width", value);
     }
-    cache.resizeHandles[field].setAttribute("aria-valuemin", String(minimumColumnWidth(cache, field)));
-    cache.resizeHandles[field].setAttribute("aria-valuenow",
-      String(value ? parseInt(value, 10) : defaultColumnWidth(cache, field)));
+    cache.resizeHandles[field].setAttribute("aria-valuemin", String(minimum));
+    cache.resizeHandles[field].setAttribute("aria-valuenow", String(width));
+  }
+  /* Fixed-layout tables otherwise squeeze unclaimed columns to almost nothing once the identity
+     columns fill a narrow panel. Reserve every visible column's width and let the mount scroll. */
+  function paintTableWidth(cache) {
+    var width = cache.columns.reduce(function (total, column) {
+      var field = column[0];
+      if (cache.headers[field].hidden) return total;
+      return total + (field === "actions" ? cache.actionsWidth : parseFloat(cache.columnElements[field].style.width));
+    }, 0);
+    cache.node.style.minWidth = width + "px";
   }
   function setColumnWidth(cache, field, width, source) {
     cache.columnWidths[field] = Math.max(minimumColumnWidth(cache, field), Math.min(480, Math.round(width)));
     paintColumnWidth(cache, field);
+    paintTableWidth(cache);
     if (cache.options.columnResize) cache.options.columnResize(field, cache.columnWidths[field], source);
     return cache.columnWidths[field];
   }
   function resetColumnWidth(cache, field) {
     delete cache.columnWidths[field]; paintColumnWidth(cache, field);
+    paintTableWidth(cache);
     if (cache.options.columnResize) cache.options.columnResize(field, null);
     if (cache.options.columnResizeEnd) cache.options.columnResizeEnd(field, null);
   }
@@ -141,6 +154,7 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       cache.columns.forEach(function (column) {
         if (cache.resizeHandles[column[0]]) paintColumnWidth(cache, column[0]);
       });
+      paintTableWidth(cache);
       if (cache.options.columnResize) cache.options.columnResize(null, null);
       if (cache.options.columnResizeEnd) cache.options.columnResizeEnd(null, null);
     };
@@ -307,8 +321,10 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       }
       position += 1;
     });
-    root.style.setProperty("--row-actions-width",
-      String(16 + actionCount * 32 + (options.actionsCell ? 40 : 0)) + "px");
+    cache.actionsWidth = 16 + actionCount * 32 + (options.actionsCell ? 40 : 0);
+    var actionsVisible = cache.headers.actions && !cache.headers.actions.hidden;
+    root.style.setProperty("--row-actions-width", (actionsVisible ? cache.actionsWidth : 0) + "px");
+    paintTableWidth(cache);
     while (cache.body.children.length > position) cache.body.removeChild(cache.body.lastChild);
     Object.keys(cache.rows).forEach(function (key) {
       if (!retained[key]) { delete cache.rows[key]; delete expanded[key]; }

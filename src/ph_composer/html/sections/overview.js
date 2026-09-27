@@ -138,8 +138,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var count = row.record.unclassified, trouble = ZONE_STATES[row.record.state];
     if (trouble) return { text: trouble.text, tooltip: trouble.tooltip };
     if (!count) return null;
-    return { text: count + " unclassified",
-      tooltip: count + " Faces in this Zone have no record yet. Suggest classification writes one " +
+    return { text: String(count),
+      tooltip: count + " unclassified Faces in this Zone have no record yet. Suggest classification writes one " +
         "for each of them and leaves every Face that already has one alone." };
   }
 
@@ -243,7 +243,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var zones = snapshot.value(state, "ph_composer.zones.overview") || { zones: [], make_zone: null };
     var faces = (snapshot.value(state, "ph_composer.face_assignment.faces") || { faces: [] }).faces;
     var tool = snapshot.value(state, "ph_composer.face_assignment.palette") || {};
-    var screenState = forSession(state.session, send), profile = preferences.current();
+    var screenState = forSession(state.session, send), profile = units.profile(AREA, preferences.current());
     screenState.faceTypes = tool.face_types || [];
     screenState.boundaries = tool.boundary_conditions || [];
     var rows = project(zones.zones, faces);

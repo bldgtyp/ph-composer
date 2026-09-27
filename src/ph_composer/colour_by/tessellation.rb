@@ -20,7 +20,7 @@ module PhComposer
         if entity.is_a?(Sketchup::Face)
           add_face(entity, transform, triangles, segments)
         else
-          each_child(entity) { |child| collect(child, transform, triangles, segments) }
+          child_entities(entity)&.each { |child| collect(child, transform, triangles, segments) }
         end
         [triangles, segments]
       end
@@ -32,18 +32,22 @@ module PhComposer
         if entity.is_a?(Sketchup::Face)
           add_face(entity, transform, triangles, segments)
         else
+          # Edges and other drawing entities are not instances and have no transformation.
+          # Resolve the children before reading a container's instance transform.
+          children = child_entities(entity)
+          return unless children
+
           inner = transform * entity.transformation
-          each_child(entity) { |child| collect(child, inner, triangles, segments) }
+          children.each { |child| collect(child, inner, triangles, segments) }
         end
       end
 
-      def each_child(entity, &block)
-        entities = if entity.is_a?(Sketchup::Group)
-                     entity.entities
-                   elsif entity.respond_to?(:definition)
-                     entity.definition.entities
-                   end
-        entities&.each(&block)
+      def child_entities(entity)
+        if entity.is_a?(Sketchup::Group)
+          entity.entities
+        elsif entity.respond_to?(:definition)
+          entity.definition.entities
+        end
       end
 
       # Hidden geometry and geometry on a hidden tag are not painted. Tag visibility does not advance
@@ -85,7 +89,7 @@ module PhComposer
         end
       end
 
-      private_class_method :collect, :each_child, :skipped?, :add_face
+      private_class_method :collect, :child_entities, :skipped?, :add_face
     end
   end
 end

@@ -25,6 +25,7 @@ module PhComposer
       def draw(view)
         return unless @service.active?
 
+        draw_wash(view)
         @service.fills.each do |colour, points|
           next if points.empty?
 
@@ -36,6 +37,14 @@ module PhComposer
       end
 
       private
+
+      def draw_wash(view)
+        return if @service.wash_triangles.empty?
+
+        colour = Palette::ISOLATION_WASH
+        view.drawing_color = Sketchup::Color.new(*colour, Palette::ISOLATION_WASH_ALPHA)
+        view.draw(GL_TRIANGLES, Tessellation.lift(@service.wash_triangles, view))
+      end
 
       def draw_outlines(view)
         view.line_width = LINE_WIDTH
@@ -59,6 +68,11 @@ module PhComposer
       def draw_hud(view)
         left, top = HUD_ORIGIN
         draw_hud_text(view, left, top, @service.mode&.label.to_s)
+        if @service.isolated
+          row = @service.rows.find { |item| [item.value, item.state] == @service.isolated }
+          top += HUD_ROW_HEIGHT
+          draw_hud_text(view, left, top, "Showing only: #{row.label}") if row
+        end
         @service.rows.each_with_index do |row, index|
           row_top = top + ((index + 1) * HUD_ROW_HEIGHT)
           draw_swatch(view, left, row_top, row.colour)

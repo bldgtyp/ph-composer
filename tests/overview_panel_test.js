@@ -67,6 +67,44 @@ function suggest(root) {
   return rowAction(root, "suggest");
 }
 
+test("Overview has no placeholder section beneath the feature work surface", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+
+  assert.strictEqual(Boolean(p.query("[data-section='overview']")), false);
+  assert.strictEqual(p.query("[data-pane='overview']").textContent.includes("Nothing to show yet."), false);
+});
+
+test("area headers and Zone and Face values follow the display profile together", function () {
+  var p = page(), payload = snapshot();
+  payload.preferences.unit_system = "IP";
+  var faces = payload.sections["ph_composer.face_assignment.faces"].value.faces;
+  faces[0].area_m2 = 1;
+  var additional = JSON.parse(JSON.stringify(faces[0]));
+  additional.area_m2 = 3;
+  additional.reference.entity_path = [103];
+  additional.reference.entity_id = "fac_c";
+  additional.values.id = "fac_c";
+  faces.push(additional);
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  function areas() {
+    return section.querySelectorAll(".col-area_m2").filter(function (node) { return node.tagName === "td"; })
+      .map(function (node) { return node.textContent; });
+  }
+  function header() {
+    return section.querySelectorAll(".col-area_m2").filter(function (node) { return node.tagName === "th"; })[0];
+  }
+
+  assert.ok(header().textContent.includes("Area ft²"));
+  assert.deepStrictEqual(areas(), ["43.06", "10.76", "32.29"]);
+  p.modules.unit_preferences.set("unit_system", "SI");
+  p.panel.repaint();
+  assert.ok(header().textContent.includes("Area m²"));
+  assert.deepStrictEqual(areas(), ["4", "1", "3"]);
+  assert.strictEqual(faces[0].area_m2, 1, "display changes leave the canonical snapshot alone");
+});
+
 test("Overview exposes Make Zone and sends its explicit selection target", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
@@ -108,7 +146,8 @@ test("an unclassified Face is its Zone's count and its Suggest action, not a row
   var section = p.query("[data-section='ph_composer.overview']");
 
   assert.strictEqual(section.querySelectorAll("[data-row-key]").length, 2, "one Zone row and one Face row");
-  assert.strictEqual(section.querySelector(".phc-row-marker").textContent, "1 unclassified");
+  assert.strictEqual(section.querySelector(".phc-row-marker").textContent, "1");
+  assert.match(section.querySelector(".phc-row-marker").getAttribute("data-tooltip"), /1 unclassified Face/);
 
   suggest(section).listeners.click({});
   assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.auto_classify");
