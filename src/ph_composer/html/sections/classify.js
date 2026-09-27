@@ -13,12 +13,12 @@ PhComposerUI.define("sections/classify", ["panel", "workspace", "request", "snap
 function (panel, ui, requests, snapshot, words) {
   "use strict";
   var KEEP = "";
-  var DEFAULT_ATTACHED_ZONE = { kind: "other" };
   var screen = null;
 
   function forSession(session, send) {
     if (screen && screen.session === session) return screen;
-    screen = { session: session, chooseWhenFree: null,
+    if (screen && screen.draft) screen.draft.close();
+    screen = { session: session, chooseWhenFree: null, draft: null,
       view: requests.channel(session, send, "palette", "view.invoke"),
       edits: requests.channel(session, send, "attached_zone") };
     return screen;
@@ -87,24 +87,96 @@ function (panel, ui, requests, snapshot, words) {
     return "Attached zone " + number;
   }
 
-  /* New acts at once under a free default name, as every other record does in this app; the user
-     renames it in the Attached zones surface rather than answering a dialog first.
-
-     The record is created and then chosen, and choosing goes down the viewport channel, which may be
-     carrying something else. A dropped choice would leave the user with a record they asked for and
-     a palette that does not name it, so the choice waits its turn rather than being lost. */
+  /* This palette has no pending Face proposal: saving creates a definition, then choosing it sets
+     the next paint gesture. Cancelling the draft changes neither definitions nor the palette. */
   function newAttachedZone(state, records) {
     var create = ui.element("button", "", "New attached zone");
     create.disabled = state.edits.busy() || state.view.busy();
-    create.addEventListener("click", function () {
-      var values = { name: freeName(records), kind: DEFAULT_ATTACHED_ZONE.kind };
+    create.addEventListener("click", function () { openAttachedZone(state, records); });
+    state.createButton = create;
+    return create;
+  }
+
+  function labelledField(form, title, control) {
+    var label = ui.element("label", "", title);
+    control.setAttribute("aria-label", title);
+    label.appendChild(control);
+    form.appendChild(label);
+    return control;
+  }
+
+  function openAttachedZone(state, records) {
+    if (state.draft) return;
+    var dialog = ui.formDialog("", cancel);
+    var form = ui.element("form");
+    var name = labelledField(form, "Name", ui.element("input"));
+    name.value = freeName(records);
+    name.required = true;
+    var kind = labelledField(form, "Kind", ui.element("select"));
+    ["garage", "attic", "crawlspace", "stairwell", "other"].forEach(function (value) {
+      var option = ui.element("option", "", ui.titleCase(value));
+      option.value = value;
+      kind.appendChild(option);
+    });
+    kind.value = "other";
+    var factor = labelledField(form, "Temperature reduction factor", ui.element("input"));
+    factor.type = "number";
+    factor.min = "0";
+    factor.max = "1";
+    factor.step = "any";
+    factor.required = true;
+    factor.value = "0.95";
+    var error = ui.element("div", "cell-error");
+    error.setAttribute("role", "status");
+    var cancelButton = ui.button("Cancel", cancel);
+    var save = ui.element("button", "primary", "Create and choose");
+    save.type = "submit";
+    form.appendChild(ui.actionRow(cancelButton, save, false));
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      if (state.edits.busy()) return;
+      var values = { name: name.value.trim(), kind: kind.value,
+        temperature_reduction_factor: Number(factor.value) };
+      if (!values.name || !factor.value.trim() || !Number.isFinite(values.temperature_reduction_factor) ||
+          values.temperature_reduction_factor < 0 || values.temperature_reduction_factor > 1) {
+        error.textContent = "Enter a name and a factor between 0 and 1.";
+        return;
+      }
+      save.disabled = true;
+      cancelButton.disabled = true;
+      [name, kind, factor].forEach(function (control) { control.disabled = true; });
       state.edits.run("ph_composer.face_assignment.attached_zone.save", { values: values }, {
         onDone: function (outcome) {
           if (outcome.value && outcome.value.id) state.chooseWhenFree = outcome.value.id;
+          close(true);
+        },
+        onFail: function (outcome) {
+          save.disabled = false;
+          cancelButton.disabled = false;
+          [name, kind, factor].forEach(function (control) { control.disabled = false; });
+          error.textContent = outcome.message || "The Attached zone could not be created. Nothing was written.";
         }
       });
     });
-    return create;
+    dialog.appendChild(ui.element("h2", "", "New attached zone"));
+    dialog.appendChild(form);
+    dialog.appendChild(error);
+    state.draft = { close: close };
+    document.body.appendChild(dialog);
+    dialog.openModal();
+    name.focus();
+    name.select();
+
+    function cancel() {
+      if (!state.edits.busy()) close();
+    }
+    function close(afterRender) {
+      state.returnFocus = afterRender === true;
+      dialog.closeModal();
+      if (dialog.parentNode) dialog.parentNode.removeChild(dialog);
+      state.draft = null;
+      if (state.createButton && state.createButton.isConnected) state.createButton.focus();
+    }
   }
 
   /* A choice the create route could not send yet, sent as soon as the channel is free. */
@@ -154,6 +226,10 @@ function (panel, ui, requests, snapshot, words) {
       root.className = "phc-classify" + (tool.active ? " is-active" : "");
       root.replaceChildren(heading, body);
     });
+    if (screenState.returnFocus) {
+      screenState.returnFocus = false;
+      screenState.createButton.focus();
+    }
   }
 
   panel.section("ph_composer.classify", render, { order: 30 });

@@ -6,7 +6,17 @@ implemented. D7's eight host questions are answered and its recorded defects are
 this branch. Broader P1-D acceptance rows remain open; P1-E has not started.
 ISSUE: none (local implementation packet)
 
-## Resume here: D7 gate continuation and corrections
+## Resume here: broader acceptance continuation
+
+D7 fixes are committed and pushed as `a79ae4d`. The subsequent A05 to A09 host run is recorded
+in [the broader acceptance evidence](evidence/p1-d-broader-acceptance.md). It adds transformed
+holed adjacency, copy/repair persistence, limited Restore, Attached-zone rollback and replacement,
+scene/tag invalidation, model-close cleanup and active-edit-path evidence. It also exposed
+ancestor visibility, lost Zone drafts and missing stale-pair retirement; their fixes pass native
+checks, `make ci`, coverage and the Ruby 2.7.2 suite. The record distinguishes the completed cases
+from the remaining boundaries. P1-D remains open until the register is complete.
+
+## D7 gate continuation and corrections
 
 The D7 handoff was executed with native computer use on 2026-09-26. Q1, Q7 and Q5's restart
 checks are answered in [the evidence record](evidence/p1-d-overview.md). Six F7 reproduction
@@ -63,7 +73,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
   development and its floor-area/import questions. P1-E still owns the shipped HBJSON wheel set.
 - Create/link the implementation issue during authorized issue intake. The configured remote is
   `bldgtyp/ph-composer`; P1-A created no external issue or PR.
-- P1-D is authorized and every slice is implemented; its slices are tracked in [PLAN.md](PLAN.md). What remains is D7's host gate, and the open items each slice recorded under "What Dn left open".
+- P1-D is authorized and every slice is implemented; its slices are tracked in [PLAN.md](PLAN.md). D7's host gate is verified; the remaining broader acceptance cases are tracked in the register and continuation record.
 
 ## Stages
 

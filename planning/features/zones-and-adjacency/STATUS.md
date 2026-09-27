@@ -28,6 +28,10 @@ partial-overlap cut are implemented, with a
 modes and the Overview tree are implemented. D7's [host continuation](../../phase-one/evidence/p1-d-overview.md)
 corrected their recorded defects and verified all three Zone modes on real Groups.
 
+The subsequent [A05 to A09 host run](../../phase-one/evidence/p1-d-broader-acceptance.md)
+records additional lifecycle evidence and corrections. Follow that record and the shared
+acceptance register for cases still open.
+
 ## Blockers
 
 - A Face meeting more than one neighbour is reported rather than cut: it needs one cut per

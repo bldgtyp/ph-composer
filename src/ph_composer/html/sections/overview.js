@@ -38,6 +38,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   /* This screen's own state, rebuilt whenever the panel shows a different Model. */
   function forSession(session, send) {
     if (screen && screen.session === session) return screen;
+    if (screen && screen.zoneEditor) screen.zoneEditor.dispose();
     screen = { session: session, selected: null, expanded: Object.create(null), columnWidths: {},
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
@@ -320,8 +321,24 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
      form beneath the table rather than more columns (UI polish: reveal contextual tools on selection). */
   function paintDetails(mount, rows, state) {
     var row = rows.filter(function (candidate) { return candidate.key === state.selected; })[0];
-    if (!row || row.depth !== 0) { mount.replaceChildren(); return; }
-    mount.replaceChildren(heading("Zone details", null, null), zoneForm(row.record.zone, state));
+    if (!row || row.depth !== 0) {
+      disposeZoneEditor(state);
+      mount.replaceChildren();
+      return;
+    }
+    if (state.zoneEditor && state.zoneEditor.key === row.key) {
+      state.zoneEditor.sync(row.record.zone);
+      return;
+    }
+    disposeZoneEditor(state);
+    state.zoneEditor = zoneForm(row.key, row.record.zone, state);
+    mount.replaceChildren(heading("Zone details", null, null), state.zoneEditor.root);
+  }
+
+  function disposeZoneEditor(state) {
+    if (!state.zoneEditor) return;
+    state.zoneEditor.dispose();
+    state.zoneEditor = null;
   }
 
   function labelled(text, control) {
@@ -338,10 +355,17 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     return node;
   }
 
-  function zoneForm(zone, state) {
-    var values = zone.values, card = ui.element("form", "phc-zone-card");
+  function copyValues(values) {
+    var copy = {};
+    Object.keys(values).forEach(function (key) { copy[key] = values[key]; });
+    return copy;
+  }
+
+  function zoneForm(key, zone, state) {
+    var values = copyValues(zone.values), card = ui.element("form", "phc-zone-card");
     var name = input("Zone name", values.name), segment = input("Building-Segment", values.building_segment);
     var level = input("Level", values.level), depthValue = values.ground_depth_mm;
+    var editor;
     var ground = new unitFields.UnitField({
       field: { quantity: "length_mm", unit: "mm", label: "Ground depth", scope: "ph_composer.zones.details" },
       value: depthValue,
@@ -354,17 +378,66 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     card.appendChild(labelled("Level", level));
     card.appendChild(labelled("Ground depth", ground.root));
     card.appendChild(save);
+    editor = {
+      key: key,
+      root: card,
+      reference: zone.reference,
+      expectedValues: copyValues(values),
+      dirty: false,
+      disposed: false,
+      setPending: function (pending) {
+        [name, segment, level, save].forEach(function (control) { control.disabled = pending; });
+        ground.setDisabled(pending);
+      },
+      dispose: function () { editor.disposed = true; ground.dispose(); },
+      accept: function (submitted) {
+        editor.expectedValues = copyValues(submitted);
+        editor.dirty = false;
+        editor.skipSync = true;
+        ground.setValue(submitted.ground_depth_mm);
+      },
+      sync: function (authoritative) {
+        if (editor.skipSync) {
+          editor.skipSync = false;
+          return;
+        }
+        if (editor.dirty) return;
+        values = copyValues(authoritative.values);
+        editor.reference = authoritative.reference;
+        editor.expectedValues = copyValues(values);
+        name.value = values.name === null || values.name === undefined ? "" : String(values.name);
+        segment.value = values.building_segment === null || values.building_segment === undefined ? "" :
+          String(values.building_segment);
+        level.value = values.level === null || values.level === undefined ? "" : String(values.level);
+        depthValue = values.ground_depth_mm;
+        ground.setValue(depthValue);
+      }
+    };
+    [name, segment, level, ground.input].forEach(function (control) {
+      control.addEventListener("input", function () { editor.dirty = true; });
+    });
     card.addEventListener("submit", function (event) {
       event.preventDefault();
       if (!ground.commit().ok) return;
-      state.edits.run("ph_composer.zones.update", {
-        reference: zone.reference,
-        values: { name: name.value, building_segment: segment.value, level: level.value || null,
-          ground_depth_mm: depthValue },
-        expected_values: values
-      });
+      var submitted = { name: name.value, building_segment: segment.value, level: level.value || null,
+        ground_depth_mm: depthValue };
+      if (!state.edits.run("ph_composer.zones.update", {
+        reference: editor.reference,
+        values: submitted,
+        expected_values: editor.expectedValues
+      }, {
+        onDone: function () {
+          if (editor.disposed) return;
+          editor.setPending(false);
+          editor.accept(submitted);
+        },
+        onFail: function () {
+          if (!editor.disposed) editor.setPending(false);
+        }
+      })) return;
+      editor.setPending(true);
     });
-    return card;
+    return editor;
   }
 
   // First in its pane: the Zone tree is the screen's work surface, and the palette and the legend

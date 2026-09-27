@@ -196,10 +196,8 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal %w[Outdoors Outdoors], boundary_conditions
   end
 
-  # Cutting a Face that still holds a Surface pair would strip that pair from the pieces and leave
-  # its counterpart naming a Face that is gone. The full-match path already refuses this; so does
-  # the cut, rather than quietly breaking the other endpoint.
-  def test_cutting_a_face_that_still_holds_a_pair_refuses_and_writes_nothing
+  # A copied envelope that does not even name its own Face is not proof of a deleted counterpart.
+  def test_cutting_a_face_with_an_unresolvable_pair_refuses_and_writes_nothing
     wall(696, 0, 0, 4, 0, 3, :east)
     wall(698, 0, 2, 6, 0, 3, :west)
     author
@@ -218,7 +216,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
 
     result = solve(all_references)
 
-    assert_equal %w[refused adjacency.stale none], result.values_at("status", "code", "effect")
+    assert_equal %w[refused adjacency.unresolved none], result.values_at("status", "code", "effect")
     assert_equal 2, faces.length
     assert_equal "Surface", store.read(entity).fetch("boundary_condition")
   end
@@ -260,7 +258,184 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_empty result.dig("value", "pair_ids")
   end
 
+  def test_solving_after_a_neighbour_is_deleted_retires_the_survivor_and_preserves_payloads
+    left, right = paired_walls
+    entity = left.entities.to_a.first
+    store = PhComposer::FaceAssignment::FACE_STORE
+    before = store.read(entity).merge("user_data" => { "note" => "keep" },
+                                      "extension_data" => { "other.ext" => { "payload" => [1, 2] } })
+    store.write(entity, before)
+    @model.entities.erase_entities(right)
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_empty result.dig("value", "pair_ids")
+    expected = before.reject { |key, _value| %w[adjacency boundary_condition].include?(key) }
+    assert_equal expected, store.read(entity)
+    @model.undo
+    assert_equal before, store.read(@model.entities.to_a.first.entities.to_a.first)
+    @model.redo
+    assert_equal expected, store.read(@model.entities.to_a.first.entities.to_a.first)
+  end
+
+  def test_solving_after_only_the_counterpart_face_is_deleted_retires_the_survivor
+    _left, right = paired_walls
+    right.entities.erase_entities(right.entities.to_a.first)
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal [nil], boundary_conditions
+  end
+
+  def test_separated_pairs_retire_both_ends_and_a_repeat_solve_creates_no_undo_entry
+    _left, right = paired_walls
+    right.transformation = Geom::Transformation.translation([100, 0, 0])
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal [nil, nil], boundary_conditions
+    count = @model.operation_starts.length
+    assert_equal "none", solve(all_references).fetch("effect")
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_a_stale_surviving_counterpart_outside_scope_refuses_before_any_write
+    _left, right = paired_walls
+    right.transformation = Geom::Transformation.translation([100, 0, 0])
+    before = faces
+    count = @model.operation_starts.length
+
+    result = solve([all_references.first])
+
+    assert_equal %w[refused scope.incomplete none], result.values_at("status", "code", "effect")
+    assert_equal before, faces
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_a_duplicated_counterpart_zone_is_ambiguous_even_when_no_geometry_matches
+    _left, right = paired_walls
+    right.transformation = Geom::Transformation.translation([100, 0, 0])
+    wall(930, 9, 0, 4, 0, 3, :west)
+    duplicate = @model.entities.to_a.last
+    store = PhComposer::Zones::ZONE_STORE
+    store.write(duplicate, store.read(duplicate).merge("id" => store.read(right).fetch("id")))
+    before = PhComposer::FaceAssignment::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first)
+
+    result = solve([all_references.first])
+
+    assert_equal %w[refused target.ambiguous none], result.values_at("status", "code", "effect")
+    assert_equal before, PhComposer::FaceAssignment::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first)
+  end
+
+  def test_an_exploded_counterpart_is_unresolved_not_deleted
+    _left, right = paired_walls
+    @model.entities << right.entities.to_a.first
+    @model.entities.erase_entities(right)
+    before = boundary_conditions
+
+    result = solve(all_references)
+
+    assert_equal %w[refused adjacency.unresolved none], result.values_at("status", "code", "effect")
+    assert_equal before, boundary_conditions
+  end
+
+  def test_a_deleted_path_with_a_surviving_face_uuid_is_unresolved
+    _left, right = paired_walls
+    store = PhComposer::FaceAssignment::FACE_STORE
+    copied = store.read(right.entities.to_a.first)
+    @model.entities.erase_entities(right)
+    wall(930, 9, 0, 4, 0, 3, :west)
+    store.write(@model.entities.to_a.last.entities.to_a.first, copied)
+
+    result = solve([all_references.first])
+
+    assert_equal %w[refused adjacency.unresolved none], result.values_at("status", "code", "effect")
+    assert_equal %w[Surface Surface], boundary_conditions
+  end
+
+  def test_common_motion_replaces_stale_stamps_and_then_solving_is_a_noop
+    left, right = paired_walls
+    [left, right].each { |group| group.transformation = Geom::Transformation.translation([100, 0, 0]) }
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal %w[current current], faces.map { |face| face.fetch("adjacency_state") }
+    count = @model.operation_starts.length
+    assert_equal "none", solve(all_references).fetch("effect")
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_partial_repair_retires_the_old_pair_and_leaves_remainders_unclassified
+    _left, right = paired_walls
+    right.transformation = Geom::Transformation.translation([0, 2 / 0.0254, 0])
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal 4, faces.length
+    assert_equal 2, boundary_conditions.count("Surface")
+    assert_equal 2, boundary_conditions.count(nil)
+    assert_equal %w[current current], faces.filter_map { |face| face["adjacency_state"] }
+  end
+
+  def test_a_failed_cut_after_retirement_rolls_back_both_old_pair_records_and_all_geometry
+    _left, right = paired_walls
+    right.transformation = Geom::Transformation.translation([0, 2 / 0.0254, 0])
+    before = faces
+    right.entities.define_singleton_method(:add_face) { |_points| raise IOError, "the host refused the cut" }
+
+    result = solve(all_references)
+
+    assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
+    assert_equal before, faces
+    assert_equal %w[Surface Surface], boundary_conditions
+  end
+
+  def test_retirement_preview_is_read_only_and_lists_both_endpoints
+    _left, right = paired_walls
+    right.transformation = Geom::Transformation.translation([100, 0, 0])
+    before = faces
+    count = @model.operation_starts.length
+
+    preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency",
+                          :params => { "zones" => all_references })
+
+    assert_equal "completed", preview.fetch("status")
+    assert_equal 2, preview.fetch("affected").count { |entry| entry.fetch("change") == "retired" }
+    assert_equal before, faces
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_a_failure_writing_the_second_retirement_rolls_back_the_first
+    left, right = paired_walls
+    right.transformation = Geom::Transformation.translation([100, 0, 0])
+    before = faces
+    # Retirement writes the counterpart first, then the initiating Face.
+    left.entities.to_a.first.define_singleton_method(:set_attribute) do |dictionary, key, value|
+      raise IOError, "the host refused the write" if dictionary == PhComposer::FaceAssignment::FACE_DICTIONARY
+
+      super(dictionary, key, value)
+    end
+
+    result = solve(all_references)
+
+    assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
+    assert_equal before, faces
+  end
+
   private
+
+  def paired_walls
+    wall(910, 0, 0, 4, 0, 3, :east)
+    wall(920, 0, 0, 4, 0, 3, :west)
+    author
+    assert_equal "committed", solve(all_references).fetch("effect")
+    @model.entities.to_a
+  end
 
   def invoke(name, params)
     @sequence += 1

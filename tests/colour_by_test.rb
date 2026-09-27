@@ -306,6 +306,88 @@ class ColourByTest < PhComposerTestCase
     assert_equal 3, service.fills.values.first.length, "only the visible Face is drawn"
   end
 
+  def test_hidden_or_tagged_zone_ancestors_suppress_every_mode_without_changing_legend_counts
+    group = zone_group(810, ["Wall"])
+    outer = @model.entities.add_group([group])
+    @model.entities.add_group([outer])
+    modes = ColourBy.modes.map { |mode| mode.fetch("name") }
+    [:hidden, :tag].each do |visibility|
+      outer.hidden = visibility == :hidden
+      outer.layer = Sketchup::Tag.new("Container", visibility != :tag)
+      modes.each do |mode|
+        service = activate(mode)
+        assert_equal 1, service.rows.sum(&:count), "#{mode} still counts the hidden occurrence"
+        assert_empty service.fills, "#{mode} does not paint through an ancestor"
+        assert_empty service.outlines
+      end
+    end
+    outer.hidden = false
+    outer.layer = Sketchup::Tag.new("Container", true)
+    service = activate("ph_composer.face_assignment.by_face_type")
+    assert_equal 3, service.fills.values.flatten.length
+  end
+
+  def test_hiding_the_zone_itself_suppresses_its_flattened_face_entries
+    group = zone_group(815, %w[Wall Floor])
+    group.hidden = true
+    service = activate("ph_composer.face_assignment.by_face_type")
+    assert_equal 2, service.rows.sum(&:count)
+    assert_empty service.fills
+    assert_empty service.outlines
+    group.hidden = false
+    service.invalidate!(:force => true)
+    assert_equal 6, service.fills.values.flatten.length
+  end
+
+  def test_hidden_nested_groups_inside_a_zone_are_not_painted_by_face_or_zone_modes
+    group = zone_group(820, %w[Wall Wall])
+    nested = group.entities.add_group([group.entities.to_a.first])
+    nested.hidden = true
+    %w[ph_composer.face_assignment.by_face_type ph_composer.zones.by_zone].each do |mode|
+      service = activate(mode)
+      assert_equal 3, service.fills.values.flatten.length, "#{mode} paints only the visible Face"
+    end
+    nested.hidden = false
+    nested.layer = Sketchup::Tag.new("Nested", false)
+    service = activate("ph_composer.face_assignment.by_boundary_condition")
+    assert_equal 3, service.fills.values.flatten.length
+    assert_equal 2, service.rows.sum(&:count)
+  end
+
+  def test_a_hidden_shared_occurrence_does_not_hide_its_visible_twin
+    group = zone_group(830, ["Wall"])
+    wrapper = @model.entities.add_group([group])
+    @model.entities.delete(wrapper)
+    first = Sketchup::ComponentInstance.new(840, wrapper.definition)
+    second = Sketchup::ComponentInstance.new(850, wrapper.definition,
+                                             :transformation => Geom::Transformation.translation([20, 0, 0]))
+    @model.entities << first << second
+    [:hidden, :tag].each do |visibility|
+      first.hidden = visibility == :hidden
+      first.layer = Sketchup::Tag.new("First occurrence", visibility != :tag)
+      %w[ph_composer.face_assignment.by_face_type ph_composer.zones.by_zone].each do |mode|
+        service = activate(mode)
+        assert_equal 2, service.rows.sum(&:count)
+        points = service.fills.values.flatten
+        assert_equal 3, points.length
+        assert points.all? { |point| point.x >= 20 }, "the visible occurrence's transform survives"
+      end
+    end
+  end
+
+  def test_occurrence_visibility_rejects_missing_or_mismatched_paths
+    group = zone_group(860, ["Wall"])
+    face = group.entities.to_a.first
+    visibility = ColourBy::OccurrenceVisibility.new(@model)
+    assert visibility.visible?([group.persistent_id, face.persistent_id], face)
+    refute visibility.visible?([999, face.persistent_id], face)
+    refute visibility.visible?([group.persistent_id, 999], face)
+    refute visibility.visible?([group.persistent_id], face)
+    refute visibility.visible?([], face)
+    refute visibility.visible?("invalid", face)
+    assert visibility.visible?(nil, face), "legacy entries retain entity-only tessellation"
+  end
+
   # A fill drawn exactly on the Face it colours z-fights with that Face and the host blinks between
   # the two, so every drawn point is lifted toward the camera. The stub's camera is high above the
   # fixtures at one model unit a pixel, so the lift reads as a clean +z of two units.

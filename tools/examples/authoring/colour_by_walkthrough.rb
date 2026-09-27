@@ -9,9 +9,9 @@
 #   1. Does `Face#mesh` triangulate a concave and a holed Face the way the fill needs? The offline
 #      stub fans the outer loop, which is right only for a convex outline.
 #   2. Does `Sketchup::LayersObserver#onLayerChanged` fire when a tag's visibility is toggled?
-#      Nothing here has measured that; the tag-invalidation path depends on it.
-#   3. Does activating a scene invalidate the drawing? Scene activation fires no observer this
-#      session subscribes to, so the expected answer is no. Record what actually happens.
+#      Measured on SketchUp 2026; repeat when proving another host.
+#   3. Does activating a scene invalidate the drawing? Scene tag visibility reaches the layer observer
+#      on SketchUp 2026. Record other scene state separately.
 #   4. Does the Model come through unchanged: materials, attribute dictionaries and Undo stack?
 #   5. What does a rebuild plus a frame cost on a Model of real size?
 #   6. Does the HUD legend draw legibly, and does the overlay leave with its Model?
@@ -23,8 +23,8 @@ module ColourByWalkthrough
 
   module_function
 
-  # Two boxes, one Zone each, auto-classified so the legend has more than one row, plus one
-  # deliberately unclassified Face and one Face with a hole for question 1.
+  # Two boxes, one Zone each, auto-classified so the legend has more than one row, including
+  # one Face with a hole for question 1. A concave fixture is a separate gate setup.
   def setup
     model = Sketchup.active_model
     model.start_operation("P1-D Colour-by walkthrough geometry", true)
@@ -198,17 +198,13 @@ module ColourByWalkthrough
 
   # A hole in one wall, so the fill meets the shape Phase 2 windows will make.
   def punch(group)
-    wall = group.entities.grep(Sketchup::Face).find { |face| face.normal.z.abs < 0.1 }
+    wall = group.entities.grep(Sketchup::Face).find { |face| face.normal.x.abs > 0.9 }
     return unless wall
 
-    points = wall.vertices.map(&:position)
-    origin = points.first
-    group.entities.add_face(
-      origin.offset(Geom::Vector3d.new(0, 1000.mm, 1000.mm)),
-      origin.offset(Geom::Vector3d.new(0, 2000.mm, 1000.mm)),
-      origin.offset(Geom::Vector3d.new(0, 2000.mm, 2000.mm)),
-      origin.offset(Geom::Vector3d.new(0, 1000.mm, 2000.mm))
-    )
+    x = wall.vertices.first.position.x
+    opening = group.entities.add_face([x, 1000.mm, 1000.mm], [x, 2000.mm, 1000.mm],
+                                      [x, 2000.mm, 2000.mm], [x, 1000.mm, 2000.mm])
+    opening.erase!
   end
 
   class Client

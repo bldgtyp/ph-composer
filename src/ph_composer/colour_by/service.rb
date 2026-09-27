@@ -8,7 +8,10 @@ module PhComposer
     # value, defaulting to the value itself. A projection that knows a value is only half filled in
     # says so with `state: :incomplete`; the service paints that amber in every mode, because only
     # the owning feature knows what its own record still needs.
-    Entry = Struct.new(:entity, :transform, :value, :label, :state, keyword_init: true)
+    # `path`, when supplied, is the full root-to-entity persistent-id path. It preserves ancestor
+    # visibility for a flattened projection, including distinct occurrences of shared storage.
+    # Without it the service can check only the entity and its descendants, as before.
+    Entry = Struct.new(:entity, :transform, :value, :label, :state, :path, keyword_init: true)
 
     # One legend row: a colour, what it means, how many entities carry it, and which of the three
     # states it is in (`classified`, `incomplete` or `unclassified`).
@@ -24,10 +27,9 @@ module PhComposer
     # Rebuilding happens when the invalidating event arrives, never inside `draw`: a draw callback
     # repairs nothing (context/TECH_STACK.md).
     #
-    # The PRD also names a scene change as an invalidator and this does not cover it: no observer
-    # the session subscribes to reports one. What a scene activation actually does to the drawing is
-    # a question for the host gate, with the walkthrough written to ask it; if it leaves the drawing
-    # stale, the mechanism is a frame change observer.
+    # Scene tag visibility reaches the layer invalidation path on the current proving host
+    # (planning/phase-one/evidence/p1-d-broader-acceptance.md). Other scene visibility state still
+    # needs its own host evidence; there is no general scene-change subscription here.
     class Service
       attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines, :isolated
       attr_reader :wash_triangles
@@ -150,6 +152,7 @@ module PhComposer
         @entities = {}
         @isolated = nil
         @built_revision = nil
+        @visibility = nil
       end
 
       def rebuild
@@ -162,6 +165,7 @@ module PhComposer
         outlines = Hash.new { |table, colour| table[colour] = [] }
         unclassified = []
         wash = []
+        @visibility = OccurrenceVisibility.new(@session.model)
         painted = Array(declaration.projection.call(@session.model)).map do |entry|
           [entry, *paint(declaration, entry)]
         end
@@ -206,6 +210,8 @@ module PhComposer
                                                      :colour => colour, :count => 0, :state => state)
         row.count += 1
         entities[[entry.value, state]] << entry.entity
+        return unless @visibility.visible?(entry.path, entry.entity)
+
         triangles, segments = Tessellation.call(entry.entity, entry.transform)
         # Set-aside geometry has its own wash pass, with no mode outline. A grey mode value and
         # the dashed unclassified outline therefore keep their meaning during isolation.

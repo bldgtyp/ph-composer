@@ -212,6 +212,12 @@ module PhComposer
     def solve_adjacency(request, proposal)
       plan = Adjacency.plan(request.model, request.params.fetch("zones"))
       plan.findings.each { |finding| proposal.add_finding(finding) }
+      unless plan.retirements.empty?
+        scopes = plan.retirements.map do |reference, _before, _after|
+          Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
+        end
+        proposal.add_step(FaceRecordStep.new(:updates => plan.retirements, :change => "retired"), :scopes => scopes)
+      end
       full, partial = plan.matches.partition { |match| match.fetch(:overlap).kind == :full }
       pair_ids = full.map { |match| pair_match(proposal, match) }
       pair_ids.concat(partial.map { |match| split_match(request, proposal, match) })
@@ -238,10 +244,8 @@ module PhComposer
       pair_id
     end
 
-    # Cutting a Face that already holds a Surface pair would strip that pair from the pieces and
-    # leave its counterpart naming a Face that no longer exists. Retiring the counterpart is the
-    # user's explicit step, and it needs the counterpart's Zone in the mutation set, so the cut
-    # refuses exactly as the full-match path does rather than quietly breaking the other endpoint.
+    # The plan must retire an old Surface pair before proposing a cut, including its surviving
+    # counterpart. Refuse an inconsistent plan rather than silently dropping one end of a pair.
     def check_unpaired!(match)
       paired = [:left, :right].select { |name| match.fetch(name).fetch(:record)["boundary_condition"] == "Surface" }
       return if paired.empty?

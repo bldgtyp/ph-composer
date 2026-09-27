@@ -342,16 +342,13 @@ and the overlay arrives and leaves with its mode
 reviewed, tested and recorded as implemented with its host gate unrun, and the gate was where both
 defects lived.
 
-The rest of that gate is still outstanding, and it carries three assumptions this code makes that
-nothing has measured:
-[`colour_by_walkthrough.rb`](../../tools/examples/authoring/colour_by_walkthrough.rb) asks each one.
-`Face#mesh` is assumed to triangulate a holed or concave Face into the fill's triangles, where the
-offline stub only fans an outer loop. `Sketchup::LayersObserver#onLayerChanged` is assumed to fire
-when a tag's visibility is toggled; the whole tag-invalidation path rests on it. Scene activation
-is expected to leave the drawing stale, because no observer this session subscribes to reports it,
-and whether that needs a frame change observer is a question for the gate rather than a decision
-taken here. Unclassified is drawn as a stippled outline rather than the PRD's hatch, which is a
-drawing claim B2 never tested.
+The 2026-09-26 [continuation](evidence/p1-d-broader-acceptance.md) verifies holed and concave
+`Face#mesh`, direct tag changes, scene tag visibility, native picking, ancestor visibility,
+Model-switch/close cleanup and Ruby rebuild cost. Scene tag visibility reaches the existing
+layer invalidation path on this host. The walkthrough's hole helper and the renderer's hidden
+ancestor handling were corrected. Complete occlusion, GPU frame timing and SketchUp's own
+Overlays-panel toggle remain open. Unclassified still uses a stippled outline rather than the
+PRD's hatch; that visual acceptance is not closed by this run.
 
 **Depends on:** P1-C. Owners: Zones and face assignment.
 

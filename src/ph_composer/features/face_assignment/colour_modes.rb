@@ -46,7 +46,8 @@ module PhComposer
             record = FACE_STORE.read(face.entity)
             value = record && record[field]
             ColourBy::Entry.new(:entity => face.entity, :transform => face.transform, :value => value,
-                                :label => value && labels.fetch(value, value), :state => state(record, value))
+                                :label => value && labels.fetch(value, value), :state => state(record, value),
+                                :path => zone.path + face.path)
           end
         end
       end

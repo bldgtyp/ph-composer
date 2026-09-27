@@ -75,7 +75,7 @@ Implemented in P1-D. A feature declares a mode in its own `install`, through the
 feature.colour_mode("ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone",
                     colours: ColourBy::Palette.ramp) do |model|
   Zones::Occurrences.zones(model).map do |zone|
-    ColourBy::Entry.new(entity: zone.entity, transform: zone.transform,
+    ColourBy::Entry.new(entity: zone.entity, transform: zone.transform, path: zone.path,
                         value: zone.record.fetch("id"), label: zone.record.fetch("name"))
   end
 end
@@ -87,6 +87,13 @@ entity an entry carries, so a later feature may colour a kind this one never ant
 entry's `transform` maps that entity's own contents to world. A value of nil is unclassified, and
 a projection that knows a record is only half filled in says `state: :incomplete`; the service
 owns the appearance of both, so those two states look the same in every mode.
+
+An entry may supply `path`, the full root-to-entity array of persistent IDs. Supply it when
+the entity belongs to an occurrence inside Groups or Components: the shared renderer then
+checks hidden and tag visibility along that occurrence's entire path. Supplied paths with missing
+entities or mismatched endpoints draw nothing. Omitting `path` preserves the original entity-only
+visibility contract.
+Visibility affects the drawing; the legend continues to count the mode's complete projection.
 
 The shared service owns registration, the one `Sketchup::Overlay` a Model gets, the viewport HUD
 legend and cache invalidation. It reads no record and knows no mode, and turning a mode on writes

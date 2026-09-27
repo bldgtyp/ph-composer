@@ -269,3 +269,81 @@ test("Zone ground depth follows display units and sends canonical millimetres", 
 
   assert.strictEqual(p.sent[0].payload.params.values.ground_depth_mm, 304.8);
 });
+
+test("a pristine selected Zone follows an authoritative snapshot refresh", function () {
+  var p = page(), payload = snapshot();
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  section.querySelector(".row-target").listeners.click({});
+  payload = snapshot();
+  payload.sections["ph_composer.zones.overview"].value.zones[0].values = {
+    name: "north", building_segment: "tower", level: "2", ground_depth_mm: 12
+  };
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+
+  assert.strictEqual(byLabel(section, "Zone name").value, "north");
+  assert.strictEqual(byLabel(section, "Building-Segment").value, "tower");
+  assert.strictEqual(byLabel(section, "Level").value, "2");
+  assert.strictEqual(byLabel(section, "Ground depth").value, "12");
+});
+
+test("a selected Zone keeps its draft and stale guard through a native unit refresh", function () {
+  var p = page(), initial = snapshot(), refreshed;
+  initial.sections["ph_composer.zones.overview"].value.zones[0].values.name = "east";
+  p.panel.receive({ type: "panel.snapshot", payload: initial });
+  var section = p.query("[data-section='ph_composer.overview']");
+  section.querySelector(".row-target").listeners.click({});
+  var name = byLabel(section, "Zone name"), depth = byLabel(section, "Ground depth");
+  name.value = "Unsaved east draft";
+  name.listeners.input({});
+  depth.value = "12 in";
+  depth.listeners.input({});
+
+  p.modules.unit_preferences.set("unit_system", "SI");
+  p.panel.repaint();
+  refreshed = snapshot();
+  refreshed.sections["ph_composer.zones.overview"].value.zones[0].values.name = "native east";
+  p.panel.receive({ type: "panel.snapshot", payload: refreshed });
+
+  assert.strictEqual(byLabel(section, "Zone name"), name);
+  assert.strictEqual(byLabel(section, "Zone name").value, "Unsaved east draft");
+  assert.strictEqual(byLabel(section, "Ground depth"), depth);
+  assert.strictEqual(byLabel(section, "Ground depth").value, "12 in");
+  section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), {
+    reference: { zone_id: "zon_a", zone_path: [100] },
+    values: { name: "Unsaved east draft", building_segment: "house", level: null, ground_depth_mm: 304.8 },
+    expected_values: { name: "east", building_segment: "house", level: null, ground_depth_mm: 0 }
+  });
+  assert.strictEqual(name.disabled, true);
+  assert.strictEqual(depth.disabled, true);
+  assert.strictEqual(section.querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Save";
+  })[0].disabled, true);
+  refreshed = snapshot();
+  refreshed.sections["ph_composer.zones.overview"].value.zones[0].values = {
+    name: "Unsaved east draft", building_segment: "house", level: null, ground_depth_mm: 304.8
+  };
+  p.panel.receive({ type: "panel.snapshot", payload: refreshed });
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
+    session: "session-a", outcome: { status: "completed", value: { zone_id: "zon_a" } } } });
+  assert.strictEqual(name.disabled, false);
+  assert.strictEqual(depth.disabled, false);
+  refreshed = snapshot();
+  refreshed.sections["ph_composer.zones.overview"].value.zones[0].values = {
+    name: "canonical east", building_segment: "house", level: null, ground_depth_mm: 305
+  };
+  p.panel.receive({ type: "panel.snapshot", payload: refreshed });
+  assert.strictEqual(name.value, "canonical east");
+  assert.strictEqual(depth.value, "305");
+  name.value = "Saved east draft";
+  name.listeners.input({});
+  section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[1].payload.params.expected_values)), {
+    name: "canonical east", building_segment: "house", level: null, ground_depth_mm: 305
+  });
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[1].payload.request_id,
+    session: "session-a", outcome: { status: "refused", message: "The Zone changed." } } });
+  assert.strictEqual(name.disabled, false, "a refused save leaves the draft available for correction");
+  assert.strictEqual(depth.disabled, false);
+});

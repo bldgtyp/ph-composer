@@ -15,20 +15,108 @@ module PhComposer
       # each pairing needs, and every case reported instead of paired. Reading is unbounded and
       # writing is not, so a pairing that would touch a Zone outside the scope refuses the whole
       # operation rather than quietly widening what the user selected (Q18).
-      Plan = Struct.new(:matches, :findings, keyword_init: true)
+      Plan = Struct.new(:matches, :findings, :retirements, keyword_init: true)
 
       def plan(model, references)
-        scope = references.map { |reference| Occurrences.resolve_zone(model, reference, :mutable => true) }
+        index = Index.new(model)
+        scope = references.map do |reference|
+          Occurrences.resolve_zone(model, reference, :mutable => true, :index => index)
+        end
         if scope.map(&:path).uniq.length != scope.length
           raise CodedError.new("target.same_zone", "Solve needs distinct Zone occurrences.")
         end
 
-        sides = Occurrences.zones(model).to_h { |zone| [zone.path, candidates(zone)] }
+        sides = index.zones.to_h { |zone| [zone.path, candidates(zone, index)] }
         in_scope = scope.map(&:path)
         found = examine(sides, in_scope)
-        Plan.new(:matches => resolve_contested(found.fetch(:matches), found.fetch(:findings)),
-                 :findings => found.fetch(:findings))
+        matches = resolve_contested(found.fetch(:matches), found.fetch(:findings))
+        kept = matches.select do |match|
+          match.fetch(:overlap).kind == :full && current_pair?(match.fetch(:left), match.fetch(:right))
+        end.flat_map { |match| [:left, :right].map { |name| face_key(match.fetch(name)) } }
+        updates = retirement_updates(model, scope, kept, index)
+        matches.each do |match|
+          [:left, :right].each do |name|
+            side = match.fetch(name)
+            update = updates[face_key(side)]
+            side[:record] = update.last if update
+          end
+        end
+        Plan.new(:matches => matches, :findings => found.fetch(:findings), :retirements => updates.values)
       end
+
+      # Retire every old pair not retained by this solve, even when its geometry no longer meets
+      # any candidate. The detached after-records also become the input to any replacement pair.
+      def retirement_updates(model, scope, kept, index)
+        updates = {}
+        scope.each do |zone|
+          index.faces(zone).each do |occurrence|
+            record = FaceAssignment::FACE_STORE.read(occurrence.entity)
+            next unless record && record["boundary_condition"] == "Surface"
+
+            reference = occurrence.reference(record.fetch("id"))
+            key = Occurrences.key(reference)
+            next if kept.include?(key) || updates.key?(key)
+
+            Occurrences.resolve_face(model, reference, :mutable => true, :index => index)
+            FaceAssignment::Schema.validate!(record)
+            envelope = record.fetch("adjacency")
+            unless envelope.fetch("self") == reference
+              raise CodedError.new("adjacency.unresolved", "The Surface endpoint no longer matches its stored path.")
+            end
+            counterpart = retirement_counterpart(model, envelope.fetch("counterpart"), index)
+            if counterpart
+              check_retirement_pair!(occurrence, record, counterpart, scope.map(&:path), updates)
+            end
+            updates[key] = [reference, record, retired(record)]
+          end
+        end
+        updates
+      end
+
+      def check_retirement_pair!(occurrence, record, counterpart, in_scope, updates)
+        other = FaceAssignment::FACE_STORE.read(counterpart.entity)
+        FaceAssignment::Schema.validate!(other)
+        reference = occurrence.reference(record.fetch("id"))
+        other_reference = counterpart.reference(other.fetch("id"))
+        unless other["boundary_condition"] == "Surface" &&
+               other.dig("adjacency", "pair_id") == record.dig("adjacency", "pair_id") &&
+               other.dig("adjacency", "counterpart") == reference &&
+               other.dig("adjacency", "self") == other_reference
+          raise CodedError.new("adjacency.unresolved", "The reciprocal Surface endpoint cannot be retired safely.")
+        end
+        check_scope!({ :occurrence => occurrence }, { :occurrence => counterpart }, in_scope)
+        updates[Occurrences.key(other_reference)] = [other_reference, other, retired(other)]
+      end
+
+      # A missing path may mean cut/paste or an exploded Zone, not deletion. Only the absence of
+      # both the native Face id and its authored id throughout live geometry confirms deletion.
+      # Ambiguity and every other resolution refusal retain their original meaning.
+      def retirement_counterpart(model, reference, index)
+        Occurrences.resolve_face(model, reference, :mutable => true, :index => index)
+      rescue CodedError => error
+        raise unless error.code == "target.not_found"
+
+        if endpoint_survives?(model.entities, reference)
+          raise CodedError.new("adjacency.unresolved", "The Surface endpoint survives outside its stored path.")
+        end
+        nil
+      end
+
+      def endpoint_survives?(entities, reference)
+        entities.any? do |entity|
+          if entity.is_a?(Sketchup::Face)
+            entity.persistent_id == reference.fetch("entity_path").last ||
+              FaceAssignment::FACE_STORE.read(entity)&.fetch("id", nil) == reference.fetch("entity_id")
+          elsif entity.is_a?(Sketchup::Group)
+            endpoint_survives?(entity.entities, reference)
+          elsif entity.is_a?(Sketchup::ComponentInstance)
+            endpoint_survives?(entity.definition.entities, reference)
+          else
+            false
+          end
+        end
+      end
+      private_class_method :retirement_updates, :check_retirement_pair!, :retirement_counterpart, :endpoint_survives?
 
       # Every cross-Zone Face pairing, classified. All Zones are read; the scope only limits writing.
       def examine(sides, in_scope)
@@ -57,7 +145,7 @@ module PhComposer
         { :matches => matches, :findings => findings }
       end
 
-      # Q18: a pairing needs to write both endpoints, so both Zones must be in the mutation set.
+      # Q18: making or retiring a pair writes both endpoints, so both Zones must be in the mutation set.
       # Refusing names both, so the caller can offer a retry that includes them.
       def check_scope!(left, right, in_scope)
         outside = [left, right].map { |side| side.fetch(:occurrence).zone }
@@ -66,7 +154,7 @@ module PhComposer
 
         raise CodedError.new(
           "scope.incomplete",
-          "Pairing these Faces would change #{outside.map { |zone| zone.record.fetch('name') }.join(' and ')}, " \
+          "Updating this adjacency would change #{outside.map { |zone| zone.record.fetch('name') }.join(' and ')}, " \
           "which is outside the Zones being solved. Include both Zones and solve again.",
           "zones" => [left, right].map { |side| side.fetch(:occurrence).zone.reference }
         )
@@ -217,8 +305,8 @@ module PhComposer
         found
       end
 
-      def candidates(zone)
-        Occurrences.faces(zone).filter_map do |occurrence|
+      def candidates(zone, index)
+        index.faces(zone).filter_map do |occurrence|
           record = FaceAssignment::FACE_STORE.read(occurrence.entity)
           next unless record && record["face_type"]
 
@@ -235,7 +323,14 @@ module PhComposer
       def current_pair?(left, right)
         left_record = left.fetch(:record)
         right_record = right.fetch(:record)
-        left_record.dig("adjacency", "pair_id") == right_record.dig("adjacency", "pair_id") &&
+        left_reference = left.fetch(:occurrence).reference(left_record.fetch("id"))
+        right_reference = right.fetch(:occurrence).reference(right_record.fetch("id"))
+        left_record["boundary_condition"] == "Surface" && right_record["boundary_condition"] == "Surface" &&
+          left_record.dig("adjacency", "self") == left_reference &&
+          right_record.dig("adjacency", "self") == right_reference &&
+          left_record.dig("adjacency", "counterpart") == right_reference &&
+          right_record.dig("adjacency", "counterpart") == left_reference &&
+          left_record.dig("adjacency", "pair_id") == right_record.dig("adjacency", "pair_id") &&
           left_record.dig("adjacency", "counterpart", "entity_id") == right_record["id"] &&
           right_record.dig("adjacency", "counterpart", "entity_id") == left_record["id"] &&
           left_record.dig("adjacency", "self_geometry", "digest") == left.fetch(:geometry).digest &&

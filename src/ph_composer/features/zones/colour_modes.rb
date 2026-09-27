@@ -34,7 +34,7 @@ module PhComposer
         Occurrences.zones(model).map do |zone|
           value, label = yield(zone.record)
           ColourBy::Entry.new(:entity => zone.entity, :transform => zone.transform, :value => value,
-                              :label => label)
+                              :label => label, :path => zone.path)
         end
       end
     end

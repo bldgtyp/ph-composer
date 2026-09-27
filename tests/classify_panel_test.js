@@ -109,7 +109,7 @@ test("the picker lists the Attached zones and choosing one names it", function (
     { field: "attached_zone_id", value: "atz_1" });
 });
 
-test("New attached zone creates one under a free name and chooses it", function () {
+test("New attached zone waits for form submit, then creates and chooses it", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette(),
     [{ kind: "ph_composer.face_assignment.attached_zone", id: "atz_1", values: { name: "Garage" } }]) });
@@ -119,15 +119,22 @@ test("New attached zone creates one under a free name and chooses it", function 
 
   create.listeners.click({});
 
+  assert.strictEqual(p.sent.length, 0, "opening the form writes nothing");
+  var dialog = p.context.document.querySelector("dialog");
+  dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+
   assert.strictEqual(p.sent[0].type, "action.invoke", "a record is a Model change, unlike the palette");
   assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.attached_zone.save");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { values: { name: "Attached zone 1", kind: "other" } },
+    { values: { name: "Attached zone 1", kind: "other", temperature_reduction_factor: 0.95 } },
     "the first name nothing is called yet, so a delete does not make two records share one");
 
   p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
     session: "session-a", outcome: { status: "completed", value: { id: "atz_2" } } } });
 
+  assert.strictEqual(p.context.document.querySelector("dialog"), null);
+  assert.strictEqual(p.context.document.activeElement.textContent, "New attached zone");
+  assert.strictEqual(p.context.document.activeElement.isConnected, true);
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[1].payload.params)),
     { field: "attached_zone_id", value: "atz_2" });
 });
@@ -160,4 +167,70 @@ test("an unchanged snapshot leaves the controls exactly where they were", functi
 
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" })) });
   assert.notStrictEqual(chip(p, "Wall"), before, "and repainted once the palette really changes");
+});
+
+function openNew(p) {
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
+  var trigger = p.section().querySelectorAll("button").filter(function (node) {
+    return node.textContent === "New attached zone";
+  })[0];
+  trigger.listeners.click({});
+  return { trigger: trigger, dialog: p.context.document.querySelector("dialog") };
+}
+
+test("Cancel and Escape discard the draft without changing the Model or palette", function () {
+  ["button", "escape"].forEach(function (route) {
+    var p = page(), opened = openNew(p);
+    opened.dialog.querySelector("input").value = "Uncommitted garage";
+    if (route === "escape") opened.dialog.listeners.cancel({ preventDefault: function () {} });
+    else opened.dialog.querySelectorAll("button").filter(function (node) {
+      return node.textContent === "Cancel";
+    })[0].listeners.click({});
+    assert.strictEqual(p.sent.length, 0);
+    assert.strictEqual(p.context.document.querySelector("dialog"), null);
+    assert.strictEqual(p.context.document.activeElement, opened.trigger);
+  });
+});
+
+test("a refused create keeps the draft and can be corrected and resubmitted", function () {
+  var p = page(), opened = openNew(p), form = opened.dialog.querySelector("form");
+  var name = opened.dialog.querySelector("[aria-label='Name']");
+  var factor = opened.dialog.querySelector("[aria-label='Temperature reduction factor']");
+  name.value = "Garage";
+  factor.value = "0.8";
+  form.listeners.submit({ preventDefault: function () {} });
+  opened.dialog.listeners.cancel({ preventDefault: function () {} });
+  assert.strictEqual(p.context.document.querySelector("dialog"), opened.dialog, "pending cannot be cancelled");
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
+    session: "session-a", outcome: { status: "refused", message: "Try again. Nothing was written." } } });
+  assert.strictEqual(p.context.document.querySelector("dialog"), opened.dialog);
+  assert.strictEqual(name.value, "Garage");
+  assert.strictEqual(factor.value, "0.8");
+  assert.strictEqual(p.sent.length, 1, "a refusal never chooses a record");
+  form.listeners.submit({ preventDefault: function () {} });
+  assert.strictEqual(p.sent.length, 2);
+});
+
+test("empty names and invalid factors keep the form open without a request", function () {
+  var p = page(), opened = openNew(p), form = opened.dialog.querySelector("form");
+  var name = opened.dialog.querySelector("[aria-label='Name']");
+  var factor = opened.dialog.querySelector("[aria-label='Temperature reduction factor']");
+  name.value = " ";
+  form.listeners.submit({ preventDefault: function () {} });
+  name.value = "Garage";
+  ["", "-1", "1.1", "bad"].forEach(function (value) {
+    factor.value = value;
+    form.listeners.submit({ preventDefault: function () {} });
+  });
+  assert.strictEqual(p.sent.length, 0);
+  assert.strictEqual(p.context.document.querySelector("dialog"), opened.dialog);
+});
+
+test("changing Model session discards an unsaved Attached zone draft", function () {
+  var p = page(), opened = openNew(p), next = snapshot(palette());
+  next.session = "session-b";
+  p.panel.receive({ type: "panel.snapshot", payload: next });
+  assert.strictEqual(p.context.document.querySelector("dialog"), null);
+  assert.strictEqual(opened.dialog.isConnected, false);
+  assert.strictEqual(p.sent.length, 0);
 });

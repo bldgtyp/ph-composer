@@ -97,7 +97,7 @@ module PhComposer
 
       # The split rules: the piece that kept the original native persistent id keeps the Face id.
       # If none did, every piece is a new Face. Nothing has to be retired in that case here,
-      # because a Face still holding a Surface pair is refused before the cut is ever proposed.
+      # because the proposal retires any old Surface pair before applying this cut.
       def assign(side, occurrence, before, shared, rest)
         survivor = [shared, *rest].find { |piece| piece.persistent_id == side.fetch("persistent_id") }
         fresh = side.fetch("fresh_ids").dup

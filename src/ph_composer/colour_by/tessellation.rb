@@ -2,6 +2,40 @@
 
 module PhComposer
   module ColourBy
+    # Visibility belongs to an occurrence, not to its leaf entity: two instances may share a Face
+    # while only one is hidden. Cache parent paths and entity lookup for one drawing rebuild only.
+    class OccurrenceVisibility
+      def initialize(model)
+        @resolved = { [] => [model, true] }
+        @children = {}
+      end
+
+      def visible?(path, entity)
+        return true if path.nil? # Older projections provide only the leaf's visibility.
+        return false unless path.is_a?(Array) && !path.empty?
+
+        resolved, visible = resolve(path)
+        resolved.equal?(entity) && visible
+      end
+
+      private
+
+      def resolve(path)
+        return @resolved[path] if @resolved.key?(path)
+
+        parent, visible = resolve(path[0...-1])
+        entity = parent && children(parent)[path.last]
+        @resolved[path] = [entity, visible && entity && !Tessellation.skipped?(entity)]
+      end
+
+      def children(parent)
+        @children[parent] ||= begin
+          entities = parent.respond_to?(:entities) ? parent.entities : Tessellation.child_entities(parent)
+          Array(entities&.to_a).to_h { |entity| [entity.persistent_id, entity] }
+        end
+      end
+    end
+
     # World-space triangles and outline segments for whatever entity a mode's projection hands over.
     # The service caches what this returns; nothing here reads a record, so a mode may colour any
     # entity kind without the shared service learning about it.
@@ -89,7 +123,7 @@ module PhComposer
         end
       end
 
-      private_class_method :collect, :child_entities, :skipped?, :add_face
+      private_class_method :collect, :add_face
     end
   end
 end

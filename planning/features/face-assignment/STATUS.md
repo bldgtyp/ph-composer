@@ -25,6 +25,10 @@ Classify tool itself, with its palette on a native menu, and Locate, which has n
 the faces table carries one. D7 supplies that table and the panel legend; its host continuation
 and fixes are recorded in [the evidence](../../phase-one/evidence/p1-d-overview.md).
 
+The subsequent [A05 to A09 host run](../../phase-one/evidence/p1-d-broader-acceptance.md)
+records additional lifecycle evidence and corrections. Follow that record and the shared
+acceptance register for cases still open.
+
 ## Blockers
 
 - The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
