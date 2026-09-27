@@ -30,7 +30,7 @@
 #   7. Does a chip edit in the faces table refuse cleanly when the Model changed underneath, and
 #      does the row go back to the value the Model holds rather than the one the user picked?
 #   8. Does the panel repaint once per viewport command, or twice? `Panel#view` cancels the queued
-#      refresh; `refresh_count` below is how that is read back.
+#      refresh; a snapshot count is how that is read back; `refresh_pending?` races the coalesced timer.
 module OverviewWalkthrough
   API = PhComposer::API
   PREFIX = "p1d_overview_"

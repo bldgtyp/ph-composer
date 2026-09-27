@@ -1,12 +1,30 @@
 # Phase 1 status
 
-DATE: 2026-09-25
-STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized and D1 to D7 are implemented, with D7's host gate outstanding.
+DATE: 2026-09-26
+STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D is authorized and D1 to D7 are implemented. D7's host gate is part run: five of eight questions answered, eight findings open, three questions outstanding.
 ISSUE: none (local implementation packet)
 
-## Resume here: P1-D D7's host gate, 2026-09-25
+## Resume here: P1-D D7's host gate, part run 2026-09-26
 
-**State.** D7 is implemented on the branch and every offline gate is green: `make ci` on Ruby 3.2.2
+**Where it stands.** The gate ran on SketchUp 26.1.188 / Ruby 3.2.2 / macOS 26.6.2 on
+2026-09-26. Questions 2, 3, 6 and 8 pass, question 4 passes on repaint and fails on the palette,
+and **eight findings are open**, the worst being F4: all three Zone-kind Colour-by modes raise
+`NoMethodError` on any real Group, because `Tessellation.collect` asks an `Edge` for a
+`transformation`. What was observed, in full, is
+[evidence/p1-d-overview.md](evidence/p1-d-overview.md).
+
+Questions 1, 7 and the restart half of 5 remain, and are written up for an operator in
+[D7-GATE-HANDOFF.md](D7-GATE-HANDOFF.md). The fix pass follows the gate, in one batch, and
+re-verifies on the same host.
+
+Ed ruled on 2026-09-26 that `Palette::MUTED` changes to a wash or a hatch: grey is a real value
+in the palette and set-aside must not compete with it (F6).
+
+The original brief for the gate follows, kept for its reasoning. Two corrections it needs are
+recorded in the evidence file: question 8 cannot be answered with `refresh_pending?`, which races
+a coalesced timer, and question 1 measures nothing until the crowd is classified.
+
+**State as of implementation.** D7 is implemented on the branch and every offline gate is green: `make ci` on Ruby 3.2.2
 and the 2.7.2 floor, 441 Ruby tests with 1,760 assertions, 157 JavaScript tests, rubocop clean over
 160 files, coverage 96.6% Ruby, 98.0% JavaScript, 97.5% Python. Both independent reviews have run,
 one on the contribution seam and one on the three screens, and every finding is fixed and covered by
@@ -31,7 +49,7 @@ quit every SketchUp, relaunch.
 
 ```sh
 make install
-uv run tools/hostkit/host_bridge.py launch _private/host/run.skp --fresh-from _private/host/blank.skp
+uv run tools/hostkit/host_bridge.py launch _private/host/run.skp --fresh-from _private/host/blank-template.skp
 uv run tools/hostkit/host_bridge.py eval \
   'load "/absolute/path/to/ph-composer/tools/examples/authoring/overview_walkthrough.rb"; OverviewWalkthrough.setup'
 ```
