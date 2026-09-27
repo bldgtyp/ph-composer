@@ -66,7 +66,7 @@ $phc_snap = 0
 module PhComposer
   module Panel
     class << self
-      unless respond_to?(:publish_snapshot_orig)
+      unless method_defined?(:publish_snapshot_orig)
         alias_method :publish_snapshot_orig, :publish_snapshot
         def publish_snapshot(session); $phc_snap += 1; publish_snapshot_orig(session); end
       end
@@ -121,9 +121,14 @@ s.refresh.cancel
 **Do:** on the `Living → Wall 1` row, open the **Boundary** dropdown and choose **To neighbour**.
 
 **Record:** whether a refusal message appeared and what it said; what the row's Boundary cell
-shows once things settle; and the state read-back. Then trigger a real refresh
-(`/tmp/b eval 'PhComposer::Sessions.current.refresh.run'`, or make any small change in the
-viewport) and confirm the row shows `Ground`.
+shows once things settle; and the state read-back. Then republish and confirm the row shows
+`Ground`:
+
+```sh
+/tmp/b eval 'PhComposer::Panel.send(:publish_snapshot, PhComposer::Sessions.current); "published"'
+```
+
+`CoalescedTimer` has only `schedule`, `cancel` and `pending?` — there is no `run` to call.
 
 **Pass:** a visible refusal, and the row ends on `Ground`.
 
@@ -142,19 +147,21 @@ is the thing nothing has measured, would stay unmeasured. Classify the crowd fir
 /tmp/b eval 'OverviewWalkthrough.crowd(500)'         # one Zone, 500 unclassified Faces
 ```
 
-Then classify them. `ph_composer.face_assignment.classify` takes many references in one `faces`
-array under one `expected_values`, and every crowd Face has `{}`, so one call does it:
+Then classify them. **One call will not do it:** `check_limit!` refuses a gesture over
+`GESTURE_FACE_LIMIT`, which is **250**, with `gesture.too_large`. Chunk it:
 
 ```sh
 /tmp/b eval '
 c = OverviewWalkthrough::Client.new
 refs = c.query("ph_composer.face_assignment.list").fetch("value").fetch("faces")
         .select { |f| f["values"].empty? }.map { |f| f.fetch("reference") }
-c.invoke("ph_composer.face_assignment.classify",
-         {"faces" => refs,
-          "intent" => {"face_type" => {"mode" => "set", "value" => "Wall"},
-                       "boundary_condition" => {"mode" => "set", "value" => "Outdoors"}},
-          "expected_values" => {}})
+refs.each_slice(200) do |slice|
+  c.invoke("ph_composer.face_assignment.classify",
+           {"faces" => slice,
+            "intent" => {"face_type" => {"mode" => "set", "value" => "Wall"},
+                         "boundary_condition" => {"mode" => "set", "value" => "Outdoors"}},
+            "expected_values" => {}})
+end
 OverviewWalkthrough.report'
 ```
 
@@ -207,9 +214,9 @@ the next launch. Two runs:
 
 **Run B, the poisoned mode.** Do this one second, and expect it to be ugly.
 
-1. `/tmp/b eval 'PhComposer::Preferences.colour_by_mode = "ph_composer.zones.by_building_segment"'`
+1. `/tmp/b eval 'PhComposer::Preferences.set("colour_by_mode", "ph_composer.zones.by_building_segment")'`
    — or reach the same place through the UI by choosing **Building-Segment**, which is how a user
-   would.
+   would. There is no `colour_by_mode=` writer; `set` is the only route, and it refuses `nil`.
 2. `quit`, `launch`, open the panel.
 3. Record: does the extension load, does the panel open, does anything say the remembered mode
    failed, and can the user get back to a working mode without editing preferences by hand.
@@ -218,8 +225,16 @@ the next launch. Two runs:
 survivable and legible: the panel opens, the user is told, and Off or another mode is reachable.
 Note exactly where it falls short, because that shapes the F5 fix.
 
-Afterwards, put the preference back:
-`/tmp/b eval 'PhComposer::Preferences.colour_by_mode = nil'`.
+Afterwards, clear the preference. It is user-wide, so a stuck one follows Ed into his other
+SketchUp work, and `Preferences.set` will not take `nil` — write the default directly:
+
+```sh
+/tmp/b eval 'Sketchup.write_default("ph_composer", "colour_by_mode", nil); PhComposer::Preferences.colour_by_mode'
+```
+
+**If the extension will not load at all** and the bridge cannot reach `PhComposer`, the same
+write still works, because `Sketchup.write_default` is the host's own:
+`/tmp/b eval 'Sketchup.write_default("ph_composer", "colour_by_mode", nil)'`.
 
 ---
 
