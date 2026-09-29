@@ -147,8 +147,11 @@ The Attached-zone dialog review found no blocking issue.
 Do not close A05 to A09 wholesale from these individual cases. Unique moved-path recovery is now
 verified; remaining identity work includes native split-Face UUID recovery (see the
 [2026-09-29 reference checks](p1-d-native-references.md)), the pending-Face atomic inline-create workflow,
-isolated GPU timing, unclassified hatch visual acceptance and any named keyboard/context cases
-not evidenced above. Native Overlays-panel toggles, foreground occlusion, alpha and orbit are
+isolated GPU timing and the remaining A06/A07 cases. The
+[hatch continuation](p1-d-hatch-and-invalidation.md) verifies the PRD hatch; the
+[keyboard/context continuation](p1-d-keyboard-context.md) completes A09's named current-host cases.
+The [adjacency boundary continuation](p1-d-adjacency-boundaries.md) completes A05's named
+current-host cases. Native Overlays-panel toggles, foreground occlusion, alpha and orbit are
 verified in the [2026-09-29 Colour-by continuation](p1-d-colour-by-continuation.md), with feature
 redraw/cadence measured at 1,032 triangles. SketchUp 2023, Windows, P1-E/F, public distribution
 and certification acceptance remain outside this run.

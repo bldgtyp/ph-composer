@@ -259,6 +259,12 @@ records name the same two endpoints. Geometry stamps check freshness and never i
   explicit solver reacquires resulting face references and establishes only valid reciprocal
   pairs. Classifications other than Surface and surviving payloads are preserved; conflicting
   payloads that cannot be retained must be reported and resolved before a plugin-owned edit.
+  Explicit split-Face identity repair retains the old Face UUID on the piece proved by a stored
+  original endpoint path. When that evidence is absent, the user explicitly chooses the retaining
+  piece. Other pieces receive new Face UUIDs; geometry matching never chooses the identity owner.
+  Retire invalid Surface links reciprocally inside the previewed mutation scope, retain supported
+  non-Surface classification and payloads, and refuse unsafe extension data before any write.
+  Ed accepted this policy on 2026-09-29 (Phase 1 P1-Q5).
 - Restore Zone preserves an unambiguous recovered Zone UUID, but new paths do not make old pairs
   current. Report them unresolved and require an explicit solve. Undo/Redo restores the matching
   geometry and record state together; save/reopen must not turn unresolved pairs into current ones.
@@ -385,6 +391,7 @@ Interviewed 2026-09-18, three rounds, Ed's answers. Each is cited where it appli
 | Q23 | Make Zone entry points | Toolbar, right-click on a group, and inline from the classification tool; names "Zone 1", "Zone 2" |
 | Q24 | Zone volume | Not shown, not exported; Vn50 and iCFA stay Space-derived |
 | Q25 | A copied Zone | Shared storage; repair refuses until the user runs SketchUp's Make Unique. PH-Composer never makes a Group unique inside a repair |
+| Q26 | Native split-Face identity | Retain one old UUID through a provable stored original path or explicit user choice; allocate new UUIDs to the other pieces, retire invalid pairs and refuse unsafe payloads before writes |
 
 ## Acceptance shape
 

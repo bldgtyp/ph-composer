@@ -22,7 +22,9 @@ The [keyboard/context continuation](evidence/p1-d-keyboard-context.md) verifies 
 quantity save/Undo/Redo, tree/focus/draft behavior and held-button Model/edit-context cancellation
 with fresh-host corrections. A09's named current-host cases pass. The
 [hatch and invalidation correction](evidence/p1-d-hatch-and-invalidation.md) verifies the PRD hatch
-and immediate public-action cache updates; isolated GPU timing remains open.
+and immediate public-action cache updates; isolated GPU timing remains open. The
+[adjacency boundary continuation](evidence/p1-d-adjacency-boundaries.md) completes A05's named
+current-host checks, with native Undo/Redo and final reciprocal-reference reopen verification.
 
 ## Read order
 

@@ -77,3 +77,9 @@ Undo/Redo, shared-copy refusal and limited Restore. Remaining cases are listed i
 | 2026-09-20 | P1-A complete. Bound entity/endpoint/proposal contracts and passed the native geometry investigation; Make Zone and solver implementation remain in later stages. |
 | 2026-09-20 | P1-B complete. Make Zone, Zone details, explicit occurrence reads and entity persistence passed offline and on SketchUp 26.1.188 through Undo/Redo and reopen. |
 | 2026-09-20 | P1-C complete on the implementation branch. Whole-wall adjacency, stale/retire behavior and the exact two-Zone HBJSON proof passed offline and on SketchUp 26.1.188. |
+
+The [native adjacency boundary continuation](../../phase-one/evidence/p1-d-adjacency-boundaries.md)
+completes A05's named current-host plane/angle, sliver, same-normal and scope cases, with native
+Undo/Redo and final reopen/reference verification. Native split recovery remains A06 work;
+[P1-Q5](../../phase-one/DECISIONS.md#p1-q5-native-split-identity-frontier) records Ed's accepted
+policy for which piece retains the old Face UUID; public recovery implementation remains open.

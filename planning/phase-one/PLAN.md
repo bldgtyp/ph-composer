@@ -165,6 +165,8 @@ focused tests; the stage closes only when A04 to A09 all have evidence.
 The [keyboard/context continuation](evidence/p1-d-keyboard-context.md) corrects panel Escape
 and native-menu tool-state refresh and verifies layered cancellation without Model writes.
 Held-button Model/edit-context cancellation and the remaining named current-host A09 cases pass.
+The [adjacency boundary continuation](evidence/p1-d-adjacency-boundaries.md) completes A05's named
+current-host plane/angle, sliver, same-normal and scope cases with native Undo/Redo and reopen.
 
 D6 is the gesture itself, distinct from D1's operation. A04's atomic-gesture row needs both.
 

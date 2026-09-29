@@ -1,7 +1,7 @@
 # Phase 1 decisions and evidence still needed
 
-DATE: 2026-09-20
-STATUS: METr deferral and P1-C fixture composition resolved; the P1-D gesture bound is settled pending host measurement; P1-E runtime-wheel selection remains open.
+DATE: 2026-09-29
+STATUS: METr deferral and P1-C fixture composition resolved; the P1-D gesture bound and split-Face identity policy are settled; P1-E runtime-wheel selection remains open.
 ISSUE: none (local planning draft)
 
 ## Product decisions
@@ -12,6 +12,7 @@ ISSUE: none (local planning draft)
 | P1-Q2 | Which wheels does canonical translation need? | P1-C proved the native development path with exact direct pins recorded in its evidence. P1-E still selects and vendors the minimal Pyodide wheel set, reviews honeybee-ph for that path and retains Pyodide 0.24.1. PHX-specific acceptance remains deferred | Partially resolved by P1-C; shipped runtime selection remains P1-E |
 | P1-Q3 | Confirm the development-only construction proof? | Resolved in P1-C: the deterministic provider lives under tools only, is absent from the RBZ, and the normal composition refuses to build Rooms without an authored provider. No persisted placeholder Assembly and no missing-reference fallback | Resolved 2026-09-20; retain through P1-E |
 | P1-Q4 | Remaining Export interview, Q2/Q4 | No canonical files on blocking validation, no implicit SKP save, HBJSON/report always selected. Exporter defaults under Q5 wait with METr | P1-E workflow |
+| P1-Q5 | Which split piece retains the old Face UUID? | Ed chose explicit repair: use a provable stored original path, otherwise ask the user to choose the retaining piece; allocate new UUIDs to the other pieces | Resolved 2026-09-29; implementation/native acceptance remain A06 |
 
 Export Q1 is already D2: keep the canonical pair on optional-exporter failure. Q3's checked
 stale-adjacency preflight is already accepted by the Zones interview. Do not reopen either.
@@ -63,3 +64,22 @@ agent adapter, SketchUp 2023/Windows support proof and public naming remain sepa
 
 The METr deferral is recorded in `planning/DECISIONS.md` and the roadmap. Once Ed chooses the
 remaining recommendations, update the owning PRD and this table.
+
+## P1-Q5: native split identity frontier
+
+The native reference run establishes that SketchUp copies one Face UUID onto both split pieces.
+Surface records retain a prior endpoint path; ordinary non-Surface Face records do not persist
+an original entity path. The current schema therefore cannot always prove which piece retains
+the original authored identity. The Zones PRD prohibits resolving identity ambiguity by geometry.
+
+Ed accepted the policy on 2026-09-29. It keeps one old identity only through a unique stored original path or explicit user
+choice. Other pieces receive new UUIDs. Repair is explicit and previewed, with invalid Surface
+links retired reciprocally inside the declared mutation scope, supported classification and
+payloads retained, and unsafe extension data refused before writes. It does not silently create
+new adjacencies; a subsequent explicit Solve remains subject to the one-to-many solver boundary.
+Face/Zone extension-reference registration and incoming-reference handling still require their
+own contract design; selecting this identity policy does not establish those capabilities.
+
+The rejected alternative gave every resulting piece a new identity, so existing references to
+the old identity would require explicit resolution. The accepted policy authorizes the recovery
+implementation within P1-D; its public contract and native evidence remain to be completed.
