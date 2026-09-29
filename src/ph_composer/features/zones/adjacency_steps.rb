@@ -103,16 +103,17 @@ module PhComposer
         fresh = side.fetch("fresh_ids").dup
         records = [shared, *rest].map do |piece|
           id = piece.equal?(survivor) ? before.fetch("id") : fresh.shift
-          [piece, carried(before, id)]
+          [piece, carried(before, id, side)]
         end
         { :occurrence => occurrence, :shared => shared, :pieces => records,
           :survivor => survivor, :before => before, :affected => [] }
       end
 
-      # Non-Surface fields, user_data and extension payloads follow every piece. A copied adjacency
-      # is not a relationship, so it never does.
-      def carried(before, id)
+      # Non-Surface fields and user_data follow every piece. Declared extension references in a
+      # new piece were remapped during preview; an unchanged Face keeps its original payload.
+      def carried(before, id, side)
         record = DeepCopy.call(before).merge("id" => id)
+        record["extension_data"] = DeepCopy.call(side.fetch("extension_copies").fetch(id)) if id != before.fetch("id")
         record.delete("adjacency")
         record.delete("boundary_condition") if before["boundary_condition"] == "Surface"
         FaceAssignment::Schema.validate!(record)

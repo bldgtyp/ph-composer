@@ -250,9 +250,11 @@ records name the same two endpoints. Geometry stamps check freshness and never i
 - Duplicate Zone UUIDs are ambiguous, not aliases. Refuse pair mutation involving them and report
   them. An explicit identity repair identifies the copied Zone occurrence, assigns it a fresh
   foundation UUID, updates its member stamps and retires copied adjacency data without rewriting
-  the original Zone's pairs. Preserve copied metadata and extension payloads; unresolved extension
-  references are reported, not guessed. Refuse if the original cannot be identified or shared
-  storage prevents an independent repair; the user must resolve the ambiguity or make it unique.
+  the original Zone's pairs. Preserve copied metadata and apply declared extension copy/reference
+  rules. Refuse before writing when unavailable or invalid extension data prevents safe identity
+  repair; a warning does not authorize carrying unresolved references onto new identities. Refuse
+  if the original cannot be identified or shared storage prevents an independent repair; the user
+  must resolve the ambiguity or make it unique.
 - A native split or merge invalidates affected pairs, even when dictionaries were copied. The
   explicit solver reacquires resulting face references and establishes only valid reciprocal
   pairs. Classifications other than Surface and surviving payloads are preserved; conflicting

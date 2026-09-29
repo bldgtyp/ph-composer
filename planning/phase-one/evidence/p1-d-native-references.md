@@ -131,7 +131,10 @@ snapshot: `native-references-recovered.json`, both gitignored under `_private/ho
 A separate fresh process reopened the native paired-split fixture against the same installed
 solver. Solve still refused `target.ambiguous / none`, wrote nothing, and all three Surface
 occurrences read unresolved. Unique-path recovery does not select among duplicated Face UUIDs
-or rewrite extension references. Forward native-split identity repair remains open.
+or rewrite extension references. Forward native-split identity repair remains open. The subsequent
+[extension-copy correction](p1-d-extension-copy-safety.md) verifies pre-write refusal for unsafe
+identity-changing payload copies and documents the missing Face/Zone reference-target contract
+and the one-to-many solver boundary.
 
 Focused scope tests pass 39 tests / 191 assertions on Ruby 3.2.2 and 2.7.2. Full `make ci`,
 coverage and the full Ruby 2.7.2 suite pass: 476 Ruby tests / 2,031 assertions, 170 JavaScript

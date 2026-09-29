@@ -126,17 +126,9 @@ module PhComposer
 
     def repair_identity(request, proposal)
       zone = Repair.occurrence_at(request.model, request.params.fetch("zone_path"))
-      plan = Repair.identity_plan(request.model, zone, request.revision)
+      plan = Repair.identity_plan(request.model, zone, request.revision, request.registry.catalog, request.engine)
       proposal.add_step(RepairIdentityStep.new(:reference => zone.reference, :plan => plan),
                         :scopes => [Operations::EntityScope.new(zone.path[0...-1])])
-      carried = plan.fetch(:faces).count { |face| face.fetch(:before)&.fetch("extension_data", {})&.any? }
-      if carried.positive?
-        proposal.add_finding(
-          "code" => "zone.copied_extension_data", "severity" => "warning",
-          "message" => "#{carried} copied Face records carry extension data. Their payloads are preserved as " \
-                       "they were; any reference inside them still names the original Face and is not remapped."
-        )
-      end
       retired = plan.fetch(:faces).count { |face| face.fetch(:before)&.fetch("boundary_condition", nil) == "Surface" }
       { "zone_id" => plan.fetch(:record).fetch("id"), "retired_pairs" => retired }
     end
@@ -258,15 +250,26 @@ module PhComposer
     # piece keeps the original id is the host's answer and is not known until it has cut.
     def side_plan(request, side, overlap, which)
       occurrence = side.fetch(:occurrence)
+      record = side.fetch(:record)
       remainders = which == :left ? overlap.left_remainders_m : overlap.right_remainders_m
       fresh = (remainders.length + 1).times.map do |index|
         Records::Identity.derived("fac", "model" => request.model.guid, "revision" => request.revision,
                                          "zone_path" => occurrence.zone.path, "entity_path" => occurrence.path,
                                          "piece" => index)
       end
-      { "reference" => occurrence.reference(side.fetch(:record).fetch("id")), "before" => side.fetch(:record),
+      copies = {}
+      unless remainders.empty?
+        data = record.fetch("extension_data", {})
+        catalog = request.registry.catalog
+        Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
+        fresh.each do |id|
+          copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
+                                                    { record.fetch("id") => id }, :engine => request.engine)
+        end
+      end
+      { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
         "persistent_id" => occurrence.entity.persistent_id, "fresh_ids" => fresh,
-        "remainder_count" => remainders.length }
+        "remainder_count" => remainders.length, "extension_copies" => copies }
     end
 
     def pair_match(proposal, match)

@@ -34,6 +34,11 @@ out-of-scope endpoints refuse in focused regression tests; they are not treated 
 
 ## A06: native copy, identity repair and limited Restore
 
+The unknown-payload warning behavior recorded below was corrected on 2026-09-29. Identity-changing
+copy now requires understood extension copy rules and refuses unsafe data before writes. See
+[extension copy safety](p1-d-extension-copy-safety.md); the older run establishes native storage
+behavior and exact snapshots, not acceptance of unremapped unknown references.
+
 A native clipboard copy was placed with a viewport click. It copied the Zone dictionary and
 shared the original Group definition. Identity repair refused `target.shared_definition`.
 After native `Group#make_unique`, explicit repair completed with one copied pair retired and

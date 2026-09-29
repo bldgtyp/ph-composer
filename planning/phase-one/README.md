@@ -7,7 +7,8 @@ The [broader native acceptance run](evidence/p1-d-broader-acceptance.md) adds A0
 and records further corrections. The [native reference checks](evidence/p1-d-native-references.md)
 verify cut/paste and split preservation, plus explicit Solve recovery of unique identities after
 path changes. Native split identity repair remains open. The register still has
-open P1-D cases.
+open P1-D cases. The [extension-copy continuation](evidence/p1-d-extension-copy-safety.md)
+corrects unsafe payload copying and records the reference-target and native-split repair limits.
 ISSUE: none (local planning draft)
 
 Phase 0 merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1), local merge

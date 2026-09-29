@@ -117,6 +117,53 @@ module PhComposer
           Array(value).compact.map { |id| [reference.fetch("target_kind"), id] }
         end
       end
+
+      # Copy rules are shared by catalog records and entity-owned feature records. A copied
+      # identity must not carry references whose meaning the installed extension cannot check.
+      def self.check_copy_rules!(data, catalog, label, id)
+        data.each do |namespace, envelope|
+          installed = catalog.extension(namespace)
+          status = status(envelope, installed)
+          next if status == "understood" && installed.copy == :remap
+
+          if status == "invalid"
+            message = "#{namespace} data on #{id} does not meet the installed extension's contract, so it cannot " \
+                      "be copied or migrated. Replace it with valid data first."
+            raise CodedError.new("extension.invalid", message, "namespace" => namespace, "status" => status)
+          end
+          raise CodedError.new(
+            "copy.rule_missing",
+            "#{label} #{id} carries #{namespace} data (#{status}) that cannot be copied safely.",
+            "id" => id, "namespace" => namespace, "status" => status
+          )
+        end
+      end
+
+      # Entity-owned records pass their Engine so declared catalog references are checked before
+      # a host operation opens. Catalog records validate staged references through Engine itself.
+      def self.copy_data(data, catalog, label, id, mapping, engine: nil)
+        check_copy_rules!(data, catalog, label, id)
+        copied = DeepCopy.call(data).each_value do |envelope|
+          envelope["payload"] = remap(envelope.fetch("payload"), envelope.fetch("references", []), mapping)
+        end
+        check_copy_rules!(copied, catalog, label, id)
+        if engine
+          copied.each_value do |envelope|
+            referenced_ids(envelope.fetch("payload"), envelope.fetch("references", [])).each do |target_kind, target_id|
+              begin
+                engine.find(target_kind, target_id)
+              rescue CodedError => error
+                raise unless error.code == "target.not_found"
+
+                raise CodedError.new("reference.invalid", "#{label} #{id} names #{target_kind} #{target_id}, " \
+                                                          "which does not exist.",
+                                     "target_kind" => target_kind, "id" => target_id)
+              end
+            end
+          end
+        end
+        copied
+      end
     end
   end
 end

@@ -227,6 +227,65 @@ class RecordsEngineTest < PhComposerTestCase
     assert changes.empty?
   end
 
+  def test_shared_copy_rules_remap_each_copy_from_the_same_source_independently
+    old_id = "tpt_OLDRECORD001"
+    first_id = "tpt_NEWRECORD001"
+    second_id = "tpt_NEWRECORD002"
+    data = { REVIEW.namespace => REVIEW.envelope("review_status" => "checked", "checked_against" => old_id) }
+
+    first = PhComposer::Records::Extension.copy_data(data, record_catalog, "Test part", old_id,
+                                                      { old_id => first_id })
+    second = PhComposer::Records::Extension.copy_data(data, record_catalog, "Test part", old_id,
+                                                       { old_id => second_id })
+
+    assert_equal first_id, first.dig(REVIEW.namespace, "payload", "checked_against")
+    assert_equal second_id, second.dig(REVIEW.namespace, "payload", "checked_against")
+    assert_equal old_id, data.dig(REVIEW.namespace, "payload", "checked_against")
+  end
+
+  def test_shared_copy_rules_revalidate_the_remapped_payload
+    extension = PhComposer::Records::Extension.new(
+      :namespace => "test.fixture.checked_copy", :schema_version => 1,
+      :references => [{ "path" => "$.target", "target_kind" => "test.fixture.part", "cardinality" => "one" }],
+      :validate => ->(payload) { payload["target"] == "tpt_FORBIDDEN001" ? ["target is forbidden"] : [] }
+    )
+    source_id = "tpt_SOURCE00001"
+    data = { extension.namespace => extension.envelope("target" => source_id) }
+    catalog = record_catalog(:extensions => [extension])
+
+    error = assert_raises(PhComposer::CodedError) do
+      PhComposer::Records::Extension.copy_data(data, catalog, "Test part", source_id,
+                                               { source_id => "tpt_FORBIDDEN001" })
+    end
+
+    assert_equal "extension.invalid", error.code
+    assert_equal source_id, data.dig(extension.namespace, "payload", "target")
+  end
+
+  def test_copy_refuses_outdated_and_explicit_refuse_policies_before_staging
+    old = seed_part("extension_data" => { REVIEW.namespace => version_one("draft") })
+    changes = PhComposer::Records::ChangeSet.new
+
+    outdated = assert_raises(PhComposer::CodedError) do
+      @engine.propose_duplicate("test.fixture.part", [old], changes)
+    end
+    assert_equal "copy.rule_missing", outdated.code
+    assert_equal "outdated", outdated.detail.fetch("status")
+    assert changes.empty?
+
+    refusing = PhComposer::Records::Extension.new(
+      :namespace => "test.fixture.no_copy", :schema_version => 1, :copy => :refuse
+    )
+    another = seed_part("extension_data" => { refusing.namespace => refusing.envelope("note" => "keep") })
+    restricted_engine = PhComposer::Records::Engine.new(@model, record_catalog(:extensions => [REVIEW, refusing]))
+
+    refused = assert_raises(PhComposer::CodedError) do
+      restricted_engine.propose_duplicate("test.fixture.part", [another], PhComposer::Records::ChangeSet.new)
+    end
+    assert_equal "copy.rule_missing", refused.code
+    assert_equal "understood", refused.detail.fetch("status")
+  end
+
   def test_migration_raises_outdated_payloads_and_reports_current_and_absent_records
     outdated = seed_part("extension_data" => { "test.fixture.review" => version_one("draft") })
     current = seed_part("extension_data" => { "test.fixture.review" => REVIEW.envelope("review_status" => "checked") })

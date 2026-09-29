@@ -23,7 +23,7 @@ module PhComposer
 
       # What identity repair would change, as detached values. Raises rather than returning a partial
       # plan: a repair that cannot be done completely must write nothing.
-      def identity_plan(model, zone, revision)
+      def identity_plan(model, zone, revision, catalog, engine)
         check_repairable!(model, zone)
         old_id = zone.record.fetch("id")
         new_id = Records::Identity.derived("zon", "model" => model.guid, "revision" => revision,
@@ -32,9 +32,25 @@ module PhComposer
           raise CodedError.new("target.ambiguous", "The repaired Zone identity is already present.")
         end
 
+        faces = member_entries(zone)
+        mapping = { old_id => new_id }
+        faces.each do |entry|
+          face_id = entry.fetch(:before)&.fetch("id", nil)
+          next unless face_id
+
+          if mapping.key?(face_id)
+            raise CodedError.new("target.ambiguous", "A copied Face id occurs more than once in this Zone.")
+          end
+
+          mapping[face_id] = Records::Identity.derived("fac", "model" => model.guid, "revision" => revision,
+                                                            "zone_id" => new_id,
+                                                            "entity_path" => entry.fetch(:occurrence).path)
+        end
         record = DeepCopy.call(zone.record).merge("id" => new_id)
+        record["extension_data"] = Records::Extension.copy_data(zone.record.fetch("extension_data", {}), catalog,
+                                                                "Zone", old_id, mapping, :engine => engine)
         Schema.validate!(record)
-        { :old_id => old_id, :record => record, :faces => face_plans(model, zone, new_id, revision) }
+        { :old_id => old_id, :record => record, :faces => face_plans(faces, zone, new_id, mapping, catalog, engine) }
       end
 
       def check_repairable!(model, zone)
@@ -55,26 +71,33 @@ module PhComposer
       # Every member record the repair rewrites. A copied `fac_` id is ambiguous data, so each face
       # takes a fresh one; a copied adjacency envelope is not a relationship, so it is dropped with
       # its boundary condition and the Face needs classifying again.
-      def face_plans(model, zone, new_zone_id, revision)
-        stamp = Schema.stamp(zone.record.merge("id" => new_zone_id))
+      def member_entries(zone)
         Occurrences.faces(zone).filter_map do |occurrence|
           record = FaceAssignment::FACE_STORE.read(occurrence.entity)
           existing_stamp = STAMP_STORE.read(occurrence.entity)
           next if record.nil? && existing_stamp.nil?
 
-          after = repaired_face(model, occurrence, record, new_zone_id, revision)
-          { :reference => occurrence.reference(record&.fetch("id", nil)), :before => record, :after => after,
-            :stamp => stamp }
+          { :occurrence => occurrence, :before => record }
         end
       end
 
-      def repaired_face(model, occurrence, record, new_zone_id, revision)
+      def face_plans(entries, zone, new_zone_id, mapping, catalog, engine)
+        stamp = Schema.stamp(zone.record.merge("id" => new_zone_id))
+        entries.map do |entry|
+          occurrence = entry.fetch(:occurrence)
+          before = entry.fetch(:before)
+          { :reference => occurrence.reference(before&.fetch("id", nil)), :before => before,
+            :after => repaired_face(before, mapping, catalog, engine), :stamp => stamp }
+        end
+      end
+
+      def repaired_face(record, mapping, catalog, engine)
         return nil unless record
 
         after = DeepCopy.call(record)
-        after["id"] = Records::Identity.derived("fac", "model" => model.guid, "revision" => revision,
-                                                       "zone_id" => new_zone_id,
-                                                       "entity_path" => occurrence.path)
+        after["id"] = mapping.fetch(record.fetch("id"))
+        after["extension_data"] = Records::Extension.copy_data(record.fetch("extension_data", {}), catalog,
+                                                               "Face", record.fetch("id"), mapping, :engine => engine)
         after.delete("adjacency")
         after.delete("boundary_condition") if record["boundary_condition"] == "Surface"
         FaceAssignment::Schema.validate!(after)
@@ -166,7 +189,8 @@ module PhComposer
           end
         end
       end
-      private_class_method :orphan_group, :orphan_refusal, :shared_edge?, :walk_orphans, :repaired_face, :face_plans
+      private_class_method :orphan_group, :orphan_refusal, :shared_edge?, :walk_orphans, :repaired_face, :face_plans,
+                           :member_entries
     end
   end
 end

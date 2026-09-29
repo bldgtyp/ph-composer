@@ -10,6 +10,13 @@ class ZoneRepairTest < PhComposerTestCase
   ZONE_STORE = PhComposer::Zones::ZONE_STORE
   STAMP_STORE = PhComposer::Zones::STAMP_STORE
   FACE_STORE = PhComposer::FaceAssignment::FACE_STORE
+  COPY_EXTENSION = PhComposer::Records::Extension.new(
+    :namespace => "test.fixture.identity", :schema_version => 1,
+    :references => [
+      { "path" => "$.external_id", "target_kind" => "ph_composer.face_assignment.attached_zone",
+        "cardinality" => "one" }
+    ]
+  )
 
   def setup
     super
@@ -48,22 +55,66 @@ class ZoneRepairTest < PhComposerTestCase
     end
   end
 
-  def test_repair_preserves_face_payloads_and_discloses_copied_extension_data
+  def test_repair_refuses_unavailable_references_without_changing_either_copy
     original, copy = copied_zone
+    old_id = FACE_STORE.read(copy.entities.to_a.first).fetch("id")
+    envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001", "marker" => old_id)
     [original, copy].each do |group|
       face = group.entities.to_a.first
       record = FACE_STORE.read(face).merge("user_data" => { "firm.note" => "keep" },
-                                           "extension_data" => { "other.ext" => { "payload" => 1 } })
+                                           "extension_data" => { COPY_EXTENSION.namespace => envelope })
       FACE_STORE.write(face, record)
+    end
+    before = [ZONE_STORE.read(copy), copy.entities.to_a.map { |face| FACE_STORE.read(face) }]
+    params = { "zone_path" => [copy.persistent_id] }
+
+    preview = API.preview(:context => @context, :name => "ph_composer.zones.repair_identity", :params => params)
+    result = invoke("ph_composer.zones.repair_identity", params)
+
+    assert_equal %w[refused copy.rule_missing none], result.values_at("status", "code", "effect")
+    assert_equal %w[refused copy.rule_missing none], preview.values_at("status", "code", "effect")
+    assert_equal "unavailable", result.dig("detail", "status")
+    assert_equal before, [ZONE_STORE.read(copy), copy.entities.to_a.map { |face| FACE_STORE.read(face) }]
+    assert_equal old_id, FACE_STORE.read(original.entities.to_a.first).fetch("id")
+  end
+
+  def test_repair_keeps_registered_external_references_and_literal_metadata
+    register_copy_extension
+    store_external_reference
+    original, copy = copied_zone
+    old_zone_id = ZONE_STORE.read(copy).fetch("id")
+    old_face_ids = copy.entities.to_a.map { |face| FACE_STORE.read(face).fetch("id") }
+    zone_envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001", "marker" => old_zone_id)
+    ZONE_STORE.write(copy, ZONE_STORE.read(copy).merge("extension_data" => {
+                       COPY_EXTENSION.namespace => zone_envelope
+                     }))
+    copy.entities.to_a.each do |face|
+      before = FACE_STORE.read(face)
+      envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001", "marker" => old_face_ids.last)
+      FACE_STORE.write(face, before.merge("user_data" => { "literal" => old_face_ids.last },
+                                          "extension_data" => { COPY_EXTENSION.namespace => envelope }))
     end
 
     result = invoke("ph_composer.zones.repair_identity", { "zone_path" => [copy.persistent_id] })
+    new_zone_id = ZONE_STORE.read(copy).fetch("id")
+    new_face_ids = copy.entities.to_a.map { |face| FACE_STORE.read(face).fetch("id") }
 
-    repaired = FACE_STORE.read(copy.entities.to_a.first)
-
-    assert_equal({ "firm.note" => "keep" }, repaired.fetch("user_data"))
-    assert_equal({ "other.ext" => { "payload" => 1 } }, repaired.fetch("extension_data"))
-    assert_equal ["zone.copied_extension_data"], result.fetch("findings").map { |row| row.fetch("code") }
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    refute_equal old_zone_id, new_zone_id
+    refute_equal old_face_ids, new_face_ids
+    assert_equal "atz_000000000001", ZONE_STORE.read(copy).dig("extension_data", COPY_EXTENSION.namespace,
+                                                                   "payload", "external_id")
+    assert_equal old_zone_id, ZONE_STORE.read(copy).dig("extension_data", COPY_EXTENSION.namespace,
+                                                      "payload", "marker")
+    copy.entities.to_a.each do |face|
+      repaired = FACE_STORE.read(face)
+      assert_equal "atz_000000000001", repaired.dig("extension_data", COPY_EXTENSION.namespace,
+                                                      "payload", "external_id")
+      assert_equal old_face_ids.last, repaired.dig("extension_data", COPY_EXTENSION.namespace,
+                                                   "payload", "marker")
+      assert_equal old_face_ids.last, repaired.dig("user_data", "literal")
+    end
+    assert_equal old_zone_id, ZONE_STORE.read(original).fetch("id")
   end
 
   def test_repair_retires_the_copied_pair_without_changing_the_original_pair
@@ -277,6 +328,22 @@ class ZoneRepairTest < PhComposerTestCase
   end
 
   private
+
+  def register_copy_extension
+    extension = COPY_EXTENSION
+    fixture = Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("test.fixture", :contract_version => 1).extension(extension)
+      end
+    end
+    PhComposer::Registry.install([fixture])
+  end
+
+  def store_external_reference
+    kind = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND
+    kind.store.write(@model, "id" => "atz_000000000001", "schema_version" => 1,
+                             "name" => "Garage", "kind" => "garage", "temperature_reduction_factor" => 0.95)
+  end
 
   def invoke(name, params)
     @sequence += 1

@@ -388,8 +388,13 @@ identities, full reciprocal-envelope agreement and the normal mutable resolver o
 Native rollback, Undo/Redo and fresh reopen pass. Native split identity repair remains incomplete:
 a Face split copies one authored UUID onto both pieces, and Solve safely refuses that ambiguity.
 Copied-Zone identity repair does not repair a split inside an otherwise unique Zone. Define and
-verify that recovery before claiming these PRD cases fully complete. Preserve unknown payloads
-and disclose unremapped references; do not choose an ambiguous endpoint by geometry.
+verify that recovery before claiming these PRD cases fully complete. The
+[extension-copy continuation](evidence/p1-d-extension-copy-safety.md) corrects warning-only
+carriage of unknown data during identity-changing copies: unsafe payloads now refuse before any
+write, while supported catalog-reference payloads follow their declared rules. Face and Zone UUID
+reference targets are not yet registrable. The paired native split is also a one-to-many overlap,
+which the current solver reports. Resolve these explicit identity/reference and solver boundaries
+before closing A06; do not choose an ambiguous endpoint by geometry.
 
 ## P1-E: HBJSON/report export workflow
 

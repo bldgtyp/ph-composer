@@ -36,7 +36,10 @@ The [native reference continuation](../../phase-one/evidence/p1-d-native-referen
 cut/paste and native split preservation, Undo/Redo and reopen. The false current endpoint state
 is corrected. Explicit Solve recovery after changed paths now passes with unique authored
 identities, exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID recovery
-remains open.
+remains open. The [extension-copy correction](../../phase-one/evidence/p1-d-extension-copy-safety.md)
+replaces warning-only unknown-payload carriage with pre-write refusal, while supported catalog
+references pass native copy/cut rollback, Undo/Redo and reopen. Face/Zone extension-reference
+targets and the explicit native split repair contract remain unsupported.
 
 ## Blockers
 

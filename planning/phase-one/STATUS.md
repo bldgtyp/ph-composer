@@ -14,7 +14,12 @@ corrected a pasted Surface endpoint reading current despite its changed paths. T
 passes both offline Rubies, full CI, coverage and independent review, with fresh installed-host
 checks. Explicit Solve now recovers unique authored identities after cut/paste path changes,
 with exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID recovery remains
-open. Atomic Attached-zone create-and-assign and the remaining overlay/UI cases also remain open.
+open. The [extension-copy correction](evidence/p1-d-extension-copy-safety.md) now refuses unsafe
+Face cuts and copied-Zone repair before writes, with supported catalog-reference payloads passing
+native rollback, Undo/Redo and reopen. Successful split repair still needs an explicit identity
+contract; Face/Zone extension-reference targets are unsupported, and one-to-many pairing remains
+reported rather than solved. Atomic Attached-zone create-and-assign and remaining overlay/UI cases
+also remain open.
 
 ## Broader acceptance continuation
 

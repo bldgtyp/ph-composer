@@ -7,6 +7,13 @@ require_relative "test_helper"
 # the ones the solver reports instead of pairing.
 class ZoneSolveScopeTest < PhComposerTestCase
   API = PhComposer::API
+  COPY_EXTENSION = PhComposer::Records::Extension.new(
+    :namespace => "test.fixture.face_copy", :schema_version => 1,
+    :references => [
+      { "path" => "$.external_id", "target_kind" => "ph_composer.face_assignment.attached_zone",
+        "cardinality" => "one" }
+    ]
+  )
 
   def setup
     super
@@ -126,9 +133,11 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal shared.first.dig("reference", "entity_id"), envelopes.last.dig("counterpart", "entity_id")
   end
 
-  # The split rules: the piece that kept the native persistent id keeps the Face id, and every
-  # piece carries the payloads the Face had before the cut.
-  def test_the_piece_keeping_the_persistent_id_keeps_the_face_id_and_every_piece_keeps_the_payload
+  # The registered rule keeps a reference to a shared catalog record; an untyped Face id is a
+  # literal marker and is not inferred as a reference.
+  def test_split_carries_registered_external_references_and_literal_metadata
+    register_copy_extension
+    store_external_reference
     wall(640, 0, 0, 4, 0, 3, :east)
     wall(650, 0, 2, 6, 0, 3, :west)
     author
@@ -136,17 +145,95 @@ class ZoneSolveScopeTest < PhComposerTestCase
     original_id = original.dig("reference", "entity_id")
     entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 640 }.entities.to_a.first
     store = PhComposer::FaceAssignment::FACE_STORE
-    store.write(entity, store.read(entity).merge("user_data" => { "firm.note" => "keep" },
-                                                 "extension_data" => { "other.ext" => { "payload" => 1 } }))
+    external_id = "atz_000000000001"
+    envelope = COPY_EXTENSION.envelope("external_id" => external_id, "marker" => original_id)
+    store.write(entity, store.read(entity).merge("user_data" => { "firm.note" => original_id },
+                                                 "extension_data" => { COPY_EXTENSION.namespace => envelope }))
 
-    solve(all_references)
+    result = solve(all_references)
 
     pieces = faces.select { |face| face.dig("reference", "zone_path") == [640] }
 
+    assert_equal %w[completed committed], result.values_at("status", "effect")
     assert_equal 2, pieces.length
     assert_includes pieces.map { |face| face.dig("reference", "entity_id") }, original_id
-    assert(pieces.all? { |face| face.fetch("user_data") == { "firm.note" => "keep" } })
-    assert(pieces.all? { |face| face.fetch("extension_data") == { "other.ext" => { "payload" => 1 } } })
+    assert(pieces.all? { |face| face.fetch("user_data") == { "firm.note" => original_id } })
+    pieces.each do |face|
+      assert_equal external_id, face.dig("extension_data", COPY_EXTENSION.namespace, "payload", "external_id")
+      assert_equal original_id, face.dig("extension_data", COPY_EXTENSION.namespace, "payload", "marker")
+    end
+  end
+
+  def test_partial_split_refuses_unavailable_references_before_any_cut_or_pair
+    wall(642, 0, 0, 4, 0, 3, :east)
+    wall(652, 0, 2, 6, 0, 3, :west)
+    author
+    entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 642 }.entities.to_a.first
+    store = PhComposer::FaceAssignment::FACE_STORE
+    before = store.read(entity)
+    store.write(entity, before.merge("extension_data" => {
+                  COPY_EXTENSION.namespace => COPY_EXTENSION.envelope("external_id" => "atz_000000000001",
+                                                                      "marker" => before.fetch("id"))
+                }))
+    snapshot = faces
+    params = { "zones" => all_references }
+
+    preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params)
+    result = solve(all_references)
+
+    assert_equal %w[refused copy.rule_missing none], preview.values_at("status", "code", "effect")
+    assert_equal %w[refused copy.rule_missing none], result.values_at("status", "code", "effect")
+    assert_equal snapshot, faces
+    assert_equal 2, faces.length
+  end
+
+  def test_an_uncut_face_keeps_unavailable_extension_data
+    wall(644, 0, 0, 6, 0, 4, :east)
+    wall(654, 0, 1, 5, 1, 3, :west)
+    author
+    entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 654 }.entities.to_a.first
+    store = PhComposer::FaceAssignment::FACE_STORE
+    old_id = store.read(entity).fetch("id")
+    envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001", "marker" => old_id)
+    store.write(entity, store.read(entity).merge("extension_data" => { COPY_EXTENSION.namespace => envelope }))
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal envelope, store.read(entity).dig("extension_data", COPY_EXTENSION.namespace)
+  end
+
+  def test_split_refuses_invalid_registered_extension_data
+    envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001")
+    envelope["references"] = []
+    assert_split_copy_refusal(COPY_EXTENSION, envelope, "extension.invalid")
+  end
+
+  def test_split_refuses_outdated_registered_extension_data
+    extension = PhComposer::Records::Extension.new(
+      :namespace => "test.fixture.old_copy", :schema_version => 2,
+      :migrations => { 1 => ->(payload) { payload } }
+    )
+    envelope = { "schema_version" => 1, "payload" => {}, "references" => [], "export_relevance" => "unknown" }
+    assert_split_copy_refusal(extension, envelope, "copy.rule_missing", "outdated")
+  end
+
+  def test_split_refuses_unsupported_registered_extension_data
+    envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001")
+    envelope["schema_version"] = 9
+    assert_split_copy_refusal(COPY_EXTENSION, envelope, "copy.rule_missing", "unsupported")
+  end
+
+  def test_split_refuses_an_installed_extension_with_a_refuse_copy_rule
+    extension = PhComposer::Records::Extension.new(
+      :namespace => "test.fixture.refused_copy", :schema_version => 1, :copy => :refuse
+    )
+    assert_split_copy_refusal(extension, extension.envelope("note" => "keep"), "copy.rule_missing", "understood")
+  end
+
+  def test_split_refuses_a_missing_declared_catalog_reference
+    envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001")
+    assert_split_copy_refusal(COPY_EXTENSION, envelope, "reference.invalid")
   end
 
   def test_a_shared_region_wholly_inside_a_wall_is_cut_out_of_it
@@ -692,6 +779,46 @@ class ZoneSolveScopeTest < PhComposerTestCase
   end
 
   private
+
+  def register_copy_extension
+    register_extension(COPY_EXTENSION)
+  end
+
+  def register_extension(extension)
+    fixture = Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("test.fixture", :contract_version => 1).extension(extension)
+      end
+    end
+    PhComposer::Registry.install([fixture])
+  end
+
+  def store_external_reference
+    kind = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND
+    kind.store.write(@model, "id" => "atz_000000000001", "schema_version" => 1,
+                             "name" => "Garage", "kind" => "garage", "temperature_reduction_factor" => 0.95)
+  end
+
+  def assert_split_copy_refusal(extension, envelope, code, status = nil)
+    register_extension(extension)
+    wall(648, 0, 0, 4, 0, 3, :east)
+    wall(658, 0, 2, 6, 0, 3, :west)
+    author
+    entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 648 }.entities.to_a.first
+    store = PhComposer::FaceAssignment::FACE_STORE
+    store.write(entity, store.read(entity).merge("extension_data" => { extension.namespace => envelope }))
+    snapshot = faces
+    params = { "zones" => all_references }
+
+    preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params)
+    result = solve(all_references)
+
+    assert_equal ["refused", code, "none"], preview.values_at("status", "code", "effect")
+    assert_equal ["refused", code, "none"], result.values_at("status", "code", "effect")
+    assert_equal status, result.dig("detail", "status") if status
+    assert_equal snapshot, faces
+    assert_equal 2, faces.length
+  end
 
   def paired_walls
     wall(910, 0, 0, 4, 0, 3, :east)
