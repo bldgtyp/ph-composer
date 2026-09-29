@@ -43,6 +43,13 @@ module PhComposer
     # A projection's transform maps that entity's own contents to world: a Face's vertices, or the
     # entities inside a Group. That is what `Zones::FaceOccurrence` and `ZoneOccurrence` already carry.
     module Tessellation
+      # SketchUp coordinates are inches. The stripe planes are anchored in world space, so a Face's
+      # mesh diagonals do not restart the pattern at each triangle. Large meshes widen the spacing
+      # as a whole rather than drawing an arbitrarily truncated hatch.
+      HATCH_SPACING = 6.0
+      MAX_HATCH_SEGMENTS = 8_192
+      HATCH_EPSILON = 1.0e-8
+      HatchTriangle = Struct.new(:vertices, :coordinates, :minimum, :maximum, keyword_init: true)
       module_function
 
       def call(entity, transform)
@@ -104,6 +111,145 @@ module PhComposer
         end
       end
 
+      # Intersect global diagonal stripe planes with the already transformed triangles. The mesh is
+      # the clipping authority: SketchUp's Face mesh excludes holes and concave exterior regions.
+      # Every two returned points form one GL_LINES segment. This reads no Model or Face.
+      def hatch(triangles)
+        prepared = triangles.each_slice(3).filter_map do |vertices|
+          next unless vertices.length == 3
+
+          across = hatch_across(vertices)
+          next unless across
+
+          coordinates = vertices.map { |point| dot(point, across) }
+          HatchTriangle.new(:vertices => vertices, :coordinates => coordinates,
+                            :minimum => coordinates.min, :maximum => coordinates.max)
+        end
+        spacing = HATCH_SPACING
+        # A stripe crosses a triangle in at most one segment. The count omits vertex-only tangencies
+        # that would clip to zero length, so they cannot erase real hatch by widening the spacing.
+        while prepared.sum { |triangle| stripe_count(triangle, spacing) } > MAX_HATCH_SEGMENTS
+          spacing *= 2.0
+        end
+        hatch_at_spacing(prepared, spacing)
+      end
+
+      def stripe_range(triangle, spacing)
+        first = ((triangle.minimum / spacing) - 0.5).ceil
+        last = ((triangle.maximum / spacing) - 0.5).floor
+        first..last
+      end
+
+      def stripe_count(triangle, spacing)
+        range = stripe_range(triangle, spacing)
+        count = range.end - range.begin + 1
+        return 0 if count <= 0
+
+        first_level = (range.begin + 0.5) * spacing
+        last_level = (range.end + 0.5) * spacing
+        count -= 1 if zero_length_extremum?(triangle, first_level, triangle.minimum)
+        count -= 1 if range.end != range.begin && zero_length_extremum?(triangle, last_level, triangle.maximum)
+        count
+      end
+
+      def zero_length_extremum?(triangle, level, extreme)
+        return false if (level - extreme).abs > HATCH_EPSILON
+
+        # A near-tangent can still span a real line on a long skinny triangle. Use the same edge
+        # fractions as clipping, but keep only numeric coordinates here, without Point3d allocation.
+        first_hit = nil
+        3.times do |edge|
+          following = (edge + 1) % 3
+          start_distance = triangle.coordinates[edge] - level
+          end_distance = triangle.coordinates[following] - level
+          next if start_distance * end_distance > 0
+          next if (start_distance - end_distance).abs < HATCH_EPSILON
+
+          fraction = start_distance / (start_distance - end_distance)
+          next if fraction < -HATCH_EPSILON || fraction > 1 + HATCH_EPSILON
+
+          start_point = triangle.vertices[edge]
+          end_point = triangle.vertices[following]
+          hit = [start_point.x + (fraction * (end_point.x - start_point.x)),
+                 start_point.y + (fraction * (end_point.y - start_point.y)),
+                 start_point.z + (fraction * (end_point.z - start_point.z))]
+          if first_hit
+            distance = first_hit.zip(hit).sum { |start_value, end_value| (start_value - end_value)**2 }
+            return false if distance >= HATCH_EPSILON**2
+          else
+            first_hit = hit
+          end
+        end
+        true
+      end
+
+      def hatch_at_spacing(prepared, spacing)
+        segments = []
+        prepared.each do |triangle|
+          vertices = triangle.vertices
+          coordinates = triangle.coordinates
+          stripe_range(triangle, spacing).each do |index|
+            level = (index + 0.5) * spacing
+            hits = []
+            3.times do |edge|
+              following = (edge + 1) % 3
+              start_distance = coordinates[edge] - level
+              end_distance = coordinates[following] - level
+              next if start_distance * end_distance > 0
+              next if (start_distance - end_distance).abs < HATCH_EPSILON
+
+              fraction = start_distance / (start_distance - end_distance)
+              next if fraction < -HATCH_EPSILON || fraction > 1 + HATCH_EPSILON
+
+              start_point = vertices[edge]
+              end_point = vertices[following]
+              hit = Geom::Point3d.new(start_point.x + (fraction * (end_point.x - start_point.x)),
+                                      start_point.y + (fraction * (end_point.y - start_point.y)),
+                                      start_point.z + (fraction * (end_point.z - start_point.z)))
+              hits << hit unless hits.any? { |point| squared_distance(point, hit) < HATCH_EPSILON**2 }
+            end
+            next unless hits.length == 2
+            next if squared_distance(hits[0], hits[1]) < HATCH_EPSILON**2
+
+            segments.concat(hits)
+          end
+        end
+        segments
+      end
+
+      def hatch_across(vertices)
+        first, second, third = vertices
+        edge_a = [second.x - first.x, second.y - first.y, second.z - first.z]
+        edge_b = [third.x - first.x, third.y - first.y, third.z - first.z]
+        normal = [edge_a[1] * edge_b[2] - edge_a[2] * edge_b[1],
+                  edge_a[2] * edge_b[0] - edge_a[0] * edge_b[2],
+                  edge_a[0] * edge_b[1] - edge_a[1] * edge_b[0]]
+        length = Math.sqrt(normal.sum { |component| component**2 })
+        return nil if length < HATCH_EPSILON
+
+        normal.map! { |component| component / length }
+        across = projected_axis([1.0, 1.0, 1.0], normal)
+        across = projected_axis([1.0, -1.0, 0.0], normal) if across.nil?
+        across
+      end
+
+      def projected_axis(axis, normal)
+        projection = axis.zip(normal).sum { |component, other| component * other }
+        result = axis.zip(normal).map { |component, other| component - (projection * other) }
+        length = Math.sqrt(result.sum { |component| component**2 })
+        return nil if length < HATCH_EPSILON
+
+        result.map { |component| component / length }
+      end
+
+      def dot(point, vector)
+        (point.x * vector[0]) + (point.y * vector[1]) + (point.z * vector[2])
+      end
+
+      def squared_distance(first, second)
+        ((first.x - second.x)**2) + ((first.y - second.y)**2) + ((first.z - second.z)**2)
+      end
+
       # The same points, lifted toward the camera by about `pixels` screen pixels.
       #
       # A fill drawn exactly on the Face it colours z-fights with that Face, and the host blinks
@@ -123,7 +269,8 @@ module PhComposer
         end
       end
 
-      private_class_method :collect, :add_face
+      private_class_method :collect, :add_face, :stripe_range, :stripe_count, :zero_length_extremum?,
+                           :hatch_at_spacing, :hatch_across, :projected_axis, :dot, :squared_distance
     end
   end
 end

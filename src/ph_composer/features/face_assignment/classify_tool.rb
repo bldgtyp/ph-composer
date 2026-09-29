@@ -146,6 +146,7 @@ module PhComposer
 
       def onLButtonDown(flags, x, y, view)
         @pressed = true
+        @gesture_edit_path = edit_path
         @intent = DeepCopy.call(@palette).freeze
         # The revision is frozen with the palette. An external client committing a change mid-drag
         # fires no cancel this tool hears, so the gesture is applied against the revision it began
@@ -161,6 +162,13 @@ module PhComposer
 
       # One completion boundary for every route: a click, a drag and a Shift-click all end here.
       def onLButtonUp(_flags, _x, _y, view)
+        # SketchUp may deliver the old tool's mouse-up after Cmd-N activates another Model,
+        # without first suspending it. That release must never commit the old gesture.
+        unless Sketchup.active_model.equal?(@session.model) && @gesture_edit_path == edit_path
+          cancel_gesture
+          view.invalidate if view.respond_to?(:invalidate)
+          return
+        end
         complete
         view.invalidate if view.respond_to?(:invalidate)
       rescue StandardError => error
@@ -203,6 +211,10 @@ module PhComposer
       end
 
       private
+
+      def edit_path
+        Array(@session.model.active_path).map(&:persistent_id)
+      end
 
       # Collecting means the button is down. Without the flag, a press whose release the host never
       # delivered would leave every later hover collecting, and the next release would write a

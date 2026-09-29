@@ -8,7 +8,7 @@ module PhComposer
     module Palette
       # A value the mode does not colour: the entity carries a record but not enough of one to paint.
       INCOMPLETE = [255, 176, 0].freeze
-      # No record at all. Drawn as a stippled outline rather than a fill, so it reads as absent.
+      # No record at all. Drawn as a hatch and solid boundary rather than a fill.
       UNCLASSIFIED = [130, 130, 130].freeze
       # Isolation washes out the underlying geometry, without the outlines a mode colour carries.
       # It is a separate rendering pass, never a substitute colour in a mode's palette.

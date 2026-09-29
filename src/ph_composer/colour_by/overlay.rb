@@ -54,13 +54,19 @@ module PhComposer
           view.drawing_color = outline_colour(colour)
           view.draw(GL_LINES, Tessellation.lift(points, view))
         end
-        return if @service.unclassified_outlines.empty?
+        return if @service.unclassified_outlines.empty? && @service.unclassified_hatch.empty?
 
-        # Unclassified entities are not filled: an absent record should not read as a colour choice.
-        view.line_stipple = "-" if view.respond_to?(:line_stipple=)
-        view.drawing_color = outline_colour(Palette::UNCLASSIFIED)
-        view.draw(GL_LINES, Tessellation.lift(@service.unclassified_outlines, view))
+        # A solid boundary remains legible on tiny Faces where no six-inch stripe crosses the mesh.
+        # Hatch points were clipped and cached at rebuild time; draw only lifts them toward the eye.
         view.line_stipple = "" if view.respond_to?(:line_stipple=)
+        view.drawing_color = outline_colour(Palette::UNCLASSIFIED)
+        unless @service.unclassified_outlines.empty?
+          view.draw(GL_LINES, Tessellation.lift(@service.unclassified_outlines, view))
+        end
+        return if @service.unclassified_hatch.empty?
+
+        view.line_width = 1
+        view.draw(GL_LINES, Tessellation.lift(@service.unclassified_hatch, view))
       end
 
       # The legend the HUD draws is the panel's legend: one source, so a QA screenshot and the panel

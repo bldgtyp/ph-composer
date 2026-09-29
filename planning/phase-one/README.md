@@ -19,7 +19,10 @@ HBJSON/report handoff. Ed deferred METr export on 2026-09-20 until feature devel
 further along; its return milestone is unscheduled.
 
 The [keyboard/context continuation](evidence/p1-d-keyboard-context.md) verifies layered Escape,
-quantity save/Undo/Redo and native-menu Classify state with fresh-host corrections. A09 remains open.
+quantity save/Undo/Redo, tree/focus/draft behavior and held-button Model/edit-context cancellation
+with fresh-host corrections. A09's named current-host cases pass. The
+[hatch and invalidation correction](evidence/p1-d-hatch-and-invalidation.md) verifies the PRD hatch
+and immediate public-action cache updates; isolated GPU timing remains open.
 
 ## Read order
 

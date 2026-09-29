@@ -23,8 +23,9 @@ module PhComposer
   module ColourBy
     FEATURE_ID = "#{EXTENSION_ID}.colour_by"
     STATE = "#{FEATURE_ID}.state"
-    # Every host event that can change what a mode would paint. A tag being hidden need not advance
-    # the session revision, so `tags_changed` forces a rebuild rather than deduplicating on one.
+    # Host events that can change what a mode would paint. Service also listens for the session's
+    # post-commit change publication, since a native commit callback may arrive before the revision
+    # advances. A hidden tag need not advance the revision, so `tags_changed` forces a rebuild.
     #
     # `model_activated` is deliberately absent. A Model that changed while it was inactive reported
     # that through its own observers at the time, so switching back to it has nothing to rebuild.

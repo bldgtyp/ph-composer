@@ -237,16 +237,42 @@ class ColourByTest < PhComposerTestCase
     assert_equal [9, 3], fills.map { |(_mode, points, _colour, _width)| points.length }
   end
 
-  def test_an_unclassified_face_is_outlined_rather_than_filled
-    zone_group(600, [nil])
+  def test_an_unclassified_face_is_hatched_and_outlined_without_a_fill_or_model_write
+    zone = zone_group(600, [nil])
+    zone.transformation = Geom::Transformation.scaling(24)
 
-    activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.face_assignment.by_face_type")
+    refute_empty service.unclassified_hatch
+    refute_empty service.unclassified_outlines
+    assert_empty service.fills
+    # Draw must consume the cache even if the geometry changes between a host event and repaint.
+    zone.entities.grep(Sketchup::Face).first.define_singleton_method(:mesh) { |*_args| raise "mesh read in draw" }
     overlay = @model.overlays.to_a.first
     overlay.draw(@model.active_view)
 
     modes = @model.active_view.draws.map(&:first)
     refute_includes modes, GL_TRIANGLES
-    assert_includes modes, GL_LINES
+    assert_equal [GL_LINES, GL_LINES], modes
+    assert_equal [2, 1], @model.active_view.draws.map(&:last)
+    refute @model.modified?
+  end
+
+  def test_unclassified_hatch_follows_isolation_and_visibility
+    zone = zone_group(605, ["Wall", nil])
+    zone.transformation = Geom::Transformation.scaling(24)
+    service = activate("ph_composer.face_assignment.by_face_type")
+    refute_empty service.unclassified_hatch
+
+    service.isolate([nil, :unclassified])
+    refute_empty service.unclassified_hatch
+    refute_empty service.wash_triangles
+    assert_empty service.fills
+
+    zone.entities.grep(Sketchup::Face).last.hidden = true
+    service.invalidate!(:force => true)
+    assert_empty service.unclassified_hatch
+    assert_empty service.unclassified_outlines
+    assert_equal 1, service.rows.last.count, "hidden Faces still belong to the legend"
   end
 
   def test_the_hud_names_the_mode_and_lists_every_legend_row
@@ -273,6 +299,7 @@ class ColourByTest < PhComposerTestCase
     assert_equal GL_LINES, outline.first
     assert_equal [230, 180, 60, Palette::OUTLINE_ALPHA], outline[2].to_a
     assert_empty service.unclassified_outlines, "the set-aside Face loses its unclassified styling"
+    assert_empty service.unclassified_hatch
     assert_equal Palette::UNCLASSIFIED, service.rows.last.colour, "its legend keeps the original meaning"
     assert_equal ["Face type", "Showing only: Wall", "Wall (1)", "Unclassified (1)"],
                  @model.active_view.texts.map { |(_point, text, _options)| text }
@@ -475,6 +502,30 @@ class ColourByTest < PhComposerTestCase
     assert_operator @model.active_view.invalidations, :>, drawn, "a later revision redraws"
   end
 
+  def test_public_make_zone_refreshes_an_active_overlay_after_the_revision_advances
+    zone_group(1_250, [nil])
+    loose_face = Sketchup::Face.new(1_261, {}, :points => [point(0, 0, 0), point(24, 0, 0),
+                                                          point(24, 24, 0)])
+    loose_group = Sketchup::Group.new(1_260, Sketchup::Entities.new([loose_face]))
+    @model.entities << loose_group
+    service = activate("ph_composer.face_assignment.by_face_type")
+    assert_equal 1, service.rows.last.count
+    assert_equal 1, service.rebuilds
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    made = PhComposer::API.invoke(
+      :context => context, :name => "ph_composer.zones.make",
+      :params => { "parent_path" => [], "entity_ids" => [loose_group.persistent_id] },
+      :request => { "sequence" => 1, "expected_revision" => @session.revision }
+    )
+
+    assert_equal %w[completed committed], made.values_at("status", "effect")
+    assert_equal 2, service.rows.last.count
+    assert_equal 2, service.rebuilds, "the in-commit callback and action publication coalesce"
+    refute_empty service.unclassified_hatch
+    assert_equal 1, @model.overlays.to_a.length
+  end
+
   def test_a_second_event_at_the_same_revision_does_not_rebuild
     zone_group(1300, ["Wall"])
     service = activate("ph_composer.face_assignment.by_face_type")
@@ -563,6 +614,7 @@ class ColourByTest < PhComposerTestCase
     assert_empty service.fills
     assert_empty service.outlines
     assert_empty service.unclassified_outlines
+    assert_empty service.unclassified_hatch
     assert_empty service.wash_triangles
     assert_empty @model.overlays.to_a
   end

@@ -31,7 +31,7 @@ module PhComposer
     # (planning/phase-one/evidence/p1-d-broader-acceptance.md). Other scene visibility state still
     # needs its own host evidence; there is no general scene-change subscription here.
     class Service
-      attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines, :isolated
+      attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines, :unclassified_hatch, :isolated
       attr_reader :wash_triangles
       # How many times the drawing has been rebuilt for this Model. The host walkthrough reads it to
       # tell an invalidating event that fired from one that did not.
@@ -41,6 +41,12 @@ module PhComposer
         @session = session
         @rebuilds = 0
         clear
+        # An extension action can receive SketchUp's commit callback before ModelSession#mutate
+        # advances the revision. Its later change publication is the first safe rebuild point.
+        # Native changes still arrive through the host-event subscriptions in install.rb.
+        @change_unsubscribe = Sessions.on_change do |changed_session, _source, _detail|
+          invalidate! if changed_session.equal?(@session)
+        end
       end
 
       def active?
@@ -94,6 +100,7 @@ module PhComposer
       def detach
         clear
         detach_overlay
+        @change_unsubscribe.call
         self
       end
 
@@ -148,6 +155,7 @@ module PhComposer
         @fills = {}
         @outlines = {}
         @unclassified_outlines = []
+        @unclassified_hatch = []
         @wash_triangles = []
         @entities = {}
         @isolated = nil
@@ -164,6 +172,7 @@ module PhComposer
         fills = Hash.new { |table, colour| table[colour] = [] }
         outlines = Hash.new { |table, colour| table[colour] = [] }
         unclassified = []
+        unclassified_triangles = []
         wash = []
         @visibility = OccurrenceVisibility.new(@session.model)
         painted = Array(declaration.projection.call(@session.model)).map do |entry|
@@ -174,7 +183,7 @@ module PhComposer
         # so a row that is gone releases what it was holding.
         @isolated = nil unless painted.any? { |entry, state, _colour| [entry.value, state] == @isolated }
         painted.each do |entry, state, colour|
-          add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified, wash)
+          add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified, unclassified_triangles, wash)
         end
         @rows = order(declaration, rows.values)
         @entities = settled(entities)
@@ -182,6 +191,7 @@ module PhComposer
         @fills = settled(fills)
         @outlines = settled(outlines)
         @unclassified_outlines = unclassified
+        @unclassified_hatch = Tessellation.hatch(unclassified_triangles)
         @wash_triangles = wash
         @built_revision = @session.revision
         @rebuilds += 1
@@ -205,7 +215,7 @@ module PhComposer
         batches.each_with_object({}) { |(colour, points), table| table[colour] = points }
       end
 
-      def add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified, wash)
+      def add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified, unclassified_triangles, wash)
         row = rows[[entry.value, state]] ||= Row.new(:value => entry.value, :label => label_for(entry),
                                                      :colour => colour, :count => 0, :state => state)
         row.count += 1
@@ -214,11 +224,12 @@ module PhComposer
 
         triangles, segments = Tessellation.call(entry.entity, entry.transform)
         # Set-aside geometry has its own wash pass, with no mode outline. A grey mode value and
-        # the dashed unclassified outline therefore keep their meaning during isolation.
+        # the unclassified hatch therefore keep their meaning during isolation.
         if set_aside?(entry.value, state)
           wash.concat(triangles)
         elsif state == :unclassified
           unclassified.concat(segments)
+          unclassified_triangles.concat(triangles)
         else
           fills[colour].concat(triangles)
           outlines[colour].concat(segments)

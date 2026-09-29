@@ -153,6 +153,36 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty values("face_type").compact
   end
 
+  def test_late_mouse_up_after_a_model_switch_cancels_without_a_suspend_callback
+    zone(660)
+    tool.choose("face_type", "Wall")
+    point_at([10, 10], @faces.fetch(0))
+    press([10, 10])
+    Sketchup.active_model = Sketchup::Model.new
+
+    tool.onLButtonUp(0, 10, 10, @view)
+
+    assert_empty values("face_type").compact
+    assert_empty(@model.operations.select { |name, _ui, _state| name == "Classify Faces" })
+    refute tool.send(:collecting?)
+  end
+
+  def test_late_mouse_up_after_an_edit_path_change_cancels_without_a_suspend_callback
+    zone(670)
+    tool.choose("face_type", "Wall")
+    point_at([10, 10], @faces.fetch(0))
+    press([10, 10])
+    @model.active_path = [@model.entities.grep(Sketchup::Group).first]
+    invalidations = @view.invalidations
+
+    tool.onLButtonUp(0, 10, 10, @view)
+
+    assert_empty values("face_type").compact
+    assert_empty(@model.operations.select { |name, _ui, _state| name == "Classify Faces" })
+    refute tool.send(:collecting?)
+    assert_operator @view.invalidations, :>, invalidations
+  end
+
   # A Face in no Zone refuses the whole pending gesture rather than painting the rest of it.
   def test_a_face_outside_every_zone_refuses_the_whole_gesture
     zone(700)

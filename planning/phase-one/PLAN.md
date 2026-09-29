@@ -164,6 +164,7 @@ focused tests; the stage closes only when A04 to A09 all have evidence.
 
 The [keyboard/context continuation](evidence/p1-d-keyboard-context.md) corrects panel Escape
 and native-menu tool-state refresh and verifies layered cancellation without Model writes.
+Held-button Model/edit-context cancellation and the remaining named current-host A09 cases pass.
 
 D6 is the gesture itself, distinct from D1's operation. A04's atomic-gesture row needs both.
 
@@ -351,8 +352,11 @@ Model-switch/close cleanup and Ruby rebuild cost. Scene tag visibility reaches t
 layer invalidation path on this host. The walkthrough's hole helper and the renderer's hidden
 ancestor handling were corrected. The [2026-09-29 continuation](evidence/p1-d-colour-by-continuation.md)
 verifies native Overlays-panel off/on, foreground occlusion, alpha and native orbit, and measures
-feature redraw/cadence at 1,032 triangles. Isolated GPU timing remains open. Unclassified still
-uses a stippled outline rather than the PRD's hatch; that visual acceptance is not closed by this run.
+feature redraw/cadence at 1,032 triangles. The
+[hatch correction](evidence/p1-d-hatch-and-invalidation.md) replaces the stippled outline with
+the PRD hatch, verifies native clipping/occlusion/visibility and fixes public-action cache
+invalidation. Final CPU hatch generation has a 91.969 ms median at 1,892 triangles. Isolated
+GPU timing remains open.
 
 **Depends on:** P1-C. Owners: Zones and face assignment.
 
