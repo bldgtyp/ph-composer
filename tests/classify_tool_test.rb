@@ -46,6 +46,32 @@ class ClassifyToolTest < PhComposerTestCase
     assert_includes Sketchup.status_texts.last, "Outdoors"
   end
 
+  def test_native_tool_choices_and_deactivation_publish_current_state_without_model_operations
+    states = []
+    PhComposer::Sessions.on_refresh do |session|
+      next unless session == @session
+
+      states << [tool.active?, tool.chosen("face_type")]
+    end
+    UI.run_timers
+    states.clear
+    operations = @model.operations.dup
+
+    tool.choose("face_type", "Wall")
+    UI.run_timers
+    assert_equal [[true, "Wall"]], states
+
+    tool.choose("face_type", "Floor")
+    UI.run_timers
+    assert_equal [true, "Floor"], states.last
+
+    tool.stop
+    UI.run_timers
+    assert_equal [false, "Floor"], states.last
+    assert_equal 3, states.length
+    assert_equal operations, @model.operations
+  end
+
   # A drag is one gesture however many Faces it crosses: one invoke, so one Undo entry.
   def test_a_drag_over_several_faces_is_one_gesture_and_one_undo_step
     zone(200)

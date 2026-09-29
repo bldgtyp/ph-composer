@@ -162,6 +162,9 @@ focused tests; the stage closes only when A04 to A09 all have evidence.
 | D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Implemented on branch |
 | D7 | Overview Zone tree, faces table, panel legend and panel palette | Implemented on branch |
 
+The [keyboard/context continuation](evidence/p1-d-keyboard-context.md) corrects panel Escape
+and native-menu tool-state refresh and verifies layered cancellation without Model writes.
+
 D6 is the gesture itself, distinct from D1's operation. A04's atomic-gesture row needs both.
 
 ### What D4 left open

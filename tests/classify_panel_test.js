@@ -155,6 +155,58 @@ test("Stop classifying appears only while the tool has the viewport", function (
   assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.stop_classifying");
 });
 
+function escape(p, handled) {
+  var event = { key: "Escape", defaultPrevented: Boolean(handled),
+    preventDefault: function () { this.defaultPrevented = true; } };
+  p.context.document.listeners.keydown(event);
+  return event;
+}
+
+test("panel Escape stops the active tool once through its public view command", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
+  assert.strictEqual(escape(p).defaultPrevented, true);
+  escape(p);
+  assert.strictEqual(p.sent.length, 1, "a pending stop is not submitted twice");
+  assert.strictEqual(p.sent[0].type, "view.invoke");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.stop_classifying");
+});
+
+test("panel Escape respects an editor's consumed press and an inactive tool", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({}, true)) });
+  escape(p, true);
+  assert.strictEqual(p.sent.length, 0);
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({}, false)) });
+  assert.strictEqual(escape(p).defaultPrevented, false);
+  assert.strictEqual(p.sent.length, 0);
+});
+
+test("a modal gets Escape before Classify, then the next press stops the tool", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({}, true)) });
+  p.section().querySelectorAll("button").filter(function (node) {
+    return node.textContent === "New attached zone";
+  })[0].listeners.click({});
+  var dialog = p.context.document.querySelector("dialog");
+  assert.strictEqual(escape(p).defaultPrevented, false);
+  assert.strictEqual(p.sent.length, 0);
+  dialog.listeners.cancel({ preventDefault: function () {} });
+  assert.strictEqual(p.context.document.querySelector("dialog"), null);
+  escape(p);
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.stop_classifying");
+});
+
+test("Escape targets the currently displayed Model session", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({}, true)) });
+  var next = snapshot(palette({}, true));
+  next.session = "session-b";
+  p.panel.receive({ type: "panel.snapshot", payload: next });
+  escape(p);
+  assert.strictEqual(p.sent[0].payload.session, "session-b");
+});
+
 /* A snapshot arrives after every Face the user paints; the palette must not be rebuilt under them. */
 test("an unchanged snapshot leaves the controls exactly where they were", function () {
   var p = page();

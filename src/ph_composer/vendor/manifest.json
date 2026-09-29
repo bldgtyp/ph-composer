@@ -71,9 +71,9 @@
       "sha256": "62ecfbf1a36e2d99e2f4a6758f00f32a080a77113b396fd7fa7e6803077bf0cb"
     },
     "html/sections/classify.js": {
-      "bytes": 10625,
+      "bytes": 11338,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "aaf34a3f453b7200dcbdd747aec76b56ef8828aad57354cfb645584abd5cfea6"
+      "sha256": "ac6e821ad278e4d6e80b5f3baebc9ff56957b5d21849470e9f406bde6d1df849"
     },
     "html/sections/colour_by.js": {
       "bytes": 5064,

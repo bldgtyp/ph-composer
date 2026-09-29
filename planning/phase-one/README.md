@@ -18,6 +18,9 @@ Phase 0 merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1), l
 HBJSON/report handoff. Ed deferred METr export on 2026-09-20 until feature development is
 further along; its return milestone is unscheduled.
 
+The [keyboard/context continuation](evidence/p1-d-keyboard-context.md) verifies layered Escape,
+quantity save/Undo/Redo and native-menu Classify state with fresh-host corrections. A09 remains open.
+
 ## Read order
 
 1. [STATUS.md](STATUS.md): current handoff and entry gates.

@@ -15,6 +15,17 @@ function (panel, ui, requests, snapshot, words) {
   var KEEP = "";
   var screen = null;
 
+  // Editors and bubbles consume their own Escape first. A modal dialog receives the native
+  // cancel event after keydown, so leave that press to it even before it marks the event handled.
+  // Otherwise panel focus must not trap the viewport's Classify tool.
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape" || event.defaultPrevented || !screen || !screen.active ||
+        screen.view.busy()) return;
+    if (Array.from(document.querySelectorAll("dialog")).some(function (dialog) { return dialog.open; })) return;
+    event.preventDefault();
+    screen.view.run("ph_composer.face_assignment.stop_classifying", {});
+  });
+
   function forSession(session, send) {
     if (screen && screen.session === session) return screen;
     if (screen && screen.draft) screen.draft.close();
@@ -205,6 +216,7 @@ function (panel, ui, requests, snapshot, words) {
     var records = (snapshot.value(state, "ph_composer.face_assignment.attached_zone.list") ||
       { records: [] }).records;
     var screenState = forSession(state.session, send);
+    screenState.active = Boolean(tool.active);
     screenState.view.consume(state);
     screenState.edits.consume(state);
     sendPending(screenState);

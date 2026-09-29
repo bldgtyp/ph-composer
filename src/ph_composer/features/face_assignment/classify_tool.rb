@@ -59,6 +59,7 @@ module PhComposer
         set("attached_zone_id", nil) if field == "boundary_condition" && value != "AttachedZone"
         start
         show_instructions
+        @session.request_refresh
         self
       end
 
@@ -99,6 +100,7 @@ module PhComposer
         @hover = nil
         force_colour_by
         show_instructions
+        @session.request_refresh
       end
 
       def deactivate(view)
@@ -107,6 +109,7 @@ module PhComposer
         @hover = nil
         release_colour_by
         view.invalidate if view.respond_to?(:invalidate)
+        @session.request_refresh
       end
 
       # Escape, a tool change or an Undo. Escape ends the tool, cancelling its pending gesture with

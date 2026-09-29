@@ -22,7 +22,9 @@ reported rather than solved. Atomic Attached-zone create-and-assign and remainin
 also remain open. The [Colour-by continuation](evidence/p1-d-colour-by-continuation.md) verifies
 native Overlays-panel toggles, foreground occlusion, alpha and orbit; feature timing passes the
 prior screening budget at 1,032 triangles. Isolated GPU timing and unclassified hatch visual
-acceptance remain open.
+acceptance remain open. The [keyboard/context continuation](evidence/p1-d-keyboard-context.md)
+verifies layered Escape, quantity save/Undo/Redo and native-menu Classify state, with two
+keyboard/lifecycle corrections fresh-host verified. A09 remains open.
 
 ## Broader acceptance continuation
 
