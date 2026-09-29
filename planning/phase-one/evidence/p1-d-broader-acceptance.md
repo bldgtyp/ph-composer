@@ -144,9 +144,11 @@ The Attached-zone dialog review found no blocking issue.
 
 ## Remaining boundaries
 
-Do not close A05 to A09 wholesale from these individual cases. Remaining items include native
-forward recovery of moved paths and native split-Face UUIDs (see the
+Do not close A05 to A09 wholesale from these individual cases. Unique moved-path recovery is now
+verified; remaining identity work includes native split-Face UUID recovery (see the
 [2026-09-29 reference checks](p1-d-native-references.md)), the pending-Face atomic inline-create workflow,
-SketchUp's own Overlays panel toggle behavior, complete occlusion and GPU timing, and any named
-keyboard/context cases not evidenced above. SketchUp 2023, Windows, P1-E/F, public distribution
+isolated GPU timing, unclassified hatch visual acceptance and any named keyboard/context cases
+not evidenced above. Native Overlays-panel toggles, foreground occlusion, alpha and orbit are
+verified in the [2026-09-29 Colour-by continuation](p1-d-colour-by-continuation.md), with feature
+redraw/cadence measured at 1,032 triangles. SketchUp 2023, Windows, P1-E/F, public distribution
 and certification acceptance remain outside this run.

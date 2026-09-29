@@ -346,9 +346,10 @@ The 2026-09-26 [continuation](evidence/p1-d-broader-acceptance.md) verifies hole
 `Face#mesh`, direct tag changes, scene tag visibility, native picking, ancestor visibility,
 Model-switch/close cleanup and Ruby rebuild cost. Scene tag visibility reaches the existing
 layer invalidation path on this host. The walkthrough's hole helper and the renderer's hidden
-ancestor handling were corrected. Complete occlusion, GPU frame timing and SketchUp's own
-Overlays-panel toggle remain open. Unclassified still uses a stippled outline rather than the
-PRD's hatch; that visual acceptance is not closed by this run.
+ancestor handling were corrected. The [2026-09-29 continuation](evidence/p1-d-colour-by-continuation.md)
+verifies native Overlays-panel off/on, foreground occlusion, alpha and native orbit, and measures
+feature redraw/cadence at 1,032 triangles. Isolated GPU timing remains open. Unclassified still
+uses a stippled outline rather than the PRD's hatch; that visual acceptance is not closed by this run.
 
 **Depends on:** P1-C. Owners: Zones and face assignment.
 

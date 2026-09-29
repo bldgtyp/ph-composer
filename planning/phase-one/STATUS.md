@@ -19,7 +19,10 @@ Face cuts and copied-Zone repair before writes, with supported catalog-reference
 native rollback, Undo/Redo and reopen. Successful split repair still needs an explicit identity
 contract; Face/Zone extension-reference targets are unsupported, and one-to-many pairing remains
 reported rather than solved. Atomic Attached-zone create-and-assign and remaining overlay/UI cases
-also remain open.
+also remain open. The [Colour-by continuation](evidence/p1-d-colour-by-continuation.md) verifies
+native Overlays-panel toggles, foreground occlusion, alpha and orbit; feature timing passes the
+prior screening budget at 1,032 triangles. Isolated GPU timing and unclassified hatch visual
+acceptance remain open.
 
 ## Broader acceptance continuation
 

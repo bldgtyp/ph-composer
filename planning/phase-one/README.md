@@ -9,6 +9,8 @@ verify cut/paste and split preservation, plus explicit Solve recovery of unique 
 path changes. Native split identity repair remains open. The register still has
 open P1-D cases. The [extension-copy continuation](evidence/p1-d-extension-copy-safety.md)
 corrects unsafe payload copying and records the reference-target and native-split repair limits.
+The [Colour-by continuation](evidence/p1-d-colour-by-continuation.md) verifies native overlay
+toggles, occlusion, alpha and orbit, with feature redraw/cadence measured at 1,032 triangles.
 ISSUE: none (local planning draft)
 
 Phase 0 merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1), local merge
