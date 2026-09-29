@@ -83,9 +83,9 @@ module PhComposer
 
     def declare_adjacency(feature)
       feature.action("#{FEATURE_ID}.solve_adjacency",
-                     :description => "Pair complete shared Faces between two explicit Zones.",
+                     :description => "Reconcile and pair shared Faces within an explicit Zone scope.",
                      :params => SOLVE_PARAMS, :result => OBJECT, :undo_name => "Solve Zone Adjacency",
-                     :side_effects => "Writes reciprocal Surface endpoints to matched Faces.") do |request, proposal|
+                     :side_effects => "Retires old Surface pairs and writes current endpoints.") do |request, proposal|
         solve_adjacency(request, proposal)
       end
       feature.action("#{FEATURE_ID}.retire_adjacency", :description => "Retire one reciprocal Surface pair.",

@@ -34,7 +34,9 @@ acceptance register for cases still open.
 
 The [native reference continuation](../../phase-one/evidence/p1-d-native-references.md) verifies
 cut/paste and native split preservation, Undo/Redo and reopen. The false current endpoint state
-is corrected. Forward repair after changed paths or copied Face UUIDs remains open.
+is corrected. Explicit Solve recovery after changed paths now passes with unique authored
+identities, exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID recovery
+remains open.
 
 ## Blockers
 

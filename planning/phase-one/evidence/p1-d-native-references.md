@@ -1,7 +1,7 @@
 # P1-D host evidence: native cut/paste and Face splits
 
 DATE: 2026-09-29
-STATUS: Native preservation, refusal and round-trip cases verified; forward repair remains open.
+STATUS: Native preservation and unique-identity path recovery verified; split identity repair remains open.
 ISSUE: none (local implementation packet)
 
 ## Host and fixture
@@ -84,7 +84,7 @@ its intended target.
 Fixture: `p1d-native-paired-split.skp`; snapshots `native-references-paired-split-before.json` and
 `native-references-paired-split.json`.
 
-## Verification and disposition
+## Initial state-fix verification and disposition
 
 The two-file correction adds regressions for moved Zone paths, duplicated local Face UUIDs and
 corrupt reciprocal paths with unchanged UUIDs. Focused scope tests: 31 tests / 132 assertions on
@@ -101,3 +101,41 @@ otherwise unique Zone containing a native Face split. Returning via Undo works. 
 forward repair needs to preserve payloads, disclose unremapped unavailable-extension references,
 refuse ambiguity and establish only valid new reciprocal endpoints. It must not be inferred from
 this read-state correction.
+
+## Explicit Solve path recovery continuation
+
+The subsequent correction, based on `4b40b19`, recovers changed stored endpoint paths during
+explicit Solve planning only. The public reference resolver remains strict. Each old endpoint
+must have one authored Zone identity and one globally unique authored Face identity, including
+orphan Faces and repeated component occurrences. The old reciprocal records must agree on the
+pair id and both complete directed references. Actual candidate paths pass the normal mutable
+resolver, and every surviving counterpart must be in the explicit caller scope. Geometry does
+not select identities. UUID counts are collected once per planning run when fallback is needed.
+
+Installed `adjacency.rb` SHA-256:
+`8d88f90b821e78ae46bbb1143c8a32267a73d2d158b18772e2cbb251dfac8edb`.
+Fresh SketchUp opened the saved native-pasted fixture. Public preview proposed retiring and
+recreating the same pair on the actual paths without writing anything. A single-Zone invocation
+refused `scope.incomplete / none`, with the full snapshot unchanged. An injected exception after
+the third Face write, the first new pair write after both retirements, returned
+`operation.failed / rolled_back`; the entire original snapshot was restored exactly.
+
+Whole-scope Solve then committed both endpoints, preserving the original Zone and Face UUIDs,
+stamps, geometry, user data and unavailable-extension payloads byte-for-value. Only adjacency
+records changed. Both endpoints read current. Repeat Solve returned `completed / none` and
+left the full snapshot unchanged. One native Undo restored the exact pasted snapshot; native
+Redo restored the exact recovered snapshot. Save, quit and fresh reopen preserved the recovered
+snapshot exactly and both endpoints still read current. Fixture: `p1d-native-recovered.skp`;
+snapshot: `native-references-recovered.json`, both gitignored under `_private/host/`.
+
+A separate fresh process reopened the native paired-split fixture against the same installed
+solver. Solve still refused `target.ambiguous / none`, wrote nothing, and all three Surface
+occurrences read unresolved. Unique-path recovery does not select among duplicated Face UUIDs
+or rewrite extension references. Forward native-split identity repair remains open.
+
+Focused scope tests pass 39 tests / 191 assertions on Ruby 3.2.2 and 2.7.2. Full `make ci`,
+coverage and the full Ruby 2.7.2 suite pass: 476 Ruby tests / 2,031 assertions, 170 JavaScript
+tests, 84 Python tests and 9 hostkit tests. Coverage remains Ruby 96.6%, JavaScript 98.2% and
+Python 97.46%. The independent architecture review found no actionable issue and added three
+read-only probes for orphan component duplicates, counterpart deletion after recovery and
+locked descendants. No shipped Python or panel assets changed.

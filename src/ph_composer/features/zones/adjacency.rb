@@ -48,6 +48,7 @@ module PhComposer
       # any candidate. The detached after-records also become the input to any replacement pair.
       def retirement_updates(model, scope, kept, index)
         updates = {}
+        authored_face_counts = {}
         scope.each do |zone|
           index.faces(zone).each do |occurrence|
             record = FaceAssignment::FACE_STORE.read(occurrence.entity)
@@ -60,12 +61,19 @@ module PhComposer
             Occurrences.resolve_face(model, reference, :mutable => true, :index => index)
             FaceAssignment::Schema.validate!(record)
             envelope = record.fetch("adjacency")
-            unless envelope.fetch("self") == reference
+            stored_self = retirement_endpoint(model, envelope.fetch("self"), index, authored_face_counts)
+            unless stored_self && stored_self.zone.path == occurrence.zone.path &&
+                   stored_self.path == occurrence.path && stored_self.entity.equal?(occurrence.entity)
               raise CodedError.new("adjacency.unresolved", "The Surface endpoint no longer matches its stored path.")
             end
-            counterpart = retirement_counterpart(model, envelope.fetch("counterpart"), index)
+            counterpart = retirement_endpoint(model, envelope.fetch("counterpart"), index, authored_face_counts)
+            counts = authored_face_counts[:all]
+            if counts && counts.fetch(record.fetch("id"), 0) != 1
+              raise CodedError.new("target.ambiguous", "The Surface Face id occurs more than once.")
+            end
             if counterpart
-              check_retirement_pair!(occurrence, record, counterpart, scope.map(&:path), updates)
+              check_retirement_pair!(occurrence, record, counterpart, scope.map(&:path), updates,
+                                     authored_face_counts)
             end
             updates[key] = [reference, record, retired(record)]
           end
@@ -73,35 +81,73 @@ module PhComposer
         updates
       end
 
-      def check_retirement_pair!(occurrence, record, counterpart, in_scope, updates)
+      def check_retirement_pair!(occurrence, record, counterpart, in_scope, updates, authored_face_counts)
         other = FaceAssignment::FACE_STORE.read(counterpart.entity)
         FaceAssignment::Schema.validate!(other)
-        reference = occurrence.reference(record.fetch("id"))
         other_reference = counterpart.reference(other.fetch("id"))
+        stored = record.fetch("adjacency")
         unless other["boundary_condition"] == "Surface" &&
                other.dig("adjacency", "pair_id") == record.dig("adjacency", "pair_id") &&
-               other.dig("adjacency", "counterpart") == reference &&
-               other.dig("adjacency", "self") == other_reference
+               other.dig("adjacency", "counterpart") == stored.fetch("self") &&
+               other.dig("adjacency", "self") == stored.fetch("counterpart")
           raise CodedError.new("adjacency.unresolved", "The reciprocal Surface endpoint cannot be retired safely.")
+        end
+        counts = authored_face_counts[:all]
+        if counts && counts.fetch(other.fetch("id"), 0) != 1
+          raise CodedError.new("target.ambiguous", "A Surface Face id occurs more than once.")
         end
         check_scope!({ :occurrence => occurrence }, { :occurrence => counterpart }, in_scope)
         updates[Occurrences.key(other_reference)] = [other_reference, other, retired(other)]
       end
 
-      # A missing path may mean cut/paste or an exploded Zone, not deletion. Only the absence of
-      # both the native Face id and its authored id throughout live geometry confirms deletion.
-      # Ambiguity and every other resolution refusal retain their original meaning.
-      def retirement_counterpart(model, reference, index)
+      # Only an explicit Solve can rebind an old adjacency path. The Zone and Face authored ids
+      # must each identify one live occurrence, and the normal mutable resolver checks its actual
+      # path before the proposal uses it. Geometry never selects a candidate.
+      def retirement_endpoint(model, reference, index, authored_face_counts)
         Occurrences.resolve_face(model, reference, :mutable => true, :index => index)
       rescue CodedError => error
-        raise unless error.code == "target.not_found"
+        raise unless %w[target.changed target.not_found target.wrong_kind].include?(error.code)
 
-        if endpoint_survives?(model.entities, reference)
-          raise CodedError.new("adjacency.unresolved", "The Surface endpoint survives outside its stored path.")
+        zones = index.zones.select { |zone| zone.record.fetch("id") == reference.fetch("zone_id") }
+        raise CodedError.new("target.ambiguous", "The Surface Zone id occurs more than once.") if zones.length > 1
+
+        face_id = reference.fetch("entity_id")
+        authored_face_counts[:all] ||= face_id_occurrence_counts(model.entities)
+        face_count = authored_face_counts.fetch(:all).fetch(face_id, 0)
+        raise CodedError.new("target.ambiguous", "The Surface Face id occurs more than once.") if face_count > 1
+
+        candidates = index.faces_with_id(face_id)
+        if zones.empty? || candidates.empty?
+          if endpoint_survives?(model.entities, reference)
+            raise CodedError.new("adjacency.unresolved", "The Surface endpoint survives outside its stored path.")
+          end
+          return nil
         end
-        nil
+        unless candidates.length == 1 && candidates.first.zone.path == zones.first.path && face_count == 1
+          raise CodedError.new("adjacency.unresolved", "The Surface endpoint is not in its authored Zone.")
+        end
+
+        Occurrences.resolve_face(model, candidates.first.reference(face_id), :mutable => true, :index => index)
       end
 
+      # Count even orphan Faces and repeated component occurrences; build this only on the first
+      # path-recovery attempt and reuse it for the rest of the Solve plan.
+      def face_id_occurrence_counts(entities, counts = Hash.new(0))
+        entities.each do |entity|
+          if entity.is_a?(Sketchup::Face)
+            face_id = FaceAssignment::FACE_STORE.read(entity)&.fetch("id", nil)
+            counts[face_id] += 1 if face_id
+          elsif entity.is_a?(Sketchup::Group)
+            face_id_occurrence_counts(entity.entities, counts)
+          elsif entity.is_a?(Sketchup::ComponentInstance)
+            face_id_occurrence_counts(entity.definition.entities, counts)
+          end
+        end
+        counts
+      end
+
+      # A missing path may mean cut/paste or an exploded Zone, not deletion. Only the absence of
+      # both the native Face id and its authored id throughout live geometry confirms deletion.
       def endpoint_survives?(entities, reference)
         entities.any? do |entity|
           if entity.is_a?(Sketchup::Face)
@@ -116,7 +162,8 @@ module PhComposer
           end
         end
       end
-      private_class_method :retirement_updates, :check_retirement_pair!, :retirement_counterpart, :endpoint_survives?
+      private_class_method :retirement_updates, :check_retirement_pair!, :retirement_endpoint,
+                           :face_id_occurrence_counts, :endpoint_survives?
 
       # Every cross-Zone Face pairing, classified. All Zones are read; the scope only limits writing.
       def examine(sides, in_scope)

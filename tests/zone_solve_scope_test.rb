@@ -356,11 +356,13 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal %w[Surface Surface], boundary_conditions
   end
 
-  def test_a_paired_zone_moved_inside_a_wrapper_reads_unresolved_without_remapping
+  def test_a_paired_zone_moved_inside_a_wrapper_is_rebound_only_by_explicit_solve
     left, right = paired_walls
     store = PhComposer::FaceAssignment::FACE_STORE
-    left_record = store.read(left.entities.to_a.first)
-    right_record = store.read(right.entities.to_a.first)
+    left_face = left.entities.to_a.first
+    right_face = right.entities.to_a.first
+    left_record = store.read(left_face)
+    right_record = store.read(right_face)
     wrapper = Sketchup::Group.new(935, Sketchup::Entities.new)
     @model.entities << wrapper
     wrapper.entities << right
@@ -374,11 +376,46 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal [920], store.read(right.entities.to_a.first).dig("adjacency", "self", "zone_path")
     assert_equal count, @model.operation_starts.length
 
+    preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency",
+                          :params => { "zones" => all_references })
+    assert_equal "completed", preview.fetch("status")
+    assert_equal 2, preview.fetch("affected").count { |entry| entry.fetch("change") == "retired" }
+    assert_equal left_record, store.read(left_face)
+    assert_equal right_record, store.read(right_face)
+    assert_equal count, @model.operation_starts.length
+
     result = solve(all_references)
 
+    assert_equal %w[completed ok committed], result.values_at("status", "code", "effect")
+    assert_equal count + 1, @model.operation_starts.length
+    assert_equal %w[current current], faces.map { |row| row.fetch("adjacency_state") }
+    assert_equal [935, 920], store.read(right_face).dig("adjacency", "self", "zone_path")
+    assert_equal right_record.fetch("id"), store.read(right_face).fetch("id")
+    assert_equal left_record.fetch("id"), store.read(left_face).fetch("id")
+    assert_equal "none", solve(all_references).fetch("effect")
+    assert_equal count + 1, @model.operation_starts.length
+
+    @model.undo
+    assert_equal %w[unresolved unresolved], faces.map { |row| row.fetch("adjacency_state") }.sort
+    undone_wrapper = @model.entities.to_a.find { |entity| entity.persistent_id == 935 }
+    assert_equal right_record, store.read(undone_wrapper.entities.to_a.first.entities.to_a.first)
+    @model.redo
+    assert_equal %w[current current], faces.map { |row| row.fetch("adjacency_state") }
+  end
+
+  def test_an_old_caller_zone_reference_remains_strict_after_reparenting
+    _left, right = paired_walls
+    old_reference = all_references.find { |reference| reference.fetch("zone_path") == [920] }
+    wrapper = Sketchup::Group.new(934, Sketchup::Entities.new)
+    @model.entities << wrapper
+    wrapper.entities << right
+    before = faces
+    count = @model.operation_starts.length
+
+    result = solve([old_reference, all_references.first])
+
     assert_equal %w[refused target.changed none], result.values_at("status", "code", "effect")
-    assert_equal left_record, store.read(left.entities.to_a.first)
-    assert_equal right_record, store.read(right.entities.to_a.first)
+    assert_equal before, faces
     assert_equal count, @model.operation_starts.length
   end
 
@@ -391,6 +428,9 @@ class ZoneSolveScopeTest < PhComposerTestCase
                                     :points => original.outer_loop.vertices.map(&:position), :normal => original.normal)
     left.entities << copied_face
     store.write(copied_face, record)
+    wrapper = Sketchup::Group.new(937, Sketchup::Entities.new)
+    @model.entities << wrapper
+    wrapper.entities << left
     count = @model.operation_starts.length
 
     rows = faces
@@ -404,6 +444,135 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal %w[refused target.ambiguous none], result.values_at("status", "code", "effect")
     assert_equal record, store.read(original)
     assert_equal record, store.read(copied_face)
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_an_orphan_copy_of_a_rebound_face_uuid_is_still_ambiguous
+    _left, right = paired_walls
+    store = PhComposer::FaceAssignment::FACE_STORE
+    face = right.entities.to_a.first
+    copied = Sketchup::Face.new(944, {}, :points => face.outer_loop.vertices.map(&:position),
+                                        :normal => face.normal)
+    store.write(copied, store.read(face))
+    @model.entities << copied
+    wrapper = Sketchup::Group.new(945, Sketchup::Entities.new)
+    @model.entities << wrapper
+    wrapper.entities << right
+    before = store.read(face)
+    count = @model.operation_starts.length
+
+    result = solve(all_references)
+
+    assert_equal %w[refused target.ambiguous none], result.values_at("status", "code", "effect")
+    assert_equal before, store.read(face)
+    assert_equal before, store.read(copied)
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_an_orphan_copy_of_the_unmoved_face_uuid_blocks_path_recovery
+    left, right = paired_walls
+    store = PhComposer::FaceAssignment::FACE_STORE
+    face = left.entities.to_a.first
+    copied = Sketchup::Face.new(946, {}, :points => face.outer_loop.vertices.map(&:position),
+                                        :normal => face.normal)
+    store.write(copied, store.read(face))
+    @model.entities << copied
+    wrapper = Sketchup::Group.new(947, Sketchup::Entities.new)
+    @model.entities << wrapper
+    wrapper.entities << right
+    before = store.read(face)
+    count = @model.operation_starts.length
+
+    result = solve(all_references)
+
+    assert_equal %w[refused target.ambiguous none], result.values_at("status", "code", "effect")
+    assert_equal before, store.read(face)
+    assert_equal before, store.read(copied)
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_a_recreated_zone_and_face_pid_repair_by_unique_authored_ids
+    left, right = paired_walls
+    face_store = PhComposer::FaceAssignment::FACE_STORE
+    zone_store = PhComposer::Zones::ZONE_STORE
+    stamp_store = PhComposer::Zones::STAMP_STORE
+    old_face = right.entities.to_a.first
+    old_record = face_store.read(old_face)
+    payload = { "missing.extension" => { "face_id" => old_record.fetch("id"), "detail" => [1, 2] } }
+    preserved = old_record.merge("user_data" => { "note" => "retain" }, "extension_data" => payload)
+    face_store.write(old_face, preserved)
+    replacement_face = Sketchup::Face.new(939, {},
+                                          :points => old_face.outer_loop.vertices.map(&:position),
+                                          :normal => old_face.normal)
+    face_store.write(replacement_face, preserved)
+    stamp_store.write(replacement_face, stamp_store.read(old_face))
+    replacement_zone = Sketchup::Group.new(938, Sketchup::Entities.new([replacement_face]))
+    zone_store.write(replacement_zone, zone_store.read(right))
+    @model.entities.erase_entities(right)
+    wrapper = Sketchup::Group.new(940, Sketchup::Entities.new([replacement_zone]))
+    @model.entities << wrapper
+
+    assert_equal %w[unresolved unresolved], faces.map { |row| row.fetch("adjacency_state") }.sort
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal %w[current current], faces.map { |row| row.fetch("adjacency_state") }
+    after = face_store.read(replacement_face)
+    assert_equal [940, 938], after.dig("adjacency", "self", "zone_path")
+    assert_equal [939], after.dig("adjacency", "self", "entity_path")
+    assert_equal old_record.fetch("id"), after.fetch("id")
+    assert_equal preserved.fetch("user_data"), after.fetch("user_data")
+    assert_equal payload, after.fetch("extension_data")
+    assert_equal "Surface", face_store.read(left.entities.to_a.first).fetch("boundary_condition")
+  end
+
+  def test_a_reparented_separated_pair_retires_both_current_occurrences
+    _left, right = paired_walls
+    right.transformation = Geom::Transformation.translation([100, 0, 0])
+    wrapper = Sketchup::Group.new(941, Sketchup::Entities.new)
+    @model.entities << wrapper
+    wrapper.entities << right
+    before = faces
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal [nil, nil], boundary_conditions
+    assert_empty result.dig("value", "pair_ids")
+    @model.undo
+    assert_equal before, faces
+    assert_equal %w[Surface Surface], boundary_conditions
+  end
+
+  def test_a_reparented_counterpart_outside_scope_still_refuses
+    left, right = paired_walls
+    right.transformation = Geom::Transformation.translation([100, 0, 0])
+    wrapper = Sketchup::Group.new(942, Sketchup::Entities.new)
+    @model.entities << wrapper
+    wrapper.entities << right
+    before = faces
+    count = @model.operation_starts.length
+    left_reference = all_references.find { |reference| reference.fetch("zone_path") == [left.persistent_id] }
+
+    result = solve([left_reference])
+
+    assert_equal %w[refused scope.incomplete none], result.values_at("status", "code", "effect")
+    assert_equal before, faces
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_a_face_moved_to_another_zone_does_not_rebind_its_old_endpoint
+    left, right = paired_walls
+    right_face = right.entities.to_a.first
+    right.entities.delete(right_face)
+    left.entities << right_face
+    before = PhComposer::FaceAssignment::FACE_STORE.read(right_face)
+    count = @model.operation_starts.length
+
+    result = solve(all_references)
+
+    assert_equal %w[refused adjacency.unresolved none], result.values_at("status", "code", "effect")
+    assert_equal before, PhComposer::FaceAssignment::FACE_STORE.read(right_face)
     assert_equal count, @model.operation_starts.length
   end
 
@@ -423,6 +592,32 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal %w[unresolved unresolved], rows.map { |row| row.fetch("adjacency_state") }
     assert_equal left_record.fetch("id"), changed.dig("adjacency", "counterpart", "entity_id")
     assert_equal count, @model.operation_starts.length
+
+    result = solve(all_references)
+
+    assert_equal %w[refused adjacency.unresolved none], result.values_at("status", "code", "effect")
+    assert_equal left_record, store.read(left.entities.to_a.first)
+    assert_equal changed, store.read(right_face)
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_failure_after_a_reparented_endpoint_retirement_rolls_back_the_pair
+    left, right = paired_walls
+    wrapper = Sketchup::Group.new(943, Sketchup::Entities.new)
+    @model.entities << wrapper
+    wrapper.entities << right
+    before = faces
+    left.entities.to_a.first.define_singleton_method(:set_attribute) do |dictionary, key, value|
+      raise IOError, "the host refused the write" if dictionary == PhComposer::FaceAssignment::FACE_DICTIONARY
+
+      super(dictionary, key, value)
+    end
+
+    result = solve(all_references)
+
+    assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
+    assert_equal before, faces
+    assert_equal %w[Surface Surface], boundary_conditions
   end
 
   def test_common_motion_replaces_stale_stamps_and_then_solving_is_a_noop

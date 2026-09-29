@@ -144,6 +144,14 @@ Each side stores the same `pair_id` and both directed endpoints:
 }
 ```
 
+Explicit Solve may recover a changed stored endpoint path when its Zone UUID identifies exactly
+one live Zone and its Face UUID identifies exactly one live Face occurrence anywhere in the
+Model. Both old Surface envelopes must agree on the pair id and complete directed references.
+The recovered actual paths pass normal mutable resolution, and all surviving endpoints must be
+in the caller scope. Retirement and any new pairing share one transaction. Public caller targets
+remain strict; reads stay unresolved until explicit recovery. Geometry never selects an identity.
+Duplicated split-Face UUIDs require the separate split rules below.
+
 The digest covers the world plane, oriented normal and all outer/inner loop vertices. Convert to
 SI, normalize negative zero and quantize coordinates to 0.001 mm before canonical ordering and
 SHA-256. Rotate each loop to its lexicographically smallest vertex, retain loop direction, and

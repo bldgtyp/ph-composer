@@ -12,8 +12,9 @@ The [2026-09-29 native reference run](evidence/p1-d-native-references.md) verifi
 Line-split record survival, safe Solve refusal, exact Undo/Redo and fresh reopen. It exposed and
 corrected a pasted Surface endpoint reading current despite its changed paths. The correction
 passes both offline Rubies, full CI, coverage and independent review, with fresh installed-host
-checks. Forward recovery after path changes or copied split-Face UUIDs remains open. Atomic
-Attached-zone create-and-assign and the remaining overlay/UI cases also remain open.
+checks. Explicit Solve now recovers unique authored identities after cut/paste path changes,
+with exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID recovery remains
+open. Atomic Attached-zone create-and-assign and the remaining overlay/UI cases also remain open.
 
 ## Broader acceptance continuation
 

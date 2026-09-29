@@ -383,10 +383,12 @@ with their owners. Neither the library provider nor Spaces becomes a Phase 1 pre
 The [2026-09-29 native checks](evidence/p1-d-native-references.md) establish cut/paste and native
 Line-split dictionary survival, safe Solve refusal, exact Undo/Redo and fresh reopen. A read-state
 defect that reported a pasted endpoint current is corrected by validating full local and reciprocal
-references before geometry. Forward repair remains incomplete: cut/paste changes native paths,
-and a native Face split copies one authored UUID onto both pieces. Solve refuses these states;
-copied-Zone identity repair does not repair a split inside an otherwise unique Zone. Define and
-verify explicit recovery before claiming these PRD cases fully complete. Preserve unknown payloads
+references before geometry. Explicit Solve now recovers cut/paste paths using unique authored
+identities, full reciprocal-envelope agreement and the normal mutable resolver on actual paths.
+Native rollback, Undo/Redo and fresh reopen pass. Native split identity repair remains incomplete:
+a Face split copies one authored UUID onto both pieces, and Solve safely refuses that ambiguity.
+Copied-Zone identity repair does not repair a split inside an otherwise unique Zone. Define and
+verify that recovery before claiming these PRD cases fully complete. Preserve unknown payloads
 and disclose unremapped references; do not choose an ambiguous endpoint by geometry.
 
 ## P1-E: HBJSON/report export workflow
