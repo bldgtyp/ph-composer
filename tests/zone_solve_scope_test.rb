@@ -356,6 +356,75 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal %w[Surface Surface], boundary_conditions
   end
 
+  def test_a_paired_zone_moved_inside_a_wrapper_reads_unresolved_without_remapping
+    left, right = paired_walls
+    store = PhComposer::FaceAssignment::FACE_STORE
+    left_record = store.read(left.entities.to_a.first)
+    right_record = store.read(right.entities.to_a.first)
+    wrapper = Sketchup::Group.new(935, Sketchup::Entities.new)
+    @model.entities << wrapper
+    wrapper.entities << right
+    count = @model.operation_starts.length
+
+    rows = faces
+
+    assert_equal [935, 920], rows.find { |row| row.dig("reference", "entity_id") == right_record.fetch("id") }
+      .dig("reference", "zone_path")
+    assert_equal %w[unresolved unresolved], rows.map { |row| row.fetch("adjacency_state") }.sort
+    assert_equal [920], store.read(right.entities.to_a.first).dig("adjacency", "self", "zone_path")
+    assert_equal count, @model.operation_starts.length
+
+    result = solve(all_references)
+
+    assert_equal %w[refused target.changed none], result.values_at("status", "code", "effect")
+    assert_equal left_record, store.read(left.entities.to_a.first)
+    assert_equal right_record, store.read(right.entities.to_a.first)
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_a_split_copy_of_the_local_face_uuid_reads_unresolved
+    left, right = paired_walls
+    store = PhComposer::FaceAssignment::FACE_STORE
+    original = left.entities.to_a.first
+    record = store.read(original)
+    copied_face = Sketchup::Face.new(936, {},
+                                    :points => original.outer_loop.vertices.map(&:position), :normal => original.normal)
+    left.entities << copied_face
+    store.write(copied_face, record)
+    count = @model.operation_starts.length
+
+    rows = faces
+
+    assert_equal 3, rows.length
+    assert_equal %w[unresolved unresolved unresolved], rows.map { |row| row.fetch("adjacency_state") }
+    assert_equal count, @model.operation_starts.length
+
+    result = solve(all_references)
+
+    assert_equal %w[refused target.ambiguous none], result.values_at("status", "code", "effect")
+    assert_equal record, store.read(original)
+    assert_equal record, store.read(copied_face)
+    assert_equal count, @model.operation_starts.length
+  end
+
+  def test_a_reciprocal_path_corruption_reads_unresolved_even_with_the_same_uuid
+    left, right = paired_walls
+    store = PhComposer::FaceAssignment::FACE_STORE
+    left_record = store.read(left.entities.to_a.first)
+    right_face = right.entities.to_a.first
+    right_record = store.read(right_face)
+    changed = PhComposer::DeepCopy.call(right_record)
+    changed.fetch("adjacency").fetch("counterpart")["zone_path"] = [999]
+    store.write(right_face, changed)
+    count = @model.operation_starts.length
+
+    rows = faces
+
+    assert_equal %w[unresolved unresolved], rows.map { |row| row.fetch("adjacency_state") }
+    assert_equal left_record.fetch("id"), changed.dig("adjacency", "counterpart", "entity_id")
+    assert_equal count, @model.operation_starts.length
+  end
+
   def test_common_motion_replaces_stale_stamps_and_then_solving_is_a_noop
     left, right = paired_walls
     [left, right].each { |group| group.transformation = Geom::Transformation.translation([100, 0, 0]) }

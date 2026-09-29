@@ -1,6 +1,6 @@
 # Zones and adjacency: status
 
-DATE: 2026-09-26
+DATE: 2026-09-29
 STATUS: In progress; P1-A through P1-C complete on the implementation branch, P1-D's D1 to D4
 implemented with current-host evidence for the recorded cases. D7's Overview Zone tree has
 current-host evidence and corrections; the broader acceptance cases remain open.
@@ -31,6 +31,10 @@ corrected their recorded defects and verified all three Zone modes on real Group
 The subsequent [A05 to A09 host run](../../phase-one/evidence/p1-d-broader-acceptance.md)
 records additional lifecycle evidence and corrections. Follow that record and the shared
 acceptance register for cases still open.
+
+The [native reference continuation](../../phase-one/evidence/p1-d-native-references.md) verifies
+cut/paste and native split preservation, Undo/Redo and reopen. The false current endpoint state
+is corrected. Forward repair after changed paths or copied Face UUIDs remains open.
 
 ## Blockers
 

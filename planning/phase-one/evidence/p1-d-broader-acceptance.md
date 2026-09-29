@@ -140,7 +140,8 @@ The Attached-zone dialog review found no blocking issue.
 ## Remaining boundaries
 
 Do not close A05 to A09 wholesale from these individual cases. Remaining items include native
-cut/paste reference behavior beyond copying, the pending-Face atomic inline-create workflow,
+forward recovery of moved paths and native split-Face UUIDs (see the
+[2026-09-29 reference checks](p1-d-native-references.md)), the pending-Face atomic inline-create workflow,
 SketchUp's own Overlays panel toggle behavior, complete occlusion and GPU timing, and any named
 keyboard/context cases not evidenced above. SketchUp 2023, Windows, P1-E/F, public distribution
 and certification acceptance remain outside this run.

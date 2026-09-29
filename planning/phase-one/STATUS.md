@@ -1,12 +1,21 @@
 # Phase 1 status
 
-DATE: 2026-09-26
+DATE: 2026-09-29
 STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D D1 to D7
 implemented. D7's eight host questions are answered and its recorded defects are corrected on
 this branch. Broader P1-D acceptance rows remain open; P1-E has not started.
 ISSUE: none (local implementation packet)
 
-## Resume here: broader acceptance continuation
+## Resume here: native references and remaining authoring work
+
+The [2026-09-29 native reference run](evidence/p1-d-native-references.md) verifies cut/paste and
+Line-split record survival, safe Solve refusal, exact Undo/Redo and fresh reopen. It exposed and
+corrected a pasted Surface endpoint reading current despite its changed paths. The correction
+passes both offline Rubies, full CI, coverage and independent review, with fresh installed-host
+checks. Forward recovery after path changes or copied split-Face UUIDs remains open. Atomic
+Attached-zone create-and-assign and the remaining overlay/UI cases also remain open.
+
+## Broader acceptance continuation
 
 D7 fixes are committed and pushed as `a79ae4d`. The subsequent A05 to A09 host run is recorded
 in [the broader acceptance evidence](evidence/p1-d-broader-acceptance.md). It adds transformed

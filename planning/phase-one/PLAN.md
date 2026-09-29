@@ -378,6 +378,17 @@ switches, and measure cost at and beyond 10,000 triangles. B2 did not test that 
 completion. Assembly assignment/pickers/colours remain Phase 2; future Spaces/window cases stay
 with their owners. Neither the library provider nor Spaces becomes a Phase 1 prerequisite.
 
+### Native reference continuation
+
+The [2026-09-29 native checks](evidence/p1-d-native-references.md) establish cut/paste and native
+Line-split dictionary survival, safe Solve refusal, exact Undo/Redo and fresh reopen. A read-state
+defect that reported a pasted endpoint current is corrected by validating full local and reciprocal
+references before geometry. Forward repair remains incomplete: cut/paste changes native paths,
+and a native Face split copies one authored UUID onto both pieces. Solve refuses these states;
+copied-Zone identity repair does not repair a split inside an otherwise unique Zone. Define and
+verify explicit recovery before claiming these PRD cases fully complete. Preserve unknown payloads
+and disclose unremapped references; do not choose an ambiguous endpoint by geometry.
+
 ## P1-E: HBJSON/report export workflow
 
 **Depends on:** P1-C, final authoring behavior for integrated acceptance, and the HBJSON/report interview choices.

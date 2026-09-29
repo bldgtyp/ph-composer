@@ -241,17 +241,31 @@ module PhComposer
         envelope = record["adjacency"]
         return "invalid" unless envelope.is_a?(Hash)
 
+        self_reference = envelope.fetch("self")
+        counterpart_reference = envelope.fetch("counterpart")
+        self_occurrence = Occurrences.resolve_face(model, self_reference, :index => index)
+        return "unresolved" unless self_occurrence.entity.equal?(occurrence.entity) &&
+                                   self_reference == occurrence.reference(record.fetch("id"))
+
+        counterpart = Occurrences.resolve_face(model, counterpart_reference, :index => index)
+        other_record = FaceAssignment::FACE_STORE.read(counterpart.entity)
+        return "unresolved" unless other_record && other_record["boundary_condition"] == "Surface"
+
+        FaceAssignment::Schema.validate!(other_record)
+        other_envelope = other_record["adjacency"]
+        return "unresolved" unless other_envelope.is_a?(Hash) &&
+                                   other_envelope["pair_id"] == envelope["pair_id"] &&
+                                   other_envelope["self"] == counterpart_reference &&
+                                   other_envelope["counterpart"] == self_reference
+
         current = FaceGeometry.capture(occurrence.entity, occurrence.transform)
         return "stale" unless envelope.dig("self_geometry", "digest") == current.digest
 
-        counterpart = Occurrences.resolve_face(model, envelope.fetch("counterpart"), :index => index)
-        other_record = FaceAssignment::FACE_STORE.read(counterpart.entity)
         other_geometry = FaceGeometry.capture(counterpart.entity, counterpart.transform)
-        reciprocal = other_record&.dig("adjacency", "pair_id") == envelope["pair_id"] &&
-                     other_record&.dig("adjacency", "counterpart", "entity_id") == record["id"] &&
-                     other_record&.dig("adjacency", "self_geometry", "digest") == other_geometry.digest &&
-                     other_record&.dig("adjacency", "counterpart_geometry", "digest") == current.digest
-        reciprocal && envelope.dig("counterpart_geometry", "digest") == other_geometry.digest ? "current" : "stale"
+        geometry_current = other_envelope.dig("self_geometry", "digest") == other_geometry.digest &&
+                           other_envelope.dig("counterpart_geometry", "digest") == current.digest &&
+                           envelope.dig("counterpart_geometry", "digest") == other_geometry.digest
+        geometry_current ? "current" : "stale"
       rescue CodedError
         "unresolved"
       end

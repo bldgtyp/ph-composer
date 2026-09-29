@@ -1,10 +1,12 @@
 # Phase 1: walking skeleton
 
-DATE: 2026-09-26
+DATE: 2026-09-29
 STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D's D1 to D7
 implemented, D4 and D6 host-verified, D7's eight host questions answered with fixes verified.
 The [broader native acceptance run](evidence/p1-d-broader-acceptance.md) adds A05 to A09 evidence
-and records further corrections. The register still has open P1-D cases.
+and records further corrections. The [native reference checks](evidence/p1-d-native-references.md)
+verify cut/paste and split preservation, with forward repair still open. The register still has
+open P1-D cases.
 ISSUE: none (local planning draft)
 
 Phase 0 merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1), local merge
