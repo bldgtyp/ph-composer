@@ -45,8 +45,8 @@ feature's mode, the two shipped modes, the unclassified and incomplete states, p
 batching, the HUD, tag and revision invalidation, and the overlay's lifecycle. D6's native tool
 checks and D7's eight Overview questions have current-host evidence. The [atomic Attached-zone continuation](../../phase-one/evidence/p1-d-attached-zone-atomic.md)
 now verifies the public create-and-assign action and inline dialog, including exact native rollback,
-Undo/Redo and fresh reopen. A07’s named current-host cases pass; isolated GPU timing remains in
-A08 in the [acceptance register](../../phase-one/ACCEPTANCE.md).
+Undo/Redo and fresh reopen. A07’s named current-host cases pass. The [isolated GPU continuation](../../phase-one/evidence/p1-d-gpu-timing.md)
+completes A08’s named current-host cases in the [acceptance register](../../phase-one/ACCEPTANCE.md).
 
 Documentation-only architecture review completed 2026-09-18; all four findings addressed in the
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.

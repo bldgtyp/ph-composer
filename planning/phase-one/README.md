@@ -12,7 +12,7 @@ corrects unsafe payload copying and records the remaining Face/Zone reference-ta
 The [Colour-by continuation](evidence/p1-d-colour-by-continuation.md) verifies native overlay
 toggles, occlusion, alpha and orbit, with feature redraw/cadence measured at 1,032 triangles.
 The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) completes A07's
-named current-host cases. A06's reference/solver boundaries and A08's isolated GPU timing remain.
+named current-host cases. The [isolated GPU continuation](evidence/p1-d-gpu-timing.md) completes A08's named current-host cases. A06's reference/solver boundaries remain.
 ISSUE: none (local planning draft)
 
 Phase 0 merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1), local merge
@@ -24,7 +24,7 @@ The [keyboard/context continuation](evidence/p1-d-keyboard-context.md) verifies 
 quantity save/Undo/Redo, tree/focus/draft behavior and held-button Model/edit-context cancellation
 with fresh-host corrections. A09's named current-host cases pass. The
 [hatch and invalidation correction](evidence/p1-d-hatch-and-invalidation.md) verifies the PRD hatch
-and immediate public-action cache updates; isolated GPU timing remains open. The
+and immediate public-action cache updates; the [isolated GPU continuation](evidence/p1-d-gpu-timing.md) completes A08’s named current-host cases. The
 [adjacency boundary continuation](evidence/p1-d-adjacency-boundaries.md) completes A05's named
 current-host checks, with native Undo/Redo and final reciprocal-reference reopen verification.
 

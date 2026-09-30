@@ -2,7 +2,8 @@
 
 DATE: 2026-09-29
 STATUS: Native inspector toggles, foreground occlusion, alpha and orbit verified on the current
-host. Feature redraw and cadence measured. Isolated GPU timing remains unverified.
+host. Feature redraw and cadence measured. Isolated GPU timing was unverified in this run;
+subsequently measured in [the GPU continuation](p1-d-gpu-timing.md).
 ISSUE: none (local implementation packet)
 
 ## Scope and host
@@ -75,7 +76,8 @@ host scheduling. The [SketchUp View API](https://ruby.sketchup.com/Sketchup/View
 refresh timing but does not document it as GPU timing. This preserves the same limitation as
 the [original overlay spike](../../archive/phase-zero/evidence/spike-overlay.md).
 
-Isolated GPU timing and the PRD's unclassified hatch versus the implemented stippled outline
-remain open. SketchUp 2023, Windows, large-project performance, P1-E/F and public release claims
+At the time of this run, isolated GPU timing and the PRD hatch remained open.
+The [hatch correction](p1-d-hatch-and-invalidation.md) and
+[isolated GPU continuation](p1-d-gpu-timing.md) subsequently close those current-host cases. SketchUp 2023, Windows, large-project performance, P1-E/F and public release claims
 remain outside this run. No offline suite was repeated for this evidence-only change; the
 required full code gates already passed at `d27fa58`.

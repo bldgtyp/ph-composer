@@ -357,8 +357,9 @@ verifies native Overlays-panel off/on, foreground occlusion, alpha and native or
 feature redraw/cadence at 1,032 triangles. The
 [hatch correction](evidence/p1-d-hatch-and-invalidation.md) replaces the stippled outline with
 the PRD hatch, verifies native clipping/occlusion/visibility and fixes public-action cache
-invalidation. Final CPU hatch generation has a 91.969 ms median at 1,892 triangles. Isolated
-GPU timing remains open.
+invalidation. Final CPU hatch generation has a 91.969 ms median at 1,892 triangles. The
+[isolated GPU continuation](evidence/p1-d-gpu-timing.md) measures 0.683 ms p95 paired
+added GPU busy time at 1,032 triangles and completes A08’s named current-host cases.
 
 **Depends on:** P1-C. Owners: Zones and face assignment.
 
@@ -409,7 +410,7 @@ before closing A06; do not choose an ambiguous endpoint by geometry.
 The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) now implements
 the pending Face create-and-assign operation and Overview modal. Public and inline paths pass
 validation, native cancellation, actual-reference checks, exact rollback, Undo/Redo and fresh
-reopen. A07's named current-host cases pass; A06 and A08 remain open.
+reopen. A07 and A08's named current-host cases pass; A06 remains open.
 
 ## P1-E: HBJSON/report export workflow
 
