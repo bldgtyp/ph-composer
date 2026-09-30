@@ -176,31 +176,38 @@ module PhComposer
         surfaces.first.fetch(:before).fetch("adjacency")
       end
 
+      # Which split piece keeps the original id, and on what basis. The stored Surface endpoint proves
+      # it when it names exactly one piece; otherwise the user must choose, and a choice that
+      # contradicts the proof refuses. Ambiguity is never resolved by guessing.
       def keeper_path(originals, envelope, zone, old_id, choice)
         paths = originals.map { |entry| entry.fetch(:path) }
-        proved = nil
-        if envelope
-          stored = envelope.fetch("self")
-          unless stored["zone_id"] == zone.record.fetch("id") && stored["entity_id"] == old_id &&
-                 stored["entity_path"].is_a?(Array) && !stored["entity_path"].empty?
-            raise CodedError.new("adjacency.unresolved", "The copied Surface self endpoint is inconsistent.")
-          end
-          if stored["zone_path"] == zone.path
-            matches = paths.select { |path| path == stored["entity_path"] }
-            proved = matches.first if matches.length == 1
-          end
-        end
+        proved = envelope && proved_keeper(paths, envelope.fetch("self"), zone, old_id)
         selected = choice && Occurrences.integer_path(choice)
-        if proved && selected && selected != proved
-          raise CodedError.new("identity.choice_conflicts", "The stored original endpoint proves another piece.")
+        if proved
+          if selected && selected != proved
+            raise CodedError.new("identity.choice_conflicts", "The stored original endpoint proves another piece.")
+          end
+          return [proved, "stored_endpoint"]
         end
-        return [proved, "stored_endpoint"] if proved
         unless selected && paths.include?(selected)
           raise CodedError.new("identity.choice_required", "Choose the split piece that retains #{old_id}.",
                                "candidates" => paths)
         end
 
         [selected, "user_choice"]
+      end
+
+      # The one piece path the copied self endpoint names, or nil when it names none or several. An
+      # endpoint that does not describe this Face in this Zone refuses: it cannot prove anything.
+      def proved_keeper(paths, stored, zone, old_id)
+        unless stored["zone_id"] == zone.record.fetch("id") && stored["entity_id"] == old_id &&
+               stored["entity_path"].is_a?(Array) && !stored["entity_path"].empty?
+          raise CodedError.new("adjacency.unresolved", "The copied Surface self endpoint is inconsistent.")
+        end
+        return nil unless stored["zone_path"] == zone.path
+
+        matches = paths.select { |path| path == stored["entity_path"] }
+        matches.length == 1 ? matches.first : nil
       end
 
       def reciprocal(model, index, envelope, old_id, scope_paths)
