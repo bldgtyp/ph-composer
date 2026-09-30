@@ -9,7 +9,7 @@ BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` f
 
 ## Next step
 
-Phase 07 on `foundation-corrections-followup`, tracked in [#5](https://github.com/bldgtyp/ph-composer/issues/5).
+Phase 08 on `foundation-corrections-followup`, tracked in [#5](https://github.com/bldgtyp/ph-composer/issues/5).
 
 ## Blockers
 
@@ -50,7 +50,7 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 | [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Merged to main | `bda13df` | |
 | [05](phases/phase-05-merge-closure.md) Merge closure | Yes | Merged to main | `08aa837`, `b2dd8b2`; merge `abd86f4` | |
 | [06](phases/phase-06-api-hardening.md) API hardening | No | Implemented on branch | `bbacbc4`, `5ec7faf`, `1b1f421` | |
-| [07](phases/phase-07-hbjson-metadata-policy.md) HBJSON metadata policy | No | Scoped | | |
+| [07](phases/phase-07-hbjson-metadata-policy.md) HBJSON metadata policy | No | Implemented on branch | `9f94e0d` | |
 | [08](phases/phase-08-responsibility-refactors.md) Non-`zones` refactors | No | Scoped | | |
 | [09](phases/phase-09-foundation-closure.md) Foundation closure | No | Blocked | | 06 to 08 |
 
@@ -89,7 +89,7 @@ Phase 08 into Phase 02.
 | A02 | Unbounded entity reads, ignored filters, loose cursors | P2 | No | 06 | Implemented on branch | `entity_reads_test`, `api_test` cursor binding; `5ec7faf` |
 | A04 | Export task methods not describable | P2 | No | 06 | Implemented on branch | `export_tasks_test` description-built client; `1b1f421` |
 | A06 | Registration schema/callable/example validation, frozen declarations | P2 | No | 06 | Implemented on branch | `registry_test` (4); `bbacbc4` |
-| HBJ | Opaque canonical HBJSON bypasses metadata-key guard; declared-key allowlist (R-D2) | P2 | No | 07 | Scoped | |
+| HBJ | Opaque canonical HBJSON bypasses metadata-key guard; declared-key allowlist (R-D2) | P2 | No | 07 | Implemented on branch | `hbjson_metadata_test` (6); `9f94e0d` |
 | REF | Non-`zones` refactors: `Workflow.start`, export-contributor validation, hatch clipping | Advisory | No | 08 | Scoped | |
 | A05 | External adapter delivery boundary | Planned | No | Out of scope | Deferred | Separate packet |
 | CONV | `planning-conventions` reported unavailable | Note | No | None | Complete | [R-D7](DECISIONS.md#r-d7-planning-conventions-availability-review-note-resolved) |

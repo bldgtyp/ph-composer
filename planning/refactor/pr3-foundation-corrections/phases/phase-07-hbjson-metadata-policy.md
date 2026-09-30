@@ -1,7 +1,7 @@
 # Phase 07: canonical HBJSON metadata policy
 
 DATE: 2026-09-30
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/5
 MERGE SET: No; required before treating arbitrary contributor output as privacy-checked
@@ -50,4 +50,22 @@ Python changes.
 
 ## Result
 
-(Fill on completion.)
+Commit `9f94e0d`.
+
+- `export/hbjson_metadata.rb` parses a copy of the canonical HBJSON inside `Privacy.validate!`.
+  `user_data` at any depth may hold only declared dotted leaf keys; empty maps pass, which matters
+  because honeybee-ph writes dozens of empty `user_data` objects. `extension_data`, usernames and
+  path keys (ArtifactHygiene's list) refuse at any depth; every string passes the path check alone.
+- `ExportContributor` gains `user_data_keys:`; registration refuses a key that is not dotted
+  lowercase. The `zones` Zone projection declares `ph_composer.level` and
+  `ph_composer.building_segment`.
+- `tests/fixtures/phase_one/two_zones.hbjson` is the exact output of
+  `tools/examples/phase_one/translate_two_zones.py` (new `--write-hbjson` flag), a hand-reviewed
+  contract example; it passes and its bytes are unchanged. The extraction golden is unchanged.
+- No shipped Python changed, so no manifest refresh. `context/TECH_STACK.md` and
+  `context/EXTENSIBILITY.md` state the policy and where it is enforced.
+
+Tests: `tests/hbjson_metadata_test.rb` (6), covering all five plan cases plus the malformed
+declaration. Full Ruby suite 655 runs on 2.7.2 and 3.2.2.
+
+Ledger screen: A10, A13 (export and privacy); no Python change, so A14 is unaffected.
