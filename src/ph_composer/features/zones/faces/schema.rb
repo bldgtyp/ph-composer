@@ -44,21 +44,30 @@ module PhComposer
       end
       PhComposer.on_reset("zones.faces") { reset_for_test }
 
+      # One Face record's values. Every field is optional: a Face is classified a field at a time.
+      # The rules between fields (a reference only with its boundary condition) are Schema's.
+      FACE_VALUES = {
+        "type" => "object", "additionalProperties" => false,
+        "properties" => {
+          "face_type" => { "type" => "string", "enum" => FACE_TYPES },
+          "boundary_condition" => { "type" => "string", "enum" => BOUNDARY_CONDITIONS },
+          "attached_zone_id" => { "type" => %w[string null],
+                                  "description" => "Id of an Attached zone record; only with AttachedZone." },
+          "assembly_id" => { "type" => %w[string null], "description" => "Id of the Face's Assembly." },
+          "adjacency" => { "type" => "object",
+                           "description" => "The Surface pair envelope Solve adjacencies writes; only with Surface." }
+        }
+      }.freeze
+
       module Schema
         module_function
 
         def problems(record)
           return ["Face assignment must be a JSON object"] unless record.is_a?(Hash)
 
-          allowed = %w[id schema_version face_type boundary_condition attached_zone_id assembly_id adjacency
-                       user_data extension_data]
-          found = (record.keys - allowed).map { |key| "Face assignment has unknown field #{key}" }
+          found = JsonSchema.validate(values(record), FACE_VALUES)
           found << "Face id is invalid" unless ID_PATTERN.match?(record["id"].to_s)
           found << "Face schema_version must be 1" unless record["schema_version"] == 1
-          found << "face_type is unknown" if record.key?("face_type") && !FACE_TYPES.include?(record["face_type"])
-          if record.key?("boundary_condition") && !BOUNDARY_CONDITIONS.include?(record["boundary_condition"])
-            found << "boundary_condition is unknown"
-          end
           # An AttachedZone with no chosen record is stored: it is a visible incomplete authoring
           # state that blocks canonical export, not data the record layer refuses to keep.
           if record.key?("attached_zone_id") && record["boundary_condition"] != "AttachedZone"

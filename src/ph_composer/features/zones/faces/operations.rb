@@ -159,8 +159,9 @@ module PhComposer
       end
 
       # Delete with replacement, in one proposal: every Face naming the record moves first, then the
-      # record goes. Faces are not catalog records, so the engine's reference check cannot see them and
-      # this feature owns the scan. A Face the caller cannot reach refuses the whole delete.
+      # record goes. A Face the caller cannot reach refuses the whole delete, naming the routes (R-D11).
+      # The engine's own reference check sees every Face through the Face descriptor and reads the
+      # planned reassignment, so it is the backstop for any other caller.
       def delete_attached_zone(request, proposal)
         id = request.params.fetch("id")
         request.engine.find(AttachedZone::KIND_ID, id)
@@ -184,8 +185,21 @@ module PhComposer
           end
           proposal.add_step(ClassifyStep.new(:updates => updates), :scopes => scopes)
         end
-        request.engine.propose_delete(AttachedZone::KIND_ID, id, proposal)
+        request.engine.propose_delete(AttachedZone::KIND_ID, id, proposal,
+                                      :reference_plan => reassignment_plan(updates))
         { "id" => id, "reassigned_faces" => updates.length }
+      end
+
+      # The Faces this delete rewrites, as they will stand, so the engine's reference check reads the
+      # reassignment rather than the Faces it is about to replace.
+      def reassignment_plan(updates)
+        entries = updates.map do |update|
+          reference = update.fetch("reference")
+          Records::ReferenceEntry.new(:kind => REFERENCE_KIND,
+                                      :key => reference.fetch("zone_path") + reference.fetch("entity_path"),
+                                      :record => update.fetch("after"))
+        end
+        Records::ReferencePlan.new(:entries => entries)
       end
 
       def validate_replacement!(request, replacement, deleted_id)

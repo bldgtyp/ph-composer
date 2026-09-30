@@ -15,6 +15,10 @@ module PhComposer
             "entity_id" => { "type" => %w[string null] }
           }
         }.freeze
+        # Declared, so the engine refuses deleting an Attached zone any Face still names (M3b).
+        ATTACHED_ZONE_REFERENCE = Records::Reference.new(
+          :key => "attached_zone_id", :target_kind => AttachedZone::KIND_ID, :cardinality => "one", :required => false
+        )
         INTENT = {
           "type" => "object", "additionalProperties" => false, "required" => ["mode"],
           "properties" => {
@@ -120,7 +124,8 @@ module PhComposer
         def install(feature)
           feature.reference_target(Records::ReferenceTarget.new(
             :id => REFERENCE_KIND, :label => "Face", :records => ReferenceTargets.method(:entries),
-            :validate => Schema.method(:problems)
+            :validate => Schema.method(:problems), :schema_version => 1, :values => FACE_VALUES,
+            :occurrence => FACE_REFERENCE, :references => [ATTACHED_ZONE_REFERENCE]
           ))
           ColourModes.install(feature)
           ClassifyMenu.install(feature)

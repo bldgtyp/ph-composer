@@ -25,7 +25,8 @@ module PhComposer
       def install(feature)
         feature.reference_target(Records::ReferenceTarget.new(
           :id => REFERENCE_KIND, :label => "Zone", :records => Zones.method(:reference_entries),
-          :validate => Schema.method(:problems)
+          :validate => Schema.method(:problems), :schema_version => 1, :values => ZONE_VALUES,
+          :occurrence => ZONE_REFERENCE
         ))
         ColourModes.install(feature)
         feature.query("#{FEATURE_ID}.list", :description => "Zone occurrences and the explicit Make Zone target.",

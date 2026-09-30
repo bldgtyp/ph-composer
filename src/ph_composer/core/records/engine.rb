@@ -89,13 +89,15 @@ module PhComposer
         end
       end
 
-      def propose_delete(kind_id, id, change_set, expected_values: {})
+      # `reference_plan`, when given, is the entity records the same proposal rewrites first (a
+      # feature moving every Face off the record it deletes); the reference check reads them as planned.
+      def propose_delete(kind_id, id, change_set, expected_values: {}, reference_plan: nil)
         staging(change_set) do
           kind = @catalog.kind(kind_id)
           before = find(kind_id, id)
           check_expected!(kind, before, expected_values)
           change_set.delete(kind.id, :before => before)
-          check_delete_references!(kind.id, id, change_set)
+          check_identity_removal!(kind.id, id, :change_set => change_set, :reference_plan => reference_plan)
         end
       end
 
@@ -211,10 +213,6 @@ module PhComposer
         targets.each do |target_kind, id|
           resolve_reference(target_kind, id, :change_set => change_set)
         end
-      end
-
-      def check_delete_references!(deleted_kind, deleted_id, change_set)
-        check_identity_removal!(deleted_kind, deleted_id, :change_set => change_set)
       end
 
       # Identity and metadata change only through their own arguments, never as a value.

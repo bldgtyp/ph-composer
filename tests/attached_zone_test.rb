@@ -218,6 +218,22 @@ class AttachedZoneTest < PhComposerTestCase
     assert_equal [garage], records.map { |record| record.fetch("id") }
   end
 
+  # M3b: the Face descriptor declares attached_zone_id as a core reference, so the engine itself refuses
+  # a delete that would leave a Face naming the record, whoever asks for it. The feature's delete
+  # passes because it plans the reassignment of every Face first.
+  def test_the_engine_refuses_deleting_an_attached_zone_a_face_still_names
+    garage = create_zone_record("Garage")
+    assign(faces.first, garage)
+    engine = PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog)
+
+    error = assert_raises(PhComposer::CodedError) do
+      engine.propose_delete(KIND, garage, PhComposer::Records::ChangeSet.new)
+    end
+
+    assert_equal "reference.in_use", error.code
+    assert_match(/#{PhComposer::Zones::Faces::REFERENCE_KIND} fac_/, error.message)
+  end
+
   def test_duplicate_creates_a_fresh_record_without_reassigning_any_face
     garage = create_zone_record("Garage")
     assign(faces.first, garage)

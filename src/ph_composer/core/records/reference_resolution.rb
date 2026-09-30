@@ -32,8 +32,13 @@ module PhComposer
       # Every declared incoming reference: core references each kind's descriptor declares, catalog
       # and entity-owned alike, and readable envelopes from unavailable extensions.
       # When identity disappears an opaque/invalid envelope cannot prove that its payload is safe.
-      def incoming_references(kind_id, id, change_set: nil, removing: false)
-        all_reference_entries(:change_set => change_set).filter_map do |entry|
+      def incoming_references(kind_id, id, change_set: nil, removing: false, reference_plan: nil)
+        entries = all_reference_entries(:change_set => change_set)
+        if reference_plan
+          validate_reference_plan!(reference_plan)
+          entries = reference_plan.project(entries)
+        end
+        entries.filter_map do |entry|
           record = entry.record
           targets = @catalog.descriptor(entry.kind).referenced_targets(record)
           record.fetch("extension_data", {}).each do |namespace, envelope|
@@ -53,8 +58,9 @@ module PhComposer
         end
       end
 
-      def check_identity_removal!(kind_id, id, change_set: nil)
-        incoming = incoming_references(kind_id, id, :change_set => change_set, :removing => true)
+      def check_identity_removal!(kind_id, id, change_set: nil, reference_plan: nil)
+        incoming = incoming_references(kind_id, id, :change_set => change_set, :removing => true,
+                                                    :reference_plan => reference_plan)
         return if incoming.empty?
 
         source = incoming.first
