@@ -201,9 +201,15 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   function showTab(name) {
     if (!document.querySelector("[data-pane='" + name + "']")) return;
     if (name !== state.ui.activeTab) {
-      var message = Object.keys(navigationGuards).map(function (key) { return navigationGuards[key](name); })
-        .filter(Boolean)[0];
-      if (message) return notify(message, "warning");
+      var refusing = Object.keys(navigationGuards).filter(function (key) {
+        return navigationGuards[key].guard(name);
+      })[0];
+      if (refusing) {
+        var entry = navigationGuards[refusing];
+        notify(entry.guard(name), "warning");
+        if (entry.refused) entry.refused();
+        return;
+      }
     }
     state = withUI(state, { activeTab: name });
     render();
@@ -290,7 +296,10 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   api = { receive: receive, section: section, ready: ready, state: state, showTab: showTab, send: send,
     setPreference: setPreference, repaint: repaint, notify: notify,
-    navigationGuard: function (name, guard) { navigationGuards[name] = guard; } };
+    // `guard(tab)` answers why the tab may not change, or null; `refused`, when given, runs after a
+    // refusal is shown, so a section can point the user at the work that holds the tab.
+    navigationGuard: function (name, guard, refused) { navigationGuards[name] = { guard: guard, refused: refused }; }
+  };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function (tab) {
     tab.addEventListener("click", function () { showTab(tab.getAttribute("data-tab")); });
   });

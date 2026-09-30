@@ -508,6 +508,10 @@ test("a Zone details draft refuses a filter change and a tab change", function (
   p.query("[data-tab='export']").listeners.click({});
   assert.strictEqual(p.query("[data-pane='overview']").hidden, false);
   assertRefused(p, zoneKey, "Zone name", "Unsaved name");
+  var tab = p.query("[data-tab='export']");
+  p.context.document.activeElement = tab; // a real click leaves focus on the tab
+  tab.listeners.click({});
+  assert.ok(p.context.document.activeElement === p.button("Save"), "a refused tab change points at the form");
 });
 
 test("Cancel restores the stored values and unlocks navigation", function () {

@@ -274,6 +274,44 @@ module CorrectionsWalkthrough
       "stale" => stale.values_at("status", "code", "effect"), "retry_same_outcome" => retried == updated }
   end
 
+  # ---------------------------------------------------------------- native handoff fixture
+
+  # The state NATIVE-HANDOFF.md starts from, in three calls so the native Copy and Paste In Place
+  # (menu actions through the bridge) run on the UI queue between them.
+  def handoff_setup
+    r01_setup
+    zone = zone_group("#{PREFIX}r01")
+    model = Sketchup.active_model
+    model.active_path = [zone]
+    model.selection.clear
+    model.selection.add(zone.entities.grep(Sketchup::Group).first)
+    Sketchup.send_action("copy:")
+    { "next" => "handoff_paste" }
+  end
+
+  def handoff_paste
+    Sketchup.send_action("pasteInPlace:")
+    { "next" => "handoff_finish" }
+  end
+
+  # R03's Zone with the Garage on two Faces, a third Zone for R05, then the Garage delete committed
+  # through the public action, so the next native Undo step is "Delete Attached Zone".
+  def handoff_finish
+    model = Sketchup.active_model
+    model.active_path = nil
+    shared = zone_group("#{PREFIX}r01").entities.grep(Sketchup::Group)
+    r03_setup(:fresh => false)
+    make_zone(box(model.entities, "#{PREFIX}r05", [0, 8000.mm, 0], 4000.mm))
+    garage, = attached_ids
+    deleted = Client.new.invoke("ph_composer.zones.faces.attached_zone.delete",
+                                "id" => garage,
+                                "replacement" => { "mode" => "boundary_condition", "boundary_condition" => "Outdoors" })
+    watch
+    { "shared_children" => shared.length,
+      "shared_face_ids" => shared.map { |group| group.entities.grep(Sketchup::Face).first.persistent_id }.uniq,
+      "garage_delete" => deleted.values_at("status", "effect"), "zones" => Client.new.zones.length }
+  end
+
   # ---------------------------------------------------------------- shared
 
   # A native Undo or Redo only runs with SketchUp frontmost, so a person does them. This observer

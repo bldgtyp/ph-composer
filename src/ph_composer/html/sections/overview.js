@@ -511,6 +511,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
 
   // First in its pane: the Zone tree is the screen's work surface, and the palette and the legend
   // are controls that act on what it shows.
-  panel.navigationGuard("ph_composer.overview", function () { return draftReason(screen); });
+  panel.navigationGuard("ph_composer.overview", function () { return draftReason(screen); }, function () {
+    if (screen && screen.zoneEditor) screen.zoneEditor.focus();
+  });
   panel.section("ph_composer.overview", render, { order: 10 });
 });
