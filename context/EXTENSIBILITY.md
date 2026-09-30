@@ -70,6 +70,13 @@ envelopes; ordinary feature actions do not require new feature-specific message 
 table. Registries must diagnose duplicate registrations, missing dependencies and incompatible
 contract versions. Keep supported public APIs distinguishable from implementation details.
 
+Implemented registration checks: the JSON Schema subset's keyword values (counts, bounds, text,
+non-empty enums, a closed object requiring only what it declares); a description, a callable
+handler and examples for every query, action and view command, where an operation whose params
+accept `{}` may omit examples and every example must validate; callable participants, menu items,
+subscriptions and Colour-by projections. Published operations are frozen with deep-frozen schemas
+and examples, so a test or a contributor registers a new declaration rather than editing one.
+
 A composition-root registration or generated build inventory is permitted. Requiring a new
 feature branch inside shell, session, export orchestration or UI-kit internals is a contract
 defect. Explicit registration does not promise dynamic plugin loading, a marketplace or separate
