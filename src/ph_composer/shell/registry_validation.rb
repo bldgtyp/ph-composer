@@ -106,14 +106,35 @@ module PhComposer
             add("registration.schema_invalid", operation.owner, operation.name,
                 "#{operation.name} params must be an object.")
           end
-          next if operation.handler
-
-          add("registration.schema_invalid", operation.owner, operation.name, "#{operation.name} has no handler.")
+          problem(operation, "needs a description") unless text?(operation.description)
+          check_examples(operation)
+          problem(operation, "needs a callable handler") unless operation.handler.respond_to?(:call)
         end
         @staging.declared_actions.reject { |action| action.confirmation == "none" }.each do |action|
           add("registration.schema_invalid", action.owner, action.name,
               "#{action.name} declares confirmation #{action.confirmation.inspect}; only \"none\" is supported yet.")
         end
+      end
+
+      # Every example is plain JSON that its params accept. An operation whose params accept `{}` may
+      # omit examples, since `{}` is then its example; any other needs at least one.
+      def check_examples(operation)
+        examples = operation.examples
+        return problem(operation, "examples must be a list") unless examples.is_a?(Array)
+        return unless operation.params.is_a?(Hash) && JsonSchema.schema_problems(operation.params).empty?
+
+        if examples.empty? && !JsonSchema.validate({}, operation.params).empty?
+          problem(operation, "needs an example of its params")
+        end
+        examples.each do |example|
+          problems = example.is_a?(Hash) ? JsonValue.problems(example) : ["$ must be an object"]
+          problems += JsonSchema.validate(example, operation.params) if problems.empty?
+          problem(operation, "has an example its params refuse: #{problems.first}") unless problems.empty?
+        end
+      end
+
+      def problem(operation, text)
+        add("registration.schema_invalid", operation.owner, operation.name, "#{operation.name} #{text}.")
       end
 
       def add_schema_problems(operation, part, schema)
@@ -169,52 +190,78 @@ module PhComposer
         end
       end
 
-      # A contributor needs a contract and a positive section version, and each result field it declares
-      # must be a valid privacy schema that neither the shell nor another contributor owns.
+      # A contributor needs its own preflight query, a contract and a positive section version, a valid
+      # user_data key declaration, and result fields that form a privacy schema no one else owns.
       def check_export_contributors
         owned = @live.export_contributors.values.flat_map { |contributor| Array(contributor.result&.keys) }
         @staging.declared_export_contributors.each do |contributor|
-          if contributor.preflight
-            query = @staging.declared_queries.find { |item| item.name == contributor.preflight } ||
-                    @live.queries[contributor.preflight]
-            unless query && query.owner == contributor.owner
-              add("registration.missing_dependency", contributor.owner, contributor.name,
-                  "#{contributor.name} needs its own registered preflight query.", contributor.preflight)
-            end
-          end
-          version = contributor.section_version
-          unless contributor.contract && version.is_a?(Integer) && version.positive?
-            add("registration.schema_invalid", contributor.owner, contributor.name,
-                "#{contributor.name} needs a contract block and a positive section version.")
-          end
-          Export::Privacy.schema_problems(contributor.result).each do |problem|
-            add("registration.schema_invalid", contributor.owner, contributor.name,
-                "#{contributor.name} result: #{problem}.")
-          end
-          next unless contributor.result.is_a?(Hash)
-
-          contributor.result.each_key do |field|
-            next unless Export::Privacy::SHELL.key?(field) || owned.include?(field)
-
-            add("registration.duplicate_id", contributor.owner, contributor.name,
-                "#{contributor.name} declares result field #{field}, which is already owned.")
-          end
-          owned.concat(contributor.result.keys)
+          check_preflight_owner(contributor)
+          check_contract(contributor)
+          check_user_data_keys(contributor)
+          check_result_fields(contributor, owned)
         end
+      end
+
+      def check_preflight_owner(contributor)
+        return unless contributor.preflight
+
+        query = @staging.declared_queries.find { |item| item.name == contributor.preflight } ||
+                @live.queries[contributor.preflight]
+        return if query && query.owner == contributor.owner
+
+        add("registration.missing_dependency", contributor.owner, contributor.name,
+            "#{contributor.name} needs its own registered preflight query.", contributor.preflight)
+      end
+
+      def check_contract(contributor)
+        version = contributor.section_version
+        return if contributor.contract && version.is_a?(Integer) && version.positive?
+
+        add("registration.schema_invalid", contributor.owner, contributor.name,
+            "#{contributor.name} needs a contract block and a positive section version.")
+      end
+
+      # `owned` accumulates across the batch, so two staged contributors cannot claim one field either.
+      def check_result_fields(contributor, owned)
+        Export::Privacy.schema_problems(contributor.result).each do |problem|
+          add("registration.schema_invalid", contributor.owner, contributor.name,
+              "#{contributor.name} result: #{problem}.")
+        end
+        return unless contributor.result.is_a?(Hash)
+
+        contributor.result.each_key do |field|
+          next unless Export::Privacy::SHELL.key?(field) || owned.include?(field)
+
+          add("registration.duplicate_id", contributor.owner, contributor.name,
+              "#{contributor.name} declares result field #{field}, which is already owned.")
+        end
+        owned.concat(contributor.result.keys)
       end
 
       def check_subscriptions
-        @staging.declared_subscriptions.reject { |subscription| Sessions::HOST_EVENTS.include?(subscription.kind) }
-                .each do |subscription|
+        @staging.declared_subscriptions.each do |subscription|
+          next if Sessions::HOST_EVENTS.include?(subscription.kind) && subscription.handler.respond_to?(:call)
+
           add("registration.schema_invalid", subscription.owner, subscription.kind.to_s,
-              "#{subscription.owner} subscribes to unknown host event #{subscription.kind.inspect}.")
+              "#{subscription.owner} subscribes to #{subscription.kind.inspect}, which needs a known host event " \
+              "and a callable handler.")
         end
       end
 
+      # Each declared HBJSON user_data key is dotted and lowercase, like a registered name.
+      def check_user_data_keys(contributor)
+        keys = contributor.user_data_keys
+        return if keys.is_a?(Array) && keys.all? { |key| key.is_a?(String) && ID_PATTERN.match?(key) }
+
+        add("registration.schema_invalid", contributor.owner, contributor.name,
+            "#{contributor.name} user_data_keys must be dotted lowercase keys such as ph_composer.level.")
+      end
+
       def check_proposal_participants
-        @staging.declared_proposal_participants.reject(&:handler).each do |participant|
+        @staging.declared_proposal_participants.reject { |participant| participant.handler.respond_to?(:call) }
+                .each do |participant|
           add("registration.schema_invalid", participant.owner, participant.name,
-              "#{participant.name} has no handler.")
+              "#{participant.name} needs a callable handler.")
         end
       end
 
@@ -225,7 +272,7 @@ module PhComposer
       # and never interprets it.
       def check_menu_items
         @staging.declared_menu_items.each do |item|
-          next if text?(item.label) && text?(item.menu) && item.handler &&
+          next if text?(item.label) && text?(item.menu) && item.handler.respond_to?(:call) &&
                   (item.state.nil? || item.state.respond_to?(:call)) &&
                   (item.available.nil? || item.available.respond_to?(:call))
 
@@ -237,7 +284,8 @@ module PhComposer
 
       def check_colour_modes
         @staging.declared_colour_modes.each do |mode|
-          next if text?(mode.label) && text?(mode.entity_kind) && mode.colours.respond_to?(:call) && mode.projection
+          next if text?(mode.label) && text?(mode.entity_kind) && mode.colours.respond_to?(:call) &&
+                  mode.projection.respond_to?(:call)
 
           add("registration.schema_invalid", mode.owner, mode.name,
               "#{mode.name} needs a label, an entity kind, a colour function and a projection block.")

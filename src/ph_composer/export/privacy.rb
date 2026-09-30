@@ -29,14 +29,22 @@ module PhComposer
         registry.export_contributors.values.reduce(SHELL) { |composed, contributor| composed.merge(contributor.result) }
       end
 
-      # Raises CodedError `export.privacy_undeclared` for a field no declaration names, or when the
-      # document carries a prohibited key or a local path (ArtifactHygiene).
+      # Raises CodedError `export.privacy_undeclared` for a field no declaration names, when the
+      # document carries a prohibited key or a local path (ArtifactHygiene), or when the canonical
+      # HBJSON carries metadata no contributor declared (HbjsonMetadata).
       def validate!(document, registry = Registry.current)
         check(document, schema(registry), "result")
         ArtifactHygiene.validate!(document)
+        hbjson = document.dig("canonical_model", "hbjson")
+        HbjsonMetadata.validate!(hbjson, user_data_keys(registry)) if hbjson.is_a?(String)
         true
       rescue KeyError => error
         raise CodedError.new("export.privacy_undeclared", "The export result is missing #{error.key}.")
+      end
+
+      # The HBJSON user_data keys every export contributor declares its translation writes.
+      def user_data_keys(registry = Registry.current)
+        registry.export_contributors.values.flat_map(&:user_data_keys).uniq
       end
 
       # Every reason `schema` is not a privacy schema. Empty means it is one.

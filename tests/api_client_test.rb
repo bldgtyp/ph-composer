@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require "tmpdir"
 
 # A01 and R06 offline: a client that knows only the public interface and docs/API_QUICKSTART.md
 # makes a Zone, reads its Faces, classifies one, previews and makes an edit, verifies what changed,
@@ -42,6 +43,8 @@ class ApiClientTest < PhComposerTestCase
     assert_equal updated, retried
     assert_equal updated, API.outcome(:context => context, :request => { "sequence" => 3 })
     assert_equal undo_steps, Sketchup.active_model.instance_variable_get(:@undo_stack).length
+
+    read_in_pages_and_export(context)
   end
 
   def test_the_client_names_no_feature_module
@@ -59,7 +62,27 @@ class ApiClientTest < PhComposerTestCase
     session = found["sessions"].find { |row| row["active"] }
     assert_empty %w[params result examples] - API.describe(:name => "ph_composer.zones.make").keys
     assert API.describe(:name => "ph_composer.zones.faces.face").key?("occurrence_reference")
-    API.connect(:session_id => session["id"])
+    API.connect(:session_id => session["id"], :capabilities => %w[read view model_write export])
+  end
+
+  # 7. Read in pages, and export. The task is cancelled before its runtime starts, as the offline suite
+  # has no translation runtime; the host run takes it to its outcome.
+  def read_in_pages_and_export(context)
+    page = API.query(:context => context, :name => "ph_composer.zones.faces.list",
+                     :params => { "fields" => %w[face_type boundary_condition], "limit" => 2 })
+    assert_equal [%w[reference values]], page["value"]["faces"].map { |row| row.keys.sort }.uniq
+    second = API.query(:context => context, :name => "ph_composer.zones.faces.list",
+                       :params => { "fields" => %w[face_type boundary_condition], "limit" => 2,
+                                    "cursor" => page["value"]["next_cursor"] })
+    assert_equal 1, second["value"]["faces"].length
+
+    assert_equal "completed", API.export_preflight(:context => context)["status"]
+    Dir.mktmpdir("phc-quickstart-") do |directory|
+      task = API.start_export(:context => context, :destination => File.join(directory, "model.hbjson"))["value"]
+      assert_nil API.export_status(:context => context, :task_id => task["task_id"])["value"]["outcome"]
+      API.cancel_export(:context => context, :task_id => task["task_id"])
+      assert_equal task["task_id"], API.latest_export(:context => context)["value"]["task_id"]
+    end
   end
 
   # 2. Make a Zone from the selection.

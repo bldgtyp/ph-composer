@@ -341,7 +341,7 @@ Params:
     },
     "cursor": {
       "type": "string",
-      "description": "next_cursor from the previous page."
+      "description": "next_cursor from the previous page of the same query and filter."
     }
   }
 }
@@ -370,7 +370,8 @@ Result:
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
     },
     "unreadable": {
       "type": "array",
@@ -384,7 +385,8 @@ Result:
     },
     "total": {
       "type": "integer",
-      "description": "Records matching the filter, on every page."
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
     }
   }
 }
@@ -399,538 +401,9 @@ Example params:
 }
 ```
 
-### `ph_composer.zones.export_preflight`
+### `ph_composer.zones.all`
 
-All-Zone export checks and adjacency repair. Owner: `ph_composer.zones`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {}
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "findings",
-    "repairs"
-  ],
-  "properties": {
-    "findings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "code",
-          "section",
-          "object_id",
-          "message",
-          "blocks_export"
-        ],
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "section": {
-            "type": "string"
-          },
-          "object_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The record the finding is about."
-          },
-          "message": {
-            "type": "string"
-          },
-          "blocks_export": {
-            "type": "boolean"
-          },
-          "locate": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "name",
-              "params"
-            ],
-            "description": "A view command that shows what the finding is about.",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "params": {
-                "type": "object"
-              }
-            }
-          }
-        }
-      }
-    },
-    "repairs": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "label",
-          "checked",
-          "action",
-          "params"
-        ],
-        "description": "An action the export workflow offers to run before exporting.",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "label": {
-            "type": "string"
-          },
-          "checked": {
-            "type": "boolean"
-          },
-          "action": {
-            "type": "string"
-          },
-          "params": {
-            "type": "object"
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-Example params:
-
-```json
-{}
-```
-
-### `ph_composer.zones.faces.classify_tool`
-
-The Classify tool's palette and whether it runs. Owner: `ph_composer.zones`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {}
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "active",
-    "palette",
-    "face_types",
-    "boundary_conditions"
-  ],
-  "properties": {
-    "active": {
-      "type": "boolean",
-      "description": "Whether the Classify tool has the viewport."
-    },
-    "palette": {
-      "type": "object",
-      "additionalProperties": {
-        "type": [
-          "string",
-          "null"
-        ]
-      },
-      "description": "The chosen value per field; a field absent is kept."
-    },
-    "face_types": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "boundary_conditions": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    }
-  }
-}
-```
-
-Example params:
-
-```json
-{}
-```
-
-### `ph_composer.zones.faces.export_preflight`
-
-Face classification and Assembly checks. Owner: `ph_composer.zones`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {}
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "findings",
-    "repairs"
-  ],
-  "properties": {
-    "findings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "code",
-          "section",
-          "object_id",
-          "message",
-          "blocks_export"
-        ],
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "section": {
-            "type": "string"
-          },
-          "object_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The record the finding is about."
-          },
-          "message": {
-            "type": "string"
-          },
-          "blocks_export": {
-            "type": "boolean"
-          },
-          "locate": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "name",
-              "params"
-            ],
-            "description": "A view command that shows what the finding is about.",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "params": {
-                "type": "object"
-              }
-            }
-          }
-        }
-      }
-    },
-    "repairs": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "label",
-          "checked",
-          "action",
-          "params"
-        ],
-        "description": "An action the export workflow offers to run before exporting.",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "label": {
-            "type": "string"
-          },
-          "checked": {
-            "type": "boolean"
-          },
-          "action": {
-            "type": "string"
-          },
-          "params": {
-            "type": "object"
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-Example params:
-
-```json
-{}
-```
-
-### `ph_composer.zones.faces.list`
-
-Path-qualified Face occurrences in authored Zones. Owner: `ph_composer.zones`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {}
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "faces",
-    "units"
-  ],
-  "properties": {
-    "faces": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "reference",
-          "zone_name",
-          "area_m2",
-          "values",
-          "user_data",
-          "extension_data",
-          "suggested",
-          "attached_zone_state",
-          "adjacency_state",
-          "state"
-        ],
-        "properties": {
-          "reference": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "zone_id",
-              "zone_path",
-              "entity_path",
-              "entity_id"
-            ],
-            "properties": {
-              "zone_id": {
-                "type": "string"
-              },
-              "zone_path": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                }
-              },
-              "entity_path": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                }
-              },
-              "entity_id": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              }
-            }
-          },
-          "zone_name": {
-            "type": "string"
-          },
-          "area_m2": {
-            "type": "number",
-            "x-unit": "m2"
-          },
-          "values": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "face_type": {
-                "type": "string",
-                "enum": [
-                  "Wall",
-                  "RoofCeiling",
-                  "Floor",
-                  "AirBoundary"
-                ]
-              },
-              "boundary_condition": {
-                "type": "string",
-                "enum": [
-                  "Outdoors",
-                  "Ground",
-                  "Adiabatic",
-                  "Surface",
-                  "AttachedZone"
-                ]
-              },
-              "attached_zone_id": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Id of an Attached zone record; only with AttachedZone."
-              },
-              "assembly_id": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Id of the Face's Assembly."
-              },
-              "adjacency": {
-                "type": "object",
-                "description": "The Surface pair envelope Solve adjacencies writes; only with Surface."
-              }
-            },
-            "description": "Empty for a Face with no record."
-          },
-          "user_data": {
-            "type": "object"
-          },
-          "extension_data": {
-            "type": "object"
-          },
-          "suggested": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "face_type",
-              "boundary_condition"
-            ],
-            "properties": {
-              "face_type": {
-                "type": "string",
-                "enum": [
-                  "Wall",
-                  "RoofCeiling",
-                  "Floor",
-                  "AirBoundary"
-                ]
-              },
-              "boundary_condition": {
-                "type": "string",
-                "enum": [
-                  "Outdoors",
-                  "Ground",
-                  "Adiabatic",
-                  "Surface",
-                  "AttachedZone"
-                ]
-              }
-            },
-            "description": "What Suggest classification would write."
-          },
-          "attached_zone_state": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              null,
-              "absent",
-              "resolved",
-              "dangling",
-              "invalid"
-            ],
-            "description": "How an AttachedZone reference stands; null otherwise."
-          },
-          "adjacency_state": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              null,
-              "current",
-              "stale",
-              "unresolved",
-              "invalid"
-            ],
-            "description": "How a Surface pair stands; null for any other boundary."
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "unclassified",
-              "incomplete",
-              "classified"
-            ]
-          }
-        }
-      },
-      "description": "Every Face occurrence inside a Zone, recorded or not."
-    },
-    "units": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "area_m2"
-      ],
-      "properties": {
-        "area_m2": {
-          "type": "string",
-          "enum": [
-            "m2"
-          ]
-        }
-      }
-    }
-  }
-}
-```
-
-Example params:
-
-```json
-{}
-```
-
-### `ph_composer.zones.list`
-
-Zone occurrences and the explicit Make Zone target. Owner: `ph_composer.zones`.
+Every Zone occurrence in one complete projection, for the panel. Scripts page ph_composer.zones.list instead. Owner: `ph_composer.zones`.
 
 Params:
 
@@ -1174,6 +647,1140 @@ Example params:
 
 ```json
 {}
+```
+
+### `ph_composer.zones.export_preflight`
+
+All-Zone export checks and adjacency repair. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings",
+    "repairs"
+  ],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "section",
+          "object_id",
+          "message",
+          "blocks_export"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The record the finding is about."
+          },
+          "message": {
+            "type": "string"
+          },
+          "blocks_export": {
+            "type": "boolean"
+          },
+          "locate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ],
+            "description": "A view command that shows what the finding is about.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "params": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "checked",
+          "action",
+          "params"
+        ],
+        "description": "An action the export workflow offers to run before exporting.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "checked": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.faces.all`
+
+Every Face occurrence in authored Zones in one complete projection, for the panel. Scripts page ph_composer.zones.faces.list instead. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "faces",
+    "units"
+  ],
+  "properties": {
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "zone_name",
+          "area_m2",
+          "values",
+          "user_data",
+          "extension_data",
+          "suggested",
+          "attached_zone_state",
+          "adjacency_state",
+          "state"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "zone_name": {
+            "type": "string"
+          },
+          "area_m2": {
+            "type": "number",
+            "x-unit": "m2"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "face_type": {
+                "type": "string",
+                "enum": [
+                  "Wall",
+                  "RoofCeiling",
+                  "Floor",
+                  "AirBoundary"
+                ]
+              },
+              "boundary_condition": {
+                "type": "string",
+                "enum": [
+                  "Outdoors",
+                  "Ground",
+                  "Adiabatic",
+                  "Surface",
+                  "AttachedZone"
+                ]
+              },
+              "attached_zone_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of an Attached zone record; only with AttachedZone."
+              },
+              "assembly_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of the Face's Assembly."
+              },
+              "adjacency": {
+                "type": "object",
+                "description": "The Surface pair envelope Solve adjacencies writes; only with Surface."
+              }
+            },
+            "description": "Empty for a Face with no record."
+          },
+          "user_data": {
+            "type": "object"
+          },
+          "extension_data": {
+            "type": "object"
+          },
+          "suggested": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "face_type",
+              "boundary_condition"
+            ],
+            "properties": {
+              "face_type": {
+                "type": "string",
+                "enum": [
+                  "Wall",
+                  "RoofCeiling",
+                  "Floor",
+                  "AirBoundary"
+                ]
+              },
+              "boundary_condition": {
+                "type": "string",
+                "enum": [
+                  "Outdoors",
+                  "Ground",
+                  "Adiabatic",
+                  "Surface",
+                  "AttachedZone"
+                ]
+              }
+            },
+            "description": "What Suggest classification would write."
+          },
+          "attached_zone_state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              null,
+              "absent",
+              "resolved",
+              "dangling",
+              "invalid"
+            ],
+            "description": "How an AttachedZone reference stands; null otherwise."
+          },
+          "adjacency_state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              null,
+              "current",
+              "stale",
+              "unresolved",
+              "invalid"
+            ],
+            "description": "How a Surface pair stands; null for any other boundary."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "unclassified",
+              "incomplete",
+              "classified"
+            ]
+          }
+        }
+      },
+      "description": "Every Face occurrence inside a Zone, recorded or not."
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area_m2"
+      ],
+      "properties": {
+        "area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.faces.classify_tool`
+
+The Classify tool's palette and whether it runs. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "active",
+    "palette",
+    "face_types",
+    "boundary_conditions"
+  ],
+  "properties": {
+    "active": {
+      "type": "boolean",
+      "description": "Whether the Classify tool has the viewport."
+    },
+    "palette": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "description": "The chosen value per field; a field absent is kept."
+    },
+    "face_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "boundary_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.faces.export_preflight`
+
+Face classification and Assembly checks. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings",
+    "repairs"
+  ],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "section",
+          "object_id",
+          "message",
+          "blocks_export"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The record the finding is about."
+          },
+          "message": {
+            "type": "string"
+          },
+          "blocks_export": {
+            "type": "boolean"
+          },
+          "locate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ],
+            "description": "A view command that shows what the finding is about.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "params": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "checked",
+          "action",
+          "params"
+        ],
+        "description": "An action the export workflow offers to run before exporting.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "checked": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.faces.list`
+
+One page of path-qualified Face occurrences in authored Zones, filtered and projected. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "zone_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "description": "Only Faces inside occurrences of these Zone ids."
+    },
+    "zone_paths": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "maxItems": 500,
+      "description": "Only Faces inside the Zones at these root-to-Zone paths."
+    },
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "description": "Only the occurrences of these Face record ids."
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "face_type",
+          "boundary_condition",
+          "attached_zone_id",
+          "assembly_id",
+          "adjacency"
+        ]
+      },
+      "description": "Project each row to these values; the whole row when absent."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "faces",
+    "units",
+    "next_cursor",
+    "total"
+  ],
+  "properties": {
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "values"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "zone_name": {
+            "type": "string"
+          },
+          "area_m2": {
+            "type": "number",
+            "x-unit": "m2"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "face_type": {
+                "type": "string",
+                "enum": [
+                  "Wall",
+                  "RoofCeiling",
+                  "Floor",
+                  "AirBoundary"
+                ]
+              },
+              "boundary_condition": {
+                "type": "string",
+                "enum": [
+                  "Outdoors",
+                  "Ground",
+                  "Adiabatic",
+                  "Surface",
+                  "AttachedZone"
+                ]
+              },
+              "attached_zone_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of an Attached zone record; only with AttachedZone."
+              },
+              "assembly_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of the Face's Assembly."
+              },
+              "adjacency": {
+                "type": "object",
+                "description": "The Surface pair envelope Solve adjacencies writes; only with Surface."
+              }
+            },
+            "description": "Empty for a Face with no record."
+          },
+          "user_data": {
+            "type": "object"
+          },
+          "extension_data": {
+            "type": "object"
+          },
+          "suggested": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "face_type",
+              "boundary_condition"
+            ],
+            "properties": {
+              "face_type": {
+                "type": "string",
+                "enum": [
+                  "Wall",
+                  "RoofCeiling",
+                  "Floor",
+                  "AirBoundary"
+                ]
+              },
+              "boundary_condition": {
+                "type": "string",
+                "enum": [
+                  "Outdoors",
+                  "Ground",
+                  "Adiabatic",
+                  "Surface",
+                  "AttachedZone"
+                ]
+              }
+            },
+            "description": "What Suggest classification would write."
+          },
+          "attached_zone_state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              null,
+              "absent",
+              "resolved",
+              "dangling",
+              "invalid"
+            ],
+            "description": "How an AttachedZone reference stands; null otherwise."
+          },
+          "adjacency_state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              null,
+              "current",
+              "stale",
+              "unresolved",
+              "invalid"
+            ],
+            "description": "How a Surface pair stands; null for any other boundary."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "unclassified",
+              "incomplete",
+              "classified"
+            ]
+          }
+        },
+        "description": "Whole without fields; with fields, the reference and the named values only."
+      },
+      "description": "One page of Face occurrences in path order."
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area_m2"
+      ],
+      "properties": {
+        "area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        }
+      }
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "zone_ids": [
+    "zon_Ab12Cd34Ef56"
+  ],
+  "fields": [
+    "face_type"
+  ]
+}
+```
+
+### `ph_composer.zones.list`
+
+One page of Zone occurrences, filtered and projected, and the Make Zone target. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "description": "Only occurrences of these Zone ids."
+    },
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "maxItems": 500,
+      "description": "Only the occurrences at these root-to-Zone paths."
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "name",
+          "building_segment",
+          "level",
+          "ground_depth_mm"
+        ]
+      },
+      "description": "Project each row to these values; the whole row when absent."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zones",
+    "make_zone",
+    "restorable",
+    "units",
+    "next_cursor",
+    "total"
+  ],
+  "properties": {
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "reference",
+          "state",
+          "values"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "building_segment": {
+                "type": "string",
+                "minLength": 1
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ground_depth_mm": {
+                "type": "number",
+                "x-unit": "mm"
+              }
+            }
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "found",
+              "ambiguous",
+              "shared_definition",
+              "wrong_hierarchy"
+            ]
+          },
+          "face_count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "description": "Whole without fields; with fields, id, reference, state and the named values only."
+      },
+      "description": "One page of Zone occurrences in path order."
+    },
+    "make_zone": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "parent_path",
+        "entity_ids"
+      ],
+      "properties": {
+        "parent_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "The edit context the Zone is made in."
+        },
+        "entity_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "One Group, or loose Faces and Edges, by persistent id."
+        }
+      },
+      "description": "The params Make Zone takes for the current selection, or null when the selection cannot become a Zone."
+    },
+    "restorable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "building_segment",
+          "level",
+          "parent_path",
+          "entity_ids",
+          "member_count",
+          "refusal",
+          "unrecoverable"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "building_segment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "level": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "parent_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "member_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "refusal": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              null,
+              "mixed_context",
+              "stamps_conflict",
+              "shared_edge"
+            ],
+            "description": "Why Restore would refuse, or null when it can run."
+          },
+          "unrecoverable": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Zone fields Restore cannot recover."
+          }
+        },
+        "description": "An exploded Zone whose stamped members Restore can regroup."
+      }
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ground_depth_mm"
+      ],
+      "properties": {
+        "ground_depth_mm": {
+          "type": "string",
+          "enum": [
+            "mm"
+          ]
+        }
+      }
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "fields": [
+    "name"
+  ],
+  "limit": 20
+}
 ```
 
 ## Actions
@@ -3116,6 +3723,17 @@ Result:
 }
 ```
 
+Example params:
+
+```json
+{
+  "row": {
+    "value": "Wall",
+    "state": "classified"
+  }
+}
+```
+
 ### `ph_composer.zones.faces.choose`
 
 Set one Classify palette field and give the tool the viewport. Owner: `ph_composer.zones`.
@@ -3360,6 +3978,676 @@ Result:
 ```
 
 Example params:
+
+```json
+{}
+```
+
+## Export tasks
+
+A file export is not a Model change, so these are task methods rather than actions. Each params key is the method's keyword argument.
+
+### `PhComposer::API.export_preflight`
+
+Every export contributor's findings and the repairs it offers, before starting. Needs `read`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result value:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings",
+    "repairs"
+  ],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "section",
+          "object_id",
+          "message",
+          "blocks_export"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The record the finding is about."
+          },
+          "message": {
+            "type": "string"
+          },
+          "blocks_export": {
+            "type": "boolean"
+          },
+          "locate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ],
+            "description": "A view command that shows what the finding is about.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "params": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "checked",
+          "action",
+          "params"
+        ],
+        "description": "An action the export workflow offers to run before exporting.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "checked": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
+
+```json
+{}
+```
+
+### `PhComposer::API.start_export`
+
+Start one export of the canonical HBJSON and its report to an explicit destination. An existing pair is replaced only with replace true; one task runs per Model at a time. Needs `export`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "destination"
+  ],
+  "properties": {
+    "destination": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The .hbjson path; the report is written beside it."
+    },
+    "replace": {
+      "type": "boolean",
+      "description": "Consent to replace an existing pair."
+    }
+  }
+}
+```
+
+Result value:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "stage",
+    "count",
+    "cancellable",
+    "outcome"
+  ],
+  "description": "One task's progress. Never carries the canonical HBJSON bytes.",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "reading",
+        "translating",
+        "checking",
+        "writing",
+        "finished"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Entities read so far."
+    },
+    "cancellable": {
+      "type": "boolean",
+      "description": "False once writing starts or the task ended."
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Null until the task ends; then the outcome shape every call answers with.",
+      "required": [
+        "status",
+        "code",
+        "message",
+        "effect"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "refused",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "export.complete, export.blocked, export.cancelled and so on."
+        },
+        "message": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string"
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "When completed: the compact result and the two artifact paths written."
+        },
+        "affected": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "proposal_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
+
+```json
+{
+  "destination": "/path/to/model.hbjson",
+  "replace": false
+}
+```
+
+### `PhComposer::API.export_status`
+
+Poll one task. An expired or other-Model handle refuses task.expired. Needs `export`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "task_id from start_export."
+    }
+  }
+}
+```
+
+Result value:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "stage",
+    "count",
+    "cancellable",
+    "outcome"
+  ],
+  "description": "One task's progress. Never carries the canonical HBJSON bytes.",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "reading",
+        "translating",
+        "checking",
+        "writing",
+        "finished"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Entities read so far."
+    },
+    "cancellable": {
+      "type": "boolean",
+      "description": "False once writing starts or the task ended."
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Null until the task ends; then the outcome shape every call answers with.",
+      "required": [
+        "status",
+        "code",
+        "message",
+        "effect"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "refused",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "export.complete, export.blocked, export.cancelled and so on."
+        },
+        "message": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string"
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "When completed: the compact result and the two artifact paths written."
+        },
+        "affected": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "proposal_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
+
+```json
+{
+  "task_id": "export_0123456789abcdef01234567"
+}
+```
+
+### `PhComposer::API.cancel_export`
+
+Cancel a task before it starts writing; nothing is written. Needs `export`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "task_id from start_export."
+    }
+  }
+}
+```
+
+Result value:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "stage",
+    "count",
+    "cancellable",
+    "outcome"
+  ],
+  "description": "One task's progress. Never carries the canonical HBJSON bytes.",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "reading",
+        "translating",
+        "checking",
+        "writing",
+        "finished"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Entities read so far."
+    },
+    "cancellable": {
+      "type": "boolean",
+      "description": "False once writing starts or the task ended."
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Null until the task ends; then the outcome shape every call answers with.",
+      "required": [
+        "status",
+        "code",
+        "message",
+        "effect"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "refused",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "export.complete, export.blocked, export.cancelled and so on."
+        },
+        "message": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string"
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "When completed: the compact result and the two artifact paths written."
+        },
+        "affected": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "proposal_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
+
+```json
+{
+  "task_id": "export_0123456789abcdef01234567"
+}
+```
+
+### `PhComposer::API.latest_export`
+
+The most recent task still retained, or null. Needs `export`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result value:
+
+```json
+{
+  "type": [
+    "object",
+    "null"
+  ],
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "stage",
+    "count",
+    "cancellable",
+    "outcome"
+  ],
+  "description": "One task's progress. Never carries the canonical HBJSON bytes.",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "reading",
+        "translating",
+        "checking",
+        "writing",
+        "finished"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Entities read so far."
+    },
+    "cancellable": {
+      "type": "boolean",
+      "description": "False once writing starts or the task ended."
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Null until the task ends; then the outcome shape every call answers with.",
+      "required": [
+        "status",
+        "code",
+        "message",
+        "effect"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "refused",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "export.complete, export.blocked, export.cancelled and so on."
+        },
+        "message": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string"
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "When completed: the compact result and the two artifact paths written."
+        },
+        "affected": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "proposal_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
 
 ```json
 {}

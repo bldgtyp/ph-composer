@@ -16,8 +16,10 @@ The offline suite runs these steps as written (`tests/api_client_test.rb`).
 ```ruby
 found = PhComposer::API.discover
 session = found["sessions"].find { |row| row["active"] }
-context = PhComposer::API.connect(session_id: session["id"])
+context = PhComposer::API.connect(session_id: session["id"], capabilities: %w[read view model_write export])
 ```
+
+Ask only for the grants you need; `export` is required for step 7 alone.
 
 `discover` lists the registered queries, actions, view commands and record kinds by name.
 `describe` returns one of them in full:
@@ -96,3 +98,30 @@ If a response never arrives, send the same request again with the same sequence.
 comes back and nothing is written twice. `PhComposer::API.outcome(context:, request: { "sequence" => n })`
 answers the same without resending. A request refused as `request.malformed` never took its
 sequence, so the corrected request may reuse it.
+
+## 7. Read in pages, and export
+
+Every list read answers one page. Name the values you need and pass `next_cursor` back for the next
+page; a cursor only answers the same query and filter at the same revision.
+
+```ruby
+page = PhComposer::API.query(context: context, name: "ph_composer.zones.faces.list",
+                             params: { "fields" => ["face_type", "boundary_condition"], "limit" => 100 })
+page["value"]["faces"]        # reference and the two values, nothing else
+page["value"]["next_cursor"]  # nil on the last page
+```
+
+Export is a task, not a Model change. Preflight shows what blocks it; start writes to an explicit
+destination and never replaces an existing pair unless you pass `replace: true`; poll until the
+status carries an outcome.
+
+```ruby
+PhComposer::API.export_preflight(context: context)["value"]["findings"]
+task = PhComposer::API.start_export(context: context, destination: "/path/to/model.hbjson")["value"]
+status = PhComposer::API.export_status(context: context, task_id: task["task_id"])["value"]
+status["outcome"]             # nil while running; then completed, refused, failed or cancelled
+PhComposer::API.latest_export(context: context)
+```
+
+Until authored Assemblies arrive, the normal build refuses the export as `export.blocked`, naming
+each Face without a construction in the preflight findings.

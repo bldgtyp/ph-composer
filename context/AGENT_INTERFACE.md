@@ -63,6 +63,15 @@ Return stable entity IDs and path-qualified occurrence references with SI unit i
 Distinguish authored values, derived values, missing inputs and unsupported data. Findings carry
 stable codes, affected references and recovery information; display labels remain separate.
 
+Implemented: every list read pages through `shell/pages.rb`. Rows come in a stable key order
+(record id, or root-to-occurrence path for Zones and Faces), at most 500 per page, with
+`next_cursor` and `total`. A cursor binds the Model session, the query, a digest of the filter
+and the revision; reusing it against any other refuses (`params.invalid`, or
+`query.cursor_expired` after a revision change). `ph_composer.zones.list` and
+`ph_composer.zones.faces.list` filter by id and path and project with `fields`, which returns a
+row's reference and the named values without geometry or metadata. The panel reads the complete
+projections `ph_composer.zones.all` and `ph_composer.zones.faces.all`; scripts page the lists.
+
 Support explicit selection, reveal and camera operations for visual inspection, plus viewport
 capture where the host permits it. Captures identify their model session, revision, camera and
 relevant selection so the agent knows what it saw. Report unsupported or obscured capture states
@@ -128,7 +137,9 @@ restart. Cancellation only rolls back work where the operation explicitly guaran
 A caller invokes selected repairs through the ordinary `model_write` contract, then revalidates.
 `API.start_export`, `export_status`, `cancel_export` and `latest_export` require the separate `export`
 grant. A scripted start supplies an authorized destination and explicit replacement consent.
-The native panel obtains these through its destination and replacement dialogs.
+The native panel obtains these through its destination and replacement dialogs. `API.describe`
+answers each task method with its grant, keyword params, result schema and an example
+(`export/task_contract.rb`), so a client needs no hand-written signature.
 
 One task may run per Model session. Status is detached, carries counts and diagnostics, and omits
 canonical HBJSON bytes. Successful results name the approved files and the run; retrieve their

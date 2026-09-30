@@ -62,10 +62,34 @@ module PhComposer
                                  "description" => "How a Surface pair stands; null for any other boundary." },
           "state" => { "type" => "string", "enum" => %w[unclassified incomplete classified] }
         }).freeze
-        LIST_RESULT = Shapes.object({
+        ALL_RESULT = Shapes.object({
           "faces" => Shapes.list(FACE_ROW, :description => "Every Face occurrence inside a Zone, recorded or not."),
           "units" => Shapes.object({ "area_m2" => { "type" => "string", "enum" => ["m2"] } })
         }).freeze
+        # A row as `list` returns it: whole, or with `fields` only its reference and those values.
+        PROJECTED_FACE_ROW = FACE_ROW.merge(
+          "required" => %w[reference values],
+          "description" => "Whole without fields; with fields, the reference and the named values only."
+        )
+        LIST_PARAMS = Shapes.object({
+          "zone_ids" => { "type" => "array", "items" => Shapes::ID, "maxItems" => Pages::MAXIMUM_LIMIT,
+                          "description" => "Only Faces inside occurrences of these Zone ids." },
+          "zone_paths" => { "type" => "array", "items" => PATH, "maxItems" => Pages::MAXIMUM_LIMIT,
+                            "description" => "Only Faces inside the Zones at these root-to-Zone paths." },
+          "ids" => { "type" => "array", "items" => Shapes::ID, "maxItems" => Pages::MAXIMUM_LIMIT,
+                     "description" => "Only the occurrences of these Face record ids." },
+          "fields" => { "type" => "array",
+                        "items" => { "type" => "string", "enum" => FACE_VALUES.fetch("properties").keys },
+                        "description" => "Project each row to these values; the whole row when absent." },
+          "limit" => Pages::LIMIT, "cursor" => Pages::CURSOR
+        }, :optional => %w[zone_ids zone_paths ids fields limit cursor]).freeze
+        LIST_EXAMPLE = { "zone_ids" => [EXAMPLE_FACE.fetch("zone_id")], "fields" => ["face_type"] }.freeze
+        LIST_RESULT = Shapes.object(
+          ALL_RESULT.fetch("properties").merge(
+            "faces" => Shapes.list(PROJECTED_FACE_ROW, :description => "One page of Face occurrences in path order."),
+            "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL
+          )
+        ).freeze
         CHOOSE_PARAMS = Shapes.object({
           "field" => { "type" => "string", "enum" => %w[face_type boundary_condition attached_zone_id] },
           "value" => { "type" => %w[string null],
@@ -124,13 +148,21 @@ module PhComposer
           feature.reference_target(TARGET)
           ColourModes.install(feature)
           ClassifyMenu.install(feature)
-          feature.query("#{PREFIX}.list", :description => "Path-qualified Face occurrences in authored Zones.",
-                                          :params => Shapes::NONE, :result => LIST_RESULT,
-                                          :examples => [{}]) { |request| Faces.list(request) }
+          feature.query("#{PREFIX}.list",
+                        :description => "One page of path-qualified Face occurrences in authored Zones, filtered " \
+                                        "and projected.",
+                        :params => LIST_PARAMS, :result => LIST_RESULT,
+                        :examples => [{}, LIST_EXAMPLE]) { |request| Faces.list(request) }
+          feature.query("#{PREFIX}.all",
+                        :description => "Every Face occurrence in authored Zones in one complete projection, for the " \
+                                        "panel. Scripts page #{PREFIX}.list instead.",
+                        :params => Shapes::NONE, :result => ALL_RESULT, :examples => [{}]) do |request|
+            Faces.all(request)
+          end
           declare_writes(feature)
           declare_viewport(feature)
           declare_attached_zones(feature)
-          feature.snapshot_section("#{PREFIX}.faces", :query => "#{PREFIX}.list")
+          feature.snapshot_section("#{PREFIX}.faces", :query => "#{PREFIX}.all")
           ExportProjection.install(feature)
         end
 

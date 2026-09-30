@@ -1,7 +1,7 @@
 # Native acceptance handoff: R03, R05 and the A04 recheck
 
 DATE: 2026-09-30
-STATUS: Ready for a native-control agent (Codex with computer use)
+STATUS: Complete; Codex ran it twice on 2026-09-30 (results in the evidence page)
 OWNER: [PLAN.md, new native cases](PLAN.md#new-native-acceptance-cases); result summary in
 [pr3-corrections-native.md](../../phase-one/evidence/pr3-corrections-native.md)
 

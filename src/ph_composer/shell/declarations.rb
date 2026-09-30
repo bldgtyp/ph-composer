@@ -45,8 +45,10 @@ module PhComposer
     # `result` declares the top-level result fields the feature's translation adds, in Export::Privacy's
     # schema form; `report` is `->(result, display_units) { [html_section, ...] }` over those fields.
     # `preflight` optionally names a registered read query returning findings and explicit repair actions.
+    # `user_data_keys` are the dotted HBJSON user_data keys the contributor's translation writes, such
+    # as "ph_composer.level"; the artifact guard refuses any other (export/hbjson_metadata.rb).
     ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, :preflight,
-                                   keyword_init: true)
+                                   :user_data_keys, keyword_init: true)
 
     # One Colour-by mode (face-assignment PRD "Colour-by"). `projection`
     # is `->(model) { [ColourBy::Entry, ...] }`: a pure read of the feature's own entities, their

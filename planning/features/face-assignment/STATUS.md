@@ -57,7 +57,7 @@ spike passed; it does not satisfy this feature's native lifecycle gate.
 ## Deferred conveniences
 
 - **One-click Make Unique for a Face in a shared Group.** The
-  [PR #3 corrections](../../refactor/pr3-foundation-corrections/DECISIONS.md#r-d10-a-face-inside-a-shared-group-m1)
+  [PR #3 corrections](../../archive/pr3-foundation-corrections/DECISIONS.md#r-d10-a-face-inside-a-shared-group-m1)
   (R-D10) make Classify and Reverse refuse a Face inside a Group that shares its definition, with
   a notice telling the user to Make Unique by hand. A later convenience could offer the Make Unique
   from the notice and retry in one Undo step. It needs its own native Undo and host acceptance.
@@ -77,5 +77,5 @@ spike passed; it does not satisfy this feature's native lifecycle gate.
 | 2026-09-20 | Post-Phase-0 refresh: added PLAN.md, removed completed foundation blockers and linked the shared Phase 1 stages and decisions. Planning only; feature implementation remains pending. |
 | 2026-09-20 | P1-B authoring core complete: explicit Face reads, geometric suggestions, keep/set/clear assignment, stamps and minimal Overview controls passed current-host acceptance. |
 | 2026-09-20 | P1-C export contribution complete on the implementation branch: detached face geometry and typed Python sections produced the exact two-Zone HBJSON with reciprocal Surface targets. |
-| 2026-09-30 | PR #3 foundation corrections decided: Face code moves under the `zones` feature (`ph_composer.zones.faces.*`); shared-Group Faces refuse with a Make Unique instruction (R-D10); Attached-zone delete refuses when an orphaned Face still uses it (R-D11). See [the corrections packet](../../refactor/pr3-foundation-corrections/README.md). |
+| 2026-09-30 | PR #3 foundation corrections decided: Face code moves under the `zones` feature (`ph_composer.zones.faces.*`); shared-Group Faces refuse with a Make Unique instruction (R-D10); Attached-zone delete refuses when an orphaned Face still uses it (R-D11). See [the corrections packet](../../archive/pr3-foundation-corrections/README.md). |
 | 2026-09-30 | PR #3 merge-set corrections implemented on the branch: code owner `src/ph_composer/features/zones/`, M1 to M4 fixed, native cases R01 to R04 pass ([evidence](../../phase-one/evidence/pr3-corrections-native.md)). |

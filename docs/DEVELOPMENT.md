@@ -90,6 +90,12 @@ JavaScript line coverage of `html/` (the runtime page included) against 94%, and
 the translation package against 92%. It sits outside `make ci`; run it before a phase gate.
 Thresholds ratchet upward only.
 
+`tests/fixtures/phase_one/two_zones.hbjson` is the exact canonical HBJSON the Phase 1 translation
+produces for the two-Zone extraction, written by
+`uv run tools/examples/phase_one/translate_two_zones.py --write-hbjson <path>`; the artifact-guard
+tests check it passes unchanged. It is a hand-reviewed contract example, regenerated only when the
+translation deliberately changes.
+
 `tests/fixtures/foundation/{extraction,result}.json` are hand-reviewed contract examples, not
 generated goldens: the Ruby suite checks that the example feature collects to the extraction, and
 the Python suite that its sections translate that to the result.

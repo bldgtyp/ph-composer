@@ -79,7 +79,7 @@ module OverviewWalkthrough
   # Gives the first `count` Faces of each Zone a record, through the same operation the panel uses,
   # so the tree opens with rows in it and a marker for what is left.
   def classify_some(client, count)
-    client.query("ph_composer.zones.faces.list").fetch("value").fetch("faces")
+    client.query("ph_composer.zones.faces.all").fetch("value").fetch("faces")
           .group_by { |face| face.fetch("reference").fetch("zone_id") }
           .each_value do |faces|
       faces.first(count).each do |face|
@@ -152,11 +152,11 @@ module OverviewWalkthrough
   end
 
   def zones
-    Client.new.query("ph_composer.zones.list").fetch("value").fetch("zones")
+    Client.new.query("ph_composer.zones.all").fetch("value").fetch("zones")
   end
 
   def faces
-    Client.new.query("ph_composer.zones.faces.list").fetch("value").fetch("faces")
+    Client.new.query("ph_composer.zones.faces.all").fetch("value").fetch("faces")
   end
 
   # Make Zone renames the Group, so the walkthrough's own Groups are found by their Zone record
@@ -180,7 +180,7 @@ module OverviewWalkthrough
 
     def invoke(name, params)
       @sequence += 1
-      revision = query("ph_composer.zones.list").fetch("revision")
+      revision = query("ph_composer.zones.all").fetch("revision")
       API.invoke(:context => @context, :name => name, :params => params,
                  :request => { "sequence" => @sequence, "expected_revision" => revision })
     end

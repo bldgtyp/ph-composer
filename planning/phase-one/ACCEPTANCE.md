@@ -31,7 +31,7 @@ The owning PRDs supply the detailed cases; this register supplies the closure ga
 
 ## PR #3 foundation-correction cases
 
-Added by [pr3-foundation-corrections](../refactor/pr3-foundation-corrections/README.md) for the
+Added by [pr3-foundation-corrections](../archive/pr3-foundation-corrections/README.md) for the
 defects its review reproduced. Ledger records are in
 [`native-acceptance/results.jsonl`](../native-acceptance/results.jsonl).
 

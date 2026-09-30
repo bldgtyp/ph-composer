@@ -200,6 +200,15 @@ The privacy allowlist is the shell's fields plus every contributor's declaration
 check, so a result field no declaration names fails the export at `checking`. The report embeds
 the translator's result document unchanged.
 
+The canonical HBJSON is a string in that document, so the allowlist cannot see inside it. The
+guard (`export/hbjson_metadata.rb`, called from `Export::Privacy.validate!`) parses a copy: any
+`user_data` may hold only the dotted leaf keys export contributors declare with `user_data_keys:`
+(`zones` declares `ph_composer.level` and `ph_composer.building_segment`, which its translation
+writes on each Room; empty maps are allowed); `extension_data`, usernames and path keys refuse at
+any depth; every string passes the local-path check on its own. A refusal is
+`export.privacy_undeclared`. The bytes written are always the translator's, never re-serialized
+(Ed, R-D2, 2026-09-30).
+
 Ed confirmed explicit translation-section dependencies on 2026-09-18. Each section declares the
 typed results it needs from other sections. The coordinator orders execution and supplies those
 results without feature-specific logic. Missing or circular dependencies produce explicit errors.

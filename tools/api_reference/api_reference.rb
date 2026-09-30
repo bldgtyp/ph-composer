@@ -13,8 +13,8 @@ module PhComposerTools
     module_function
 
     def markdown(registry)
-      [intro, kinds(registry), *GROUPS.map { |title, key, capability| operations(registry, title, key, capability) }]
-        .join("\n")
+      [intro, kinds(registry), *GROUPS.map { |title, key, capability| operations(registry, title, key, capability) },
+       tasks].join("\n")
     end
 
     def intro
@@ -78,6 +78,21 @@ module PhComposerTools
       declarations = registry.public_send(key).values.sort_by(&:name)
       "## #{title}\n\nCalled with a context granted `#{capability}`.\n\n" +
         declarations.map { |declaration| operation_section(declaration) }.join("\n")
+    end
+
+    # The shell's export task methods: API methods with keyword arguments, not registered operations.
+    def tasks
+      sections = PhComposer::Export::TaskContract::TASKS.keys.map do |name|
+        task = PhComposer::Export::TaskContract.describe(name)
+        lines = ["### `PhComposer::API.#{name}`", "",
+                 "#{task.fetch('description')} Needs `#{task.fetch('capability')}`.", ""]
+        lines.concat(json_block("Keyword arguments besides context", task.fetch("params")))
+        lines.concat(json_block("Result value", task.fetch("result")))
+        task.fetch("examples").each { |example| lines.concat(json_block("Example arguments", example)) }
+        lines.join("\n")
+      end
+      "## Export tasks\n\nA file export is not a Model change, so these are task methods rather than actions. " \
+        "Each params key is the method's keyword argument.\n\n#{sections.join("\n")}"
     end
 
     def operation_section(declaration)

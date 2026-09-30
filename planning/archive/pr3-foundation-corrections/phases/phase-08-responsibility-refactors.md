@@ -1,11 +1,10 @@
 # Phase 08: responsibility refactors and cleanup
 
 DATE: 2026-09-30
-STATUS: Blocked
+STATUS: Complete (lands with PR #6)
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/5
 MERGE SET: No
-BLOCKED ON: Phase 05 merged; runs on the post-merge branch
 
 ## Scope
 
@@ -43,4 +42,21 @@ Per candidate. Hatch clipping flags A08 and needs its native pixel/timing check.
 
 ## Result
 
-(Fill on completion: taken, skipped and why.)
+Taken, each its own behavior-preserving commit with the suite unchanged and no golden change:
+
+- `Export::Workflow.start` (`bd11e2d`): chosen repairs, native destination and replacement consent,
+  the Model-unchanged check and the repair runs are named steps; `start` keeps every early return,
+  so the stopping policy reads in one place. Cyclomatic 17 to below the advisory threshold.
+- `Registry::Validation#check_export_contributors` (`a1f3ca0`): preflight ownership, contract and
+  section version, user_data keys (Phase 07) and result-field ownership are separate methods.
+
+Skipped:
+
+- Colour-by hatch clipping: the one shared rule is a dozen lines of edge-crossing arithmetic in a
+  measured hot path; sharing it needs a native A08 pixel and GPU-timing rerun to keep that
+  evidence, which costs more than the reader saves.
+- `FaceGeometry.world_normal`: matrix arithmetic explains its score and no caller wants a smaller
+  helper, as the plan expected.
+
+Ledger screen: A12 and A16 flag for `export/workflow.rb` (panel export path) and every case for
+`shell/`; A08 is not affected because hatch clipping was not touched.

@@ -120,7 +120,8 @@ module ExampleFoundation
       "#{ID}.update_parts", :description => "Edit parts' values, user_data or review, all or none.",
       :params => { "type" => "object", "required" => ["edits"], "additionalProperties" => false,
                    "properties" => { "edits" => { "type" => "array", "items" => EDIT, "minItems" => 1 } } },
-      :result => OBJECT, :undo_name => "Edit Example Parts", :side_effects => "Changes part values and metadata."
+      :result => OBJECT, :undo_name => "Edit Example Parts", :side_effects => "Changes part values and metadata.",
+      :examples => [{ "edits" => [{ "id" => "exp_Ab12Cd34Ef56", "values" => { "length_mm" => 900 } }] }]
     ) do |request, changes|
       request.params.fetch("edits").each do |edit|
         request.engine.propose_update(
@@ -138,7 +139,8 @@ module ExampleFoundation
     feature.action(
       "#{ID}.duplicate_parts", :description => "Duplicate parts as one collection.",
       :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
-      :result => OBJECT, :undo_name => "Duplicate Example Parts", :side_effects => "Creates records."
+      :result => OBJECT, :undo_name => "Duplicate Example Parts", :side_effects => "Creates records.",
+      :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
     ) do |request, changes|
       { "mapping" => request.engine.propose_duplicate(PART, request.params.fetch("ids"), changes) }
     end
@@ -146,7 +148,8 @@ module ExampleFoundation
     feature.action(
       "#{ID}.migrate_review", :description => "Raise review data to the installed version.",
       :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
-      :result => OBJECT, :undo_name => "Migrate Example Review", :side_effects => "Rewrites extension data."
+      :result => OBJECT, :undo_name => "Migrate Example Review", :side_effects => "Rewrites extension data.",
+      :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
     ) do |request, changes|
       { "results" => request.engine.propose_migration(PART, request.params.fetch("ids"), REVIEW, changes) }
     end

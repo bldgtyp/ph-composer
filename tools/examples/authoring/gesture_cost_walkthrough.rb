@@ -142,7 +142,7 @@ module GestureCostWalkthrough
   end
 
   def read_faces
-    Client.new.query("ph_composer.zones.faces.list").dig("value", "faces")
+    Client.new.query("ph_composer.zones.faces.all").dig("value", "faces")
   end
 
   def pick(faces, boundary, count)
@@ -151,7 +151,7 @@ module GestureCostWalkthrough
   end
 
   def zones(client = Client.new)
-    client.query("ph_composer.zones.list").dig("value", "zones").map { |zone| zone.fetch("reference") }
+    client.query("ph_composer.zones.all").dig("value", "zones").map { |zone| zone.fetch("reference") }
   end
 
   def summary(values)

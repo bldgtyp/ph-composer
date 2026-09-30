@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # PR #3 foundation corrections, native cases R01 to R04 and R06
-# (planning/refactor/pr3-foundation-corrections/PLAN.md). Development only; never shipped.
+# (planning/archive/pr3-foundation-corrections/PLAN.md). Development only; never shipped.
 #
 # Geometry setup is development-only. Every product write goes through the public operations with
 # the panel closed. The steps a person performs are named in the method that follows them; each
@@ -446,7 +446,7 @@ module CorrectionsWalkthrough
     end
 
     def zones_value
-      query("ph_composer.zones.list").fetch("value")
+      query("ph_composer.zones.all").fetch("value")
     end
 
     def zones
@@ -454,7 +454,7 @@ module CorrectionsWalkthrough
     end
 
     def faces
-      query("ph_composer.zones.faces.list").dig("value", "faces")
+      query("ph_composer.zones.faces.all").dig("value", "faces")
     end
 
     def attached_ids
@@ -463,7 +463,7 @@ module CorrectionsWalkthrough
     end
 
     def revision
-      query("ph_composer.zones.list").fetch("revision")
+      query("ph_composer.zones.all").fetch("revision")
     end
 
     def preview(name, params)

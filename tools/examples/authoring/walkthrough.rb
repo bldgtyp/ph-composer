@@ -34,7 +34,7 @@ module AuthoringWalkthrough
       preview = client.preview("ph_composer.zones.make", target)
       client.invoke("ph_composer.zones.make", target, preview.fetch("proposal_digest"))
     end
-    zones = client.query("ph_composer.zones.list").dig("value", "zones")
+    zones = client.query("ph_composer.zones.all").dig("value", "zones")
     west = zones.find { |zone| zone.dig("values", "name") == "west" }
     values = west.fetch("values").merge("name" => "West Zone", "building_segment" => "Walkthrough",
                                          "level" => "L1", "ground_depth_mm" => 150.0)
@@ -42,7 +42,7 @@ module AuthoringWalkthrough
       "reference" => west.fetch("reference"), "values" => values, "expected_values" => west.fetch("values")
     })
 
-    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
+    faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     classified = zones.map do |zone|
       face = faces.find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
       client.invoke("ph_composer.zones.faces.classify", {
@@ -73,8 +73,8 @@ module AuthoringWalkthrough
 
   def verify
     client = Client.new
-    zones = client.query("ph_composer.zones.list").dig("value", "zones")
-    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
+    zones = client.query("ph_composer.zones.all").dig("value", "zones")
+    faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     classified = faces.select { |face| face.dig("reference", "entity_id") }
     {
       "zones" => zones.length,
@@ -130,7 +130,7 @@ module AuthoringWalkthrough
 
     def invoke(name, params, proposal_digest = nil)
       @sequence += 1
-      revision = query("ph_composer.zones.list").fetch("revision")
+      revision = query("ph_composer.zones.all").fetch("revision")
       request = { "sequence" => @sequence, "expected_revision" => revision }
       request["proposal_digest"] = proposal_digest if proposal_digest
       API.invoke(:context => @context, :name => name, :params => params, :request => request)

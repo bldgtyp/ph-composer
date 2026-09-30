@@ -1,7 +1,7 @@
 # Phase 03: building-operation schemas and examples
 
 DATE: 2026-09-30
-STATUS: Implemented on branch
+STATUS: Merged to main (abd86f4, PR #3)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/4
 MERGE SET: Yes

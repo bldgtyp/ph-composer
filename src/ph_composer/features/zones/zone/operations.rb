@@ -44,15 +44,42 @@ module PhComposer
         "unrecoverable" => offer.fetch("unrecoverable") }
     end
 
+    # One page of Zone occurrences in path order, filtered by id or path; `fields` projects each row to
+    # its identity, state and the named values. The Make Zone target and the restorable Zones are
+    # small and whole on every page.
     def list(request)
+      params = request.params
       zones = Occurrences.zones(request.model)
-      duplicates = zones.group_by { |zone| zone.record.fetch("id") }.select { |_id, rows| rows.length > 1 }.keys
-      {
-        "zones" => zones.map { |zone| zone_view(zone, duplicates.include?(zone.record.fetch("id"))) },
-        "make_zone" => make_target(request.model),
-        "restorable" => Repair.orphans(request.model),
-        "units" => { "ground_depth_mm" => "mm" }
-      }
+      duplicates = duplicate_ids(zones)
+      zones = zones.select { |zone| params["ids"].include?(zone.record.fetch("id")) } if params.key?("ids")
+      zones = zones.select { |zone| params["paths"].include?(zone.path) } if params.key?("paths")
+      zones = zones.sort_by(&:path)
+      page, next_cursor = Pages.slice(request, "#{FEATURE_ID}.list", zones, :key => :path.to_proc)
+      rows = page.map do |zone|
+        row = zone_view(zone, duplicates.include?(zone.record.fetch("id")))
+        params.key?("fields") ? project_row(row, params["fields"]) : row
+      end
+      overview(request.model, rows).merge("next_cursor" => next_cursor, "total" => zones.length)
+    end
+
+    # Every Zone occurrence, whole: the panel's projection. Scripts page `list` instead.
+    def all(request)
+      zones = Occurrences.zones(request.model)
+      duplicates = duplicate_ids(zones)
+      overview(request.model, zones.map { |zone| zone_view(zone, duplicates.include?(zone.record.fetch("id"))) })
+    end
+
+    def overview(model, rows)
+      { "zones" => rows, "make_zone" => make_target(model), "restorable" => Repair.orphans(model),
+        "units" => { "ground_depth_mm" => "mm" } }
+    end
+
+    def duplicate_ids(zones)
+      zones.group_by { |zone| zone.record.fetch("id") }.select { |_id, rows| rows.length > 1 }.keys
+    end
+
+    def project_row(row, fields)
+      row.slice("id", "reference", "state").merge("values" => row.fetch("values").slice(*fields))
     end
 
     def make(request, proposal)
@@ -164,6 +191,7 @@ module PhComposer
 
       "found"
     end
-    private_class_method :zone_view, :make_target, :validate_make_target!, :zone_state
+    private_class_method :zone_view, :make_target, :validate_make_target!, :zone_state, :overview, :duplicate_ids,
+                         :project_row
   end
 end

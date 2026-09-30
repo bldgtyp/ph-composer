@@ -1,7 +1,7 @@
 # PR #3 foundation corrections
 
 DATE: 2026-09-30
-STATUS: In progress
+STATUS: Complete; archived with PR #6
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/4 (merge set, [R-D6](DECISIONS.md#r-d6-issue-intake))
 PR: https://github.com/bldgtyp/ph-composer/pull/3

@@ -103,6 +103,9 @@ def main() -> int:
     assert len(segments) == 1 and segments[0]["display_name"] == "Main Building"
     assert all(room["properties"]["ph"]["ph_bldg_segment_id"] == segments[0]["identifier"] for room in hbjson["rooms"])
     assert all(face.properties.energy.construction.identifier == "phc_dev_opaque" for face in faces.values())
+    if "--write-hbjson" in sys.argv:
+        # The exact canonical bytes, for the Ruby artifact-guard contract example.
+        Path(sys.argv[sys.argv.index("--write-hbjson") + 1]).write_text(canonical["hbjson"])
     print(json.dumps({"state": "PASS", "versions": versions, **{k: canonical[k] for k in canonical if k != "hbjson"}}))
     return 0
 

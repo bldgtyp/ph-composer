@@ -90,7 +90,8 @@ module PhComposer
       end
       feature.view_command("#{FEATURE_ID}.select_row",
                            :description => "Select and zoom to the entities one legend row stands for.",
-                           :params => SELECT_ROW_PARAMS, :result => SELECT_ROW_RESULT) do |request|
+                           :params => SELECT_ROW_PARAMS, :result => SELECT_ROW_RESULT,
+                           :examples => [{ "row" => { "value" => "Wall", "state" => "classified" } }]) do |request|
         row = request.params.fetch("row")
         { "selected" => self.for(request.session).select_row(row.fetch("value"), row.fetch("state")) }
       end

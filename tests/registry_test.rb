@@ -20,6 +20,84 @@ class RegistryTest < PhComposerTestCase
     error.diagnostics
   end
 
+  # A06: registration checks the schema subset's values, not only its keywords.
+  def test_malformed_schema_values_and_inconsistent_required_refuse
+    bad = [
+      { "type" => "object", "properties" => { "n" => { "type" => "integer", "minimum" => "one" } } },
+      { "type" => "object", "properties" => { "n" => { "type" => "array", "minItems" => -1 } } },
+      { "type" => "object", "properties" => { "n" => { "type" => "string", "enum" => [] } } },
+      { "type" => "object", "additionalProperties" => false, "required" => ["missing"], "properties" => {} },
+      { "type" => "object", "properties" => { "n" => { "type" => "number", "minimum" => 5, "maximum" => 1 } } },
+      { "type" => "object", "properties" => { "n" => { "type" => "array", "minItems" => 3, "maxItems" => 1 } } },
+      { "type" => "object", "properties" => { "n" => { "type" => "string", "enum" => [1] } } }
+    ]
+    bad.each_with_index do |params, index|
+      diagnostics = refused(feature do |registry|
+        registry.feature("probe.schema", :contract_version => 1)
+                .query("probe.schema.read#{index}", :description => "Probe.", :params => params, :result => OBJECT,
+                                                     :examples => [{}]) { {} }
+      end)
+      assert_equal ["registration.schema_invalid"], diagnostics.map(&:code).uniq, params.inspect
+    end
+  end
+
+  def test_an_operation_needs_a_description_a_callable_handler_and_valid_examples
+    params = { "type" => "object", "additionalProperties" => false, "required" => ["n"],
+               "properties" => { "n" => { "type" => "integer" } } }
+    cases = {
+      "no description" => lambda do |scope|
+        scope.query("probe.ops.a", :description => " ", :params => OBJECT, :result => OBJECT) { {} }
+      end,
+      "no example" => lambda do |scope|
+        scope.query("probe.ops.b", :description => "B.", :params => params, :result => OBJECT) { {} }
+      end,
+      "invalid example" => lambda do |scope|
+        scope.query("probe.ops.c", :description => "C.", :params => params, :result => OBJECT,
+                                   :examples => [{ "n" => "one" }]) { {} }
+      end,
+      "not callable" => lambda do |scope|
+        scope.query("probe.ops.d", :description => "D.", :params => OBJECT, :result => OBJECT) { {} }
+        scope.instance_variable_get(:@staging).declared_queries.last.handler = "not callable"
+      end
+    }
+    cases.each do |label, declare|
+      diagnostics = refused(feature { |registry| declare.call(registry.feature("probe.ops", :contract_version => 1)) })
+      assert_equal ["registration.schema_invalid"], diagnostics.map(&:code).uniq, label
+    end
+  end
+
+  def test_participants_and_menu_items_need_callable_handlers
+    %i[declared_proposal_participants declared_menu_items].each do |collection|
+      diagnostics = refused(feature do |registry|
+        scope = registry.feature("probe.calls", :contract_version => 1)
+        scope.proposal_participant("probe.calls.participant") { |*_args| {} }
+        scope.menu_item("probe.calls.item", :label => "Item", :menu => "Probe") { |_session| nil }
+        scope.instance_variable_get(:@staging).public_send(collection).last.handler = "not callable"
+      end)
+      assert_equal ["registration.schema_invalid"], diagnostics.map(&:code).uniq, collection.to_s
+    end
+  end
+
+  def test_an_operation_whose_params_accept_nothing_needs_no_example
+    Registry.install([feature do |registry|
+      registry.feature("probe.empty", :contract_version => 1)
+              .query("probe.empty.read", :description => "Read.", :params => OBJECT, :result => OBJECT) { {} }
+    end])
+
+    assert Registry.installed?("probe.empty")
+  end
+
+  def test_published_declarations_are_frozen
+    Registry.install([feature do |registry|
+      registry.feature("probe.frozen", :contract_version => 1)
+              .query("probe.frozen.read", :description => "Read.", :params => OBJECT, :result => OBJECT) { {} }
+    end])
+    query = Registry.current.queries.fetch("probe.frozen.read")
+
+    assert_raises(FrozenError) { query.result = { "type" => "array" } }
+    assert_raises(FrozenError) { query.params["type"] = "array" }
+  end
+
   def test_reference_target_requires_callable_provider_and_pure_validator
     target = PhComposer::Records::ReferenceTarget.new(:id => "outside.feature.object", :label => "Object",
                                                        :records => nil, :validate => nil)
@@ -179,7 +257,7 @@ class RegistryTest < PhComposerTestCase
     assert_match(/only "none" is supported/, messages)
     assert_match(/refers to record kind probe.absent.kind/, messages)
     assert_match(/projects query probe.one.absent/, messages)
-    assert_match(/unknown host event :model_closed/, messages)
+    assert_match(/subscribes to :model_closed, which needs a known host event/, messages)
   end
 
   def test_an_install_that_raises_is_a_diagnostic_not_a_crash
