@@ -395,10 +395,10 @@ Line-split dictionary survival, safe Solve refusal, exact Undo/Redo and fresh re
 defect that reported a pasted endpoint current is corrected by validating full local and reciprocal
 references before geometry. Explicit Solve now recovers cut/paste paths using unique authored
 identities, full reciprocal-envelope agreement and the normal mutable resolver on actual paths.
-Native rollback, Undo/Redo and fresh reopen pass. Native split identity repair remains incomplete:
-a Face split copies one authored UUID onto both pieces, and Solve safely refuses that ambiguity.
-Copied-Zone identity repair does not repair a split inside an otherwise unique Zone. Define and
-verify that recovery before claiming these PRD cases fully complete. The
+Native rollback, Undo/Redo and fresh reopen pass. The [native split recovery continuation](evidence/p1-d-split-identity-recovery.md) implements P1-Q5
+through a public action and native Repair menu: stored endpoint proof retains the original identity;
+otherwise an explicit choice does. Other pieces receive new IDs and invalid reciprocal links retire
+within scope. Unsafe payloads refuse before writes; exact rollback, Undo/Redo and fresh reopen pass. The
 [extension-copy continuation](evidence/p1-d-extension-copy-safety.md) corrects warning-only
 carriage of unknown data during identity-changing copies: unsafe payloads now refuse before any
 write, while supported catalog-reference payloads follow their declared rules. Face and Zone UUID

@@ -12,7 +12,7 @@ ISSUE: none (local planning draft)
 | P1-Q2 | Which wheels does canonical translation need? | P1-C proved the native development path with exact direct pins recorded in its evidence. P1-E still selects and vendors the minimal Pyodide wheel set, reviews honeybee-ph for that path and retains Pyodide 0.24.1. PHX-specific acceptance remains deferred | Partially resolved by P1-C; shipped runtime selection remains P1-E |
 | P1-Q3 | Confirm the development-only construction proof? | Resolved in P1-C: the deterministic provider lives under tools only, is absent from the RBZ, and the normal composition refuses to build Rooms without an authored provider. No persisted placeholder Assembly and no missing-reference fallback | Resolved 2026-09-20; retain through P1-E |
 | P1-Q4 | Remaining Export interview, Q2/Q4 | No canonical files on blocking validation, no implicit SKP save, HBJSON/report always selected. Exporter defaults under Q5 wait with METr | P1-E workflow |
-| P1-Q5 | Which split piece retains the old Face UUID? | Ed chose explicit repair: use a provable stored original path, otherwise ask the user to choose the retaining piece; allocate new UUIDs to the other pieces | Resolved 2026-09-29; implementation/native acceptance remain A06 |
+| P1-Q5 | Which split piece retains the old Face UUID? | Ed chose explicit repair: use a provable stored original path, otherwise ask the user to choose the retaining piece; allocate new UUIDs to the other pieces | Resolved 2026-09-29; public action and native-menu recovery verified; remaining reference/solver boundaries stay A06 |
 
 Export Q1 is already D2: keep the canonical pair on optional-exporter failure. Q3's checked
 stale-adjacency preflight is already accepted by the Zones interview. Do not reopen either.
@@ -82,4 +82,6 @@ own contract design; selecting this identity policy does not establish those cap
 
 The rejected alternative gave every resulting piece a new identity, so existing references to
 the old identity would require explicit resolution. The accepted policy authorizes the recovery
-implementation within P1-D; its public contract and native evidence remain to be completed.
+implementation within P1-D; its public contract and native gate now pass in the
+[split recovery evidence](evidence/p1-d-split-identity-recovery.md). The remaining reference and
+one-to-many solver boundaries are not closed by this gate.

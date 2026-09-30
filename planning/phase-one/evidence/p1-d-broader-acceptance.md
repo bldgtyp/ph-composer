@@ -145,8 +145,9 @@ The Attached-zone dialog review found no blocking issue.
 ## Remaining boundaries
 
 Do not close A05 to A09 wholesale from these individual cases. Unique moved-path recovery is now
-verified; remaining identity work includes native split-Face UUID recovery (see the
-[2026-09-29 reference checks](p1-d-native-references.md)), the pending-Face atomic inline-create workflow,
+verified. [Native split identity recovery](p1-d-split-identity-recovery.md) now passes its public action
+and native-menu gate. Remaining work includes Face/Zone extension-reference targets, one-to-many
+pairing, the pending-Face atomic inline-create workflow,
 isolated GPU timing and the remaining A06/A07 cases. The
 [hatch continuation](p1-d-hatch-and-invalidation.md) verifies the PRD hatch; the
 [keyboard/context continuation](p1-d-keyboard-context.md) completes A09's named current-host cases.

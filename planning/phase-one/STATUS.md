@@ -13,11 +13,11 @@ Line-split record survival, safe Solve refusal, exact Undo/Redo and fresh reopen
 corrected a pasted Surface endpoint reading current despite its changed paths. The correction
 passes both offline Rubies, full CI, coverage and independent review, with fresh installed-host
 checks. Explicit Solve now recovers unique authored identities after cut/paste path changes,
-with exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID recovery remains
-open. The [extension-copy correction](evidence/p1-d-extension-copy-safety.md) now refuses unsafe
+with exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID recovery now passes through the explicit public action and native Repair menu, with
+[exact rollback, Undo/Redo and fresh reopen](evidence/p1-d-split-identity-recovery.md). The [extension-copy correction](evidence/p1-d-extension-copy-safety.md) now refuses unsafe
 Face cuts and copied-Zone repair before writes, with supported catalog-reference payloads passing
 native rollback, Undo/Redo and reopen. Ed accepted the split identity policy in [P1-Q5](DECISIONS.md#p1-q5-native-split-identity-frontier);
-successful repair still needs its public implementation and native gate; Face/Zone extension-reference targets are unsupported, and one-to-many pairing remains
+the stored-path/explicit-choice policy is implemented and current-host verified. Face/Zone extension-reference targets are unsupported, and one-to-many pairing remains
 reported rather than solved. Atomic Attached-zone create-and-assign and isolated GPU timing remain open. The
 [native adjacency boundary continuation](evidence/p1-d-adjacency-boundaries.md) verifies A05's
 named current-host cases, including independent plane/angle controls, sliver/same-normal skips

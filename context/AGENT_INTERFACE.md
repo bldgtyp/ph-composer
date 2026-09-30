@@ -155,6 +155,14 @@ For each feature, identify supported programmatic reads and writes. If an operat
 interactive geometry picking, document that limitation and the plan for an explicit-reference
 equivalent where feasible. Core data edits must not require UI scraping or arbitrary eval.
 
+Zones exposes native split identity recovery as `ph_composer.zones.repair_split_face`. The native
+Repair menu and [synthetic scripting client](../tools/examples/authoring/split_identity_walkthrough.rb)
+use the same preview and invocation contract. Stored endpoint proof or an explicit retaining path
+chooses the keeper; reads never repair duplicate identities. Invocation carries the reviewed
+preview revision and digest. Supported payloads follow declared copy rules; unsafe data refuses
+before writes. [Phase 1 evidence](../planning/phase-one/evidence/p1-d-split-identity-recovery.md)
+records the implemented scope and remaining reference/solver boundaries.
+
 ## Delivery and acceptance
 
 Ed confirmed the delivery split during Phase 0 planning on 2026-09-18. Phase 0 establishes the

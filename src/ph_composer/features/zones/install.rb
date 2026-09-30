@@ -9,6 +9,8 @@ require_relative "adjacency"
 require_relative "face_split"
 require_relative "adjacency_steps"
 require_relative "repair"
+require_relative "split_identity_repair"
+require_relative "split_identity_menu"
 require_relative "export"
 require_relative "colour_modes"
 
@@ -48,6 +50,14 @@ module PhComposer
     REPAIR_PARAMS = {
       "type" => "object", "additionalProperties" => false, "required" => ["zone_path"],
       "properties" => { "zone_path" => PATH }
+    }.freeze
+    SPLIT_REPAIR_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[zone face_id zones],
+      "properties" => {
+        "zone" => ZONE_REFERENCE, "face_id" => { "type" => "string" },
+        "zones" => { "type" => "array", "items" => ZONE_REFERENCE, "minItems" => 1 },
+        "retaining_entity_path" => PATH
+      }
     }.freeze
     RESTORE_PARAMS = {
       "type" => "object", "additionalProperties" => false, "required" => %w[parent_path zone_id],
@@ -108,6 +118,15 @@ module PhComposer
     end
 
     def declare_repairs(feature)
+      SplitIdentityMenu.install(feature)
+      feature.action("#{FEATURE_ID}.repair_split_face",
+                     :description => "Repair copied Face identities after a native split.",
+                     :params => SPLIT_REPAIR_PARAMS, :result => OBJECT,
+                     :undo_name => "Repair Split Face Identity",
+                     :side_effects => "Reidentifies split pieces and retires invalid Surface links.") do |
+                       request, proposal|
+        repair_split_face(request, proposal)
+      end
       feature.action("#{FEATURE_ID}.repair_identity",
                      :description => "Give one copied Zone occurrence an identity of its own.",
                      :params => REPAIR_PARAMS, :result => OBJECT, :undo_name => "Repair Zone Identity",
@@ -122,6 +141,13 @@ module PhComposer
                        request, proposal|
         restore(request, proposal)
       end
+    end
+
+    def repair_split_face(request, proposal)
+      plan = SplitIdentityRepair.plan(request)
+      scopes = plan.fetch(:scope_paths).map { |path| Operations::EntityScope.new(path) }
+      proposal.add_step(SplitIdentityRepair::Step.new(plan), :scopes => scopes)
+      plan.fetch(:value)
     end
 
     def repair_identity(request, proposal)

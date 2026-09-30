@@ -6,9 +6,9 @@ implemented, D4 and D6 host-verified, D7's eight host questions answered with fi
 The [broader native acceptance run](evidence/p1-d-broader-acceptance.md) adds A05 to A09 evidence
 and records further corrections. The [native reference checks](evidence/p1-d-native-references.md)
 verify cut/paste and split preservation, plus explicit Solve recovery of unique identities after
-path changes. Native split identity repair remains open. The register still has
+path changes. The [split identity recovery](evidence/p1-d-split-identity-recovery.md) public action and native Repair menu now pass rollback, Undo/Redo and fresh reopen. The register still has
 open P1-D cases. The [extension-copy continuation](evidence/p1-d-extension-copy-safety.md)
-corrects unsafe payload copying and records the reference-target and native-split repair limits.
+corrects unsafe payload copying and records the remaining Face/Zone reference-target limits.
 The [Colour-by continuation](evidence/p1-d-colour-by-continuation.md) verifies native overlay
 toggles, occlusion, alpha and orbit, with feature redraw/cadence measured at 1,032 triangles.
 ISSUE: none (local planning draft)

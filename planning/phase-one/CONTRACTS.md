@@ -181,8 +181,15 @@ Native splitting copies the full face dictionary to every resulting face. Theref
 - Every copied adjacency is removed before new pairs are proposed. Surviving counterparts are in
   the declared mutation set or the operation refuses. No geometric similarity keeps a pair current.
 - A native split is detected by duplicate face ids or a changed geometry stamp. Reconciliation
-  reports it without repair. Explicit Solve may propose identity rebinding and pairing under the
-  same rules.
+  reports it without repair. Under P1-Q5, explicit `ph_composer.zones.repair_split_face` retains
+  one identity using the stored original endpoint path, or an explicit selected piece when that
+  proof is absent. Every other piece receives a new id. A choice conflicting with stored proof
+  refuses. The native Repair menu previews the same public action before confirmation.
+- Split identity repair retires invalid Surface envelopes on the pieces and any surviving
+  reciprocal endpoint. Counterpart Zones must be in the explicit mutation scope. Core fields,
+  `user_data` and supported extension payloads survive; unsafe payloads refuse before writes.
+  Repair does not create pairs or enable one-to-many Solve. The public walkthrough is
+  [split_identity_walkthrough.rb](../../tools/examples/authoring/split_identity_walkthrough.rb).
 - Copying a Zone duplicates its Zone and Face dictionaries. The copy is ambiguous until explicit
   identity repair allocates a new Zone id and new member ids, updates stamps and retires copied
   pairs without changing the original occurrence. Shared definition storage refuses repair.

@@ -36,10 +36,11 @@ The [native reference continuation](../../phase-one/evidence/p1-d-native-referen
 cut/paste and native split preservation, Undo/Redo and reopen. The false current endpoint state
 is corrected. Explicit Solve recovery after changed paths now passes with unique authored
 identities, exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID recovery
-remains open. The [extension-copy correction](../../phase-one/evidence/p1-d-extension-copy-safety.md)
+now passes the public action and native Repair menu, with exact rollback, Undo/Redo and fresh reopen.
+[Split recovery](../../phase-one/evidence/p1-d-split-identity-recovery.md). The [extension-copy correction](../../phase-one/evidence/p1-d-extension-copy-safety.md)
 replaces warning-only unknown-payload carriage with pre-write refusal, while supported catalog
 references pass native copy/cut rollback, Undo/Redo and reopen. Face/Zone extension-reference
-targets and the explicit native split repair contract remain unsupported.
+targets remain unsupported; one-to-many pairing remains reported rather than solved.
 
 ## Blockers
 
@@ -80,6 +81,7 @@ Undo/Redo, shared-copy refusal and limited Restore. Remaining cases are listed i
 
 The [native adjacency boundary continuation](../../phase-one/evidence/p1-d-adjacency-boundaries.md)
 completes A05's named current-host plane/angle, sliver, same-normal and scope cases, with native
-Undo/Redo and final reopen/reference verification. Native split recovery remains A06 work;
+Undo/Redo and final reopen/reference verification. Native split recovery now passes its A06 slice;
 [P1-Q5](../../phase-one/DECISIONS.md#p1-q5-native-split-identity-frontier) records Ed's accepted
-policy for which piece retains the old Face UUID; public recovery implementation remains open.
+policy for which piece retains the old Face UUID; its public action and native menu are implemented
+and current-host verified. A06 still requires the extension-reference and one-to-many boundaries.
