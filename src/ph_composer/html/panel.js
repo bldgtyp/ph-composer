@@ -13,6 +13,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   "use strict";
 
   var sections = [];
+  var navigationGuards = {};
   var DEFAULT_ORDER = 100;
   var state = initialState();
   var preferenceSequence = 0;
@@ -199,9 +200,17 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   function showTab(name) {
     if (!document.querySelector("[data-pane='" + name + "']")) return;
+    if (name !== state.ui.activeTab) {
+      var message = Object.keys(navigationGuards).map(function (key) { return navigationGuards[key](name); })
+        .filter(Boolean)[0];
+      if (message) {
+        state = withUI(state, { notice: { message: message, tone: "warning" } });
+        render();
+        return;
+      }
+    }
     state = withUI(state, { activeTab: name });
-    applyTab();
-    api.state = state;
+    render();
   }
 
   /* `options.pane` names the tab the section belongs to (default "overview"). `options.order` places
@@ -278,7 +287,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   function repaint() { render(); }
 
   api = { receive: receive, section: section, ready: ready, state: state, showTab: showTab, send: send,
-    setPreference: setPreference, repaint: repaint };
+    setPreference: setPreference, repaint: repaint,
+    navigationGuard: function (name, guard) { navigationGuards[name] = guard; } };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function (tab) {
     tab.addEventListener("click", function () { showTab(tab.getAttribute("data-tab")); });
   });

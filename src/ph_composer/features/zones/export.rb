@@ -7,6 +7,29 @@ module PhComposer
 
       module_function
 
+      def preflight(request)
+        index = Index.new(request.model)
+        zones = Occurrences.zones(request.model, :index => index)
+        findings = []
+        if zones.empty?
+          findings << { "code" => "zone.none", "section" => SECTION, "object_id" => nil,
+                        "message" => "Make at least one Zone before exporting.", "blocks_export" => true }
+        end
+        zones.each do |zone|
+          begin
+            Schema.validate!(zone.record)
+            Occurrences.resolve_zone(request.model, zone.reference, :mutable => true, :index => index)
+          rescue CodedError => error
+            findings << { "code" => error.code, "section" => SECTION, "object_id" => zone.record["id"],
+                          "message" => error.message, "blocks_export" => true }
+          end
+        end
+        repair = { "id" => "#{FEATURE_ID}.solve_all", "label" => "Solve stale adjacencies before export",
+                   "checked" => true, "action" => "#{FEATURE_ID}.solve_adjacency",
+                   "params" => { "zones" => zones.map(&:reference) } }
+        { "findings" => findings, "repairs" => zones.empty? ? [] : [repair] }
+      end
+
       def records(reader)
         zones = reader.snapshot.records(ZONE_DICTIONARY, :kind => "group")
         zones.map do |entry, record|

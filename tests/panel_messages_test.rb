@@ -13,6 +13,8 @@ class PanelMessagesTest < PhComposerTestCase
     # A request channel sends whichever message it was made with, so the map of the ones it carries is
     # where those types are written down.
     sent += File.read(File.join(HTML, "request.js"))[/var SLOTS = \{(.*?)\};/m, 1].scan(/"([a-z.]+)":/).flatten
+    channels = File.read(File.join(HTML, "sections", "export.js"))[/var CHANNELS = \{(.*?)\};/m, 1]
+    sent += channels.scan(/: "([a-z.]+)"/).flatten
     sent = sent.uniq
 
     assert_includes sent, "action.invoke"

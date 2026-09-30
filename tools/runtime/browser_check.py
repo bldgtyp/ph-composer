@@ -26,6 +26,7 @@ import tempfile
 import threading
 import time
 import urllib.request
+import uuid
 import zipfile
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -141,6 +142,16 @@ def page_websocket(port: int) -> str:
 DRIVER = """
 window.__phc = {messages: []};
 window.sketchup = {ph_composer_runtime: function (text) { window.__phc.messages.push(JSON.parse(text)); }};
+Object.defineProperty(window, "loadPyodide", {
+  configurable: true,
+  get: function () { return window.__phc.loader; },
+  set: function (loader) {
+    if (typeof loader !== "function") { window.__phc.loader = loader; return; }
+    window.__phc.loader = function (options) {
+      return loader(options).then(function (runtime) { window.__phc.runtime = runtime; return runtime; });
+    };
+  }
+});
 """
 
 PROBE = """
@@ -162,7 +173,7 @@ new Promise(function (resolve) {
 """
 
 
-def run_browser(binary: Path) -> dict[str, Any]:
+def run_browser(binary: Path, translation: bool = False) -> dict[str, Any]:
     major = chrome_major(binary)
     server = ThreadingHTTPServer(("127.0.0.1", free_port()), RuntimeHandler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -192,6 +203,8 @@ def run_browser(binary: Path) -> dict[str, Any]:
         client.send("Page.navigate", url=url)
         observed = wait_for_page(client)
         observed.update(client.evaluate(PROBE % MANIFEST["gates"]["boot_deadline_ms"]))
+        if translation:
+            observed["export_translation"] = check_translation(client)
     finally:
         if client:
             client.socket.close()
@@ -200,6 +213,132 @@ def run_browser(binary: Path) -> dict[str, Any]:
         server.shutdown()
         shutil.rmtree(profile, ignore_errors=True)
     return verdict(major, observed, client.console if client else [])
+
+
+def check_translation(client: CDP) -> dict[str, Any]:
+    """Exercise shipped translation first, then the explicit tools-only synthetic provider."""
+    document = json.loads((ROOT / "tests/fixtures/phase_one/two_zones_extraction.json").read_text())
+    request = {"request_id": "browser-export", "deadline_ms": 15000, "document": document}
+    response = client.evaluate(
+        """
+new Promise(function (resolve, reject) {
+  PhComposerRuntime.receive({type: "runtime.translate", payload: REQUEST});
+  var deadline = Date.now() + 30000;
+  (function poll() {
+    var result = window.__phc.messages.find(function (m) { return m.type === "runtime.translation"; });
+    if (result) return resolve(result.payload);
+    if (Date.now() > deadline) return reject(new Error("translation timed out"));
+    setTimeout(poll, 100);
+  }());
+});
+""".replace("REQUEST", json.dumps(request))
+    )
+    if response.get("error"):
+        # Surface the Python exception only in this development check, never in the shipped panel.
+        diagnostic = json.dumps("from ph_composer_translation.entry import export_json\nexport_json(_phc_document)")
+        client.evaluate(f"window.__phc.runtime.runPythonAsync({diagnostic})")
+        raise RuntimeError(f"shipped export runtime failed: {response['error']}")
+    blocked = response["result"]
+    assert blocked["summary"]["publishable"] is False and "canonical_model" not in blocked, blocked
+    # This separately composed provider never enters src/ or the packaged extension.
+    example = (ROOT / "tools/examples/phase_one/translate_two_zones.py").read_text()
+    provider = example[example.index("class DevelopmentConstructionProvider:") : example.index("\ndef main()")]
+    source = "\n".join(
+        [
+            "import json",
+            "import honeybee_energy._extend_honeybee",
+            "import honeybee_ph",
+            "from honeybee_energy.construction.opaque import OpaqueConstruction",
+            "from honeybee_energy.material.opaque import EnergyMaterial",
+            "from ph_composer_translation.contract import RecordError",
+            "from ph_composer_translation.model_sections import FaceSection, ZoneSection",
+            "from ph_composer_translation.entry import export_json",
+            provider,
+            f"export_json({json.dumps(json.dumps(document))}, "
+            "(FaceSection(), ZoneSection(DevelopmentConstructionProvider())))",
+        ]
+    )
+    result = json.loads(client.evaluate(f"window.__phc.runtime.runPythonAsync({json.dumps(source)})"))
+    assert result["summary"]["publishable"] is True, result
+    canonical = result["canonical_model"]
+    assert {key: canonical[key] for key in ("rooms", "faces", "surface_pairs", "omitted")} == {
+        "rooms": 2,
+        "faces": 12,
+        "surface_pairs": 1,
+        "omitted": 0,
+    }, canonical
+    with tempfile.TemporaryDirectory(prefix="phc-native-wheels-") as temporary:
+        wheel_path = Path(temporary) / "wheels"
+        for filename in MANIFEST["wheel_order"]:
+            with zipfile.ZipFile(EXTENSION / "vendor/wheels" / filename) as wheel:
+                wheel.extractall(wheel_path)
+        script = Path(temporary) / "parity.py"
+        native_source = "\n".join(
+            [
+                "import sys",
+                f"sys.path[:0] = {[str(wheel_path), str(EXTENSION / 'python')]!r}",
+                source.rsplit("\n", 1)[0],
+                "print(" + source.rsplit("\n", 1)[1] + ")",
+            ]
+        )
+        script.write_text(native_source)
+        native = subprocess.run([sys.executable, "-S", str(script)], capture_output=True, text=True, check=True)
+        native_result = json.loads(native.stdout)
+        assert comparable_result(native_result) == comparable_result(result), "native/Pyodide model content differs"
+    return {
+        "shipped_missing_construction_refused": True,
+        "native_pyodide_model_parity": True,
+        "comparison": "Normalize upstream PH default UUIDs and unordered global construction definitions only.",
+        "synthetic_result": result,
+    }
+
+
+def comparable_result(result: dict[str, Any]) -> dict[str, Any]:
+    """Compare exact values and authored references; scope normalization to upstream-created defaults.
+
+    HB-PH initializes otherwise unauthored team/site/certification children with uuid4 identifiers.
+    HB-Energy emits its global material/construction sets in hash-set order. Neither difference
+    changes this fixture's authored Room/Face/segment identities or Surface/construction references.
+    This is comparison-only: the exported HBJSON is never rewritten or a golden replaced.
+    """
+    copied = json.loads(json.dumps(result))
+    model = json.loads(copied["canonical_model"]["hbjson"])
+    replacements: dict[str, str] = {}
+
+    def defaults(value: Any, path: str) -> None:
+        if isinstance(value, dict):
+            identifier = value.get("identifier")
+            if isinstance(identifier, str):
+                try:
+                    uuid.UUID(identifier)
+                    replacements[identifier] = path
+                except ValueError:
+                    pass
+            for key, child in value.items():
+                defaults(child, f"{path}/{key}")
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                defaults(child, f"{path}/{index}")
+
+    ph = model["properties"]["ph"]
+    defaults(ph["team"], "ph/team")
+    for segment in ph["bldg_segments"]:
+        defaults(segment, "ph/segment/" + segment["identifier"])
+
+    def replace(value: Any) -> Any:
+        if isinstance(value, str):
+            return replacements.get(value, value)
+        if isinstance(value, list):
+            return [replace(child) for child in value]
+        if isinstance(value, dict):
+            return {key: replace(child) for key, child in value.items()}
+        return value
+
+    global_set = model["properties"]["energy"]["global_construction_set"]
+    for field in ("materials", "constructions"):
+        global_set[field].sort(key=lambda definition: definition["identifier"])
+    copied["canonical_model"]["hbjson"] = json.dumps(replace(model), sort_keys=True, separators=(",", ":"))
+    return copied
 
 
 def wait_for_page(client: CDP) -> dict[str, Any]:
@@ -231,11 +370,14 @@ def verdict(major: int, observed: dict[str, Any], console: list[str]) -> dict[st
         "warm_round_trip_within_ceiling": bool(results)
         and all(result.get("warm_round_trip_ms", 10**9) <= gates["warm_round_trip_ceiling_ms"] for result in results),
     }
+    if "export_translation" in observed:
+        checks["export_translation"] = observed["export_translation"]["shipped_missing_construction_refused"]
     return {
         "verdict": "PASS" if all(checks.values()) else "FAIL",
         "checks": checks,
         "results": results,
         "console": console,
+        **({"export_translation": observed["export_translation"]} if "export_translation" in observed else {}),
     }
 
 
@@ -244,13 +386,16 @@ def main() -> int:
     parser.add_argument("--download-chromium", action="store_true", help="download the pinned Chromium 88 if absent")
     parser.add_argument("--chrome", type=Path, default=DEFAULT_CHROME)
     parser.add_argument("--out", type=Path)
+    parser.add_argument(
+        "--translation", action="store_true", help="check shipped refusal and tools-only HBJSON translation"
+    )
     args = parser.parse_args()
     subprocess.run([sys.executable, str(ROOT / "tools" / "runtime" / "vendor.py"), "--check"], check=True)
     if args.download_chromium:
         download_chrome(args.chrome)
     if not args.chrome.exists():
         raise SystemExit(f"Chromium 88 not found at {args.chrome}; pass --download-chromium")
-    result = run_browser(args.chrome)
+    result = run_browser(args.chrome, args.translation)
     print(json.dumps(result, indent=2))
     if args.out:
         args.out.write_text(json.dumps(result, indent=2) + "\n")

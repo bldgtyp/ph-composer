@@ -20,6 +20,8 @@
   var boot = null;
   var bootCount = 0;
   var pyodide = null;
+  var wheelManifest = null;
+  var wheels = null;
 
   function send(type, payload) {
     if (state === "stopped" || !window.sketchup || !window.sketchup.ph_composer_runtime) return;
@@ -98,6 +100,7 @@
     state = "starting";
     bootCount += 1;
     boot = withDeadline(fetchAsset("vendor/manifest.json", "json").then(function (manifest) {
+      wheelManifest = manifest;
       var step = window.performance.now();
       return loadScript("vendor/pyodide/pyodide.js").then(function () {
         return window.loadPyodide({ indexURL: ROOT + "vendor/pyodide/" });
@@ -156,9 +159,52 @@
     pyodide = null;
   }
 
+  function translate(payload) {
+    start(payload.deadline_ms).then(installWheels).then(function () {
+      if (state === "stopped") return;
+      pyodide.globals.set("_phc_document", JSON.stringify(payload.document));
+      return pyodide.runPythonAsync(
+        "from ph_composer_translation.entry import export_json\nexport_json(_phc_document)"
+      ).then(function (text) {
+        send("runtime.translation", { request_id: payload.request_id, session: session, result: JSON.parse(text) });
+      });
+    }).catch(function (error) {
+      send("runtime.translation", { request_id: payload.request_id, session: session,
+        error: { code: error.code || "runtime.translation_failed", message: "The export runtime failed." } });
+    });
+  }
+
+  /* Install only shipped, manifest-pinned pure-Python wheels. No pip dependency resolution,
+     external downloads or system-Python fallback occur in the host runtime. */
+  function installWheels() {
+    if (wheels) return wheels;
+    wheels = Promise.all(wheelManifest.wheel_order.map(function (filename) {
+      return window.fetch(ROOT + "vendor/wheels/" + filename).then(function (response) {
+        if (!response.ok) throw failure("runtime.asset_refused", "A translation wheel was refused.");
+        return response.arrayBuffer();
+      }).then(function (buffer) {
+        if (state === "stopped") throw failure("runtime.stopped", "The runtime was stopped.");
+        pyodide.FS.mkdirTree("/wheel-downloads");
+        pyodide.FS.writeFile("/wheel-downloads/" + filename, new Uint8Array(buffer));
+      });
+    })).then(function () {
+      pyodide.globals.set("_phc_wheels", JSON.stringify(wheelManifest.wheel_order));
+      return pyodide.runPythonAsync([
+        "import json, sys, zipfile, os",
+        "for _name in json.loads(_phc_wheels):",
+        "    with zipfile.ZipFile('/wheel-downloads/' + _name) as _wheel:",
+        "        _wheel.extractall('/translation-wheels')",
+        "    os.remove('/wheel-downloads/' + _name)",
+        "sys.path.insert(0, '/translation-wheels')"
+      ].join("\n"));
+    });
+    return wheels;
+  }
+
   window.PhComposerRuntime = {
     receive: function (envelope) {
       if (envelope && envelope.type === "runtime.probe") probe(envelope.payload || {});
+      if (envelope && envelope.type === "runtime.translate") translate(envelope.payload || {});
       if (envelope && envelope.type === "runtime.stop") stop();
     },
     state: function () { return state; }

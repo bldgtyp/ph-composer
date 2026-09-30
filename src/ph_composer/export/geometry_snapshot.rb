@@ -23,30 +23,61 @@ module PhComposer
 
       attr_reader :entries, :revision
 
-      def self.capture(model, revision:)
-        found = []
-        walk(model.entities, [], Geom::Transformation.new, found)
-        new(found, revision)
+      # A traversal resumed by UI timers. One slice bounds both entity count and elapsed host work;
+      # a single native Face capture cannot be interrupted, so it remains the smallest work unit.
+      class Cursor
+        attr_reader :entries, :count
+
+        def initialize(model)
+          @walk = GeometrySnapshot.enum_for(:walk, model.entities, [], Geom::Transformation.new)
+          @entries = []
+          @count = 0
+          @done = false
+        end
+
+        def advance(limit: 100, budget_seconds: 0.008)
+          started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          limit.times do
+            entry = @walk.next
+            @entries << entry if entry
+            @count += 1
+            break if Process.clock_gettime(Process::CLOCK_MONOTONIC) - started >= budget_seconds
+          end
+          done?
+        rescue StopIteration
+          @done = true
+        end
+
+        def done?
+          @done
+        end
       end
 
-      def self.walk(entities, path, transform, found)
+      def self.capture(model, revision:)
+        cursor = Cursor.new(model)
+        cursor.advance until cursor.done?
+        new(cursor.entries, revision)
+      end
+
+      def self.walk(entities, path, transform, &block)
         entities.each do |entity|
           child_path = path + [entity.persistent_id]
           dictionaries = read_dictionaries(entity)
           if entity.is_a?(Sketchup::Face)
-            found << Entry.new(:kind => "face", :path => child_path.freeze, :transform => transform.to_a.freeze,
-                               :dictionaries => dictionaries, :geometry => FaceGeometry.capture(entity, transform))
+            block.call(Entry.new(:kind => "face", :path => child_path.freeze, :transform => transform.to_a.freeze,
+                                 :dictionaries => dictionaries, :geometry => FaceGeometry.capture(entity, transform)))
           elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
             child_transform = transform * entity.transformation
             kind = entity.is_a?(Sketchup::Group) ? "group" : "component_instance"
-            found << Entry.new(:kind => kind, :path => child_path.freeze, :transform => child_transform.to_a.freeze,
-                               :dictionaries => dictionaries, :geometry => nil)
+            block.call(Entry.new(:kind => kind, :path => child_path.freeze, :transform => child_transform.to_a.freeze,
+                                 :dictionaries => dictionaries, :geometry => nil))
             child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
-            walk(child_entities, child_path, child_transform, found)
+            walk(child_entities, child_path, child_transform, &block)
+          else
+            block.call(nil)
           end
         end
       end
-      private_class_method :walk
 
       def self.read_dictionaries(entity)
         Array(entity.attribute_dictionaries).each_with_object({}) do |dictionary, result|

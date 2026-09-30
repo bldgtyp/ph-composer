@@ -113,12 +113,15 @@ module PhComposer
       end
       feature.export_contributor(
         ExportProjection::SECTION, :section_version => 1,
+        :preflight => "#{FEATURE_ID}.export_preflight",
         :result => {
           "canonical_model" => Export::Privacy::Optional.new(
             Export::Privacy.fields(%w[hbjson rooms faces surface_pairs omitted])
           )
         }
       ) { |reader| ExportProjection.records(reader) }
+      feature.query("#{FEATURE_ID}.export_preflight", :description => "All-Zone export checks and adjacency repair.",
+                    :params => OBJECT, :result => OBJECT) { |request| ExportProjection.preflight(request) }
     end
 
     def reference_entries(model)

@@ -98,9 +98,17 @@
     if (message.type === "view.invoke") this.viewCommand(message.payload);
     if (message.type === "preferences.set") this.setPreference(message.payload);
     if (message.type === "export.start") this.exportStart(message.payload);
+    if (message.type === "export.preflight" || message.type === "export.latest") {
+      var value = message.type === "export.latest" ? null : { repairs: [], findings: [{
+        code: "preview.export_unavailable", blocks_export: true,
+        message: "Export writes are unavailable in this browser preview."
+      }] };
+      this.publish("export.result", { request_id: message.payload.request_id, session: message.payload.session,
+        outcome: { status: "completed", value: value, findings: [], revision: this.revision } });
+    }
   };
 
-  /* Like the shipped build: a destination is "accepted" and nothing is written. */
+  /* This development preview has no filesystem or runtime; it never performs an export. */
   Host.prototype.exportStart = function (payload) {
     this.publish("export.result", { request_id: payload.request_id, session: payload.session,
       outcome: refused("export.unavailable", "No exporter is installed in this build, so nothing was written.",

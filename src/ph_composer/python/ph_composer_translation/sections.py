@@ -22,11 +22,12 @@ A section never reads another section's records, and the coordinator names no se
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, ClassVar, Generic, TypeVar
 
 from .contract import JSONValue
+from .result import Finding
 
 RecordT = TypeVar("RecordT")
 ObjectT = TypeVar("ObjectT")
@@ -85,6 +86,10 @@ class Section(ABC, Generic[RecordT, ObjectT]):
     @abstractmethod
     def translate(self, record: RecordT, inputs: Inputs) -> ObjectT:
         """One object. Raise `RecordError`, or let `DependencyUnavailable` from `inputs` propagate."""
+
+    def findings(self, objects: Mapping[str, ObjectT]) -> Sequence[Finding]:
+        """Non-fatal information about translated objects, including deliberate omissions."""
+        return ()
 
     def result_fields(self, objects: Mapping[str, ObjectT]) -> Mapping[str, JSONValue]:
         """Top-level fields this section adds to the result document. Each must be declared by the

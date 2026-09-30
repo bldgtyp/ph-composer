@@ -30,6 +30,10 @@ module PhComposer
         "api" => { "major" => MAJOR, "minor" => MINOR },
         "extension" => { "id" => EXTENSION_ID, "version" => VERSION },
         "contract_versions" => [Declarations::CONTRACT_VERSION],
+        "capabilities" => CallerRegistry::CAPABILITIES,
+        "tasks" => { "export" => { "start" => "start_export", "status" => "export_status",
+                                    "cancel" => "cancel_export", "latest" => "latest_export",
+                                    "retention_limit" => 20, "retention_seconds" => 1800 } },
         "sessions" => Sessions.all.map { |session| session_summary(session) },
         "features" => registry.features.values.map do |feature|
           { "id" => feature.id, "contract_version" => feature.contract_version, "requires" => feature.requires }
@@ -111,6 +115,26 @@ module PhComposer
 
     def outcome(context:, request:)
       Dispatch.new.outcome(context, request)
+    end
+
+    def start_export(context:, destination:, replace: false)
+      Dispatch.new.export_task(context, :start, :destination => destination, :replace => replace)
+    end
+
+    def export_preflight(context:)
+      Dispatch.new.export_preflight(context)
+    end
+
+    def export_status(context:, task_id:)
+      Dispatch.new.export_task(context, :status, :task_id => task_id)
+    end
+
+    def cancel_export(context:, task_id:)
+      Dispatch.new.export_task(context, :cancel, :task_id => task_id)
+    end
+
+    def latest_export(context:)
+      Dispatch.new.export_task(context, :latest, {})
     end
 
     def session_summary(session)

@@ -34,18 +34,20 @@ class PhaseOneExportTest < PhComposerTestCase
     write_or_compare(FIXTURE, extraction.document)
   end
 
-  def test_stale_surface_geometry_blocks_collection_without_repair
+  def test_stale_surface_geometry_is_accounted_without_repair
     zones = seed_two_boxes
     invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
     right = @model.entities.to_a.find { |entity| entity.persistent_id == 2000 }
     right.transformation = Geom::Transformation.translation([1, 0, 0])
     names = [PhComposer::FaceAssignment::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
 
-    error = assert_raises(PhComposer::Export::Blocked) do
-      PhComposer::Export::Collection.build(@model, :run_id => "stale", :contributors => names)
-    end
-
-    assert_equal "adjacency.stale", error.code
+    extraction = PhComposer::Export::Collection.build(@model, :run_id => "stale", :contributors => names)
+    faces = extraction.document.dig("sections", names.first, "records")
+    omitted = faces.select { |face| face["omission"] }
+    assert_equal 2, omitted.length
+    assert_equal ["adjacency.stale"], omitted.map { |face| face.dig("omission", "code") }.uniq
+    assert omitted.all? { |face| face.dig("omission", "area_m2") > 0 }
+    assert_equal omitted.map { |face| face.fetch("zone_id") }, omitted.map { |face| face.dig("omission", "zone_id") }
     records = right.entities.to_a.map { |face| PhComposer::FaceAssignment::FACE_STORE.read(face) }
     assert_equal 1, records.count { |record| record["boundary_condition"] == "Surface" }
   end
@@ -85,7 +87,7 @@ class PhaseOneExportTest < PhComposerTestCase
     assert_equal "face.wrong_zone", error.code
   end
 
-  def test_deleted_surface_counterpart_blocks_collection
+  def test_deleted_surface_counterpart_is_an_accounted_omission
     zones = seed_two_boxes
     invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
     right = @model.entities.to_a.find { |entity| entity.persistent_id == 2000 }
@@ -94,11 +96,12 @@ class PhaseOneExportTest < PhComposerTestCase
     end
     right.entities.delete(counterpart)
 
-    error = assert_raises(PhComposer::Export::Blocked) do
-      PhComposer::Export::Collection.build(@model, :run_id => "deleted", :contributors => contributor_names)
-    end
-
-    assert_equal "adjacency.unresolved", error.code
+    extraction = PhComposer::Export::Collection.build(@model, :run_id => "deleted", :contributors => contributor_names)
+    faces = extraction.document.dig("sections", contributor_names.first, "records")
+    assert_equal 11, faces.length
+    omitted = faces.select { |face| face["omission"] }
+    assert_equal 1, omitted.length
+    assert_equal "adjacency.unresolved", omitted.first.dig("omission", "code")
   end
 
   private

@@ -11,7 +11,7 @@ var URLSearchParams = require("url").URLSearchParams;
 
 var ROOT = "http://127.0.0.1:9/token/";
 var MANIFEST = { translation_assets: ["python/ph_composer_translation/__init__.py",
-  "python/ph_composer_translation/entry.py"] };
+  "python/ph_composer_translation/entry.py"], wheel_order: ["fixture.whl"] };
 
 function fakePyodide(log) {
   return {
@@ -20,6 +20,10 @@ function fakePyodide(log) {
     FS: {
       mkdirTree: function (directory) { log.push(["mkdir", directory]); },
       writeFile: function (target, source) { this.owner.files[target] = source; }
+    },
+    runPythonAsync: function (code) {
+      log.push(["async", code]);
+      return Promise.resolve(code.indexOf("export_json") >= 0 ? JSON.stringify({ state: "complete" }) : null);
     },
     runPython: function (code) {
       log.push(["run", code]);
@@ -55,7 +59,8 @@ function page(options) {
       var relative = url.replace(ROOT, "");
       if (settings.refuse === relative) return Promise.resolve({ ok: false, status: 404 });
       return Promise.resolve({ ok: true, json: function () { return Promise.resolve(MANIFEST); },
-        text: function () { return Promise.resolve("# " + relative); } });
+        text: function () { return Promise.resolve("# " + relative); },
+        arrayBuffer: function () { return Promise.resolve(new ArrayBuffer(3)); } });
     },
     document: {
       head: { appendChild: function (script) {
@@ -164,4 +169,51 @@ test("a failure after the boot is the translation's, not the boot's", async func
   assert.strictEqual(result.error.code, "runtime.translation_failed");
   assert.strictEqual(result.error.message, "The translation package failed: StackUnavailable: honeybee.model");
   assert.strictEqual(p.context.PhComposerRuntime.state(), "ready");
+});
+
+
+test("translation installs shipped wheels once and correlates compact runtime replies", async function () {
+  var p = page();
+  function translate(id) {
+    p.context.PhComposerRuntime.receive({ type: "runtime.translate", payload: {
+      request_id: id, deadline_ms: 15000, document: { run_id: id }
+    } });
+  }
+  translate("one");
+  await settle();
+  translate("two");
+  await settle();
+  assert.strictEqual(p.boots(), 1);
+  assert.deepStrictEqual(p.fetched.filter(function (path) { return path.indexOf("vendor/wheels/") === 0; }),
+    ["vendor/wheels/fixture.whl"]);
+  var replies = p.sent.filter(function (message) { return message.type === "runtime.translation"; });
+  assert.deepStrictEqual(replies.map(function (message) { return message.payload.request_id; }), ["one", "two"]);
+  assert.ok(replies.every(function (message) { return message.payload.result.state === "complete"; }));
+  var installations = p.log.filter(function (row) { return row[0] === "async" && row[1].indexOf("zipfile") >= 0; });
+  assert.strictEqual(installations.length, 1);
+});
+
+test("a refused shipped wheel reports failure without external dependency resolution", async function () {
+  var p = page({ refuse: "vendor/wheels/fixture.whl" });
+  p.context.PhComposerRuntime.receive({ type: "runtime.translate", payload: {
+    request_id: "refused", deadline_ms: 15000
+  } });
+  await settle();
+  var reply = p.sent.filter(function (message) { return message.type === "runtime.translation"; })[0];
+  assert.strictEqual(reply.payload.error.code, "runtime.asset_refused");
+  assert.strictEqual(reply.payload.request_id, "refused");
+  assert.ok(p.fetched.every(function (path) { return path.indexOf("http") < 0; }));
+  assert.strictEqual(p.log.filter(function (row) { return row[0] === "async"; }).length, 0);
+});
+
+test("stopping during translation boot suppresses replies and wheel writes", async function () {
+  var p = page();
+  p.context.PhComposerRuntime.receive({ type: "runtime.translate", payload: {
+    request_id: "stopped", deadline_ms: 15000
+  } });
+  p.context.PhComposerRuntime.receive({ type: "runtime.stop" });
+  await settle();
+  assert.strictEqual(p.context.PhComposerRuntime.state(), "stopped");
+  assert.strictEqual(p.sent.filter(function (message) { return message.type === "runtime.translation"; }).length, 0);
+  assert.ok(!p.pyodide.files["/wheel-downloads/fixture.whl"]);
 });

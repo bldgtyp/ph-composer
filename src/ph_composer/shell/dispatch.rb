@@ -27,6 +27,54 @@ module PhComposer
       answer(context, "read", name, @registry.queries, params)
     end
 
+    # File export has its own grant and never enters a Model mutation. Polling and cancellation
+    # use the same explicit session as starting the task, even when another Model is foreground.
+    def export_task(context, operation, arguments)
+      session, = resolve(context, "export", nil, nil)
+      tasks = Export::Tasks.for(session)
+      value = case operation
+              when :start then tasks.start(**arguments)
+              when :status then tasks.status(arguments.fetch(:task_id))
+              when :cancel then tasks.cancel(arguments.fetch(:task_id))
+              when :latest then tasks.latest
+              else raise InternalError, "Unknown export task operation."
+              end
+      Outcome.completed(:revision => session.revision, :value => value)
+    rescue CodedError => error
+      coded_outcome(error, session)
+    rescue UserError => error
+      Outcome.refused("export.refused", error.message, :revision => session&.revision)
+    rescue StandardError => error
+      unexpected_outcome(error, session, "export.#{operation}")
+    end
+
+    def export_preflight(context)
+      session, = resolve(context, "read", nil, nil)
+      value = { "findings" => [], "repairs" => [] }
+      @registry.export_contributors.values.sort_by(&:name).each do |contributor|
+        next unless contributor.preflight
+
+        outcome = query(context, contributor.preflight, {})
+        return outcome unless outcome["status"] == "completed"
+
+        declared = outcome.fetch("value")
+        value["findings"].concat(declared.fetch("findings"))
+        declared.fetch("repairs").each do |repair|
+          action = @registry.actions[repair["action"]]
+          unless action&.owner == contributor.owner
+            raise InternalError, "Preflight repair needs its owner's public action."
+          end
+
+          value["repairs"] << repair
+        end
+      end
+      Outcome.completed(:revision => session.revision, :value => DeepCopy.call(value))
+    rescue CodedError => error
+      coded_outcome(error, session)
+    rescue StandardError => error
+      unexpected_outcome(error, session, "export.preflight")
+    end
+
     # A change to what the host shows and nothing else (Declarations::ViewCommand). It carries no
     # sequence number and returns no proposal, because there is nothing to retry and nothing to undo.
     # It refuses while the session is busy, as a read does, so it cannot move the camera or the

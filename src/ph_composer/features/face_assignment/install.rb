@@ -163,9 +163,7 @@ module PhComposer
       declare_viewport(feature)
       declare_attached_zones(feature)
       feature.snapshot_section("#{FEATURE_ID}.faces", :query => "#{FEATURE_ID}.list")
-      feature.export_contributor(ExportProjection::SECTION, :section_version => 1) do |reader|
-        ExportProjection.records(reader)
-      end
+      ExportProjection.install(feature)
     end
 
     # What reaches the viewport rather than the Model: the Classify tool's palette, the tool itself,

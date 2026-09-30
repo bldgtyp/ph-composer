@@ -46,7 +46,11 @@ def test_the_module_imports_without_the_stack(module: str) -> None:
     assert completed.returncode == 0, completed.stderr
 
 
-def test_the_stack_seam_names_what_this_runtime_lacks() -> None:
+def test_the_stack_seam_names_a_missing_package(monkeypatch: pytest.MonkeyPatch) -> None:
+    def absent(module: str) -> None:
+        raise ImportError(module)
+
+    monkeypatch.setattr(stack.importlib, "import_module", absent)
     with pytest.raises(stack.StackUnavailable, match=r"honeybee\.model is not installed"):
         stack.load("honeybee.model")
 

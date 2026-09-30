@@ -171,6 +171,14 @@ module PhComposer
       def check_export_contributors
         owned = @live.export_contributors.values.flat_map { |contributor| Array(contributor.result&.keys) }
         @staging.declared_export_contributors.each do |contributor|
+          if contributor.preflight
+            query = @staging.declared_queries.find { |item| item.name == contributor.preflight } ||
+                    @live.queries[contributor.preflight]
+            unless query && query.owner == contributor.owner
+              add("registration.missing_dependency", contributor.owner, contributor.name,
+                  "#{contributor.name} needs its own registered preflight query.", contributor.preflight)
+            end
+          end
           version = contributor.section_version
           unless contributor.contract && version.is_a?(Integer) && version.positive?
             add("registration.schema_invalid", contributor.owner, contributor.name,

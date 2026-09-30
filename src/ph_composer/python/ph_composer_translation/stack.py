@@ -4,8 +4,8 @@ Nothing is imported when a module of this package is imported: every module must
 stack (tests/python/test_imports.py), so the contract layer runs under pytest alone and nothing runs
 before the runtime has installed the wheels. A section calls `load` inside `translate`.
 
-P1-C verifies the exact stack through a development-only native composition. The shipped runtime
-does not install these wheels until P1-E; `load` then raises `StackUnavailable` and names the module.
+The export runtime installs its pinned wheels on demand. A missing requested package raises
+`StackUnavailable` and names the module; no external resolver or system-Python fallback runs.
 """
 
 from __future__ import annotations

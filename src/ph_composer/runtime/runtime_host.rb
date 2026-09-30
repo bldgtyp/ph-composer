@@ -5,7 +5,7 @@ require "json"
 module PhComposer
   # One running Python runtime: a loopback asset server and the dialog that loads the runtime page
   # (html/runtime/) from it. Nothing starts one when the extension loads or the panel opens; in this
-  # build only the development probe does (tools/hostkit/runtime_probe.rb).
+  # build the export task and the development probe start it only when requested.
   #
   # It is bound to one Model session by id and holds no reference to the Model or the session, so a
   # closed Model is never kept alive by it. `stop` releases the dialog, the server, its pump timer and
@@ -13,7 +13,7 @@ module PhComposer
   class RuntimeHost
     PAGE = "html/runtime/index.html"
     CALLBACK = "ph_composer_runtime"
-    INBOUND = %w[runtime.ready runtime.result].freeze
+    INBOUND = %w[runtime.ready runtime.result runtime.translation].freeze
 
     attr_reader :session_id, :state, :results
 
@@ -37,7 +37,10 @@ module PhComposer
       @server.start
       @dialog = @dialog_factory.call
       @dialog.add_action_callback(CALLBACK) { |_context, raw| receive(raw) }
-      @dialog.set_on_closed { stop }
+      @dialog.set_on_closed do
+        stop
+        @on_message&.call("runtime.closed", "session" => @session_id)
+      end
       @dialog.set_url(@server.url(PAGE, "session" => @session_id))
       @dialog.show
       @state = "loading"
@@ -51,6 +54,13 @@ module PhComposer
     # A probe sent before the page is ready waits for it.
     def probe(request_id, deadline_ms: RuntimeGate.fetch("boot_deadline_ms"))
       message = { "type" => "runtime.probe", "payload" => { "request_id" => request_id, "deadline_ms" => deadline_ms } }
+      @state == "ready" ? deliver(message) : @queued << message
+      request_id
+    end
+
+    def translate(request_id, document, deadline_ms: RuntimeGate.fetch("boot_deadline_ms"))
+      message = { "type" => "runtime.translate", "payload" => { "request_id" => request_id,
+                                                               "document" => document, "deadline_ms" => deadline_ms } }
       @state == "ready" ? deliver(message) : @queued << message
       request_id
     end

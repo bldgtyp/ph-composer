@@ -25,3 +25,15 @@ def translate_json(text: str, sections: Sequence[Section[Any, Any]] = SECTIONS) 
 def probe_json(text: str) -> str:
     """Exercise the contract shell without loading feature stacks or their wheels."""
     return translate_json(text, ())
+
+
+def export_json(text: str, sections: Sequence[Section[Any, Any]] = SECTIONS) -> str:
+    """Translate, then reload and reconcile the exact canonical bytes before returning them."""
+    result = json.loads(translate_json(text, sections))
+    canonical = result.get("canonical_model")
+    if not result["summary"]["publishable"] or canonical is None:
+        return json.dumps(result)
+    from .conformance import check
+
+    check(canonical)
+    return json.dumps(result)

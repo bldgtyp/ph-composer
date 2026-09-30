@@ -15,6 +15,7 @@ from typing import Any, Protocol
 
 from . import stack
 from .contract import JSONValue, RecordError, as_number, as_text
+from .result import Finding
 from .sections import Inputs, Requirement, Section
 
 FACE_SECTION_ID = "ph_composer.face_assignment.export.faces"
@@ -28,14 +29,33 @@ class ConstructionProvider(Protocol):
 
 
 @dataclass(frozen=True)
+class FaceOmission:
+    code: str
+    reason: str
+    area_m2: float
+    zone_id: str
+
+    def row(self, identifier: str) -> dict[str, JSONValue]:
+        return {
+            "face_id": identifier,
+            "zone_id": self.zone_id,
+            "code": self.code,
+            "reason": self.reason,
+            "area_m2": self.area_m2,
+        }
+
+
+@dataclass(frozen=True)
 class FaceSpec:
     identifier: str
     zone_id: str
     face_type: str
-    boundary_condition: str
+    boundary_condition: str | None
     assembly_id: str | None
     loops_m: tuple[tuple[tuple[float, float, float], ...], ...]
     adjacency: Mapping[str, object] | None
+    area_m2: float
+    omission: FaceOmission | None
 
 
 @dataclass(frozen=True)
@@ -67,7 +87,22 @@ class FaceSection(Section[FaceSpec, FaceSpec]):
         identifier = as_text(raw.get("id"), "face id")
         zone_id = as_text(raw.get("zone_id"), f"face {identifier} zone_id")
         face_type = as_text(raw.get("face_type"), f"face {identifier} face_type")
-        boundary = as_text(raw.get("boundary_condition"), f"face {identifier} boundary_condition")
+        omission = _read_omission(raw.get("omission"), identifier, zone_id)
+        boundary_value = raw.get("boundary_condition")
+        boundary = (
+            None
+            if omission and boundary_value is None
+            else as_text(boundary_value, f"face {identifier} boundary_condition")
+        )
+        if omission:
+            try:
+                _face_type_name(face_type)
+                if boundary is not None and boundary != "Surface":
+                    _boundary_name(boundary)
+            except KeyError as error:
+                raise RecordError(
+                    f"face {identifier} has invalid classification independently of its omission"
+                ) from error
         assembly = raw.get("assembly_id")
         if assembly is not None and not isinstance(assembly, str):
             raise RecordError(f"face {identifier} assembly_id must be text or null")
@@ -78,10 +113,29 @@ class FaceSection(Section[FaceSpec, FaceSpec]):
         adjacency = raw.get("adjacency")
         if adjacency is not None and not isinstance(adjacency, Mapping):
             raise RecordError(f"face {identifier} adjacency must be an object")
-        return FaceSpec(identifier, zone_id, face_type, boundary, assembly, loops, adjacency)
+        area = as_number(geometry.get("area_m2"), f"face {identifier} area_m2")
+        if area < 0:
+            raise RecordError(f"face {identifier} area_m2 must not be negative")
+        return FaceSpec(identifier, zone_id, face_type, boundary, assembly, loops, adjacency, area, omission)
 
     def translate(self, record: FaceSpec, inputs: Inputs) -> FaceSpec:
         return record
+
+    def findings(self, objects: Mapping[str, FaceSpec]) -> Sequence[Finding]:
+        return [
+            Finding(
+                omission.code,
+                self.id,
+                identifier,
+                f"Face {identifier}, Zone {omission.zone_id}, {omission.area_m2:g} m²: {omission.reason}",
+                False,
+            )
+            for identifier, omission in _omissions(objects).items()
+        ]
+
+    def result_fields(self, objects: Mapping[str, FaceSpec]) -> Mapping[str, JSONValue]:
+        rows: list[JSONValue] = [omission.row(identifier) for identifier, omission in _omissions(objects).items()]
+        return {"surface_omissions": rows}
 
     @staticmethod
     def _loops(value: object, identifier: str) -> tuple[tuple[tuple[float, float, float], ...], ...]:
@@ -146,6 +200,14 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
             specification = inputs.get(FACES, face_id)
             if specification.zone_id != record.identifier:
                 raise RecordError(f"face {face_id} names Zone {specification.zone_id}, not {record.identifier}")
+            specifications[face_id] = specification
+            omission = specification.omission
+            if omission is None and specification.boundary_condition == "Surface":
+                counterpart = inputs.get(FACES, _counterpart_id(specification))
+                if counterpart.omission:
+                    omission = _counterpart_omission(specification, counterpart)
+            if omission:
+                continue
             if specification.boundary_condition == "Surface":
                 _validate_surface(specification, inputs)
             points = [[lb_point.Point3D(*point) for point in loop] for loop in specification.loops_m]
@@ -181,7 +243,8 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
         segment_objects: dict[str, Any] = {}
         emitted_faces = {identifier: face for zone in zones for identifier, face in zone.faces.items()}
         specifications = {identifier: spec for zone in zones for identifier, spec in zone.specifications.items()}
-        omitted = 0
+        omissions = _omissions(specifications)
+        omitted = len(omissions)
         paired: set[str] = set()
         for zone in zones:
             ph = zone.room.properties.ph
@@ -190,18 +253,15 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
             segment.display_name = zone.source.building_segment
             ph.ph_bldg_segment = segment
         for identifier, specification in specifications.items():
-            if specification.boundary_condition != "Surface" or identifier in paired:
+            if identifier in omissions or specification.boundary_condition != "Surface" or identifier in paired:
                 continue
             counterpart_id = _counterpart_id(specification)
             counterpart = specifications.get(counterpart_id)
             reciprocal = counterpart is not None and _counterpart_id(counterpart) == identifier
             if not reciprocal or counterpart_id not in emitted_faces:
-                omitted += 1
-                continue
+                return {}
             emitted_faces[identifier].set_adjacency(emitted_faces[counterpart_id])
             paired.update((identifier, counterpart_id))
-        if omitted:
-            return {}
         model = hb_model.Model("ph_composer_model", rooms=[zone.room for zone in zones], units="Meters")
         hbjson = json.dumps(model.to_dict(), sort_keys=True, separators=(",", ":"))
         return {
@@ -215,11 +275,48 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
         }
 
 
+def _read_omission(value: object, identifier: str, zone_id: str) -> FaceOmission | None:
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise RecordError(f"face {identifier} omission must be an object")
+    code = as_text(value.get("code"), f"face {identifier} omission code")
+    reason = as_text(value.get("reason"), f"face {identifier} omission reason")
+    area = as_number(value.get("area_m2"), f"face {identifier} omission area_m2")
+    owner = as_text(value.get("zone_id"), f"face {identifier} omission zone_id")
+    if area < 0 or owner != zone_id:
+        raise RecordError(f"face {identifier} omission has an invalid area or Zone")
+    return FaceOmission(code, reason, area, owner)
+
+
+def _counterpart_omission(specification: FaceSpec, counterpart: FaceSpec) -> FaceOmission:
+    return FaceOmission(
+        "adjacency.counterpart_omitted",
+        f"Surface counterpart {counterpart.identifier} is explicitly omitted",
+        specification.area_m2,
+        specification.zone_id,
+    )
+
+
+def _omissions(specifications: Mapping[str, FaceSpec]) -> dict[str, FaceOmission]:
+    omissions: dict[str, FaceOmission] = {}
+    for identifier, specification in specifications.items():
+        omission = specification.omission
+        counterpart = specifications.get(_counterpart_id(specification))
+        if omission is None and specification.boundary_condition == "Surface" and counterpart and counterpart.omission:
+            omission = _counterpart_omission(specification, counterpart)
+        if omission:
+            omissions[identifier] = omission
+    return omissions
+
+
 def _face_type_name(value: str) -> str:
     return {"Wall": "wall", "RoofCeiling": "roof_ceiling", "Floor": "floor", "AirBoundary": "air_boundary"}[value]
 
 
-def _boundary_name(value: str) -> str:
+def _boundary_name(value: str | None) -> str:
+    if value is None:
+        raise KeyError("no boundary condition")
     return {"Outdoors": "outdoors", "Ground": "ground", "Adiabatic": "adiabatic"}[value]
 
 

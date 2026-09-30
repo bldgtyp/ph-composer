@@ -44,7 +44,9 @@ module PhComposer
     # never writes. `name` is the section id the translation package reads, at `section_version`.
     # `result` declares the top-level result fields the feature's translation adds, in Export::Privacy's
     # schema form; `report` is `->(result, display_units) { [html_section, ...] }` over those fields.
-    ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, keyword_init: true)
+    # `preflight` optionally names a registered read query returning findings and explicit repair actions.
+    ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, :preflight,
+                                   keyword_init: true)
 
     # One Colour-by mode (face-assignment PRD "Colour-by"). `projection`
     # is `->(model) { [ColourBy::Entry, ...] }`: a pure read of the feature's own entities, their

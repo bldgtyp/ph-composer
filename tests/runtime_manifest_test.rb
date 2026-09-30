@@ -24,7 +24,9 @@ class RuntimeManifestTest < PhComposerTestCase
 
     assert_empty Manifest.invalid_assets(PhComposer::ROOT, manifest.fetch("assets"))
     assert_equal "0.24.1", manifest.dig("pyodide", "version")
-    assert manifest.fetch("assets").keys.all? { |name| name.start_with?("html/", "python/", "vendor/pyodide/") }
+    roots = %w[html/ python/ vendor/pyodide/ vendor/wheels/]
+    assert manifest.fetch("assets").keys.all? { |name| roots.any? { |root| name.start_with?(root) } }
+    assert_equal 8, manifest.fetch("wheel_order").length
   end
 
   def test_a_malformed_manifest_is_a_packaging_fault

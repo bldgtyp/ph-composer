@@ -7,13 +7,14 @@
     { id: "exp_Dd44Ee55Ff66", label: "Head", length_mm: 1231.9 },
     { id: "exp_Gg77Hh88Ii99", label: "Jamb", length_mm: 2438.4 }
   ];
+  function zonePath(id) { return id === "zon_Aa11Bb22Cc33" ? [100] : [200]; }
   function zone(id, name, level, faceCount) {
     return { id: id, schema_version: 1, user_data: {}, extension_data: {},
-      reference: { zone_id: id, zone_path: [100] }, state: "found", face_count: faceCount,
+      reference: { zone_id: id, zone_path: zonePath(id) }, state: "found", face_count: faceCount,
       values: { name: name, building_segment: "House", level: level, ground_depth_mm: 0 } };
   }
   function face(zoneId, path, id, area, values, state) {
-    return { reference: { zone_id: zoneId, zone_path: [100], entity_path: [path], entity_id: id },
+    return { reference: { zone_id: zoneId, zone_path: zonePath(zoneId), entity_path: [path], entity_id: id },
       zone_name: "", area_m2: area, values: values, state: state,
       suggested: { face_type: "Wall", boundary_condition: "Outdoors" } };
   }
