@@ -9,7 +9,9 @@ BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` f
 
 ## Next step
 
-Phase 05: independent review, native run, docs-pass, then Ed merges PR #3.
+Codex (computer use) runs [NATIVE-HANDOFF.md](NATIVE-HANDOFF.md): R03's Undo/Redo and moved-Face
+variant, R05 and the A04 recheck. Then: the scripted walkthrough reruns for the targeted A cases,
+docs-pass (move R01 to R06 into `phase-one/ACCEPTANCE.md`), PR #3 description, and Ed merges.
 
 ## Blockers
 
@@ -98,13 +100,13 @@ Phase 08 into Phase 02.
 
 | Case | Phase | State | Ledger record |
 | --- | --- | --- | --- |
-| R01 shared child Groups | 01a / 05 | In catalog, not run | |
-| R02 nested Zone path | 01a / 05 | In catalog, not run | |
-| R03 orphan Attached-zone delete | 01a / 05 | In catalog, not run | |
-| R04 partial AttachedZone cut | 01a / 05 | In catalog, not run | |
-| R05 Overview draft navigation | 01c / 05 | In catalog, not run | |
-| R06 panel-closed API client | 03 / 05, extended 09 | In catalog, not run; offline `api_client_test` passes | |
-| Existing cases flagged by `--changed` | 05, 09 | | List per phase **Result** |
+| R01 shared child Groups | 01a / 05 | Pass | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
+| R02 nested Zone path | 01a / 05 | Pass | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
+| R03 orphan Attached-zone delete | 01a / 05 | Partly observed; rest handed off | [NATIVE-HANDOFF.md](NATIVE-HANDOFF.md) |
+| R04 partial AttachedZone cut | 01a / 05 | Pass | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
+| R05 Overview draft navigation | 01c / 05 | Handed off | [NATIVE-HANDOFF.md](NATIVE-HANDOFF.md) |
+| R06 panel-closed API client | 03 / 05, extended 09 | Pass (Phase 05 scope) | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
+| Existing cases flagged by `--changed` | 05, 09 | Targeted (Ed, 2026-09-30): A04 recheck handed off; A08 and A12 carry forward; scripted walkthroughs pending | Phase 05 **Result** |
 
 ## Verification log
 
@@ -112,5 +114,6 @@ Newest first. Record each gate run: date, command, Ruby version, counts, pass/fa
 
 | Date | Gate | Result |
 | --- | --- | --- |
+| 2026-09-30 | `make ci` Ruby 3.2.2 and 2.7.2 at `08aa837` (after review fixes); `make coverage` | Pass: 636 Ruby, 191 JS, 96 Python; coverage Ruby 96.5%, JS 97.8%, Python 94.0% |
 | 2026-09-30 | `make ci` Ruby 3.2.2 at `71b8534`; `tests/all_tests.rb` on 2.7.2 | Pass: 634 Ruby, 191 JS, 96 Python tests; fixtures, manifests, RBZ |
 | 2026-09-30 | Review baseline, `make ci` Ruby 3.2.2 at `99b6fc7` | Pass: 605 Ruby, 184 JS, 96 Python tests; see [review](review/README.md#verification) |

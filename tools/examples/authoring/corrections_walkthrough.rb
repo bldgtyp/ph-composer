@@ -17,8 +17,8 @@ module CorrectionsWalkthrough
   # ---------------------------------------------------------------- R01 shared child Groups
 
   # One Zone holding a small child Group with one Face. Ed then copies the child natively.
-  def r01_setup
-    clear
+  def r01_setup(fresh: true)
+    clear if fresh
     zone = box(Sketchup.active_model.entities, "#{PREFIX}r01", [0, 0, 0], 4000.mm)
     child = zone.entities.add_group
     child.name = "#{PREFIX}r01_child"
@@ -114,15 +114,15 @@ module CorrectionsWalkthrough
 
   # One Zone whose first two Faces use the Garage, and an Attic to move them to. Ed then explodes
   # the Zone (right-click, Explode) and runs r03_delete.
-  def r03_setup
-    clear
+  def r03_setup(fresh: true)
+    clear if fresh
     client = Client.new
-    zone = box(Sketchup.active_model.entities, "#{PREFIX}r03", [0, 0, 0], 4000.mm)
-    make_zone(zone)
-    client.invoke("ph_composer.zones.faces.auto_classify", "zone" => client.zones.first.fetch("reference"))
+    zone = box(Sketchup.active_model.entities, "#{PREFIX}r03", [8000.mm, 0, 0], 4000.mm)
+    @r03_zone_id = make_zone(zone).dig("value", "zone_id")
+    client.invoke("ph_composer.zones.faces.auto_classify", "zone" => r03_zone(client).fetch("reference"))
     garage = client.invoke("ph_composer.zones.faces.attached_zone.save", "values" => GARAGE).dig("value", "id")
     attic = client.invoke("ph_composer.zones.faces.attached_zone.save", "values" => ATTIC).dig("value", "id")
-    client.faces.first(2).each do |row|
+    r03_faces(client).first(2).each do |row|
       client.invoke("ph_composer.zones.faces.classify",
                     "faces" => [row.fetch("reference")], "expected_values" => row.fetch("values"),
                     "intent" => { "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" },
@@ -168,7 +168,7 @@ module CorrectionsWalkthrough
   def r03_assign_again
     client = Client.new
     garage = client.invoke("ph_composer.zones.faces.attached_zone.save", "values" => GARAGE).dig("value", "id")
-    client.faces.first(2).each do |row|
+    r03_faces(client).first(2).each do |row|
       client.invoke("ph_composer.zones.faces.classify",
                     "faces" => [row.fetch("reference")], "expected_values" => row.fetch("values"),
                     "intent" => { "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" },
@@ -177,6 +177,16 @@ module CorrectionsWalkthrough
     { "garage" => garage, "assigned" => assigned(garage).length,
       "next" => "Ed: open the Zone, select a Garage Face (the first floor or wall), Edit > Cut, close the " \
                 "Zone, Edit > Paste at the root, then run r03_delete." }
+  end
+
+  # By record id: Restore regroups the Faces under a new Group, so the persistent id does not last.
+  def r03_zone(client)
+    client.zones.find { |row| row["id"] == @r03_zone_id }
+  end
+
+  def r03_faces(client)
+    zone = r03_zone(client)
+    client.faces.select { |row| zone && row.dig("reference", "zone_path") == zone.dig("reference", "zone_path") }
   end
 
   # ---------------------------------------------------------------- R04 partial AttachedZone cut
@@ -266,6 +276,32 @@ module CorrectionsWalkthrough
 
   # ---------------------------------------------------------------- shared
 
+  # A native Undo or Redo only runs with SketchUp frontmost, so a person does them. This observer
+  # records what each one left, a moment after it settles, so several can be done in a row.
+  class Watcher < Sketchup::ModelObserver
+    def onTransactionUndo(_model)
+      settle("undo")
+    end
+
+    def onTransactionRedo(_model)
+      settle("redo")
+    end
+
+    def settle(event)
+      UI.start_timer(0.3, false) { CorrectionsWalkthrough.log << [event, CorrectionsWalkthrough.state] }
+    end
+  end
+
+  def watch
+    @watcher ||= Watcher.new.tap { |watcher| Sketchup.active_model.add_observer(watcher) }
+    log.clear
+    { "watching" => true }
+  end
+
+  def log
+    @log ||= []
+  end
+
   def undo
     Sketchup.send_action("editUndo:")
     { "next" => "read back in a later call" }
@@ -283,7 +319,8 @@ module CorrectionsWalkthrough
       "faces" => client.faces.map { |row|
  [row.dig("reference", "entity_id"), row.dig("values", "boundary_condition")] },
       "restorable" => client.zones_value.fetch("restorable").map { |row| row.values_at("zone_id", "refusal") },
-      "attached_zones" => client.attached_ids }
+      "attached_zones" => client.attached_ids,
+      "loose_faces" => Sketchup.active_model.entities.grep(Sketchup::Face).length }
   end
 
   def clear

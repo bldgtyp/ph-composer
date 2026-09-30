@@ -1,9 +1,9 @@
 # Phase 05: merge closure
 
 DATE: 2026-09-30
-STATUS: Blocked
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/4
 MERGE SET: Yes
 BLOCKED ON: Phases 01a to 04 `Implemented on branch`
 
@@ -44,4 +44,21 @@ verification profile in [PLAN.md](../PLAN.md#verification-profile).
 
 ## Result
 
-(Fill on completion: gate counts, ledger record IDs, review outcome, merge commit.)
+In progress.
+
+- Gates: `make ci` passes on Ruby 3.2.2 and 2.7.2 at `08aa837`; `make coverage` Ruby 96.5%, JS 97.8%,
+  Python 94.0%. No manifest drift.
+- Independent review: one fresh-context Opus pass over `f33dd42..HEAD` with the architecture and
+  UI rubrics. No P1. Fixed in `08aa837`: A03 invalid-UTF-8 and digest ordering (P2), Suggest
+  classification on shared child Groups (P2), foreign stamps failing the Zones read, `describe`
+  copies, stranded-Face reasons and routes, split-identity repair using the shared pair rule, the
+  quickstart's affected claim, refused-Clear focus, a misnamed test and an indent. Recorded as known
+  limits, not fixed: a lost Save result leaves navigation locked until a Model switch (no request
+  timeout in `request.js`); a Model-driven change (Undo, move into a Group) that removes the
+  selected Zone still disposes a dirty draft without a notice; `make ci` syntax-checks with 3.2 only.
+- Native scope (Ed, 2026-09-30): targeted rerun, not all of A01 to A16. R01, R02, R04, R06 pass and
+  are in `results.jsonl` ([evidence](../../phase-one/evidence/pr3-corrections-native.md)). R03 is
+  partly observed; its Undo/Redo and moved-Face variant, R05 and the A04 recheck are in
+  [NATIVE-HANDOFF.md](../NATIVE-HANDOFF.md) for Codex computer use, after `codex exec` could not be
+  granted SketchUp non-interactively. A08 and A12 carry forward as historical: their code saw id
+  renames only.
