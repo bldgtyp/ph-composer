@@ -1,6 +1,6 @@
 # Face assignment: status
 
-DATE: 2026-09-26
+DATE: 2026-09-29
 STATUS: In progress; P1-B authoring, P1-C export contribution and P1-D's gestures, Attached zones,
 Colour-by and the Overview screen implemented. The faces table, the panel legend and the Classify
 palette have D7 current-host evidence and corrections. Broader acceptance cases remain open.
@@ -43,8 +43,10 @@ the face extraction schema, complete world geometry, reciprocal emitted targets 
 development-construction boundary in the exact reloaded HBJSON. D5 verifies the Colour-by seam offline: an outside
 feature's mode, the two shipped modes, the unclassified and incomplete states, per-colour
 batching, the HUD, tag and revision invalidation, and the overlay's lifecycle. D6's native tool
-checks and D7's eight Overview questions have current-host evidence. The remaining Colour-by
-lifecycle and Attached-zone cases stay open in the [acceptance register](../../phase-one/ACCEPTANCE.md).
+checks and D7's eight Overview questions have current-host evidence. The [atomic Attached-zone continuation](../../phase-one/evidence/p1-d-attached-zone-atomic.md)
+now verifies the public create-and-assign action and inline dialog, including exact native rollback,
+Undo/Redo and fresh reopen. A07’s named current-host cases pass; isolated GPU timing remains in
+A08 in the [acceptance register](../../phase-one/ACCEPTANCE.md).
 
 Documentation-only architecture review completed 2026-09-18; all four findings addressed in the
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.

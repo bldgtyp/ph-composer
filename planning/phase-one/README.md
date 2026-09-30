@@ -11,6 +11,8 @@ open P1-D cases. The [extension-copy continuation](evidence/p1-d-extension-copy-
 corrects unsafe payload copying and records the remaining Face/Zone reference-target limits.
 The [Colour-by continuation](evidence/p1-d-colour-by-continuation.md) verifies native overlay
 toggles, occlusion, alpha and orbit, with feature redraw/cadence measured at 1,032 triangles.
+The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) completes A07's
+named current-host cases. A06's reference/solver boundaries and A08's isolated GPU timing remain.
 ISSUE: none (local planning draft)
 
 Phase 0 merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1), local merge

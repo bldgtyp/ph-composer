@@ -94,6 +94,16 @@ module PhComposer
         "expected_values" => { "type" => "object" }
       }
     }.freeze
+    ATTACHED_ZONE_CREATE_ASSIGN_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[faces values],
+      "properties" => {
+        "faces" => { "type" => "array", "items" => FACE_REFERENCE, "minItems" => 1 },
+        "values" => { "type" => "object" }, "user_data" => { "type" => "object" },
+        "intent" => { "type" => "object", "additionalProperties" => false,
+                      "properties" => { "face_type" => INTENT } },
+        "expected_values" => { "type" => "object" }
+      }
+    }.freeze
     ATTACHED_ZONE_DELETE_PARAMS = {
       "type" => "object", "additionalProperties" => false, "required" => %w[id replacement],
       "properties" => {
@@ -215,6 +225,14 @@ module PhComposer
                      :side_effects => "Writes one Attached zone record.") do |request, proposal|
         save_attached_zone(request, proposal)
       end
+      feature.action("#{AttachedZone::KIND_ID}.create_and_assign",
+                     :description => "Create one Attached zone and assign it to explicit Face occurrences.",
+                     :params => ATTACHED_ZONE_CREATE_ASSIGN_PARAMS, :result => OBJECT,
+                     :undo_name => "Create and Assign Attached Zone",
+                     :side_effects => "Creates one Attached zone and classifies its Faces in one Undo step.") do |
+                       request, proposal|
+        create_and_assign_attached_zone(request, proposal)
+      end
       feature.action("#{AttachedZone::KIND_ID}.duplicate",
                      :description => "Copy Attached zones without reassigning any Face.",
                      :params => ATTACHED_ZONE_DUPLICATE_PARAMS, :result => OBJECT,
@@ -246,10 +264,13 @@ module PhComposer
     # One gesture, one step, all or nothing. Targets are deduplicated by occurrence before anything
     # is resolved, so an over-limit gesture refuses without walking the Model once per Face.
     def classify(request, proposal)
-      intent = request.params.fetch("intent")
+      plan_classification(request, proposal, request.params.fetch("faces"), request.params.fetch("intent"),
+                          request.params.fetch("expected_values", {}))
+    end
+
+    def plan_classification(request, proposal, faces, intent, expected)
       validate_intent!(intent)
-      expected = request.params.fetch("expected_values", {})
-      references = deduplicate(request.params.fetch("faces"))
+      references = deduplicate(faces)
       check_limit!(references.length)
 
       # One walk for the whole gesture. Nothing here changes the Model: the proposal is applied
@@ -334,6 +355,21 @@ module PhComposer
       end
       AttachedZone.findings(values.merge("id" => id)).each { |finding| proposal.add_finding(finding) }
       { "id" => id }
+    end
+
+    # The record proposal and the complete Face proposal are validated before the dispatcher
+    # opens its native operation. ClassifyStep then writes the Faces, followed by the staged record
+    # write; a host failure rolls both back. The new id is frozen into preview's normalized digest.
+    def create_and_assign_attached_zone(request, proposal)
+      created = save_attached_zone(request, proposal)
+      id = created.fetch("id")
+      intent = request.params.fetch("intent", {}).merge(
+        "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" },
+        "attached_zone_id" => { "mode" => "set", "value" => id }
+      )
+      classified = plan_classification(request, proposal, request.params.fetch("faces"), intent,
+                                       request.params.fetch("expected_values", {}))
+      created.merge(classified)
     end
 
     # The engine's own patch rule: a named value replaces, and an explicit nil removes.
@@ -548,6 +584,6 @@ module PhComposer
     end
     private_class_method :face_view, :patched_record, :validate_intent!, :check_expected!, :deduplicate,
                          :check_limit!, :retiring?, :plan_retirements, :classify_updates,
-                         :retirement_only_updates, :new_record
+                         :retirement_only_updates, :new_record, :plan_classification
   end
 end

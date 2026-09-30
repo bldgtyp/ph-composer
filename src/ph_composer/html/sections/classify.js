@@ -9,8 +9,9 @@
  * Surface is shown and refused: Solve adjacencies writes it, and a palette that offered it would
  * let a user break a pair by painting over one of its ends.
  */
-PhComposerUI.define("sections/classify", ["panel", "workspace", "request", "snapshot", "sections/face_words"],
-function (panel, ui, requests, snapshot, words) {
+PhComposerUI.define("sections/classify", ["panel", "workspace", "request", "snapshot",
+  "sections/face_words", "sections/attached_zone_fields"],
+function (panel, ui, requests, snapshot, words, attachedFields) {
   "use strict";
   var KEEP = "";
   var screen = null;
@@ -89,15 +90,6 @@ function (panel, ui, requests, snapshot, words) {
     return body;
   }
 
-  /* The first "Attached zone N" nothing is called yet, so a name is not reused after a delete. Zones
-     name a new Zone the same way. */
-  function freeName(records) {
-    var taken = {}, number = 1;
-    records.forEach(function (record) { taken[record.values.name] = true; });
-    while (taken["Attached zone " + number]) number += 1;
-    return "Attached zone " + number;
-  }
-
   /* This palette has no pending Face proposal: saving creates a definition, then choosing it sets
      the next paint gesture. Cancelling the draft changes neither definitions nor the palette. */
   function newAttachedZone(state, records) {
@@ -108,35 +100,12 @@ function (panel, ui, requests, snapshot, words) {
     return create;
   }
 
-  function labelledField(form, title, control) {
-    var label = ui.element("label", "", title);
-    control.setAttribute("aria-label", title);
-    label.appendChild(control);
-    form.appendChild(label);
-    return control;
-  }
-
   function openAttachedZone(state, records) {
     if (state.draft) return;
     var dialog = ui.formDialog("", cancel);
     var form = ui.element("form");
-    var name = labelledField(form, "Name", ui.element("input"));
-    name.value = freeName(records);
-    name.required = true;
-    var kind = labelledField(form, "Kind", ui.element("select"));
-    ["garage", "attic", "crawlspace", "stairwell", "other"].forEach(function (value) {
-      var option = ui.element("option", "", ui.titleCase(value));
-      option.value = value;
-      kind.appendChild(option);
-    });
-    kind.value = "other";
-    var factor = labelledField(form, "Temperature reduction factor", ui.element("input"));
-    factor.type = "number";
-    factor.min = "0";
-    factor.max = "1";
-    factor.step = "any";
-    factor.required = true;
-    factor.value = "0.95";
+    var inputs = attachedFields.build(form, records);
+    var name = inputs.name;
     var error = ui.element("div", "cell-error");
     error.setAttribute("role", "status");
     var cancelButton = ui.button("Cancel", cancel);
@@ -146,16 +115,14 @@ function (panel, ui, requests, snapshot, words) {
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       if (state.edits.busy()) return;
-      var values = { name: name.value.trim(), kind: kind.value,
-        temperature_reduction_factor: Number(factor.value) };
-      if (!values.name || !factor.value.trim() || !Number.isFinite(values.temperature_reduction_factor) ||
-          values.temperature_reduction_factor < 0 || values.temperature_reduction_factor > 1) {
+      var values = inputs.values();
+      if (!values) {
         error.textContent = "Enter a name and a factor between 0 and 1.";
         return;
       }
       save.disabled = true;
       cancelButton.disabled = true;
-      [name, kind, factor].forEach(function (control) { control.disabled = true; });
+      inputs.controls.forEach(function (control) { control.disabled = true; });
       state.edits.run("ph_composer.face_assignment.attached_zone.save", { values: values }, {
         onDone: function (outcome) {
           if (outcome.value && outcome.value.id) state.chooseWhenFree = outcome.value.id;
@@ -164,7 +131,7 @@ function (panel, ui, requests, snapshot, words) {
         onFail: function (outcome) {
           save.disabled = false;
           cancelButton.disabled = false;
-          [name, kind, factor].forEach(function (control) { control.disabled = false; });
+          inputs.controls.forEach(function (control) { control.disabled = false; });
           error.textContent = outcome.message || "The Attached zone could not be created. Nothing was written.";
         }
       });

@@ -18,7 +18,7 @@ with exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID r
 Face cuts and copied-Zone repair before writes, with supported catalog-reference payloads passing
 native rollback, Undo/Redo and reopen. Ed accepted the split identity policy in [P1-Q5](DECISIONS.md#p1-q5-native-split-identity-frontier);
 the stored-path/explicit-choice policy is implemented and current-host verified. Face/Zone extension-reference targets are unsupported, and one-to-many pairing remains
-reported rather than solved. Atomic Attached-zone create-and-assign and isolated GPU timing remain open. The
+reported rather than solved. The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) verifies the public action, inline Enter/Escape, references, exact rollback, Undo/Redo and fresh reopen; A07’s named current-host cases pass. Isolated GPU timing remains open. The
 [native adjacency boundary continuation](evidence/p1-d-adjacency-boundaries.md) verifies A05's
 named current-host cases, including independent plane/angle controls, sliver/same-normal skips
 and refusal when A–B would retire an existing B–C pair outside scope. The [Colour-by continuation](evidence/p1-d-colour-by-continuation.md) verifies
@@ -62,8 +62,8 @@ Ed's pending arrangement decision has not been inferred from this verification w
 ### Acceptance boundary
 
 The older handoff said a docs pass would close P1-D. `PLAN.md` instead requires A04 to A09 to
-have evidence. `ACCEPTANCE.md` still carries unresolved cases in A06, A07 and A08;
-A05 and A09's named current-host cases now pass.
+have evidence. `ACCEPTANCE.md` still carries unresolved cases in A06 and A08;
+A05, A07 and A09's named current-host cases now pass.
 Complete those named cases before closing P1-D. The D7 results do not establish scene/tag
 invalidation, full Attached-zone lifecycle, identity-repair reopen behavior or multi-Model
 acceptance. P1-E's HBJSON/report workflow remains unimplemented and is not part of this fix pass.
@@ -107,7 +107,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 | P1-A: geometry contracts and host investigation | Complete | [Contract](CONTRACTS.md); [host evidence](evidence/p1-a-geometry.md); A01 met |
 | P1-B: Zone and face authoring core | Complete | [Authoring evidence](evidence/p1-b-authoring.md); A02/A03 and the P1-B portion of A04 met |
 | P1-C: adjacency and early HBJSON proof | Complete on branch | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
-| P1-D: complete Phase 1 authoring UI and repairs | Implemented on branch | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass. D4 and D6 host gates passed; D7's eight questions are answered and fixes rechecked. Broader A06 to A08 cases remain open; A05 and A09 named current-host cases pass. Slice table in [PLAN.md](PLAN.md) |
+| P1-D: complete Phase 1 authoring UI and repairs | Implemented on branch | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass. D4 and D6 host gates passed; D7's eight questions are answered and fixes rechecked. Broader A06 and A08 cases remain open; A05, A07 and A09 named current-host cases pass. Slice table in [PLAN.md](PLAN.md) |
 | P1-E: HBJSON/report export workflow | Scoped | Pending; remaining canonical-export choices open |
 | P1-F: acceptance and handoff | Scoped | Pending |
 

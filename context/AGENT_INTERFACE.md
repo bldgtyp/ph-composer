@@ -163,6 +163,13 @@ preview revision and digest. Supported payloads follow declared copy rules; unsa
 before writes. [Phase 1 evidence](../planning/phase-one/evidence/p1-d-split-identity-recovery.md)
 records the implemented scope and remaining reference/solver boundaries.
 
+Face assignment exposes `ph_composer.face_assignment.attached_zone.create_and_assign` for one
+atomic definition-and-assignment operation. It takes explicit Face references and record values,
+with optional Face type intent and expected values, and returns the new record ID and assigned
+Face IDs. The Overview inline dialog uses that public operation; scripts can preview and invoke
+it with the panel closed. [Current-host evidence](../planning/phase-one/evidence/p1-d-attached-zone-atomic.md)
+records validation, exact rollback and persistence checks.
+
 ## Delivery and acceptance
 
 Ed confirmed the delivery split during Phase 0 planning on 2026-09-18. Phase 0 establishes the

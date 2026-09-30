@@ -406,6 +406,11 @@ reference targets are not yet registrable. The paired native split is also a one
 which the current solver reports. Resolve these explicit identity/reference and solver boundaries
 before closing A06; do not choose an ambiguous endpoint by geometry.
 
+The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) now implements
+the pending Face create-and-assign operation and Overview modal. Public and inline paths pass
+validation, native cancellation, actual-reference checks, exact rollback, Undo/Redo and fresh
+reopen. A07's named current-host cases pass; A06 and A08 remain open.
+
 ## P1-E: HBJSON/report export workflow
 
 **Depends on:** P1-C, final authoring behavior for integrated acceptance, and the HBJSON/report interview choices.

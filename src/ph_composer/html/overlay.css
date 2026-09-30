@@ -260,7 +260,9 @@
 }
 /* Record forms open in the shared modal; fields wrap into two columns at the dialog width. */
 .phc-form-dialog h2 { margin: 0 0 16px; }
-.phc-form-dialog form { display: flex; flex-wrap: wrap; gap: 12px 16px; }
+.phc-form-dialog form, .phc-form-dialog .phc-form-fields {
+  display: flex; flex-wrap: wrap; gap: 12px 16px;
+}
 .phc-form-dialog form > :not(label) { flex-basis: 100%; }
 .phc-form-dialog label {
   display: flex;

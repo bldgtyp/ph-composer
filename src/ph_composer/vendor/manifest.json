@@ -21,9 +21,9 @@
       "sha256": "1f8738bd0700e56306c2d82a21bc23133b0dc8f8508ff0c9a4f7c301f00b54cb"
     },
     "html/index.html": {
-      "bytes": 2903,
+      "bytes": 3029,
       "mime": "text/html; charset=utf-8",
-      "sha256": "c456f07d23e43c94fe41d332e4b9eb488fb19db1be08b43cb6905b290fcbbb16"
+      "sha256": "7b1a398af26050a0496ca018f44d8f9187c600d99e8b3096ad7d656924013636"
     },
     "html/length_expression.js": {
       "bytes": 10498,
@@ -36,9 +36,9 @@
       "sha256": "884ea2b3e0312b660d13517ae33cb7cb5cf6c60fd602f7dee624543bfac9cde2"
     },
     "html/overlay.css": {
-      "bytes": 9240,
+      "bytes": 9277,
       "mime": "text/css; charset=utf-8",
-      "sha256": "4af9f93f210d246d3da89b2a86a8f1d3e3b20272c5ee48bdeca6dd3c24f5aebf"
+      "sha256": "7c3081bb48c530091b1b3973bf1f3a0ffe405b0d39df971f000c8fdcc28e2ec6"
     },
     "html/overlay.js": {
       "bytes": 17480,
@@ -70,10 +70,20 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "62ecfbf1a36e2d99e2f4a6758f00f32a080a77113b396fd7fa7e6803077bf0cb"
     },
-    "html/sections/classify.js": {
-      "bytes": 11338,
+    "html/sections/attached_zone_assignment.js": {
+      "bytes": 3847,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "ac6e821ad278e4d6e80b5f3baebc9ff56957b5d21849470e9f406bde6d1df849"
+      "sha256": "b707b3b264a32a817dcfedab8b2424d5ac8d651a5fab5bcba0817504ea7be537"
+    },
+    "html/sections/attached_zone_fields.js": {
+      "bytes": 1735,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "0206c6615e98937dd7977692d9c8ad84301a77cba53811fd0787245ad326f533"
+    },
+    "html/sections/classify.js": {
+      "bytes": 9894,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "d750c778fef875b38a23351d9e4ce439c9f1973b168aab528f89b2e4c4bc26c9"
     },
     "html/sections/colour_by.js": {
       "bytes": 5064,
@@ -91,9 +101,9 @@
       "sha256": "df76102e3142ad9ff51ad03f24648a47e1710ccfacdb830ead4dacb064708d16"
     },
     "html/sections/overview.js": {
-      "bytes": 21274,
+      "bytes": 23003,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "836d6020626d5ee22a71f6537e50a8f18e42424fe5d0c5cacf99de0d076c37e7"
+      "sha256": "afba9338f2353c7a91b27eacf546f4a90b80b39d288466260a5610e094f17852"
     },
     "html/sections/shell.js": {
       "bytes": 758,

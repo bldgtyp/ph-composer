@@ -23,6 +23,11 @@ Attached-zone hand entry lands here, including its local Library subtab/inline c
 Library navigation label does not require a provider, account or network connection. Keep its
 record/reference operations independent of provider integration.
 
+The [2026-09-29 atomic continuation](../../phase-one/evidence/p1-d-attached-zone-atomic.md) verifies
+inline creation against a pending existing Face, through the public combined action and Overview
+modal. A07's named current-host cases pass, including cancellation, exact references, rollback,
+Undo/Redo and fresh reopen. The palette's create-and-choose remains a separate future-gesture path.
+
 ## Delivery allocation
 
 - **P1-A:** bind face/Attached-zone schemas, endpoint resolution and operation participation

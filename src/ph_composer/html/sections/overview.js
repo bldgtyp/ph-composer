@@ -11,8 +11,9 @@
  * the count and the Suggest classification action that gives those Faces a record.
  */
 PhComposerUI.define("sections/overview", ["panel", "workspace", "request", "snapshot", "units", "unit_preferences",
-  "unit_field", "table", "view_controls", "fields", "sections/face_words"],
-function (panel, ui, requests, snapshot, units, preferences, unitFields, tables, viewControls, fields, words) {
+  "unit_field", "table", "view_controls", "fields", "sections/face_words", "sections/attached_zone_assignment"],
+function (panel, ui, requests, snapshot, units, preferences, unitFields, tables, viewControls, fields, words,
+          attachedAssignment) {
   "use strict";
   var AREA = fields.AREA_M2;
   // What a chip offers comes from the host, through the same read the Classify palette uses, so this
@@ -39,6 +40,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function forSession(session, send) {
     if (screen && screen.session === session) return screen;
     if (screen && screen.zoneEditor) screen.zoneEditor.dispose();
+    if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
     screen = { session: session, selected: null, expanded: Object.create(null), columnWidths: {},
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
@@ -159,7 +161,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
      set on its own. A Face already holding one of those keeps it and its cell stays read only. */
   function choices(state, field) {
     return (field === "face_type" ? state.faceTypes : state.boundaries)
-      .filter(function (value) { return !words.UNCHOOSABLE[value]; });
+      .filter(function (value) { return value === "AttachedZone" || !words.UNCHOOSABLE[value]; });
   }
 
   function chipLabel(field, value) {
@@ -177,6 +179,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function cell(td, row, field, text, state) {
     var face = row.record.face, offered, chip;
     if (!face || (field !== "face_type" && field !== "boundary_condition")) return false;
+    if (field === "boundary_condition" && face.values.boundary_condition === "AttachedZone") {
+      return attachedCell(td, row, state);
+    }
+    td._attachedChip = null;
     offered = choices(state, field);
     if (!offered.length) return false;
     if (face.values[field] && offered.indexOf(face.values[field]) < 0) return false;
@@ -189,7 +195,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         chip.appendChild(option);
       });
       chip.addEventListener("change", function () {
-        apply(td._state, td._face, field, chip.value);
+        if (field === "boundary_condition" && chip.value === "AttachedZone") {
+          openAttached(td._state, td._face, chip);
+          chip.value = td._face.values[field] || "";
+        } else apply(td._state, td._face, field, chip.value);
       });
       td.className = "col-" + field + " phc-editable-cell";
       td.replaceChildren(chip);
@@ -202,6 +211,27 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     chip.disabled = state.edits.busy();
     chip.setAttribute("aria-label", row.record.name + (field === "face_type" ? " type" : " boundary"));
     return true;
+  }
+
+  function attachedCell(td, row, state) {
+    var chip = td._attachedChip;
+    if (!chip) {
+      chip = ui.button("Attached zone", function () { openAttached(td._state, td._face, chip); });
+      chip.className = "phc-cell-input";
+      td.className = "col-boundary_condition phc-editable-cell";
+      td.replaceChildren(chip); td._attachedChip = chip; td._chip = null; td._chipValues = null;
+    }
+    td._state = state; td._face = row.record.face;
+    chip.disabled = state.edits.busy();
+    chip.setAttribute("aria-label", row.record.name + " boundary");
+    chip.title = "Choose or create an Attached zone";
+    return true;
+  }
+
+  function openAttached(state, face, trigger) {
+    if (state.attachedDraft) return;
+    state.attachedDraft = attachedAssignment.open(state.session, state.send, state.revision, face,
+      state.attachedRecords, trigger, function () { state.attachedDraft = null; });
   }
 
   function apply(state, face, field, chosen) {
@@ -245,6 +275,11 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var faces = (snapshot.value(state, "ph_composer.face_assignment.faces") || { faces: [] }).faces;
     var tool = snapshot.value(state, "ph_composer.face_assignment.palette") || {};
     var screenState = forSession(state.session, send), profile = units.profile(AREA, preferences.current());
+    screenState.send = send;
+    screenState.revision = state.revision;
+    screenState.attachedRecords = (snapshot.value(state, "ph_composer.face_assignment.attached_zone.list") ||
+      { records: [] }).records;
+    if (screenState.attachedDraft) screenState.attachedDraft.consume(state);
     screenState.faceTypes = tool.face_types || [];
     screenState.boundaries = tool.boundary_conditions || [];
     var rows = project(zones.zones, faces);

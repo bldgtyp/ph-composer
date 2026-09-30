@@ -68,5 +68,6 @@ fallback for the skill's unavailable Terra model. Native acceptance is recorded 
 
 This closes the native duplicated-Face identity recovery slice, not A06 as a whole. Face/Zone UUID
 extension-reference targets are not yet registrable. One-to-many pairing remains reported without
-geometry cuts or pairs. A07's atomic Attached-zone create-and-assign and A08's isolated GPU timing
-also remain open. SketchUp 2023, Windows, distribution and certification claims are outside this run.
+geometry cuts or pairs. The subsequent [atomic Attached-zone continuation](p1-d-attached-zone-atomic.md)
+completes A07's named current-host cases. A08's isolated GPU timing remains open. SketchUp 2023,
+Windows, distribution and certification claims are outside this run.

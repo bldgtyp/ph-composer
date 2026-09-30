@@ -39,7 +39,7 @@ function snapshot() {
       "ph_composer.face_assignment.faces": { status: "completed", value: { units: { area_m2: "m2" }, faces: [{
         reference: { zone_id: "zon_a", zone_path: [100], entity_path: [101], entity_id: "fac_a" },
         zone_name: "Zone 1", area_m2: 12, state: "classified",
-        values: { id: "fac_a", face_type: "Wall", boundary_condition: "Outdoors" },
+        values: { face_type: "Wall", boundary_condition: "Outdoors" },
         suggested: { face_type: "Wall", boundary_condition: "Outdoors" }
       }, {
         reference: { zone_id: "zon_a", zone_path: [100], entity_path: [102], entity_id: null },
@@ -51,7 +51,7 @@ function snapshot() {
 }
 
 function byLabel(root, label) {
-  return root.querySelectorAll("input, select").filter(function (node) {
+  return root.querySelectorAll("input, select, button").filter(function (node) {
     return node.getAttribute("aria-label") === label;
   })[0];
 }
@@ -84,7 +84,6 @@ test("area headers and Zone and Face values follow the display profile together"
   additional.area_m2 = 3;
   additional.reference.entity_path = [103];
   additional.reference.entity_id = "fac_c";
-  additional.values.id = "fac_c";
   faces.push(additional);
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var section = p.query("[data-section='ph_composer.overview']");
@@ -136,7 +135,7 @@ test("a Face chip sets one field, keeps the other, and guards on the values it p
       face_type: { mode: "keep" },
       boundary_condition: { mode: "set", value: "Ground" }
     },
-    expected_values: { id: "fac_a", face_type: "Wall", boundary_condition: "Outdoors" }
+    expected_values: { face_type: "Wall", boundary_condition: "Outdoors" }
   });
 });
 
@@ -170,7 +169,7 @@ test("two Zone occurrences sharing one record id are two rows", function () {
   faces.faces = faces.faces.concat([{
     reference: { zone_id: "zon_a", zone_path: [200], entity_path: [201], entity_id: "fac_b" },
     zone_name: "Zone 1 copy", area_m2: 5, state: "classified",
-    values: { id: "fac_b", face_type: "Floor", boundary_condition: "Ground" },
+    values: { face_type: "Floor", boundary_condition: "Ground" },
     suggested: { face_type: "Floor", boundary_condition: "Ground" }
   }]);
   p.panel.receive({ type: "panel.snapshot", payload: payload });
@@ -197,7 +196,7 @@ test("classifying one Face leaves its neighbours' rows alone", function () {
   var payload = snapshot();
   var faces = payload.sections["ph_composer.face_assignment.faces"].value.faces;
   faces[1].state = "classified";
-  faces[1].values = { id: "fac_b", face_type: "Floor", boundary_condition: "Ground" };
+  faces[1].values = { face_type: "Floor", boundary_condition: "Ground" };
   p.panel.receive({ type: "panel.snapshot", payload: payload });
 
   var after = section.querySelectorAll("[data-row-key]").map(function (node) {
@@ -215,7 +214,7 @@ test("a Face the chips cannot set keeps its value and stays read only", function
   var p = page();
   var payload = snapshot();
   payload.sections["ph_composer.face_assignment.faces"].value.faces[0].values = {
-    id: "fac_a", face_type: "AirBoundary", boundary_condition: "Surface"
+    face_type: "AirBoundary", boundary_condition: "Surface"
   };
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var section = p.query("[data-section='ph_composer.overview']");
@@ -346,4 +345,91 @@ test("a selected Zone keeps its draft and stale guard through a native unit refr
     session: "session-a", outcome: { status: "refused", message: "The Zone changed." } } });
   assert.strictEqual(name.disabled, false, "a refused save leaves the draft available for correction");
   assert.strictEqual(depth.disabled, false);
+});
+
+function attachedDialog(p, payload) {
+  p.panel.receive({ type: "panel.snapshot", payload: payload || snapshot() });
+  var chip = byLabel(p.query("[data-section='ph_composer.overview']"), "Wall 1 boundary");
+  if (chip.tagName === "button") chip.listeners.click({});
+  else { chip.value = "AttachedZone"; chip.listeners.change({}); }
+  return p.query("dialog");
+}
+
+test("inline Attached-zone creation cancels without writing or changing the Face chip", function () {
+  var p = page(), dialog = attachedDialog(p);
+  assert.strictEqual(p.sent.length, 0);
+  assert.strictEqual(byLabel(p.query("[data-section='ph_composer.overview']"), "Wall 1 boundary").value, "Outdoors");
+  dialog.listeners.cancel({ preventDefault: function () {} });
+  assert.strictEqual(p.sent.length, 0);
+  assert.strictEqual(p.query("dialog"), null);
+  assert.strictEqual(p.context.document.activeElement.getAttribute("aria-label"), "Wall 1 boundary");
+});
+
+test("inline create-and-assign sends one action with the original Face and reviewed revision", function () {
+  var p = page(), dialog = attachedDialog(p);
+  var newer = snapshot(); newer.revision = 9;
+  p.panel.receive({ type: "panel.snapshot", payload: newer });
+  dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  assert.strictEqual(p.sent.length, 1);
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.attached_zone.create_and_assign");
+  assert.strictEqual(p.sent[0].payload.expected_revision, 4);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), {
+    faces: [snapshot().sections["ph_composer.face_assignment.faces"].value.faces[0].reference],
+    expected_values: { face_type: "Wall", boundary_condition: "Outdoors" },
+    values: { name: "Attached zone 1", kind: "other", temperature_reduction_factor: 0.95 }
+  });
+  dialog.listeners.cancel({ preventDefault: function () {} });
+  assert.strictEqual(p.query("dialog"), dialog, "pending writes keep their controls visible");
+  dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  assert.strictEqual(p.sent.length, 1, "one in-flight request");
+});
+
+test("a refused inline assignment preserves the draft; success closes and restores focus", function () {
+  var p = page(), dialog = attachedDialog(p), form = dialog.querySelector("form");
+  byLabel(dialog, "Name").value = "Garage draft";
+  form.listeners.submit({ preventDefault: function () {} });
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
+    session: "session-a", outcome: { status: "refused", message: "The Face changed." } } });
+  assert.strictEqual(p.query("dialog"), dialog);
+  assert.strictEqual(byLabel(dialog, "Name").value, "Garage draft");
+  assert.strictEqual(dialog.querySelector(".cell-error").textContent, "The Face changed.");
+  assert.strictEqual(dialog.querySelector(".phc-action-apply").disabled, false);
+  form.listeners.submit({ preventDefault: function () {} });
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[1].payload.request_id,
+    session: "session-a", outcome: { status: "completed", value: { id: "atz_new", face_ids: ["fac_a"] } } } });
+  assert.strictEqual(p.query("dialog"), null);
+  assert.strictEqual(p.context.document.activeElement.getAttribute("aria-label"), "Wall 1 boundary");
+});
+
+test("an existing Attached-zone choice assigns without creating a definition", function () {
+  var p = page(), payload = snapshot();
+  payload.sections["ph_composer.face_assignment.attached_zone.list"] = { status: "completed", value: {
+    records: [{ id: "atz_existing", values: { name: "Garage" } }]
+  } };
+  var dialog = attachedDialog(p, payload), picker = byLabel(dialog, "Attached zone");
+  picker.value = "atz_existing"; picker.listeners.change({});
+  assert.strictEqual(byLabel(dialog, "Name").disabled, true);
+  dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.classify");
+  assert.strictEqual(p.sent[0].payload.params.intent.attached_zone_id.value, "atz_existing");
+  assert.strictEqual(p.sent[0].payload.params.values, undefined);
+});
+
+test("an incomplete AttachedZone Face can open and cancel inline creation", function () {
+  var p = page(), payload = snapshot();
+  payload.sections["ph_composer.face_assignment.faces"].value.faces[0].values.boundary_condition = "AttachedZone";
+  var dialog = attachedDialog(p, payload);
+  assert.ok(dialog);
+  dialog.listeners.cancel({ preventDefault: function () {} });
+  assert.strictEqual(p.sent.length, 0);
+  assert.strictEqual(payload.sections["ph_composer.face_assignment.faces"].value.faces[0]
+    .values.attached_zone_id, undefined);
+});
+
+test("switching Models withdraws the pending Attached-zone draft", function () {
+  var p = page(); attachedDialog(p);
+  var other = snapshot(); other.session = "session-b";
+  p.panel.receive({ type: "panel.snapshot", payload: other });
+  assert.strictEqual(p.query("dialog"), null);
+  assert.strictEqual(p.sent.length, 0);
 });

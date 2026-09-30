@@ -84,7 +84,9 @@ the shared form dialog. Native Escape left the catalog and revision unchanged, r
 New, and Enter reopened it. Submitting created the entered name and kind with default factor
 0.95; a second submission stored an explicit 0.8 factor and chose that exact new record for the
 next gesture. This palette has no pending Face proposal: atomic create-and-assign to existing
-Faces remains unimplemented and is not claimed by this create-and-choose result.
+Faces was not claimed by this create-and-choose result. The subsequent
+[atomic inline continuation](p1-d-attached-zone-atomic.md) now verifies that separate public action
+and Overview workflow, including Enter/Escape, references, rollback, Undo/Redo and fresh reopen.
 
 ## A08: Colour-by host behavior
 
@@ -147,8 +149,8 @@ The Attached-zone dialog review found no blocking issue.
 Do not close A05 to A09 wholesale from these individual cases. Unique moved-path recovery is now
 verified. [Native split identity recovery](p1-d-split-identity-recovery.md) now passes its public action
 and native-menu gate. Remaining work includes Face/Zone extension-reference targets, one-to-many
-pairing, the pending-Face atomic inline-create workflow,
-isolated GPU timing and the remaining A06/A07 cases. The
+pairing and isolated GPU timing in A06/A08. The [atomic inline continuation](p1-d-attached-zone-atomic.md)
+completes A07’s named current-host cases. The
 [hatch continuation](p1-d-hatch-and-invalidation.md) verifies the PRD hatch; the
 [keyboard/context continuation](p1-d-keyboard-context.md) completes A09's named current-host cases.
 The [adjacency boundary continuation](p1-d-adjacency-boundaries.md) completes A05's named

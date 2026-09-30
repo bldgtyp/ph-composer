@@ -243,6 +243,13 @@ No step opens its own transaction or waits for a dialog. An empty proposal write
 creates no Undo entry. Attached-zone delete-with-replacement changes every referencing face and
 deletes the definition inside one proposal.
 
+`ph_composer.face_assignment.attached_zone.create_and_assign` stages one local definition and
+classification of explicit `faces` in the same proposal. Required `values` define the new record;
+optional `intent.face_type` carries a pending type change. The action sets AttachedZone and its
+new ID together, validates all targets before writes, and preserves existing Face identity and
+unmentioned payloads. `expected_values` and the reviewed revision guard the pending Face proposal.
+Cancel sends no action. [Current-host evidence](evidence/p1-d-attached-zone-atomic.md).
+
 ## Failure and rollback evidence
 
 The pre-image fingerprints the complete declared mutation containers, including entity kind,
