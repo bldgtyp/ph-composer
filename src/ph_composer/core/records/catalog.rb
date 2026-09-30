@@ -31,6 +31,13 @@ module PhComposer
         @kinds.fetch(id) { raise CodedError.new("params.invalid", "There is no record kind #{id.inspect}.") }
       end
 
+      # The descriptor of a catalog kind or a registered entity target, or nil.
+      def descriptor(id)
+        return @kinds[id].descriptor if @kinds.key?(id)
+
+        @reference_targets[id]&.descriptor
+      end
+
       def kind?(id)
         @kinds.key?(id)
       end

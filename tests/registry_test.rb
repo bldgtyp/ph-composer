@@ -32,6 +32,21 @@ class RegistryTest < PhComposerTestCase
     refute Registry.current.reference_targets.key?(target.id)
   end
 
+  def test_a_core_reference_to_an_unregistered_kind_refuses_the_target
+    target = PhComposer::Records::ReferenceTarget.new(
+      :id => "outside.feature.object", :label => "Object", :records => ->(_model) { [] },
+      :validate => ->(_record) { [] },
+      :references => [PhComposer::Records::Reference.new(:key => "owner_id", :target_kind => "missing.feature.kind",
+                                                         :cardinality => "one", :required => false)]
+    )
+    diagnostics = refused(feature do |registry|
+      registry.feature("outside.feature", :contract_version => 1).reference_target(target)
+    end)
+
+    assert_equal [["registration.missing_dependency", "missing.feature.kind"]],
+                 diagnostics.map { |diagnostic| [diagnostic.code, diagnostic.dependency] }
+  end
+
   def test_unregistered_reference_target_refuses_the_extension_batch
     extension = PhComposer::Records::Extension.new(
       :namespace => "outside.feature.links", :schema_version => 1,

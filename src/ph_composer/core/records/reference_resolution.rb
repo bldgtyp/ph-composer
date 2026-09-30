@@ -29,12 +29,13 @@ module PhComposer
                            :record => DeepCopy.call(entry.record))
       end
 
-      # Every declared incoming reference, including readable envelopes from unavailable extensions.
+      # Every declared incoming reference: core references each kind's descriptor declares, catalog
+      # and entity-owned alike, and readable envelopes from unavailable extensions.
       # When identity disappears an opaque/invalid envelope cannot prove that its payload is safe.
       def incoming_references(kind_id, id, change_set: nil, removing: false)
         all_reference_entries(:change_set => change_set).filter_map do |entry|
           record = entry.record
-          targets = @catalog.kind?(entry.kind) ? referenced_core_targets(entry.kind, record) : []
+          targets = @catalog.descriptor(entry.kind).referenced_targets(record)
           record.fetch("extension_data", {}).each do |namespace, envelope|
             readable = Extension.readable?(envelope)
             status = Extension.status(envelope, @catalog.extension(namespace))
@@ -111,12 +112,6 @@ module PhComposer
           next if problems.empty?
 
           raise CodedError.new("validation.failed", "Planned #{entry.kind} is invalid: #{problems.first}.")
-        end
-      end
-
-      def referenced_core_targets(kind_id, record)
-        @catalog.kind(kind_id).references.flat_map do |reference|
-          reference.ids(record).map { |id| [reference.target_kind, id] }
         end
       end
     end

@@ -134,6 +134,9 @@ module PhComposer
 
       def check_reference_targets
         @staging.declared_reference_targets.each do |target|
+          target.descriptor.references.each do |reference|
+            require_kind(owner(target.id), target.id, reference.target_kind)
+          end
           next if target.label.is_a?(String) && !target.label.empty? &&
                   target.provider.respond_to?(:call) && target.validator.respond_to?(:call)
 
