@@ -136,6 +136,10 @@ module PhComposer
         FaceOccurrence.new(:entity => entity, :zone => zone, :path => path, :transform => transform)
       end
 
+      # Every container on the path is checked the way `walk_faces` bounds a Zone's Faces: a child
+      # carrying a Zone record owns what is inside it, so a path through one names a Face this Zone
+      # does not own, for reads and writes alike. A Group whose definition another Group shares is
+      # storage both placements write through, so a mutable path refuses it and asks for Make Unique.
       def resolve_face_path(zone, path, mutable)
         current = zone.entity.entities
         transform = zone.transform
@@ -144,11 +148,18 @@ module PhComposer
           entity = unique_entity(current, persistent_id)
           break if index == path.length - 1
 
-          if entity.is_a?(Sketchup::ComponentInstance)
+          if ZONE_STORE.read(entity)
+            raise_target("target.wrong_hierarchy", "The Face path crosses another Zone.")
+          elsif entity.is_a?(Sketchup::ComponentInstance)
             raise_target("target.shared_definition", "That Face is inside shared component storage.") if mutable
             current = entity.definition.entities
           elsif entity.is_a?(Sketchup::Group)
             raise_target("target.locked", "The Face is inside a locked Group.") if mutable && entity.locked?
+            if mutable && shared_storage?(entity)
+              raise_target("target.shared_definition",
+                           "That Face is inside a Group shared with a copy. Make the Group unique " \
+                           "(right-click, Make Unique) and try again.")
+            end
             current = entity.entities
           else
             raise_target("target.wrong_kind", "The occurrence path passes through a non-container entity.")

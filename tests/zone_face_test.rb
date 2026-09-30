@@ -293,7 +293,111 @@ class ZoneFaceTest < PhComposerTestCase
     assert after.all? { |row| row["adjacency_state"].nil? }
   end
 
+  # M1: two child Groups drawn from one definition share every Face in it, so writing through one
+  # placement writes the other. Classify and Reverse refuse; reads still list both placements.
+  def test_a_face_under_shared_child_groups_refuses_classify_and_reverse
+    shared = Sketchup::Entities.new([Sketchup::Face.new(901)])
+    zone = Sketchup::Group.new(900, Sketchup::Entities.new([Sketchup::Group.new(910, shared),
+                                                            Sketchup::Group.new(920, shared)]))
+    @model.entities << zone
+    make_group_zone(zone)
+
+    assert_equal [[910, 901], [920, 901]],
+                 query("ph_composer.face_assignment.list").dig("value", "faces")
+                   .map { |row| row.dig("reference", "entity_path") }
+    assert_shared_group_refusals
+  end
+
+  def test_a_shared_child_group_with_one_placement_outside_the_zone_refuses
+    shared = Sketchup::Entities.new([Sketchup::Face.new(901)])
+    zone = Sketchup::Group.new(900, Sketchup::Entities.new([Sketchup::Group.new(910, shared)]))
+    @model.entities << zone << Sketchup::Group.new(920, shared)
+    make_group_zone(zone)
+
+    assert_shared_group_refusals
+  end
+
+  def test_a_recorded_face_under_shared_child_groups_still_refuses
+    shared = Sketchup::Entities.new([Sketchup::Face.new(901)])
+    zone = Sketchup::Group.new(900, Sketchup::Entities.new([Sketchup::Group.new(910, shared)]))
+    @model.entities << zone
+    make_group_zone(zone)
+    classified = invoke("ph_composer.face_assignment.classify",
+                        classify_params(query("ph_composer.face_assignment.list").dig("value", "faces", 0),
+                                        "Wall", "Outdoors"))
+    assert_equal "committed", classified.fetch("effect")
+    zone.entities << Sketchup::Group.new(920, shared)
+
+    assert_shared_group_refusals
+  end
+
+  # M2: an explicit outer-Zone path through an authored inner Zone names a Face the outer Zone does
+  # not own. It refuses for reads and writes; an ordinary nested Group still classifies.
+  def test_an_explicit_face_path_through_a_nested_zone_refuses
+    inner = Sketchup::Group.new(701, Sketchup::Entities.new([Sketchup::Face.new(700)]))
+    outer = Sketchup::Group.new(600, Sketchup::Entities.new([Sketchup::Face.new(601), inner]))
+    @model.entities << outer
+    zone = make_group_zone(outer)
+    PhComposer::Zones::ZONE_STORE.write(inner, zone_record("zon_BBBBBBBBBBBB", "Inner"))
+    crossing = zone.fetch("reference").merge("entity_path" => [701, 700], "entity_id" => nil)
+    operation_count = @model.operations.length
+
+    classify = invoke("ph_composer.face_assignment.classify", {
+      "faces" => [crossing], "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" } }
+    })
+    reverse = invoke("ph_composer.face_assignment.reverse", { "face" => crossing })
+    error = assert_raises(PhComposer::CodedError) do
+      PhComposer::Zones::Occurrences.resolve_face(@model, crossing, :allow_unassigned => true)
+    end
+
+    assert_equal %w[refused target.wrong_hierarchy none], classify.values_at("status", "code", "effect")
+    assert_equal %w[refused target.wrong_hierarchy none], reverse.values_at("status", "code", "effect")
+    assert_equal "target.wrong_hierarchy", error.code
+    assert_equal operation_count, @model.operations.length
+    assert_nil PhComposer::Zones::STAMP_STORE.read(inner.entities.to_a.first)
+  end
+
+  def test_a_face_in_an_ordinary_nested_group_still_classifies
+    outer = Sketchup::Group.new(600, Sketchup::Entities.new([
+      Sketchup::Group.new(701, Sketchup::Entities.new([Sketchup::Face.new(700)]))
+    ]))
+    @model.entities << outer
+    make_group_zone(outer)
+    face = query("ph_composer.face_assignment.list").dig("value", "faces", 0)
+
+    result = invoke("ph_composer.face_assignment.classify", classify_params(face, "Wall", "Outdoors"))
+
+    assert_equal [701, 700], face.dig("reference", "entity_path")
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+  end
+
   private
+
+  def assert_shared_group_refusals
+    rows = query("ph_composer.face_assignment.list").dig("value", "faces")
+    face = rows.first
+    before = PhComposer::FaceAssignment::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first
+                                                           .entities.to_a.first)
+    operation_count = @model.operations.length
+    classify = classify_params(face, "Floor", "Ground")
+    reverse = { "face" => face.fetch("reference") }
+
+    results = [
+      API.preview(:context => @context, :name => "ph_composer.face_assignment.classify", :params => classify),
+      invoke("ph_composer.face_assignment.classify", classify),
+      API.preview(:context => @context, :name => "ph_composer.face_assignment.reverse", :params => reverse),
+      invoke("ph_composer.face_assignment.reverse", reverse)
+    ]
+
+    results.each do |result|
+      assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
+      assert_match(/Make Unique/, result.fetch("message"))
+    end
+    assert_equal operation_count, @model.operations.length
+    assert_equal [before], [PhComposer::FaceAssignment::FACE_STORE.read(@model.entities.to_a.first.entities.to_a
+                                                                         .first.entities.to_a.first)]
+    assert_equal rows, query("ph_composer.face_assignment.list").dig("value", "faces")
+  end
 
   def invoke(name, params, proposal_digest = nil)
     @sequence += 1
