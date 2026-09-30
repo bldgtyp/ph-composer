@@ -118,6 +118,16 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert(rest.all? { |face| (face.fetch("area_m2") - 6.0).abs < 1.0e-6 })
   end
 
+  # M4: the shared pieces become Surface, which carries no Attached-zone reference; the remainders
+  # keep the AttachedZone boundary and its reference.
+  def test_a_partial_overlap_with_one_attached_zone_face_pairs_without_the_reference
+    assert_attached_zone_partial_pair(%i[first])
+  end
+
+  def test_a_partial_overlap_of_two_attached_zone_faces_pairs_without_the_reference
+    assert_attached_zone_partial_pair(%i[first last])
+  end
+
   def test_the_new_pair_is_reciprocal_and_reads_current
     wall(620, 0, 0, 4, 0, 3, :east)
     wall(630, 0, 2, 6, 0, 3, :west)
@@ -1109,6 +1119,40 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal status, result.dig("detail", "status") if status
     assert_equal snapshot, faces
     assert_equal 2, faces.length
+  end
+
+  # M4: the shared pieces become Surface, which carries no Attached-zone reference; the remainders
+  # keep the AttachedZone boundary and its reference. Repeat Solve is a no-op and Undo is exact.
+  def assert_attached_zone_partial_pair(attached)
+    wall(660, 0, 0, 4, 0, 3, :east)
+    wall(670, 0, 2, 6, 0, 3, :west)
+    author
+    attached_id = invoke("ph_composer.face_assignment.attached_zone.save",
+                         { "values" => { "name" => "Garage", "kind" => "garage" } }).dig("value", "id")
+    attached.each do |which|
+      invoke("ph_composer.face_assignment.classify", {
+        "faces" => [faces.public_send(which).fetch("reference")],
+        "intent" => { "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" },
+                      "attached_zone_id" => { "mode" => "set", "value" => attached_id } }
+      })
+    end
+    before = faces
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    shared, rest = faces.partition { |face| face.dig("values", "boundary_condition") == "Surface" }
+    assert_equal %w[current current], shared.map { |face| face.fetch("adjacency_state") }
+    assert(shared.none? { |face| face.fetch("values").key?("attached_zone_id") })
+    assert_equal attached.length, rest.count { |face| face.dig("values", "attached_zone_id") == attached_id }
+    assert_equal attached.length, rest.count { |face| face.dig("values", "boundary_condition") == "AttachedZone" }
+
+    operation_count = @model.operations.length
+    assert_equal %w[completed none], solve(all_references).values_at("status", "effect")
+    assert_equal operation_count, @model.operations.length
+
+    @model.undo
+    assert_equal before, faces
   end
 
   def paired_walls

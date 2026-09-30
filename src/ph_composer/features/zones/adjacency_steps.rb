@@ -132,6 +132,7 @@ module PhComposer
         [[left, right], [right, left]].each do |side, counterpart|
           record = record_for(side, side.fetch(:shared))
           record["boundary_condition"] = "Surface"
+          record.delete("attached_zone_id")
           record["adjacency"] = {
             "schema_version" => 1, "pair_id" => @pair_id,
             "self" => endpoint(side), "counterpart" => endpoint(counterpart),
