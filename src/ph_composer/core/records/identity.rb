@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "securerandom"
+require "digest"
 
 module PhComposer
   module Records
@@ -26,6 +27,12 @@ module PhComposer
           reserved << id
           return id
         end
+      end
+
+      # A stable proposal identity for geometry creation. Preview and invoke at the same revision
+      # derive the same id without retaining state; a later revision derives another id.
+      def derived(prefix, value)
+        "#{prefix}_#{Digest::SHA256.hexdigest(CanonicalJson.generate(value))[0, 12]}"
       end
     end
   end

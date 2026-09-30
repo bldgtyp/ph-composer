@@ -1,9 +1,9 @@
 # Zones and adjacency: behavior contract
 
 DATE: 2026-09-18
-STATUS: Scoped. Interviewed 2026-09-18 in three rounds, 24 decisions recorded below. PLAN.md follows the foundation transplant.
+STATUS: Scoped. Interviewed 2026-09-18 in three rounds, 24 decisions recorded below. PLAN.md now binds the Phase 1 delivery sequence after the merged foundation.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
 
 ## Problem
 
@@ -237,16 +237,34 @@ records name the same two endpoints. Geometry stamps check freshness and never i
 - Preserve Zone UUIDs for the same logical Zone when the foundation can establish continuity.
   Path or persistent-id changes invalidate the old adjacency reference until an explicit solve
   creates a new pair. Never recover a face reference by name, proximity or coincident geometry.
+- **A copied Zone is shared storage, and Make Unique comes first (Q25).** Measured on 26.1.188,
+  2026-09-20: copying a Group makes both Groups instances of one definition sharing every Face,
+  while each keeps its own Zone record. So a plain copy is ambiguous and shared at once, and
+  identity repair refuses it, because giving the copy new Face ids would rewrite the original's.
+  The Zones read reports shared storage ahead of the ambiguity, since that is what blocks every
+  repair and names the fix. The user makes the copy unique with SketchUp's own Make Unique, and
+  identity repair is then available on an occurrence that genuinely has its own members.
+  PH-Composer does not make a Group unique on the user's behalf inside a repair: that is a native
+  edit with its own consequences for every other instance, and hiding it inside an identity repair
+  would change more of the Model than the repair names. Ed confirmed this on 2026-09-20.
 - Duplicate Zone UUIDs are ambiguous, not aliases. Refuse pair mutation involving them and report
   them. An explicit identity repair identifies the copied Zone occurrence, assigns it a fresh
   foundation UUID, updates its member stamps and retires copied adjacency data without rewriting
-  the original Zone's pairs. Preserve copied metadata and extension payloads; unresolved extension
-  references are reported, not guessed. Refuse if the original cannot be identified or shared
-  storage prevents an independent repair; the user must resolve the ambiguity or make it unique.
+  the original Zone's pairs. Preserve copied metadata and apply declared extension copy/reference
+  rules. Refuse before writing when unavailable or invalid extension data prevents safe identity
+  repair; a warning does not authorize carrying unresolved references onto new identities. Refuse
+  if the original cannot be identified or shared storage prevents an independent repair; the user
+  must resolve the ambiguity or make it unique.
 - A native split or merge invalidates affected pairs, even when dictionaries were copied. The
   explicit solver reacquires resulting face references and establishes only valid reciprocal
   pairs. Classifications other than Surface and surviving payloads are preserved; conflicting
   payloads that cannot be retained must be reported and resolved before a plugin-owned edit.
+  Explicit split-Face identity repair retains the old Face UUID on the piece proved by a stored
+  original endpoint path. When that evidence is absent, the user explicitly chooses the retaining
+  piece. Other pieces receive new Face UUIDs; geometry matching never chooses the identity owner.
+  Retire invalid Surface links reciprocally inside the previewed mutation scope, retain supported
+  non-Surface classification and payloads, and refuse unsafe extension data before any write.
+  Ed accepted this policy on 2026-09-29 (Phase 1 P1-Q5).
 - Restore Zone preserves an unambiguous recovered Zone UUID, but new paths do not make old pairs
   current. Report them unresolved and require an explicit solve. Undo/Redo restores the matching
   geometry and record state together; save/reopen must not turn unresolved pairs into current ones.
@@ -372,8 +390,15 @@ Interviewed 2026-09-18, three rounds, Ed's answers. Each is cited where it appli
 | Q22 | On-screen label for Adiabatic | "To neighbour", tooltip names honeybee Adiabatic |
 | Q23 | Make Zone entry points | Toolbar, right-click on a group, and inline from the classification tool; names "Zone 1", "Zone 2" |
 | Q24 | Zone volume | Not shown, not exported; Vn50 and iCFA stay Space-derived |
+| Q25 | A copied Zone | Shared storage; repair refuses until the user runs SketchUp's Make Unique. PH-Composer never makes a Group unique inside a repair |
+| Q26 | Native split-Face identity | Retain one old UUID through a provable stored original path or explicit user choice; allocate new UUIDs to the other pieces, retire invalid pairs and refuse unsafe payloads before writes |
 
 ## Acceptance shape
+
+Delivery update, 2026-09-20: D12 defers METr exporter development and consumer acceptance.
+The HBJSON and authoring checks below remain Phase 1 work as allocated in PLAN.md; METr-specific
+checks wait for the exporter's separately scheduled milestone. Existing consumer mappings remain
+requirements for that future work.
 
 The 2026-09-18 architecture-review corrections were authorized after the interview. Q14, Q18 and
 Q21 above include those clarifications; consumer-specific blocking remains Q10's policy.

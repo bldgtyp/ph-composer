@@ -1,0 +1,4 @@
+interface:
+  display_name: "PH-Composer Native Acceptance"
+  short_description: "Run scoped SketchUp gates with traceable native proof"
+  default_prompt: "Use $ph-composer-native-acceptance to continue the authorized host cases from the ledger."

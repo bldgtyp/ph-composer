@@ -18,6 +18,11 @@ function harness(session) {
   return { sent: sent, channel: channel };
 }
 function state(result) { return { ui: { actionResult: result } }; }
+function viewState(results) {
+  var kept = {};
+  results.forEach(function (one) { kept[one.request_id] = one; });
+  return { ui: { viewResults: kept } };
+}
 function result(id, session, status, message) {
   return { request_id: id, session: session, outcome: { status: status, message: message } };
 }
@@ -71,4 +76,35 @@ test("send never refuses, and matches checks a given id", function () {
   assert.strictEqual(h.channel.matches({ request_id: second, session: "session-a" }, second), true);
   assert.strictEqual(h.channel.matches({ request_id: second, session: "session-a" }, first), false);
   assert.strictEqual(h.channel.matches({ request_id: first, session: "session-a" }, null), false);
+});
+
+test("a view channel sends view.invoke and settles from its own result slot", function () {
+  var sent = [];
+  var channel = request.channel("session-a", function (type, payload) {
+    sent.push({ type: type, payload: payload });
+  }, "legend", "view.invoke");
+  var id = channel.run("ph_composer.colour_by.activate", { mode: null });
+
+  assert.strictEqual(sent[0].type, "view.invoke");
+  assert.deepStrictEqual(sent[0].payload.params, { mode: null });
+  assert.strictEqual(channel.consume(state(result(id, "session-a", "completed"))), null,
+    "an action result never settles a view request");
+  assert.strictEqual(channel.consume(viewState([result(id, "session-a", "completed")])).status, "completed");
+});
+
+test("one view channel's answer never strands another's", function () {
+  var first = request.channel("session-a", function () {}, "legend", "view.invoke");
+  var second = request.channel("session-a", function () {}, "table", "view.invoke");
+  var a = first.run("ph_composer.colour_by.activate", { mode: null });
+  var b = second.run("ph_composer.zones.faces.locate", { faces: [] });
+  var held = viewState([result(b, "session-a", "completed"), result(a, "session-a", "refused")]);
+
+  assert.strictEqual(second.consume(held).status, "completed");
+  assert.strictEqual(first.consume(held).status, "refused", "the earlier request still settles");
+  assert.strictEqual(first.busy(), false);
+});
+
+test("a channel refuses a message the panel does not carry", function () {
+  assert.throws(function () { request.channel("session-a", function () {}, "x", "sketchup.invoke"); },
+    /does not carry/);
 });

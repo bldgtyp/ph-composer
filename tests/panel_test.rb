@@ -95,6 +95,64 @@ class PanelTest < PhComposerTestCase
     assert_equal 2, PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).ids(PART).length
   end
 
+  # A view command carries no expected revision, because it changes no record. The snapshot still
+  # follows it, so a section reading what it changed repaints.
+  def test_a_view_command_answers_after_the_snapshot_and_leaves_the_revision_alone
+    dialog = open_panel
+    before = dialog.scripts.length
+    revision = @session.revision
+
+    send_message(dialog, "view.invoke", "request_id" => "a:look:1", "session" => @session.id,
+                                        "name" => "test.fixture.look", "params" => { "count" => 1 })
+
+    published = dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
+    result = messages(dialog, "view.result").last
+    assert_equal %w[panel.snapshot view.result], published
+    assert_equal ["a:look:1", @session.id], result.values_at("request_id", "session")
+    assert_equal "completed", result.dig("outcome", "status")
+    assert_equal revision, @session.revision
+  end
+
+  # Changing the selection raises a host event that would schedule a second identical snapshot; one
+  # viewport click is one Model read.
+  def test_a_view_command_that_changed_the_selection_leaves_no_second_snapshot_queued
+    dialog = open_panel
+    before = dialog.scripts.length
+
+    send_message(dialog, "view.invoke", "request_id" => "a:look:1", "session" => @session.id,
+                                        "name" => "test.fixture.look", "params" => { "count" => 1 })
+
+    refute_predicate @session.refresh, :pending?
+    assert_equal 1, dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
+                              .count("panel.snapshot")
+  end
+
+  # A section reading through a busy session refuses with the same reason, so republishing would
+  # replace every section's good data with that refusal.
+  def test_a_refused_view_command_publishes_no_snapshot
+    dialog = open_panel
+    work = Struct.new(:pending?).new(true)
+    @session.feature_state(:api_test) { work }
+    before = dialog.scripts.length
+
+    send_message(dialog, "view.invoke", "request_id" => "a:look:1", "session" => @session.id,
+                                        "name" => "test.fixture.look", "params" => { "count" => 1 })
+
+    published = dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
+    assert_equal ["view.result"], published
+    assert_equal "busy", messages(dialog, "view.result").last.dig("outcome", "status")
+  end
+
+  def test_a_view_command_for_a_model_the_panel_no_longer_shows_is_refused
+    dialog = open_panel
+
+    send_message(dialog, "view.invoke", "request_id" => "a:look:1", "session" => "another-session",
+                                        "name" => "test.fixture.look", "params" => { "count" => 1 })
+
+    assert_equal %w[refused session.inactive],
+                 messages(dialog, "view.result").last.fetch("outcome").values_at("status", "code")
+  end
+
   def test_an_action_against_an_older_revision_is_refused_and_writes_nothing
     dialog = open_panel
     stale = @session.revision
@@ -262,7 +320,7 @@ class PanelTest < PhComposerTestCase
   def test_cancelling_the_export_destination_writes_nothing
     dialog = open_panel
 
-    send_message(dialog, "export.start", "request_id" => "export:1", "session" => @session.id)
+    with_ready_export { send_message(dialog, "export.start", "request_id" => "export:1", "session" => @session.id) }
 
     assert_equal ["Export HBJSON", nil, "model.hbjson"], UI.last_savepanel
     outcome = messages(dialog, "export.result").last.fetch("outcome")
@@ -270,9 +328,8 @@ class PanelTest < PhComposerTestCase
     assert_equal "Export cancelled. Nothing was written.", outcome.fetch("message")
   end
 
-  # Accepting a destination answers that export is unavailable; the chosen file, its neighbours and
-  # the folder are exactly as they were, and no runtime server, timer or dialog started.
-  def test_accepting_a_destination_writes_nothing_and_starts_no_runtime
+  # Declining replacement preserves the pair and starts no runtime or task timers.
+  def test_declining_replacement_preserves_the_pair_and_starts_no_runtime
     dialog = open_panel
     Dir.mktmpdir("phc-export-destination") do |directory|
       destination = File.join(directory, "existing.hbjson")
@@ -281,18 +338,63 @@ class PanelTest < PhComposerTestCase
       before = destination_contents(directory)
       timers = UI.timer_count
       UI.selected_save_path = destination
+      UI.messagebox_result = IDNO
 
       PhComposer::AssetServer.stub(:new, ->(*) { flunk "Export started the runtime server" }) do
-        send_message(dialog, "export.start", "request_id" => "export:2", "session" => @session.id)
+        with_ready_export { send_message(dialog, "export.start", "request_id" => "export:2", "session" => @session.id) }
       end
 
       outcome = messages(dialog, "export.result").last
       assert_equal "export:2", outcome.fetch("request_id")
-      assert_equal %w[refused export.unavailable none],
+      assert_equal %w[cancelled export.cancelled none],
                    outcome.fetch("outcome").values_at("status", "code", "effect")
       assert_equal before, destination_contents(directory)
       assert_equal timers, UI.timer_count
     end
+  end
+
+  def test_blocking_preflight_stays_visible_and_opens_no_destination
+    dialog = open_panel
+    send_message(dialog, "export.start", "request_id" => "export:blocked", "session" => @session.id)
+    outcome = messages(dialog, "export.result").last.fetch("outcome")
+    assert_equal "export.blocked", outcome.fetch("code")
+    assert_equal "zone.none", outcome.fetch("findings").first.fetch("code")
+    assert_nil UI.last_savepanel
+    assert_empty @model.operations
+  end
+
+  def test_preflight_is_repeated_after_selected_solve_before_starting_a_task
+    dialog = open_panel
+    repair = { "id" => "solve", "action" => "ph_composer.zones.solve_adjacency", "params" => {} }
+    before = PhComposer::Outcome.completed(:revision => @session.revision,
+                                          :value => { "findings" => [], "repairs" => [repair] })
+    after = PhComposer::Outcome.completed(:revision => @session.revision, :value => {
+      "repairs" => [], "findings" => [{ "code" => "face.invalid", "blocks_export" => true,
+                                       "message" => "Invalid Face after Solve." }]
+    })
+    preflights = [before, after]
+    calls = []
+    Dir.mktmpdir("phc-revalidate") do |directory|
+      UI.selected_save_path = File.join(directory, "model.hbjson")
+      invoke = lambda do |**args|
+        calls << args[:name]
+        PhComposer::Outcome.completed(:revision => @session.revision)
+      end
+      PhComposer::API.stub(:export_preflight, ->(**) { preflights.shift }) do
+        PhComposer::API.stub(:invoke, invoke) do
+          PhComposer::API.stub(:start_export, ->(**) { flunk "Task started despite post-Solve blocker" }) do
+            send_message(dialog, "export.start", "request_id" => "repair", "session" => @session.id,
+                                                 "repairs" => ["solve"])
+          end
+        end
+      end
+      assert_empty Dir.children(directory)
+    end
+    assert_empty preflights
+    assert_equal ["ph_composer.zones.solve_adjacency"], calls
+    outcome = messages(dialog, "export.result").last.fetch("outcome")
+    assert_equal "export.blocked", outcome.fetch("code")
+    assert_equal "face.invalid", outcome.fetch("findings").first.fetch("code")
   end
 
   def test_export_for_a_model_the_panel_no_longer_shows_is_refused_without_a_dialog
@@ -308,7 +410,7 @@ class PanelTest < PhComposerTestCase
     dialog = open_panel
     PhComposer::Diagnostics.strict = false
 
-    PhComposer::Export::Workflow.stub(:start, ->(_session) { raise IOError, "dialog failed" }) do
+    PhComposer::Export::Workflow.stub(:start, ->(_session, **) { raise IOError, "dialog failed" }) do
       send_message(dialog, "export.start", "request_id" => "export:4", "session" => @session.id)
     end
 
@@ -317,6 +419,12 @@ class PanelTest < PhComposerTestCase
   end
 
   private
+
+  def with_ready_export(&block)
+    outcome = PhComposer::Outcome.completed(:revision => @session.revision,
+                                            :value => { "findings" => [], "repairs" => [] })
+    PhComposer::API.stub(:export_preflight, outcome, &block)
+  end
 
   def destination_contents(directory)
     Dir.children(directory).sort.to_h do |name|

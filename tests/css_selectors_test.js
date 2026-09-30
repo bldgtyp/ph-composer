@@ -27,8 +27,12 @@ function producedNames(sources) {
 }
 
 // Names completed at runtime. `producer` is the literal that builds them: when it goes, this entry fails.
-// None exists yet; the record table brings the first ("col-" + field).
-var DYNAMIC = [];
+var DYNAMIC = [
+  { prefix: "col-", producer: '"col-" + column[0]', only: ".phc-table",
+    reason: "the record table names one column class per declared field" },
+  { prefix: "tier-", producer: '"tier-" + row.depth', only: ".phc-table",
+    reason: "a table row is classed by its depth in the tree" }
+];
 
 function classSelectors(css) {
   var text = css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/url\((?:"[^"]*"|'[^']*'|[^)]*)\)/g, "url()");

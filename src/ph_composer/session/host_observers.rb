@@ -47,6 +47,31 @@ module PhComposer
       end
     end
 
+    # Tag visibility decides what a viewport drawing may paint. Whether the host also commits a
+    # transaction for it, and so advances the session revision, is not measured: a subscriber that
+    # has to repaint should not wait to find out, so the event is published on its own.
+    class LayersObserver < Sketchup::LayersObserver
+      def onLayerChanged(layers, _layer)
+        tags_changed(layers)
+      end
+
+      def onLayerRemoved(layers, _layer)
+        tags_changed(layers)
+      end
+
+      def onRemoveAllLayers(layers)
+        tags_changed(layers)
+      end
+
+      private
+
+      def tags_changed(layers)
+        model = layers.respond_to?(:model) ? layers.model : Sketchup.active_model
+        session = model && Sessions.for(model)
+        session&.host_event(:tags_changed)
+      end
+    end
+
     class SelectionObserver < Sketchup::SelectionObserver
       def onSelectionBulkChange(selection)
         selection_changed(selection)

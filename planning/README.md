@@ -17,6 +17,7 @@ planning/
   ROADMAP.md           # phase order of the core features, high level
   DECISIONS.md         # cross-cutting choices that need Ed's answer
   FOUNDING_BRIEF.md    # origin, transplant tables, decisions, naming record
+  phase-one/          # post-foundation delivery plan and acceptance gates
   ui-baseline/         # the predecessor's screens, ruled on part by part
   features/            # new-capability packets     (features/<slug>/)
   refactor/            # cross-cutting refactors    (refactor/<slug>.md or <slug>/)

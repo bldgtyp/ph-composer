@@ -9,7 +9,8 @@ from __future__ import annotations
 from typing import Any
 
 from .exporters import Exporter
+from .model_sections import FaceSection, ZoneSection
 from .sections import Section
 
-SECTIONS: tuple[Section[Any, Any], ...] = ()
+SECTIONS: tuple[Section[Any, Any], ...] = (FaceSection(), ZoneSection())
 EXPORTERS: tuple[Exporter, ...] = ()

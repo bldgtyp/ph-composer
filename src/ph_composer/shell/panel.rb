@@ -20,9 +20,13 @@ module PhComposer
     ].freeze
     MAX_PENDING_NOTICES = 20
     SESSION_CHANGED = "The panel now shows a different Model."
-    # Export reads nothing and writes nothing yet, so a failure there leaves the Model as it was.
+    # Export startup failure is reported before a task or a Model operation begins.
     EXPORT_FAILED = Outcome.build(
       "failed", "operation.failed", "Export could not start. Nothing was written.", "none", nil
+    ).freeze
+    # A view command reaches no record and opens no operation, so a failure there leaves the Model as it was.
+    VIEW_FAILED = Outcome.build(
+      "failed", "operation.failed", "The panel could not change what the viewport shows.", "none", nil
     ).freeze
     # The panel could not tell whether an action ran, so it does not claim the Model is unchanged.
     UNEXPECTED = Outcome.build(
@@ -135,14 +139,18 @@ module PhComposer
         case type
         when "panel.ready" then ready
         when "action.invoke" then invoke(payload)
+        when "view.invoke" then view(payload)
         when "preferences.set" then set_preference(payload)
-        when "export.start" then export(payload)
+        when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
+          export(type, payload)
         end
       rescue StandardError => error
         Diagnostics.exception("panel_message", error)
         case type
         when "action.invoke" then publish_result(payload, UNEXPECTED)
-        when "export.start" then publish_export(payload, EXPORT_FAILED)
+        when "view.invoke" then publish_view(payload, VIEW_FAILED)
+        when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
+          publish_export(payload, EXPORT_FAILED)
         when "preferences.set"
           publish_preferences(payload, "failed", "The display preference could not be saved.")
         else publish("panel.failure", "message" => "The panel could not complete that request.")
@@ -186,16 +194,58 @@ module PhComposer
         publish_result(payload, outcome)
       end
 
+      # Selection, camera and the active Colour-by mode, for the Model the panel shows. A section may read
+      # what the command changed, so a snapshot follows; the revision does not move, so nothing the page has
+      # in flight goes stale.
+      #
+      # Changing the selection raises a host event, which schedules a refresh that would publish the same
+      # snapshot again a tick later: cancelling it first keeps one viewport click to one Model read. A
+      # refusal publishes nothing, because a section that refused with it would replace good data with the
+      # same refusal.
+      def view(payload)
+        session = Sessions.current
+        unless session && payload["session"] == session.id
+          return publish_view(payload, Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil))
+        end
+
+        outcome = API.view(:context => context_for(session), :name => payload["name"].to_s,
+                           :params => payload.fetch("params", {}))
+        if outcome.fetch("status") == "completed"
+          session.refresh.cancel
+          publish_snapshot(session)
+        end
+        publish_view(payload, outcome)
+      end
+
+      def publish_view(payload, outcome)
+        publish("view.result", "request_id" => payload["request_id"], "session" => payload["session"],
+                               "outcome" => outcome)
+      end
+
       # Export acts on the Model the panel shows, like an action, but it is the shell's command: it opens a
       # native destination dialog, so it never runs inside a Model operation.
-      def export(payload)
+      def export(type, payload)
         session = Sessions.current
         outcome = if session && payload["session"] == session.id
-                    Export::Workflow.start(session)
+                    export_request(type, payload, session)
                   else
                     Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
                   end
         publish_export(payload, outcome)
+      end
+
+      def export_request(type, payload, session)
+        context = context_for(session)
+        case type
+        when "export.start"
+          Export::Workflow.start(session, :context => context, :repairs => payload.fetch("repairs", []),
+                                 :request => -> { { "sequence" => next_sequence(session),
+                                                   "expected_revision" => session.revision } })
+        when "export.preflight" then API.export_preflight(:context => context)
+        when "export.status" then API.export_status(:context => context, :task_id => payload["task_id"])
+        when "export.cancel" then API.cancel_export(:context => context, :task_id => payload["task_id"])
+        when "export.latest" then API.latest_export(:context => context)
+        end
       end
 
       def publish_export(payload, outcome)
@@ -254,7 +304,8 @@ module PhComposer
       def context_for(session)
         @contexts ||= {}
         @contexts.delete_if { |id, _context| Sessions.find(id).nil? }
-        @contexts[session.id] ||= API.connect(:session_id => session.id)
+        @contexts[session.id] ||= API.connect(:session_id => session.id,
+                                             :capabilities => %w[read view model_write export])
       end
 
       def next_sequence(session)

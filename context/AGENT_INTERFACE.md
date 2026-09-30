@@ -1,10 +1,11 @@
 # External agent interface
 
-DATE: 2026-09-18
+DATE: 2026-09-20
 STATUS: Agent access is an accepted product priority. The in-process programming interface
-(`PhComposer::API`: discover, describe, connect, query, preview, invoke, outcome) is implemented on
-branch in Phase 0 P0-D with a panel-closed synthetic client. Transport, packaging, grants and the
-external adapter remain proposed.
+(`PhComposer::API`: discover, describe, connect, query, preview, invoke, outcome) merged through
+PR #1 from Phase 0 P0-D with a panel-closed synthetic client. `view`, the selection, reveal and
+camera verb, was added in Phase 1 P1-D. Transport, packaging, grants and the external adapter
+remain proposed.
 
 Users bring their own agents. PH-Composer supplies documented access to inspect, view and edit
 the authored model without requiring an agent to understand private Ruby internals or operate
@@ -98,6 +99,9 @@ contract for mutations: scope keys to the caller/session, bind them to the reque
 retain a retrievable outcome for a documented period. A retry after a lost response must not
 create a second record or Undo entry. Report expired or uncertain outcomes; clients must inspect
 state rather than retry blindly. Do not claim exactly-once execution across process crashes.
+A request whose params are not plain JSON is refused before acceptance as `request.malformed`,
+effect `none`: it consumes no sequence and retains no outcome, so the caller resends it corrected
+under the same sequence.
 
 Successful writes return affected references and the resulting revision, with enough information
 to verify the change using a read. Validation failure is distinct from transport failure.
@@ -118,10 +122,29 @@ semantics. A timeout does not imply cancellation or failure. Polling must work e
 change notifications are unavailable. Document task retention and behavior on model close or host
 restart. Cancellation only rolls back work where the operation explicitly guarantees it.
 
+### Implemented export task contract
+
+`API.export_preflight` requires `read` and returns feature-owned findings and explicit repair actions.
+A caller invokes selected repairs through the ordinary `model_write` contract, then revalidates.
+`API.start_export`, `export_status`, `cancel_export` and `latest_export` require the separate `export`
+grant. A scripted start supplies an authorized destination and explicit replacement consent.
+The native panel obtains these through its destination and replacement dialogs.
+
+One task may run per Model session. Status is detached, carries counts and diagnostics, and omits
+canonical HBJSON bytes. Successful results name the approved files and the run; retrieve their
+contents explicitly. A lost reply or timeout does not cancel a task. Poll or use `latest_export`
+before deciding whether to retry. Polling never repeats a write. The latest 20 terminal tasks are
+retained for at most 30 minutes using a monotonic clock. Model close releases the task and runtime;
+panel or client loss does not. Reopen and host restart expire old handles. File-journal recovery
+restores a coherent artifact pair independently of task history and does not assert that an
+unknown interrupted task succeeded.
+
 ## User-controlled local access
 
 External access is explicit and revocable, with a visible connection/access state. Separate read,
-model-write and file/import/export capabilities so the user can grant useful scope. Enforce grants
+view, model-write and file/import/export capabilities so the user can grant useful scope. `view`
+is the selection, reveal and camera operations below: it moves nothing in the SKP, so it is granted
+apart from model-write, and a read never carries it. Enforce grants
 at dispatch; an action description or a client-supplied confirmation flag is not authorization.
 Do not require renewed permission for every request already covered by a valid grant.
 
@@ -151,6 +174,34 @@ land; the repository architecture-review skill is for development and is not tha
 For each feature, identify supported programmatic reads and writes. If an operation requires
 interactive geometry picking, document that limitation and the plan for an explicit-reference
 equivalent where feasible. Core data edits must not require UI scraping or arbitrary eval.
+
+Zones exposes native split identity recovery as `ph_composer.zones.repair_split_face`. The native
+Repair menu and [synthetic scripting client](../tools/examples/authoring/split_identity_walkthrough.rb)
+use the same preview and invocation contract. Stored endpoint proof or an explicit retaining path
+chooses the keeper; reads never repair duplicate identities. Invocation carries the reviewed
+preview revision and digest. Supported payloads follow declared copy rules; unsafe data refuses
+before writes. [Phase 1 evidence](../planning/phase-one/evidence/p1-d-split-identity-recovery.md)
+records the implemented scope and remaining reference/solver boundaries.
+
+The `zones` feature exposes `ph_composer.zones.faces.attached_zone.create_and_assign` for one
+atomic definition-and-assignment operation. It takes explicit Face references and record values,
+with optional Face type intent and expected values, and returns the new record ID and assigned
+Face IDs. The Overview inline dialog uses that public operation; scripts can preview and invoke
+it with the panel closed. [Current-host evidence](../planning/phase-one/evidence/p1-d-attached-zone-atomic.md)
+records validation, exact rollback and persistence checks.
+
+Discovery also lists read-only `reference_targets`; description returns their descriptor: ID, owner,
+label, schema version, values schema, occurrence-reference schema and declared core references.
+Every registered operation publishes specific params and result schemas and at least one worked
+example. [`docs/API_REFERENCE.md`](../docs/API_REFERENCE.md) is generated from the registrations by
+`make fixtures` and checked by the offline suite; [`docs/API_QUICKSTART.md`](../docs/API_QUICKSTART.md)
+is the public walkthrough a synthetic client test runs as written.
+Registered extensions can name `ph_composer.zones.zone` and `ph_composer.zones.faces.face`.
+Contributors resolve those identities through the shared record engine while the owning features
+retain entity writes. [The contract](EXTENSIBILITY.md#entity-owned-reference-targets) defines typed
+proposal projections and incoming-reference handling; [native evidence](../planning/phase-one/evidence/p1-d-entity-reference-targets.md)
+records actual copy/split/Solve targets; the independent review of that work passed (see the
+[Phase 1 acceptance register](../planning/phase-one/ACCEPTANCE.md)).
 
 ## Delivery and acceptance
 

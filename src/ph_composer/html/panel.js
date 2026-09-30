@@ -13,6 +13,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   "use strict";
 
   var sections = [];
+  var navigationGuards = {};
+  var DEFAULT_ORDER = 100;
   var state = initialState();
   var preferenceSequence = 0;
   var notice = null;
@@ -22,6 +24,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   var HANDLERS = {
     "panel.snapshot": reduceSnapshot,
     "action.result": reduceActionResult,
+    "view.result": reduceViewResult,
     "preferences.result": reducePreferenceResult,
     "panel.notice": reduceNotice,
     "panel.failure": reduceFailure,
@@ -30,7 +33,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   function initialState() {
     return { session: null, revision: null, sections: {},
-      ui: { activeTab: "overview", actionResult: null, exportResult: null, notice: null, preferencePending: {} } };
+      ui: { activeTab: "overview", actionResult: null, viewResults: {}, exportResult: null, notice: null,
+        preferencePending: {} } };
   }
 
   function copy(object) {
@@ -52,6 +56,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     next.ui = copy(previous.ui);
     if (previous.session !== next.session) {
       next.ui.actionResult = null;
+      next.ui.viewResults = {};
       next.ui.exportResult = null;
       next.ui.notice = null;
     }
@@ -67,6 +72,21 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     if (payload.session !== previous.session) return previous;
     if (outcome.status !== "completed") {
       changes.notice = { message: outcome.message || "The change was not applied.",
+        tone: outcome.status === "failed" ? "error" : "warning" };
+    }
+    return withUI(previous, changes);
+  }
+
+  /* A viewport-state command changes what the host shows and never the Model, so a refusal is a warning
+     about the view, never about an edit the user should check. Results are kept by request id, because
+     several views send them independently; the oldest are dropped once the page is clearly done with
+     them, which is a bound on the map rather than a promise about any one entry. */
+  function reduceViewResult(previous, payload) {
+    var outcome = payload.outcome || {};
+    var changes = { viewResults: recentResults(previous.ui.viewResults, payload) };
+    if (payload.session !== previous.session) return previous;
+    if (outcome.status !== "completed") {
+      changes.notice = { message: outcome.message || "The viewport did not change.",
         tone: outcome.status === "failed" ? "error" : "warning" };
     }
     return withUI(previous, changes);
@@ -102,6 +122,14 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   function reduceFailure(previous, payload) {
     return withUI(previous, { notice: { message: payload.message || "The panel request failed.", tone: "error" } });
+  }
+
+  var MAX_VIEW_RESULTS = 8;
+  function recentResults(previous, payload) {
+    var kept = copy(previous), ids = Object.keys(kept);
+    kept[payload.request_id] = payload;
+    ids.slice(0, Math.max(0, ids.length + 1 - MAX_VIEW_RESULTS)).forEach(function (id) { delete kept[id]; });
+    return kept;
   }
 
   function receive(envelope) {
@@ -172,20 +200,38 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   function showTab(name) {
     if (!document.querySelector("[data-pane='" + name + "']")) return;
+    if (name !== state.ui.activeTab) {
+      var refusing = Object.keys(navigationGuards).filter(function (key) {
+        return navigationGuards[key].guard(name);
+      })[0];
+      if (refusing) {
+        var entry = navigationGuards[refusing];
+        notify(entry.guard(name), "warning");
+        if (entry.refused) entry.refused();
+        return;
+      }
+    }
     state = withUI(state, { activeTab: name });
-    applyTab();
-    api.state = state;
+    render();
   }
 
-  /* `options.pane` names the tab the section belongs to (default "overview"). */
+  /* `options.pane` names the tab the section belongs to (default "overview"). `options.order` places
+     it within that pane, low first; sections that do not ask are placed after those that do, in the
+     order they registered. A pane holds the screen's work surface first and its secondary controls
+     after it, and load order is decided by the module graph, so a section that cares says so. */
   function section(name, renderFunction, options) {
-    var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview" };
+    var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview",
+      order: (options && options.order) !== undefined ? options.order : DEFAULT_ORDER,
+      registered: sections.length };
     if (!document.querySelector("[data-section='" + name + "']") &&
         !document.querySelector("[data-pane='" + entry.pane + "']")) {
       throw new Error("panel section \"" + name + "\" names no pane \"" + entry.pane + "\"");
     }
     sections.push(entry);
-    if (state.session !== null) renderSection(entry);
+    sections.sort(function (left, right) {
+      return left.order - right.order || left.registered - right.registered;
+    });
+    if (state.session !== null) sections.forEach(renderSection);
   }
 
   function preferenceValue(key, extra) {
@@ -235,11 +281,25 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     }
   }
 
+  /* A notice raised by the page itself, such as a refused navigation. It never reaches the host. */
+  function notify(message, tone) {
+    state = withUI(state, { notice: { message: message, tone: tone || "info" } });
+    render();
+  }
+
   /* Sent once the page has started, so the first snapshot has somewhere to render. */
   function ready() { send("panel.ready", {}); }
 
+  /* A presentation-only change: a section that owns local view state (a selection, a filter, an open
+     row) repaints every section from the state already in hand. It never reaches the host. */
+  function repaint() { render(); }
+
   api = { receive: receive, section: section, ready: ready, state: state, showTab: showTab, send: send,
-    setPreference: setPreference };
+    setPreference: setPreference, repaint: repaint, notify: notify,
+    // `guard(tab)` answers why the tab may not change, or null; `refused`, when given, runs after a
+    // refusal is shown, so a section can point the user at the work that holds the tab.
+    navigationGuard: function (name, guard, refused) { navigationGuards[name] = { guard: guard, refused: refused }; }
+  };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function (tab) {
     tab.addEventListener("click", function () { showTab(tab.getAttribute("data-tab")); });
   });

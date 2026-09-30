@@ -9,7 +9,13 @@ class PanelMessagesTest < PhComposerTestCase
   HTML = File.join(SOURCE_ROOT, "ph_composer", "html")
 
   def test_every_message_the_page_sends_is_one_ruby_accepts
-    sent = sources.flat_map { |source| source.scan(/\b(?:send|transport)\("([a-z]+\.[a-z_.]+)"/).flatten }.uniq
+    sent = sources.flat_map { |source| source.scan(/\b(?:send|transport)\("([a-z]+\.[a-z_.]+)"/).flatten }
+    # A request channel sends whichever message it was made with, so the map of the ones it carries is
+    # where those types are written down.
+    sent += File.read(File.join(HTML, "request.js"))[/var SLOTS = \{(.*?)\};/m, 1].scan(/"([a-z.]+)":/).flatten
+    channels = File.read(File.join(HTML, "sections", "export.js"))[/var CHANNELS = \{(.*?)\};/m, 1]
+    sent += channels.scan(/: "([a-z.]+)"/).flatten
+    sent = sent.uniq
 
     assert_includes sent, "action.invoke"
     assert_empty sent - Messages::INBOUND.keys, "the page sends a type Ruby does not accept"

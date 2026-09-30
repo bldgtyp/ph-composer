@@ -9,7 +9,10 @@ module PhComposer
     class ChangeSet
       Write = Struct.new(:kind, :id, :before, :after, keyword_init: true) do
         def change
-          before.nil? ? "created" : "updated"
+          return "created" if before.nil?
+          return "deleted" if after.nil?
+
+          "updated"
         end
       end
 
@@ -28,11 +31,17 @@ module PhComposer
 
       # Records the write unless it would change nothing, so a no-change edit opens no operation.
       def put(kind, before:, after:)
-        id = after.fetch("id")
+        raise ArgumentError, "a record change needs a before or after value" if before.nil? && after.nil?
+
+        id = (after || before).fetch("id")
         raise ArgumentError, "#{kind} #{id} is already in this change set." if find(kind, id)
         return if before == after
 
         @writes << Write.new(:kind => kind, :id => id, :before => before, :after => after)
+      end
+
+      def delete(kind, before:)
+        put(kind, :before => before, :after => nil)
       end
 
       def find(kind, id)

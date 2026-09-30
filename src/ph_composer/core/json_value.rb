@@ -16,7 +16,12 @@ module PhComposer
           node.each_key { |key| found << "#{path} has a non-string key #{key.inspect}" unless key.is_a?(String) }
         when Float
           found << "#{path} is not a finite number" unless node.finite?
-        when Array, String, Integer, true, false, nil
+        when String
+          utf8 = node.valid_encoding? && (node.encoding == Encoding::UTF_8 || node.ascii_only?)
+          found << "#{path} is not valid UTF-8 text" unless utf8
+        when JsonWalk::CYCLE
+          found << "#{path} contains itself"
+        when Array, Integer, true, false, nil
           nil
         else
           found << "#{path} is not a JSON value (#{node.class})"

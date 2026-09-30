@@ -30,9 +30,26 @@ class LoaderTest < PhComposerTestCase
     end
   end
 
-  # Phase 0 ships an empty extension: development examples load only from the development tree.
-  def test_the_shipping_composition_root_installs_no_feature
-    assert_empty PhComposer::FEATURES
+  def test_the_shipping_composition_root_lists_the_phase_one_authoring_features
+    assert_equal [PhComposer::Zones], PhComposer::FEATURES
+    assert PhComposer::Registry.installed?("ph_composer.zones")
+    refute PhComposer::Registry.installed?("ph_composer.face_assignment")
+  end
+
+  # R-D1: one feature owns Zones, Faces and adjacency, so the published dependency graph is the whole
+  # truth and no registered name survives from the retired face_assignment feature.
+  def test_zones_owns_every_zone_face_and_adjacency_registration
+    registry = PhComposer::Registry.current
+    names = [registry.queries, registry.actions, registry.view_commands, registry.record_kinds,
+             registry.reference_targets, registry.snapshot_sections, registry.export_contributors,
+             registry.proposal_participants, registry.colour_modes, registry.menu_items].flat_map(&:keys)
+
+    assert_empty registry.features.fetch("ph_composer.zones").requires
+    assert_empty names.grep(/face_assignment/)
+    assert_includes names, "ph_composer.zones.faces.classify"
+    names.grep(/\Aph_composer\.zones\./).each do |name|
+      assert_equal "ph_composer.zones", registry.owner_of(name), name
+    end
   end
 
   def test_reset_for_test_clears_every_registered_state_once_per_name

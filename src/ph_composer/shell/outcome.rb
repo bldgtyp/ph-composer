@@ -19,8 +19,10 @@ module PhComposer
 
     module_function
 
-    def completed(revision:, value: nil, effect: "none", affected: [], message: "Done.")
-      build("completed", "ok", message, effect, revision, :value => value, :affected => affected)
+    def completed(revision:, value: nil, effect: "none", affected: [], findings: [], proposal_digest: nil,
+                  message: "Done.")
+      build("completed", "ok", message, effect, revision, :value => value, :affected => affected,
+            :findings => findings, :proposal_digest => proposal_digest)
     end
 
     # A request turned away before anything was written. `mutation` adds the sentence that tells a
@@ -30,16 +32,22 @@ module PhComposer
       build(status, code, text, "none", revision, :findings => findings, :detail => detail)
     end
 
-    def failed(effect:, revision:)
+    def failed(effect:, revision:, reason: nil)
       message = effect == "rolled_back" ? ROLLED_BACK : UNVERIFIED
       code = effect == "rolled_back" ? "operation.failed" : "operation.rollback_unverified"
-      build("failed", code, message, effect, revision)
+      # A declared domain failure remains actionable even when it arose during a native cut.
+      # Keep rollback certainty separate; never expose an unexpected exception's message.
+      detail = reason && { "cause" => reason.code, "detail" => DeepCopy.call(reason.detail) }
+      message = "#{reason.message} #{message}" if reason
+      build("failed", code, message, effect, revision, :detail => detail)
     end
 
-    def build(status, code, message, effect, revision, value: nil, affected: [], findings: [], detail: nil)
+    def build(status, code, message, effect, revision, value: nil, affected: [], findings: [], detail: nil,
+              proposal_digest: nil)
       {
         "status" => status, "code" => code, "message" => message, "effect" => effect, "revision" => revision,
-        "value" => value, "affected" => affected, "findings" => findings, "detail" => detail
+        "value" => value, "affected" => affected, "findings" => findings, "detail" => detail,
+        "proposal_digest" => proposal_digest
       }
     end
   end

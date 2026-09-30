@@ -1,8 +1,8 @@
 # PH-Composer: founding brief
 
-**DATE:** 2026-09-18 | **STATUS:** Draft for review. Repository initialized with `docs/` and
-`context/` ported from the predecessor on 2026-09-18; no code. First feature packet scoped the same
-day: `features/zones-and-adjacency/`.
+**DATE:** 2026-09-20 | **STATUS:** Founding record. Phase 0 foundation merged through PR #1.
+[Phase 1 planning](phase-one/README.md) now owns the next delivery sequence; building features
+remain unimplemented. The transplant tables below record the original predecessor inventory.
 **OWNER:** Ed May, BLDGTYP
 
 ## The idea
@@ -116,8 +116,8 @@ Core follows the walking-skeleton order in `ROADMAP.md`:
 
 1. Zones and adjacency, then face assignment: what a Zone is, which faces are envelope and what
    is on the other side. Zones come first because a boundary condition may name another Zone.
-2. Validation and the canonical HBJSON/report handoff, with the METr exporter through PHX when
-   its Pyodide gate passes. The Phase 1 construction is a development-only fixture, never a user
+2. Validation and the canonical HBJSON/report handoff. D12 defers METr export through PHX
+   until further feature development; its return milestone is unscheduled. The Phase 1 construction is a development-only fixture, never a user
    fallback.
 3. Assembly Builder and the file-library seam, carried over and generalized.
 4. Windows: types, Frames, Glazings and Psi-Install Types carried over; window geometry authoring
@@ -154,9 +154,9 @@ never required to author or export a model.
 The cross-cutting choices are consolidated in [`DECISIONS.md`](DECISIONS.md); feature-local
 questions remain in their packet PRDs.
 
-- **PHX in Pyodide.** PHX pulls openpyxl and xlwings for its PHPP path. Those must become optional
-  extras so the wheel loads without them, and the payload growth against the predecessor's 20 MB
-  must be measured. This is a small spike in the PHX repository and the first technical gate.
+- **PHX in Pyodide.** [B1](archive/phase-zero/evidence/spike-phx.md) passed with nine pinned
+  wheels installed without dependency resolution. Phase 1 selects its HBJSON translation pins. The no-Spaces
+  floor-area decision, PHX integration and actual METr import wait with the deferred exporter. Upstream optional-dependency cleanup remains a follow-up.
 - **Public name, organization and namespaces.** Development remains PH-Composer at `bldgtyp/ph-composer`.
   Before public announcement, decide whether to keep that name and home, then claim only the
   namespaces that decision requires.

@@ -82,6 +82,21 @@ module Geom
     def transform(transformation)
       transformation.transform(self)
     end
+
+    # The host's Point3d arithmetic, enough for a drawing offset: point minus point is the vector
+    # between them, and `offset` moves a point along a vector by a length.
+    def -(other)
+      Vector3d.new(@x - other.x, @y - other.y, @z - other.z)
+    end
+
+    def offset(vector, length = nil)
+      scale = length.nil? ? 1.0 : length.to_f / vector.length
+      Point3d.new(@x + (vector.x * scale), @y + (vector.y * scale), @z + (vector.z * scale))
+    end
+
+    def length
+      Math.sqrt((@x**2) + (@y**2) + (@z**2))
+    end
   end
 
   class Vector3d < Point3d; end

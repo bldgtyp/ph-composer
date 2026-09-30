@@ -1,6 +1,6 @@
 # Licensing
 
-**DATE:** 2026-09-18
+**DATE:** 2026-09-29
 
 PH-Composer is copyright BLDGTYP, LLC and its contributors and is released under the GNU
 Affero General Public License, version 3 or later (`AGPL-3.0-or-later`). The full text is in
@@ -25,9 +25,11 @@ The predecessor's manifest recorded no license for the ph-units wheel. The wheel
 Exact versions, source URLs, hashes and declared licenses live in the runtime manifest,
 `src/ph_composer/vendor/manifest.json`, and the shipped notice,
 `src/ph_composer/vendor/THIRD_PARTY_NOTICES.md`. The current build ships the Pyodide 0.24.1 core,
-which embeds CPython 3.11.3, and no wheels. The Pyodide repository's license file is MPL-2.0, while
-the release's `package.json` declares Apache-2.0; both are recorded, and the notice is settled
-before any public release.
+which embeds CPython 3.11.3, and eight pinned pure-Python translation wheels. Full upstream
+license texts travel with the build. Pyodide's pinned `LICENSE` says MPL-2.0 while its
+`src/js/package.json` says Apache-2.0. honeybee-standards 2.0.7 declares GPL-3.0 in its
+metadata classifier and carries an MIT license file. The shipped notice preserves both
+discrepancies and links the exact sources. Public distribution remains a separate gate.
 
 ## What it means in practice
 

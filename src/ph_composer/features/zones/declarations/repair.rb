@@ -1,0 +1,67 @@
+# frozen_string_literal: true
+
+module PhComposer
+  module Zones
+    # Identity and membership repairs: a copied Zone, a natively split Face, an exploded Zone. The
+    # handlers are Zones module functions (zone/operations.rb).
+    module RepairRegistration
+      # The copy is named by path, not by id: its id is the ambiguous thing being repaired.
+      REPAIR_PARAMS = Shapes.object({ "zone_path" => PATH }).freeze
+      REPAIR_RESULT = Shapes.object({
+        "zone_id" => Shapes::ID.merge("description" => "The copy's new Zone id."),
+        "retired_pairs" => Shapes::COUNT.merge("description" => "Surface pairs the copy's Faces left behind.")
+      }).freeze
+      SPLIT_REPAIR_PARAMS = Shapes.object({
+        "zone" => ZONE_REFERENCE, "face_id" => Shapes::ID,
+        "zones" => { "type" => "array", "items" => ZONE_REFERENCE, "minItems" => 1,
+                     "description" => "Every Zone the repair may write, the counterpart's included." },
+        "retaining_entity_path" => PATH.merge("description" => "The piece that keeps face_id, when no stored " \
+                                                                "endpoint proves it.")
+      }, :optional => ["retaining_entity_path"]).freeze
+      SPLIT_REPAIR_RESULT = Shapes.object({
+        "face_id" => Shapes::ID, "retaining_entity_path" => PATH,
+        "retention_basis" => { "type" => "string", "enum" => %w[stored_endpoint user_choice] },
+        "pieces" => Shapes.list(Shapes.object({ "before" => Faces::FACE_REFERENCE, "after" => Faces::FACE_REFERENCE })),
+        "retired" => Shapes.list(Faces::FACE_REFERENCE, :description => "Surface endpoints the repair retired.")
+      }).freeze
+      RESTORE_PARAMS = Shapes.object({ "parent_path" => PATH, "zone_id" => Shapes::ID }).freeze
+      RESTORE_RESULT = Shapes.object({
+        "zone_id" => Shapes::ID, "member_count" => Shapes::COUNT,
+        "unrecoverable" => Shapes.list({ "type" => "string" }, :description => "Zone fields Restore cannot recover.")
+      }).freeze
+      EXAMPLE_ZONE = { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201] }.freeze
+
+      module_function
+
+      def install(feature)
+        SplitIdentityMenu.install(feature)
+        feature.action("#{FEATURE_ID}.repair_split_face",
+                       :description => "Repair copied Face identities after a native split.",
+                       :params => SPLIT_REPAIR_PARAMS, :result => SPLIT_REPAIR_RESULT,
+                       :examples => [{ "zone" => EXAMPLE_ZONE, "face_id" => "fac_Mn34Op56Qr78",
+                                       "zones" => [EXAMPLE_ZONE] }],
+                       :undo_name => "Repair Split Face Identity",
+                       :side_effects => "Reidentifies split pieces and retires invalid Surface links.") do |
+                         request, proposal|
+          Zones.repair_split_face(request, proposal)
+        end
+        feature.action("#{FEATURE_ID}.repair_identity",
+                       :description => "Give one copied Zone occurrence an identity of its own.",
+                       :params => REPAIR_PARAMS, :result => REPAIR_RESULT, :undo_name => "Repair Zone Identity",
+                       :examples => [{ "zone_path" => [1401] }],
+                       :side_effects => "Reidentifies the named occurrence and its Faces; the original is " \
+                                        "left untouched.") do |request, proposal|
+          Zones.repair_identity(request, proposal)
+        end
+        feature.action("#{FEATURE_ID}.restore",
+                       :description => "Regroup the stamped members of an exploded Zone, recovering only their stamp.",
+                       :params => RESTORE_PARAMS, :result => RESTORE_RESULT, :undo_name => "Restore Zone",
+                       :examples => [{ "parent_path" => [], "zone_id" => "zon_Ab12Cd34Ef56" }],
+                       :side_effects => "Groups stamped Faces in one parent context and writes a Zone record.") do |
+                         request, proposal|
+          Zones.restore(request, proposal)
+        end
+      end
+    end
+  end
+end

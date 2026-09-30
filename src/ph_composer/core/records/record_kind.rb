@@ -48,6 +48,11 @@ module PhComposer
         }
       end
 
+      def descriptor
+        Descriptor.new(:kind => id, :label => label, :schema_version => schema_version,
+                       :values_schema => values_schema, :references => references)
+      end
+
       def values(record)
         record.reject { |key, _value| RESERVED_KEYS.include?(key) }
       end

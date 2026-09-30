@@ -9,6 +9,11 @@
   "use strict";
 
   var PARTS = "example.foundation.parts";
+  var LEGEND = "ph_composer.colour_by.legend";
+  var PALETTE = "ph_composer.zones.faces.palette";
+  var ATTACHED = "ph_composer.zones.faces.attached_zone.list";
+  var ZONES = "ph_composer.zones.overview";
+  var FACES = "ph_composer.zones.faces.faces";
   var NOTHING_WRITTEN = "Nothing was written.";
 
   function Host(window, options) {
@@ -19,6 +24,14 @@
     this.revision = 1;
     this.sequence = 0;
     this.parts = (settings.parts || []).map(function (part) { return JSON.parse(JSON.stringify(part)); });
+    this.zones = JSON.parse(JSON.stringify(settings.zones || []));
+    this.faces = JSON.parse(JSON.stringify(settings.faces || []));
+    this.makeZone = settings.makeZone || null;
+    this.colourBy = { mode: null, isolated: null };
+    this.palette = { active: false, palette: {},
+      face_types: ["Wall", "RoofCeiling", "Floor"],
+      boundary_conditions: ["Outdoors", "Ground", "Adiabatic", "AttachedZone", "Surface"] };
+    this.attachedZones = JSON.parse(JSON.stringify(settings.attachedZones || []));
     this.preferences = { unit_system: settings.unitSystem || "SI", dimension_formats: {},
       number_format: { decimal: settings.decimal || ".", locale: settings.locale || "en-US" } };
   }
@@ -34,24 +47,96 @@
     this.publish("panel.snapshot", {
       product: "PH-Composer", version: "preview", session: this.session, revision: this.revision,
       file_name: "preview.skp", edit_path: [], preferences: JSON.parse(JSON.stringify(this.preferences)),
-      sections: { [PARTS]: { status: "completed", code: "ok", revision: this.revision,
-        value: { records: records, units: { length_mm: "mm" }, next_cursor: null, total: records.length } } }
+      sections: {
+        [PARTS]: { status: "completed", code: "ok", revision: this.revision,
+          value: { records: records, units: { length_mm: "mm" }, next_cursor: null, total: records.length } },
+        [ZONES]: { status: "completed", code: "ok", revision: this.revision,
+          value: { zones: JSON.parse(JSON.stringify(this.zones)), make_zone: this.makeZone,
+            units: { ground_depth_mm: "mm" } } },
+        [FACES]: { status: "completed", code: "ok", revision: this.revision,
+          value: { faces: JSON.parse(JSON.stringify(this.faces)), units: { area_m2: "m2" } } },
+        [LEGEND]: { status: "completed", code: "ok", revision: this.revision, value: this.legend() },
+        [PALETTE]: { status: "completed", code: "ok", revision: this.revision,
+          value: JSON.parse(JSON.stringify(this.palette)) },
+        [ATTACHED]: { status: "completed", code: "ok", revision: this.revision,
+          value: { records: JSON.parse(JSON.stringify(this.attachedZones)), next_cursor: null,
+            total: this.attachedZones.length } }
+      }
     });
+  };
+
+  /* The legend the shared service would build, counted from the preview's own Faces so the rows move
+     when the panel classifies one. */
+  Host.prototype.legend = function () {
+    var isolated = this.colourBy.isolated, rows = [];
+    var counts = {};
+    if (this.colourBy.mode) {
+      this.faces.forEach(function (face) {
+        var value = face.values.face_type || null;
+        var state = value ? (face.state === "incomplete" ? "incomplete" : "classified") : "unclassified";
+        var key = value + "|" + state;
+        counts[key] = counts[key] || { value: value, label: value || "Unclassified", state: state, count: 0,
+          colour: value ? [230, 180, 60] : [130, 130, 130] };
+        counts[key].count += 1;
+      });
+      rows = Object.keys(counts).map(function (key) {
+        var row = counts[key];
+        row.isolated = Boolean(isolated && isolated.value === row.value && isolated.state === row.state);
+        return row;
+      });
+    }
+    return { mode: this.colourBy.mode, label: this.colourBy.mode ? "Face type" : null,
+      entity_kind: this.colourBy.mode ? "face" : null, isolated: isolated, rows: rows,
+      modes: [{ name: "ph_composer.zones.faces.by_face_type", label: "Face type", entity_kind: "face" },
+        { name: "ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone" }] };
   };
 
   Host.prototype.receive = function (message) {
     this.sent.push(message);
     if (message.type === "panel.ready") this.snapshot();
     if (message.type === "action.invoke") this.invoke(message.payload);
+    if (message.type === "view.invoke") this.viewCommand(message.payload);
     if (message.type === "preferences.set") this.setPreference(message.payload);
     if (message.type === "export.start") this.exportStart(message.payload);
+    if (message.type === "export.preflight" || message.type === "export.latest") {
+      var value = message.type === "export.latest" ? null : { repairs: [], findings: [{
+        code: "preview.export_unavailable", blocks_export: true,
+        message: "Export writes are unavailable in this browser preview."
+      }] };
+      this.publish("export.result", { request_id: message.payload.request_id, session: message.payload.session,
+        outcome: { status: "completed", value: value, findings: [], revision: this.revision } });
+    }
   };
 
-  /* Like the shipped build: a destination is "accepted" and nothing is written. */
+  /* This development preview has no filesystem or runtime; it never performs an export. */
   Host.prototype.exportStart = function (payload) {
     this.publish("export.result", { request_id: payload.request_id, session: payload.session,
       outcome: refused("export.unavailable", "No exporter is installed in this build, so nothing was written.",
         this.revision) });
+  };
+
+  /* A viewport-state command: nothing to write and no revision to guard, so the preview answers that it
+     ran and leaves its Model alone. There is no viewport here to move. */
+  Host.prototype.viewCommand = function (payload) {
+    var outcome;
+    if (payload.session !== this.session) {
+      outcome = refused("session.inactive", "The panel now shows a different Model.", null);
+    } else {
+      if (payload.name === "ph_composer.colour_by.activate") {
+        this.colourBy = { mode: payload.params.mode, isolated: null };
+      }
+      if (payload.name === "ph_composer.colour_by.isolate") this.colourBy.isolated = payload.params.row || null;
+      if (payload.name === "ph_composer.zones.faces.choose") {
+        this.palette.active = true;
+        if (payload.params.value === null) delete this.palette.palette[payload.params.field];
+        else this.palette.palette[payload.params.field] = payload.params.value;
+      }
+      if (payload.name === "ph_composer.zones.faces.stop_classifying") this.palette.active = false;
+      outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
+        value: {}, affected: [], findings: [], detail: null };
+      this.snapshot();
+    }
+    this.publish("view.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
   };
 
   Host.prototype.invoke = function (payload) {
@@ -82,6 +167,31 @@
         host.sequence += 1;
         host.parts.push({ id: "exp_preview" + String(host.sequence).padStart(5, "0"), label: values.label,
           length_mm: values.length_mm });
+      });
+    } else if (payload.name === "ph_composer.zones.update") {
+      var zone = this.zones.filter(function (item) {
+        return item.reference.zone_id === payload.params.reference.zone_id;
+      })[0];
+      if (!zone) return refused("target.not_found", "That Zone is unavailable. " + NOTHING_WRITTEN, this.revision);
+      zone.values = JSON.parse(JSON.stringify(payload.params.values));
+    } else if (payload.name === "ph_composer.zones.faces.classify") {
+      var reference = payload.params.faces[0];
+      var face = this.faces.filter(function (item) {
+        return item.reference.entity_path.join(",") === reference.entity_path.join(",");
+      })[0];
+      if (!face) return refused("target.not_found", "That Face is unavailable. " + NOTHING_WRITTEN, this.revision);
+      Object.keys(payload.params.intent).forEach(function (field) {
+        var intent = payload.params.intent[field];
+        if (intent.mode === "set") face.values[field] = intent.value;
+        if (intent.mode === "clear") delete face.values[field];
+      });
+      face.state = face.values.face_type && face.values.boundary_condition ? "classified" : "incomplete";
+    } else if (payload.name === "ph_composer.zones.faces.auto_classify") {
+      this.faces.filter(function (item) {
+        return item.reference.zone_id === payload.params.zone.zone_id && item.state === "unclassified";
+      }).forEach(function (item) {
+        item.values = JSON.parse(JSON.stringify(item.suggested));
+        item.state = "classified";
       });
     } else {
       return refused("request.unknown_operation", "The preview host does not run " + payload.name + ".", this.revision);

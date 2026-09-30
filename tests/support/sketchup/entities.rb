@@ -56,10 +56,14 @@ module Sketchup
   class LayersObserver; end
 
   class Color
-    attr_reader :red, :green, :blue
+    attr_reader :red, :green, :blue, :alpha
 
-    def initialize(red, green, blue)
-      @red, @green, @blue = red, green, blue
+    def initialize(red, green, blue, alpha = 255)
+      @red, @green, @blue, @alpha = red, green, blue, alpha
+    end
+
+    def to_a
+      [@red, @green, @blue, @alpha]
     end
   end
 
@@ -69,7 +73,10 @@ module Sketchup
     def initialize(id, name, description: "")
       @overlay_id, @name, @description = id, name, description
       @valid = true
-      @enabled = true
+      # A new overlay is disabled, as the host's is: `OverlaysManager#add` accepts it, shows it
+      # unticked in the Overlays panel and never calls `draw` until something enables it. Measured
+      # on 26.1.188, 2026-09-20, when a Colour-by mode turned on drew nothing at all.
+      @enabled = false
     end
 
     def valid?
@@ -102,6 +109,16 @@ module Sketchup
     def remove_observer(observer)
       @observers.delete(observer)
       true
+    end
+  end
+
+  # SketchUp's tag collection. It knows its Model, so an observer can reach the session.
+  class Layers < ObservableCollection
+    attr_reader :model
+
+    def initialize(model)
+      super()
+      @model = model
     end
   end
 
@@ -140,19 +157,73 @@ module Sketchup
     end
   end
 
+  # The host picks whatever is under the pointer; the stub picks whatever a fixture put at those
+  # coordinates. `picks` maps [x, y] to one root-to-leaf entity path, or to several when a test
+  # means to check that the best Face wins over a nearer Edge.
+  class PickHelper
+    def initialize(view)
+      @view = view
+      @paths = []
+    end
+
+    def do_pick(x_value, y_value)
+      found = @view.picks[[x_value, y_value]]
+      @paths = found.nil? ? [] : (found.first.is_a?(Array) ? found : [found])
+      @paths.length
+    end
+
+    def count
+      @paths.length
+    end
+
+    def path_at(index)
+      @paths[index]
+    end
+
+    def leaf_at(index)
+      @paths[index]&.last
+    end
+  end
+
+  Camera = Struct.new(:eye)
+
   class View
-    attr_accessor :line_width, :drawing_color, :pick_result
-    attr_reader :model, :draws, :invalidations, :zoomed
+    attr_accessor :line_width, :drawing_color, :pick_result, :line_stipple, :tooltip
+    attr_accessor :camera, :model_units_per_pixel
+    attr_reader :model, :draws, :screen_draws, :texts, :invalidations, :zoomed, :picks
 
     def initialize(model)
       @model = model
       @draws = []
+      @screen_draws = []
+      @texts = []
       @invalidations = 0
       @zoomed = []
+      @picks = {}
+      # Far enough above the fixtures that a lift toward it is a clean +z, and one model unit a
+      # pixel, so a test can state the lift it expects.
+      @camera = Camera.new(Geom::Point3d.new(0, 0, 1_000_000))
+      @model_units_per_pixel = 1.0
+    end
+
+    def pixels_to_model(pixels, _point)
+      pixels * @model_units_per_pixel
+    end
+
+    def pick_helper
+      @pick_helper ||= PickHelper.new(self)
     end
 
     def draw(mode, points)
       @draws << [mode, points.dup, @drawing_color, @line_width]
+    end
+
+    def draw2d(mode, points)
+      @screen_draws << [mode, points.dup, @drawing_color]
+    end
+
+    def draw_text(point, text, options = {})
+      @texts << [point, text, options]
     end
 
     def invalidate
@@ -193,6 +264,10 @@ module Sketchup
     def transform!(transformation)
       @vertices.each { |vertex| vertex.transform!(transformation) }
     end
+
+    def reverse!
+      @vertices.reverse!
+    end
   end
 
   class AttributeDictionary
@@ -229,13 +304,19 @@ module Sketchup
   class Entity
     attr_reader :persistent_id
     attr_accessor :layer, :parent_entities
+    attr_writer :hidden
 
     def initialize(persistent_id, dictionaries = {})
       @persistent_id = persistent_id
+      @hidden = false
       @dictionaries = dictionaries.each_with_object({}) do |(name, values), result|
         result[name] = AttributeDictionary.new(name, values)
       end
       @layer = Tag.new("Untagged", true)
+    end
+
+    def hidden?
+      @hidden
     end
 
     def attribute_dictionaries
@@ -275,18 +356,46 @@ module Sketchup
   end
 
   class Face < Entity
-    attr_reader :loops, :outer_loop, :normal
+    attr_reader :loops, :outer_loop, :normal, :edges
 
-    def initialize(persistent_id, dictionaries = {}, points: nil, holes: [], normal: nil)
+    # `edges` is opt-in. The host always gives a Face its bounding Edges, but most fixtures here do
+    # not care about topology, so a Face built without them simply reports none and any rule that
+    # reads topology is vacuously satisfied. A fixture that means to test edge sharing passes them.
+    def initialize(persistent_id, dictionaries = {}, points: nil, holes: [], normal: nil, edges: [])
       super(persistent_id, dictionaries)
       points ||= [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(1, 0, 0), Geom::Point3d.new(1, 1, 0)]
       @outer_loop = Loop.new(points)
       @loops = [@outer_loop] + holes.map { |loop| Loop.new(loop) }
-      @normal = normal || Geom::Vector3d.new(0, 0, 1)
+      @normal = normal || Face.newell_normal(@outer_loop.vertices.map(&:position))
+      @edges = Array(edges)
+      @edges.each { |edge| edge.attach_face(self) }
     end
 
+    # The host derives a Face's normal from its winding. A fixture that says nothing about the
+    # normal gets the one its own points imply, so a Face built by add_face faces the right way.
+    def self.newell_normal(points)
+      vector = points.each_with_index.reduce([0.0, 0.0, 0.0]) do |sum, (point, index)|
+        following = points[(index + 1) % points.length]
+        [sum[0] + ((point.y - following.y) * (point.z + following.z)),
+         sum[1] + ((point.z - following.z) * (point.x + following.x)),
+         sum[2] + ((point.x - following.x) * (point.y + following.y))]
+      end
+      length = Math.sqrt(vector.sum { |value| value**2 })
+      return Geom::Vector3d.new(0, 0, 1) if length < 1.0e-12
+
+      Geom::Vector3d.new(*vector.map { |value| value / length })
+    end
+
+    # As the host does, a Face's area is its outline less its holes.
     def area(transformation = Geom::Transformation.new)
-      points = @outer_loop.vertices.map { |vertex| vertex.position.transform(transformation) }
+      @loops.each_with_index.sum do |loop, index|
+        value = loop_area(loop, transformation)
+        index.zero? ? value : -value
+      end
+    end
+
+    def loop_area(loop, transformation)
+      points = loop.vertices.map { |vertex| vertex.position.transform(transformation) }
       vector = points.each_with_index.reduce([0.0, 0.0, 0.0]) do |sum, (point, index)|
         following = points[(index + 1) % points.length]
         [
@@ -297,19 +406,75 @@ module Sketchup
       end
       Math.sqrt(vector.sum { |value| value**2 }) / 2.0
     end
+    private :loop_area
 
     def transform!(transformation)
       @loops.each { |loop| loop.transform!(transformation) }
     end
+
+    # The host reverses the loop winding and the normal together and keeps every attribute
+    # dictionary on the Face. Nothing else about the Face changes.
+    def reverse!
+      @loops.each(&:reverse!)
+      @normal = Geom::Vector3d.new(-@normal.x, -@normal.y, -@normal.z)
+      true
+    end
+
+    # Used by the split model: the host reshapes a Face in place, keeping its identity and every
+    # attribute dictionary on it.
+    def replace_outline!(points)
+      @outer_loop = Loop.new(points)
+      @loops[0] = @outer_loop
+      self
+    end
+
+    def add_hole!(points)
+      @loops << Loop.new(points)
+      self
+    end
+
+    # The host triangulates a Face, holes and concavity included, and hands back a PolygonMesh. This
+    # stub fans the outer loop instead, which is only right for a convex outline: it exists so the
+    # Colour-by cache can be tested for what it batches and counts, never as evidence about how
+    # SketchUp tessellates. See tests/sketchup_stub_deviations_test.rb.
+    def mesh(_flags = 0)
+      PolygonMesh.new(@outer_loop.vertices.map(&:position))
+    end
+  end
+
+  # A fan over the points it was given: 1-based indices, as the host's PolygonMesh uses.
+  class PolygonMesh
+    attr_reader :points
+
+    def initialize(points)
+      @points = points
+    end
+
+    def polygons
+      (1..(@points.length - 2)).map { |index| [1, index + 1, index + 2] }
+    end
+
+    def count_polygons
+      polygons.length
+    end
+
+    def point_at(index)
+      @points[index - 1]
+    end
   end
 
   class Edge < Entity
-    attr_reader :start, :end
+    attr_reader :start, :end, :faces
 
     def initialize(persistent_id, start_point, end_point, dictionaries = {})
       super(persistent_id, dictionaries)
       @start = Vertex.new(start_point)
       @end = Vertex.new(end_point)
+      @faces = []
+    end
+
+    def attach_face(face)
+      @faces << face unless @faces.include?(face)
     end
 
     def transform!(transformation)
@@ -334,6 +499,15 @@ module Sketchup
 
     attr_accessor :root
     attr_reader :each_count, :scan_count
+
+    # The Groups drawn from this collection. A Group registers itself when it is built on one.
+    def group_instances
+      @group_instances ||= []
+    end
+
+    def register_group(group)
+      group_instances << group unless group_instances.include?(group)
+    end
 
     def initialize(values = [])
       @values = []
@@ -391,6 +565,20 @@ module Sketchup
       group = Group.new(self.class.allocate_persistent_id, Entities.new(members))
       self << group
       group
+    end
+
+    # A model of how the host splits a Face, not evidence about it. Drawing an outline onto a
+    # coplanar Face that contains it leaves the shared region as a new Face and the original Face
+    # holding what is left: its outline shrinks when the region touches its boundary, and it gains
+    # a hole when the region sits wholly inside it, which is what SketchUp does. The original keeps
+    # its persistent id here; on the host that is measured, not assumed, which is why the caller
+    # looks the survivor up rather than relying on it.
+    def add_face(points)
+      face = Face.new(self.class.allocate_persistent_id, {}, :points => Array(points))
+      host = to_a.grep(Face).find { |candidate| PhComposerStub.splittable?(candidate, face) }
+      PhComposerStub.split!(host, face) if host
+      self << face
+      face
     end
 
     def add_instance(definition, transformation)
@@ -483,6 +671,25 @@ module Sketchup
     end
   end
 
+  # What a Group's contents are, and which Groups are drawn from them. The host models this as a
+  # ComponentDefinition with instances; here it is derived from the Entities collection, so two
+  # Groups built on one collection report each other exactly as two copies do on the host.
+  class GroupDefinition
+    attr_reader :entities
+
+    def initialize(entities)
+      @entities = entities
+    end
+
+    def instances
+      @entities.group_instances
+    end
+
+    def persistent_id
+      @entities.object_id
+    end
+  end
+
   class Group < Entity
     attr_reader :entities
     attr_accessor :transformation, :name
@@ -494,6 +701,7 @@ module Sketchup
       @transformation = transformation || Geom::Transformation.new
       @name = name
       @locked = locked
+      @entities.register_group(self) if @entities.respond_to?(:register_group)
     end
 
     def locked?
@@ -502,6 +710,13 @@ module Sketchup
 
     def locked=(value)
       @locked = !!value
+    end
+
+    # Copying a Group on the host makes both Groups instances of one definition, sharing every
+    # entity in it. A fixture models that by giving two Groups the same Entities collection; the
+    # definition each reports then knows both of them.
+    def definition
+      GroupDefinition.new(@entities)
     end
 
     def explode

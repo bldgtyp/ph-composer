@@ -9,11 +9,13 @@ SketchUp facts behind these rules, with what pins each one, are in
 [`SKETCHUP_HOST_BEHAVIOR.md`](SKETCHUP_HOST_BEHAVIOR.md). Where a rule cites evidence, the evidence
 is in the predecessor's archive at `../../ph-navigator-sketchup/planning/archive/`.
 
-The foundation is partly implemented on the `phase-zero-foundation` branch: sessions, revisions,
-transactions, the record engine and the public operation contract (Phase 0 stages P0-C and P0-D),
-and the panel shell, its UI kit and shared Units (P0-E).
-Everything else here still describes the target and the reasons for it. The Phase 0 packet under
-`planning/archive/phase-zero/` records which rules have implementation and host evidence.
+The Phase 0 foundation merged through PR #1: sessions, revisions, record transactions and the
+public operation contract, panel/UI kit and shared Units, the runtime shell and export contracts.
+On the Phase 1 branch (PR #3) the build registers one building feature, `zones`
+(`src/ph_composer/features/zones/`), which owns Zones, their Faces and the adjacency between them,
+and the export run to canonical HBJSON. No exporter beyond HBJSON ships. The archived Phase 0
+packet records implementation and host evidence; later behavior below remains a requirement until
+its owning packet lands.
 
 [EXTENSIBILITY.md](EXTENSIBILITY.md) owns the accepted contributor architecture, including the
 separation of pure Ruby domain behavior from SketchUp adapters, public scripting, metadata and
@@ -144,6 +146,9 @@ consumer-specific validation rule, not a requirement for creating or exporting e
 rules are the zones-and-adjacency packet's to settle
 (`../planning/features/zones-and-adjacency/PRD.md`), and these are the constraints it starts from:
 
+- One feature, `zones`, owns this whole lifecycle: Zone containment, Face identity, Zone stamps,
+  Surface endpoints and the split and copy transitions between them. They change together, so a
+  second feature reaching into any of them would need to learn all of them.
 - Classification is a record on the face in PH-Composer's dictionary, carrying face type,
   boundary condition and the assigned assembly's record id. The face's geometry is SketchUp's.
 - A face is identified by its persistent id plus its occurrence path, never by `entityID`.
@@ -165,7 +170,7 @@ opens. The server's token authorizes loading runtime assets and nothing else; it
 credential.
 
 A feature adds export coverage with `feature.export_contributor(name, section_version:, result:,
-report:)` in its `install`, whose block returns the section's records, and a Python `Section` with
+report:, preflight:)` in its `install`, whose block returns the section's records, and a Python `Section` with
 the same id listed in `python/ph_composer_translation/composition.py`. The block reads through
 `Export::RecordReader`, which exports only declared values and named extension fields, leaves
 `user_data` and `local_only` data out with a finding, and blocks on data whose export relevance is
@@ -173,6 +178,23 @@ unknown or required but unexported. When the translator adds result fields for t
 contributor declares them in `result` and renders them in `report`. The extraction carries every
 section under `sections`; `export/` knows no feature. The development example
 (`tools/examples/foundation/`) is the working pattern.
+
+Export preflight is a declared query owned by the same feature as its contributor. It returns
+findings and optional registered repair actions. The shell runs only selected repairs before the
+read-only task and repeats preflight afterward. Sections may produce nonblocking findings through
+the generic Python section hook; feature omission rules remain in their sections.
+
+Collection resumes a detached geometry traversal in slices of at most 100 entities with an 8 ms
+budget. One native Face capture and one contributor callback are indivisible. The task checks a
+separate export content generation during collection, on translation return and before canonical
+commit. Camera, selection and edit-path navigation do not invalidate it; content commits and
+Undo/Redo do. SketchUp 26.1's navigation-only commit and the preceding content-commit ordering
+are measured in [P1-E evidence](../planning/phase-one/evidence/p1-e-export-workflow.md).
+
+The runtime installs only manifest-pinned local wheels on explicit export. There is no pip resolver,
+external download or system-Python fallback. The shipping composition still has no authored
+construction provider; the separately composed synthetic provider exists only in development
+acceptance and never becomes a stored Assembly or a shipping fallback.
 
 The privacy allowlist is the shell's fields plus every contributor's declaration, composed on each
 check, so a result field no declaration names fails the export at `checking`. The report embeds
@@ -214,8 +236,11 @@ HBJSON document and the user's export choices. It never reads the export contrac
 The METr exporter is the first. It calls PHX to build a PHX project from HBJSON and PHX's WUFI
 writer to produce the METr model. Two facts gate it:
 
-- PHX's PHPP path imports openpyxl and xlwings. Those must be optional extras so the PHX wheel
-  loads in Pyodide without them. The spike lives in the PHX repository.
+- [Phase 0 B1](../planning/archive/phase-zero/evidence/spike-phx.md) proved PHX 1.57.1
+  conversion with nine pinned wheels installed without dependency resolution. The METr path
+  does not import the omitted dependencies. D12 defers METr integration and actual import until
+  further feature development. Phase 1 selects its HBJSON translation payload independently;
+  upstream dependency cleanup is not a prerequisite for the proven PHX route.
 - The payload budget. The predecessor shipped 20 MB. The manifest records the installed size of
   every asset and CI enforces the budget; the METr exporter's cost is measured before it is
   accepted.

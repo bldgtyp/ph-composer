@@ -17,9 +17,13 @@ module PhComposer
         check_names
         check_operations
         check_record_kinds
+        check_reference_targets
         check_extensions
         check_snapshot_sections
         check_export_contributors
+        check_proposal_participants
+        check_colour_modes
+        check_menu_items
         check_subscriptions
         @diagnostics
       end
@@ -95,7 +99,7 @@ module PhComposer
       end
 
       def check_operations
-        (@staging.declared_queries + @staging.declared_actions).each do |operation|
+        (@staging.declared_queries + @staging.declared_actions + @staging.declared_view_commands).each do |operation|
           add_schema_problems(operation, "params", operation.params)
           add_schema_problems(operation, "result", operation.result)
           unless operation.params.is_a?(Hash) && operation.params["type"] == "object"
@@ -128,6 +132,19 @@ module PhComposer
         end
       end
 
+      def check_reference_targets
+        @staging.declared_reference_targets.each do |target|
+          target.descriptor.references.each do |reference|
+            require_kind(owner(target.id), target.id, reference.target_kind)
+          end
+          next if target.label.is_a?(String) && !target.label.empty? &&
+                  target.provider.respond_to?(:call) && target.validator.respond_to?(:call)
+
+          add("registration.schema_invalid", owner(target.id), target.id,
+              "#{target.id} needs a label, a records provider and a pure validator.")
+        end
+      end
+
       def check_extensions
         @staging.declared_extensions.each do |extension|
           owner = owner(extension.namespace)
@@ -157,6 +174,14 @@ module PhComposer
       def check_export_contributors
         owned = @live.export_contributors.values.flat_map { |contributor| Array(contributor.result&.keys) }
         @staging.declared_export_contributors.each do |contributor|
+          if contributor.preflight
+            query = @staging.declared_queries.find { |item| item.name == contributor.preflight } ||
+                    @live.queries[contributor.preflight]
+            unless query && query.owner == contributor.owner
+              add("registration.missing_dependency", contributor.owner, contributor.name,
+                  "#{contributor.name} needs its own registered preflight query.", contributor.preflight)
+            end
+          end
           version = contributor.section_version
           unless contributor.contract && version.is_a?(Integer) && version.positive?
             add("registration.schema_invalid", contributor.owner, contributor.name,
@@ -186,9 +211,47 @@ module PhComposer
         end
       end
 
+      def check_proposal_participants
+        @staging.declared_proposal_participants.reject(&:handler).each do |participant|
+          add("registration.schema_invalid", participant.owner, participant.name,
+              "#{participant.name} has no handler.")
+        end
+      end
+
+      # A Colour-by mode needs a legend label, the entity kind it paints, a colour function and a
+      # projection. Entity kinds are open (face-assignment PRD "Colour-by"), so the kind is checked
+      # for shape alone and never against a list the shared service would have to keep.
+      # A menu item's submenu label is open prose, like a mode's entity kind: `shell/` groups by it
+      # and never interprets it.
+      def check_menu_items
+        @staging.declared_menu_items.each do |item|
+          next if text?(item.label) && text?(item.menu) && item.handler &&
+                  (item.state.nil? || item.state.respond_to?(:call)) &&
+                  (item.available.nil? || item.available.respond_to?(:call))
+
+          add("registration.schema_invalid", item.owner, item.name,
+              "#{item.name} needs a label, a submenu name and a handler block; state and available " \
+              "must be callable.")
+        end
+      end
+
+      def check_colour_modes
+        @staging.declared_colour_modes.each do |mode|
+          next if text?(mode.label) && text?(mode.entity_kind) && mode.colours.respond_to?(:call) && mode.projection
+
+          add("registration.schema_invalid", mode.owner, mode.name,
+              "#{mode.name} needs a label, an entity kind, a colour function and a projection block.")
+        end
+      end
+
+      def text?(value)
+        value.is_a?(String) && !value.strip.empty?
+      end
+
       def require_kind(owner, subject, kind_id)
         staged = @staging.declared_record_kinds.any? { |kind| kind.id == kind_id }
-        return if staged || @live.record_kinds.key?(kind_id)
+        staged ||= @staging.declared_reference_targets.any? { |target| target.id == kind_id }
+        return if staged || @live.record_kinds.key?(kind_id) || @live.reference_targets.key?(kind_id)
 
         message = "#{subject} refers to record kind #{kind_id}, which is not registered."
         add("registration.missing_dependency", owner, subject, message, kind_id)

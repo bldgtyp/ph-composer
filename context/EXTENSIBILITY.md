@@ -1,8 +1,8 @@
 # Contributor architecture
 
-DATE: 2026-09-18
+DATE: 2026-09-25
 STATUS: Accepted architectural direction. Registration, record kinds, metadata and extension data are
-implemented on branch in Phase 0 P0-D; see the example under `tools/examples/foundation/`.
+merged through PR #1 from Phase 0 P0-D; see the example under `tools/examples/foundation/`.
 
 PH-Composer exists to support an open-source community in the Phius sphere. A contributor
 should be able to understand and extend one part without understanding the whole application.
@@ -30,6 +30,15 @@ operations and optional UI. The UI kit depends only on its published contracts, 
 calculation or honeybee dependency. Python translation consumes the authored snapshot; downstream
 exporters consume HBJSON. Preserve the existing four-layer boundaries.
 
+Zones, their Faces and the adjacency between them are one feature, `zones`
+(`src/ph_composer/features/zones/`), because Zone containment, Face identity, stamps, Surface
+endpoints and split and copy transitions are one authoring lifecycle. Its `install.rb` names the
+layout: `zone/`, `faces/` and `adjacency/` hold each part's domain code and handlers, with pure
+geometry and pair rules apart from the SketchUp write steps, and `declarations/` holds what each
+part registers. Zone actions are `ph_composer.zones.*`; Face actions are `ph_composer.zones.faces.*`.
+A feature that needs authored Face identity, such as assemblies or windows, depends on `zones`
+through its queries, actions, reference targets and descriptors, never through its stores.
+
 Built-in features use the same public interfaces available to external contributors. A private
 hook needed by a built-in feature exposes a missing public capability. Fix that contract before
 presenting it as a supported extension point. Cross-feature access uses declared public contracts;
@@ -50,6 +59,7 @@ names, monkey-patching and incidental load order must not discover behavior.
 | Export contributor | Feature-owned data for canonical translation and its findings |
 | Exporter | Conversion of HBJSON to another format |
 | Colour-by mode | Values, colouring and legend information |
+| View command | A change to what the host shows: selection, camera, the active Colour-by mode |
 
 An importer does not write raw model dictionaries. The application validates its proposed
 changes and applies accepted changes through normal model operations and Undo. A model importer
@@ -64,6 +74,135 @@ A composition-root registration or generated build inventory is permitted. Requi
 feature branch inside shell, session, export orchestration or UI-kit internals is a contract
 defect. Explicit registration does not promise dynamic plugin loading, a marketplace or separate
 installation in the MVP.
+
+### Colour-by modes
+
+Implemented in P1-D. A feature declares a mode in its own `install`, through the same
+`FeatureScope` its queries and actions use:
+
+```ruby
+feature.colour_mode("ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone",
+                    colours: ColourBy::Palette.ramp) do |model|
+  Zones::Occurrences.zones(model).map do |zone|
+    ColourBy::Entry.new(entity: zone.entity, transform: zone.transform, path: zone.path,
+                        value: zone.record.fetch("id"), label: zone.record.fetch("name"))
+  end
+end
+```
+
+The mode owns a pure projection over its own feature's entities and a colour function over the
+values that projection produces. `entity_kind` is open prose: the service tessellates whatever
+entity an entry carries, so a later feature may colour a kind this one never anticipated. An
+entry's `transform` maps that entity's own contents to world. A value of nil is unclassified, and
+a projection that knows a record is only half filled in says `state: :incomplete`; the service
+owns the appearance of both, so those two states look the same in every mode.
+
+An entry may supply `path`, the full root-to-entity array of persistent IDs. Supply it when
+the entity belongs to an occurrence inside Groups or Components: the shared renderer then
+checks hidden and tag visibility along that occurrence's entire path. Supplied paths with missing
+entities or mismatched endpoints draw nothing. Omitting `path` preserves the original entity-only
+visibility contract.
+Visibility affects the drawing; the legend continues to count the mode's complete projection.
+
+The shared service owns registration, the one `Sketchup::Overlay` a Model gets, the viewport HUD
+legend and cache invalidation. It reads no record and knows no mode, and turning a mode on writes
+nothing to the Model, so it is not a registered action: it is reached through the native Colour by
+menu, which is built from whatever modes are registered, and read back through the registered
+`ph_composer.colour_by.state` query. Nothing in `shell/` or `session/` names a mode or a feature.
+
+### Native menu items
+
+Implemented in P1-D. Some things a user asks for change no record and open no operation: starting a
+viewport tool, choosing its palette, turning a Colour-by mode on. They are not actions, because an
+action is a validated Model change, and registering them as one would manufacture an Undo entry for
+something that changed nothing. A feature declares them as menu items instead:
+
+```ruby
+feature.menu_item("ph_composer.zones.faces.classify_face_type_wall",
+                  label: "Wall", menu: "Classify faces",
+                  state: ->(session) { ... MF_CHECKED or MF_UNCHECKED }) do |session|
+  Zones::Faces.classify_tool(session).choose("face_type", "Wall")
+end
+```
+
+`menu` is the submenu's label and is open prose; items are grouped under it in registration order,
+and `separator_after` closes a group. The handler receives the current `ModelSession`. `state` is
+optional and is what makes an item show whether its choice is the current one.
+
+`shell/` builds the Extensions submenu and the viewport context menu from whatever is registered,
+so an outside feature reaches both without a line added to it. Nothing in `shell/` or `session/`
+names a menu item, a mode or a feature, and no feature's words appear there: a label comes from the
+declaring feature, which is also where `context/UBIQUITOUS_LANGUAGE.md`'s glossary words live.
+
+A menu item is the native-menu route to those things. The same state has to be reachable from the
+panel and from a client, and that is a view command.
+
+### View commands
+
+Implemented in P1-D. A view command changes what the host shows and nothing else: the selection, the
+camera, the active Colour-by mode, a running tool's palette. It is the write channel for viewport
+state, and it is a third verb beside `query` and `action` because neither one fits. A query cannot
+do it: `context/AGENT_INTERFACE.md` says a read never changes the camera or the selection. An action
+cannot do it either: an action's contract is a named native operation the user can undo, and there is
+nothing here to undo.
+
+```ruby
+feature.view_command("ph_composer.zones.faces.locate",
+                     description: "Select an explicit set of Faces and bring them into view.",
+                     params: LOCATE_PARAMS, result: LOCATE_RESULT) do |request|
+  Zones::Faces.locate(request)
+end
+```
+
+The handler takes the same `request` a query's does and returns a JSON value against its declared
+result schema. What it must not do is write a record, open a `ModelOperation` or advance the session
+revision; a handler that needs to wants `action`.
+
+A view command that fails part-way leaves viewport state unspecified. Its outcome reports `effect`
+`none`, which is a statement about the Model: the SKP is untouched, because nothing here opens an
+operation. A client that needs to know what the viewport now shows re-reads it rather than assuming.
+
+Every client reaches one the same way: `API.view(context:, name:, params:)` with no sequence number
+and no expected revision, because there is nothing to retry and nothing for a stale revision to
+protect. It refuses while the session is busy, as a read does, so it cannot move the camera out from
+under an operation that is still running. Access is the `view` capability, separate from `read`
+because a read never moves either, and separate from `model_write` because nothing it does reaches
+the SKP. The panel sends `view.invoke` and settles the answer in its own result slot.
+
+### Viewport tools
+
+Implemented in P1-D. A feature that authors by pointing writes a `Sketchup::Tool` and starts it
+from a menu item. Spaces' Mark floor, window placement and the thermal-bridge edge tool are all
+this shape, so the rules below are the shared ones, learned from the Classify tool's host gate
+([evidence](../planning/phase-one/evidence/p1-d-classify-tool.md)).
+
+- **Pick, never walk.** `Pick.face_path(view, x, y)` answers what is under the pointer as a
+  root-to-leaf instance path, and a feature turns that path into an occurrence without touching the
+  Model. A pointer move happens tens of times a second; a Model walk per move costs what P1-D
+  measured a walk to cost. `core/pick.rb` and `core/drag_set.rb` name no feature.
+- **The tool owns the gesture, not the change.** It calls a registered action through `API.invoke`
+  with its own caller handle and sequence numbers, exactly as any other client does. It opens no
+  `ModelOperation` itself, so an abandoned gesture writes nothing and leaves no Undo entry, and one
+  completed gesture is one Undo step however many entities the pointer crossed.
+- **Freeze intent and revision at button-down.** Both belong to the gesture, not to the tool. A
+  palette changed mid-drag must not change what the drag in progress writes, and a gesture applied
+  against the revision it began at refuses as `revision.stale` rather than writing through a change
+  someone else committed underneath it.
+- **Bound the collection one past the limit** so the operation that owns the limit refuses, rather
+  than the tool silently applying the first N of what the pointer crossed.
+- **Talk to the status bar, not only the session.** The panel is the only subscriber to a session
+  notice, and a viewport tool is used with the panel closed, so a refusal delivered only that way
+  is silent exactly where it matters. Results and refusals reach both `Sketchup.status_text=`
+  and the session notice. Routine activation guidance uses the status bar alone so it does not
+  cover the panel controls; see [D7 F8](../planning/phase-one/evidence/p1-d-overview.md).
+- **Cancel on every route, and leave nothing behind.** Escape, deactivation, a suspended context
+  and a callback that raised all abandon the pending gesture. Track whether the button is actually
+  down: a press whose release the host never delivered must not leave later hovers collecting. The
+  tool is session feature state, so `detach` must take it, and anything it forced on, with a
+  closing Model.
+- **Do not reach for gestures the host reserves.** A custom tool receives no
+  double-click-to-enter-group; that belongs to the Select tool, as it does for every native drawing
+  tool. Reach geometry inside a container through the picked path instead.
 
 ## Metadata and structured extension data
 
@@ -120,6 +259,48 @@ export mappings. Specify how operations declare their dependence on extension da
 confirmed refusal policy can be enforced. Test the relevant round trips
 and actual references. Arbitrary metadata is not a substitute for a typed core domain field.
 
+### Entity-owned reference targets
+
+A feature registers read-only entity identities through `feature.reference_target` rather than
+exposing its entity store as catalog CRUD. The declaration is a `Records::ReferenceTarget` with
+an `id`, `label`, `records:` provider and pure `validate:` callback. The provider returns detached
+`Records::ReferenceEntry` values with `kind`, an occurrence `key`, and the stored `record`.
+The key identifies the storage occurrence, not the UUID. Repeated placements and orphan records
+must be included when they could make a UUID ambiguous. The callback returns validation findings.
+
+A reference target also describes its kind: `schema_version:`, `values:` (the values JSON Schema),
+`occurrence:` (the schema of the reference naming one occurrence) and `references:` (its outgoing
+core references, as `Records::Reference` fields). These form a `Records::Descriptor`, the same
+shape a catalog `RecordKind` publishes, so discovery, validation and the reference scan read one
+description whoever stores the kind. The engine's incoming-reference scan reads core references
+from every kind's descriptor: an entity record naming a catalog record blocks that record's
+deletion exactly as a catalog record does. A proposal that rewrites those entity records before
+the delete passes them to `propose_delete` as a `reference_plan`. Describing a kind grants the
+engine no authority to create or delete what stores it.
+
+An extension's `target_kind` may name a catalog kind or a registered reference target. The
+built-in targets are `ph_composer.zones.zone` and `ph_composer.zones.faces.face`; a Face's
+`attached_zone_id` is a declared core reference to `ph_composer.zones.faces.attached_zone`.
+`Records::Engine#resolve_reference(kind, id)` returns exactly one validated, detached entry;
+missing or ambiguous identities refuse without repairing storage. The owning feature continues
+to control all writes through its normal public actions.
+
+Identity-changing proposals use a typed `Records::ReferencePlan` of the exact occurrences they
+will replace. This establishes the final identity set, including the untouched original or
+retaining split piece, before copied payloads are accepted. A remap applies only to the declared
+target kind and objects included in that copy. A list of newly allocated UUID strings alone is
+not evidence that their reference targets exist.
+
+Incoming references outside a copied collection remain unchanged. After explicit split repair
+they name the piece retaining the old UUID. If a solver cut retains no original native Face,
+removing its authored identity must not leave incoming references dangling: the operation refuses
+and rolls back instead of choosing a replacement by geometry. Incoming checks cover catalog and
+entity-owned records, including declared references in readable unavailable envelopes. An
+unreadable envelope cannot establish safe identity removal and causes conservative refusal.
+When this is learned during a native cut, the failed result retains the rollback-certainty code
+and effect and includes the declared domain reason in its message and `detail.cause`.
+Unexpected exceptions retain the generic message; their internal details are not exposed.
+
 ## Scripting as an entry point
 
 [AGENT_INTERFACE.md](AGENT_INTERFACE.md) extends this interface to users' external agents,
@@ -152,7 +333,7 @@ unavailable-extension examples distinguish retained data from validated behavior
 
 Land each example with its owning capability. The foundation packet starts with a synthetic
 feature and record; this list does not authorize implementing later features during transplant.
-The first two are implemented on branch: the example feature's walkthrough (P0-D) and its
+The first two merged through PR #1: the example feature's walkthrough (P0-D) and its
 synthetic editor (P0-E, `tools/examples/foundation/editor.js`), a panel section registered with
 `panel.section` that edits through `request.js` and the unit field. Adding the editor changed no
 file in `shell/`, `session/`, `core/` or `html/`; its development entry hands the script to the

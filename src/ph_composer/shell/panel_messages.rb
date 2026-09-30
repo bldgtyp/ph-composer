@@ -11,14 +11,22 @@ module PhComposer
       "panel.ready" => [],
       # `session` names the Model session the panel showed; `expected_revision` the revision it rendered.
       "action.invoke" => %w[request_id session name params expected_revision],
+      # A viewport-state command for the Model the panel showed. It changes no record, so it carries no
+      # expected revision: there is nothing for a stale one to protect.
+      "view.invoke" => %w[request_id session name params],
       "preferences.set" => %w[request_id key value scope system],
       # The Export command for the Model the panel showed. It is the shell's own command, not a Model action.
-      "export.start" => %w[request_id session]
+      "export.start" => %w[request_id session repairs],
+      "export.preflight" => %w[request_id session],
+      "export.status" => %w[request_id session task_id],
+      "export.cancel" => %w[request_id session task_id],
+      "export.latest" => %w[request_id session]
     }.freeze
 
     OUTBOUND = {
       "panel.snapshot" => %w[product version session revision file_name edit_path preferences sections],
       "action.result" => %w[request_id session outcome],
+      "view.result" => %w[request_id session outcome],
       "preferences.result" => %w[request_id status message preferences],
       "export.result" => %w[request_id session outcome],
       "panel.notice" => %w[session message tone],

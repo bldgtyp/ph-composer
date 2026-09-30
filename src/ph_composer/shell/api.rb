@@ -30,17 +30,25 @@ module PhComposer
         "api" => { "major" => MAJOR, "minor" => MINOR },
         "extension" => { "id" => EXTENSION_ID, "version" => VERSION },
         "contract_versions" => [Declarations::CONTRACT_VERSION],
+        "capabilities" => CallerRegistry::CAPABILITIES,
+        "tasks" => { "export" => { "start" => "start_export", "status" => "export_status",
+                                    "cancel" => "cancel_export", "latest" => "latest_export",
+                                    "retention_limit" => 20, "retention_seconds" => 1800 } },
         "sessions" => Sessions.all.map { |session| session_summary(session) },
         "features" => registry.features.values.map do |feature|
           { "id" => feature.id, "contract_version" => feature.contract_version, "requires" => feature.requires }
         end,
         "queries" => registry.queries.values.map { |query| summary(query) },
+        "view_commands" => registry.view_commands.values.map { |command| summary(command) },
         "actions" => registry.actions.values.map do |action|
           summary(action).merge("side_effects" => action.side_effects)
         end,
         "record_kinds" => registry.record_kinds.values.map do |kind|
           { "id" => kind.id, "owner" => registry.owner_of(kind.id), "label" => kind.label,
             "schema_version" => kind.schema_version }
+        end,
+        "reference_targets" => registry.reference_targets.values.map do |target|
+          { "id" => target.id, "owner" => registry.owner_of(target.id), "label" => target.label }
         end,
         "extensions" => registry.extensions.values.map do |extension|
           { "namespace" => extension.namespace, "owner" => registry.owner_of(extension.namespace),
@@ -50,27 +58,30 @@ module PhComposer
       )
     end
 
-    # The full declaration of one registered query, action or record kind, or nil when none has the name.
-    # The schemas are copies; validation keeps its own.
+    # The full declaration of one registered query, action, view command, record kind or entity kind,
+    # or nil when none has the name. The schemas are copies; validation keeps its own.
     def describe(name:)
       registry = Registry.current
-      if (operation = registry.queries[name] || registry.actions[name])
+      if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name])
         return DeepCopy.call(operation_description(operation))
       end
 
+      # A catalog kind and an entity-owned target describe themselves the same way (Records::Descriptor).
+      if (target = registry.reference_targets[name])
+        return DeepCopy.call({ "kind" => "reference_target", "owner" => registry.owner_of(name) }
+                               .merge(target.descriptor.to_h))
+      end
+
       kind = registry.record_kinds[name]
-      kind && DeepCopy.call(
-        "kind" => "record_kind", "id" => kind.id, "owner" => registry.owner_of(kind.id), "label" => kind.label,
-        "schema_version" => kind.schema_version, "values" => kind.values_schema,
-        "references" => kind.references.map do |reference|
-          { "key" => reference.key, "target_kind" => reference.target_kind, "cardinality" => reference.cardinality }
-        end
-      )
+      kind && DeepCopy.call({ "kind" => "record_kind", "owner" => registry.owner_of(name) }.merge(kind.descriptor.to_h))
     end
 
     # Issues a caller handle for an open Model session and returns the context to call with. This is
     # the trusted in-process entry; a future external adapter must authenticate before calling it.
-    def connect(session_id:, capabilities: %w[read model_write])
+    # `view` grants the viewport-state commands: selection, camera and the active Colour-by mode. It is
+    # separate from `read` because a read never moves either (context/AGENT_INTERFACE.md), and separate
+    # from `model_write` because nothing it does reaches the SKP.
+    def connect(session_id:, capabilities: %w[read view model_write])
       session = Sessions.find(session_id)
       raise CodedError.new("session.unknown", "That Model session is closed or was never opened.") unless session
 
@@ -80,6 +91,11 @@ module PhComposer
 
     def query(context:, name:, params: {})
       Dispatch.new.query(context, name, params)
+    end
+
+    # Changes what the host shows and never the Model, so it takes no request: see Declarations::ViewCommand.
+    def view(context:, name:, params: {})
+      Dispatch.new.view(context, name, params)
     end
 
     def preview(context:, name:, params: {})
@@ -96,6 +112,26 @@ module PhComposer
       Dispatch.new.outcome(context, request)
     end
 
+    def start_export(context:, destination:, replace: false)
+      Dispatch.new.export_task(context, :start, :destination => destination, :replace => replace)
+    end
+
+    def export_preflight(context:)
+      Dispatch.new.export_preflight(context)
+    end
+
+    def export_status(context:, task_id:)
+      Dispatch.new.export_task(context, :status, :task_id => task_id)
+    end
+
+    def cancel_export(context:, task_id:)
+      Dispatch.new.export_task(context, :cancel, :task_id => task_id)
+    end
+
+    def latest_export(context:)
+      Dispatch.new.export_task(context, :latest, {})
+    end
+
     def session_summary(session)
       {
         "id" => session.id, "revision" => session.revision, "file_name" => File.basename(session.model.path.to_s),
@@ -109,7 +145,7 @@ module PhComposer
 
     def operation_description(operation)
       {
-        "kind" => operation.is_a?(Declarations::Action) ? "action" : "query",
+        "kind" => operation_kind(operation),
         "name" => operation.name, "owner" => operation.owner, "description" => operation.description,
         "params" => operation.params, "result" => operation.result, "examples" => operation.examples
       }.merge(
@@ -117,6 +153,13 @@ module PhComposer
                                                    "confirmation" => operation.confirmation } : {}
       )
     end
-    private_class_method :session_summary, :summary, :operation_description
+
+    def operation_kind(operation)
+      return "action" if operation.is_a?(Declarations::Action)
+      return "view_command" if operation.is_a?(Declarations::ViewCommand)
+
+      "query"
+    end
+    private_class_method :session_summary, :summary, :operation_description, :operation_kind
   end
 end

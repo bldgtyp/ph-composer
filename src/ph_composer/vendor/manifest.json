@@ -1,9 +1,9 @@
 {
   "assets": {
     "html/base.css": {
-      "bytes": 8120,
+      "bytes": 8066,
       "mime": "text/css; charset=utf-8",
-      "sha256": "33d0b00feab72c07ca044888d7a919c8ee7dd264b57dd0ea3a2e6b71e8d090bb"
+      "sha256": "83262b9ce8de9de74b0bc3b2c3d7a746574ed2ced953fc068c7c91665ce53b05"
     },
     "html/dom.js": {
       "bytes": 4030,
@@ -21,9 +21,9 @@
       "sha256": "1f8738bd0700e56306c2d82a21bc23133b0dc8f8508ff0c9a4f7c301f00b54cb"
     },
     "html/index.html": {
-      "bytes": 2532,
+      "bytes": 3029,
       "mime": "text/html; charset=utf-8",
-      "sha256": "4ca5c0deebc21fbc87b4efa8709b14ebfe30f3b7e124f480a31525144b61294d"
+      "sha256": "7b1a398af26050a0496ca018f44d8f9187c600d99e8b3096ad7d656924013636"
     },
     "html/length_expression.js": {
       "bytes": 10498,
@@ -36,9 +36,9 @@
       "sha256": "884ea2b3e0312b660d13517ae33cb7cb5cf6c60fd602f7dee624543bfac9cde2"
     },
     "html/overlay.css": {
-      "bytes": 9240,
+      "bytes": 9277,
       "mime": "text/css; charset=utf-8",
-      "sha256": "4af9f93f210d246d3da89b2a86a8f1d3e3b20272c5ee48bdeca6dd3c24f5aebf"
+      "sha256": "7c3081bb48c530091b1b3973bf1f3a0ffe405b0d39df971f000c8fdcc28e2ec6"
     },
     "html/overlay.js": {
       "bytes": 17480,
@@ -46,9 +46,9 @@
       "sha256": "d04ec25b95305a45ab69cbabd9a18a5e4c8ba9ff382d37618c596665e5d360ad"
     },
     "html/panel.js": {
-      "bytes": 10496,
+      "bytes": 13562,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "482541084da7039b797bd6a97602289fe36200878b8fddc7c5810ba2f576b85f"
+      "sha256": "356b90a128e4508c6121d150dfcb322369ae01eda0d4ed5b4b45fe2a8d9063a7"
     },
     "html/record_form.js": {
       "bytes": 4121,
@@ -56,9 +56,9 @@
       "sha256": "c330b1b8f7e17ccfc16bf9c1f86d8e91acd41fa91b4d9625aafb6967b312a91a"
     },
     "html/request.js": {
-      "bytes": 3479,
+      "bytes": 4429,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "9abc3b7332b40c579190ef39e20005c44b68a664dd32587b7d0d38f02ba4a4bf"
+      "sha256": "6cc5af86e832c903c63d5a3b8a4e121f8da80c799ae3656561ad1935049e4a5e"
     },
     "html/runtime/index.html": {
       "bytes": 580,
@@ -66,29 +66,69 @@
       "sha256": "0d1f14371ea0932c0c1d0c793bed9573858c3d2c5ff0553f6867caf1d798bfd1"
     },
     "html/runtime/runtime.js": {
-      "bytes": 6990,
+      "bytes": 9257,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "83ff4bf06c2b9cc0fbe63814466f31a7e53bd5ff44056df8b05c4104a794fbf9"
+      "sha256": "d0ecc88e9f68278dcc73a66652093c4e218b6f860e008dde53d117c680f95b4f"
+    },
+    "html/sections/attached_zone_assignment.js": {
+      "bytes": 3839,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "b5d7076fa26b1fb9896e1895f85bf44b9feb6f9be12fda026128637b2ff58eae"
+    },
+    "html/sections/attached_zone_fields.js": {
+      "bytes": 1735,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "0206c6615e98937dd7977692d9c8ad84301a77cba53811fd0787245ad326f533"
+    },
+    "html/sections/classify.js": {
+      "bytes": 9870,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "39161f7a9714659417f74585b7f8c8c0ee6c761a91f9491bf90a24f63d658093"
+    },
+    "html/sections/colour_by.js": {
+      "bytes": 5064,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "2b2c90b2700842b97dc7dfaa487d1a6b39159df283612b7d6b9744a83d370a1d"
     },
     "html/sections/export.js": {
-      "bytes": 1944,
+      "bytes": 7479,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d8cfba1d469220564d2b53327f38b7cdee1aad0d2a90441ed5f38982787fc237"
+      "sha256": "347da1a20c7063cbc10cb09f961d944788ec103f5a51bfd9a299820afa829fa1"
+    },
+    "html/sections/face_words.js": {
+      "bytes": 1391,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "df76102e3142ad9ff51ad03f24648a47e1710ccfacdb830ead4dacb064708d16"
+    },
+    "html/sections/overview.js": {
+      "bytes": 24604,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "d07b4be761553b8e8dcaa4bc38397a66d20bce341d89f15da040ccecb41d5950"
     },
     "html/sections/shell.js": {
-      "bytes": 1276,
+      "bytes": 758,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "6f0089590c96a1c10c5ac812852b26104791d30ce9b243670c2d7a9a5d1664c9"
+      "sha256": "8801e69e8143d6a8db6003fa2acd751e8a3b03d9a06c39f7292bf6156355088e"
     },
     "html/shell.css": {
-      "bytes": 1174,
+      "bytes": 1638,
       "mime": "text/css; charset=utf-8",
-      "sha256": "b0e3fc8b484fb405506acbee89628114375e80f4231bbe7bde1ea65b56b19aaf"
+      "sha256": "c588e9a8c21f15e6f12f2cd4e882c6c82a30937c3f999388c247d2479d300eed"
     },
     "html/snapshot.js": {
       "bytes": 1462,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "ebd42866e75a1c4ba916861e9dfef089f80463ad8ce7ef7184ba459cd3da4fd7"
+    },
+    "html/table.css": {
+      "bytes": 5418,
+      "mime": "text/css; charset=utf-8",
+      "sha256": "8f6c1a2dec7eda479cc97ea9a3836233935fcd66649f1d322aec9589038d796c"
+    },
+    "html/table.js": {
+      "bytes": 18281,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "e89934af3f1c49d666739cc3a21fa2533b377b1fa583ceffb517b595c09d6213"
     },
     "html/unit_field.js": {
       "bytes": 7928,
@@ -115,10 +155,20 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "a092c02f3cc376b33177db3c9f90180f51aca82465f6ae7b85b99d38e8b57539"
     },
+    "html/view_controls.js": {
+      "bytes": 8627,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "da1c330d23bb73f529274144be083aff0589fe9225147831d4cdeb128c8dca23"
+    },
     "html/workspace.js": {
       "bytes": 1099,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "3ea0d2929b882fad80da8fb48d2998874bb265f59f72dd5599812dbae02b82a8"
+    },
+    "html/zones.css": {
+      "bytes": 3217,
+      "mime": "text/css; charset=utf-8",
+      "sha256": "bcba146ccb1efb5f31b145730c2cf13585e554c5929e7fa870310c7f42fe6ebc"
     },
     "python/ph_composer_translation/__init__.py": {
       "bytes": 1234,
@@ -126,9 +176,14 @@
       "sha256": "884e2725e72e1d8e08c345067699790718ca70c6a0a3c83ae241abb9dce64dbd"
     },
     "python/ph_composer_translation/composition.py": {
-      "bytes": 464,
+      "bytes": 545,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "80c816a0363cd80a43dbfae4943cfeb27cb6295389d77ac4b52293840f1612cb"
+      "sha256": "94ea5ad9bffede7100cc544e6e8150cb1a8f95cbc39af1940ab0ced74448be4a"
+    },
+    "python/ph_composer_translation/conformance.py": {
+      "bytes": 2298,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "9b0b8f3194aa7844b4cdc3c1ad1f803c89f08fa90f0ac2fefc31541ed88afb6d"
     },
     "python/ph_composer_translation/contract.py": {
       "bytes": 1487,
@@ -136,19 +191,24 @@
       "sha256": "011c27edad6b9c98656c359be77f92a7e92bdb69be5161d09177242bf494a6b4"
     },
     "python/ph_composer_translation/coordinator.py": {
-      "bytes": 8421,
+      "bytes": 8491,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "9bf200d5e7372f9f2b8eefe6e159e5998968b042ce95a1c6e4de4c040bbcedce"
+      "sha256": "0afe23a08442bd3be098b0c8bd24d1070f52674b195795c43566b56f9669aea9"
     },
     "python/ph_composer_translation/entry.py": {
-      "bytes": 848,
+      "bytes": 1478,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "4f4cdfc98a7ed355aed9e36ed3f4e11a0394bc95ff03d0790e7a0a7e912df2ca"
+      "sha256": "83fb6702490d07fa67a57179569033081eb0ec9af24390cbbdfd77d42aa27a4a"
     },
     "python/ph_composer_translation/exporters.py": {
       "bytes": 1952,
       "mime": "text/plain; charset=utf-8",
       "sha256": "deaae8b808bf827dfc8911cbcea2d41458efa573b3d541d35cd076fbb6c0f00a"
+    },
+    "python/ph_composer_translation/model_sections.py": {
+      "bytes": 15681,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "970b57c4435a22ba56ed2162ade89fa49e31e2905b94635e855d0ac7703fa962"
     },
     "python/ph_composer_translation/result.py": {
       "bytes": 3162,
@@ -156,14 +216,14 @@
       "sha256": "1ba3b6a6ee723d7c79dbb3db223aefb42ba7f27155a09b54ccdf396ce9ec501d"
     },
     "python/ph_composer_translation/sections.py": {
-      "bytes": 3867,
+      "bytes": 4095,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "3100514ba701652eedc340118d78013e6cb7588f7056fd19d1b014e126dde365"
+      "sha256": "c226834c202461a23bf15e2fb9163a42b6202b7caffcba892620ccf1999d67e7"
     },
     "python/ph_composer_translation/stack.py": {
-      "bytes": 1246,
+      "bytes": 1333,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "709f687a67d1ecfa5739908b495d61b81d2f9d0aa88d90da854486786271fef2"
+      "sha256": "d66a54c02ffdc526283117dcb6c1c3346813bbba97c237d3223131ebe3e119a9"
     },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,
@@ -189,6 +249,46 @@
       "bytes": 8882369,
       "mime": "application/zip",
       "sha256": "573b362d25c0ade9f5c2c2d2313fae9a92bc46adf66dd2374130d1f80b5ec9ca"
+    },
+    "vendor/wheels/honeybee_core-1.64.65-py3-none-any.whl": {
+      "bytes": 196266,
+      "mime": "application/octet-stream",
+      "sha256": "e5aa2e668952385a2b47ba18a94e64113d553f66ac7d328cfd62c6e6334b04ea"
+    },
+    "vendor/wheels/honeybee_energy-1.123.23-py3-none-any.whl": {
+      "bytes": 586381,
+      "mime": "application/octet-stream",
+      "sha256": "384ff7552c131cc700b6c86f85afa39dfba1f7a3037bdb43e380d1a0f2de34e0"
+    },
+    "vendor/wheels/honeybee_ph-1.33.65-py3-none-any.whl": {
+      "bytes": 223367,
+      "mime": "application/octet-stream",
+      "sha256": "b9b44a76806ec6ba66010a0023addd99c0279fea9dce9aab58b67031d421cece"
+    },
+    "vendor/wheels/honeybee_standards-2.0.7-py2.py3-none-any.whl": {
+      "bytes": 11109,
+      "mime": "application/octet-stream",
+      "sha256": "194245b5bfa8f571c09b3ed8f40ee38b1a71c2c6a03b49701a19ffc3efe54679"
+    },
+    "vendor/wheels/ladybug_core-0.44.56-py3-none-any.whl": {
+      "bytes": 275103,
+      "mime": "application/octet-stream",
+      "sha256": "213833188498e08d3b9a1a6da141de9a5856bd442cf4967e865a4437776a7603"
+    },
+    "vendor/wheels/ladybug_geometry-1.35.3-py3-none-any.whl": {
+      "bytes": 204922,
+      "mime": "application/octet-stream",
+      "sha256": "e7cce5e1c41f9863ddf37d0cc03249921d23a25caafff47730a9f9f67bf9f8b4"
+    },
+    "vendor/wheels/ladybug_geometry_polyskel-1.7.52-py3-none-any.whl": {
+      "bytes": 38765,
+      "mime": "application/octet-stream",
+      "sha256": "c31d5a59b21847bc9b108bf227ecd3ca04d4be1d353e0975e86cdc4230c330a1"
+    },
+    "vendor/wheels/ph_units-1.5.38-py3-none-any.whl": {
+      "bytes": 32177,
+      "mime": "application/octet-stream",
+      "sha256": "ee9963cf573d82401e8fba78ecbb7d6dc267835ae4a81bf33ed4ddf1206d4dbd"
     }
   },
   "gates": {
@@ -208,7 +308,80 @@
     "warm_round_trip_target_ms": 20
   },
   "manifest_asset": "vendor/manifest.json",
-  "packages": [],
+  "packages": [
+    {
+      "copyright_holder": "Ladybug Tools",
+      "filename": "ladybug_geometry-1.35.3-py3-none-any.whl",
+      "license": "AGPL-3.0",
+      "name": "ladybug-geometry",
+      "sha256": "e7cce5e1c41f9863ddf37d0cc03249921d23a25caafff47730a9f9f67bf9f8b4",
+      "source": "https://files.pythonhosted.org/packages/4d/7c/0aade0858e173e329eac14cf6477ad2f8bd57fe5505fce82da73251b69d5/ladybug_geometry-1.35.3-py3-none-any.whl",
+      "version": "1.35.3"
+    },
+    {
+      "copyright_holder": "Ladybug Tools",
+      "filename": "ladybug_geometry_polyskel-1.7.52-py3-none-any.whl",
+      "license": "AGPL-3.0",
+      "name": "ladybug-geometry-polyskel",
+      "sha256": "c31d5a59b21847bc9b108bf227ecd3ca04d4be1d353e0975e86cdc4230c330a1",
+      "source": "https://files.pythonhosted.org/packages/ea/3a/5de078edceca160fc5dc02d20a3a522bfcf5d03c4647999f852b28999c4c/ladybug_geometry_polyskel-1.7.52-py3-none-any.whl",
+      "version": "1.7.52"
+    },
+    {
+      "copyright_holder": "Ladybug Tools",
+      "filename": "ladybug_core-0.44.56-py3-none-any.whl",
+      "license": "AGPL-3.0",
+      "name": "ladybug-core",
+      "sha256": "213833188498e08d3b9a1a6da141de9a5856bd442cf4967e865a4437776a7603",
+      "source": "https://files.pythonhosted.org/packages/31/c0/b04628ffc84f9580d26d72d58d11f833380661314bcada7fc4ae55b596e2/ladybug_core-0.44.56-py3-none-any.whl",
+      "version": "0.44.56"
+    },
+    {
+      "copyright_holder": "Ladybug Tools",
+      "filename": "honeybee_standards-2.0.7-py2.py3-none-any.whl",
+      "license": "GPL-3.0 (metadata classifier); MIT (bundled LICENSE)",
+      "name": "honeybee-standards",
+      "sha256": "194245b5bfa8f571c09b3ed8f40ee38b1a71c2c6a03b49701a19ffc3efe54679",
+      "source": "https://files.pythonhosted.org/packages/17/55/4a94086c7054db931527be64bb1d4ae0ec37a17867dec0671709d71a0fd7/honeybee_standards-2.0.7-py2.py3-none-any.whl",
+      "version": "2.0.7"
+    },
+    {
+      "copyright_holder": "Ladybug Tools",
+      "filename": "honeybee_core-1.64.65-py3-none-any.whl",
+      "license": "AGPL-3.0",
+      "name": "honeybee-core",
+      "sha256": "e5aa2e668952385a2b47ba18a94e64113d553f66ac7d328cfd62c6e6334b04ea",
+      "source": "https://files.pythonhosted.org/packages/d5/87/940c8ebe18c370d5f1e5e044f589643c9b68c9b9c1e6a52ad8f1080d9e2d/honeybee_core-1.64.65-py3-none-any.whl",
+      "version": "1.64.65"
+    },
+    {
+      "copyright_holder": "Ladybug Tools",
+      "filename": "honeybee_energy-1.123.23-py3-none-any.whl",
+      "license": "AGPL-3.0",
+      "name": "honeybee-energy",
+      "sha256": "384ff7552c131cc700b6c86f85afa39dfba1f7a3037bdb43e380d1a0f2de34e0",
+      "source": "https://files.pythonhosted.org/packages/fe/6c/0f829cd768acf43c53253d8fbd1c3f7b4498d7f7c1f009080af6d20c2907/honeybee_energy-1.123.23-py3-none-any.whl",
+      "version": "1.123.23"
+    },
+    {
+      "copyright_holder": "Package contributors (see bundled wheel license)",
+      "filename": "ph_units-1.5.38-py3-none-any.whl",
+      "license": "GPL-3.0-or-later",
+      "name": "ph-units",
+      "sha256": "ee9963cf573d82401e8fba78ecbb7d6dc267835ae4a81bf33ed4ddf1206d4dbd",
+      "source": "https://files.pythonhosted.org/packages/1e/19/ae8ecfb3de7d612f77b6c64dd80ee8f345f318fd826d831ead14c23308c8/ph_units-1.5.38-py3-none-any.whl",
+      "version": "1.5.38"
+    },
+    {
+      "copyright_holder": "Package contributors (see bundled wheel license)",
+      "filename": "honeybee_ph-1.33.65-py3-none-any.whl",
+      "license": "GPL-3.0-or-later",
+      "name": "honeybee-ph",
+      "sha256": "b9b44a76806ec6ba66010a0023addd99c0279fea9dce9aab58b67031d421cece",
+      "source": "https://files.pythonhosted.org/packages/58/eb/c7581cd58ee81a3b5cc81187947ce2bea3c712adcccfaef488959c56ca4c/honeybee_ph-1.33.65-py3-none-any.whl",
+      "version": "1.33.65"
+    }
+  ],
   "pyodide": {
     "assets": {
       "pyodide-lock.json": {
@@ -250,13 +423,24 @@
   "translation_assets": [
     "python/ph_composer_translation/__init__.py",
     "python/ph_composer_translation/composition.py",
+    "python/ph_composer_translation/conformance.py",
     "python/ph_composer_translation/contract.py",
     "python/ph_composer_translation/coordinator.py",
     "python/ph_composer_translation/entry.py",
     "python/ph_composer_translation/exporters.py",
+    "python/ph_composer_translation/model_sections.py",
     "python/ph_composer_translation/result.py",
     "python/ph_composer_translation/sections.py",
     "python/ph_composer_translation/stack.py"
   ],
-  "wheel_order": []
+  "wheel_order": [
+    "ladybug_geometry-1.35.3-py3-none-any.whl",
+    "ladybug_geometry_polyskel-1.7.52-py3-none-any.whl",
+    "ladybug_core-0.44.56-py3-none-any.whl",
+    "honeybee_standards-2.0.7-py2.py3-none-any.whl",
+    "honeybee_core-1.64.65-py3-none-any.whl",
+    "honeybee_energy-1.123.23-py3-none-any.whl",
+    "ph_units-1.5.38-py3-none-any.whl",
+    "honeybee_ph-1.33.65-py3-none-any.whl"
+  ]
 }

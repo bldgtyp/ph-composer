@@ -89,6 +89,18 @@ module PhComposer
         end
       end
 
+      # `reference_plan`, when given, is the entity records the same proposal rewrites first (a
+      # feature moving every Face off the record it deletes); the reference check reads them as planned.
+      def propose_delete(kind_id, id, change_set, expected_values: {}, reference_plan: nil)
+        staging(change_set) do
+          kind = @catalog.kind(kind_id)
+          before = find(kind_id, id)
+          check_expected!(kind, before, expected_values)
+          change_set.delete(kind.id, :before => before)
+          check_identity_removal!(kind.id, id, :change_set => change_set, :reference_plan => reference_plan)
+        end
+      end
+
       # Duplicates records as one collection: every new id is allocated first, then each reference
       # between copied records points to the new counterpart while references outside the copy stay
       # shared. `user_data` is copied unchanged. A copy that needs copy rules the installed extensions
@@ -97,15 +109,20 @@ module PhComposer
         staging(change_set) do
           kind = @catalog.kind(kind_id)
           originals = ids.uniq.map { |id| find(kind_id, id) }
-          originals.each { |record| check_copy_rules!(kind, record) }
+          originals.each do |record|
+            Extension.check_copy_rules!(record.fetch("extension_data", {}), @catalog, kind.label, record.fetch("id"))
+          end
           reserved = reserved_ids(kind, change_set)
           mapping = originals.to_h { |record| [record.fetch("id"), Identity.fresh(kind.id_prefix, reserved)] }
           copies = originals.map do |record|
-            copy = kind.references.reduce(DeepCopy.call(record)) { |value, field| field.remap(value, mapping) }
+            copy = kind.references.reduce(DeepCopy.call(record)) do |value, field|
+              field.target_kind == kind_id ? field.remap(value, mapping) : value
+            end
             copy["id"] = mapping.fetch(record.fetch("id"))
-            copy.fetch("extension_data", {}).each_value do |envelope|
-              references = envelope.fetch("references", [])
-              envelope["payload"] = Extension.remap(envelope.fetch("payload"), references, mapping)
+            if record.key?("extension_data")
+              copy["extension_data"] = Extension.copy_data(record.fetch("extension_data"), @catalog,
+                                                            kind.label, record.fetch("id"), mapping,
+                                                            :mapping_kind => kind_id)
             end
             propose(kind, change_set, nil, copy, :check_references => false)
             copy
@@ -143,7 +160,10 @@ module PhComposer
       # ---------------------------------------------------------------- writes
 
       def apply(change_set)
-        change_set.writes.each { |write| @catalog.kind(write.kind).store.write(@model, write.after) }
+        change_set.writes.each do |write|
+          store = @catalog.kind(write.kind).store
+          write.after ? store.write(@model, write.after) : store.delete(@model, write.id)
+        end
       end
 
       # Whether every record the change set names is stored exactly as it was before. The dispatcher
@@ -191,10 +211,7 @@ module PhComposer
           targets.concat(Extension.referenced_ids(envelope.fetch("payload"), envelope.fetch("references", [])))
         end
         targets.each do |target_kind, id|
-          next if change_set.find(target_kind, id) || stored?(target_kind, id)
-
-          message = "#{kind.label} #{record['id']} names #{target_kind} #{id}, which does not exist."
-          raise CodedError.new("reference.invalid", message, "target_kind" => target_kind, "id" => id)
+          resolve_reference(target_kind, id, :change_set => change_set)
         end
       end
 
@@ -212,21 +229,6 @@ module PhComposer
 
         raise CodedError.new("target.changed", "#{kind.label} #{record['id']} has changed since it was read " \
                                                "(#{changed.join(', ')}).", "fields" => changed)
-      end
-
-      def check_copy_rules!(kind, record)
-        record.fetch("extension_data", {}).each do |namespace, envelope|
-          extension = @catalog.extension(namespace)
-          status = Extension.status(envelope, extension)
-          next if status == "understood" && extension.copy == :remap
-          refuse_extension!(namespace, record["id"], status) if status == "invalid"
-
-          raise CodedError.new(
-            "copy.rule_missing",
-            "#{kind.label} #{record['id']} carries #{namespace} data (#{status}) that cannot be copied safely.",
-            "id" => record["id"], "namespace" => namespace, "status" => status
-          )
-        end
       end
 
       def set_extension_payload(record, namespace, payload)
@@ -287,10 +289,6 @@ module PhComposer
 
         raise CodedError.new("params.invalid", "User data must be plain JSON: #{problems.first}.",
                              "findings" => problems)
-      end
-
-      def stored?(kind_id, id)
-        @catalog.kind?(kind_id) && !read(@catalog.kind(kind_id), id).nil?
       end
 
       def reserved_ids(kind, change_set)

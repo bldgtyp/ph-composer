@@ -175,6 +175,7 @@ class ApiTest < PhComposerTestCase
 
     assert_equal %w[failed operation.failed rolled_back], failed.values_at("status", "code", "effect")
     assert_equal PhComposer::Outcome::ROLLED_BACK, failed.fetch("message")
+    assert_nil failed.fetch("detail"), "unexpected exceptions do not disclose their messages or details"
     assert_equal [1200.0] * 3, parts.map { |id| stored(id).fetch("length_mm") }
     assert_equal [revision, undo_steps], [@session.revision, @model.instance_variable_get(:@undo_stack).length]
     assert_nil @session.busy_reason, "no mutation or suppression is left behind"
@@ -217,6 +218,43 @@ class ApiTest < PhComposerTestCase
                                                  :params => { "parts" => [] },
                                                  :request => request(1).merge("preview" => true)).fetch("code")
     assert_equal "params.invalid", invoke("test.fixture.create", { "parts" => "none" }, 1).fetch("code")
+  end
+
+  # A03, R-D3: params that are not plain JSON are refused before acceptance. The sequence is not
+  # consumed, so no outcome is retained and the same sequence carries the corrected request.
+  def test_non_json_params_are_refused_without_consuming_the_sequence
+    cyclic = { "parts" => [] }
+    cyclic["self"] = cyclic
+    [{ "parts" => [], "extra" => Float::NAN }, { "parts" => [], :extra => 1 },
+     { "parts" => [], "extra" => Object.new }, { "parts" => [], "extra" => "\xFF".dup.force_encoding("UTF-8") },
+     cyclic].each do |params|
+      context = API.connect(:session_id => @session.id)
+      caller = @session.callers.fetch(context.caller)
+      operations = @model.operations.length
+      revision = @session.revision
+
+      refused = API.invoke(:context => context, :name => "test.fixture.create", :params => params,
+                           :request => request(1))
+
+      assert_equal %w[refused request.malformed none], refused.values_at("status", "code", "effect")
+      assert_equal [0, revision, operations], [caller.highest_sequence, @session.revision, @model.operations.length]
+      assert_equal "request.outcome_unavailable",
+                   API.outcome(:context => context, :request => { "sequence" => 1 }).fetch("code")
+      accepted = API.invoke(:context => context, :name => "test.fixture.create",
+                            :params => { "parts" => [part_values] }, :request => request(1))
+      assert_equal %w[completed committed], accepted.values_at("status", "effect")
+    end
+  end
+
+  def test_a_lost_response_retry_writes_once
+    first = create_parts(1, 1, 1)
+    operations = @model.operations.length
+    undo_steps = @model.instance_variable_get(:@undo_stack).length
+
+    again = create_parts(1, 1, 1)
+
+    assert_equal first, again
+    assert_equal [operations, undo_steps], [@model.operations.length, @model.instance_variable_get(:@undo_stack).length]
   end
 
   # ------------------------------------------------------------------ retries
@@ -323,6 +361,67 @@ class ApiTest < PhComposerTestCase
     assert_equal "completed", create_parts(1).fetch("status")
   end
 
+  # ------------------------------------------------------------------ view commands
+
+  # A view command changes what the host shows and nothing else, so it carries no sequence, opens no
+  # operation and leaves the revision where it was: there is nothing for an Undo to take back.
+  def test_a_view_command_moves_the_view_without_a_sequence_or_a_revision
+    before = @session.revision
+
+    outcome = API.view(:context => @context, :name => "test.fixture.look", :params => { "count" => 2 })
+
+    assert_equal "completed", outcome.fetch("status")
+    assert_equal 2, outcome.dig("value", "selected")
+    assert_equal before, @session.revision
+    assert_equal before, outcome.fetch("revision")
+    refute @model.modified?
+  end
+
+  def test_a_view_command_says_why_it_refused
+    outcome = API.view(:context => @context, :name => "test.fixture.look", :params => { "count" => 0 })
+
+    assert_equal %w[refused validation.failed], outcome.values_at("status", "code")
+    assert_equal "There is nothing to look at.", outcome.fetch("message")
+  end
+
+  # `effect` is a statement about the Model, which nothing here touched. The viewport may be half
+  # moved, which is why a client re-reads what it shows rather than assuming.
+  def test_a_view_command_that_fails_after_moving_the_view_still_reports_the_model_unchanged
+    outcome = API.view(:context => @context, :name => "test.fixture.look", :params => { "count" => -1 })
+
+    assert_equal %w[failed operation.failed none], outcome.values_at("status", "code", "effect")
+    refute @model.modified?
+  end
+
+  def test_a_query_name_is_not_a_view_command
+    outcome = API.view(:context => @context, :name => "test.fixture.total_length", :params => {})
+
+    assert_equal %w[refused request.unknown_operation], outcome.values_at("status", "code")
+  end
+
+  def test_a_caller_without_view_access_cannot_move_the_view
+    reader = API.connect(:session_id => @session.id, :capabilities => ["read"])
+
+    outcome = API.view(:context => reader, :name => "test.fixture.look", :params => { "count" => 1 })
+
+    assert_equal %w[refused request.capability_denied], outcome.values_at("status", "code")
+  end
+
+  def test_a_view_command_refuses_while_the_session_is_busy
+    work = Struct.new(:pending?).new(true)
+    @session.feature_state(:api_test) { work }
+
+    outcome = API.view(:context => @context, :name => "test.fixture.look", :params => { "count" => 1 })
+
+    assert_equal %w[busy session.busy], outcome.values_at("status", "code")
+  end
+
+  def test_an_action_name_is_not_a_view_command
+    outcome = API.view(:context => @context, :name => "test.fixture.create", :params => {})
+
+    assert_equal %w[refused request.unknown_operation], outcome.values_at("status", "code")
+  end
+
   # ------------------------------------------------------------------ Models and lifecycle
 
   def test_two_models_with_identical_record_ids_stay_isolated
@@ -380,6 +479,31 @@ class ApiTest < PhComposerTestCase
 
     snapshot = PhComposer::Snapshot.build(@context)
     assert_equal 4, snapshot.dig("sections", "test.fixture.parts", "value", "total")
+  end
+
+  def test_a_preview_digest_revalidates_a_create_without_retaining_its_random_ids
+    params = { "parts" => [part_values] }
+    preview = API.preview(:context => @context, :name => "test.fixture.create", :params => params)
+
+    created = API.invoke(
+      :context => @context, :name => "test.fixture.create", :params => params,
+      :request => request(1).merge("proposal_digest" => preview.fetch("proposal_digest"))
+    )
+
+    assert_equal %w[completed committed], created.values_at("status", "effect")
+  end
+
+  def test_a_mismatched_preview_digest_refuses_before_opening_an_operation
+    params = { "parts" => [part_values] }
+    operations = @model.operations.length
+
+    result = API.invoke(
+      :context => @context, :name => "test.fixture.create", :params => params,
+      :request => request(1).merge("proposal_digest" => "not-the-preview")
+    )
+
+    assert_equal %w[refused proposal.changed none], result.values_at("status", "code", "effect")
+    assert_equal operations, @model.operations.length
   end
 
   def test_a_handler_result_outside_its_schema_fails_before_anything_is_written

@@ -23,7 +23,8 @@ class ExampleFoundationTest < PhComposerTestCase
     registry = PhComposer::Registry.current
 
     assert_equal ExampleFoundation::ID, registry.owner_of("example.foundation.update_parts")
-    assert_empty PhComposer::FEATURES, "the shipping composition root still lists no feature"
+    assert_equal [PhComposer::Zones], PhComposer::FEATURES,
+                 "the example does not alter the shipping feature list"
   end
 
   # The synthetic editor reaches the panel only through the development entry: the page runs it after the

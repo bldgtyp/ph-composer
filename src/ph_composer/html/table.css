@@ -1,0 +1,64 @@
+/* The shared record table: the tree table, its sticky identity columns, column resizing, editable cells
+   and the table options menu. Ported from the predecessor's table.css; the columns a screen declares are
+   the widths it sets, so nothing here names a feature's data. */
+.live-panel .phc-table td, .live-panel .phc-table th { font-size: 13px; }
+.live-panel .phc-table [aria-invalid="true"] { border-color: var(--red); }
+.live-panel .phc-table .host-selected td { background: #edf6f7; }
+.live-panel .phc-table td { overflow: hidden; text-overflow: ellipsis; }
+.phc-table { --col-actions-width: var(--row-actions-width, 80px); --col-hierarchy-width: 110px; --col-name-width: 220px; border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
+.phc-table th, .phc-table td { height: 36px; padding: 3px 8px; border-bottom: 1px solid #e8edef; border-right: 1px solid #edf0f2; text-align: right; white-space: nowrap; }
+.phc-table th { position: sticky; top: 0; z-index: 3; background: #f7f9fa; font-weight: 500; white-space: normal; height: 44px; }
+.phc-table td { background: #fff; }
+.phc-table .col-hierarchy { width: var(--col-hierarchy-width); text-align: left; }
+.phc-table .col-name { width: var(--col-name-width); text-align: left; }
+.phc-table .col-actions { width: var(--col-actions-width); min-width: var(--col-actions-width); text-align: left; left: 0; position: sticky; z-index: 2; }
+.phc-table th.col-actions { z-index: 5; }
+.phc-table td.col-hierarchy, .phc-table td.col-name { position: sticky; z-index: 1; }
+.phc-table .col-hierarchy { left: var(--col-actions-width); }
+.phc-table .col-name { left: calc(var(--col-actions-width) + var(--col-hierarchy-width)); }
+.phc-table th.col-hierarchy, .phc-table th.col-name { z-index: 4; }
+.phc-table th { overflow: visible; }
+.phc-column-resizer { position: absolute; z-index: 7; top: 0; right: -4px; bottom: 0; width: 8px; cursor: col-resize; touch-action: none; }
+.phc-column-resizer::after { content: ''; position: absolute; top: 7px; bottom: 7px; left: 3px; width: 2px; border-radius: 1px; background: var(--interaction-highlight); opacity: 0; }
+.phc-table th:hover > .phc-column-resizer::after, .phc-column-resizer:hover::after, .phc-column-resizer:focus-visible::after, body.phc-column-resizing .phc-column-resizer::after { opacity: 1; }
+body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !important; user-select: none !important; }
+.phc-table button { padding: 2px 5px; min-height: 26px; }
+.phc-table .row-target { border: 0; background: transparent; }
+.phc-table .phc-row-marker { margin-left: 5px; color: var(--muted); font-size: 11px; }
+.phc-table .tier-1 .col-hierarchy { padding-left: 14px; }
+.phc-table .tier-2 .col-hierarchy { padding-left: 30px; color: var(--muted); }
+.phc-table input { width: 100%; min-width: 0; min-height: 28px; padding: 3px 6px; }
+.phc-table td.phc-editable-cell { padding: 0; }
+.phc-table .phc-cell-input { min-height: 35px; padding: 6px 8px; border-color: transparent; border-radius: 0; background: transparent; box-shadow: none; }
+.phc-table .phc-editable-cell:hover { background: var(--interaction-highlight-tint); }
+.phc-table .phc-editable-cell:focus-within { background: #fff; box-shadow: inset 0 0 0 2px var(--interaction-highlight); }
+.phc-workspace .phc-table .phc-cell-input:focus-visible { outline: 0; }
+.phc-table .phc-cell-input[aria-invalid="true"] { box-shadow: inset 0 -2px var(--red); }
+.phc-table tr:focus-within td { background: #edf6f7; }
+@media (max-width: 900px) {
+  .phc-table td.col-name { position: static; }
+  .phc-table th.col-name { left: auto; }
+}
+@media (max-width: 500px) {
+  .phc-table td.col-hierarchy { position: static; }
+  .phc-table th.col-hierarchy { left: auto; }
+}
+.phc-table .row-icon { width: 28px; height: 28px; min-height: 28px; padding: 5px; margin-right: 4px; border: 0; background: transparent; color: var(--muted-strong); vertical-align: middle; }
+.phc-table .row-icon svg { display: block; }
+.phc-table .row-icon:disabled { opacity: .4; background: transparent; }
+.phc-table .row-delete:hover:enabled, .phc-table .row-delete:focus-visible { color: var(--red); background: var(--error-surface); }
+.phc-table .row-icon:last-child { margin-right: 0; }
+.phc-table .row-chevron { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: 20px; height: 26px; padding: 0; }
+.phc-table .row-chevron svg { display: block; }
+.phc-table .row-chevron[aria-expanded="true"] svg { transform: rotate(90deg); }
+.phc-inventory-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-right: auto; }
+.phc-view-control { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.phc-table .phc-group-row td { background: #f5f8f9; padding: 6px 10px; }
+.phc-workspace .phc-group-toggle, .phc-table .phc-group-toggle { display: flex; align-items: center; gap: 10px; border: 0; border-radius: 0; background: transparent; text-align: left; width: 100%; }
+.phc-group-count { color: var(--muted); font-size: 12px; }
+.phc-group-chevron { width: 12px; }
+.phc-group-chevron svg { width: 14px; height: 14px; }
+.phc-group-toggle[aria-expanded="false"] .phc-group-chevron { transform: rotate(-90deg); }
+.phc-inventory-controls input { width: 190px; }
+.phc-view-count { color: var(--muted); font-size: 12px; }
+.phc-group-label { font-weight: 600; }

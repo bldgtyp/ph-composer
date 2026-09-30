@@ -60,7 +60,7 @@ module PhComposer
       end
 
       def summary(summary)
-        rows = [["Objects exported", summary.fetch("objects")], ["Objects not exported", summary.fetch("unavailable")],
+        rows = [["Objects translated", summary.fetch("objects")], ["Objects unavailable", summary.fetch("unavailable")],
                 ["Findings", summary.fetch("findings")]]
         ReportHtml.section("Summary", ReportHtml.table(%w[Item Count], rows))
       end

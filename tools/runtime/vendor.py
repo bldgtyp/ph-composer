@@ -41,7 +41,7 @@ PYODIDE_URL = (
 RUNTIME_FILES = ("pyodide.js", "pyodide.asm.js", "pyodide.asm.wasm", "pyodide-lock.json", "python_stdlib.zip")
 # The folders the asset server may serve from. The panel page, the translation package and the
 # Pyodide core; nothing else under the extension is reachable over loopback.
-ASSET_ROOTS = ("html", "python", "vendor/pyodide")
+ASSET_ROOTS = ("html", "python", "vendor/pyodide", "vendor/wheels")
 
 
 @dataclass(frozen=True)
@@ -55,10 +55,82 @@ class PackagePin:
     holder: str
 
 
-# The wheels the runtime installs, in install order. Phase 0 ships none: the foundation's package
-# shell imports without them, and the predecessor's eight honeybee-family pins stay recorded as
-# evidence in planning/archive/phase-zero/SOURCE_INVENTORY.md until a package decision adds them.
-PACKAGE_PINS: tuple[PackagePin, ...] = ()
+# Exact pure-Python translation path pins. CLI/schema-validation and optional simulation
+# dependencies are outside this runtime; actual native/Pyodide path parity is an acceptance gate.
+PACKAGE_PINS: tuple[PackagePin, ...] = (
+    PackagePin(
+        name="ladybug-geometry",
+        version="1.35.3",
+        filename="ladybug_geometry-1.35.3-py3-none-any.whl",
+        url_path="4d/7c/0aade0858e173e329eac14cf6477ad2f8bd57fe5505fce82da73251b69d5",
+        sha256="e7cce5e1c41f9863ddf37d0cc03249921d23a25caafff47730a9f9f67bf9f8b4",
+        license="AGPL-3.0",
+        holder="Ladybug Tools",
+    ),
+    PackagePin(
+        name="ladybug-geometry-polyskel",
+        version="1.7.52",
+        filename="ladybug_geometry_polyskel-1.7.52-py3-none-any.whl",
+        url_path="ea/3a/5de078edceca160fc5dc02d20a3a522bfcf5d03c4647999f852b28999c4c",
+        sha256="c31d5a59b21847bc9b108bf227ecd3ca04d4be1d353e0975e86cdc4230c330a1",
+        license="AGPL-3.0",
+        holder="Ladybug Tools",
+    ),
+    PackagePin(
+        name="ladybug-core",
+        version="0.44.56",
+        filename="ladybug_core-0.44.56-py3-none-any.whl",
+        url_path="31/c0/b04628ffc84f9580d26d72d58d11f833380661314bcada7fc4ae55b596e2",
+        sha256="213833188498e08d3b9a1a6da141de9a5856bd442cf4967e865a4437776a7603",
+        license="AGPL-3.0",
+        holder="Ladybug Tools",
+    ),
+    PackagePin(
+        name="honeybee-standards",
+        version="2.0.7",
+        filename="honeybee_standards-2.0.7-py2.py3-none-any.whl",
+        url_path="17/55/4a94086c7054db931527be64bb1d4ae0ec37a17867dec0671709d71a0fd7",
+        sha256="194245b5bfa8f571c09b3ed8f40ee38b1a71c2c6a03b49701a19ffc3efe54679",
+        license="GPL-3.0 (metadata classifier); MIT (bundled LICENSE)",
+        holder="Ladybug Tools",
+    ),
+    PackagePin(
+        name="honeybee-core",
+        version="1.64.65",
+        filename="honeybee_core-1.64.65-py3-none-any.whl",
+        url_path="d5/87/940c8ebe18c370d5f1e5e044f589643c9b68c9b9c1e6a52ad8f1080d9e2d",
+        sha256="e5aa2e668952385a2b47ba18a94e64113d553f66ac7d328cfd62c6e6334b04ea",
+        license="AGPL-3.0",
+        holder="Ladybug Tools",
+    ),
+    PackagePin(
+        name="honeybee-energy",
+        version="1.123.23",
+        filename="honeybee_energy-1.123.23-py3-none-any.whl",
+        url_path="fe/6c/0f829cd768acf43c53253d8fbd1c3f7b4498d7f7c1f009080af6d20c2907",
+        sha256="384ff7552c131cc700b6c86f85afa39dfba1f7a3037bdb43e380d1a0f2de34e0",
+        license="AGPL-3.0",
+        holder="Ladybug Tools",
+    ),
+    PackagePin(
+        name="ph-units",
+        version="1.5.38",
+        filename="ph_units-1.5.38-py3-none-any.whl",
+        url_path="1e/19/ae8ecfb3de7d612f77b6c64dd80ee8f345f318fd826d831ead14c23308c8",
+        sha256="ee9963cf573d82401e8fba78ecbb7d6dc267835ae4a81bf33ed4ddf1206d4dbd",
+        license="GPL-3.0-or-later",
+        holder="Package contributors (see bundled wheel license)",
+    ),
+    PackagePin(
+        name="honeybee-ph",
+        version="1.33.65",
+        filename="honeybee_ph-1.33.65-py3-none-any.whl",
+        url_path="58/eb/c7581cd58ee81a3b5cc81187947ce2bea3c712adcccfaef488959c56ca4c",
+        sha256="b9b44a76806ec6ba66010a0023addd99c0279fea9dce9aab58b67031d421cece",
+        license="GPL-3.0-or-later",
+        holder="Package contributors (see bundled wheel license)",
+    ),
+)
 
 MIME_TYPES = {
     ".html": "text/html; charset=utf-8",
@@ -121,6 +193,14 @@ def vendor() -> None:
                     raise SystemExit(f"pyodide core is missing {filename}")
                 with (runtime_dir / filename).open("wb") as output:
                     shutil.copyfileobj(source, output)
+    wheel_dir = VENDOR / "wheels"
+    wheel_dir.mkdir(parents=True, exist_ok=True)
+    for pin in PACKAGE_PINS:
+        destination = wheel_dir / pin.filename
+        if not destination.exists() or sha256(destination) != pin.sha256:
+            download(f"https://files.pythonhosted.org/packages/{pin.url_path}/{pin.filename}", destination)
+        if sha256(destination) != pin.sha256:
+            raise SystemExit(f"wheel sha256 mismatch: {pin.filename}")
     write_manifest()
     check()
 

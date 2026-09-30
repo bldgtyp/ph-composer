@@ -20,6 +20,46 @@ class RegistryTest < PhComposerTestCase
     error.diagnostics
   end
 
+  def test_reference_target_requires_callable_provider_and_pure_validator
+    target = PhComposer::Records::ReferenceTarget.new(:id => "outside.feature.object", :label => "Object",
+                                                       :records => nil, :validate => nil)
+    diagnostics = refused(feature do |registry|
+      registry.feature("outside.feature", :contract_version => 1).reference_target(target)
+    end)
+
+    assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
+    refute Registry.installed?("outside.feature")
+    refute Registry.current.reference_targets.key?(target.id)
+  end
+
+  def test_a_core_reference_to_an_unregistered_kind_refuses_the_target
+    target = PhComposer::Records::ReferenceTarget.new(
+      :id => "outside.feature.object", :label => "Object", :records => ->(_model) { [] },
+      :validate => ->(_record) { [] },
+      :references => [PhComposer::Records::Reference.new(:key => "owner_id", :target_kind => "missing.feature.kind",
+                                                         :cardinality => "one", :required => false)]
+    )
+    diagnostics = refused(feature do |registry|
+      registry.feature("outside.feature", :contract_version => 1).reference_target(target)
+    end)
+
+    assert_equal [["registration.missing_dependency", "missing.feature.kind"]],
+                 diagnostics.map { |diagnostic| [diagnostic.code, diagnostic.dependency] }
+  end
+
+  def test_unregistered_reference_target_refuses_the_extension_batch
+    extension = PhComposer::Records::Extension.new(
+      :namespace => "outside.feature.links", :schema_version => 1,
+      :references => [{ "path" => "$.entity", "target_kind" => "missing.feature.object", "cardinality" => "one" }]
+    )
+    diagnostics = refused(feature do |registry|
+      registry.feature("outside.feature", :contract_version => 1).extension(extension)
+    end)
+
+    assert_equal ["registration.missing_dependency"], diagnostics.map(&:code)
+    refute Registry.installed?("outside.feature")
+  end
+
   def test_a_valid_feature_publishes_every_declaration
     Registry.install([TestFeature])
 
@@ -82,6 +122,20 @@ class RegistryTest < PhComposerTestCase
     assert_equal [:selection_changed], received
   end
 
+  def test_a_feature_can_publish_a_named_proposal_participant
+    handler = ->(_request, _proposal, _payload) {}
+    participant = feature("Participant") do |registry|
+      registry.feature("test.participant", :contract_version => 1)
+        .proposal_participant("test.participant.retire", &handler)
+    end
+
+    Registry.install([participant])
+
+    declaration = Registry.current.proposal_participants.fetch("test.participant.retire")
+    assert_equal "test.participant", declaration.owner
+    assert_same handler, declaration.handler
+  end
+
   def test_missing_dependencies_cycles_and_contract_majors_are_diagnosed
     diagnostics = refused(
       feature { |r| r.feature("probe.alpha", :contract_version => 1, :requires => ["probe.beta"]) },
@@ -132,6 +186,64 @@ class RegistryTest < PhComposerTestCase
     diagnostics = refused(feature("Broken") { |_r| raise ArgumentError, "typo" })
 
     assert_equal ["Broken could not install: typo"], diagnostics.map(&:message)
+  end
+
+  # The native menus are a contribution seam like the others: an outside feature declares an item
+  # and it reaches SketchUp's own menus, and the viewport context menu, with no line in `shell/`.
+  def test_an_outside_feature_reaches_the_native_menus_without_a_line_in_shell
+    reached = []
+    Registry.install([feature do |registry|
+      registry.feature("outside.probe", :contract_version => 1)
+              .menu_item("outside.probe.go", :label => "Go", :menu => "Probe",
+                                             :state => ->(_session) { MF_CHECKED }) { |session| reached << session }
+    end])
+    PhComposer::Commands.install
+    menu = PhComposer::Commands.feature_menus.fetch("Probe")
+
+    menu.entries.find { |entry| entry.is_a?(Array) && entry.first == "Go" }.last.call
+
+    assert_equal [PhComposer::Sessions.current], reached
+    assert_equal MF_CHECKED, menu.validation_procs.values.first.call
+  end
+
+  # A view command is registered, described and dispatched like a query, and an outside feature
+  # declares one the same way a built-in does.
+  def test_an_outside_feature_registers_a_view_command_and_it_is_described_as_one
+    Registry.install([feature do |registry|
+      registry.feature("outside.probe", :contract_version => 1)
+              .view_command("outside.probe.look", :description => "Look.", :params => OBJECT,
+                                                  :result => OBJECT) { |_request| {} }
+    end])
+
+    assert Registry.current.view_commands.key?("outside.probe.look")
+    assert_equal "outside.probe", Registry.current.owner_of("outside.probe.look")
+    assert_equal "view_command", PhComposer::API.describe(:name => "outside.probe.look").fetch("kind")
+    assert_includes PhComposer::API.discover.fetch("view_commands").map { |one| one.fetch("name") },
+                    "outside.probe.look"
+  end
+
+  def test_a_view_command_with_no_handler_refuses_the_whole_batch
+    probe = feature do |registry|
+      registry.feature("outside.probe", :contract_version => 1)
+              .view_command("outside.probe.look", :description => "Look.", :params => OBJECT, :result => OBJECT)
+    end
+
+    error = assert_raises(PhComposer::RegistrationError) { Registry.install([probe]) }
+
+    assert_includes error.diagnostics.map(&:code), "registration.schema_invalid"
+    refute Registry.current.view_commands.key?("outside.probe.look")
+  end
+
+  def test_a_menu_item_without_a_submenu_name_refuses_the_whole_batch
+    probe = feature do |registry|
+      registry.feature("outside.probe", :contract_version => 1)
+              .menu_item("outside.probe.go", :label => "Go", :menu => nil) { |_session| nil }
+    end
+
+    error = assert_raises(PhComposer::RegistrationError) { Registry.install([probe]) }
+
+    assert_includes error.diagnostics.map(&:code), "registration.schema_invalid"
+    refute Registry.current.menu_items.key?("outside.probe.go")
   end
 
   private

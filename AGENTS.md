@@ -1,7 +1,7 @@
 # PH-Composer: agent guidance
 
-This is the canonical, tool-neutral guidance for the repository. Tool-specific files import it and
-add only their own mechanics.
+This is the canonical, tool-neutral guidance for the repository. Agents read it directly; there is no
+per-tool instruction file.
 
 ## Scope and product boundary
 
@@ -26,7 +26,8 @@ not a dependency. Its designPH integration is retired and is never reintroduced 
 | Coding and compatibility rules | [`context/CODING_STANDARDS.md`](context/CODING_STANDARDS.md) |
 | Contributor architecture, scripting and extension contracts | [`context/EXTENSIBILITY.md`](context/EXTENSIBILITY.md) |
 | External agent access, discovery, model reads and writes | [`context/AGENT_INTERFACE.md`](context/AGENT_INTERFACE.md) |
-| Build, install, test and host procedures | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md), target state until the tooling lands |
+| Build, install, test and host procedures | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md), implemented commands and remaining host gates |
+| Native acceptance and resuming host gates | [`.agents/skills/ph-composer-native-acceptance/SKILL.md`](.agents/skills/ph-composer-native-acceptance/SKILL.md), then the owning packet and case ledger |
 | Current delivery state or next authorized work | [`planning/STATUS.md`](planning/STATUS.md), then the owning packet |
 | Planning documents or status changes | [`planning/.instructions.md`](planning/.instructions.md) |
 
@@ -37,8 +38,8 @@ the owning packet.
 
 - Keep proposed product behavior distinct from implemented contracts. Product shape belongs in
   `docs/`; the durable rules that constrain code belong in `context/`; plans, decisions, status
-  and acceptance evidence belong in `planning/`. Nothing is implemented in this repository until
-  the transplant lands; every document says so where it matters.
+  and acceptance evidence belong in `planning/`. Phase 0 foundation is merged; feature behavior
+  remains proposed until its owning packet records implementation and acceptance.
 - Feature interviews establish shared understanding but do not authorize code. Follow the current
   owning plan and explicit implementation scope.
 - The model is the authoring authority. Library records become editable local copies. No provider
@@ -78,7 +79,7 @@ the owning packet.
 
 ## Verification
 
-- `make ci` is the full offline gate once the tooling lands. Use focused tests while editing.
+- `make ci` is the implemented full offline gate. Use focused tests while editing.
 - Real-host acceptance uses the development bridge plus native controls. A required host gate runs
   against the specified model and host state, often from a fresh process. Offline tests, an
   installed RBZ or a bridge command alone do not satisfy it. Ask Ed to operate the host only when
@@ -117,6 +118,7 @@ working assumption until the namespace decision closes:
 | `session/` | One `ModelSession` per open Model, its generation, observers and per-feature state objects. Names no feature |
 | `shell/` | Transport and the action registry: the panel dialog, actions, commands, preferences. Names no feature |
 | `features/` | One folder per feature, each registering itself in one `install` |
+| `colour_by/` | The shared Colour-by service: the mode registry's consumers, the viewport overlay and HUD, and the drawing cache. Names no feature |
 | `library/` | The provider contract and the shipped providers, starting with the library file |
 | `export/` | The export run: contributors, the attribute guard, artifact hygiene, the report, and the exporter registry |
 | `html/` | The UI kit: a module graph with a generated script list and owned stylesheets |

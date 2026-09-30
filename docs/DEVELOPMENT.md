@@ -1,8 +1,12 @@
 # Development
 
-**DATE:** 2026-09-18 | **STATUS:** Partly implemented. The commands below exist unless marked
-"not yet". The extension has its foundation, an empty panel, the Python runtime payload and the
-export infrastructure, with no exporter yet.
+**DATE:** 2026-09-30 | **STATUS:** Partly implemented. The commands below exist unless marked
+"not yet". The extension has its foundation, the Overview screen with its Zone tree and faces table,
+the Classify tool and its palette, the shared Colour-by service, the Python runtime payload and the
+HBJSON/report workflow with pinned translation wheels. The normal build refuses canonical export
+until an authored construction provider is available. Phase 1 acceptance uses a separately composed
+synthetic development provider; it never becomes a stored Assembly or shipping fallback. METr
+remains deferred.
 
 The development loop needs no installed dependencies beyond Ruby, Node and `uv`. Ruby source stays
 compatible with Ruby 2.7 inside the SketchUp 2023 support floor. The proving host is SketchUp
@@ -75,8 +79,11 @@ every push to `main`.
 
 Generated goldens are regenerated with `make fixtures`, which prints every file it changed; every
 other run compares them. Each golden has exactly one owning test, listed in `FIXTURE_OWNERS` in
-the Makefile. There are no goldens yet. Hand-authored inputs live apart from goldens and nothing
-regenerates them.
+the Makefile, and `FIXTURE_PATHS` names what `make fixtures-check` compares. There are two:
+`tests/fixtures/phase_one/two_zones_extraction.json`, the Phase 1 two-Zone extraction, owned by
+`tests/phase_one_export_test.rb`; and [`API_REFERENCE.md`](API_REFERENCE.md), the generated API
+reference, owned by `tests/api_reference_test.rb`. Hand-authored inputs live apart from goldens and
+nothing regenerates them.
 
 `make coverage` measures Ruby line coverage of the extension folder against a 93% minimum,
 JavaScript line coverage of `html/` (the runtime page included) against 94%, and Python coverage of
@@ -124,6 +131,15 @@ citation that must name the predecessor is admitted one exact line at a time thr
 Restart SketchUp after replacing the loader. For every phase gate, quit all SketchUp processes
 and relaunch after `make install`. Installation is preparation, not host validation.
 
+## Native acceptance continuity
+
+The [native acceptance skill](../.agents/skills/ph-composer-native-acceptance/SKILL.md) coordinates
+fixture/build identity, control selection, observed assertions and normal-build restoration.
+The [case/result ledger](../planning/native-acceptance/README.md) screens affected checks and
+retains historical evidence without fabricating missing run provenance. Source snapshots do not
+run SketchUp or prove current-host acceptance. [Control capabilities](../context/NATIVE_CONTROL_CAPABILITIES.md)
+identify which claims require native pixels or a human gesture.
+
 ## Driving SketchUp from a terminal
 
 This section concerns development tooling. The separate supported interface for users' agents is
@@ -147,6 +163,37 @@ loop. `tools/hostkit/.index.md` lists what each does. Every `eval` runs in one s
 a local variable assigned in one call survives into the next and keeps its object alive. Set such
 locals to nil before checking that a closed Model's session was collected. The measured host facts
 the bridge depends on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
+
+Phase-specific native probes live under [`tools/spikes/`](../tools/spikes/) and never ship. The
+P1-A Zone geometry probe and its stepwise bridge commands are documented in
+[`tools/spikes/geometry/README.md`](../tools/spikes/geometry/README.md); its accepted results are
+in [`planning/phase-one/evidence/p1-a-geometry.md`](../planning/phase-one/evidence/p1-a-geometry.md).
+The panel-closed walkthroughs are in
+[`tools/examples/authoring/`](../tools/examples/authoring/README.md): P1-B's Zone and Face
+authoring, P1-C's adjacency, P1-D's Zone repairs, P1-D's adjacency cut, P1-D's Colour-by overlay,
+P1-D's Classify tool and P1-D's Overview screen. The Classify tool's ran on 2026-09-20 with an operator at the mouse,
+because SketchUp delivers pointer events to the active tool and the Ruby API synthesizes none; it
+covered the parts of Colour-by's that a drawing tool exercises. Colour-by's own questions were
+closed later by the [Colour-by continuation](../planning/phase-one/evidence/p1-d-colour-by-continuation.md).
+Accepted current-host results are in
+[`p1-b-authoring.md`](../planning/phase-one/evidence/p1-b-authoring.md),
+[`p1-c-adjacency-hbjson.md`](../planning/phase-one/evidence/p1-c-adjacency-hbjson.md),
+[`p1-d-repairs-and-cut.md`](../planning/phase-one/evidence/p1-d-repairs-and-cut.md) and
+[`p1-d-classify-tool.md`](../planning/phase-one/evidence/p1-d-classify-tool.md).
+
+The Overview screen's eight handoff questions were completed with native computer use on
+2026-09-26. The [evidence](../planning/phase-one/evidence/p1-d-overview.md) records the fixes,
+fresh-process checks and remaining acceptance boundaries. Its walkthrough builds the Model and
+reads back what the panel's commands did; native controls drive the HtmlDialog interactions.
+
+A gate that needs pointer input cannot be scripted and cannot be skipped. The Classify tool's gate
+found three defects that no offline test could have caught, one of them in a slice already recorded
+as implemented and reviewed, because its own host gate had not been run.
+
+Native Undo and Redo are menu actions: a walkthrough sends `Sketchup.send_action("editUndo:")`
+and reads the result in a later call. There is no `Sketchup::Model#undo` on the host, although the
+offline stub has one; that and the other measured facts these walkthroughs depend on are in
+[`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
 
 ## The panel
 
@@ -191,3 +238,20 @@ passing check.
 
 - **Library provider testing.** A local fixture server for connection providers arrives with the
   library provider contract.
+
+## Phase 1 export verification
+
+The Export pane performs feature-owned preflight, offers explicit Solve, repeats preflight after
+repair, and creates an HBJSON/report pair. Cancellation is accepted before canonical commit.
+Export never saves the SKP. Stale or retired Surface Faces are omitted with area, Zone and reason;
+independent blockers leave the full diagnostics visible and write no canonical pair.
+
+`uv run tools/runtime/browser_check.py --translation` exercises the exact shipped wheel set in
+Chromium 88 and compares the explicit synthetic composition with native Python using those same
+wheels. Only upstream-created PH default UUIDs and unordered construction-definition sets are
+normalized for comparison; authored identities, references and values are compared directly.
+The files themselves are not rewritten. This browser gate supplements real SketchUp acceptance.
+
+Current-host acceptance and remaining distribution limits are recorded in the
+[Phase 1 evidence](../planning/phase-one/evidence/p1-e-export-workflow.md). SketchUp 2023,
+Windows, public distribution and certification claims retain their separate gates.

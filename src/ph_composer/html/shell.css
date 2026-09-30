@@ -15,3 +15,9 @@
 .live-panel .phc-export-actions { padding: 0 24px; }
 .live-panel .phc-export-status { margin: 0; padding: 12px 24px; color: var(--muted); }
 .live-panel .phc-export-status:empty { display: none; }
+.live-panel [data-pane="export"] > p { margin: 12px 24px; }
+.live-panel .phc-export-repair { display: flex; align-items: center; gap: 8px; margin: 16px 24px; }
+.live-panel .phc-export-repair input { min-height: 0; width: 16px; height: 16px; padding: 0; margin: 0; }
+.live-panel .phc-export-findings { margin: 12px 24px; padding-left: 20px; }
+.live-panel .phc-export-findings li { margin-bottom: 6px; }
+.live-panel .phc-export-findings button { margin-left: 8px; }

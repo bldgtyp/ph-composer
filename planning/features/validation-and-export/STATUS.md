@@ -1,36 +1,34 @@
 # Validation and export: status
 
-DATE: 2026-09-18
-STATUS: Requested
+DATE: 2026-09-30
+STATUS: Phase 1 HBJSON/report scope implemented and current-host verified on branch.
 AUTHOR: Ed May, BLDGTYP, with Codex review
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
 
 ## State
 
-PRD drafted from the PH-Composer product boundary, the predecessor's completed E1 export
-contract and the contributor/exporter seams already recorded in `context/TECH_STACK.md`. Not
-interviewed. Nothing is implemented.
+P1-E implements preflight, explicit repairs, per-Model asynchronous tasks, bounded collection,
+pinned lazy translation, cancellation, result retention and coordinated HBJSON/report replacement
+and recovery. Blocking findings remain visible and write no canonical pair. Export does not save
+or modify the SKP. [P1-E/F evidence](../../phase-one/evidence/p1-e-export-workflow.md) records the
+exact implementation, package, native cases and independent-review corrections.
 
-## Next step
+## Remaining scope and delivery boundaries
 
-Interview the remaining questions in the PRD before PLAN.md. D2 is confirmed: an optional METr
-failure does not discard the canonical HBJSON/report pair. Run the PHX-in-Pyodide spike before planning the METr exporter phase;
-HBJSON/report planning does not wait on it.
-
-## Blockers
-
-- The foundation transplant has not started.
-- Phase 1 needs the Zones and face-assignment contracts.
-- The PHX-in-Pyodide gate passed on 2026-09-18 ([B1](../../archive/phase-zero/evidence/spike-phx.md)), with conditions
-  for this plan: pin nine wheels installed without dependency resolution while PHX#157 is open,
-  honeybee-ph 1.33.65, and decide how a model without honeybee-ph Spaces supplies METr floor area.
-- No GitHub remote, so no issue yet.
+The normal build requires authored Assemblies; it safely refuses when none are available.
+Successful Phase 1 translation acceptance uses an explicit tools-only synthetic provider, excluded
+from shipping composition. Assemblies/materials authoring and later building validation belong to
+their feature stages. METr export, consumer import and floor-area policy remain deferred and
+unscheduled. SketchUp 2023/Windows host proof, public-distribution license review, merge and
+release are separate gates. No implementation issue was requested or created.
 
 ## Verification
 
-Documentation consistency checked against the authorized zones-and-adjacency corrections:
-explicit preflight scope and omission accounting for unresolved or unrepresentable pairs.
-Nothing is implemented; runtime and host gates remain outstanding.
+Both Ruby 3.2.2 and 2.7.2 full offline gates pass, with coverage, real-panel browser checks,
+pinned native/Pyodide comparison, package inventory and fresh SketchUp 26.1.188 acceptance.
+Native cases cover missing-construction refusal, successful exact HBJSON/report, warnings,
+cancellation, mutation refusal, navigation tolerance, fault/restart recovery, panel/runtime/Model
+loss, two Models, nested edit paths, Undo/Redo and reopen. See the evidence for fixture limits.
 
 ## Ledger
 
@@ -38,3 +36,8 @@ Nothing is implemented; runtime and host gates remain outstanding.
 | --- | --- |
 | 2026-09-18 | Initial scoping packet drafted during the whole-project review. |
 | 2026-09-18 | D2 confirmed: keep a valid HBJSON/report pair when optional METr export fails, report the failure and preserve any prior METr file. |
+| 2026-09-20 | Post-Phase-0 refresh: added PLAN.md, removed completed foundation blockers and linked the shared Phase 1 stages and decisions. Planning only; feature implementation remains pending. |
+| 2026-09-20 | Ed deferred METr exporter development and consumer acceptance until further feature development. Phase 1 closes on canonical HBJSON/report; return milestone unscheduled. |
+| 2026-09-20 | P1-C development proof complete on the implementation branch: registered Zone/face sections produced and reloaded exact HBJSON in the pinned native Honeybee stack; P1-E user workflow and Pyodide wheels remain pending. |
+| 2026-09-29 | Ed authorized P1-E: HBJSON/report always selected, blockers write no pair and remain visible, no implicit SKP save, METr deferred. |
+| 2026-09-30 | P1-E implementation and P1-F current-host integrated acceptance complete on branch; independent review and final gates pass. Normal composition requires authored Assemblies. |

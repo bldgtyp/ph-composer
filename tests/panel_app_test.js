@@ -37,21 +37,18 @@ function snapshot(session, revision, extra) {
 
 function types(sent) { return sent.map(function (message) { return message.type; }); }
 
-test("ready asks for the first snapshot, which fills the Overview and the status bar", function () {
+test("ready asks for the first snapshot, which fills the status bar", function () {
   var p = page();
   p.panel.ready();
   assert.deepStrictEqual(types(p.sent), ["panel.ready"]);
 
   p.receive("panel.snapshot", snapshot("session-a", 3, { edit_path: ["Level 1", ""] }));
 
-  var overview = p.query("[data-section='overview']");
-  assert.strictEqual(overview.querySelector("h1").textContent, "Overview");
-  assert.strictEqual(overview.querySelector(".phc-heading-note").textContent, "house.skp");
   var footer = p.query("[data-section='footer']").children.map(function (node) { return node.textContent; });
   assert.deepStrictEqual(footer, ["PH-Composer 0.1.0-dev", "Editing: Level 1 / Unnamed group"]);
 });
 
-test("switching tabs is presentation only: panes toggle and nothing is sent", function () {
+test("opening Export reads preflight and retained tasks without starting a write", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 1));
   p.query("[data-tab='export']").listeners.click({});
@@ -60,7 +57,7 @@ test("switching tabs is presentation only: panes toggle and nothing is sent", fu
   assert.strictEqual(p.query("[data-pane='overview']").hidden, true);
   assert.strictEqual(p.query("[data-tab='export']").getAttribute("aria-pressed"), "true");
   assert.strictEqual(p.query("[data-section='export']").querySelector("h1").textContent, "Export");
-  assert.deepStrictEqual(p.sent, []);
+  assert.deepStrictEqual(types(p.sent), ["export.preflight", "export.latest"]);
 });
 
 test("an action names the shown session and the revision the panel last rendered", function () {
@@ -94,6 +91,22 @@ test("a refusal stays on screen as a warning and a failure as an error, until di
   assert.strictEqual(notice.hidden, true);
 });
 
+test("a view result settles in its own slot and says why the viewport did not change", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 7));
+  p.receive("view.result", { request_id: "v1", session: "session-a", outcome: {
+    status: "completed", value: { found: 4, missing: 0 } } });
+
+  assert.strictEqual(p.panel.state.ui.viewResults.v1.request_id, "v1");
+  assert.strictEqual(p.panel.state.ui.actionResult, null, "a view command is not an edit");
+  assert.strictEqual(p.notice().hidden, true, "a viewport change that worked says nothing");
+
+  p.receive("view.result", { request_id: "v2", session: "session-a", outcome: {
+    status: "refused", code: "validation.failed", message: "There is no Colour-by mode named that." } });
+  assert.strictEqual(p.notice().message.textContent, "There is no Colour-by mode named that.");
+  assert.strictEqual(p.notice().getAttribute("data-tone"), "warning");
+});
+
 test("a result or notice for another Model is not painted, and a new Model clears the old one's", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 7));
@@ -106,8 +119,7 @@ test("a result or notice for another Model is not painted, and a new Model clear
   assert.strictEqual(p.notice().hidden, false);
   p.receive("panel.snapshot", snapshot("session-b", 1, { file_name: "other.skp" }));
   assert.strictEqual(p.notice().hidden, true, "the other Model's notice is gone");
-  assert.strictEqual(p.query("[data-section='overview']").querySelector(".phc-heading-note").textContent,
-    "other.skp");
+  assert.strictEqual(p.panel.state.file_name, "other.skp");
 });
 
 test("the unit switch applies at once, is remembered by the host, and never becomes a Model action", function () {
@@ -192,40 +204,69 @@ test("the current tab is scrolled into view, so a narrow panel never hides which
   assert.deepStrictEqual(scrolled[scrolled.length - 1], { block: "nearest", inline: "nearest" });
 });
 
-test("Export asks the host for a destination once, then shows the host's answer and allows another", function () {
+function enterExport(p, findings) {
+  p.panel.showTab("export");
+  var requests = p.sent.slice(-2);
+  p.receive("export.result", { request_id: requests[0].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { findings: findings || [], repairs: [] } } });
+  p.receive("export.result", { request_id: requests[1].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: null } });
+  p.sent.length = 0;
+}
+
+test("Export asks for one destination and retains a cancellation message", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 4));
+  enterExport(p);
   var pane = function () { return p.query("[data-section='export']"); };
   var button = function () { return pane().querySelector("button"); };
-
   button().listeners.click({});
   button().listeners.click({});
-
-  assert.deepStrictEqual(p.sent, [{ type: "export.start", payload: { request_id: "export:1", session: "session-a" } }]);
+  assert.strictEqual(p.sent.length, 1);
+  assert.strictEqual(p.sent[0].type, "export.start");
+  assert.deepStrictEqual(p.sent[0].payload.repairs, []);
+  var id = p.sent[0].payload.request_id;
   assert.strictEqual(button().disabled, true);
   assert.strictEqual(button().textContent, "Choosing destination…");
-
-  p.receive("export.result", { request_id: "export:1", session: "session-b", outcome: { message: "Other Model." } });
-  assert.strictEqual(button().disabled, true, "an answer for another Model is not this request's");
-
-  var message = "No exporter is installed in this build, so nothing was written.";
-  p.receive("export.result", { request_id: "export:1", session: "session-a",
-    outcome: { status: "refused", code: "export.unavailable", message: message } });
-
+  p.receive("export.result", { request_id: id, session: "session-b", outcome: { message: "Other Model." } });
+  assert.strictEqual(button().disabled, true);
+  p.receive("export.result", { request_id: id, session: "session-a",
+    outcome: { status: "cancelled", code: "export.cancelled", message: "Export cancelled. Nothing was written." } });
   assert.strictEqual(button().disabled, false);
-  assert.strictEqual(pane().querySelector(".phc-export-status").textContent, message);
-  assert.strictEqual(p.notice().hidden, true, "export writes nothing to the Model, so no warning is raised");
+  assert.strictEqual(pane().querySelector(".phc-export-status").textContent, "Export cancelled. Nothing was written.");
 });
 
-test("a new Model clears the Export answer and any pending request", function () {
+test("blocking preflight disables destination selection and preserves its complete findings", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 1));
-  var pane = function () { return p.query("[data-section='export']"); };
-  pane().querySelector("button").listeners.click({});
-  p.receive("export.result", { request_id: "export:1", session: "session-a", outcome: { message: "Answered." } });
-  pane().querySelector("button").listeners.click({});
-  p.receive("panel.snapshot", snapshot("session-b", 1));
+  enterExport(p, [{ code: "construction.missing", message: "Assign an Assembly.", blocks_export: true }]);
+  var pane = p.query("[data-section='export']");
+  assert.strictEqual(pane.querySelector("button").disabled, true);
+  assert.strictEqual(pane.querySelector("li").textContent, "Assign an Assembly.");
+  pane.querySelector("button").listeners.click({});
+  assert.deepStrictEqual(p.sent, []);
+});
 
-  assert.strictEqual(pane().querySelector("button").disabled, false);
-  assert.strictEqual(pane().querySelector(".phc-export-status").textContent, "");
+test("running Export remains visible until cancelled and a Model switch drops its handle", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  enterExport(p);
+  p.query("[data-section='export']").querySelector("button").listeners.click({});
+  var start = p.sent[0].payload.request_id;
+  p.receive("export.result", { request_id: start, session: "session-a", outcome: { status: "completed",
+    value: { task_id: "task-a", stage: "reading", cancellable: true, outcome: null } } });
+  p.panel.showTab("overview");
+  assert.strictEqual(p.panel.state.ui.activeTab, "export");
+  var buttons = p.query("[data-section='export']").querySelectorAll("button");
+  buttons[1].listeners.click({});
+  var cancellation = p.sent[p.sent.length - 1];
+  assert.strictEqual(cancellation.type, "export.cancel");
+  assert.strictEqual(cancellation.payload.task_id, "task-a");
+  p.receive("export.result", { request_id: cancellation.payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { task_id: "task-a", stage: "finished", cancellable: false,
+      outcome: { status: "cancelled", message: "Cancelled.", findings: [] } } } });
+  p.panel.showTab("overview");
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview");
+  p.receive("panel.snapshot", snapshot("session-b", 1));
+  assert.strictEqual(p.query("[data-section='export']").querySelector(".phc-export-status").textContent, "");
 });

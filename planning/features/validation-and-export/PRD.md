@@ -1,9 +1,17 @@
 # Validation and export: behavior contract
 
 DATE: 2026-09-18
-STATUS: Requested. Draft, not interviewed.
+STATUS: Phase 1 HBJSON/report scope implemented and current-host verified 2026-09-30; later feature scope remains proposed. METr remains deferred.
 AUTHOR: Ed May, BLDGTYP, with Codex review
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
+
+## Delivery scope
+
+Ed deferred METr exporter development and consumer acceptance on 2026-09-20 until feature
+development is further along; the return milestone is unscheduled. Phase 1 delivers the canonical
+HBJSON/report workflow only. METr, exporter-selection defaults, optional-artifact recovery and
+METr-specific acceptance below remain future contracts, not Phase 1 requirements. The existing
+exporter seam and D2 policy remain valid.
 
 ## Problem
 
@@ -83,7 +91,7 @@ account. Unknown exceptions fail the pipeline; they do not become an `other` ite
 - Preflight shows blocking findings before opening a destination dialog and gives Locate or the
   feature's named repair. It does not invent automatic fixes.
 - The zones packet's **Solve stale adjacencies before export** is a checked preflight action already
-  accepted by that packet. If retained, the UI names the Model change and Undo boundary, runs it
+  accepted by that packet. The UI names the Model change and Undo boundary, runs it
   before the snapshot and revalidates. Export itself remains read-only.
 - Preflight passes an explicit all-Zone mutation set to the zones feature's public solve operation,
   independent of selection. Its proposal, refusal and atomic rollback rules are the same as a
@@ -162,7 +170,7 @@ defer HBJSON.
 | Q3 | Should stale-adjacency repair remain checked by default? | Yes, because the zones interview accepted it, but present it as a named preflight Model action with one Undo step before export begins |
 | Q4 | Should a successful export save the SKP? | No. Export reads current in-memory state and never saves or changes the Model implicitly |
 | Q5 | Which exporters are selected by default? | HBJSON/report are always on. METr defaults on once its gate passes and the preference may be remembered per user, not per SKP |
-| Q6 | Final METr file extension and overwrite UX | Confirm against the current METr import UI during the PHX spike; do not infer it from PHX internals |
+| Q6 | Final METr file extension and overwrite UX | Deferred with METr; confirm against its import UI when work resumes, since B1 did not open the output there |
 | Q7 | Is the Phase 1 placeholder construction acceptable as development-only proof? | Yes. Refuse it in packaged/user builds and remove the gate before Phase 2 can close |
 
 ## Non-goals

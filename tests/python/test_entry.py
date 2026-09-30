@@ -20,7 +20,12 @@ def test_a_document_translates_with_the_given_sections() -> None:
     assert result["state"] == "complete" and result["summary"]["objects"] == 5
 
 
-def test_the_foundation_build_carries_no_section_or_exporter() -> None:
-    assert SECTIONS == () and EXPORTERS == ()
+def test_the_product_build_lists_face_then_zone_sections_and_no_exporter() -> None:
+    assert [section.id for section in SECTIONS] == [
+        "ph_composer.zones.faces.export.faces",
+        "ph_composer.zones.export.zones",
+    ]
+    assert EXPORTERS == ()
     empty = {"schema_version": 1, "run_id": "run-0", "sections": {}}
-    assert json.loads(translate_json(json.dumps(empty)))["state"] == "complete"
+    result = json.loads(translate_json(json.dumps(empty)))
+    assert result["state"] == "failed" and result["failure"]["code"] == "payload.contract"

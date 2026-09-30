@@ -22,6 +22,18 @@ module PhComposer
       keyword_init: true
     )
 
+    # A change to what the host shows, and nothing else, as a contribution seam. `handler` is
+    # `->(request) { value }`, the same shape a query's takes, and it may change the selection, the
+    # camera or the state of a shared viewport service. It never writes a record, opens a Model
+    # operation or leaves an Undo entry.
+    #
+    # It is not a query, because `context/AGENT_INTERFACE.md` says a read never changes the camera or
+    # the selection. It is not an action, because an action's contract is a named native operation the
+    # user can undo, and there is nothing here to undo. Both halves of that are why the seam exists:
+    # before it, such a change could be reached from a native menu and from Ruby but from no client
+    # (context/EXTENSIBILITY.md, "View commands").
+    ViewCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
+
     # A panel snapshot section: the result of one registered query, under the section's name.
     SnapshotSection = Struct.new(:name, :owner, :query, :params, keyword_init: true)
 
@@ -32,7 +44,33 @@ module PhComposer
     # never writes. `name` is the section id the translation package reads, at `section_version`.
     # `result` declares the top-level result fields the feature's translation adds, in Export::Privacy's
     # schema form; `report` is `->(result, display_units) { [html_section, ...] }` over those fields.
-    ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, keyword_init: true)
+    # `preflight` optionally names a registered read query returning findings and explicit repair actions.
+    ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, :preflight,
+                                   keyword_init: true)
+
+    # One Colour-by mode (face-assignment PRD "Colour-by"). `projection`
+    # is `->(model) { [ColourBy::Entry, ...] }`: a pure read of the feature's own entities, their
+    # world transforms and the value each one carries. `colours` is `->(value) { [r, g, b] }`, nil for
+    # a value the mode cannot colour, which the service draws as incomplete. `entity_kind` is open
+    # prose naming what the mode paints; the service tessellates whatever entity an entry carries.
+    # `sort` is an optional `->(row) { key }` over legend rows.
+    ColourMode = Struct.new(:name, :owner, :label, :entity_kind, :colours, :sort, :projection, keyword_init: true)
+
+    # One native menu item: how a feature reaches SketchUp's own menus without `shell/` naming it.
+    # `menu` is the submenu's label and items are grouped under it in registration order.
+    # `handler` is `->(session) { }` and `state` an optional `->(session) { MF_CHECKED | MF_UNCHECKED }`
+    # for an item that shows whether its choice is the current one. `separator_after` closes a group.
+    # `available` is an optional `->(session) { true }` asked only when the viewport context menu is
+    # built, so an item appears on a right-click only where it applies; `shell/` cannot decide that
+    # for a feature, because deciding it means knowing what the feature's entities are.
+    #
+    # A menu item writes no record and opens no operation; that is the whole difference between one
+    # and an action. Starting a tool, choosing its palette and turning a Colour-by mode on are the
+    # three things in Phase 1 that are reached this way.
+    MenuItem = Struct.new(:name, :owner, :label, :menu, :separator_after, :handler, :state, :available,
+                          keyword_init: true)
+
+    ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)
 
     # One registration problem. `subject` is the declaration it concerns; `dependency` names what it
     # needed, when that is the problem.

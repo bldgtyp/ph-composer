@@ -10,7 +10,7 @@ module PhComposer
     # What the host observers publish for a session.
     HOST_EVENTS = %i[
       session_created model_activated transaction_committed transaction_undone transaction_redone
-      active_path_changed selection_changed pre_save post_save
+      active_path_changed selection_changed tags_changed pre_save post_save
     ].freeze
 
     class << self
@@ -37,7 +37,9 @@ module PhComposer
         selection_observer = HostObservers::SelectionObserver.new
         model.add_observer(model_observer)
         model.selection.add_observer(selection_observer) if model.selection.respond_to?(:add_observer)
-        session.add_observers(model_observer, selection_observer)
+        layers_observer = HostObservers::LayersObserver.new
+        model.layers.add_observer(layers_observer) if model.layers.respond_to?(:add_observer)
+        session.add_observers(model_observer, selection_observer, layers_observer)
         sessions[model.object_id] = session
         session.host_event(:session_created)
         session
@@ -101,10 +103,12 @@ module PhComposer
         session = sessions.delete(model.object_id)
         return true unless session
 
-        model_observer, selection_observer = session.observers
+        model_observer, selection_observer, layers_observer = session.observers
         model.remove_observer(model_observer) if model_observer && model.respond_to?(:remove_observer)
         selection = model.selection
         selection.remove_observer(selection_observer) if selection_observer && selection.respond_to?(:remove_observer)
+        layers = model.respond_to?(:layers) ? model.layers : nil
+        layers.remove_observer(layers_observer) if layers_observer && layers.respond_to?(:remove_observer)
         session.detach
         true
       end

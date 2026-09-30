@@ -16,8 +16,9 @@ module PhComposer
   class Registry
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
-    attr_reader :features, :queries, :actions, :record_kinds, :extensions, :snapshot_sections, :export_contributors,
-                :subscriptions
+    attr_reader :features, :queries, :actions, :view_commands, :record_kinds, :reference_targets, :extensions,
+                :snapshot_sections,
+                :export_contributors, :proposal_participants, :colour_modes, :menu_items, :subscriptions
 
     class << self
       def current
@@ -48,17 +49,23 @@ module PhComposer
       @features = {}
       @queries = {}
       @actions = {}
+      @view_commands = {}
       @record_kinds = {}
+      @reference_targets = {}
       @extensions = {}
       @snapshot_sections = {}
       @export_contributors = {}
+      @proposal_participants = {}
+      @colour_modes = {}
+      @menu_items = {}
       @subscriptions = []
       @unsubscribers = []
       @owners = {}
     end
 
     def catalog
-      Records::Catalog.new(:kinds => record_kinds.values, :extensions => extensions.values)
+      Records::Catalog.new(:kinds => record_kinds.values, :extensions => extensions.values,
+                           :reference_targets => reference_targets.values)
     end
 
     # The feature, query, action, record kind, extension or snapshot section that owns `name`.
@@ -81,11 +88,16 @@ module PhComposer
       staging.declared_features.each { |feature| @features[feature.id] = feature }
       publish_each(staging.declared_queries, @queries, :name)
       publish_each(staging.declared_actions, @actions, :name)
+      publish_each(staging.declared_view_commands, @view_commands, :name)
       publish_each(staging.declared_record_kinds, @record_kinds, :id)
       staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
+      publish_each(staging.declared_reference_targets, @reference_targets, :id)
       publish_each(staging.declared_extensions, @extensions, :namespace)
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
+      publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
+      publish_each(staging.declared_colour_modes, @colour_modes, :name)
+      publish_each(staging.declared_menu_items, @menu_items, :name)
       staging.owners.each { |name, owner| @owners[name] = owner }
       staging.declared_subscriptions.each do |subscription|
         @subscriptions << subscription
@@ -107,8 +119,11 @@ module PhComposer
 
     # Collects one batch's declarations and checks them against each other and the live registry.
     class Staging
-      attr_reader :declared_features, :declared_queries, :declared_actions, :declared_record_kinds,
-                  :declared_extensions, :declared_snapshot_sections, :declared_export_contributors,
+      attr_reader :declared_features, :declared_queries, :declared_actions, :declared_view_commands,
+                  :declared_record_kinds, :declared_reference_targets, :declared_extensions,
+                  :declared_snapshot_sections,
+                  :declared_export_contributors, :declared_proposal_participants, :declared_colour_modes,
+                  :declared_menu_items,
                   :declared_subscriptions, :owners, :named
 
       def initialize(live)
@@ -116,10 +131,15 @@ module PhComposer
         @declared_features = []
         @declared_queries = []
         @declared_actions = []
+        @declared_view_commands = []
         @declared_record_kinds = []
+        @declared_reference_targets = []
         @declared_extensions = []
         @declared_snapshot_sections = []
         @declared_export_contributors = []
+        @declared_proposal_participants = []
+        @declared_colour_modes = []
+        @declared_menu_items = []
         @declared_subscriptions = []
         @owners = {}
         @named = []
@@ -164,6 +184,10 @@ module PhComposer
         @staging.add(:declared_record_kinds, id, kind.id, kind)
       end
 
+      def reference_target(target)
+        @staging.add(:declared_reference_targets, id, target.id, target)
+      end
+
       def extension(extension)
         @staging.add(:declared_extensions, id, extension.namespace, extension)
       end
@@ -186,18 +210,51 @@ module PhComposer
         @staging.add(:declared_actions, id, name, declaration)
       end
 
+      # One viewport-state command: it changes what the host shows and never the Model, so it takes
+      # no `undo_name` and no sequence number. A handler that would write a record wants `action`.
+      def view_command(name, description:, params:, result:, examples: [], &handler)
+        declaration = Declarations::ViewCommand.new(
+          :name => name, :owner => id, :description => description, :params => params, :result => result,
+          :examples => examples, :handler => handler
+        )
+        @staging.add(:declared_view_commands, id, name, declaration)
+      end
+
       def snapshot_section(name, query:, params: {})
         declaration = Declarations::SnapshotSection.new(:name => name, :owner => id, :query => query, :params => params)
         @staging.add(:declared_snapshot_sections, id, name, declaration)
       end
 
       # Adds a section to the export extraction and declares the result fields its translation adds.
-      def export_contributor(name, section_version:, result: {}, report: nil, &contract)
+      def export_contributor(name, section_version:, result: {}, report: nil, preflight: nil, &contract)
         declaration = Declarations::ExportContributor.new(
           :name => name, :owner => id, :section_version => section_version, :contract => contract,
-          :result => result, :report => report
+          :result => result, :report => report, :preflight => preflight
         )
         @staging.add(:declared_export_contributors, id, name, declaration)
+      end
+
+      # One Colour-by mode. The projection reads this feature's own entities and never another's.
+      def colour_mode(name, label:, entity_kind:, colours:, sort: nil, &projection)
+        declaration = Declarations::ColourMode.new(
+          :name => name, :owner => id, :label => label, :entity_kind => entity_kind, :colours => colours,
+          :sort => sort, :projection => projection
+        )
+        @staging.add(:declared_colour_modes, id, name, declaration)
+      end
+
+      # One native menu item under the named submenu. The handler receives the current ModelSession.
+      def menu_item(name, label:, menu:, separator_after: false, state: nil, available: nil, &handler)
+        declaration = Declarations::MenuItem.new(
+          :name => name, :owner => id, :label => label, :menu => menu,
+          :separator_after => separator_after, :state => state, :available => available, :handler => handler
+        )
+        @staging.add(:declared_menu_items, id, name, declaration)
+      end
+
+      def proposal_participant(name, &handler)
+        declaration = Declarations::ProposalParticipant.new(:name => name, :owner => id, :handler => handler)
+        @staging.add(:declared_proposal_participants, id, name, declaration)
       end
 
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).

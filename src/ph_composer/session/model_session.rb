@@ -10,12 +10,14 @@ module PhComposer
   # The revision is one whole-Model counter (CONTRACTS.md C3). It advances on a committed mutation,
   # Undo, Redo and an edit-path change, and never on a read, a selection change or a save.
   class ModelSession
-    attr_reader :model, :id, :revision, :refresh, :observers, :callers, :outcomes
+    attr_reader :model, :id, :revision, :export_generation, :refresh, :observers, :callers, :outcomes
 
     def initialize(model)
       @model = model
       @id = SecureRandom.uuid
       @revision = 1
+      @export_generation = 1
+      @export_path = Array(model.active_path)
       @own_commits_pending = 0
       @exclusive = false
       @committing = false
@@ -35,8 +37,8 @@ module PhComposer
       !@detached && (!@model.respond_to?(:valid?) || @model.valid?)
     end
 
-    def add_observers(model_observer, selection_observer)
-      @observers = [model_observer, selection_observer]
+    def add_observers(*host_observers)
+      @observers = host_observers
     end
 
     # Why an authoritative read or write cannot run now, or nil when it can. A feature state object
@@ -72,6 +74,7 @@ module PhComposer
       @committing = false
       if committed || @commits_seen.positive?
         @revision += 1
+        @export_generation += 1
         @own_commits_pending += 1 if @commits_seen.zero?
       end
     end
@@ -82,7 +85,17 @@ module PhComposer
     end
 
     def host_event(kind, *arguments)
+      previous = @revision
+      path = Array(model.active_path)
+      # SketchUp 26.1 emits a commit for the new edit path immediately before its path callback.
+      # It commits preceding content changes separately while the old path is still active.
+      navigation_commit = kind == :transaction_committed && path != @export_path
       advance_revision_for(kind)
+      if %i[transaction_committed transaction_undone transaction_redone].include?(kind) &&
+         @revision != previous && !navigation_commit
+        @export_generation += 1
+      end
+      @export_path = path if kind == :transaction_committed || kind == :active_path_changed
       Sessions.notify_host_event(self, kind, *arguments)
     end
 

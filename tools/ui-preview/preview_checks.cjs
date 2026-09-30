@@ -82,12 +82,21 @@ fs.mkdirSync(output, { recursive: true });
   await page.setViewportSize({ width: 360, height: 520 });
   await shot("empty-narrow");
   await page.getByRole("button", { name: "Export" }).click();
-  await page.getByText("No exporter is installed.").waitFor();
+  await page.getByText("Export writes are unavailable in this browser preview.").waitFor();
+  assert(await page.getByRole("button", { name: "Choose destination…" }).isDisabled());
   await shot("export-narrow");
+
+  await page.goto(`${BASE}?fixture=authoring`);
+  await page.getByRole("heading", { name: "Zones" }).waitFor();
+  await page.getByRole("cell", { name: "Living Zone", exact: true }).waitFor();
+  await page.getByRole("cell", { name: "Attic Zone", exact: true }).waitFor();
+  await page.setViewportSize({ width: 360, height: 520 });
+  assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), "authoring has no page scroll");
+  await shot("authoring-narrow");
 
   assert.deepEqual(errors, []);
   console.log(`PASS: preview on the real panel: 4 viewports, draft through a unit switch, invalid entry, ` +
-    `form Escape, refused edit warning, empty and Export panes; evidence in ${output}`);
+    `form Escape, refused edit warning, empty, Export and authoring panes; evidence in ${output}`);
   await browser.close();
 })().catch((error) => {
   console.error(error);

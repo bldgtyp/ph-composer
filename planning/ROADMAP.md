@@ -1,13 +1,13 @@
 # Roadmap
 
-DATE: 2026-09-18
-STATUS: Phase 3/4 release boundaries confirmed; remaining ordering proposed. No implementation authorization.
+DATE: 2026-09-30
+STATUS: Phase 0 merged; Phase 1 P1-A through P1-F complete on branch for the named current-host scope.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 The high-level order of the core features and where each one stands. [STATUS.md](STATUS.md) is
-the index of every tracked item. This file is the sequence. Implementation plans and phase
-trackers live in each packet, in its `PLAN.md` and `STATUS.md`.
+the index of every tracked item. This file is the sequence. The [Phase 1 packet](phase-one/README.md)
+coordinates the three owning feature plans and their acceptance gates. Feature behavior remains in each PRD.
 
 Cross-cutting choices that need Ed's answer are in [DECISIONS.md](DECISIONS.md). Feature-local
 questions remain in their owning PRDs.
@@ -22,8 +22,9 @@ Build the part nobody has built before first, and prove it end to end before add
 The predecessor already proved the Assembly Builder, the Window Type editor, the Library tab,
 Spaces and units. Those are ports with known cost. What PH-Composer has never done is what
 designPH used to do: decide what a Zone is, which faces are envelope, and turn that into a
-honeybee model METr accepts. If that fails or turns out slow, every other packet changes. So the
-first milestone is one box, drawn in SketchUp, opened in METr, with default constructions.
+honeybee model. The first milestone proves two authored Zones through canonical HBJSON and its
+report, using a development-only construction fixture. Ed deferred METr export on 2026-09-20
+until further feature development; conversion and actual import resume at a later, unscheduled milestone.
 
 Libraries do not come first. A library holds Materials, Frames, Glazings and Psi-Install Types,
 and those record kinds are defined by the assemblies and window-types packets. Manual entry is
@@ -35,7 +36,7 @@ record kind exists, so it is shaped against a real kind and then reused by the n
 | Phase | Name | Ends when |
 | --- | --- | --- |
 | 0 | Gates and foundation | The transplanted shell loads in SketchUp, tests pass, and the four spikes have answers |
-| 1 | Walking skeleton | A two-Zone model with assigned faces exports to HBJSON and opens in METr |
+| 1 | Walking skeleton | A two-Zone model with assigned faces exports a coherent HBJSON/report pair and reloads in honeybee |
 | 2 | Envelope | Real assemblies and real windows on that model, with a file library |
 | 3 | Rooms and junctions | Spaces and thermal bridges. The model matches what a designPH export gave |
 | 4 | Mechanical | Equipment, ducting and piping. METr needs no hand entry before its first run |
@@ -57,27 +58,36 @@ through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1). The packet is ar
 | --- | --- | --- | --- | --- |
 | 0.1 | PHX without Excel, [PHX#157](https://github.com/PH-Tools/PHX/issues/157) | external spike | Complete 2026-09-18, [route viable](archive/phase-zero/evidence/spike-phx.md) | The founding brief's first technical gate. If PHX cannot run in Pyodide, METr export needs a different route and phase 1 changes |
 | 0.2 | [Foundation transplant](archive/foundation-transplant.md) | refactor | Complete 2026-09-18, merged through PR #1 | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
-| 0.3 | [Units](features/units/README.md) | feature, port | Scoped, Phase 0 split confirmed | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
+| 0.3 | [Units](features/units/README.md) | feature, port | Shared portion merged through PR #1; feature quantities remain | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
 | 0.4 | Overlay fill spike | spike | Complete 2026-09-18, [pass](archive/phase-zero/evidence/spike-overlay.md) | Gates Colour-by, which face-assignment needs in phase 1 |
 | 0.5 | Window component host spike | spike | Complete 2026-09-18, [flat component holds, five plan consequences](archive/phase-zero/evidence/spike-window.md) | Gates window-types. Cheap to run with 0.4 |
 | 0.6 | Edge identity spike | spike | Complete 2026-09-18, [dictionaries survive, and multiply](archive/phase-zero/evidence/spike-edge.md) | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
 | 0.7 | Development repository home and MVP license boundary | decisions | Confirmed | D5 keeps the UI kit AGPL and external integrations at file/HTTPS seams. D8 keeps development at `bldgtyp/ph-composer`; the public name and any future organization move remain open |
 
-The three host spikes are one session against the predecessor's bridge. They need no
-PH-Composer code, so they can run before or beside the transplant.
+The host investigations are complete. Their evidence records the PH-Composer development bridge
+and current proving host; feature-specific lifecycle and geometry gates remain with their owners.
 
 ## Phase 1: walking skeleton
 
+The [execution plan](phase-one/PLAN.md) starts from the merged foundation. P1-A binds entity-owned
+records and geometry transactions, P1-B builds Zone/face authoring, P1-C proves two-Zone HBJSON,
+P1-D completes authoring behavior, P1-E closes the HBJSON/report handoff, and P1-F records acceptance.
+The early proof does not mark the full feature packets complete.
+
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 1.1 | [Zones and adjacency](features/zones-and-adjacency/README.md) | Scoped, interviewed | First, because a boundary condition names what is on the other side |
-| 1.2 | [Face assignment](features/face-assignment/README.md) | Scoped, interviewed | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
-| 1.3 | [Validation and export](features/validation-and-export/README.md) | Requested, PRD drafted | Owns the export run, findings, Export tab, canonical HBJSON/report pair and the METr exporter through PHX |
+| 1.1 | [Zones and adjacency](features/zones-and-adjacency/README.md) | In progress; P1-C adjacency implemented | First, because a boundary condition names what is on the other side |
+| 1.2 | [Face assignment](features/face-assignment/README.md) | In progress; the Classify tool, P1-D gestures and Attached zones implemented and host-verified, and the Overview screen, faces table, Colour-by legend and panel palette implemented with their host gate outstanding | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
+| 1.3 | [Validation and export](features/validation-and-export/README.md) | Scoped draft, interview decisions open | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
 
-Exit: draw two boxes, make them Zones, classify the faces, export, open in METr. Constructions
+Exit: draw two boxes, make them Zones, classify the faces, export and reload the exact HBJSON. Constructions
 use one deterministic development-only placeholder. That placeholder is a vertical-slice fixture,
 not a user fallback, and packaged/user builds refuse it. Phase 2 closes the gate with real
 assemblies.
+
+METr exporter development, PHX-specific runtime integration and actual consumer acceptance are
+deferred with no assigned phase. The broader MVP still targets METr; schedule its delivery before
+claiming that outcome. This change leaves envelope and mechanical feature work in their existing order.
 
 ## Phase 2: envelope
 
@@ -97,7 +107,7 @@ assemblies.
 | 3.2 | [Thermal bridges](features/thermal-bridges/README.md) | Requested, PRD drafted | New. Depends on spike 0.6. Brings the edge Classify tool that phase 4 reuses |
 
 These two are independent of each other and of phase 2. Either can move earlier if a port is
-wanted as a warm-up. They sit here because neither is needed for the model to open in METr.
+wanted as a warm-up. They sit here because neither is needed for the Phase 1 canonical HBJSON proof.
 
 ## Phase 4: mechanical
 
@@ -136,14 +146,24 @@ wanted as a warm-up. They sit here because neither is needed for the model to op
                                           4.3 hot water ───────── 4.4 piping
 ```
 
-## What is needed before phase 1 can be planned
+## Phase 1 completion and next scope
 
-1. The validation and export packet is interviewed; D2 is already confirmed.
-2. Units inheritance and Phase 0 scope are confirmed. Remaining quantity questions and the
-   thermal-bridge, equipment, piping and ducting interviews belong to their later feature plans.
-3. Go on the spikes and the transplant.
+P1-A through P1-F are complete on branch for the named current-host scope. The
+[execution plan](phase-one/PLAN.md) and [final evidence](phase-one/evidence/p1-e-export-workflow.md)
+record authoring, export tasks, the pinned wheel payload and fresh integrated acceptance.
+The normal build safely refuses without authored Assemblies; successful Phase 1 translation uses
+an explicit tools-only provider. Phase 2 supplies real Assembly/material authoring and its gates.
+Merge, SketchUp 2023/Windows host proof and public distribution remain separate. METr decisions
+wait until that work is separately scheduled.
+
+B1 proved PHX conversion, not import into METr. Keep its evidence for the deferred exporter.
+Phase 1 needs no METr floor-area workaround. Revisit consumer requirements against the authoring
+features available when METr development resumes.
 
 ## Ledger
+
+Post-merge refresh on 2026-09-20: added Phase 1 execution/feature plans, replaced completed
+prerequisites and carried B1/B2 conditions into the next phase.
 
 | Date | Event |
 | --- | --- |
@@ -151,3 +171,7 @@ wanted as a warm-up. They sit here because neither is needed for the model to op
 | 2026-09-18 | Review added the foundation and validation/export scopes, explicit Phase 1 placeholder boundary and cross-cutting decision register. |
 | 2026-09-18 | Ed confirmed the Phase 3 internal-release and Phase 4 MVP boundaries, the Systems navigation, MVP license boundary, and development repository home. |
 | 2026-09-18 | D9 confirmed the EPW monthly-work boundary and the user-supplied peak-load gate for METr climate export. |
+| 2026-09-20 | Ed deferred METr exporter development and consumer acceptance until further feature development. Phase 1 closes on canonical HBJSON/report; return milestone unscheduled. |
+| 2026-09-20 | P1-B implemented the Zone/Face authoring core, public operations and minimal Overview UI; native save/reopen and Undo/Redo acceptance passed. |
+| 2026-09-20 | P1-D D7 built the Overview Zone tree and faces table, the panel Colour-by legend and the Classify palette, on a sixth contribution seam for viewport-state commands. Its host gate is outstanding. |
+| 2026-09-20 | P1-C implemented whole-wall adjacency and the two-Zone HBJSON proof. Ed authorized P1-D, which is delivered in slices; D1 and D2 are implemented. |

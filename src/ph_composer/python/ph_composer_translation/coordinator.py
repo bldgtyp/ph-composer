@@ -80,6 +80,7 @@ def translate(document: object, sections: Sequence[Section[Any, Any]]) -> Transl
         result = run_section(section, inputs[section.id], objects, translation.findings)
         translation.results[section.id] = result
         objects[section.id] = result.objects
+        translation.findings.extend(section.findings(result.objects))
         add_fields(translation, section, result)
     return translation
 

@@ -1,7 +1,7 @@
 # Decision register
 
-DATE: 2026-09-18
-STATUS: D1-D11 confirmed 2026-09-18. No implementation authorization.
+DATE: 2026-09-20
+STATUS: D1-D11 confirmed 2026-09-18; D12 confirmed 2026-09-20. P1-A through P1-C complete on the implementation branch.
 AUTHOR: Ed May, BLDGTYP, with Codex review
 
 This register collects only choices that change the product boundary, architecture, roadmap or
@@ -23,6 +23,7 @@ are folded into their owners. No program decision in this register remains open.
 | D9 | Confirmed | EPW-derived monthly data may be used for preliminary demand work and overlays. A climate-bearing METr export remains blocked until the user supplies authorized peak-load values by manual entry, paste or a user-owned dataset. Never synthesize peak loads | Preserves useful EPW-derived monthly data without disguising it as a complete or certification-ready climate | [climate-data](features/climate-data/PRD.md) |
 | D10 | Confirmed | Contributor comprehension and extensibility govern architecture and coding standards. Built-in features use public contracts; provide scripting, namespaced metadata and registered extension data. Apply a repository-local architecture skill within the existing implementation review | Records accepted direction without implementing APIs; exact scripting, lifecycle and registration contracts remain design work. Size metrics guide review rather than force fragmentation | [EXTENSIBILITY.md](../context/EXTENSIBILITY.md), [CODING_STANDARDS.md](../context/CODING_STANDARDS.md) |
 | D11 | Confirmed priority | Users' agents must be able to inspect, view and write through a clear public interface designed into the foundation. PH-Composer does not build an agent | Public operations support external clients as well as UI and scripts. MCP is a recommended adapter, with transport and delivery choices still open; no implementation authorized | [AGENT_INTERFACE.md](../context/AGENT_INTERFACE.md) |
+| D12 | Confirmed 2026-09-20 | Defer METr exporter development and consumer acceptance until feature development is further along. Phase 1 ends with canonical HBJSON/report | PHX integration, optional-output recovery and METr floor-area/import decisions are deferred; return milestone unscheduled. HBJSON development continues through separately authorized Phase 1 stages | [Phase 1](phase-one/README.md), [ROADMAP.md](ROADMAP.md) |
 
 ## Technical gates that need an answer, not a product preference
 

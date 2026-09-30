@@ -6,26 +6,81 @@ module PhComposer
   # session, validation before any operation opens, one native operation per accepted change, and a
   # verified rollback when that operation fails. Handlers only read and propose.
   class Dispatch
-    REQUEST_KEYS = %w[sequence expected_revision].freeze
+    REQUEST_KEYS = %w[sequence expected_revision proposal_digest].freeze
 
     # What a query or action handler receives.
-    Request = Struct.new(:session, :model, :params, :engine, :revision, keyword_init: true)
+    Request = Struct.new(:session, :model, :params, :engine, :revision, :registry, keyword_init: true) do
+      def participant(name)
+        declaration = registry.proposal_participants[name]
+        raise CodedError.new("operation.participant_missing", "No proposal participant named #{name} is installed.") \
+          unless declaration
+
+        declaration.handler
+      end
+    end
 
     def initialize(registry = Registry.current)
       @registry = registry
     end
 
     def query(context, name, params)
-      session, _caller, query = resolve(context, "read", name, @registry.queries)
-      check_params!(query, params, session)
-      refuse_if_busy!(session)
-      value = query.handler.call(request_for(session, params))
-      check_result!(query, value)
+      answer(context, "read", name, @registry.queries, params)
+    end
+
+    # File export has its own grant and never enters a Model mutation. Polling and cancellation
+    # use the same explicit session as starting the task, even when another Model is foreground.
+    def export_task(context, operation, arguments)
+      session, = resolve(context, "export", nil, nil)
+      tasks = Export::Tasks.for(session)
+      value = case operation
+              when :start then tasks.start(**arguments)
+              when :status then tasks.status(arguments.fetch(:task_id))
+              when :cancel then tasks.cancel(arguments.fetch(:task_id))
+              when :latest then tasks.latest
+              else raise InternalError, "Unknown export task operation."
+              end
       Outcome.completed(:revision => session.revision, :value => value)
     rescue CodedError => error
       coded_outcome(error, session)
+    rescue UserError => error
+      Outcome.refused("export.refused", error.message, :revision => session&.revision)
     rescue StandardError => error
-      unexpected_outcome(error, session, name)
+      unexpected_outcome(error, session, "export.#{operation}")
+    end
+
+    def export_preflight(context)
+      session, = resolve(context, "read", nil, nil)
+      value = { "findings" => [], "repairs" => [] }
+      @registry.export_contributors.values.sort_by(&:name).each do |contributor|
+        next unless contributor.preflight
+
+        outcome = query(context, contributor.preflight, {})
+        return outcome unless outcome["status"] == "completed"
+
+        declared = outcome.fetch("value")
+        value["findings"].concat(declared.fetch("findings"))
+        declared.fetch("repairs").each do |repair|
+          action = @registry.actions[repair["action"]]
+          unless action&.owner == contributor.owner
+            raise InternalError, "Preflight repair needs its owner's public action."
+          end
+
+          value["repairs"] << repair
+        end
+      end
+      Outcome.completed(:revision => session.revision, :value => DeepCopy.call(value))
+    rescue CodedError => error
+      coded_outcome(error, session)
+    rescue StandardError => error
+      unexpected_outcome(error, session, "export.preflight")
+    end
+
+    # A change to what the host shows and nothing else (Declarations::ViewCommand). It carries no
+    # sequence number and returns no proposal, because there is nothing to retry and nothing to undo.
+    # It refuses while the session is busy, as a read does, so it cannot move the camera or the
+    # selection out from under an operation that is still running.
+    def view(context, name, params)
+      answer(context, "view", name, @registry.view_commands, params)
     end
 
     # What an operation would change, without changing anything. The result is bound to the revision
@@ -34,10 +89,12 @@ module PhComposer
       session, _caller, action = resolve(context, "read", name, @registry.actions)
       check_params!(action, params, session)
       refuse_if_busy!(session)
-      changes = Records::ChangeSet.new
-      value = action.handler.call(request_for(session, params), changes)
+      proposal = Operations::Proposal.new
+      value = action.handler.call(request_for(session, params), proposal)
+      raise proposal.refusal if proposal.refusal
       check_result!(action, value)
-      Outcome.completed(:revision => session.revision, :value => value, :affected => changes.affected,
+      Outcome.completed(:revision => session.revision, :value => value, :affected => proposal.affected,
+                        :findings => proposal.findings, :proposal_digest => proposal.digest,
                         :message => "Preview only.")
     rescue CodedError => error
       coded_outcome(error, session)
@@ -45,19 +102,28 @@ module PhComposer
       unexpected_outcome(error, session, name)
     end
 
+    # R-D3: a request whose params are not plain JSON is refused before acceptance. It cannot be
+    # digested, so it consumes no sequence and retains no outcome; the caller resends it corrected
+    # under the same sequence.
     def invoke(context, name, params, request)
       session, caller, action = resolve(context, "model_write", name, @registry.actions)
-      sequence, expected_revision = read_request!(request, session)
-      retained = retained_outcome(session, caller, sequence, name, params, expected_revision)
+      sequence, expected_revision, proposal_digest = read_request!(request, session)
+      check_json!(params, session)
+      retained = retained_outcome(session, caller, sequence, name, params, expected_revision, proposal_digest)
       return retained if retained
 
       refuse_if_busy!(session)
+      # Digested before the sequence is taken, so anything that cannot be canonicalized still leaves
+      # the caller's sequence free.
+      digest = request_digest(name, params, expected_revision, proposal_digest)
       caller.highest_sequence = sequence
-      session.outcomes.begin(caller.handle, sequence, request_digest(name, params, expected_revision))
-      outcome = session.exclusive { run(session, action, params, expected_revision) }
+      session.outcomes.begin(caller.handle, sequence, digest)
+      outcome = session.exclusive { run(session, action, params, expected_revision, proposal_digest) }
       session.outcomes.finish(caller.handle, sequence, outcome)
     rescue CodedError => error
       coded_outcome(error, session, :mutation => true)
+    rescue StandardError => error
+      unexpected_outcome(error, session, name)
     end
 
     # The retained outcome of an earlier mutation request, without running it again.
@@ -79,6 +145,26 @@ module PhComposer
     private
 
     # ---------------------------------------------------------------- acceptance
+
+    # A read and a view command run the same way: validate, refuse while busy, call the handler, check
+    # the result against its declared schema. They differ in the capability they need and in what the
+    # handler is allowed to touch, which is the declaration's business rather than this method's.
+    def answer(context, capability, name, declarations, params)
+      session, _caller, declaration = resolve(context, capability, name, declarations)
+      check_params!(declaration, params, session)
+      refuse_if_busy!(session)
+      value = declaration.handler.call(request_for(session, params))
+      check_result!(declaration, value)
+      Outcome.completed(:revision => session.revision, :value => value)
+    rescue CodedError => error
+      coded_outcome(error, session)
+    rescue UserError => error
+      # A handler that refuses what it was asked for says why, as an operation does: "There is no
+      # Colour-by mode named ..." is the answer, not a generic failure.
+      Outcome.refused("validation.failed", error.message, :revision => session&.revision)
+    rescue StandardError => error
+      unexpected_outcome(error, session, name)
+    end
 
     def resolve(context, capability, name, declarations)
       unless context.is_a?(OperationContext)
@@ -118,15 +204,20 @@ module PhComposer
                                                   "integer expected_revision.", "revision" => session.revision)
       end
 
-      [sequence, expected_revision]
+      proposal_digest = request["proposal_digest"]
+      unless proposal_digest.nil? || proposal_digest.is_a?(String)
+        raise CodedError.new("request.malformed", "proposal_digest must be a string when supplied.")
+      end
+
+      [sequence, expected_revision, proposal_digest]
     end
 
     # CONTRACTS.md C4: a sequence at or below the caller's highest accepted one is a retry, never new work.
-    def retained_outcome(session, caller, sequence, name, params, expected_revision)
+    def retained_outcome(session, caller, sequence, name, params, expected_revision, proposal_digest)
       entry = session.outcomes.lookup(caller.handle, sequence)
       if entry
         return pending(session) if entry.pending?
-        same_request = entry.digest == request_digest(name, params, expected_revision)
+        same_request = entry.digest == request_digest(name, params, expected_revision, proposal_digest)
         return session.outcomes.retained(caller.handle, sequence) if same_request
 
         raise CodedError.new("request.sequence_conflict", "Sequence #{sequence} was already used for a different " \
@@ -138,8 +229,9 @@ module PhComposer
                                                           "has expired; inspect the Model before issuing new work.")
     end
 
-    def request_digest(name, params, expected_revision)
-      CanonicalJson.digest("name" => name, "params" => params, "expected_revision" => expected_revision)
+    def request_digest(name, params, expected_revision, proposal_digest = nil)
+      CanonicalJson.digest("name" => name, "params" => params, "expected_revision" => expected_revision,
+                           "proposal_digest" => proposal_digest)
     end
 
     def pending(session)
@@ -153,14 +245,17 @@ module PhComposer
     end
 
     def check_params!(declaration, params, session)
-      unless params.is_a?(Hash) && JsonValue.problems(params).empty?
-        raise CodedError.new("request.malformed", "Params must be a plain JSON object.", "revision" => session.revision)
-      end
-
+      check_json!(params, session)
       findings = JsonSchema.validate(params, declaration.params)
       return if findings.empty?
 
       raise CodedError.new("params.invalid", "The request is not valid: #{findings.first}.", "findings" => findings)
+    end
+
+    def check_json!(params, session)
+      return if params.is_a?(Hash) && JsonValue.problems(params).empty?
+
+      raise CodedError.new("request.malformed", "Params must be a plain JSON object.", "revision" => session.revision)
     end
 
     def check_result!(declaration, value)
@@ -172,12 +267,13 @@ module PhComposer
 
     def request_for(session, params)
       Request.new(:session => session, :model => session.model, :params => DeepCopy.call(params),
-                  :engine => Records::Engine.new(session.model, @registry.catalog), :revision => session.revision)
+                  :engine => Records::Engine.new(session.model, @registry.catalog), :revision => session.revision,
+                  :registry => @registry)
     end
 
     # ---------------------------------------------------------------- the mutation
 
-    def run(session, action, params, expected_revision)
+    def run(session, action, params, expected_revision, expected_proposal_digest)
       check_params!(action, params, session)
       if expected_revision != session.revision
         raise CodedError.new("revision.stale", "The Model has changed since revision #{expected_revision}; it is " \
@@ -185,17 +281,23 @@ module PhComposer
       end
 
       request = request_for(session, params)
-      changes = Records::ChangeSet.new
-      value = action.handler.call(request, changes)
+      proposal = Operations::Proposal.new
+      value = action.handler.call(request, proposal)
       # A handler that rescued a refusal still proposed an incomplete change; it is refused whole.
-      raise changes.refusal if changes.refusal
+      raise proposal.refusal if proposal.refusal
 
       check_result!(action, value)
-      if changes.empty?
-        return Outcome.completed(:revision => session.revision, :value => value, :message => "Nothing to change.")
+      if expected_proposal_digest && expected_proposal_digest != proposal.digest
+        raise CodedError.new("proposal.changed", "The proposed change no longer matches the preview.")
+      end
+      if proposal.empty?
+        # Nothing to write is not nothing to say. A handler that only had findings, such as a Solve
+        # whose every candidate was a sliver, still has to hand them back.
+        return Outcome.completed(:revision => session.revision, :value => value,
+                                 :findings => proposal.findings, :message => "Nothing to change.")
       end
 
-      commit(session, action, request.engine, changes, value)
+      commit(session, action, request.engine, proposal, value)
     rescue CodedError => error
       coded_outcome(error, session, :mutation => true)
     rescue UserError => error
@@ -209,29 +311,34 @@ module PhComposer
       # `failed` with effect `none`: the error came before any operation opened.
     end
 
-    def commit(session, action, engine, changes, value)
+    def commit(session, action, engine, proposal, value)
+      proposal.capture(session.model)
       session.mutate do
-        ModelOperation.perform(session.model, action.undo_name) { engine.apply(changes) }
+        ModelOperation.perform(session.model, action.undo_name) { proposal.apply(session.model, engine) }
         true
       end
       session.changed(:action, action.name)
       Outcome.completed(:revision => session.revision, :value => value, :effect => "committed",
-                        :affected => changes.affected)
+                        :affected => proposal.affected, :findings => proposal.findings,
+                        :proposal_digest => proposal.digest)
     rescue StandardError => error
-      effect = verified_unchanged?(engine, changes) ? "rolled_back" : "unknown"
+      effect = verified_unchanged?(session.model, engine, proposal) ? "rolled_back" : "unknown"
       Diagnostics.log("operation_failed", "operation" => action.name, "status" => effect,
                                           "error_class" => error.class.name)
-      Outcome.failed(:effect => effect, :revision => session.revision)
+      reason = error.is_a?(CodedError) ? error : nil
+      Outcome.failed(:effect => effect, :revision => session.revision, :reason => reason)
     end
 
-    def verified_unchanged?(engine, changes)
-      engine.unchanged?(changes)
+    def verified_unchanged?(model, engine, proposal)
+      proposal.unchanged?(model, engine)
     rescue StandardError
       false
     end
 
-    # A read that failed unexpectedly (a handler bug, a result outside its schema) answers every client
-    # with the same failed outcome; the error goes to the log. Reads open no operation, so nothing changed.
+    # A read or a view command that failed unexpectedly (a handler bug, a result outside its schema)
+    # answers every client with the same failed outcome; the error goes to the log. Neither opens an
+    # operation, so `effect` is "none": the Model is unchanged. A view command may still have moved the
+    # viewport part-way, which is why a client re-reads what it shows rather than assuming.
     def unexpected_outcome(error, session, name)
       Diagnostics.log("operation_failed", "operation" => name, "code" => "operation.failed",
                                           "error_class" => error.class.name)
