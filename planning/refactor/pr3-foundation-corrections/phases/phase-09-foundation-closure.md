@@ -3,7 +3,7 @@
 DATE: 2026-09-30
 STATUS: Blocked
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/5
 MERGE SET: No
 BLOCKED ON: Phases 06 to 08 `Implemented on branch`
 

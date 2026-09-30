@@ -1,22 +1,21 @@
 # PR #3 foundation corrections: status
 
 DATE: 2026-09-30
-STATUS: In progress; merge-set phases authorized 2026-09-30
+STATUS: Merge set merged to main (abd86f4); Phases 06 to 09 in progress on `foundation-corrections-followup`
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: https://github.com/bldgtyp/ph-composer/issues/4 (merge set, [R-D6](DECISIONS.md#r-d6-issue-intake))
+ISSUE: [#4](https://github.com/bldgtyp/ph-composer/issues/4) merge set (closed); [#5](https://github.com/bldgtyp/ph-composer/issues/5) Phases 06 to 09 ([R-D6](DECISIONS.md#r-d6-issue-intake))
 PR: https://github.com/bldgtyp/ph-composer/pull/3
 BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` for 06 to 09
 
 ## Next step
 
-Ed merges PR #3; merge-set rows then move to `Merged to main`. Phases 06 to 09 start on a branch
-from `main` with the second issue (R-D6).
+Phase 06 on `foundation-corrections-followup`, tracked in [#5](https://github.com/bldgtyp/ph-composer/issues/5).
 
 ## Blockers
 
 | Blocker | Blocks |
 | --- | --- |
-| PR #3 merged | 06 to 09 |
+| Phases 06 to 08 | 09 |
 
 ## Decisions
 
@@ -43,16 +42,16 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 
 | Phase | Merge set | State | Commit | Notes |
 | --- | --- | --- | --- | --- |
-| [01a](phases/phase-01a-model-correctness.md) Model correctness | Yes | Implemented on branch | `024cbfc`, `71c98b2`, `1bd2503` | |
-| [01b](phases/phase-01b-invocation-validation.md) Invocation validation | Yes | Implemented on branch | `a9b8f5c` | |
-| [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Implemented on branch | `ec20723` | |
-| [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Implemented on branch | `907817c` to `97cd90a` | |
-| [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Implemented on branch | `71b8534`, `16bd367` | |
-| [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Implemented on branch | `bda13df` | |
-| [05](phases/phase-05-merge-closure.md) Merge closure | Yes | Implemented on branch; awaiting merge | `08aa837`, `b2dd8b2` | Ed merges |
-| [06](phases/phase-06-api-hardening.md) API hardening | No | Blocked | | PR #3 merged |
-| [07](phases/phase-07-hbjson-metadata-policy.md) HBJSON metadata policy | No | Blocked | | PR #3 merged |
-| [08](phases/phase-08-responsibility-refactors.md) Non-`zones` refactors | No | Blocked | | PR #3 merged |
+| [01a](phases/phase-01a-model-correctness.md) Model correctness | Yes | Merged to main | `024cbfc`, `71c98b2`, `1bd2503` | |
+| [01b](phases/phase-01b-invocation-validation.md) Invocation validation | Yes | Merged to main | `a9b8f5c` | |
+| [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Merged to main | `ec20723` | |
+| [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Merged to main | `907817c` to `97cd90a` | |
+| [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Merged to main | `71b8534`, `16bd367` | |
+| [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Merged to main | `bda13df` | |
+| [05](phases/phase-05-merge-closure.md) Merge closure | Yes | Merged to main | `08aa837`, `b2dd8b2`; merge `abd86f4` | |
+| [06](phases/phase-06-api-hardening.md) API hardening | No | Scoped | | |
+| [07](phases/phase-07-hbjson-metadata-policy.md) HBJSON metadata policy | No | Scoped | | |
+| [08](phases/phase-08-responsibility-refactors.md) Non-`zones` refactors | No | Scoped | | |
 | [09](phases/phase-09-foundation-closure.md) Foundation closure | No | Blocked | | 06 to 08 |
 
 ## Finding tracker
@@ -71,27 +70,27 @@ Phase 08 into Phase 02.
 
 | ID | Finding | Pri | Merge | Phase | State | Test / evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| M1 | Shared child Group bypasses Face mutation refusal | P1 | Yes | 01a | Implemented on branch | `zone_face_test`: shared child Group classify/reverse refusals (3 tests) |
-| M2 | Explicit Face path crosses a nested authored Zone | P2 | Yes | 01a | Implemented on branch | `zone_face_test`: nested-Zone path refusal, ordinary nested Group |
-| M3a | Attached-zone delete ignores orphan Face references (feature action) | P2 | Yes | 01a | Implemented on branch | `attached_zone_test`: stranded-Face delete refusals, Restore route (3 tests) |
-| M3b | Generic incoming-reference guard skips entity core references | P2 | Yes | 02 | Implemented on branch | `entity_descriptor_test`, `attached_zone_test` engine refusal; `907817c`, `98fd918` |
-| M4 | Partial pairing keeps `attached_zone_id` on Surface pieces | P2 | Yes | 01a | Implemented on branch | `zone_solve_scope_test`: partial AttachedZone pair, one and two sides |
-| U1 | Overview selection discards Zone details draft | P2 | Yes | 01c | Implemented on branch | `overview_panel_test`: draft navigation, Cancel, pending, Model switch (7 tests) |
-| A03 | Non-JSON params escape and consume a sequence | P2 | Yes | 01b | Implemented on branch | `api_test`: non-JSON params refusal, lost-response retry |
-| OWN | Zones/FaceAssignment reciprocal private dependencies; one `zones` owner | Foundation | Yes | 02 | Implemented on branch | `loader_test`: zones owns every zones.* name; commits `e9c6f87`, `4e9e187`, `eeac00c` |
-| DESC | Entity descriptors: values, references, occurrence schemas | Foundation | Yes | 02 | Implemented on branch | `entity_descriptor_test` (5); `98fd918` |
-| SNAP | `GeometrySnapshot#zone_owner` holds Zone policy in shared export | P2 | Yes | 02 | Implemented on branch | `geometry_snapshot_test` (2); `7196475` |
-| CAT | `SplitAndPairStep` reads `Registry.current.catalog` during apply | Hidden dependency | Yes | 02 | Implemented on branch | `zone_solve_scope_test` alternate registry; `020328a` |
-| REF-Z | `zones`-internal refactors: pair validity rule, `cut_partition`, `keeper_path`, `Overlap.partition`, `install.rb` split | Advisory | Yes (R-D9) | 02 | Implemented on branch | `ba20aed`, `062b308`, `d64d2c4`; Overlap.partition skipped (see phase Result) |
-| RP | Unused `revision` param on `Zones::Repair.restore_plan` | Cleanup | Yes (R-D9) | 02 | Implemented on branch | `97cd90a` |
-| A01 | Zone/Face discovery lacks schemas, result shapes, examples | P1 | Yes | 03 | Implemented on branch | `api_reference_test`, `api_client_test`; `71b8534` |
-| DOC | Stale authorities: TECH_STACK, PRD, DEVELOPMENT, AGENT_INTERFACE | Consistency | Yes | 04 | Implemented on branch | `bda13df`, with `742e75e` |
-| SKL | UI skill `references/patterns.md` names predecessor paths | Consistency | Yes | 04 | Implemented on branch | `bda13df` |
-| A02 | Unbounded entity reads, ignored filters, loose cursors | P2 | No | 06 | Blocked | |
-| A04 | Export task methods not describable | P2 | No | 06 | Blocked | |
-| A06 | Registration schema/callable/example validation, frozen declarations | P2 | No | 06 | Blocked | |
-| HBJ | Opaque canonical HBJSON bypasses metadata-key guard; declared-key allowlist (R-D2) | P2 | No | 07 | Blocked | |
-| REF | Non-`zones` refactors: `Workflow.start`, export-contributor validation, hatch clipping | Advisory | No | 08 | Blocked | |
+| M1 | Shared child Group bypasses Face mutation refusal | P1 | Yes | 01a | Merged to main | `zone_face_test`: shared child Group classify/reverse refusals (3 tests) |
+| M2 | Explicit Face path crosses a nested authored Zone | P2 | Yes | 01a | Merged to main | `zone_face_test`: nested-Zone path refusal, ordinary nested Group |
+| M3a | Attached-zone delete ignores orphan Face references (feature action) | P2 | Yes | 01a | Merged to main | `attached_zone_test`: stranded-Face delete refusals, Restore route (3 tests) |
+| M3b | Generic incoming-reference guard skips entity core references | P2 | Yes | 02 | Merged to main | `entity_descriptor_test`, `attached_zone_test` engine refusal; `907817c`, `98fd918` |
+| M4 | Partial pairing keeps `attached_zone_id` on Surface pieces | P2 | Yes | 01a | Merged to main | `zone_solve_scope_test`: partial AttachedZone pair, one and two sides |
+| U1 | Overview selection discards Zone details draft | P2 | Yes | 01c | Merged to main | `overview_panel_test`: draft navigation, Cancel, pending, Model switch (7 tests) |
+| A03 | Non-JSON params escape and consume a sequence | P2 | Yes | 01b | Merged to main | `api_test`: non-JSON params refusal, lost-response retry |
+| OWN | Zones/FaceAssignment reciprocal private dependencies; one `zones` owner | Foundation | Yes | 02 | Merged to main | `loader_test`: zones owns every zones.* name; commits `e9c6f87`, `4e9e187`, `eeac00c` |
+| DESC | Entity descriptors: values, references, occurrence schemas | Foundation | Yes | 02 | Merged to main | `entity_descriptor_test` (5); `98fd918` |
+| SNAP | `GeometrySnapshot#zone_owner` holds Zone policy in shared export | P2 | Yes | 02 | Merged to main | `geometry_snapshot_test` (2); `7196475` |
+| CAT | `SplitAndPairStep` reads `Registry.current.catalog` during apply | Hidden dependency | Yes | 02 | Merged to main | `zone_solve_scope_test` alternate registry; `020328a` |
+| REF-Z | `zones`-internal refactors: pair validity rule, `cut_partition`, `keeper_path`, `Overlap.partition`, `install.rb` split | Advisory | Yes (R-D9) | 02 | Merged to main | `ba20aed`, `062b308`, `d64d2c4`; Overlap.partition skipped (see phase Result) |
+| RP | Unused `revision` param on `Zones::Repair.restore_plan` | Cleanup | Yes (R-D9) | 02 | Merged to main | `97cd90a` |
+| A01 | Zone/Face discovery lacks schemas, result shapes, examples | P1 | Yes | 03 | Merged to main | `api_reference_test`, `api_client_test`; `71b8534` |
+| DOC | Stale authorities: TECH_STACK, PRD, DEVELOPMENT, AGENT_INTERFACE | Consistency | Yes | 04 | Merged to main | `bda13df`, with `742e75e` |
+| SKL | UI skill `references/patterns.md` names predecessor paths | Consistency | Yes | 04 | Merged to main | `bda13df` |
+| A02 | Unbounded entity reads, ignored filters, loose cursors | P2 | No | 06 | Scoped | |
+| A04 | Export task methods not describable | P2 | No | 06 | Scoped | |
+| A06 | Registration schema/callable/example validation, frozen declarations | P2 | No | 06 | Scoped | |
+| HBJ | Opaque canonical HBJSON bypasses metadata-key guard; declared-key allowlist (R-D2) | P2 | No | 07 | Scoped | |
+| REF | Non-`zones` refactors: `Workflow.start`, export-contributor validation, hatch clipping | Advisory | No | 08 | Scoped | |
 | A05 | External adapter delivery boundary | Planned | No | Out of scope | Deferred | Separate packet |
 | CONV | `planning-conventions` reported unavailable | Note | No | None | Complete | [R-D7](DECISIONS.md#r-d7-planning-conventions-availability-review-note-resolved) |
 

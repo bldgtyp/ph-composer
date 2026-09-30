@@ -1,11 +1,10 @@
 # Phase 06: bounded reads, export task descriptions, registration validation
 
 DATE: 2026-09-30
-STATUS: Blocked
+STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/5
 MERGE SET: No; recommended before faster feature development
-BLOCKED ON: Phase 05 merged; runs on the post-merge branch (R-D5)
 
 ## Scope
 
