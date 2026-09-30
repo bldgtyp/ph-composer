@@ -1,6 +1,6 @@
 # PH-Composer
 
-**DATE:** 2026-09-20 | **STATUS:** Proposed product scope. Phase 1 Zone/Face authoring core implemented on branch.
+**DATE:** 2026-09-30 | **STATUS:** Proposed product scope. Phase 1 (Zones, Face assignment, HBJSON/report export) implemented and merged to main.
 **OWNER:** Ed May, BLDGTYP
 
 ## Purpose
@@ -55,7 +55,9 @@ exporter. The contributor architecture names the supported kinds of contribution
 
 ## Proposed feature scope
 
-The phase numbers follow the proposed roadmap and are not implementation authorization.
+The phase numbers follow the proposed roadmap and are not implementation authorization. The three
+Phase 1 rows are implemented within the scope stated under Current capability below; every later
+row is proposed.
 
 | Phase | Feature | User outcome |
 | --- | --- | --- |
@@ -91,8 +93,9 @@ linked file does not prevent model editing, calculation or ordinary export.
 
 - honeybee-ph supplies the domain vocabulary and the typed export structures. Face types and
   boundary conditions are honeybee's; PH-Composer does not coin a third vocabulary.
-- PHX converts HBJSON to the METr model. It runs inside the shipped runtime as the first exporter.
-  The extension does not operate Excel and does not write PHPP.
+- PHX will convert HBJSON to the METr model, running inside the shipped runtime as the first
+  exporter. That exporter is deferred; the shipped runtime carries only the HBJSON translation
+  stack today. The extension does not operate Excel and does not write PHPP.
 - METr is the calculator. PH-Composer produces its input and claims nothing about its results.
 - PassivSure is a sibling project building a PHI-focused designPH companion. It may reuse the UI
   kit and the record engine. It is not a destination for PH-Composer's output.
@@ -112,12 +115,14 @@ linked evidence is in proposed scope and adds none of those services.
 ## Current capability and release boundary
 
 The foundation merged through PR #1: records and public operations, sessions, panel/UI kit and
-shared units, the runtime shell and export infrastructure. Phase 1 (P1-A to P1-F) is implemented on
-its branch, PR #3, and has not merged: Zones, Faces and the adjacency between them, the Classify
-tool, Colour-by, repairs, and the export run to canonical HBJSON and its report, with a
-development-only construction provider for the proof. Merging is separate from any release. METr
-export and import acceptance are deferred until further feature development; their return milestone
-is unscheduled.
+shared units, the runtime shell and export infrastructure. Phase 1 merged on
+2026-09-30: Zones, Faces and the adjacency between them, the Classify tool, Auto-classify,
+Attached zones, Colour-by, the Overview screen, copy and split repairs, the public scripting
+interface, and the export run to canonical HBJSON and its report. Export needs authored
+Assemblies, which arrive in Phase 2, so the normal build refuses to export today; Phase 1 was
+proven with a development-only construction provider. Merging is separate from any release. METr
+export and import acceptance are deferred until further feature development; their return
+milestone is unscheduled.
 
 SketchUp 2023 is the compatibility floor; its host proof is pending. SketchUp 26.1.188 on macOS
 is the proving host. Windows support and public distribution are separate gates. The first

@@ -5,15 +5,15 @@ STATUS: Phase 1 scope implemented and verified on branch; METr remains deferred.
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md) owns the proposed workflow and the accepted D2 failure policy. The
-[Phase 1 plan](../../phase-one/PLAN.md) coordinates feature delivery. Open interview answers and
-the accepted METr deferral are in [Phase 1 decisions](../../phase-one/DECISIONS.md).
+[Phase 1 plan](../../archive/phase-one/PLAN.md) coordinates feature delivery. Open interview answers and
+the accepted METr deferral are in [Phase 1 decisions](../../archive/phase-one/DECISIONS.md).
 
 ## Existing versus missing
 
 Phase 0 supplies the contributor/result declarations, privacy/report contracts and recoverable
 canonical pair. P1-C adds typed Zone/Face translation. P1-E now implements the bounded task,
 feature-owned preflight, panel lifecycle, wheel payload, conformance and pair commit. P1-F adds
-fresh integrated acceptance. [Evidence](../../phase-one/evidence/p1-e-export-workflow.md) closes
+fresh integrated acceptance. [Evidence](../../archive/phase-one/evidence/p1-e-export-workflow.md) closes
 A11 to A14 and A16 on the current host. The normal composition continues to refuse missing authored
 constructions; the synthetic provider remains development-only. Broader feature validation,
 Assembly authoring and the deferred METr consumer milestone are outside this Phase 1 closure.
@@ -23,7 +23,7 @@ Assembly authoring and the deferred METr consumer milestone are outside this Pha
 | Stage | Deliverable | Acceptance |
 | --- | --- | --- |
 | P1-A | Shared snapshot/geometry reader and proposal/preflight boundary design | One coherent read, no feature-specific orchestration or hidden repair |
-| P1-C | Complete 2026-09-20: two-Zone HBJSON development proof through registered sections | [Typed dependencies, exact reload, references/areas/accounting and fixture isolation](../../phase-one/evidence/p1-c-adjacency-hbjson.md) |
+| P1-C | Complete 2026-09-20: two-Zone HBJSON development proof through registered sections | [Typed dependencies, exact reload, references/areas/accounting and fixture isolation](../../archive/phase-one/evidence/p1-c-adjacency-hbjson.md) |
 | P1-E | Run coordinator, Export UI, progress/cancellation, snapshot guard and conformance | Clean/warning/blocking/cancelled/changed-Model outcomes; destination-first behavior and report consistency |
 | P1-E | Pinned HBJSON translation wheels | Native/Pyodide parity and manifest/footprint |
 | P1-E/F | Fresh-process canonical export gate | Exact HBJSON/report reconciled against authoring |

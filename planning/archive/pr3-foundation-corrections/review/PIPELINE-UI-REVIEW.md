@@ -183,6 +183,6 @@ line or every future contributor route has been exercised. Runtime asset server 
 of the RBZ builder predate PR #3; no new defect is claimed merely from their existing design.
 
 No host automation or fresh host session was run by this reviewer. Current acceptance
-evidence remains with `planning/phase-one/ACCEPTANCE.md` and its linked evidence. Offline
+evidence remains with `planning/archive/phase-one/ACCEPTANCE.md` and its linked evidence. Offline
 tests and these reproductions do not establish SketchUp 2023, Windows, public distribution,
 or METr acceptance. The notes do not advance any delivery or acceptance status.

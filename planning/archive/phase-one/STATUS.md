@@ -1,10 +1,8 @@
 # Phase 1 status
 
 DATE: 2026-09-30
-STATUS: P1-A through P1-F complete on the implementation branch for the named current-host scope.
-Recorded stage reviews, offline gates and named fresh SketchUp acceptance pass.
-The [2026-09-30 PR #3 foundation review](../archive/pr3-foundation-corrections/review/README.md)'s merge-set corrections are implemented on this branch with cases R01 to R06 in [ACCEPTANCE.md](ACCEPTANCE.md#pr-3-foundation-correction-cases).
-Merge and release remain separate; existing acceptance covers its recorded cases.
+STATUS: Complete. Merged to main through [PR #3](https://github.com/bldgtyp/ph-composer/pull/3) (`abd86f4`) on 2026-09-30, with the follow-on [PR #6](https://github.com/bldgtyp/ph-composer/pull/6) (`9d92a26`); issue #2 closed. A01 to A14, A16 and R01 to R06 pass; A15 (METr) is deferred to its own packet.
+Archived 2026-09-30. SketchUp 2023 floor, Windows, release and public distribution remain separate gates.
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 ## Current completion boundary
@@ -67,8 +65,9 @@ removes its overlay and displays a warning without replacing the last successful
 At 512 classified Faces, Ruby snapshot construction takes 39 to 47 ms. Discrete panel
 interactions were usable. JavaScript paint was observed rather than timed. Rebuilding a full
 snapshot on every pointer move is too expensive for hover-to-highlight; keep that feature
-deferred until a cheaper path is measured. It is now its own [packet](../features/legend-hover-highlight/README.md). The existing Overview pane arrangement is retained;
-Ed's pending arrangement decision has not been inferred from this verification work.
+deferred until a cheaper path is measured. It is now its own [packet](../../features/legend-hover-highlight/README.md). The existing Overview pane arrangement is retained;
+Ed's pending arrangement ruling was not inferred from this verification work and remains open in
+[the UI baseline](../../ui-baseline/README.md) (Overview's pane order row).
 
 ### Acceptance boundary
 
@@ -77,7 +76,7 @@ have evidence. The named current-host cases now have that evidence, including A0
 continuation. A fresh independent review of `4404527` found two resolver defects: proposal aliasing and
 uncoded malformed-identity failure. Both are corrected, covered by regressions, and re-reviewed
 by the same independent reviewer. Final CI, coverage, Ruby 2.7 and targeted fresh installed-host
-checks pass. P1-D is complete on this implementation branch; release and floor-host acceptance
+checks pass. P1-D is complete and merged to main; release and floor-host acceptance
 remain separate. P1-E subsequently completed the HBJSON/report workflow; see the current completion boundary above.
 
 The historical [D7-GATE-HANDOFF.md](D7-GATE-HANDOFF.md) is retained as the procedure that was
@@ -110,9 +109,9 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
   floor-area/import questions remain deferred. The HBJSON wheel set is shipped and verified.
 - The implementation issue is [#2](https://github.com/bldgtyp/ph-composer/issues/2), created
   2026-09-30 with the pull request that closes it.
-- All six Phase 1 stages are complete on branch. Merge, floor-host/platform proof and public distribution require their own gates.
-  The deferred and separate gates now have owning packets: [METr export](../features/metr-export/README.md),
-  [SketchUp 2023 floor](../features/sketchup-2023-floor/README.md) and [Windows support](../features/windows-support/README.md).
+- All six Phase 1 stages are complete and merged to main through PR #3. Floor-host/platform proof and public distribution require their own gates.
+  The deferred and separate gates now have owning packets: [METr export](../../features/metr-export/README.md),
+  [SketchUp 2023 floor](../../features/sketchup-2023-floor/README.md) and [Windows support](../../features/windows-support/README.md).
 
 ## Stages
 
@@ -120,10 +119,10 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 | --- | --- | --- |
 | P1-A: geometry contracts and host investigation | Complete | [Contract](CONTRACTS.md); [host evidence](evidence/p1-a-geometry.md); A01 met |
 | P1-B: Zone and face authoring core | Complete | [Authoring evidence](evidence/p1-b-authoring.md); A02/A03 and the P1-B portion of A04 met |
-| P1-C: adjacency and early HBJSON proof | Complete on branch | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
-| P1-D: complete Phase 1 authoring UI and repairs | Complete on branch | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass. D4 and D6 host gates passed; D7's eight questions are answered and fixes rechecked. A04 to A09 named current-host cases have evidence; the final entity-reference implementation and review corrections pass independent review, final gates and targeted fresh-host checks. Slice table in [PLAN.md](PLAN.md) |
-| P1-E: HBJSON/report export workflow | Complete on branch | [Export evidence](evidence/p1-e-export-workflow.md); A11 to A14 pass for the accepted scope |
-| P1-F: acceptance and handoff | Complete on branch | [Integrated evidence](evidence/p1-e-export-workflow.md); A16 passes on SketchUp 26.1.188 |
+| P1-C: adjacency and early HBJSON proof | Complete | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
+| P1-D: complete Phase 1 authoring UI and repairs | Complete | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass. D4 and D6 host gates passed; D7's eight questions are answered and fixes rechecked. A04 to A09 named current-host cases have evidence; the final entity-reference implementation and review corrections pass independent review, final gates and targeted fresh-host checks. Slice table in [PLAN.md](PLAN.md) |
+| P1-E: HBJSON/report export workflow | Complete | [Export evidence](evidence/p1-e-export-workflow.md); A11 to A14 pass for the accepted scope |
+| P1-F: acceptance and handoff | Complete | [Integrated evidence](evidence/p1-e-export-workflow.md); A16 passes on SketchUp 26.1.188 |
 
 ## Verification
 
@@ -168,7 +167,7 @@ Level, disclosing the rest, reverting in one Undo, and refusing on the complete 
 conflicting stamps, mixed parent contexts, an id already back in the Model, and a bounding Edge
 shared with geometry nobody stamped. P1-A's host probe already measured the Restore
 mechanic itself; the native checks for these two operations wait with the rest of P1-D, and
-[`tools/examples/authoring/repair_walkthrough.rb`](../../tools/examples/authoring/repair_walkthrough.rb)
+[`tools/examples/authoring/repair_walkthrough.rb`](../../../tools/examples/authoring/repair_walkthrough.rb)
 is checked in so that gate can be run as soon as Ed is at the bridge. One step in it needs Ed at
 the viewport: how SketchUp copies a Group is the thing being measured, so the walkthrough asks for
 a Ctrl-drag copy rather than scripting an assumption about it.
@@ -215,7 +214,7 @@ transformation, so the world-space composition the whole overlay rests on was un
 covered now by a translated Zone holding a translated nested Group. No host gate ran; its
 questions and the three unmeasured assumptions behind them are in "What D5 left open" in
 [PLAN.md](PLAN.md), and
-[`colour_by_walkthrough.rb`](../../tools/examples/authoring/colour_by_walkthrough.rb) asks each one.
+[`colour_by_walkthrough.rb`](../../../tools/examples/authoring/colour_by_walkthrough.rb) asks each one.
 
 D6's two measurements ran on SketchUp 26.1.188 on 2026-09-20, before any of D6 was built, because
 both of them decide how it is built. The gesture ceiling was re-measured on the host it will run
@@ -289,7 +288,7 @@ blinked; every drawn point is now lifted toward the camera. The rest: a refusal 
 panel, which is closed while a viewport tool is in use; `Model#active_tool` does not exist on the
 host; the context menu tested for a selected Face where a root right-click selects the Group;
 `CONSTRAIN_MODIFIER_MASK` is 131072, not 1; and the walkthrough's cleanup missed renamed Zones.
-Every one is recorded in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../../context/SKETCHUP_HOST_BEHAVIOR.md).
+Every one is recorded in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../../../context/SKETCHUP_HOST_BEHAVIOR.md).
 
 P1-C passes 260 Ruby tests with 1,175 assertions, 116 JavaScript tests and 84 Python tests.
 Coverage is 95.6% Ruby, 97.7% JavaScript and 97.5% Python. The pinned development composition
@@ -318,6 +317,7 @@ post-commit CI close this branch slice; merge remains pending.
 | 2026-09-20 | P1-D D5: the shared Colour-by seam, its overlay, HUD and cache invalidation, with face-assignment and Zone modes registered through the public call. |
 | 2026-09-20 | P1-D D6: the Classify tool, the shared pick and drag primitives, Locate, Q12 forcing, and the `menu_item` seam a feature reaches the native menus through. |
 | 2026-09-20 | The Ground suggestion was corrected to honeybee's rule after the host gate showed it setting five of a plain box's six Faces to Ground. |
+| 2026-09-30 | PR #3 merged (`abd86f4`), closing #2; follow-on PR #6 merged (`9d92a26`). Ed accepted R05 on its offline coverage. Phase 1 complete and archived. |
 
 P1-D D7 brings the offline suite to 439 Ruby tests with 1,753 assertions, green on both Ruby 3.2.2
 and the 2.7.2 compatibility floor, with `make ci` green, Ruby coverage at 96.5% and JavaScript at

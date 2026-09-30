@@ -1,17 +1,18 @@
 # Users and workflows
 
-**DATE:** 2026-09-18
+**DATE:** 2026-09-30
 
 Proposed journeys to refine in feature interviews, not accepted user stories.
 
 ## Consultant working alone
 
-Open a SketchUp model of the building. Classify the envelope faces with the assignment tool, by
-face type and boundary condition. Create a material by hand, build an assembly graphically, and
+Open a SketchUp model of the building. Make a Zone from each part of the geometry and solve the
+adjacencies between them. Classify the envelope faces with the assignment tool, by face type and
+boundary condition. Create a material by hand, build an assembly graphically, and
 assign it to faces. Create frames, glazings and a Window Type, then place window units on
 the walls. Identify the thermal bridges. Author Spaces and Volumes, classify the iCFA floors,
-enter ventilation rates. Validate, export HBJSON, run the METr exporter, and open the result in
-METr. Save and reopen the SKP with all definitions and assignments intact. No sign-in at any step.
+enter ventilation rates. Validate, export HBJSON, convert it with the METr exporter once that
+exporter exists, and open the result in METr. Save and reopen the SKP with all definitions and assignments intact. No sign-in at any step.
 
 ## Consultant reusing office work
 
@@ -27,7 +28,7 @@ links are visible and repairable. The model remains usable when the folder is un
 
 ## Sending a model onward
 
-Use ordinary Export for HBJSON plus the report, or the METr model. When selected evidence must
+Use ordinary Export for HBJSON plus the report, or, once its exporter exists, the METr model. When selected evidence must
 travel too, use the proposed transmission package to collect a saved model copy and its related
 files.
 

@@ -1,9 +1,8 @@
 # Phase 1 delivery plan
 
 DATE: 2026-09-30
-STATUS: P1-A through P1-F complete on the implementation branch for the named current-host scope.
-See [P1-E/F evidence](evidence/p1-e-export-workflow.md) for the final export and integration gates.
-A15 remains deferred; merge, release and floor-host/platform support are separate.
+STATUS: Complete. Merged to main through [PR #3](https://github.com/bldgtyp/ph-composer/pull/3) (`abd86f4`) on 2026-09-30, with the follow-on [PR #6](https://github.com/bldgtyp/ph-composer/pull/6) (`9d92a26`); issue #2 closed. A01 to A14, A16 and R01 to R06 pass; A15 (METr) is deferred to its own packet.
+Archived 2026-09-30. SketchUp 2023 floor, Windows, release and public distribution remain separate gates.
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 ## Outcome and scope
@@ -41,9 +40,9 @@ baseline at `f1e9a98`, not a substitute for the durable contracts in `context/`.
 | Python section coordinator and exporter registry | Typed dependencies, result accounting and HBJSON-only exporter isolation; P1-C adds Zone/face sections and early honeybee model assembly | P1-E completed the user export workflow and shipped runtime composition; METr remains deferred |
 | Runtime host, server and manifest | Separate token-origin runtime page, lazy boot and integrity checks | HBJSON translation wheel set, loader and real translation requests; refresh manifest and measured footprint; PHX payload deferred |
 
-The [foundation example](../../tools/examples/foundation/README.md) is the entrypoint pattern.
-The [P0-E](../archive/phase-zero/evidence/phase-04-panel-units.md) and
-[P0-F](../archive/phase-zero/evidence/phase-05-runtime.md) records identify deferred work.
+The [foundation example](../../../tools/examples/foundation/README.md) is the entrypoint pattern.
+The [P0-E](../phase-zero/evidence/phase-04-panel-units.md) and
+[P0-F](../phase-zero/evidence/phase-05-runtime.md) records identify deferred work.
 Do not port an entire predecessor subsystem merely because its name appears in the target layout.
 
 ## Ownership and dependency direction
@@ -124,7 +123,7 @@ construction or thermal-performance claim is made. The public-operation walkthro
 
 ## P1-C: adjacency and early HBJSON proof
 
-**State:** Complete 2026-09-20 on the implementation branch. See
+**State:** Complete 2026-09-20; merged to main 2026-09-30. See
 [acceptance evidence](evidence/p1-c-adjacency-hbjson.md).
 
 **Depends on:** P1-B, the development-fixture decision and accepted runtime pins for real
@@ -151,20 +150,20 @@ METr conversion and import are deferred; neither is required for this gate.
 
 ## P1-D: complete Phase 1 authoring behavior
 
-**State:** Complete on branch, 2026-09-29. Named current-host A04 to A09 cases have evidence.
+**State:** Complete 2026-09-29; merged to main 2026-09-30. Named current-host A04 to A09 cases have evidence.
 The final [entity-reference slice](evidence/p1-d-entity-reference-targets.md) and its two resolver
 corrections pass independent review, final deterministic gates and targeted fresh installed-host
 checks. Delivered behavior remains distinguished from release/floor-host acceptance.
 
 | Slice | Delivers | State |
 | --- | --- | --- |
-| D1 | Bounded Classify gesture and its ceiling, Suggest classification for this Zone, Reverse face | Implemented on branch |
-| D2 | Attached zone record kind, reference lifecycle and guarded delete with replacement | Implemented on branch |
-| D3 | Explicit copied-Zone identity repair and limited Restore Zone | Implemented on branch |
-| D4 | Partial-overlap splitting, sliver skips and out-of-scope reciprocal refusal | Implemented on branch |
-| D5 | Shared Colour-by registry, overlay, HUD and cache invalidation | Implemented on branch |
-| D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Implemented on branch |
-| D7 | Overview Zone tree, faces table, panel legend and panel palette | Implemented on branch |
+| D1 | Bounded Classify gesture and its ceiling, Suggest classification for this Zone, Reverse face | Merged to main |
+| D2 | Attached zone record kind, reference lifecycle and guarded delete with replacement | Merged to main |
+| D3 | Explicit copied-Zone identity repair and limited Restore Zone | Merged to main |
+| D4 | Partial-overlap splitting, sliver skips and out-of-scope reciprocal refusal | Merged to main |
+| D5 | Shared Colour-by registry, overlay, HUD and cache invalidation | Merged to main |
+| D6 | Classify `Sketchup::Tool`: drag collection, Shift-click, frozen palette intent, Escape and Locate | Merged to main |
+| D7 | Overview Zone tree, faces table, panel legend and panel palette | Merged to main |
 
 The [keyboard/context continuation](evidence/p1-d-keyboard-context.md) corrects panel Escape
 and native-menu tool-state refresh and verifies layered cancellation without Model writes.
@@ -226,7 +225,7 @@ question D5 left open. Turning a Colour-by mode on, Locate, showing one legend r
 setting a Classify chip all change what the host shows and never the Model. A query cannot carry
 them (`context/AGENT_INTERFACE.md`: a read never changes the camera or the selection) and an action
 cannot either (an action's contract is a named native operation there is nothing here to undo). The
-contract is in [`context/EXTENSIBILITY.md`](../../context/EXTENSIBILITY.md) under "View commands",
+contract is in [`context/EXTENSIBILITY.md`](../../../context/EXTENSIBILITY.md) under "View commands",
 and it closes both D5's write channel and D6's missing route for Locate.
 
 Four things are deliberately not in this slice:
@@ -299,7 +298,7 @@ pick is relative to the open edit context, an added overlay is disabled until so
 and a fill drawn on the Face it colours z-fights with it. The second of those is a D5 defect that
 meant Colour-by had never drawn on a real host. See
 [the Classify tool evidence](evidence/p1-d-classify-tool.md) and the new rows in
-[`context/SKETCHUP_HOST_BEHAVIOR.md`](../../context/SKETCHUP_HOST_BEHAVIOR.md).
+[`context/SKETCHUP_HOST_BEHAVIOR.md`](../../../context/SKETCHUP_HOST_BEHAVIOR.md).
 
 Two host behaviours were measured and deliberately not worked around. A custom tool does not
 receive double-click-to-enter-group, which belongs to the Select tool as it does for every native
@@ -316,7 +315,7 @@ The seam, the service and the two features' modes are implemented. A feature dec
 `colour_mode` in its own `install`, hands over a pure projection of its own entities, and reaches
 the overlay, the HUD and the cache without a line in the shared renderer; `colour_by/` is a
 foundation directory that names no feature. The contract is written up in
-[`context/EXTENSIBILITY.md`](../../context/EXTENSIBILITY.md) under "Colour-by modes".
+[`context/EXTENSIBILITY.md`](../../../context/EXTENSIBILITY.md) under "Colour-by modes".
 
 Three things are deliberately not in this slice:
 
@@ -385,7 +384,7 @@ no partial paint. Confirm or revise the limit with measured P1-D host behavior b
 implementation closes; test the exact accepted limit and one above it. Auto-classify is a separate
 named batch, touches only faces without records and creates one Undo step.
 
-The [B2 overlay evidence](../archive/phase-zero/evidence/spike-overlay.md) permits filled modes
+The [B2 overlay evidence](../phase-zero/evidence/spike-overlay.md) permits filled modes
 on the proving host. Feature work must invalidate cached geometry after edits, Undo/Redo and model
 switches, and measure cost at and beyond 10,000 triangles. B2 did not test that lifecycle.
 
@@ -419,7 +418,7 @@ reopen. A06, A07 and A08's named current-host cases pass.
 
 ## P1-E: HBJSON/report export workflow
 
-Completed on branch 2026-09-30. [Evidence](evidence/p1-e-export-workflow.md) records the accepted
+Completed 2026-09-30 and merged to main. [Evidence](evidence/p1-e-export-workflow.md) records the accepted
 choices, actual runtime, normal-construction refusal, artifact lifecycle and independent review.
 
 **Depends on:** P1-C, final authoring behavior for integrated acceptance, and the HBJSON/report interview choices.

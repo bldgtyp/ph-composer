@@ -24,7 +24,7 @@ no em or en dashes.
 | Anything 01a to 03 changed | Action IDs, module paths and examples in `context/`, `docs/` and skills match the code |
 
 Do not weaken the shared skills to fit the implementation, and do not rewrite historical
-evidence under `planning/phase-one/evidence/`.
+evidence under `planning/archive/phase-one/evidence/`.
 
 ## Done when
 
@@ -48,7 +48,7 @@ Commit `bda13df`, plus the context edits already made in Phase 02 (`742e75e`) an
   Export patterns recorded. Two stale facts in `SKILL.md` corrected; no rule changed.
 - Old ids and module paths: `grep` for `ph_composer.face_assignment.`, `features/face_assignment`
   and `FaceAssignment` outside this packet returns only historical evidence
-  (`planning/phase-one/evidence/`), the completed D7 gate handoff, one measurement note in
-  `planning/phase-one/STATUS.md`, and `CONTRACTS.md`'s storage table row, which names the stored
+  (`planning/archive/phase-one/evidence/`), the completed D7 gate handoff, one measurement note in
+  `planning/archive/phase-one/STATUS.md`, and `CONTRACTS.md`'s storage table row, which names the stored
   dictionary that deliberately kept its name. Relative links in every edited file resolve; no em
   or en dashes in `docs/`.

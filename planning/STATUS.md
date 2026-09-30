@@ -9,7 +9,7 @@ Master index. Every active item gets a row; archived items move to
 
 The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 
-Phase 0 and its four completed investigations are in [the archive](archive/README.md).
+Phase 0, its four completed investigations and Phase 1 are in [the archive](archive/README.md).
 The remote exists. Historical `none (no remote)` issue cells below mean no issue was recorded;
 reconcile them at each packet's intake rather than treating the old reason as a current blocker.
 
@@ -17,11 +17,10 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Phase 1 walking skeleton | delivery plan | Merged to main (abd86f4, PR #3) with the foundation corrections; archiving `phase-one/` is pending | [#2](https://github.com/bldgtyp/ph-composer/issues/2) | [phase-one/](phase-one/README.md); [review and correction packet](archive/pr3-foundation-corrections/README.md); [final export/integration evidence](phase-one/evidence/p1-e-export-workflow.md); merge, release and floor-host/platform gates remain separate |
-| Zones and adjacency | feature | In progress; partial-overlap cut, repairs and whole-scope Solve host-verified | none (local planning draft) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
-| Face assignment | feature | In progress; the Classify tool, bounded gestures and Attached zones implemented | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
+| Zones and adjacency | feature | In progress; Phase 1 scope merged to main and archived; later-phase scope remains | none (local planning draft) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
+| Face assignment | feature | In progress; Phase 1 classification scope merged to main; assembly assignment is Phase 2; interview record awaits Ed's confirmation | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
 | Native acceptance tooling | workflow | Implemented; historical evidence indexed, observed-result validation and dependency screening | none (local tooling work) | [native-acceptance/](native-acceptance/README.md); tools and skills remain development-only |
-| Validation and export | feature | Phase 1 HBJSON/report scope implemented and current-host verified; later feature scope remains | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); [evidence](phase-one/evidence/p1-e-export-workflow.md); authored Assemblies required in normal composition |
+| Validation and export | feature | In progress; Phase 1 HBJSON/report scope merged to main; later feature scope remains | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); [evidence](archive/phase-one/evidence/p1-e-export-workflow.md); authored Assemblies required in normal composition |
 | METr export | feature | Deferred; return milestone unscheduled | none (local planning draft) | [features/metr-export/](features/metr-export/README.md); Phase 1 row A15; Ed deferred until further feature development on 2026-09-20 |
 | SketchUp 2023 floor verification | feature, host gate | Requested | none (local planning draft) | [features/sketchup-2023-floor/](features/sketchup-2023-floor/README.md); no 2023 host run yet |
 | Windows support verification | feature, host gate | Requested | none (local planning draft) | [features/windows-support/](features/windows-support/README.md); first release candidate is macOS-only |

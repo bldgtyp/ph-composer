@@ -11,7 +11,7 @@ PH-Composer development bridge, fresh process. Initial run: extension `ph_compos
 features `PhComposer::Zones` and `PhComposer::FaceAssignment`. Fresh from
 `_private/host/blank-template.skp`, saved as `_private/host/p1d-overview.skp`. Display
 preference **IP** (carried over from an earlier host run, and the reason F1 showed at all).
-Harness: [`overview_walkthrough.rb`](../../../tools/examples/authoring/overview_walkthrough.rb).
+Harness: [`overview_walkthrough.rb`](../../../../tools/examples/authoring/overview_walkthrough.rb).
 
 Fixture: two Zones, `Living` and `Attic`, six Faces each, the first four of each classified
 `Wall` / `Outdoors`. Twelve Faces, eight classified, four unclassified.

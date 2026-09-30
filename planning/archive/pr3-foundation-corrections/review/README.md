@@ -79,7 +79,7 @@ records Ruby 96.4%, JS 97.7% and Python 94.0%; those are reviewed prior results,
 All 66 branch commits carry a `Signed-off-by` trailer. This mechanical check does not resolve
 third-party licensing or authorize public distribution.
 
-Current-host acceptance is recorded in `planning/phase-one/ACCEPTANCE.md` and its evidence, including
+Current-host acceptance is recorded in `planning/archive/phase-one/ACCEPTANCE.md` and its evidence, including
 the final P1-E/F continuation. These records describe their named cases on SketchUp 26.1.188/macOS.
 They do not cover the newly found cases. Any repair to host ownership, references or geometry
 requires its focused native checks before closure. SketchUp 2023, Windows, METr, authored

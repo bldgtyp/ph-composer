@@ -14,7 +14,7 @@ runs. Extension `ph_composer` 0.1.0-dev, features
 `_private/host/blank-template.skp`, saved as `_private/host/p1d-gesture.skp`
 (SHA-256 `20edd54a…f113a82b`) before and `_private/host/p1d-gesture-after.skp`
 (SHA-256 `012f7dea…f662b975ac1`) after. Harness:
-[`gesture_cost_walkthrough.rb`](../../../tools/examples/authoring/gesture_cost_walkthrough.rb).
+[`gesture_cost_walkthrough.rb`](../../../../tools/examples/authoring/gesture_cost_walkthrough.rb).
 
 The fixture is boxes three metres wide, ten to a row, flush along each row and clear between rows,
 so every interior box shares exactly one wall with the box on either side. Each is made a Zone and

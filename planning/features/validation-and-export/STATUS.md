@@ -1,7 +1,8 @@
 # Validation and export: status
 
 DATE: 2026-09-30
-STATUS: Phase 1 HBJSON/report scope implemented and current-host verified on branch.
+STATUS: In progress. Phase 1 HBJSON/report scope merged to main through PR #3 and PR #6 and accepted in
+the archived Phase 1 packet. Later feature scope remains.
 AUTHOR: Ed May, BLDGTYP, with Codex review
 ISSUE: none (local planning draft)
 
@@ -10,7 +11,7 @@ ISSUE: none (local planning draft)
 P1-E implements preflight, explicit repairs, per-Model asynchronous tasks, bounded collection,
 pinned lazy translation, cancellation, result retention and coordinated HBJSON/report replacement
 and recovery. Blocking findings remain visible and write no canonical pair. Export does not save
-or modify the SKP. [P1-E/F evidence](../../phase-one/evidence/p1-e-export-workflow.md) records the
+or modify the SKP. [P1-E/F evidence](../../archive/phase-one/evidence/p1-e-export-workflow.md) records the
 exact implementation, package, native cases and independent-review corrections.
 
 ## Remaining scope and delivery boundaries

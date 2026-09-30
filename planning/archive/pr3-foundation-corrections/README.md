@@ -27,7 +27,7 @@ Assemblies, public distribution, and the external agent adapter (review finding 
 
 `M1`-`M4` are model findings, `U1` the Overview draft finding, `P-*` pipeline findings and
 `A01`-`A06` agent-interface findings. **These `A01`-`A06` are review finding IDs, not the Phase 1
-acceptance cases `A01`-`A16`** in [`phase-one/ACCEPTANCE.md`](../../phase-one/ACCEPTANCE.md).
+acceptance cases `A01`-`A16`** in [`phase-one/ACCEPTANCE.md`](../phase-one/ACCEPTANCE.md).
 Where both appear, this packet writes the acceptance cases as "case A07" and so on. New native
 cases proposed here use `R01`-`R06`.
 

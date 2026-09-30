@@ -1,6 +1,6 @@
 # Product shape
 
-**DATE:** 2026-09-18
+**DATE:** 2026-09-30
 
 PH-Composer is a free, open-source authoring tool for Phius passive building models. The SKP
 file holds the working building data. A consultant can enter every supported definition by hand,
@@ -8,8 +8,9 @@ assign it in the model, and export without an account or network service.
 
 Everything below describes agreed product behavior. The predecessor, PH-Navigator for SketchUp,
 settled most of it through recorded interviews between 2026-09-06 and 2026-09-17, and the rules
-that did not depend on designPH carry over unchanged. Nothing here is implemented in this
-repository yet.
+that did not depend on designPH carry over unchanged. Phase 1 implemented Zones, face
+classification and the HBJSON/report export described under Zones, Envelope and Handoff; assembly
+assignment, Window Types, Spaces, thermal bridges and libraries are not implemented yet.
 
 ## The working environment
 
@@ -70,10 +71,25 @@ anchored property bubbles. Total thickness and U-value stay visible in the heade
 inventories share Filter, Group by, Order by and Direction controls; filtering retains local
 drafts and never changes the model or the export scope.
 
+## Zones
+
+A Zone is one SketchUp Group, the geometry unit that becomes one honeybee Room. The user makes a
+Zone from a selected Group or from loose geometry, and tags it with a Building-Segment and an
+optional Level. Solve adjacencies pairs the faces two Zones share, cutting partial overlaps so only
+the shared region pairs, in one Undo step. It runs only when asked, and validation offers it again
+when a pairing goes stale. A copied Zone or a split face keeps its records; an explicit repair gives
+the copy its own identity, and ambiguity is refused rather than guessed.
+
 ## Envelope
 
 The user classifies faces with PH-Composer's own tool: face type, boundary condition and
-assembly. A face inside a repeated component is shared by every occurrence, and independent
+assembly. The Classify tool paints by click, drag or Shift-click across a connected plane, one Undo
+step per gesture. Suggest classification proposes a face type and boundary condition for each face of a Zone that
+has no classification record yet, from its geometry.
+An Attached zone, such as a garage or attic, is a named boundary condition with its temperature
+reduction factor. Colour by shows face type, boundary condition, Zone, Building-Segment or Level on
+the model without changing its materials, and the Overview lists each Zone with its classified faces.
+Assembly assignment arrives with Assemblies in Phase 2. A face inside a repeated component is shared by every occurrence, and independent
 classification requires the user to make the parent unique first. PH-Composer never does that
 automatically. Unclassified faces are visible in validation and never silently exported.
 
@@ -115,12 +131,15 @@ edits and Locate.
 
 ## Handoff
 
-Export produces HBJSON with an adjacent report explaining supported content and findings, and,
-when requested, the METr model. Independent consumers decide how to view, review and calculate
+Export produces HBJSON with an adjacent report explaining supported content and findings. A
+preflight lists blocking findings and offers repairs such as Solve adjacencies before anything is
+written. The run can be cancelled, a failed replacement leaves the previous pair intact, and Export
+never saves the SKP. The METr model is a later exporter, deferred until more of the building can be
+authored. Independent consumers decide how to view, review and calculate
 it. Optional linked PDFs and photos remain in external project folders. Ordinary model use never
 depends on those files.
 
 ## Delivery
 
-The proposed scope is in [the PRD](PRD.md). Interview order and implementation readiness will be
-in the planning folder once it exists. Public release scope is undecided and requires Gate A.
+The proposed scope is in [the PRD](PRD.md). Interview order and implementation readiness are in
+[the planning folder](../planning/ROADMAP.md). Public release scope is undecided and requires Gate A.

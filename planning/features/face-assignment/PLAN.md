@@ -6,7 +6,7 @@ and implemented: D1 gestures, D2 Attached zones, D5 Colour-by, D6 the Classify t
 Overview screen, faces table, panel legend and panel palette. D7's host gate is outstanding.
 ISSUE: none (local planning draft)
 
-The [PRD](PRD.md) owns behavior; the [Phase 1 plan](../../phase-one/PLAN.md) coordinates delivery.
+The [PRD](PRD.md) owns behavior; the [Phase 1 plan](../../archive/phase-one/PLAN.md) coordinates delivery.
 The overlay investigation [B2](../../archive/phase-zero/evidence/spike-overlay.md) passed on the
 proving host. It permits filled modes but supplies no feature cache-invalidation implementation.
 
@@ -23,7 +23,7 @@ Attached-zone hand entry lands here, including its local Library subtab/inline c
 Library navigation label does not require a provider, account or network connection. Keep its
 record/reference operations independent of provider integration.
 
-The [2026-09-29 atomic continuation](../../phase-one/evidence/p1-d-attached-zone-atomic.md) verifies
+The [2026-09-29 atomic continuation](../../archive/phase-one/evidence/p1-d-attached-zone-atomic.md) verifies
 inline creation against a pending existing Face, through the public combined action and Overview
 modal. A07's named current-host cases pass, including cancellation, exact references, rollback,
 Undo/Redo and fresh reopen. The palette's create-and-choose remains a separate future-gesture path.
@@ -34,12 +34,12 @@ Undo/Redo and fresh reopen. The palette's create-and-choose remains a separate f
   with Zones, including record deletion and atomic delete-with-replacement. Field edits use keep/set/clear intent; changing Surface composes reciprocal
   retirement in the same transaction. Define the shared snapshot geometry read with export.
 - **P1-B, complete 2026-09-20:** registered Face reads, single-Face classification and a minimal
-  palette for the two-Zone proof. See [authoring evidence](../../phase-one/evidence/p1-b-authoring.md).
+  palette for the two-Zone proof. See [authoring evidence](../../archive/phase-one/evidence/p1-b-authoring.md).
   Includes typed/boundary views and suggestions using world geometry with metadata preservation.
 - **P1-C, complete 2026-09-20:** contributor and Python face section with complete accounting,
   emitted-target checks and explicit construction dependency. The development construction is a
   tools-only composition; normal builds withhold the canonical model when no provider exists.
-  See the [P1-C evidence](../../phase-one/evidence/p1-c-adjacency-hbjson.md).
+  See the [P1-C evidence](../../archive/phase-one/evidence/p1-c-adjacency-hbjson.md).
 - **P1-D, D1 and D2 implemented 2026-09-20:** the bounded Classify gesture with its 1,000-occurrence
   ceiling, Suggest classification for this Zone, Reverse face, the Attached zone record kind and its
   reference and delete-with-replacement lifecycle. **D5, implemented 2026-09-20:** the shared

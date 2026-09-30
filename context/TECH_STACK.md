@@ -1,6 +1,6 @@
 # Technical working context
 
-**DATE:** 2026-09-18
+**DATE:** 2026-09-30
 
 The durable starting point for work in this repository. It carries the implementation rules the
 predecessor, PH-Navigator for SketchUp, learned at cost between 2026-09-06 and 2026-09-17, with
@@ -11,15 +11,19 @@ is in the predecessor's archive at `../../ph-navigator-sketchup/planning/archive
 
 The Phase 0 foundation merged through PR #1: sessions, revisions, record transactions and the
 public operation contract, panel/UI kit and shared Units, the runtime shell and export contracts.
-On the Phase 1 branch (PR #3) the build registers one building feature, `zones`
-(`src/ph_composer/features/zones/`), which owns Zones, their Faces and the adjacency between them,
-and the export run to canonical HBJSON. No exporter beyond HBJSON ships. The archived Phase 0
-packet records implementation and host evidence; later behavior below remains a requirement until
-its owning packet lands.
+Phase 1 merged through PR #3 and PR #6 on 2026-09-30. The build registers one building feature,
+`zones` (`src/ph_composer/features/zones/`), which owns Zones, their Faces and the adjacency between
+them, plus two foundation capabilities, `RecordQueries` and `ColourBy`, and the export run to
+canonical HBJSON and its report. No exporter beyond HBJSON ships. The archived
+[Phase 0](../planning/archive/phase-zero/README.md) and
+[Phase 1](../planning/archive/phase-one/README.md) packets record implementation and host evidence.
+Spaces, Volumes, Assemblies, Window Types, libraries and exporters are not implemented; the rules
+below that describe them remain requirements until their owning packets land.
 
 [EXTENSIBILITY.md](EXTENSIBILITY.md) owns the accepted contributor architecture, including the
 separation of pure Ruby domain behavior from SketchUp adapters, public scripting, metadata and
-registered extension data. Exact new API contracts remain for the owning implementation plans.
+registered extension data. `PhComposer::API` implements the public operations; each registered
+operation's schemas and example are in the generated [`docs/API_REFERENCE.md`](../docs/API_REFERENCE.md).
 
 [AGENT_INTERFACE.md](AGENT_INTERFACE.md) governs external clients of those public operations.
 Their results and confirmation handling must work without an open panel. The development eval
@@ -46,9 +50,9 @@ export do not admit arbitrary local paths or attachment bytes.
   produced 559 errors that no amount of 3.2.2 runs could surface. CI runs `make ci` as one job per
   version, and the test helper refuses anything outside 2.7 to 3.2.
 - **Pyodide and the wheel versions in `vendor/manifest.json`** are pinned runtime inputs, not
-  loose development dependencies. The predecessor pinned Pyodide 0.24.1 and eight wheels; this
-  project adds PHX and whatever PHX needs for its METr writer, subject to the spike named in the
-  founding brief.
+  loose development dependencies. The shipped payload is Pyodide 0.24.1 and eight honeybee-stack
+  wheels for HBJSON translation. PHX and whatever its METr writer needs are added when the deferred
+  METr exporter resumes (see [the exporter seam](#the-exporter-seam)).
 - **The first release candidate is macOS-only.** Windows support is its own gate.
 
 ## Namespace
@@ -60,6 +64,12 @@ is `ph_composer.rbz`. Treat these as the working implementation namespace; chang
 name later requires an explicit migration decision rather than a partial rename.
 
 ## SketchUp Model and transaction rules
+
+The Volume, Space and reconciler rules in this section and in the failure signatures below are the
+predecessor's, measured there and carried over for the Spaces feature. No Volume, reconciler,
+`close_volume` or `model.active_path` assignment exists in this repository yet; the Spaces
+feature adopts them, with their tests, when it lands. The observer, session and Undo rules apply
+now.
 
 ### Observers report; deferred work mutates
 
@@ -144,7 +154,8 @@ PH-Composer owns all of it, in its own attribute namespace, through its own tool
 that owns a face is the Zone, one Group per honeybee Room, with Spaces inside it. Closure is a
 consumer-specific validation rule, not a requirement for creating or exporting every Zone. The
 rules are the zones-and-adjacency packet's to settle
-(`../planning/features/zones-and-adjacency/PRD.md`), and these are the constraints it starts from:
+(`../planning/features/zones-and-adjacency/PRD.md`); Phase 1 implemented them. The durable
+constraints:
 
 - One feature, `zones`, owns this whole lifecycle: Zone containment, Face identity, Zone stamps,
   Surface endpoints and the split and copy transitions between them. They change together, so a
@@ -158,6 +169,15 @@ rules are the zones-and-adjacency packet's to settle
 - Back faces, coplanar overlaps and faces inside nested edit contexts are the cases a happy path
   at Model root does not cover. Test them before claiming face assignment works.
 - Floor Segments are floor faces the user classifies as iCFA. There is no reduction factor.
+- Face occurrence resolution walks the Model. A read phase with no write before its last resolve
+  (a query, target resolution before a proposal, `ClassifyStep`) shares one `Zones::Index`, which
+  walks once and is valid only while the Model is unchanged; a step that mutates and then reads its
+  own result walks the live Model. Per-target walks measured O(targets x Model Faces) on the host
+  ([gesture cost evidence](../planning/archive/phase-one/evidence/p1-d-gesture-cost.md)).
+- A Classify gesture affects at most `GESTURE_FACE_LIMIT` (250) Face occurrences, reciprocal
+  counterparts included and deduplicated; one over refuses the whole gesture as
+  `gesture.too_large`. The ceiling bounds the blast radius, not elapsed time. Suggest
+  classification for one Zone is a named batch and carries no ceiling.
 
 ## Pyodide and Export boundary
 
@@ -189,7 +209,13 @@ budget. One native Face capture and one contributor callback are indivisible. Th
 separate export content generation during collection, on translation return and before canonical
 commit. Camera, selection and edit-path navigation do not invalidate it; content commits and
 Undo/Redo do. SketchUp 26.1's navigation-only commit and the preceding content-commit ordering
-are measured in [P1-E evidence](../planning/phase-one/evidence/p1-e-export-workflow.md).
+are measured in [P1-E evidence](../planning/archive/phase-one/evidence/p1-e-export-workflow.md).
+
+The HBJSON and its report are written as one pair or not at all (`export/artifact_pair.rb`). Both
+are staged beside the destination and verified, a journal records the plan, the previous pair moves
+aside and the new pair is renamed into place; the next run to the same destination rolls back an
+interrupted one from the journal. Blocking findings write no canonical files, HBJSON and report are
+always selected together, and Export never saves the SKP (P1-Q4, confirmed 2026-09-29).
 
 The runtime installs only manifest-pinned local wheels on explicit export. There is no pip resolver,
 external download or system-Python fallback. The shipping composition still has no authored
@@ -213,8 +239,9 @@ Ed confirmed explicit translation-section dependencies on 2026-09-18. Each secti
 typed results it needs from other sections. The coordinator orders execution and supplies those
 results without feature-specific logic. Missing or circular dependencies produce explicit errors.
 If a required result fails, dependent output receives an explicit finding rather than a substitute.
-The existing record-level and contract-level failure policy still applies. Phase 0 proves the
-contract with synthetic sections; real building translation lands with its owning features. A
+The existing record-level and contract-level failure policy still applies. Phase 0 proved the
+contract with synthetic sections; Phase 1 composes the real `FaceSection` and `ZoneSection`, and
+later building sections land with their owning features. A
 section declares typed `Requirement`s; missing, mistyped, duplicate and cyclic requirements stop the
 run before any record is read, and a record whose required object did not translate gets a
 `dependency.unavailable` finding and no object.
@@ -256,8 +283,8 @@ writer to produce the METr model. Two facts gate it:
 
 An exporter registers in `python/ph_composer_translation/composition.py`: a name, the format it
 writes, a file suffix, the options it accepts and a `run(hbjson, options)` that returns its output
-and findings. It receives a copy of the options and nothing else. The Export report will list every
-exporter that ran and what each omitted. A third exporter adds one registration and no change to
+and findings. It receives a copy of the options and nothing else. No exporter is registered yet
+(`EXPORTERS` is empty); the Export report will list every exporter that ran and what each omitted. A third exporter adds one registration and no change to
 `export/`, the translation package or any feature.
 
 ## The library provider seam
@@ -318,19 +345,22 @@ dispatcher, an observer callback, a task tick, or the Export run. Input coercion
 
 ## Panel protocol
 
-Implemented in P0-E. `shell/panel_messages.rb` declares every message between the page and Ruby,
-with the payload keys each carries: `panel.ready`, `action.invoke` and `preferences.set` inbound;
-`panel.snapshot`, `action.result`, `preferences.result`, `panel.notice` and `panel.failure`
-outbound. Ruby refuses an inbound type or payload key the table does not declare and answers with
+Implemented in P0-E and extended in Phase 1. `shell/panel_messages.rb` declares every message
+between the page and Ruby, with the payload keys each carries: `panel.ready`, `action.invoke`,
+`view.invoke`, `preferences.set` and the shell's Export command (`export.start`,
+`export.preflight`, `export.status`, `export.cancel`, `export.latest`) inbound; `panel.snapshot`,
+`action.result`, `view.result`, `preferences.result`, `export.result`, `panel.notice` and
+`panel.failure` outbound. Ruby refuses an inbound type or payload key the table does not declare and answers with
 `panel.failure`; it refuses to publish an undeclared outbound key. `tests/panel_messages_test.rb`
 reads the page sources and fails when the page sends or handles a type the table does not declare.
 
 Features add no transport types. A feature's panel request is `action.invoke` naming a registered
-action, and its panel data is a registered snapshot section (CONTRACTS.md C1, C2).
+action, a viewport-state request is `view.invoke` naming a registered view command, and its
+panel data is a registered snapshot section ([CONTRACTS.md](../planning/archive/phase-one/CONTRACTS.md) C1, C2).
 
 ## Panel
 
-The panel is one client of `PhComposer::API`, not the owner of any Model behavior (CONTRACTS.md C2).
+The panel is one client of `PhComposer::API`, not the owner of any Model behavior ([CONTRACTS.md](../planning/archive/phase-one/CONTRACTS.md) C2).
 `shell/panel.rb` owns the dialog and nothing else a feature reaches:
 
 - It shows the active Model. For each session it shows it connects once with its own caller
@@ -377,8 +407,10 @@ label)`; `run(action, params, { onDone, onFail })` is single flight and pending 
 leaves, and `consume(state)` settles the action-result slot for that request once; `send` never
 refuses, for views that keep several requests in flight. Record forms are `record_form.js` specs,
 snapshot reads go through `snapshot.js`, and unit descriptors for stored fields are `fields.js`. The
-record table, inventory controls and inline cell drafts (`table.js`, `view_controls.js`,
-`record_edits.js`) arrive with the first screen that has a record table.
+record table and inventory controls (`table.js`, `table.css`, `view_controls.js`) arrived with the
+Overview screen, ported from the predecessor and trimmed to what it uses; neither names a feature.
+Inline cell drafts (the predecessor's `record_edits`) arrive with the first screen that edits
+record cells in place.
 
 **Browser floor: Chromium 88**, the engine SketchUp 2022 was measured on and the one assumed for
 the 2023 floor. Syntax is ES2020. Runtime APIs that arrived after Chromium 88 are refused by
@@ -410,8 +442,10 @@ What a new feature owns and where each rule is enforced. The predecessor's restr
 these true of every feature it had, so a new one that follows them needs no change to `shell/`,
 `session/` or another feature's folder. A composition-root registration is permitted.
 
-- **One folder.** `features/<name>/`, listed in the composition root's `FEATURES`. Outside that
-  registration, shared orchestration names no feature, and features name no other feature's internals.
+- **One folder.** `features/<name>/`, listed by hand in the composition root's `FEATURES`. Outside
+  that registration, shared orchestration names no feature, and features name no other feature's
+  internals. A capability the foundation itself provides and no feature owns (`RecordQueries`,
+  `ColourBy`) registers through `FOUNDATION_FEATURES` with the same `install` interface.
 - **One `install`.** Every registration happens there: record kinds, queries, actions, snapshot
   sections, host-event subscriptions, the export contributor. There are no feature flags and no
   inbound panel handlers: a feature that is not composed is absent, and the panel reaches a
@@ -473,8 +507,8 @@ extends these seams rather than inventing a second pattern.
   `ModelOperation.perform`, which is one Undo step. Fields that must revert together travel in one
   call. Every update carries an `expected_value` so a stale edit is refused rather than overwriting.
 - **Panel.** The inventory table, view controls, row projection and anchored bubbles come from the
-  `workspace` toolkit; inline cell editing comes from `record_edits`, configured with an action
-  name and a field list. The library sidebar is generic, driven by a per-kind adapter object.
+  `workspace` toolkit; inline cell editing will come from a port of the predecessor's
+  `record_edits`, configured with an action name and a field list. The library sidebar is generic, driven by a per-kind adapter object.
 - **Export.** One `export_contributor` declaration whose block is the versioned wire contract, a
   Python `Section` listed in `composition.py`, and a builder package. A block that must refuse
   raises `Export::Blocked`.

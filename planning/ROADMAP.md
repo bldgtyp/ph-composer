@@ -1,13 +1,13 @@
 # Roadmap
 
 DATE: 2026-09-30
-STATUS: Phase 0 merged; Phase 1 P1-A through P1-F complete on branch for the named current-host scope.
+STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 not yet authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 The high-level order of the core features and where each one stands. [STATUS.md](STATUS.md) is
-the index of every tracked item. This file is the sequence. The [Phase 1 packet](phase-one/README.md)
-coordinates the three owning feature plans and their acceptance gates. Feature behavior remains in each PRD.
+the index of every tracked item. This file is the sequence. The archived [Phase 1 packet](archive/phase-one/README.md)
+coordinated the three owning feature plans and their acceptance gates. Feature behavior remains in each PRD.
 
 Cross-cutting choices that need Ed's answer are in [DECISIONS.md](DECISIONS.md). Feature-local
 questions remain in their owning PRDs.
@@ -69,16 +69,16 @@ and current proving host; feature-specific lifecycle and geometry gates remain w
 
 ## Phase 1: walking skeleton
 
-The [execution plan](phase-one/PLAN.md) starts from the merged foundation. P1-A binds entity-owned
+The [execution plan](archive/phase-one/PLAN.md) starts from the merged foundation. P1-A binds entity-owned
 records and geometry transactions, P1-B builds Zone/face authoring, P1-C proves two-Zone HBJSON,
 P1-D completes authoring behavior, P1-E closes the HBJSON/report handoff, and P1-F records acceptance.
 The early proof does not mark the full feature packets complete.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 1.1 | [Zones and adjacency](features/zones-and-adjacency/README.md) | In progress; P1-C adjacency implemented | First, because a boundary condition names what is on the other side |
-| 1.2 | [Face assignment](features/face-assignment/README.md) | In progress; the Classify tool, P1-D gestures and Attached zones implemented and host-verified, and the Overview screen, faces table, Colour-by legend and panel palette implemented with their host gate outstanding | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
-| 1.3 | [Validation and export](features/validation-and-export/README.md) | Scoped draft, interview decisions open | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
+| 1.1 | [Zones and adjacency](features/zones-and-adjacency/README.md) | Phase 1 scope merged to main; later-phase scope remains | First, because a boundary condition names what is on the other side |
+| 1.2 | [Face assignment](features/face-assignment/README.md) | Phase 1 scope merged to main and host-verified; assembly assignment waits for 2.1 | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
+| 1.3 | [Validation and export](features/validation-and-export/README.md) | Phase 1 HBJSON/report scope merged to main; METr exporter deferred | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
 
 Exit: draw two boxes, make them Zones, classify the faces, export and reload the exact HBJSON. Constructions
 use one deterministic development-only placeholder. That placeholder is a vertical-slice fixture,
@@ -148,12 +148,13 @@ wanted as a warm-up. They sit here because neither is needed for the Phase 1 can
 
 ## Phase 1 completion and next scope
 
-P1-A through P1-F are complete on branch for the named current-host scope. The
-[execution plan](phase-one/PLAN.md) and [final evidence](phase-one/evidence/p1-e-export-workflow.md)
+P1-A through P1-F are complete and merged to main through PR #3 and PR #6 (2026-09-30); the
+packet is archived. The
+[execution plan](archive/phase-one/PLAN.md) and [final evidence](archive/phase-one/evidence/p1-e-export-workflow.md)
 record authoring, export tasks, the pinned wheel payload and fresh integrated acceptance.
 The normal build safely refuses without authored Assemblies; successful Phase 1 translation uses
 an explicit tools-only provider. Phase 2 supplies real Assembly/material authoring and its gates.
-Merge, SketchUp 2023/Windows host proof and public distribution remain separate. METr decisions
+SketchUp 2023/Windows host proof and public distribution remain separate. METr decisions
 wait until that work is separately scheduled.
 
 B1 proved PHX conversion, not import into METr. Keep its evidence for the deferred exporter.
@@ -175,3 +176,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-09-20 | P1-B implemented the Zone/Face authoring core, public operations and minimal Overview UI; native save/reopen and Undo/Redo acceptance passed. |
 | 2026-09-20 | P1-D D7 built the Overview Zone tree and faces table, the panel Colour-by legend and the Classify palette, on a sixth contribution seam for viewport-state commands. Its host gate is outstanding. |
 | 2026-09-20 | P1-C implemented whole-wall adjacency and the two-Zone HBJSON proof. Ed authorized P1-D, which is delivered in slices; D1 and D2 are implemented. |
+| 2026-09-30 | Phase 1 merged through PR #3 and PR #6, closing #2; Ed accepted R05 on offline coverage; the packet is archived. |

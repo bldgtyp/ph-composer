@@ -1,7 +1,8 @@
 # Phase 1 geometry and persistence contracts
 
 DATE: 2026-09-20
-STATUS: P1-A contract design complete; P1-B entity storage and proposal subset implemented.
+STATUS: Complete. Merged to main through [PR #3](https://github.com/bldgtyp/ph-composer/pull/3) (`abd86f4`) on 2026-09-30, with the follow-on [PR #6](https://github.com/bldgtyp/ph-composer/pull/6) (`9d92a26`); issue #2 closed. A01 to A14, A16 and R01 to R06 pass; A15 (METr) is deferred to its own packet.
+Archived 2026-09-30. SketchUp 2023 floor, Windows, release and public distribution remain separate gates.
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 This document binds the Zone, face-assignment and compound-operation contracts to the merged
@@ -199,7 +200,7 @@ Native splitting copies the full face dictionary to every resulting face. Theref
   `user_data` and supported extension payloads survive; unsafe payloads refuse before writes.
   Repair does not create pairs. A subsequent explicit Solve may partition clean multi-neighbour
   regions in one coordinated geometry step. The public walkthrough is
-  [split_identity_walkthrough.rb](../../tools/examples/authoring/split_identity_walkthrough.rb).
+  [split_identity_walkthrough.rb](../../../tools/examples/authoring/split_identity_walkthrough.rb).
 - Copying a Zone duplicates its Zone and Face dictionaries. The copy is ambiguous until explicit
   identity repair allocates a new Zone id and new member ids, updates stamps and retires copied
   pairs without changing the original occurrence. Shared definition storage refuses repair.

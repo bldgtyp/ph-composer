@@ -28,7 +28,7 @@ module PhComposer
     # repairs nothing (context/TECH_STACK.md).
     #
     # Scene tag visibility reaches the layer invalidation path on the current proving host
-    # (planning/phase-one/evidence/p1-d-broader-acceptance.md). Other scene visibility state still
+    # (planning/archive/phase-one/evidence/p1-d-broader-acceptance.md). Other scene visibility state still
     # needs its own host evidence; there is no general scene-change subscription here.
     class Service
       attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines, :unclassified_hatch, :isolated

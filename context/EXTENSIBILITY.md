@@ -1,8 +1,10 @@
 # Contributor architecture
 
-DATE: 2026-09-25
-STATUS: Accepted architectural direction. Registration, record kinds, metadata and extension data are
-merged through PR #1 from Phase 0 P0-D; see the example under `tools/examples/foundation/`.
+DATE: 2026-09-30
+STATUS: Accepted architectural direction. Registration, record kinds, metadata and extension data
+merged through PR #1 from Phase 0 P0-D; see the example under `tools/examples/foundation/`. Phase 1
+(PR #3, PR #6) added view commands, menu items, Colour-by modes, entity reference targets and
+descriptors, and the `zones` feature built on them.
 
 PH-Composer exists to support an open-source community in the Phius sphere. A contributor
 should be able to understand and extend one part without understanding the whole application.
@@ -12,8 +14,10 @@ Correctness, native host behavior and usable response times remain requirements.
 
 This document owns contributor-facing architecture. [TECH_STACK.md](TECH_STACK.md) owns runtime
 and host mechanics; [CODING_STANDARDS.md](CODING_STANDARDS.md) owns code-level readability rules.
-The contribution contracts below are requirements for their future implementation, not claims
-that an API already exists. Feature scope and delivery order remain with the owning packets.
+Where a section below says it is implemented, the contract exists in code and is published in
+[`docs/API_REFERENCE.md`](../docs/API_REFERENCE.md); the rest are requirements for their future
+implementation, not claims that an API already exists. Feature scope and delivery order remain
+with the owning packets.
 
 ## Organization and dependencies
 
@@ -181,7 +185,7 @@ the SKP. The panel sends `view.invoke` and settles the answer in its own result 
 Implemented in P1-D. A feature that authors by pointing writes a `Sketchup::Tool` and starts it
 from a menu item. Spaces' Mark floor, window placement and the thermal-bridge edge tool are all
 this shape, so the rules below are the shared ones, learned from the Classify tool's host gate
-([evidence](../planning/phase-one/evidence/p1-d-classify-tool.md)).
+([evidence](../planning/archive/phase-one/evidence/p1-d-classify-tool.md)).
 
 - **Pick, never walk.** `Pick.face_path(view, x, y)` answers what is under the pointer as a
   root-to-leaf instance path, and a feature turns that path into an occurrence without touching the
@@ -196,12 +200,13 @@ this shape, so the rules below are the shared ones, learned from the Classify to
   against the revision it began at refuses as `revision.stale` rather than writing through a change
   someone else committed underneath it.
 - **Bound the collection one past the limit** so the operation that owns the limit refuses, rather
-  than the tool silently applying the first N of what the pointer crossed.
+  than the tool silently applying the first N of what the pointer crossed. The Classify limit is
+  `GESTURE_FACE_LIMIT`, owned by the Face schema; see [TECH_STACK.md](TECH_STACK.md#envelope-what-ph-composer-owns-that-the-predecessor-did-not).
 - **Talk to the status bar, not only the session.** The panel is the only subscriber to a session
   notice, and a viewport tool is used with the panel closed, so a refusal delivered only that way
   is silent exactly where it matters. Results and refusals reach both `Sketchup.status_text=`
   and the session notice. Routine activation guidance uses the status bar alone so it does not
-  cover the panel controls; see [D7 F8](../planning/phase-one/evidence/p1-d-overview.md).
+  cover the panel controls; see [D7 F8](../planning/archive/phase-one/evidence/p1-d-overview.md).
 - **Cancel on every route, and leave nothing behind.** Escape, deactivation, a suspended context
   and a callback that raised all abandon the pending gesture. Track whether the button is actually
   down: a press whose release the host never delivered must not leave later hovers collecting. The
@@ -263,9 +268,11 @@ Ed also confirmed the unavailable-extension and unsupported-schema policy on 202
 - Block export when unknown data affects export correctness, following the existing export rules.
   Merely preserving data does not establish that it can be exported correctly.
 
-Before implementing this storage contract, design the reference declaration API and explicit
-export mappings. Specify how operations declare their dependence on extension data so the
-confirmed refusal policy can be enforced. Test the relevant round trips
+The reference declaration API (`Records::Reference`, `Records::ReferenceTarget`,
+`Records::Descriptor`, `Records::ReferencePlan`, below) and the explicit export mapping for
+`user_data` (`user_data_keys:` on an export contributor) are implemented. A new storage use still
+states how its operations depend on extension data so the confirmed refusal policy is enforced,
+as the copied-Zone and split repairs do by refusing unsafe payloads before any write. Test the relevant round trips
 and actual references. Arbitrary metadata is not a substitute for a typed core domain field.
 
 ### Entity-owned reference targets
@@ -332,7 +339,9 @@ Prove implemented contracts with small synthetic examples and reusable contract 
 - Register a record kind and a simple editor.
 - Register an importer that proposes changes and applies them through model operations.
 - Register an exporter that consumes only HBJSON.
-- Register a Colour-by mode through the shared overlay interface.
+- Register a Colour-by mode through the shared overlay interface. Phase 1's Face and Zone modes
+  register through the public `colour_mode` call
+  ([walkthrough](../tools/examples/authoring/colour_by_walkthrough.rb)).
 
 Each example has a short walkthrough identifying the entrypoint, relevant contract and required
 files. A newcomer should be able to trace one request through validation, mutation and its result.
@@ -353,12 +362,14 @@ HBJSON text and a copy of its options (`tests/python/test_exporters.py`). Neithe
 `export/` or the translation package.
 Do not claim an extension point is ready until its example and required host gate pass.
 
-## Decisions still needed before API implementation
+## API decisions settled and open
 
-The owning implementation plans must settle the exact scripting methods and mutation contract,
-metadata and extension-data lifecycle, and registration schemas and compatibility policy. These
-are unresolved API details within the accepted direction, not a reason to reopen the community
-goal or to invent all interfaces in advance.
+Phase 1 settled the scripting methods and mutation contract (`PhComposer::API`: discover, describe,
+connect, query, view, preview, invoke, outcome and the export task methods), registration schemas
+and their validation at load, and the reference declaration and extension-data refusal policy for
+entity records. The compatibility policy across API major versions and the extension-data lifecycle
+for later record kinds remain for their owning plans. These are details within the accepted
+direction, not a reason to reopen the community goal or to invent all interfaces in advance.
 
 ## Development review
 

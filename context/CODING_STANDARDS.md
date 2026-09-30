@@ -1,6 +1,6 @@
 # Coding standards: PH-Composer
 
-**DATE:** 2026-09-18
+**DATE:** 2026-09-30
 
 This file holds what is specific to this repository. Cross-repo rules live in the shared skills.
 Rules about the product and its language live in `../docs/` and this folder, chiefly
@@ -29,8 +29,8 @@ Four layers, one dependency direction. The founding brief names them; this is wh
   sessions, transactions, Undo, observers and every domain calculation the panel shows.
 - **The Python translation package owns only the HBJSON translation.** It reads the export
   contract and writes honeybee objects. It does not read the Model.
-- **Exporters consume HBJSON.** The METr exporter reads the HBJSON artifact and runs PHX. An
-  exporter never reads the export contract or the Model, so a second exporter needs nothing from
+- **Exporters consume HBJSON.** The METr exporter, deferred and not yet built, will read the HBJSON
+  artifact and run PHX. An exporter never reads the export contract or the Model, so a second exporter needs nothing from
   the layers above it.
 
 ## Ruby
