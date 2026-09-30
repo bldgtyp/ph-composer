@@ -172,7 +172,7 @@ module PhComposer
         end
       end
 
-      def restore_plan(model, parent_path, zone_id, revision)
+      def restore_plan(model, parent_path, zone_id)
         wanted = Occurrences.integer_path(parent_path)
         if Occurrences.zones(model).any? { |zone| zone.record.fetch("id") == zone_id }
           raise CodedError.new("zone.identity_in_use", "Zone #{zone_id} is already in the Model.")

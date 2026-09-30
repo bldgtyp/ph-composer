@@ -30,7 +30,7 @@ module PhComposer
 
     def restore(request, proposal)
       record, offer = Repair.restore_plan(request.model, request.params.fetch("parent_path"),
-                                          request.params.fetch("zone_id"), request.revision)
+                                          request.params.fetch("zone_id"))
       parent_path = Occurrences.integer_path(request.params.fetch("parent_path"))
       step = MakeZoneStep.new(:parent_path => parent_path, :entity_ids => offer.fetch("entity_ids"),
                               :record => record)
