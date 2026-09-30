@@ -86,6 +86,8 @@ module PhComposer
 
     def publish(staging)
       staging.declared_features.each { |feature| @features[feature.id] = feature }
+      operations = staging.declared_queries + staging.declared_actions + staging.declared_view_commands
+      operations.each { |operation| freeze_operation(operation) }
       publish_each(staging.declared_queries, @queries, :name)
       publish_each(staging.declared_actions, @actions, :name)
       publish_each(staging.declared_view_commands, @view_commands, :name)
@@ -112,6 +114,23 @@ module PhComposer
     end
 
     private
+
+    # A published operation is what validation and discovery read, so nothing may change it afterwards:
+    # its schemas and examples are deep-frozen copies and the declaration itself is frozen.
+    def freeze_operation(operation)
+      %i[params result examples].each do |part|
+        operation[part] = deep_freeze(DeepCopy.call(operation[part]))
+      end
+      operation.freeze
+    end
+
+    def deep_freeze(value)
+      case value
+      when Hash then value.each_value { |item| deep_freeze(item) }
+      when Array then value.each { |item| deep_freeze(item) }
+      end
+      value.freeze
+    end
 
     def publish_each(declarations, target, key)
       declarations.each { |declaration| target[declaration.public_send(key)] = declaration }

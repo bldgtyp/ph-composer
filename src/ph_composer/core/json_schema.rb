@@ -25,11 +25,55 @@ module PhComposer
       types = Array(schema["type"])
       found << "#{path} needs a type" if types.empty?
       found.concat((types - TYPES).map { |type| "#{path} has unknown type #{type.inspect}" })
-      (schema["properties"] || {}).each { |name, child| found.concat(schema_problems(child, "#{path}.#{name}")) }
+      found.concat(value_problems(schema, path))
+      properties = schema["properties"]
+      return found << "#{path}.properties must be an object" unless properties.nil? || properties.is_a?(Hash)
+
+      (properties || {}).each { |name, child| found.concat(schema_problems(child, "#{path}.#{name}")) }
       found.concat(schema_problems(schema["items"], "#{path}[]")) if schema.key?("items")
       additional = schema["additionalProperties"]
       found.concat(schema_problems(additional, "#{path}.*")) if additional.is_a?(Hash)
       found
+    end
+
+    COUNTS = %w[minItems maxItems minLength maxLength].freeze
+    BOUNDS = %w[minimum maximum exclusiveMinimum exclusiveMaximum].freeze
+    TEXTS = %w[description title x-unit].freeze
+
+    # Each keyword's own value: counts are whole numbers, bounds are finite numbers, text is text,
+    # an enum lists something, and a closed object requires only properties it declares.
+    def value_problems(schema, path)
+      found = []
+      COUNTS.each do |key|
+        next unless schema.key?(key) && !(schema[key].is_a?(Integer) && schema[key] >= 0)
+
+        found << "#{path}.#{key} must be a whole number of at least 0"
+      end
+      BOUNDS.each do |key|
+        found << "#{path}.#{key} must be a finite number" if schema.key?(key) && !type?(schema[key], "number")
+      end
+      TEXTS.each { |key| found << "#{path}.#{key} must be text" if schema.key?(key) && !schema[key].is_a?(String) }
+      if schema.key?("enum") && !(schema["enum"].is_a?(Array) && !schema["enum"].empty?)
+        found << "#{path}.enum must list at least one value"
+      end
+      found << "#{path}.examples must be a list" if schema.key?("examples") && !schema["examples"].is_a?(Array)
+      additional = schema["additionalProperties"]
+      unless additional.nil? || additional == true || additional == false || additional.is_a?(Hash)
+        found << "#{path}.additionalProperties must be true, false or a schema"
+      end
+      found.concat(required_problems(schema, path))
+    end
+
+    def required_problems(schema, path)
+      return [] unless schema.key?("required")
+
+      required = schema["required"]
+      return ["#{path}.required must list property names"] unless required.is_a?(Array) &&
+                                                                   required.all? { |name| name.is_a?(String) }
+      return [] unless schema["additionalProperties"] == false
+
+      undeclared = required - (schema["properties"] || {}).keys
+      undeclared.map { |name| "#{path} requires #{name}, which it does not declare" }
     end
 
     # What is wrong with `value` against `schema`, one finding per problem, each naming its path.

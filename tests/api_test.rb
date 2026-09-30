@@ -120,12 +120,11 @@ class ApiTest < PhComposerTestCase
 
   # Scripts get the same failure envelope the panel's snapshot relies on, with nothing written.
   def test_an_unexpected_query_or_preview_failure_is_a_failed_outcome
-    PhComposer::Registry.current.queries.fetch("test.fixture.total_length").result = { "type" => "array" }
-    PhComposer::Registry.current.actions.fetch("test.fixture.create").result = { "type" => "array" }
+    install_mismatched_results
     operations = @model.operations.length
 
-    failed_query = API.query(:context => @context, :name => "test.fixture.total_length")
-    failed_preview = API.preview(:context => @context, :name => "test.fixture.create",
+    failed_query = API.query(:context => @context, :name => "test.mismatch.read")
+    failed_preview = API.preview(:context => @context, :name => "test.mismatch.create",
                                  :params => { "parts" => [part_values] })
 
     [failed_query, failed_preview].each do |outcome|
@@ -507,17 +506,38 @@ class ApiTest < PhComposerTestCase
   end
 
   def test_a_handler_result_outside_its_schema_fails_before_anything_is_written
-    PhComposer::Registry.current.actions.fetch("test.fixture.create").result = { "type" => "array" }
+    install_mismatched_results
 
-    failed = create_parts(1)
+    failed = invoke("test.mismatch.create", { "parts" => [part_values] }, 1)
 
     assert_equal %w[failed operation.failed none], failed.values_at("status", "code", "effect")
-    assert_equal 0, records.dig("value", "total")
+    assert_equal 0, records(:kind => "test.fixture.definition").dig("value", "total")
   end
 
   private
 
   PART_KIND = RecordFixtures::PART
+
+  # A read and a write whose handlers return an object while each declares an array. Published
+  # declarations are frozen, so the mismatch is registered rather than patched in.
+  def install_mismatched_results
+    array = { "type" => "array" }
+    parts = { "type" => "object", "required" => ["parts"], "properties" => { "parts" => { "type" => "array" } } }
+    feature = Module.new do
+      define_singleton_method(:install) do |registry|
+        scope = registry.feature("test.mismatch", :contract_version => 1)
+        scope.query("test.mismatch.read", :description => "Read.", :params => { "type" => "object" },
+                                          :result => array) { {} }
+        scope.action("test.mismatch.create", :description => "Create parts.", :params => parts, :result => array,
+                                             :undo_name => "Create", :side_effects => "Creates records.",
+                                             :examples => [{ "parts" => [] }]) do |request, changes|
+          request.engine.propose_create("test.fixture.definition", changes, :values => { "label" => "Frame" })
+          {}
+        end
+      end
+    end
+    PhComposer::Registry.install([feature])
+  end
 
   def part_values(length = 1200.0)
     { "label" => "Sill", "length_mm" => length }

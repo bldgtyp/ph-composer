@@ -3116,6 +3116,17 @@ Result:
 }
 ```
 
+Example params:
+
+```json
+{
+  "row": {
+    "value": "Wall",
+    "state": "classified"
+  }
+}
+```
+
 ### `ph_composer.zones.faces.choose`
 
 Set one Classify palette field and give the tool the viewport. Owner: `ph_composer.zones`.

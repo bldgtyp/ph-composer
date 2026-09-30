@@ -50,7 +50,7 @@ module TestFeature
                                        :params => { "type" => "object", "required" => ["count"],
                                                     "additionalProperties" => false,
                                                     "properties" => { "count" => { "type" => "integer" } } },
-                                       :result => OBJECT) do |request|
+                                       :result => OBJECT, :examples => [{ "count" => 1 }]) do |request|
       raise PhComposer::UserError, "There is nothing to look at." if request.params.fetch("count").zero?
 
       request.model.selection.clear
@@ -66,6 +66,7 @@ module TestFeature
                                    :params => { "type" => "object", "required" => ["parts"],
                                                 "properties" => { "parts" => { "type" => "array" } } },
                                    :result => OBJECT, :undo_name => "Create Test Parts",
+                                   :examples => [{ "parts" => [{ "label" => "Sill", "length_mm" => 1200.0 }] }],
                                    :side_effects => "Creates records.") do |request, changes|
       definition = request.engine.propose_create("#{ID}.definition", changes, :values => { "label" => "Frame" })
       ids = request.params.fetch("parts").map do |values|
@@ -78,6 +79,7 @@ module TestFeature
                                          :params => { "type" => "object", "required" => ["edits"],
                                                       "properties" => { "edits" => EDITS } },
                                          :result => OBJECT, :undo_name => "Edit Test Parts",
+                                         :examples => [{ "edits" => [{ "id" => "tpt_Ab12Cd34Ef56" }] }],
                                          :side_effects => "Changes part values and metadata.") do |request, changes|
       request.params.fetch("edits").each do |edit|
         request.engine.propose_update(
@@ -96,6 +98,7 @@ module TestFeature
                                             :params => { "type" => "object", "required" => ["ids"],
                                                          "properties" => { "ids" => { "type" => "array" } } },
                                             :result => OBJECT, :undo_name => "Duplicate Test Parts",
+                                            :examples => [{ "ids" => ["tpt_Ab12Cd34Ef56"] }],
                                             :side_effects => "Creates records.") do |request, changes|
       { "mapping" => request.engine.propose_duplicate("#{ID}.part", request.params.fetch("ids"), changes) }
     end
@@ -104,6 +107,7 @@ module TestFeature
                                            :params => { "type" => "object", "required" => ["ids"],
                                                         "properties" => { "ids" => { "type" => "array" } } },
                                            :result => OBJECT, :undo_name => "Migrate Test Review",
+                                            :examples => [{ "ids" => ["tpt_Ab12Cd34Ef56"] }],
                                            :side_effects => "Rewrites extension data.") do |request, changes|
       ids = request.params.fetch("ids")
       { "results" => request.engine.propose_migration("#{ID}.part", ids, "#{ID}.review", changes) }
@@ -114,6 +118,7 @@ module TestFeature
                                             :params => { "type" => "object", "required" => ["ids"],
                                                          "properties" => { "ids" => { "type" => "array" } } },
                                             :result => OBJECT, :undo_name => "Swallow",
+                                            :examples => [{ "ids" => ["tpt_Ab12Cd34Ef56"] }],
                                             :side_effects => "Rewrites extension data.") do |request, changes|
       begin
         request.engine.propose_migration("#{ID}.part", request.params.fetch("ids"), "#{ID}.review", changes)

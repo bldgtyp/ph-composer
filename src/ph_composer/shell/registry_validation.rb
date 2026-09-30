@@ -106,14 +106,35 @@ module PhComposer
             add("registration.schema_invalid", operation.owner, operation.name,
                 "#{operation.name} params must be an object.")
           end
-          next if operation.handler
-
-          add("registration.schema_invalid", operation.owner, operation.name, "#{operation.name} has no handler.")
+          problem(operation, "needs a description") unless text?(operation.description)
+          check_examples(operation)
+          problem(operation, "needs a callable handler") unless operation.handler.respond_to?(:call)
         end
         @staging.declared_actions.reject { |action| action.confirmation == "none" }.each do |action|
           add("registration.schema_invalid", action.owner, action.name,
               "#{action.name} declares confirmation #{action.confirmation.inspect}; only \"none\" is supported yet.")
         end
+      end
+
+      # Every example is plain JSON that its params accept. An operation whose params accept `{}` may
+      # omit examples, since `{}` is then its example; any other needs at least one.
+      def check_examples(operation)
+        examples = operation.examples
+        return problem(operation, "examples must be a list") unless examples.is_a?(Array)
+        return unless operation.params.is_a?(Hash) && JsonSchema.schema_problems(operation.params).empty?
+
+        if examples.empty? && !JsonSchema.validate({}, operation.params).empty?
+          problem(operation, "needs an example of its params")
+        end
+        examples.each do |example|
+          problems = example.is_a?(Hash) ? JsonValue.problems(example) : ["$ must be an object"]
+          problems += JsonSchema.validate(example, operation.params) if problems.empty?
+          problem(operation, "has an example its params refuse: #{problems.first}") unless problems.empty?
+        end
+      end
+
+      def problem(operation, text)
+        add("registration.schema_invalid", operation.owner, operation.name, "#{operation.name} #{text}.")
       end
 
       def add_schema_problems(operation, part, schema)
@@ -204,17 +225,20 @@ module PhComposer
       end
 
       def check_subscriptions
-        @staging.declared_subscriptions.reject { |subscription| Sessions::HOST_EVENTS.include?(subscription.kind) }
-                .each do |subscription|
+        @staging.declared_subscriptions.each do |subscription|
+          next if Sessions::HOST_EVENTS.include?(subscription.kind) && subscription.handler.respond_to?(:call)
+
           add("registration.schema_invalid", subscription.owner, subscription.kind.to_s,
-              "#{subscription.owner} subscribes to unknown host event #{subscription.kind.inspect}.")
+              "#{subscription.owner} subscribes to #{subscription.kind.inspect}, which needs a known host event " \
+              "and a callable handler.")
         end
       end
 
       def check_proposal_participants
-        @staging.declared_proposal_participants.reject(&:handler).each do |participant|
+        @staging.declared_proposal_participants.reject { |participant| participant.handler.respond_to?(:call) }
+                .each do |participant|
           add("registration.schema_invalid", participant.owner, participant.name,
-              "#{participant.name} has no handler.")
+              "#{participant.name} needs a callable handler.")
         end
       end
 
@@ -225,7 +249,7 @@ module PhComposer
       # and never interprets it.
       def check_menu_items
         @staging.declared_menu_items.each do |item|
-          next if text?(item.label) && text?(item.menu) && item.handler &&
+          next if text?(item.label) && text?(item.menu) && item.handler.respond_to?(:call) &&
                   (item.state.nil? || item.state.respond_to?(:call)) &&
                   (item.available.nil? || item.available.respond_to?(:call))
 
@@ -237,7 +261,8 @@ module PhComposer
 
       def check_colour_modes
         @staging.declared_colour_modes.each do |mode|
-          next if text?(mode.label) && text?(mode.entity_kind) && mode.colours.respond_to?(:call) && mode.projection
+          next if text?(mode.label) && text?(mode.entity_kind) && mode.colours.respond_to?(:call) &&
+                  mode.projection.respond_to?(:call)
 
           add("registration.schema_invalid", mode.owner, mode.name,
               "#{mode.name} needs a label, an entity kind, a colour function and a projection block.")
