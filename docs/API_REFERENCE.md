@@ -3982,3 +3982,673 @@ Example params:
 ```json
 {}
 ```
+
+## Export tasks
+
+A file export is not a Model change, so these are task methods rather than actions. Each params key is the method's keyword argument.
+
+### `PhComposer::API.export_preflight`
+
+Every export contributor's findings and the repairs it offers, before starting. Needs `read`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result value:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings",
+    "repairs"
+  ],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "section",
+          "object_id",
+          "message",
+          "blocks_export"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The record the finding is about."
+          },
+          "message": {
+            "type": "string"
+          },
+          "blocks_export": {
+            "type": "boolean"
+          },
+          "locate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ],
+            "description": "A view command that shows what the finding is about.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "params": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "checked",
+          "action",
+          "params"
+        ],
+        "description": "An action the export workflow offers to run before exporting.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "checked": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
+
+```json
+{}
+```
+
+### `PhComposer::API.start_export`
+
+Start one export of the canonical HBJSON and its report to an explicit destination. An existing pair is replaced only with replace true; one task runs per Model at a time. Needs `export`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "destination"
+  ],
+  "properties": {
+    "destination": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The .hbjson path; the report is written beside it."
+    },
+    "replace": {
+      "type": "boolean",
+      "description": "Consent to replace an existing pair."
+    }
+  }
+}
+```
+
+Result value:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "stage",
+    "count",
+    "cancellable",
+    "outcome"
+  ],
+  "description": "One task's progress. Never carries the canonical HBJSON bytes.",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "reading",
+        "translating",
+        "checking",
+        "writing",
+        "finished"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Entities read so far."
+    },
+    "cancellable": {
+      "type": "boolean",
+      "description": "False once writing starts or the task ended."
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Null until the task ends; then the outcome shape every call answers with.",
+      "required": [
+        "status",
+        "code",
+        "message",
+        "effect"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "refused",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "export.complete, export.blocked, export.cancelled and so on."
+        },
+        "message": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string"
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "When completed: the compact result and the two artifact paths written."
+        },
+        "affected": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "proposal_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
+
+```json
+{
+  "destination": "/path/to/model.hbjson",
+  "replace": false
+}
+```
+
+### `PhComposer::API.export_status`
+
+Poll one task. An expired or other-Model handle refuses task.expired. Needs `export`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "task_id from start_export."
+    }
+  }
+}
+```
+
+Result value:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "stage",
+    "count",
+    "cancellable",
+    "outcome"
+  ],
+  "description": "One task's progress. Never carries the canonical HBJSON bytes.",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "reading",
+        "translating",
+        "checking",
+        "writing",
+        "finished"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Entities read so far."
+    },
+    "cancellable": {
+      "type": "boolean",
+      "description": "False once writing starts or the task ended."
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Null until the task ends; then the outcome shape every call answers with.",
+      "required": [
+        "status",
+        "code",
+        "message",
+        "effect"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "refused",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "export.complete, export.blocked, export.cancelled and so on."
+        },
+        "message": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string"
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "When completed: the compact result and the two artifact paths written."
+        },
+        "affected": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "proposal_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
+
+```json
+{
+  "task_id": "export_0123456789abcdef01234567"
+}
+```
+
+### `PhComposer::API.cancel_export`
+
+Cancel a task before it starts writing; nothing is written. Needs `export`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "task_id from start_export."
+    }
+  }
+}
+```
+
+Result value:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "stage",
+    "count",
+    "cancellable",
+    "outcome"
+  ],
+  "description": "One task's progress. Never carries the canonical HBJSON bytes.",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "reading",
+        "translating",
+        "checking",
+        "writing",
+        "finished"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Entities read so far."
+    },
+    "cancellable": {
+      "type": "boolean",
+      "description": "False once writing starts or the task ended."
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Null until the task ends; then the outcome shape every call answers with.",
+      "required": [
+        "status",
+        "code",
+        "message",
+        "effect"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "refused",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "export.complete, export.blocked, export.cancelled and so on."
+        },
+        "message": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string"
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "When completed: the compact result and the two artifact paths written."
+        },
+        "affected": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "proposal_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
+
+```json
+{
+  "task_id": "export_0123456789abcdef01234567"
+}
+```
+
+### `PhComposer::API.latest_export`
+
+The most recent task still retained, or null. Needs `export`.
+
+Keyword arguments besides context:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result value:
+
+```json
+{
+  "type": [
+    "object",
+    "null"
+  ],
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "stage",
+    "count",
+    "cancellable",
+    "outcome"
+  ],
+  "description": "One task's progress. Never carries the canonical HBJSON bytes.",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "reading",
+        "translating",
+        "checking",
+        "writing",
+        "finished"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Entities read so far."
+    },
+    "cancellable": {
+      "type": "boolean",
+      "description": "False once writing starts or the task ended."
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Null until the task ends; then the outcome shape every call answers with.",
+      "required": [
+        "status",
+        "code",
+        "message",
+        "effect"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "refused",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "export.complete, export.blocked, export.cancelled and so on."
+        },
+        "message": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string"
+        },
+        "revision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "When completed: the compact result and the two artifact paths written."
+        },
+        "affected": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        },
+        "detail": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "proposal_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example arguments:
+
+```json
+{}
+```

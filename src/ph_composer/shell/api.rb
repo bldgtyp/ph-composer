@@ -31,9 +31,10 @@ module PhComposer
         "extension" => { "id" => EXTENSION_ID, "version" => VERSION },
         "contract_versions" => [Declarations::CONTRACT_VERSION],
         "capabilities" => CallerRegistry::CAPABILITIES,
-        "tasks" => { "export" => { "start" => "start_export", "status" => "export_status",
-                                    "cancel" => "cancel_export", "latest" => "latest_export",
-                                    "retention_limit" => 20, "retention_seconds" => 1800 } },
+        "tasks" => { "export" => { "preflight" => "export_preflight", "start" => "start_export",
+                                    "status" => "export_status", "cancel" => "cancel_export",
+                                    "latest" => "latest_export", "retention_limit" => Export::Tasks::LIMIT,
+                                    "retention_seconds" => Export::Tasks::RETENTION_SECONDS } },
         "sessions" => Sessions.all.map { |session| session_summary(session) },
         "features" => registry.features.values.map do |feature|
           { "id" => feature.id, "contract_version" => feature.contract_version, "requires" => feature.requires }
@@ -59,7 +60,7 @@ module PhComposer
     end
 
     # The full declaration of one registered query, action, view command, record kind or entity kind,
-    # or nil when none has the name. The schemas are copies; validation keeps its own.
+    # or of one export task method, or nil when none has the name. The schemas are copies; validation keeps its own.
     def describe(name:)
       registry = Registry.current
       if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name])
@@ -67,6 +68,10 @@ module PhComposer
       end
 
       # A catalog kind and an entity-owned target describe themselves the same way (Records::Descriptor).
+      if (task = Export::TaskContract.describe(name))
+        return task
+      end
+
       if (target = registry.reference_targets[name])
         return DeepCopy.call({ "kind" => "reference_target", "owner" => registry.owner_of(name) }
                                .merge(target.descriptor.to_h))

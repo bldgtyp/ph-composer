@@ -226,6 +226,37 @@ class ExportTasksTest < PhComposerTestCase
     assert_empty Dir.children(@directory)
   end
 
+  # A04: the export task methods describe themselves, and a client built only from those
+  # descriptions preflights, starts, polls, cancels and reads the latest task with the panel closed.
+  def test_a_client_built_from_the_task_descriptions_runs_the_export_methods
+    api = PhComposer::API
+    context = api.connect(:session_id => @session.id, :capabilities => %w[read export])
+    names = api.discover.dig("tasks", "export").values_at("preflight", "start", "status", "cancel", "latest")
+    call = lambda do |name, params|
+      description = api.describe(:name => name)
+      assert_empty PhComposer::JsonSchema.validate(params, description.fetch("params")), name
+      outcome = api.public_send(name.to_sym, :context => context, **params.transform_keys(&:to_sym))
+      if outcome.fetch("status") == "completed"
+        assert_empty PhComposer::JsonSchema.validate(outcome.fetch("value"), description.fetch("result")), name
+      end
+      outcome
+    end
+
+    assert_equal %w[task task task task task], names.map { |name| api.describe(:name => name).fetch("kind") }
+    assert_equal "completed", call.call(names[0], {}).fetch("status")
+    started = call.call(names[1], "destination" => @destination)
+    id = started.dig("value", "task_id")
+    call.call(names[2], "task_id" => id)
+    cancelled = call.call(names[3], "task_id" => id)
+    latest = call.call(names[4], {})
+
+    assert_equal "cancelled", cancelled.dig("value", "outcome", "status")
+    assert_equal id, latest.dig("value", "task_id")
+    refute_includes JSON.generate(latest.fetch("value")), "hbjson"
+    File.write(@destination, "{}")
+    assert_equal "export.replace_required", call.call(names[1], "destination" => @destination).fetch("code")
+  end
+
   def test_task_retention_is_bounded_and_old_handles_never_restart_a_write
     ids = 21.times.map do
       task = start
