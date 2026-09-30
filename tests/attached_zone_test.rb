@@ -158,6 +158,66 @@ class AttachedZoneTest < PhComposerTestCase
     assert_equal garage, faces.first.dig("values", "attached_zone_id")
   end
 
+  # M3a: a Face moved or exploded out of every Zone keeps its assignment. Delete cannot reach it
+  # through a normal operation, so it refuses the whole delete and names the recovery routes.
+  def test_delete_refuses_while_a_face_outside_every_zone_names_the_record
+    garage = create_zone_record("Garage")
+    assign(faces.first, garage)
+    assign(faces.last, garage)
+    orphan = Sketchup::Face.new(900)
+    FACE_STORE.write(orphan, FACE_STORE.read(zone_face(0)).merge("id" => "fac_000000000999"))
+    @model.entities << orphan
+    before = [records, faces, FACE_STORE.read(orphan)]
+    operation_count = @model.operations.length
+
+    [{ "mode" => "boundary_condition", "boundary_condition" => "Adiabatic" },
+     { "mode" => "attached_zone", "attached_zone_id" => create_zone_record("Attic", "attic") }]
+      .each do |replacement|
+        result = invoke("#{KIND}.delete", { "id" => garage, "replacement" => replacement })
+
+        assert_equal %w[refused reference.in_use none], result.values_at("status", "code", "effect")
+        assert_match(/Restore Zone/, result.fetch("message"))
+        assert_equal [{ "id" => "fac_000000000999", "path" => [900] }], result.dig("detail", "faces")
+      end
+    assert_equal before, [records.reject { |record| record.dig("values", "name") == "Attic" }, faces,
+                          FACE_STORE.read(orphan)]
+    assert_equal operation_count + 1, @model.operations.length
+  end
+
+  # A native explode leaves the Zone's Faces outside every Zone. After the refusal, Restore Zone
+  # brings them back into scope and the same delete then moves every one.
+  def test_delete_refused_by_an_exploded_zone_succeeds_after_restore
+    garage = create_zone_record("Garage")
+    assign(faces.first, garage)
+    zone_id = faces.first.dig("reference", "zone_id")
+    @model.entities.to_a.first.explode
+    replacement = { "mode" => "boundary_condition", "boundary_condition" => "Outdoors" }
+
+    refused = invoke("#{KIND}.delete", { "id" => garage, "replacement" => replacement })
+    restored = invoke("ph_composer.zones.restore", { "parent_path" => [], "zone_id" => zone_id })
+    deleted = invoke("#{KIND}.delete", { "id" => garage, "replacement" => replacement })
+
+    assert_equal %w[refused reference.in_use none], refused.values_at("status", "code", "effect")
+    assert_equal "committed", restored.fetch("effect")
+    assert_equal %w[completed committed], deleted.values_at("status", "effect")
+    assert_equal "Outdoors", faces.first.dig("values", "boundary_condition")
+    assert_empty records
+  end
+
+  def test_a_face_in_shared_storage_inside_the_zone_also_refuses_the_delete
+    garage = create_zone_record("Garage")
+    assign(faces.first, garage)
+    group = @model.entities.to_a.first
+    @model.entities << Sketchup::Group.new(800, group.entities)
+
+    result = invoke("#{KIND}.delete", { "id" => garage,
+                                        "replacement" => { "mode" => "boundary_condition",
+                                                           "boundary_condition" => "Outdoors" } })
+
+    assert_equal %w[refused reference.in_use none], result.values_at("status", "code", "effect")
+    assert_equal [garage], records.map { |record| record.fetch("id") }
+  end
+
   def test_duplicate_creates_a_fresh_record_without_reassigning_any_face
     garage = create_zone_record("Garage")
     assign(faces.first, garage)
@@ -189,6 +249,7 @@ class AttachedZoneTest < PhComposerTestCase
   private
 
   KIND_STORE = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND.store
+  FACE_STORE = PhComposer::FaceAssignment::FACE_STORE
 
   def invoke(name, params)
     @sequence += 1
@@ -218,6 +279,10 @@ class AttachedZoneTest < PhComposerTestCase
       "expected_values" => {}
     })
     faces.find { |row| row.dig("reference", "entity_path") == face.dig("reference", "entity_path") }
+  end
+
+  def zone_face(index)
+    @model.entities.to_a.first.entities.to_a.fetch(index)
   end
 
   def make_box_zone(base, face_count)

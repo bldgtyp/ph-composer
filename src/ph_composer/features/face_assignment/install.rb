@@ -391,7 +391,7 @@ module PhComposer
       replacement = request.params.fetch("replacement")
       validate_replacement!(request, replacement, id)
 
-      updates = referencing_faces(request.model, id).map do |occurrence, record|
+      updates = reassignable_faces(request.model, id).map do |occurrence, record|
         after = DeepCopy.call(record)
         if replacement.fetch("mode") == "attached_zone"
           after["attached_zone_id"] = replacement.fetch("attached_zone_id")
@@ -426,11 +426,40 @@ module PhComposer
       request.engine.find(AttachedZone::KIND_ID, target)
     end
 
+    # Every Face naming the record, found through the orphan-inclusive inventory, must be one a
+    # normal Classify could rewrite: inside a Zone and resolvable for mutation. A Face exploded or
+    # moved out of every Zone, or held in storage another placement shares, is never rewritten from
+    # here (R-D11); the delete refuses and names it.
+    def reassignable_faces(model, attached_zone_id)
+      reachable = referencing_faces(model, attached_zone_id).select do |occurrence, record|
+        Zones::Occurrences.resolve_face(model, occurrence.reference(record.fetch("id")), :mutable => true)
+      rescue CodedError
+        false
+      end
+      keys = reachable.map { |occurrence, _record| occurrence.zone.path + occurrence.path }
+      stranded = ReferenceTargets.entries(model).select do |entry|
+        entry.record["attached_zone_id"] == attached_zone_id && !keys.include?(entry.key)
+      end
+      refuse_stranded!(attached_zone_id, stranded) unless stranded.empty?
+      reachable
+    end
+
     def referencing_faces(model, attached_zone_id)
       Zones::Occurrences.zones(model).flat_map { |zone| Zones::Occurrences.faces(zone) }.filter_map do |occurrence|
         record = FACE_STORE.read(occurrence.entity)
         [occurrence, record] if record && record["attached_zone_id"] == attached_zone_id
       end
+    end
+
+    def refuse_stranded!(attached_zone_id, entries)
+      raise CodedError.new(
+        "reference.in_use",
+        "#{entries.length} Face(s) outside every Zone, or in a Group shared with a copy, still use " \
+        "Attached zone #{attached_zone_id}. Restore Zone to bring them back, or remove those faces, " \
+        "then delete.",
+        "target_kind" => AttachedZone::KIND_ID, "id" => attached_zone_id,
+        "faces" => entries.map { |entry| { "id" => entry.record.fetch("id"), "path" => entry.key } }
+      )
     end
 
     def face_view(request, occurrence, index:)
