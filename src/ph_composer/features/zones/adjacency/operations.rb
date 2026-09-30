@@ -55,7 +55,8 @@ module PhComposer
         match.delete("keys")
       end
       scopes = faces.map { |face| Operations::EntityScope.new(face.fetch("reference").fetch("zone_path")) }
-      proposal.add_step(PartitionAndPairStep.new(:faces => faces, :matches => matches), :scopes => scopes)
+      step = PartitionAndPairStep.new(:faces => faces, :matches => matches, :catalog => request.registry.catalog)
+      proposal.add_step(step, :scopes => scopes)
       matches.map { |match| match.fetch("pair_id") }
     end
 
@@ -113,8 +114,8 @@ module PhComposer
       end
       scopes = sides.map { |side| Operations::EntityScope.new(side.fetch("reference").fetch("zone_path")) }
       proposal.add_step(
-        SplitAndPairStep.new(:left => sides.fetch(0), :right => sides.fetch(1),
-                             :polygon_m => overlap.polygon_m, :pair_id => pair_id),
+        SplitAndPairStep.new(:left => sides.fetch(0), :right => sides.fetch(1), :polygon_m => overlap.polygon_m,
+                             :pair_id => pair_id, :catalog => request.registry.catalog),
         :scopes => scopes
       )
       pair_id

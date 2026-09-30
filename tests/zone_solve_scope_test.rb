@@ -1007,6 +1007,39 @@ class ZoneSolveScopeTest < PhComposerTestCase
     )
   end
 
+  # CAT: the cut checks removed identities against the catalog its request prepared with, not
+  # whatever registry is current. Here only the dispatching registry knows the kind that refers to
+  # the Face, so a check against Registry.current would let the cut commit.
+  def test_no_survivor_cut_checks_the_dispatching_registrys_catalog
+    wall(682, 0, 0, 4, 0, 3, :east)
+    wall(692, 0, 2, 6, 0, 3, :west)
+    author
+    old_id = faces.first.fetch("reference").fetch("entity_id")
+    reference = PhComposer::Records::Reference.new(:key => "face_id", :cardinality => "one", :required => true,
+                                                   :target_kind => PhComposer::Zones::Faces::REFERENCE_KIND)
+    link = PhComposer::Records::RecordKind.new(:id => "test.alternate.link", :label => "Link", :schema_version => 1,
+                                               :id_prefix => "lnk", :fields => [reference])
+    link.store.write(@model, "id" => "lnk_000000000001", "schema_version" => 1, "face_id" => old_id)
+    feature = Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("test.alternate", :contract_version => 1).record_kind(link)
+      end
+    end
+    alternate = PhComposer::Registry.new
+    alternate.publish(alternate.stage([PhComposer::Zones, feature]))
+    before = faces
+    request = { "sequence" => @sequence += 1, "expected_revision" => @session.revision }
+
+    result = without_native_survivor do
+      PhComposer::Dispatch.new(alternate).invoke(@context, "ph_composer.zones.solve_adjacency",
+                                                 { "zones" => all_references }, request)
+    end
+
+    assert_equal %w[failed rolled_back], result.values_at("status", "effect")
+    assert_equal "reference.in_use", result.dig("detail", "cause")
+    assert_equal before, faces
+  end
+
   def test_no_survivor_with_entity_incoming_reference_rolls_back_all_native_cuts
     wall(700, 0, 0, 4, 0, 3, :east)
     wall(710, 0, 2, 6, 0, 3, :west)

@@ -40,11 +40,14 @@ module PhComposer
     class SplitAndPairStep
       attr_reader :affected
 
-      def initialize(left:, right:, polygon_m:, pair_id:)
+      # `catalog` is the one the request prepared against. A cut that removes a Face identity checks
+      # that nothing it knows of still refers to it; it is not part of the descriptor or the digest.
+      def initialize(left:, right:, polygon_m:, pair_id:, catalog:)
         @left = DeepCopy.call(left).freeze
         @right = DeepCopy.call(right).freeze
         @polygon_m = DeepCopy.call(polygon_m).freeze
         @pair_id = pair_id
+        @catalog = catalog
         @affected = []
       end
 
@@ -70,7 +73,7 @@ module PhComposer
       private
 
       def check_removed_identities!(model, sides)
-        engine = Records::Engine.new(model, Registry.current.catalog)
+        engine = Records::Engine.new(model, @catalog)
         sides.reject { |side| side.fetch(:survivor) }.each do |side|
           id = side.key?(:before) ? side.fetch(:before).fetch("id") : side.fetch(:removed_id)
           engine.check_identity_removal!(Faces::REFERENCE_KIND, id)
@@ -188,9 +191,10 @@ module PhComposer
     # A connected set of matches is cut per original Face, then paired only after every native
     # piece has been checked. The proposal has already settled all overlap and sliver decisions.
     class PartitionAndPairStep < SplitAndPairStep
-      def initialize(faces:, matches:)
+      def initialize(faces:, matches:, catalog:)
         @faces = DeepCopy.call(faces).freeze
         @matches = DeepCopy.call(matches).freeze
+        @catalog = catalog
         @affected = []
       end
 
