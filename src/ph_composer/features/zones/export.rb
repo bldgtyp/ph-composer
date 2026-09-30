@@ -44,6 +44,17 @@ module PhComposer
         { "findings" => findings, "repairs" => zones.empty? ? [] : [repair] }
       end
 
+      # The one Zone occurrence containing a snapshot entry, as [entry, record], or nil. Two means a
+      # Zone nested in a Zone, which export refuses.
+      def zone_owner(snapshot, entry)
+        matches = snapshot.records(ZONE_DICTIONARY, :kind => "group").select do |zone_entry, _record|
+          snapshot.contains?(zone_entry, entry)
+        end
+        raise Export::Blocked.new("face.wrong_zone", "A Face is contained by more than one Zone.") if matches.length > 1
+
+        matches.first
+      end
+
       def records(reader)
         zones = reader.snapshot.records(ZONE_DICTIONARY, :kind => "group")
         zones.map do |entry, record|

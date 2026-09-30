@@ -114,7 +114,7 @@ module PhComposer
             Schema.validate!(record)
             geometry = entry.geometry
             stamp = entry.record(Zones::STAMP_DICTIONARY)
-            owner = reader.snapshot.zone_owner(entry)
+            owner = Zones::ExportProjection.zone_owner(reader.snapshot, entry)
             unless stamp && stamp["zone_id"].is_a?(String) && owner && owner.fetch(1)["id"] == stamp["zone_id"]
               raise Export::Blocked.new("face.wrong_zone", "Face #{record.fetch('id')} has no owning Zone stamp.")
             end

@@ -111,26 +111,13 @@ module PhComposer
         matches.first
       end
 
-      def zone_owner(entry)
-        matches = records(Zones::ZONE_DICTIONARY, :kind => "group").select do |zone_entry, _record|
-          prefix?(entry.path, zone_entry.path) && entry.path.length > zone_entry.path.length
-        end
-        if matches.length > 1
-          raise Blocked.new("face.wrong_zone", "A Face is contained by more than one Zone.")
-        end
-        matches.first
-      end
-
       def descendants(parent, kind: nil)
-        entries.select do |entry|
-          (!kind || entry.kind == kind) && entry.path.length > parent.path.length && prefix?(entry.path, parent.path)
-        end
+        entries.select { |entry| (!kind || entry.kind == kind) && contains?(parent, entry) }
       end
 
-      private
-
-      def prefix?(path, prefix)
-        path[0, prefix.length] == prefix
+      # Whether `entry` lies strictly inside `parent`, by occurrence path.
+      def contains?(parent, entry)
+        entry.path.length > parent.path.length && entry.path[0, parent.path.length] == parent.path
       end
     end
 
