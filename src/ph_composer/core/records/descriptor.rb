@@ -30,10 +30,35 @@ module PhComposer
         references.flat_map { |reference| reference.ids(record).map { |id| [reference.target_kind, id] } }
       end
 
+      # One stored record as a read returns it: identity, values and the two metadata maps.
+      def view_schema
+        {
+          "type" => "object", "additionalProperties" => false,
+          "required" => %w[id schema_version values user_data extension_data],
+          "properties" => {
+            IDENTITY_FIELD => { "type" => "string" }, "schema_version" => { "type" => "integer" },
+            "values" => DeepCopy.call(values_schema),
+            "user_data" => { "type" => "object", "description" => "Contributor metadata, preserved as written." },
+            "extension_data" => { "type" => "object", "description" => "Versioned payloads registered extensions own." }
+          }
+        }
+      end
+
+      # A partial change to the values: every field optional, and an explicit null removes one.
+      def patch_schema
+        patch = DeepCopy.call(values_schema)
+        patch.delete("required")
+        patch.fetch("properties", {}).each_value do |field|
+          field["type"] = (Array(field["type"]) + ["null"]).uniq
+          field["enum"] += [nil] if field["enum"] && !field["enum"].include?(nil)
+        end
+        patch
+      end
+
       # The public, plain-JSON form discovery publishes.
       def to_h
         {
-          "kind" => kind, "label" => label, "schema_version" => schema_version, "identity_field" => IDENTITY_FIELD,
+          "id" => kind, "label" => label, "schema_version" => schema_version, "identity_field" => IDENTITY_FIELD,
           "values" => DeepCopy.call(values_schema), "occurrence_reference" => DeepCopy.call(occurrence_schema),
           "references" => references.map do |reference|
             { "key" => reference.key, "target_kind" => reference.target_kind, "cardinality" => reference.cardinality }

@@ -44,6 +44,17 @@ module PhComposer
       end
       PhComposer.on_reset("zones.faces") { reset_for_test }
 
+      # One Face occurrence: its Zone's reference, the path from the Zone to the Face, and the Face
+      # record's id, or null for a Face with no record yet.
+      FACE_REFERENCE = {
+        "type" => "object", "additionalProperties" => false,
+        "required" => %w[zone_id zone_path entity_path entity_id],
+        "properties" => {
+          "zone_id" => { "type" => "string" }, "zone_path" => PATH, "entity_path" => PATH,
+          "entity_id" => { "type" => %w[string null] }
+        }
+      }.freeze
+
       # One Face record's values. Every field is optional: a Face is classified a field at a time.
       # The rules between fields (a reference only with its boundary condition) are Schema's.
       FACE_VALUES = {

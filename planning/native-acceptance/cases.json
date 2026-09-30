@@ -644,6 +644,24 @@
         "tools/hostkit/host_helpers.rb"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "R06",
+      "label": "Panel-closed API client from discovery and quickstart",
+      "mode": "native",
+      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "paths": [
+        "docs/API_QUICKSTART.md",
+        "docs/API_REFERENCE.md",
+        "src/ph_composer/core/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "tests/api_client_test.rb",
+        "tools/hostkit/host_bridge*",
+        "tools/hostkit/host_helpers.rb"
+      ],
+      "native_control_required": false
     }
   ]
 }

@@ -1,0 +1,113 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+
+# A01 and R06 offline: a client that knows only the public interface and docs/API_QUICKSTART.md
+# makes a Zone, reads its Faces, classifies one, previews and makes an edit, verifies what changed,
+# recovers from a stale revision and retries a lost response. It names no feature module; the host
+# side of the test only draws geometry and selects it, as a user would.
+class ApiClientTest < PhComposerTestCase
+  API = PhComposer::API
+
+  def setup
+    super
+    faces = 3.times.map do |index|
+      Sketchup::Face.new(1202 + index, {}, :points => [Geom::Point3d.new(0, 0, index), Geom::Point3d.new(40, 0, index),
+                                                       Geom::Point3d.new(40, 40, index)])
+    end
+    group = Sketchup::Group.new(1201, Sketchup::Entities.new(faces))
+    Sketchup.active_model.entities << group
+    Sketchup.active_model.selection.add(group)
+  end
+
+  def test_the_quickstart_runs_as_written
+    context = connect
+    zones, made = make_zone(context)
+    classified, written = classify_first_face(context)
+    edit, preview, updated = edit_zone(context, classified)
+
+    assert_equal [made.dig("value", "zone_id")], made["affected"].map { |row| row["id"] }
+    assert_equal "Wall", faces(context).find { |row| row["reference"] == written }.dig("values", "face_type")
+
+    # 5. A write based on an old read refuses and changes nothing.
+    stale = API.invoke(:context => context, :name => "ph_composer.zones.update", :params => edit,
+                       :request => { "sequence" => 4, "expected_revision" => zones["revision"] })
+    assert_equal %w[refused revision.stale none], stale.values_at("status", "code", "effect")
+
+    # 6. The same request again returns the first outcome and writes nothing twice.
+    undo_steps = Sketchup.active_model.instance_variable_get(:@undo_stack).length
+    retried = API.invoke(:context => context, :name => "ph_composer.zones.update", :params => edit,
+                         :request => { "sequence" => 3, "expected_revision" => classified["revision"],
+                                       "proposal_digest" => preview["proposal_digest"] })
+    assert_equal updated, retried
+    assert_equal updated, API.outcome(:context => context, :request => { "sequence" => 3 })
+    assert_equal undo_steps, Sketchup.active_model.instance_variable_get(:@undo_stack).length
+  end
+
+  def test_the_client_names_no_feature_module
+    source = File.read(__FILE__)
+    %w[Zones Faces FaceAssignment].each do |name|
+      refute_match(/PhComposer::#{name}\b/, source.sub(/%w\[Zones Faces FaceAssignment\]/, ""))
+    end
+  end
+
+  private
+
+  # 1. Find the Model and connect.
+  def connect
+    found = API.discover
+    session = found["sessions"].find { |row| row["active"] }
+    assert_empty %w[params result examples] - API.describe(:name => "ph_composer.zones.make").keys
+    assert API.describe(:name => "ph_composer.zones.faces.face").key?("occurrence_reference")
+    API.connect(:session_id => session["id"])
+  end
+
+  # 2. Make a Zone from the selection.
+  def make_zone(context)
+    zones = API.query(:context => context, :name => "ph_composer.zones.list")
+    target = zones["value"]["make_zone"]
+    preview = API.preview(:context => context, :name => "ph_composer.zones.make", :params => target)
+    made = API.invoke(:context => context, :name => "ph_composer.zones.make", :params => target,
+                      :request => { "sequence" => 1, "expected_revision" => zones["revision"],
+                                    "proposal_digest" => preview["proposal_digest"] })
+    assert_equal %w[completed committed], made.values_at("status", "effect")
+    [zones, made]
+  end
+
+  # 3. Read the Zone's Faces and classify one.
+  def classify_first_face(context)
+    read = API.query(:context => context, :name => "ph_composer.zones.faces.list")
+    face = read["value"]["faces"].first
+    classified = API.invoke(
+      :context => context, :name => "ph_composer.zones.faces.classify",
+      :params => { "faces" => [face["reference"]], "expected_values" => face["values"],
+                   "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
+                                 "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } } },
+      :request => { "sequence" => 2, "expected_revision" => read["revision"] }
+    )
+    written = classified["affected"].first["reference"]
+    assert_equal "committed", classified["effect"]
+    assert_equal face["reference"].merge("entity_id" => classified.dig("value", "face_ids", 0)), written
+    [classified, written]
+  end
+
+  # 4. Preview and edit the Zone, then verify by reading back.
+  def edit_zone(context, classified)
+    zone = API.query(:context => context, :name => "ph_composer.zones.list")["value"]["zones"].first
+    edit = { "reference" => zone["reference"], "expected_values" => zone["values"],
+             "values" => zone["values"].merge("level" => "L1") }
+    preview = API.preview(:context => context, :name => "ph_composer.zones.update", :params => edit)
+    updated = API.invoke(:context => context, :name => "ph_composer.zones.update", :params => edit,
+                         :request => { "sequence" => 3, "expected_revision" => classified["revision"],
+                                       "proposal_digest" => preview["proposal_digest"] })
+    assert_equal "committed", updated["effect"]
+    assert_includes updated["affected"].map { |row| row["id"] }, zone["id"]
+    read_back = API.query(:context => context, :name => "ph_composer.zones.list")["value"]["zones"].first
+    assert_equal edit["values"], read_back["values"]
+    [edit, preview, updated]
+  end
+
+  def faces(context)
+    API.query(:context => context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
+  end
+end

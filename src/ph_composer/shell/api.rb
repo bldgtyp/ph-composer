@@ -58,27 +58,21 @@ module PhComposer
       )
     end
 
-    # The full declaration of one registered query, action, view command or record kind, or nil when
-    # none has the name. The schemas are copies; validation keeps its own.
+    # The full declaration of one registered query, action, view command, record kind or entity kind,
+    # or nil when none has the name. The schemas are copies; validation keeps its own.
     def describe(name:)
       registry = Registry.current
       if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name])
         return DeepCopy.call(operation_description(operation))
       end
 
+      # A catalog kind and an entity-owned target describe themselves the same way (Records::Descriptor).
       if (target = registry.reference_targets[name])
-        return DeepCopy.call("kind" => "reference_target", "id" => target.id,
-                             "owner" => registry.owner_of(target.id), "label" => target.label)
+        return { "kind" => "reference_target", "owner" => registry.owner_of(name) }.merge(target.descriptor.to_h)
       end
 
       kind = registry.record_kinds[name]
-      kind && DeepCopy.call(
-        "kind" => "record_kind", "id" => kind.id, "owner" => registry.owner_of(kind.id), "label" => kind.label,
-        "schema_version" => kind.schema_version, "values" => kind.values_schema,
-        "references" => kind.references.map do |reference|
-          { "key" => reference.key, "target_kind" => reference.target_kind, "cardinality" => reference.cardinality }
-        end
-      )
+      kind && { "kind" => "record_kind", "owner" => registry.owner_of(name) }.merge(kind.descriptor.to_h)
     end
 
     # Issues a caller handle for an open Model session and returns the context to call with. This is

@@ -28,7 +28,7 @@ class EntityDescriptorTest < PhComposerTestCase
 
   def test_an_entity_target_publishes_its_values_occurrence_and_core_references
     assert_equal({
-      "kind" => MARKER, "label" => "Marker", "schema_version" => 1, "identity_field" => "id",
+      "id" => MARKER, "label" => "Marker", "schema_version" => 1, "identity_field" => "id",
       "values" => MARKER_VALUES, "occurrence_reference" => OCCURRENCE,
       "references" => [{ "key" => "definition_id", "target_kind" => DEFINITION.id, "cardinality" => "one" }]
     }, marker_target.descriptor.to_h)
@@ -38,7 +38,7 @@ class EntityDescriptorTest < PhComposerTestCase
     descriptor = PART.descriptor.to_h
 
     assert_equal [PART.id, 1, PART.values_schema, nil],
-                 descriptor.values_at("kind", "schema_version", "values", "occurrence_reference")
+                 descriptor.values_at("id", "schema_version", "values", "occurrence_reference")
     assert_equal [["definition_id", DEFINITION.id, "one"], ["neighbour_ids", PART.id, "many"]],
                  descriptor.fetch("references").map { |row| row.values_at("key", "target_kind", "cardinality") }
   end

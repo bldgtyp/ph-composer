@@ -10,7 +10,6 @@ module PhComposer
     STAMP_STORE = Records::EntityStore.new(STAMP_DICTIONARY)
     ID_PATTERN = Records::Identity.pattern("zon")
 
-    OBJECT = { "type" => "object" }.freeze
     PATH = { "type" => "array", "items" => { "type" => "integer" } }.freeze
     ZONE_REFERENCE = {
       "type" => "object", "additionalProperties" => false, "required" => %w[zone_id zone_path],

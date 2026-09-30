@@ -58,10 +58,10 @@ lint-python:
 	@uv run ruff check tools tests/python src/ph_composer/python
 	@uv run ruff format --check tools tests/python src/ph_composer/python
 
-# The owning tests, one per golden: exactly one test may write each file. None exist yet; the
-# first golden adds its owner here (docs/DEVELOPMENT.md "Fixtures and coverage").
-FIXTURE_OWNERS := phase_one_export
-FIXTURE_PATHS := tests/fixtures tests/python/fixtures
+# The owning tests, one per golden: exactly one test may write each file (docs/DEVELOPMENT.md
+# "Fixtures and coverage"). A new golden adds its owner here and its path below.
+FIXTURE_OWNERS := phase_one_export api_reference
+FIXTURE_PATHS := tests/fixtures tests/python/fixtures docs/API_REFERENCE.md
 
 fixtures:
 	@if [ -z "$(strip $(FIXTURE_OWNERS))" ]; then echo "fixtures: no generated goldens yet"; else \

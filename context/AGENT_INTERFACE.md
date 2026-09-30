@@ -190,7 +190,12 @@ Face IDs. The Overview inline dialog uses that public operation; scripts can pre
 it with the panel closed. [Current-host evidence](../planning/phase-one/evidence/p1-d-attached-zone-atomic.md)
 records validation, exact rollback and persistence checks.
 
-Discovery also lists read-only `reference_targets`; description returns their ID, owner and label.
+Discovery also lists read-only `reference_targets`; description returns their descriptor: ID, owner,
+label, schema version, values schema, occurrence-reference schema and declared core references.
+Every registered operation publishes specific params and result schemas and at least one worked
+example. [`docs/API_REFERENCE.md`](../docs/API_REFERENCE.md) is generated from the registrations by
+`make fixtures` and checked by the offline suite; [`docs/API_QUICKSTART.md`](../docs/API_QUICKSTART.md)
+is the public walkthrough a synthetic client test runs as written.
 Registered extensions can name `ph_composer.zones.zone` and `ph_composer.zones.faces.face`.
 Contributors resolve those identities through the shared record engine while the owning features
 retain entity writes. [The contract](EXTENSIBILITY.md#entity-owned-reference-targets) defines typed

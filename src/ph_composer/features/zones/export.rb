@@ -18,7 +18,8 @@ module PhComposer
           }
         ) { |reader| records(reader) }
         feature.query("#{FEATURE_ID}.export_preflight", :description => "All-Zone export checks and adjacency repair.",
-                      :params => OBJECT, :result => OBJECT) { |request| preflight(request) }
+                      :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
+                      :examples => [{}]) { |request| preflight(request) }
       end
 
       def preflight(request)

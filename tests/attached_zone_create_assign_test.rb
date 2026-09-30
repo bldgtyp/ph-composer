@@ -69,8 +69,9 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
   end
 
   def test_invalid_record_or_pending_face_proposal_refuses_before_writes
+    # The values schema is the Attached zone descriptor's, so an unknown kind is refused as params.
     invalid_record = invoke(params([faces.first], :values => { "name" => "Garage", "kind" => "unknown" }))
-    assert_equal %w[refused validation.failed none], invalid_record.values_at("status", "code", "effect")
+    assert_equal %w[refused params.invalid none], invalid_record.values_at("status", "code", "effect")
 
     invalid_face = invoke(params([faces.first], :intent => {
       "face_type" => { "mode" => "set", "value" => "AirBoundary" }
