@@ -9,7 +9,7 @@ BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` f
 
 ## Next step
 
-Phase 04.
+Phase 05: independent review, native run, docs-pass, then Ed merges PR #3.
 
 ## Blockers
 
@@ -47,8 +47,8 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 | [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Implemented on branch | `ec20723` | |
 | [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Implemented on branch | `907817c` to `97cd90a` | |
 | [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Implemented on branch | `71b8534`, `16bd367` | |
-| [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Scoped | | Best after 02/03 |
-| [05](phases/phase-05-merge-closure.md) Merge closure | Yes | Blocked | | 01a to 04 |
+| [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Implemented on branch | `bda13df` | |
+| [05](phases/phase-05-merge-closure.md) Merge closure | Yes | In progress | | |
 | [06](phases/phase-06-api-hardening.md) API hardening | No | Blocked | | PR #3 merged |
 | [07](phases/phase-07-hbjson-metadata-policy.md) HBJSON metadata policy | No | Blocked | | PR #3 merged |
 | [08](phases/phase-08-responsibility-refactors.md) Non-`zones` refactors | No | Blocked | | PR #3 merged |
@@ -84,8 +84,8 @@ Phase 08 into Phase 02.
 | REF-Z | `zones`-internal refactors: pair validity rule, `cut_partition`, `keeper_path`, `Overlap.partition`, `install.rb` split | Advisory | Yes (R-D9) | 02 | Implemented on branch | `ba20aed`, `062b308`, `d64d2c4`; Overlap.partition skipped (see phase Result) |
 | RP | Unused `revision` param on `Zones::Repair.restore_plan` | Cleanup | Yes (R-D9) | 02 | Implemented on branch | `97cd90a` |
 | A01 | Zone/Face discovery lacks schemas, result shapes, examples | P1 | Yes | 03 | Implemented on branch | `api_reference_test`, `api_client_test`; `71b8534` |
-| DOC | Stale authorities: TECH_STACK, PRD, DEVELOPMENT, AGENT_INTERFACE | Consistency | Yes | 04 | Scoped | |
-| SKL | UI skill `references/patterns.md` names predecessor paths | Consistency | Yes | 04 | Scoped | |
+| DOC | Stale authorities: TECH_STACK, PRD, DEVELOPMENT, AGENT_INTERFACE | Consistency | Yes | 04 | Implemented on branch | `bda13df`, with `742e75e` |
+| SKL | UI skill `references/patterns.md` names predecessor paths | Consistency | Yes | 04 | Implemented on branch | `bda13df` |
 | A02 | Unbounded entity reads, ignored filters, loose cursors | P2 | No | 06 | Blocked | |
 | A04 | Export task methods not describable | P2 | No | 06 | Blocked | |
 | A06 | Registration schema/callable/example validation, frozen declarations | P2 | No | 06 | Blocked | |

@@ -1,11 +1,10 @@
 # Phase 04: stale authorities and UI skill reference
 
 DATE: 2026-09-30
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/4
 MERGE SET: Yes
-BLOCKED ON: nothing; best run after 02 and 03 so names are final
 
 ## Scope
 
@@ -36,4 +35,20 @@ evidence under `planning/phase-one/evidence/`.
 
 ## Result
 
-(Fill on completion.)
+Commit `bda13df`, plus the context edits already made in Phase 02 (`742e75e`) and 03.
+
+- `context/TECH_STACK.md`: corrected in Phase 02; names `zones` as the registered building feature.
+- `docs/PRD.md`: Phase 1 implemented on PR #3, not merged; merge and release kept distinct.
+- `docs/DEVELOPMENT.md`: both goldens and their owning tests; the Colour-by sentence points at the
+  continuation that closed its questions.
+- `context/AGENT_INTERFACE.md`: the pending review gate replaced by a pointer to the acceptance
+  register; the descriptor, generated reference and quickstart described (Phase 03).
+- UI polish skill: `references/patterns.md` rewritten against local paths, predecessor-only screens
+  labelled, the accepted Overview (with R-D4's draft rule), Attached-zone, Classify, Colour-by and
+  Export patterns recorded. Two stale facts in `SKILL.md` corrected; no rule changed.
+- Old ids and module paths: `grep` for `ph_composer.face_assignment.`, `features/face_assignment`
+  and `FaceAssignment` outside this packet returns only historical evidence
+  (`planning/phase-one/evidence/`), the completed D7 gate handoff, one measurement note in
+  `planning/phase-one/STATUS.md`, and `CONTRACTS.md`'s storage table row, which names the stored
+  dictionary that deliberately kept its name. Relative links in every edited file resolve; no em
+  or en dashes in `docs/`.
