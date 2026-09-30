@@ -27,6 +27,7 @@ not a dependency. Its designPH integration is retired and is never reintroduced 
 | Contributor architecture, scripting and extension contracts | [`context/EXTENSIBILITY.md`](context/EXTENSIBILITY.md) |
 | External agent access, discovery, model reads and writes | [`context/AGENT_INTERFACE.md`](context/AGENT_INTERFACE.md) |
 | Build, install, test and host procedures | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md), implemented commands and remaining host gates |
+| Native acceptance and resuming host gates | [`.agents/skills/ph-composer-native-acceptance/SKILL.md`](.agents/skills/ph-composer-native-acceptance/SKILL.md), then the owning packet and case ledger |
 | Current delivery state or next authorized work | [`planning/STATUS.md`](planning/STATUS.md), then the owning packet |
 | Planning documents or status changes | [`planning/.instructions.md`](planning/.instructions.md) |
 

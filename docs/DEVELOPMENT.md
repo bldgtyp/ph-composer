@@ -128,6 +128,15 @@ citation that must name the predecessor is admitted one exact line at a time thr
 Restart SketchUp after replacing the loader. For every phase gate, quit all SketchUp processes
 and relaunch after `make install`. Installation is preparation, not host validation.
 
+## Native acceptance continuity
+
+The [native acceptance skill](../.agents/skills/ph-composer-native-acceptance/SKILL.md) coordinates
+fixture/build identity, control selection, observed assertions and normal-build restoration.
+The [case/result ledger](../planning/native-acceptance/README.md) screens affected checks and
+retains historical evidence without fabricating missing run provenance. Source snapshots do not
+run SketchUp or prove current-host acceptance. [Control capabilities](../context/NATIVE_CONTROL_CAPABILITIES.md)
+identify which claims require native pixels or a human gesture.
+
 ## Driving SketchUp from a terminal
 
 This section concerns development tooling. The separate supported interface for users' agents is
