@@ -45,7 +45,7 @@ module ColourByWalkthrough
       preview = client.preview("ph_composer.zones.make", target)
       client.invoke("ph_composer.zones.make", target, preview.fetch("proposal_digest"))
     end
-    client.query("ph_composer.zones.list").dig("value", "zones").each do |zone|
+    client.query("ph_composer.zones.all").dig("value", "zones").each do |zone|
       client.invoke("ph_composer.zones.faces.auto_classify", { "zone" => zone.fetch("reference") })
     end
     fingerprint
@@ -224,7 +224,7 @@ module ColourByWalkthrough
 
     def invoke(name, params, proposal_digest = nil)
       @sequence += 1
-      revision = query("ph_composer.zones.list").fetch("revision")
+      revision = query("ph_composer.zones.all").fetch("revision")
       request = { "sequence" => @sequence, "expected_revision" => revision }
       request["proposal_digest"] = proposal_digest if proposal_digest
       API.invoke(:context => @context, :name => name, :params => params, :request => request)

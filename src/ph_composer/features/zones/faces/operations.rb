@@ -70,6 +70,7 @@ module PhComposer
 
       def projected_view(occurrence, fields)
         record = FACE_STORE.read(occurrence.entity)
+        Schema.validate!(record) if record
         { "reference" => occurrence.reference(record&.fetch("id", nil)),
           "values" => record ? Schema.values(record).slice(*fields) : {} }
       end

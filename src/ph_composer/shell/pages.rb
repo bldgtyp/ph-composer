@@ -24,7 +24,7 @@ module PhComposer
     def slice(request, query, rows, key:)
       limit = limit(request.params)
       after = position(request, query)
-      remaining = after.nil? ? rows : rows.select { |row| (key.call(row) <=> after).positive? }
+      remaining = after.nil? ? rows : rows.select { |row| after_position?(key.call(row), after) }
       page = remaining.first(limit)
       [page, remaining.length > limit ? token(request, query, key.call(page.last)) : nil]
     end
@@ -63,10 +63,19 @@ module PhComposer
       raise CodedError.new("params.invalid", "That cursor is not one this query issued.")
     end
 
+    # A position of another kind than this query's keys (a path where ids are, say) did not come
+    # from this query, however well its binding was copied.
+    def after_position?(row_key, after)
+      order = row_key <=> after
+      raise CodedError.new("params.invalid", "That cursor is not one this query issued.") if order.nil?
+
+      order.positive?
+    end
+
     def binding_of(request, query)
       { "session" => request.session.id, "query" => query, "revision" => request.revision,
         "filter" => CanonicalJson.digest(request.params.reject { |key, _value| PAGE_KEYS.include?(key) }) }
     end
-    private_class_method :binding_of
+    private_class_method :after_position?, :binding_of
   end
 end

@@ -249,7 +249,8 @@ module PhComposer
                              &contract)
         declaration = Declarations::ExportContributor.new(
           :name => name, :owner => id, :section_version => section_version, :contract => contract,
-          :result => result, :report => report, :preflight => preflight, :user_data_keys => user_data_keys
+          :result => DeepCopy.call(result).freeze, :report => report, :preflight => preflight,
+          :user_data_keys => DeepCopy.call(user_data_keys).freeze
         )
         @staging.add(:declared_export_contributors, id, name, declaration)
       end

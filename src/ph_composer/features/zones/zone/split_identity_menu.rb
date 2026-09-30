@@ -60,7 +60,7 @@ module PhComposer
             UI.messagebox("Open the Zone and select one of its split Faces first.")
             return []
           end
-          result = API.query(:context => @context, :name => "ph_composer.zones.faces.list")
+          result = API.query(:context => @context, :name => "ph_composer.zones.faces.all")
           unless result["status"] == "completed"
             show(result)
             return []

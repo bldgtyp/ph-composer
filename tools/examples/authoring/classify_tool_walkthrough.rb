@@ -153,7 +153,7 @@ module ClassifyToolWalkthrough
 
   # Questions 3, 5 and 6, and the whole of the gesture. What the Model holds now.
   def report
-    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
+    faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     {
       # There is no `Sketchup::Model#active_tool` on the host, although the offline stub has one,
       # so the tool is asked whether it is active rather than the Model being asked what is.
@@ -177,7 +177,7 @@ module ClassifyToolWalkthrough
 
   # Question 8. Locate every unclassified Face, which is the read D7's legend will make of it.
   def locate_unclassified
-    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
+    faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     references = faces.select { |face| face.fetch("values").empty? }.map { |face| face.fetch("reference") }
     found = PhComposer::Zones::Faces::Locate.call(session, references)
     { "asked" => references.length, "found" => found.length,
@@ -218,7 +218,7 @@ module ClassifyToolWalkthrough
 
     def invoke(name, params)
       @sequence += 1
-      revision = query("ph_composer.zones.list").fetch("revision")
+      revision = query("ph_composer.zones.all").fetch("revision")
       API.invoke(:context => @context, :name => name, :params => params,
                  :request => { "sequence" => @sequence, "expected_revision" => revision })
     end

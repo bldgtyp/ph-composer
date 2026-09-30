@@ -44,6 +44,7 @@ module PhComposer
     # an enum lists something, and a closed object requires only properties it declares.
     def value_problems(schema, path)
       found = []
+      types = Array(schema["type"])
       COUNTS.each do |key|
         next unless schema.key?(key) && !(schema[key].is_a?(Integer) && schema[key] >= 0)
 
@@ -55,13 +56,25 @@ module PhComposer
       TEXTS.each { |key| found << "#{path}.#{key} must be text" if schema.key?(key) && !schema[key].is_a?(String) }
       if schema.key?("enum") && !(schema["enum"].is_a?(Array) && !schema["enum"].empty?)
         found << "#{path}.enum must list at least one value"
+      elsif schema.key?("enum") && schema["enum"].any? { |value| types.none? { |type| type?(value, type) } }
+        found << "#{path}.enum lists a value its type does not allow"
       end
+      found.concat(range_problems(schema, path))
       found << "#{path}.examples must be a list" if schema.key?("examples") && !schema["examples"].is_a?(Array)
       additional = schema["additionalProperties"]
       unless additional.nil? || additional == true || additional == false || additional.is_a?(Hash)
         found << "#{path}.additionalProperties must be true, false or a schema"
       end
       found.concat(required_problems(schema, path))
+    end
+
+    # A lower bound above its upper bound admits nothing.
+    def range_problems(schema, path)
+      [%w[minimum maximum], %w[minItems maxItems], %w[minLength maxLength]].filter_map do |low, high|
+        next unless schema[low].is_a?(Numeric) && schema[high].is_a?(Numeric) && schema[low] > schema[high]
+
+        "#{path}.#{low} is above #{high}"
+      end
     end
 
     def required_problems(schema, path)

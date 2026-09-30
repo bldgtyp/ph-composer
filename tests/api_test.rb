@@ -116,8 +116,29 @@ class ApiTest < PhComposerTestCase
     assert_equal 2, records(:limit => 2, :cursor => first.fetch("next_cursor")).dig("value", "records").length
     assert_equal "params.invalid", records(:limit => 1, :fields => ["label"],
                                            :cursor => first.fetch("next_cursor")).fetch("code")
-    assert_equal "params.invalid", API.query(:context => @context, :name => "ph_composer.zones.list",
-                                             :params => { "cursor" => first.fetch("next_cursor") }).fetch("code")
+  end
+
+  # A cursor whose binding matches but whose position is the wrong kind of key is still one this
+  # query did not issue: it refuses rather than failing inside the comparison.
+  def test_a_cursor_with_a_foreign_position_refuses
+    create_parts(3)
+    first = records(:limit => 1).fetch("value")
+    decoded = JSON.parse(first.fetch("next_cursor").unpack1("m0")).merge("after" => [1, 2])
+    forged = [JSON.generate(decoded)].pack("m0")
+
+    assert_equal %w[refused params.invalid], records(:limit => 1, :cursor => forged).values_at("status", "code")
+  end
+
+  # A cursor from another Model's session is refused, even at the same revision number.
+  def test_a_cursor_from_another_session_refuses
+    create_parts(2)
+    first = records(:limit => 1).fetch("value")
+    other = PhComposer::Sessions.for(Sketchup::Model.new)
+    context = API.connect(:session_id => other.id)
+    params = { "kind" => PART, "limit" => 1, "cursor" => first.fetch("next_cursor") }
+
+    assert_equal "params.invalid", API.query(:context => context, :name => "ph_composer.records.list",
+                                             :params => params).fetch("code")
   end
 
   def test_a_malformed_cursor_is_refused_as_an_outcome

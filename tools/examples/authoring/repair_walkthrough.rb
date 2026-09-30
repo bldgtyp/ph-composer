@@ -31,7 +31,7 @@ module RepairWalkthrough
     target = { "parent_path" => [], "entity_ids" => [group.persistent_id], "name" => "Source" }
     preview = client.preview("ph_composer.zones.make", target)
     client.invoke("ph_composer.zones.make", target, preview.fetch("proposal_digest"))
-    zone = client.query("ph_composer.zones.list").dig("value", "zones", 0)
+    zone = client.query("ph_composer.zones.all").dig("value", "zones", 0)
     client.invoke("ph_composer.zones.faces.auto_classify", { "zone" => zone.fetch("reference") })
     verify
   end
@@ -120,7 +120,7 @@ module RepairWalkthrough
 
   def restore_source
     client = Client.new
-    offer = client.query("ph_composer.zones.list").dig("value", "restorable", 0)
+    offer = client.query("ph_composer.zones.all").dig("value", "restorable", 0)
     raise "Nothing is offered for Restore; run explode_source first." unless offer
 
     params = { "parent_path" => offer.fetch("parent_path"), "zone_id" => offer.fetch("zone_id") }
@@ -147,8 +147,8 @@ module RepairWalkthrough
   # duplicated, what each Zone's Faces claim, and what is currently offered for Restore.
   def verify
     client = Client.new
-    zones = client.query("ph_composer.zones.list").fetch("value")
-    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
+    zones = client.query("ph_composer.zones.all").fetch("value")
+    faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     ids = zones.fetch("zones").map { |zone| zone.dig("id") }
     {
       "zone_ids" => ids,
@@ -207,7 +207,7 @@ module RepairWalkthrough
 
     def invoke(name, params, proposal_digest = nil)
       @sequence += 1
-      revision = query("ph_composer.zones.list").fetch("revision")
+      revision = query("ph_composer.zones.all").fetch("revision")
       request = { "sequence" => @sequence, "expected_revision" => revision }
       request["proposal_digest"] = proposal_digest if proposal_digest
       API.invoke(:context => @context, :name => name, :params => params, :request => request)

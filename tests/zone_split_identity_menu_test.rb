@@ -100,6 +100,19 @@ class ZoneSplitIdentityMenuTest < PhComposerTestCase
     assert UI.messages.any? { |message| message.include?("no recorded Zone identity") }
   end
 
+  # The selected Face and every copy of its identity may be anywhere in the Model, so the menu reads
+  # the complete Faces projection rather than one page of the paged list.
+  def test_the_menu_reads_every_face_not_one_page
+    names = []
+    queried = lambda do |**args|
+      names << args.fetch(:name)
+      { "status" => "completed", "revision" => 0, "value" => { "faces" => @rows } }
+    end
+    API.stub(:query, queried) { API.stub(:preview, ->(**_args) { completed("user_choice") }) { @client.run } }
+
+    assert_equal ["ph_composer.zones.faces.all"], names.uniq
+  end
+
   def test_query_failure_is_reported_before_preview
     failed = { "status" => "refused", "message" => "The Model is closed." }
     API.stub(:query, failed) do

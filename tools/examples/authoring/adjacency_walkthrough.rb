@@ -34,8 +34,8 @@ module AdjacencyWalkthrough
       preview = client.preview("ph_composer.zones.make", target)
       client.invoke("ph_composer.zones.make", target, preview.fetch("proposal_digest"))
     end
-    zones = client.query("ph_composer.zones.list").dig("value", "zones")
-    client.query("ph_composer.zones.faces.list").dig("value", "faces").each do |face|
+    zones = client.query("ph_composer.zones.all").dig("value", "zones")
+    client.query("ph_composer.zones.faces.all").dig("value", "faces").each do |face|
       client.invoke("ph_composer.zones.faces.classify", {
         "faces" => [face.fetch("reference")],
         "intent" => {
@@ -58,7 +58,7 @@ module AdjacencyWalkthrough
     east = zone_groups.find { |group| group.name == "east" || group.name.end_with?("east") }
     east.transformation = Geom::Transformation.new([5001.mm, 0, 0])
     client = Client.new
-    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
+    faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     surface = faces.find { |face| face["adjacency_state"] == "stale" }
     raise "Moving the east Zone did not expose a stale pair." unless surface
     stale_states = faces.map { |face| face["adjacency_state"] }.compact
@@ -71,15 +71,15 @@ module AdjacencyWalkthrough
     east = zone_groups.find { |group| group.name == "east" || group.name.end_with?("east") }
     east.transformation = Geom::Transformation.new([5000.mm, 0, 0])
     client = Client.new
-    zones = client.query("ph_composer.zones.list").dig("value", "zones")
+    zones = client.query("ph_composer.zones.all").dig("value", "zones")
     result = client.invoke("ph_composer.zones.solve_adjacency", "zones" => zones.map { |zone| zone.fetch("reference") })
     verify.merge("resolve" => result.values_at("status", "effect"))
   end
 
   def verify
     client = Client.new
-    zones = client.query("ph_composer.zones.list").dig("value", "zones")
-    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
+    zones = client.query("ph_composer.zones.all").dig("value", "zones")
+    faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     states = faces.map { |face| face["adjacency_state"] }.compact
     names = [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
     extraction = PhComposer::Export::Collection.build(Sketchup.active_model, :run_id => "host-p1c",
@@ -177,7 +177,7 @@ module AdjacencyWalkthrough
 
     def invoke(name, params, proposal_digest = nil)
       @sequence += 1
-      revision = query("ph_composer.zones.list").fetch("revision")
+      revision = query("ph_composer.zones.all").fetch("revision")
       request = { "sequence" => @sequence, "expected_revision" => revision }
       request["proposal_digest"] = proposal_digest if proposal_digest
       API.invoke(:context => @context, :name => name, :params => params, :request => request)

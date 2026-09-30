@@ -26,7 +26,10 @@ class RegistryTest < PhComposerTestCase
       { "type" => "object", "properties" => { "n" => { "type" => "integer", "minimum" => "one" } } },
       { "type" => "object", "properties" => { "n" => { "type" => "array", "minItems" => -1 } } },
       { "type" => "object", "properties" => { "n" => { "type" => "string", "enum" => [] } } },
-      { "type" => "object", "additionalProperties" => false, "required" => ["missing"], "properties" => {} }
+      { "type" => "object", "additionalProperties" => false, "required" => ["missing"], "properties" => {} },
+      { "type" => "object", "properties" => { "n" => { "type" => "number", "minimum" => 5, "maximum" => 1 } } },
+      { "type" => "object", "properties" => { "n" => { "type" => "array", "minItems" => 3, "maxItems" => 1 } } },
+      { "type" => "object", "properties" => { "n" => { "type" => "string", "enum" => [1] } } }
     ]
     bad.each_with_index do |params, index|
       diagnostics = refused(feature do |registry|
@@ -60,6 +63,18 @@ class RegistryTest < PhComposerTestCase
     cases.each do |label, declare|
       diagnostics = refused(feature { |registry| declare.call(registry.feature("probe.ops", :contract_version => 1)) })
       assert_equal ["registration.schema_invalid"], diagnostics.map(&:code).uniq, label
+    end
+  end
+
+  def test_participants_and_menu_items_need_callable_handlers
+    %i[declared_proposal_participants declared_menu_items].each do |collection|
+      diagnostics = refused(feature do |registry|
+        scope = registry.feature("probe.calls", :contract_version => 1)
+        scope.proposal_participant("probe.calls.participant") { |*_args| {} }
+        scope.menu_item("probe.calls.item", :label => "Item", :menu => "Probe") { |_session| nil }
+        scope.instance_variable_get(:@staging).public_send(collection).last.handler = "not callable"
+      end)
+      assert_equal ["registration.schema_invalid"], diagnostics.map(&:code).uniq, collection.to_s
     end
   end
 

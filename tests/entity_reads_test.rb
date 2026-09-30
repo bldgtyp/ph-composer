@@ -90,6 +90,17 @@ class EntityReadsTest < PhComposerTestCase
     assert_equal 2, read(FACES, "zone_paths" => [[100]]).dig("value", "total")
   end
 
+  # A projected read refuses an invalid stored record exactly as the whole-row read does.
+  def test_a_projected_read_refuses_an_invalid_record_like_the_whole_read
+    make_zone(box(100, 1))
+    face = @model.entities.to_a.first.entities.to_a.first
+    PhComposer::Zones::Faces::FACE_STORE.write(face, "id" => "fac_Ab12Cd34Ef56", "schema_version" => 1,
+                                                     "face_type" => "Bogus")
+
+    assert_equal "validation.failed", read(FACES).fetch("code")
+    assert_equal "validation.failed", read(FACES, "fields" => ["boundary_condition"]).fetch("code")
+  end
+
   def test_unsupported_arguments_are_refused
     assert_equal "params.invalid", read(ZONES, "sort" => "name").fetch("code")
     assert_equal "params.invalid", read(FACES, "fields" => ["area_m2"]).fetch("code")
