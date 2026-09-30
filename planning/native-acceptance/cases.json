@@ -541,7 +541,7 @@
       "id": "R01",
       "label": "Shared child Group Face mutation refusal",
       "mode": "native",
-      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "authority": "planning/phase-one/ACCEPTANCE.md",
       "paths": [
         "context/SKETCHUP_HOST_BEHAVIOR.md",
         "context/TECH_STACK.md",
@@ -564,7 +564,7 @@
       "id": "R02",
       "label": "Explicit Face path through a nested Zone",
       "mode": "native",
-      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "authority": "planning/phase-one/ACCEPTANCE.md",
       "paths": [
         "context/SKETCHUP_HOST_BEHAVIOR.md",
         "context/TECH_STACK.md",
@@ -587,7 +587,7 @@
       "id": "R03",
       "label": "Attached-zone delete with orphaned Face references",
       "mode": "native",
-      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "authority": "planning/phase-one/ACCEPTANCE.md",
       "paths": [
         "context/SKETCHUP_HOST_BEHAVIOR.md",
         "context/TECH_STACK.md",
@@ -610,7 +610,7 @@
       "id": "R04",
       "label": "Partial AttachedZone cut and pairing",
       "mode": "native",
-      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "authority": "planning/phase-one/ACCEPTANCE.md",
       "paths": [
         "context/SKETCHUP_HOST_BEHAVIOR.md",
         "context/TECH_STACK.md",
@@ -633,7 +633,7 @@
       "id": "R05",
       "label": "Overview Zone details draft navigation",
       "mode": "native",
-      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "authority": "planning/phase-one/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/html/*",
         "src/ph_composer/shell/*",
@@ -649,7 +649,7 @@
       "id": "R06",
       "label": "Panel-closed API client from discovery and quickstart",
       "mode": "native",
-      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "authority": "planning/phase-one/ACCEPTANCE.md",
       "paths": [
         "docs/API_QUICKSTART.md",
         "docs/API_REFERENCE.md",

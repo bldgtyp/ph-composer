@@ -29,6 +29,21 @@ The owning PRDs supply the detailed cases; this register supplies the closure ga
 | A15 | Deferred METr milestone | Actual import, suffix, floor-area policy and consumer mapping to be re-scoped against available features when work resumes | Deferred; excluded from Phase 1 closure. Owned by [METr export](../features/metr-export/README.md) |
 | A16 | Integration / P1-F | Both offline Ruby gates, coverage and browser/runtime checks; packaged inventory; fresh-process two-Zone authoring/export with nested edit path, two Models, Undo/Redo and reopen; host restart expires task handles and recovers staged artifacts without claiming an unknown run succeeded | Pass 2026-09-30 on SketchUp 26.1.188: both offline Ruby gates, coverage, browser/runtime/package checks and fresh integrated nested-path, Undo/Redo, two-Model, reopen and restart cases. [Evidence](evidence/p1-e-export-workflow.md) |
 
+## PR #3 foundation-correction cases
+
+Added by [pr3-foundation-corrections](../refactor/pr3-foundation-corrections/README.md) for the
+defects its review reproduced. Ledger records are in
+[`native-acceptance/results.jsonl`](../native-acceptance/results.jsonl).
+
+| ID | Owner/stage | Required evidence | State |
+| --- | --- | --- | --- |
+| R01 | Corrections 01a | Fresh native copy producing shared child Groups inside a Zone: Classify and Reverse on one occurrence refuse `target.shared_definition`, write nothing, add no Undo step; reads list both occurrences | Pass 2026-09-30. [Evidence](evidence/pr3-corrections-native.md) |
+| R02 | Corrections 01a | Nested authored Zone: an explicit outer-Zone Face path through the inner Zone refuses; ordinary nested non-Zone Groups still classify | Pass 2026-09-30. [Evidence](evidence/pr3-corrections-native.md) |
+| R03 | Corrections 01a | Attached zone assigned, member Face orphaned by native explode and by move; delete in both replacement modes refuses and keeps definition and assignments; Undo/Redo; Restore after the refusal | Pass 2026-09-30. [Evidence](evidence/pr3-corrections-native.md) |
+| R04 | Corrections 01a | Partial overlap with one or both Faces AttachedZone: shared pieces pair as Surface without `attached_zone_id`, remainders keep it; repeat Solve is a no-op; exact Undo/Redo, save and reopen | Pass 2026-09-30. [Evidence](evidence/pr3-corrections-native.md) |
+| R05 | Corrections 01c | Overview Zone details drafts survive or are explicitly cancelled across Face and other-Zone selection, filtering and tabs, with native keyboard focus; a pending request keeps its controls | Observed 2026-09-30 except the pending-request visibility, which completed too fast to capture (covered offline). Ledger outcome `unknown`. [Evidence](evidence/pr3-corrections-native.md) |
+| R06 | Corrections 03 | Panel closed: a client using only discovery, `describe` and the public quickstart makes a Zone, reads Faces, classifies one, previews and edits, verifies, recovers from a stale revision and a lost-response retry | Pass 2026-09-30 (Phase 05 scope; bounded reads and export polling extend it in Phase 06). [Evidence](evidence/pr3-corrections-native.md) |
+
 ## Synthetic reference cases
 
 Start with adjacent 5 x 4 x 3 m and 4 x 4 x 3 m boxes, without windows or Spaces. Expected

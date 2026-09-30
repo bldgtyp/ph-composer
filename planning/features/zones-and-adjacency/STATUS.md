@@ -84,3 +84,4 @@ Undo/Redo and final reopen/reference verification. Native split recovery now pas
 [P1-Q5](../../phase-one/DECISIONS.md#p1-q5-native-split-identity-frontier) records Ed's accepted
 policy for which piece retains the old Face UUID; its public action and native menu are implemented
 and current-host verified. A06's [extension-reference continuation](../../phase-one/evidence/p1-d-entity-reference-targets.md) passes native cases; independent review, resolver corrections, final gates and targeted fresh-host checks pass. Clean one-to-many pairing is current-host verified.
+| 2026-09-30 | PR #3 merge-set corrections implemented on the branch: code owner `src/ph_composer/features/zones/`, M1 to M4 fixed, native cases R01 to R04 pass ([evidence](../../phase-one/evidence/pr3-corrections-native.md)). |

@@ -1,7 +1,7 @@
 # Phase 05: merge closure
 
 DATE: 2026-09-30
-STATUS: In progress
+STATUS: Implemented on branch; awaiting Ed's merge
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/4
 MERGE SET: Yes
@@ -56,9 +56,13 @@ In progress.
   limits, not fixed: a lost Save result leaves navigation locked until a Model switch (no request
   timeout in `request.js`); a Model-driven change (Undo, move into a Group) that removes the
   selected Zone still disposes a dirty draft without a notice; `make ci` syntax-checks with 3.2 only.
-- Native scope (Ed, 2026-09-30): targeted rerun, not all of A01 to A16. R01, R02, R04, R06 pass and
-  are in `results.jsonl` ([evidence](../../phase-one/evidence/pr3-corrections-native.md)). R03 is
-  partly observed; its Undo/Redo and moved-Face variant, R05 and the A04 recheck are in
-  [NATIVE-HANDOFF.md](../NATIVE-HANDOFF.md) for Codex computer use, after `codex exec` could not be
-  granted SketchUp non-interactively. A08 and A12 carry forward as historical: their code saw id
-  renames only.
+- Native scope (Ed, 2026-09-30): targeted rerun, not all of A01 to A16. R01 to R04 and R06 pass.
+  R05 is observed except the pending-request visibility (recorded `unknown`; offline-covered). The
+  first Codex computer-use pass found one real defect: a refused tab change left focus on the tab.
+  Fixed in `b2dd8b2` and observed fixed natively. A02, A04 (one drag), A05 and A11 rechecked and pass;
+  A08, A10, A12, A13, A14 and A16 carried forward with reasons. All in `results.jsonl` and the
+  [evidence page](../../../phase-one/evidence/pr3-corrections-native.md). Native Undo/Redo needs
+  SketchUp frontmost; bridge and System Events requests sent in the background were delivered late.
+- docs-pass: R01 to R06 moved into `phase-one/ACCEPTANCE.md` and `cases.json` repointed; top-level,
+  Phase 1 and both feature packet statuses updated.
+- Remaining: Ed merges PR #3. The merge closes #4.

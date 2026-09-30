@@ -9,9 +9,8 @@ BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` f
 
 ## Next step
 
-Codex (computer use) runs [NATIVE-HANDOFF.md](NATIVE-HANDOFF.md): R03's Undo/Redo and moved-Face
-variant, R05 and the A04 recheck. Then: the scripted walkthrough reruns for the targeted A cases,
-docs-pass (move R01 to R06 into `phase-one/ACCEPTANCE.md`), PR #3 description, and Ed merges.
+Ed merges PR #3; merge-set rows then move to `Merged to main`. Phases 06 to 09 start on a branch
+from `main` with the second issue (R-D6).
 
 ## Blockers
 
@@ -50,7 +49,7 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 | [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Implemented on branch | `907817c` to `97cd90a` | |
 | [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Implemented on branch | `71b8534`, `16bd367` | |
 | [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Implemented on branch | `bda13df` | |
-| [05](phases/phase-05-merge-closure.md) Merge closure | Yes | In progress | | |
+| [05](phases/phase-05-merge-closure.md) Merge closure | Yes | Implemented on branch; awaiting merge | `08aa837`, `b2dd8b2` | Ed merges |
 | [06](phases/phase-06-api-hardening.md) API hardening | No | Blocked | | PR #3 merged |
 | [07](phases/phase-07-hbjson-metadata-policy.md) HBJSON metadata policy | No | Blocked | | PR #3 merged |
 | [08](phases/phase-08-responsibility-refactors.md) Non-`zones` refactors | No | Blocked | | PR #3 merged |
@@ -102,11 +101,11 @@ Phase 08 into Phase 02.
 | --- | --- | --- | --- |
 | R01 shared child Groups | 01a / 05 | Pass | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
 | R02 nested Zone path | 01a / 05 | Pass | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
-| R03 orphan Attached-zone delete | 01a / 05 | Partly observed; rest handed off | [NATIVE-HANDOFF.md](NATIVE-HANDOFF.md) |
+| R03 orphan Attached-zone delete | 01a / 05 | Pass | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
 | R04 partial AttachedZone cut | 01a / 05 | Pass | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
-| R05 Overview draft navigation | 01c / 05 | Handed off | [NATIVE-HANDOFF.md](NATIVE-HANDOFF.md) |
+| R05 Overview draft navigation | 01c / 05 | Observed; pending-state visibility `unknown` (offline-covered) | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
 | R06 panel-closed API client | 03 / 05, extended 09 | Pass (Phase 05 scope) | `results.jsonl`; [evidence](../../phase-one/evidence/pr3-corrections-native.md) |
-| Existing cases flagged by `--changed` | 05, 09 | Targeted (Ed, 2026-09-30): A04 recheck handed off; A08 and A12 carry forward; scripted walkthroughs pending | Phase 05 **Result** |
+| Existing cases flagged by `--changed` | 05, 09 | Targeted (Ed, 2026-09-30): A02, A04 (drag), A05, A11 rechecked and pass; A08, A10, A12, A13, A14, A16 carried forward with reasons | [evidence](../../phase-one/evidence/pr3-corrections-native.md#carried-forward) |
 
 ## Verification log
 
