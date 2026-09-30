@@ -65,7 +65,20 @@ Commit `9f94e0d`.
 - No shipped Python changed, so no manifest refresh. `context/TECH_STACK.md` and
   `context/EXTENSIBILITY.md` state the policy and where it is enforced.
 
-Tests: `tests/hbjson_metadata_test.rb` (6), covering all five plan cases plus the malformed
+Scope, stated plainly: the guard covers `user_data` (declared keys only), the prohibited keys and
+path strings at any depth. Other metadata outside `user_data` (a free-text field on a Room, say)
+is not policed; that matches R-D2 but is narrower than this plan's "undeclared metadata at any
+depth".
+
+Phase 09's review fixes (`0f77fff`): the guard walks the parsed copy itself, so keys are compared
+whole (a dot or bracket cannot hide `username`), paths are built only for messages and each
+refusal names its JSON path, and an empty nested `user_data` map declares nothing. Contributor
+`result` and `user_data_keys` are frozen copies. Known limits: the parse runs on SketchUp's thread
+in one tick, measured at about 0.09 s per MB of HBJSON on Ruby 3.2; a display name beginning with
+`/` reads as a path and refuses, now naming where. `ArtifactHygiene` still recovers keys from a
+path string with the same regex; follow-up.
+
+Tests: `tests/hbjson_metadata_test.rb` (6, then 10 after the review), covering all five plan cases plus the malformed
 declaration. Full Ruby suite 655 runs on 2.7.2 and 3.2.2.
 
 Ledger screen: A10, A13 (export and privacy); no Python change, so A14 is unaffected.

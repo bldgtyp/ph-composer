@@ -76,5 +76,10 @@ A06, A02, A04 so registration validated the new declarations as they were writte
 Tests: `registry_test` (4 new), `api_test` cursor binding, `tests/entity_reads_test.rb` (7),
 `export_tasks_test` task-description client. Full Ruby suite 649 runs on 2.7.2 and 3.2.2.
 
+Phase 09's review found one P1 this phase missed: the Split Face repair menu still read the paged
+`faces.list` and saw only the first 100 Faces. Fixed in `0f77fff` (it reads `faces.all`), with the
+walkthroughs; the same commit refuses a cursor whose position is the wrong kind of key, validates
+records in the projected Faces read, and adds cursor-from-another-session and bound-check tests.
+
 Ledger screen: every case (the `core/*` and `shell/*` patterns). Phase 09's native run extends R06
 with paged reads and export polling on the host.

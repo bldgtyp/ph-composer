@@ -71,7 +71,7 @@ table. Registries must diagnose duplicate registrations, missing dependencies an
 contract versions. Keep supported public APIs distinguishable from implementation details.
 
 Implemented registration checks: the JSON Schema subset's keyword values (counts, bounds, text,
-non-empty enums, a closed object requiring only what it declares); a description, a callable
+non-empty enums whose values fit their type, no lower bound above its upper, a closed object requiring only what it declares); a description, a callable
 handler and examples for every query, action and view command, where an operation whose params
 accept `{}` may omit examples and every example must validate; callable participants, menu items,
 subscriptions and Colour-by projections. Published operations are frozen with deep-frozen schemas
