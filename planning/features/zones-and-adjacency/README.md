@@ -4,6 +4,8 @@ The first feature packet. It settles what the fundamental unit of geometry is, t
 that keeps PH-Composer's Zone distinct from honeybee's Room and honeybee's zone tag, and how
 interior faces between Zones are found, recorded and kept honest.
 
+Code owner: [`src/ph_composer/features/zones/`](../../../src/ph_composer/features/zones/install.rb), which also owns Faces ([R-D1](../../refactor/pr3-foundation-corrections/DECISIONS.md#r-d1-authored-geometry-ownership)); this packet remains the product contract.
+
 ## Read order
 
 1. [PRD.md](PRD.md): the behavior contract, the vocabulary table, the solver, the export mapping

@@ -5,6 +5,8 @@ the envelope, what each is, what is on the other side, and which assembly it car
 on [zones-and-adjacency](../zones-and-adjacency/README.md), which fixed the container a face is
 classified in and the Zone stamp every face record carries.
 
+Code owner: [`src/ph_composer/features/zones/`](../../../src/ph_composer/features/zones/install.rb), under `faces/` ([R-D1](../../refactor/pr3-foundation-corrections/DECISIONS.md#r-d1-authored-geometry-ownership)); this packet remains the product contract.
+
 ## Read order
 
 1. [PRD.md](PRD.md): the face record, the Classify tool, suggestions, the overlay, the faces

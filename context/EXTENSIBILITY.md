@@ -30,6 +30,15 @@ operations and optional UI. The UI kit depends only on its published contracts, 
 calculation or honeybee dependency. Python translation consumes the authored snapshot; downstream
 exporters consume HBJSON. Preserve the existing four-layer boundaries.
 
+Zones, their Faces and the adjacency between them are one feature, `zones`
+(`src/ph_composer/features/zones/`), because Zone containment, Face identity, stamps, Surface
+endpoints and split and copy transitions are one authoring lifecycle. Its `install.rb` names the
+layout: `zone/`, `faces/` and `adjacency/` hold each part's domain code and handlers, with pure
+geometry and pair rules apart from the SketchUp write steps, and `declarations/` holds what each
+part registers. Zone actions are `ph_composer.zones.*`; Face actions are `ph_composer.zones.faces.*`.
+A feature that needs authored Face identity, such as assemblies or windows, depends on `zones`
+through its queries, actions, reference targets and descriptors, never through its stores.
+
 Built-in features use the same public interfaces available to external contributors. A private
 hook needed by a built-in feature exposes a missing public capability. Fix that contract before
 presenting it as a supported extension point. Cross-feature access uses declared public contracts;
@@ -109,10 +118,10 @@ action is a validated Model change, and registering them as one would manufactur
 something that changed nothing. A feature declares them as menu items instead:
 
 ```ruby
-feature.menu_item("ph_composer.face_assignment.classify_face_type_wall",
+feature.menu_item("ph_composer.zones.faces.classify_face_type_wall",
                   label: "Wall", menu: "Classify faces",
                   state: ->(session) { ... MF_CHECKED or MF_UNCHECKED }) do |session|
-  FaceAssignment.classify_tool(session).choose("face_type", "Wall")
+  Zones::Faces.classify_tool(session).choose("face_type", "Wall")
 end
 ```
 
@@ -138,10 +147,10 @@ cannot do it either: an action's contract is a named native operation the user c
 nothing here to undo.
 
 ```ruby
-feature.view_command("ph_composer.face_assignment.locate",
+feature.view_command("ph_composer.zones.faces.locate",
                      description: "Select an explicit set of Faces and bring them into view.",
                      params: LOCATE_PARAMS, result: LOCATE_RESULT) do |request|
-  FaceAssignment.locate(request)
+  Zones::Faces.locate(request)
 end
 ```
 
@@ -259,8 +268,19 @@ an `id`, `label`, `records:` provider and pure `validate:` callback. The provide
 The key identifies the storage occurrence, not the UUID. Repeated placements and orphan records
 must be included when they could make a UUID ambiguous. The callback returns validation findings.
 
+A reference target also describes its kind: `schema_version:`, `values:` (the values JSON Schema),
+`occurrence:` (the schema of the reference naming one occurrence) and `references:` (its outgoing
+core references, as `Records::Reference` fields). These form a `Records::Descriptor`, the same
+shape a catalog `RecordKind` publishes, so discovery, validation and the reference scan read one
+description whoever stores the kind. The engine's incoming-reference scan reads core references
+from every kind's descriptor: an entity record naming a catalog record blocks that record's
+deletion exactly as a catalog record does. A proposal that rewrites those entity records before
+the delete passes them to `propose_delete` as a `reference_plan`. Describing a kind grants the
+engine no authority to create or delete what stores it.
+
 An extension's `target_kind` may name a catalog kind or a registered reference target. The
-built-in targets are `ph_composer.zones.zone` and `ph_composer.face_assignment.face`.
+built-in targets are `ph_composer.zones.zone` and `ph_composer.zones.faces.face`; a Face's
+`attached_zone_id` is a declared core reference to `ph_composer.zones.faces.attached_zone`.
 `Records::Engine#resolve_reference(kind, id)` returns exactly one validated, detached entry;
 missing or ambiguous identities refuse without repairing storage. The owning feature continues
 to control all writes through its normal public actions.

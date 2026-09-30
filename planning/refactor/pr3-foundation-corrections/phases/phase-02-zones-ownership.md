@@ -1,11 +1,10 @@
 # Phase 02: `zones` ownership, entity descriptors and internal refactors
 
 DATE: 2026-09-30
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/4
 MERGE SET: Yes
-BLOCKED ON: implementation authorization; Phase 01a landed
 
 ## Scope
 
@@ -120,4 +119,52 @@ new paths in this phase, so the screen stays meaningful.
 
 ## Result
 
-(Fill on completion: commits, taken and skipped refactors with reasons, ledger cases flagged.)
+Commits, in order: `907817c` DESC and M3b, `e9c6f87` move only, `4e9e187` one owner and id
+rename, `eeac00c` declarations split from handlers, `98fd918` Zone and Face descriptors, `7196475`
+SNAP, `020328a` CAT, `ba20aed` `062b308` `d64d2c4` REF-Z, `97cd90a` RP, then the docs commit.
+
+Decisions made here (the phase left them open):
+
+- **Ids.** One prefix substitution, `ph_composer.face_assignment.` to `ph_composer.zones.faces.`,
+  for every registered name, including the Face and Attached-zone kinds, the snapshot sections and
+  the export section (`ph_composer.zones.faces.export.faces`). A literal rule means any old id maps
+  to its new id without a table. The adjacency actions keep `ph_composer.zones.solve_adjacency`,
+  `retire_adjacency` and `retire_pairs`: they already sit under the owner, and a third prefix level
+  would not read better. Affected rows say `"kind": "face"`, matching `"zone"`.
+- **Storage names stay.** `ph_composer.face_assignment` (Face records) and
+  `ph_composer.face_assignment.attached_zone` (Attached zones) are persistence, not API. Renaming
+  them would orphan every record in existing host fixtures and Phase 1 evidence models; each is
+  now a named constant with a comment saying so. Ed can overrule this at the Phase 05 review.
+- **Golden.** `two_zones_extraction.json` changes only by its section key and that key's sorted
+  position; a semantic comparison with the key renamed is identical.
+- **Layout.** As proposed, with `declarations/{zone,faces,adjacency,repair}.rb` and one
+  `operations.rb` per part. The Face registration is `Zones::Faces::Registration` so bare constant
+  lookups resolve to the Face schema, colour modes and export projection rather than the Zone ones.
+- **Descriptor.** `Records::Descriptor` (values schema, identity field, occurrence-reference schema,
+  core references). `RecordKind#descriptor` derives one; `ReferenceTarget` takes optional
+  `schema_version:`, `values:`, `occurrence:` and `references:`. Occurrence keys stay plain arrays
+  internally: no caller confused root and relative paths once the key is always root-relative.
+  `FACE_VALUES` is now what the Face validator checks fields against.
+- **M3b.** The engine refuses deleting an Attached zone any Face names. `propose_delete` takes a
+  `reference_plan`, and the feature's own delete passes its planned reassignment. R-D11's refusal
+  stays the user-facing check.
+
+REF-Z taken: the reciprocal-pair rule (`reciprocal?` and `geometry_current?`, shared by `state`,
+`current_pair?`, `snapshot_pair_current?` and both retirement checks; `state` cyclomatic 17 to
+11); `cut_partition` split into the native cut, region matching, area conservation and identity
+projection (cyclomatic 18 to under 7 each); `keeper_path` split from `proved_keeper` (17 to 9
+and 8). One deliberate tightening: `retire_records` now applies the full reciprocal rule instead of
+pair id plus one counterpart id. REF-Z skipped: `Overlap.partition`, one straight sequence of
+guards on one geometric argument that splitting would scatter; `validate_make_target!`, untouched
+by the shared predicate.
+
+Tests added: `tests/entity_descriptor_test.rb` (5, synthetic kinds only), a registry refusal for an
+unregistered core-reference target, `test_the_engine_refuses_deleting_an_attached_zone_a_face_still_names`,
+`test_zones_owns_every_zone_face_and_adjacency_registration` (loader), `tests/geometry_snapshot_test.rb`
+(neutral outside-contributor read and a private-store source scan), and
+`test_no_survivor_cut_checks_the_dispatching_registrys_catalog`. The 01a tests kept their intent;
+only ids and constants changed. Full Ruby suite 628 runs on 2.7.2 and 3.2.2, JS 191, Python 96,
+hostkit and fixtures green.
+
+Ledger screen: every case A01 to A16 and R01 to R05 (the `core/*` patterns flag everything).
+`cases.json` path patterns moved from `features/face_assignment/*` to `features/zones/faces/*`.

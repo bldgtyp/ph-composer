@@ -11,9 +11,11 @@ is in the predecessor's archive at `../../ph-navigator-sketchup/planning/archive
 
 The Phase 0 foundation merged through PR #1: sessions, revisions, record transactions and the
 public operation contract, panel/UI kit and shared Units, the runtime shell and export contracts.
-The shipping build registers no building features or exporters. Entity-owned geometry operations
-and the real export run remain Phase 1 work. The archived Phase 0 packet records implementation
-and host evidence; later behavior below remains a requirement until its owning packet lands.
+On the Phase 1 branch (PR #3) the build registers one building feature, `zones`
+(`src/ph_composer/features/zones/`), which owns Zones, their Faces and the adjacency between them,
+and the export run to canonical HBJSON. No exporter beyond HBJSON ships. The archived Phase 0
+packet records implementation and host evidence; later behavior below remains a requirement until
+its owning packet lands.
 
 [EXTENSIBILITY.md](EXTENSIBILITY.md) owns the accepted contributor architecture, including the
 separation of pure Ruby domain behavior from SketchUp adapters, public scripting, metadata and
@@ -144,6 +146,9 @@ consumer-specific validation rule, not a requirement for creating or exporting e
 rules are the zones-and-adjacency packet's to settle
 (`../planning/features/zones-and-adjacency/PRD.md`), and these are the constraints it starts from:
 
+- One feature, `zones`, owns this whole lifecycle: Zone containment, Face identity, Zone stamps,
+  Surface endpoints and the split and copy transitions between them. They change together, so a
+  second feature reaching into any of them would need to learn all of them.
 - Classification is a record on the face in PH-Composer's dictionary, carrying face type,
   boundary condition and the assigned assembly's record id. The face's geometry is SketchUp's.
 - A face is identified by its persistent id plus its occurrence path, never by `entityID`.

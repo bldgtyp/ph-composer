@@ -9,7 +9,7 @@ BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` f
 
 ## Next step
 
-Phase 02.
+Phase 03.
 
 ## Blockers
 
@@ -45,8 +45,8 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 | [01a](phases/phase-01a-model-correctness.md) Model correctness | Yes | Implemented on branch | `024cbfc`, `71c98b2`, `1bd2503` | |
 | [01b](phases/phase-01b-invocation-validation.md) Invocation validation | Yes | Implemented on branch | `a9b8f5c` | |
 | [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Implemented on branch | `ec20723` | |
-| [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Scoped | | After 01a |
-| [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Blocked | | Phase 02 |
+| [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Implemented on branch | `907817c` to `97cd90a` | |
+| [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Scoped | | Next |
 | [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Scoped | | Best after 02/03 |
 | [05](phases/phase-05-merge-closure.md) Merge closure | Yes | Blocked | | 01a to 04 |
 | [06](phases/phase-06-api-hardening.md) API hardening | No | Blocked | | PR #3 merged |
@@ -73,16 +73,16 @@ Phase 08 into Phase 02.
 | M1 | Shared child Group bypasses Face mutation refusal | P1 | Yes | 01a | Implemented on branch | `zone_face_test`: shared child Group classify/reverse refusals (3 tests) |
 | M2 | Explicit Face path crosses a nested authored Zone | P2 | Yes | 01a | Implemented on branch | `zone_face_test`: nested-Zone path refusal, ordinary nested Group |
 | M3a | Attached-zone delete ignores orphan Face references (feature action) | P2 | Yes | 01a | Implemented on branch | `attached_zone_test`: stranded-Face delete refusals, Restore route (3 tests) |
-| M3b | Generic incoming-reference guard skips entity core references | P2 | Yes | 02 | Scoped | |
+| M3b | Generic incoming-reference guard skips entity core references | P2 | Yes | 02 | Implemented on branch | `entity_descriptor_test`, `attached_zone_test` engine refusal; `907817c`, `98fd918` |
 | M4 | Partial pairing keeps `attached_zone_id` on Surface pieces | P2 | Yes | 01a | Implemented on branch | `zone_solve_scope_test`: partial AttachedZone pair, one and two sides |
 | U1 | Overview selection discards Zone details draft | P2 | Yes | 01c | Implemented on branch | `overview_panel_test`: draft navigation, Cancel, pending, Model switch (7 tests) |
 | A03 | Non-JSON params escape and consume a sequence | P2 | Yes | 01b | Implemented on branch | `api_test`: non-JSON params refusal, lost-response retry |
-| OWN | Zones/FaceAssignment reciprocal private dependencies; one `zones` owner | Foundation | Yes | 02 | Scoped | |
-| DESC | Entity descriptors: values, references, occurrence schemas | Foundation | Yes | 02 | Scoped | |
-| SNAP | `GeometrySnapshot#zone_owner` holds Zone policy in shared export | P2 | Yes | 02 | Scoped | |
-| CAT | `SplitAndPairStep` reads `Registry.current.catalog` during apply | Hidden dependency | Yes | 02 | Scoped | |
-| REF-Z | `zones`-internal refactors: pair validity rule, `cut_partition`, `keeper_path`, `Overlap.partition`, `install.rb` split | Advisory | Yes (R-D9) | 02 | Scoped | |
-| RP | Unused `revision` param on `Zones::Repair.restore_plan` | Cleanup | Yes (R-D9) | 02 | Scoped | |
+| OWN | Zones/FaceAssignment reciprocal private dependencies; one `zones` owner | Foundation | Yes | 02 | Implemented on branch | `loader_test`: zones owns every zones.* name; commits `e9c6f87`, `4e9e187`, `eeac00c` |
+| DESC | Entity descriptors: values, references, occurrence schemas | Foundation | Yes | 02 | Implemented on branch | `entity_descriptor_test` (5); `98fd918` |
+| SNAP | `GeometrySnapshot#zone_owner` holds Zone policy in shared export | P2 | Yes | 02 | Implemented on branch | `geometry_snapshot_test` (2); `7196475` |
+| CAT | `SplitAndPairStep` reads `Registry.current.catalog` during apply | Hidden dependency | Yes | 02 | Implemented on branch | `zone_solve_scope_test` alternate registry; `020328a` |
+| REF-Z | `zones`-internal refactors: pair validity rule, `cut_partition`, `keeper_path`, `Overlap.partition`, `install.rb` split | Advisory | Yes (R-D9) | 02 | Implemented on branch | `ba20aed`, `062b308`, `d64d2c4`; Overlap.partition skipped (see phase Result) |
+| RP | Unused `revision` param on `Zones::Repair.restore_plan` | Cleanup | Yes (R-D9) | 02 | Implemented on branch | `97cd90a` |
 | A01 | Zone/Face discovery lacks schemas, result shapes, examples | P1 | Yes | 03 | Blocked | |
 | DOC | Stale authorities: TECH_STACK, PRD, DEVELOPMENT, AGENT_INTERFACE | Consistency | Yes | 04 | Scoped | |
 | SKL | UI skill `references/patterns.md` names predecessor paths | Consistency | Yes | 04 | Scoped | |
