@@ -245,10 +245,11 @@ module PhComposer
       end
 
       # Adds a section to the export extraction and declares the result fields its translation adds.
-      def export_contributor(name, section_version:, result: {}, report: nil, preflight: nil, &contract)
+      def export_contributor(name, section_version:, result: {}, report: nil, preflight: nil, user_data_keys: [],
+                             &contract)
         declaration = Declarations::ExportContributor.new(
           :name => name, :owner => id, :section_version => section_version, :contract => contract,
-          :result => result, :report => report, :preflight => preflight
+          :result => result, :report => report, :preflight => preflight, :user_data_keys => user_data_keys
         )
         @staging.add(:declared_export_contributors, id, name, declaration)
       end

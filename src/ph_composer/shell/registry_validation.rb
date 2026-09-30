@@ -208,6 +208,7 @@ module PhComposer
             add("registration.schema_invalid", contributor.owner, contributor.name,
                 "#{contributor.name} needs a contract block and a positive section version.")
           end
+          check_user_data_keys(contributor)
           Export::Privacy.schema_problems(contributor.result).each do |problem|
             add("registration.schema_invalid", contributor.owner, contributor.name,
                 "#{contributor.name} result: #{problem}.")
@@ -232,6 +233,15 @@ module PhComposer
               "#{subscription.owner} subscribes to #{subscription.kind.inspect}, which needs a known host event " \
               "and a callable handler.")
         end
+      end
+
+      # Each declared HBJSON user_data key is dotted and lowercase, like a registered name.
+      def check_user_data_keys(contributor)
+        keys = contributor.user_data_keys
+        return if keys.is_a?(Array) && keys.all? { |key| key.is_a?(String) && ID_PATTERN.match?(key) }
+
+        add("registration.schema_invalid", contributor.owner, contributor.name,
+            "#{contributor.name} user_data_keys must be dotted lowercase keys such as ph_composer.level.")
       end
 
       def check_proposal_participants

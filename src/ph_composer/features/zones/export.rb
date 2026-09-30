@@ -11,6 +11,8 @@ module PhComposer
         feature.export_contributor(
           SECTION, :section_version => 1,
           :preflight => "#{FEATURE_ID}.export_preflight",
+          # What the Zone translation writes on each Room (python/ph_composer_translation/model_sections.py).
+          :user_data_keys => %w[ph_composer.level ph_composer.building_segment],
           :result => {
             "canonical_model" => Export::Privacy::Optional.new(
               Export::Privacy.fields(%w[hbjson rooms faces surface_pairs omitted])

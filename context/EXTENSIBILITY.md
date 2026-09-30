@@ -225,7 +225,9 @@ read and update it without requiring raw dictionary access; updates participate 
 calculations do not silently interpret arbitrary metadata. Absence in an older record is valid.
 
 Export inclusion is deliberate. Specify mappings for supported outputs and disclose omissions;
-local metadata is not automatically admitted through the export privacy allowlist. Do not promise
+local metadata is not automatically admitted through the export privacy allowlist. An export
+contributor whose translation writes HBJSON `user_data` declares those keys at registration
+(`user_data_keys:`); the artifact guard refuses any key no contributor declared. Do not promise
 lossless round trips through formats that cannot preserve it.
 
 Maintained extensions can register structured extension data with a namespace, schema version,
