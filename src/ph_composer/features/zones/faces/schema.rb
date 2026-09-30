@@ -25,7 +25,8 @@ module PhComposer
       # the proposed 1,000 on 2026-09-20: a gesture affecting 1,000 Faces measured about 13 seconds
       # against the offline stub, because occurrence resolution walks the Model once per Face. 250 is
       # still far above a realistic drag and bounds the worst case to roughly a quarter of that. The
-      # cost itself is D6's to fix; a ceiling bounds the blast radius, it cannot bound elapsed time.
+      # per-Face walk was later replaced by one `Zones::Index` walk per read phase; the ceiling bounds
+      # the blast radius, it cannot bound elapsed time.
       GESTURE_FACE_LIMIT = 250
 
       class << self
