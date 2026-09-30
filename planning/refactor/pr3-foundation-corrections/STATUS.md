@@ -9,7 +9,7 @@ BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` f
 
 ## Next step
 
-Phase 03.
+Phase 04.
 
 ## Blockers
 
@@ -46,7 +46,7 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 | [01b](phases/phase-01b-invocation-validation.md) Invocation validation | Yes | Implemented on branch | `a9b8f5c` | |
 | [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Implemented on branch | `ec20723` | |
 | [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Implemented on branch | `907817c` to `97cd90a` | |
-| [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Scoped | | Next |
+| [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Implemented on branch | `71b8534`, `16bd367` | |
 | [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Scoped | | Best after 02/03 |
 | [05](phases/phase-05-merge-closure.md) Merge closure | Yes | Blocked | | 01a to 04 |
 | [06](phases/phase-06-api-hardening.md) API hardening | No | Blocked | | PR #3 merged |
@@ -83,7 +83,7 @@ Phase 08 into Phase 02.
 | CAT | `SplitAndPairStep` reads `Registry.current.catalog` during apply | Hidden dependency | Yes | 02 | Implemented on branch | `zone_solve_scope_test` alternate registry; `020328a` |
 | REF-Z | `zones`-internal refactors: pair validity rule, `cut_partition`, `keeper_path`, `Overlap.partition`, `install.rb` split | Advisory | Yes (R-D9) | 02 | Implemented on branch | `ba20aed`, `062b308`, `d64d2c4`; Overlap.partition skipped (see phase Result) |
 | RP | Unused `revision` param on `Zones::Repair.restore_plan` | Cleanup | Yes (R-D9) | 02 | Implemented on branch | `97cd90a` |
-| A01 | Zone/Face discovery lacks schemas, result shapes, examples | P1 | Yes | 03 | Blocked | |
+| A01 | Zone/Face discovery lacks schemas, result shapes, examples | P1 | Yes | 03 | Implemented on branch | `api_reference_test`, `api_client_test`; `71b8534` |
 | DOC | Stale authorities: TECH_STACK, PRD, DEVELOPMENT, AGENT_INTERFACE | Consistency | Yes | 04 | Scoped | |
 | SKL | UI skill `references/patterns.md` names predecessor paths | Consistency | Yes | 04 | Scoped | |
 | A02 | Unbounded entity reads, ignored filters, loose cursors | P2 | No | 06 | Blocked | |
@@ -103,7 +103,7 @@ Phase 08 into Phase 02.
 | R03 orphan Attached-zone delete | 01a / 05 | In catalog, not run | |
 | R04 partial AttachedZone cut | 01a / 05 | In catalog, not run | |
 | R05 Overview draft navigation | 01c / 05 | In catalog, not run | |
-| R06 panel-closed API client | 03 / 05, extended 09 | Blocked | |
+| R06 panel-closed API client | 03 / 05, extended 09 | In catalog, not run; offline `api_client_test` passes | |
 | Existing cases flagged by `--changed` | 05, 09 | | List per phase **Result** |
 
 ## Verification log
@@ -112,4 +112,5 @@ Newest first. Record each gate run: date, command, Ruby version, counts, pass/fa
 
 | Date | Gate | Result |
 | --- | --- | --- |
+| 2026-09-30 | `make ci` Ruby 3.2.2 at `71b8534`; `tests/all_tests.rb` on 2.7.2 | Pass: 634 Ruby, 191 JS, 96 Python tests; fixtures, manifests, RBZ |
 | 2026-09-30 | Review baseline, `make ci` Ruby 3.2.2 at `99b6fc7` | Pass: 605 Ruby, 184 JS, 96 Python tests; see [review](review/README.md#verification) |
