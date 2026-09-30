@@ -13,6 +13,8 @@ The patterns here were established in the predecessor, PH-Navigator for SketchUp
 
 Design for the consultant using the tool. Each change should make the next step obvious, keep the work surface still, and remove words and controls the user does not need. Simple and consistent beats clever. Push back on any direction, including the owner's, that works against the end user, and say why before building it.
 
+Geometry first, then action: the user selects geometry and then chooses what to do to it, one attribute at a time. A modal action-first tool is the secondary route unless the feature's plan records why it is better. The rule is in `context/TECH_STACK.md` under "Rules for later features".
+
 The UI kit is meant for reuse by other teams. A screen pattern that only works because of one feature's data shape is a defect in the kit, not a local convenience.
 
 ## Establish the baseline

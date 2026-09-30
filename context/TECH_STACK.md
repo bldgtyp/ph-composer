@@ -464,6 +464,12 @@ these true of every feature it had, so a new one that follows them needs no chan
 - **The panel** is a module graph. A feature's section registers itself with `panel.section`,
   reads its snapshot section through `snapshot.js` and sends correlated actions through
   `request.js`. Cross-feature navigation is designed with the first feature that needs it.
+- **Geometry first, then action.** The default interaction is: the user selects geometry, then
+  chooses the action, which applies to that selection (a right-click item, a panel action). Each
+  attribute (face type, boundary condition, Assembly, Zone fields) is set on its own. A modal
+  action-first tool (paint, place) is a secondary route, and it becomes the primary one only when a
+  feature's plan records why its UX is demonstrably better. Ed confirmed this rule on 2026-09-30
+  ([Phase 1 UX follow-ups](../planning/features/phase-one-ux-followups/README.md)).
 
 ## Durable delivery rules
 
