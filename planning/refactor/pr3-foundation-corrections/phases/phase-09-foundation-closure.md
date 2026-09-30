@@ -1,11 +1,10 @@
 # Phase 09: foundation closure and archive
 
 DATE: 2026-09-30
-STATUS: Blocked
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/5
 MERGE SET: No
-BLOCKED ON: Phases 06 to 08 `Implemented on branch`
 
 ## Scope
 
