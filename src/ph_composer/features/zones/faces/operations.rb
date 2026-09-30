@@ -91,6 +91,12 @@ module PhComposer
         # already owns, not a pointer gesture whose target set the user cannot see (P1-D decision).
         unrecorded = Zones::Occurrences.faces(zone, :index => index)
                                        .reject { |occurrence| FACE_STORE.read(occurrence.entity) }
+        # Each target resolves for mutation now, so a Face in a shared or locked Group refuses here,
+        # with its instruction, rather than failing when the step applies.
+        unrecorded.each do |occurrence|
+          Zones::Occurrences.resolve_face(request.model, occurrence.reference,
+                                          :mutable => true, :allow_unassigned => true, :index => index)
+        end
         updates = unrecorded.map do |occurrence|
           suggested = Geometry.suggested_values(occurrence)
           record = new_record(request, occurrence).merge(suggested)
@@ -221,16 +227,18 @@ module PhComposer
       # moved out of every Zone, or held in storage another placement shares, is never rewritten from
       # here (R-D11); the delete refuses and names it.
       def reassignable_faces(model, attached_zone_id)
+        reasons = {}
         reachable = referencing_faces(model, attached_zone_id).select do |occurrence, record|
           Zones::Occurrences.resolve_face(model, occurrence.reference(record.fetch("id")), :mutable => true)
-        rescue CodedError
+        rescue CodedError => error
+          reasons[occurrence.zone.path + occurrence.path] = error.code
           false
         end
         keys = reachable.map { |occurrence, _record| occurrence.zone.path + occurrence.path }
         stranded = ReferenceTargets.entries(model).select do |entry|
           entry.record["attached_zone_id"] == attached_zone_id && !keys.include?(entry.key)
         end
-        refuse_stranded!(attached_zone_id, stranded) unless stranded.empty?
+        refuse_stranded!(attached_zone_id, stranded, reasons) unless stranded.empty?
         reachable
       end
 
@@ -241,14 +249,25 @@ module PhComposer
         end
       end
 
-      def refuse_stranded!(attached_zone_id, entries)
+      # What the user can do about each kind of Face the delete cannot reach. A Face outside every
+      # Zone has no reason code of its own; one inside a Zone carries the code its resolution refused.
+      STRANDED_ROUTES = {
+        "outside_zone" => "Restore its Zone, or remove it",
+        "target.shared_definition" => "make its Group unique (right-click, Make Unique)",
+        "target.locked" => "unlock its Group or Zone"
+      }.freeze
+
+      def refuse_stranded!(attached_zone_id, entries, reasons)
+        faces = entries.map do |entry|
+          { "id" => entry.record.fetch("id"), "path" => entry.key,
+            "reason" => reasons.fetch(entry.key, "outside_zone") }
+        end
+        routes = faces.map { |face| STRANDED_ROUTES.fetch(face.fetch("reason"), "resolve its #{face.fetch('reason')}") }
         raise CodedError.new(
           "reference.in_use",
-          "#{entries.length} Face(s) outside every Zone, or in a Group shared with a copy, still use " \
-          "Attached zone #{attached_zone_id}. Restore Zone to bring them back, or remove those faces, " \
-          "then delete.",
-          "target_kind" => AttachedZone::KIND_ID, "id" => attached_zone_id,
-          "faces" => entries.map { |entry| { "id" => entry.record.fetch("id"), "path" => entry.key } }
+          "#{faces.length} Face(s) still use Attached zone #{attached_zone_id} where this delete cannot " \
+          "reach them. For each, #{routes.uniq.join('; or ')}, then delete again.",
+          "target_kind" => AttachedZone::KIND_ID, "id" => attached_zone_id, "faces" => faces
         )
       end
 

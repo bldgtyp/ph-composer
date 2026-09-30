@@ -76,7 +76,7 @@ updated = PhComposer::API.invoke(context: context, name: "ph_composer.zones.upda
 ```
 
 Read the Zone again and compare its `values` with what you sent; `updated["affected"]` names the
-Zone and every Face whose Zone stamp moved with it.
+Zone.
 
 ## 5. Recover from a stale revision
 

@@ -331,6 +331,21 @@ class ZoneFaceTest < PhComposerTestCase
     assert_shared_group_refusals
   end
 
+  def test_suggest_classification_refuses_a_zone_holding_shared_child_groups
+    shared = Sketchup::Entities.new([Sketchup::Face.new(901)])
+    zone = Sketchup::Group.new(900, Sketchup::Entities.new([Sketchup::Group.new(910, shared),
+                                                            Sketchup::Group.new(920, shared)]))
+    @model.entities << zone
+    made = make_group_zone(zone)
+    operation_count = @model.operations.length
+
+    result = invoke("ph_composer.zones.faces.auto_classify", { "zone" => made.fetch("reference") })
+
+    assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
+    assert_match(/Make Unique/, result.fetch("message"))
+    assert_equal operation_count, @model.operations.length
+  end
+
   # M2: an explicit outer-Zone path through an authored inner Zone names a Face the outer Zone does
   # not own. It refuses for reads and writes; an ordinary nested Group still classifies.
   def test_an_explicit_face_path_through_a_nested_zone_refuses

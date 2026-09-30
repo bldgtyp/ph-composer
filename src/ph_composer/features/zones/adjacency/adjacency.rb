@@ -362,7 +362,7 @@ module PhComposer
           right.dig("self_geometry", "digest") == right_digest &&
           right.dig("counterpart_geometry", "digest") == left_digest
       end
-      private_class_method :reciprocal?, :geometry_current?
+      private_class_method :geometry_current?
 
       def retire_records(model, occurrence, record, index: nil)
         unless record && record["boundary_condition"] == "Surface" && record["adjacency"].is_a?(Hash)

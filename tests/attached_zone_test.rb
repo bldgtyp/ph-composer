@@ -176,8 +176,9 @@ class AttachedZoneTest < PhComposerTestCase
         result = invoke("#{KIND}.delete", { "id" => garage, "replacement" => replacement })
 
         assert_equal %w[refused reference.in_use none], result.values_at("status", "code", "effect")
-        assert_match(/Restore Zone/, result.fetch("message"))
-        assert_equal [{ "id" => "fac_000000000999", "path" => [900] }], result.dig("detail", "faces")
+        assert_match(/Restore its Zone/, result.fetch("message"))
+        assert_equal [{ "id" => "fac_000000000999", "path" => [900], "reason" => "outside_zone" }],
+                     result.dig("detail", "faces")
       end
     assert_equal before, [records.reject { |record| record.dig("values", "name") == "Attic" }, faces,
                           FACE_STORE.read(orphan)]
@@ -204,23 +205,29 @@ class AttachedZoneTest < PhComposerTestCase
     assert_empty records
   end
 
-  def test_a_face_in_shared_storage_inside_the_zone_also_refuses_the_delete
+  # A Face inside a live Zone but in a child Group shared with a copy cannot be rewritten either;
+  # the refusal says to make the Group unique.
+  def test_a_face_in_a_shared_child_group_inside_the_zone_also_refuses_the_delete
     garage = create_zone_record("Garage")
-    assign(faces.first, garage)
-    group = @model.entities.to_a.first
-    @model.entities << Sketchup::Group.new(800, group.entities)
+    record = FACE_STORE.read(zone_face(0)) || {}
+    shared = Sketchup::Entities.new([Sketchup::Face.new(801)])
+    zone = @model.entities.to_a.first
+    zone.entities << Sketchup::Group.new(810, shared) << Sketchup::Group.new(820, shared)
+    FACE_STORE.write(shared.to_a.first, record.merge(
+      "id" => "fac_000000000801", "schema_version" => 1, "face_type" => "Wall",
+      "boundary_condition" => "AttachedZone", "attached_zone_id" => garage
+    ))
 
     result = invoke("#{KIND}.delete", { "id" => garage,
                                         "replacement" => { "mode" => "boundary_condition",
                                                            "boundary_condition" => "Outdoors" } })
 
     assert_equal %w[refused reference.in_use none], result.values_at("status", "code", "effect")
-    assert_equal [garage], records.map { |record| record.fetch("id") }
+    assert_equal %w[target.shared_definition], result.dig("detail", "faces").map { |face| face["reason"] }.uniq
+    assert_match(/Make Unique/, result.fetch("message"))
+    assert_equal [garage], records.map { |row| row.fetch("id") }
   end
 
-  # M3b: the Face descriptor declares attached_zone_id as a core reference, so the engine itself refuses
-  # a delete that would leave a Face naming the record, whoever asks for it. The feature's delete
-  # passes because it plans the reassignment of every Face first.
   def test_the_engine_refuses_deleting_an_attached_zone_a_face_still_names
     garage = create_zone_record("Garage")
     assign(faces.first, garage)

@@ -11,7 +11,7 @@ module PhComposer
         def install(feature)
           feature.query("#{PREFIX}.export_preflight", :description => "Face classification and Assembly checks.",
                         :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
-                      :examples => [{}]) { |request| preflight(request) }
+                        :examples => [{}]) { |request| preflight(request) }
           feature.export_contributor(SECTION, :section_version => 1,
                                      :preflight => "#{PREFIX}.export_preflight",
                                      :result => { "surface_omissions" => [

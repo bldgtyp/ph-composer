@@ -29,8 +29,8 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     var self = this, filtered = "";
     function filterChanged() {
       var reason = options.guard && options.guard();
-      if (reason) { self.filter.value = filtered; options.refused(reason); return; }
-      filtered = self.filter.value; changed();
+      if (reason) { self.filter.value = filtered; options.refused(reason); return false; }
+      filtered = self.filter.value; changed(); return true;
     }
     this.options = options; this.root = element("div", "phc-inventory-controls");
     this.collapsed = Object.create(null); this.groups = [];
@@ -48,7 +48,10 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     this.filter.setAttribute("aria-label", "Filter " + options.label);
     this.filter.addEventListener("input", filterChanged);
     filterLabel.appendChild(this.filter); this.root.appendChild(filterLabel);
-    this.clear = button("Clear", function () { self.filter.value = ""; filterChanged(); self.filter.focus(); });
+    this.clear = button("Clear", function () {
+      self.filter.value = "";
+      if (filterChanged()) self.filter.focus();
+    });
     this.root.appendChild(this.clear);
     this.groupBy = select("Group by", [["", "None"]].concat(options.groups || []), "", "group");
     if (options.groups === undefined) this.groupBy.parentNode.hidden = true;

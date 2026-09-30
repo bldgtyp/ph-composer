@@ -113,8 +113,11 @@ module PhComposer
       return retained if retained
 
       refuse_if_busy!(session)
+      # Digested before the sequence is taken, so anything that cannot be canonicalized still leaves
+      # the caller's sequence free.
+      digest = request_digest(name, params, expected_revision, proposal_digest)
       caller.highest_sequence = sequence
-      session.outcomes.begin(caller.handle, sequence, request_digest(name, params, expected_revision, proposal_digest))
+      session.outcomes.begin(caller.handle, sequence, digest)
       outcome = session.exclusive { run(session, action, params, expected_revision, proposal_digest) }
       session.outcomes.finish(caller.handle, sequence, outcome)
     rescue CodedError => error

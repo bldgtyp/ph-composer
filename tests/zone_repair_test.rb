@@ -207,6 +207,18 @@ class ZoneRepairTest < PhComposerTestCase
     refute_includes @model.entities.to_a, group
   end
 
+  # A stamp the feature did not write names no Zone to restore, and must not fail the Zones read.
+  def test_a_foreign_stamp_is_not_offered_for_restore_and_leaves_the_read_intact
+    face = Sketchup::Face.new(990)
+    STAMP_STORE.write(face, "schema_version" => 1, "building_segment" => 7)
+    @model.entities << face
+
+    result = PhComposer::API.query(:context => @context, :name => "ph_composer.zones.list")
+
+    assert_equal "completed", result.fetch("status")
+    assert_empty result.dig("value", "restorable")
+  end
+
   def test_restore_regroups_the_stamped_members_and_recovers_only_the_stamp
     _group, zone_id = exploded_zone
 

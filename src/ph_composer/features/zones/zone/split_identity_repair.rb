@@ -240,10 +240,8 @@ module PhComposer
         end
         before = Faces::FACE_STORE.read(occurrence.entity)
         Faces::Schema.validate!(before)
-        other_envelope = before["adjacency"]
-        unless before["boundary_condition"] == "Surface" &&
-               other_envelope["pair_id"] == envelope["pair_id"] &&
-               other_envelope["self"] == stored && other_envelope["counterpart"] == envelope["self"]
+        copied = { "id" => old_id, "boundary_condition" => "Surface", "adjacency" => envelope }
+        unless Adjacency.reciprocal?(copied, before)
           raise CodedError.new("adjacency.unresolved", "The Surface counterpart is not reciprocal.")
         end
         # The stored counterpart may have moved. Its unique identity and complete reciprocal

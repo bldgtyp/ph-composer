@@ -68,11 +68,12 @@ module PhComposer
 
       # A catalog kind and an entity-owned target describe themselves the same way (Records::Descriptor).
       if (target = registry.reference_targets[name])
-        return { "kind" => "reference_target", "owner" => registry.owner_of(name) }.merge(target.descriptor.to_h)
+        return DeepCopy.call({ "kind" => "reference_target", "owner" => registry.owner_of(name) }
+                               .merge(target.descriptor.to_h))
       end
 
       kind = registry.record_kinds[name]
-      kind && { "kind" => "record_kind", "owner" => registry.owner_of(name) }.merge(kind.descriptor.to_h)
+      kind && DeepCopy.call({ "kind" => "record_kind", "owner" => registry.owner_of(name) }.merge(kind.descriptor.to_h))
     end
 
     # Issues a caller handle for an open Model session and returns the context to call with. This is

@@ -226,7 +226,8 @@ class ApiTest < PhComposerTestCase
     cyclic = { "parts" => [] }
     cyclic["self"] = cyclic
     [{ "parts" => [], "extra" => Float::NAN }, { "parts" => [], :extra => 1 },
-     { "parts" => [], "extra" => Object.new }, cyclic].each do |params|
+     { "parts" => [], "extra" => Object.new }, { "parts" => [], "extra" => "\xFF".dup.force_encoding("UTF-8") },
+     cyclic].each do |params|
       context = API.connect(:session_id => @session.id)
       caller = @session.callers.fetch(context.caller)
       operations = @model.operations.length

@@ -201,7 +201,9 @@ module PhComposer
         entities.each do |entity|
           if entity.is_a?(Sketchup::Face)
             stamp = STAMP_STORE.read(entity)
-            next if stamp.nil? || live.include?(stamp["zone_id"])
+            # A stamp this feature did not write cannot name a Zone to restore; it is left alone
+            # rather than failing the whole Zones read.
+            next unless Schema.stamp?(stamp) && !live.include?(stamp["zone_id"])
 
             found << { :zone_id => stamp["zone_id"], :stamp => stamp, :parent_path => path,
                        :persistent_id => entity.persistent_id, :entity => entity }

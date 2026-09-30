@@ -67,6 +67,12 @@ module PhComposer
         }
       end
 
+      # Whether `value` is a membership stamp as `stamp` writes it.
+      def stamp?(value)
+        value.is_a?(Hash) && ID_PATTERN.match?(value["zone_id"].to_s) &&
+          value["building_segment"].is_a?(String) && [String, NilClass].include?(value["level"].class)
+      end
+
       def metadata_problems(record)
         %w[user_data extension_data].flat_map do |key|
           next [] unless record.key?(key)
