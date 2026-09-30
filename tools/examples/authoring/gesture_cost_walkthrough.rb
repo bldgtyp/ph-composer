@@ -60,7 +60,7 @@ module GestureCostWalkthrough
       preview = client.preview("ph_composer.zones.make", target)
       client.invoke("ph_composer.zones.make", target, preview.fetch("proposal_digest"))
     end
-    zones(client).each { |zone| client.invoke("ph_composer.face_assignment.auto_classify", { "zone" => zone }) }
+    zones(client).each { |zone| client.invoke("ph_composer.zones.faces.auto_classify", { "zone" => zone }) }
     solve(client)
     inventory
   end
@@ -121,7 +121,7 @@ module GestureCostWalkthrough
       params = { "faces" => references, "intent" => intent, "expected_values" => {} }
       # The revision, the envelope and the targets are all in hand before the clock starts.
       request = { "sequence" => client.next_sequence, "expected_revision" => client.revision }
-      timed { @last = client.send_invoke("ph_composer.face_assignment.classify", params, request) }
+      timed { @last = client.send_invoke("ph_composer.zones.faces.classify", params, request) }
     end
     summary(elapsed).merge("targets" => references.length, "status" => @last.fetch("status"),
                            "affected" => Array(@last["affected"]).length)
@@ -142,7 +142,7 @@ module GestureCostWalkthrough
   end
 
   def read_faces
-    Client.new.query("ph_composer.face_assignment.list").dig("value", "faces")
+    Client.new.query("ph_composer.zones.faces.list").dig("value", "faces")
   end
 
   def pick(faces, boundary, count)

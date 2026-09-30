@@ -38,7 +38,7 @@ class AttachedZoneTest < PhComposerTestCase
   def test_an_attached_zone_with_no_chosen_record_is_stored_as_an_incomplete_state
     face = faces.first
 
-    invoke("ph_composer.face_assignment.classify", {
+    invoke("ph_composer.zones.faces.classify", {
       "faces" => [face.fetch("reference")],
       "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
                     "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" } },
@@ -63,7 +63,7 @@ class AttachedZoneTest < PhComposerTestCase
     id = create_zone_record("Garage")
     face = assign(faces.first, id)
 
-    invoke("ph_composer.face_assignment.classify", {
+    invoke("ph_composer.zones.faces.classify", {
       "faces" => [face.fetch("reference")],
       "intent" => { "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } },
       "expected_values" => {}
@@ -98,7 +98,7 @@ class AttachedZoneTest < PhComposerTestCase
   def test_setting_the_reference_without_the_condition_refuses_instead_of_dropping_it
     id = create_zone_record("Garage")
 
-    result = invoke("ph_composer.face_assignment.classify", {
+    result = invoke("ph_composer.zones.faces.classify", {
       "faces" => [faces.first.fetch("reference")],
       "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
                     "attached_zone_id" => { "mode" => "set", "value" => id } },
@@ -263,7 +263,7 @@ class AttachedZoneTest < PhComposerTestCase
   end
 
   def faces
-    API.query(:context => @context, :name => "ph_composer.face_assignment.list").dig("value", "faces")
+    API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
   end
 
   def create_zone_record(name, kind = "garage")
@@ -271,7 +271,7 @@ class AttachedZoneTest < PhComposerTestCase
   end
 
   def assign(face, attached_zone_id)
-    invoke("ph_composer.face_assignment.classify", {
+    invoke("ph_composer.zones.faces.classify", {
       "faces" => [face.fetch("reference")],
       "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
                     "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" },

@@ -10,7 +10,10 @@ module PhComposer
       # lower value is accepted with a warning naming the Phius estimator rather than refused. An
       # occupied, always-conditioned neighbour is To neighbour, not an Attached zone.
       module AttachedZone
-        KIND_ID = "ph_composer.face_assignment.attached_zone"
+        KIND_ID = "#{PREFIX}.attached_zone"
+        # The stored dictionary name predates the move into Zones and stays: renaming it would orphan
+        # every Attached zone saved so far.
+        STORE = Records::DictionaryStore.new("ph_composer.face_assignment.attached_zone")
         KINDS = %w[garage attic crawlspace stairwell other].freeze
         DEFAULT_FACTOR = 0.95
         PHIUS_FACTOR_FLOOR = 0.95
@@ -18,7 +21,7 @@ module PhComposer
         R = Records
 
         RECORD_KIND = R::RecordKind.new(
-          :id => KIND_ID, :label => "Attached zone", :schema_version => 1, :id_prefix => "atz",
+          :id => KIND_ID, :label => "Attached zone", :schema_version => 1, :id_prefix => "atz", :store => STORE,
           :fields => [
             R::Field.new(:key => "name", :schema => { "type" => "string", "minLength" => 1 }, :required => true),
             R::Field.new(:key => "kind", :schema => { "type" => "string", "enum" => KINDS }, :required => true),

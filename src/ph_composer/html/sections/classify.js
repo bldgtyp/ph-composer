@@ -24,7 +24,7 @@ function (panel, ui, requests, snapshot, words, attachedFields) {
         screen.view.busy()) return;
     if (Array.from(document.querySelectorAll("dialog")).some(function (dialog) { return dialog.open; })) return;
     event.preventDefault();
-    screen.view.run("ph_composer.face_assignment.stop_classifying", {});
+    screen.view.run("ph_composer.zones.faces.stop_classifying", {});
   });
 
   function forSession(session, send) {
@@ -54,7 +54,7 @@ function (panel, ui, requests, snapshot, words, attachedFields) {
   }
 
   function choose(state, field, value) {
-    state.view.run("ph_composer.face_assignment.choose", { field: field, value: value });
+    state.view.run("ph_composer.zones.faces.choose", { field: field, value: value });
   }
 
   function field(title, hint, body) {
@@ -123,7 +123,7 @@ function (panel, ui, requests, snapshot, words, attachedFields) {
       save.disabled = true;
       cancelButton.disabled = true;
       inputs.controls.forEach(function (control) { control.disabled = true; });
-      state.edits.run("ph_composer.face_assignment.attached_zone.save", { values: values }, {
+      state.edits.run("ph_composer.zones.faces.attached_zone.save", { values: values }, {
         onDone: function (outcome) {
           if (outcome.value && outcome.value.id) state.chooseWhenFree = outcome.value.id;
           close(true);
@@ -172,15 +172,15 @@ function (panel, ui, requests, snapshot, words, attachedFields) {
     stop.disabled = state.view.busy();
     stop.setAttribute("aria-label", "Give the viewport back to the previous tool");
     stop.addEventListener("click", function () {
-      state.view.run("ph_composer.face_assignment.stop_classifying", {});
+      state.view.run("ph_composer.zones.faces.stop_classifying", {});
     });
     return stop;
   }
 
   function render(root, state, send) {
-    var tool = snapshot.value(state, "ph_composer.face_assignment.palette") ||
+    var tool = snapshot.value(state, "ph_composer.zones.faces.palette") ||
       { active: false, palette: {}, face_types: [], boundary_conditions: [] };
-    var records = (snapshot.value(state, "ph_composer.face_assignment.attached_zone.list") ||
+    var records = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") ||
       { records: [] }).records;
     var screenState = forSession(state.session, send);
     screenState.active = Boolean(tool.active);

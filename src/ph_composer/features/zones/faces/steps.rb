@@ -11,7 +11,7 @@ module PhComposer
         def initialize(updates:)
           @updates = updates.map { |update| DeepCopy.call(update).freeze }.freeze
           @affected = @updates.map do |update|
-            { "kind" => "face_assignment", "id" => update.fetch("after").fetch("id"),
+            { "kind" => "face", "id" => update.fetch("after").fetch("id"),
               "change" => update.fetch("change"),
               "reference" => update.fetch("reference").merge("entity_id" => update.fetch("after").fetch("id")) }
           end
@@ -58,7 +58,7 @@ module PhComposer
 
         def initialize(reference:)
           @reference = DeepCopy.call(reference).freeze
-          @affected = [{ "kind" => "face_assignment", "id" => @reference["entity_id"], "change" => "updated",
+          @affected = [{ "kind" => "face", "id" => @reference["entity_id"], "change" => "updated",
                          "reference" => @reference }]
         end
 

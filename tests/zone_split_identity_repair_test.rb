@@ -12,7 +12,7 @@ class ZoneSplitIdentityRepairTest < PhComposerTestCase
   PAIR_ID = "adj_000000000001"
   EXTENSION = PhComposer::Records::Extension.new(
     :namespace => "test.fixture.split", :schema_version => 1,
-    :references => [{ "path" => "$.external_id", "target_kind" => "ph_composer.face_assignment.attached_zone",
+    :references => [{ "path" => "$.external_id", "target_kind" => "ph_composer.zones.faces.attached_zone",
                       "cardinality" => "one" }]
   )
 

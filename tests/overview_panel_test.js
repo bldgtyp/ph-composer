@@ -26,7 +26,7 @@ function snapshot() {
       unit_system: "SI", dimension_formats: {}, number_format: { decimal: ".", locale: "en-US" }
     },
     sections: {
-      "ph_composer.face_assignment.palette": { status: "completed", value: {
+      "ph_composer.zones.faces.palette": { status: "completed", value: {
         active: false, palette: {}, face_types: ["Wall", "RoofCeiling", "Floor"],
         boundary_conditions: ["Outdoors", "Ground", "Adiabatic", "AttachedZone", "Surface"]
       } },
@@ -36,7 +36,7 @@ function snapshot() {
           values: { name: "Zone 1", building_segment: "house", level: null, ground_depth_mm: 0 } }],
         make_zone: { parent_path: [], entity_ids: [200] }, units: { ground_depth_mm: "mm" }
       } },
-      "ph_composer.face_assignment.faces": { status: "completed", value: { units: { area_m2: "m2" }, faces: [{
+      "ph_composer.zones.faces.faces": { status: "completed", value: { units: { area_m2: "m2" }, faces: [{
         reference: { zone_id: "zon_a", zone_path: [100], entity_path: [101], entity_id: "fac_a" },
         zone_name: "Zone 1", area_m2: 12, state: "classified",
         values: { face_type: "Wall", boundary_condition: "Outdoors" },
@@ -78,7 +78,7 @@ test("Overview has no placeholder section beneath the feature work surface", fun
 test("area headers and Zone and Face values follow the display profile together", function () {
   var p = page(), payload = snapshot();
   payload.preferences.unit_system = "IP";
-  var faces = payload.sections["ph_composer.face_assignment.faces"].value.faces;
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
   faces[0].area_m2 = 1;
   var additional = JSON.parse(JSON.stringify(faces[0]));
   additional.area_m2 = 3;
@@ -128,7 +128,7 @@ test("a Face chip sets one field, keeps the other, and guards on the values it p
   chip.listeners.change({});
 
   var sent = p.sent[0].payload;
-  assert.strictEqual(sent.name, "ph_composer.face_assignment.classify");
+  assert.strictEqual(sent.name, "ph_composer.zones.faces.classify");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(sent.params)), {
     faces: [{ zone_id: "zon_a", zone_path: [100], entity_path: [101], entity_id: "fac_a" }],
     intent: {
@@ -149,7 +149,7 @@ test("an unclassified Face is its Zone's count and its Suggest action, not a row
   assert.match(section.querySelector(".phc-row-marker").getAttribute("data-tooltip"), /1 unclassified Face/);
 
   suggest(section).listeners.click({});
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.auto_classify");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.auto_classify");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
     { zone: { zone_id: "zon_a", zone_path: [100] } });
 });
@@ -161,7 +161,7 @@ test("two Zone occurrences sharing one record id are two rows", function () {
   var p = page();
   var payload = snapshot();
   var overview = payload.sections["ph_composer.zones.overview"].value;
-  var faces = payload.sections["ph_composer.face_assignment.faces"].value;
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value;
   overview.zones = overview.zones.concat([{ id: "zon_a", schema_version: 1, user_data: {}, extension_data: {},
     reference: { zone_id: "zon_a", zone_path: [200] }, state: "ambiguous", face_count: 1,
     values: { name: "Zone 1 copy", building_segment: "house", level: null, ground_depth_mm: 0 } }]);
@@ -194,7 +194,7 @@ test("classifying one Face leaves its neighbours' rows alone", function () {
   });
 
   var payload = snapshot();
-  var faces = payload.sections["ph_composer.face_assignment.faces"].value.faces;
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
   faces[1].state = "classified";
   faces[1].values = { face_type: "Floor", boundary_condition: "Ground" };
   p.panel.receive({ type: "panel.snapshot", payload: payload });
@@ -213,7 +213,7 @@ test("classifying one Face leaves its neighbours' rows alone", function () {
 test("a Face the chips cannot set keeps its value and stays read only", function () {
   var p = page();
   var payload = snapshot();
-  payload.sections["ph_composer.face_assignment.faces"].value.faces[0].values = {
+  payload.sections["ph_composer.zones.faces.faces"].value.faces[0].values = {
     face_type: "AirBoundary", boundary_condition: "Surface"
   };
   p.panel.receive({ type: "panel.snapshot", payload: payload });
@@ -232,7 +232,7 @@ test("Locate goes to the viewport channel and never to an action", function () {
   rowAction(section, "locate").listeners.click({});
 
   assert.strictEqual(p.sent[0].type, "view.invoke");
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.locate");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.locate");
   assert.strictEqual(p.sent[0].payload.params.faces.length, 1, "a Zone locates only its recorded Faces");
   assert.strictEqual(p.sent[0].payload.expected_revision, undefined, "a view command guards no revision");
 });
@@ -371,10 +371,10 @@ test("inline create-and-assign sends one action with the original Face and revie
   p.panel.receive({ type: "panel.snapshot", payload: newer });
   dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
   assert.strictEqual(p.sent.length, 1);
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.attached_zone.create_and_assign");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.attached_zone.create_and_assign");
   assert.strictEqual(p.sent[0].payload.expected_revision, 4);
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), {
-    faces: [snapshot().sections["ph_composer.face_assignment.faces"].value.faces[0].reference],
+    faces: [snapshot().sections["ph_composer.zones.faces.faces"].value.faces[0].reference],
     expected_values: { face_type: "Wall", boundary_condition: "Outdoors" },
     values: { name: "Attached zone 1", kind: "other", temperature_reduction_factor: 0.95 }
   });
@@ -403,26 +403,26 @@ test("a refused inline assignment preserves the draft; success closes and restor
 
 test("an existing Attached-zone choice assigns without creating a definition", function () {
   var p = page(), payload = snapshot();
-  payload.sections["ph_composer.face_assignment.attached_zone.list"] = { status: "completed", value: {
+  payload.sections["ph_composer.zones.faces.attached_zone.list"] = { status: "completed", value: {
     records: [{ id: "atz_existing", values: { name: "Garage" } }]
   } };
   var dialog = attachedDialog(p, payload), picker = byLabel(dialog, "Attached zone");
   picker.value = "atz_existing"; picker.listeners.change({});
   assert.strictEqual(byLabel(dialog, "Name").disabled, true);
   dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.classify");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.classify");
   assert.strictEqual(p.sent[0].payload.params.intent.attached_zone_id.value, "atz_existing");
   assert.strictEqual(p.sent[0].payload.params.values, undefined);
 });
 
 test("an incomplete AttachedZone Face can open and cancel inline creation", function () {
   var p = page(), payload = snapshot();
-  payload.sections["ph_composer.face_assignment.faces"].value.faces[0].values.boundary_condition = "AttachedZone";
+  payload.sections["ph_composer.zones.faces.faces"].value.faces[0].values.boundary_condition = "AttachedZone";
   var dialog = attachedDialog(p, payload);
   assert.ok(dialog);
   dialog.listeners.cancel({ preventDefault: function () {} });
   assert.strictEqual(p.sent.length, 0);
-  assert.strictEqual(payload.sections["ph_composer.face_assignment.faces"].value.faces[0]
+  assert.strictEqual(payload.sections["ph_composer.zones.faces.faces"].value.faces[0]
     .values.attached_zone_id, undefined);
 });
 

@@ -43,7 +43,7 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
 
   def test_existing_face_identity_type_and_metadata_survive
     first = faces.first
-    classified = invoke_named("ph_composer.face_assignment.classify", {
+    classified = invoke_named("ph_composer.zones.faces.classify", {
       "faces" => [first.fetch("reference")],
       "intent" => { "face_type" => { "mode" => "set", "value" => "Floor" },
                     "boundary_condition" => { "mode" => "set", "value" => "Ground" } }
@@ -82,7 +82,7 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
 
   def test_stale_face_value_refuses_whole_creation
     first = faces.first
-    invoke_named("ph_composer.face_assignment.classify", {
+    invoke_named("ph_composer.zones.faces.classify", {
       "faces" => [first.fetch("reference")],
       "intent" => { "face_type" => { "mode" => "set", "value" => "Floor" } }
     })
@@ -102,7 +102,7 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
     assert_empty records
     assert faces.all? { |face| face.fetch("values").empty? }
 
-    changed = invoke_named("ph_composer.face_assignment.classify", {
+    changed = invoke_named("ph_composer.zones.faces.classify", {
       "faces" => [selected.last.fetch("reference")],
       "intent" => { "face_type" => { "mode" => "set", "value" => "Floor" } }
     })
@@ -203,7 +203,7 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
   end
 
   def faces
-    API.query(:context => @context, :name => "ph_composer.face_assignment.list").dig("value", "faces")
+    API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
   end
 
   def make_zone(base, count)
@@ -227,7 +227,7 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
       invoke_named("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [id] })
     end
     pair = faces.select { |face| [800, 810].include?(face.dig("reference", "zone_path", 0)) }
-    invoke_named("ph_composer.face_assignment.classify", {
+    invoke_named("ph_composer.zones.faces.classify", {
       "faces" => pair.map { |face| face.fetch("reference") },
       "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
                     "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } }

@@ -2,7 +2,40 @@
   "run_id": "run-phase-one-two-zones",
   "schema_version": 1,
   "sections": {
-    "ph_composer.face_assignment.export.faces": {
+    "ph_composer.zones.export.zones": {
+      "records": [
+        {
+          "building_segment": "Main Building",
+          "face_ids": [
+            "fac_A00000000001",
+            "fac_A00000000002",
+            "fac_A00000000003",
+            "fac_A00000000004",
+            "fac_A00000000005",
+            "fac_A00000000006"
+          ],
+          "id": "zon_AAAAAAAAAAAA",
+          "level": "L1",
+          "name": "Zone A"
+        },
+        {
+          "building_segment": "Main Building",
+          "face_ids": [
+            "fac_B00000000001",
+            "fac_B00000000002",
+            "fac_B00000000003",
+            "fac_B00000000004",
+            "fac_B00000000005",
+            "fac_B00000000006"
+          ],
+          "id": "zon_BBBBBBBBBBBB",
+          "level": "L1",
+          "name": "Zone B"
+        }
+      ],
+      "version": 1
+    },
+    "ph_composer.zones.faces.export.faces": {
       "records": [
         {
           "boundary_condition": "Ground",
@@ -547,39 +580,6 @@
           },
           "id": "fac_B00000000006",
           "zone_id": "zon_BBBBBBBBBBBB"
-        }
-      ],
-      "version": 1
-    },
-    "ph_composer.zones.export.zones": {
-      "records": [
-        {
-          "building_segment": "Main Building",
-          "face_ids": [
-            "fac_A00000000001",
-            "fac_A00000000002",
-            "fac_A00000000003",
-            "fac_A00000000004",
-            "fac_A00000000005",
-            "fac_A00000000006"
-          ],
-          "id": "zon_AAAAAAAAAAAA",
-          "level": "L1",
-          "name": "Zone A"
-        },
-        {
-          "building_segment": "Main Building",
-          "face_ids": [
-            "fac_B00000000001",
-            "fac_B00000000002",
-            "fac_B00000000003",
-            "fac_B00000000004",
-            "fac_B00000000005",
-            "fac_B00000000006"
-          ],
-          "id": "zon_BBBBBBBBBBBB",
-          "level": "L1",
-          "name": "Zone B"
         }
       ],
       "version": 1

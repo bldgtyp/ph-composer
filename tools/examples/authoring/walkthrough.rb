@@ -42,10 +42,10 @@ module AuthoringWalkthrough
       "reference" => west.fetch("reference"), "values" => values, "expected_values" => west.fetch("values")
     })
 
-    faces = client.query("ph_composer.face_assignment.list").dig("value", "faces")
+    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
     classified = zones.map do |zone|
       face = faces.find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
-      client.invoke("ph_composer.face_assignment.classify", {
+      client.invoke("ph_composer.zones.faces.classify", {
         "faces" => [face.fetch("reference")],
         "intent" => {
           "face_type" => { "mode" => "set", "value" => face.dig("suggested", "face_type") },
@@ -74,7 +74,7 @@ module AuthoringWalkthrough
   def verify
     client = Client.new
     zones = client.query("ph_composer.zones.list").dig("value", "zones")
-    faces = client.query("ph_composer.face_assignment.list").dig("value", "faces")
+    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
     classified = faces.select { |face| face.dig("reference", "entity_id") }
     {
       "zones" => zones.length,

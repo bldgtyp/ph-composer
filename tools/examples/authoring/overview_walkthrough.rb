@@ -79,11 +79,11 @@ module OverviewWalkthrough
   # Gives the first `count` Faces of each Zone a record, through the same operation the panel uses,
   # so the tree opens with rows in it and a marker for what is left.
   def classify_some(client, count)
-    client.query("ph_composer.face_assignment.list").fetch("value").fetch("faces")
+    client.query("ph_composer.zones.faces.list").fetch("value").fetch("faces")
           .group_by { |face| face.fetch("reference").fetch("zone_id") }
           .each_value do |faces|
       faces.first(count).each do |face|
-        client.invoke("ph_composer.face_assignment.classify",
+        client.invoke("ph_composer.zones.faces.classify",
                       { "faces" => [face.fetch("reference")],
                         "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
                                       "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } },
@@ -156,7 +156,7 @@ module OverviewWalkthrough
   end
 
   def faces
-    Client.new.query("ph_composer.face_assignment.list").fetch("value").fetch("faces")
+    Client.new.query("ph_composer.zones.faces.list").fetch("value").fetch("faces")
   end
 
   # Make Zone renames the Group, so the walkthrough's own Groups are found by their Zone record

@@ -251,18 +251,18 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function apply(state, face, field, chosen) {
     var intent = { face_type: { mode: "keep" }, boundary_condition: { mode: "keep" } };
     intent[field] = { mode: "set", value: chosen };
-    state.edits.run("ph_composer.face_assignment.classify",
+    state.edits.run("ph_composer.zones.faces.classify",
       { faces: [face.reference], intent: intent, expected_values: face.values });
   }
 
   function locate(state, row) {
     var references = row.record.face ? [row.record.face.reference]
       : row.record.faces.map(function (face) { return face.reference; });
-    if (references.length) state.look.run("ph_composer.face_assignment.locate", { faces: references });
+    if (references.length) state.look.run("ph_composer.zones.faces.locate", { faces: references });
   }
 
   function suggest(state, row) {
-    state.edits.run("ph_composer.face_assignment.auto_classify", { zone: row.record.zone.reference });
+    state.edits.run("ph_composer.zones.faces.auto_classify", { zone: row.record.zone.reference });
   }
 
   function heading(title, count, action) {
@@ -286,12 +286,12 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
 
   function render(root, state, send) {
     var zones = snapshot.value(state, "ph_composer.zones.overview") || { zones: [], make_zone: null };
-    var faces = (snapshot.value(state, "ph_composer.face_assignment.faces") || { faces: [] }).faces;
-    var tool = snapshot.value(state, "ph_composer.face_assignment.palette") || {};
+    var faces = (snapshot.value(state, "ph_composer.zones.faces.faces") || { faces: [] }).faces;
+    var tool = snapshot.value(state, "ph_composer.zones.faces.palette") || {};
     var screenState = forSession(state.session, send), profile = units.profile(AREA, preferences.current());
     screenState.send = send;
     screenState.revision = state.revision;
-    screenState.attachedRecords = (snapshot.value(state, "ph_composer.face_assignment.attached_zone.list") ||
+    screenState.attachedRecords = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") ||
       { records: [] }).records;
     if (screenState.attachedDraft) screenState.attachedDraft.consume(state);
     screenState.faceTypes = tool.face_types || [];

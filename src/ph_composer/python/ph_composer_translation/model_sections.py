@@ -18,7 +18,7 @@ from .contract import JSONValue, RecordError, as_number, as_text
 from .result import Finding
 from .sections import Inputs, Requirement, Section
 
-FACE_SECTION_ID = "ph_composer.face_assignment.export.faces"
+FACE_SECTION_ID = "ph_composer.zones.faces.export.faces"
 ZONE_SECTION_ID = "ph_composer.zones.export.zones"
 
 

@@ -13,7 +13,7 @@ class ZoneRepairTest < PhComposerTestCase
   COPY_EXTENSION = PhComposer::Records::Extension.new(
     :namespace => "test.fixture.identity", :schema_version => 1,
     :references => [
-      { "path" => "$.external_id", "target_kind" => "ph_composer.face_assignment.attached_zone",
+      { "path" => "$.external_id", "target_kind" => "ph_composer.zones.faces.attached_zone",
         "cardinality" => "one" }
     ]
   )
@@ -368,8 +368,8 @@ class ZoneRepairTest < PhComposerTestCase
   end
 
   def classify_all
-    faces = API.query(:context => @context, :name => "ph_composer.face_assignment.list").dig("value", "faces")
-    invoke("ph_composer.face_assignment.classify", {
+    faces = API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
+    invoke("ph_composer.zones.faces.classify", {
       "faces" => faces.map { |face| face.fetch("reference") },
       "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
                     "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } },

@@ -96,7 +96,7 @@ test("one view channel's answer never strands another's", function () {
   var first = request.channel("session-a", function () {}, "legend", "view.invoke");
   var second = request.channel("session-a", function () {}, "table", "view.invoke");
   var a = first.run("ph_composer.colour_by.activate", { mode: null });
-  var b = second.run("ph_composer.face_assignment.locate", { faces: [] });
+  var b = second.run("ph_composer.zones.faces.locate", { faces: [] });
   var held = viewState([result(b, "session-a", "completed"), result(a, "session-a", "refused")]);
 
   assert.strictEqual(second.consume(held).status, "completed");

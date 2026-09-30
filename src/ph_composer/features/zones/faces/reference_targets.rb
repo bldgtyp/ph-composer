@@ -3,7 +3,7 @@
 module PhComposer
   module Zones
     module Faces
-      REFERENCE_KIND = "#{FEATURE_ID}.face"
+      REFERENCE_KIND = "#{PREFIX}.face"
 
       # Includes orphan records and every placement of shared component storage. Restricting this
       # inventory to Zones would silently admit UUID ambiguity outside the authoring scope.

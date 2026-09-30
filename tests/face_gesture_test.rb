@@ -20,7 +20,7 @@ class FaceGestureTest < PhComposerTestCase
     make_box_zone(100, 6)
     faces = list_faces
 
-    result = invoke("ph_composer.face_assignment.classify", gesture(faces, "Wall", "Outdoors"))
+    result = invoke("ph_composer.zones.faces.classify", gesture(faces, "Wall", "Outdoors"))
 
     assert_equal %w[completed committed], result.values_at("status", "effect")
     assert_equal 6, result.dig("value", "face_ids").length
@@ -36,7 +36,7 @@ class FaceGestureTest < PhComposerTestCase
     face = list_faces.first
     params = gesture([face, face, face], "Wall", "Outdoors")
 
-    result = invoke("ph_composer.face_assignment.classify", params)
+    result = invoke("ph_composer.zones.faces.classify", params)
 
     assert_equal 1, result.dig("value", "face_ids").length
     assert_equal 1, result.fetch("affected").length
@@ -46,13 +46,13 @@ class FaceGestureTest < PhComposerTestCase
     make_box_zone(1_000, LIMIT + 1)
     faces = list_faces
 
-    accepted = invoke("ph_composer.face_assignment.classify", gesture(faces.first(LIMIT), "Wall", "Outdoors"))
+    accepted = invoke("ph_composer.zones.faces.classify", gesture(faces.first(LIMIT), "Wall", "Outdoors"))
 
     assert_equal "completed", accepted.fetch("status")
     assert_equal LIMIT, accepted.dig("value", "face_ids").length
 
     @model.undo
-    refused = invoke("ph_composer.face_assignment.classify", gesture(faces, "Wall", "Outdoors"))
+    refused = invoke("ph_composer.zones.faces.classify", gesture(faces, "Wall", "Outdoors"))
 
     assert_equal %w[refused gesture.too_large none], refused.values_at("status", "code", "effect")
     assert_empty list_faces.reject { |face| face.fetch("values").empty? }
@@ -68,13 +68,13 @@ class FaceGestureTest < PhComposerTestCase
 
     assert_equal 2, left.length
 
-    accepted = invoke("ph_composer.face_assignment.classify", gesture(left.first(1), nil, "Ground"))
+    accepted = invoke("ph_composer.zones.faces.classify", gesture(left.first(1), nil, "Ground"))
 
     assert_equal "completed", accepted.fetch("status")
     assert_equal 2, accepted.fetch("affected").length
 
     @model.undo
-    refused = invoke("ph_composer.face_assignment.classify", gesture(left, nil, "Ground"))
+    refused = invoke("ph_composer.zones.faces.classify", gesture(left, nil, "Ground"))
 
     assert_equal %w[refused gesture.too_large none], refused.values_at("status", "code", "effect")
     assert_equal %w[Surface Surface Surface Surface], list_faces.map { |face| face.dig("values", "boundary_condition") }
@@ -83,7 +83,7 @@ class FaceGestureTest < PhComposerTestCase
   def test_classifying_both_endpoints_of_one_pair_writes_each_face_once
     left, right = solved_pair(300)
 
-    result = invoke("ph_composer.face_assignment.classify", gesture([left, right], nil, "Ground"))
+    result = invoke("ph_composer.zones.faces.classify", gesture([left, right], nil, "Ground"))
 
     assert_equal %w[completed committed], result.values_at("status", "effect")
     assert_equal 2, result.fetch("affected").length
@@ -96,11 +96,11 @@ class FaceGestureTest < PhComposerTestCase
   def test_a_target_that_changed_after_preview_aborts_the_whole_gesture
     make_box_zone(400, 3)
     faces = list_faces
-    preview = API.preview(:context => @context, :name => "ph_composer.face_assignment.classify",
+    preview = API.preview(:context => @context, :name => "ph_composer.zones.faces.classify",
                           :params => gesture(faces, "Wall", "Outdoors"))
-    invoke("ph_composer.face_assignment.classify", gesture([faces.last], "Floor", "Ground"))
+    invoke("ph_composer.zones.faces.classify", gesture([faces.last], "Floor", "Ground"))
 
-    result = invoke("ph_composer.face_assignment.classify", gesture(faces, "Wall", "Outdoors"),
+    result = invoke("ph_composer.zones.faces.classify", gesture(faces, "Wall", "Outdoors"),
                     preview.fetch("proposal_digest"))
 
     assert_equal "refused", result.fetch("status")
@@ -118,7 +118,7 @@ class FaceGestureTest < PhComposerTestCase
       super(dictionary, key, value)
     end
 
-    result = invoke("ph_composer.face_assignment.classify", gesture(faces, "Wall", "Outdoors"))
+    result = invoke("ph_composer.zones.faces.classify", gesture(faces, "Wall", "Outdoors"))
 
     assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
     assert_empty list_faces.reject { |face| face.fetch("values").empty? }
@@ -127,9 +127,9 @@ class FaceGestureTest < PhComposerTestCase
   def test_suggest_classification_writes_only_unrecorded_faces_in_one_step
     zone = make_box_zone(500, 4)
     first = list_faces.first
-    invoke("ph_composer.face_assignment.classify", gesture([first], "Floor", "Ground"))
+    invoke("ph_composer.zones.faces.classify", gesture([first], "Floor", "Ground"))
 
-    result = invoke("ph_composer.face_assignment.auto_classify", { "zone" => zone.fetch("reference") })
+    result = invoke("ph_composer.zones.faces.auto_classify", { "zone" => zone.fetch("reference") })
 
     assert_equal %w[completed committed], result.values_at("status", "effect")
     assert_equal({ "classified" => 3, "kept" => 1 }, result.fetch("value"))
@@ -143,9 +143,9 @@ class FaceGestureTest < PhComposerTestCase
 
   def test_suggest_classification_on_a_fully_recorded_zone_writes_nothing
     zone = make_box_zone(600, 2)
-    invoke("ph_composer.face_assignment.classify", gesture(list_faces, "Wall", "Outdoors"))
+    invoke("ph_composer.zones.faces.classify", gesture(list_faces, "Wall", "Outdoors"))
 
-    result = invoke("ph_composer.face_assignment.auto_classify", { "zone" => zone.fetch("reference") })
+    result = invoke("ph_composer.zones.faces.auto_classify", { "zone" => zone.fetch("reference") })
 
     assert_equal "none", result.fetch("effect")
     assert_equal({ "classified" => 0, "kept" => 2 }, result.fetch("value"))
@@ -154,7 +154,7 @@ class FaceGestureTest < PhComposerTestCase
   def test_reverse_face_keeps_the_record_and_leaves_the_pair_stale
     left, = solved_pair(700)
 
-    result = invoke("ph_composer.face_assignment.reverse", { "face" => left.fetch("reference") })
+    result = invoke("ph_composer.zones.faces.reverse", { "face" => left.fetch("reference") })
 
     assert_equal %w[completed committed], result.values_at("status", "effect")
     reversed = list_faces.find { |face| face.dig("reference", "entity_id") == left.dig("reference", "entity_id") }
@@ -173,7 +173,7 @@ class FaceGestureTest < PhComposerTestCase
   end
 
   def list_faces
-    API.query(:context => @context, :name => "ph_composer.face_assignment.list").dig("value", "faces")
+    API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
   end
 
   def gesture(faces, face_type, boundary)
@@ -214,7 +214,7 @@ class FaceGestureTest < PhComposerTestCase
       @model.entities << Sketchup::Group.new(persistent_id, Sketchup::Entities.new(faces))
       invoke("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [persistent_id] })
     end
-    invoke("ph_composer.face_assignment.classify", gesture(list_faces, "Wall", "Outdoors"))
+    invoke("ph_composer.zones.faces.classify", gesture(list_faces, "Wall", "Outdoors"))
     zones = API.query(:context => @context, :name => "ph_composer.zones.list").dig("value", "zones")
     invoke("ph_composer.zones.solve_adjacency", { "zones" => zones.map { |zone| zone.fetch("reference") } })
     list_faces

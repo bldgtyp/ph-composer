@@ -27,7 +27,7 @@ class ExportPreflightTest < PhComposerTestCase
     assert_equal "completed", outcome.fetch("status")
     finding = outcome.dig("value", "findings").first
     assert_equal "face.unclassified", finding.fetch("code")
-    assert_equal "ph_composer.face_assignment.locate", finding.dig("locate", "name")
+    assert_equal "ph_composer.zones.faces.locate", finding.dig("locate", "name")
     reference = finding.dig("locate", "params", "faces", 0)
     assert_equal [100], reference.fetch("zone_path")
     assert_equal [101], reference.fetch("entity_path")

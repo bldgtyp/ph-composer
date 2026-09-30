@@ -4,7 +4,7 @@ module PhComposer
   module Zones
     module Faces
       # The Classify tool: the viewport half of the Classify gesture (face-assignment PRD "The
-      # Classify tool"). The operation is D1's `ph_composer.face_assignment.classify`, and this tool
+      # Classify tool"). The operation is D1's `ph_composer.zones.faces.classify`, and this tool
       # calls it through the public interface like any other client (CONTRACTS.md C2), with its own
       # caller handle and its own sequence numbers.
       #
@@ -21,7 +21,7 @@ module PhComposer
       # Until the panel palette lands with the Overview UI (D7), the palette is set from the native
       # Classify menu, which offers one item per assignable face type and boundary condition.
       class ClassifyTool
-        CLASSIFY = "#{FEATURE_ID}.classify"
+        CLASSIFY = "#{PREFIX}.classify"
         # Transient pointer state is red and collected state is teal, the same two highlight roles the
         # panel uses (.agents/skills/ph-composer-ui-polish/SKILL.md "Graphics and interaction").
         HOVER_COLOUR = [184, 59, 59].freeze

@@ -215,7 +215,7 @@ class EntityReferencesTest < PhComposerTestCase
     result = invoke("ph_composer.zones.repair_identity", "zone_path" => [200])
 
     assert_equal %w[completed committed], result.values_at("status", "effect")
-    result.fetch("affected").select { |entry| entry.fetch("kind") == "face_assignment" }.each do |entry|
+    result.fetch("affected").select { |entry| entry.fetch("kind") == "face" }.each do |entry|
       resolved = ZONES::Occurrences.resolve_face(@model, entry.fetch("reference"))
       assert_equal entry.fetch("id"), face_id(resolved.entity)
     end
@@ -353,7 +353,7 @@ class EntityReferencesTest < PhComposerTestCase
                  inventory.map { |target| target.fetch("id") }.sort
     found = PhComposer::API.describe(:name => FACE::REFERENCE_KIND)
     assert_equal "reference_target", found.fetch("kind")
-    assert_equal FACE::FEATURE_ID, found.fetch("owner")
+    assert_equal ZONES::FEATURE_ID, found.fetch("owner")
     found["label"] = "Edited"
     assert_equal "Face", PhComposer::API.describe(:name => FACE::REFERENCE_KIND).fetch("label")
   end

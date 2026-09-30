@@ -10,8 +10,8 @@ module PhComposer
       # honeybee-display (PRD Q17; `honeybee-core/honeybee/face.py` and `boundarycondition.py`). Stored
       # values keep honeybee's names; the legend shows the PRD's words.
       module ColourModes
-        BY_FACE_TYPE = "#{FEATURE_ID}.by_face_type"
-        BY_BOUNDARY_CONDITION = "#{FEATURE_ID}.by_boundary_condition"
+        BY_FACE_TYPE = "#{PREFIX}.by_face_type"
+        BY_BOUNDARY_CONDITION = "#{PREFIX}.by_boundary_condition"
 
         FACE_TYPE_COLOURS = {
           "Wall" => [230, 180, 60], "RoofCeiling" => [128, 20, 20], "Floor" => [128, 128, 128],

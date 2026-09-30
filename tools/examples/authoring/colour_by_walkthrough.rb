@@ -19,7 +19,7 @@
 module ColourByWalkthrough
   API = PhComposer::API
   PREFIX = "p1d_colour_"
-  MODE = "ph_composer.face_assignment.by_face_type"
+  MODE = "ph_composer.zones.faces.by_face_type"
 
   module_function
 
@@ -46,7 +46,7 @@ module ColourByWalkthrough
       client.invoke("ph_composer.zones.make", target, preview.fetch("proposal_digest"))
     end
     client.query("ph_composer.zones.list").dig("value", "zones").each do |zone|
-      client.invoke("ph_composer.face_assignment.auto_classify", { "zone" => zone.fetch("reference") })
+      client.invoke("ph_composer.zones.faces.auto_classify", { "zone" => zone.fetch("reference") })
     end
     fingerprint
   end

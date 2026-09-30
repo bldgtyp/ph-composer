@@ -29,10 +29,10 @@ class ZoneFaceTest < PhComposerTestCase
     assert_equal [100], zone.dig("reference", "zone_path")
     assert_equal "Zone 1", zone.dig("values", "name")
 
-    faces = query("ph_composer.face_assignment.list").dig("value", "faces")
+    faces = query("ph_composer.zones.faces.list").dig("value", "faces")
     assert_equal 6, faces.length
     first = faces.first
-    classified = invoke("ph_composer.face_assignment.classify", {
+    classified = invoke("ph_composer.zones.faces.classify", {
       "faces" => [first.fetch("reference")],
       "intent" => {
         "face_type" => { "mode" => "set", "value" => "Wall" },
@@ -42,7 +42,7 @@ class ZoneFaceTest < PhComposerTestCase
     })
     assert_equal %w[completed committed], classified.values_at("status", "effect")
     face_id = classified.dig("value", "face_ids", 0)
-    read_back = query("ph_composer.face_assignment.list").dig("value", "faces")
+    read_back = query("ph_composer.zones.faces.list").dig("value", "faces")
       .find { |face| face.dig("reference", "entity_id") == face_id }
     assert_equal({ "face_type" => "Wall", "boundary_condition" => "Outdoors" }, read_back.fetch("values"))
 
@@ -57,7 +57,7 @@ class ZoneFaceTest < PhComposerTestCase
     Sketchup.open_file("/tmp/ph-composer-p1b.skp")
     reopened = PhComposer::Sessions.for(Sketchup.active_model)
     reopened_context = API.connect(:session_id => reopened.id)
-    result = API.query(:context => reopened_context, :name => "ph_composer.face_assignment.list")
+    result = API.query(:context => reopened_context, :name => "ph_composer.zones.faces.list")
     assert_equal face_id, result.dig("value", "faces", 0, "reference", "entity_id")
   end
 
@@ -80,8 +80,8 @@ class ZoneFaceTest < PhComposerTestCase
     group = box_group(300)
     @model.entities << group
     zone = make_group_zone(group)
-    face = query("ph_composer.face_assignment.list").dig("value", "faces", 0)
-    invoke("ph_composer.face_assignment.classify", classify_params(face, "Wall", "Ground"))
+    face = query("ph_composer.zones.faces.list").dig("value", "faces", 0)
+    invoke("ph_composer.zones.faces.classify", classify_params(face, "Wall", "Ground"))
     stored = PhComposer::Zones::ZONE_STORE.read(group)
     stored["user_data"] = { "firm.note" => "keep" }
     PhComposer::Zones::ZONE_STORE.write(group, stored)
@@ -147,16 +147,16 @@ class ZoneFaceTest < PhComposerTestCase
     group = box_group(600)
     @model.entities << group
     make_group_zone(group)
-    face = query("ph_composer.face_assignment.list").dig("value", "faces", 0)
-    invoke("ph_composer.face_assignment.classify", classify_params(face, "Wall", "Outdoors"))
+    face = query("ph_composer.zones.faces.list").dig("value", "faces", 0)
+    invoke("ph_composer.zones.faces.classify", classify_params(face, "Wall", "Outdoors"))
     entity = group.entities.to_a.first
     record = PhComposer::Zones::Faces::FACE_STORE.read(entity)
     record["user_data"] = { "firm.note" => "keep" }
     record["extension_data"] = { "outside.extension" => { "schema_version" => 3, "payload" => { "x" => 1 } } }
     PhComposer::Zones::Faces::FACE_STORE.write(entity, record)
-    current = query("ph_composer.face_assignment.list").dig("value", "faces", 0)
+    current = query("ph_composer.zones.faces.list").dig("value", "faces", 0)
 
-    result = invoke("ph_composer.face_assignment.classify", {
+    result = invoke("ph_composer.zones.faces.classify", {
       "faces" => [current.fetch("reference")],
       "intent" => {
         "face_type" => { "mode" => "keep" },
@@ -176,9 +176,9 @@ class ZoneFaceTest < PhComposerTestCase
     group = box_group(650)
     @model.entities << group
     make_group_zone(group)
-    face = query("ph_composer.face_assignment.list").dig("value", "faces", 0)
+    face = query("ph_composer.zones.faces.list").dig("value", "faces", 0)
 
-    result = invoke("ph_composer.face_assignment.classify", {
+    result = invoke("ph_composer.zones.faces.classify", {
       "faces" => [face.fetch("reference")],
       "intent" => {
         "face_type" => { "mode" => "keep" },
@@ -202,7 +202,7 @@ class ZoneFaceTest < PhComposerTestCase
     make_group_zone(group)
     dictionaries = face.attribute_dictionaries
 
-    row = query("ph_composer.face_assignment.list").dig("value", "faces", 0)
+    row = query("ph_composer.zones.faces.list").dig("value", "faces", 0)
 
     assert_equal({ "face_type" => "RoofCeiling", "boundary_condition" => "Outdoors" }, row.fetch("suggested"))
     assert_same dictionaries, face.attribute_dictionaries
@@ -224,7 +224,7 @@ class ZoneFaceTest < PhComposerTestCase
     assert_equal %w[completed committed], result.values_at("status", "effect")
     pair_id = result.dig("value", "pair_ids", 0)
     assert_match(/^adj_/, pair_id)
-    rows = query("ph_composer.face_assignment.list").dig("value", "faces")
+    rows = query("ph_composer.zones.faces.list").dig("value", "faces")
     paired = rows.select { |row| row.dig("values", "adjacency", "pair_id") == pair_id }
     assert_equal 2, paired.length
     assert_equal %w[current current], paired.map { |row| row.fetch("adjacency_state") }
@@ -237,10 +237,10 @@ class ZoneFaceTest < PhComposerTestCase
     assert_equal operation_count, @model.operations.length
 
     @model.undo
-    assert_equal %w[Outdoors Outdoors], query("ph_composer.face_assignment.list").dig("value", "faces")
+    assert_equal %w[Outdoors Outdoors], query("ph_composer.zones.faces.list").dig("value", "faces")
       .map { |row| row.dig("values", "boundary_condition") }.sort
     @model.redo
-    assert_equal %w[current current], query("ph_composer.face_assignment.list").dig("value", "faces")
+    assert_equal %w[current current], query("ph_composer.zones.faces.list").dig("value", "faces")
       .map { |row| row.fetch("adjacency_state") }
   end
 
@@ -255,12 +255,12 @@ class ZoneFaceTest < PhComposerTestCase
     invoke("ph_composer.zones.solve_adjacency", solve)
 
     right_group.transformation = Geom::Transformation.translation([1, 0, 0])
-    rows = query("ph_composer.face_assignment.list").dig("value", "faces")
+    rows = query("ph_composer.zones.faces.list").dig("value", "faces")
     assert_equal %w[stale stale], rows.map { |row| row.fetch("adjacency_state") }
 
     retired = invoke("ph_composer.zones.retire_adjacency", { "face" => rows.first.fetch("reference") })
     assert_equal %w[completed committed], retired.values_at("status", "effect")
-    unpaired = query("ph_composer.face_assignment.list").dig("value", "faces")
+    unpaired = query("ph_composer.zones.faces.list").dig("value", "faces")
     assert unpaired.all? { |row| !row.fetch("values").key?("boundary_condition") }
     assert unpaired.all? { |row| row["adjacency_state"].nil? }
 
@@ -278,17 +278,17 @@ class ZoneFaceTest < PhComposerTestCase
     classify_only_face(right_zone, "Outdoors")
     invoke("ph_composer.zones.solve_adjacency",
            { "zones" => [left_zone.fetch("reference"), right_zone.fetch("reference")] })
-    rows = query("ph_composer.face_assignment.list").dig("value", "faces")
+    rows = query("ph_composer.zones.faces.list").dig("value", "faces")
     edited = rows.first
 
-    result = invoke("ph_composer.face_assignment.classify", {
+    result = invoke("ph_composer.zones.faces.classify", {
       "faces" => [edited.fetch("reference")],
       "intent" => { "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } },
       "expected_values" => edited.fetch("values")
     })
 
     assert_equal %w[completed committed], result.values_at("status", "effect")
-    after = query("ph_composer.face_assignment.list").dig("value", "faces")
+    after = query("ph_composer.zones.faces.list").dig("value", "faces")
     assert_equal [nil, "Outdoors"], after.map { |row| row.dig("values", "boundary_condition") }.sort_by(&:to_s)
     assert after.all? { |row| row["adjacency_state"].nil? }
   end
@@ -303,7 +303,7 @@ class ZoneFaceTest < PhComposerTestCase
     make_group_zone(zone)
 
     assert_equal [[910, 901], [920, 901]],
-                 query("ph_composer.face_assignment.list").dig("value", "faces")
+                 query("ph_composer.zones.faces.list").dig("value", "faces")
                    .map { |row| row.dig("reference", "entity_path") }
     assert_shared_group_refusals
   end
@@ -322,8 +322,8 @@ class ZoneFaceTest < PhComposerTestCase
     zone = Sketchup::Group.new(900, Sketchup::Entities.new([Sketchup::Group.new(910, shared)]))
     @model.entities << zone
     make_group_zone(zone)
-    classified = invoke("ph_composer.face_assignment.classify",
-                        classify_params(query("ph_composer.face_assignment.list").dig("value", "faces", 0),
+    classified = invoke("ph_composer.zones.faces.classify",
+                        classify_params(query("ph_composer.zones.faces.list").dig("value", "faces", 0),
                                         "Wall", "Outdoors"))
     assert_equal "committed", classified.fetch("effect")
     zone.entities << Sketchup::Group.new(920, shared)
@@ -342,10 +342,10 @@ class ZoneFaceTest < PhComposerTestCase
     crossing = zone.fetch("reference").merge("entity_path" => [701, 700], "entity_id" => nil)
     operation_count = @model.operations.length
 
-    classify = invoke("ph_composer.face_assignment.classify", {
+    classify = invoke("ph_composer.zones.faces.classify", {
       "faces" => [crossing], "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" } }
     })
-    reverse = invoke("ph_composer.face_assignment.reverse", { "face" => crossing })
+    reverse = invoke("ph_composer.zones.faces.reverse", { "face" => crossing })
     error = assert_raises(PhComposer::CodedError) do
       PhComposer::Zones::Occurrences.resolve_face(@model, crossing, :allow_unassigned => true)
     end
@@ -363,9 +363,9 @@ class ZoneFaceTest < PhComposerTestCase
     ]))
     @model.entities << outer
     make_group_zone(outer)
-    face = query("ph_composer.face_assignment.list").dig("value", "faces", 0)
+    face = query("ph_composer.zones.faces.list").dig("value", "faces", 0)
 
-    result = invoke("ph_composer.face_assignment.classify", classify_params(face, "Wall", "Outdoors"))
+    result = invoke("ph_composer.zones.faces.classify", classify_params(face, "Wall", "Outdoors"))
 
     assert_equal [701, 700], face.dig("reference", "entity_path")
     assert_equal %w[completed committed], result.values_at("status", "effect")
@@ -374,7 +374,7 @@ class ZoneFaceTest < PhComposerTestCase
   private
 
   def assert_shared_group_refusals
-    rows = query("ph_composer.face_assignment.list").dig("value", "faces")
+    rows = query("ph_composer.zones.faces.list").dig("value", "faces")
     face = rows.first
     before = PhComposer::Zones::Faces::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first
                                                            .entities.to_a.first)
@@ -383,10 +383,10 @@ class ZoneFaceTest < PhComposerTestCase
     reverse = { "face" => face.fetch("reference") }
 
     results = [
-      API.preview(:context => @context, :name => "ph_composer.face_assignment.classify", :params => classify),
-      invoke("ph_composer.face_assignment.classify", classify),
-      API.preview(:context => @context, :name => "ph_composer.face_assignment.reverse", :params => reverse),
-      invoke("ph_composer.face_assignment.reverse", reverse)
+      API.preview(:context => @context, :name => "ph_composer.zones.faces.classify", :params => classify),
+      invoke("ph_composer.zones.faces.classify", classify),
+      API.preview(:context => @context, :name => "ph_composer.zones.faces.reverse", :params => reverse),
+      invoke("ph_composer.zones.faces.reverse", reverse)
     ]
 
     results.each do |result|
@@ -396,7 +396,7 @@ class ZoneFaceTest < PhComposerTestCase
     assert_equal operation_count, @model.operations.length
     assert_equal [before], [PhComposer::Zones::Faces::FACE_STORE.read(@model.entities.to_a.first.entities.to_a
                                                                          .first.entities.to_a.first)]
-    assert_equal rows, query("ph_composer.face_assignment.list").dig("value", "faces")
+    assert_equal rows, query("ph_composer.zones.faces.list").dig("value", "faces")
   end
 
   def invoke(name, params, proposal_digest = nil)
@@ -449,10 +449,10 @@ class ZoneFaceTest < PhComposerTestCase
   end
 
   def classify_only_face(zone, boundary)
-    face = query("ph_composer.face_assignment.list").dig("value", "faces")
+    face = query("ph_composer.zones.faces.list").dig("value", "faces")
       .find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
-    invoke("ph_composer.face_assignment.classify", classify_params(face, "Wall", boundary))
-    query("ph_composer.face_assignment.list").dig("value", "faces")
+    invoke("ph_composer.zones.faces.classify", classify_params(face, "Wall", boundary))
+    query("ph_composer.zones.faces.list").dig("value", "faces")
       .find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
   end
 

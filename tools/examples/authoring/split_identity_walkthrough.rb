@@ -29,7 +29,7 @@ module SplitIdentityWalkthrough
     end
 
     def duplicates
-      query("ph_composer.face_assignment.list").dig("value", "faces")
+      query("ph_composer.zones.faces.list").dig("value", "faces")
         .group_by { |face| face.dig("reference", "entity_id") }
         .reject { |id, faces| id.nil? || faces.length < 2 }
         .transform_values do |faces|

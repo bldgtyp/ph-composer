@@ -15,7 +15,6 @@ module PhComposer
   module Zones
     module Faces
       OBJECT = { "type" => "object" }.freeze
-      PATH = Zones::PATH
       FACE_REFERENCE = {
         "type" => "object", "additionalProperties" => false,
         "required" => %w[zone_id zone_path entity_path entity_id],
@@ -129,25 +128,23 @@ module PhComposer
 
       module_function
 
-      def install(registry)
-        feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION,
-                                    :requires => [Zones::FEATURE_ID])
+      def install(feature)
         feature.reference_target(Records::ReferenceTarget.new(
           :id => REFERENCE_KIND, :label => "Face", :records => ReferenceTargets.method(:entries),
           :validate => Schema.method(:problems)
         ))
         ColourModes.install(feature)
         ClassifyMenu.install(feature)
-        feature.query("#{FEATURE_ID}.list", :description => "Path-qualified Face occurrences in authored Zones.",
+        feature.query("#{PREFIX}.list", :description => "Path-qualified Face occurrences in authored Zones.",
                                                 :params => OBJECT, :result => OBJECT) { |request| list(request) }
-        feature.action("#{FEATURE_ID}.classify", :description => "Apply explicit keep, set or clear intent to Faces.",
+        feature.action("#{PREFIX}.classify", :description => "Apply explicit keep, set or clear intent to Faces.",
                                                      :params => CLASSIFY_PARAMS, :result => OBJECT,
                                                      :undo_name => "Classify Faces",
                                                      :side_effects => "Writes face assignments and Zone stamps.") do |
                                                        request, proposal|
           classify(request, proposal)
         end
-        feature.action("#{FEATURE_ID}.auto_classify",
+        feature.action("#{PREFIX}.auto_classify",
                        :description => "Suggest a classification for every unrecorded Face in one Zone.",
                        :params => AUTO_CLASSIFY_PARAMS, :result => OBJECT,
                        :undo_name => "Suggest Classification",
@@ -155,7 +152,7 @@ module PhComposer
                          request, proposal|
           auto_classify(request, proposal)
         end
-        feature.action("#{FEATURE_ID}.reverse",
+        feature.action("#{PREFIX}.reverse",
                        :description => "Reverse one Face and keep its assignment record.",
                        :params => REVERSE_PARAMS, :result => OBJECT, :undo_name => "Reverse Face",
                        :side_effects => "Flips the Face normal; any Surface pair goes stale.") do |request, proposal|
@@ -163,31 +160,31 @@ module PhComposer
         end
         declare_viewport(feature)
         declare_attached_zones(feature)
-        feature.snapshot_section("#{FEATURE_ID}.faces", :query => "#{FEATURE_ID}.list")
+        feature.snapshot_section("#{PREFIX}.faces", :query => "#{PREFIX}.list")
         ExportProjection.install(feature)
       end
 
       # What reaches the viewport rather than the Model: the Classify tool's palette, the tool itself,
       # and Locate. None of them writes a record, so none is an action.
       def declare_viewport(feature)
-        feature.query("#{FEATURE_ID}.classify_tool", :description => "The Classify tool's palette and whether it runs.",
+        feature.query("#{PREFIX}.classify_tool", :description => "The Classify tool's palette and whether it runs.",
                                                      :params => OBJECT, :result => TOOL_STATE) do |request|
           tool_state(request.session)
         end
-        feature.snapshot_section("#{FEATURE_ID}.palette", :query => "#{FEATURE_ID}.classify_tool")
-        feature.view_command("#{FEATURE_ID}.choose",
+        feature.snapshot_section("#{PREFIX}.palette", :query => "#{PREFIX}.classify_tool")
+        feature.view_command("#{PREFIX}.choose",
                              :description => "Set one Classify palette field and give the tool the viewport.",
                              :params => CHOOSE_PARAMS, :result => TOOL_STATE) do |request|
           classify_tool(request.session).choose(request.params.fetch("field"), request.params.fetch("value"))
           tool_state(request.session)
         end
-        feature.view_command("#{FEATURE_ID}.stop_classifying",
+        feature.view_command("#{PREFIX}.stop_classifying",
                              :description => "Give the viewport back to whatever tool the user had.",
                              :params => OBJECT, :result => TOOL_STATE, :examples => [{}]) do |request|
           classify_tool(request.session).stop
           tool_state(request.session)
         end
-        feature.view_command("#{FEATURE_ID}.locate",
+        feature.view_command("#{PREFIX}.locate",
                              :description => "Select an explicit set of Faces and bring them into view.",
                              :params => LOCATE_PARAMS, :result => LOCATE_RESULT) do |request|
           locate(request)

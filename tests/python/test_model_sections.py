@@ -112,7 +112,7 @@ def test_model_sections_build_rooms_then_resolve_surface_pairs(monkeypatch: pyte
 def test_invalid_face_vocabulary_becomes_a_record_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     document = json.loads(FIXTURE.read_text())
-    document["sections"]["ph_composer.face_assignment.export.faces"]["records"][0]["face_type"] = "Ceiling"
+    document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0]["face_type"] = "Ceiling"
     result = translate(document, (FaceSection(), ZoneSection(FakeConstructionProvider()))).to_document()
 
     assert result["state"] == "complete_with_findings"
@@ -128,7 +128,7 @@ def test_invalid_face_vocabulary_becomes_a_record_error(monkeypatch: pytest.Monk
 def test_surface_requires_an_available_reciprocal_counterpart(monkeypatch: pytest.MonkeyPatch, failure: str) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     document = json.loads(FIXTURE.read_text())
-    faces = document["sections"]["ph_composer.face_assignment.export.faces"]["records"]
+    faces = document["sections"]["ph_composer.zones.faces.export.faces"]["records"]
     surfaces = [face for face in faces if face["boundary_condition"] == "Surface"]
     if failure == "missing":
         faces.remove(surfaces[1])
@@ -180,7 +180,7 @@ def test_explicit_and_reciprocal_omissions_preserve_inputs_and_publish_remaining
 ) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     document = json.loads(FIXTURE.read_text())
-    raw_faces = document["sections"]["ph_composer.face_assignment.export.faces"]["records"]
+    raw_faces = document["sections"]["ph_composer.zones.faces.export.faces"]["records"]
     surfaces = [face for face in raw_faces if face["boundary_condition"] == "Surface"]
     omit(surfaces[0])
     before = json.dumps(document, sort_keys=True)
@@ -207,7 +207,7 @@ def test_explicit_and_reciprocal_omissions_preserve_inputs_and_publish_remaining
 def test_retired_face_with_no_boundary_is_a_nonblocking_reported_omission(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     document = json.loads(FIXTURE.read_text())
-    face = document["sections"]["ph_composer.face_assignment.export.faces"]["records"][0]
+    face = document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0]
     omit(face, "face.boundary_unclassified")
     face.pop("boundary_condition")
 
@@ -226,7 +226,7 @@ def test_retired_face_with_no_boundary_is_a_nonblocking_reported_omission(monkey
 
 def test_omissions_do_not_install_a_construction_provider_or_hide_independent_blockers() -> None:
     document = json.loads(FIXTURE.read_text())
-    omit(document["sections"]["ph_composer.face_assignment.export.faces"]["records"][0])
+    omit(document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0])
 
     result = cast(dict[str, Any], translate(document, (FaceSection(), ZoneSection())).to_document())
 
@@ -245,7 +245,7 @@ def test_malformed_omission_metadata_remains_a_blocker(
 ) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     document = json.loads(FIXTURE.read_text())
-    face = document["sections"]["ph_composer.face_assignment.export.faces"]["records"][0]
+    face = document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0]
     omit(face)
     face["omission"].update(change)
 
@@ -260,7 +260,7 @@ def test_malformed_omission_metadata_remains_a_blocker(
 def test_missing_boundary_without_explicit_omission_remains_a_blocker(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     document = json.loads(FIXTURE.read_text())
-    document["sections"]["ph_composer.face_assignment.export.faces"]["records"][0].pop("boundary_condition")
+    document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0].pop("boundary_condition")
 
     result = cast(
         dict[str, Any], translate(document, (FaceSection(), ZoneSection(FakeConstructionProvider()))).to_document()
@@ -273,7 +273,7 @@ def test_missing_boundary_without_explicit_omission_remains_a_blocker(monkeypatc
 def test_omitted_face_invalid_classification_still_blocks(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     document = json.loads(FIXTURE.read_text())
-    face = document["sections"]["ph_composer.face_assignment.export.faces"]["records"][0]
+    face = document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0]
     omit(face)
     face["face_type"] = "Ceiling"
 
@@ -296,7 +296,7 @@ def test_real_hbjson_reloads_with_omitted_surface_pair_and_positive_omission_cou
     from ph_composer_translation.conformance import check
 
     document = json.loads(FIXTURE.read_text())
-    faces = document["sections"]["ph_composer.face_assignment.export.faces"]["records"]
+    faces = document["sections"]["ph_composer.zones.faces.export.faces"]["records"]
     surface = next(face for face in faces if face["boundary_condition"] == "Surface")
     omit(surface)
     result = cast(

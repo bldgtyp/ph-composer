@@ -145,7 +145,7 @@ class OccurrenceIndexTest < PhComposerTestCase
   end
 
   def classify(references, face_type)
-    invoke("ph_composer.face_assignment.classify", {
+    invoke("ph_composer.zones.faces.classify", {
       "faces" => references, "expected_values" => {},
       "intent" => { "face_type" => { "mode" => "set", "value" => face_type },
                     "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } }
@@ -153,7 +153,7 @@ class OccurrenceIndexTest < PhComposerTestCase
   end
 
   def reclassify(references, boundary)
-    invoke("ph_composer.face_assignment.classify", {
+    invoke("ph_composer.zones.faces.classify", {
       "faces" => references, "expected_values" => {},
       "intent" => { "boundary_condition" => { "mode" => "set", "value" => boundary } }
     })
@@ -173,7 +173,7 @@ class OccurrenceIndexTest < PhComposerTestCase
   end
 
   def faces
-    API.query(:context => @context, :name => "ph_composer.face_assignment.list").dig("value", "faces")
+    API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
   end
 
   def face_references
@@ -192,7 +192,7 @@ class OccurrenceIndexTest < PhComposerTestCase
   end
 
   def author
-    invoke("ph_composer.face_assignment.classify", {
+    invoke("ph_composer.zones.faces.classify", {
       "faces" => face_references,
       "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
                     "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } },

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "zone/schema"
+require_relative "faces/install"
 require_relative "zone/occurrences"
 require_relative "zone/index"
 require_relative "zone/steps"
@@ -16,12 +17,6 @@ require_relative "colour_modes"
 
 module PhComposer
   module Zones
-    OBJECT = { "type" => "object" }.freeze
-    PATH = { "type" => "array", "items" => { "type" => "integer" } }.freeze
-    ZONE_REFERENCE = {
-      "type" => "object", "additionalProperties" => false, "required" => %w[zone_id zone_path],
-      "properties" => { "zone_id" => { "type" => "string" }, "zone_path" => PATH }
-    }.freeze
     MAKE_PARAMS = {
       "type" => "object", "additionalProperties" => false, "required" => %w[parent_path entity_ids],
       "properties" => {
@@ -89,6 +84,7 @@ module PhComposer
                                                   request, proposal|
         update(request, proposal)
       end
+      Faces.install(feature)
       declare_adjacency(feature)
       declare_repairs(feature)
       feature.snapshot_section("#{FEATURE_ID}.overview", :query => "#{FEATURE_ID}.list")

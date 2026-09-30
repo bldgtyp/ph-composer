@@ -130,7 +130,7 @@ module PhComposer
         after = face.fetch(:after)
         return nil unless after
 
-        { "kind" => "face_assignment", "id" => after.fetch("id"), "change" => "updated",
+        { "kind" => "face", "id" => after.fetch("id"), "change" => "updated",
           "reference" => face.fetch(:reference).merge("zone_id" => @record.fetch("id"),
                                                      "entity_id" => after.fetch("id")) }
       end

@@ -10,10 +10,10 @@
 
   var PARTS = "example.foundation.parts";
   var LEGEND = "ph_composer.colour_by.legend";
-  var PALETTE = "ph_composer.face_assignment.palette";
-  var ATTACHED = "ph_composer.face_assignment.attached_zone.list";
+  var PALETTE = "ph_composer.zones.faces.palette";
+  var ATTACHED = "ph_composer.zones.faces.attached_zone.list";
   var ZONES = "ph_composer.zones.overview";
-  var FACES = "ph_composer.face_assignment.faces";
+  var FACES = "ph_composer.zones.faces.faces";
   var NOTHING_WRITTEN = "Nothing was written.";
 
   function Host(window, options) {
@@ -87,7 +87,7 @@
     }
     return { mode: this.colourBy.mode, label: this.colourBy.mode ? "Face type" : null,
       entity_kind: this.colourBy.mode ? "face" : null, isolated: isolated, rows: rows,
-      modes: [{ name: "ph_composer.face_assignment.by_face_type", label: "Face type", entity_kind: "face" },
+      modes: [{ name: "ph_composer.zones.faces.by_face_type", label: "Face type", entity_kind: "face" },
         { name: "ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone" }] };
   };
 
@@ -126,12 +126,12 @@
         this.colourBy = { mode: payload.params.mode, isolated: null };
       }
       if (payload.name === "ph_composer.colour_by.isolate") this.colourBy.isolated = payload.params.row || null;
-      if (payload.name === "ph_composer.face_assignment.choose") {
+      if (payload.name === "ph_composer.zones.faces.choose") {
         this.palette.active = true;
         if (payload.params.value === null) delete this.palette.palette[payload.params.field];
         else this.palette.palette[payload.params.field] = payload.params.value;
       }
-      if (payload.name === "ph_composer.face_assignment.stop_classifying") this.palette.active = false;
+      if (payload.name === "ph_composer.zones.faces.stop_classifying") this.palette.active = false;
       outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
         value: {}, affected: [], findings: [], detail: null };
       this.snapshot();
@@ -174,7 +174,7 @@
       })[0];
       if (!zone) return refused("target.not_found", "That Zone is unavailable. " + NOTHING_WRITTEN, this.revision);
       zone.values = JSON.parse(JSON.stringify(payload.params.values));
-    } else if (payload.name === "ph_composer.face_assignment.classify") {
+    } else if (payload.name === "ph_composer.zones.faces.classify") {
       var reference = payload.params.faces[0];
       var face = this.faces.filter(function (item) {
         return item.reference.entity_path.join(",") === reference.entity_path.join(",");
@@ -186,7 +186,7 @@
         if (intent.mode === "clear") delete face.values[field];
       });
       face.state = face.values.face_type && face.values.boundary_condition ? "classified" : "incomplete";
-    } else if (payload.name === "ph_composer.face_assignment.auto_classify") {
+    } else if (payload.name === "ph_composer.zones.faces.auto_classify") {
       this.faces.filter(function (item) {
         return item.reference.zone_id === payload.params.zone.zone_id && item.state === "unclassified";
       }).forEach(function (item) {

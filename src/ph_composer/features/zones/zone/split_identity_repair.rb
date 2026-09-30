@@ -256,7 +256,7 @@ module PhComposer
           @changes = DeepCopy.call(plan.fetch(:changes)).freeze
           @affected = @changes.map do |entry|
             after = entry.fetch(:after)
-            { "kind" => "face_assignment", "id" => after.fetch("id"), "change" => "updated",
+            { "kind" => "face", "id" => after.fetch("id"), "change" => "updated",
               "reference" => entry.fetch(:reference).merge("entity_id" => after.fetch("id")) }
           end
         end

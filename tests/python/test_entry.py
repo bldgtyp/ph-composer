@@ -22,7 +22,7 @@ def test_a_document_translates_with_the_given_sections() -> None:
 
 def test_the_product_build_lists_face_then_zone_sections_and_no_exporter() -> None:
     assert [section.id for section in SECTIONS] == [
-        "ph_composer.face_assignment.export.faces",
+        "ph_composer.zones.faces.export.faces",
         "ph_composer.zones.export.zones",
     ]
     assert EXPORTERS == ()

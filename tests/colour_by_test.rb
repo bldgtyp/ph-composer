@@ -63,7 +63,7 @@ class ColourByTest < PhComposerTestCase
 
   def test_a_legend_row_selects_and_zooms_to_exactly_what_it_counts
     zone_group(1_700, %w[Wall Floor Wall])
-    activate("ph_composer.face_assignment.by_face_type")
+    activate("ph_composer.zones.faces.by_face_type")
     context = PhComposer::API.connect(:session_id => @session.id)
 
     outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.select_row",
@@ -76,7 +76,7 @@ class ColourByTest < PhComposerTestCase
 
   def test_a_legend_row_that_is_no_longer_drawn_refuses_by_name
     zone_group(1_710, ["Wall"])
-    activate("ph_composer.face_assignment.by_face_type")
+    activate("ph_composer.zones.faces.by_face_type")
     context = PhComposer::API.connect(:session_id => @session.id)
 
     outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.select_row",
@@ -90,7 +90,7 @@ class ColourByTest < PhComposerTestCase
   # draws for the others: the legend still tells the truth about the Model.
   def test_showing_one_row_on_its_own_mutes_the_rest_and_is_released_by_asking_for_none
     zone_group(1_720, %w[Wall Floor])
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     context = PhComposer::API.connect(:session_id => @session.id)
 
     on = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.isolate",
@@ -110,7 +110,7 @@ class ColourByTest < PhComposerTestCase
 
   def test_turning_a_different_mode_on_shows_every_row_again
     zone_group(1_730, %w[Wall Floor])
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     service.isolate(["Wall", "classified"])
 
     activate("ph_composer.zones.by_zone")
@@ -123,7 +123,7 @@ class ColourByTest < PhComposerTestCase
   # leaves no row offering to undo it, so the viewport stays grey with no way back.
   def test_an_isolated_row_that_stops_existing_releases_what_it_was_holding
     zone = zone_group(1_740, %w[Wall Floor])
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     service.isolate(["Wall", "classified"])
     refute_empty service.wash_triangles
 
@@ -148,7 +148,7 @@ class ColourByTest < PhComposerTestCase
     record = PhComposer::Zones::Faces::FACE_STORE.read(face)
     PhComposer::Zones::Faces::FACE_STORE.write(face, record.reject { |key, _| key == "boundary_condition" })
 
-    service = activate("ph_composer.face_assignment.by_boundary_condition")
+    service = activate("ph_composer.zones.faces.by_boundary_condition")
 
     assert_equal [%w[Unclassified incomplete]],
                  service.rows.map { |row| [row.label, row.state.to_s] }
@@ -191,7 +191,7 @@ class ColourByTest < PhComposerTestCase
   def test_face_type_colours_every_face_and_counts_the_unclassified_ones
     zone_group(100, ["Wall", "Wall", nil])
 
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
 
     wall, unclassified = service.rows
     assert_equal ["Wall", 2, "classified"], [wall.label, wall.count, wall.state.to_s]
@@ -206,7 +206,7 @@ class ColourByTest < PhComposerTestCase
     record = PhComposer::Zones::Faces::FACE_STORE.read(face)
     PhComposer::Zones::Faces::FACE_STORE.write(face, record.merge("boundary_condition" => "AttachedZone"))
 
-    service = activate("ph_composer.face_assignment.by_boundary_condition")
+    service = activate("ph_composer.zones.faces.by_boundary_condition")
 
     row = service.rows.first
     assert_equal "incomplete", row.state.to_s
@@ -228,7 +228,7 @@ class ColourByTest < PhComposerTestCase
   def test_fills_are_batched_one_draw_a_colour_rather_than_one_a_face
     zone_group(500, %w[Wall Wall Wall RoofCeiling])
 
-    activate("ph_composer.face_assignment.by_face_type")
+    activate("ph_composer.zones.faces.by_face_type")
     overlay = @model.overlays.to_a.first
     overlay.draw(@model.active_view)
 
@@ -241,7 +241,7 @@ class ColourByTest < PhComposerTestCase
     zone = zone_group(600, [nil])
     zone.transformation = Geom::Transformation.scaling(24)
 
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     refute_empty service.unclassified_hatch
     refute_empty service.unclassified_outlines
     assert_empty service.fills
@@ -260,7 +260,7 @@ class ColourByTest < PhComposerTestCase
   def test_unclassified_hatch_follows_isolation_and_visibility
     zone = zone_group(605, ["Wall", nil])
     zone.transformation = Geom::Transformation.scaling(24)
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     refute_empty service.unclassified_hatch
 
     service.isolate([nil, :unclassified])
@@ -278,7 +278,7 @@ class ColourByTest < PhComposerTestCase
   def test_the_hud_names_the_mode_and_lists_every_legend_row
     zone_group(700, ["Wall", nil])
 
-    activate("ph_composer.face_assignment.by_face_type")
+    activate("ph_composer.zones.faces.by_face_type")
     @model.overlays.to_a.first.draw(@model.active_view)
 
     texts = @model.active_view.texts.map { |(_point, text, _options)| text }
@@ -287,7 +287,7 @@ class ColourByTest < PhComposerTestCase
 
   def test_isolation_washes_geometry_without_a_mode_outline_and_names_its_scope_in_the_hud
     zone_group(710, ["Wall", nil])
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     service.isolate(["Wall", "classified"])
 
     @model.overlays.to_a.first.draw(@model.active_view)
@@ -327,7 +327,7 @@ class ColourByTest < PhComposerTestCase
     faces[0].hidden = true
     faces[1].layer = Sketchup::Tag.new("Roof", false)
 
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
 
     assert_equal 3, service.rows.first.count, "the legend still counts every classified Face"
     assert_equal 3, service.fills.values.first.length, "only the visible Face is drawn"
@@ -350,14 +350,14 @@ class ColourByTest < PhComposerTestCase
     end
     outer.hidden = false
     outer.layer = Sketchup::Tag.new("Container", true)
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     assert_equal 3, service.fills.values.flatten.length
   end
 
   def test_hiding_the_zone_itself_suppresses_its_flattened_face_entries
     group = zone_group(815, %w[Wall Floor])
     group.hidden = true
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     assert_equal 2, service.rows.sum(&:count)
     assert_empty service.fills
     assert_empty service.outlines
@@ -370,13 +370,13 @@ class ColourByTest < PhComposerTestCase
     group = zone_group(820, %w[Wall Wall])
     nested = group.entities.add_group([group.entities.to_a.first])
     nested.hidden = true
-    %w[ph_composer.face_assignment.by_face_type ph_composer.zones.by_zone].each do |mode|
+    %w[ph_composer.zones.faces.by_face_type ph_composer.zones.by_zone].each do |mode|
       service = activate(mode)
       assert_equal 3, service.fills.values.flatten.length, "#{mode} paints only the visible Face"
     end
     nested.hidden = false
     nested.layer = Sketchup::Tag.new("Nested", false)
-    service = activate("ph_composer.face_assignment.by_boundary_condition")
+    service = activate("ph_composer.zones.faces.by_boundary_condition")
     assert_equal 3, service.fills.values.flatten.length
     assert_equal 2, service.rows.sum(&:count)
   end
@@ -392,7 +392,7 @@ class ColourByTest < PhComposerTestCase
     [:hidden, :tag].each do |visibility|
       first.hidden = visibility == :hidden
       first.layer = Sketchup::Tag.new("First occurrence", visibility != :tag)
-      %w[ph_composer.face_assignment.by_face_type ph_composer.zones.by_zone].each do |mode|
+      %w[ph_composer.zones.faces.by_face_type ph_composer.zones.by_zone].each do |mode|
         service = activate(mode)
         assert_equal 2, service.rows.sum(&:count)
         points = service.fills.values.flatten
@@ -420,7 +420,7 @@ class ColourByTest < PhComposerTestCase
   # fixtures at one model unit a pixel, so the lift reads as a clean +z of two units.
   def test_every_drawn_point_is_lifted_off_the_face_toward_the_camera
     zone_group(950, ["Wall"])
-    activate("ph_composer.face_assignment.by_face_type")
+    activate("ph_composer.zones.faces.by_face_type")
     @model.overlays.to_a.first.draw(@model.active_view)
 
     drawn = @model.active_view.draws.flat_map { |_mode, points, _colour, _width| points }
@@ -436,7 +436,7 @@ class ColourByTest < PhComposerTestCase
   def test_turning_a_mode_on_adds_one_overlay_and_turning_it_off_removes_it
     zone_group(900, ["Wall"])
 
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     assert_equal 1, @model.overlays.to_a.length
     # An overlay the host accepts is not one the host draws: `add` leaves it disabled and `draw` is
     # never called until something enables it (context/SKETCHUP_HOST_BEHAVIOR.md).
@@ -450,7 +450,7 @@ class ColourByTest < PhComposerTestCase
 
   def test_a_closed_model_takes_its_overlay_with_it
     zone_group(1000, ["Wall"])
-    activate("ph_composer.face_assignment.by_face_type")
+    activate("ph_composer.zones.faces.by_face_type")
 
     @session.detach
 
@@ -461,7 +461,7 @@ class ColourByTest < PhComposerTestCase
   # `respond_to?(:overlays)` while reading them raises. Nothing may be read from it here.
   def test_tearing_down_a_model_that_has_already_closed_raises_nothing
     zone_group(1050, ["Wall"])
-    activate("ph_composer.face_assignment.by_face_type")
+    activate("ph_composer.zones.faces.by_face_type")
     @model.close
 
     PhComposer::Sessions.detach(@model)
@@ -479,7 +479,7 @@ class ColourByTest < PhComposerTestCase
     group = zone_group(1100, ["Wall"])
     before = PhComposer::Zones::ZONE_STORE.read(group)
 
-    activate("ph_composer.face_assignment.by_face_type")
+    activate("ph_composer.zones.faces.by_face_type")
 
     assert_equal before, PhComposer::Zones::ZONE_STORE.read(group)
     assert_empty @model.operations, "no native operation opens, so Undo history is unchanged"
@@ -488,7 +488,7 @@ class ColourByTest < PhComposerTestCase
 
   def test_a_committed_change_rebuilds_the_drawing_once_a_revision
     group = zone_group(1200, ["Wall"])
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     assert_equal 1, service.rows.length
 
     face = group.entities.to_a.first
@@ -508,7 +508,7 @@ class ColourByTest < PhComposerTestCase
                                                           point(24, 24, 0)])
     loose_group = Sketchup::Group.new(1_260, Sketchup::Entities.new([loose_face]))
     @model.entities << loose_group
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     assert_equal 1, service.rows.last.count
     assert_equal 1, service.rebuilds
     context = PhComposer::API.connect(:session_id => @session.id)
@@ -528,7 +528,7 @@ class ColourByTest < PhComposerTestCase
 
   def test_a_second_event_at_the_same_revision_does_not_rebuild
     zone_group(1300, ["Wall"])
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     PhComposer::Sessions.notify_host_event(@session, :transaction_committed)
     settled = @model.active_view.invalidations
 
@@ -541,7 +541,7 @@ class ColourByTest < PhComposerTestCase
   # rebuilds without one.
   def test_hiding_a_tag_rebuilds_although_the_revision_is_unchanged
     group = zone_group(1400, %w[Wall Wall])
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     assert_equal 6, service.fills.values.first.length
 
     group.entities.to_a.first.layer = Sketchup::Tag.new("Walls", false)
@@ -572,7 +572,7 @@ class ColourByTest < PhComposerTestCase
     context = PhComposer::API.connect(:session_id => @session.id)
 
     outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.activate",
-                                   :params => { "mode" => "ph_composer.face_assignment.by_face_type" })
+                                   :params => { "mode" => "ph_composer.zones.faces.by_face_type" })
 
     assert_equal "completed", outcome.fetch("status"), "the panel receives the recovered Off snapshot"
     assert_nil outcome.dig("value", "mode")
@@ -599,7 +599,7 @@ class ColourByTest < PhComposerTestCase
 
   def test_tessellation_failure_during_invalidation_clears_all_caches_and_allows_later_subscribers
     group = zone_group(2020, %w[Wall Floor])
-    service = activate("ph_composer.face_assignment.by_face_type")
+    service = activate("ph_composer.zones.faces.by_face_type")
     service.isolate(["Wall", "classified"])
     group.entities.grep(Sketchup::Face).last.define_singleton_method(:mesh) { |*_args| raise "mesh failed" }
     reached = []
@@ -651,12 +651,12 @@ class ColourByTest < PhComposerTestCase
 
   def test_the_state_query_reports_the_active_mode_every_registered_mode_and_the_legend
     zone_group(1500, ["Wall", nil])
-    activate("ph_composer.face_assignment.by_face_type")
+    activate("ph_composer.zones.faces.by_face_type")
     context = PhComposer::API.connect(:session_id => @session.id)
 
     value = PhComposer::API.query(:context => context, :name => "ph_composer.colour_by.state").fetch("value")
 
-    assert_equal "ph_composer.face_assignment.by_face_type", value.fetch("mode")
+    assert_equal "ph_composer.zones.faces.by_face_type", value.fetch("mode")
     assert_equal "Face type", value.fetch("label")
     assert_equal [{ "value" => "Wall", "label" => "Wall", "colour" => [230, 180, 60], "count" => 1,
                     "state" => "classified", "isolated" => false },

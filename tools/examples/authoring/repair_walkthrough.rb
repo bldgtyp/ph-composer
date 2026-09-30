@@ -32,7 +32,7 @@ module RepairWalkthrough
     preview = client.preview("ph_composer.zones.make", target)
     client.invoke("ph_composer.zones.make", target, preview.fetch("proposal_digest"))
     zone = client.query("ph_composer.zones.list").dig("value", "zones", 0)
-    client.invoke("ph_composer.face_assignment.auto_classify", { "zone" => zone.fetch("reference") })
+    client.invoke("ph_composer.zones.faces.auto_classify", { "zone" => zone.fetch("reference") })
     verify
   end
 
@@ -148,7 +148,7 @@ module RepairWalkthrough
   def verify
     client = Client.new
     zones = client.query("ph_composer.zones.list").fetch("value")
-    faces = client.query("ph_composer.face_assignment.list").dig("value", "faces")
+    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
     ids = zones.fetch("zones").map { |zone| zone.dig("id") }
     {
       "zone_ids" => ids,

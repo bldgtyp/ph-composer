@@ -33,7 +33,7 @@ module PhComposer
             spec.fetch("values").each { |value| declare(feature, field, value, spec) }
             declare(feature, field, nil, spec)
           end
-          feature.menu_item("#{FEATURE_ID}.classify_off", :label => OFF, :menu => MENU,
+          feature.menu_item("#{PREFIX}.classify_off", :label => OFF, :menu => MENU,
                             :available => ->(session) { classifiable?(session) }) do |session|
             Faces.classify_tool(session).stop
           end
@@ -41,7 +41,7 @@ module PhComposer
 
         def declare(feature, field, value, spec)
           label = value ? spec.fetch("labels").fetch(value, value) : "#{KEEP} (#{spec.fetch('noun')})"
-          feature.menu_item("#{FEATURE_ID}.classify_#{field}_#{value ? value.downcase : "keep"}",
+          feature.menu_item("#{PREFIX}.classify_#{field}_#{value ? value.downcase : "keep"}",
                             :label => label, :menu => MENU, :separator_after => value.nil?,
                             :state => ->(session) { check(session, field, value) },
                             :available => ->(session) { classifiable?(session) }) do |session|

@@ -4,7 +4,7 @@ require_relative "test_helper"
 
 # P1-D D6: the Classify tool, which is the gesture rather than the operation.
 #
-# D1 already tests what `ph_composer.face_assignment.classify` does with a set of references. What
+# D1 already tests what `ph_composer.zones.faces.classify` does with a set of references. What
 # these tests hold is the half the pointer owns: which Faces a click, a drag and a Shift-click
 # collect, that the palette is frozen when the button goes down, that every cancel route writes
 # nothing, and that Colour-by is forced on for the tool's lifetime and no longer (PRD Q12).
@@ -480,7 +480,7 @@ class ClassifyToolTest < PhComposerTestCase
     context = PhComposer::API.connect(:session_id => @session.id)
     revision = @session.revision
 
-    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.face_assignment.locate",
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.zones.faces.locate",
                                    :params => { "faces" => references })
 
     assert_equal "completed", outcome.fetch("status")
@@ -495,7 +495,7 @@ class ClassifyToolTest < PhComposerTestCase
     context = PhComposer::API.connect(:session_id => @session.id)
     revision = @session.revision
 
-    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.face_assignment.choose",
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.zones.faces.choose",
                                    :params => { "field" => "face_type", "value" => "RoofCeiling" })
 
     assert_equal true, outcome.dig("value", "active")
@@ -503,7 +503,7 @@ class ClassifyToolTest < PhComposerTestCase
     assert_equal revision, @session.revision
     refute @model.modified?
 
-    stopped = PhComposer::API.view(:context => context, :name => "ph_composer.face_assignment.stop_classifying",
+    stopped = PhComposer::API.view(:context => context, :name => "ph_composer.zones.faces.stop_classifying",
                                    :params => {})
 
     assert_equal false, stopped.dig("value", "active")
@@ -540,7 +540,7 @@ class ClassifyToolTest < PhComposerTestCase
     context = PhComposer::API.connect(:session_id => @session.id)
 
     value = PhComposer::API.query(:context => context,
-                                  :name => "ph_composer.face_assignment.classify_tool").fetch("value")
+                                  :name => "ph_composer.zones.faces.classify_tool").fetch("value")
 
     assert_equal %w[Wall RoofCeiling Floor], value.fetch("face_types")
     assert_includes value.fetch("boundary_conditions"), "Surface"
@@ -699,7 +699,7 @@ class ClassifyToolTest < PhComposerTestCase
   end
 
   def list_faces
-    API.query(:context => @context, :name => "ph_composer.face_assignment.list").dig("value", "faces")
+    API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
   end
 
   def invoke(name, params)

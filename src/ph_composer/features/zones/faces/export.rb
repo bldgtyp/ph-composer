@@ -4,15 +4,15 @@ module PhComposer
   module Zones
     module Faces
       module ExportProjection
-        SECTION = "ph_composer.face_assignment.export.faces"
+        SECTION = "ph_composer.zones.faces.export.faces"
 
         module_function
 
         def install(feature)
-          feature.query("#{FEATURE_ID}.export_preflight", :description => "Face classification and Assembly checks.",
+          feature.query("#{PREFIX}.export_preflight", :description => "Face classification and Assembly checks.",
                         :params => OBJECT, :result => OBJECT) { |request| preflight(request) }
           feature.export_contributor(SECTION, :section_version => 1,
-                                     :preflight => "#{FEATURE_ID}.export_preflight",
+                                     :preflight => "#{PREFIX}.export_preflight",
                                      :result => { "surface_omissions" => [
                                        Export::Privacy.fields(%w[face_id zone_id code reason area_m2])
                                      ] }, :report => method(:omission_report)) { |reader| records(reader) }
@@ -53,7 +53,7 @@ module PhComposer
           issues.map do |code, message, blocking|
             { "code" => code, "section" => SECTION, "object_id" => record && record["id"],
               "message" => message, "blocks_export" => blocking, "locate" => {
-                "name" => "#{FEATURE_ID}.locate", "params" => { "faces" => [occurrence.reference] }
+                "name" => "#{PREFIX}.locate", "params" => { "faces" => [occurrence.reference] }
               } }
           end
         end

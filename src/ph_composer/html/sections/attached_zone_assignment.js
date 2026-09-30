@@ -2,8 +2,8 @@
 PhComposerUI.define("sections/attached_zone_assignment", ["workspace", "record_form", "sections/attached_zone_fields"],
 function (ui, RecordForm, fields) {
   "use strict";
-  var CREATE = "ph_composer.face_assignment.attached_zone.create_and_assign";
-  var CLASSIFY = "ph_composer.face_assignment.classify";
+  var CREATE = "ph_composer.zones.faces.attached_zone.create_and_assign";
+  var CLASSIFY = "ph_composer.zones.faces.classify";
   var NEW = "";
 
   function Assignment(session, send, revision, face, records, trigger, closed) {

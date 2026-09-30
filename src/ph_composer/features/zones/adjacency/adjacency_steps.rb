@@ -10,7 +10,7 @@ module PhComposer
           [DeepCopy.call(reference).freeze, DeepCopy.call(before).freeze, DeepCopy.call(after).freeze]
         end.freeze
         @affected = @updates.map do |reference, _before, after|
-          { "kind" => "face_assignment", "id" => after.fetch("id"), "change" => change,
+          { "kind" => "face", "id" => after.fetch("id"), "change" => change,
             "reference" => reference }
         end
       end
@@ -174,7 +174,7 @@ module PhComposer
           STAMP_STORE.write(piece.entity, stamp)
           change = piece.equal?(side.fetch(:survivor)) ? "split" : "created"
           side.fetch(:affected) << {
-            "kind" => "face_assignment", "id" => record.fetch("id"), "change" => change,
+            "kind" => "face", "id" => record.fetch("id"), "change" => change,
             "reference" => {
               "zone_id" => side.fetch(:occurrence).zone.record.fetch("id"),
               "zone_path" => side.fetch(:occurrence).zone.path.dup,

@@ -65,7 +65,7 @@ class FaceSuggestionTest < PhComposerTestCase
   end
 
   def faces
-    API.query(:context => @context, :name => "ph_composer.face_assignment.list").dig("value", "faces")
+    API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
   end
 
   # Each call builds its own Zone, so several suggestions can be read in one test.

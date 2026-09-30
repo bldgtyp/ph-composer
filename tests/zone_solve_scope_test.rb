@@ -10,7 +10,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
   COPY_EXTENSION = PhComposer::Records::Extension.new(
     :namespace => "test.fixture.face_copy", :schema_version => 1,
     :references => [
-      { "path" => "$.external_id", "target_kind" => "ph_composer.face_assignment.attached_zone",
+      { "path" => "$.external_id", "target_kind" => "ph_composer.zones.faces.attached_zone",
         "cardinality" => "one" }
     ]
   )
@@ -1127,10 +1127,10 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wall(660, 0, 0, 4, 0, 3, :east)
     wall(670, 0, 2, 6, 0, 3, :west)
     author
-    attached_id = invoke("ph_composer.face_assignment.attached_zone.save",
+    attached_id = invoke("ph_composer.zones.faces.attached_zone.save",
                          { "values" => { "name" => "Garage", "kind" => "garage" } }).dig("value", "id")
     attached.each do |which|
-      invoke("ph_composer.face_assignment.classify", {
+      invoke("ph_composer.zones.faces.classify", {
         "faces" => [faces.public_send(which).fetch("reference")],
         "intent" => { "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" },
                       "attached_zone_id" => { "mode" => "set", "value" => attached_id } }
@@ -1186,7 +1186,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
   end
 
   def faces
-    API.query(:context => @context, :name => "ph_composer.face_assignment.list").dig("value", "faces")
+    API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
   end
 
   def boundary_conditions
@@ -1204,7 +1204,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
   end
 
   def author
-    invoke("ph_composer.face_assignment.classify", {
+    invoke("ph_composer.zones.faces.classify", {
       "faces" => faces.map { |face| face.fetch("reference") },
       "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
                     "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } },

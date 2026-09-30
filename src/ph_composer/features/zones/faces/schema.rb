@@ -3,7 +3,12 @@
 module PhComposer
   module Zones
     module Faces
-      FEATURE_ID = "ph_composer.face_assignment"
+      # Every name the Face submodule registers: its actions, queries, view commands, colour modes,
+      # menu items, snapshot sections, export section and the Face and Attached-zone kinds. The
+      # feature id is Zones::FEATURE_ID; this is not a second feature.
+      PREFIX = "#{FEATURE_ID}.faces"
+      # The stored dictionary name predates the move into Zones and stays: renaming it would orphan
+      # every Face record saved so far.
       FACE_DICTIONARY = "ph_composer.face_assignment"
       FACE_STORE = Records::EntityStore.new(FACE_DICTIONARY)
       ID_PATTERN = Records::Identity.pattern("fac")
@@ -34,7 +39,7 @@ module PhComposer
           @gesture_face_limit = nil
         end
       end
-      PhComposer.on_reset("face_assignment") { reset_for_test }
+      PhComposer.on_reset("zones.faces") { reset_for_test }
 
       module Schema
         module_function

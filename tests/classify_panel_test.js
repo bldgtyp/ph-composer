@@ -29,8 +29,8 @@ function snapshot(tool, records) {
       unit_system: "SI", dimension_formats: {}, number_format: { decimal: ".", locale: "en-US" }
     },
     sections: {
-      "ph_composer.face_assignment.palette": { status: "completed", value: tool },
-      "ph_composer.face_assignment.attached_zone.list": { status: "completed",
+      "ph_composer.zones.faces.palette": { status: "completed", value: tool },
+      "ph_composer.zones.faces.attached_zone.list": { status: "completed",
         value: { records: records || [] } }
     }
   };
@@ -66,7 +66,7 @@ test("choosing a chip sets one field and gives the tool the viewport", function 
   chip(p, "Roof or ceiling").listeners.click({});
 
   assert.strictEqual(p.sent[0].type, "view.invoke");
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.choose");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.choose");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
     { field: "face_type", value: "RoofCeiling" });
 });
@@ -97,7 +97,7 @@ test("Surface is shown and refused, with the reason on the control", function ()
 test("the picker lists the Attached zones and choosing one names it", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette(),
-    [{ kind: "ph_composer.face_assignment.attached_zone", id: "atz_1", values: { name: "Garage" } }]) });
+    [{ kind: "ph_composer.zones.faces.attached_zone", id: "atz_1", values: { name: "Garage" } }]) });
   var picker = p.section().querySelector("select");
 
   assert.deepStrictEqual(picker.children.map(function (node) { return node.textContent; }),
@@ -112,7 +112,7 @@ test("the picker lists the Attached zones and choosing one names it", function (
 test("New attached zone waits for form submit, then creates and chooses it", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette(),
-    [{ kind: "ph_composer.face_assignment.attached_zone", id: "atz_1", values: { name: "Garage" } }]) });
+    [{ kind: "ph_composer.zones.faces.attached_zone", id: "atz_1", values: { name: "Garage" } }]) });
   var create = p.section().querySelectorAll("button").filter(function (node) {
     return node.textContent === "New attached zone";
   })[0];
@@ -124,7 +124,7 @@ test("New attached zone waits for form submit, then creates and chooses it", fun
   dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
 
   assert.strictEqual(p.sent[0].type, "action.invoke", "a record is a Model change, unlike the palette");
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.attached_zone.save");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.attached_zone.save");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
     { values: { name: "Attached zone 1", kind: "other", temperature_reduction_factor: 0.95 } },
     "the first name nothing is called yet, so a delete does not make two records share one");
@@ -152,7 +152,7 @@ test("Stop classifying appears only while the tool has the viewport", function (
   assert.strictEqual(running.textContent, "Stop classifying");
   running.listeners.click({});
 
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.stop_classifying");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
 });
 
 function escape(p, handled) {
@@ -169,7 +169,7 @@ test("panel Escape stops the active tool once through its public view command", 
   escape(p);
   assert.strictEqual(p.sent.length, 1, "a pending stop is not submitted twice");
   assert.strictEqual(p.sent[0].type, "view.invoke");
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.stop_classifying");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
 });
 
 test("panel Escape respects an editor's consumed press and an inactive tool", function () {
@@ -194,7 +194,7 @@ test("a modal gets Escape before Classify, then the next press stops the tool", 
   dialog.listeners.cancel({ preventDefault: function () {} });
   assert.strictEqual(p.context.document.querySelector("dialog"), null);
   escape(p);
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.face_assignment.stop_classifying");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
 });
 
 test("Escape targets the currently displayed Model session", function () {

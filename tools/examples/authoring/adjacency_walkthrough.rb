@@ -35,8 +35,8 @@ module AdjacencyWalkthrough
       client.invoke("ph_composer.zones.make", target, preview.fetch("proposal_digest"))
     end
     zones = client.query("ph_composer.zones.list").dig("value", "zones")
-    client.query("ph_composer.face_assignment.list").dig("value", "faces").each do |face|
-      client.invoke("ph_composer.face_assignment.classify", {
+    client.query("ph_composer.zones.faces.list").dig("value", "faces").each do |face|
+      client.invoke("ph_composer.zones.faces.classify", {
         "faces" => [face.fetch("reference")],
         "intent" => {
           "face_type" => { "mode" => "set", "value" => face.dig("suggested", "face_type") },
@@ -58,7 +58,7 @@ module AdjacencyWalkthrough
     east = zone_groups.find { |group| group.name == "east" || group.name.end_with?("east") }
     east.transformation = Geom::Transformation.new([5001.mm, 0, 0])
     client = Client.new
-    faces = client.query("ph_composer.face_assignment.list").dig("value", "faces")
+    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
     surface = faces.find { |face| face["adjacency_state"] == "stale" }
     raise "Moving the east Zone did not expose a stale pair." unless surface
     stale_states = faces.map { |face| face["adjacency_state"] }.compact
@@ -79,7 +79,7 @@ module AdjacencyWalkthrough
   def verify
     client = Client.new
     zones = client.query("ph_composer.zones.list").dig("value", "zones")
-    faces = client.query("ph_composer.face_assignment.list").dig("value", "faces")
+    faces = client.query("ph_composer.zones.faces.list").dig("value", "faces")
     states = faces.map { |face| face["adjacency_state"] }.compact
     names = [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
     extraction = PhComposer::Export::Collection.build(Sketchup.active_model, :run_id => "host-p1c",
