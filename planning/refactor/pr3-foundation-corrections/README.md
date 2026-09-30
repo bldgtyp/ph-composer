@@ -1,9 +1,9 @@
 # PR #3 foundation corrections
 
 DATE: 2026-09-30
-STATUS: Scoped; decisions answered 2026-09-30, awaiting implementation authorization
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none yet (merge-set issue to be drafted for Ed's approval, see [R-D6](DECISIONS.md#r-d6-issue-intake))
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/4 (merge set, [R-D6](DECISIONS.md#r-d6-issue-intake))
 PR: https://github.com/bldgtyp/ph-composer/pull/3
 BRANCH UNDER REVIEW: `codex/phase-one-geometry-contracts` at `99b6fc7`
 

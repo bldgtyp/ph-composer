@@ -1,22 +1,20 @@
 # PR #3 foundation corrections: status
 
 DATE: 2026-09-30
-STATUS: Scoped; all decisions answered 2026-09-30; awaiting authorization to start Phase 01a
+STATUS: In progress; merge-set phases authorized 2026-09-30
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none yet (merge-set issue to be drafted for Ed's approval, see [R-D6](DECISIONS.md#r-d6-issue-intake))
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/4 (merge set, [R-D6](DECISIONS.md#r-d6-issue-intake))
 PR: https://github.com/bldgtyp/ph-composer/pull/3
 BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` for 06 to 09
 
 ## Next step
 
-Ed authorizes Phase 01a (01b and 01c may run alongside). Before or with that, Claude drafts the
-merge-set issue text for Ed's approval (R-D6).
+Phase 01b.
 
 ## Blockers
 
 | Blocker | Blocks |
 | --- | --- |
-| Implementation authorization | Every phase |
 | PR #3 merged | 06 to 09 |
 
 ## Decisions
@@ -44,7 +42,7 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 
 | Phase | Merge set | State | Commit | Notes |
 | --- | --- | --- | --- | --- |
-| [01a](phases/phase-01a-model-correctness.md) Model correctness | Yes | Scoped | | Next |
+| [01a](phases/phase-01a-model-correctness.md) Model correctness | Yes | Implemented on branch | `024cbfc`, `71c98b2`, `1bd2503` | |
 | [01b](phases/phase-01b-invocation-validation.md) Invocation validation | Yes | Scoped | | Independent of 01a |
 | [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Scoped | | Independent of 01a |
 | [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Scoped | | After 01a |
@@ -72,11 +70,11 @@ Phase 08 into Phase 02.
 
 | ID | Finding | Pri | Merge | Phase | State | Test / evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| M1 | Shared child Group bypasses Face mutation refusal | P1 | Yes | 01a | Scoped | |
-| M2 | Explicit Face path crosses a nested authored Zone | P2 | Yes | 01a | Scoped | |
-| M3a | Attached-zone delete ignores orphan Face references (feature action) | P2 | Yes | 01a | Scoped | |
+| M1 | Shared child Group bypasses Face mutation refusal | P1 | Yes | 01a | Implemented on branch | `zone_face_test`: shared child Group classify/reverse refusals (3 tests) |
+| M2 | Explicit Face path crosses a nested authored Zone | P2 | Yes | 01a | Implemented on branch | `zone_face_test`: nested-Zone path refusal, ordinary nested Group |
+| M3a | Attached-zone delete ignores orphan Face references (feature action) | P2 | Yes | 01a | Implemented on branch | `attached_zone_test`: stranded-Face delete refusals, Restore route (3 tests) |
 | M3b | Generic incoming-reference guard skips entity core references | P2 | Yes | 02 | Scoped | |
-| M4 | Partial pairing keeps `attached_zone_id` on Surface pieces | P2 | Yes | 01a | Scoped | |
+| M4 | Partial pairing keeps `attached_zone_id` on Surface pieces | P2 | Yes | 01a | Implemented on branch | `zone_solve_scope_test`: partial AttachedZone pair, one and two sides |
 | U1 | Overview selection discards Zone details draft | P2 | Yes | 01c | Scoped | |
 | A03 | Non-JSON params escape and consume a sequence | P2 | Yes | 01b | Scoped | |
 | OWN | Zones/FaceAssignment reciprocal private dependencies; one `zones` owner | Foundation | Yes | 02 | Scoped | |
@@ -100,10 +98,10 @@ Phase 08 into Phase 02.
 
 | Case | Phase | State | Ledger record |
 | --- | --- | --- | --- |
-| R01 shared child Groups | 01a / 05 | Scoped | |
-| R02 nested Zone path | 01a / 05 | Scoped | |
-| R03 orphan Attached-zone delete | 01a / 05 | Scoped | |
-| R04 partial AttachedZone cut | 01a / 05 | Scoped | |
+| R01 shared child Groups | 01a / 05 | In catalog, not run | |
+| R02 nested Zone path | 01a / 05 | In catalog, not run | |
+| R03 orphan Attached-zone delete | 01a / 05 | In catalog, not run | |
+| R04 partial AttachedZone cut | 01a / 05 | In catalog, not run | |
 | R05 Overview draft navigation | 01c / 05 | Scoped | |
 | R06 panel-closed API client | 03 / 05, extended 09 | Blocked | |
 | Existing cases flagged by `--changed` | 05, 09 | | List per phase **Result** |

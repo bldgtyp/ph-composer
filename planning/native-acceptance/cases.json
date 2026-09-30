@@ -536,6 +536,98 @@
         "uv.lock"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "R01",
+      "label": "Shared child Group Face mutation refusal",
+      "mode": "native",
+      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "paths": [
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "context/TECH_STACK.md",
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/extension.rb",
+        "src/ph_composer/features/face_assignment/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "tests/attached_zone*",
+        "tests/support/*",
+        "tests/zone*",
+        "tools/hostkit/host_bridge*",
+        "tools/hostkit/host_helpers.rb"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "R02",
+      "label": "Explicit Face path through a nested Zone",
+      "mode": "native",
+      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "paths": [
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "context/TECH_STACK.md",
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/extension.rb",
+        "src/ph_composer/features/face_assignment/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "tests/attached_zone*",
+        "tests/support/*",
+        "tests/zone*",
+        "tools/hostkit/host_bridge*",
+        "tools/hostkit/host_helpers.rb"
+      ],
+      "native_control_required": false
+    },
+    {
+      "id": "R03",
+      "label": "Attached-zone delete with orphaned Face references",
+      "mode": "native",
+      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "paths": [
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "context/TECH_STACK.md",
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/extension.rb",
+        "src/ph_composer/features/face_assignment/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "tests/attached_zone*",
+        "tests/support/*",
+        "tests/zone*",
+        "tools/hostkit/host_bridge*",
+        "tools/hostkit/host_helpers.rb"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "R04",
+      "label": "Partial AttachedZone cut and pairing",
+      "mode": "native",
+      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "paths": [
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "context/TECH_STACK.md",
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/extension.rb",
+        "src/ph_composer/features/face_assignment/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "tests/attached_zone*",
+        "tests/support/*",
+        "tests/zone*",
+        "tools/hostkit/host_bridge*",
+        "tools/hostkit/host_helpers.rb"
+      ],
+      "native_control_required": false
     }
   ]
 }

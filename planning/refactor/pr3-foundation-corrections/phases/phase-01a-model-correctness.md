@@ -1,11 +1,10 @@
 # Phase 01a: model correctness
 
 DATE: 2026-09-30
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/4
 MERGE SET: Yes
-BLOCKED ON: implementation authorization
 
 ## Scope
 
@@ -73,4 +72,32 @@ possibly A10. Add R01 to R04 to `planning/native-acceptance/cases.json` with
 
 ## Result
 
-(Fill on completion: commits, tests added, ledger cases flagged, deviations.)
+Commits: `024cbfc` (M4), `71c98b2` (M1, M2), `1bd2503` (M3a). M1 and M2 share one commit
+because both are checks in the same loop of `resolve_face_path`.
+
+Tests added, each confirmed failing before its fix for the reason the review states:
+
+- M1, `tests/zone_face_test.rb`: `test_a_face_under_shared_child_groups_refuses_classify_and_reverse`,
+  `test_a_shared_child_group_with_one_placement_outside_the_zone_refuses`,
+  `test_a_recorded_face_under_shared_child_groups_still_refuses`.
+- M2, `tests/zone_face_test.rb`: `test_an_explicit_face_path_through_a_nested_zone_refuses`,
+  `test_a_face_in_an_ordinary_nested_group_still_classifies`.
+- M3a, `tests/attached_zone_test.rb`: `test_delete_refuses_while_a_face_outside_every_zone_names_the_record`,
+  `test_delete_refused_by_an_exploded_zone_succeeds_after_restore`,
+  `test_a_face_in_shared_storage_inside_the_zone_also_refuses_the_delete`.
+- M4, `tests/zone_solve_scope_test.rb`: `test_a_partial_overlap_with_one_attached_zone_face_pairs_without_the_reference`,
+  `test_a_partial_overlap_of_two_attached_zone_faces_pairs_without_the_reference`.
+
+Settled codes: M1 `target.shared_definition` with a Make Unique instruction; M2
+`target.wrong_hierarchy` ("The Face path crosses another Zone"); M3a `reference.in_use` with
+`detail.faces` listing each stranded Face id and full path. A recorded duplicate under shared
+Groups now refuses `target.shared_definition` rather than `target.ambiguous`, because the path
+check runs before identity. M3a treats a referencing Face inside a Zone that cannot resolve for
+mutation (shared storage, duplicated id) as stranded too, so the refusal happens before writes
+instead of as a rolled-back apply. Readable extension references on the Attached zone remain
+the engine's guard; M3b adds the entity core-reference backstop in Phase 02.
+
+Focused suites pass on Ruby 2.7.2 and 3.2.2; full Ruby suite 615 runs, 0 failures (3.2.2).
+
+Ledger screen (`--changed` on the three source files): A01 to A12, A16, R01 to R04. R01 to R04
+added to `planning/native-acceptance/cases.json`; `validate` passes.
