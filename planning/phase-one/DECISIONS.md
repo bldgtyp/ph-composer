@@ -2,7 +2,7 @@
 
 DATE: 2026-09-30
 STATUS: Phase 1 choices resolved and current-host acceptance complete on branch; METr and delivery/platform gates remain separate.
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 ## Product decisions
 
@@ -41,8 +41,8 @@ record together with these choices rather than repeat its 22-question interview.
   already chosen rather than a pointer gesture whose target set the user cannot see. A Zone with
   more Faces than the gesture ceiling can still be suggested in one step.
 - **P1-D:** first Zone/face screen layout, table components and feature navigation. Apply the
-  accepted UI baseline and local polish skill. Phase 0's muted Planned tabs are an open carryover;
-  any change to their accepted presence needs a recorded UI decision.
+  accepted UI baseline and local polish skill. Phase 0's muted Planned tabs stay as they are: Ed
+  confirmed on 2026-09-30 that they are fine for now. Any later change needs a recorded UI decision.
 - **P1-E:** retain the separate runtime page as the proposed default. Verify actual runtime
   requests and cancellation rather than infer them from the spike's standalone browser page.
 - **Deferred METr milestone:** confirm the file extension and floor-area requirements in its

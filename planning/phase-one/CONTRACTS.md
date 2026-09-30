@@ -2,7 +2,7 @@
 
 DATE: 2026-09-20
 STATUS: P1-A contract design complete; P1-B entity storage and proposal subset implemented.
-ISSUE: none (local implementation packet)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 This document binds the Zone, face-assignment and compound-operation contracts to the merged
 Phase 0 foundation. P1-B implements entity stores, record deletion, compound proposals, Zone/Face

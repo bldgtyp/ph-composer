@@ -3,7 +3,7 @@
 DATE: 2026-09-30
 STATUS: P1-A through P1-F complete on the implementation branch for the named current-host scope.
 Independent review, offline gates and fresh SketchUp acceptance pass. Merge and release remain separate.
-ISSUE: none (local implementation packet)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 ## Current completion boundary
 
@@ -65,7 +65,7 @@ removes its overlay and displays a warning without replacing the last successful
 At 512 classified Faces, Ruby snapshot construction takes 39 to 47 ms. Discrete panel
 interactions were usable. JavaScript paint was observed rather than timed. Rebuilding a full
 snapshot on every pointer move is too expensive for hover-to-highlight; keep that feature
-deferred until a cheaper path is measured. The existing Overview pane arrangement is retained;
+deferred until a cheaper path is measured. It is now its own [packet](../features/legend-hover-highlight/README.md). The existing Overview pane arrangement is retained;
 Ed's pending arrangement decision has not been inferred from this verification work.
 
 ### Acceptance boundary
@@ -106,9 +106,11 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 
 - [DECISIONS.md](DECISIONS.md) records the accepted Phase 1 choices. METr development and its
   floor-area/import questions remain deferred. The HBJSON wheel set is shipped and verified.
-- Create/link the implementation issue during authorized issue intake. The configured remote is
-  `bldgtyp/ph-composer`; P1-A created no external issue or PR.
+- The implementation issue is [#2](https://github.com/bldgtyp/ph-composer/issues/2), created
+  2026-09-30 with the pull request that closes it.
 - All six Phase 1 stages are complete on branch. Merge, floor-host/platform proof and public distribution require their own gates.
+  The deferred and separate gates now have owning packets: [METr export](../features/metr-export/README.md),
+  [SketchUp 2023 floor](../features/sketchup-2023-floor/README.md) and [Windows support](../features/windows-support/README.md).
 
 ## Stages
 

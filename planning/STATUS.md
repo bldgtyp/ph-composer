@@ -17,11 +17,14 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Phase 1 walking skeleton | delivery plan | P1-A through P1-F complete on branch; named current-host acceptance passes | none (local implementation packet) | [phase-one/](phase-one/README.md); [final export/integration evidence](phase-one/evidence/p1-e-export-workflow.md); merge, release and floor-host/platform gates remain separate |
+| Phase 1 walking skeleton | delivery plan | In review; P1-A through P1-F complete on branch; named current-host acceptance passes | [#2](https://github.com/bldgtyp/ph-composer/issues/2) | [phase-one/](phase-one/README.md); [final export/integration evidence](phase-one/evidence/p1-e-export-workflow.md); merge, release and floor-host/platform gates remain separate |
 | Zones and adjacency | feature | In progress; partial-overlap cut, repairs and whole-scope Solve host-verified | none (local planning draft) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
 | Face assignment | feature | In progress; the Classify tool, bounded gestures and Attached zones implemented | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
 | Validation and export | feature | Phase 1 HBJSON/report scope implemented and current-host verified; later feature scope remains | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); [evidence](phase-one/evidence/p1-e-export-workflow.md); authored Assemblies required in normal composition |
-| METr exporter and consumer acceptance | feature | Deferred; return milestone unscheduled | none (local planning draft) | [validation/export plan](features/validation-and-export/PLAN.md); Ed deferred until further feature development on 2026-09-20 |
+| METr export | feature | Deferred; return milestone unscheduled | none (local planning draft) | [features/metr-export/](features/metr-export/README.md); Phase 1 row A15; Ed deferred until further feature development on 2026-09-20 |
+| SketchUp 2023 floor verification | feature, host gate | Requested | none (local planning draft) | [features/sketchup-2023-floor/](features/sketchup-2023-floor/README.md); no 2023 host run yet |
+| Windows support verification | feature, host gate | Requested | none (local planning draft) | [features/windows-support/](features/windows-support/README.md); first release candidate is macOS-only |
+| Legend hover-to-highlight | feature | Requested | none (local planning draft) | [features/legend-hover-highlight/](features/legend-hover-highlight/README.md); fourth Q18 legend affordance, deferred from Phase 1 D7 on cost |
 | Spaces | feature | Scoped, interviewed | none (no remote) | [features/spaces/](features/spaces/README.md) |
 | Assemblies and materials | feature | Scoped, interviewed | none (no remote) | [features/assemblies/](features/assemblies/README.md) |
 | Window Types and placement | feature | Scoped, interviewed | none (no remote) | [features/window-types/](features/window-types/README.md) |

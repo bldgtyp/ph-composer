@@ -4,7 +4,7 @@ DATE: 2026-09-30
 STATUS: P1-A through P1-F complete on the implementation branch for the named current-host scope.
 See [P1-E/F evidence](evidence/p1-e-export-workflow.md) for the final export and integration gates.
 A15 remains deferred; merge, release and floor-host/platform support are separate.
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 ## Outcome and scope
 
