@@ -35,7 +35,7 @@ module PhComposer
         zones.map do |entry, record|
           Schema.validate!(record)
           owned = reader.snapshot.descendants(entry, :kind => "face")
-          assigned = owned.map { |face| [face, face.record(FaceAssignment::FACE_DICTIONARY)] }
+          assigned = owned.map { |face| [face, face.record(Faces::FACE_DICTIONARY)] }
           missing = assigned.select { |_face, assignment| assignment.nil? }
           unless missing.empty?
             raise Export::Blocked.new("face.unclassified",

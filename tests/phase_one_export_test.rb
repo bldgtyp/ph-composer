@@ -17,7 +17,7 @@ class PhaseOneExportTest < PhComposerTestCase
   def test_two_zone_extraction_uses_one_snapshot_and_owns_the_golden
     zones = seed_two_boxes
     invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
-    names = [PhComposer::FaceAssignment::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+    names = [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
     before = @model.entities.each_count
 
     extraction = PhComposer::Export::Collection.build(
@@ -28,7 +28,7 @@ class PhaseOneExportTest < PhComposerTestCase
     assert_empty extraction.findings
     assert_equal [6, 6], extraction.document.dig("sections", PhComposer::Zones::ExportProjection::SECTION, "records")
       .map { |zone| zone.fetch("face_ids").length }
-    faces = extraction.document.dig("sections", PhComposer::FaceAssignment::ExportProjection::SECTION, "records")
+    faces = extraction.document.dig("sections", PhComposer::Zones::Faces::ExportProjection::SECTION, "records")
     assert_equal 12, faces.length
     assert_equal 2, faces.count { |face| face["boundary_condition"] == "Surface" }
     write_or_compare(FIXTURE, extraction.document)
@@ -39,7 +39,7 @@ class PhaseOneExportTest < PhComposerTestCase
     invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
     right = @model.entities.to_a.find { |entity| entity.persistent_id == 2000 }
     right.transformation = Geom::Transformation.translation([1, 0, 0])
-    names = [PhComposer::FaceAssignment::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+    names = [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
 
     extraction = PhComposer::Export::Collection.build(@model, :run_id => "stale", :contributors => names)
     faces = extraction.document.dig("sections", names.first, "records")
@@ -48,7 +48,7 @@ class PhaseOneExportTest < PhComposerTestCase
     assert_equal ["adjacency.stale"], omitted.map { |face| face.dig("omission", "code") }.uniq
     assert omitted.all? { |face| face.dig("omission", "area_m2") > 0 }
     assert_equal omitted.map { |face| face.fetch("zone_id") }, omitted.map { |face| face.dig("omission", "zone_id") }
-    records = right.entities.to_a.map { |face| PhComposer::FaceAssignment::FACE_STORE.read(face) }
+    records = right.entities.to_a.map { |face| PhComposer::Zones::Faces::FACE_STORE.read(face) }
     assert_equal 1, records.count { |record| record["boundary_condition"] == "Surface" }
   end
 
@@ -73,7 +73,7 @@ class PhaseOneExportTest < PhComposerTestCase
       "id" => "fac_Z00000000001", "schema_version" => 1, "face_type" => "Floor",
       "boundary_condition" => "Ground", "user_data" => {}, "extension_data" => {}
     }
-    PhComposer::FaceAssignment::FACE_STORE.write(face, record)
+    PhComposer::Zones::Faces::FACE_STORE.write(face, record)
     PhComposer::Zones::STAMP_STORE.write(
       face, "schema_version" => 1, "zone_id" => "zon_#{'A' * 12}",
             "building_segment" => "Main Building", "level" => "L1"
@@ -92,7 +92,7 @@ class PhaseOneExportTest < PhComposerTestCase
     invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
     right = @model.entities.to_a.find { |entity| entity.persistent_id == 2000 }
     counterpart = right.entities.to_a.find do |face|
-      PhComposer::FaceAssignment::FACE_STORE.read(face)["boundary_condition"] == "Surface"
+      PhComposer::Zones::Faces::FACE_STORE.read(face)["boundary_condition"] == "Surface"
     end
     right.entities.delete(counterpart)
 
@@ -107,7 +107,7 @@ class PhaseOneExportTest < PhComposerTestCase
   private
 
   def contributor_names
-    [PhComposer::FaceAssignment::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+    [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
   end
 
   def seed_two_boxes
@@ -129,7 +129,7 @@ class PhaseOneExportTest < PhComposerTestCase
         "id" => face_id, "schema_version" => 1, "face_type" => face_type,
         "boundary_condition" => boundary, "user_data" => {}, "extension_data" => {}
       }
-      PhComposer::FaceAssignment::FACE_STORE.write(face, record)
+      PhComposer::Zones::Faces::FACE_STORE.write(face, record)
       face
     end
     group = Sketchup::Group.new(base, Sketchup::Entities.new(faces))

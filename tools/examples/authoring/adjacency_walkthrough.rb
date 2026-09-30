@@ -81,7 +81,7 @@ module AdjacencyWalkthrough
     zones = client.query("ph_composer.zones.list").dig("value", "zones")
     faces = client.query("ph_composer.face_assignment.list").dig("value", "faces")
     states = faces.map { |face| face["adjacency_state"] }.compact
-    names = [PhComposer::FaceAssignment::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+    names = [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
     extraction = PhComposer::Export::Collection.build(Sketchup.active_model, :run_id => "host-p1c",
                                                                               :contributors => names)
     {

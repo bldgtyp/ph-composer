@@ -33,8 +33,8 @@ module PhComposer
   # build carries is visible in one place. A feature adds its entry file's `require_relative` and its
   # module to this list; nothing else in the foundation changes.
   require_relative "features/zones/install"
-  require_relative "features/face_assignment/install"
-  FEATURES = [Zones, FaceAssignment].freeze unless const_defined?(:FEATURES)
+  require_relative "features/zones/faces/install"
+  FEATURES = [Zones, Zones::Faces].freeze unless const_defined?(:FEATURES)
 
   # Capabilities the foundation itself provides, registered through the same interface as a feature.
   FOUNDATION_FEATURES = [RecordQueries, ColourBy].freeze unless const_defined?(:FOUNDATION_FEATURES)

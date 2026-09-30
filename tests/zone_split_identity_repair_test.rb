@@ -5,7 +5,7 @@ require_relative "test_helper"
 class ZoneSplitIdentityRepairTest < PhComposerTestCase
   API = PhComposer::API
   ZONE_STORE = PhComposer::Zones::ZONE_STORE
-  FACE_STORE = PhComposer::FaceAssignment::FACE_STORE
+  FACE_STORE = PhComposer::Zones::Faces::FACE_STORE
   STAMP_STORE = PhComposer::Zones::STAMP_STORE
   OLD_ID = "fac_000000000001"
   OTHER_ID = "fac_000000000002"
@@ -424,7 +424,7 @@ class ZoneSplitIdentityRepairTest < PhComposerTestCase
   end
 
   def store_attached_zone
-    kind = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND
+    kind = PhComposer::Zones::Faces::AttachedZone::RECORD_KIND
     kind.store.write(@model, "id" => "atz_000000000001", "schema_version" => 1,
                              "name" => "Garage", "kind" => "garage", "temperature_reduction_factor" => 0.95)
   end

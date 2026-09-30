@@ -95,7 +95,7 @@ module AuthoringWalkthrough
     walkthrough_groups.all? do |group|
       zone = PhComposer::Zones::ZONE_STORE.read(group)
       group.entities.grep(Sketchup::Face).all? do |face|
-        assignment = PhComposer::FaceAssignment::FACE_STORE.read(face)
+        assignment = PhComposer::Zones::Faces::FACE_STORE.read(face)
         next true unless assignment
 
         PhComposer::Zones::STAMP_STORE.read(face)&.fetch("zone_id", nil) == zone&.fetch("id", nil)

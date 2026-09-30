@@ -66,7 +66,7 @@ module PhComposer
           next unless before
 
           entries << Records::ReferenceEntry.new(
-            :kind => FaceAssignment::REFERENCE_KIND, :key => zone.path + entry.fetch(:occurrence).path,
+            :kind => Faces::REFERENCE_KIND, :key => zone.path + entry.fetch(:occurrence).path,
             :record => before.merge("id" => mapping.fetch(before.fetch("id")))
           )
         end
@@ -93,7 +93,7 @@ module PhComposer
       # its boundary condition and the Face needs classifying again.
       def member_entries(zone)
         Occurrences.faces(zone).filter_map do |occurrence|
-          record = FaceAssignment::FACE_STORE.read(occurrence.entity)
+          record = Faces::FACE_STORE.read(occurrence.entity)
           existing_stamp = STAMP_STORE.read(occurrence.entity)
           next if record.nil? && existing_stamp.nil?
 
@@ -121,7 +121,7 @@ module PhComposer
                                                                :reference_plan => reference_plan)
         after.delete("adjacency")
         after.delete("boundary_condition") if record["boundary_condition"] == "Surface"
-        FaceAssignment::Schema.validate!(after)
+        Faces::Schema.validate!(after)
       end
 
       # Faces carrying a Zone stamp whose Zone is gone, grouped by the id they remember and the one

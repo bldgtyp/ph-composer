@@ -14,7 +14,7 @@ module PhComposer
         refuse_locked!(zone)
         scope_paths = mutation_scope(request, zone, index)
         old_id = request.params.fetch("face_id")
-        unless FaceAssignment::ID_PATTERN.match?(old_id)
+        unless Faces::ID_PATTERN.match?(old_id)
           raise CodedError.new("params.invalid", "face_id is not a Face identity.")
         end
         originals = split_entries(model, index, zone, old_id)
@@ -63,10 +63,10 @@ module PhComposer
 
         pieces.sort_by(&:path).map do |piece|
           actual = Occurrences.face_at(zone, piece.path, :mutable => true)
-          before = FaceAssignment::FACE_STORE.read(actual.entity)
+          before = Faces::FACE_STORE.read(actual.entity)
           raise CodedError.new("target.changed", "A split piece has no Face record.") unless before
 
-          FaceAssignment::Schema.validate!(before)
+          Faces::Schema.validate!(before)
           stamp = STAMP_STORE.read(actual.entity)
           check_stamp!(stamp, zone)
           { :path => piece.path, :before => before, :stamp => stamp }
@@ -88,7 +88,7 @@ module PhComposer
           end
           after = DeepCopy.call(before).merge("id" => id)
           after = retired(after) if envelope
-          FaceAssignment::Schema.validate!(after)
+          Faces::Schema.validate!(after)
           { :reference => piece_reference(zone, path, old_id), :before => before,
             :after => after, :stamp => entry.fetch(:stamp) }
         end
@@ -97,7 +97,7 @@ module PhComposer
         end
 
         reference_plan = Records::ReferencePlan.new(:entries => changes.map do |entry|
-          Records::ReferenceEntry.new(:kind => FaceAssignment::REFERENCE_KIND,
+          Records::ReferenceEntry.new(:kind => Faces::REFERENCE_KIND,
                                      :key => zone.path + entry.fetch(:reference).fetch("entity_path"),
                                      :record => entry.fetch(:after))
         end)
@@ -133,7 +133,7 @@ module PhComposer
         after = DeepCopy.call(record)
         after.delete("adjacency")
         after.delete("boundary_condition")
-        FaceAssignment::Schema.validate!(after)
+        Faces::Schema.validate!(after)
       end
 
       def refuse_locked!(zone)
@@ -154,7 +154,7 @@ module PhComposer
         counts ||= { :ids => 0, :original_pid => 0 }
         entities.each do |entity|
           if entity.is_a?(Sketchup::Face)
-            counts[:ids] += 1 if FaceAssignment::FACE_STORE.read(entity)&.fetch("id", nil) == id
+            counts[:ids] += 1 if Faces::FACE_STORE.read(entity)&.fetch("id", nil) == id
             counts[:original_pid] += 1 if original_pid && entity.persistent_id == original_pid
           elsif entity.is_a?(Sketchup::Group)
             live_identity_counts(entity.entities, id, original_pid, counts)
@@ -231,8 +231,8 @@ module PhComposer
           raise CodedError.new("scope.incomplete", "The Surface counterpart's Zone is outside the repair scope.",
                                "zones" => [occurrence.zone.reference])
         end
-        before = FaceAssignment::FACE_STORE.read(occurrence.entity)
-        FaceAssignment::Schema.validate!(before)
+        before = Faces::FACE_STORE.read(occurrence.entity)
+        Faces::Schema.validate!(before)
         other_envelope = before["adjacency"]
         unless before["boundary_condition"] == "Surface" &&
                other_envelope["pair_id"] == envelope["pair_id"] &&
@@ -276,7 +276,7 @@ module PhComposer
           zone = Occurrences.resolve_zone(model, @zone, :mutable => true)
           SplitIdentityRepair.refuse_locked!(zone)
           present = Occurrences.faces(zone).select do |piece|
-            FaceAssignment::FACE_STORE.read(piece.entity)&.fetch("id", nil) == @old_id
+            Faces::FACE_STORE.read(piece.entity)&.fetch("id", nil) == @old_id
           end.map(&:path).sort
           global = SplitIdentityRepair.live_identity_counts(model.entities, @old_id)
           unless present == @piece_paths.sort && global.fetch(:ids) == @piece_paths.length
@@ -289,7 +289,7 @@ module PhComposer
                          else
                            Occurrences.resolve_face(model, reference, :mutable => true)
                          end
-            before = FaceAssignment::FACE_STORE.read(occurrence.entity)
+            before = Faces::FACE_STORE.read(occurrence.entity)
             unless before == entry.fetch(:before)
               raise CodedError.new("target.changed", "A Face changed after the repair preview.")
             end
@@ -302,7 +302,7 @@ module PhComposer
             end
             [occurrence, entry.fetch(:after)]
           end
-          resolved.each { |occurrence, after| FaceAssignment::FACE_STORE.write(occurrence.entity, after) }
+          resolved.each { |occurrence, after| Faces::FACE_STORE.write(occurrence.entity, after) }
         end
       end
     end

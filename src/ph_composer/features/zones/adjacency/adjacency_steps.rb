@@ -22,12 +22,12 @@ module PhComposer
       def apply(model, _slots)
         resolved = @updates.map do |reference, before, after|
           occurrence = Occurrences.resolve_face(model, reference, :mutable => true)
-          current = FaceAssignment::FACE_STORE.read(occurrence.entity)
+          current = Faces::FACE_STORE.read(occurrence.entity)
           raise CodedError.new("target.changed", "A Face changed after the adjacency preview.") unless current == before
 
           [occurrence, after]
         end
-        resolved.each { |occurrence, after| FaceAssignment::FACE_STORE.write(occurrence.entity, after) }
+        resolved.each { |occurrence, after| Faces::FACE_STORE.write(occurrence.entity, after) }
       end
     end
 
@@ -73,14 +73,14 @@ module PhComposer
         engine = Records::Engine.new(model, Registry.current.catalog)
         sides.reject { |side| side.fetch(:survivor) }.each do |side|
           id = side.key?(:before) ? side.fetch(:before).fetch("id") : side.fetch(:removed_id)
-          engine.check_identity_removal!(FaceAssignment::REFERENCE_KIND, id)
+          engine.check_identity_removal!(Faces::REFERENCE_KIND, id)
         end
       end
 
       # Cut one Face and work out what each resulting piece is: the shared region, or a remainder.
       def cut(model, side)
         occurrence = Occurrences.resolve_face(model, side.fetch("reference"), :mutable => true)
-        before = FaceAssignment::FACE_STORE.read(occurrence.entity)
+        before = Faces::FACE_STORE.read(occurrence.entity)
         unless before == side.fetch("before")
           raise CodedError.new("target.changed", "A Face changed after the split was previewed.")
         end
@@ -125,7 +125,7 @@ module PhComposer
         record["extension_data"] = DeepCopy.call(side.fetch("extension_copies").fetch(id)) if id != before.fetch("id")
         record.delete("adjacency")
         record.delete("boundary_condition") if before["boundary_condition"] == "Surface"
-        FaceAssignment::Schema.validate!(record)
+        Faces::Schema.validate!(record)
       end
 
       def pair(left, right)
@@ -139,7 +139,7 @@ module PhComposer
             "self_geometry" => stamp(side.fetch(:shared)),
             "counterpart_geometry" => stamp(counterpart.fetch(:shared))
           }
-          FaceAssignment::Schema.validate!(record)
+          Faces::Schema.validate!(record)
         end
       end
 
@@ -170,7 +170,7 @@ module PhComposer
       def write(side)
         stamp = Schema.stamp(side.fetch(:occurrence).zone.record)
         side.fetch(:pieces).each do |piece, record|
-          FaceAssignment::FACE_STORE.write(piece.entity, record)
+          Faces::FACE_STORE.write(piece.entity, record)
           STAMP_STORE.write(piece.entity, stamp)
           change = piece.equal?(side.fetch(:survivor)) ? "split" : "created"
           side.fetch(:affected) << {
@@ -206,7 +206,7 @@ module PhComposer
         # Resolve and verify every original Face before the first native cut.
         originals = @faces.map do |face|
           occurrence = Occurrences.resolve_face(model, face.fetch("reference"), :mutable => true)
-          before = FaceAssignment::FACE_STORE.read(occurrence.entity)
+          before = Faces::FACE_STORE.read(occurrence.entity)
           unless before == face.fetch("before")
             raise CodedError.new("target.changed", "A Face changed after the partition preview.")
           end
@@ -284,7 +284,7 @@ module PhComposer
             "self" => region_endpoint(side, piece), "counterpart" => region_endpoint(other, other_piece),
             "self_geometry" => stamp(piece), "counterpart_geometry" => stamp(other_piece)
           }
-          FaceAssignment::Schema.validate!(record)
+          Faces::Schema.validate!(record)
         end
       end
 

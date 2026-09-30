@@ -179,14 +179,14 @@ module ClassifyToolWalkthrough
   def locate_unclassified
     faces = client.query("ph_composer.face_assignment.list").dig("value", "faces")
     references = faces.select { |face| face.fetch("values").empty? }.map { |face| face.fetch("reference") }
-    found = PhComposer::FaceAssignment::Locate.call(session, references)
+    found = PhComposer::Zones::Faces::Locate.call(session, references)
     { "asked" => references.length, "found" => found.length,
       "selected" => Sketchup.active_model.selection.to_a.length,
       "active_path" => Array(Sketchup.active_model.active_path).map(&:persistent_id) }
   end
 
   def tool
-    PhComposer::FaceAssignment.classify_tool(session)
+    PhComposer::Zones::Faces.classify_tool(session)
   end
 
   def session

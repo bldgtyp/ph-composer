@@ -161,7 +161,7 @@ class OccurrenceIndexTest < PhComposerTestCase
 
   # The same Face id on a Face in another Zone, which is what a copied Zone leaves behind.
   def duplicate_face_id(face_id)
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     other = @model.entities.to_a.last.entities.to_a.first
     store.write(other, store.read(other).merge("id" => face_id))
   end

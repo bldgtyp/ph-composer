@@ -31,7 +31,7 @@ class LoaderTest < PhComposerTestCase
   end
 
   def test_the_shipping_composition_root_lists_the_phase_one_authoring_features
-    assert_equal [PhComposer::Zones, PhComposer::FaceAssignment], PhComposer::FEATURES
+    assert_equal [PhComposer::Zones, PhComposer::Zones::Faces], PhComposer::FEATURES
     assert PhComposer::Registry.installed?("ph_composer.zones")
     assert PhComposer::Registry.installed?("ph_composer.face_assignment")
   end

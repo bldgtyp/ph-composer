@@ -184,9 +184,7 @@ module PhComposer
       end
 
       def face_record(face)
-        return nil unless defined?(PhComposer::FaceAssignment)
-
-        PhComposer::FaceAssignment::FACE_STORE.read(face)
+        Faces::FACE_STORE.read(face)
       end
 
       def faces_with_id(model, id, index: nil)

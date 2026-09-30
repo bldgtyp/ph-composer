@@ -128,7 +128,7 @@ module OverviewWalkthrough
   # What the panel's own commands did. Call it after each step the operator drives.
   def report
     service = PhComposer::ColourBy.for(PhComposer::Sessions.current)
-    tool = PhComposer::FaceAssignment.classify_tool(PhComposer::Sessions.current)
+    tool = PhComposer::Zones::Faces.classify_tool(PhComposer::Sessions.current)
     {
       "revision" => PhComposer::Sessions.current.revision,
       "zones" => zones.map { |zone| zone.fetch("values").fetch("name") },

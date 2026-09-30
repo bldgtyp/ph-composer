@@ -4,9 +4,9 @@ require_relative "test_helper"
 
 class AttachedZoneCreateAssignTest < PhComposerTestCase
   API = PhComposer::API
-  KIND = PhComposer::FaceAssignment::AttachedZone::KIND_ID
+  KIND = PhComposer::Zones::Faces::AttachedZone::KIND_ID
   ACTION = "#{KIND}.create_and_assign"
-  FACE_STORE = PhComposer::FaceAssignment::FACE_STORE
+  FACE_STORE = PhComposer::Zones::Faces::FACE_STORE
 
   def setup
     super
@@ -129,7 +129,7 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
   def test_second_face_host_failure_rolls_back_faces_and_record
     entity = @model.entities.to_a.first.entities.to_a[1]
     entity.define_singleton_method(:set_attribute) do |dictionary, key, value|
-      raise "host refused second Face" if dictionary == PhComposer::FaceAssignment::FACE_DICTIONARY
+      raise "host refused second Face" if dictionary == PhComposer::Zones::Faces::FACE_DICTIONARY
 
       super(dictionary, key, value)
     end

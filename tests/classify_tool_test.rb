@@ -125,7 +125,7 @@ class ClassifyToolTest < PhComposerTestCase
 
     assert_empty values("face_type").compact
     assert_nil @model.active_tool
-    assert_includes @notices.map(&:first), PhComposer::FaceAssignment::ClassifyTool::CANCELLED
+    assert_includes @notices.map(&:first), PhComposer::Zones::Faces::ClassifyTool::CANCELLED
   end
 
   def test_deactivating_the_tool_cancels_a_pending_gesture_without_writing
@@ -197,7 +197,7 @@ class ClassifyToolTest < PhComposerTestCase
     release
 
     assert_empty values("face_type").compact
-    assert_includes @notices.map(&:first), PhComposer::FaceAssignment::ClassifyTool::OUTSIDE_ZONE
+    assert_includes @notices.map(&:first), PhComposer::Zones::Faces::ClassifyTool::OUTSIDE_ZONE
   end
 
   # A drag crosses empty space whenever the Zone has a window opening, a re-entrant corner or sky
@@ -214,7 +214,7 @@ class ClassifyToolTest < PhComposerTestCase
     release
 
     assert_equal %w[Wall Wall], values("face_type").compact
-    refute_includes @notices.map(&:first), PhComposer::FaceAssignment::ClassifyTool::OUTSIDE_ZONE
+    refute_includes @notices.map(&:first), PhComposer::Zones::Faces::ClassifyTool::OUTSIDE_ZONE
   end
 
   # A press whose release the host never delivered must not leave the tool collecting: otherwise
@@ -237,7 +237,7 @@ class ClassifyToolTest < PhComposerTestCase
   # rather than the tool quietly painting the first 250 of what the pointer crossed.
   def test_a_gesture_over_the_ceiling_is_refused_whole
     zone(800, 4)
-    PhComposer::FaceAssignment.gesture_face_limit = 2
+    PhComposer::Zones::Faces.gesture_face_limit = 2
     tool.choose("face_type", "Wall")
     @faces.each_with_index { |face, index| point_at([index, 0], face) }
 
@@ -263,7 +263,7 @@ class ClassifyToolTest < PhComposerTestCase
     click([10, 10])
 
     assert_empty values("face_type").compact
-    assert_includes @notices.map(&:first), PhComposer::FaceAssignment::ClassifyTool::NOTHING_CHOSEN
+    assert_includes @notices.map(&:first), PhComposer::Zones::Faces::ClassifyTool::NOTHING_CHOSEN
   end
 
   # The palette is the Model's and the intent is the gesture's: changing the palette after the
@@ -288,7 +288,7 @@ class ClassifyToolTest < PhComposerTestCase
     tool.stop
 
     assert_equal({ "mode" => "set", "value" => "Ground" },
-                 PhComposer::FaceAssignment.classify_tool(@session).palette.fetch("boundary_condition"))
+                 PhComposer::Zones::Faces.classify_tool(@session).palette.fetch("boundary_condition"))
   end
 
   # Q12: the tool forces Colour-by on while it is active, and what it forced is not what the user
@@ -350,7 +350,7 @@ class ClassifyToolTest < PhComposerTestCase
     tool.draw(@view)
 
     assert_equal 1, @view.draws.count { |mode, _points, _colour, _width| mode == GL_TRIANGLES }
-    assert_equal PhComposer::FaceAssignment::ClassifyTool::HOVER_COLOUR,
+    assert_equal PhComposer::Zones::Faces::ClassifyTool::HOVER_COLOUR,
                  @view.draws.first.fetch(2).to_a.first(3)
   end
 
@@ -360,7 +360,7 @@ class ClassifyToolTest < PhComposerTestCase
   def test_the_menu_sets_one_palette_field_at_a_time_and_checks_the_chosen_one
     zone(1_150)
     PhComposer::Commands.install
-    menu = PhComposer::Commands.feature_menus.fetch(PhComposer::FaceAssignment::ClassifyMenu::MENU)
+    menu = PhComposer::Commands.feature_menus.fetch(PhComposer::Zones::Faces::ClassifyMenu::MENU)
 
     item(menu, "Wall").call
     item(menu, "Ground").call
@@ -371,7 +371,7 @@ class ClassifyToolTest < PhComposerTestCase
     assert_equal MF_UNCHECKED, checked(menu, "Floor")
     assert_same tool, @model.active_tool
 
-    item(menu, PhComposer::FaceAssignment::ClassifyMenu::OFF).call
+    item(menu, PhComposer::Zones::Faces::ClassifyMenu::OFF).call
 
     assert_nil @model.active_tool
   end
@@ -394,7 +394,7 @@ class ClassifyToolTest < PhComposerTestCase
     @model.selection.clear
     @model.selection.add(@faces.fetch(0))
 
-    assert_includes submenu_names(UI.build_context_menu), PhComposer::FaceAssignment::ClassifyMenu::MENU
+    assert_includes submenu_names(UI.build_context_menu), PhComposer::Zones::Faces::ClassifyMenu::MENU
   end
 
   # While the tool is running, SketchUp hands the right-click to the tool instead of selecting, so
@@ -409,7 +409,7 @@ class ClassifyToolTest < PhComposerTestCase
     tool.getMenu(over_face, 0, 10, 10, @view)
     tool.getMenu(over_nothing, 0, 99, 99, @view)
 
-    assert_includes submenu_names(over_face), PhComposer::FaceAssignment::ClassifyMenu::MENU
+    assert_includes submenu_names(over_face), PhComposer::Zones::Faces::ClassifyMenu::MENU
     assert_empty submenu_names(over_nothing)
   end
 
@@ -417,7 +417,7 @@ class ClassifyToolTest < PhComposerTestCase
   # legend reads rather than a second copy inside `shell/`.
   def test_the_menu_shows_honeybee_values_by_their_glossary_words
     PhComposer::Commands.install
-    labels = PhComposer::Commands.feature_menus.fetch(PhComposer::FaceAssignment::ClassifyMenu::MENU)
+    labels = PhComposer::Commands.feature_menus.fetch(PhComposer::Zones::Faces::ClassifyMenu::MENU)
                                  .entries.select { |entry| entry.is_a?(Array) }.map(&:first)
 
     assert_includes labels, "Roof or ceiling"
@@ -466,7 +466,7 @@ class ClassifyToolTest < PhComposerTestCase
     references = list_faces.map { |face| face.fetch("reference") }
     stale = references.last.merge("entity_path" => [9_999])
 
-    found = PhComposer::FaceAssignment::Locate.call(@session, [references.first, stale])
+    found = PhComposer::Zones::Faces::Locate.call(@session, [references.first, stale])
 
     assert_equal 1, found.length
     assert_equal [@faces.fetch(0)], @model.selection.to_a
@@ -513,7 +513,7 @@ class ClassifyToolTest < PhComposerTestCase
   # An Attached zone boundary naming no record is an incomplete Face, so the record and the boundary
   # condition are one choice however the palette is reached.
   def test_choosing_an_attached_zone_carries_its_boundary_condition_and_dropping_it_takes_it_back
-    tool = PhComposer::FaceAssignment.classify_tool(@session)
+    tool = PhComposer::Zones::Faces.classify_tool(@session)
 
     tool.choose("attached_zone_id", "atz_1")
 
@@ -525,7 +525,7 @@ class ClassifyToolTest < PhComposerTestCase
   end
 
   def test_choosing_another_boundary_condition_drops_the_attached_zone_it_replaces
-    tool = PhComposer::FaceAssignment.classify_tool(@session)
+    tool = PhComposer::Zones::Faces.classify_tool(@session)
     tool.choose("attached_zone_id", "atz_1")
 
     tool.choose("boundary_condition", "Outdoors")
@@ -585,8 +585,8 @@ class ClassifyToolTest < PhComposerTestCase
 
     assert_equal walked.transform.to_a, picked.transform.to_a
     assert_equal walked.zone.transform.to_a, picked.zone.transform.to_a
-    assert_equal PhComposer::FaceAssignment::Geometry.suggested_values(walked),
-                 PhComposer::FaceAssignment::Geometry.suggested_values(picked)
+    assert_equal PhComposer::Zones::Faces::Geometry.suggested_values(walked),
+                 PhComposer::Zones::Faces::Geometry.suggested_values(picked)
   end
 
   # `PickHelper#path_at` answers relative to the open edit context, not from the Model root: inside
@@ -657,7 +657,7 @@ class ClassifyToolTest < PhComposerTestCase
   private
 
   def tool
-    @tool ||= PhComposer::FaceAssignment.classify_tool(@session)
+    @tool ||= PhComposer::Zones::Faces.classify_tool(@session)
   end
 
   def item(menu, label)

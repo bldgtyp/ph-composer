@@ -52,7 +52,7 @@ module PhComposer
         authored_face_counts = {}
         scope.each do |zone|
           index.faces(zone).each do |occurrence|
-            record = FaceAssignment::FACE_STORE.read(occurrence.entity)
+            record = Faces::FACE_STORE.read(occurrence.entity)
             next unless record && record["boundary_condition"] == "Surface"
 
             reference = occurrence.reference(record.fetch("id"))
@@ -60,7 +60,7 @@ module PhComposer
             next if kept.include?(key) || updates.key?(key)
 
             Occurrences.resolve_face(model, reference, :mutable => true, :index => index)
-            FaceAssignment::Schema.validate!(record)
+            Faces::Schema.validate!(record)
             envelope = record.fetch("adjacency")
             stored_self = retirement_endpoint(model, envelope.fetch("self"), index, authored_face_counts)
             unless stored_self && stored_self.zone.path == occurrence.zone.path &&
@@ -83,8 +83,8 @@ module PhComposer
       end
 
       def check_retirement_pair!(occurrence, record, counterpart, in_scope, updates, authored_face_counts)
-        other = FaceAssignment::FACE_STORE.read(counterpart.entity)
-        FaceAssignment::Schema.validate!(other)
+        other = Faces::FACE_STORE.read(counterpart.entity)
+        Faces::Schema.validate!(other)
         other_reference = counterpart.reference(other.fetch("id"))
         stored = record.fetch("adjacency")
         unless other["boundary_condition"] == "Surface" &&
@@ -136,7 +136,7 @@ module PhComposer
       def face_id_occurrence_counts(entities, counts = Hash.new(0))
         entities.each do |entity|
           if entity.is_a?(Sketchup::Face)
-            face_id = FaceAssignment::FACE_STORE.read(entity)&.fetch("id", nil)
+            face_id = Faces::FACE_STORE.read(entity)&.fetch("id", nil)
             counts[face_id] += 1 if face_id
           elsif entity.is_a?(Sketchup::Group)
             face_id_occurrence_counts(entity.entities, counts)
@@ -153,7 +153,7 @@ module PhComposer
         entities.any? do |entity|
           if entity.is_a?(Sketchup::Face)
             entity.persistent_id == reference.fetch("entity_path").last ||
-              FaceAssignment::FACE_STORE.read(entity)&.fetch("id", nil) == reference.fetch("entity_id")
+              Faces::FACE_STORE.read(entity)&.fetch("id", nil) == reference.fetch("entity_id")
           elsif entity.is_a?(Sketchup::Group)
             endpoint_survives?(entity.entities, reference)
           elsif entity.is_a?(Sketchup::ComponentInstance)
@@ -326,10 +326,10 @@ module PhComposer
                                    self_reference == occurrence.reference(record.fetch("id"))
 
         counterpart = Occurrences.resolve_face(model, counterpart_reference, :index => index)
-        other_record = FaceAssignment::FACE_STORE.read(counterpart.entity)
+        other_record = Faces::FACE_STORE.read(counterpart.entity)
         return "unresolved" unless other_record && other_record["boundary_condition"] == "Surface"
 
-        FaceAssignment::Schema.validate!(other_record)
+        Faces::Schema.validate!(other_record)
         other_envelope = other_record["adjacency"]
         return "unresolved" unless other_envelope.is_a?(Hash) &&
                                    other_envelope["pair_id"] == envelope["pair_id"] &&
@@ -369,7 +369,7 @@ module PhComposer
         end
         counterpart = Occurrences.resolve_face(model, record.fetch("adjacency").fetch("counterpart"),
                                                :mutable => true, :index => index)
-        other = FaceAssignment::FACE_STORE.read(counterpart.entity)
+        other = Faces::FACE_STORE.read(counterpart.entity)
         pair_id = record.dig("adjacency", "pair_id")
         unless other&.dig("adjacency", "pair_id") == pair_id &&
                other&.dig("adjacency", "counterpart", "entity_id") == record["id"]
@@ -399,10 +399,10 @@ module PhComposer
 
       def candidates(zone, index)
         index.faces(zone).filter_map do |occurrence|
-          record = FaceAssignment::FACE_STORE.read(occurrence.entity)
+          record = Faces::FACE_STORE.read(occurrence.entity)
           next unless record && record["face_type"]
 
-          FaceAssignment::Schema.validate!(record)
+          Faces::Schema.validate!(record)
           { :occurrence => occurrence, :record => record,
             :geometry => FaceGeometry.capture(occurrence.entity, occurrence.transform) }
         end
@@ -443,7 +443,7 @@ module PhComposer
           "self_geometry" => geometry_stamp(side.fetch(:geometry)),
           "counterpart_geometry" => geometry_stamp(counterpart.fetch(:geometry))
         }
-        FaceAssignment::Schema.validate!(result)
+        Faces::Schema.validate!(result)
       end
       private_class_method :with_pair
 
@@ -456,7 +456,7 @@ module PhComposer
         result = DeepCopy.call(record)
         result.delete("adjacency")
         result.delete("boundary_condition")
-        FaceAssignment::Schema.validate!(result)
+        Faces::Schema.validate!(result)
       end
       private_class_method :retired
 

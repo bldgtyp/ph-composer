@@ -154,7 +154,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     original = faces.find { |face| face.dig("reference", "zone_path") == [640] }
     original_id = original.dig("reference", "entity_id")
     entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 640 }.entities.to_a.first
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     external_id = "atz_000000000001"
     envelope = COPY_EXTENSION.envelope("external_id" => external_id, "marker" => original_id)
     store.write(entity, store.read(entity).merge("user_data" => { "firm.note" => original_id },
@@ -179,7 +179,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wall(652, 0, 2, 6, 0, 3, :west)
     author
     entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 642 }.entities.to_a.first
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     before = store.read(entity)
     store.write(entity, before.merge("extension_data" => {
                   COPY_EXTENSION.namespace => COPY_EXTENSION.envelope("external_id" => "atz_000000000001",
@@ -202,7 +202,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wall(654, 0, 1, 5, 1, 3, :west)
     author
     entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 654 }.entities.to_a.first
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     old_id = store.read(entity).fetch("id")
     envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001", "marker" => old_id)
     store.write(entity, store.read(entity).merge("extension_data" => { COPY_EXTENSION.namespace => envelope }))
@@ -299,7 +299,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wall(698, 0, 2, 6, 0, 3, :west)
     author
     entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 696 }.entities.to_a.first
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     record = store.read(entity)
     store.write(entity, record.merge(
       "boundary_condition" => "Surface",
@@ -437,7 +437,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wall(772, 0, 8, 12, 0, 3, :west)
     author
     entity = @model.entities.to_a.find { |zone| zone.persistent_id == 752 }.entities.to_a.first
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     original_id = store.read(entity).fetch("id")
     payload = COPY_EXTENSION.envelope("external_id" => "atz_000000000001", "marker" => original_id)
     store.write(entity, store.read(entity).merge("user_data" => { "firm.note" => original_id },
@@ -460,7 +460,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wall(774, 0, 6, 12, 0, 3, :west)
     author
     entity = @model.entities.to_a.find { |zone| zone.persistent_id == 754 }.entities.to_a.first
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     store.write(entity, store.read(entity).merge("extension_data" => {
       COPY_EXTENSION.namespace => COPY_EXTENSION.envelope("external_id" => "atz_000000000001")
     }))
@@ -522,7 +522,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
   def test_solving_after_a_neighbour_is_deleted_retires_the_survivor_and_preserves_payloads
     left, right = paired_walls
     entity = left.entities.to_a.first
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     before = store.read(entity).merge("user_data" => { "note" => "keep" },
                                       "extension_data" => { "other.ext" => { "payload" => [1, 2] } })
     store.write(entity, before)
@@ -583,12 +583,12 @@ class ZoneSolveScopeTest < PhComposerTestCase
     duplicate = @model.entities.to_a.last
     store = PhComposer::Zones::ZONE_STORE
     store.write(duplicate, store.read(duplicate).merge("id" => store.read(right).fetch("id")))
-    before = PhComposer::FaceAssignment::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first)
+    before = PhComposer::Zones::Faces::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first)
 
     result = solve([all_references.first])
 
     assert_equal %w[refused target.ambiguous none], result.values_at("status", "code", "effect")
-    assert_equal before, PhComposer::FaceAssignment::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first)
+    assert_equal before, PhComposer::Zones::Faces::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first)
   end
 
   def test_an_exploded_counterpart_is_unresolved_not_deleted
@@ -605,7 +605,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
 
   def test_a_deleted_path_with_a_surviving_face_uuid_is_unresolved
     _left, right = paired_walls
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     copied = store.read(right.entities.to_a.first)
     @model.entities.erase_entities(right)
     wall(930, 9, 0, 4, 0, 3, :west)
@@ -619,7 +619,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
 
   def test_a_paired_zone_moved_inside_a_wrapper_is_rebound_only_by_explicit_solve
     left, right = paired_walls
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     left_face = left.entities.to_a.first
     right_face = right.entities.to_a.first
     left_record = store.read(left_face)
@@ -682,7 +682,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
 
   def test_a_split_copy_of_the_local_face_uuid_reads_unresolved
     left, right = paired_walls
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     original = left.entities.to_a.first
     record = store.read(original)
     copied_face = Sketchup::Face.new(936, {},
@@ -710,7 +710,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
 
   def test_an_orphan_copy_of_a_rebound_face_uuid_is_still_ambiguous
     _left, right = paired_walls
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     face = right.entities.to_a.first
     copied = Sketchup::Face.new(944, {}, :points => face.outer_loop.vertices.map(&:position),
                                         :normal => face.normal)
@@ -732,7 +732,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
 
   def test_an_orphan_copy_of_the_unmoved_face_uuid_blocks_path_recovery
     left, right = paired_walls
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     face = left.entities.to_a.first
     copied = Sketchup::Face.new(946, {}, :points => face.outer_loop.vertices.map(&:position),
                                         :normal => face.normal)
@@ -754,7 +754,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
 
   def test_a_recreated_zone_and_face_pid_repair_by_unique_authored_ids
     left, right = paired_walls
-    face_store = PhComposer::FaceAssignment::FACE_STORE
+    face_store = PhComposer::Zones::Faces::FACE_STORE
     zone_store = PhComposer::Zones::ZONE_STORE
     stamp_store = PhComposer::Zones::STAMP_STORE
     old_face = right.entities.to_a.first
@@ -827,19 +827,19 @@ class ZoneSolveScopeTest < PhComposerTestCase
     right_face = right.entities.to_a.first
     right.entities.delete(right_face)
     left.entities << right_face
-    before = PhComposer::FaceAssignment::FACE_STORE.read(right_face)
+    before = PhComposer::Zones::Faces::FACE_STORE.read(right_face)
     count = @model.operation_starts.length
 
     result = solve(all_references)
 
     assert_equal %w[refused adjacency.unresolved none], result.values_at("status", "code", "effect")
-    assert_equal before, PhComposer::FaceAssignment::FACE_STORE.read(right_face)
+    assert_equal before, PhComposer::Zones::Faces::FACE_STORE.read(right_face)
     assert_equal count, @model.operation_starts.length
   end
 
   def test_a_reciprocal_path_corruption_reads_unresolved_even_with_the_same_uuid
     left, right = paired_walls
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     left_record = store.read(left.entities.to_a.first)
     right_face = right.entities.to_a.first
     right_record = store.read(right_face)
@@ -869,7 +869,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wrapper.entities << right
     before = faces
     left.entities.to_a.first.define_singleton_method(:set_attribute) do |dictionary, key, value|
-      raise IOError, "the host refused the write" if dictionary == PhComposer::FaceAssignment::FACE_DICTIONARY
+      raise IOError, "the host refused the write" if dictionary == PhComposer::Zones::Faces::FACE_DICTIONARY
 
       super(dictionary, key, value)
     end
@@ -941,7 +941,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     before = faces
     # Retirement writes the counterpart first, then the initiating Face.
     left.entities.to_a.first.define_singleton_method(:set_attribute) do |dictionary, key, value|
-      raise IOError, "the host refused the write" if dictionary == PhComposer::FaceAssignment::FACE_DICTIONARY
+      raise IOError, "the host refused the write" if dictionary == PhComposer::Zones::Faces::FACE_DICTIONARY
 
       super(dictionary, key, value)
     end
@@ -958,7 +958,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wall(660, 0, 0, 4, 0, 3, :east)
     wall(670, 0, 2, 6, 0, 3, :west)
     author
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     @model.entities.to_a.each do |group|
       face = group.entities.to_a.first
       before = store.read(face)
@@ -976,7 +976,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
         record = store.read(face)
         id = record.dig("extension_data", extension.namespace, "payload", "face_id")
         assert_equal record.fetch("id"), id
-        assert_equal record, engine.resolve_reference(PhComposer::FaceAssignment::REFERENCE_KIND, id).record
+        assert_equal record, engine.resolve_reference(PhComposer::Zones::Faces::REFERENCE_KIND, id).record
       end
     end
   end
@@ -988,7 +988,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     extension = entity_link_extension
     old_id = faces.first.fetch("reference").fetch("entity_id")
     store_external_reference
-    kind = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND
+    kind = PhComposer::Zones::Faces::AttachedZone::RECORD_KIND
     record = kind.store.read(@model, "atz_000000000001")
     kind.store.write(@model, record.merge("extension_data" => {
                       "unavailable.incoming" => extension.envelope("face_id" => old_id)
@@ -1059,7 +1059,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
   def entity_link_extension
     PhComposer::Records::Extension.new(
       :namespace => "test.fixture.entity_link", :schema_version => 1,
-      :references => [{ "path" => "$.face_id", "target_kind" => PhComposer::FaceAssignment::REFERENCE_KIND,
+      :references => [{ "path" => "$.face_id", "target_kind" => PhComposer::Zones::Faces::REFERENCE_KIND,
                         "cardinality" => "one" }]
     )
   end
@@ -1095,7 +1095,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
   end
 
   def store_external_reference
-    kind = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND
+    kind = PhComposer::Zones::Faces::AttachedZone::RECORD_KIND
     kind.store.write(@model, "id" => "atz_000000000001", "schema_version" => 1,
                              "name" => "Garage", "kind" => "garage", "temperature_reduction_factor" => 0.95)
   end
@@ -1106,7 +1106,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wall(658, 0, 2, 6, 0, 3, :west)
     author
     entity = @model.entities.to_a.find { |candidate| candidate.persistent_id == 648 }.entities.to_a.first
-    store = PhComposer::FaceAssignment::FACE_STORE
+    store = PhComposer::Zones::Faces::FACE_STORE
     store.write(entity, store.read(entity).merge("extension_data" => { extension.namespace => envelope }))
     snapshot = faces
     params = { "zones" => all_references }

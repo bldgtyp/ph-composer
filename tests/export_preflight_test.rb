@@ -35,7 +35,7 @@ class ExportPreflightTest < PhComposerTestCase
     assert_equal true, repair.fetch("checked")
     assert_equal "ph_composer.zones.solve_adjacency", repair.fetch("action")
     assert_equal [{ "zone_id" => "zon_#{'A' * 12}", "zone_path" => [100] }], repair.dig("params", "zones")
-    assert_nil PhComposer::FaceAssignment::FACE_STORE.read(group.entities.to_a.first)
+    assert_nil PhComposer::Zones::Faces::FACE_STORE.read(group.entities.to_a.first)
     assert_empty @model.operations
   end
 
@@ -44,10 +44,10 @@ class ExportPreflightTest < PhComposerTestCase
     face = group.entities.to_a.first
     record = { "id" => "fac_#{'A' * 12}", "schema_version" => 1, "face_type" => "Wall",
                "boundary_condition" => "Outdoors", "user_data" => {}, "extension_data" => {} }
-    PhComposer::FaceAssignment::FACE_STORE.write(face, record)
+    PhComposer::Zones::Faces::FACE_STORE.write(face, record)
     first = API.export_preflight(:context => @context)
     assert_equal "construction.missing", first.dig("value", "findings", 0, "code")
-    PhComposer::FaceAssignment::FACE_STORE.write(face, record.merge("assembly_id" => "asm_#{'A' * 12}"))
+    PhComposer::Zones::Faces::FACE_STORE.write(face, record.merge("assembly_id" => "asm_#{'A' * 12}"))
     second = API.export_preflight(:context => @context)
     assert_equal "construction.unavailable", second.dig("value", "findings", 0, "code")
     assert second.dig("value", "findings").all? { |finding| finding.fetch("blocks_export") }
@@ -71,14 +71,14 @@ class ExportPreflightTest < PhComposerTestCase
     face = seed_zone.entities.to_a.first
     record = { "id" => "fac_#{'A' * 12}", "schema_version" => 1,
                "boundary_condition" => "AttachedZone", "user_data" => {}, "extension_data" => {} }
-    PhComposer::FaceAssignment::FACE_STORE.write(face, record)
+    PhComposer::Zones::Faces::FACE_STORE.write(face, record)
     codes = preflight_codes
     assert_includes codes, "face.type_missing"
     assert_includes codes, "attached_zone.absent"
     record["attached_zone_id"] = "atz_#{'A' * 12}"
-    PhComposer::FaceAssignment::FACE_STORE.write(face, record)
+    PhComposer::Zones::Faces::FACE_STORE.write(face, record)
     assert_includes preflight_codes, "attached_zone.dangling"
-    kind = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND
+    kind = PhComposer::Zones::Faces::AttachedZone::RECORD_KIND
     attached = { "id" => record.fetch("attached_zone_id"), "schema_version" => 1, "name" => "Garage",
                  "kind" => "garage", "temperature_reduction_factor" => 2.0 }
     kind.store.write(@model, attached)
@@ -92,7 +92,7 @@ class ExportPreflightTest < PhComposerTestCase
 
   def test_unassigned_boundary_is_an_omission_without_a_construction_requirement
     face = seed_zone.entities.to_a.first
-    PhComposer::FaceAssignment::FACE_STORE.write(face, {
+    PhComposer::Zones::Faces::FACE_STORE.write(face, {
       "id" => "fac_#{'A' * 12}", "schema_version" => 1, "face_type" => "Wall",
       "user_data" => {}, "extension_data" => {}
     })

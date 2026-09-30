@@ -4,7 +4,7 @@ require_relative "test_helper"
 
 class EntityReferencesTest < PhComposerTestCase
   R = PhComposer::Records
-  FACE = PhComposer::FaceAssignment
+  FACE = PhComposer::Zones::Faces
   ZONES = PhComposer::Zones
   ATTACHED = FACE::AttachedZone::RECORD_KIND
   EXTENSION = R::Extension.new(

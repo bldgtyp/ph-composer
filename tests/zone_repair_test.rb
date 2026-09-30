@@ -9,7 +9,7 @@ class ZoneRepairTest < PhComposerTestCase
   API = PhComposer::API
   ZONE_STORE = PhComposer::Zones::ZONE_STORE
   STAMP_STORE = PhComposer::Zones::STAMP_STORE
-  FACE_STORE = PhComposer::FaceAssignment::FACE_STORE
+  FACE_STORE = PhComposer::Zones::Faces::FACE_STORE
   COPY_EXTENSION = PhComposer::Records::Extension.new(
     :namespace => "test.fixture.identity", :schema_version => 1,
     :references => [
@@ -340,7 +340,7 @@ class ZoneRepairTest < PhComposerTestCase
   end
 
   def store_external_reference
-    kind = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND
+    kind = PhComposer::Zones::Faces::AttachedZone::RECORD_KIND
     kind.store.write(@model, "id" => "atz_000000000001", "schema_version" => 1,
                              "name" => "Garage", "kind" => "garage", "temperature_reduction_factor" => 0.95)
   end

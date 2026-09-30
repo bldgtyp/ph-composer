@@ -6,7 +6,7 @@ require_relative "test_helper"
 # that moves every referencing Face and removes the definition in one step.
 class AttachedZoneTest < PhComposerTestCase
   API = PhComposer::API
-  KIND = PhComposer::FaceAssignment::AttachedZone::KIND_ID
+  KIND = PhComposer::Zones::Faces::AttachedZone::KIND_ID
 
   def setup
     super
@@ -248,8 +248,8 @@ class AttachedZoneTest < PhComposerTestCase
 
   private
 
-  KIND_STORE = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND.store
-  FACE_STORE = PhComposer::FaceAssignment::FACE_STORE
+  KIND_STORE = PhComposer::Zones::Faces::AttachedZone::RECORD_KIND.store
+  FACE_STORE = PhComposer::Zones::Faces::FACE_STORE
 
   def invoke(name, params)
     @sequence += 1

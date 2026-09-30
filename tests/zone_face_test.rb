@@ -48,10 +48,10 @@ class ZoneFaceTest < PhComposerTestCase
 
     @model.undo
     current_group = @model.entities.to_a.find { |entity| entity.persistent_id == group.persistent_id }
-    assert_nil PhComposer::FaceAssignment::FACE_STORE.read(current_group.entities.to_a.first)
+    assert_nil PhComposer::Zones::Faces::FACE_STORE.read(current_group.entities.to_a.first)
     @model.redo
     current_group = @model.entities.to_a.find { |entity| entity.persistent_id == group.persistent_id }
-    assert_equal face_id, PhComposer::FaceAssignment::FACE_STORE.read(current_group.entities.to_a.first).fetch("id")
+    assert_equal face_id, PhComposer::Zones::Faces::FACE_STORE.read(current_group.entities.to_a.first).fetch("id")
 
     @model.save("/tmp/ph-composer-p1b.skp")
     Sketchup.open_file("/tmp/ph-composer-p1b.skp")
@@ -150,10 +150,10 @@ class ZoneFaceTest < PhComposerTestCase
     face = query("ph_composer.face_assignment.list").dig("value", "faces", 0)
     invoke("ph_composer.face_assignment.classify", classify_params(face, "Wall", "Outdoors"))
     entity = group.entities.to_a.first
-    record = PhComposer::FaceAssignment::FACE_STORE.read(entity)
+    record = PhComposer::Zones::Faces::FACE_STORE.read(entity)
     record["user_data"] = { "firm.note" => "keep" }
     record["extension_data"] = { "outside.extension" => { "schema_version" => 3, "payload" => { "x" => 1 } } }
-    PhComposer::FaceAssignment::FACE_STORE.write(entity, record)
+    PhComposer::Zones::Faces::FACE_STORE.write(entity, record)
     current = query("ph_composer.face_assignment.list").dig("value", "faces", 0)
 
     result = invoke("ph_composer.face_assignment.classify", {
@@ -166,7 +166,7 @@ class ZoneFaceTest < PhComposerTestCase
     })
 
     assert_equal "completed", result.fetch("status")
-    stored = PhComposer::FaceAssignment::FACE_STORE.read(entity)
+    stored = PhComposer::Zones::Faces::FACE_STORE.read(entity)
     assert_equal ["Wall", "Adiabatic"], stored.values_at("face_type", "boundary_condition")
     assert_equal({ "firm.note" => "keep" }, stored.fetch("user_data"))
     assert_equal 3, stored.dig("extension_data", "outside.extension", "schema_version")
@@ -189,7 +189,7 @@ class ZoneFaceTest < PhComposerTestCase
 
     entity = group.entities.to_a.first
     assert_equal %w[completed none], result.values_at("status", "effect")
-    assert_nil PhComposer::FaceAssignment::FACE_STORE.read(entity)
+    assert_nil PhComposer::Zones::Faces::FACE_STORE.read(entity)
     assert_nil PhComposer::Zones::STAMP_STORE.read(entity)
   end
 
@@ -206,7 +206,7 @@ class ZoneFaceTest < PhComposerTestCase
 
     assert_equal({ "face_type" => "RoofCeiling", "boundary_condition" => "Outdoors" }, row.fetch("suggested"))
     assert_same dictionaries, face.attribute_dictionaries
-    assert_nil PhComposer::FaceAssignment::FACE_STORE.read(face)
+    assert_nil PhComposer::Zones::Faces::FACE_STORE.read(face)
   end
 
   def test_full_wall_solve_is_reciprocal_idempotent_and_native_undoable
@@ -376,7 +376,7 @@ class ZoneFaceTest < PhComposerTestCase
   def assert_shared_group_refusals
     rows = query("ph_composer.face_assignment.list").dig("value", "faces")
     face = rows.first
-    before = PhComposer::FaceAssignment::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first
+    before = PhComposer::Zones::Faces::FACE_STORE.read(@model.entities.to_a.first.entities.to_a.first
                                                            .entities.to_a.first)
     operation_count = @model.operations.length
     classify = classify_params(face, "Floor", "Ground")
@@ -394,7 +394,7 @@ class ZoneFaceTest < PhComposerTestCase
       assert_match(/Make Unique/, result.fetch("message"))
     end
     assert_equal operation_count, @model.operations.length
-    assert_equal [before], [PhComposer::FaceAssignment::FACE_STORE.read(@model.entities.to_a.first.entities.to_a
+    assert_equal [before], [PhComposer::Zones::Faces::FACE_STORE.read(@model.entities.to_a.first.entities.to_a
                                                                          .first.entities.to_a.first)]
     assert_equal rows, query("ph_composer.face_assignment.list").dig("value", "faces")
   end

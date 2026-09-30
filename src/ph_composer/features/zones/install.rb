@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require_relative "schema"
-require_relative "occurrences"
-require_relative "index"
-require_relative "steps"
-require_relative "overlap"
-require_relative "adjacency"
-require_relative "face_split"
-require_relative "adjacency_steps"
-require_relative "repair"
-require_relative "split_identity_repair"
-require_relative "split_identity_menu"
+require_relative "zone/schema"
+require_relative "zone/occurrences"
+require_relative "zone/index"
+require_relative "zone/steps"
+require_relative "adjacency/overlap"
+require_relative "adjacency/adjacency"
+require_relative "adjacency/face_split"
+require_relative "adjacency/adjacency_steps"
+require_relative "zone/repair"
+require_relative "zone/split_identity_repair"
+require_relative "zone/split_identity_menu"
 require_relative "export"
 require_relative "colour_modes"
 
@@ -328,7 +328,7 @@ module PhComposer
 
     def split_reference_plan(occurrence, record, id)
       entry = Records::ReferenceEntry.new(
-        :kind => FaceAssignment::REFERENCE_KIND,
+        :kind => Faces::REFERENCE_KIND,
         :key => occurrence.zone.path + occurrence.path + [id], :record => record.merge("id" => id)
       )
       Records::ReferencePlan.new(:entries => [entry])
@@ -410,7 +410,7 @@ module PhComposer
 
     def retire_adjacency(request, proposal)
       occurrence = Occurrences.resolve_face(request.model, request.params.fetch("face"), :mutable => true)
-      record = FaceAssignment::FACE_STORE.read(occurrence.entity)
+      record = Faces::FACE_STORE.read(occurrence.entity)
       pair_id = record&.dig("adjacency", "pair_id")
       retire_pair(request, proposal, occurrence, record)
       { "pair_id" => pair_id }

@@ -6,7 +6,7 @@ require_relative "test_helper"
 # the Reverse face repair. Each asserts the atomic boundary, not just the happy path.
 class FaceGestureTest < PhComposerTestCase
   API = PhComposer::API
-  LIMIT = PhComposer::FaceAssignment::GESTURE_FACE_LIMIT
+  LIMIT = PhComposer::Zones::Faces::GESTURE_FACE_LIMIT
 
   def setup
     super
@@ -64,7 +64,7 @@ class FaceGestureTest < PhComposerTestCase
   def test_reciprocal_retirement_targets_count_towards_the_ceiling
     left = solved_pairs(900, 2).select { |face| face.dig("reference", "zone_path") == [900] }
     # Set after the fixture, so building it is not itself bounded by the reduced ceiling.
-    PhComposer::FaceAssignment.gesture_face_limit = 3
+    PhComposer::Zones::Faces.gesture_face_limit = 3
 
     assert_equal 2, left.length
 
@@ -113,7 +113,7 @@ class FaceGestureTest < PhComposerTestCase
     faces = list_faces
     group = @model.entities.to_a.find { |entity| entity.persistent_id == 800 }
     group.entities.to_a.last.define_singleton_method(:set_attribute) do |dictionary, key, value|
-      raise "the host refused the write" if dictionary == PhComposer::FaceAssignment::FACE_DICTIONARY
+      raise "the host refused the write" if dictionary == PhComposer::Zones::Faces::FACE_DICTIONARY
 
       super(dictionary, key, value)
     end

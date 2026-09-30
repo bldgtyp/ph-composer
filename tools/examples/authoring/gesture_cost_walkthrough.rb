@@ -24,7 +24,7 @@
 module GestureCostWalkthrough
   API = PhComposer::API
   PREFIX = "p1d_cost_"
-  FACE_STORE = PhComposer::FaceAssignment::FACE_STORE
+  FACE_STORE = PhComposer::Zones::Faces::FACE_STORE
   # Gesture sizes, up to the shipped ceiling.
   GESTURE_SIZES = [1, 10, 50, 100, 250].freeze
   # Boxes, six Faces each, for the fixed-gesture curve: about 250, 500, 1,000 and 2,000 Faces.
@@ -130,7 +130,7 @@ module GestureCostWalkthrough
   # The ceiling itself: the shipped limit, and one above it, both from a real read.
   def ceiling
     faces = read_faces
-    limit = PhComposer::FaceAssignment.gesture_face_limit
+    limit = PhComposer::Zones::Faces.gesture_face_limit
     {
       "limit" => limit,
       # Outdoors Faces set to To neighbour, so the run at the ceiling actually writes; setting the

@@ -128,10 +128,10 @@ class ColourByTest < PhComposerTestCase
     refute_empty service.wash_triangles
 
     wall = zone.entities.grep(Sketchup::Face).find do |face|
-      PhComposer::FaceAssignment::FACE_STORE.read(face)["face_type"] == "Wall"
+      PhComposer::Zones::Faces::FACE_STORE.read(face)["face_type"] == "Wall"
     end
-    record = PhComposer::FaceAssignment::FACE_STORE.read(wall)
-    PhComposer::FaceAssignment::FACE_STORE.write(wall, record.merge("face_type" => "Floor"))
+    record = PhComposer::Zones::Faces::FACE_STORE.read(wall)
+    PhComposer::Zones::Faces::FACE_STORE.write(wall, record.merge("face_type" => "Floor"))
     service.invalidate!(:force => true)
 
     assert_nil service.isolated
@@ -145,8 +145,8 @@ class ColourByTest < PhComposerTestCase
   def test_a_record_missing_this_modes_field_is_incomplete_rather_than_unclassified
     zone_group(1_750, ["Wall"])
     face = Sketchup.active_model.entities.grep(Sketchup::Group).last.entities.grep(Sketchup::Face).first
-    record = PhComposer::FaceAssignment::FACE_STORE.read(face)
-    PhComposer::FaceAssignment::FACE_STORE.write(face, record.reject { |key, _| key == "boundary_condition" })
+    record = PhComposer::Zones::Faces::FACE_STORE.read(face)
+    PhComposer::Zones::Faces::FACE_STORE.write(face, record.reject { |key, _| key == "boundary_condition" })
 
     service = activate("ph_composer.face_assignment.by_boundary_condition")
 
@@ -203,8 +203,8 @@ class ColourByTest < PhComposerTestCase
   def test_an_attached_zone_with_no_chosen_record_reads_as_incomplete_rather_than_classified
     group = zone_group(200, ["Wall"])
     face = group.entities.to_a.first
-    record = PhComposer::FaceAssignment::FACE_STORE.read(face)
-    PhComposer::FaceAssignment::FACE_STORE.write(face, record.merge("boundary_condition" => "AttachedZone"))
+    record = PhComposer::Zones::Faces::FACE_STORE.read(face)
+    PhComposer::Zones::Faces::FACE_STORE.write(face, record.merge("boundary_condition" => "AttachedZone"))
 
     service = activate("ph_composer.face_assignment.by_boundary_condition")
 
@@ -492,7 +492,7 @@ class ColourByTest < PhComposerTestCase
     assert_equal 1, service.rows.length
 
     face = group.entities.to_a.first
-    PhComposer::FaceAssignment::FACE_STORE.write(face, PhComposer::FaceAssignment::FACE_STORE.read(face)
+    PhComposer::Zones::Faces::FACE_STORE.write(face, PhComposer::Zones::Faces::FACE_STORE.read(face)
       .merge("face_type" => "Floor"))
     @session.host_event(:transaction_committed)
 
@@ -773,7 +773,7 @@ class ColourByTest < PhComposerTestCase
                                                                   point(2, 2, index)])
       next face unless face_type
 
-      PhComposer::FaceAssignment::FACE_STORE.write(face, {
+      PhComposer::Zones::Faces::FACE_STORE.write(face, {
         "id" => format("fac_%<base>d%<index>07d", :base => base, :index => index), "schema_version" => 1,
         "face_type" => face_type, "boundary_condition" => "Outdoors", "user_data" => {}, "extension_data" => {}
       })

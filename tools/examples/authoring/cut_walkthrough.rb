@@ -13,7 +13,7 @@
 module CutWalkthrough
   API = PhComposer::API
   PREFIX = "p1d_cut_"
-  FACE_STORE = PhComposer::FaceAssignment::FACE_STORE
+  FACE_STORE = PhComposer::Zones::Faces::FACE_STORE
 
   module_function
 

@@ -119,7 +119,7 @@ module PhComposer
         ZONE_STORE.write(zone.entity, @record)
         resolved.each do |occurrence, face|
           after = face.fetch(:after)
-          FaceAssignment::FACE_STORE.write(occurrence.entity, after) if after
+          Faces::FACE_STORE.write(occurrence.entity, after) if after
           STAMP_STORE.write(occurrence.entity, face.fetch(:stamp))
         end
       end
@@ -137,7 +137,7 @@ module PhComposer
 
       def resolve_member(zone, face)
         occurrence = Occurrences.face_at(zone, face.fetch(:reference).fetch("entity_path"), :mutable => true)
-        current = FaceAssignment::FACE_STORE.read(occurrence.entity)
+        current = Faces::FACE_STORE.read(occurrence.entity)
         unless current == face.fetch(:before)
           raise CodedError.new("target.changed", "A Face changed after the repair was previewed.")
         end
