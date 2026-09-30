@@ -230,17 +230,26 @@ module PhComposer
 
       private
 
+      # The native cut, then what it made: which piece is each shared region, whether the cut kept
+      # the original area, and which piece keeps the original Face id. Only the first touches SketchUp.
       def cut_partition(face, occurrence, before)
+        pieces = split_natively(face, occurrence)
+        regions = match_regions(face.fetch("regions"), pieces)
+        check_area_conserved!(face, pieces, regions)
+        project_identities(face, occurrence, before, pieces, regions)
+      end
+
+      def split_natively(face, occurrence)
         regions = face.fetch("regions")
         complete = face.fetch("complete")
-        pieces = if regions.length == 1 && complete
-                   [FaceSplit.whole(occurrence)]
-                 else
-                   FaceSplit.apply_many(occurrence, regions.map { |region| region.fetch("polygon_m") },
-                                        :complete => complete)
-                 end
-        matched = {}
-        regions.each do |region|
+        return [FaceSplit.whole(occurrence)] if regions.length == 1 && complete
+
+        FaceSplit.apply_many(occurrence, regions.map { |region| region.fetch("polygon_m") }, :complete => complete)
+      end
+
+      # { match index => piece }: exactly one hole-free piece per region outline, none used twice.
+      def match_regions(regions, pieces)
+        regions.each_with_object({}) do |region, matched|
           candidates = pieces.select do |piece|
             piece.geometry.holes.empty? &&
               FaceGeometry.loop_equal?(piece.geometry.outer_loop, region.fetch("polygon_m"),
@@ -251,16 +260,22 @@ module PhComposer
           end
           matched[region.fetch("match_index")] = candidates.first
         end
-        remainder = pieces.reject { |piece| matched.value?(piece) }
+      end
+
+      def check_area_conserved!(face, pieces, regions)
         expected_area = face.fetch("area_m2")
         actual_area = pieces.sum { |piece| piece.geometry.area_m2 }
-        rest_area = remainder.sum { |piece| piece.geometry.area_m2 }
+        rest_area = pieces.reject { |piece| regions.value?(piece) }.sum { |piece| piece.geometry.area_m2 }
         tolerance = [1.0e-6, expected_area * 1.0e-8].max
-        unless (actual_area - expected_area).abs <= tolerance &&
-               (rest_area - face.fetch("remainder_area_m2")).abs <= tolerance
-          raise CodedError.new("geometry.split_failed", "The native partition did not conserve the original Face area.")
-        end
+        return if (actual_area - expected_area).abs <= tolerance &&
+                  (rest_area - face.fetch("remainder_area_m2")).abs <= tolerance
 
+        raise CodedError.new("geometry.split_failed", "The native partition did not conserve the original Face area.")
+      end
+
+      # The piece that kept the original native persistent id keeps the Face id; every other piece
+      # takes the next id allocated at preview.
+      def project_identities(face, occurrence, before, pieces, regions)
         survivor = pieces.find { |piece| piece.persistent_id == face.fetch("persistent_id") }
         fresh = face.fetch("fresh_ids").dup
         records = pieces.map do |piece|
@@ -271,7 +286,7 @@ module PhComposer
 
           [piece, carried(before, id, face)]
         end
-        { :occurrence => occurrence, :pieces => records, :regions => matched,
+        { :occurrence => occurrence, :pieces => records, :regions => regions,
           :survivor => survivor, :removed_id => before.fetch("id"), :affected => [] }
       end
 
