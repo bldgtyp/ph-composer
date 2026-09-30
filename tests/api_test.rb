@@ -108,6 +108,18 @@ class ApiTest < PhComposerTestCase
     refute_includes API.discover.fetch("features").first.fetch("requires"), "mutated"
   end
 
+  # A02: a cursor answers only the query and filter it came from; a limit change is still the same filter.
+  def test_a_cursor_is_refused_for_another_filter_or_query
+    create_parts(3)
+    first = records(:limit => 1).fetch("value")
+
+    assert_equal 2, records(:limit => 2, :cursor => first.fetch("next_cursor")).dig("value", "records").length
+    assert_equal "params.invalid", records(:limit => 1, :fields => ["label"],
+                                           :cursor => first.fetch("next_cursor")).fetch("code")
+    assert_equal "params.invalid", API.query(:context => @context, :name => "ph_composer.zones.list",
+                                             :params => { "cursor" => first.fetch("next_cursor") }).fetch("code")
+  end
+
   def test_a_malformed_cursor_is_refused_as_an_outcome
     create_parts(2)
     forged = [JSON.generate("revision" => @session.revision, "after" => 7)].pack("m0")

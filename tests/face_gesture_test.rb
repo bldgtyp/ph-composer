@@ -173,7 +173,7 @@ class FaceGestureTest < PhComposerTestCase
   end
 
   def list_faces
-    API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
+    API.query(:context => @context, :name => "ph_composer.zones.faces.all").dig("value", "faces")
   end
 
   def gesture(faces, face_type, boundary)

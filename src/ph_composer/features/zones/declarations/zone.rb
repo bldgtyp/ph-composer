@@ -31,6 +31,23 @@ module PhComposer
                              "state" => { "type" => "string",
                                           "enum" => %w[found ambiguous shared_definition wrong_hierarchy] },
                              "face_count" => Shapes::COUNT)
+      # A row as `list` returns it: whole, or with `fields` only its identity, state and those values.
+      PROJECTED_ZONE_ROW = ZONE_ROW.merge(
+        "required" => %w[id reference state values],
+        "properties" => ZONE_ROW.fetch("properties")
+                                .merge("values" => ZONE_VALUES.reject { |key, _value| key == "required" }),
+        "description" => "Whole without fields; with fields, id, reference, state and the named values only."
+      )
+      VALUE_KEYS = ZONE_VALUES.fetch("properties").keys.freeze
+      LIST_PARAMS = Shapes.object({
+        "ids" => { "type" => "array", "items" => Shapes::ID, "maxItems" => Pages::MAXIMUM_LIMIT,
+                   "description" => "Only occurrences of these Zone ids." },
+        "paths" => { "type" => "array", "items" => PATH, "maxItems" => Pages::MAXIMUM_LIMIT,
+                     "description" => "Only the occurrences at these root-to-Zone paths." },
+        "fields" => { "type" => "array", "items" => { "type" => "string", "enum" => VALUE_KEYS },
+                      "description" => "Project each row to these values; the whole row when absent." },
+        "limit" => Pages::LIMIT, "cursor" => Pages::CURSOR
+      }, :optional => %w[ids paths fields limit cursor]).freeze
       RESTORABLE = Shapes.object({
         "zone_id" => Shapes::ID, "building_segment" => { "type" => %w[string null] },
         "level" => { "type" => %w[string null] }, "parent_path" => PATH,
@@ -39,7 +56,7 @@ module PhComposer
                        "description" => "Why Restore would refuse, or null when it can run." },
         "unrecoverable" => Shapes.list({ "type" => "string" }, :description => "Zone fields Restore cannot recover.")
       }, :description => "An exploded Zone whose stamped members Restore can regroup.")
-      LIST_RESULT = Shapes.object({
+      ALL_RESULT = Shapes.object({
         "zones" => Shapes.list(ZONE_ROW, :description => "Every Zone occurrence, copies and nested Zones included."),
         "make_zone" => MAKE_TARGET.merge("type" => %w[object null],
                                          "description" => "The params Make Zone takes for the current selection, " \
@@ -47,6 +64,12 @@ module PhComposer
         "restorable" => Shapes.list(RESTORABLE),
         "units" => Shapes.object({ "ground_depth_mm" => { "type" => "string", "enum" => ["mm"] } })
       }).freeze
+      LIST_RESULT = Shapes.object(
+        ALL_RESULT.fetch("properties").merge(
+          "zones" => Shapes.list(PROJECTED_ZONE_ROW, :description => "One page of Zone occurrences in path order."),
+          "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL
+        )
+      ).freeze
       ZONE_ID_RESULT = Shapes.object({ "zone_id" => Shapes::ID }).freeze
 
       module_function
@@ -54,9 +77,16 @@ module PhComposer
       def install(feature)
         feature.reference_target(TARGET)
         ColourModes.install(feature)
-        feature.query("#{FEATURE_ID}.list", :description => "Zone occurrences and the explicit Make Zone target.",
-                                                 :params => Shapes::NONE, :result => LIST_RESULT,
-                                                 :examples => [{}]) { |request| Zones.list(request) }
+        feature.query("#{FEATURE_ID}.list",
+                      :description => "One page of Zone occurrences, filtered and projected, and the Make Zone target.",
+                      :params => LIST_PARAMS, :result => LIST_RESULT,
+                      :examples => [{}, { "fields" => ["name"], "limit" => 20 }]) { |request| Zones.list(request) }
+        feature.query("#{FEATURE_ID}.all",
+                      :description => "Every Zone occurrence in one complete projection, for the panel. Scripts " \
+                                      "page #{FEATURE_ID}.list instead.",
+                      :params => Shapes::NONE, :result => ALL_RESULT, :examples => [{}]) do |request|
+          Zones.all(request)
+        end
         feature.action("#{FEATURE_ID}.make",
                        :description => "Make one Zone from explicit entities in one edit context.",
                        :params => MAKE_PARAMS, :result => ZONE_ID_RESULT, :undo_name => "Make Zone",
@@ -75,7 +105,7 @@ module PhComposer
                                                     request, proposal|
           Zones.update(request, proposal)
         end
-        feature.snapshot_section("#{FEATURE_ID}.overview", :query => "#{FEATURE_ID}.list")
+        feature.snapshot_section("#{FEATURE_ID}.overview", :query => "#{FEATURE_ID}.all")
         feature.on_host_event(:selection_changed) { |session| session.request_refresh }
       end
     end

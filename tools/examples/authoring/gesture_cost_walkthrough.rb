@@ -142,7 +142,7 @@ module GestureCostWalkthrough
   end
 
   def read_faces
-    Client.new.query("ph_composer.zones.faces.list").dig("value", "faces")
+    Client.new.query("ph_composer.zones.faces.all").dig("value", "faces")
   end
 
   def pick(faces, boundary, count)

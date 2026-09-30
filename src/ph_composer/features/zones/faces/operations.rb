@@ -29,15 +29,49 @@ module PhComposer
         { "found" => found.length, "missing" => references.length - found.length }
       end
 
-      # One walk for the whole read. Without the index this resolved every Surface Face's counterpart
-      # separately, which walked the Model again for each one and made the read quadratic in Faces.
+      # One page of Face occurrences in root-to-Face path order, filtered by Zone id, Zone path or Face
+      # id. The walk covers the Model once; only the page's rows are measured and resolved, and with
+      # `fields` a row is its reference and the named values, with no geometry or derived state.
       def list(request)
+        params = request.params
+        index = Zones::Index.new(request.model)
+        occurrences = Zones::Occurrences.zones(request.model, :index => index).flat_map do |zone|
+          next [] if params.key?("zone_ids") && !params["zone_ids"].include?(zone.record.fetch("id"))
+          next [] if params.key?("zone_paths") && !params["zone_paths"].include?(zone.path)
+
+          Zones::Occurrences.faces(zone, :index => index)
+        end
+        if params.key?("ids")
+          occurrences = occurrences.select do |face|
+            params["ids"].include?(FACE_STORE.read(face.entity)&.fetch("id", nil))
+          end
+        end
+        occurrences = occurrences.sort_by { |face| face.zone.path + face.path }
+        page, next_cursor = Pages.slice(request, "#{PREFIX}.list", occurrences,
+                                        :key => ->(face) { face.zone.path + face.path })
+        rows = page.map do |face|
+          params.key?("fields") ? projected_view(face, params["fields"]) : face_view(request, face, :index => index)
+        end
+        { "faces" => rows, "units" => { "area_m2" => "m2" }, "next_cursor" => next_cursor,
+          "total" => occurrences.length }
+      end
+
+      # Every Face, whole: the panel's projection. Scripts page `list` instead. One walk for the whole
+      # read: without the index this resolved every Surface Face's counterpart separately, which walked
+      # the Model again for each one and made the read quadratic in Faces.
+      def all(request)
         index = Zones::Index.new(request.model)
         rows = Zones::Occurrences.zones(request.model, :index => index).flat_map do |zone|
           Zones::Occurrences.faces(zone, :index => index)
                             .map { |face| face_view(request, face, :index => index) }
         end
         { "faces" => rows, "units" => { "area_m2" => "m2" } }
+      end
+
+      def projected_view(occurrence, fields)
+        record = FACE_STORE.read(occurrence.entity)
+        { "reference" => occurrence.reference(record&.fetch("id", nil)),
+          "values" => record ? Schema.values(record).slice(*fields) : {} }
       end
 
       # One gesture, one step, all or nothing. Targets are deduplicated by occurrence before anything
@@ -423,6 +457,7 @@ module PhComposer
 
         raise CodedError.new("target.changed", "The Face changed since it was read (#{changed.join(', ')}).")
       end
+      private_class_method :projected_view
       private_class_method :face_view, :patched_record, :validate_intent!, :check_expected!, :deduplicate,
                            :check_limit!, :retiring?, :plan_retirements, :classify_updates,
                            :retirement_only_updates, :new_record, :plan_classification
