@@ -86,11 +86,7 @@ module PhComposer
         other = Faces::FACE_STORE.read(counterpart.entity)
         Faces::Schema.validate!(other)
         other_reference = counterpart.reference(other.fetch("id"))
-        stored = record.fetch("adjacency")
-        unless other["boundary_condition"] == "Surface" &&
-               other.dig("adjacency", "pair_id") == record.dig("adjacency", "pair_id") &&
-               other.dig("adjacency", "counterpart") == stored.fetch("self") &&
-               other.dig("adjacency", "self") == stored.fetch("counterpart")
+        unless reciprocal?(record, other)
           raise CodedError.new("adjacency.unresolved", "The reciprocal Surface endpoint cannot be retired safely.")
         end
         counts = authored_face_counts[:all]
@@ -327,41 +323,46 @@ module PhComposer
 
         counterpart = Occurrences.resolve_face(model, counterpart_reference, :index => index)
         other_record = Faces::FACE_STORE.read(counterpart.entity)
-        return "unresolved" unless other_record && other_record["boundary_condition"] == "Surface"
+        return "unresolved" unless other_record && reciprocal?(record, Faces::Schema.validate!(other_record))
 
-        Faces::Schema.validate!(other_record)
-        other_envelope = other_record["adjacency"]
-        return "unresolved" unless other_envelope.is_a?(Hash) &&
-                                   other_envelope["pair_id"] == envelope["pair_id"] &&
-                                   other_envelope["self"] == counterpart_reference &&
-                                   other_envelope["counterpart"] == self_reference
-
-        current = FaceGeometry.capture(occurrence.entity, occurrence.transform)
-        return "stale" unless envelope.dig("self_geometry", "digest") == current.digest
-
-        other_geometry = FaceGeometry.capture(counterpart.entity, counterpart.transform)
-        geometry_current = other_envelope.dig("self_geometry", "digest") == other_geometry.digest &&
-                           other_envelope.dig("counterpart_geometry", "digest") == current.digest &&
-                           envelope.dig("counterpart_geometry", "digest") == other_geometry.digest
-        geometry_current ? "current" : "stale"
+        digests = [occurrence, counterpart].map { |side| FaceGeometry.capture(side.entity, side.transform).digest }
+        geometry_current?(record, other_record, *digests) ? "current" : "stale"
       rescue CodedError
         "unresolved"
       end
 
+      # The detached form of `state` for export: the same reciprocal and geometry rules, with each
+      # record's own endpoint compared against the snapshot path instead of a live occurrence.
       def snapshot_pair_current?(left_entry, left_record, right_entry, right_record)
+        reciprocal?(left_record, right_record) &&
+          endpoint_path(left_record.dig("adjacency", "self")) == left_entry.path &&
+          endpoint_path(right_record.dig("adjacency", "self")) == right_entry.path &&
+          geometry_current?(left_record, right_record, left_entry.geometry.digest, right_entry.geometry.digest)
+      end
+
+      # Whether two Face records are the two ends of one Surface pair: both Surface, one pair id, and
+      # each naming the other as its counterpart exactly as the other names itself. It reads only the
+      # records; where each end lives now is the caller's to compare, live or detached.
+      def reciprocal?(left_record, right_record)
         left = left_record["adjacency"]
         right = right_record["adjacency"]
-        left.is_a?(Hash) && right.is_a?(Hash) &&
-          endpoint_path(left["self"]) == left_entry.path && endpoint_path(left["counterpart"]) == right_entry.path &&
-          endpoint_path(right["self"]) == right_entry.path && endpoint_path(right["counterpart"]) == left_entry.path &&
-          left["pair_id"] == right["pair_id"] &&
+        left_record["boundary_condition"] == "Surface" && right_record["boundary_condition"] == "Surface" &&
+          left.is_a?(Hash) && right.is_a?(Hash) && left["pair_id"] == right["pair_id"] &&
+          left["self"] == right["counterpart"] && left["counterpart"] == right["self"] &&
           left.dig("counterpart", "entity_id") == right_record["id"] &&
-          right.dig("counterpart", "entity_id") == left_record["id"] &&
-          left.dig("self_geometry", "digest") == left_entry.geometry.digest &&
-          left.dig("counterpart_geometry", "digest") == right_entry.geometry.digest &&
-          right.dig("self_geometry", "digest") == right_entry.geometry.digest &&
-          right.dig("counterpart_geometry", "digest") == left_entry.geometry.digest
+          right.dig("counterpart", "entity_id") == left_record["id"]
       end
+
+      # Whether both ends' geometry stamps, of themselves and of each other, match these digests.
+      def geometry_current?(left_record, right_record, left_digest, right_digest)
+        left = left_record["adjacency"]
+        right = right_record["adjacency"]
+        left.dig("self_geometry", "digest") == left_digest &&
+          left.dig("counterpart_geometry", "digest") == right_digest &&
+          right.dig("self_geometry", "digest") == right_digest &&
+          right.dig("counterpart_geometry", "digest") == left_digest
+      end
+      private_class_method :reciprocal?, :geometry_current?
 
       def retire_records(model, occurrence, record, index: nil)
         unless record && record["boundary_condition"] == "Surface" && record["adjacency"].is_a?(Hash)
@@ -370,9 +371,7 @@ module PhComposer
         counterpart = Occurrences.resolve_face(model, record.fetch("adjacency").fetch("counterpart"),
                                                :mutable => true, :index => index)
         other = Faces::FACE_STORE.read(counterpart.entity)
-        pair_id = record.dig("adjacency", "pair_id")
-        unless other&.dig("adjacency", "pair_id") == pair_id &&
-               other&.dig("adjacency", "counterpart", "entity_id") == record["id"]
+        unless other && reciprocal?(record, other)
           raise CodedError.new("adjacency.unresolved", "The reciprocal Surface endpoint cannot be retired safely.")
         end
         [retired(record), counterpart, other, retired(other)]
@@ -417,18 +416,10 @@ module PhComposer
         right_record = right.fetch(:record)
         left_reference = left.fetch(:occurrence).reference(left_record.fetch("id"))
         right_reference = right.fetch(:occurrence).reference(right_record.fetch("id"))
-        left_record["boundary_condition"] == "Surface" && right_record["boundary_condition"] == "Surface" &&
+        reciprocal?(left_record, right_record) &&
           left_record.dig("adjacency", "self") == left_reference &&
           right_record.dig("adjacency", "self") == right_reference &&
-          left_record.dig("adjacency", "counterpart") == right_reference &&
-          right_record.dig("adjacency", "counterpart") == left_reference &&
-          left_record.dig("adjacency", "pair_id") == right_record.dig("adjacency", "pair_id") &&
-          left_record.dig("adjacency", "counterpart", "entity_id") == right_record["id"] &&
-          right_record.dig("adjacency", "counterpart", "entity_id") == left_record["id"] &&
-          left_record.dig("adjacency", "self_geometry", "digest") == left.fetch(:geometry).digest &&
-          left_record.dig("adjacency", "counterpart_geometry", "digest") == right.fetch(:geometry).digest &&
-          right_record.dig("adjacency", "self_geometry", "digest") == right.fetch(:geometry).digest &&
-          right_record.dig("adjacency", "counterpart_geometry", "digest") == left.fetch(:geometry).digest
+          geometry_current?(left_record, right_record, left.fetch(:geometry).digest, right.fetch(:geometry).digest)
       end
       private_class_method :current_pair?
 
