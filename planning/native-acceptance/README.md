@@ -10,6 +10,10 @@ it contains 15 historical evidence pointers, not reconstructed host runs. Detail
 and closure remain in [the owning acceptance register](../archive/phase-one/ACCEPTANCE.md). Add finer case IDs
 when a gate needs independent reruns; a partial subcase does not close its parent.
 
+The Phase 1 packet is archived and stays unchanged. A rerun after that records its synthetic summary
+under [`evidence/`](evidence/) and, when another agent runs it, its procedure as a handoff beside
+this file, such as the [R06 rerun](R06-RERUN-HANDOFF.md) of 2026-09-30.
+
 ## Resume and screen affected checks
 
 ```sh
