@@ -190,39 +190,52 @@ module PhComposer
         end
       end
 
-      # A contributor needs a contract and a positive section version, and each result field it declares
-      # must be a valid privacy schema that neither the shell nor another contributor owns.
+      # A contributor needs its own preflight query, a contract and a positive section version, a valid
+      # user_data key declaration, and result fields that form a privacy schema no one else owns.
       def check_export_contributors
         owned = @live.export_contributors.values.flat_map { |contributor| Array(contributor.result&.keys) }
         @staging.declared_export_contributors.each do |contributor|
-          if contributor.preflight
-            query = @staging.declared_queries.find { |item| item.name == contributor.preflight } ||
-                    @live.queries[contributor.preflight]
-            unless query && query.owner == contributor.owner
-              add("registration.missing_dependency", contributor.owner, contributor.name,
-                  "#{contributor.name} needs its own registered preflight query.", contributor.preflight)
-            end
-          end
-          version = contributor.section_version
-          unless contributor.contract && version.is_a?(Integer) && version.positive?
-            add("registration.schema_invalid", contributor.owner, contributor.name,
-                "#{contributor.name} needs a contract block and a positive section version.")
-          end
+          check_preflight_owner(contributor)
+          check_contract(contributor)
           check_user_data_keys(contributor)
-          Export::Privacy.schema_problems(contributor.result).each do |problem|
-            add("registration.schema_invalid", contributor.owner, contributor.name,
-                "#{contributor.name} result: #{problem}.")
-          end
-          next unless contributor.result.is_a?(Hash)
-
-          contributor.result.each_key do |field|
-            next unless Export::Privacy::SHELL.key?(field) || owned.include?(field)
-
-            add("registration.duplicate_id", contributor.owner, contributor.name,
-                "#{contributor.name} declares result field #{field}, which is already owned.")
-          end
-          owned.concat(contributor.result.keys)
+          check_result_fields(contributor, owned)
         end
+      end
+
+      def check_preflight_owner(contributor)
+        return unless contributor.preflight
+
+        query = @staging.declared_queries.find { |item| item.name == contributor.preflight } ||
+                @live.queries[contributor.preflight]
+        return if query && query.owner == contributor.owner
+
+        add("registration.missing_dependency", contributor.owner, contributor.name,
+            "#{contributor.name} needs its own registered preflight query.", contributor.preflight)
+      end
+
+      def check_contract(contributor)
+        version = contributor.section_version
+        return if contributor.contract && version.is_a?(Integer) && version.positive?
+
+        add("registration.schema_invalid", contributor.owner, contributor.name,
+            "#{contributor.name} needs a contract block and a positive section version.")
+      end
+
+      # `owned` accumulates across the batch, so two staged contributors cannot claim one field either.
+      def check_result_fields(contributor, owned)
+        Export::Privacy.schema_problems(contributor.result).each do |problem|
+          add("registration.schema_invalid", contributor.owner, contributor.name,
+              "#{contributor.name} result: #{problem}.")
+        end
+        return unless contributor.result.is_a?(Hash)
+
+        contributor.result.each_key do |field|
+          next unless Export::Privacy::SHELL.key?(field) || owned.include?(field)
+
+          add("registration.duplicate_id", contributor.owner, contributor.name,
+              "#{contributor.name} declares result field #{field}, which is already owned.")
+        end
+        owned.concat(contributor.result.keys)
       end
 
       def check_subscriptions
