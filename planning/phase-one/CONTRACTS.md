@@ -253,7 +253,7 @@ No step opens its own transaction or waits for a dialog. An empty proposal write
 creates no Undo entry. Attached-zone delete-with-replacement changes every referencing face and
 deletes the definition inside one proposal.
 
-`ph_composer.face_assignment.attached_zone.create_and_assign` stages one local definition and
+`ph_composer.zones.faces.attached_zone.create_and_assign` stages one local definition and
 classification of explicit `faces` in the same proposal. Required `values` define the new record;
 optional `intent.face_type` carries a pending type change. The action sets AttachedZone and its
 new ID together, validates all targets before writes, and preserves existing Face identity and

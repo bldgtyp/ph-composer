@@ -79,8 +79,11 @@ every push to `main`.
 
 Generated goldens are regenerated with `make fixtures`, which prints every file it changed; every
 other run compares them. Each golden has exactly one owning test, listed in `FIXTURE_OWNERS` in
-the Makefile. There are no goldens yet. Hand-authored inputs live apart from goldens and nothing
-regenerates them.
+the Makefile, and `FIXTURE_PATHS` names what `make fixtures-check` compares. There are two:
+`tests/fixtures/phase_one/two_zones_extraction.json`, the Phase 1 two-Zone extraction, owned by
+`tests/phase_one_export_test.rb`; and [`API_REFERENCE.md`](API_REFERENCE.md), the generated API
+reference, owned by `tests/api_reference_test.rb`. Hand-authored inputs live apart from goldens and
+nothing regenerates them.
 
 `make coverage` measures Ruby line coverage of the extension folder against a 93% minimum,
 JavaScript line coverage of `html/` (the runtime page included) against 94%, and Python coverage of
@@ -170,8 +173,9 @@ The panel-closed walkthroughs are in
 authoring, P1-C's adjacency, P1-D's Zone repairs, P1-D's adjacency cut, P1-D's Colour-by overlay,
 P1-D's Classify tool and P1-D's Overview screen. The Classify tool's ran on 2026-09-20 with an operator at the mouse,
 because SketchUp delivers pointer events to the active tool and the Ruby API synthesizes none; it
-covered the parts of Colour-by's that a drawing tool exercises, and Colour-by's own remaining
-questions are still open. Accepted current-host results are in
+covered the parts of Colour-by's that a drawing tool exercises. Colour-by's own questions were
+closed later by the [Colour-by continuation](../planning/phase-one/evidence/p1-d-colour-by-continuation.md).
+Accepted current-host results are in
 [`p1-b-authoring.md`](../planning/phase-one/evidence/p1-b-authoring.md),
 [`p1-c-adjacency-hbjson.md`](../planning/phase-one/evidence/p1-c-adjacency-hbjson.md),
 [`p1-d-repairs-and-cut.md`](../planning/phase-one/evidence/p1-d-repairs-and-cut.md) and

@@ -276,7 +276,7 @@ Four things are deliberately not in this slice:
   "New attached zone" route are in the panel; the assembly picker waits on Phase 2's assemblies. The
   native Classify menu stays, and both reach the same tool through the same calls.
 - **Locate has no user route yet, and is not registered.** Closed in D7. It is a view command,
-  `ph_composer.face_assignment.locate`, reached from the faces table and from any client with `view`
+  `ph_composer.zones.faces.locate`, reached from the faces table and from any client with `view`
   access. Registering it as an action would have manufactured an Undo entry for a read, which is why
   it waited for a seam that is neither a query nor an action.
 - **No toolbar button and no cursor change.** The UI polish skill's drawing-tool state rule asks for

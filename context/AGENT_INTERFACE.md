@@ -200,7 +200,8 @@ Registered extensions can name `ph_composer.zones.zone` and `ph_composer.zones.f
 Contributors resolve those identities through the shared record engine while the owning features
 retain entity writes. [The contract](EXTENSIBILITY.md#entity-owned-reference-targets) defines typed
 proposal projections and incoming-reference handling; [native evidence](../planning/phase-one/evidence/p1-d-entity-reference-targets.md)
-records actual copy/split/Solve targets and the pending independent-review gate.
+records actual copy/split/Solve targets; the independent review of that work passed (see the
+[Phase 1 acceptance register](../planning/phase-one/ACCEPTANCE.md)).
 
 ## Delivery and acceptance
 

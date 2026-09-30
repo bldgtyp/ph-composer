@@ -7,7 +7,7 @@ description: Polish, refactor, or review PH-Composer HtmlDialog screens using th
 
 Treat each screen as another view of one application, not a standalone visual redesign. Preserve behavior and domain language while making the initial state quiet, legible, and predictable.
 
-The patterns here were established in the predecessor, PH-Navigator for SketchUp, between 2026-09-06 and 2026-09-17, and its UI kit transplants into this repository. Until the transplant lands, the source paths in [references/patterns.md](references/patterns.md) point at the predecessor; after it, they point here. The rules do not change either way.
+The patterns here were established in the predecessor, PH-Navigator for SketchUp, between 2026-09-06 and 2026-09-17, and its UI kit transplanted into this repository. [references/patterns.md](references/patterns.md) lists local paths separately from predecessor-only screens not yet built here. The rules are the same for both.
 
 ## Priorities
 
@@ -56,7 +56,7 @@ The ellipsis menu is not a dumping ground. Keep actions visible when their curre
 
 ## Screens that do not exist yet
 
-Face assignment, window placement and thermal bridge assignment have no accepted screen pattern. They work in the SketchUp viewport with a native tool as much as in the panel. When designing one, start from the rules above, reuse the drawing-tool state rule (pressed button, icon and cursor change together; Escape unwinds one layer), and record the new pattern in `references/patterns.md` once the owner accepts it. Do not invent a second interaction grammar for the viewport.
+Window placement and thermal bridge assignment have no accepted screen pattern; face assignment's (the Overview and the Classify tool) is recorded in `references/patterns.md`. They work in the SketchUp viewport with a native tool as much as in the panel. When designing one, start from the rules above, reuse the drawing-tool state rule (pressed button, icon and cursor change together; Escape unwinds one layer), and record the new pattern in `references/patterns.md` once the owner accepts it. Do not invent a second interaction grammar for the viewport.
 
 ## Verify the result
 

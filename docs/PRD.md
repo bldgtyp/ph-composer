@@ -112,11 +112,12 @@ linked evidence is in proposed scope and adds none of those services.
 ## Current capability and release boundary
 
 The foundation merged through PR #1: records and public operations, sessions, panel/UI kit and
-shared units, the runtime shell and export infrastructure. P1-B now installs the first building
-features: Zone creation/details, path-qualified Face reads and single-Face classification. The
-remaining Phase 1 stages add adjacency, complete authoring behavior and the development-only
-construction proof through HBJSON/report. METr export and import acceptance are deferred until further
-feature development; their return milestone is unscheduled.
+shared units, the runtime shell and export infrastructure. Phase 1 (P1-A to P1-F) is implemented on
+its branch, PR #3, and has not merged: Zones, Faces and the adjacency between them, the Classify
+tool, Colour-by, repairs, and the export run to canonical HBJSON and its report, with a
+development-only construction provider for the proof. Merging is separate from any release. METr
+export and import acceptance are deferred until further feature development; their return milestone
+is unscheduled.
 
 SketchUp 2023 is the compatibility floor; its host proof is pending. SketchUp 26.1.188 on macOS
 is the proving host. Windows support and public distribution are separate gates. The first
