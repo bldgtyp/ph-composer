@@ -9,7 +9,7 @@ BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` f
 
 ## Next step
 
-Phase 01b.
+Phase 01c.
 
 ## Blockers
 
@@ -43,7 +43,7 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 | Phase | Merge set | State | Commit | Notes |
 | --- | --- | --- | --- | --- |
 | [01a](phases/phase-01a-model-correctness.md) Model correctness | Yes | Implemented on branch | `024cbfc`, `71c98b2`, `1bd2503` | |
-| [01b](phases/phase-01b-invocation-validation.md) Invocation validation | Yes | Scoped | | Independent of 01a |
+| [01b](phases/phase-01b-invocation-validation.md) Invocation validation | Yes | Implemented on branch | see git log | |
 | [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Scoped | | Independent of 01a |
 | [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Scoped | | After 01a |
 | [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Blocked | | Phase 02 |
@@ -76,7 +76,7 @@ Phase 08 into Phase 02.
 | M3b | Generic incoming-reference guard skips entity core references | P2 | Yes | 02 | Scoped | |
 | M4 | Partial pairing keeps `attached_zone_id` on Surface pieces | P2 | Yes | 01a | Implemented on branch | `zone_solve_scope_test`: partial AttachedZone pair, one and two sides |
 | U1 | Overview selection discards Zone details draft | P2 | Yes | 01c | Scoped | |
-| A03 | Non-JSON params escape and consume a sequence | P2 | Yes | 01b | Scoped | |
+| A03 | Non-JSON params escape and consume a sequence | P2 | Yes | 01b | Implemented on branch | `api_test`: non-JSON params refusal, lost-response retry |
 | OWN | Zones/FaceAssignment reciprocal private dependencies; one `zones` owner | Foundation | Yes | 02 | Scoped | |
 | DESC | Entity descriptors: values, references, occurrence schemas | Foundation | Yes | 02 | Scoped | |
 | SNAP | `GeometrySnapshot#zone_owner` holds Zone policy in shared export | P2 | Yes | 02 | Scoped | |

@@ -102,9 +102,13 @@ module PhComposer
       unexpected_outcome(error, session, name)
     end
 
+    # R-D3: a request whose params are not plain JSON is refused before acceptance. It cannot be
+    # digested, so it consumes no sequence and retains no outcome; the caller resends it corrected
+    # under the same sequence.
     def invoke(context, name, params, request)
       session, caller, action = resolve(context, "model_write", name, @registry.actions)
       sequence, expected_revision, proposal_digest = read_request!(request, session)
+      check_json!(params, session)
       retained = retained_outcome(session, caller, sequence, name, params, expected_revision, proposal_digest)
       return retained if retained
 
@@ -115,6 +119,8 @@ module PhComposer
       session.outcomes.finish(caller.handle, sequence, outcome)
     rescue CodedError => error
       coded_outcome(error, session, :mutation => true)
+    rescue StandardError => error
+      unexpected_outcome(error, session, name)
     end
 
     # The retained outcome of an earlier mutation request, without running it again.
@@ -236,14 +242,17 @@ module PhComposer
     end
 
     def check_params!(declaration, params, session)
-      unless params.is_a?(Hash) && JsonValue.problems(params).empty?
-        raise CodedError.new("request.malformed", "Params must be a plain JSON object.", "revision" => session.revision)
-      end
-
+      check_json!(params, session)
       findings = JsonSchema.validate(params, declaration.params)
       return if findings.empty?
 
       raise CodedError.new("params.invalid", "The request is not valid: #{findings.first}.", "findings" => findings)
+    end
+
+    def check_json!(params, session)
+      return if params.is_a?(Hash) && JsonValue.problems(params).empty?
+
+      raise CodedError.new("request.malformed", "Params must be a plain JSON object.", "revision" => session.revision)
     end
 
     def check_result!(declaration, value)

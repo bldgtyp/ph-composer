@@ -16,6 +16,8 @@ module PhComposer
           node.each_key { |key| found << "#{path} has a non-string key #{key.inspect}" unless key.is_a?(String) }
         when Float
           found << "#{path} is not a finite number" unless node.finite?
+        when JsonWalk::CYCLE
+          found << "#{path} contains itself"
         when Array, String, Integer, true, false, nil
           nil
         else

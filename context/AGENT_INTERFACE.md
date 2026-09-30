@@ -99,6 +99,9 @@ contract for mutations: scope keys to the caller/session, bind them to the reque
 retain a retrievable outcome for a documented period. A retry after a lost response must not
 create a second record or Undo entry. Report expired or uncertain outcomes; clients must inspect
 state rather than retry blindly. Do not claim exactly-once execution across process crashes.
+A request whose params are not plain JSON is refused before acceptance as `request.malformed`,
+effect `none`: it consumes no sequence and retains no outcome, so the caller resends it corrected
+under the same sequence.
 
 Successful writes return affected references and the resulting revision, with enough information
 to verify the change using a read. Validation failure is distinct from transport failure.

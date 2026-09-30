@@ -24,12 +24,23 @@ module PhComposer
       end
     end
 
+    # Stands in for a container that contains itself. JSON cannot express one, and following it
+    # would never end, so `each` visits CYCLE at that path instead of descending again.
+    CYCLE = Object.new.freeze
+
     # Visits every node, containers included, with its JSON path from the root (`$`, `$.a`, `$.a[0]`).
-    def each(value, path = "$", &visit)
+    def each(value, path = "$", ancestors = [], &visit)
+      container = value.is_a?(Hash) || value.is_a?(Array)
+      return visit.call(path, CYCLE) if container && ancestors.any? { |ancestor| ancestor.equal?(value) }
+
       visit.call(path, value)
-      case value
-      when Hash then value.each { |name, item| each(item, "#{path}.#{name}", &visit) }
-      when Array then value.each_with_index { |item, index| each(item, "#{path}[#{index}]", &visit) }
+      return unless container
+
+      inside = ancestors + [value]
+      if value.is_a?(Hash)
+        value.each { |name, item| each(item, "#{path}.#{name}", inside, &visit) }
+      else
+        value.each_with_index { |item, index| each(item, "#{path}[#{index}]", inside, &visit) }
       end
     end
   end

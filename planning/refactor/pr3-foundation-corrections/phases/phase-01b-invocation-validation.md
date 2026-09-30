@@ -1,11 +1,10 @@
 # Phase 01b: invocation validation
 
 DATE: 2026-09-30
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/4
 MERGE SET: Yes
-BLOCKED ON: implementation authorization
 
 ## Scope
 
@@ -55,4 +54,23 @@ path used by the panel.
 
 ## Result
 
-(Fill on completion.)
+Implemented in one commit (see the phase ledger in [STATUS.md](../STATUS.md)).
+
+- `Dispatch#invoke` checks params are plain JSON (`check_json!`) right after the request envelope
+  and before the digest, the retained-outcome lookup and `highest_sequence`. `check_params!` reuses
+  the same check. An unexpected `StandardError` in `invoke` now returns a structured failed
+  outcome instead of escaping.
+- Cyclic input is in the refusal set: `JsonWalk.each` tracks its ancestors and visits
+  `JsonWalk::CYCLE` instead of recursing, and `JsonValue.problems` reports it. No
+  `SystemStackError`.
+- Tests in `tests/api_test.rb`: `test_non_json_params_are_refused_without_consuming_the_sequence`
+  (NaN, mixed String/Symbol keys, a Ruby object, a cycle; fresh caller each; model, revision and
+  `highest_sequence` unchanged; `API.outcome` answers `request.outcome_unavailable`; the corrected
+  request under the same sequence commits) and `test_a_lost_response_retry_writes_once`. The first
+  failed before the fix with `JSON::GeneratorError`.
+- `context/AGENT_INTERFACE.md` states the rule in Writes with observable outcomes.
+- `api_test.rb` passes on Ruby 2.7.2 and 3.2.2; full Ruby suite 617 runs, 0 failures.
+
+Ledger screen: `core/*` and `shell/*` patterns flag every case, A01 to A16 and R01 to R04. The
+retained-outcome path the panel uses is unchanged for valid requests, so only case A03 is
+re-run at Phase 05 for this phase.

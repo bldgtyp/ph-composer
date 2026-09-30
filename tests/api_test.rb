@@ -220,6 +220,42 @@ class ApiTest < PhComposerTestCase
     assert_equal "params.invalid", invoke("test.fixture.create", { "parts" => "none" }, 1).fetch("code")
   end
 
+  # A03, R-D3: params that are not plain JSON are refused before acceptance. The sequence is not
+  # consumed, so no outcome is retained and the same sequence carries the corrected request.
+  def test_non_json_params_are_refused_without_consuming_the_sequence
+    cyclic = { "parts" => [] }
+    cyclic["self"] = cyclic
+    [{ "parts" => [], "extra" => Float::NAN }, { "parts" => [], :extra => 1 },
+     { "parts" => [], "extra" => Object.new }, cyclic].each do |params|
+      context = API.connect(:session_id => @session.id)
+      caller = @session.callers.fetch(context.caller)
+      operations = @model.operations.length
+      revision = @session.revision
+
+      refused = API.invoke(:context => context, :name => "test.fixture.create", :params => params,
+                           :request => request(1))
+
+      assert_equal %w[refused request.malformed none], refused.values_at("status", "code", "effect")
+      assert_equal [0, revision, operations], [caller.highest_sequence, @session.revision, @model.operations.length]
+      assert_equal "request.outcome_unavailable",
+                   API.outcome(:context => context, :request => { "sequence" => 1 }).fetch("code")
+      accepted = API.invoke(:context => context, :name => "test.fixture.create",
+                            :params => { "parts" => [part_values] }, :request => request(1))
+      assert_equal %w[completed committed], accepted.values_at("status", "effect")
+    end
+  end
+
+  def test_a_lost_response_retry_writes_once
+    first = create_parts(1, 1, 1)
+    operations = @model.operations.length
+    undo_steps = @model.instance_variable_get(:@undo_stack).length
+
+    again = create_parts(1, 1, 1)
+
+    assert_equal first, again
+    assert_equal [operations, undo_steps], [@model.operations.length, @model.instance_variable_get(:@undo_stack).length]
+  end
+
   # ------------------------------------------------------------------ retries
 
   def test_a_retry_with_the_same_payload_returns_the_first_outcome_without_running_again
