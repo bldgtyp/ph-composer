@@ -44,7 +44,7 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 | --- | --- | --- | --- | --- |
 | [01a](phases/phase-01a-model-correctness.md) Model correctness | Yes | Implemented on branch | `024cbfc`, `71c98b2`, `1bd2503` | |
 | [01b](phases/phase-01b-invocation-validation.md) Invocation validation | Yes | Implemented on branch | `a9b8f5c` | |
-| [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Implemented on branch | see git log | |
+| [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Implemented on branch | `ec20723` | |
 | [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Scoped | | After 01a |
 | [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Blocked | | Phase 02 |
 | [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Scoped | | Best after 02/03 |
