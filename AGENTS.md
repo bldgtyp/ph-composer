@@ -1,7 +1,7 @@
 # PH-Composer: agent guidance
 
-This is the canonical, tool-neutral guidance for the repository. Tool-specific files import it and
-add only their own mechanics.
+This is the canonical, tool-neutral guidance for the repository. Agents read it directly; there is no
+per-tool instruction file.
 
 ## Scope and product boundary
 
