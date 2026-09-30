@@ -34,6 +34,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         "cannot be exported as it stands." }
   };
 
+  var DRAFT_OPEN = "Save or cancel the Zone details first.";
   var screen = null;
 
   /* This screen's own state, rebuilt whenever the panel shows a different Model. */
@@ -46,9 +47,22 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       look: requests.channel(session, send, "locate", "view.invoke") };
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone, type or boundary", fields: ORDER_FIELDS, initialOrder: "name",
-      expansion: expansion(screen)
+      expansion: expansion(screen), guard: function () { return draftReason(screen); }, refused: refuse
     }, function () { panel.repaint(); });
     return screen;
+  }
+
+  /* One Zone details draft at a time (R-D4). While the form holds unsaved edits or a Save in flight,
+     anything that would hide it is refused rather than discarding the draft; the user saves or
+     cancels first. Model switch still withdraws the editor, because that draft is for another Model. */
+  function draftReason(state) {
+    var editor = state && state.zoneEditor;
+    return editor && (editor.dirty || editor.pending) ? DRAFT_OPEN : null;
+  }
+
+  function refuse(reason) {
+    panel.notify(reason, "warning");
+    if (screen && screen.zoneEditor) screen.zoneEditor.focus();
   }
 
   /* Collapse all and Expand all act on the tree, because this screen groups by the tree rather than
@@ -323,7 +337,12 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       cell: function (td, row, field, text) { return cell(td, row, field, text, state); },
       marker: marker, actions: actions, rowHidden: projection.hidden,
       selected: function (row) { return state.selected === row.key; },
-      inspect: function (row) { state.selected = row.key; panel.repaint(); },
+      inspect: function (row) {
+        var reason = row.key !== state.selected && draftReason(state);
+        if (reason) return refuse(reason);
+        state.selected = row.key;
+        panel.repaint();
+      },
       columnResize: function (field, width) {
         if (field === null) state.columnWidths = {};
         else if (width === null) delete state.columnWidths[field];
@@ -406,23 +425,37 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       value: depthValue,
       onCommit: function (committed) { depthValue = committed; }
     });
-    var save = ui.element("button", "", "Save");
+    var save = ui.element("button", "", "Save"), cancel = ui.button("Cancel", function () { editor.cancel(); });
     save.type = "submit";
+    cancel.type = "button";
     card.appendChild(labelled("Name", name));
     card.appendChild(labelled("Building-Segment", segment));
     card.appendChild(labelled("Level", level));
     card.appendChild(labelled("Ground depth", ground.root));
     card.appendChild(save);
+    card.appendChild(cancel);
     editor = {
       key: key,
       root: card,
       reference: zone.reference,
+      stored: zone,
       expectedValues: copyValues(values),
       dirty: false,
+      pending: false,
       disposed: false,
       setPending: function (pending) {
-        [name, segment, level, save].forEach(function (control) { control.disabled = pending; });
+        editor.pending = pending;
+        [name, segment, level, save, cancel].forEach(function (control) { control.disabled = pending; });
         ground.setDisabled(pending);
+      },
+      focus: function () { if (!save.disabled) save.focus(); },
+      // The whole form goes back to what the Model last said, and the draft ends.
+      cancel: function () {
+        if (editor.pending) return;
+        editor.dirty = false;
+        editor.skipSync = false;
+        ground.cancel();
+        editor.sync(editor.stored);
       },
       dispose: function () { editor.disposed = true; ground.dispose(); },
       accept: function (submitted) {
@@ -432,6 +465,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         ground.setValue(submitted.ground_depth_mm);
       },
       sync: function (authoritative) {
+        editor.stored = authoritative;
         if (editor.skipSync) {
           editor.skipSync = false;
           return;
@@ -477,5 +511,6 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
 
   // First in its pane: the Zone tree is the screen's work surface, and the palette and the legend
   // are controls that act on what it shows.
+  panel.navigationGuard("ph_composer.overview", function () { return draftReason(screen); });
   panel.section("ph_composer.overview", render, { order: 10 });
 });

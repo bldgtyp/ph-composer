@@ -9,7 +9,7 @@
 .phc-details-mount:empty { display: none; }
 .phc-zone-card { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px;
   display: grid; grid-template-columns: minmax(140px, 2fr) minmax(120px, 1fr) minmax(90px, 1fr)
-  minmax(110px, 1fr) auto; gap: 8px; align-items: end; }
+  minmax(110px, 1fr) auto auto; gap: 8px; align-items: end; }
 .phc-zone-card label { display: grid; gap: 4px; color: var(--muted); font-size: 11px; }
 .phc-zone-card input { min-width: 0; }
 .phc-empty { margin: 0; padding: 12px; color: var(--muted); }

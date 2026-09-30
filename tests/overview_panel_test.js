@@ -433,3 +433,137 @@ test("switching Models withdraws the pending Attached-zone draft", function () {
   assert.strictEqual(p.query("dialog"), null);
   assert.strictEqual(p.sent.length, 0);
 });
+
+/* U1, R-D4: one Zone details draft at a time. While the form is dirty or its Save is pending, row
+   selection, filtering and tab changes that would hide it are refused with a warning notice. */
+function draftPage(payload) {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: payload || snapshot() });
+  var section = p.query("[data-section='ph_composer.overview']");
+  section.querySelector(".row-target").listeners.click({});
+  p.section = section;
+  p.notice = function () { return p.context.document.querySelector(".phc-floating-notice"); };
+  p.button = function (text) {
+    return section.querySelectorAll("button").filter(function (node) { return node.textContent === text; })[0];
+  };
+  p.selectedKey = function () {
+    return section.querySelectorAll("[data-row-key]").filter(function (node) {
+      return /host-selected/.test(node.className);
+    }).map(function (node) { return node.getAttribute("data-row-key"); })[0];
+  };
+  return p;
+}
+
+function type(control, text) {
+  control.value = text;
+  control.listeners.input({});
+}
+
+function assertRefused(p, zoneKey, label, draft) {
+  assert.strictEqual(p.selectedKey(), zoneKey, "the selection does not change");
+  assert.strictEqual(p.notice().hidden, false);
+  assert.strictEqual(p.notice().getAttribute("data-tone"), "warning");
+  assert.match(p.notice().message.textContent, /Save or cancel the Zone details/);
+  assert.strictEqual(byLabel(p.section, label).value, draft, "the draft and its controls stay");
+  assert.ok(p.button("Save") && p.button("Cancel"));
+  assert.strictEqual(p.sent.filter(function (m) { return m.type === "action.invoke"; }).length, 0);
+}
+
+test("a Zone details draft refuses selecting one of its Face rows", function () {
+  [["Zone name", "Unsaved name"], ["Building-Segment", "annex"], ["Level", "L3"], ["Ground depth", "250"]]
+    .forEach(function (pair) {
+      var p = draftPage(), zoneKey = p.selectedKey();
+      type(byLabel(p.section, pair[0]), pair[1]);
+
+      p.section.querySelectorAll(".row-target")[1].listeners.click({});
+
+      assertRefused(p, zoneKey, pair[0], pair[1]);
+    });
+});
+
+test("a Zone details draft refuses selecting another Zone row", function () {
+  var payload = snapshot(), overview = payload.sections["ph_composer.zones.overview"].value;
+  overview.zones.push({ id: "zon_b", schema_version: 1, user_data: {}, extension_data: {},
+    reference: { zone_id: "zon_b", zone_path: [300] }, state: "found", face_count: 0,
+    values: { name: "Zone 2", building_segment: "house", level: null, ground_depth_mm: 0 } });
+  var p = draftPage(payload), zoneKey = p.selectedKey();
+  type(byLabel(p.section, "Zone name"), "Unsaved name");
+  var other = p.section.querySelectorAll("[data-row-key]").map(function (node) {
+    return node.getAttribute("data-row-key");
+  }).indexOf(JSON.stringify(["Zone", [300]]));
+
+  p.section.querySelectorAll(".row-target")[other].listeners.click({});
+
+  assertRefused(p, zoneKey, "Zone name", "Unsaved name");
+});
+
+test("a Zone details draft refuses a filter change and a tab change", function () {
+  var p = draftPage(), zoneKey = p.selectedKey(), filter = byLabel(p.section, "Filter Zones");
+  type(byLabel(p.section, "Zone name"), "Unsaved name");
+
+  type(filter, "nothing matches");
+  assert.strictEqual(filter.value, "", "the filter keeps its value");
+  assertRefused(p, zoneKey, "Zone name", "Unsaved name");
+
+  p.query("[data-tab='export']").listeners.click({});
+  assert.strictEqual(p.query("[data-pane='overview']").hidden, false);
+  assertRefused(p, zoneKey, "Zone name", "Unsaved name");
+});
+
+test("Cancel restores the stored values and unlocks navigation", function () {
+  var p = draftPage();
+  type(byLabel(p.section, "Zone name"), "Unsaved name");
+  type(byLabel(p.section, "Ground depth"), "250");
+
+  p.button("Cancel").listeners.click({});
+
+  assert.strictEqual(byLabel(p.section, "Zone name").value, "Zone 1");
+  assert.strictEqual(byLabel(p.section, "Ground depth").value, "0");
+  p.section.querySelectorAll(".row-target")[1].listeners.click({});
+  assert.notStrictEqual(p.selectedKey(), JSON.stringify(["Zone", [100]]));
+  assert.strictEqual(byLabel(p.section, "Zone name"), undefined, "a Face row has no Zone details");
+  assert.strictEqual(p.sent.length, 0);
+});
+
+test("a pending Save keeps the form and locks navigation; success unlocks it", function () {
+  var p = draftPage(), zoneKey = p.selectedKey();
+  type(byLabel(p.section, "Zone name"), "North Zone");
+  p.section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  assert.strictEqual(p.sent.length, 1);
+  assert.strictEqual(p.button("Cancel").disabled, true, "an in-flight Save cannot be cancelled");
+
+  p.section.querySelectorAll(".row-target")[1].listeners.click({});
+  assert.strictEqual(p.selectedKey(), zoneKey);
+  assert.ok(p.button("Save"), "the pending request keeps its controls");
+
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
+    session: "session-a", outcome: { status: "completed", value: { zone_id: "zon_a" } } } });
+  p.section.querySelectorAll(".row-target")[1].listeners.click({});
+  assert.notStrictEqual(p.selectedKey(), zoneKey);
+  assert.strictEqual(p.sent.length, 1);
+});
+
+test("a refused Save keeps the draft locked and gives focus back to the form", function () {
+  var p = draftPage(), zoneKey = p.selectedKey();
+  type(byLabel(p.section, "Zone name"), "North Zone");
+  p.section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
+    session: "session-a", outcome: { status: "refused", message: "The Zone changed." } } });
+
+  p.section.querySelectorAll(".row-target")[1].listeners.click({});
+
+  assert.strictEqual(p.selectedKey(), zoneKey);
+  assert.strictEqual(byLabel(p.section, "Zone name").value, "North Zone");
+  assert.strictEqual(p.context.document.activeElement, p.button("Save"));
+});
+
+test("switching Models withdraws a dirty Zone details draft", function () {
+  var p = draftPage();
+  type(byLabel(p.section, "Zone name"), "Unsaved name");
+  var other = snapshot(); other.session = "session-b";
+
+  p.panel.receive({ type: "panel.snapshot", payload: other });
+
+  assert.strictEqual(byLabel(p.section, "Zone name"), undefined);
+  assert.strictEqual(p.sent.length, 0);
+});

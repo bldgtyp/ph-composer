@@ -9,7 +9,7 @@ BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` f
 
 ## Next step
 
-Phase 01c.
+Phase 02.
 
 ## Blockers
 
@@ -44,7 +44,7 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 | --- | --- | --- | --- | --- |
 | [01a](phases/phase-01a-model-correctness.md) Model correctness | Yes | Implemented on branch | `024cbfc`, `71c98b2`, `1bd2503` | |
 | [01b](phases/phase-01b-invocation-validation.md) Invocation validation | Yes | Implemented on branch | `a9b8f5c` | |
-| [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Scoped | | Independent of 01a |
+| [01c](phases/phase-01c-overview-draft-ownership.md) Overview draft ownership | Yes | Implemented on branch | see git log | |
 | [02](phases/phase-02-zones-ownership.md) `zones` ownership and refactors | Yes | Scoped | | After 01a |
 | [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Blocked | | Phase 02 |
 | [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Scoped | | Best after 02/03 |
@@ -75,7 +75,7 @@ Phase 08 into Phase 02.
 | M3a | Attached-zone delete ignores orphan Face references (feature action) | P2 | Yes | 01a | Implemented on branch | `attached_zone_test`: stranded-Face delete refusals, Restore route (3 tests) |
 | M3b | Generic incoming-reference guard skips entity core references | P2 | Yes | 02 | Scoped | |
 | M4 | Partial pairing keeps `attached_zone_id` on Surface pieces | P2 | Yes | 01a | Implemented on branch | `zone_solve_scope_test`: partial AttachedZone pair, one and two sides |
-| U1 | Overview selection discards Zone details draft | P2 | Yes | 01c | Scoped | |
+| U1 | Overview selection discards Zone details draft | P2 | Yes | 01c | Implemented on branch | `overview_panel_test`: draft navigation, Cancel, pending, Model switch (7 tests) |
 | A03 | Non-JSON params escape and consume a sequence | P2 | Yes | 01b | Implemented on branch | `api_test`: non-JSON params refusal, lost-response retry |
 | OWN | Zones/FaceAssignment reciprocal private dependencies; one `zones` owner | Foundation | Yes | 02 | Scoped | |
 | DESC | Entity descriptors: values, references, occurrence schemas | Foundation | Yes | 02 | Scoped | |
@@ -102,7 +102,7 @@ Phase 08 into Phase 02.
 | R02 nested Zone path | 01a / 05 | In catalog, not run | |
 | R03 orphan Attached-zone delete | 01a / 05 | In catalog, not run | |
 | R04 partial AttachedZone cut | 01a / 05 | In catalog, not run | |
-| R05 Overview draft navigation | 01c / 05 | Scoped | |
+| R05 Overview draft navigation | 01c / 05 | In catalog, not run | |
 | R06 panel-closed API client | 03 / 05, extended 09 | Blocked | |
 | Existing cases flagged by `--changed` | 05, 09 | | List per phase **Result** |
 

@@ -1,11 +1,10 @@
 # Phase 01c: Overview draft ownership
 
 DATE: 2026-09-30
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/4
 MERGE SET: Yes
-BLOCKED ON: implementation authorization
 
 ## Scope
 
@@ -59,4 +58,28 @@ Expect case A09. Add R05 to the case catalog. Host run in Phase 05 with native k
 
 ## Result
 
-(Fill on completion.)
+Implemented in one commit (see the phase ledger in [STATUS.md](../STATUS.md)).
+
+- `sections/overview.js`: the Zone details form gains a whole-form Cancel (restores the last
+  stored values, cancels any Ground depth edit, ends the draft) and tracks `pending` beside
+  `dirty`. While either holds, row selection away from the Zone, filter edits and tab changes
+  are refused with the warning notice "Save or cancel the Zone details first." and focus returns
+  to Save. Model switch still disposes the editor.
+- Two small UI kit seams, both feature-neutral: `panel.notify(message, tone)` raises a page-side
+  notice (`showTab` now uses it for its own guard refusals), and `ViewControls` takes an optional
+  `guard`/`refused` pair that keeps the previous filter text when a filter edit is refused. The
+  Overview registers its tab guard through the existing `panel.navigationGuard`.
+- `zones.css`: one more `auto` column so Cancel sits beside Save. Runtime manifest refreshed.
+- Tests in `tests/overview_panel_test.js` (7, written first; 5 failed before the change): Face
+  row and other-Zone row refusals for Name, Building-Segment, Level and Ground depth drafts;
+  filter and tab refusals; Cancel restores and unlocks; pending Save keeps Save/Cancel and locks
+  navigation, success unlocks; refused Save keeps the draft and focus; Model switch withdraws a
+  dirty draft. Full JS suite 191 tests pass, including the existing unit-switch, stale-value and
+  refresh tests.
+
+UI polish checklist: warning tone for a refusal, floating notice (no reflow, no browser modal),
+the draft surface stays visible while navigation that would hide it is locked, Cancel is a plain
+button beside Save with no restating text, Face chip edits are unaffected. Visual check of the
+two-button row at narrow width is part of the R05 host run in Phase 05.
+
+Ledger screen: A03, A04, A07, A09 to A16. R05 added to the case catalog.

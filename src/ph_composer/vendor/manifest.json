@@ -46,9 +46,9 @@
       "sha256": "d04ec25b95305a45ab69cbabd9a18a5e4c8ba9ff382d37618c596665e5d360ad"
     },
     "html/panel.js": {
-      "bytes": 13040,
+      "bytes": 13203,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "714ad4bc2047518bff72951e36fd0b47869dd3fe92672639627ece3f898d08cd"
+      "sha256": "9c6148e3760beb2a10e4c9c2266686406e42ada82428a5628879fc8e87973332"
     },
     "html/record_form.js": {
       "bytes": 4121,
@@ -101,9 +101,9 @@
       "sha256": "df76102e3142ad9ff51ad03f24648a47e1710ccfacdb830ead4dacb064708d16"
     },
     "html/sections/overview.js": {
-      "bytes": 23003,
+      "bytes": 24545,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "afba9338f2353c7a91b27eacf546f4a90b80b39d288466260a5610e094f17852"
+      "sha256": "0aeedfdf6e22f9738d2b3255d1b62169520388a0c7e13eb0637f5786ffdf956b"
     },
     "html/sections/shell.js": {
       "bytes": 758,
@@ -156,9 +156,9 @@
       "sha256": "a092c02f3cc376b33177db3c9f90180f51aca82465f6ae7b85b99d38e8b57539"
     },
     "html/view_controls.js": {
-      "bytes": 8097,
+      "bytes": 8588,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "0e18f14951f1abc1c04169c978df04645d64c8c5d4c799cbb27c164eaa1379e8"
+      "sha256": "824773705aadae111a1c8e3fd12179412be42031453851b74c207a7ff43e3e0a"
     },
     "html/workspace.js": {
       "bytes": 1099,
@@ -166,9 +166,9 @@
       "sha256": "3ea0d2929b882fad80da8fb48d2998874bb265f59f72dd5599812dbae02b82a8"
     },
     "html/zones.css": {
-      "bytes": 3212,
+      "bytes": 3217,
       "mime": "text/css; charset=utf-8",
-      "sha256": "62327c40be4e6671b57e884be0f061bf9d5b57da2be7638a846eaa67ddba56d4"
+      "sha256": "bcba146ccb1efb5f31b145730c2cf13585e554c5929e7fa870310c7f42fe6ebc"
     },
     "python/ph_composer_translation/__init__.py": {
       "bytes": 1234,

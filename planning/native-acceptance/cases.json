@@ -628,6 +628,22 @@
         "tools/hostkit/host_helpers.rb"
       ],
       "native_control_required": false
+    },
+    {
+      "id": "R05",
+      "label": "Overview Zone details draft navigation",
+      "mode": "native",
+      "authority": "planning/refactor/pr3-foundation-corrections/PLAN.md",
+      "paths": [
+        "src/ph_composer/html/*",
+        "src/ph_composer/shell/*",
+        "tests/*overview*",
+        "tests/panel*",
+        "tests/support/*",
+        "tools/hostkit/host_bridge*",
+        "tools/hostkit/host_helpers.rb"
+      ],
+      "native_control_required": true
     }
   ]
 }

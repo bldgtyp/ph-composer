@@ -203,11 +203,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     if (name !== state.ui.activeTab) {
       var message = Object.keys(navigationGuards).map(function (key) { return navigationGuards[key](name); })
         .filter(Boolean)[0];
-      if (message) {
-        state = withUI(state, { notice: { message: message, tone: "warning" } });
-        render();
-        return;
-      }
+      if (message) return notify(message, "warning");
     }
     state = withUI(state, { activeTab: name });
     render();
@@ -279,6 +275,12 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     }
   }
 
+  /* A notice raised by the page itself, such as a refused navigation. It never reaches the host. */
+  function notify(message, tone) {
+    state = withUI(state, { notice: { message: message, tone: tone || "info" } });
+    render();
+  }
+
   /* Sent once the page has started, so the first snapshot has somewhere to render. */
   function ready() { send("panel.ready", {}); }
 
@@ -287,7 +289,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   function repaint() { render(); }
 
   api = { receive: receive, section: section, ready: ready, state: state, showTab: showTab, send: send,
-    setPreference: setPreference, repaint: repaint,
+    setPreference: setPreference, repaint: repaint, notify: notify,
     navigationGuard: function (name, guard) { navigationGuards[name] = guard; } };
   Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function (tab) {
     tab.addEventListener("click", function () { showTab(tab.getAttribute("data-tab")); });
