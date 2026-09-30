@@ -18,6 +18,7 @@ these are observed limitations of this run, not permanent limits of SketchUp or 
 | Pending export plus Model/panel/runtime loss | Read task stage before triggering loss; later session/file readback | Use an explicit tools-only runtime delay when ordinary completion is too fast. Remove it in a fresh normal process afterward. |
 | Destination selection | Native Save dialog navigation followed by actual path readback | An entered full path became a colon filename in Documents in this run. Use the dialog's folder navigation; do not assume the requested directory was selected. |
 | Missing/blank window | Refresh current surface and check active Space/document | A missing capture is not proof of a failed panel. Bridge state may remain available. |
+| Window-bounded capture and menu labels | Resolve SketchUp's windows with System Events (`get {name, position, size} of every window` of process "SketchUp"), activate SketchUp, then `screencapture -x -R x,y,w,h` of that rectangle. Read a menu item's label through System Events without opening the menu | Codex computer use could not capture the SketchUp window on 2026-09-30. The window list itself shows whether a PH-Composer dialog is open. Never capture the full screen. |
 | Fresh process / install | Existing hostkit launch and build/install workflow | Inspect all open documents first. `launch` quits the host and may kill it after timeout; a scratch save does not authorize discarding unrelated work. |
 
 A human handoff names one action, its starting state, when to release/stop, and the observation needed.
@@ -33,4 +34,5 @@ helper override/live runtime remains, and record the normal build's expected beh
 
 Sources: [Colour-by toggle continuation](../planning/archive/phase-one/evidence/p1-d-colour-by-continuation.md),
 [held gesture/context continuation](../planning/archive/phase-one/evidence/p1-d-keyboard-context.md),
-[export lifecycle and restoration](../planning/archive/phase-one/evidence/p1-e-export-workflow.md).
+[export lifecycle and restoration](../planning/archive/phase-one/evidence/p1-e-export-workflow.md),
+[R06 rerun](../planning/native-acceptance/evidence/r06-rerun-2026-09-30.md).
