@@ -18,9 +18,9 @@ archive the packet.
 2. Native run: extended R06, plus the union of `--changed` screens from 06 to 08 (expect A03,
    A08, A10, A12, A13). Record through the acceptance ledger.
 3. One independent review of the 06 to 08 diff.
-4. `docs-pass`; fold durable outcomes into `context/` (envelope owner, entity descriptors,
+4. `docs-pass`; fold durable outcomes into `context/` (`zones` ownership, entity descriptors,
    malformed-request rule, bounded reads, metadata policy).
-5. PR with `Closes #N` (R-D6). After merge, move this packet unchanged to
+5. PR with `Closes #N` for the second issue, created when Phase 06 starts (R-D6). After merge, move this packet unchanged to
    `planning/archive/pr3-foundation-corrections/` and add a newest-first row to
    `planning/archive/README.md`; remove the row from `planning/STATUS.md`.
 

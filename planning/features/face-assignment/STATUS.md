@@ -54,6 +54,15 @@ Local PHX construction resolution was inspected. No feature runtime or host test
 that review. The later Phase 0 B2 overlay
 spike passed; it does not satisfy this feature's native lifecycle gate.
 
+## Deferred conveniences
+
+- **One-click Make Unique for a Face in a shared Group.** The
+  [PR #3 corrections](../../refactor/pr3-foundation-corrections/DECISIONS.md#r-d10-a-face-inside-a-shared-group-m1)
+  (R-D10) make Classify and Reverse refuse a Face inside a Group that shares its definition, with
+  a notice telling the user to Make Unique by hand. A later convenience could offer the Make Unique
+  from the notice and retry in one Undo step. It needs its own native Undo and host acceptance.
+  Not scheduled.
+
 ## Ledger
 
 | Date | Event |
@@ -68,3 +77,4 @@ spike passed; it does not satisfy this feature's native lifecycle gate.
 | 2026-09-20 | Post-Phase-0 refresh: added PLAN.md, removed completed foundation blockers and linked the shared Phase 1 stages and decisions. Planning only; feature implementation remains pending. |
 | 2026-09-20 | P1-B authoring core complete: explicit Face reads, geometric suggestions, keep/set/clear assignment, stamps and minimal Overview controls passed current-host acceptance. |
 | 2026-09-20 | P1-C export contribution complete on the implementation branch: detached face geometry and typed Python sections produced the exact two-Zone HBJSON with reciprocal Surface targets. |
+| 2026-09-30 | PR #3 foundation corrections decided: Face code moves under the `zones` feature (`ph_composer.zones.faces.*`); shared-Group Faces refuse with a Make Unique instruction (R-D10); Attached-zone delete refuses when an orphaned Face still uses it (R-D11). See [the corrections packet](../../refactor/pr3-foundation-corrections/README.md). |

@@ -5,7 +5,7 @@ STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 MERGE SET: Yes
-BLOCKED ON: implementation authorization; R-D5 for the branch
+BLOCKED ON: implementation authorization
 
 ## Scope
 
@@ -15,9 +15,9 @@ survive that move unchanged in intent.
 
 | ID | Correction | Review |
 | --- | --- | --- |
-| M1 | Apply the shared-storage refusal to every intermediate mutable container on a Face path, Groups included. Reads stay available. Never call `make_unique` | [M1](../review/MODEL-REVIEW.md#m1-p1-a-shared-child-group-bypasses-the-face-mutation-refusal) |
+| M1 | Apply the shared-storage refusal to every intermediate mutable container on a Face path, Groups included. Reads stay available. Never call `make_unique`. Per [R-D10](../DECISIONS.md#r-d10-a-face-inside-a-shared-group-m1) the panel shows a warning notice telling the user to make the Group unique (right-click, Make Unique) | [M1](../review/MODEL-REVIEW.md#m1-p1-a-shared-child-group-bypasses-the-face-mutation-refusal) |
 | M2 | Refuse a Face path that crosses another Zone record, using the same boundary as the inventory walk. Applies to reads and writes | [M2](../review/MODEL-REVIEW.md#m2-p2-a-supplied-face-path-can-cross-into-another-authored-zone) |
-| M3a | Attached-zone delete inventories every stored Face assignment, orphans included, and refuses the whole delete if any referencing occurrence cannot be reassigned through its normal operation. No silent mutation of an orphan | [M3](../review/MODEL-REVIEW.md#m3-p2-attached-zone-deletion-leaves-orphan-face-references-dangling) |
+| M3a | Attached-zone delete inventories every stored Face assignment, orphans included. Per [R-D11](../DECISIONS.md#r-d11-deleting-an-attached-zone-that-an-orphaned-face-uses-m3), any referencing Face outside every Zone, or otherwise not reassignable through its normal operation, refuses the whole delete before writes. The refusal names the affected Faces and the routes: Restore Zone, or remove those faces, then delete. No mutation of an orphan | [M3](../review/MODEL-REVIEW.md#m3-p2-attached-zone-deletion-leaves-orphan-face-references-dangling) |
 | M4 | Delete `attached_zone_id` on shared pieces when the single partial-match path installs Surface, matching the full-match and multi-neighbour paths; remainders keep it | [M4](../review/MODEL-REVIEW.md#m4-p2-partial-adjacency-pairing-retains-an-invalid-attached-zone-reference) |
 
 ## Source
@@ -36,13 +36,15 @@ the fixture recipe.
 1. **M1** Unrecorded Face under two child Groups sharing one Entities collection: Classify and
    Reverse, preview and invoke, both placements inside the Zone and one outside, refuse
    `target.shared_definition`; no attributes written; no Undo step. An already-recorded duplicate
-   still refuses. Read lists both occurrences.
+   still refuses. Read lists both occurrences. The refusal message tells the user to make the
+   Group unique.
 2. **M2** Explicit outer-Zone reference whose `entity_path` traverses an authored inner Zone:
    Classify, Reverse and locate/resolution refuse (`target.wrong_hierarchy` or the code the fix
    settles on) and write nothing. Ordinary nested non-Zone Group still classifies. Direct
    inner-hierarchy refusal unchanged.
 3. **M3a** Assigned Attached zone, member Face orphaned outside any Zone: delete with each
-   replacement mode refuses before writes; definition and all assignments retained. Also:
+   replacement mode refuses before writes; definition and all assignments retained; the refusal names the orphaned Faces and the Restore
+   Zone / remove-faces routes. Also:
    repeated/shared placements, a readable extension reference, normal successful replacement,
    Undo/Redo, Restore after the refusal.
 4. **M4** Partial overlap with one, then both, original Faces AttachedZone: Solve completes;
@@ -53,7 +55,8 @@ the fixture recipe.
 
 - The generic incoming-reference guard for entity core references (M3b): Phase 02.
 - Moving code between features, renaming actions: Phase 02.
-- `Adjacency.state` predicate consolidation: Phase 08.
+- `Adjacency.state` predicate consolidation and other `zones` refactors: Phase 02.
+- One-click Make Unique: deferred to the face-assignment packet (R-D10).
 
 ## Ledger screen
 

@@ -1,33 +1,36 @@
 # PR #3 foundation corrections: plan
 
 DATE: 2026-09-30
-STATUS: Scoped; no phase authorized
+STATUS: Scoped; decisions answered, no phase authorized
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 The phases follow the work order in [review/FOLLOW-UP.md](review/FOLLOW-UP.md), split at the
-merge gate. FOLLOW-UP step 1 becomes 01a to 01c; step 2 becomes 02; step 3 splits into 03 (A01,
-merge set) and 06 (A02, A04, A06); step 4 is 07; step 5 splits into 04 (docs, merge set) and 08
-(refactors).
+merge gate and adjusted by Ed's decisions of 2026-09-30 ([DECISIONS.md](DECISIONS.md)). FOLLOW-UP
+step 1 becomes 01a to 01c; step 2 becomes 02, which also absorbs every `zones`-internal refactor
+from step 5 (R-D9); step 3 splits into 03 (A01, merge set) and 06 (A02, A04, A06); step 4 is 07;
+the rest of step 5 splits into 04 (docs, merge set) and 08 (non-`zones` refactors).
+
+Priority, per R-D1: the cleanest final state, not the smallest diff. Work happens directly on
+`codex/phase-one-geometry-contracts`; PR #3 merges at Phase 05; 06 to 09 run on a branch from
+`main` (R-D5).
 
 ## Dependencies
 
 ```
-01a ─┐
-01b ─┼──────────────────────────────┐
-01c ─┘                              │
-02 (R-D1) ── 03 ────────────────────┼── 05 merge closure
-04 (docs; after 02/03 settle names) ┘
-                                     └── 06 ── 07 (R-D2) ── 08 ── 09 foundation closure
+01a ── 02 (zones owner + refactors) ── 03 ──┐
+01b ────────────────────────────────────────┤
+01c ────────────────────────────────────────┼── 05 merge closure ── PR #3 merges
+04 (docs; after 02/03 settle names) ────────┘
+                                                   └── 06 ─ 07 ─ 08 ── 09 foundation closure
 ```
 
-- 01a, 01b and 01c are independent and may run in any order or in parallel sessions.
-- 01a lands before 02. Phase 02 moves the code 01a fixes; fixing first keeps each regression
-  test meaningful across the move.
+- 01a, 01b and 01c are independent and may run in any order.
+- 01a lands before 02 (R-D9a): the restructure runs against a green suite, so any break it
+  causes is its own.
 - 03 needs 02's entity descriptors: A01's schemas are generated from them.
 - 04 is documentation. Run it after 02 and 03 so it describes the final names once.
-- 06 to 08 are independent of each other after 03, except 08's `Adjacency.state` work, which
-  builds on 02's module layout. The order shown is a recommendation, not a dependency.
+- 06, 07 and 08 are independent after the merge; the order shown is a recommendation.
 
 ## Working rules for every phase
 
@@ -41,7 +44,7 @@ merge set) and 06 (A02, A04, A06); step 4 is 07; step 5 splits into 04 (docs, me
 - Ruby 2.7 and Chromium 88 compatibility hold.
 - Never update a golden to make a failure disappear.
 - Link to the review section for facts; do not restate line numbers or metrics in new docs.
-- One commit per phase (or per finding inside 01a), DCO signed off.
+- One commit per phase, per finding inside 01a, and per refactor inside 02; DCO signed off.
 
 ## Verification profile
 

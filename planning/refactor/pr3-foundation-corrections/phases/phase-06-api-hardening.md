@@ -5,7 +5,7 @@ STATUS: Blocked
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 MERGE SET: No; recommended before faster feature development
-BLOCKED ON: Phase 03; R-D5 for the branch
+BLOCKED ON: Phase 05 merged; runs on the post-merge branch (R-D5)
 
 ## Scope
 
@@ -20,7 +20,7 @@ No plugin loader, no framework. Keep the registered contracts small.
 ## Source
 
 `src/ph_composer/shell/{api,dispatch,record_queries,registry,registry_validation}.rb`,
-`src/ph_composer/core/json_schema.rb`, envelope feature list operations, the Overview panel if it
+`src/ph_composer/core/json_schema.rb`, `zones` list operations, the Overview panel if it
 moves to the named complete projection.
 
 ## Tests (write first)

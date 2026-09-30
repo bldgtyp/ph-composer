@@ -29,7 +29,7 @@ owned by their feature; no generic CRUD over entity dictionaries.
 
 ## Source
 
-`src/ph_composer/shell/api.rb`, `core/records/reference_target.rb`, the envelope feature's
+`src/ph_composer/shell/api.rb`, `core/records/reference_target.rb`, the `zones` feature's
 declaration modules from Phase 02, `docs/` for generated reference.
 
 ## Tests (write first)

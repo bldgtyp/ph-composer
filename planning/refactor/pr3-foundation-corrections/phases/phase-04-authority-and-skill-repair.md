@@ -17,7 +17,7 @@ no em or en dashes.
 
 | Item | Correction |
 | --- | --- |
-| `context/TECH_STACK.md` | Remove "the shipping build registers no building features"; describe the registered envelope feature |
+| `context/TECH_STACK.md` | Remove "the shipping build registers no building features"; describe `zones` as the registered owner of Zones, Faces and adjacency |
 | `docs/PRD.md`, current capability and release boundary | P1-C to P1-F are implemented on the branch, not future work; keep merge and release distinct |
 | `docs/DEVELOPMENT.md`, fixtures and coverage | Name the Phase 1 extraction golden and its owning test; close the Colour-by open-questions sentence against the acceptance continuation |
 | `context/AGENT_INTERFACE.md`, entity-reference paragraph | Remove the pending independent-review gate the acceptance register records as passed |

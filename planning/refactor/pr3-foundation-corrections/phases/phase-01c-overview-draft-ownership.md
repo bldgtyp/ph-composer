@@ -1,11 +1,11 @@
 # Phase 01c: Overview draft ownership
 
 DATE: 2026-09-30
-STATUS: Blocked
+STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 MERGE SET: Yes
-BLOCKED ON: [R-D4](../DECISIONS.md#r-d4-overview-draft-ownership)
+BLOCKED ON: implementation authorization
 
 ## Scope
 
@@ -15,9 +15,16 @@ filtering or tab navigation. See
 Load `.agents/skills/ph-composer-ui-polish/SKILL.md` first; its progressive-disclosure rule is the
 standard this phase meets. Model switch still withdraws the old session's editor safely.
 
-Under R-D4 option A this adds a whole-form Cancel and a guard. Choose between keeping the editor
-pinned while selection moves, or refusing the navigation with an inline notice, during this
-phase and record the choice in **Result**. No browser modal dialogs.
+Behavior, per [R-D4](../DECISIONS.md#r-d4-overview-draft-ownership): one draft at a time.
+
+- The Zone details form gains a whole-form Cancel that restores stored values and ends the draft.
+- While the form is dirty or has a pending request, row selection, filter changes and tab
+  changes are refused, and a `warning` floating notice (for example "Save or cancel the Zone
+  details first") points the user at the form. The skill's rule: lock navigation that would hide
+  the draft's controls.
+- Model switch and panel close still withdraw the editor safely.
+- Single-cell Face table edits, which commit on Enter or blur, are unaffected.
+- No browser modal dialogs.
 
 ## Source
 
@@ -27,17 +34,18 @@ phase and record the choice in **Result**. No browser modal dialogs.
 
 In `tests/overview_panel_test.js`, starting from the review's reproduction:
 
-1. Type a new Zone name; select a Face row; return to the Zone. The draft is either still present
-   or was explicitly cancelled by the user. Never silently reverted. Zero writes sent.
+1. Type a new Zone name; click a Face row. The selection does not change, a warning notice
+   appears, the draft and its controls stay visible, and zero writes are sent.
 2. Same for Building-Segment, Level and Ground depth drafts.
-3. Filtering the selected Zone out, and changing tabs, follow the same rule.
-4. Cancel restores stored values and ends the draft; Save sends one write.
+3. A filter change and a tab change are refused the same way.
+4. Cancel restores stored values, ends the draft and unlocks navigation; Save sends one write
+   and unlocks navigation on success.
 5. A pending request keeps Save/Cancel visible; a refusal leaves the draft and a focus route.
 6. Existing unit-switch, stale-value and Undo/Redo preservation tests still pass.
 
 ## Out of scope
 
-Per-occurrence draft retention (unless R-D4 chooses it), other Overview layout changes.
+Per-row draft retention (rejected in R-D4), other Overview layout changes.
 
 ## Ledger screen
 
@@ -51,4 +59,4 @@ Expect case A09. Add R05 to the case catalog. Host run in Phase 05 with native k
 
 ## Result
 
-(Fill on completion, including the pinned-versus-refuse choice.)
+(Fill on completion.)

@@ -5,7 +5,7 @@ STATUS: Blocked
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 MERGE SET: No
-BLOCKED ON: Phase 02 (module layout)
+BLOCKED ON: Phase 05 merged; runs on the post-merge branch
 
 ## Scope
 
@@ -17,17 +17,16 @@ Metrics are advisory; long cohesive geometry or recovery procedures may stay lon
 Take each candidate as its own commit, behavior-preserving, with existing tests as the net.
 Skip a candidate when the change does not reduce what a reader must hold in mind; record the skip.
 
+The `zones`-internal candidates (reciprocal-pair validity, `cut_partition`, `keeper_path`,
+`Overlap.partition`) and the `restore_plan` parameter moved to Phase 02 under
+[R-D9](../DECISIONS.md#r-d9-phase-order-under-cleanest-final-state). This phase keeps the rest.
+
 | Candidate | Change | Priority |
 | --- | --- | --- |
-| Reciprocal-pair validity | One predicate shared by `Adjacency.state`, `current_pair?`, snapshot validation and retirement; live resolution stays separate from detached comparison | High: removes divergent copies of one rule |
-| `PartitionAndPairStep#cut_partition` | Separate native splitting from post-cut identity/reference projection; one transaction owner | Medium |
-| `SplitIdentityRepair.keeper_path` | Name endpoint proof versus explicit keeper selection; keep conservative ambiguity refusal | Medium |
-| `Registry::Validation#check_export_contributors` | Separate preflight ownership, schema and result-field checks (coordinate with Phase 06 A06) | Medium |
 | `Export::Workflow.start` | Separate reviewed repairs from destination consent and task start; transaction policy stays in one place. Explicit task stages without a state-machine library | Medium |
-| `Zones::Overlap.partition` | Separate polygon validation from region construction only if it helps | Low |
+| `Registry::Validation#check_export_contributors` | Separate preflight ownership, schema and result-field checks; coordinate with Phase 06 A06 and Phase 07's `user_data` key declaration | Medium |
 | Colour-by hatch clipping | Shared pure edge-intersection helper; preserve measured holed/concave/performance evidence | Low; needs case A08 rerun |
-| `FaceGeometry.world_normal` | Leave unless a smaller transform helper serves real callers | Low |
-| RP | Remove unused `revision` param from `Zones::Repair.restore_plan` and its callers | Cleanup |
+| `FaceGeometry.world_normal` (core) | Leave unless a smaller transform helper serves real callers | Low |
 
 Do not delete modules for lacking a production caller: public seams, test resets, synthetic
 examples, empty exporter composition and development spikes are intentional.
@@ -40,7 +39,7 @@ Per candidate. Hatch clipping flags A08 and needs its native pixel/timing check.
 
 - Each taken candidate is a separate commit with unchanged test outcomes and no golden change.
 - Skipped candidates recorded with a one-line reason in **Result**.
-- STATUS rows REF and RP set to `Implemented on branch`.
+- STATUS row REF set to `Implemented on branch`.
 
 ## Result
 

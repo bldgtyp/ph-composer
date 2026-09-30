@@ -10,8 +10,7 @@ BLOCKED ON: Phases 01a to 04 `Implemented on branch`
 ## Scope
 
 Prove the merge set as one coherent result and reassess PR #3 merge readiness. Follows the
-verification profile in [PLAN.md](../PLAN.md#verification-profile). If R-D5 chose option B,
-this phase is an interim checkpoint: run the gates and the native cases, skip the merge.
+verification profile in [PLAN.md](../PLAN.md#verification-profile).
 
 ## Steps
 
@@ -32,7 +31,8 @@ this phase is an interim checkpoint: run the gates and the native cases, skip th
    zones-and-adjacency and face-assignment packets. Existing Phase 1 acceptance stays as
    historical evidence of its named cases. Move R01 to R06 into `planning/phase-one/ACCEPTANCE.md`
    and repoint their `cases.json` authority (see [PLAN.md](../PLAN.md#new-native-acceptance-cases)).
-7. Update PR #3's description with a link to this packet and the closed finding list. Ed merges.
+7. Update PR #3's description with links to this packet and the merge-set issue (R-D6), and the
+   closed finding list. Ed merges; the merge closes the merge-set issue.
 
 ## Done when
 
