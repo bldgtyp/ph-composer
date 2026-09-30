@@ -57,6 +57,73 @@ class EntityReferencesTest < PhComposerTestCase
     assert_equal "target.ambiguous", refusal { @engine.resolve_reference(FACE::REFERENCE_KIND, face_id(orphan)) }
   end
 
+  def test_planned_reference_results_do_not_alias_nested_records_or_occurrence_keys
+    _zone, faces = zone(100, [101])
+    record = FACE::FACE_STORE.read(faces.first).merge("user_data" => { "tags" => ["original"] })
+    plan = R::ReferencePlan.new(:entries => [
+      R::ReferenceEntry.new(:kind => FACE::REFERENCE_KIND, :key => [100, 101], :record => record)
+    ])
+
+    found = @engine.resolve_reference(FACE::REFERENCE_KIND, record.fetch("id"), :reference_plan => plan)
+    found.key << 999
+    found.record.fetch("user_data").fetch("tags") << "mutated"
+    found.record["face_type"] = "invalid"
+
+    assert_equal [100, 101], plan.entries.first.key
+    assert_equal record, plan.entries.first.record
+    assert_equal record, @engine.resolve_reference(FACE::REFERENCE_KIND, record.fetch("id"),
+                                                 :reference_plan => plan).record
+  end
+
+  def test_staged_catalog_reference_results_cannot_change_what_apply_persists
+    before = attached("atz_000000000001")
+    changes = R::ChangeSet.new
+    @engine.propose_update(ATTACHED.id, before.fetch("id"), changes,
+                           :values => { "name" => "Updated" }, :user_data => { "tags" => ["original"] })
+    expected = PhComposer::DeepCopy.call(changes.writes.first.after)
+
+    found = @engine.resolve_reference(ATTACHED.id, before.fetch("id"), :change_set => changes)
+    found.record.fetch("user_data").fetch("tags") << "mutated"
+    found.record["temperature_reduction_factor"] = -1
+    found.key.replace("mutated")
+    @engine.apply(changes)
+
+    assert_equal expected, changes.writes.first.after
+    assert_equal expected, ATTACHED.store.read(@model, before.fetch("id"))
+    assert_empty ATTACHED.problems(changes.writes.first.after)
+  end
+
+  def test_malformed_neighbor_identity_reports_its_occurrence_without_writing
+    _zone, faces = zone(100, [101])
+    orphan = make_face(201)
+    @model.entities << orphan
+    FACE::FACE_STORE.write(orphan, "schema_version" => 1, "face_type" => "Wall")
+    before = FACE::FACE_STORE.read(orphan)
+    id = face_id(faces.first)
+    fixture = Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("test.reference_read", :contract_version => 1).query(
+          "test.reference_read.resolve", :description => "Resolve the fixture Face.",
+          :params => { "type" => "object" }, :result => { "type" => "object" }
+        ) { |request| request.engine.resolve_reference(FACE::REFERENCE_KIND, id).record }
+      end
+    end
+    PhComposer::Registry.install([fixture])
+
+    result = PhComposer::API.query(:context => @context, :name => "test.reference_read.resolve")
+
+    assert_equal %w[refused record.unreadable none], result.values_at("status", "code", "effect")
+    assert_equal FACE::REFERENCE_KIND, result.dig("detail", "target_kind")
+    assert_equal [201], result.dig("detail", "key")
+    assert_includes result.fetch("message"), "[201]"
+    assert_equal before, FACE::FACE_STORE.read(orphan)
+    assert_empty @model.operations
+    [nil, "", 201].each do |bad_id|
+      FACE::FACE_STORE.write(orphan, before.merge("id" => bad_id))
+      assert_equal "record.unreadable", refusal { @engine.resolve_reference(FACE::REFERENCE_KIND, id) }
+    end
+  end
+
   def test_catalog_edits_validate_entity_targets_without_catalog_crud
     _zone, faces = zone(100, [101])
     record = attached("atz_000000000001")

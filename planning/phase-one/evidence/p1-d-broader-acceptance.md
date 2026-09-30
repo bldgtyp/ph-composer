@@ -146,10 +146,10 @@ The Attached-zone dialog review found no blocking issue.
 
 ## Remaining boundaries
 
-Do not close A05 to A09 wholesale from these individual cases. Unique moved-path recovery is now
+The continuation records below complete A05 to A09's named current-host cases; the original individual cases alone did not establish that closure. Unique moved-path recovery is now
 verified. [Native split identity recovery](p1-d-split-identity-recovery.md) now passes its public action
 and native-menu gate. The [clean multi-neighbour continuation](p1-d-multi-neighbour-adjacency.md) verifies one-to-many
-pairing. The [entity-reference continuation](p1-d-entity-reference-targets.md) verifies the remaining A06 native cases. P1-D awaits independent review of that final implementation after the chat reached its agent-thread limit. The [isolated GPU continuation](p1-d-gpu-timing.md) completes A08’s named current-host cases. The [atomic inline continuation](p1-d-attached-zone-atomic.md)
+pairing. The [entity-reference continuation](p1-d-entity-reference-targets.md) verifies the remaining A06 native cases. That implementation and its two resolver corrections now pass independent review, final gates and targeted fresh-host checks; P1-D is complete on branch. The [isolated GPU continuation](p1-d-gpu-timing.md) completes A08’s named current-host cases. The [atomic inline continuation](p1-d-attached-zone-atomic.md)
 completes A07’s named current-host cases. The
 [hatch continuation](p1-d-hatch-and-invalidation.md) verifies the PRD hatch; the
 [keyboard/context continuation](p1-d-keyboard-context.md) completes A09's named current-host cases.

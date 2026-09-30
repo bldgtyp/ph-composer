@@ -11,7 +11,7 @@ module PhComposer
           validate_reference_plan!(reference_plan)
           entries = reference_plan.project(entries).select { |entry| entry.kind == kind_id }
         end
-        matches = entries.select { |entry| entry.record.fetch("id") == id }
+        matches = entries.select { |entry| reference_identity(entry) == id }
         detail = { "target_kind" => kind_id, "id" => id }
         if matches.empty?
           raise CodedError.new("reference.invalid", "#{kind_id} #{id} does not exist.", detail)
@@ -25,7 +25,8 @@ module PhComposer
         unless problems.empty?
           raise CodedError.new("record.unreadable", "#{kind_id} #{id} cannot be used: #{problems.first}.")
         end
-        entry
+        ReferenceEntry.new(:kind => DeepCopy.call(entry.kind), :key => DeepCopy.call(entry.key),
+                           :record => DeepCopy.call(entry.record))
       end
 
       # Every declared incoming reference, including readable envelopes from unavailable extensions.
@@ -61,6 +62,14 @@ module PhComposer
       end
 
       private
+
+      def reference_identity(entry)
+        id = entry.record["id"]
+        return id if id.is_a?(String) && !id.empty?
+
+        raise CodedError.new("record.unreadable", "#{entry.kind} at #{entry.key.inspect} has no valid record id.",
+                             "target_kind" => entry.kind, "key" => DeepCopy.call(entry.key))
+      end
 
       def all_reference_entries(change_set: nil)
         ids = @catalog.kinds.map(&:id) + @catalog.reference_targets.map(&:id)

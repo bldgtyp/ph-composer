@@ -1,7 +1,7 @@
 # P1-D evidence: Face and Zone extension-reference targets
 
 DATE: 2026-09-29
-STATUS: Implemented and current-host verified; independent review pending because the chat's agent-thread limit refused both start and resume attempts. P1-D remains open for that gate.
+STATUS: Implemented and current-host verified; independent review and its corrections pass. P1-D complete on branch.
 ISSUE: none (local implementation packet)
 
 ## Scope and correction
@@ -65,7 +65,7 @@ Fixtures use `p1d-entity-reference-{copy,split,solve,catalog}-{before,after}.skp
 `p1d-entity-references.rb`, `p1d-catalog-reference-kind.rb`, and
 `p1d-no-survivor-reference.rb`; corresponding JSON fingerprints and target checks stay private.
 
-## Deterministic gates and review
+## Initial implementation gates and local review
 
 Full `make ci`: 578 Ruby tests / 2,570 assertions; 180 JavaScript tests; 84 Python tests;
 9 hostkit tests / 30 assertions. Ruby 2.7.2 passes the same full Ruby suite. RuboCop inspects
@@ -76,14 +76,50 @@ Full `make ci`: 578 Ruby tests / 2,570 assertions; 180 JavaScript tests; 84 Pyth
 Local coherent-diff review traced registration, typed lookup, catalog copy/delete, entity copy,
 split keeper and solver identity-loss paths. It corrected the cross-kind catalog remap and removed
 unreachable catalog-only resolution handling and unused reference helpers. The returned-reference
-defect was reproduced and rechecked on the installed host. The required independent review did
+defect was reproduced and rechecked on the installed host. At the initial implementation commit, the required independent review did
 not run: spawning a reviewer and resuming the earlier independent reviewer both returned
 `agent thread limit reached`. Implementation-author investigation is not counted as that review.
 
-## Remaining gate
+## Final independent review and corrections
 
-A06's named current-host cases now have evidence. Before closing P1-D, a fresh review session must
-review this coherent implementation against the architecture rubric and the stronger `simplify`
-lane, including the final domain-failure reporting change. Keep P1-D open until that review and
-any required corrections are complete. P1-E's HBJSON/report workflow and P1-F remain pending;
-SketchUp 2023 and Windows acceptance remain separate gates.
+Ed authorized a separate review chat after the original chat's agent-thread limit refused another
+start attempt. Fresh read-only reviewer session `01a0f014-b5ba-71c2-ac5e-23d465963c37` reviewed
+`4404527` against `860c150`, using the architecture rubric and simplify's reuse, clarity and
+efficiency criteria. The reviewer reproduced two P2 defects without editing files:
+
+- Planned and staged catalog resolver results aliased proposal data. Mutating a read result could
+  change the eventual write after validation. The resolver now detaches kind, key and nested
+  record data using the existing DeepCopy helper.
+- Matching fetched every record's id before validation. A missing-id neighboring occurrence
+  raised KeyError rather than a domain diagnostic. Invalid identity shape now returns
+  `record.unreadable` with target kind and occurrence key, including through the public query.
+
+Three regression tests cover nested plan/key mutation, staged mutation and actual apply, and
+missing/null/empty/non-string identities beside a valid Face, with public no-write refusal.
+The same independent reviewer rechecked only the corrections and confirmed both findings closed,
+with no directly introduced actionable findings. The original review found no further actionable
+issues in registration, copy, split keeper, identity-removal checks or domain-cause reporting.
+
+Final `make ci` and the full Ruby 2.7.2 suite pass: 581 Ruby tests / 2,591 assertions, 180 JavaScript
+and 84 Python tests, plus 9 hostkit tests / 30 assertions. RuboCop: 172 files, no offenses.
+Coverage: Ruby 96.8% of 5,794 lines / 91 files; JavaScript 98.2%; Python 97.46%. Manifest and RBZ
+checks pass: 144 files, 5,422,621 compressed bytes / 19,904,789 installed bytes.
+
+The final build was installed and SketchUp restarted cleanly against the saved Solve-after
+fixture. Targeted native read checks verify detached plan results, detached staged results and
+actual applied records, then abort the synthetic writes. A deliberately malformed orphan gives
+`refused / record.unreadable / none` through the public query with its real occurrence key.
+The complete Model fingerprint remains exact and `modified: false`; all 76 saved declared targets
+resolve. Private helper: `p1d-final-review-read-checks.rb`. Earlier native copy/split/Solve acceptance
+remains applicable; these corrections do not change their geometry or mutation plans.
+
+The shared simplify skill now directs reviewer reuse, a specifically authorized separate review
+chat when available, and an honest pending gate with useful work continuing if tooling is
+unavailable. Self-review cannot satisfy independence. This workflow change is local agent
+configuration, not shipping extension behavior.
+
+## Remaining gates
+
+A04 to A09's named current-host evidence and final independent review are complete; P1-D is
+complete on the implementation branch. P1-E's HBJSON/report workflow and P1-F remain pending.
+SketchUp 2023, Windows, merge and public distribution remain separate gates.

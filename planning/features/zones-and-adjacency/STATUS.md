@@ -3,7 +3,7 @@
 DATE: 2026-09-29
 STATUS: In progress; P1-A through P1-C complete on the implementation branch, P1-D's D1 to D4
 implemented with current-host evidence for the recorded cases. D7's Overview Zone tree has
-current-host evidence and corrections; the broader acceptance cases remain open.
+current-host evidence and corrections; the named current-host P1-D cases and final independent review now pass.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -30,7 +30,7 @@ corrected their recorded defects and verified all three Zone modes on real Group
 
 The subsequent [A05 to A09 host run](../../phase-one/evidence/p1-d-broader-acceptance.md)
 records additional lifecycle evidence and corrections. Follow that record and the shared
-acceptance register for cases still open.
+acceptance register for the completed current-host cases and separate remaining gates.
 
 The [native reference continuation](../../phase-one/evidence/p1-d-native-references.md) verifies
 cut/paste and native split preservation, Undo/Redo and reopen. The false current endpoint state
@@ -40,14 +40,12 @@ now passes the public action and native Repair menu, with exact rollback, Undo/R
 [Split recovery](../../phase-one/evidence/p1-d-split-identity-recovery.md). The [extension-copy correction](../../phase-one/evidence/p1-d-extension-copy-safety.md)
 replaces warning-only unknown-payload carriage with pre-write refusal, while supported catalog
 references pass native copy/cut rollback, Undo/Redo and reopen. The [entity-reference continuation](../../phase-one/evidence/p1-d-entity-reference-targets.md)
-now verifies Face/Zone targets and incoming references; independent review is pending. The [clean multi-neighbour continuation](../../phase-one/evidence/p1-d-multi-neighbour-adjacency.md)
+now verifies Face/Zone targets and incoming references; independent review and its two resolver corrections pass. The [clean multi-neighbour continuation](../../phase-one/evidence/p1-d-multi-neighbour-adjacency.md)
 verifies coordinated one-to-many partitions, current reciprocal references, scope/unsafe refusal,
 exact rollback, native Undo/Redo, no-op repeat and fresh reopen.
 
 ## Blockers
 
-- Face/Zone extension-reference targets and incoming-reference handling pass native cases; their
-  final implementation awaits independent review because this chat reached its agent-thread limit.
 - A concave outline and a Face with a hole are reported rather than cut. Windows arrive in Phase 2
   and will put holes in real walls, so the holed case needs an answer before an assembly-bearing
   model relies on it.
@@ -85,4 +83,4 @@ completes A05's named current-host plane/angle, sliver, same-normal and scope ca
 Undo/Redo and final reopen/reference verification. Native split recovery now passes its A06 slice;
 [P1-Q5](../../phase-one/DECISIONS.md#p1-q5-native-split-identity-frontier) records Ed's accepted
 policy for which piece retains the old Face UUID; its public action and native menu are implemented
-and current-host verified. A06's [extension-reference continuation](../../phase-one/evidence/p1-d-entity-reference-targets.md) passes native cases; independent review is pending after the chat reached its agent-thread limit. Clean one-to-many pairing is current-host verified.
+and current-host verified. A06's [extension-reference continuation](../../phase-one/evidence/p1-d-entity-reference-targets.md) passes native cases; independent review, resolver corrections, final gates and targeted fresh-host checks pass. Clean one-to-many pairing is current-host verified.

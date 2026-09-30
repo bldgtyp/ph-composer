@@ -79,12 +79,12 @@ payloads retained, and unsafe extension data refused before writes. It does not 
 new adjacencies; a subsequent explicit Solve remains subject to the one-to-many solver boundary.
 Face/Zone extension-reference registration and incoming-reference handling now use the shared
 read-only target and typed proposal contract in `context/EXTENSIBILITY.md`. Their [native
-continuation](evidence/p1-d-entity-reference-targets.md) passes; independent review is pending.
+continuation](evidence/p1-d-entity-reference-targets.md) passes; independent review and its resolver corrections also pass.
 Outside incoming references retain their original/keeper target. Identity removal with incoming
 or unknowable references aborts rather than selecting a replacement by geometry.
 
 The rejected alternative gave every resulting piece a new identity, so existing references to
 the old identity would require explicit resolution. The accepted policy authorizes the recovery
 implementation within P1-D; its public contract and native gate now pass in the
-[split recovery evidence](evidence/p1-d-split-identity-recovery.md). The remaining reference and
-one-to-many solver boundaries are not closed by this gate.
+[split recovery evidence](evidence/p1-d-split-identity-recovery.md). Reference targets and clean one-to-many pairing have separate accepted continuation evidence;
+this split recovery gate alone does not establish those boundaries.

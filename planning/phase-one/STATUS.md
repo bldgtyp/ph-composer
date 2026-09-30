@@ -1,9 +1,8 @@
 # Phase 1 status
 
 DATE: 2026-09-29
-STATUS: In progress. P1-A through P1-C complete on the implementation branch; P1-D D1 to D7
-implemented. D7's eight host questions are answered and its recorded defects are corrected on
-this branch. Named current-host P1-D cases have evidence; the final entity-reference slice awaits independent review. P1-E has not started.
+STATUS: In progress. P1-A through P1-D complete on the implementation branch. D7's eight host questions are answered and its recorded defects are corrected on
+this branch. Named current-host P1-D cases have evidence; final independent review and corrections pass. P1-E has not started.
 ISSUE: none (local implementation packet)
 
 ## Resume here: native references and remaining authoring work
@@ -17,7 +16,7 @@ with exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID r
 [exact rollback, Undo/Redo and fresh reopen](evidence/p1-d-split-identity-recovery.md). The [extension-copy correction](evidence/p1-d-extension-copy-safety.md) now refuses unsafe
 Face cuts and copied-Zone repair before writes, with supported catalog-reference payloads passing
 native rollback, Undo/Redo and reopen. Ed accepted the split identity policy in [P1-Q5](DECISIONS.md#p1-q5-native-split-identity-frontier);
-the stored-path/explicit-choice policy is implemented and current-host verified. [Face/Zone extension-reference targets](evidence/p1-d-entity-reference-targets.md) now pass native copy, split, Solve, rollback, Undo/Redo and reopen; independent review is pending. The
+the stored-path/explicit-choice policy is implemented and current-host verified. [Face/Zone extension-reference targets](evidence/p1-d-entity-reference-targets.md) now pass native copy, split, Solve, rollback, Undo/Redo and reopen; independent review and its two resolver corrections pass. The
 [clean multi-neighbour continuation](evidence/p1-d-multi-neighbour-adjacency.md) verifies coordinated
 partitioning, reciprocal references, rollback, Undo/Redo and fresh reopen. The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) verifies the public action, inline Enter/Escape, references, exact rollback, Undo/Redo and fresh reopen; A07’s named current-host cases pass. The [isolated GPU continuation](evidence/p1-d-gpu-timing.md) completes A08’s named current-host cases. The
 [native adjacency boundary continuation](evidence/p1-d-adjacency-boundaries.md) verifies A05's
@@ -39,7 +38,7 @@ holed adjacency, copy/repair persistence, limited Restore, Attached-zone rollbac
 scene/tag invalidation, model-close cleanup and active-edit-path evidence. It also exposed
 ancestor visibility, lost Zone drafts and missing stale-pair retirement; their fixes pass native
 checks, `make ci`, coverage and the Ruby 2.7.2 suite. The record distinguishes the completed cases
-from the remaining boundaries. P1-D remains open until the register is complete.
+from the remaining boundaries. The continuation records now complete the named current-host P1-D register.
 
 ## D7 gate continuation and corrections
 
@@ -64,10 +63,11 @@ Ed's pending arrangement decision has not been inferred from this verification w
 
 The older handoff said a docs pass would close P1-D. `PLAN.md` instead requires A04 to A09 to
 have evidence. The named current-host cases now have that evidence, including A06's entity-reference
-continuation. P1-D remains open for the required independent review of that final implementation:
-both reviewer start and resume attempts failed with `agent thread limit reached`. The authoring
-worker's investigation and local review are not an independent review. Resume in a fresh review
-session against the coherent entity-reference commit and this packet's evidence. P1-E's
+continuation. A fresh independent review of `4404527` found two resolver defects: proposal aliasing and
+uncoded malformed-identity failure. Both are corrected, covered by regressions, and re-reviewed
+by the same independent reviewer. Final CI, coverage, Ruby 2.7 and targeted fresh installed-host
+checks pass. P1-D is complete on this implementation branch; release and floor-host acceptance
+remain separate. P1-E's
 HBJSON/report workflow remains unimplemented and is not part of this fix pass.
 
 The historical [D7-GATE-HANDOFF.md](D7-GATE-HANDOFF.md) is retained as the procedure that was
@@ -100,7 +100,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
   development and its floor-area/import questions. P1-E still owns the shipped HBJSON wheel set.
 - Create/link the implementation issue during authorized issue intake. The configured remote is
   `bldgtyp/ph-composer`; P1-A created no external issue or PR.
-- P1-D is authorized and every slice is implemented; its slices are tracked in [PLAN.md](PLAN.md). D7's host gate is verified; the remaining broader acceptance cases are tracked in the register and continuation record.
+- P1-D is authorized and every slice is implemented; its slices are tracked in [PLAN.md](PLAN.md). D7's host gate and the named current-host broader acceptance cases are verified; final independent review passes. P1-E is next.
 
 ## Stages
 
@@ -109,7 +109,7 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 | P1-A: geometry contracts and host investigation | Complete | [Contract](CONTRACTS.md); [host evidence](evidence/p1-a-geometry.md); A01 met |
 | P1-B: Zone and face authoring core | Complete | [Authoring evidence](evidence/p1-b-authoring.md); A02/A03 and the P1-B portion of A04 met |
 | P1-C: adjacency and early HBJSON proof | Complete on branch | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
-| P1-D: complete Phase 1 authoring UI and repairs | Implemented on branch | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass. D4 and D6 host gates passed; D7's eight questions are answered and fixes rechecked. A04 to A09 named current-host cases have evidence; the final entity-reference implementation awaits independent review. Slice table in [PLAN.md](PLAN.md) |
+| P1-D: complete Phase 1 authoring UI and repairs | Complete on branch | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass. D4 and D6 host gates passed; D7's eight questions are answered and fixes rechecked. A04 to A09 named current-host cases have evidence; the final entity-reference implementation and review corrections pass independent review, final gates and targeted fresh-host checks. Slice table in [PLAN.md](PLAN.md) |
 | P1-E: HBJSON/report export workflow | Scoped | Pending; remaining canonical-export choices open |
 | P1-F: acceptance and handoff | Scoped | Pending |
 

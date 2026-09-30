@@ -1,7 +1,7 @@
 # Phase 1 delivery plan
 
-DATE: 2026-09-25
-STATUS: P1-A through P1-C complete on the implementation branch. P1-D is authorized and in progress; D1 to D4 are implemented.
+DATE: 2026-09-29
+STATUS: P1-A through P1-D complete on the implementation branch; P1-E is next.
 ISSUE: none (local planning draft)
 
 ## Outcome and scope
@@ -149,10 +149,10 @@ METr conversion and import are deferred; neither is required for this gate.
 
 ## P1-D: complete Phase 1 authoring behavior
 
-**State:** In progress, authorized 2026-09-20. Named current-host A04 to A09 cases have evidence.
-The final [entity-reference slice](evidence/p1-d-entity-reference-targets.md) awaits its required
-independent review after the chat reached its agent-thread limit. Complete that review before
-closing P1-D; delivered behavior remains distinguished from release/floor-host acceptance.
+**State:** Complete on branch, 2026-09-29. Named current-host A04 to A09 cases have evidence.
+The final [entity-reference slice](evidence/p1-d-entity-reference-targets.md) and its two resolver
+corrections pass independent review, final deterministic gates and targeted fresh installed-host
+checks. Delivered behavior remains distinguished from release/floor-host acceptance.
 
 | Slice | Delivers | State |
 | --- | --- | --- |
