@@ -25,13 +25,19 @@ each action did to the Model.
 
 ## Host state when this was written
 
-- SketchUp 26.1.188 is running with `_private/host/pr3-r.skp` (fresh from
-  `_private/host/blank-template.skp`), RBZ `24fa64c9...` built from `08aa837`, normal composition.
-- Model contents: "Zone 2" at the origin holds two child Groups sharing one definition (R01's
-  fixture; leave it). The R03 Zone at x = 8 m was exploded, refused, restored by Restore Zone, and
-  the Garage Attached zone was then deleted with its two Faces reclassified Outdoors. The Attic
-  Attached zone remains. The next Undo step is "Undo Delete Attached Zone".
+Refreshed after Codex's first pass found the earlier Model had drifted (stray Undo steps
+delivered late). A fresh process now holds `_private/host/pr3-handoff.skp` (fresh from
+`_private/host/blank-template.skp`), RBZ `5d1ca29e...` built from the R05 focus fix, normal
+composition, set up by `CorrectionsWalkthrough.handoff_setup`, `handoff_paste`, `handoff_finish`:
 
+- "Zone 1" at the origin with one small child Group (one square Face) inside it.
+- "Zone 2", R03's Zone at x = 8 m: its Garage Attached zone was just deleted through the public action,
+  moving its two Faces to Outdoors. The Attic Attached zone remains. The next Undo step should be
+  "Undo Delete Attached Zone".
+- "Zone 3" at y = 8 m, for R05's other-Zone selection.
+- The walkthrough is loaded and its Undo/Redo observer is on.
+
+Check `$B eval 'CorrectionsWalkthrough.state'` before starting: three Zones, all `found`.
 If SketchUp is not running or shows another Model, stop and report; do not relaunch.
 
 ## Bridge readback
@@ -62,7 +68,7 @@ then worked and the same delete committed, moving 2 Faces.
    Expect the Garage id back and 2 assigned Faces. Then Edit > Redo; the same readback should show
    no Garage (`[nil, nil]` or the Garage absent).
 2. **Moved-Face variant.** `$B eval 'CorrectionsWalkthrough.r03_assign_again'` (expect
-   `"assigned": 2`). Natively: double-click the R03 Zone (the right-hand box) to open it; select
+   `"assigned": 2`). Natively: double-click "Zone 2" (the R03 Zone, at x = 8 m) to open it; select
    one of its Faces that the readback lists as AttachedZone (the Outliner will not help with Faces;
    `$B eval 'CorrectionsWalkthrough.state'` lists Face ids and boundary conditions, and the floor is
    usually one of them); Edit > Cut; close the Zone (Escape or click outside it); Edit > Paste and
@@ -76,7 +82,7 @@ then worked and the same delete committed, moving 2 Faces.
 
 1. Open the panel: Extensions > PH-Composer > Open PH-Composer. The Overview tab shows the Zones
    table.
-2. Click the "Zone 2" row (the row target, not its chips). The Zone details form appears beneath the
+2. Click the "Zone 1" row (the row target, not its chips). The Zone details form appears beneath the
    table with Name, Building-Segment, Level, Ground depth, Save and Cancel.
 3. Click into the Name field and type ` draft` at the end with the keyboard. Do not press Enter.
 4. Try each of these and observe after each: click a Face row of another Zone, or the other Zone's
@@ -86,7 +92,7 @@ then worked and the same delete committed, moving 2 Faces.
    act on Save). The Filter field keeps its previous text.
 5. Click Cancel. Expected: Name returns to its stored value, and clicking another row now changes
    the selection.
-6. Select "Zone 2" again, type ` draft` in Name, press Tab to reach Save (or click Save). While the
+6. Select that Zone again, type ` draft` in Name, press Tab to reach Save (or click Save). While the
    request is pending, Save and Cancel stay visible. After it completes, read back
    `$B eval 'CorrectionsWalkthrough::Client.new.zones.map { |z| z.dig("values", "name") }'`; the
    new name is stored, and row selection works again.
@@ -99,11 +105,15 @@ Only the Face path resolution changed for this case, so one drag suffices.
 
 1. In the panel's Classify palette choose Face type "Wall" (the tool takes the viewport; the Classify
    toolbar/menu state shows it pressed).
-2. In the viewport, press and drag across two or three walls of the R03 Zone, then release.
+2. In the viewport, press and drag across two or three walls of "Zone 3", then release.
 3. Read back `$B eval 'CorrectionsWalkthrough.state'`: the dragged Faces now have records. Press
    Escape once; the tool stops (Extensions > PH-Composer > Classify faces shows nothing chosen).
-4. Also try one drag inside "Zone 2" across the child square (the shared child Group). Expected: a
-   yellow notice telling you to Make Unique, and no record changed for that Face.
+4. Make the child shared, natively: double-click "Zone 1" to open it, select its
+   child Group in the Outliner, Edit > Copy, Edit > Paste In Place, then Escape to close the Zone.
+   The Outliner should show two child Groups under that Zone. Read back
+   `$B eval 'CorrectionsWalkthrough.state'`: that Zone's Face appears twice. Then, with the Classify
+   tool active, drag across the child square. Expected: a yellow notice telling you to Make Unique,
+   and no record written for that Face (its entry in `state` stays `[null, null]`).
 
 ## Report
 
