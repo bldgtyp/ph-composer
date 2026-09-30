@@ -1,7 +1,7 @@
 # Validation and export: behavior contract
 
 DATE: 2026-09-18
-STATUS: Scoped draft. PLAN.md added after Phase 0; remaining interview decisions are open.
+STATUS: Phase 1 HBJSON/report scope implemented and current-host verified 2026-09-30; later feature scope remains proposed. METr remains deferred.
 AUTHOR: Ed May, BLDGTYP, with Codex review
 ISSUE: none (local planning draft)
 

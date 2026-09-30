@@ -165,7 +165,7 @@ opens. The server's token authorizes loading runtime assets and nothing else; it
 credential.
 
 A feature adds export coverage with `feature.export_contributor(name, section_version:, result:,
-report:)` in its `install`, whose block returns the section's records, and a Python `Section` with
+report:, preflight:)` in its `install`, whose block returns the section's records, and a Python `Section` with
 the same id listed in `python/ph_composer_translation/composition.py`. The block reads through
 `Export::RecordReader`, which exports only declared values and named extension fields, leaves
 `user_data` and `local_only` data out with a finding, and blocks on data whose export relevance is
@@ -173,6 +173,23 @@ unknown or required but unexported. When the translator adds result fields for t
 contributor declares them in `result` and renders them in `report`. The extraction carries every
 section under `sections`; `export/` knows no feature. The development example
 (`tools/examples/foundation/`) is the working pattern.
+
+Export preflight is a declared query owned by the same feature as its contributor. It returns
+findings and optional registered repair actions. The shell runs only selected repairs before the
+read-only task and repeats preflight afterward. Sections may produce nonblocking findings through
+the generic Python section hook; feature omission rules remain in their sections.
+
+Collection resumes a detached geometry traversal in slices of at most 100 entities with an 8 ms
+budget. One native Face capture and one contributor callback are indivisible. The task checks a
+separate export content generation during collection, on translation return and before canonical
+commit. Camera, selection and edit-path navigation do not invalidate it; content commits and
+Undo/Redo do. SketchUp 26.1's navigation-only commit and the preceding content-commit ordering
+are measured in [P1-E evidence](../planning/phase-one/evidence/p1-e-export-workflow.md).
+
+The runtime installs only manifest-pinned local wheels on explicit export. There is no pip resolver,
+external download or system-Python fallback. The shipping composition still has no authored
+construction provider; the separately composed synthetic provider exists only in development
+acceptance and never becomes a stored Assembly or a shipping fallback.
 
 The privacy allowlist is the shell's fields plus every contributor's declaration, composed on each
 check, so a result field no declaration names fails the export at `checking`. The report embeds

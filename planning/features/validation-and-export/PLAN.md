@@ -1,7 +1,7 @@
 # Validation and export: implementation plan
 
-DATE: 2026-09-20
-STATUS: In progress; P1-C HBJSON development proof complete, P1-E workflow not authorized.
+DATE: 2026-09-30
+STATUS: Phase 1 scope implemented and verified on branch; METr remains deferred.
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md) owns the proposed workflow and the accepted D2 failure policy. The
@@ -10,13 +10,13 @@ the accepted METr deferral are in [Phase 1 decisions](../../phase-one/DECISIONS.
 
 ## Existing versus missing
 
-Phase 0 supplies contributor/result declarations, the Python coordinator/exporter registry,
-privacy checks, report rendering and recoverable canonical-pair primitives. The user command in
-`src/ph_composer/export/workflow.rb` still chooses a destination and refuses without writing.
-P1-C adds one detached Model traversal and registered Zone/face contributors, but not the bounded
-or cancellable P1-E run. The Python composition registers the building sections while withholding
-Rooms when no authored construction provider exists. The runtime still ships its core without
-translation wheels. The development-only proof does not implement a user export.
+Phase 0 supplies the contributor/result declarations, privacy/report contracts and recoverable
+canonical pair. P1-C adds typed Zone/Face translation. P1-E now implements the bounded task,
+feature-owned preflight, panel lifecycle, wheel payload, conformance and pair commit. P1-F adds
+fresh integrated acceptance. [Evidence](../../phase-one/evidence/p1-e-export-workflow.md) closes
+A11 to A14 and A16 on the current host. The normal composition continues to refuse missing authored
+constructions; the synthetic provider remains development-only. Broader feature validation,
+Assembly authoring and the deferred METr consumer milestone are outside this Phase 1 closure.
 
 ## Delivery allocation
 
@@ -29,7 +29,7 @@ translation wheels. The development-only proof does not implement a user export.
 | P1-E/F | Fresh-process canonical export gate | Exact HBJSON/report reconciled against authoring |
 | Deferred, unscheduled | METr exporter and actual import | Re-scope against available features when Ed resumes this work |
 
-## Implementation contracts to settle
+## Implemented Phase 1 contracts
 
 1. **Task lifecycle:** a per-session run with explicit stages, task identity, bounded progress,
    cancellation and teardown. Define bounded task/result retention and retrieval through polling;

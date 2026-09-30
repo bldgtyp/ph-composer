@@ -1,17 +1,9 @@
 # Phase 1: walking skeleton
 
-DATE: 2026-09-29
-STATUS: In progress. P1-A through P1-D complete on the implementation branch. D7's eight host questions are answered with fixes verified.
-The [broader native acceptance run](evidence/p1-d-broader-acceptance.md) adds A05 to A09 evidence
-and records further corrections. The [native reference checks](evidence/p1-d-native-references.md)
-verify cut/paste and split preservation, plus explicit Solve recovery of unique identities after
-path changes. The [split identity recovery](evidence/p1-d-split-identity-recovery.md) public action and native Repair menu now pass rollback, Undo/Redo and fresh reopen. The named current-host P1-D cases are complete. The [extension-copy continuation](evidence/p1-d-extension-copy-safety.md)
-corrects unsafe payload copying; the [entity-reference continuation](evidence/p1-d-entity-reference-targets.md)
-now verifies Face/Zone targets and incoming-reference handling.
-The [Colour-by continuation](evidence/p1-d-colour-by-continuation.md) verifies native overlay
-toggles, occlusion, alpha and orbit, with feature redraw/cadence measured at 1,032 triangles.
-The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) completes A07's
-named current-host cases. The [isolated GPU continuation](evidence/p1-d-gpu-timing.md) completes A08's named current-host cases. The [clean multi-neighbour continuation](evidence/p1-d-multi-neighbour-adjacency.md) verifies the solver boundary. A06's entity-reference native cases now pass; independent review found two resolver defects, now corrected and re-reviewed with final gates and targeted fresh-host checks passing. P1-E is next.
+DATE: 2026-09-30
+STATUS: P1-A through P1-F complete on the implementation branch for the named current-host scope.
+See [P1-E/F evidence](evidence/p1-e-export-workflow.md) for the final export and integration gates.
+A15 remains deferred; merge, release and floor-host/platform support are separate.
 ISSUE: none (local planning draft)
 
 Phase 0 merged through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1), local merge

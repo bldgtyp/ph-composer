@@ -1,7 +1,7 @@
 # Roadmap
 
-DATE: 2026-09-25
-STATUS: Phase 0 merged; Phase 1 P1-A through P1-C complete. P1-D is authorized and in progress.
+DATE: 2026-09-30
+STATUS: Phase 0 merged; Phase 1 P1-A through P1-F complete on branch for the named current-host scope.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -146,13 +146,15 @@ wanted as a warm-up. They sit here because neither is needed for the Phase 1 can
                                           4.3 hot water ───────── 4.4 piping
 ```
 
-## What remains before the next Phase 1 stage
+## Phase 1 completion and next scope
 
-P1-A through P1-C are complete. P1-D is authorized and in progress: its slice table is in the
-[execution plan](phase-one/PLAN.md). P1-E follows and still needs the shipped HBJSON translation
-wheel selection and the remaining canonical-export interview choices in
-[Phase 1 decisions](phase-one/DECISIONS.md). METr decisions wait until that work is separately
-scheduled.
+P1-A through P1-F are complete on branch for the named current-host scope. The
+[execution plan](phase-one/PLAN.md) and [final evidence](phase-one/evidence/p1-e-export-workflow.md)
+record authoring, export tasks, the pinned wheel payload and fresh integrated acceptance.
+The normal build safely refuses without authored Assemblies; successful Phase 1 translation uses
+an explicit tools-only provider. Phase 2 supplies real Assembly/material authoring and its gates.
+Merge, SketchUp 2023/Windows host proof and public distribution remain separate. METr decisions
+wait until that work is separately scheduled.
 
 B1 proved PHX conversion, not import into METr. Keep its evidence for the deferred exporter.
 Phase 1 needs no METr floor-area workaround. Revisit consumer requirements against the authoring

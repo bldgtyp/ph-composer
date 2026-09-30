@@ -7,11 +7,13 @@ You define the building while you work on its geometry. Envelope faces, assembli
 windows, thermal bridges and spaces all live in the SKP file. The extension exports HBJSON and,
 from that, the model METr reads.
 
-**Status: Phase 1 authoring core implemented on branch.** [PR #1](https://github.com/bldgtyp/ph-composer/pull/1)
-landed the foundation, panel and units, runtime shell and four investigations. P1-A established
-the geometry contracts; P1-B adds Zone creation/details and single-Face classification through
-the panel and public operations. Adjacency and real exports remain future Phase 1 stages.
-METr export is deferred until feature development is further along.
+**Status: Phase 1 implemented and current-host verified on branch.**
+[PR #1](https://github.com/bldgtyp/ph-composer/pull/1) landed the foundation. Phase 1 adds Zone/Face
+authoring, adjacency, identity repairs and the HBJSON/report workflow with pinned translation
+wheels. [Acceptance evidence](planning/phase-one/evidence/p1-e-export-workflow.md) records the
+checks and limits. The normal build requires authored Assemblies; successful Phase 1 translation
+uses a separate development fixture provider. METr, merge/release and SketchUp 2023/Windows
+host proof remain separate.
 
 ## What it will do
 

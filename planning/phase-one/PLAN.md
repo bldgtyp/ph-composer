@@ -1,7 +1,9 @@
 # Phase 1 delivery plan
 
-DATE: 2026-09-29
-STATUS: P1-A through P1-D complete on the implementation branch; P1-E is next.
+DATE: 2026-09-30
+STATUS: P1-A through P1-F complete on the implementation branch for the named current-host scope.
+See [P1-E/F evidence](evidence/p1-e-export-workflow.md) for the final export and integration gates.
+A15 remains deferred; merge, release and floor-host/platform support are separate.
 ISSUE: none (local planning draft)
 
 ## Outcome and scope
@@ -36,7 +38,7 @@ baseline at `f1e9a98`, not a substitute for the durable contracts in `context/`.
 | `session/model_session.rb`, `host_observers.rb` | Per-Model state, events, revision and lifecycle | Feature reconciliation, endpoint/geometry stamps, copy ambiguity and cache invalidation |
 | `html/` panel sections, request channel, forms and units | One client of the public operations | First model tree/table, table drafts/preferences deferred by P0-E, feature navigation and viewport tool state |
 | `export/collection.rb`, record reader, privacy, report and artifact pair | Contributor declarations, allowlist and recoverable pair primitives | Bounded geometry collection, coherent snapshot guard, cancellable task/run coordinator and optional-artifact recovery |
-| Python section coordinator and exporter registry | Typed dependencies, result accounting and HBJSON-only exporter isolation; P1-C adds Zone/face sections and early honeybee model assembly | P1-E completes the user export workflow and shipped runtime composition; METr remains deferred |
+| Python section coordinator and exporter registry | Typed dependencies, result accounting and HBJSON-only exporter isolation; P1-C adds Zone/face sections and early honeybee model assembly | P1-E completed the user export workflow and shipped runtime composition; METr remains deferred |
 | Runtime host, server and manifest | Separate token-origin runtime page, lazy boot and integrity checks | HBJSON translation wheel set, loader and real translation requests; refresh manifest and measured footprint; PHX payload deferred |
 
 The [foundation example](../../tools/examples/foundation/README.md) is the entrypoint pattern.
@@ -405,17 +407,20 @@ within scope. Unsafe payloads refuse before writes; exact rollback, Undo/Redo an
 [extension-copy continuation](evidence/p1-d-extension-copy-safety.md) corrects warning-only
 carriage of unknown data during identity-changing copies: unsafe payloads now refuse before any
 write, while supported catalog-reference payloads follow their declared rules. Face and Zone UUID
-reference targets are not yet registrable. The [clean multi-neighbour continuation](evidence/p1-d-multi-neighbour-adjacency.md)
+reference targets are now registrable and verified in the [entity-reference continuation](evidence/p1-d-entity-reference-targets.md). The [clean multi-neighbour continuation](evidence/p1-d-multi-neighbour-adjacency.md)
 now solves the repaired paired split and three stacked Zones with coordinated partitions, exact
-rollback, native Undo/Redo, no-op repeat and fresh reopen. Resolve the remaining extension-reference
-boundary before closing A06; do not choose an ambiguous endpoint by geometry.
+rollback, native Undo/Redo, no-op repeat and fresh reopen. The subsequent entity-reference
+implementation and independent review close A06; ambiguous endpoints still refuse.
 
 The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) now implements
 the pending Face create-and-assign operation and Overview modal. Public and inline paths pass
 validation, native cancellation, actual-reference checks, exact rollback, Undo/Redo and fresh
-reopen. A07 and A08's named current-host cases pass; A06 remains open.
+reopen. A06, A07 and A08's named current-host cases pass.
 
 ## P1-E: HBJSON/report export workflow
+
+Completed on branch 2026-09-30. [Evidence](evidence/p1-e-export-workflow.md) records the accepted
+choices, actual runtime, normal-construction refusal, artifact lifecycle and independent review.
 
 **Depends on:** P1-C, final authoring behavior for integrated acceptance, and the HBJSON/report interview choices.
 
@@ -443,6 +448,9 @@ HBJSON reloads in the pinned stack, and all canonical-pair failure paths pass. M
 only when separately scheduled after further feature development.
 
 ## P1-F: acceptance and handoff
+
+Completed for the named current-host scope 2026-09-30. [Evidence](evidence/p1-e-export-workflow.md)
+records both offline Ruby gates, coverage, runtime/browser checks and fresh integrated acceptance.
 
 Run the [acceptance register](ACCEPTANCE.md), record exact commits/builds and host/runtime
 versions, update the owning feature statuses and route Phase 2 work. Keep the development-only

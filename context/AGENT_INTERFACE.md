@@ -119,6 +119,23 @@ semantics. A timeout does not imply cancellation or failure. Polling must work e
 change notifications are unavailable. Document task retention and behavior on model close or host
 restart. Cancellation only rolls back work where the operation explicitly guarantees it.
 
+### Implemented export task contract
+
+`API.export_preflight` requires `read` and returns feature-owned findings and explicit repair actions.
+A caller invokes selected repairs through the ordinary `model_write` contract, then revalidates.
+`API.start_export`, `export_status`, `cancel_export` and `latest_export` require the separate `export`
+grant. A scripted start supplies an authorized destination and explicit replacement consent.
+The native panel obtains these through its destination and replacement dialogs.
+
+One task may run per Model session. Status is detached, carries counts and diagnostics, and omits
+canonical HBJSON bytes. Successful results name the approved files and the run; retrieve their
+contents explicitly. A lost reply or timeout does not cancel a task. Poll or use `latest_export`
+before deciding whether to retry. Polling never repeats a write. The latest 20 terminal tasks are
+retained for at most 30 minutes using a monotonic clock. Model close releases the task and runtime;
+panel or client loss does not. Reopen and host restart expire old handles. File-journal recovery
+restores a coherent artifact pair independently of task history and does not assert that an
+unknown interrupted task succeeded.
+
 ## User-controlled local access
 
 External access is explicit and revocable, with a visible connection/access state. Separate read,

@@ -1,41 +1,34 @@
 # Validation and export: status
 
-DATE: 2026-09-20
-STATUS: In progress; P1-C development proof complete on the implementation branch.
+DATE: 2026-09-30
+STATUS: Phase 1 HBJSON/report scope implemented and current-host verified on branch.
 AUTHOR: Ed May, BLDGTYP, with Codex review
 ISSUE: none (local planning draft)
 
 ## State
 
-PRD drafted from the PH-Composer product boundary, the predecessor's completed E1 export
-contract and the contributor/exporter seams already recorded in `context/TECH_STACK.md`. Remaining
-interview choices are open. Phase 0 supplies shared export infrastructure. P1-C now supplies the
-shared detached geometry snapshot, Zone/face contributors and the typed two-Zone HBJSON proof.
-Building validation, the real export workflow and the METr exporter are not implemented.
+P1-E implements preflight, explicit repairs, per-Model asynchronous tasks, bounded collection,
+pinned lazy translation, cancellation, result retention and coordinated HBJSON/report replacement
+and recovery. Blocking findings remain visible and write no canonical pair. Export does not save
+or modify the SKP. [P1-E/F evidence](../../phase-one/evidence/p1-e-export-workflow.md) records the
+exact implementation, package, native cases and independent-review corrections.
 
-## Next step
+## Remaining scope and delivery boundaries
 
-P1-D completes authoring behavior before this packet resumes for P1-E. Review [PLAN.md](PLAN.md)
-and close the remaining export choices in [Phase 1 decisions](../../phase-one/DECISIONS.md).
-D2 and the Zones preflight decision are confirmed. Ed deferred METr export on 2026-09-20 until
-further feature development. Phase 1 closes on HBJSON/report; actual METr import and floor-area
-policy remain deferred, unscheduled.
-
-## Blockers
-
-- P1-E implementation is not authorized; remaining export interview choices gate it.
-- The real export run is not implemented.
-- Select and verify the shipped HBJSON translation wheel set. P1-C proved exact native pins;
-  Pyodide packaging remains P1-E. PHX-specific pin acceptance and the
-  no-Spaces METr floor-area question are deferred, not Phase 1 blockers.
-- The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
+The normal build requires authored Assemblies; it safely refuses when none are available.
+Successful Phase 1 translation acceptance uses an explicit tools-only synthetic provider, excluded
+from shipping composition. Assemblies/materials authoring and later building validation belong to
+their feature stages. METr export, consumer import and floor-area policy remain deferred and
+unscheduled. SketchUp 2023/Windows host proof, public-distribution license review, merge and
+release are separate gates. No implementation issue was requested or created.
 
 ## Verification
 
-Documentation consistency checked against the authorized zones-and-adjacency corrections:
-explicit preflight scope and omission accounting for unresolved or unrepresentable pairs.
-P1-C's exact HBJSON reload, identifiers, areas, reciprocal Surface target and tools-only fixture
-provider pass. The runtime, artifact workflow and final host export gates remain outstanding.
+Both Ruby 3.2.2 and 2.7.2 full offline gates pass, with coverage, real-panel browser checks,
+pinned native/Pyodide comparison, package inventory and fresh SketchUp 26.1.188 acceptance.
+Native cases cover missing-construction refusal, successful exact HBJSON/report, warnings,
+cancellation, mutation refusal, navigation tolerance, fault/restart recovery, panel/runtime/Model
+loss, two Models, nested edit paths, Undo/Redo and reopen. See the evidence for fixture limits.
 
 ## Ledger
 
@@ -46,3 +39,5 @@ provider pass. The runtime, artifact workflow and final host export gates remain
 | 2026-09-20 | Post-Phase-0 refresh: added PLAN.md, removed completed foundation blockers and linked the shared Phase 1 stages and decisions. Planning only; feature implementation remains pending. |
 | 2026-09-20 | Ed deferred METr exporter development and consumer acceptance until further feature development. Phase 1 closes on canonical HBJSON/report; return milestone unscheduled. |
 | 2026-09-20 | P1-C development proof complete on the implementation branch: registered Zone/face sections produced and reloaded exact HBJSON in the pinned native Honeybee stack; P1-E user workflow and Pyodide wheels remain pending. |
+| 2026-09-29 | Ed authorized P1-E: HBJSON/report always selected, blockers write no pair and remain visible, no implicit SKP save, METr deferred. |
+| 2026-09-30 | P1-E implementation and P1-F current-host integrated acceptance complete on branch; independent review and final gates pass. Normal composition requires authored Assemblies. |

@@ -1,7 +1,7 @@
 # Phase 1 decisions and evidence still needed
 
-DATE: 2026-09-29
-STATUS: METr deferral and P1-C fixture composition resolved; the P1-D gesture bound and split-Face identity policy are settled; P1-E runtime-wheel selection remains open.
+DATE: 2026-09-30
+STATUS: Phase 1 choices resolved and current-host acceptance complete on branch; METr and delivery/platform gates remain separate.
 ISSUE: none (local planning draft)
 
 ## Product decisions
@@ -9,10 +9,10 @@ ISSUE: none (local planning draft)
 | ID | Decision | Recommendation | Gates |
 | --- | --- | --- | --- |
 | P1-Q1 | METr before further feature development? | Ed deferred METr export and consumer acceptance on 2026-09-20. Phase 1 ends with HBJSON/report. Revisit floor-area requirements against the features available when METr resumes; no workaround now | Resolved: deferred, return milestone unscheduled |
-| P1-Q2 | Which wheels does canonical translation need? | P1-C proved the native development path with exact direct pins recorded in its evidence. P1-E still selects and vendors the minimal Pyodide wheel set, reviews honeybee-ph for that path and retains Pyodide 0.24.1. PHX-specific acceptance remains deferred | Partially resolved by P1-C; shipped runtime selection remains P1-E |
-| P1-Q3 | Confirm the development-only construction proof? | Resolved in P1-C: the deterministic provider lives under tools only, is absent from the RBZ, and the normal composition refuses to build Rooms without an authored provider. No persisted placeholder Assembly and no missing-reference fallback | Resolved 2026-09-20; retain through P1-E |
-| P1-Q4 | Remaining Export interview, Q2/Q4 | No canonical files on blocking validation, no implicit SKP save, HBJSON/report always selected. Exporter defaults under Q5 wait with METr | P1-E workflow |
-| P1-Q5 | Which split piece retains the old Face UUID? | Ed chose explicit repair: use a provable stored original path, otherwise ask the user to choose the retaining piece; allocate new UUIDs to the other pieces | Resolved 2026-09-29; public action and native-menu recovery verified; clean one-to-many Solve is verified; extension-reference boundary stays A06 |
+| P1-Q2 | Which wheels does canonical translation need? | P1-E vendors eight exact HBJSON wheels, retains Pyodide 0.24.1 and verifies native/Pyodide parity and installed footprint. PHX-specific acceptance remains deferred | Resolved 2026-09-30; [runtime evidence](evidence/p1-e-export-workflow.md) |
+| P1-Q3 | Confirm the development-only construction proof? | Resolved in P1-C: the deterministic provider lives under tools only, is absent from the RBZ, and the normal composition refuses to build Rooms without an authored provider. No persisted placeholder Assembly and no missing-reference fallback | Resolved 2026-09-20; retained and verified in P1-E |
+| P1-Q4 | Remaining Export interview, Q2/Q4 | No canonical files on blocking validation, no implicit SKP save, HBJSON/report always selected. Exporter defaults under Q5 wait with METr | Confirmed by Ed 2026-09-29; implemented and verified 2026-09-30 |
+| P1-Q5 | Which split piece retains the old Face UUID? | Ed chose explicit repair: use a provable stored original path, otherwise ask the user to choose the retaining piece; allocate new UUIDs to the other pieces | Resolved 2026-09-29; public action and native-menu recovery verified; clean one-to-many Solve is verified; extension-reference boundary verified under A06 |
 
 Export Q1 is already D2: keep the canonical pair on optional-exporter failure. Q3's checked
 stale-adjacency preflight is already accepted by the Zones interview. Do not reopen either.
@@ -56,14 +56,16 @@ record together with these choices rather than repeat its 22-question interview.
 
 ## Carryovers outside this milestone
 
-The Phase 0 archive also records the unknown-outcome warning wording, Pyodide license notice
-ambiguity, missing extension LICENSE in the RBZ, and a possible upstream PHX#157 comment.
+The Phase 0 archive records the unknown-outcome warning wording, Pyodide license notice
+ambiguity, missing extension LICENSE in the RBZ, and a possible upstream PHX#157 comment. P1-E
+ships the extension LICENSE and exact upstream texts, while preserving source discrepancies for
+the separate public-distribution review.
 Keep truthful failure outcomes; settle notices before public distribution. Posting an upstream
 comment is optional and is not authorized by this planning request. The user-facing external
 agent adapter, SketchUp 2023/Windows support proof and public naming remain separately gated.
 
-The METr deferral is recorded in `planning/DECISIONS.md` and the roadmap. Once Ed chooses the
-remaining recommendations, update the owning PRD and this table.
+The METr deferral is recorded in `planning/DECISIONS.md` and the roadmap. The owning PRD and
+this table now record the accepted Phase 1 choices and their implementation evidence.
 
 ## P1-Q5: native split identity frontier
 

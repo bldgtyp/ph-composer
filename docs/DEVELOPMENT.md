@@ -1,9 +1,12 @@
 # Development
 
-**DATE:** 2026-09-25 | **STATUS:** Partly implemented. The commands below exist unless marked
+**DATE:** 2026-09-30 | **STATUS:** Partly implemented. The commands below exist unless marked
 "not yet". The extension has its foundation, the Overview screen with its Zone tree and faces table,
 the Classify tool and its palette, the shared Colour-by service, the Python runtime payload and the
-export infrastructure, with no exporter yet.
+HBJSON/report workflow with pinned translation wheels. The normal build refuses canonical export
+until an authored construction provider is available. Phase 1 acceptance uses a separately composed
+synthetic development provider; it never becomes a stored Assembly or shipping fallback. METr
+remains deferred.
 
 The development loop needs no installed dependencies beyond Ruby, Node and `uv`. Ruby source stays
 compatible with Ruby 2.7 inside the SketchUp 2023 support floor. The proving host is SketchUp
@@ -222,3 +225,20 @@ passing check.
 
 - **Library provider testing.** A local fixture server for connection providers arrives with the
   library provider contract.
+
+## Phase 1 export verification
+
+The Export pane performs feature-owned preflight, offers explicit Solve, repeats preflight after
+repair, and creates an HBJSON/report pair. Cancellation is accepted before canonical commit.
+Export never saves the SKP. Stale or retired Surface Faces are omitted with area, Zone and reason;
+independent blockers leave the full diagnostics visible and write no canonical pair.
+
+`uv run tools/runtime/browser_check.py --translation` exercises the exact shipped wheel set in
+Chromium 88 and compares the explicit synthetic composition with native Python using those same
+wheels. Only upstream-created PH default UUIDs and unordered construction-definition sets are
+normalized for comparison; authored identities, references and values are compared directly.
+The files themselves are not rewritten. This browser gate supplements real SketchUp acceptance.
+
+Current-host acceptance and remaining distribution limits are recorded in the
+[Phase 1 evidence](../planning/phase-one/evidence/p1-e-export-workflow.md). SketchUp 2023,
+Windows, public distribution and certification claims retain their separate gates.

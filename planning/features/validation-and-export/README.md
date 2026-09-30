@@ -8,8 +8,8 @@ HBJSON and coordinated Export report, and optionally runs registered exporters s
 1. [PRD.md](PRD.md): artifact contract, validation ownership, workflow, accounting, exporter
    isolation and acceptance.
 2. [STATUS.md](STATUS.md).
-3. [PLAN.md](PLAN.md): existing export infrastructure, remaining workflow and consumer gates.
-4. [Phase 1 decisions](../../phase-one/DECISIONS.md): the remaining interview and B1 consequences.
+3. [PLAN.md](PLAN.md): implemented Phase 1 workflow and later consumer gates.
+4. [Phase 1 decisions](../../phase-one/DECISIONS.md): accepted Phase 1 choices and deferred METr/B1 consequences.
 
 ## Scope
 

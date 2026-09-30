@@ -1,6 +1,6 @@
 # Planning Status
 
-DATE: 2026-09-29
+DATE: 2026-09-30
 STATUS: Active index of tracked planning work.
 AUTHOR: Ed May, BLDGTYP
 
@@ -17,10 +17,10 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Phase 1 walking skeleton | delivery plan | In progress; P1-A through P1-D complete on branch | none (local implementation packet) | [phase-one/](phase-one/README.md); D7 fixes pushed; [A05 to A09 native continuation](phase-one/evidence/p1-d-broader-acceptance.md) and [native reference checks](phase-one/evidence/p1-d-native-references.md); unique-path recovery and [copy safety](phase-one/evidence/p1-d-extension-copy-safety.md) verified; [Colour-by native continuation](phase-one/evidence/p1-d-colour-by-continuation.md) verifies toggles/occlusion and measures feature redraw/cadence; [keyboard/context continuation](phase-one/evidence/p1-d-keyboard-context.md) verifies A09 named current-host cases, including held-button Model/edit-context cancellation; [hatch and invalidation](phase-one/evidence/p1-d-hatch-and-invalidation.md) verifies the PRD hatch and cache correction; [adjacency boundary continuation](phase-one/evidence/p1-d-adjacency-boundaries.md) completes A05 named current-host cases; [split identity recovery](phase-one/evidence/p1-d-split-identity-recovery.md) verified; [atomic Attached-zone create-and-assign](phase-one/evidence/p1-d-attached-zone-atomic.md) completes A07 named current-host cases; [isolated GPU timing](phase-one/evidence/p1-d-gpu-timing.md) completes A08 named current-host cases; [clean one-to-many pairing](phase-one/evidence/p1-d-multi-neighbour-adjacency.md) passes native rollback, Undo/Redo and reopen; [Face/Zone extension-reference targets](phase-one/evidence/p1-d-entity-reference-targets.md) now pass native cases; independent review found two resolver defects, corrected and re-reviewed with final gates and fresh-host checks passing; P1-D complete on branch, then P1-E |
+| Phase 1 walking skeleton | delivery plan | P1-A through P1-F complete on branch; named current-host acceptance passes | none (local implementation packet) | [phase-one/](phase-one/README.md); [final export/integration evidence](phase-one/evidence/p1-e-export-workflow.md); merge, release and floor-host/platform gates remain separate |
 | Zones and adjacency | feature | In progress; partial-overlap cut, repairs and whole-scope Solve host-verified | none (local planning draft) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
 | Face assignment | feature | In progress; the Classify tool, bounded gestures and Attached zones implemented | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
-| Validation and export | feature | In progress; P1-C HBJSON proof implemented | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); P1-E workflow remains |
+| Validation and export | feature | Phase 1 HBJSON/report scope implemented and current-host verified; later feature scope remains | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); [evidence](phase-one/evidence/p1-e-export-workflow.md); authored Assemblies required in normal composition |
 | METr exporter and consumer acceptance | feature | Deferred; return milestone unscheduled | none (local planning draft) | [validation/export plan](features/validation-and-export/PLAN.md); Ed deferred until further feature development on 2026-09-20 |
 | Spaces | feature | Scoped, interviewed | none (no remote) | [features/spaces/](features/spaces/README.md) |
 | Assemblies and materials | feature | Scoped, interviewed | none (no remote) | [features/assemblies/](features/assemblies/README.md) |

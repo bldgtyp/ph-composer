@@ -1,11 +1,20 @@
 # Phase 1 status
 
-DATE: 2026-09-29
-STATUS: In progress. P1-A through P1-D complete on the implementation branch. D7's eight host questions are answered and its recorded defects are corrected on
-this branch. Named current-host P1-D cases have evidence; final independent review and corrections pass. P1-E has not started.
+DATE: 2026-09-30
+STATUS: P1-A through P1-F complete on the implementation branch for the named current-host scope.
+Independent review, offline gates and fresh SketchUp acceptance pass. Merge and release remain separate.
 ISSUE: none (local implementation packet)
 
-## Resume here: native references and remaining authoring work
+## Current completion boundary
+
+P1-E implements the canonical HBJSON/report task, panel workflow and eight pinned translation wheels.
+P1-F verifies fresh two-Zone authoring, nested edit paths, native Undo/Redo, two Models, reopen,
+restart recovery and task expiry. See [P1-E/F evidence](evidence/p1-e-export-workflow.md) for build,
+checks and limits. The normal build requires authored Assemblies and safely refuses without them;
+successful translation uses an explicit tools-only synthetic provider. METr, SketchUp 2023 and
+Windows host proof, public distribution and certification remain separate gates.
+
+## Completed native references and authoring work
 
 The [2026-09-29 native reference run](evidence/p1-d-native-references.md) verifies cut/paste and
 Line-split record survival, safe Solve refusal, exact Undo/Redo and fresh reopen. It exposed and
@@ -67,8 +76,7 @@ continuation. A fresh independent review of `4404527` found two resolver defects
 uncoded malformed-identity failure. Both are corrected, covered by regressions, and re-reviewed
 by the same independent reviewer. Final CI, coverage, Ruby 2.7 and targeted fresh installed-host
 checks pass. P1-D is complete on this implementation branch; release and floor-host acceptance
-remain separate. P1-E's
-HBJSON/report workflow remains unimplemented and is not part of this fix pass.
+remain separate. P1-E subsequently completed the HBJSON/report workflow; see the current completion boundary above.
 
 The historical [D7-GATE-HANDOFF.md](D7-GATE-HANDOFF.md) is retained as the procedure that was
 executed, with its corrected assumptions noted at the top. Use the current evidence and
@@ -80,27 +88,27 @@ Phase 0 is complete and merged at `f1e9a98` through PR #1. The four investigatio
 recorded conditions. P1-B installs the first building features: entity-owned Zones and Face
 assignments, registered public operations and the minimal Overview authoring UI. P1-C adds
 whole-wall adjacency, a shared detached geometry snapshot, registered Zone/face contributors and
-the first typed Honeybee model sections. Export still refuses after destination selection without
-writing anything; the user workflow and shipped translation wheels remain P1-E.
+the first typed Honeybee model sections. P1-E completes the user workflow and shipped translation
+wheels, with normal composition refusing missing authored Assemblies before destination selection.
 P1-A completed on 2026-09-20 under Ed's implementation instruction. It produced the
 [geometry/persistence contract](CONTRACTS.md), a reusable native probe and
 [current-host evidence](evidence/p1-a-geometry.md). P1-B completed on 2026-09-20 with
 [authoring evidence](evidence/p1-b-authoring.md) and a checked-in public-operation walkthrough.
 
 The [plan](PLAN.md) starts with the geometry/storage contract and native evidence needed by
-Make Zone and Solve adjacencies. The small two-Zone HBJSON proof now passes. P1-D completes the
-remaining authoring behavior; the early proof does not close a feature packet.
+Make Zone and Solve adjacencies. P1-D completes the Phase 1 authoring behavior; P1-E/F complete
+the export and integrated current-host acceptance. Later feature scope remains in its owning packets.
 
 METr exporter implementation and consumer acceptance are deferred by Ed on 2026-09-20.
 Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 
-## Entry gates
+## Remaining delivery boundaries
 
-- Review the remaining recommendations in [DECISIONS.md](DECISIONS.md). Ed has deferred METr
-  development and its floor-area/import questions. P1-E still owns the shipped HBJSON wheel set.
+- [DECISIONS.md](DECISIONS.md) records the accepted Phase 1 choices. METr development and its
+  floor-area/import questions remain deferred. The HBJSON wheel set is shipped and verified.
 - Create/link the implementation issue during authorized issue intake. The configured remote is
   `bldgtyp/ph-composer`; P1-A created no external issue or PR.
-- P1-D is authorized and every slice is implemented; its slices are tracked in [PLAN.md](PLAN.md). D7's host gate and the named current-host broader acceptance cases are verified; final independent review passes. P1-E is next.
+- All six Phase 1 stages are complete on branch. Merge, floor-host/platform proof and public distribution require their own gates.
 
 ## Stages
 
@@ -110,8 +118,8 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 | P1-B: Zone and face authoring core | Complete | [Authoring evidence](evidence/p1-b-authoring.md); A02/A03 and the P1-B portion of A04 met |
 | P1-C: adjacency and early HBJSON proof | Complete on branch | [Adjacency/HBJSON evidence](evidence/p1-c-adjacency-hbjson.md); A10 and P1-C portions of A05/A11 met |
 | P1-D: complete Phase 1 authoring UI and repairs | Complete on branch | D1 to D7 implemented; the offline portions of A04, A06, A07, A08 and A09 pass. D4 and D6 host gates passed; D7's eight questions are answered and fixes rechecked. A04 to A09 named current-host cases have evidence; the final entity-reference implementation and review corrections pass independent review, final gates and targeted fresh-host checks. Slice table in [PLAN.md](PLAN.md) |
-| P1-E: HBJSON/report export workflow | Scoped | Pending; remaining canonical-export choices open |
-| P1-F: acceptance and handoff | Scoped | Pending |
+| P1-E: HBJSON/report export workflow | Complete on branch | [Export evidence](evidence/p1-e-export-workflow.md); A11 to A14 pass for the accepted scope |
+| P1-F: acceptance and handoff | Complete on branch | [Integrated evidence](evidence/p1-e-export-workflow.md); A16 passes on SketchUp 26.1.188 |
 
 ## Verification
 
