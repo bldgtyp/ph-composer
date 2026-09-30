@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # PR #3 foundation corrections, native cases R01 to R04 and R06
-# (planning/refactor/pr3-foundation-corrections/PLAN.md). Development only; never shipped.
+# (planning/archive/pr3-foundation-corrections/PLAN.md). Development only; never shipped.
 #
 # Geometry setup is development-only. Every product write goes through the public operations with
 # the panel closed. The steps a person performs are named in the method that follows them; each

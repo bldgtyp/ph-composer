@@ -1,7 +1,7 @@
 # Phase 06: bounded reads, export task descriptions, registration validation
 
 DATE: 2026-09-30
-STATUS: Implemented on branch
+STATUS: Complete (lands with PR #6)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/5
 MERGE SET: No; recommended before faster feature development

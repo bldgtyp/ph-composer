@@ -1,7 +1,7 @@
 # PR #3 foundation corrections: plan
 
 DATE: 2026-09-30
-STATUS: Scoped; decisions answered, no phase authorized
+STATUS: Complete; archived with PR #6
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 

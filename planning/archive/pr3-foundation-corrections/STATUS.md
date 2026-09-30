@@ -1,7 +1,7 @@
 # PR #3 foundation corrections: status
 
 DATE: 2026-09-30
-STATUS: Merge set merged to main (abd86f4); Phases 06 to 09 in progress on `foundation-corrections-followup`
+STATUS: Complete. Merge set merged to main in PR #3 (abd86f4); Phases 06 to 09 land with PR #6. Archived.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#4](https://github.com/bldgtyp/ph-composer/issues/4) merge set (closed); [#5](https://github.com/bldgtyp/ph-composer/issues/5) Phases 06 to 09 ([R-D6](DECISIONS.md#r-d6-issue-intake))
 PR: https://github.com/bldgtyp/ph-composer/pull/3
@@ -9,7 +9,7 @@ BRANCH: `codex/phase-one-geometry-contracts` (merge set); a branch from `main` f
 
 ## Next step
 
-Phase 09: gates, one independent review of the 06 to 08 diff, a targeted native run (R06 extended), docs-pass, PR with `Closes #5`, then archive after merge.
+None. Packet complete and archived with PR [#6](https://github.com/bldgtyp/ph-composer/pull/6).
 
 ## Blockers
 
@@ -48,10 +48,10 @@ States use the planning vocabulary: `Requested` · `Scoped` · `In progress` · 
 | [03](phases/phase-03-building-operation-schemas.md) Building-operation schemas | Yes | Merged to main | `71b8534`, `16bd367` | |
 | [04](phases/phase-04-authority-and-skill-repair.md) Authority and skill repair | Yes | Merged to main | `bda13df` | |
 | [05](phases/phase-05-merge-closure.md) Merge closure | Yes | Merged to main | `08aa837`, `b2dd8b2`; merge `abd86f4` | |
-| [06](phases/phase-06-api-hardening.md) API hardening | No | Implemented on branch | `bbacbc4`, `5ec7faf`, `1b1f421` | |
-| [07](phases/phase-07-hbjson-metadata-policy.md) HBJSON metadata policy | No | Implemented on branch | `9f94e0d` | |
-| [08](phases/phase-08-responsibility-refactors.md) Non-`zones` refactors | No | Implemented on branch | `bd11e2d`, `a1f3ca0` | |
-| [09](phases/phase-09-foundation-closure.md) Foundation closure | No | In progress | | |
+| [06](phases/phase-06-api-hardening.md) API hardening | No | Complete (PR #6) | `bbacbc4`, `5ec7faf`, `1b1f421` | |
+| [07](phases/phase-07-hbjson-metadata-policy.md) HBJSON metadata policy | No | Complete (PR #6) | `9f94e0d` | |
+| [08](phases/phase-08-responsibility-refactors.md) Non-`zones` refactors | No | Complete (PR #6) | `bd11e2d`, `a1f3ca0` | |
+| [09](phases/phase-09-foundation-closure.md) Foundation closure | No | Complete (PR #6) | `0f77fff` and docs | |
 
 ## Finding tracker
 
@@ -85,11 +85,11 @@ Phase 08 into Phase 02.
 | A01 | Zone/Face discovery lacks schemas, result shapes, examples | P1 | Yes | 03 | Merged to main | `api_reference_test`, `api_client_test`; `71b8534` |
 | DOC | Stale authorities: TECH_STACK, PRD, DEVELOPMENT, AGENT_INTERFACE | Consistency | Yes | 04 | Merged to main | `bda13df`, with `742e75e` |
 | SKL | UI skill `references/patterns.md` names predecessor paths | Consistency | Yes | 04 | Merged to main | `bda13df` |
-| A02 | Unbounded entity reads, ignored filters, loose cursors | P2 | No | 06 | Implemented on branch | `entity_reads_test`, `api_test` cursor binding; `5ec7faf` |
-| A04 | Export task methods not describable | P2 | No | 06 | Implemented on branch | `export_tasks_test` description-built client; `1b1f421` |
-| A06 | Registration schema/callable/example validation, frozen declarations | P2 | No | 06 | Implemented on branch | `registry_test` (4); `bbacbc4` |
-| HBJ | Opaque canonical HBJSON bypasses metadata-key guard; declared-key allowlist (R-D2) | P2 | No | 07 | Implemented on branch | `hbjson_metadata_test` (6); `9f94e0d` |
-| REF | Non-`zones` refactors: `Workflow.start`, export-contributor validation, hatch clipping | Advisory | No | 08 | Implemented on branch | `bd11e2d`, `a1f3ca0`; hatch clipping and world_normal skipped with reasons |
+| A02 | Unbounded entity reads, ignored filters, loose cursors | P2 | No | 06 | Complete (PR #6) | `entity_reads_test`, `api_test` cursor binding; `5ec7faf` |
+| A04 | Export task methods not describable | P2 | No | 06 | Complete (PR #6) | `export_tasks_test` description-built client; `1b1f421` |
+| A06 | Registration schema/callable/example validation, frozen declarations | P2 | No | 06 | Complete (PR #6) | `registry_test` (4); `bbacbc4` |
+| HBJ | Opaque canonical HBJSON bypasses metadata-key guard; declared-key allowlist (R-D2) | P2 | No | 07 | Complete (PR #6) | `hbjson_metadata_test` (6); `9f94e0d` |
+| REF | Non-`zones` refactors: `Workflow.start`, export-contributor validation, hatch clipping | Advisory | No | 08 | Complete (PR #6) | `bd11e2d`, `a1f3ca0`; hatch clipping and world_normal skipped with reasons |
 | A05 | External adapter delivery boundary | Planned | No | Out of scope | Deferred | Separate packet |
 | CONV | `planning-conventions` reported unavailable | Note | No | None | Complete | [R-D7](DECISIONS.md#r-d7-planning-conventions-availability-review-note-resolved) |
 
@@ -111,6 +111,7 @@ Newest first. Record each gate run: date, command, Ruby version, counts, pass/fa
 
 | Date | Gate | Result |
 | --- | --- | --- |
+| 2026-09-30 | `make ci` Ruby 3.2.2 and 2.7.2 at `0f77fff`; `make coverage` | Pass: 664 Ruby, 191 JS, 96 Python; coverage Ruby 96.6%, JS 97.8%, Python 94.0% |
 | 2026-09-30 | `make ci` Ruby 3.2.2 and 2.7.2 at `08aa837` (after review fixes); `make coverage` | Pass: 636 Ruby, 191 JS, 96 Python; coverage Ruby 96.5%, JS 97.8%, Python 94.0% |
 | 2026-09-30 | `make ci` Ruby 3.2.2 at `71b8534`; `tests/all_tests.rb` on 2.7.2 | Pass: 634 Ruby, 191 JS, 96 Python tests; fixtures, manifests, RBZ |
 | 2026-09-30 | Review baseline, `make ci` Ruby 3.2.2 at `99b6fc7` | Pass: 605 Ruby, 184 JS, 96 Python tests; see [review](review/README.md#verification) |
