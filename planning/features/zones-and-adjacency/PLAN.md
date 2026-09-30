@@ -5,17 +5,17 @@ STATUS: P1-A through P1-C complete on the implementation branch; P1-D is authori
 is implemented, with D7's host gate outstanding.
 ISSUE: none (local implementation packet)
 
-The [PRD](PRD.md) owns behavior. The [Phase 1 plan](../../phase-one/PLAN.md) owns shared sequencing
-and [acceptance](../../phase-one/ACCEPTANCE.md). Phase 0 is merged; its record operations are
+The [PRD](PRD.md) owns behavior. The [Phase 1 plan](../../archive/phase-one/PLAN.md) owns shared sequencing
+and [acceptance](../../archive/phase-one/ACCEPTANCE.md). Phase 0 is merged; its record operations are
 available, but entity-owned records and compound geometry operations still need design.
 
 ## Delivery allocation
 
 | Stage | This feature delivers | Gate |
 | --- | --- | --- |
-| P1-A | Entity-owned Zone store, occurrence/endpoint schema and geometry proposal design; host investigation | Complete 2026-09-20: [contract](../../phase-one/CONTRACTS.md), [evidence](../../phase-one/evidence/p1-a-geometry.md) |
-| P1-B | Complete 2026-09-20: feature install, Zone records, Make Zone, details, hierarchy/identity findings and focused public reads | [Script/UI and host evidence](../../phase-one/evidence/p1-b-authoring.md) |
-| P1-C | Complete 2026-09-20: full-wall solve/retire, stamps and stale findings; Zone extraction and Python Room section | [Reciprocal references, no-op solve and round-trip evidence](../../phase-one/evidence/p1-c-adjacency-hbjson.md) |
+| P1-A | Entity-owned Zone store, occurrence/endpoint schema and geometry proposal design; host investigation | Complete 2026-09-20: [contract](../../archive/phase-one/CONTRACTS.md), [evidence](../../archive/phase-one/evidence/p1-a-geometry.md) |
+| P1-B | Complete 2026-09-20: feature install, Zone records, Make Zone, details, hierarchy/identity findings and focused public reads | [Script/UI and host evidence](../../archive/phase-one/evidence/p1-b-authoring.md) |
+| P1-C | Complete 2026-09-20: full-wall solve/retire, stamps and stale findings; Zone extraction and Python Room section | [Reciprocal references, no-op solve and round-trip evidence](../../archive/phase-one/evidence/p1-c-adjacency-hbjson.md) |
 | P1-D | Partial splitting, scope refusal, limited Restore, lifecycle reconciliation and Zone Colour-by registrations | Complete applicable PRD cases, native Undo/Redo, copy/path ambiguity and metadata preservation. The `retire_pairs` participant landed in D1, identity repair and limited Restore in D3, and the overlap geometry, whole-scope solve and scope refusal in D4. The partial-overlap cut landed in D4, and the Zone, Building-Segment and Level Colour-by modes in D5 |
 | P1-E/F | Explicit all-Zone export preflight and integrated HBJSON proof | Room/Face references and Building-Segment metadata; METr mapping deferred |
 

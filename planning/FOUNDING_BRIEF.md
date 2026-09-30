@@ -1,7 +1,7 @@
 # PH-Composer: founding brief
 
 **DATE:** 2026-09-20 | **STATUS:** Founding record. Phase 0 foundation merged through PR #1.
-[Phase 1 planning](phase-one/README.md) now owns the next delivery sequence; building features
+[Phase 1 planning](archive/phase-one/README.md) now owns the next delivery sequence; building features
 remain unimplemented. The transplant tables below record the original predecessor inventory.
 **OWNER:** Ed May, BLDGTYP
 

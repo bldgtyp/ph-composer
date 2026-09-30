@@ -1,6 +1,6 @@
 # SketchUp host behavior: measured facts for agents
 
-**DATE:** 2026-09-20
+**DATE:** 2026-09-30
 
 Unless a row says otherwise, every fact here was measured in the predecessor, PH-Navigator for
 SketchUp, on SketchUp Pro 2026.1 build 26.1.188 (macOS, embedded Ruby 3.2.2) between 2026-09-06 and
@@ -10,7 +10,9 @@ Re-measuring the observer-ordering facts on a host without designPH is a pending
 project; until then treat them as likely and pin them in the stub as the predecessor did.
 
 Each fact names the code that depended on it and the offline test or stub rule that pinned it in
-the predecessor. Those tests move here with the tooling transplant. When a fact changes on a newer
+the predecessor. Tests for facts this repository already depends on were ported and are named
+in the Pinned by column; tests named for Volumes, Spaces and `GeometryReference` are the
+predecessor's and move here with the Spaces feature. When a fact changes on a newer
 host, update the stub and this file in the same change. The full record, including the designPH
 and Dynamic Components facts this file drops, is
 [`../../ph-navigator-sketchup/context/SKETCHUP_HOST_BEHAVIOR.md`](../../ph-navigator-sketchup/context/SKETCHUP_HOST_BEHAVIOR.md).
@@ -50,7 +52,7 @@ and Dynamic Components facts this file drops, is
 | Copying a Group does not copy what is inside it: both Groups become instances of one definition and share every entity in it, while each instance keeps its own attribute dictionaries. `Group#definition.instances` then reports both. Measured in PH-Composer on 26.1.188, 2026-09-20. | A copied Zone has a duplicated UUID and shared members at the same time. Storage is shared whenever a container is a ComponentInstance **or** its definition has more than one instance; treating only the first as shared let a repair of the copy rewrite the original's Faces. | `Occurrences.shared_storage?`; stub `GroupDefinition`; `test_a_zone_copied_the_way_sketchup_copies_one_reads_as_shared_storage` |
 | There is no `Sketchup::Model#undo`. Native Undo and Redo are menu actions, reached with `Sketchup.send_action("editUndo:")`, and they run on the UI queue rather than before the call returns. Measured in PH-Composer on 26.1.188, 2026-09-20. | Host code sends the action and reads the result in a later call. The offline stub keeps `Model#undo` because a test has no UI queue to run an action on, which is a deviation, not the host's API. | `test_the_stub_steps_undo_itself_because_the_host_has_no_model_undo`; the walkthroughs under `tools/examples/authoring/` |
 | Drawing a coplanar outline onto a Face splits it and the original Face object keeps its `persistent_id` and every attribute dictionary; each further piece is new. An outline sharing part of the Face's boundary leaves separate Faces, while one wholly inside it leaves a single Face carrying a hole, whose `Face#area` is already net of that hole. Measured in PH-Composer on 26.1.188, 2026-09-20. | The adjacency solver reads the container after the cut and matches pieces by outline and surviving persistent id rather than assuming which is which. Its sliver thresholds judge area per Face the host will make, so a ring is judged whole and disjoint pieces separately. | `Zones::FaceSplit`; `tests/support/sketchup/split_model.rb`; `tools/examples/authoring/cut_walkthrough.rb` |
-| A coordinated clean partition supports two 6 m² Faces against one 12 m² counterpart and one full-height Zone beside two stacked Zones on SketchUp 26.1.188. | Capture the original plane and local normal before drawing; validate actual pieces and write reciprocal records in one operation. Native rollback, Undo/Redo and fresh reopen preserve the complete result. | [P1-D multi-neighbour evidence](../planning/phase-one/evidence/p1-d-multi-neighbour-adjacency.md) |
+| A coordinated clean partition supports two 6 m² Faces against one 12 m² counterpart and one full-height Zone beside two stacked Zones on SketchUp 26.1.188. | Capture the original plane and local normal before drawing; validate actual pieces and write reciprocal records in one operation. Native rollback, Undo/Redo and fresh reopen preserve the complete result. | [P1-D multi-neighbour evidence](../planning/archive/phase-one/evidence/p1-d-multi-neighbour-adjacency.md) |
 | Grouping stamped Faces takes their bounding Edges with them: the restored Group returned `manifold? == true` with 6 Faces and 12 Edges and nothing left in the parent context. Measured in PH-Composer on 26.1.188, 2026-09-20. | Limited Restore passes only the stamped Faces and lets the host collect the Edges. | `Zones::Repair.restore_plan`; `tools/examples/authoring/repair_walkthrough.rb` |
 | SketchUp cut and paste can replace a `persistent_id`. | A durable UUID in PH-Composer's own dictionary survives the operation when the object is still logically the same; placement references stay path-qualified; session `entityID` is never durable identity. | Predecessor B2 evidence |
 | `Sketchup::Model#delete_attribute` returned `nil` without removing the key. Deleting the key from `model.attribute_dictionary(namespace, false)` succeeded. | Remove Model-level keys through `AttributeDictionary#delete_key`, and model this in the stub. | Predecessor phase 6c2 |
@@ -80,7 +82,7 @@ and Dynamic Components facts this file drops, is
 | After `Model#close(true)` on the only open Model, `Sketchup.open_file` of the same path in the same process loaded it again with a new session; no `ModelSession` for the old id survived `GC.start`. 26.1.188, 2026-09-18. | A same-process close and reopen is reachable from the bridge; the earlier note about reopening an open path applies only while it is still open. |
 | `Sketchup.open_file` on an already open path in the same process activates the existing document rather than reloading the file. | A real reopen needs a fresh SketchUp process. |
 | Two instrumented `open_file` activations of an already open document changed `Sketchup.active_model` but fired no `onActivateModel`, to the session's subscriber or to a fresh `AppObserver`. One earlier `open_file` activation, of a document with an open group edit context, did move the panel by a path not identified. A native click in another document's window fired `onActivateModel` every time. Observed in PH-Composer on 26.1.188, 2026-09-18. | Do not rely on `open_file` to exercise a Model switch; a same-process switch check needs native window clicks. |
-| `UI.savepanel(title, directory, filename)` opened in `~/Documents` on this host, with `directory` naming the Model's folder, both under `/private/tmp` and under a normal user folder. The proposed file name was kept. Observed in PH-Composer on 26.1.188, macOS 26, 2026-09-18. | Phase 1 Export cannot rely on the `directory` argument to start in the Model's folder; the cause and a working form are unverified. |
+| `UI.savepanel(title, directory, filename)` opened in `~/Documents` on this host, with `directory` naming the Model's folder, both under `/private/tmp` and under a normal user folder. The proposed file name was kept. Observed in PH-Composer on 26.1.188, macOS 26, 2026-09-18. | Export passes the Model's folder only as a hint and writes wherever the dialog returns (`export/workflow.rb`). The cause and a working form are unverified. |
 | `Sketchup.write_default` accepts a string containing a double quote and returns true, but `read_default` returns nil for it. Plain strings, base64 text, arrays and hashes read back intact. | Store structured preferences as base64 JSON. The Ruby stub's `read_default` returns nil for such strings so the offline tests catch a regression. |
 | A panel that is hidden or behind other windows throttles its timers. | Bring the dialog to the front before a scripted run. |
 | `Sketchup.redo` replays a panel edit from the bridge; `Sketchup.send_action("editRedo:")` does not redo. | Use `Sketchup.redo`, or raise the document window by title and send the keystroke. |
@@ -128,7 +130,7 @@ Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/archive/phase-
 ## Zone grouping and face topology
 
 Measured in PH-Composer on 26.1.188, 2026-09-20
-([P1-A](../planning/phase-one/evidence/p1-a-geometry.md)).
+([P1-A](../planning/archive/phase-one/evidence/p1-a-geometry.md)).
 
 | Fact | Consequence |
 | --- | --- |

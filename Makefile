@@ -88,8 +88,8 @@ coverage:
 	@node tools/coverage_js.js $(JS_COVERAGE_MIN)
 	@uv run pytest -q --cov=src/ph_composer/python --cov-report=term --cov-fail-under=$(PYTHON_COVERAGE_MIN) tests/python
 
-# Development-only P1-C proof. Inline dependency pins isolate the accepted Honeybee stack from
-# the zero-wheel shipping composition until P1-E vendors the selected runtime payload.
+# Development-only P1-C proof of the two-Zone translation, run with the synthetic construction
+# provider and inline pins matching the eight shipped wheels.
 phase-one-proof:
 	@uv run tools/examples/phase_one/translate_two_zones.py
 

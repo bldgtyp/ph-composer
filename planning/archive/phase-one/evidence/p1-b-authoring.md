@@ -11,7 +11,7 @@ the minimal Overview UI and panel-closed public-operation parity. Adjacency, bou
 gestures, Auto-classify, Reverse face, Colour-by and HBJSON remain P1-C/P1-D work.
 
 The synthetic fixture contains no project or licensed data. The reproducible public-operation
-driver is [`tools/examples/authoring/walkthrough.rb`](../../../tools/examples/authoring/walkthrough.rb).
+driver is [`tools/examples/authoring/walkthrough.rb`](../../../../tools/examples/authoring/walkthrough.rb).
 
 ## Deterministic checks
 

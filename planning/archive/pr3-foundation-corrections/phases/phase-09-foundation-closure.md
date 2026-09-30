@@ -42,7 +42,7 @@ packet archived.
   and payload separately" item was not measured.
 - Native (targeted, per Ed): R06 extended with paged reads and export polling passes on SketchUp
   26.1.188 (ledger record in `results.jsonl`); A08, A12 and A13 carried forward with reasons in the
-  [evidence page](../../../phase-one/evidence/pr3-corrections-native.md).
+  [evidence page](../../phase-one/evidence/pr3-corrections-native.md).
 - docs-pass: `context/AGENT_INTERFACE.md` (paged reads, task descriptions), `context/EXTENSIBILITY.md`
   (registration checks, declared user_data keys), `context/TECH_STACK.md` (metadata policy),
   `docs/API_QUICKSTART.md` step 7 and the generated reference.

@@ -3,7 +3,7 @@
 DATE: 2026-09-30
 STATUS: Complete; Codex ran it twice on 2026-09-30 (results in the evidence page)
 OWNER: [PLAN.md, new native cases](PLAN.md#new-native-acceptance-cases); result summary in
-[pr3-corrections-native.md](../../phase-one/evidence/pr3-corrections-native.md)
+[pr3-corrections-native.md](../phase-one/evidence/pr3-corrections-native.md)
 
 You are validating three remaining SketchUp acceptance cases for PR #3's foundation corrections.
 R01, R02, R04 and R06 already passed and are recorded; do not rerun them. Your job is the native

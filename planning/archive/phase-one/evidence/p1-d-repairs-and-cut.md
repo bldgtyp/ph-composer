@@ -7,8 +7,8 @@ ISSUE: none (local implementation packet)
 Host: SketchUp Pro 26.1.188, macOS, embedded Ruby 3.2.2, through the PH-Composer development
 bridge. Extension `ph_composer` 0.1.0-dev, features `PhComposer::Zones` and
 `PhComposer::FaceAssignment`. Models were fresh from `_private/host/blank-template.skp`.
-Walkthroughs: [`repair_walkthrough.rb`](../../../tools/examples/authoring/repair_walkthrough.rb)
-and [`cut_walkthrough.rb`](../../../tools/examples/authoring/cut_walkthrough.rb).
+Walkthroughs: [`repair_walkthrough.rb`](../../../../tools/examples/authoring/repair_walkthrough.rb)
+and [`cut_walkthrough.rb`](../../../../tools/examples/authoring/cut_walkthrough.rb).
 
 Offline at the same commit: 337 Ruby tests, 1,435 assertions, green on Ruby 3.2.2 and the 2.7.2
 compatibility floor, `make ci` clean, Ruby coverage 96.0%.
@@ -56,7 +56,7 @@ definition has more than one instance. Re-measured on the host afterwards: the Z
 untouched. The offline stub gained group definitions and instances so a fixture models two Groups
 built on one collection as two copies behave on the host.
 
-This settles Q25 in the [Zones PRD](../../features/zones-and-adjacency/PRD.md): a copied Zone
+This settles Q25 in the [Zones PRD](../../../features/zones-and-adjacency/PRD.md): a copied Zone
 needs SketchUp's own Make Unique before identity repair is available, and PH-Composer does not run
 Make Unique inside a repair.
 
@@ -75,8 +75,8 @@ Make Unique inside a repair.
 The Classify tool is implemented in D6 and the Overview table is D7; neither has host evidence yet.
 Colour-by is implemented in D5 and has none either. Both have their own walkthrough checked in with
 the questions it has to answer:
-[`colour_by_walkthrough.rb`](../../../tools/examples/authoring/colour_by_walkthrough.rb) and
-[`classify_tool_walkthrough.rb`](../../../tools/examples/authoring/classify_tool_walkthrough.rb).
+[`colour_by_walkthrough.rb`](../../../../tools/examples/authoring/colour_by_walkthrough.rb) and
+[`classify_tool_walkthrough.rb`](../../../../tools/examples/authoring/classify_tool_walkthrough.rb).
 The gesture ceiling's own host measurement is done and is in
 [the gesture cost evidence](p1-d-gesture-cost.md). A Face
 meeting more than one neighbour, a concave outline and a Face with a hole are reported rather than

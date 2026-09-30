@@ -1,7 +1,7 @@
 # API quickstart
 
 DATE: 2026-09-30
-STATUS: Implemented on the Phase 1 branch for in-process Ruby clients. No external connection is
+STATUS: Implemented and merged to main for in-process Ruby clients. No external connection is
 supported yet; see [AGENT_ACCESS.md](AGENT_ACCESS.md).
 
 This walks one session from discovery to a verified edit using only the public interface. Every

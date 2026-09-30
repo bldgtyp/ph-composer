@@ -21,7 +21,7 @@ choice only when proof is absent. Model switching during confirmation cancels th
 The action checks the entire duplicate set, unique mutable Zone occurrences, stamps, common
 Surface envelope, reciprocal counterpart and scope. Installed extension copy rules validate every
 piece before writing. Ordinary Face resolution remains strict about duplicate identities. One
-operation owns all writes and rollback. The [public walkthrough](../../../tools/examples/authoring/split_identity_walkthrough.rb)
+operation owns all writes and rollback. The [public walkthrough](../../../../tools/examples/authoring/split_identity_walkthrough.rb)
 uses the reviewed preview's revision and digest; it does not refresh the revision before invocation.
 
 ## Fresh installed SketchUp evidence

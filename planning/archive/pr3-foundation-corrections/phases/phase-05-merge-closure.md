@@ -27,9 +27,9 @@ verification profile in [PLAN.md](../PLAN.md#verification-profile).
 5. One independent review of the diff from `99b6fc7` to head: fresh-context Opus or
    `codex-review`, with the architecture rubric and, for 01c, the UI rubric. Fix findings;
    do not stack a second equivalent review over unchanged code.
-6. `docs-pass`: `context/` authorities, `planning/STATUS.md`, `planning/phase-one/STATUS.md`,
+6. `docs-pass`: `context/` authorities, `planning/STATUS.md`, `planning/archive/phase-one/STATUS.md`,
    zones-and-adjacency and face-assignment packets. Existing Phase 1 acceptance stays as
-   historical evidence of its named cases. Move R01 to R06 into `planning/phase-one/ACCEPTANCE.md`
+   historical evidence of its named cases. Move R01 to R06 into `planning/archive/phase-one/ACCEPTANCE.md`
    and repoint their `cases.json` authority (see [PLAN.md](../PLAN.md#new-native-acceptance-cases)).
 7. Update PR #3's description with links to this packet and the merge-set issue (R-D6), and the
    closed finding list. Ed merges; the merge closes the merge-set issue.
@@ -61,7 +61,7 @@ In progress.
   first Codex computer-use pass found one real defect: a refused tab change left focus on the tab.
   Fixed in `b2dd8b2` and observed fixed natively. A02, A04 (one drag), A05 and A11 rechecked and pass;
   A08, A10, A12, A13, A14 and A16 carried forward with reasons. All in `results.jsonl` and the
-  [evidence page](../../../phase-one/evidence/pr3-corrections-native.md). Native Undo/Redo needs
+  [evidence page](../../phase-one/evidence/pr3-corrections-native.md). Native Undo/Redo needs
   SketchUp frontmost; bridge and System Events requests sent in the background were delivered late.
 - docs-pass: R01 to R06 moved into `phase-one/ACCEPTANCE.md` and `cases.json` repointed; top-level,
   Phase 1 and both feature packet statuses updated.

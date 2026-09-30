@@ -13,7 +13,7 @@ Code owner: [`src/ph_composer/features/zones/`](../../../src/ph_composer/feature
 2. [STATUS.md](STATUS.md): current state, next step, blockers.
 
 3. [PLAN.md](PLAN.md): delivery against the merged foundation and the shared
-   [Phase 1 plan](../../phase-one/PLAN.md). Entity storage, geometry transactions and feature
+   [Phase 1 plan](../../archive/phase-one/PLAN.md). Entity storage, geometry transactions and feature
    reconciliation still require implementation; the foundation alone does not supply them.
 
 ## Scope

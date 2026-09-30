@@ -1,6 +1,6 @@
 # Ubiquitous language
 
-**DATE:** 2026-09-18
+**DATE:** 2026-09-30
 
 Use these terms in product docs, interviews, the panel and code. A definition here is product
 vocabulary. It does not claim that the corresponding editor exists. Terms carried over from the
@@ -41,7 +41,7 @@ predecessor's designPH terms (adoption, push, origin row, designPH difference, T
 honeybee's names for its geometry units collide with ordinary building words, so this table is
 exact. The left column is what PH-Composer says on screen, in code and in this repository; the
 right column is what the export writes. The rules are in the zones-and-adjacency packet
-(`planning/features/zones-and-adjacency/PRD.md`), which is provisional until it lands.
+(`planning/features/zones-and-adjacency/PRD.md`); Phase 1 implemented them.
 
 | Term | Meaning | honeybee object | Note |
 | --- | --- | --- | --- |
@@ -51,6 +51,8 @@ right column is what the export writes. The rules are in the zones-and-adjacency
 | Adjacency | A reciprocal pairing of path-qualified face endpoints in different Zones, carrying Zone UUIDs, face persistent ids and solved world-geometry stamps | `Surface` boundary condition while current | Solved on demand, never live; identity and freshness are separate |
 | Interior face | A face of a Zone whose other side is another Zone, solved or not | `Surface` when solved, `Adiabatic` when marked To neighbour | Distinct from an envelope face facing Outdoors or Ground |
 | To neighbour | The on-screen boundary condition for a face whose other side is not modeled or does not matter: a party wall, a floor over an unmodeled podium | `Adiabatic` | WUFI and METr vocabulary on screen, honeybee's in the stored value (zones packet, Q22) |
+| Repair Zone identity | The explicit repair for a copied Zone: the copy and its faces receive new identities, pairs copied with it are retired and the original's pairs are kept, as one Undo step. A plain copy that shares storage is refused until the user runs SketchUp's Make Unique | | `ph_composer.zones.repair_identity` |
+| Repair split Face identities | The explicit repair after a native split copies one face identity onto several pieces: a provable stored path, or the user's choice, keeps the old identity and the other pieces receive new ones | | `ph_composer.zones.repair_split_face`; the Repair menu item |
 | Restore Zone | A limited repair regrouping eligible surviving stamped contents and recovering Zone id, Building-Segment and Level; other Zone fields are unavailable and disclosed | | Native Undo is the full recovery route while available; no surviving stamps means no Restore Zone |
 | Closed Zone | A Zone whose group is a manifold solid | Required by EnergyPlus only | `Group#manifold?` |
 | Solve adjacencies | The explicit action that pairs interior faces across Zones, splits them to match, and records the Adjacencies as one Undo step | | Validation offers it again whenever an Adjacency is stale |
@@ -66,7 +68,7 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Envelope face | A SketchUp face the user has classified as part of the thermal envelope. Classification is PH-Composer's own record in its own attribute namespace; the face carries no designPH data |
 | Face type | The honeybee face type of an envelope face: `Wall`, `RoofCeiling`, `Floor` or `AirBoundary` |
 | Boundary condition | What is on the other side of an envelope face: honeybee's `Outdoors`, `Ground`, `Adiabatic`, `Surface`, and honeybee-ph's `PhAdditionalZone`. Shown as Outdoors, Ground, To neighbour, Surface (set only by Solve adjacencies) and Attached zone |
-| Attached zone | A named unconditioned space outside the envelope (garage, attic, crawlspace) with one temperature reduction factor, default 0.95 per Phius guidebook 6.9.1. A Library record kind, assigned to faces as a boundary condition. Maps to honeybee-ph `PhAdditionalZone` |
+| Attached zone | A named unconditioned space outside the envelope (garage, attic, crawlspace) with one temperature reduction factor, default 0.95 per Phius guidebook 6.9.1. A model-local record kind owned by Zones, which a library can supply later, assigned to faces as a boundary condition. Maps to honeybee-ph `PhAdditionalZone` |
 | Ground depth | A per-Zone height, default the Model's z=0, below which the Classify tool suggests Ground |
 | Face record | The classification record on one face: face type, boundary condition, assembly id and Zone stamp. A retired pair can leave the boundary condition absent. Payload preservation and endpoint validity are distinct requirements, subject to native-host acceptance |
 | Face assignment | The act and the packet: writing face records with the Classify tool, the faces table or Suggest classification (`planning/features/face-assignment/`) |
@@ -77,7 +79,7 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Colour-by | The shared visualization component: one viewport overlay, one panel legend with counts, Locate and Show only this, and one viewport HUD legend drawn while a mode is active. Features register modes; it is the fourth contribution seam. Never writes a SketchUp material |
 | Colour-by mode | One registered way of colouring the model: a name, an entity kind (a face, a Zone, a Volume or another kind a feature names), a colour function, a label and optionally derived geometry such as the Volume preview. A readout, such as Space labels or Selection totals, registers separately and does not depend on the active mode. Face type, boundary condition and assembly come from face assignment; Zone, Building-Segment and Level from the zones packet |
 | HUD legend | The compact text legend the Colour-by overlay draws in the upper left of the viewport while a mode is active, so a screenshot carries its own key |
-| Classification overlay | The Colour-by overlay in its three face modes |
+| Classification overlay | The Colour-by overlay in its face modes: face type and boundary condition now, assembly when Assemblies arrive |
 | Faces table | The panel inventory of face records with editable type, boundary condition and assembly cells, area, state and Locate |
 | Material | Physical and product properties used by assembly layers. METr's own screen word. Maps to honeybee `EnergyMaterial`. Distinct from SketchUp display materials |
 | Material category | A preset classification shown as a colored chip. Independent of display color. User-created categories are not supported |

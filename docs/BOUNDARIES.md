@@ -17,8 +17,8 @@ boundary is gone, and with it every rule about reading or writing another produc
 
 ## Export and consumers
 
-Export writes HBJSON and its report. The METr exporter runs PHX on that HBJSON inside the shipped
-runtime. The extension does not write PHPP or drive Excel. Producer defects remain here; consumer
+Export writes HBJSON and its report. The METr exporter, deferred until more of the building can
+be authored, will run PHX on that HBJSON inside the shipped runtime. The extension does not write PHPP or drive Excel. Producer defects remain here; consumer
 defects remain with the reader. HBJSON carries only the fields honeybee-ph defines; native
 product snapshots and full source evidence stay inside the model.
 

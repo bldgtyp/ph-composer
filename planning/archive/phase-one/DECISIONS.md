@@ -1,7 +1,8 @@
 # Phase 1 decisions and evidence still needed
 
 DATE: 2026-09-30
-STATUS: Phase 1 choices resolved and current-host acceptance complete on branch; METr and delivery/platform gates remain separate.
+STATUS: Complete. Merged to main through [PR #3](https://github.com/bldgtyp/ph-composer/pull/3) (`abd86f4`) on 2026-09-30, with the follow-on [PR #6](https://github.com/bldgtyp/ph-composer/pull/6) (`9d92a26`); issue #2 closed. A01 to A14, A16 and R01 to R06 pass; A15 (METr) is deferred to its own packet.
+Archived 2026-09-30. SketchUp 2023 floor, Windows, release and public distribution remain separate gates.
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 ## Product decisions
@@ -16,8 +17,9 @@ ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 Export Q1 is already D2: keep the canonical pair on optional-exporter failure. Q3's checked
 stale-adjacency preflight is already accepted by the Zones interview. Do not reopen either.
-The face interview status still requests confirmation of its recorded answers; confirm that
-record together with these choices rather than repeat its 22-question interview.
+The face interview's request for confirmation of its recorded answers was not settled in Phase 1.
+It stays open in [the face-assignment status](../../features/face-assignment/STATUS.md); confirm that
+record rather than repeat its 22-question interview.
 
 ## Engineering decisions to settle in the owning stage
 

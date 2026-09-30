@@ -10,7 +10,7 @@ Host: SketchUp Pro 26.1.188, macOS 26.6.2, Apple M1 Max, embedded Ruby 3.2.2, th
 PH-Composer development bridge. Extension `ph_composer` 0.1.0-dev, features `PhComposer::Zones`
 and `PhComposer::FaceAssignment`. Fresh from `_private/host/blank-template.skp`, saved as
 `_private/host/p1d-classify.skp` (SHA-256 `3bf25fc1…`). Harness:
-[`classify_tool_walkthrough.rb`](../../../tools/examples/authoring/classify_tool_walkthrough.rb).
+[`classify_tool_walkthrough.rb`](../../../../tools/examples/authoring/classify_tool_walkthrough.rb).
 
 The fixture is forty upright panels in rows of ten, one Zone, and a second Zone of eight coplanar
 panels sharing their edges with a return wall at right angles, which is what a whole-plane

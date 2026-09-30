@@ -38,8 +38,10 @@ the owning packet.
 
 - Keep proposed product behavior distinct from implemented contracts. Product shape belongs in
   `docs/`; the durable rules that constrain code belong in `context/`; plans, decisions, status
-  and acceptance evidence belong in `planning/`. Phase 0 foundation is merged; feature behavior
-  remains proposed until its owning packet records implementation and acceptance.
+  and acceptance evidence belong in `planning/`. Phase 0 (foundation) and Phase 1 (Zones,
+  face classification, adjacency, Colour-by and the HBJSON/report export) are merged and archived;
+  other feature behavior remains proposed until its owning packet records implementation and
+  acceptance.
 - Feature interviews establish shared understanding but do not authorize code. Follow the current
   owning plan and explicit implementation scope.
 - The model is the authoring authority. Library records become editable local copies. No provider
@@ -108,21 +110,22 @@ shared review and polish process without widening scope.
 
 ## Repository map
 
-Target layout. `src/ph_composer/` will be the shipping extension, with the module name a
-working assumption until the namespace decision closes:
+`src/ph_composer/` is the shipping extension. `PhComposer` and the `ph_composer` prefix are the
+working namespace D8 confirmed; the final public name is still open. `library/` is planned and
+does not exist yet; the rest is implemented:
 
 | Path | Owns |
 | --- | --- |
-| `extension.rb` | The composition root: the feature list and the load order |
+| `extension.rb` | The composition root: the feature list (`FEATURES`), the foundation capabilities (`FOUNDATION_FEATURES`) and the load order |
 | `core/` | What several features need and none owns: the record engine, dictionaries, JSON, geometry and units primitives, model operations |
 | `session/` | One `ModelSession` per open Model, its generation, observers and per-feature state objects. Names no feature |
 | `shell/` | Transport and the action registry: the panel dialog, actions, commands, preferences. Names no feature |
-| `features/` | One folder per feature, each registering itself in one `install` |
+| `features/` | One folder per feature, each registering itself in one `install`. Today only `zones/`, which owns Zones, Faces and adjacency |
 | `colour_by/` | The shared Colour-by service: the mode registry's consumers, the viewport overlay and HUD, and the drawing cache. Names no feature |
-| `library/` | The provider contract and the shipped providers, starting with the library file |
+| `library/` | Planned: the provider contract and the shipped providers, starting with the library file |
 | `export/` | The export run: contributors, the attribute guard, artifact hygiene, the report, and the exporter registry |
 | `html/` | The UI kit: a module graph with a generated script list and owned stylesheets |
-| `python/`, `runtime/`, `vendor/` | The translation package, the exporters, the Pyodide loader and the pinned payload |
+| `python/`, `runtime/`, `vendor/` | The translation package and exporter registry (no exporter registered yet), the Pyodide loader and the pinned payload |
 
 Outside it: `tests/` for the offline suites and fixtures, `tools/` for development-only build,
 runtime, UI-preview and hostkit tooling that never ships, `docs/` for the product written for a

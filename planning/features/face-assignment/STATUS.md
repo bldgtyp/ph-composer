@@ -1,9 +1,10 @@
 # Face assignment: status
 
-DATE: 2026-09-29
-STATUS: In progress; P1-B authoring, P1-C export contribution and P1-D's gestures, Attached zones,
-Colour-by and the Overview screen implemented. The faces table, the panel legend and the Classify
-palette have D7 current-host evidence and corrections. Broader acceptance cases remain open.
+DATE: 2026-09-30
+STATUS: In progress. Phase 1 scope (classification, the Classify tool, Suggest classification, Reverse,
+Attached zones, face Colour-by modes, the Overview faces table) merged to main through PR #3 and
+PR #6 and accepted in the archived Phase 1 packet. Assembly assignment is Phase 2. Ed's
+confirmation of the recorded interview answers is still pending.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -23,9 +24,9 @@ face, and the Attached zone record kind with its reference and delete-with-repla
 D5 adds the shared Colour-by seam and its face type and boundary condition modes. D6 adds the
 Classify tool itself, with its palette on a native menu, and Locate, which has no user route until
 the faces table carries one. D7 supplies that table and the panel legend; its host continuation
-and fixes are recorded in [the evidence](../../phase-one/evidence/p1-d-overview.md).
+and fixes are recorded in [the evidence](../../archive/phase-one/evidence/p1-d-overview.md).
 
-The subsequent [A05 to A09 host run](../../phase-one/evidence/p1-d-broader-acceptance.md)
+The subsequent [A05 to A09 host run](../../archive/phase-one/evidence/p1-d-broader-acceptance.md)
 records additional lifecycle evidence and corrections. Follow that record and the shared
 acceptance register for cases still open.
 
@@ -43,10 +44,10 @@ the face extraction schema, complete world geometry, reciprocal emitted targets 
 development-construction boundary in the exact reloaded HBJSON. D5 verifies the Colour-by seam offline: an outside
 feature's mode, the two shipped modes, the unclassified and incomplete states, per-colour
 batching, the HUD, tag and revision invalidation, and the overlay's lifecycle. D6's native tool
-checks and D7's eight Overview questions have current-host evidence. The [atomic Attached-zone continuation](../../phase-one/evidence/p1-d-attached-zone-atomic.md)
+checks and D7's eight Overview questions have current-host evidence. The [atomic Attached-zone continuation](../../archive/phase-one/evidence/p1-d-attached-zone-atomic.md)
 now verifies the public create-and-assign action and inline dialog, including exact native rollback,
-Undo/Redo and fresh reopen. A07’s named current-host cases pass. The [isolated GPU continuation](../../phase-one/evidence/p1-d-gpu-timing.md)
-completes A08’s named current-host cases in the [acceptance register](../../phase-one/ACCEPTANCE.md).
+Undo/Redo and fresh reopen. A07’s named current-host cases pass. The [isolated GPU continuation](../../archive/phase-one/evidence/p1-d-gpu-timing.md)
+completes A08’s named current-host cases in the [acceptance register](../../archive/phase-one/ACCEPTANCE.md).
 
 Documentation-only architecture review completed 2026-09-18; all four findings addressed in the
 planning contracts under Ed's authorization. The standalone review was removed after incorporation.
@@ -78,4 +79,4 @@ spike passed; it does not satisfy this feature's native lifecycle gate.
 | 2026-09-20 | P1-B authoring core complete: explicit Face reads, geometric suggestions, keep/set/clear assignment, stamps and minimal Overview controls passed current-host acceptance. |
 | 2026-09-20 | P1-C export contribution complete on the implementation branch: detached face geometry and typed Python sections produced the exact two-Zone HBJSON with reciprocal Surface targets. |
 | 2026-09-30 | PR #3 foundation corrections decided: Face code moves under the `zones` feature (`ph_composer.zones.faces.*`); shared-Group Faces refuse with a Make Unique instruction (R-D10); Attached-zone delete refuses when an orphaned Face still uses it (R-D11). See [the corrections packet](../../archive/pr3-foundation-corrections/README.md). |
-| 2026-09-30 | PR #3 merge-set corrections implemented on the branch: code owner `src/ph_composer/features/zones/`, M1 to M4 fixed, native cases R01 to R04 pass ([evidence](../../phase-one/evidence/pr3-corrections-native.md)). |
+| 2026-09-30 | PR #3 merge-set corrections implemented on the branch: code owner `src/ph_composer/features/zones/`, M1 to M4 fixed, native cases R01 to R04 pass ([evidence](../../archive/phase-one/evidence/pr3-corrections-native.md)). |

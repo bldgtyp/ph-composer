@@ -13,7 +13,8 @@ on it under the terms below.
 
 ## Why AGPL
 
-Export runs honeybee, ladybug and PHX inside SketchUp through a Pyodide payload. The predecessor
+Export runs honeybee and ladybug inside SketchUp through a Pyodide payload, and the planned METr
+exporter adds PHX to it. The predecessor
 shipped Pyodide under MPL-2.0 and CPython under PSF-2.0, with wheels declaring AGPL-3.0 for
 honeybee-core, honeybee-energy, ladybug-core, ladybug-geometry and ladybug-geometry-polyskel,
 GPL-3.0-or-later for honeybee-ph, and GPL-3.0 for honeybee-standards. PHX is GPL-3.0-or-later.
@@ -79,8 +80,8 @@ request whose commits lack a sign-off is not merged. The DCO text ships in this 
 
 A contributor also certifies that the contribution contains no data derived from PHI, Phius, PHPP,
 WUFI-Passive, METr or any other licensed source they are not entitled to redistribute. That is
-the one addition to the standard DCO text, stated in the pull request template rather than in
-the certificate.
+the one addition to the standard DCO text. It belongs in the pull request template rather than in
+the certificate; that template is not in the repository yet.
 
 Nothing here is legal advice. The license choice and the DCO process have not been reviewed by
 counsel.

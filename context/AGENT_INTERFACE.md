@@ -1,11 +1,13 @@
 # External agent interface
 
-DATE: 2026-09-20
+DATE: 2026-09-30
 STATUS: Agent access is an accepted product priority. The in-process programming interface
 (`PhComposer::API`: discover, describe, connect, query, preview, invoke, outcome) merged through
-PR #1 from Phase 0 P0-D with a panel-closed synthetic client. `view`, the selection, reveal and
-camera verb, was added in Phase 1 P1-D. Transport, packaging, grants and the external adapter
-remain proposed.
+PR #1 from Phase 0 P0-D with a panel-closed synthetic client. Phase 1 (PR #3, PR #6) added `view`,
+the selection, reveal and camera verb; per-operation schemas and examples; bounded, filtered and
+projected reads; the export task methods; and in-process grants (`read`, `view`, `model_write`,
+`export`) enforced at dispatch. Transport, packaging, the user-facing access grant and the
+external adapter remain proposed.
 
 Users bring their own agents. PH-Composer supplies documented access to inspect, view and edit
 the authored model without requiring an agent to understand private Ruby internals or operate
@@ -191,14 +193,14 @@ Repair menu and [synthetic scripting client](../tools/examples/authoring/split_i
 use the same preview and invocation contract. Stored endpoint proof or an explicit retaining path
 chooses the keeper; reads never repair duplicate identities. Invocation carries the reviewed
 preview revision and digest. Supported payloads follow declared copy rules; unsafe data refuses
-before writes. [Phase 1 evidence](../planning/phase-one/evidence/p1-d-split-identity-recovery.md)
+before writes. [Phase 1 evidence](../planning/archive/phase-one/evidence/p1-d-split-identity-recovery.md)
 records the implemented scope and remaining reference/solver boundaries.
 
 The `zones` feature exposes `ph_composer.zones.faces.attached_zone.create_and_assign` for one
 atomic definition-and-assignment operation. It takes explicit Face references and record values,
 with optional Face type intent and expected values, and returns the new record ID and assigned
 Face IDs. The Overview inline dialog uses that public operation; scripts can preview and invoke
-it with the panel closed. [Current-host evidence](../planning/phase-one/evidence/p1-d-attached-zone-atomic.md)
+it with the panel closed. [Current-host evidence](../planning/archive/phase-one/evidence/p1-d-attached-zone-atomic.md)
 records validation, exact rollback and persistence checks.
 
 Discovery also lists read-only `reference_targets`; description returns their descriptor: ID, owner,
@@ -210,9 +212,9 @@ is the public walkthrough a synthetic client test runs as written.
 Registered extensions can name `ph_composer.zones.zone` and `ph_composer.zones.faces.face`.
 Contributors resolve those identities through the shared record engine while the owning features
 retain entity writes. [The contract](EXTENSIBILITY.md#entity-owned-reference-targets) defines typed
-proposal projections and incoming-reference handling; [native evidence](../planning/phase-one/evidence/p1-d-entity-reference-targets.md)
+proposal projections and incoming-reference handling; [native evidence](../planning/archive/phase-one/evidence/p1-d-entity-reference-targets.md)
 records actual copy/split/Solve targets; the independent review of that work passed (see the
-[Phase 1 acceptance register](../planning/phase-one/ACCEPTANCE.md)).
+[Phase 1 acceptance register](../planning/archive/phase-one/ACCEPTANCE.md)).
 
 ## Delivery and acceptance
 
