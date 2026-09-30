@@ -1,0 +1,225 @@
+# frozen_string_literal: true
+
+module PhComposer
+  module Zones
+    # The adjacency handlers the declarations register: Solve, retire one pair, and the retirement
+    # plan Classify composes into its own step.
+    module_function
+
+    def solve_adjacency(request, proposal)
+      plan = Adjacency.plan(request.model, request.params.fetch("zones"))
+      plan.findings.each { |finding| proposal.add_finding(finding) }
+      unless plan.retirements.empty?
+        scopes = plan.retirements.map do |reference, _before, _after|
+          Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
+        end
+        proposal.add_step(FaceRecordStep.new(:updates => plan.retirements, :change => "retired"), :scopes => scopes)
+      end
+      pair_ids = Adjacency.components(plan.matches).flat_map do |group|
+        if group.length > 1
+          partition_matches(request, proposal, group, plan.partitions)
+        elsif group.first.fetch(:overlap).kind == :full
+          [pair_match(proposal, group.first)]
+        else
+          [split_match(request, proposal, group.first)]
+        end
+      end
+      { "pair_ids" => pair_ids.compact.sort, "reported" => proposal.findings.length }
+    end
+
+    def partition_matches(request, proposal, group, partitions)
+      sides = {}
+      matches = group.each_with_index.map do |match, index|
+        check_unpaired!(match)
+        positions = [:left, :right].map do |name|
+          side = match.fetch(name)
+          occurrence = side.fetch(:occurrence)
+          key = Occurrences.key(occurrence.reference)
+          sides[key] ||= { :side => side, :regions => [] }
+          sides.fetch(key).fetch(:regions) << { "match_index" => index, "polygon_m" => match.fetch(:overlap).polygon_m }
+          key
+        end
+        pair_id = Records::Identity.derived(
+          "adj", "faces" => [:left, :right].map { |name| match.fetch(name).fetch(:record).fetch("id") }.sort
+        )
+        { "keys" => positions, "pair_id" => pair_id }
+      end
+      face_keys = sides.keys
+      faces = face_keys.map do |key|
+        item = sides.fetch(key)
+        partition_side_plan(request, item.fetch(:side), item.fetch(:regions), partitions.fetch(key))
+      end
+      matches.each do |match|
+        match["left"] = face_keys.index(match.fetch("keys").fetch(0))
+        match["right"] = face_keys.index(match.fetch("keys").fetch(1))
+        match.delete("keys")
+      end
+      scopes = faces.map { |face| Operations::EntityScope.new(face.fetch("reference").fetch("zone_path")) }
+      proposal.add_step(PartitionAndPairStep.new(:faces => faces, :matches => matches), :scopes => scopes)
+      matches.map { |match| match.fetch("pair_id") }
+    end
+
+    def partition_side_plan(request, side, regions, partition)
+      occurrence = side.fetch(:occurrence)
+      record = side.fetch(:record)
+      complete = partition.fetch(:remainder_area_m2) <= 1.0e-7
+      needs_cut = regions.length > 1 || !complete
+      fresh = if needs_cut
+                (regions.length + partition.fetch(:remainder_count)).times.map do |index|
+                  Records::Identity.derived("fac", "model" => request.model.guid,
+                                                   "revision" => request.revision,
+                                                   "zone_path" => occurrence.zone.path,
+                                                   "entity_path" => occurrence.path, "piece" => index)
+                end
+              else
+                []
+              end
+      copies = {}
+      if needs_cut
+        data = record.fetch("extension_data", {})
+        catalog = request.registry.catalog
+        Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
+        fresh.each do |id|
+          copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
+                                                    { record.fetch("id") => id }, :engine => request.engine,
+                                                    :reference_plan => split_reference_plan(occurrence, record, id))
+        end
+      end
+      { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
+        "persistent_id" => occurrence.entity.persistent_id, "fresh_ids" => fresh,
+        "extension_copies" => copies, "regions" => regions,
+        "complete" => complete, "area_m2" => side.fetch(:geometry).area_m2,
+        "remainder_area_m2" => partition.fetch(:remainder_area_m2) }
+    end
+
+    def split_reference_plan(occurrence, record, id)
+      entry = Records::ReferenceEntry.new(
+        :kind => Faces::REFERENCE_KIND,
+        :key => occurrence.zone.path + occurrence.path + [id], :record => record.merge("id" => id)
+      )
+      Records::ReferencePlan.new(:entries => [entry])
+    end
+
+    # A partial overlap is cut on both sides and paired in one step, because the pair's endpoints
+    # do not exist until both Faces have been cut.
+    def split_match(request, proposal, match)
+      overlap = match.fetch(:overlap)
+      check_unpaired!(match)
+      pair_id = Records::Identity.derived(
+        "adj", "faces" => [:left, :right].map { |side| match.fetch(side).fetch(:record).fetch("id") }.sort
+      )
+      sides = [:left, :right].map do |name|
+        side_plan(request, match.fetch(name), overlap, name == :left ? :left : :right)
+      end
+      scopes = sides.map { |side| Operations::EntityScope.new(side.fetch("reference").fetch("zone_path")) }
+      proposal.add_step(
+        SplitAndPairStep.new(:left => sides.fetch(0), :right => sides.fetch(1),
+                             :polygon_m => overlap.polygon_m, :pair_id => pair_id),
+        :scopes => scopes
+      )
+      pair_id
+    end
+
+    # The plan must retire an old Surface pair before proposing a cut, including its surviving
+    # counterpart. Refuse an inconsistent plan rather than silently dropping one end of a pair.
+    def check_unpaired!(match)
+      paired = [:left, :right].select { |name| match.fetch(name).fetch(:record)["boundary_condition"] == "Surface" }
+      return if paired.empty?
+
+      raise CodedError.new("adjacency.stale",
+                           "A Face that would be cut still holds a Surface pair. Retire it before solving again.")
+    end
+
+    # Ids for every piece the cut may need, allocated now so the preview digest is stable. Which
+    # piece keeps the original id is the host's answer and is not known until it has cut.
+    def side_plan(request, side, overlap, which)
+      occurrence = side.fetch(:occurrence)
+      record = side.fetch(:record)
+      remainders = which == :left ? overlap.left_remainders_m : overlap.right_remainders_m
+      fresh = (remainders.length + 1).times.map do |index|
+        Records::Identity.derived("fac", "model" => request.model.guid, "revision" => request.revision,
+                                         "zone_path" => occurrence.zone.path, "entity_path" => occurrence.path,
+                                         "piece" => index)
+      end
+      copies = {}
+      unless remainders.empty?
+        data = record.fetch("extension_data", {})
+        catalog = request.registry.catalog
+        Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
+        fresh.each do |id|
+          copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
+                                                    { record.fetch("id") => id }, :engine => request.engine,
+                                                    :reference_plan => split_reference_plan(occurrence, record, id))
+        end
+      end
+      { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
+        "persistent_id" => occurrence.entity.persistent_id, "fresh_ids" => fresh,
+        "remainder_count" => remainders.length, "extension_copies" => copies }
+    end
+
+    def pair_match(proposal, match)
+      left = match.fetch(:left)
+      right = match.fetch(:right)
+      left_after, right_after, pair_id = Adjacency.pair(left, right)
+      return pair_id if left_after == left.fetch(:record) && right_after == right.fetch(:record)
+
+      updates = [left, right].zip([left_after, right_after]).map do |side, after|
+        occurrence = side.fetch(:occurrence)
+        [occurrence.reference(side.fetch(:record).fetch("id")), side.fetch(:record), after]
+      end
+      scopes = updates.map do |reference, _before, _after|
+        Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
+      end
+      proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "updated"), :scopes => scopes)
+      pair_id
+    end
+
+    def retire_adjacency(request, proposal)
+      occurrence = Occurrences.resolve_face(request.model, request.params.fetch("face"), :mutable => true)
+      record = Faces::FACE_STORE.read(occurrence.entity)
+      pair_id = record&.dig("adjacency", "pair_id")
+      retire_pair(request, proposal, occurrence, record)
+      { "pair_id" => pair_id }
+    end
+
+    def retire_pair(request, proposal, occurrence, record)
+      local_after, counterpart, other, other_after = Adjacency.retire_records(request.model, occurrence, record)
+      updates = [[occurrence.reference(record.fetch("id")), record, local_after],
+                 [counterpart.reference(other.fetch("id")), other, other_after]]
+      scopes = updates.map do |reference, _before, _after|
+        Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
+      end
+      proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "retired"), :scopes => scopes)
+      local_after
+    end
+
+    # Plans the reciprocal retirement for a whole gesture without writing anything. The caller
+    # composes the returned records into its own step, so Classify never edits an adjacency
+    # envelope itself and one Face is written once even when both endpoints are being classified.
+    #
+    # Returns { occurrence key => [reference, before, after] } covering both targets and the
+    # counterparts they drag in.
+    def retire_pairs(request, targets, index = nil)
+      plan = {}
+      targets.each do |occurrence, record|
+        local_after, counterpart, other, other_after =
+          Adjacency.retire_records(request.model, occurrence, record, :index => index)
+        add_retirement(plan, occurrence.reference(record.fetch("id")), record, local_after)
+        add_retirement(plan, counterpart.reference(other.fetch("id")), other, other_after)
+      end
+      plan
+    end
+
+    def add_retirement(plan, reference, before, after)
+      key = Occurrences.key(reference)
+      existing = plan[key]
+      if existing && existing.fetch(2) != after
+        raise CodedError.new("gesture.retirement_conflict",
+                             "Face #{before.fetch('id')} would be retired two different ways in one gesture.")
+      end
+
+      plan[key] = [reference, before, after]
+    end
+    private_class_method :pair_match, :split_match, :check_unpaired!, :side_plan, :add_retirement
+  end
+end

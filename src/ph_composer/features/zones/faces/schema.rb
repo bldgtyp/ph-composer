@@ -18,6 +18,9 @@ module PhComposer
       BOUNDARY_CONDITIONS = %w[Outdoors Ground Adiabatic Surface AttachedZone].freeze
       # Surface belongs to Solve adjacencies; every other condition is the Classify tool's.
       ASSIGNABLE_BOUNDARIES = %w[Outdoors Ground Adiabatic AttachedZone].freeze
+      # What the palette lists. Surface is in it and is not assignable: the PRD asks for it to be shown
+      # and refused, because a user who looks for it and finds nothing learns nothing about why.
+      PALETTE_BOUNDARIES = (ASSIGNABLE_BOUNDARIES + %w[Surface]).freeze
       # The ceiling on Face occurrences one gesture may affect, counterparts included. Lowered from
       # the proposed 1,000 on 2026-09-20: a gesture affecting 1,000 Faces measured about 13 seconds
       # against the offline stub, because occurrence resolution walks the Model once per Face. 250 is
