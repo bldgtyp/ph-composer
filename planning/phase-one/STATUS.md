@@ -2,7 +2,9 @@
 
 DATE: 2026-09-30
 STATUS: P1-A through P1-F complete on the implementation branch for the named current-host scope.
-Independent review, offline gates and fresh SketchUp acceptance pass. Merge and release remain separate.
+Recorded stage reviews, offline gates and named fresh SketchUp acceptance pass.
+The [2026-09-30 PR #3 foundation review](../refactor/pr3-foundation-corrections/review/README.md) recommends corrections before merge.
+Merge and release remain separate; existing acceptance covers its recorded cases.
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 
 ## Current completion boundary
