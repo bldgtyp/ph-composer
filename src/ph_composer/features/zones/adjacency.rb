@@ -15,7 +15,7 @@ module PhComposer
       # each pairing needs, and every case reported instead of paired. Reading is unbounded and
       # writing is not, so a pairing that would touch a Zone outside the scope refuses the whole
       # operation rather than quietly widening what the user selected (Q18).
-      Plan = Struct.new(:matches, :findings, :retirements, keyword_init: true)
+      Plan = Struct.new(:matches, :findings, :retirements, :partitions, keyword_init: true)
 
       def plan(model, references)
         index = Index.new(model)
@@ -29,8 +29,8 @@ module PhComposer
         sides = index.zones.to_h { |zone| [zone.path, candidates(zone, index)] }
         in_scope = scope.map(&:path)
         found = examine(sides, in_scope)
-        matches = resolve_contested(found.fetch(:matches), found.fetch(:findings))
-        kept = matches.select do |match|
+        matches, partitions = resolve_contested(found.fetch(:matches), found.fetch(:findings))
+        kept = components(matches).select { |group| group.length == 1 }.flatten.select do |match|
           match.fetch(:overlap).kind == :full && current_pair?(match.fetch(:left), match.fetch(:right))
         end.flat_map { |match| [:left, :right].map { |name| face_key(match.fetch(name)) } }
         updates = retirement_updates(model, scope, kept, index)
@@ -41,7 +41,8 @@ module PhComposer
             side[:record] = update.last if update
           end
         end
-        Plan.new(:matches => matches, :findings => found.fetch(:findings), :retirements => updates.values)
+        Plan.new(:matches => matches, :findings => found.fetch(:findings),
+                 :retirements => updates.values, :partitions => partitions)
       end
 
       # Retire every old pair not retained by this solve, even when its geometry no longer meets
@@ -207,28 +208,58 @@ module PhComposer
         )
       end
 
-      # A Face that meets more than one neighbour needs its own cut per neighbour, which this solver
-      # does not do. It is reported with every Zone involved and pairs nothing, rather than pairing
-      # one neighbour arbitrarily (PRD step 7).
+      # Match components share original Faces. Accept a component only when every original Face
+      # has a complete, disjoint partition; otherwise none of its pairs is written.
       def resolve_contested(matches, findings)
-        counts = Hash.new(0)
-        matches.each { |match| [:left, :right].each { |side| counts[face_key(match.fetch(side))] += 1 } }
-        contested, clean = matches.partition do |match|
-          [:left, :right].any? { |side| counts[face_key(match.fetch(side))] > 1 }
+        accepted = []
+        partitions = {}
+        components(matches).each do |group|
+          if group.length == 1
+            accepted.concat(group)
+            next
+          end
+
+          sides = group.flat_map do |match|
+            [:left, :right].map do |name|
+              [face_key(match.fetch(name)), match.fetch(name), match.fetch(:overlap).polygon_m]
+            end
+          end
+          group_partitions = {}
+          sides.group_by(&:first).each do |key, entries|
+            group_partitions[key] = Overlap.partition(entries.first.fetch(1).fetch(:geometry), entries.map(&:last))
+          end
+          if group_partitions.values.any?(&:nil?)
+            findings << multiple_neighbours(group)
+          else
+            accepted.concat(group)
+            partitions.merge!(group_partitions)
+          end
         end
-        contested.group_by { |match| contested_key(match, counts) }.each_value do |group|
-          findings << multiple_neighbours(group)
+        [accepted, partitions]
+      end
+
+      def components(matches)
+        remaining = matches.dup
+        result = []
+        until remaining.empty?
+          group = [remaining.shift]
+          keys = group.flat_map { |match| [:left, :right].map { |name| face_key(match.fetch(name)) } }
+          loop do
+            connected, remaining = remaining.partition do |match|
+              [:left, :right].any? { |name| keys.include?(face_key(match.fetch(name))) }
+            end
+            break if connected.empty?
+
+            group.concat(connected)
+            keys.concat(connected.flat_map { |match| [:left, :right].map { |name| face_key(match.fetch(name)) } })
+          end
+          result << group
         end
-        clean
+        result
       end
 
       def face_key(side)
         Occurrences.key(side.fetch(:occurrence).reference)
-      end
-
-      def contested_key(match, counts)
-        [:left, :right].find { |side| counts[face_key(match.fetch(side))] > 1 }
-          .then { |side| face_key(match.fetch(side)) }
       end
 
       def multiple_neighbours(group)
@@ -376,7 +407,7 @@ module PhComposer
             :geometry => FaceGeometry.capture(occurrence.entity, occurrence.transform) }
         end
       end
-      private_class_method :examine, :check_scope!, :resolve_contested, :face_key, :contested_key,
+      private_class_method :examine, :check_scope!, :resolve_contested, :face_key,
                            :multiple_neighbours, :reported, :message_for
       private_class_method :candidates
 

@@ -174,5 +174,114 @@ module PhComposer
         end
       end
     end
+
+    # A connected set of matches is cut per original Face, then paired only after every native
+    # piece has been checked. The proposal has already settled all overlap and sliver decisions.
+    class PartitionAndPairStep < SplitAndPairStep
+      def initialize(faces:, matches:)
+        @faces = DeepCopy.call(faces).freeze
+        @matches = DeepCopy.call(matches).freeze
+        @affected = []
+      end
+
+      def descriptor
+        { "name" => "partition_and_pair", "faces" => @faces, "matches" => @matches }
+      end
+
+      def temporary_ids
+        @faces.flat_map { |face| face.fetch("fresh_ids") }
+      end
+
+      def apply(model, _slots)
+        # Resolve and verify every original Face before the first native cut.
+        originals = @faces.map do |face|
+          occurrence = Occurrences.resolve_face(model, face.fetch("reference"), :mutable => true)
+          before = FaceAssignment::FACE_STORE.read(occurrence.entity)
+          unless before == face.fetch("before")
+            raise CodedError.new("target.changed", "A Face changed after the partition preview.")
+          end
+
+          [occurrence, before]
+        end
+        sides = @faces.each_with_index.map { |face, index| cut_partition(face, *originals.fetch(index)) }
+        @matches.each_with_index do |match, index|
+          left = sides.fetch(match.fetch("left"))
+          right = sides.fetch(match.fetch("right"))
+          pair_regions(left, right, index, match.fetch("pair_id"))
+        end
+        sides.each { |side| write(side) }
+        @affected = sides.flat_map { |side| side.fetch(:affected) }
+      end
+
+      private
+
+      def cut_partition(face, occurrence, before)
+        regions = face.fetch("regions")
+        complete = face.fetch("complete")
+        pieces = if regions.length == 1 && complete
+                   [FaceSplit.whole(occurrence)]
+                 else
+                   FaceSplit.apply_many(occurrence, regions.map { |region| region.fetch("polygon_m") },
+                                        :complete => complete)
+                 end
+        matched = {}
+        regions.each do |region|
+          candidates = pieces.select do |piece|
+            piece.geometry.holes.empty? &&
+              FaceGeometry.loop_equal?(piece.geometry.outer_loop, region.fetch("polygon_m"),
+                                       Adjacency::POINT_TOLERANCE_M)
+          end
+          unless candidates.length == 1 && !matched.value?(candidates.first)
+            raise CodedError.new("geometry.split_failed", "The partition did not produce one Face per shared region.")
+          end
+          matched[region.fetch("match_index")] = candidates.first
+        end
+        remainder = pieces.reject { |piece| matched.value?(piece) }
+        expected_area = face.fetch("area_m2")
+        actual_area = pieces.sum { |piece| piece.geometry.area_m2 }
+        rest_area = remainder.sum { |piece| piece.geometry.area_m2 }
+        tolerance = [1.0e-6, expected_area * 1.0e-8].max
+        unless (actual_area - expected_area).abs <= tolerance &&
+               (rest_area - face.fetch("remainder_area_m2")).abs <= tolerance
+          raise CodedError.new("geometry.split_failed", "The native partition did not conserve the original Face area.")
+        end
+
+        survivor = pieces.find { |piece| piece.persistent_id == face.fetch("persistent_id") }
+        fresh = face.fetch("fresh_ids").dup
+        records = pieces.map do |piece|
+          id = piece.equal?(survivor) ? before.fetch("id") : fresh.shift
+          unless id
+            raise CodedError.new("geometry.split_failed", "The native partition produced more Faces than planned.")
+          end
+
+          [piece, carried(before, id, face)]
+        end
+        { :occurrence => occurrence, :pieces => records, :regions => matched,
+          :survivor => survivor, :affected => [] }
+      end
+
+      def pair_regions(left, right, index, pair_id)
+        left_piece = left.fetch(:regions).fetch(index)
+        right_piece = right.fetch(:regions).fetch(index)
+        directions = [[left, left_piece, right, right_piece], [right, right_piece, left, left_piece]]
+        directions.each do |side, piece, other, other_piece|
+          record = record_for(side, piece)
+          record["boundary_condition"] = "Surface"
+          record.delete("attached_zone_id")
+          record["adjacency"] = {
+            "schema_version" => 1, "pair_id" => pair_id,
+            "self" => region_endpoint(side, piece), "counterpart" => region_endpoint(other, other_piece),
+            "self_geometry" => stamp(piece), "counterpart_geometry" => stamp(other_piece)
+          }
+          FaceAssignment::Schema.validate!(record)
+        end
+      end
+
+      def region_endpoint(side, piece)
+        occurrence = side.fetch(:occurrence)
+        { "zone_id" => occurrence.zone.record.fetch("id"), "zone_path" => occurrence.zone.path.dup,
+          "entity_path" => path_to(piece, occurrence), "entity_id" => record_for(side, piece).fetch("id") }
+      end
+    end
   end
 end

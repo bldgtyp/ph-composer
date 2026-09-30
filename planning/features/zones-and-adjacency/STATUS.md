@@ -40,13 +40,13 @@ now passes the public action and native Repair menu, with exact rollback, Undo/R
 [Split recovery](../../phase-one/evidence/p1-d-split-identity-recovery.md). The [extension-copy correction](../../phase-one/evidence/p1-d-extension-copy-safety.md)
 replaces warning-only unknown-payload carriage with pre-write refusal, while supported catalog
 references pass native copy/cut rollback, Undo/Redo and reopen. Face/Zone extension-reference
-targets remain unsupported; one-to-many pairing remains reported rather than solved.
+targets remain unsupported. The [clean multi-neighbour continuation](../../phase-one/evidence/p1-d-multi-neighbour-adjacency.md)
+verifies coordinated one-to-many partitions, current reciprocal references, scope/unsafe refusal,
+exact rollback, native Undo/Redo, no-op repeat and fresh reopen.
 
 ## Blockers
 
-- A Face meeting more than one neighbour is reported rather than cut: it needs one cut per
-  neighbour and the solver does one. This is a normal multifamily shape, a wall against two
-  stacked Zones, so it should not stay open indefinitely.
+- Face/Zone extension-reference targets and incoming-reference handling remain unsupported.
 - A concave outline and a Face with a hole are reported rather than cut. Windows arrive in Phase 2
   and will put holes in real walls, so the holed case needs an answer before an assembly-bearing
   model relies on it.
@@ -84,4 +84,4 @@ completes A05's named current-host plane/angle, sliver, same-normal and scope ca
 Undo/Redo and final reopen/reference verification. Native split recovery now passes its A06 slice;
 [P1-Q5](../../phase-one/DECISIONS.md#p1-q5-native-split-identity-frontier) records Ed's accepted
 policy for which piece retains the old Face UUID; its public action and native menu are implemented
-and current-host verified. A06 still requires the extension-reference and one-to-many boundaries.
+and current-host verified. A06 still requires the extension-reference boundary. Clean one-to-many pairing is current-host verified.

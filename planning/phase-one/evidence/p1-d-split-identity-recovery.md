@@ -69,5 +69,7 @@ fallback for the skill's unavailable Terra model. Native acceptance is recorded 
 This closes the native duplicated-Face identity recovery slice, not A06 as a whole. Face/Zone UUID
 extension-reference targets are not yet registrable. One-to-many pairing remains reported without
 geometry cuts or pairs. The subsequent [atomic Attached-zone continuation](p1-d-attached-zone-atomic.md)
-completes A07's named current-host cases. A08's isolated GPU timing remains open. SketchUp 2023,
+completes A07's named current-host cases. The subsequent [GPU continuation](p1-d-gpu-timing.md)
+closes A08, and [multi-neighbour continuation](p1-d-multi-neighbour-adjacency.md) closes the solver
+boundary recorded above. Face/Zone extension-reference targets remain open. SketchUp 2023,
 Windows, distribution and certification claims are outside this run.

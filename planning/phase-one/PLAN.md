@@ -403,9 +403,10 @@ within scope. Unsafe payloads refuse before writes; exact rollback, Undo/Redo an
 [extension-copy continuation](evidence/p1-d-extension-copy-safety.md) corrects warning-only
 carriage of unknown data during identity-changing copies: unsafe payloads now refuse before any
 write, while supported catalog-reference payloads follow their declared rules. Face and Zone UUID
-reference targets are not yet registrable. The paired native split is also a one-to-many overlap,
-which the current solver reports. Resolve these explicit identity/reference and solver boundaries
-before closing A06; do not choose an ambiguous endpoint by geometry.
+reference targets are not yet registrable. The [clean multi-neighbour continuation](evidence/p1-d-multi-neighbour-adjacency.md)
+now solves the repaired paired split and three stacked Zones with coordinated partitions, exact
+rollback, native Undo/Redo, no-op repeat and fresh reopen. Resolve the remaining extension-reference
+boundary before closing A06; do not choose an ambiguous endpoint by geometry.
 
 The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) now implements
 the pending Face create-and-assign operation and Overview modal. Public and inline paths pass

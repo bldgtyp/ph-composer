@@ -38,6 +38,10 @@ module PhComposer
         aligned = alignment(left.normal, right.normal, angle_tolerance_degrees)
         return none unless aligned
 
+        if aligned == :same && FaceGeometry.same_outline?(left, right, point_tolerance_m)
+          return Result.new(:kind => :same_normal, :area_m2 => left.area_m2)
+        end
+
         if FaceGeometry.equivalent_full_face?(left, right, :plane_tolerance_m => plane_tolerance_m,
                                                            :angle_tolerance_degrees => angle_tolerance_degrees,
                                                            :point_tolerance_m => point_tolerance_m)
@@ -154,6 +158,39 @@ module PhComposer
           end
           piece if piece.length >= 3 && polygon_area(piece) > 0.0
         end
+      end
+
+      # Plan every shared region on one original Face together. Pairwise-valid cuts can leave a
+      # sliver between neighbours, so the final remainder must be checked after all subtractions.
+      # The convex pieces are an upper bound on native remainder Faces, not an assumed host result.
+      def partition(geometry, polygons_m)
+        return nil if geometry.holes.any?
+
+        basis = plane_basis(geometry.normal, geometry.outer_loop.first)
+        original = project(geometry.outer_loop, basis)
+        return nil unless convex?(original)
+
+        polygons = polygons_m.map { |polygon| project(polygon, basis) }
+        return nil if polygons.any? { |polygon| !convex?(polygon) || too_small?(polygon) }
+
+        polygons.combination(2).each do |left, right|
+          intersection = clip_polygon(left, counter_clockwise(right))
+          return nil if intersection.length >= 3 && polygon_area(intersection) > 1.0e-8
+        end
+
+        remainder = [original]
+        polygons.each do |polygon|
+          inside = clip_polygon(original, counter_clockwise(polygon))
+          return nil if (polygon_area(inside) - polygon_area(polygon)).abs > 1.0e-7
+
+          remainder = remainder.flat_map { |piece| difference(piece, polygon) }
+        end
+        total = remainder.sum { |piece| polygon_area(piece) } + polygons.sum { |piece| polygon_area(piece) }
+        return nil if (total - polygon_area(original)).abs > [1.0e-6, polygon_area(original) * 1.0e-8].max
+        return nil if remainder_too_small?(remainder)
+        return nil if remainder.any? { |piece| minimum_width(piece) < MINIMUM_WIDTH_M }
+
+        { :remainder_count => remainder.length, :remainder_area_m2 => remainder.sum { |piece| polygon_area(piece) } }
       end
 
       # Sutherland-Hodgman: carry the subject through one half-plane per clip edge.

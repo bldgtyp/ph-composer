@@ -178,6 +178,12 @@ Native splitting copies the full face dictionary to every resulting face. Theref
 - Non-Surface core fields and `user_data` copy to the resulting records. Installed extension data
   follows its declared copy/reference rules. If unavailable or invalid extension data prevents a
   safe identity split, refuse the plugin operation before writing.
+- Clean multi-neighbour Solve plans every shared region on an original Face together, including
+  combined remainder thresholds and overlapping-region refusal. It resolves all original Faces
+  before cutting and matches actual pieces against that proposal before reciprocal record writes.
+  Original planes and local normals are captured before any outline changes the host geometry.
+  The entire connected partition and pair retirement belong to one operation; a native cut or
+  write failure aborts it. [Current-host evidence](evidence/p1-d-multi-neighbour-adjacency.md).
 - Every copied adjacency is removed before new pairs are proposed. Surviving counterparts are in
   the declared mutation set or the operation refuses. No geometric similarity keeps a pair current.
 - A native split is detected by duplicate face ids or a changed geometry stamp. Reconciliation
@@ -188,7 +194,8 @@ Native splitting copies the full face dictionary to every resulting face. Theref
 - Split identity repair retires invalid Surface envelopes on the pieces and any surviving
   reciprocal endpoint. Counterpart Zones must be in the explicit mutation scope. Core fields,
   `user_data` and supported extension payloads survive; unsafe payloads refuse before writes.
-  Repair does not create pairs or enable one-to-many Solve. The public walkthrough is
+  Repair does not create pairs. A subsequent explicit Solve may partition clean multi-neighbour
+  regions in one coordinated geometry step. The public walkthrough is
   [split_identity_walkthrough.rb](../../tools/examples/authoring/split_identity_walkthrough.rb).
 - Copying a Zone duplicates its Zone and Face dictionaries. The copy is ambiguous until explicit
   identity repair allocates a new Zone id and new member ids, updates stamps and retires copied

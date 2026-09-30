@@ -77,6 +77,31 @@ class ZoneOverlapTest < PhComposerTestCase
     assert_in_delta 6.0, result.area_m2
   end
 
+  def test_identical_faces_pointing_the_same_way_are_overlapping_zones
+    result = between(wall(0, 4, 0, 3), wall(0, 4, 0, 3))
+
+    assert_equal :same_normal, result.kind
+    refute result.paired?
+    assert_in_delta 12.0, result.area_m2
+  end
+
+  def test_identical_holed_faces_with_the_same_normal_are_overlapping_zones
+    hole = [[0, 1, 1], [0, 3, 1], [0, 3, 2], [0, 1, 2]]
+    result = between(wall(0, 4, 0, 3, :hole => hole), wall(0, 4, 0, 3, :hole => hole))
+
+    assert_equal :same_normal, result.kind
+    refute result.paired?
+    assert_in_delta 10.0, result.area_m2
+  end
+
+  def test_identical_concave_faces_with_the_same_normal_are_overlapping_zones
+    result = between(chevron, chevron)
+
+    assert_equal :same_normal, result.kind
+    refute result.paired?
+    assert_in_delta 18.0, result.area_m2
+  end
+
   def test_a_face_with_a_hole_is_reported_rather_than_cut
     holed = wall(0, 4, 0, 3, :hole => [[0, 1, 1], [0, 2, 1], [0, 2, 2], [0, 1, 2]])
 

@@ -323,6 +323,170 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_empty result.dig("value", "pair_ids")
   end
 
+  def test_two_clean_neighbours_partition_one_face_and_repeat_as_no_op
+    wall(702, 0, 0, 12, 0, 3, :east)
+    wall(712, 0, 0, 6, 0, 3, :west)
+    wall(722, 0, 6, 12, 0, 3, :west)
+    author
+    original = faces.find { |face| face.dig("reference", "zone_path") == [702] }.dig("reference", "entity_id")
+    params = { "zones" => all_references }
+    first_preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params)
+    second_preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params)
+
+    assert_equal first_preview, second_preview
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal 2, result.dig("value", "pair_ids").length
+    assert_equal 4, faces.length
+    assert_equal 4, boundary_conditions.count("Surface")
+    assert_equal %w[current current current current], faces.map { |face| face.fetch("adjacency_state") }
+    assert_includes faces.map { |face| face.dig("reference", "entity_id") }, original
+    assert_equal %w[completed none], solve(all_references).values_at("status", "effect")
+  end
+
+  def test_separated_neighbours_leave_a_classified_remainder
+    wall(704, 0, 0, 12, 0, 3, :east)
+    wall(714, 0, 0, 4, 0, 3, :west)
+    wall(724, 0, 8, 12, 0, 3, :west)
+    author
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal 2, result.dig("value", "pair_ids").length
+    assert_equal 5, faces.length
+    rest = faces.find { |face| face.dig("values", "boundary_condition") == "Outdoors" }
+    assert_equal [704], rest.dig("reference", "zone_path")
+    assert_in_delta 12.0, rest.fetch("area_m2")
+  end
+
+  def test_three_neighbours_can_cover_one_face
+    wall(706, 0, 0, 12, 0, 3, :east)
+    wall(716, 0, 0, 4, 0, 3, :west)
+    wall(726, 0, 4, 8, 0, 3, :west)
+    wall(736, 0, 8, 12, 0, 3, :west)
+    author
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal 3, result.dig("value", "pair_ids").length
+    assert_equal 6, faces.length
+    assert_equal %w[current current current current current current], faces.map { |face| face.fetch("adjacency_state") }
+  end
+
+  def test_two_by_two_grid_partitions_contested_faces_on_both_sides
+    wall(738, 0, 0, 6, 0, 3, :east)
+    wall(748, 0, 6, 12, 0, 3, :east)
+    wall(758, 0, 0, 12, 0, 1.5, :west)
+    wall(768, 0, 0, 12, 1.5, 3, :west)
+    author
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal 4, result.dig("value", "pair_ids").length
+    assert_equal 8, faces.length
+    assert_equal 8, boundary_conditions.count("Surface")
+    assert_equal ["current"], faces.map { |face| face.fetch("adjacency_state") }.uniq
+    assert_equal %w[completed none], solve(all_references).values_at("status", "effect")
+  end
+
+  def test_overlapping_neighbours_report_without_cutting
+    wall(708, 0, 0, 12, 0, 3, :east)
+    wall(718, 0, 0, 7, 0, 3, :west)
+    wall(728, 0, 5, 12, 0, 3, :west)
+    author
+
+    result = solve(all_references)
+
+    assert_includes finding_codes(result), "adjacency.multiple_neighbours"
+    assert_empty result.dig("value", "pair_ids")
+    assert_equal 3, faces.length
+  end
+
+  def test_combined_partition_sliver_is_reported_before_any_cut
+    wall(730, 0, 0, 12, 0, 3, :east)
+    wall(740, 0, 0, 5, 0, 3, :west)
+    wall(750, 0, 5.005, 12, 0, 3, :west)
+    author
+
+    result = solve(all_references)
+
+    assert_includes finding_codes(result), "adjacency.multiple_neighbours"
+    assert_empty result.dig("value", "pair_ids")
+    assert_equal 3, faces.length
+  end
+
+  def test_partition_copies_supported_payload_to_all_new_pieces
+    register_copy_extension
+    store_external_reference
+    wall(752, 0, 0, 12, 0, 3, :east)
+    wall(762, 0, 0, 4, 0, 3, :west)
+    wall(772, 0, 8, 12, 0, 3, :west)
+    author
+    entity = @model.entities.to_a.find { |zone| zone.persistent_id == 752 }.entities.to_a.first
+    store = PhComposer::FaceAssignment::FACE_STORE
+    original_id = store.read(entity).fetch("id")
+    payload = COPY_EXTENSION.envelope("external_id" => "atz_000000000001", "marker" => original_id)
+    store.write(entity, store.read(entity).merge("user_data" => { "firm.note" => original_id },
+                                                 "extension_data" => { COPY_EXTENSION.namespace => payload }))
+
+    assert_equal "committed", solve(all_references).fetch("effect")
+    pieces = faces.select { |face| face.dig("reference", "zone_path") == [752] }
+    assert_equal 3, pieces.length
+    assert_includes pieces.map { |face| face.dig("reference", "entity_id") }, original_id
+    pieces.each do |face|
+      assert_equal original_id, face.dig("user_data", "firm.note")
+      assert_equal "atz_000000000001", face.dig("extension_data", COPY_EXTENSION.namespace, "payload", "external_id")
+      assert_equal original_id, face.dig("extension_data", COPY_EXTENSION.namespace, "payload", "marker")
+    end
+  end
+
+  def test_partition_refuses_unsafe_payload_before_any_cut
+    wall(754, 0, 0, 12, 0, 3, :east)
+    wall(764, 0, 0, 6, 0, 3, :west)
+    wall(774, 0, 6, 12, 0, 3, :west)
+    author
+    entity = @model.entities.to_a.find { |zone| zone.persistent_id == 754 }.entities.to_a.first
+    store = PhComposer::FaceAssignment::FACE_STORE
+    store.write(entity, store.read(entity).merge("extension_data" => {
+      COPY_EXTENSION.namespace => COPY_EXTENSION.envelope("external_id" => "atz_000000000001")
+    }))
+    snapshot = faces
+
+    preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency",
+                          :params => { "zones" => all_references })
+    result = solve(all_references)
+
+    assert_equal %w[refused copy.rule_missing none], preview.values_at("status", "code", "effect")
+    assert_equal %w[refused copy.rule_missing none], result.values_at("status", "code", "effect")
+    assert_equal snapshot, faces
+  end
+
+  def test_partition_failure_on_second_cut_rolls_back_every_face
+    wall(756, 0, 0, 12, 0, 3, :east)
+    wall(766, 0, 0, 4, 0, 3, :west)
+    wall(776, 0, 8, 12, 0, 3, :west)
+    author
+    snapshot = faces
+    zone = @model.entities.to_a.find { |entity| entity.persistent_id == 756 }
+    original_add = zone.entities.method(:add_face)
+    calls = 0
+    zone.entities.define_singleton_method(:add_face) do |points|
+      calls += 1
+      raise IOError, "the host refused the second cut" if calls == 2
+
+      original_add.call(points)
+    end
+
+    result = solve(all_references)
+
+    assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
+    assert_equal snapshot, faces
+  end
+
   def test_a_finding_names_the_zones_it_is_about
     wall(800, 0, 0, 4, 0, 3, :east)
     wall(810, 0, 2, 6, 0, 3, :east)

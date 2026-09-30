@@ -236,10 +236,80 @@ module PhComposer
         end
         proposal.add_step(FaceRecordStep.new(:updates => plan.retirements, :change => "retired"), :scopes => scopes)
       end
-      full, partial = plan.matches.partition { |match| match.fetch(:overlap).kind == :full }
-      pair_ids = full.map { |match| pair_match(proposal, match) }
-      pair_ids.concat(partial.map { |match| split_match(request, proposal, match) })
+      pair_ids = Adjacency.components(plan.matches).flat_map do |group|
+        if group.length > 1
+          partition_matches(request, proposal, group, plan.partitions)
+        elsif group.first.fetch(:overlap).kind == :full
+          [pair_match(proposal, group.first)]
+        else
+          [split_match(request, proposal, group.first)]
+        end
+      end
       { "pair_ids" => pair_ids.compact.sort, "reported" => proposal.findings.length }
+    end
+
+    def partition_matches(request, proposal, group, partitions)
+      sides = {}
+      matches = group.each_with_index.map do |match, index|
+        check_unpaired!(match)
+        positions = [:left, :right].map do |name|
+          side = match.fetch(name)
+          occurrence = side.fetch(:occurrence)
+          key = Occurrences.key(occurrence.reference)
+          sides[key] ||= { :side => side, :regions => [] }
+          sides.fetch(key).fetch(:regions) << { "match_index" => index, "polygon_m" => match.fetch(:overlap).polygon_m }
+          key
+        end
+        pair_id = Records::Identity.derived(
+          "adj", "faces" => [:left, :right].map { |name| match.fetch(name).fetch(:record).fetch("id") }.sort
+        )
+        { "keys" => positions, "pair_id" => pair_id }
+      end
+      face_keys = sides.keys
+      faces = face_keys.map do |key|
+        item = sides.fetch(key)
+        partition_side_plan(request, item.fetch(:side), item.fetch(:regions), partitions.fetch(key))
+      end
+      matches.each do |match|
+        match["left"] = face_keys.index(match.fetch("keys").fetch(0))
+        match["right"] = face_keys.index(match.fetch("keys").fetch(1))
+        match.delete("keys")
+      end
+      scopes = faces.map { |face| Operations::EntityScope.new(face.fetch("reference").fetch("zone_path")) }
+      proposal.add_step(PartitionAndPairStep.new(:faces => faces, :matches => matches), :scopes => scopes)
+      matches.map { |match| match.fetch("pair_id") }
+    end
+
+    def partition_side_plan(request, side, regions, partition)
+      occurrence = side.fetch(:occurrence)
+      record = side.fetch(:record)
+      complete = partition.fetch(:remainder_area_m2) <= 1.0e-7
+      needs_cut = regions.length > 1 || !complete
+      fresh = if needs_cut
+                (regions.length + partition.fetch(:remainder_count)).times.map do |index|
+                  Records::Identity.derived("fac", "model" => request.model.guid,
+                                                   "revision" => request.revision,
+                                                   "zone_path" => occurrence.zone.path,
+                                                   "entity_path" => occurrence.path, "piece" => index)
+                end
+              else
+                []
+              end
+      copies = {}
+      if needs_cut
+        data = record.fetch("extension_data", {})
+        catalog = request.registry.catalog
+        Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
+        fresh.each do |id|
+          copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
+                                                    { record.fetch("id") => id }, :engine => request.engine)
+        end
+      end
+      { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
+        "persistent_id" => occurrence.entity.persistent_id, "fresh_ids" => fresh,
+        "extension_copies" => copies, "regions" => regions,
+        "complete" => complete, "area_m2" => side.fetch(:geometry).area_m2,
+        "remainder_area_m2" => partition.fetch(:remainder_area_m2) }
     end
 
     # A partial overlap is cut on both sides and paired in one step, because the pair's endpoints

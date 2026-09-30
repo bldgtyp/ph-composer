@@ -49,9 +49,15 @@ module PhComposer
       return false if left.area_m2 < 0.01 || right.area_m2 < 0.01
       return false unless opposite_normals?(left.normal, right.normal, angle_tolerance_degrees)
       return false unless coplanar?(left, right, plane_tolerance_m)
-      return false unless same_loops?(left.loops_m, right.loops_m, point_tolerance_m)
+      return false unless same_outline?(left, right, point_tolerance_m)
 
       minimum_edge(left.outer_loop) >= 0.01 && minimum_edge(right.outer_loop) >= 0.01
+    end
+
+    # Outline equality is independent of normal direction and cut thresholds. The solver uses
+    # it to identify same-normal overlapping Zones, including identical holed or concave Faces.
+    def same_outline?(left, right, tolerance_m)
+      same_loops?(left.loops_m, right.loops_m, tolerance_m)
     end
 
     def opposite_normals?(left, right, tolerance_degrees)

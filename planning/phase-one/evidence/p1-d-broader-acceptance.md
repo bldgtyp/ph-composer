@@ -148,8 +148,8 @@ The Attached-zone dialog review found no blocking issue.
 
 Do not close A05 to A09 wholesale from these individual cases. Unique moved-path recovery is now
 verified. [Native split identity recovery](p1-d-split-identity-recovery.md) now passes its public action
-and native-menu gate. Remaining work includes Face/Zone extension-reference targets, one-to-many
-pairing in A06. The [isolated GPU continuation](p1-d-gpu-timing.md) completes A08’s named current-host cases. The [atomic inline continuation](p1-d-attached-zone-atomic.md)
+and native-menu gate. The [clean multi-neighbour continuation](p1-d-multi-neighbour-adjacency.md) verifies one-to-many
+pairing. Remaining A06 work is Face/Zone extension-reference targets. The [isolated GPU continuation](p1-d-gpu-timing.md) completes A08’s named current-host cases. The [atomic inline continuation](p1-d-attached-zone-atomic.md)
 completes A07’s named current-host cases. The
 [hatch continuation](p1-d-hatch-and-invalidation.md) verifies the PRD hatch; the
 [keyboard/context continuation](p1-d-keyboard-context.md) completes A09's named current-host cases.

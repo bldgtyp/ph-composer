@@ -17,8 +17,9 @@ with exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID r
 [exact rollback, Undo/Redo and fresh reopen](evidence/p1-d-split-identity-recovery.md). The [extension-copy correction](evidence/p1-d-extension-copy-safety.md) now refuses unsafe
 Face cuts and copied-Zone repair before writes, with supported catalog-reference payloads passing
 native rollback, Undo/Redo and reopen. Ed accepted the split identity policy in [P1-Q5](DECISIONS.md#p1-q5-native-split-identity-frontier);
-the stored-path/explicit-choice policy is implemented and current-host verified. Face/Zone extension-reference targets are unsupported, and one-to-many pairing remains
-reported rather than solved. The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) verifies the public action, inline Enter/Escape, references, exact rollback, Undo/Redo and fresh reopen; A07’s named current-host cases pass. The [isolated GPU continuation](evidence/p1-d-gpu-timing.md) completes A08’s named current-host cases. The
+the stored-path/explicit-choice policy is implemented and current-host verified. Face/Zone extension-reference targets remain unsupported. The
+[clean multi-neighbour continuation](evidence/p1-d-multi-neighbour-adjacency.md) verifies coordinated
+partitioning, reciprocal references, rollback, Undo/Redo and fresh reopen. The [atomic Attached-zone continuation](evidence/p1-d-attached-zone-atomic.md) verifies the public action, inline Enter/Escape, references, exact rollback, Undo/Redo and fresh reopen; A07’s named current-host cases pass. The [isolated GPU continuation](evidence/p1-d-gpu-timing.md) completes A08’s named current-host cases. The
 [native adjacency boundary continuation](evidence/p1-d-adjacency-boundaries.md) verifies A05's
 named current-host cases, including independent plane/angle controls, sliver/same-normal skips
 and refusal when A–B would retire an existing B–C pair outside scope. The [Colour-by continuation](evidence/p1-d-colour-by-continuation.md) verifies

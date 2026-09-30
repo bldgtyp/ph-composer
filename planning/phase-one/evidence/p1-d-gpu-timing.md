@@ -64,3 +64,6 @@ P1-D still requires A06's clean one-to-many partition pairing and Face/Zone exte
 targets. The PRD already requires clean partitions to solve; the current blanket
 `adjacency.multiple_neighbours` report does not satisfy that case. The recorded two 6 m²
 Faces against one 12 m² counterpart is the next native regression fixture.
+
+The subsequent [multi-neighbour continuation](p1-d-multi-neighbour-adjacency.md) implements and
+verifies that regression and the stacked-Zone case. A06's extension-reference boundary remains open.
