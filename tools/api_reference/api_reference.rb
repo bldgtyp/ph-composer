@@ -92,8 +92,11 @@ module PhComposerTools
       lines.join("\n")
     end
 
+    # Empty containers are collapsed because json gem versions lay them out differently; the page
+    # must not go stale on a gem update (tests/support/fixture_files.rb says the same for goldens).
     def json_block(label, value)
-      ["#{label}:", "", "```json", JSON.pretty_generate(value), "```", ""]
+      text = JSON.pretty_generate(value).gsub(/\[\n\s*\]/, "[]").gsub(/\{\n\s*\}/, "{}")
+      ["#{label}:", "", "```json", text, "```", ""]
     end
   end
 end

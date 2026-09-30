@@ -244,8 +244,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {
-  }
+  "properties": {}
 }
 ```
 
@@ -300,8 +299,7 @@ Result:
 Example params:
 
 ```json
-{
-}
+{}
 ```
 
 ### `ph_composer.records.list`
@@ -411,8 +409,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {
-  }
+  "properties": {}
 }
 ```
 
@@ -518,8 +515,7 @@ Result:
 Example params:
 
 ```json
-{
-}
+{}
 ```
 
 ### `ph_composer.zones.faces.classify_tool`
@@ -532,8 +528,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {
-  }
+  "properties": {}
 }
 ```
 
@@ -583,8 +578,7 @@ Result:
 Example params:
 
 ```json
-{
-}
+{}
 ```
 
 ### `ph_composer.zones.faces.export_preflight`
@@ -597,8 +591,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {
-  }
+  "properties": {}
 }
 ```
 
@@ -704,8 +697,7 @@ Result:
 Example params:
 
 ```json
-{
-}
+{}
 ```
 
 ### `ph_composer.zones.faces.list`
@@ -718,8 +710,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {
-  }
+  "properties": {}
 }
 ```
 
@@ -934,8 +925,7 @@ Result:
 Example params:
 
 ```json
-{
-}
+{}
 ```
 
 ### `ph_composer.zones.list`
@@ -948,8 +938,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {
-  }
+  "properties": {}
 }
 ```
 
@@ -1184,8 +1173,7 @@ Result:
 Example params:
 
 ```json
-{
-}
+{}
 ```
 
 ## Actions
@@ -1302,9 +1290,7 @@ Params:
     "intent": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-
-      ],
+      "required": [],
       "properties": {
         "face_type": {
           "type": "object",
@@ -1866,9 +1852,7 @@ Params:
     "intent": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-
-      ],
+      "required": [],
       "properties": {
         "face_type": {
           "type": "object",
@@ -2029,8 +2013,7 @@ Example params:
       "entity_id": null
     }
   ],
-  "expected_values": {
-  },
+  "expected_values": {},
   "intent": {
     "face_type": {
       "mode": "set",
@@ -2103,8 +2086,7 @@ Result:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {
-  }
+  "properties": {}
 }
 ```
 
@@ -2186,9 +2168,7 @@ Example params:
 
 ```json
 {
-  "parent_path": [
-
-  ],
+  "parent_path": [],
   "entity_ids": [
     1201
   ]
@@ -2566,9 +2546,7 @@ Example params:
 
 ```json
 {
-  "parent_path": [
-
-  ],
+  "parent_path": [],
   "zone_id": "zon_Ab12Cd34Ef56"
 }
 ```
@@ -3075,8 +3053,7 @@ Result:
 Example params:
 
 ```json
-{
-}
+{}
 ```
 
 ### `ph_composer.colour_by.select_row`
@@ -3335,8 +3312,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {
-  }
+  "properties": {}
 }
 ```
 
@@ -3386,6 +3362,5 @@ Result:
 Example params:
 
 ```json
-{
-}
+{}
 ```
