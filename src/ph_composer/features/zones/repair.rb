@@ -46,11 +46,31 @@ module PhComposer
                                                             "zone_id" => new_id,
                                                             "entity_path" => entry.fetch(:occurrence).path)
         end
+        reference_plan = identity_reference_plan(zone, faces, mapping)
         record = DeepCopy.call(zone.record).merge("id" => new_id)
         record["extension_data"] = Records::Extension.copy_data(zone.record.fetch("extension_data", {}), catalog,
-                                                                "Zone", old_id, mapping, :engine => engine)
+                                                                "Zone", old_id, mapping, :engine => engine,
+                                                                :reference_plan => reference_plan)
         Schema.validate!(record)
-        { :old_id => old_id, :record => record, :faces => face_plans(faces, zone, new_id, mapping, catalog, engine) }
+        plans = face_plans(faces, zone, new_id, mapping, catalog, engine, reference_plan)
+        { :old_id => old_id, :record => record, :faces => plans }
+      end
+
+      def identity_reference_plan(zone, faces, mapping)
+        entries = [Records::ReferenceEntry.new(
+          :kind => REFERENCE_KIND, :key => zone.path,
+          :record => zone.record.merge("id" => mapping.fetch(zone.record.fetch("id")))
+        )]
+        faces.each do |entry|
+          before = entry.fetch(:before)
+          next unless before
+
+          entries << Records::ReferenceEntry.new(
+            :kind => FaceAssignment::REFERENCE_KIND, :key => zone.path + entry.fetch(:occurrence).path,
+            :record => before.merge("id" => mapping.fetch(before.fetch("id")))
+          )
+        end
+        Records::ReferencePlan.new(:entries => entries)
       end
 
       def check_repairable!(model, zone)
@@ -81,23 +101,24 @@ module PhComposer
         end
       end
 
-      def face_plans(entries, zone, new_zone_id, mapping, catalog, engine)
+      def face_plans(entries, zone, new_zone_id, mapping, catalog, engine, reference_plan)
         stamp = Schema.stamp(zone.record.merge("id" => new_zone_id))
         entries.map do |entry|
           occurrence = entry.fetch(:occurrence)
           before = entry.fetch(:before)
           { :reference => occurrence.reference(before&.fetch("id", nil)), :before => before,
-            :after => repaired_face(before, mapping, catalog, engine), :stamp => stamp }
+            :after => repaired_face(before, mapping, catalog, engine, reference_plan), :stamp => stamp }
         end
       end
 
-      def repaired_face(record, mapping, catalog, engine)
+      def repaired_face(record, mapping, catalog, engine, reference_plan)
         return nil unless record
 
         after = DeepCopy.call(record)
         after["id"] = mapping.fetch(record.fetch("id"))
         after["extension_data"] = Records::Extension.copy_data(record.fetch("extension_data", {}), catalog,
-                                                               "Face", record.fetch("id"), mapping, :engine => engine)
+                                                               "Face", record.fetch("id"), mapping, :engine => engine,
+                                                               :reference_plan => reference_plan)
         after.delete("adjacency")
         after.delete("boundary_condition") if record["boundary_condition"] == "Surface"
         FaceAssignment::Schema.validate!(after)

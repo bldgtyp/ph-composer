@@ -20,6 +20,31 @@ class RegistryTest < PhComposerTestCase
     error.diagnostics
   end
 
+  def test_reference_target_requires_callable_provider_and_pure_validator
+    target = PhComposer::Records::ReferenceTarget.new(:id => "outside.feature.object", :label => "Object",
+                                                       :records => nil, :validate => nil)
+    diagnostics = refused(feature do |registry|
+      registry.feature("outside.feature", :contract_version => 1).reference_target(target)
+    end)
+
+    assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
+    refute Registry.installed?("outside.feature")
+    refute Registry.current.reference_targets.key?(target.id)
+  end
+
+  def test_unregistered_reference_target_refuses_the_extension_batch
+    extension = PhComposer::Records::Extension.new(
+      :namespace => "outside.feature.links", :schema_version => 1,
+      :references => [{ "path" => "$.entity", "target_kind" => "missing.feature.object", "cardinality" => "one" }]
+    )
+    diagnostics = refused(feature do |registry|
+      registry.feature("outside.feature", :contract_version => 1).extension(extension)
+    end)
+
+    assert_equal ["registration.missing_dependency"], diagnostics.map(&:code)
+    refute Registry.installed?("outside.feature")
+  end
+
   def test_a_valid_feature_publishes_every_declaration
     Registry.install([TestFeature])
 

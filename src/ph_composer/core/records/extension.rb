@@ -96,18 +96,33 @@ module PhComposer
       end
 
       # The payload with every declared reference whose id is in `mapping` replaced by its counterpart.
-      def self.remap(payload, references, mapping)
+      def self.remap(payload, references, mapping, reference_plan: nil, mapping_kind: nil)
         references.reduce(DeepCopy.call(payload)) do |copy, reference|
           keys = reference.fetch("path").delete_prefix("$.").split(".")
           parent = keys[0...-1].reduce(copy) { |node, key| node.is_a?(Hash) ? node[key] : nil }
           next copy unless parent.is_a?(Hash) && parent.key?(keys.last)
 
+          typed_mapping = reference_mapping(mapping, reference, reference_plan, mapping_kind)
           current = parent[keys.last]
           parent[keys.last] =
-            current.is_a?(Array) ? current.map { |id| mapping.fetch(id, id) } : mapping.fetch(current, current)
+            if current.is_a?(Array)
+              current.map { |id| typed_mapping.fetch(id, id) }
+            else
+              typed_mapping.fetch(current, current)
+            end
           copy
         end
       end
+
+      def self.reference_mapping(mapping, reference, plan, mapping_kind)
+        return reference.fetch("target_kind") == mapping_kind ? mapping : {} if mapping_kind
+        return mapping unless plan
+
+        targets = plan.entries.select { |entry| entry.kind == reference.fetch("target_kind") }
+        ids = targets.map { |entry| entry.record.fetch("id") }
+        mapping.select { |_source, copied| ids.include?(copied) }
+      end
+      private_class_method :reference_mapping
 
       # The ids a payload's declared references name, as [target_kind, id] pairs.
       def self.referenced_ids(payload, references)
@@ -139,26 +154,19 @@ module PhComposer
         end
       end
 
-      # Entity-owned records pass their Engine so declared catalog references are checked before
+      # Entity-owned records pass their Engine so declared references are checked before
       # a host operation opens. Catalog records validate staged references through Engine itself.
-      def self.copy_data(data, catalog, label, id, mapping, engine: nil)
+      def self.copy_data(data, catalog, label, id, mapping, engine: nil, reference_plan: nil, mapping_kind: nil)
         check_copy_rules!(data, catalog, label, id)
         copied = DeepCopy.call(data).each_value do |envelope|
-          envelope["payload"] = remap(envelope.fetch("payload"), envelope.fetch("references", []), mapping)
+          envelope["payload"] = remap(envelope.fetch("payload"), envelope.fetch("references", []), mapping,
+                                      :reference_plan => reference_plan, :mapping_kind => mapping_kind)
         end
         check_copy_rules!(copied, catalog, label, id)
         if engine
           copied.each_value do |envelope|
             referenced_ids(envelope.fetch("payload"), envelope.fetch("references", [])).each do |target_kind, target_id|
-              begin
-                engine.find(target_kind, target_id)
-              rescue CodedError => error
-                raise unless error.code == "target.not_found"
-
-                raise CodedError.new("reference.invalid", "#{label} #{id} names #{target_kind} #{target_id}, " \
-                                                          "which does not exist.",
-                                     "target_kind" => target_kind, "id" => target_id)
-              end
+              engine.resolve_reference(target_kind, target_id, :reference_plan => reference_plan)
             end
           end
         end

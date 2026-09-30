@@ -942,7 +942,134 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal before, faces
   end
 
+  def test_solve_new_pieces_have_resolvable_declared_self_references
+    extension = entity_link_extension
+    register_extension(extension)
+    wall(660, 0, 0, 4, 0, 3, :east)
+    wall(670, 0, 2, 6, 0, 3, :west)
+    author
+    store = PhComposer::FaceAssignment::FACE_STORE
+    @model.entities.to_a.each do |group|
+      face = group.entities.to_a.first
+      before = store.read(face)
+      store.write(face, before.merge("extension_data" => {
+                    extension.namespace => extension.envelope("face_id" => before.fetch("id"))
+                  }))
+    end
+
+    result = solve(all_references)
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    engine = PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog)
+    @model.entities.to_a.each do |group|
+      group.entities.to_a.grep(Sketchup::Face).each do |face|
+        record = store.read(face)
+        id = record.dig("extension_data", extension.namespace, "payload", "face_id")
+        assert_equal record.fetch("id"), id
+        assert_equal record, engine.resolve_reference(PhComposer::FaceAssignment::REFERENCE_KIND, id).record
+      end
+    end
+  end
+
+  def test_no_survivor_with_catalog_incoming_reference_rolls_back_all_native_cuts
+    wall(680, 0, 0, 4, 0, 3, :east)
+    wall(690, 0, 2, 6, 0, 3, :west)
+    author
+    extension = entity_link_extension
+    old_id = faces.first.fetch("reference").fetch("entity_id")
+    store_external_reference
+    kind = PhComposer::FaceAssignment::AttachedZone::RECORD_KIND
+    record = kind.store.read(@model, "atz_000000000001")
+    kind.store.write(@model, record.merge("extension_data" => {
+                      "unavailable.incoming" => extension.envelope("face_id" => old_id)
+                    }))
+    before = faces
+
+    result = without_native_survivor { solve(all_references) }
+
+    assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
+    assert_equal "reference.in_use", result.dig("detail", "cause")
+    assert_includes result.fetch("message"), old_id
+    assert_includes result.fetch("message"), "No changes were retained."
+    assert_equal before, faces
+    assert_equal old_id, kind.store.read(@model, record.fetch("id")).dig(
+      "extension_data", "unavailable.incoming", "payload", "face_id"
+    )
+  end
+
+  def test_no_survivor_with_entity_incoming_reference_rolls_back_all_native_cuts
+    wall(700, 0, 0, 4, 0, 3, :east)
+    wall(710, 0, 2, 6, 0, 3, :west)
+    author
+    group = @model.entities.to_a.first
+    store = PhComposer::Zones::ZONE_STORE
+    before_record = store.read(group)
+    id = faces.first.fetch("reference").fetch("entity_id")
+    store.write(group, before_record.merge("extension_data" => {
+                  "unavailable.incoming" => entity_link_extension.envelope("face_id" => id)
+                }))
+    before = faces
+
+    result = without_native_survivor { solve(all_references) }
+
+    assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
+    assert_equal before, faces
+  end
+
+  def test_no_survivor_without_incoming_references_keeps_new_piece_policy
+    wall(720, 0, 0, 4, 0, 3, :east)
+    wall(730, 0, 2, 6, 0, 3, :west)
+    author
+    old_ids = faces.map { |face| face.fetch("reference").fetch("entity_id") }
+
+    result = without_native_survivor { solve(all_references) }
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_empty faces.map { |face| face.fetch("reference").fetch("entity_id") } & old_ids
+    assert_equal 4, faces.length
+  end
+
+  def test_no_survivor_with_opaque_incoming_payload_rolls_back
+    wall(740, 0, 0, 4, 0, 3, :east)
+    wall(750, 0, 2, 6, 0, 3, :west)
+    author
+    group = @model.entities.to_a.first
+    store = PhComposer::Zones::ZONE_STORE
+    store.write(group, store.read(group).merge("extension_data" => { "opaque.fixture" => { "payload" => {} } }))
+    before = faces
+
+    result = without_native_survivor { solve(all_references) }
+
+    assert_equal %w[failed operation.failed rolled_back], result.values_at("status", "code", "effect")
+    assert_equal before, faces
+  end
+
   private
+
+  def entity_link_extension
+    PhComposer::Records::Extension.new(
+      :namespace => "test.fixture.entity_link", :schema_version => 1,
+      :references => [{ "path" => "$.face_id", "target_kind" => PhComposer::FaceAssignment::REFERENCE_KIND,
+                        "cardinality" => "one" }]
+    )
+  end
+
+  # Simulate the native answer where every cut piece has a new persistent id. Production code
+  # still owns the complete transaction, new records and rollback; no geometry result is mocked.
+  def without_native_survivor
+    splitter = PhComposer::Zones::FaceSplit
+    original = splitter.method(:apply)
+    splitter.define_singleton_method(:apply) do |occurrence, polygon|
+      original.call(occurrence, polygon).each do |piece|
+        id = piece.persistent_id + 1_000_000
+        piece.entity.instance_variable_set(:@persistent_id, id)
+        piece.persistent_id = id
+      end
+    end
+    yield
+  ensure
+    splitter.define_singleton_method(:apply, original)
+  end
 
   def register_copy_extension
     register_extension(COPY_EXTENSION)

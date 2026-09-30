@@ -17,6 +17,7 @@ module PhComposer
         check_names
         check_operations
         check_record_kinds
+        check_reference_targets
         check_extensions
         check_snapshot_sections
         check_export_contributors
@@ -131,6 +132,16 @@ module PhComposer
         end
       end
 
+      def check_reference_targets
+        @staging.declared_reference_targets.each do |target|
+          next if target.label.is_a?(String) && !target.label.empty? &&
+                  target.provider.respond_to?(:call) && target.validator.respond_to?(:call)
+
+          add("registration.schema_invalid", owner(target.id), target.id,
+              "#{target.id} needs a label, a records provider and a pure validator.")
+        end
+      end
+
       def check_extensions
         @staging.declared_extensions.each do |extension|
           owner = owner(extension.namespace)
@@ -228,7 +239,8 @@ module PhComposer
 
       def require_kind(owner, subject, kind_id)
         staged = @staging.declared_record_kinds.any? { |kind| kind.id == kind_id }
-        return if staged || @live.record_kinds.key?(kind_id)
+        staged ||= @staging.declared_reference_targets.any? { |target| target.id == kind_id }
+        return if staged || @live.record_kinds.key?(kind_id) || @live.reference_targets.key?(kind_id)
 
         message = "#{subject} refers to record kind #{kind_id}, which is not registered."
         add("registration.missing_dependency", owner, subject, message, kind_id)

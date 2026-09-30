@@ -131,7 +131,8 @@ module PhComposer
         return nil unless after
 
         { "kind" => "face_assignment", "id" => after.fetch("id"), "change" => "updated",
-          "reference" => face.fetch(:reference).merge("entity_id" => after.fetch("id")) }
+          "reference" => face.fetch(:reference).merge("zone_id" => @record.fetch("id"),
+                                                     "entity_id" => after.fetch("id")) }
       end
 
       def resolve_member(zone, face)

@@ -68,6 +68,10 @@ module PhComposer
 
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION)
+      feature.reference_target(Records::ReferenceTarget.new(
+        :id => REFERENCE_KIND, :label => "Zone", :records => method(:reference_entries),
+        :validate => Schema.method(:problems)
+      ))
       ColourModes.install(feature)
       feature.query("#{FEATURE_ID}.list", :description => "Zone occurrences and the explicit Make Zone target.",
                                                :params => OBJECT, :result => OBJECT) { |request| list(request) }
@@ -115,6 +119,12 @@ module PhComposer
           )
         }
       ) { |reader| ExportProjection.records(reader) }
+    end
+
+    def reference_entries(model)
+      Occurrences.zones(model).map do |zone|
+        Records::ReferenceEntry.new(:kind => REFERENCE_KIND, :key => zone.path, :record => zone.record)
+      end
     end
 
     def declare_repairs(feature)
@@ -302,7 +312,8 @@ module PhComposer
         Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
         fresh.each do |id|
           copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
-                                                    { record.fetch("id") => id }, :engine => request.engine)
+                                                    { record.fetch("id") => id }, :engine => request.engine,
+                                                    :reference_plan => split_reference_plan(occurrence, record, id))
         end
       end
       { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
@@ -310,6 +321,14 @@ module PhComposer
         "extension_copies" => copies, "regions" => regions,
         "complete" => complete, "area_m2" => side.fetch(:geometry).area_m2,
         "remainder_area_m2" => partition.fetch(:remainder_area_m2) }
+    end
+
+    def split_reference_plan(occurrence, record, id)
+      entry = Records::ReferenceEntry.new(
+        :kind => FaceAssignment::REFERENCE_KIND,
+        :key => occurrence.zone.path + occurrence.path + [id], :record => record.merge("id" => id)
+      )
+      Records::ReferencePlan.new(:entries => [entry])
     end
 
     # A partial overlap is cut on both sides and paired in one step, because the pair's endpoints
@@ -360,7 +379,8 @@ module PhComposer
         Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
         fresh.each do |id|
           copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
-                                                    { record.fetch("id") => id }, :engine => request.engine)
+                                                    { record.fetch("id") => id }, :engine => request.engine,
+                                                    :reference_plan => split_reference_plan(occurrence, record, id))
         end
       end
       { "reference" => occurrence.reference(record.fetch("id")), "before" => record,

@@ -87,10 +87,6 @@ module PhComposer
             raise CodedError.new("target.ambiguous", "The proposed Face identity already exists.")
           end
           after = DeepCopy.call(before).merge("id" => id)
-          after["extension_data"] = Records::Extension.copy_data(
-            before.fetch("extension_data", {}), request.registry.catalog, "Face", old_id,
-            id == old_id ? {} : { old_id => id }, :engine => request.engine
-          )
           after = retired(after) if envelope
           FaceAssignment::Schema.validate!(after)
           { :reference => piece_reference(zone, path, old_id), :before => before,
@@ -100,6 +96,19 @@ module PhComposer
           raise CodedError.new("target.ambiguous", "The proposed Face identities are not unique.")
         end
 
+        reference_plan = Records::ReferencePlan.new(:entries => changes.map do |entry|
+          Records::ReferenceEntry.new(:kind => FaceAssignment::REFERENCE_KIND,
+                                     :key => zone.path + entry.fetch(:reference).fetch("entity_path"),
+                                     :record => entry.fetch(:after))
+        end)
+        changes.each do |entry|
+          after = entry.fetch(:after)
+          id = after.fetch("id")
+          after["extension_data"] = Records::Extension.copy_data(
+            entry.fetch(:before).fetch("extension_data", {}), request.registry.catalog, "Face", old_id,
+            id == old_id ? {} : { old_id => id }, :engine => request.engine, :reference_plan => reference_plan
+          )
+        end
         changes
       end
 

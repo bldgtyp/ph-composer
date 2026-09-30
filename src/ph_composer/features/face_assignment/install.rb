@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "schema"
+require_relative "reference_targets"
 require_relative "geometry"
 require_relative "attached_zone"
 require_relative "steps"
@@ -130,6 +131,10 @@ module PhComposer
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION,
                                   :requires => [Zones::FEATURE_ID])
+      feature.reference_target(Records::ReferenceTarget.new(
+        :id => REFERENCE_KIND, :label => "Face", :records => ReferenceTargets.method(:entries),
+        :validate => Schema.method(:problems)
+      ))
       ColourModes.install(feature)
       ClassifyMenu.install(feature)
       feature.query("#{FEATURE_ID}.list", :description => "Path-qualified Face occurrences in authored Zones.",

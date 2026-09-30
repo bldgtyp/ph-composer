@@ -250,6 +250,37 @@ export mappings. Specify how operations declare their dependence on extension da
 confirmed refusal policy can be enforced. Test the relevant round trips
 and actual references. Arbitrary metadata is not a substitute for a typed core domain field.
 
+### Entity-owned reference targets
+
+A feature registers read-only entity identities through `feature.reference_target` rather than
+exposing its entity store as catalog CRUD. The declaration is a `Records::ReferenceTarget` with
+an `id`, `label`, `records:` provider and pure `validate:` callback. The provider returns detached
+`Records::ReferenceEntry` values with `kind`, an occurrence `key`, and the stored `record`.
+The key identifies the storage occurrence, not the UUID. Repeated placements and orphan records
+must be included when they could make a UUID ambiguous. The callback returns validation findings.
+
+An extension's `target_kind` may name a catalog kind or a registered reference target. The
+built-in targets are `ph_composer.zones.zone` and `ph_composer.face_assignment.face`.
+`Records::Engine#resolve_reference(kind, id)` returns exactly one validated, detached entry;
+missing or ambiguous identities refuse without repairing storage. The owning feature continues
+to control all writes through its normal public actions.
+
+Identity-changing proposals use a typed `Records::ReferencePlan` of the exact occurrences they
+will replace. This establishes the final identity set, including the untouched original or
+retaining split piece, before copied payloads are accepted. A remap applies only to the declared
+target kind and objects included in that copy. A list of newly allocated UUID strings alone is
+not evidence that their reference targets exist.
+
+Incoming references outside a copied collection remain unchanged. After explicit split repair
+they name the piece retaining the old UUID. If a solver cut retains no original native Face,
+removing its authored identity must not leave incoming references dangling: the operation refuses
+and rolls back instead of choosing a replacement by geometry. Incoming checks cover catalog and
+entity-owned records, including declared references in readable unavailable envelopes. An
+unreadable envelope cannot establish safe identity removal and causes conservative refusal.
+When this is learned during a native cut, the failed result retains the rollback-certainty code
+and effect and includes the declared domain reason in its message and `detail.cause`.
+Unexpected exceptions retain the generic message; their internal details are not exposed.
+
 ## Scripting as an entry point
 
 [AGENT_INTERFACE.md](AGENT_INTERFACE.md) extends this interface to users' external agents,

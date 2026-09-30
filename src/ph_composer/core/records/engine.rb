@@ -113,11 +113,14 @@ module PhComposer
           reserved = reserved_ids(kind, change_set)
           mapping = originals.to_h { |record| [record.fetch("id"), Identity.fresh(kind.id_prefix, reserved)] }
           copies = originals.map do |record|
-            copy = kind.references.reduce(DeepCopy.call(record)) { |value, field| field.remap(value, mapping) }
+            copy = kind.references.reduce(DeepCopy.call(record)) do |value, field|
+              field.target_kind == kind_id ? field.remap(value, mapping) : value
+            end
             copy["id"] = mapping.fetch(record.fetch("id"))
             if record.key?("extension_data")
               copy["extension_data"] = Extension.copy_data(record.fetch("extension_data"), @catalog,
-                                                            kind.label, record.fetch("id"), mapping)
+                                                            kind.label, record.fetch("id"), mapping,
+                                                            :mapping_kind => kind_id)
             end
             propose(kind, change_set, nil, copy, :check_references => false)
             copy
@@ -206,41 +209,12 @@ module PhComposer
           targets.concat(Extension.referenced_ids(envelope.fetch("payload"), envelope.fetch("references", [])))
         end
         targets.each do |target_kind, id|
-          next if change_set.find(target_kind, id) || stored?(target_kind, id)
-
-          message = "#{kind.label} #{record['id']} names #{target_kind} #{id}, which does not exist."
-          raise CodedError.new("reference.invalid", message, "target_kind" => target_kind, "id" => id)
+          resolve_reference(target_kind, id, :change_set => change_set)
         end
       end
 
       def check_delete_references!(deleted_kind, deleted_id, change_set)
-        @catalog.kinds.each do |kind|
-          ids = kind.store.ids(@model) + change_set.writes.select { |write| write.kind == kind.id }.map(&:id)
-          ids.uniq.each do |id|
-            staged = change_set.find(kind.id, id)
-            record = staged ? staged.after : read(kind, id)
-            next unless record
-
-            references = referenced_targets(kind, record)
-            next unless references.include?([deleted_kind, deleted_id])
-
-            message = "#{kind.label} #{id} still refers to #{deleted_kind} #{deleted_id}."
-            raise CodedError.new("reference.in_use", message, "target_kind" => deleted_kind,
-                                                                "id" => deleted_id)
-          end
-        end
-      end
-
-      def referenced_targets(kind, record)
-        targets = kind.references.flat_map do |reference|
-          reference.ids(record).map { |id| [reference.target_kind, id] }
-        end
-        record.fetch("extension_data", {}).each do |namespace, envelope|
-          next unless Extension.status(envelope, @catalog.extension(namespace)) == "understood"
-
-          targets.concat(Extension.referenced_ids(envelope.fetch("payload"), envelope.fetch("references", [])))
-        end
-        targets
+        check_identity_removal!(deleted_kind, deleted_id, :change_set => change_set)
       end
 
       # Identity and metadata change only through their own arguments, never as a value.
@@ -317,10 +291,6 @@ module PhComposer
 
         raise CodedError.new("params.invalid", "User data must be plain JSON: #{problems.first}.",
                              "findings" => problems)
-      end
-
-      def stored?(kind_id, id)
-        @catalog.kind?(kind_id) && !read(@catalog.kind(kind_id), id).nil?
       end
 
       def reserved_ids(kind, change_set)

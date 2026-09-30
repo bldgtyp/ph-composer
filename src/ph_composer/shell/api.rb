@@ -43,6 +43,9 @@ module PhComposer
           { "id" => kind.id, "owner" => registry.owner_of(kind.id), "label" => kind.label,
             "schema_version" => kind.schema_version }
         end,
+        "reference_targets" => registry.reference_targets.values.map do |target|
+          { "id" => target.id, "owner" => registry.owner_of(target.id), "label" => target.label }
+        end,
         "extensions" => registry.extensions.values.map do |extension|
           { "namespace" => extension.namespace, "owner" => registry.owner_of(extension.namespace),
             "schema_version" => extension.schema_version, "export_relevance" => extension.export_relevance }
@@ -57,6 +60,11 @@ module PhComposer
       registry = Registry.current
       if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name])
         return DeepCopy.call(operation_description(operation))
+      end
+
+      if (target = registry.reference_targets[name])
+        return DeepCopy.call("kind" => "reference_target", "id" => target.id,
+                             "owner" => registry.owner_of(target.id), "label" => target.label)
       end
 
       kind = registry.record_kinds[name]

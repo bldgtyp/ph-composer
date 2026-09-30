@@ -174,7 +174,10 @@ Native splitting copies the full face dictionary to every resulting face. Theref
 
 - A plugin-owned split keeps the existing face id on the result retaining the original native
   persistent id. Each other result receives a fresh `fac_` id. If the original persistent id does
-  not survive, every result receives a new id and the old endpoint is retired.
+  not survive, every result receives a new id and the old endpoint is retired. Removing that
+  identity requires safe incoming-reference checks across catalog and entity records; a dangling
+  or unknowable reference aborts the whole operation. The result reports the domain cause while
+  preserving rollback certainty. [Entity-reference evidence](evidence/p1-d-entity-reference-targets.md).
 - Non-Surface core fields and `user_data` copy to the resulting records. Installed extension data
   follows its declared copy/reference rules. If unavailable or invalid extension data prevents a
   safe identity split, refuse the plugin operation before writing.

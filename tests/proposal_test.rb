@@ -99,6 +99,19 @@ class ProposalTest < PhComposerTestCase
     assert_equal %w[failed operation.rollback_unverified unknown], outcome.values_at("status", "code", "effect")
   end
 
+  def test_a_domain_failure_reason_does_not_overstate_unverified_rollback
+    reason = PhComposer::CodedError.new("reference.in_use", "A Face is still referenced.", "id" => "fac_held")
+
+    outcome = PhComposer::Outcome.failed(:effect => "unknown", :revision => 1, :reason => reason)
+
+    assert_equal %w[failed operation.rollback_unverified unknown], outcome.values_at("status", "code", "effect")
+    assert_equal "reference.in_use", outcome.dig("detail", "cause")
+    assert_equal "fac_held", outcome.dig("detail", "detail", "id")
+    assert_includes outcome.fetch("message"), reason.message
+    assert_includes outcome.fetch("message"), PhComposer::Outcome::UNVERIFIED
+    refute_includes outcome.fetch("message"), "No changes were retained."
+  end
+
   def test_record_failure_rolls_back_the_preceding_geometry_and_record_write
     outcome = invoke_compound(2)
 

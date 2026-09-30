@@ -149,8 +149,10 @@ METr conversion and import are deferred; neither is required for this gate.
 
 ## P1-D: complete Phase 1 authoring behavior
 
-**State:** In progress, authorized 2026-09-20. Delivered in slices so each lands with its own
-focused tests; the stage closes only when A04 to A09 all have evidence.
+**State:** In progress, authorized 2026-09-20. Named current-host A04 to A09 cases have evidence.
+The final [entity-reference slice](evidence/p1-d-entity-reference-targets.md) awaits its required
+independent review after the chat reached its agent-thread limit. Complete that review before
+closing P1-D; delivered behavior remains distinguished from release/floor-host acceptance.
 
 | Slice | Delivers | State |
 | --- | --- | --- |
@@ -178,11 +180,11 @@ scope with the Q18 out-of-scope refusal; and a partial overlap is cut on both si
 the shared pieces only, in one step, with the split rules from [CONTRACTS.md](CONTRACTS.md)
 deciding which piece keeps its Face id.
 
-Two things remain open and are deliberate, not oversights:
+The original D4 boundaries have the following current disposition:
 
-- **A Face meeting more than one neighbour is reported, not cut.** It needs one cut per neighbour
-  and the solver does one. This is a normal multifamily shape, a wall against two stacked Zones,
-  so it should not stay open indefinitely. Revisit it when such a model needs it.
+- **Clean multi-neighbour partitions now solve together.** The [native continuation](evidence/p1-d-multi-neighbour-adjacency.md)
+  verifies repaired split Faces against one counterpart and a wall against stacked Zones. Overlapping
+  or otherwise unsafe regions still report rather than forcing a cut.
 - **A concave outline and a Face with a hole are reported, not cut.** A cut needs both outlines
   convex, because the remainder of a concave Face is a shape the solver will not decompose. Both
   still pair on a full match, which cuts nothing. Windows arrive in Phase 2 and will put holes in

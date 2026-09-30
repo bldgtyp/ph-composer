@@ -77,8 +77,11 @@ choice. Other pieces receive new UUIDs. Repair is explicit and previewed, with i
 links retired reciprocally inside the declared mutation scope, supported classification and
 payloads retained, and unsafe extension data refused before writes. It does not silently create
 new adjacencies; a subsequent explicit Solve remains subject to the one-to-many solver boundary.
-Face/Zone extension-reference registration and incoming-reference handling still require their
-own contract design; selecting this identity policy does not establish those capabilities.
+Face/Zone extension-reference registration and incoming-reference handling now use the shared
+read-only target and typed proposal contract in `context/EXTENSIBILITY.md`. Their [native
+continuation](evidence/p1-d-entity-reference-targets.md) passes; independent review is pending.
+Outside incoming references retain their original/keeper target. Identity removal with incoming
+or unknowable references aborts rather than selecting a replacement by geometry.
 
 The rejected alternative gave every resulting piece a new identity, so existing references to
 the old identity would require explicit resolution. The accepted policy authorizes the recovery

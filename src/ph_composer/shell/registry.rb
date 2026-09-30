@@ -16,7 +16,8 @@ module PhComposer
   class Registry
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
-    attr_reader :features, :queries, :actions, :view_commands, :record_kinds, :extensions, :snapshot_sections,
+    attr_reader :features, :queries, :actions, :view_commands, :record_kinds, :reference_targets, :extensions,
+                :snapshot_sections,
                 :export_contributors, :proposal_participants, :colour_modes, :menu_items, :subscriptions
 
     class << self
@@ -50,6 +51,7 @@ module PhComposer
       @actions = {}
       @view_commands = {}
       @record_kinds = {}
+      @reference_targets = {}
       @extensions = {}
       @snapshot_sections = {}
       @export_contributors = {}
@@ -62,7 +64,8 @@ module PhComposer
     end
 
     def catalog
-      Records::Catalog.new(:kinds => record_kinds.values, :extensions => extensions.values)
+      Records::Catalog.new(:kinds => record_kinds.values, :extensions => extensions.values,
+                           :reference_targets => reference_targets.values)
     end
 
     # The feature, query, action, record kind, extension or snapshot section that owns `name`.
@@ -88,6 +91,7 @@ module PhComposer
       publish_each(staging.declared_view_commands, @view_commands, :name)
       publish_each(staging.declared_record_kinds, @record_kinds, :id)
       staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
+      publish_each(staging.declared_reference_targets, @reference_targets, :id)
       publish_each(staging.declared_extensions, @extensions, :namespace)
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
@@ -116,7 +120,8 @@ module PhComposer
     # Collects one batch's declarations and checks them against each other and the live registry.
     class Staging
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_view_commands,
-                  :declared_record_kinds, :declared_extensions, :declared_snapshot_sections,
+                  :declared_record_kinds, :declared_reference_targets, :declared_extensions,
+                  :declared_snapshot_sections,
                   :declared_export_contributors, :declared_proposal_participants, :declared_colour_modes,
                   :declared_menu_items,
                   :declared_subscriptions, :owners, :named
@@ -128,6 +133,7 @@ module PhComposer
         @declared_actions = []
         @declared_view_commands = []
         @declared_record_kinds = []
+        @declared_reference_targets = []
         @declared_extensions = []
         @declared_snapshot_sections = []
         @declared_export_contributors = []
@@ -176,6 +182,10 @@ module PhComposer
 
       def record_kind(kind)
         @staging.add(:declared_record_kinds, id, kind.id, kind)
+      end
+
+      def reference_target(target)
+        @staging.add(:declared_reference_targets, id, target.id, target)
       end
 
       def extension(extension)

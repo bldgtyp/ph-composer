@@ -3,6 +3,7 @@
 module PhComposer
   module Zones
     FEATURE_ID = "ph_composer.zones"
+    REFERENCE_KIND = "#{FEATURE_ID}.zone"
     ZONE_DICTIONARY = "ph_composer.zone"
     STAMP_DICTIONARY = "ph_composer.zone_stamp"
     ZONE_STORE = Records::EntityStore.new(ZONE_DICTIONARY)

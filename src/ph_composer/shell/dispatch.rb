@@ -265,7 +265,8 @@ module PhComposer
       effect = verified_unchanged?(session.model, engine, proposal) ? "rolled_back" : "unknown"
       Diagnostics.log("operation_failed", "operation" => action.name, "status" => effect,
                                           "error_class" => error.class.name)
-      Outcome.failed(:effect => effect, :revision => session.revision)
+      reason = error.is_a?(CodedError) ? error : nil
+      Outcome.failed(:effect => effect, :revision => session.revision, :reason => reason)
     end
 
     def verified_unchanged?(model, engine, proposal)

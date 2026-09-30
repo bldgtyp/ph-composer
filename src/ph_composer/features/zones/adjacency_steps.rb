@@ -63,10 +63,19 @@ module PhComposer
         sides = [@left, @right].map { |side| cut(model, side) }
         pair(sides.fetch(0), sides.fetch(1))
         sides.each { |side| write(side) }
+        check_removed_identities!(model, sides)
         @affected = sides.flat_map { |side| side.fetch(:affected) }
       end
 
       private
+
+      def check_removed_identities!(model, sides)
+        engine = Records::Engine.new(model, Registry.current.catalog)
+        sides.reject { |side| side.fetch(:survivor) }.each do |side|
+          id = side.key?(:before) ? side.fetch(:before).fetch("id") : side.fetch(:removed_id)
+          engine.check_identity_removal!(FaceAssignment::REFERENCE_KIND, id)
+        end
+      end
 
       # Cut one Face and work out what each resulting piece is: the shared region, or a remainder.
       def cut(model, side)
@@ -210,6 +219,7 @@ module PhComposer
           pair_regions(left, right, index, match.fetch("pair_id"))
         end
         sides.each { |side| write(side) }
+        check_removed_identities!(model, sides)
         @affected = sides.flat_map { |side| side.fetch(:affected) }
       end
 
@@ -257,7 +267,7 @@ module PhComposer
           [piece, carried(before, id, face)]
         end
         { :occurrence => occurrence, :pieces => records, :regions => matched,
-          :survivor => survivor, :affected => [] }
+          :survivor => survivor, :removed_id => before.fetch("id"), :affected => [] }
       end
 
       def pair_regions(left, right, index, pair_id)

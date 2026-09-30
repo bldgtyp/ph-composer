@@ -170,6 +170,13 @@ Face IDs. The Overview inline dialog uses that public operation; scripts can pre
 it with the panel closed. [Current-host evidence](../planning/phase-one/evidence/p1-d-attached-zone-atomic.md)
 records validation, exact rollback and persistence checks.
 
+Discovery also lists read-only `reference_targets`; description returns their ID, owner and label.
+Registered extensions can name `ph_composer.zones.zone` and `ph_composer.face_assignment.face`.
+Contributors resolve those identities through the shared record engine while the owning features
+retain entity writes. [The contract](EXTENSIBILITY.md#entity-owned-reference-targets) defines typed
+proposal projections and incoming-reference handling; [native evidence](../planning/phase-one/evidence/p1-d-entity-reference-targets.md)
+records actual copy/split/Solve targets and the pending independent-review gate.
+
 ## Delivery and acceptance
 
 Ed confirmed the delivery split during Phase 0 planning on 2026-09-18. Phase 0 establishes the
