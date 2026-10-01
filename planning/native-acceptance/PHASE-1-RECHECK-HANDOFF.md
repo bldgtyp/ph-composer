@@ -1,7 +1,7 @@
 # Native acceptance handoff: Phase 1 recheck after PR #10
 
 DATE: 2026-09-30
-STATUS: Complete 2026-09-30. Codex ran all ten; nine pass, R05 `unknown` (pending state). [Evidence](evidence/phase-1-recheck-2026-09-30.md)
+STATUS: Complete 2026-09-30. Codex ran all ten; nine pass; R05 observed `unknown` on its pending state, passed on Ed's acceptance of the offline coverage. [Evidence](evidence/phase-1-recheck-2026-09-30.md)
 OWNER: [acceptance register](../archive/phase-01-faces-and-zones/ACCEPTANCE.md) (A02, A04, A05, A11,
 R01 to R06); ledger cases in [cases.json](cases.json); prior results in
 [pr3-corrections-native.md](../archive/phase-01-faces-and-zones/evidence/pr3-corrections-native.md)

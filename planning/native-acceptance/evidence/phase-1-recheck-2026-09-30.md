@@ -42,5 +42,5 @@ the walkthroughs predate it. Raw readbacks and captures remain in `_private/host
 - With a Zone details draft open, the tab's settings gear opens its bubble rather than refusing.
   The draft survived and no setting was changed. Whether a settings change during a draft should be
   refused, as Solve adjacencies is, is undecided.
-- R05's pending-state visibility stays `unknown`, as in the previous run, where Ed accepted the
-  offline coverage for that one assertion.
+- R05's pending-state visibility stays `unknown` in the ledger, as in the previous run. Ed accepted
+  the offline coverage for that one assertion again on 2026-09-30, so R05 passes on his acceptance.
