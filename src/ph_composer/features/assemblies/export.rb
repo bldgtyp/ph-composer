@@ -43,8 +43,11 @@ module PhComposer
         assemblies, bad_assemblies = Snapshot.read_records(request.engine, ASSEMBLY_KIND,
                                                            request.engine.ids(ASSEMBLY_KIND))
         by_id = materials.to_h { |row| [row.fetch("id"), row] }
-        findings = materials.flat_map { |row| Validation.material(row) }
-        findings.concat(assemblies.flat_map { |row| Validation.assembly(row, by_id) })
+        material_findings = materials.to_h { |row| [row.fetch("id"), Validation.material(row)] }
+        findings = material_findings.values.flatten
+        findings.concat(assemblies.flat_map do |row|
+          Validation.assembly(row, by_id, :material_findings => material_findings)
+        end)
         findings = findings.map do |finding|
           message = finding.fetch("message")
           if finding.fetch("code") == "material_thermal_mass_default"

@@ -109,8 +109,10 @@ fs.mkdirSync(output, { recursive: true });
     await assemblies.getByRole("button", { name: "Duplicate New slab", exact: true }).click();
     await assemblies.getByRole("button", { name: "Delete New slab (copy)", exact: true }).waitFor();
     await assemblies.getByRole("button", { name: "Delete New slab (copy)", exact: true }).click();
-    const deleteAssembly = assemblies.getByRole("dialog", { name: "Delete New slab (copy)", exact: true });
-    await deleteAssembly.locator("button[type=submit]").click();
+    const deleteAssembly = assemblies.getByRole("dialog", { name: "Replace and delete New slab (copy)", exact: true });
+    assert.equal(await deleteAssembly.locator("button[type=submit]").isDisabled(), true);
+    await deleteAssembly.getByRole("combobox", { name: "Replacement assembly", exact: true }).selectOption("__clear__");
+    await deleteAssembly.getByRole("button", { name: /Replace and delete$/ }).click();
     await deleteAssembly.waitFor({ state: "hidden" });
     assert.equal(await page.evaluate(() => window.previewHost.assemblies.records.length), 3);
 

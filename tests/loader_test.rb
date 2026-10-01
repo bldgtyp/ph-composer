@@ -45,7 +45,7 @@ class LoaderTest < PhComposerTestCase
              registry.reference_targets, registry.snapshot_sections, registry.export_contributors,
              registry.proposal_participants, registry.colour_modes, registry.menu_items].flat_map(&:keys)
 
-    assert_empty registry.features.fetch("ph_composer.zones").requires
+    assert_equal ["ph_composer.assemblies"], registry.features.fetch("ph_composer.zones").requires
     assert_empty names.grep(/face_assignment/)
     assert_includes names, "ph_composer.zones.faces.classify"
     names.grep(/\Aph_composer\.zones\./).each do |name|
