@@ -59,9 +59,16 @@ Use plus one exact Undo also pass. The complete three-Layer mixed framing constr
 matches an independent thermal calculation; all five construction commits pass individual
 Undo comparisons. E04's native workflow is observed across the recorded batches, but
 consolidated attestation and the preceding E03 gate remain open.
-Current own `assemblies-native.skp`, PID 25109 / bridge 62465, is unmodified; panel is
-closed. Private journal and `assemblies-native-builder-observed.skp` preserve the batch.
-Next autonomous work: remaining Assembly / assignment / export and affected Phase 1 host checks.
+The Assembly batch ends in its saved, unmodified state with the panel closed. Private
+journals, `assemblies-native-builder-observed.skp` and `assemblies-native-three-layer.skp`
+preserve the observed states. The quit helper timed out and terminated that owned process;
+no work was lost, and no clean-shutdown acceptance is claimed for that transition.
+Current own `native-move-copy-ready.skp`, PID 27059 / bridge 64380, has exactly four synthetic
+Units, `direct` selected inside `zone_a`, native Move active and the complete pre-copy
+readback captured. See [the prepared human batch](MANUAL_BATCH.md). Actual Option Move-copy
+is the current dependency blocker before Unit placement and Aperture implementation.
+Remaining autonomous work: Assembly / assignment / export attestation and affected Phase 1 checks,
+then Slice C and downstream implementation once the native Move-copy gate passes.
 The final human batch contains native Option Move-copy, held-modal context workflow and
 outside-example repository decision. Slice C, P2-13 and P2-14 still wait on Move-copy.
 Keep these gates open; no placement or Aperture implementation yet.

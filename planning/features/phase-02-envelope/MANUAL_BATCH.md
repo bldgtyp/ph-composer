@@ -14,6 +14,14 @@ Starting fixture: a fresh private copy of `_private/host/envelope/window-host/na
 with the stamped `direct` cutting instance selected inside its Group. Codex loads the tools-only
 `WindowNativeEdits` helper, captures the before state and leaves the native Move tool ready.
 
+Prepared checkpoint: `native-move-copy-ready.skp` in that private folder, PID 27059 /
+bridge 64380. The copied prior evidence file contained earlier probe edits, so only the
+owned ready copy was reset using the synthetic SDK fixture helper and saved. The baseline
+has exactly four Units (`direct`, `repeated`, `nested`, `mirrored`); `direct`, persistent id
+49190, is selected in `zone_a` and glued to Face 49137. The native Move tool is active.
+`native-move-copy-ready-before.json` captures dictionaries, definitions, transforms and glue.
+Do not reset this state after Ed's gesture until its readback is collected.
+
 Ed uses the actual Move tool and Option-copy gesture to place one copy beside the original on
 the same wall. Stop after the copy lands; do not rename, stamp, Make unique or repair it.
 Codex reads the actual instance ids, dictionaries, shared definition and glue, then checks one
