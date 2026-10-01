@@ -4,8 +4,8 @@ require "json"
 
 module PhComposer
   module Export
-    # The metadata policy for the canonical HBJSON (R-D2). The translator's bytes are what is written;
-    # this reads a parsed copy and never re-serializes. `user_data` may hold only the dotted leaf keys
+    # The metadata policy for the canonical HBJSON. The translator's bytes are what is written; this
+    # reads a parsed copy and never re-serializes. `user_data` may hold only the dotted leaf keys
     # export contributors declare (an empty map, at any level, declares nothing); every other key
     # ArtifactHygiene prohibits, extension envelopes and usernames among them, refuses at any depth;
     # and every string passes the local-path check on its own. A refusal names the JSON path.

@@ -2,9 +2,9 @@
 
 require_relative "test_helper"
 
-# A02: the Zone and Face reads are bounded, filtered and projected. Rows come in occurrence-path
-# order a page at a time; a cursor answers only its own query, filter, session and revision; a
-# projection returns the named values and nothing else. The panel reads the complete projections.
+# The Zone and Face reads are bounded, filtered and projected. Rows come in occurrence-path order a
+# page at a time; a cursor answers only its own query, filter, session and revision; a projection
+# returns the named values and nothing else. The panel reads the complete projections.
 class EntityReadsTest < PhComposerTestCase
   API = PhComposer::API
   ZONES = "ph_composer.zones.list"

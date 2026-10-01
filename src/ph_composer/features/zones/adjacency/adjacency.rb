@@ -14,7 +14,7 @@ module PhComposer
       # Everything one Solve would do, settled before a single write: which Faces pair, which cuts
       # each pairing needs, and every case reported instead of paired. Reading is unbounded and
       # writing is not, so a pairing that would touch a Zone outside the scope refuses the whole
-      # operation rather than quietly widening what the user selected (Q18).
+      # operation rather than quietly widening what the user selected.
       Plan = Struct.new(:matches, :findings, :retirements, :partitions, keyword_init: true)
 
       def plan(model, references)
@@ -189,7 +189,7 @@ module PhComposer
         { :matches => matches, :findings => findings }
       end
 
-      # Q18: making or retiring a pair writes both endpoints, so both Zones must be in the mutation set.
+      # Making or retiring a pair writes both endpoints, so both Zones must be in the mutation set.
       # Refusing names both, so the caller can offer a retry that includes them.
       def check_scope!(left, right, in_scope)
         outside = [left, right].map { |side| side.fetch(:occurrence).zone }

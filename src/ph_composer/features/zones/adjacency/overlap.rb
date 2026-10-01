@@ -11,11 +11,12 @@ module PhComposer
     #   :none          the Faces do not share a plane, or their outlines do not meet
     #   :full          each Face is entirely the other's counterpart; no split needed
     #   :partial       the shared region is a proper subset of at least one Face
-    #   :same_normal   coplanar and overlapping but pointing the same way: overlapping Zones (Q19)
-    #   :sliver        a real overlap too small or too narrow to cut (Q17)
+    #   :same_normal   coplanar and overlapping but pointing the same way: overlapping Zones
+    #   :sliver        a real overlap too small or too narrow to cut
     #   :unsupported   a shape this solver will not cut; reported, never guessed at
     module Overlap
-      # Q17's independent thresholds. They are about what is safe to draw, not about tolerance.
+      # Independent area and width thresholds. They are about what is safe to draw, not about
+      # tolerance.
       MINIMUM_AREA_M2 = 0.01
       MINIMUM_WIDTH_M = 0.01
 
@@ -50,9 +51,9 @@ module PhComposer
 
         shared = shared_region(left, right)
         # Two coplanar Faces pointing the same way are overlapping Zones whatever the size of the
-        # region they share (Q19). Judging the size first would report a real modelling error as an
-        # ordinary skip, and "skipped" implies the solver would otherwise have paired them.
-        # An unsupported shape is left alone: there the solver never learned whether they overlap.
+        # region they share. Judging the size first would report a real modelling error as an ordinary
+        # skip, and "skipped" implies the solver would otherwise have paired them. An unsupported
+        # shape is left alone: there the solver never learned whether they overlap.
         return Result.new(:kind => :same_normal, :area_m2 => shared.area_m2) if aligned == :same &&
                                                                                %i[partial sliver].include?(shared.kind)
 
@@ -83,7 +84,7 @@ module PhComposer
         cut(basis, subject, clip, polygon, area)
       end
 
-      # Q17 applies to everything the cut would create, not only to the shared piece.
+      # The thresholds apply to everything the cut would create, not only to the shared piece.
       #
       # The two thresholds are checked against different things, because the host makes one Face
       # per remainder and not one per convex piece: a shared region drawn inside a wall leaves a

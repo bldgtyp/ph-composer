@@ -2,8 +2,8 @@
 
 require_relative "test_helper"
 
-# P1-D D4: the pure SI overlap geometry the adjacency solver decides with. No SketchUp here, so
-# every candidate, sliver and modelling-error case is settled before any geometry could move.
+# The pure SI overlap geometry the adjacency solver decides with. No SketchUp here, so every
+# candidate, sliver and modelling-error case is settled before any geometry could move.
 class ZoneOverlapTest < PhComposerTestCase
   OVERLAP = PhComposer::Zones::Overlap
   TOLERANCES = {
@@ -149,8 +149,8 @@ class ZoneOverlapTest < PhComposerTestCase
     assert_equal 12.0 - 4.0, result.left_remainders_m.sum { |piece| area_of(piece) }.round(6)
   end
 
-  # Q17 governs everything the cut creates. A shared region well over both thresholds is still
-  # refused when it would leave a sliver behind.
+  # The thresholds govern everything the cut creates. A shared region well over both thresholds is
+  # still refused when it would leave a sliver behind.
   def test_a_split_that_would_leave_a_sliver_behind_is_skipped_whole
     result = between(wall(0, 4, 0, 3), wall(0, 3.999, 0, 3, :facing => :west))
 
@@ -178,8 +178,8 @@ class ZoneOverlapTest < PhComposerTestCase
     assert_in_delta 7.84, result.area_m2
   end
 
-  # Q19 is about which way the Faces point, not how much they share. Reporting a same-normal
-  # overlap as a skip would call a modelling error an ordinary width or area problem.
+  # Overlapping Zones is about which way the Faces point, not how much they share. Reporting a
+  # same-normal overlap as a skip would call a modelling error an ordinary width or area problem.
   def test_a_same_normal_overlap_too_small_to_cut_is_still_overlapping_zones
     result = between(wall(0, 4, 0, 3), wall(3.999, 8, 0, 3))
 

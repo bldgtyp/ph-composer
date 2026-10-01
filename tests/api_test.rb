@@ -108,7 +108,7 @@ class ApiTest < PhComposerTestCase
     refute_includes API.discover.fetch("features").first.fetch("requires"), "mutated"
   end
 
-  # A02: a cursor answers only the query and filter it came from; a limit change is still the same filter.
+  # A cursor answers only the query and filter it came from; a limit change is still the same filter.
   def test_a_cursor_is_refused_for_another_filter_or_query
     create_parts(3)
     first = records(:limit => 1).fetch("value")
@@ -252,8 +252,8 @@ class ApiTest < PhComposerTestCase
     assert_equal "params.invalid", invoke("test.fixture.create", { "parts" => "none" }, 1).fetch("code")
   end
 
-  # A03, R-D3: params that are not plain JSON are refused before acceptance. The sequence is not
-  # consumed, so no outcome is retained and the same sequence carries the corrected request.
+  # Params that are not plain JSON are refused before acceptance. The sequence is not consumed, so no
+  # outcome is retained and the same sequence carries the corrected request.
   def test_non_json_params_are_refused_without_consuming_the_sequence
     cyclic = { "parts" => [] }
     cyclic["self"] = cyclic

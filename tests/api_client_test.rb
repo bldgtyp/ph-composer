@@ -3,10 +3,10 @@
 require_relative "test_helper"
 require "tmpdir"
 
-# A01 and R06 offline: a client that knows only the public interface and docs/API_QUICKSTART.md
-# makes a Zone, reads its Faces, classifies one, previews and makes an edit, verifies what changed,
-# recovers from a stale revision and retries a lost response. It names no feature module; the host
-# side of the test only draws geometry and selects it, as a user would.
+# Offline: a client that knows only the public interface and docs/API_QUICKSTART.md makes a Zone,
+# reads its Faces, classifies one, previews and makes an edit, verifies what changed, recovers from a
+# stale revision and retries a lost response. It names no feature module; the host side of the test
+# only draws geometry and selects it, as a user would.
 class ApiClientTest < PhComposerTestCase
   API = PhComposer::API
 

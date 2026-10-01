@@ -27,8 +27,8 @@ class GeometrySnapshotTest < PhComposerTestCase
     assert_equal({ [10, 11] => ["mkr_1"], [20] => [] }, owners)
   end
 
-  # R-D1 and SNAP: Zone and Face storage is private to the zones feature. Shared code, export
-  # included, reads it only through public operations or a feature's own projection.
+  # Zone and Face storage is private to the zones feature. Shared code, export included, reads it only
+  # through public operations or a feature's own projection.
   def test_no_code_outside_the_zones_feature_names_its_private_stores
     root = File.expand_path("../src/ph_composer", __dir__)
     private_names = /\b(ZONE_STORE|STAMP_STORE|FACE_STORE|ZONE_DICTIONARY|STAMP_DICTIONARY|FACE_DICTIONARY)\b/

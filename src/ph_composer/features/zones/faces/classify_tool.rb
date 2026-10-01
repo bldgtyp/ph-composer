@@ -18,8 +18,8 @@ module PhComposer
       # tool on again paints what it painted last. A gesture freezes a copy at button-down, so a
       # palette changed mid-drag cannot change what the drag in progress will write.
       #
-      # Until the panel palette lands with the Overview UI (D7), the palette is set from the native
-      # Classify menu, which offers one item per assignable face type and boundary condition.
+      # The palette is set from the panel's Classify palette, or from a native Classify menu item
+      # chosen with nothing selected.
       class ClassifyTool
         CLASSIFY = "#{PREFIX}.classify"
         # Transient pointer state is red and collected state is teal, the same two highlight roles the
@@ -400,7 +400,8 @@ module PhComposer
         end
 
         # Routine guidance stays beside the viewport, including when the host keeps the same tool
-        # active after a palette change. A floating copy covers panel controls (D7 host evidence, F8).
+        # active after a palette change. A floating copy covers panel controls, measured on SketchUp
+        # 26.1.
         def show_instructions
           Sketchup.status_text = instructions if Sketchup.respond_to?(:status_text=)
         end

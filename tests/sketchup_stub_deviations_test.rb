@@ -97,10 +97,10 @@ class SketchupStubDeviationsTest < PhComposerTestCase
     assert_empty model.entities.to_a
   end
 
-  # SketchUp's `Face#mesh` triangulates the Face itself, holes and concavity included. The stub
-  # fans the outer loop, which is right only for a convex outline: it exists so the Colour-by cache
-  # can be tested for what it batches and counts, and it is never evidence about how SketchUp
-  # tessellates. What the host does with a holed or concave Face is a P1-D host-gate item.
+  # SketchUp's `Face#mesh` triangulates the Face itself, holes and concavity included. The stub fans
+  # the outer loop, which is right only for a convex outline: it exists so the Colour-by cache can be
+  # tested for what it batches and counts, and it is never evidence about how SketchUp tessellates.
+  # What the host does with a holed or concave Face is a host-gate item.
   def test_the_stub_mesh_fans_the_outer_loop_and_ignores_holes
     square = [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(4, 0, 0), Geom::Point3d.new(4, 4, 0),
               Geom::Point3d.new(0, 4, 0)]
@@ -112,11 +112,11 @@ class SketchupStubDeviationsTest < PhComposerTestCase
                                    face.mesh(0).point_at(1).z]
   end
 
-  # SketchUp's `PickHelper` ray-casts the Model from screen coordinates and orders what it hits by
-  # how good a pick each is. The stub answers from a table a fixture filled in, because an offline
-  # suite has no camera to cast through: it is how a test says "the pointer is over this Face", and
-  # it is never evidence about what the host picks. What `path_at` returns while an edit context is
-  # open is a D6 host-gate item (tools/examples/authoring/classify_tool_walkthrough.rb).
+  # SketchUp's `PickHelper` ray-casts the Model from screen coordinates and orders what it hits by how
+  # good a pick each is. The stub answers from a table a fixture filled in, because an offline suite
+  # has no camera to cast through: it is how a test says "the pointer is over this Face", and it is
+  # never evidence about what the host picks. What `path_at` returns while an edit context is open is
+  # a host-gate item (tools/examples/authoring/classify_tool_walkthrough.rb).
   def test_the_stub_picks_what_a_fixture_put_at_those_coordinates_in_the_order_it_listed
     view = Sketchup.active_model.active_view
     face = Sketchup::Face.new(9_201, {})

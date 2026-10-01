@@ -55,8 +55,9 @@ installs both. A local skip is not gate evidence.
   pnpm's one-day minimum release age and refuses non-registry subdependencies.
 - `lint-python` runs ruff over `tools/`, `tests/python` and the translation package, lint and
   format check.
-- `lint-citations` fails if shipped code or a test cites a planning document. Comments cite
-  `context/` instead, because planning documents move when they are archived.
+- `lint-citations` fails if shipped code or a test cites a planning document or a planning
+  identifier (a phase stage, question, decision or acceptance number). Comments cite `context/`
+  instead, because planning documents move when they are archived.
 
 The line ceiling is 120 characters in every language. What the linters cannot express is in
 [`context/CODING_STANDARDS.md`](../context/CODING_STANDARDS.md).

@@ -10,7 +10,7 @@ module PhComposer
       # That is also why it is not a registered action: registering it as one would manufacture an Undo
       # entry for a read. It is a view command instead (Declarations::ViewCommand), registered as
       # `ph_composer.zones.faces.locate`, so the faces table, a script and any client with `view`
-      # access reach it the same way. That seam is the write channel for viewport state D5 left open.
+      # access reach it the same way. That seam is the write channel for viewport state.
       module Locate
         module_function
 

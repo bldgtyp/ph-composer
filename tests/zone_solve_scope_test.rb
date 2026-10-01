@@ -2,9 +2,9 @@
 
 require_relative "test_helper"
 
-# P1-D D4: what Solve does across a whole scope. Reading is unbounded and writing is not, so the
-# interesting cases are the ones where a pairing reaches outside the Zones the caller named, and
-# the ones the solver reports instead of pairing.
+# What Solve does across a whole scope. Reading is unbounded and writing is not, so the interesting
+# cases are the ones where a pairing reaches outside the Zones the caller named, and the ones the
+# solver reports instead of pairing.
 class ZoneSolveScopeTest < PhComposerTestCase
   API = PhComposer::API
   COPY_EXTENSION = PhComposer::Records::Extension.new(
@@ -113,7 +113,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
 
     assert_equal 2, shared.length
     assert(shared.all? { |face| (face.fetch("area_m2") - 6.0).abs < 1.0e-6 })
-    # Q21: the unpaired remainder keeps the classification it already had.
+    # The unpaired remainder keeps the classification it already had.
     assert_equal %w[Outdoors Outdoors], rest.map { |face| face.dig("values", "boundary_condition") }
     assert(rest.all? { |face| (face.fetch("area_m2") - 6.0).abs < 1.0e-6 })
   end

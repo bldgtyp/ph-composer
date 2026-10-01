@@ -89,7 +89,7 @@ class DiagnosticsTest < PhComposerTestCase
     assert_equal "moved to /outside", Diagnostics.redact("moved to /outside")
   end
 
-  # Forms the P0-F review found passing: Ruby's own Windows spelling, a share, a home path, and a path
+  # Forms a review once found passing: Ruby's own Windows spelling, a share, a home path, and a path
   # after punctuation. A web address and a ratio are not paths.
   def test_finds_paths_in_other_spellings_and_after_punctuation
     ["C:/Users/example/model.skp", "\\\\server\\share\\model.skp", "~/Desktop/model.skp",

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# One feature owns Zones, their Faces and the adjacency between them (R-D1): Zone containment, Face
-# identity, stamps, Surface endpoints and safe split and copy transitions are one authoring lifecycle.
+# One feature owns Zones, their Faces and the adjacency between them: Zone containment, Face identity,
+# stamps, Surface endpoints and safe split and copy transitions are one authoring lifecycle.
 #
 #   zone/          Zone schema, occurrences, index, Make and Edit steps, repairs
 #   faces/         Face and Attached-zone schema, Classify and Reverse steps, suggestions, the Classify

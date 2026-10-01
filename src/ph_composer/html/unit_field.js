@@ -2,7 +2,7 @@
 
    The field shows its stored SI value in the current display units and parses what the user types. The first
    keystroke or paste fixes the unit context the draft is read in: a unit switch during an unfinished edit
-   keeps the draft text and its starting unit until Enter or Escape (Units I7). Presentation is one-way: focus,
+   keeps the draft text and its starting unit until Enter or Escape. Presentation is one-way: focus,
    blur, a repaint and a switch never hand a rounded display value back to the owner. */
 PhComposerUI.define("unit_field", ["unit_preferences", "units", "workspace"], function (preferences, units, ui) {
   "use strict";

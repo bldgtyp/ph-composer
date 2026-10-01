@@ -226,8 +226,8 @@ class ExportTasksTest < PhComposerTestCase
     assert_empty Dir.children(@directory)
   end
 
-  # A04: the export task methods describe themselves, and a client built only from those
-  # descriptions preflights, starts, polls, cancels and reads the latest task with the panel closed.
+  # The export task methods describe themselves, and a client built only from those descriptions
+  # preflights, starts, polls, cancels and reads the latest task with the panel closed.
   def test_a_client_built_from_the_task_descriptions_runs_the_export_methods
     api = PhComposer::API
     context = api.connect(:session_id => @session.id, :capabilities => %w[read export])

@@ -3,10 +3,10 @@
 require_relative "test_helper"
 require_relative "../tools/api_reference/api_reference"
 
-# A01: discovery and description are enough to use the building operations. Every Zone and Face
-# operation publishes specific input and output schemas and a worked example that validates, the
-# entity kinds publish their descriptors, and docs/API_REFERENCE.md is generated from the same
-# registrations rather than kept by hand.
+# Discovery and description are enough to use the building operations. Every Zone and Face operation
+# publishes specific input and output schemas and a worked example that validates, the entity kinds
+# publish their descriptors, and docs/API_REFERENCE.md is generated from the same registrations rather
+# than kept by hand.
 class ApiReferenceTest < PhComposerTestCase
   include FixtureFiles
   API = PhComposer::API

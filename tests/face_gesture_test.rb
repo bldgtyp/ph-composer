@@ -2,8 +2,8 @@
 
 require_relative "test_helper"
 
-# P1-D gestures: one Classify covering many Faces, the named Suggest classification for a Zone, and
-# the Reverse face repair. Each asserts the atomic boundary, not just the happy path.
+# Gestures: one Classify covering many Faces, the named Suggest classification for a Zone, and the
+# Reverse face repair. Each asserts the atomic boundary, not just the happy path.
 class FaceGestureTest < PhComposerTestCase
   API = PhComposer::API
   LIMIT = PhComposer::Zones::Faces::GESTURE_FACE_LIMIT

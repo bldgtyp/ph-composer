@@ -2,8 +2,8 @@
 
 require_relative "test_helper"
 
-# P1-D Attached zones: the record kind, its reference lifecycle on a Face, and the guarded delete
-# that moves every referencing Face and removes the definition in one step.
+# Attached zones: the record kind, its reference lifecycle on a Face, and the guarded delete that
+# moves every referencing Face and removes the definition in one step.
 class AttachedZoneTest < PhComposerTestCase
   API = PhComposer::API
   KIND = PhComposer::Zones::Faces::AttachedZone::KIND_ID

@@ -1,8 +1,10 @@
-/* Model authoring settings. Each committed field change is one public operation and one Undo step. */
+/* Model authoring settings. Each committed field change is one public operation and one Undo step.
+   `guard` names what must finish before the bubble may open, such as an unsaved Zone details draft,
+   and `refuse` tells the user; a settings change would otherwise advance the revision under it. */
 PhComposerUI.define("sections/zone_settings", ["workspace", "request"], function (ui, requests) {
   "use strict";
 
-  function Settings(session, send) {
+  function Settings(session, send, guard, refuse) {
     var self = this;
     this.channel = requests.channel(session, function (type, payload) {
       send(type, Object.assign({}, payload, { expected_revision: self.revision }));
@@ -20,6 +22,8 @@ PhComposerUI.define("sections/zone_settings", ["workspace", "request"], function
     this.bubble.content.appendChild(this.error);
     this.trigger.addEventListener("click", function () {
       if (self.channel.busy()) return;
+      var reason = guard && self.bubble.panel.hidden ? guard() : null;
+      if (reason) return refuse(reason);
       self.baseline = Object.assign({}, self.current);
       self.revision = self.currentRevision;
       self.paint();

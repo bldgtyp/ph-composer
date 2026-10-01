@@ -2,9 +2,9 @@
 
 require_relative "test_helper"
 
-# P1-D D3: the two explicit Zone repairs. Identity repair gives a copied occurrence an identity of
-# its own without touching the Zone it came from. Restore regroups an exploded Zone's stamped
-# members and recovers only what a stamp can carry.
+# The two explicit Zone repairs. Identity repair gives a copied occurrence an identity of its own
+# without touching the Zone it came from. Restore regroups an exploded Zone's stamped members and
+# recovers only what a stamp can carry.
 class ZoneRepairTest < PhComposerTestCase
   API = PhComposer::API
   ZONE_STORE = PhComposer::Zones::ZONE_STORE

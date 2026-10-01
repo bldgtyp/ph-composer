@@ -54,9 +54,13 @@ lint-js:
 	fi
 
 # Shipped code and tests never cite planning documents (context/CODING_STANDARDS.md, "Comments").
+# Planning ids: phase stages (P1-D), interview questions (Q18), decisions (D7, R-D4), acceptance
+# cases (A02, R06) and contract or requirement numbers (C4, I10, U1, B2, F8).
+PLANNING_IDS := \b(P\d-[A-F]\d?|Q\d{1,2}|D\d{1,2}|R-D\d+|R0\d|A\d\d|B\d|C\d|I\d{1,2}|U\d|F\d)\b
 # Planning moves when it is archived; a citation into it breaks. The vendored payload is exempt.
 lint-citations:
-	@if git grep --untracked -nE 'planning/|\bPRD\b|CONTRACTS\.md C[0-9]' -- src tests ':!src/ph_composer/vendor'; then \
+	@if git grep --untracked -nP 'planning/|\bPRD\b|CONTRACTS\.md C\d|$(PLANNING_IDS)' -- src tests ':!src/ph_composer/vendor' \
+	    ':!tests/fixtures'; then \
 	  echo "lint-citations: cite context/ instead of planning (context/CODING_STANDARDS.md)"; exit 1; \
 	else \
 	  echo "lint-citations: ok"; \

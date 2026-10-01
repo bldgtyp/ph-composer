@@ -103,9 +103,9 @@ module PhComposer
       unexpected_outcome(error, session, name)
     end
 
-    # R-D3: a request whose params are not plain JSON is refused before acceptance. It cannot be
-    # digested, so it consumes no sequence and retains no outcome; the caller resends it corrected
-    # under the same sequence.
+    # A request whose params are not plain JSON is refused before acceptance. It cannot be digested,
+    # so it consumes no sequence and retains no outcome; the caller resends it corrected under the
+    # same sequence.
     def invoke(context, name, params, request)
       session, caller, action = resolve(context, "model_write", name, @registry.actions)
       sequence, expected_revision, proposal_digest = read_request!(request, session)

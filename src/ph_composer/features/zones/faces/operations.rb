@@ -128,7 +128,7 @@ module PhComposer
                                                :mutable => true, :index => index)
         stamp = Zones::Schema.stamp(zone.record)
         # No gesture ceiling here: Auto-classify is a separate named batch over one Zone the user
-        # already owns, not a pointer gesture whose target set the user cannot see (P1-D decision).
+        # already owns, not a pointer gesture whose target set the user cannot see.
         unrecorded = Zones::Occurrences.faces(zone, :index => index)
                                        .reject { |occurrence| FACE_STORE.read(occurrence.entity) }
         # Each target resolves for mutation now, so a Face in a shared or locked Group refuses here,
@@ -210,9 +210,9 @@ module PhComposer
       end
 
       # Delete with replacement, in one proposal: every Face naming the record moves first, then the
-      # record goes. A Face the caller cannot reach refuses the whole delete, naming the routes (R-D11).
-      # The engine's own reference check sees every Face through the Face descriptor and reads the
-      # planned reassignment, so it is the backstop for any other caller.
+      # record goes. A Face the caller cannot reach refuses the whole delete, naming the routes. The
+      # engine's own reference check sees every Face through the Face descriptor and reads the planned
+      # reassignment, so it is the backstop for any other caller.
       def delete_attached_zone(request, proposal)
         id = request.params.fetch("id")
         request.engine.find(AttachedZone::KIND_ID, id)
@@ -270,7 +270,7 @@ module PhComposer
       # Every Face naming the record, found through the orphan-inclusive inventory, must be one a
       # normal Classify could rewrite: inside a Zone and resolvable for mutation. A Face exploded or
       # moved out of every Zone, or held in storage another placement shares, is never rewritten from
-      # here (R-D11); the delete refuses and names it.
+      # here; the delete refuses and names it.
       def reassignable_faces(model, attached_zone_id)
         reasons = {}
         reachable = referencing_faces(model, attached_zone_id).select do |occurrence, record|
