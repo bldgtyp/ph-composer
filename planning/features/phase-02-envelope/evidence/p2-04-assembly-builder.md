@@ -82,10 +82,26 @@ Seven individual native Model Undo steps each restore the immediately preceding 
 Materials/Assemblies authored catalog exactly, including nested ids and references.
 The last Undo restores the starting catalog and the saved, unmodified Model state.
 Private journals `assembly-native-e04-tools-*.json` retain each before/after and verification.
-The complete stud-wall calculation and full E04 gate remain open.
+The later complete construction observation is recorded below; full E04 attestation remains open.
 
 Opening Synthetic framing's details bubble with a segment selected preserves the exact
 starting catalog and unmodified Model. Pressing native Enter activates the focused Use
 button and assigns that Material to the selected segment. One native Model Undo restores
 the complete starting catalog and unmodified state. Private `assembly-native-e04-keyboard-framing.json`
 records the committed assignment; `e04-tools-before-verify` records its restoration.
+
+Continuing the reopened partial Assembly through native controls produces a complete
+three-Layer construction: 100 mm board, 100 mm mixed insulation/framing at 1000/200 mm
+segment widths, and 100 mm cladding. The framing segment has conductivity 0.13 W/(m K).
+Five commits (board, insulation and framing drops, Add Layer, cladding drop) each pass one
+native Undo restoring the prior complete catalog exactly. The final Undo restores the saved,
+unmodified partial Model. Two earlier coordinate attempts hit outside the shifted canvas/toolbar
+after the missing-Material warning disappeared; they made no commit and are not counted.
+
+The complete construction displays U with films 0.329263 W/(m² K), construction-only U
+0.348786 W/(m² K), and construction R 2.867088 m²K/W. An independent scalar calculation
+of the one mixed Layer's parallel-path and isothermal-plane limits matches each rounded value.
+Private `assembly-native-three-layer-thermal.json`, `assembly-native-e04-wall-*.json`
+and `assemblies-native-three-layer.skp` retain values, exact journals and the completed Model.
+The native workflow set is now observed across the documented batches, including editing
+after fresh reopen. E04 remains open for consolidated attestation and the preceding E03 gate.
