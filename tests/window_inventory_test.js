@@ -68,3 +68,19 @@ test("new Glazing rejects an out-of-range g-value and preserves the draft for co
   assert.strictEqual(o.sent[0].payload.params.values.ug_w_m2k, 0.6);
   assert.strictEqual(o.sent[0].payload.params.values.g_value, 0.5);
 });
+test("Duplicate and Delete hide entire quantity labels; reopening Create restores the complete controls", function () {
+  var o = setup(), form = o.view.form, record = o.view.records[0];
+  function label(key) { var input = form.fields[key]; return form.unitFields[key] ? input.parentNode.parentNode :
+    input.parentNode; }
+  form.open("duplicate", record, o.view.records);
+  assert.strictEqual(label("name").hidden, false);
+  ["width_m", "uf_w_m2k", "psi_g_w_mk", "manufacturer"].forEach(function (key) {
+    assert.strictEqual(label(key).hidden, true, key + " label and control must disappear together");
+  });
+  form.open("delete", record, o.view.records); assert.strictEqual(label("name").hidden, true);
+  assert.strictEqual(label("width_m").hidden, true);
+  form.open("create", null, o.view.records);
+  Object.keys(form.fields).forEach(function (key) { assert.strictEqual(label(key).hidden, false); });
+  assert.strictEqual(form.unitFields.width_m.root.hidden, false);
+  assert.strictEqual(o.sent.length, 0);
+});

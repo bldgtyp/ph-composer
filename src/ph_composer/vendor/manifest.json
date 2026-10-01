@@ -331,9 +331,9 @@
       "sha256": "fdc89c8b3f5cf3ff282414364e86a3cd2bb433690d1cb8523b1be68ad63a193e"
     },
     "html/window_form.js": {
-      "bytes": 5611,
+      "bytes": 5675,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "7327124afb0023345db1fae0526ed47e198848596531f54d0195e35474eb5cc6"
+      "sha256": "a8a380e5ead5f1a5dbc780fb1326c8ff7a9b4f04d7699210462a804803ae1e9b"
     },
     "html/window_install_editor.js": {
       "bytes": 16423,

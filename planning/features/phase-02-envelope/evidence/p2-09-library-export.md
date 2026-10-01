@@ -63,3 +63,20 @@ separate-extension example under tools, prove load-order diagnostics and shared 
 then integrate the explicit panel scope/identity choice and native export/read-back proof.
 Ask Ed for the external repository creation only after the local example is reviewable, with the
 other manual items at the end. No external repository has been created.
+
+
+## Native export checkpoint on installed 7afe894
+
+Fresh SketchUp 26.1.188 / Ruby 3.2.2, PID 3593, session
+`83a48fca-0d70-4fca-b0fc-0225c9112e5d`, used the real export form, native Save panel
+and final review to write four Materials from `p209-p211-native.skp`. The installed
+FileProvider reads all four rows with no warnings or unavailable kinds. Explicit Update
+retains UUID `29c576e0-9961-412c-b806-2561544c7292` and its library name. Cancelling
+a subsequent native destination chooser leaves the Model unmodified at revision 61.
+Private readback is `e09-all-readback.json`; all files remain in the private synthetic corpus.
+
+The final native review exposed a blank unsupported-kind omission label. The correction
+now names each omitted record kind and field names without field values. A regression
+through the actual export callback passes with the file-export suite on Ruby 2.7.2 and
+3.2.2 (20 tests, 138 assertions). Installation and native recheck remain pending. Selected
+scope, fresh identity, subsequent reuse and complete E09 attestation remain open.

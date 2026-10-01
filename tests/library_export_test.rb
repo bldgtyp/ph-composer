@@ -150,6 +150,29 @@ class LibraryExportTest < PhComposerTestCase
     refute JSON.parse(File.read(@path)).key?("record_origins")
   end
 
+  def test_native_omission_review_names_unsupported_kind_and_omitted_fields_without_values
+    assembly = fixture_assembly(reference_layers)
+    Assemblies::Assembly::Schema::KIND.store.write(Sketchup.active_model, assembly)
+    material = @records.first.merge("user_data" => { "firm.private" => "PRIVATE PAYLOAD" })
+    Assemblies::Materials::Schema::KIND.store.write(Sketchup.active_model, material)
+    review = nil
+    UI.stub(:savepanel, @path) do
+      consent = lambda do |text, *_arguments|
+        review = text
+        IDNO
+      end
+      UI.stub(:messagebox, consent) do
+        result = API.export_file(:context => @context, :name => NAME)
+        assert_equal "cancelled", result["status"], result.inspect
+      end
+    end
+    assert_includes review, "ph_composer.assemblies.assembly: unsupported kind"
+    assert_includes review, "ph_composer.assemblies.material: fields not in wire schema (source, user_data)"
+    refute_includes review, "PRIVATE PAYLOAD"
+    refute_includes review, "unsupported_kind: "
+    refute File.exist?(@path)
+  end
+
   def test_update_admits_missing_optional_fields_but_refuses_invalid_rows_and_versions
     export
     document = JSON.parse(File.read(@path))

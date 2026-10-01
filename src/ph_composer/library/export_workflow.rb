@@ -57,7 +57,11 @@ module PhComposer
         omissions = projection.fetch("omissions")
         unless omissions.empty?
           lines << "Omissions:"
-          lines.concat(omissions.map { |row| "#{row.fetch('reason')}: #{row.fetch('fields').join(', ')}" }.uniq)
+          lines.concat(omissions.map do |row|
+            text = "#{row.fetch('record_kind')}: #{row.fetch('reason').tr('_', ' ')}"
+            fields = row.fetch("fields")
+            fields.empty? ? text : "#{text} (#{fields.join(', ')})"
+          end.uniq)
         end
         lines << "Write this library file? Existing destination bytes will be replaced."
         lines.join("\n")

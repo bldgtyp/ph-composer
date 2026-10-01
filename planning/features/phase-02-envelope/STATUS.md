@@ -124,3 +124,18 @@ Group refusal. Complete native case attestations and final integrated gates rema
 | 2026-10-01 | Ed revised D2-1: definitions at the bottom. Assemblies requires nothing, Zones requires assemblies, window placement requires Zones. Delete with replacement moves onto a foundation retarget contract (G10) and inventory usage onto table contributions (G11). CONTRACTS, PLAN, the PRD amendments, stages P2-01, P2-02, P2-05, P2-06 and P2-10, and `context/EXTENSIBILITY.md` updated. D2-10 reaffirmed. |
 | 2026-09-30 | Ed answered D2-1 to D2-10, each as recommended. Answers recorded in DECISIONS and folded into the PRDs, CONTRACTS, stage documents, the UI baseline and `context/EXTENSIBILITY.md` (D2-1). The pane-as-Zone-Face finding behind D2-5 was reproduced offline. |
 | 2026-09-30 | Packet drafted: plan, contracts, decisions, acceptance register and seventeen stage documents. Feature packets moved into phased directories. PRD amendments recorded for the Phase 1 consequences. |
+
+
+## Native resume checkpoint
+
+The installed `7afe894` Builder completes the three-element native workflow, including
+Empty, merge/split, eyedropper, flip, Installs staging/Save, audit and atomic Frame
+replacement. Eighteen native Undo and Redo steps produce 38 exact inventory/reference
+comparisons; creation and rename add four exact comparisons. The saved private fixture is
+`p209-p211-native.skp`. Fresh reopen remains pending. Native export writes and warning-free
+readback succeed for four Materials; explicit Update preserves the library UUID.
+
+Two bounded corrections found in the host now pass focused tests: whole-field visibility
+in Duplicate/Delete and readable omission kinds in the final file-export review. The next
+step is to install these corrections, recheck those screens and reopen persistence, then
+finish E09/E11 and continue P2-15. Full case awards remain open. See P2-09/P2-11 evidence.

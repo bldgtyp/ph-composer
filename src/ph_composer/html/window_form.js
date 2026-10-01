@@ -4,11 +4,13 @@ PhComposerUI.define("window_form", ["record_form", "snapshot", "unit_field", "wi
   "use strict";
   function Form(session, send, kind, spec, changed) {
     var self = this; this.kind = kind; this.productSpec = spec; this.fields = {}; this.unitFields = {};
+    this.fieldLabels = {};
     RecordForm.call(this, session, send, { title: "New " + spec.label, label: "window-product-" + kind,
       action: shared.PREFIX + kind + ".create", submitLabel: "Create " + spec.label,
       pendingText: "Saving…", failureText: "The product was not changed.", changed: changed });
     spec.columns.filter(function (column) { return column[0] !== "color"; }).forEach(function (column) {
       var label = ui.element("label", "", column[1]), input = ui.element("input");
+      self.fieldLabels[column[0]] = label;
       input.setAttribute("aria-label", column[1]); self.fields[column[0]] = input;
       if (spec.quantities[column[0]]) {
         self.unitFields[column[0]] = new unitFields.UnitField({ input: input, field: spec.quantities[column[0]] });
@@ -37,7 +39,7 @@ PhComposerUI.define("window_form", ["record_form", "snapshot", "unit_field", "wi
       this.replacement.appendChild(ui.option(row.id, row.values.name));
     } }, this);
     Object.keys(this.fields).forEach(function (key) {
-      this.fields[key].parentNode.hidden = method === "delete" || method === "duplicate" && key !== "name";
+      this.fieldLabels[key].hidden = method === "delete" || method === "duplicate" && key !== "name";
       if (this.unitFields[key]) { this.unitFields[key].cancel(); this.unitFields[key].setValue(null); }
       else this.fields[key].value = method === "duplicate" && key === "name" ? this.copyName(record) : "";
     }, this);
