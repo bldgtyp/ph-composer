@@ -157,3 +157,11 @@ The fourth new Unit (entity 48974) has its opening bottom at 0.8999999999999998 
 900 mm within floating-point precision. All four new Units have no findings. Exact rows and
 world bounds are preserved in `p213-restart-step-1.json`. Step 1 passes on the fresh baseline.
 Exact offset and Roof placement plus steps 3 to 5 remain pending.
+
+## Step 2 reset
+
+At Ed's request the four step-1 test Units were removed through public `units.remove`, retaining
+the two seeded repair examples and the passing step-1 readback. Place was stopped and freshly
+started to clear both measurement overrides. The Wall baseline is saved with two Units; Place
+is active at sill center. Private `p213-restart-before-step-2-reset.json` and
+`p213-restart-step-2-ready.json` record the reset. The left side is clear for the offset check.
