@@ -34,7 +34,9 @@ module CorrectionsWalkthrough
     client = Client.new
     zone = zone_group("#{PREFIX}r01")
     children = zone.entities.grep(Sketchup::Group)
-    shared = children.map { |group| group.entities.object_id }.uniq.length == 1 && children.length == 2
+    # Two placements of one definition. Each `Group#entities` call returns a fresh wrapper, so compare
+    # definitions, never wrapper object ids.
+    shared = children.length == 2 && children.map(&:definition).uniq.length == 1
     rows = client.faces.select { |row| row.dig("reference", "zone_path") == [zone.persistent_id] &&
                                        row.dig("reference", "entity_path").length == 2 }
     before = [client.revision, children.map { |group| face_record(group.entities.grep(Sketchup::Face).first) }]

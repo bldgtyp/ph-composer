@@ -91,8 +91,12 @@ module AuthoringWalkthrough
     Sketchup.active_model.entities.grep(Sketchup::Group).select { |group| group.name.start_with?(PREFIX) }
   end
 
+  # Make Zone renames each Group to its Zone name, so the Zones are found by record, not by PREFIX.
+  # No Zone at all is not agreement.
   def stamps_agree?
-    walkthrough_groups.all? do |group|
+    zones = Sketchup.active_model.entities.grep(Sketchup::Group)
+                    .select { |group| PhComposer::Zones::ZONE_STORE.read(group) }
+    !zones.empty? && zones.all? do |group|
       zone = PhComposer::Zones::ZONE_STORE.read(group)
       group.entities.grep(Sketchup::Face).all? do |face|
         assignment = PhComposer::Zones::Faces::FACE_STORE.read(face)
