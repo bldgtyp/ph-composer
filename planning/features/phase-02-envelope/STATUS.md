@@ -29,15 +29,15 @@ the top of each PRD.
 
 ## Current resume checkpoint
 
-Branch `codex/phase-02-envelope`, HEAD `60b8eb1` plus the current documentation tidy-up.
+Branch `codex/phase-02-envelope`, documentation checkpoint `1c5dfd2`; gross-area correction in progress.
 Shipping source `1dae77d` passes full CI on both Rubies: 991 tests / 6705 assertions,
 346 JS and 135 Python tests. Coverage 96.6% / 94.9% / 94.98%; all eight browser scripts and
 Chromium 88 runtime pass. Exact installed RBZ is `checkpoint-1dae77d.rbz`, SHA-256
 `8d2e72c73482d59a9b22c22affbbc170c38fd412ba28167d60285167e4492050`, 296 files,
 22,623,696 installed bytes. E15 has a passing structured native result. D2-8 defers P2-16 to
 Phase 5 against the deployed endpoint evidence. P2-09 and P2-11 native workflows are observed;
-full phase case consolidation remains pending. The only source since `1dae77d` is two scoped
-browser selectors; shipping bytes are unchanged.
+full phase case consolidation remains pending. Two scoped browser selectors are committed since `1dae77d`. A shared geometry
+correction is independently reviewed and has not yet been installed.
 
 Current native batch: P2-12 Slice B, fresh normal SketchUp 26.1.188 / Ruby 3.2.2,
 PID 16514, bridge 61208, own `_private/host/envelope/p212b-native.skp`, initially unmodified
@@ -45,8 +45,11 @@ root edit path, copied from the authored two-Zone reference fixture. E12 depende
 captured before Slice B actions. The previous E15 provider configuration is removed; no outside
 provider or fault override remains. Exact installed-source checks still hold.
 
-Next: native cutting-component exclusion and glued-Solve replay, then required affected-case
-closure. The final human batch contains the inaccessible native Option Move-copy observation,
+Native reads, partial-glue refusals, full pairing and covered-side preservation are observed.
+SDK cutter-adjusted area leaked into gross Face area; its loop-based correction passes
+both-Ruby focused checks and independent review. Full gates and fresh installed replay
+remain. See [Slice B evidence](evidence/p2-12-zone-cutting-rules.md).
+Next: complete this correction and replay, then required affected-case closure. The final human batch contains the inaccessible native Option Move-copy observation,
 held-modal context workflow and outside-example repository decision. Slice C, P2-13 and P2-14
 still wait on Move-copy. Keep these gates open; no placement or Aperture implementation yet.
 

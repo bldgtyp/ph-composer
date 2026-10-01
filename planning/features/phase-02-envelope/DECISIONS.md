@@ -61,6 +61,7 @@ read, not that the consequence was reproduced on a host or in a test.
 | F24 | `shared_storage?` is true for any ComponentInstance, so a mutable Face path through one refuses as `target.shared_definition` | Nobody can classify a pane by accident, which is wanted. Placement into a Zone whose Group shares its definition refuses with the same code and the Make Unique instruction |
 | F25 | The Classify gesture ceiling is 250 Face occurrences, not the 1,000 first proposed, and `Zones::Index` is valid for a read phase only | Assembly assignment by selection or paint follows the same ceiling and the same index rule |
 | F26 | The face-assignment PRD says Zones "declares that read as a dependency when window-types lands" for net opaque area. Window placement requires Zones under D2-1, so Zones requiring windows would be a cycle | See D2-10 |
+| F27 | A real glued cutter changes SDK Face area from 12 to 11.75 m² without changing host loops or digest; public gross Face area inherits the reduction | P2-12 Slice B corrects shared area from world-space loops, subtracting actual inner holes. See [native evidence](evidence/p2-12-zone-cutting-rules.md). This follows D2-10 |
 
 ## Part 2: decisions for Ed
 

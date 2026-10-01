@@ -1,7 +1,7 @@
 # P2-12 Slice B evidence: cutting components
 
 DATE: 2026-10-01
-STATUS: Implemented source and focused checks; independent review closed; integrated/native replay open.
+STATUS: Native replay exposed a gross-area defect; correction reviewed, full gates and fresh replay pending.
 
 Cutting ComponentInstances are excluded from Zone and Face occurrence discovery, including picks
 and explicit references. Their panes are absent from Face lists, counts and Suggest. The shared
@@ -33,3 +33,25 @@ context workflow is already a batched manual item. Raw screen output is kept in
 
 Slice A still lacks native Move-copy. Slice C remains blocked on that observation. This independent
 Slice B work implements no Window unit, placement tool, Schedule or Aperture export.
+
+## Native replay and gross-area correction
+
+Fresh normal SketchUp 26.1.188 against installed source `1dae77d` observes cutting-descendant
+exclusion from public Face reads, counts and Suggest, retained instance dictionaries in the
+export snapshot, and explicit-reference refusal. Both partial-overlap directions refuse before
+cutting and preserve geometry, assignments, glue and revision. Full matches pair without cutting;
+a wholly covered glued side remains intact while its unglued counterpart splits. These are
+partial E12 observations, not complete acceptance.
+
+A real 0.25 m² glued cutter reduces SDK `Face#area(transform)` from 12 to 11.75 m² while
+the host retains one unchanged outer loop, normal, plane and geometry digest. Public Face reads
+consequently report 11.75 m² as gross area. The stale-preview probe exposed this mismatch.
+Shared geometry now computes world-space outer-loop area minus actual inner-loop areas.
+Cutter openings remain the responsibility of the later Window layer.
+
+The correction passes 110 affected tests / 534 assertions on both Rubies, including holes,
+concavity, reversed/cyclic winding and oblique mirrored/nonuniform transforms. Two-file lint
+passes. Independent review found no actionable defects; an independent oblique-shear probe
+passes 1 test / 2 assertions. Full gates and fresh installed-host replay remain pending.
+Private evidence: `p212b-before-area-fix.json`, the native probe and
+`/tmp/phc-p212b-geometry-glue.json`; no licensed or client data is involved.

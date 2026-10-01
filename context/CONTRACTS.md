@@ -287,6 +287,9 @@ The geometry digest covers the world plane, oriented normal and every outer and 
 in SI, with negative zero normalized and coordinates quantized to 0.001 mm. Each loop is rotated to
 its lexicographically smallest vertex with its direction kept, and holes are sorted by their
 canonical vertex sequence. A digest detects change; it never locates or substitutes a target.
+Face area is the world-space outer-loop area minus actual inner-loop areas. Glued component
+cutouts that do not create inner loops do not reduce this gross area. SDK `Face#area` is not
+the source for this value.
 
 **Solve recovery.** Explicit Solve may recover a changed stored endpoint path only when its Zone id
 names exactly one live Zone and its Face id exactly one live Face occurrence, both old envelopes
