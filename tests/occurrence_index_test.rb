@@ -6,7 +6,7 @@ require_relative "test_helper"
 #
 # The host measured the old behaviour as O(targets x Model Faces): a 50-target gesture cost 459 ms
 # in a 252-Face Model and 3,352 ms in a 2,004-Face one, and the Face read was quadratic through the
-# same call. See planning/archive/phase-one/evidence/p1-d-gesture-cost.md.
+# same call. See planning/archive/phase-01-faces-and-zones/evidence/p1-d-gesture-cost.md.
 #
 # The property these tests hold is not a number of milliseconds, which the offline stub cannot
 # speak to. It is that the number of times the Model is walked does not grow with the number of

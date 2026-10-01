@@ -13,7 +13,7 @@ later exporter will convert that HBJSON to the model METr reads.
 [PR #6](https://github.com/bldgtyp/ph-composer/pull/6) landed Phase 1: Zone and Face authoring,
 the Classify tool, Colour-by, adjacency, identity repairs, a public scripting interface and the
 HBJSON/report export with pinned translation wheels, verified on SketchUp 26.1 for macOS.
-[Acceptance evidence](planning/archive/phase-one/evidence/p1-e-export-workflow.md) records the
+[Acceptance evidence](planning/archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md) records the
 checks and limits. The normal build refuses to export until Assemblies are authored, which arrives
 in Phase 2; Phase 1 translation was proven with a separate development fixture provider. The METr
 exporter is deferred. SketchUp 2023 and Windows host proof, and any release, remain separate gates.

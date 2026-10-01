@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# B3 spike: a flat cutting window component (planning/archive/phase-zero/phases/phase-01-investigations.md).
+# B3 spike: a flat cutting window component (planning/archive/phase-00-foundation/phases/phase-01-investigations.md).
 # Development only, never shipped. Loaded into SketchUp through the development bridge, one step per eval:
 #
 #   load "<repo>/tools/spikes/window/window_spike.rb"

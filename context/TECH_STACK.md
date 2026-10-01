@@ -15,8 +15,8 @@ Phase 1 merged through PR #3 and PR #6 on 2026-09-30. The build registers one bu
 `zones` (`src/ph_composer/features/zones/`), which owns Zones, their Faces and the adjacency between
 them, plus two foundation capabilities, `RecordQueries` and `ColourBy`, and the export run to
 canonical HBJSON and its report. No exporter beyond HBJSON ships. The archived
-[Phase 0](../planning/archive/phase-zero/README.md) and
-[Phase 1](../planning/archive/phase-one/README.md) packets record implementation and host evidence.
+[Phase 0](../planning/archive/phase-00-foundation/README.md) and
+[Phase 1](../planning/archive/phase-01-faces-and-zones/README.md) packets record implementation and host evidence.
 Spaces, Volumes, Assemblies, Window Types, libraries and exporters are not implemented; the rules
 below that describe them remain requirements until their owning packets land.
 
@@ -185,7 +185,7 @@ constraints:
   (a query, target resolution before a proposal, `ClassifyStep`) shares one `Zones::Index`, which
   walks once and is valid only while the Model is unchanged; a step that mutates and then reads its
   own result walks the live Model. Per-target walks measured O(targets x Model Faces) on the host
-  ([gesture cost evidence](../planning/archive/phase-one/evidence/p1-d-gesture-cost.md)).
+  ([gesture cost evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-gesture-cost.md)).
 - A Classify gesture affects at most `GESTURE_FACE_LIMIT` (250) Face occurrences, reciprocal
   counterparts included and deduplicated; one over refuses the whole gesture as
   `gesture.too_large`. The ceiling bounds the blast radius, not elapsed time. Suggest
@@ -221,7 +221,7 @@ budget. One native Face capture and one contributor callback are indivisible. Th
 separate export content generation during collection, on translation return and before canonical
 commit. Camera, selection and edit-path navigation do not invalidate it; content commits and
 Undo/Redo do. SketchUp 26.1's navigation-only commit and the preceding content-commit ordering
-are measured in [P1-E evidence](../planning/archive/phase-one/evidence/p1-e-export-workflow.md).
+are measured in [P1-E evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md).
 
 The HBJSON and its report are written as one pair or not at all (`export/artifact_pair.rb`). Both
 are staged beside the destination and verified, a journal records the plan, the previous pair moves
@@ -284,7 +284,7 @@ HBJSON document and the user's export choices. It never reads the export contrac
 The METr exporter is the first. It calls PHX to build a PHX project from HBJSON and PHX's WUFI
 writer to produce the METr model. Two facts gate it:
 
-- [Phase 0 B1](../planning/archive/phase-zero/evidence/spike-phx.md) proved PHX 1.57.1
+- [Phase 0 B1](../planning/archive/phase-00-foundation/evidence/spike-phx.md) proved PHX 1.57.1
   conversion with nine pinned wheels installed without dependency resolution. The METr path
   does not import the omitted dependencies. D12 defers METr integration and actual import until
   further feature development. Phase 1 selects its HBJSON translation payload independently;
@@ -368,11 +368,11 @@ reads the page sources and fails when the page sends or handles a type the table
 
 Features add no transport types. A feature's panel request is `action.invoke` naming a registered
 action, a viewport-state request is `view.invoke` naming a registered view command, and its
-panel data is a registered snapshot section ([CONTRACTS.md](../planning/archive/phase-one/CONTRACTS.md) C1, C2).
+panel data is a registered snapshot section ([CONTRACTS.md](../planning/archive/phase-01-faces-and-zones/CONTRACTS.md) C1, C2).
 
 ## Panel
 
-The panel is one client of `PhComposer::API`, not the owner of any Model behavior ([CONTRACTS.md](../planning/archive/phase-one/CONTRACTS.md) C2).
+The panel is one client of `PhComposer::API`, not the owner of any Model behavior ([CONTRACTS.md](../planning/archive/phase-01-faces-and-zones/CONTRACTS.md) C2).
 `shell/panel.rb` owns the dialog and nothing else a feature reaches:
 
 - It shows the active Model. For each session it shows it connects once with its own caller

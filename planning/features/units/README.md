@@ -10,7 +10,7 @@ contract whole and extends the quantity table to the features the predecessor ne
    features add, and four decisions for the interview.
 2. [STATUS.md](STATUS.md).
 
-The Phase 0 portion is planned in [the panel/Units stage](../../archive/phase-zero/phases/phase-04-panel-units.md).
+The Phase 0 portion is planned in [the panel/Units stage](../../archive/phase-00-foundation/phases/phase-04-panel-units.md).
 Ed confirmed that the shared unit files and applicable tests move with the
 foundation transplant. Assembly and Window editor follow-ups stay with their features; Spaces
 owns repaint optimization if measurements justify it. New quantities stay with their owning

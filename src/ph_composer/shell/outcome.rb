@@ -12,7 +12,7 @@ module PhComposer
   module Outcome
     NOTHING_WRITTEN = "Nothing was written."
     ROLLED_BACK = "The change could not be completed. No changes were retained."
-    # Pending Ed's wording decision (planning/archive/phase-zero/STATUS.md): the abort ran, but the
+    # Pending Ed's wording decision (planning/archive/phase-00-foundation/STATUS.md): the abort ran, but the
     # unchanged-data check failed or could not run, so the message cannot confirm that nothing changed.
     UNVERIFIED = "The change could not be completed, and PH-Composer could not confirm that the Model " \
                  "is unchanged. Check the Model before continuing."

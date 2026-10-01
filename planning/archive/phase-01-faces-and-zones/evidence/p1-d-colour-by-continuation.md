@@ -74,7 +74,7 @@ native feature timing beyond the earlier Ruby rebuild measurement. It does not i
 completion: `View#refresh` may return before GPU work finishes, and callback cadence includes
 host scheduling. The [SketchUp View API](https://ruby.sketchup.com/Sketchup/View.html) exposes
 refresh timing but does not document it as GPU timing. This preserves the same limitation as
-the [original overlay spike](../../phase-zero/evidence/spike-overlay.md).
+the [original overlay spike](../../phase-00-foundation/evidence/spike-overlay.md).
 
 At the time of this run, isolated GPU timing and the PRD hatch remained open.
 The [hatch correction](p1-d-hatch-and-invalidation.md) and

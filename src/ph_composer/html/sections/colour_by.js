@@ -9,7 +9,7 @@
  * Every control sends a view command: turning a mode on, selecting a row and showing one row on its
  * own all change what the host draws and none of them writes to the Model, so none leaves an Undo
  * entry. Hover-to-highlight, the fourth affordance Q18 names, is not built: it would send one command
- * per pointer move and its cost is a question only a host can answer (planning/archive/phase-one/PLAN.md).
+ * per pointer move and its cost is a question only a host can answer (planning/archive/phase-01-faces-and-zones/PLAN.md).
  */
 PhComposerUI.define("sections/colour_by", ["panel", "workspace", "request", "snapshot"],
 function (panel, ui, requests, snapshot) {

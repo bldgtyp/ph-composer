@@ -126,7 +126,7 @@ overlay leaves with it and comes back with it.
 ## P1-D D6: what a Classify gesture costs
 
 `gesture_cost_walkthrough.rb` is the harness behind
-[the gesture cost evidence](../../../planning/archive/phase-one/evidence/p1-d-gesture-cost.md). It answers
+[the gesture cost evidence](../../../planning/archive/phase-01-faces-and-zones/evidence/p1-d-gesture-cost.md). It answers
 two questions that decide how the Classify tool is built: whether the 250-Face ceiling is
 defensible on the host, and what occurrence resolution costs.
 

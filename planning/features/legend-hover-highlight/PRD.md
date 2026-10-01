@@ -9,12 +9,12 @@ ISSUE: none (local planning draft)
 
 The [face-assignment PRD](../face-assignment/PRD.md) Q18 names four legend affordances: click to
 select and zoom, counts, Show only this, and hover to highlight. Phase 1 shipped the first three.
-Ed chose on 2026-09-20 to measure hover before shipping it ([Phase 1 plan](../../archive/phase-one/PLAN.md),
+Ed chose on 2026-09-20 to measure hover before shipping it ([Phase 1 plan](../../archive/phase-01-faces-and-zones/PLAN.md),
 "What D7 left open").
 
 The D7 host run answered that measurement: at 512 classified Faces, the Ruby Overview snapshot
 alone costs 39 to 47 ms, well over a 16.7 ms frame
-([Overview evidence](../../archive/phase-one/evidence/p1-d-overview.md), Q1). One command, snapshot and
+([Overview evidence](../../archive/phase-01-faces-and-zones/evidence/p1-d-overview.md), Q1). One command, snapshot and
 repaint per pointer move is therefore not an acceptable design. The feature waits on a cheaper,
 measured path.
 

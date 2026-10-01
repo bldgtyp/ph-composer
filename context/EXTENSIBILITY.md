@@ -196,7 +196,7 @@ the SKP. The panel sends `view.invoke` and settles the answer in its own result 
 Implemented in P1-D. A feature that authors by pointing writes a `Sketchup::Tool` and starts it
 from a menu item. Spaces' Mark floor, window placement and the thermal-bridge edge tool are all
 this shape, so the rules below are the shared ones, learned from the Classify tool's host gate
-([evidence](../planning/archive/phase-one/evidence/p1-d-classify-tool.md)).
+([evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-classify-tool.md)).
 
 - **Pick, never walk.** `Pick.face_path(view, x, y)` answers what is under the pointer as a
   root-to-leaf instance path, and a feature turns that path into an occurrence without touching the
@@ -217,7 +217,7 @@ this shape, so the rules below are the shared ones, learned from the Classify to
   notice, and a viewport tool is used with the panel closed, so a refusal delivered only that way
   is silent exactly where it matters. Results and refusals reach both `Sketchup.status_text=`
   and the session notice. Routine activation guidance uses the status bar alone so it does not
-  cover the panel controls; see [D7 F8](../planning/archive/phase-one/evidence/p1-d-overview.md).
+  cover the panel controls; see [D7 F8](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-overview.md).
 - **Cancel on every route, and leave nothing behind.** Escape, deactivation, a suspended context
   and a callback that raised all abandon the pending gesture. Track whether the button is actually
   down: a press whose release the host never delivered must not leave later hovers collecting. The

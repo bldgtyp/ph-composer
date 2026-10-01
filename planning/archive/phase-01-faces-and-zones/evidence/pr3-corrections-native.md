@@ -3,7 +3,7 @@
 DATE: 2026-09-30
 STATUS: R01 to R04 and R06 pass; R05 observed except pending-request visibility; A02, A04 (drag
 recheck), A05 and A11 rechecked; A08, A10, A12, A13, A14 and A16 carried forward
-OWNER: [pr3-foundation-corrections](../../pr3-foundation-corrections/README.md)
+OWNER: [pr3-foundation-corrections](../../phase-01-faces-and-zones-refactor/README.md)
 
 Synthetic summary evidence. Raw readbacks are in the gitignored `_private/host/pr3/`.
 
@@ -70,7 +70,7 @@ Classify and a Reverse there; that is an ordinary write on an unshared Group, no
   `reference.in_use`, effect `none`, naming 2 Faces; definition and assignments kept; revision
   unchanged. Restore Zone then regrouped them and the same delete committed, moving 2 Faces.
 - Fresh handoff fixture (`_private/host/pr3-handoff.skp`, RBZ `5d1ca29e...` from `b2dd8b2`), driven
-  by Codex with computer use from [NATIVE-HANDOFF.md](../../pr3-foundation-corrections/NATIVE-HANDOFF.md):
+  by Codex with computer use from [NATIVE-HANDOFF.md](../../phase-01-faces-and-zones-refactor/NATIVE-HANDOFF.md):
   native Edit > Undo of the committed delete restored the Garage with its two Faces; Redo removed it.
 - A Garage Face natively cut out of its Zone and pasted at the root: both modes refused
   `reference.in_use`, effect `none`, naming 1 Face with the route "Restore its Zone, or remove it";

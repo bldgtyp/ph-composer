@@ -5,7 +5,7 @@ module PhComposer
     # The one `Sketchup::Overlay` a Model gets while a Colour-by mode is active. It draws what the
     # service already cached and nothing else: no Model read, no record read and no repair, so the
     # cost of a frame is the marshalling B2 measured
-    # ([spike](../../../planning/archive/phase-zero/evidence/spike-overlay.md)).
+    # ([spike](../../../planning/archive/phase-00-foundation/evidence/spike-overlay.md)).
     #
     # Fills are batched per colour, one `View#draw` a legend row rather than one a face, because that
     # marshalling is what dominates past about 10,000 triangles.

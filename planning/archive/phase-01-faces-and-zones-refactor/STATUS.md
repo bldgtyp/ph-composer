@@ -97,13 +97,13 @@ Phase 08 into Phase 02.
 
 | Case | Phase | State | Ledger record |
 | --- | --- | --- | --- |
-| R01 shared child Groups | 01a / 05 | Pass | `results.jsonl`; [evidence](../phase-one/evidence/pr3-corrections-native.md) |
-| R02 nested Zone path | 01a / 05 | Pass | `results.jsonl`; [evidence](../phase-one/evidence/pr3-corrections-native.md) |
-| R03 orphan Attached-zone delete | 01a / 05 | Pass | `results.jsonl`; [evidence](../phase-one/evidence/pr3-corrections-native.md) |
-| R04 partial AttachedZone cut | 01a / 05 | Pass | `results.jsonl`; [evidence](../phase-one/evidence/pr3-corrections-native.md) |
-| R05 Overview draft navigation | 01c / 05 | Observed; pending-state visibility `unknown` (offline-covered) | `results.jsonl`; [evidence](../phase-one/evidence/pr3-corrections-native.md) |
-| R06 panel-closed API client | 03 / 05, extended 09 | Pass (Phase 05 scope) | `results.jsonl`; [evidence](../phase-one/evidence/pr3-corrections-native.md) |
-| Existing cases flagged by `--changed` | 05, 09 | Targeted (Ed, 2026-09-30): A02, A04 (drag), A05, A11 rechecked and pass; A08, A10, A12, A13, A14, A16 carried forward with reasons | [evidence](../phase-one/evidence/pr3-corrections-native.md#carried-forward) |
+| R01 shared child Groups | 01a / 05 | Pass | `results.jsonl`; [evidence](../phase-01-faces-and-zones/evidence/pr3-corrections-native.md) |
+| R02 nested Zone path | 01a / 05 | Pass | `results.jsonl`; [evidence](../phase-01-faces-and-zones/evidence/pr3-corrections-native.md) |
+| R03 orphan Attached-zone delete | 01a / 05 | Pass | `results.jsonl`; [evidence](../phase-01-faces-and-zones/evidence/pr3-corrections-native.md) |
+| R04 partial AttachedZone cut | 01a / 05 | Pass | `results.jsonl`; [evidence](../phase-01-faces-and-zones/evidence/pr3-corrections-native.md) |
+| R05 Overview draft navigation | 01c / 05 | Observed; pending-state visibility `unknown` (offline-covered) | `results.jsonl`; [evidence](../phase-01-faces-and-zones/evidence/pr3-corrections-native.md) |
+| R06 panel-closed API client | 03 / 05, extended 09 | Pass (Phase 05 scope) | `results.jsonl`; [evidence](../phase-01-faces-and-zones/evidence/pr3-corrections-native.md) |
+| Existing cases flagged by `--changed` | 05, 09 | Targeted (Ed, 2026-09-30): A02, A04 (drag), A05, A11 rechecked and pass; A08, A10, A12, A13, A14, A16 carried forward with reasons | [evidence](../phase-01-faces-and-zones/evidence/pr3-corrections-native.md#carried-forward) |
 
 ## Verification log
 

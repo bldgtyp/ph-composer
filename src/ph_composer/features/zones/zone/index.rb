@@ -10,7 +10,7 @@ module PhComposer
     # times. Measured on SketchUp 26.1.188, that is O(targets x Model Faces): a 50-target gesture
     # cost 459 ms in a 252-Face Model and 3,352 ms in a 2,004-Face one, and the Face read had the
     # same defect through `Adjacency.state`
-    # ([evidence](../../../../planning/archive/phase-one/evidence/p1-d-gesture-cost.md)).
+    # ([evidence](../../../../planning/archive/phase-01-faces-and-zones/evidence/p1-d-gesture-cost.md)).
     #
     # An index walks once and answers from what it found. Every walk is lazy, so a caller that
     # passes one pays for exactly the walks it would have paid for anyway, and no more.

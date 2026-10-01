@@ -4,7 +4,7 @@ require_relative "test_helper"
 
 # One runtime's lifecycle against the stub dialog and a real loopback server on the shipped payload:
 # nothing is sent before the page is ready, results are bound to the runtime's session, and stop
-# reports what was running and that nothing still is (planning/archive/phase-zero/phases/
+# reports what was running and that nothing still is (planning/archive/phase-00-foundation/phases/
 # phase-05-runtime.md, work item 7).
 class RuntimeHostTest < PhComposerTestCase
   RuntimeHost = PhComposer::RuntimeHost

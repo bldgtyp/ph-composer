@@ -20,7 +20,7 @@ archive the packet.
 4. `docs-pass`; fold durable outcomes into `context/` (`zones` ownership, entity descriptors,
    malformed-request rule, bounded reads, metadata policy).
 5. PR with `Closes #N` for the second issue, created when Phase 06 starts (R-D6). After merge, move this packet unchanged to
-   `planning/archive/pr3-foundation-corrections/` and add a newest-first row to
+   `planning/archive/phase-01-faces-and-zones-refactor/` and add a newest-first row to
    `planning/archive/README.md`; remove the row from `planning/STATUS.md`.
 
 ## Done when
@@ -42,9 +42,9 @@ packet archived.
   and payload separately" item was not measured.
 - Native (targeted, per Ed): R06 extended with paged reads and export polling passes on SketchUp
   26.1.188 (ledger record in `results.jsonl`); A08, A12 and A13 carried forward with reasons in the
-  [evidence page](../../phase-one/evidence/pr3-corrections-native.md).
+  [evidence page](../../phase-01-faces-and-zones/evidence/pr3-corrections-native.md).
 - docs-pass: `context/AGENT_INTERFACE.md` (paged reads, task descriptions), `context/EXTENSIBILITY.md`
   (registration checks, declared user_data keys), `context/TECH_STACK.md` (metadata policy),
   `docs/API_QUICKSTART.md` step 7 and the generated reference.
 - PR [#6](https://github.com/bldgtyp/ph-composer/pull/6) closes #5 and moves this packet to
-  `planning/archive/pr3-foundation-corrections/`.
+  `planning/archive/phase-01-faces-and-zones-refactor/`.

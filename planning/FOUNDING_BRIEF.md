@@ -1,7 +1,7 @@
 # PH-Composer: founding brief
 
 **DATE:** 2026-09-20 | **STATUS:** Founding record. Phase 0 foundation merged through PR #1.
-[Phase 1 planning](archive/phase-one/README.md) now owns the next delivery sequence; building features
+[Phase 1 planning](archive/phase-01-faces-and-zones/README.md) now owns the next delivery sequence; building features
 remain unimplemented. The transplant tables below record the original predecessor inventory.
 **OWNER:** Ed May, BLDGTYP
 
@@ -154,7 +154,7 @@ never required to author or export a model.
 The cross-cutting choices are consolidated in [`DECISIONS.md`](DECISIONS.md); feature-local
 questions remain in their packet PRDs.
 
-- **PHX in Pyodide.** [B1](archive/phase-zero/evidence/spike-phx.md) passed with nine pinned
+- **PHX in Pyodide.** [B1](archive/phase-00-foundation/evidence/spike-phx.md) passed with nine pinned
   wheels installed without dependency resolution. Phase 1 selects its HBJSON translation pins. The no-Spaces
   floor-area decision, PHX integration and actual METr import wait with the deferred exporter. Upstream optional-dependency cleanup remains a follow-up.
 - **Public name, organization and namespaces.** Development remains PH-Composer at `bldgtyp/ph-composer`.

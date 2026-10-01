@@ -1,7 +1,7 @@
 # B1 spike: PHX inside Pyodide
 
 Development only, never shipped. Reproduces the P0-B B1 investigation
-(`planning/archive/phase-zero/evidence/spike-phx.md`): a synthetic two-Room HBJSON converted to
+(`planning/archive/phase-00-foundation/evidence/spike-phx.md`): a synthetic two-Room HBJSON converted to
 METr JSON by PHX, first in native CPython, then in the pinned Pyodide 0.24.1 under Chromium 88.
 
 | File | Does |

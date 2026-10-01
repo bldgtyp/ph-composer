@@ -41,8 +41,8 @@ baseline at `f1e9a98`, not a substitute for the durable contracts in `context/`.
 | Runtime host, server and manifest | Separate token-origin runtime page, lazy boot and integrity checks | HBJSON translation wheel set, loader and real translation requests; refresh manifest and measured footprint; PHX payload deferred |
 
 The [foundation example](../../../tools/examples/foundation/README.md) is the entrypoint pattern.
-The [P0-E](../phase-zero/evidence/phase-04-panel-units.md) and
-[P0-F](../phase-zero/evidence/phase-05-runtime.md) records identify deferred work.
+The [P0-E](../phase-00-foundation/evidence/phase-04-panel-units.md) and
+[P0-F](../phase-00-foundation/evidence/phase-05-runtime.md) records identify deferred work.
 Do not port an entire predecessor subsystem merely because its name appears in the target layout.
 
 ## Ownership and dependency direction
@@ -384,7 +384,7 @@ no partial paint. Confirm or revise the limit with measured P1-D host behavior b
 implementation closes; test the exact accepted limit and one above it. Auto-classify is a separate
 named batch, touches only faces without records and creates one Undo step.
 
-The [B2 overlay evidence](../phase-zero/evidence/spike-overlay.md) permits filled modes
+The [B2 overlay evidence](../phase-00-foundation/evidence/spike-overlay.md) permits filled modes
 on the proving host. Feature work must invalidate cached geometry after edits, Undo/Redo and model
 switches, and measure cost at and beyond 10,000 triangles. B2 did not test that lifecycle.
 

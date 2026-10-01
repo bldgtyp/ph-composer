@@ -76,12 +76,12 @@ with this file as the temporary owning authority. Each needs the host bridge plu
 controls; stubs and browser results do not close them.
 
 This packet is archived at Phase 09, so this table is not a durable home. In Phase 05's
-`docs-pass`, move R01 to R06 into `planning/archive/phase-one/ACCEPTANCE.md` (the register the existing
+`docs-pass`, move R01 to R06 into `planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md` (the register the existing
 cases A01 to A16 use), repoint their `cases.json` authority there, and leave a link here.
 `acceptance_ledger.py validate` does not detect an authority file that merely moved.
 
 Moved 2026-09-30 in Phase 05: R01 to R06 now live in
-[`phase-one/ACCEPTANCE.md`](../phase-one/ACCEPTANCE.md#pr-3-foundation-correction-cases), and
+[`phase-one/ACCEPTANCE.md`](../phase-01-faces-and-zones/ACCEPTANCE.md#pr-3-foundation-correction-cases), and
 `cases.json` names that register as their authority. The table below is the original scoping.
 
 | Case | Introduced | What the host run must show |

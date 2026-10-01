@@ -4,7 +4,7 @@ require_relative "test_helper"
 require_relative "support/test_feature"
 
 # The public interface with no panel: discovery, reads, validated writes, retries and lifecycle,
-# as planning/archive/phase-zero/phases/phase-03-operations.md "Required cases" lists them.
+# as planning/archive/phase-00-foundation/phases/phase-03-operations.md "Required cases" lists them.
 class ApiTest < PhComposerTestCase
   API = PhComposer::API
   PART = "test.fixture.part"

@@ -6,7 +6,7 @@ module PhComposer
   # A path is what an occurrence reference is built from, so a tool that picks one per pointer move
   # never walks the Model to find out where the pointer is. That distinction is the whole reason
   # this exists: a walk per pointer move would cost what P1-D measured a walk to cost
-  # (planning/archive/phase-one/evidence/p1-d-gesture-cost.md).
+  # (planning/archive/phase-01-faces-and-zones/evidence/p1-d-gesture-cost.md).
   #
   # It names no feature; Spaces' Mark floor picks the same way (face-assignment PRD Q22).
   module Pick

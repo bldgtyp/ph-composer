@@ -9,16 +9,16 @@ ISSUE: none (local planning draft)
 
 The MVP targets METr, but Phase 1 closed on HBJSON/report. Ed deferred METr exporter development
 and consumer acceptance on 2026-09-20 until more authoring features exist
-([P1-Q1](../../archive/phase-one/DECISIONS.md)). Nothing on the branch writes a METr file today. Until this
+([P1-Q1](../../archive/phase-01-faces-and-zones/DECISIONS.md)). Nothing on the branch writes a METr file today. Until this
 packet completes, PH-Composer cannot claim a METr outcome.
 
 ## What already exists
 
 - **Canonical input.** The HBJSON/report pair, its export task, pair recovery and privacy checks
-  ([P1-E evidence](../../archive/phase-one/evidence/p1-e-export-workflow.md)). METr is an optional second
+  ([P1-E evidence](../../archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md)). METr is an optional second
   artifact produced from that HBJSON, never from the SKP directly.
 - **Conversion route.** The B1 spike ran PHX `from_HBJSON` and `to_METr_JSON` in Pyodide without
-  Excel ([spike evidence](../../archive/phase-zero/evidence/spike-phx.md)). It proved conversion only;
+  Excel ([spike evidence](../../archive/phase-00-foundation/evidence/spike-phx.md)). It proved conversion only;
   the output was never opened in METr. PHX packaging is tracked upstream in
   [PH-Tools/PHX#157](https://github.com/PH-Tools/PHX/issues/157).
 - **Failure policy.** D2: when METr fails, keep the valid HBJSON/report pair, report the failure

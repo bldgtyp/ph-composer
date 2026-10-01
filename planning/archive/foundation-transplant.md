@@ -2,11 +2,11 @@
 
 DATE: 2026-09-18
 STATUS: Complete 2026-09-18, merged through PR #1. Foundation milestone met in P0-G
-([evidence](phase-zero/evidence/phase-06-acceptance.md)); executed through the phase-zero packet.
+([evidence](phase-00-foundation/evidence/phase-06-acceptance.md)); executed through the phase-zero packet.
 AUTHOR: Ed May, BLDGTYP, with Codex review
 ISSUE: none (local planning draft)
 
-Phase 0 coordination now lives in [the implementation planning packet](phase-zero/README.md).
+Phase 0 coordination now lives in [the implementation planning packet](phase-00-foundation/README.md).
 It records detailed stages and contract designs. This file remains the foundation scope;
 the new packet supplies no implementation authorization.
 
@@ -88,7 +88,7 @@ The SketchUp 2023 floor, Windows and public distribution remain explicit later g
 
 ## Accepted planning decisions
 
-The [Phase 0 PLAN](phase-zero/PLAN.md) and [contract design](phase-zero/CONTRACTS.md) now specify
+The [Phase 0 PLAN](phase-00-foundation/PLAN.md) and [contract design](phase-00-foundation/CONTRACTS.md) now specify
 the implementation handoff. The rules below remain its scope constraints.
 
 Apply [the external agent requirements](../../context/AGENT_INTERFACE.md) to the public query

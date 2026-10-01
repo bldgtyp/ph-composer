@@ -88,7 +88,7 @@ Windows thresholds remain source evidence only until the separate Windows gate i
 
 After implementation is authorized, give the next agent this packet and the authorized stage range:
 
-> Read planning/archive/phase-zero/STATUS.md and PLAN.md, then execute the first incomplete
+> Read planning/archive/phase-00-foundation/STATUS.md and PLAN.md, then execute the first incomplete
 > stage within the authorized scope. Follow CONTRACTS.md and the frozen source inventory.
 > Preserve unrelated work. Do not implement later features or an external adapter. Record
 > verification and remaining gates, update the packet, and stop at an unavailable prerequisite

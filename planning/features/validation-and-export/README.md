@@ -9,7 +9,7 @@ HBJSON and coordinated Export report, and optionally runs registered exporters s
    isolation and acceptance.
 2. [STATUS.md](STATUS.md).
 3. [PLAN.md](PLAN.md): implemented Phase 1 workflow and later consumer gates.
-4. [Phase 1 decisions](../../archive/phase-one/DECISIONS.md): accepted Phase 1 choices and deferred METr/B1 consequences.
+4. [Phase 1 decisions](../../archive/phase-01-faces-and-zones/DECISIONS.md): accepted Phase 1 choices and deferred METr/B1 consequences.
 
 ## Scope
 
