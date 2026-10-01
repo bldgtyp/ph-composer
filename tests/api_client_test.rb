@@ -27,7 +27,9 @@ class ApiClientTest < PhComposerTestCase
     classified, written = classify_first_face(context)
     edit, preview, updated = edit_zone(context, classified)
 
-    assert_equal [made.dig("value", "zone_id")], made["affected"].map { |row| row["id"] }
+    assert_equal [made.dig("value", "zone_id")], made["affected"].select { |row| row["kind"] == "zone" }
+                                                               .map { |row| row["id"] }
+    assert_equal 3, made["affected"].count { |row| row["kind"] == "face" }
     assert_equal "Wall", faces(context).find { |row| row["reference"] == written }.dig("values", "face_type")
 
     # 5. A write based on an old read refuses and changes nothing.

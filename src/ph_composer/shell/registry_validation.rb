@@ -272,12 +272,14 @@ module PhComposer
       # and never interprets it.
       def check_menu_items
         @staging.declared_menu_items.each do |item|
-          next if text?(item.label) && text?(item.menu) && item.handler.respond_to?(:call) &&
+          content = item.entries ? item.entries.respond_to?(:call) :
+            text?(item.label) && item.handler.respond_to?(:call)
+          next if content && text?(item.menu) &&
                   (item.state.nil? || item.state.respond_to?(:call)) &&
                   (item.available.nil? || item.available.respond_to?(:call))
 
           add("registration.schema_invalid", item.owner, item.name,
-              "#{item.name} needs a label, a submenu name and a handler block; state and available " \
+              "#{item.name} needs static content or an entries provider, a submenu name; state and available " \
               "must be callable.")
         end
       end

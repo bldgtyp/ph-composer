@@ -1,0 +1,266 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+
+class SelectionTest < PhComposerTestCase
+  API = PhComposer::API
+  ZONES = PhComposer::Zones
+  FACES = ZONES::Faces
+
+  def setup
+    super
+    @model = Sketchup.active_model
+    FACES::Settings::STORE.write(@model, FACES::Settings::DEFAULTS.merge("suggest_on_make" => false))
+    @session = PhComposer::Sessions.for(@model)
+    @context = API.connect(:session_id => @session.id)
+    @sequence = 0
+    @groups = [make_zone(100), make_zone(200)]
+    select(*@groups)
+  end
+
+  def test_zone_query_is_detached_and_batch_changes_one_attribute_with_one_undo
+    read = query("ph_composer.zones.selection")
+    rows = read.dig("value", "zones")
+    assert_equal [[100], [200]], rows.map { |row| row.dig("reference", "zone_path") }
+    assert_equal %w[Zone\ 1 Zone\ 2], rows.map { |row| row.dig("values", "name") }
+    before = @groups.map { |group| ZONES::ZONE_STORE.read(group) }
+    before.first["user_data"] = { "test.note" => "retain" }
+    ZONES::ZONE_STORE.write(@groups.first, before.first)
+
+    result = update(rows, "level", "L2", read.fetch("revision"))
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert_equal %w[L2 L2], @groups.map { |group| ZONES::ZONE_STORE.read(group).fetch("level") }
+    assert_equal before.first.fetch("user_data"), ZONES::ZONE_STORE.read(@groups.first).fetch("user_data")
+    assert_equal ["Edit Selected Zones", true, :committed], @model.operations.last
+    assert_equal 3, @model.operations.length
+    assert @model.undo
+    assert @model.entities.grep(Sketchup::Group).all? { |group| ZONES::ZONE_STORE.read(group).fetch("level").nil? }
+    assert @model.redo
+    assert @model.entities.grep(Sketchup::Group).all? { |group| ZONES::ZONE_STORE.read(group).fetch("level") == "L2" }
+    rows.first.fetch("values")["name"] = "detached"
+    refute_equal "detached", ZONES::ZONE_STORE.read(@model.entities.grep(Sketchup::Group).first).fetch("name")
+  end
+
+  def test_empty_selection_chooses_the_secondary_paint_tool_without_a_model_write
+    @model.selection.clear
+    before = @session.revision
+    operations = @model.operations.length
+
+    result = FACES::Selection.client(@session).classify("face_type", "Wall")
+
+    assert_equal %w[completed none], result.values_at("status", "effect")
+    assert FACES.classify_tool(@session).active?
+    assert_equal({ "mode" => "set", "value" => "Wall" }, FACES.classify_tool(@session).palette.fetch("face_type"))
+    assert_equal before, @session.revision
+    assert_equal operations, @model.operations.length
+  end
+
+  def test_batch_checks_every_expected_value_before_composing_any_writes
+    rows = query("ph_composer.zones.selection").dig("value", "zones")
+    rows.last.fetch("values")["level"] = "stale"
+    result = update(rows, "level", "L2", @session.revision)
+
+    assert_equal %w[refused target.changed none], result.values_at("status", "code", "effect")
+    assert_equal [nil, nil], @groups.map { |group| ZONES::ZONE_STORE.read(group).fetch("level") }
+    assert_equal 2, @model.operations.length
+  end
+
+  def test_duplicate_or_invalid_field_value_refuses_the_entire_batch
+    rows = query("ph_composer.zones.selection").dig("value", "zones")
+    duplicate = update([rows.first, rows.first], "level", "L2", @session.revision)
+    invalid = update(rows, "ground_depth_mm", "bad", @session.revision)
+
+    assert_equal %w[refused params.invalid none], duplicate.values_at("status", "code", "effect")
+    assert_equal %w[refused validation.failed none], invalid.values_at("status", "code", "effect")
+    assert_equal 2, @model.operations.length
+  end
+
+  def test_mixed_locked_shared_and_ambiguous_selected_zone_sets_refuse
+    select(@groups.first, @groups.last.entities.to_a.first)
+    assert_equal "selection.invalid", query("ph_composer.zones.selection").fetch("code")
+    select(*@groups)
+    @groups.last.locked = true
+    assert_equal "target.locked", query("ph_composer.zones.selection").fetch("code")
+    @groups.last.locked = false
+    duplicate = ZONES::ZONE_STORE.read(@groups.first)
+    ZONES::ZONE_STORE.write(@groups.last, duplicate)
+    assert_equal "target.ambiguous", query("ph_composer.zones.selection").fetch("code")
+
+    ZONES::ZONE_STORE.write(@groups.last, duplicate.merge("id" => "zon_123456789abc"))
+    definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([@groups.first]))
+    instances = [Sketchup::ComponentInstance.new(800, definition), Sketchup::ComponentInstance.new(900, definition)]
+    instances.each { |instance| @model.entities << instance }
+    @model.active_path = [instances.first]
+    select(@groups.first)
+    assert_equal "target.ambiguous", query("ph_composer.zones.selection").fetch("code")
+    assert_equal 2, @model.operations.length
+  end
+
+  def test_inputbox_cancel_writes_nothing_and_stale_revision_refuses
+    client = ZONES::Selection.client(@session)
+    assert_nil client.edit("level")
+    assert_equal [["Level"], [""], "Selected Zones"], UI.inputboxes.last
+    assert_equal 2, @model.operations.length
+    UI.inputbox_result = ["L3"]
+    read = query("ph_composer.zones.selection")
+    @session.host_event(:transaction_committed)
+    result = API.stub(:query, read) { client.edit("level") }
+    assert_equal "revision.stale", result.fetch("code")
+    assert_equal 2, @model.operations.length
+  end
+
+  def test_inputbox_captures_all_values_and_revision_before_dialog
+    client = ZONES::Selection.client(@session)
+    UI.inputbox_result = ["-250"]
+    result = client.edit("ground_depth_mm")
+    assert_equal "completed", result.fetch("status")
+    assert_equal [-250.0, -250.0], @groups.map { |group| ZONES::ZONE_STORE.read(group).fetch("ground_depth_mm") }
+    UI.inputbox_result = ["bad"]
+    assert_equal "refused", client.edit("ground_depth_mm").fetch("status")
+    assert_equal 3, @model.operations.length
+  end
+
+  def test_solve_client_passes_selected_occurrences_and_captured_revision
+    read = query("ph_composer.zones.selection")
+    invocation = nil
+    API.stub(:invoke, lambda { |**args|
+      invocation = args
+      { "status" => "completed", "message" => "Solved." }
+    }) { ZONES::Selection.client(@session).solve }
+    assert_equal "ph_composer.zones.solve_adjacency", invocation.fetch(:name)
+    assert_equal read.dig("value", "zones").map { |row| row.fetch("reference") }, invocation.dig(:params, "zones")
+    assert_equal read.fetch("revision"), invocation.dig(:request, "expected_revision")
+  end
+
+  def test_selected_faces_immediately_classify_one_attribute_without_starting_tool
+    inside_zone
+    selected = @groups.first.entities.to_a.first(2)
+    select(*selected)
+    result = FACES::Selection.client(@session).classify("face_type", "Wall")
+
+    assert_equal "completed", result.fetch("status")
+    assert_equal %w[Wall Wall], selected.map { |face| FACES::FACE_STORE.read(face).fetch("face_type") }
+    assert_nil FACES::FACE_STORE.read(@groups.first.entities.to_a.last)
+    refute FACES.classify_tool(@session).active?
+    assert_nil @model.active_tool
+    assert_equal 3, @model.operations.length
+    assert @model.undo
+    assert @model.entities.grep(Sketchup::Group).first.entities.all? { |face| FACES::FACE_STORE.read(face).nil? }
+    assert @model.redo
+    assert_equal 2, @model.entities.grep(Sketchup::Group).first.entities.count { |face| FACES::FACE_STORE.read(face) }
+  end
+
+  def test_face_selection_rejects_over_limit_mixed_root_locked_and_shared
+    inside_zone
+    faces = 251.times.map { |index| Sketchup::Face.new(1000 + index) }
+    faces.each { |face| @groups.first.entities << face }
+    select(*faces)
+    assert_equal "gesture.too_large", query("ph_composer.zones.faces.selection").fetch("code")
+    edge = Sketchup::Edge.new(2000, Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(1, 0, 0))
+    @groups.first.entities << edge
+    select(faces.first, edge)
+    assert_equal "selection.invalid", query("ph_composer.zones.faces.selection").fetch("code")
+    @model.active_path = nil
+    select(@groups.first.entities.to_a.first)
+    assert_equal "target.wrong_zone", query("ph_composer.zones.faces.selection").fetch("code")
+    inside_zone
+    @groups.first.locked = true
+    assert_equal "target.locked", query("ph_composer.zones.faces.selection").fetch("code")
+    assert_equal 2, @model.operations.length
+  end
+
+  def test_dynamic_attached_menu_uses_current_records_and_exit_only_while_active
+    inside_zone
+    select(@groups.first.entities.to_a.first)
+    PhComposer::Commands.install
+    menus = context_menus
+    labels = labels(menus.fetch(FACES::ClassifyMenu::MENU))
+    assert_includes labels, "New attached zone…"
+    refute labels.any? { |label| label.include?("Keep") || label == FACES::ClassifyMenu::OFF }
+    created = invoke("#{FACES::AttachedZone::KIND_ID}.save", { "values" => { "name" => "Garage", "kind" => "garage" } })
+    assert_equal "completed", created.fetch("status")
+    menu = context_menus.fetch(FACES::ClassifyMenu::MENU)
+    entry = menu.entries.find { |row| row.is_a?(Array) && row.first == "Attached zone: Garage" }
+    assert entry
+    entry.last.call
+    face = FACES::FACE_STORE.read(@groups.first.entities.to_a.first)
+    assert_equal created.dig("value", "id"), face.fetch("attached_zone_id")
+    assert_equal "AttachedZone", face.fetch("boundary_condition")
+    FACES.classify_tool(@session).start
+    select
+    assert_includes labels(context_menus.fetch(FACES::ClassifyMenu::MENU)), FACES::ClassifyMenu::OFF
+    FACES.classify_tool(@session).stop
+    refute context_menus.key?(FACES::ClassifyMenu::MENU)
+  end
+
+  def test_assignment_handoff_is_detached_revision_guarded_and_token_scoped
+    inside_zone
+    select(*@groups.first.entities.to_a.first(2))
+    read = query("ph_composer.zones.faces.selection")
+    params = { "faces" => read.dig("value", "faces"), "revision" => read.fetch("revision") }
+    result = API.view(:context => @context, :name => "ph_composer.zones.faces.open_attached_assignment",
+                     :params => params)
+    assert_equal "completed", result.fetch("status")
+    token = result.dig("value", "token")
+    params.fetch("faces").first["entity_path"] = [999]
+    assert_equal 2, query("ph_composer.zones.faces.attached_assignment").dig("value", "faces").length
+    close = ->(value) { API.view(:context => @context, :name => "ph_composer.zones.faces.close_attached_assignment",
+                               :params => { "token" => value }) }
+    assert_equal token, close.call("wrong").dig("value", "token")
+    assert_nil close.call(token).dig("value", "token")
+    stale = API.view(:context => @context, :name => "ph_composer.zones.faces.open_attached_assignment",
+                     :params => { "faces" => read.dig("value", "faces"), "revision" => -1 })
+    assert_equal "revision.stale", stale.fetch("code")
+    assert_equal 2, @model.operations.length
+  end
+
+  private
+
+  def make_zone(id)
+    faces = 3.times.map do |index|
+      Sketchup::Face.new(id + index + 1, {}, :points => [Geom::Point3d.new(0, 0, index),
+                                                       Geom::Point3d.new(2, 0, index), Geom::Point3d.new(2, 2, index)])
+    end
+    group = Sketchup::Group.new(id, Sketchup::Entities.new(faces))
+    @model.entities << group
+    result = invoke("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [id] })
+    assert_equal "completed", result.fetch("status")
+    group
+  end
+
+  def query(name)
+    API.query(:context => @context, :name => name)
+  end
+
+  def invoke(name, params, revision = @session.revision)
+    @sequence += 1
+    API.invoke(:context => @context, :name => name, :params => params,
+               :request => { "sequence" => @sequence, "expected_revision" => revision })
+  end
+
+  def update(rows, field, value, revision)
+    invoke("ph_composer.zones.update_field", { "field" => field, "value" => value,
+      "targets" => rows.map do |row|
+        { "reference" => row.fetch("reference"), "expected_values" => row.fetch("values") }
+      end },
+           revision)
+  end
+
+  def select(*entities)
+    @model.selection.clear
+    entities.each { |entity| @model.selection.add(entity) }
+  end
+
+  def inside_zone
+    @model.active_path = [@groups.first]
+  end
+
+  def context_menus
+    PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)
+  end
+
+  def labels(menu)
+    menu.entries.select { |entry| entry.is_a?(Array) }.map(&:first)
+  end
+end

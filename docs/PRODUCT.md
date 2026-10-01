@@ -80,15 +80,24 @@ the shared region pairs, in one Undo step. It runs only when asked, and validati
 when a pairing goes stale. A copied Zone or a split face keeps its records; an explicit repair gives
 the copy its own identity, and ambiguity is refused rather than guessed.
 
+Make Zone and the Zone attributes are available from the selected geometry's native context menu.
+The Zones / Faces tab also offers Solve for the whole Model; the native command solves selected
+Zones. A Zone's name follows its Group name in Entity Info and Outliner. Clearing that name restores
+the last valid name.
+
 ## Envelope
 
-The user classifies faces with PH-Composer's own tool: face type, boundary condition and
-assembly. The Classify tool paints by click, drag or Shift-click across a connected plane, one Undo
+The user selects Faces, then sets one face type or boundary condition from the native context menu.
+Existing Attached zones appear there; New attached zone opens a form for the captured selection.
+The Classify tool also paints by click, drag or Shift-click across a connected plane, one Undo
 step per gesture. Suggest classification proposes a face type and boundary condition for each face of a Zone that
 has no classification record yet, from its geometry.
+Make Zone runs Suggest by default in the same Undo step. The tab's gear control stores the switch
+and roof/floor tilt thresholds in the Model, initially 60 and 130 degrees. Settings changes can be
+undone independently.
 An Attached zone, such as a garage or attic, is a named boundary condition with its temperature
 reduction factor. Colour by shows face type, boundary condition, Zone, Building-Segment or Level on
-the model without changing its materials, and the Overview lists each Zone with its classified faces.
+the model without changing its materials, and the Zones / Faces screen lists each Zone with its classified faces.
 Assembly assignment arrives with Assemblies in Phase 2. A face inside a repeated component is shared by every occurrence, and independent
 classification requires the user to make the parent unique first. PH-Composer never does that
 automatically. Unclassified faces are visible in validation and never silently exported.

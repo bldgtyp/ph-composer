@@ -66,10 +66,12 @@ module PhComposer
     # built, so an item appears on a right-click only where it applies; `shell/` cannot decide that
     # for a feature, because deciding it means knowing what the feature's entities are.
     #
-    # A menu item writes no record and opens no operation; that is the whole difference between one
-    # and an action. Starting a tool, choosing its palette and turning a Colour-by mode on are the
-    # three things in Phase 1 that are reached this way.
-    MenuItem = Struct.new(:name, :owner, :label, :menu, :separator_after, :handler, :state, :available,
+    # Native entry points delegate Model writes to registered actions. Direct handlers may only
+    # change view/session state, such as starting a tool or turning a Colour-by mode on.
+    # `entries` optionally supplies current per-session context-menu entries instead of one static
+    # item. Contributors own catalog/selection reads; global menus do not capture dynamic catalogs.
+    MenuEntry = Struct.new(:label, :handler, :state, :separator_after, keyword_init: true)
+    MenuItem = Struct.new(:name, :owner, :label, :menu, :separator_after, :handler, :state, :available, :entries,
                           keyword_init: true)
 
     ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)

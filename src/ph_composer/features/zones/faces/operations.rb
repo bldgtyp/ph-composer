@@ -133,7 +133,7 @@ module PhComposer
                                           :mutable => true, :allow_unassigned => true, :index => index)
         end
         updates = unrecorded.map do |occurrence|
-          suggested = Geometry.suggested_values(occurrence)
+          suggested = Geometry.suggested_values(occurrence, :settings => Settings.read(request.model))
           record = new_record(request, occurrence).merge(suggested)
           { "reference" => occurrence.reference, "before" => nil, "after" => Schema.validate!(record),
             "stamp" => stamp, "change" => "created" }
@@ -315,7 +315,7 @@ module PhComposer
           "area_m2" => Geometry.area_m2(occurrence), "values" => record ? Schema.values(record) : {},
           "user_data" => record ? DeepCopy.call(record.fetch("user_data", {})) : {},
           "extension_data" => record ? DeepCopy.call(record.fetch("extension_data", {})) : {},
-          "suggested" => Geometry.suggested_values(occurrence),
+          "suggested" => Geometry.suggested_values(occurrence, :settings => Settings.read(request.model)),
           "attached_zone_state" => AttachedZone.reference_state(request.engine, record),
           "adjacency_state" => Zones::Adjacency.state(request.model, occurrence, record, :index => index)
         }

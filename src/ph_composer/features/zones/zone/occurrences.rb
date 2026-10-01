@@ -118,7 +118,7 @@ module PhComposer
       def zone_for_path(entities, nested)
         transform = entities.reduce(identity) { |carried, entity| carried * entity.transformation }
         ZoneOccurrence.new(:entity => entities.last, :path => entities.map(&:persistent_id),
-                           :transform => transform, :record => Schema.validate!(ZONE_STORE.read(entities.last)),
+                           :transform => transform, :record => Schema.validate!(Names.read(entities.last)),
                            :shared_definition => entities.any? { |entity| shared_storage?(entity) },
                            :nested => nested)
       end
@@ -225,7 +225,7 @@ module PhComposer
 
           child_path = path + [entity.persistent_id]
           child_transform = transform * entity.transformation
-          record = ZONE_STORE.read(entity)
+          record = Names.read(entity)
           child_shared = shared || shared_storage?(entity)
           if record
             Schema.validate!(record)

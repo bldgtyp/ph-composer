@@ -60,7 +60,7 @@ repository: `screens/` is gitignored (U4).
 | Enum values as coloured chips with a chevron | Keep. The values change where a packet says so |
 
 The tab row accepted in U1 was:
-Overview, Spaces, Assemblies, Window Types, Thermal Bridges · Planned, Systems · Planned,
+Zones / Faces, Spaces, Assemblies, Window Types, Thermal Bridges · Planned, Systems · Planned,
 Library, Export. D4 confirms Equipment, ERV ducting and Hot-water piping as peer subtabs under
 Systems, with one work surface at a time. Do not add separate primary Ducting or Piping tabs.
 
@@ -209,10 +209,10 @@ in the polish skill's `patterns.md` once Ed accepts it.
 
 | # | Decision | Answer |
 | --- | --- | --- |
-| U1 | Primary tab row | Overview, Spaces, Assemblies, Window Types, Thermal Bridges · Planned, Systems · Planned, Library, Export. The Zone tree and faces table live under Overview. Systems contains Equipment, ERV ducting and Hot-water piping peer subtabs; no extra primary tab is proposed |
+| U1 | Primary tab row | Zones / Faces, Spaces, Assemblies, Window Types, Thermal Bridges · Planned, Systems · Planned, Library, Export. The Zone tree and faces table live under Zones / Faces. Systems contains Equipment, ERV ducting and Hot-water piping peer subtabs; no extra primary tab is proposed |
 | U2 | Chip words | Chips show the palette's short words, such as Roof. Records hold honeybee's, such as `RoofCeiling` |
 | U3 | U-value in the Assemblies inventory | One column, with films. Both values appear in the Builder header |
-| U1a | Overview renamed | 2026-09-30: the Overview tab becomes **Zones / Faces**, with tab settings behind a gear icon in its action bar. Pending implementation in [Phase 1 UX follow-ups](../features/phase-one-ux-followups/README.md) Z5 |
+| U1a | Overview renamed | 2026-09-30: the Overview tab becomes **Zones / Faces**, with tab settings behind a gear icon in its action bar. Implemented; final native acceptance pending in [Phase 1 UX follow-ups](../features/phase-one-ux-followups/README.md) Z5 |
 | U4 | Screenshots | Kept out of the repository. `screens/` is gitignored and the files stay in Dropbox |
 | U5 | Accent colour | The predecessor's dark teal, until the product has its own identity |
 

@@ -14,7 +14,8 @@ function (ui, RecordForm, fields) {
     }, { title: "Attached zone", action: CREATE, label: "attached_zone_assignment",
       submitLabel: "Create and assign", pendingText: "Assigning…", failureText: "Nothing was assigned.",
       changed: function () { self.dispose(); closed(); } });
-    this.face = JSON.parse(JSON.stringify(face));
+    this.faces = JSON.parse(JSON.stringify(Array.isArray(face) ? face : [face]));
+    var firstValues = this.faces[0].values || {};
     this.trigger = trigger;
     this.picker = fields.labelled(this.form, "Attached zone", ui.element("select"));
     var create = ui.element("option", "", "New attached zone…");
@@ -23,8 +24,8 @@ function (ui, RecordForm, fields) {
       var option = ui.element("option", "", record.values.name);
       option.value = record.id; self.picker.appendChild(option);
     });
-    this.picker.value = records.some(function (record) { return record.id === face.values.attached_zone_id; })
-      ? face.values.attached_zone_id : NEW;
+    this.picker.value = records.some(function (record) { return record.id === firstValues.attached_zone_id; })
+      ? firstValues.attached_zone_id : NEW;
     this.fieldMount = ui.element("div", "phc-form-fields");
     this.fields = fields.build(this.fieldMount, records);
     this.form.appendChild(this.fieldMount);
@@ -43,7 +44,10 @@ function (ui, RecordForm, fields) {
   };
   Assignment.prototype.submit = function () {
     if (this.busy()) return;
-    var params = { faces: [this.face.reference], expected_values: this.face.values };
+    var params = { faces: this.faces.map(function (face) { return face.reference || face; }) };
+    // The standalone one-Face form keeps its exact values. A batch freezes the Model revision;
+    // heterogeneous Face values cannot be represented by the classify action's shared precondition.
+    if (this.faces.length === 1 && this.faces[0].values) params.expected_values = this.faces[0].values;
     if (this.picker.value === NEW) {
       params.values = this.fields.values();
       if (!params.values) { this.error.textContent = "Enter a name and a factor between 0 and 1."; return; }

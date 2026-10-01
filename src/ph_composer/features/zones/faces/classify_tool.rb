@@ -93,6 +93,20 @@ module PhComposer
 
         # Sketchup::Tool. The host calls these; nothing else does.
 
+        def onSetCursor
+          UI.set_cursor(self.class.cursor)
+        end
+
+        # Native cursor images are never released by SketchUp. Cache once across Model sessions.
+        # UI.create_cursor uses PDF on macOS and SVG on Windows; keep the hotspot near the origin
+        # for the SketchUp 2023.1 macOS hotspot defect (ruby.sketchup.com/UI#create_cursor-class_method).
+        def self.cursor
+          return @cursor if @cursor
+
+          format = Sketchup.platform == :platform_win ? "svg" : "pdf"
+          @cursor = UI.create_cursor(File.join(__dir__, "cursors", "classify.#{format}"), 1, 1)
+        end
+
         def activate
           @active = true
           @pressed = false
@@ -181,14 +195,10 @@ module PhComposer
           draw_occurrences(view, @hover ? [@hover] : [], HOVER_COLOUR) unless collecting?
         end
 
-        # SketchUp hands a right-click to the active tool rather than selecting what is under it, so
-        # the context-menu handler in `shell/` cannot fire while this tool runs, and its
-        # selection-based test for "is a Face under the cursor" would answer no in any case. This is
-        # the same menu built by the same code, with the coordinates that route never had.
-        def getMenu(menu, _flags = 0, x_value = nil, y_value = nil, view = nil)
-          return unless view && Zones::Occurrences.occurrence_for_path(Pick.face_path(view, x_value, y_value) || [])
-
-          Commands.install_feature_menus(menu)
+        # The active tool receives right-clicks itself. Build the current selection menu here too;
+        # its Exit entry is available even when no Face is selected or under the pointer.
+        def getMenu(menu, _flags = 0, _x_value = nil, _y_value = nil, _view = nil)
+          Commands.install_feature_menus(menu, :contextual => true)
         end
 
         def getInstructorContentDirectory

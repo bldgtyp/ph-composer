@@ -106,6 +106,18 @@ Undo step. Direct panel or toolbar commits use named one-step Model operations. 
 editing path again immediately before commit, because the user can change context between the
 event and the deferred work.
 
+Zone names read from the native Group name, including export's detached snapshot. The schema-v1
+stored name is a compatibility fallback. Native valid renames cause no mirror transaction. Clearing
+an observed Zone name restores its last valid name in deferred transparent work. The restoration
+must commit rather than abort on failure: aborting a transparent operation can also abort the user's
+source operation. Native clipboard copies are observed when their authored dictionary arrives;
+Ruby `Group#copy` is not assumed to copy instance attributes. Evidence and current-host scope are in
+`planning/features/phase-one-ux-followups/README.md`.
+
+Zones / Faces settings are Model records, reached through registered reads and actions. Automatic
+Suggest on Make defaults on, with roof/floor tilt thresholds of 60/130 degrees. Make and Suggest
+share one proposal, transaction and Undo step. A settings edit has its own named Undo step.
+
 Observer suppression must span commit, abort, Undo and Redo paths. Suppression is not a reason to
 skip explicit recovery. Leaving it set after an exception makes later edits appear randomly dead.
 
@@ -408,7 +420,7 @@ leaves, and `consume(state)` settles the action-result slot for that request onc
 refuses, for views that keep several requests in flight. Record forms are `record_form.js` specs,
 snapshot reads go through `snapshot.js`, and unit descriptors for stored fields are `fields.js`. The
 record table and inventory controls (`table.js`, `table.css`, `view_controls.js`) arrived with the
-Overview screen, ported from the predecessor and trimmed to what it uses; neither names a feature.
+Zones / Faces screen, ported from the predecessor and trimmed to what it uses; neither names a feature.
 Inline cell drafts (the predecessor's `record_edits`) arrive with the first screen that edits
 record cells in place.
 

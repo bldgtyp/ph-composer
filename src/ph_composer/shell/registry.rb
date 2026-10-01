@@ -273,6 +273,14 @@ module PhComposer
         @staging.add(:declared_menu_items, id, name, declaration)
       end
 
+      # Current context-menu entries supplied when it opens, rather than a catalog snapshot captured
+      # at extension install. The provider returns Declarations::MenuEntry values for this session.
+      def menu_entries(name, menu:, available: nil, &entries)
+        declaration = Declarations::MenuItem.new(:name => name, :owner => id, :menu => menu,
+                                                 :available => available, :entries => entries)
+        @staging.add(:declared_menu_items, id, name, declaration)
+      end
+
       def proposal_participant(name, &handler)
         declaration = Declarations::ProposalParticipant.new(:name => name, :owner => id, :handler => handler)
         @staging.add(:declared_proposal_participants, id, name, declaration)

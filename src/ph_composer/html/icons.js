@@ -5,6 +5,8 @@ PhComposerUI.define("icons", ["dom"], function (dom) {
   "use strict";
   var element = dom.element, button = dom.button;
   var ICONS = {
+    settings: '<path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/>' +
+      '<path d="m9 3-1 3-3 1-2 3 2 2-1 3 3 2 3-1 2 2 3-2-1-3 2-2-2-3-3-1-1-3Z"/>',
     add: '<path d="M12 4v16M4 12h16"/>',
     group_add: '<path d="M3 6h7l2 2h9v11H3Z"/><path d="M12 11v6m-3-3h6"/>',
     sort: '<path d="M8 6h12M8 12h8M8 18h4M4 5v14m-2-2 2 2 2-2"/>',

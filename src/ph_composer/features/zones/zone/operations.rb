@@ -100,13 +100,19 @@ module PhComposer
       Schema.validate!(record)
       step = MakeZoneStep.new(:parent_path => parent_path, :entity_ids => entity_ids, :record => record)
       proposal.add_step(step, :scopes => [Operations::EntityScope.new(parent_path)])
+      settings = Faces::Settings.read(request.model)
+      if settings.fetch("suggest_on_make")
+        suggestion = Faces::SuggestMadeZoneStep.new(:zone_id => zone_id, :request => request, :settings => settings)
+        proposal.add_step(suggestion,
+                          :scopes => [Operations::EntityScope.new(parent_path)])
+      end
       { "zone_id" => zone_id }
     end
 
     def update(request, proposal)
       reference = request.params.fetch("reference")
       occurrence = Occurrences.resolve_zone(request.model, reference, :mutable => true)
-      before = ZONE_STORE.read(occurrence.entity)
+      before = occurrence.record
       expected = request.params.fetch("expected_values")
       changed = expected.keys.reject { |key| before[key] == expected[key] }
       unless changed.empty?
@@ -131,6 +137,8 @@ module PhComposer
       )
     end
 
+    # The native menu's read-only availability check. Submission reads the same target through
+    # the public Zone query, which carries the revision required by the Make Zone action.
     def make_target(model)
       selected = model.selection.to_a
       parent_path = Occurrences.active_path(model)
@@ -191,7 +199,7 @@ module PhComposer
 
       "found"
     end
-    private_class_method :zone_view, :make_target, :validate_make_target!, :zone_state, :overview, :duplicate_ids,
+    private_class_method :zone_view, :validate_make_target!, :zone_state, :overview, :duplicate_ids,
                          :project_row
   end
 end

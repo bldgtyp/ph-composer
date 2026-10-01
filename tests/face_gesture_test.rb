@@ -11,6 +11,9 @@ class FaceGestureTest < PhComposerTestCase
   def setup
     super
     @model = Sketchup.active_model
+    # This fixture exercises hand classification; default-on Make/Suggest has its own settings tests.
+    settings = PhComposer::Zones::Faces::Settings
+    settings::STORE.write(@model, settings::DEFAULTS.merge("suggest_on_make" => false))
     @session = PhComposer::Sessions.for(@model)
     @context = API.connect(:session_id => @session.id)
     @sequence = 0

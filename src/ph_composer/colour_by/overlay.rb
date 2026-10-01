@@ -48,12 +48,8 @@ module PhComposer
 
       def draw_outlines(view)
         view.line_width = LINE_WIDTH
-        @service.outlines.each do |colour, points|
-          next if points.empty?
-
-          view.drawing_color = outline_colour(colour)
-          view.draw(GL_LINES, Tessellation.lift(points, view))
-        end
+        # Classified Faces carry fills only. Their native edges remain available to SketchUp's
+        # selection, hover and inference highlights, including Outdoors' similar blue.
         return if @service.unclassified_outlines.empty? && @service.unclassified_hatch.empty?
 
         # A solid boundary remains legible on tiny Faces where no six-inch stripe crosses the mesh.

@@ -93,6 +93,14 @@ fs.mkdirSync(output, { recursive: true });
   await page.setViewportSize({ width: 360, height: 520 });
   assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), "authoring has no page scroll");
   await shot("authoring-narrow");
+  await page.getByRole("button", { name: "Zones / Faces settings", exact: true }).click();
+  const roof = page.getByRole("spinbutton", { name: "Roof maximum tilt [deg]" });
+  await roof.fill("45");
+  await roof.press("Enter");
+  assert.equal(await page.evaluate(() => window.previewHost.zoneSettings.roof_angle_deg), 45);
+  assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), "settings have no page scroll");
+  await shot("zone-settings-narrow");
+  await page.keyboard.press("Escape");
 
   assert.deepEqual(errors, []);
   console.log(`PASS: preview on the real panel: 4 viewports, draft through a unit switch, invalid entry, ` +

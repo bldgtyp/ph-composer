@@ -292,12 +292,11 @@ class ColourByTest < PhComposerTestCase
 
     @model.overlays.to_a.first.draw(@model.active_view)
 
-    wash, fill, outline = @model.active_view.draws
+    wash, fill = @model.active_view.draws
     assert_equal GL_TRIANGLES, wash.first
     assert_equal [255, 255, 255, Palette::ISOLATION_WASH_ALPHA], wash[2].to_a
     assert_equal Palette::FILL_ALPHA, fill[2].alpha
-    assert_equal GL_LINES, outline.first
-    assert_equal [230, 180, 60, Palette::OUTLINE_ALPHA], outline[2].to_a
+    assert_equal 2, @model.active_view.draws.length, "classification paints fills without replacing native edges"
     assert_empty service.unclassified_outlines, "the set-aside Face loses its unclassified styling"
     assert_empty service.unclassified_hatch
     assert_equal Palette::UNCLASSIFIED, service.rows.last.colour, "its legend keeps the original meaning"
@@ -305,7 +304,7 @@ class ColourByTest < PhComposerTestCase
                  @model.active_view.texts.map { |(_point, text, _options)| text }
   end
 
-  def test_isolating_a_real_grey_value_keeps_its_fill_and_outline_distinct_from_the_wash
+  def test_isolating_a_real_grey_value_keeps_its_fill_distinct_from_the_wash_without_painting_edges
     # Level "a" selects the real grey in the categorical ramp: 97 modulo 10 is 7.
     zone_group(720, ["Wall"], :level => "a")
     zone_group(730, ["Wall"], :level => nil)
@@ -317,8 +316,9 @@ class ColourByTest < PhComposerTestCase
     assert_equal [[127, 127, 127]], service.fills.keys
     assert_equal [[127, 127, 127]], service.outlines.keys
     refute_empty service.wash_triangles
-    assert_equal [Palette::ISOLATION_WASH_ALPHA, Palette::FILL_ALPHA, Palette::OUTLINE_ALPHA],
+    assert_equal [Palette::ISOLATION_WASH_ALPHA, Palette::FILL_ALPHA],
                  @model.active_view.draws.map { |_mode, _points, colour, _width| colour.alpha }
+    assert @model.active_view.draws.all? { |mode, _points, _colour, _width| mode == GL_TRIANGLES }
   end
 
   def test_hidden_geometry_and_a_hidden_tag_are_not_painted
@@ -520,9 +520,11 @@ class ColourByTest < PhComposerTestCase
     )
 
     assert_equal %w[completed committed], made.values_at("status", "effect")
-    assert_equal 2, service.rows.last.count
+    assert_equal 2, service.rows.sum(&:count)
+    assert_equal 1, service.rows.find { |row| row.state == :unclassified }.count
+    assert_equal 1, service.rows.find { |row| row.state == :classified }.count
     assert_equal 2, service.rebuilds, "the in-commit callback and action publication coalesce"
-    refute_empty service.unclassified_hatch
+    refute_empty service.fills, "automatic Suggest projects the newly authored Face immediately"
     assert_equal 1, @model.overlays.to_a.length
   end
 

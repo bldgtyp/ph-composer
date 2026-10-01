@@ -3,6 +3,9 @@
 .phc-overview { padding: 18px 24px 24px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
 .phc-zone-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .phc-zone-heading h2 { margin: 0; font-size: 17px; }
+.phc-zone-actions { display: flex; align-items: center; gap: 8px; }
+.phc-zone-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0; }
+.phc-zone-setting input[type="number"] { width: 72px; }
 .phc-table-mount { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 6px; }
 .phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
   color: var(--warning-ink); background: var(--warning-surface); }

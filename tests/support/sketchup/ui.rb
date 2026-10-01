@@ -149,9 +149,27 @@ module UI
   class << self
     attr_reader :opened_urls, :messages, :last_savepanel, :last_openpanel, :context_menu_handlers
     attr_writer :open_url_result, :messagebox_result
+    attr_writer :inputbox_result
+    attr_reader :inputboxes
+    attr_reader :created_cursors, :last_cursor
+
+    def create_cursor(path, hot_x, hot_y)
+      @created_cursors << [path, hot_x, hot_y]
+      @created_cursors.length
+    end
+
+    def set_cursor(id)
+      @last_cursor = id
+      true
+    end
 
     def menu(name)
       (@menus ||= {})[name] ||= Menu.new(name)
+    end
+
+    def inputbox(prompts, defaults, title)
+      (@inputboxes ||= []) << [prompts, defaults, title]
+      @inputbox_result
     end
 
     def openURL(url)
@@ -245,6 +263,10 @@ module UI
     attr_writer :selected_open_path
 
     def reset
+      @inputbox_result = nil
+      @inputboxes = []
+      @created_cursors = []
+      @last_cursor = nil
       @menus = {}
       @opened_urls = []
       @open_url_result = true
@@ -266,4 +288,3 @@ end
 
 Sketchup.reset
 UI.reset
-

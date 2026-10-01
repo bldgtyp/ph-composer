@@ -66,7 +66,7 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
         if (child !== self) child.close(false);
       });
     }
-    if (!this.options.parent && activeBubble && activeBubble !== this) activeBubble.close(false);
+    if (!this.options.parent && activeBubble && activeBubble !== this && activeBubble.close(false) === false) return;
     if (!this.options.parent) activeBubble = this;
     this.panel.hidden = false;
     this.trigger.setAttribute("aria-expanded", "true");
@@ -155,11 +155,17 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     return { left: left, top: Math.max(margin, Math.min(top, window.innerHeight - size.height - margin)) };
   }
   Bubble.prototype.close = function (focus) {
+    var reason = this.options.guard && this.options.guard();
+    if (reason) {
+      if (this.options.refused) this.options.refused(reason);
+      return false;
+    }
     this.cancelHover();
     this.children.forEach(function (child) { child.close(false); });
     this.panel.hidden = true; this.trigger.setAttribute("aria-expanded", "false");
     if (activeBubble === this) activeBubble = null;
     if (focus) this.trigger.focus({ preventScroll: true });
+    return true;
   };
   Bubble.prototype.deepest = function () {
     var child = this.children.filter(function (item) { return !item.panel.hidden; })[0];
