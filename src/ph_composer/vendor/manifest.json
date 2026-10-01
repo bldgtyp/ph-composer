@@ -311,9 +311,9 @@
       "sha256": "e8c76fc9341b6dea14d469014773b6faf92817494509bfc32f735834f5372dcf"
     },
     "html/window_canvas.js": {
-      "bytes": 17971,
+      "bytes": 17947,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "b741248ca0a92fcb0f47ac828758cd9cc1344bd7e6e82473bed3a2046cfd8d6e"
+      "sha256": "133882a56dd387bc6a5b7309cf086fd0c8ded7f77ce81778c4fb0b4297fc0775"
     },
     "html/window_cards.js": {
       "bytes": 27784,

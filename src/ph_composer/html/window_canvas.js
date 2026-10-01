@@ -131,7 +131,7 @@ PhComposerUI.define("window_canvas", ["workspace"], function (ui) {
       type = box.type, scale = box.scale;
     // The unit perimeter is the heaviest line, above every element.
     this.root.appendChild(svg("rect", { x: margin, y: top, width: w, height: h, "class": "window-unit-outline" }));
-    // Dimension lines, as in PH-Navigator web: a light rule per axis with a dot at every row and column boundary.
+    // Dimension lines: a light rule per axis with a dot at every row and column boundary.
     // Graphic only.
     var ruleX = margin - 14 * type, ruleY = top + h + 14 * type, rules = svg("g", {
       "class": "window-dimension-lines" });
