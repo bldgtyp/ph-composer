@@ -28,7 +28,7 @@ module PhComposer
                                            :engine => @request.engine, :revision => @request.revision,
                                            :registry => @request.registry)
           suggestion = Operations::Proposal.new
-          Faces.auto_classify(request, suggestion)
+          Faces.auto_classify(request, suggestion, :skip_unwritable => true)
           suggestion.apply(model, request.engine)
           @affected = suggestion.affected
         end

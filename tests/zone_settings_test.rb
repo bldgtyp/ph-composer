@@ -89,6 +89,21 @@ class ZoneSettingsTest < PhComposerTestCase
     assert PhComposer::Zones::Faces::FACE_STORE.read(current.entities.to_a.first)
   end
 
+  def test_make_suggests_around_shared_child_groups_and_leaves_their_faces_unclassified
+    shared = Sketchup::Entities.new([Sketchup::Face.new(901)])
+    own = Sketchup::Face.new(905)
+    group = Sketchup::Group.new(900, Sketchup::Entities.new([own, Sketchup::Group.new(910, shared),
+                                                             Sketchup::Group.new(920, shared)]))
+    @model.entities << group
+
+    result = make(group)
+
+    assert_equal "committed", result.fetch("effect")
+    assert PhComposer::Zones::ZONE_STORE.read(group)
+    assert PhComposer::Zones::Faces::FACE_STORE.read(own)
+    assert_nil PhComposer::Zones::Faces::FACE_STORE.read(shared.to_a.first)
+  end
+
   def test_make_with_suggestions_disabled_leaves_faces_for_hand_entry
     update(SETTINGS::DEFAULTS.merge("suggest_on_make" => false))
     group = make_fixture

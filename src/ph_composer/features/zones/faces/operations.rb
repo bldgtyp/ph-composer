@@ -7,6 +7,9 @@ module PhComposer
       # owns the native operation.
       module_function
 
+      # Refusals that leave a Face unwritable where it sits; the user's remedy is on the Group.
+      UNWRITABLE_CODES = %w[target.shared_definition target.locked].freeze
+
       # What the palette shows: what the tool is set to, and what it may be set to. The words each
       # value is shown by belong to whichever surface shows it; the stored honeybee string is the
       # contract (context/UBIQUITOUS_LANGUAGE.md).
@@ -115,7 +118,9 @@ module PhComposer
                                .map { |update| update.fetch("after").fetch("id") } }
       end
 
-      def auto_classify(request, proposal)
+      # `skip_unwritable` is Make Zone's suggestion: a Face in a shared or locked child Group stays
+      # unclassified, visible in validation, rather than refusing the Zone it is being made in.
+      def auto_classify(request, proposal, skip_unwritable: false)
         # One walk for the whole batch, so the Zone it resolves is the Zone the index walked and the
         # Faces come back from that same walk.
         index = Zones::Index.new(request.model)
@@ -128,9 +133,14 @@ module PhComposer
                                        .reject { |occurrence| FACE_STORE.read(occurrence.entity) }
         # Each target resolves for mutation now, so a Face in a shared or locked Group refuses here,
         # with its instruction, rather than failing when the step applies.
-        unrecorded.each do |occurrence|
+        unrecorded = unrecorded.select do |occurrence|
           Zones::Occurrences.resolve_face(request.model, occurrence.reference,
                                           :mutable => true, :allow_unassigned => true, :index => index)
+          true
+        rescue CodedError => error
+          raise unless skip_unwritable && UNWRITABLE_CODES.include?(error.code)
+
+          false
         end
         updates = unrecorded.map do |occurrence|
           suggested = Geometry.suggested_values(occurrence, :settings => Settings.read(request.model))
