@@ -55,12 +55,31 @@ Window record proof covers seven public commits, seven exact native Undo/Redo st
 reopen. See the owning evidence for limits and provenance; complete case attestations remain open.
 
 P2-09 export backend, explicit panel form and local outside-provider example are implemented and
-under coherent review. Twelve starter public-source records pass reader and packaging checks.
+independently reviewed, with native export acceptance still open. Twelve starter public-source records pass reader and packaging checks.
 The example passes its shared provider contract and public copy/read-back on both Rubies.
-P2-11 Window editors pass focused checks and four browser widths; native installation remains open.
+P2-11 Window editors are independently reviewed and pass focused checks and four browser widths.
+Checkpoint `7afe894` is installed byte-for-byte in a fresh SketchUp 26.1.188 process; native
+Builder acceptance is in progress. P2-12 Slice B is implemented and independently reviewed;
+its affected native Zone replay remains open.
 P2-12 Slice A has measured evidence except native Move Copy; Slice C waits on that specific
 host observation. API copies do not satisfy it. Manual items remain reserved for Ed's final
 batch while independent authorized work continues.
+
+## Installed verification checkpoint
+
+`make ci` passes on Ruby 2.7.2 and 3.2.2 for shipping source `d812540`: 972 Ruby tests /
+6373 assertions, 329 JavaScript tests and 135 Python tests, plus hostkit checks. Subsequent
+example-provider wire corrections pass four tests / 36 assertions on both Rubies. The tests-only
+`7afe894` checkpoint adds eight meaningful Window behavior cases; focused Window checks and lint
+pass. Coverage is Ruby 96.5%, JavaScript 94.8% and Python 94.98%. All seven browser scripts and
+Chromium 88 runtime checks pass. This is not a new full-suite invocation on `7afe894`.
+
+Installed package `_private/host/envelope/checkpoint-7afe894.rbz` contains 290 files and
+22,602,164 installed bytes, above the 22 MB target and below the 24 MB ceiling. Its SHA-256 is
+`04a51985ebc0ff4068572289a5b7f05daa288ae3d50992ffc10b23fefd83c9d4`.
+The install proof verifies every archive entry and absence of extras. Fresh native E09/E11
+baselines precede actions in `p209-p211-native.skp`. Window Type creation and rename each have
+one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain in progress.
 
 ## Blockers
 
@@ -79,10 +98,10 @@ batch while independent authorized work continues.
 | [P2-06 Construction export](phases/p2-06-construction-export.md) | 2.1, 1.3 | Implemented and reviewed; dual-Ruby CI/runtime and real-SKP export pass; final native gate open | [Construction evidence](evidence/p2-06-construction-export.md) |
 | [P2-07 Library seam and file provider](phases/p2-07-library-seam-and-file-provider.md) | 2.2 | Implemented and reviewed; integrated gates and native library proof pass; final attestation open | [Library evidence](evidence/p2-07-library-seam.md) |
 | [P2-08 Library sidebar and setup](phases/p2-08-library-sidebar-and-setup.md) | 2.2 | Implemented and reviewed; integrated gates and native UI workflows pass; final attestation open | [Sidebar evidence](evidence/p2-08-library-sidebar.md) |
-| [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented source and focused checks; review/native gates open; outside repository approval reserved for final batch | [Export evidence](evidence/p2-09-library-export.md) |
+| [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented and reviewed; full shipping gates pass; native export and outside repository approval open | [Export evidence](evidence/p2-09-library-export.md) |
 | [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented and reviewed; integrated gates and native records Undo/Redo/reopen pass; final attestation open | [Window records evidence](evidence/p2-10-window-records.md) |
-| [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented source; focused/browser checks pass; review/native gates open | [Builder evidence](evidence/p2-11-window-type-builder.md) |
-| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A partial; Slice B focused checks pass with review/native replay open; Slice C blocked on native Move Copy | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
+| [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow in progress | [Builder evidence](evidence/p2-11-window-type-builder.md) |
+| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A partial; Slice B implemented and reviewed; integrated gates pass, native replay open; Slice C blocked on native Move Copy | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Scoped | |
 | [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
 | [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Scoped | |

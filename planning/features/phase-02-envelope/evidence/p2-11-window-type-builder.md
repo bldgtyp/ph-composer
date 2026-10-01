@@ -1,7 +1,7 @@
 # P2-11 evidence: Window Type Builder
 
 DATE: 2026-10-01
-STATUS: Source implemented; focused and browser checks pass. Independent review and native gates open.
+STATUS: Source implemented; focused and browser checks pass. Independent review closed; native acceptance in progress.
 
 The panel now has Window Types and U-Values peer tabs, the type list and dimensioned element
 drawing, guarded grid commands, element product cards and an Installs session with local staging.
@@ -26,5 +26,15 @@ changing types; it now guards navigation and dismissal until Apply or Cancel. Fo
 and independent direct probes pass. The immediate-response export form also retains refusal text
 and an enabled Cancel. The combined Window/export browser script passes all four widths.
 
-Final manifests, full gates, installation and the
-fresh-process native workflow in the owning phase are pending. No E11 acceptance is awarded.
+Both Ruby full shipping gates pass on `d812540`; all seven browser scripts and Chromium 88
+pass. Tests-only checkpoint `7afe894` closes JavaScript coverage at 94.8%, with 33 focused
+Window/CSS cases and clean scoped ESLint. Ruby coverage is 96.5%; Python is 94.98%.
+
+Installed `7afe894` is byte-exact, fresh SketchUp 26.1.188 / Ruby 3.2.2, PID 3593, bridge
+55228, session `83a48fca-0d70-4fca-b0fc-0225c9112e5d`. Fixture `p209-p211-native.skp`
+started unmodified at root edit path, with one Window Type and one of each Window product.
+The E11 ledger baseline was captured before gestures. Native creation and inline rename each
+restore the complete public Window Type inventory through one Undo and one Redo. Private
+`e11-create-rename-proof.json` records four exact comparisons, all true. An explicit-unit band
+edit `1200 mm` visibly commits as 1.2 m. Remaining Builder gestures and their Undo checks are
+still in progress. No E11 acceptance is awarded.

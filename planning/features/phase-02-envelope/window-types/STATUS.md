@@ -1,6 +1,6 @@
 # Window Types and placement: status
 
-DATE: 2026-09-30
+DATE: 2026-10-01
 STATUS: Implementation in progress
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
@@ -15,18 +15,19 @@ seven public commits with exact native Undo/Redo and fresh-process inventory per
 Final structured E10 attestation remains open.
 
 P2-11 screens are implemented in source. Focused checks and browser workflows at four widths pass;
-independent review and native Builder acceptance remain open. See
+independent review is closed and native Builder acceptance is in progress on installed `7afe894`. See
 [Builder evidence](../evidence/p2-11-window-type-builder.md).
 
 P2-12 Slice A is in progress in a fresh SketchUp 2026 process with a synthetic Model. The
 [host investigation](../evidence/p2-12-window-host.md) records completed probes and the remaining
-native Move-copy gesture. Independent Slice B cutting-component rules are in implementation;
+native Move-copy gesture. Independent Slice B cutting-component rules are implemented and reviewed; affected native replay is open;
 Slice C has not started. Placement, schedules, Colour-by, translation and library adapters are not delivered.
 
 ## Next step
 
-Gate the integrated P2-07/P2-08/P2-10 checkpoint, install that exact source and exercise the
-panel-closed window-record walkthrough, native Undo and save/reopen. Complete Slice A before
+Continue the fresh-process native P2-11 Builder workflow, then E09 export and the Slice B
+affected native replay. Creation and rename each restore exact inventories through one native
+Undo/Redo. Complete Slice A before
 implementing Slice C. Proceed through the owning [PLAN.md](PLAN.md) and stage entry gates.
 
 ## Blockers and remaining acceptance
