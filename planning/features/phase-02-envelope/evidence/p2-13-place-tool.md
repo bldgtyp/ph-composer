@@ -205,3 +205,25 @@ No source defect is established by the resumed tool.
 Ordinary active-tool Model switching with no writes is observed. This check did not exercise a
 mouse-down held across the Model switch, and is not evidence for that distinct gesture case.
 Colour-by/hidden-tag rendering and the overhang refusal reason remain outstanding E13 evidence.
+
+## Restart step 5 and hidden-tag verification
+
+Ed confirms Window Type Colour-by renders and turns on/off properly. Live readback preserves
+every Unit row and authoring revision; Colour-by was on when captured (Ed had returned to
+the mode). Private `p213-restart-step-5.json` records the result.
+
+The agent then assigned the nested Wall's root ancestor to a temporary fixture tag through
+a native SDK operation. With all tags shown, the actual Colour-by draw cache contains 24
+triangle points and 32 outline points for four Units. Hiding the ancestor tag, through native
+SDK visibility and the real observer path without manually invalidating the service, reduces
+the cache to 6 / 8, retaining only the Roof Unit. The legend correctly keeps occurrence counts.
+A CUA native viewport screenshot shows the Wall and its Window overlays absent, with no
+ghost overlay. Showing the tag restores 24 / 32; a second native screenshot shows the Wall
+and visible green pane fill restored. Private `p213-restart-tag-visible.json`, `tag-hidden.json`
+and `tag-restored.json` retain exact cache readback (the latter two share the same prefix).
+
+The temporary parent tag assignment was restored and the temporary tag removed. Colour-by
+is off. The Wall is framed for overhang acceptance; Place freshly started at sill center with
+no measurement overrides. The four-Unit baseline is saved. `p213-restart-overhang-ready.json`
+records this state. The only remaining ordinary E13 attestation is the visible overhang refusal
+reason. E13 remains open; no source changed or offline gate was repeated.
