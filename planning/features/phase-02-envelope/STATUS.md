@@ -302,3 +302,16 @@ a dirty Zone draft. Records stayed unchanged throughout the reproduced defect. F
 independent review, both full CI gates, JS coverage and all browser checks pass. Fresh normal
 package replay is the next action; then finish retained-proof reconciliation and the held-Classify
 human batch. See the P2-17 dirty-Zone correction section.
+
+
+## Prepared remaining gesture
+
+Normal shipping checkpoint `f4f6576`, signed consolidation `80815f0`; PID 45208 has the restored,
+saved integration Model and active isolated `held-classify-ready.skp`. Prepared session
+`49781f8a-a2ae-478b-a4f9-f0de2a00e55e`, root edit path, unmodified; Classify Floor is active.
+Fixture SHA-256: `147a5638a3203381829bc35700530d5012b14fae3ad77ae330a5134ded7f7d9a`.
+The native view shows a large tan classified Wall on the right. Model-switch tracing is armed;
+no edit-path timer is armed yet. Before-action ledger snapshot is `p217-held-a09-baseline.json`,
+authored fingerprint is `p217-held-authoring-before.json`, preparation is `p217-held-prepared.json`
+in the private corpus. Preserve this state until Ed's held Cmd-N/release gesture is read back.
+Existing historical trace/results were copied with the `pre-p217-` prefix before instrumentation.
