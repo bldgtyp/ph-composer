@@ -336,9 +336,9 @@
       "sha256": "deaae8b808bf827dfc8911cbcea2d41458efa573b3d541d35cd076fbb6c0f00a"
     },
     "python/ph_composer_translation/model_sections.py": {
-      "bytes": 16292,
+      "bytes": 16293,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "357a8aed278ba98212c4c325ce1cc33bed75d00434c8b674c064ea9e33837ef6"
+      "sha256": "1f6e7e6287affc01bb85c13475e648260c56bf7117934e3b6694f41bc29f1ca9"
     },
     "python/ph_composer_translation/result.py": {
       "bytes": 3162,
@@ -353,7 +353,7 @@
     "python/ph_composer_translation/stack.py": {
       "bytes": 1361,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "34619134c806237f412f61ffe35a8034078773dd6302cc83cef771cd0cbfe829"
+      "sha256": "1b73dab83dd4ee7d5b381d71d70e2a30a753b691f248b035903596f59ca6a740"
     },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,

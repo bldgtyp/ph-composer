@@ -274,7 +274,7 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
                 "faces": len(emitted_faces),
                 "surface_pairs": len(paired) // 2,
                 "omitted": omitted,
-            }
+            },
         }
 
 

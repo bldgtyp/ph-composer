@@ -14,9 +14,9 @@ import importlib
 from types import ModuleType
 
 #: The top-level packages this seam serves. Anything else is imported where it is used.
-PACKAGES = frozenset({
-    "honeybee", "honeybee_energy", "honeybee_ph", "honeybee_energy_ph", "ladybug", "ladybug_geometry", "PHX"
-})
+PACKAGES = frozenset(
+    {"honeybee", "honeybee_energy", "honeybee_ph", "honeybee_energy_ph", "ladybug", "ladybug_geometry", "PHX"}
+)
 
 
 class StackUnavailable(Exception):

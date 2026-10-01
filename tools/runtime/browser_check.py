@@ -239,10 +239,12 @@ new Promise(function (resolve, reject) {
         client.evaluate(f"window.__phc.runtime.runPythonAsync({diagnostic})")
         raise RuntimeError(f"shipped export runtime failed: {response['error']}")
     result = response["result"]
-    source = "\n".join([
-        "from ph_composer_translation.entry import export_json",
-        f"export_json({json.dumps(json.dumps(document))})",
-    ])
+    source = "\n".join(
+        [
+            "from ph_composer_translation.entry import export_json",
+            f"export_json({json.dumps(json.dumps(document))})",
+        ]
+    )
     assert result["summary"]["publishable"] is True, result
     canonical = result["canonical_model"]
     assert {key: canonical[key] for key in ("rooms", "faces", "surface_pairs", "omitted")} == {

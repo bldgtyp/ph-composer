@@ -285,8 +285,6 @@ def test_omitted_face_invalid_classification_still_blocks(monkeypatch: pytest.Mo
     assert any("independently" in finding["message"] for finding in result["findings"])
 
 
-
-
 def test_real_hbjson_reloads_with_omitted_surface_pair_and_positive_omission_count() -> None:
     from ph_composer_translation.conformance import check
 
@@ -294,9 +292,7 @@ def test_real_hbjson_reloads_with_omitted_surface_pair_and_positive_omission_cou
     faces = document["sections"]["ph_composer.zones.faces.export.faces"]["records"]
     surface = next(face for face in faces if face["boundary_condition"] == "Surface")
     omit(surface)
-    result = cast(
-        dict[str, Any], translate(document, SECTIONS).to_document()
-    )
+    result = cast(dict[str, Any], translate(document, SECTIONS).to_document())
 
     assert result["summary"]["publishable"] is True
     canonical = result["canonical_model"]
