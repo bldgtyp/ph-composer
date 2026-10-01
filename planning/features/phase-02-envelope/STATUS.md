@@ -95,16 +95,11 @@ Inside-definition Reset, actual foreign-Model paste with unknown-Type Swap recov
 used-Type deletion with explicit Unit removal all pass native Undo/Redo. Five Units are saved
 without findings. Ed's actual Line-tool split preserves both Wall classifications, total gross
 area, Unit records, geometry and glue; Re-host passes exact native Undo/Redo. E12 is
-current-host verified. P2-13 is implemented, reviewed, full-gated and installed. Schedule
-Locate/start, native measurement parsing, human hover/repeated Wall placement and exact 900 mm
-sill placement, exact 24-inch anchor offset, Escape and Roof placement pass. Colour-by on/off
-and hidden-parent-tag viewport/cache checks pass. Ordinary active-tool Model switching preserves Units
-and revision; the originating session retains Place on return as allowed by the tool contract.
-Native Surface / No Zone refusals leave exact Unit
-rows and revision unchanged; the overhang refusal reason is the remaining ordinary E13 attestation.
-Autonomous canvas gestures remain blocked by the
-computer-use controller. P2-14 awaits E13. The prepared manual batch and exact source/package
-provenance are in [P2-13 evidence](evidence/p2-13-place-tool.md). See
+current-host verified. P2-13 is implemented, independently reviewed, full-gated and installed.
+E13 current-host acceptance passes: native placement and measurements, visible refusals with
+exact no-write readback, Escape, ordinary Model switching, nested Schedule Locate, and Window
+Colour-by with hidden ancestor tags. P2-14 Aperture export is now in progress. See
+[P2-13 evidence](evidence/p2-13-place-tool.md),
 [Unit source evidence](evidence/p2-12-unit-geometry.md) and
 [native Unit evidence](evidence/p2-12-window-unit.md).
 
@@ -163,8 +158,6 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 
 ## Blockers
 
-- P2-13 canvas acceptance is blocked by the computer-use controller. The saved synthetic fixture
-  and manual batch are in [E13 evidence](evidence/p2-13-place-tool.md); P2-14 requires this gate.
 - Held-Classify remains unverified. Its older private fixture must be rearmed against the current
   installed source before the later consolidated acceptance; do not treat its old process as live.
 - No repository decision remains: Ed approved the exact outside example, and it is published.
@@ -185,8 +178,8 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 | [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented and reviewed; integrated gates and native records Undo/Redo/reopen pass; final attestation open | [Window records evidence](evidence/p2-10-window-records.md) |
 | [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow observed; final attestation open | [Builder evidence](evidence/p2-11-window-type-builder.md) |
 | [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A/B verified; Slice C implemented/reviewed/installed; native actions, roundtrips and human Line split pass; E12 current-host verified | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
-| [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Implemented, reviewed, offline verified; E13 open | [Evidence and manual batch](evidence/p2-13-place-tool.md) |
-| [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
+| [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Implemented, reviewed; E13 current-host passes | [Evidence and manual batch](evidence/p2-13-place-tool.md) |
+| [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Implementation in progress; E13 entry gate passes | |
 | [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Implemented, native E15 passes | 2026-10-01 |
 | [P2-16 Connection provider and sign-in](../phase-05-post-mvp/phases/p2-16-connection-provider.md) | 2.5 | Deferred to Phase 5 by D2-8 | 2026-10-01 |
 | [P2-17 Acceptance and handoff](phases/p2-17-acceptance-and-handoff.md) | all | Scoped | |
@@ -253,6 +246,6 @@ and consolidated E01 to E14 / E17 acceptance remain. Next autonomous work: remai
 
 Actual Option Move-copy, exact Copy Undo/Redo and example repository publication are complete.
 The retained historical checkpoints above describe their original frontier; current work is
-E13 native gestures on the fresh `p213-restart.skp` fixture requested by Ed; the first attempt
-is saved separately. Then P2-14, held-Classify and consolidated
-acceptance. E12 passes on the current host; Phase 2 remains open.
+P2-14 Aperture export, then held-Classify and consolidated acceptance. E12 and E13 pass on the
+current host; Phase 2 remains open. The first placement attempt and fresh restart are saved
+separately under `_private/host/envelope/`.

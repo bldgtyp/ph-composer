@@ -1,7 +1,7 @@
 # P2-13: Place tool, Schedule and the Window Type Colour-by mode
 
 DATE: 2026-09-30
-STATUS: Implemented, reviewed, full offline gates passed and installed. E13 native gestures remain open.
+STATUS: Implemented, reviewed, full offline gates passed and installed. E13 current-host acceptance passes.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -100,3 +100,10 @@ Measurements field before keyword input to avoid SketchUp global letter shortcut
 the opening bottom above the host's minimum up extent; `offset=` is the chosen anchor's inward
 perpendicular distance from the nearest outer host edge. Exact placed offsets remain a host gate.
 E13 is open and P2-14 has not advanced past this required dependency.
+
+## Final host acceptance
+
+E13 passes after Ed's actual native gestures and exact bridge readback, including the final
+overhang refusal with unchanged authoring state. See the final section of
+[P2-13 evidence](../evidence/p2-13-place-tool.md). Earlier checkpoint notes describe the
+frontier at that date. P2-14 is now authorized to enter.

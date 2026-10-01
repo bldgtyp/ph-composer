@@ -1,7 +1,7 @@
 # P2-14: aperture export
 
 DATE: 2026-09-30
-STATUS: Scoped. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: Implementation in progress. Authorized 2026-10-01; E13 current-host entry gate passes.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 

@@ -1,7 +1,8 @@
 # P2-13: Place tool, Schedule and Window Type Colour-by
 
 Date: 2026-10-01. Implemented, independently reviewed, full offline gates passed and installed.
-E13 remains open for native gestures. P2-14 has not started because E13 is its entry gate.
+E13 passes on the current SketchUp 2026 host. P2-14 implementation is now the next authorized stage.
+The dated checkpoints below retain the earlier native frontier; the final acceptance is at the end.
 
 ## Source and installed provenance
 
@@ -227,3 +228,19 @@ is off. The Wall is framed for overhang acceptance; Place freshly started at sil
 no measurement overrides. The four-Unit baseline is saved. `p213-restart-overhang-ready.json`
 records this state. The only remaining ordinary E13 attestation is the visible overhang refusal
 reason. E13 remains open; no source changed or offline gate was repeated.
+
+## E13 final current-host acceptance
+
+Ed's final native screenshot shows the overhang refusal: “The Window outline leaves its host
+Face or crosses a hole. Nothing was written.” Live readback exactly matches the prepared
+four-Unit baseline and its authoring revision; the explicit save succeeds. Private
+`p213-restart-overhang-pass.json` captures the comparison.
+
+E13 passes on SketchUp 2026 against the normal installed P2-13 package: native hover and
+repeated Wall placement, exact sill height and edge inset, Roof placement after clearing
+overrides, visible Surface / No Zone / overhang reasons with no writes, Escape, ordinary
+active-tool Model switching, Schedule contents and nested Locate, and Colour-by on/off with
+hidden ancestor tags. The independent review and offline gates above cover unchanged source.
+Held-mouse Model-switch gestures were not part of this walkthrough; the existing focused
+callback tests and later held-Classify acceptance remain distinct evidence. SketchUp 2023,
+Windows and public release claims remain pending. P2-14 can now proceed.
