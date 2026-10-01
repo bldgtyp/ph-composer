@@ -1,7 +1,7 @@
 # Native acceptance handoff: Phase 1 recheck for PR #11
 
 DATE: 2026-09-30
-STATUS: Ready for Codex. Not yet run.
+STATUS: Complete 2026-09-30. All ten pass (R05 on Ed's acceptance of its pending-state assertion). [Evidence](evidence/phase-1-recheck-pr11-2026-09-30.md)
 OWNER: [acceptance register](../archive/phase-01-faces-and-zones/ACCEPTANCE.md); ledger cases in
 [cases.json](cases.json); procedure base [PHASE-1-RECHECK-HANDOFF.md](PHASE-1-RECHECK-HANDOFF.md)
 ISSUE: none (local tooling work)
