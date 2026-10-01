@@ -13,8 +13,8 @@ module PhComposer
   module Outcome
     NOTHING_WRITTEN = "Nothing was written."
     ROLLED_BACK = "The change could not be completed. No changes were retained."
-    # The abort ran, but the
-    # unchanged-data check failed or could not run, so the message cannot confirm that nothing changed.
+    # The abort ran, but the unchanged-data check failed or could not run, so the message cannot
+    # confirm that nothing changed.
     UNVERIFIED = "The change could not be completed, and PH-Composer could not confirm that the Model " \
                  "is unchanged. Check the Model before continuing."
 

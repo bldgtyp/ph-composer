@@ -368,19 +368,20 @@ reads the page sources and fails when the page sends or handles a type the table
 
 Features add no transport types. A feature's panel request is `action.invoke` naming a registered
 action, a viewport-state request is `view.invoke` naming a registered view command, and its
-panel data is a registered snapshot section ([CONTRACTS.md](../planning/archive/phase-01-faces-and-zones/CONTRACTS.md) C1, C2).
+panel data is a registered snapshot section ([CONTRACTS.md](CONTRACTS.md), "Registration" and "Public interface").
 
 ## Panel
 
-The panel is one client of `PhComposer::API`, not the owner of any Model behavior ([CONTRACTS.md](../planning/archive/phase-01-faces-and-zones/CONTRACTS.md) C2).
+The panel is one client of `PhComposer::API`, not the owner of any Model behavior ([CONTRACTS.md](CONTRACTS.md), "Public interface").
 `shell/panel.rb` owns the dialog and nothing else a feature reaches:
 
 - It shows the active Model. For each session it shows it connects once with its own caller
-  handle and gives the panel's mutations their own sequence numbers (C4). The page's request ids
-  only correlate a result with the view that asked.
+  handle and gives the panel's mutations their own sequence numbers (CONTRACTS.md, "Retries"). The
+  page's request ids only correlate a result with the view that asked.
 - `action.invoke` carries the session the page showed and the revision it last rendered. An action
   for a session the panel no longer shows is refused as `session.inactive` with nothing written.
-  The result is published after the authoritative snapshot (C3).
+  The result is published after the authoritative snapshot (CONTRACTS.md, "Revisions, transactions
+  and host execution").
 - The page loads from the shipped file with `set_file`. The message callback is bound to its
   dialog, so a closed page's late message is ignored. The panel refreshes the shown Model's
   snapshot after committed changes, Undo, Redo, an edit-path change and activation, through the

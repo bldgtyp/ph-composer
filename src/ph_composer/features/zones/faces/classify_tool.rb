@@ -5,8 +5,8 @@ module PhComposer
     module Faces
       # The Classify tool: the viewport half of the Classify gesture. The operation is
       # `ph_composer.zones.faces.classify`, and this tool calls it through the public interface like
-      # any other client (context/CONTRACTS.md, "Public interface"), with its own caller handle and
-      # its own sequence numbers.
+      # any other client, with its own caller handle and its own sequence numbers (context/CONTRACTS.md,
+      # "Retries").
       #
       # What the tool owns is the gesture, not the change: which Faces the pointer collected, the
       # palette intent frozen when the button went down, and the refusals that belong to the pointer
