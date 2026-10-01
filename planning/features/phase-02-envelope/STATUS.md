@@ -249,5 +249,6 @@ and consolidated E01 to E14 / E17 acceptance remain. Next autonomous work: remai
 
 Actual Option Move-copy, exact Copy Undo/Redo and example repository publication are complete.
 The retained historical checkpoints above describe their original frontier; current work is
-E13 native gestures on the prepared P2-13 fixture, then P2-14, held-Classify and consolidated
+E13 native gestures on the fresh `p213-restart.skp` fixture requested by Ed; the first attempt
+is saved separately. Then P2-14, held-Classify and consolidated
 acceptance. E12 passes on the current host; Phase 2 remains open.

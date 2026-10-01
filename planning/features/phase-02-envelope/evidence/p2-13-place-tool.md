@@ -123,3 +123,28 @@ alone do not establish a committed measurement or placed position. The live read
 no Roof Unit, so retained roof-placement evidence is also pending. This is an acceptance
 evidence gap, not a confirmed product defect. Preserve the live model while Ed finishes the
 batch. Steps 3 to 5 remain pending; do not close E13 or advance P2-14 yet.
+
+## Fresh-model restart, 2026-10-01
+
+At Ed's request the first attempt is preserved by an explicit successful save of
+`_private/host/envelope/p213-native.skp`. Its earlier observations remain historical evidence.
+A new active Model, `_private/host/envelope/p213-restart.skp`, is now the continuation authority.
+It was created from a fresh template and populated through the same public authoring API and
+synthetic SDK fixture operations, without changing installed product source. The two seeded
+repair examples are the only Units. Wall is nested beneath a root Group; unlike the earlier
+fixture, this Wall starts at world X = 0. Scenes remain Wall, Roof, Surface and No Zone.
+
+Normal package source remains `1fdebc8`. Place is active for **Place Tool acceptance**, default
+**sill center**, with no measurement overrides. The saved baseline is unmodified. Native
+Window-menu activation and a CUA screenshot verify that the new Wall scene is in front.
+Private helper/journals now use `P213RestartProbe` and the `p213-restart-*` prefix; do not reuse
+`P213Probe`'s API context for this Model. `p213-restart-ready.json` records two Units and the
+active tool state.
+
+Restart the five-step batch above against **p213-restart.skp**. First place three spaced Wall
+windows in the clear left/middle region. Then click Measurements, enter the complete
+`sill=900mm`, press Return, and place a fourth in a clear region. Next click Measurements,
+enter `offset=24"`, press Return, and place a fifth near the left edge at mid-height. With
+sill center, the expected anchor inset is 0.6096 m and the opening's left edge is 0.1596 m
+from the host edge. Escape and restart clears both overrides before Roof placement.
+Leave this Model open for exact agent readback. E13 remains open.
