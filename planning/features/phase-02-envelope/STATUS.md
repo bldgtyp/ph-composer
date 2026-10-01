@@ -29,13 +29,12 @@ the top of each PRD.
 
 ## Current resume checkpoint
 
-Branch `codex/phase-02-envelope`, shipping source `7932856`. Both Ruby full CI gates
+Branch `codex/phase-02-envelope`, shipping source `43a1418`. Both Ruby full CI gates
 pass: 995 tests / 6725 assertions, 346 JS and 135 Python tests. Coverage is
-96.6% / 94.9% / 94.98%. Existing Chromium 88 and eight browser passes remain applicable
-because the correction changes no panel or Python assets. Exact installed 296-file RBZ is
-`checkpoint-7932856.rbz`, SHA-256
-`0c178acbf39842fe9d2206186e27051ba379c72fea6ce0d2fa62b0fa3751bf08`,
-22,624,647 installed bytes. Independent geometry review is clear.
+96.6% / 94.9% / 94.98%. Chromium 88 and all eight browser scripts pass after the caption correction. Exact installed 296-file RBZ is
+`checkpoint-43a1418.rbz`, SHA-256
+`af377ff41e6dcf6a3b906acbc1a87ce7733ffec18b2a87981d65da1bb1cb22d3`,
+22,624,674 installed bytes. Independent geometry review is clear.
 
 P2-12 Slice B fresh normal SketchUp 26.1.188 / Ruby 3.2.2 replay passes cutting-descendant
 exclusion, both partial-glue refusals, full pairing, covered-side preservation and unchanged-
@@ -50,9 +49,11 @@ E15 has a passing structured result; D2-8 defers P2-16 to Phase 5. P2-09/P2-11 n
 workflows are observed. Complete E12 and consolidated E01 to E14 / E17 remain open.
 Native Assembly batch follows: seven Builder gestures pass one-step Undo and final Redo
 exact catalog comparison; observed model saved privately. Caption-only correction `43a1418`
-passes both full CI gates and Chromium 88; installed refresh and native caption readback are
-next. Last own Assembly process PID 22104 / bridge 61969 is quit. Resume from
-`assemblies-native-builder-observed.skp`, using the private read-only journal.
+passes both full CI gates, Chromium 88 and eight browser scripts; fresh native caption
+readback and partial-Assembly reopen pass. Film toggle changes only the authored flag
+and exterior-film result; one Undo restores full catalog and unmodified state.
+Current own `assemblies-native.skp`, PID 25109 / bridge 62465, is unmodified; panel is
+closed. Private journal and `assemblies-native-builder-observed.skp` preserve the batch.
 Next autonomous work: remaining Assembly / assignment / export and affected Phase 1 host checks.
 The final human batch contains native Option Move-copy, held-modal context workflow and
 outside-example repository decision. Slice C, P2-13 and P2-14 still wait on Move-copy.

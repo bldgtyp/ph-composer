@@ -72,3 +72,10 @@ dialog incorrectly captions its Assembly selector "Replacement material". Source
 corrects that caption to "Replacement assembly" using the caller's record-kind label;
 31 existing focused UI tests and scoped lint pass, followed by both full CI gates and
 Chromium 88. Fresh installed caption verification and full E03 consolidation remain pending.
+
+Exact fresh installed package `43a1418` now visibly shows "Replacement assembly" in the
+actual HtmlDialog. Cancel leaves the complete catalog unchanged and the Model unmodified.
+All 296 installed files match package SHA-256
+`af377ff41e6dcf6a3b906acbc1a87ce7733ffec18b2a87981d65da1bb1cb22d3`.
+Both full CI gates, Chromium 88 and all eight browser scripts pass;
+`/tmp/phc-caption-{ci32,ci27,runtime,ui}.log` records this verification.

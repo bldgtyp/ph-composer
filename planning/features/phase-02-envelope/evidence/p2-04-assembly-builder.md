@@ -63,3 +63,12 @@ Proofs are `assembly-native-e04-*.json`; final synthetic Model is
 width. The earlier CUA `typeText` attempt changed visible text but did not commit; it is
 not counted as a passing action or a confirmed product defect. Remaining Layer tools,
 Segment properties/removal, film toggle and fresh reopen still require observation. E04 stays open.
+
+Fresh process PID 25109 / bridge 62465 runs the exact installed `43a1418` package.
+The saved partial Builder Assembly reopens with the complete Materials/Assemblies catalog
+matching `e04-flip-orientation` exactly. Native ventilated-cladding toggle on the complete
+reference wall changes only the authored flag; construction U remains 1.176262 W/(m² K),
+construction R remains 0.850151 m²K/W and Rsi remains 0.13. Rse changes 0.04 to 0.13
+and U with films changes 0.980247 to 0.900778. One native Undo restores the full catalog
+and unmodified Model state. Private `assembly-native-film-proof.json` and
+`assembly-native-e04-film-*.json` retain the comparisons.
