@@ -629,7 +629,7 @@ Values:
 
 Face, a entity kind owned by `ph_composer.zones`, schema version 1.
 
-References: `attached_zone_id` names one `ph_composer.zones.faces.attached_zone`.
+References: `attached_zone_id` names one `ph_composer.zones.faces.attached_zone`; `assembly_id` names one `ph_composer.assemblies.assembly`.
 
 Values:
 
@@ -1976,6 +1976,125 @@ Example params:
 {
   "limit": 20
 }
+```
+
+### `ph_composer.assemblies.export_preflight`
+
+Material and Assembly export conditions. Owner: `ph_composer.assemblies`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings",
+    "repairs"
+  ],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "section",
+          "object_id",
+          "message",
+          "blocks_export"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The record the finding is about."
+          },
+          "message": {
+            "type": "string"
+          },
+          "blocks_export": {
+            "type": "boolean"
+          },
+          "locate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ],
+            "description": "A view command that shows what the finding is about.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "params": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "checked",
+          "action",
+          "params"
+        ],
+        "description": "An action the export workflow offers to run before exporting.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "checked": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
 ```
 
 ### `ph_composer.assemblies.materials.all`
@@ -3348,7 +3467,8 @@ Result:
   "additionalProperties": false,
   "required": [
     "faces",
-    "units"
+    "units",
+    "assembly_usage"
   ],
   "properties": {
     "faces": {
@@ -3366,6 +3486,8 @@ Result:
           "suggested",
           "attached_zone_state",
           "adjacency_state",
+          "assembly_state",
+          "findings",
           "state"
         ],
         "properties": {
@@ -3517,6 +3639,41 @@ Result:
             ],
             "description": "How a Surface pair stands; null for any other boundary."
           },
+          "assembly_state": {
+            "type": "string",
+            "enum": [
+              "absent",
+              "resolved",
+              "dangling",
+              "invalid"
+            ]
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "assembly_id"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "assembly_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
           "state": {
             "type": "string",
             "enum": [
@@ -3541,6 +3698,228 @@ Result:
           "enum": [
             "m2"
           ]
+        }
+      }
+    },
+    "assembly_usage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "assembly_id",
+          "face_count",
+          "gross_area_m2",
+          "faces"
+        ],
+        "properties": {
+          "assembly_id": {
+            "type": "string"
+          },
+          "face_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "gross_area_m2": {
+            "type": "number",
+            "x-unit": "m2"
+          },
+          "faces": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "zone_id",
+                "zone_path",
+                "entity_path",
+                "entity_id"
+              ],
+              "properties": {
+                "zone_id": {
+                  "type": "string"
+                },
+                "zone_path": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "entity_path": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "entity_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.faces.assembly_choices`
+
+Current Assembly names, hints and colours. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assemblies"
+  ],
+  "properties": {
+    "assemblies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "type",
+          "color"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "color": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.faces.assembly_usage`
+
+Face counts and gross areas by Assembly. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assemblies"
+  ],
+  "properties": {
+    "assemblies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "assembly_id",
+          "face_count",
+          "gross_area_m2",
+          "faces"
+        ],
+        "properties": {
+          "assembly_id": {
+            "type": "string"
+          },
+          "face_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "gross_area_m2": {
+            "type": "number",
+            "x-unit": "m2"
+          },
+          "faces": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "zone_id",
+                "zone_path",
+                "entity_path",
+                "entity_id"
+              ],
+              "properties": {
+                "zone_id": {
+                  "type": "string"
+                },
+                "zone_path": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "entity_path": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "entity_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -4056,6 +4435,41 @@ Result:
             ],
             "description": "How a Surface pair stands; null for any other boundary."
           },
+          "assembly_state": {
+            "type": "string",
+            "enum": [
+              "absent",
+              "resolved",
+              "dangling",
+              "invalid"
+            ]
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "assembly_id"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "assembly_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
           "state": {
             "type": "string",
             "enum": [
@@ -4140,7 +4554,8 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "faces"
+    "faces",
+    "targets"
   ],
   "properties": {
     "faces": {
@@ -4175,6 +4590,95 @@ Result:
               "string",
               "null"
             ]
+          }
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "expected_values"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "expected_values": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "face_type": {
+                "type": "string",
+                "enum": [
+                  "Wall",
+                  "RoofCeiling",
+                  "Floor",
+                  "AirBoundary"
+                ]
+              },
+              "boundary_condition": {
+                "type": "string",
+                "enum": [
+                  "Outdoors",
+                  "Ground",
+                  "Adiabatic",
+                  "Surface",
+                  "AttachedZone"
+                ]
+              },
+              "attached_zone_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of an Attached zone record; only with AttachedZone."
+              },
+              "assembly_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of the Face's Assembly."
+              },
+              "adjacency": {
+                "type": "object",
+                "description": "The Surface pair envelope Solve adjacencies writes; only with Surface."
+              }
+            }
           }
         }
       }
@@ -5029,7 +5533,7 @@ Example params:
 
 Delete Assembly; remaining references refuse. Owner: `ph_composer.assemblies`.
 
-Undo step: Delete Assembly. Deletes the record; Material replacement rewrites all uses atomically.
+Undo step: Delete Assembly. Replacement or explicit clearing rewrites uses and deletes atomically.
 
 Params:
 
@@ -5407,6 +5911,13 @@ Params:
           ]
         }
       }
+    },
+    "replacement_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Replacement identity, or explicit null to clear uses."
     }
   }
 }
@@ -11356,7 +11867,7 @@ Example params:
 
 Delete Material; remaining references refuse. Owner: `ph_composer.assemblies`.
 
-Undo step: Delete Material. Deletes the record; Material replacement rewrites all uses atomically.
+Undo step: Delete Material. Replacement or explicit clearing rewrites uses and deletes atomically.
 
 Params:
 
@@ -12012,6 +12523,167 @@ Example params:
   "expected_values": {
     "name": "Original"
   }
+}
+```
+
+### `ph_composer.zones.faces.assign_assembly`
+
+Set or clear only the Assembly of explicit Faces. Owner: `ph_composer.zones`.
+
+Undo step: Assign Assembly. Changes only assembly_id on all targets.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "targets",
+    "assembly_id"
+  ],
+  "properties": {
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "expected_values"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "expected_values": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "face_type": {
+                "type": "string",
+                "enum": [
+                  "Wall",
+                  "RoofCeiling",
+                  "Floor",
+                  "AirBoundary"
+                ]
+              },
+              "boundary_condition": {
+                "type": "string",
+                "enum": [
+                  "Outdoors",
+                  "Ground",
+                  "Adiabatic",
+                  "Surface",
+                  "AttachedZone"
+                ]
+              },
+              "attached_zone_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of an Attached zone record; only with AttachedZone."
+              },
+              "assembly_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of the Face's Assembly."
+              },
+              "adjacency": {
+                "type": "object",
+                "description": "The Surface pair envelope Solve adjacencies writes; only with Surface."
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "assembly_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "face_ids"
+  ],
+  "properties": {
+    "face_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Face records written; empty when nothing changed."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "targets": [
+    {
+      "reference": {
+        "zone_id": "zon_Ab12Cd34Ef56",
+        "zone_path": [
+          1201
+        ],
+        "entity_path": [
+          1202
+        ],
+        "entity_id": null
+      },
+      "expected_values": {}
+    }
+  ],
+  "assembly_id": "asm_Ab12Cd34Ef56"
 }
 ```
 
@@ -12760,6 +13432,30 @@ Params:
               "description": "The value `set` writes."
             }
           }
+        },
+        "assembly_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "keep",
+                "set",
+                "clear"
+              ]
+            },
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The value `set` writes."
+            }
+          }
         }
       }
     },
@@ -12857,6 +13553,31 @@ Example params:
     "boundary_condition": {
       "mode": "set",
       "value": "Outdoors"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "faces": [
+    {
+      "zone_id": "zon_Ab12Cd34Ef56",
+      "zone_path": [
+        1201
+      ],
+      "entity_path": [
+        1202
+      ],
+      "entity_id": null
+    }
+  ],
+  "intent": {
+    "assembly_id": {
+      "mode": "set",
+      "value": "asm_Ab12Cd34Ef56"
     }
   }
 }
@@ -14243,7 +14964,8 @@ Params:
       "enum": [
         "face_type",
         "boundary_condition",
-        "attached_zone_id"
+        "attached_zone_id",
+        "assembly_id"
       ]
     },
     "value": {
@@ -14252,6 +14974,10 @@ Params:
         "null"
       ],
       "description": "The value to set, or null to keep whatever each Face has."
+    },
+    "reset": {
+      "type": "boolean",
+      "description": "Clear other palette choices before this choice."
     }
   }
 }
@@ -14306,6 +15032,15 @@ Example params:
 {
   "field": "face_type",
   "value": "Wall"
+}
+```
+
+Example params:
+
+```json
+{
+  "field": "assembly_id",
+  "value": "asm_Ab12Cd34Ef56"
 }
 ```
 

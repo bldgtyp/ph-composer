@@ -12,16 +12,20 @@ PRD drafted 2026-09-18 as a port of the predecessor's Assembly Builder packet
 designPH dependency removed and the export mapping checked against honeybee-ph and PHX source.
 Interviewed the same day: two rounds, 18 decisions, recorded in the PRD and folded into its
 behavior sections. Ed authorized the full Phase 2 implementation on 2026-10-01.
-Material and Assembly records (P2-02) and inventories (P2-03) are being implemented on
-`codex/phase-02-envelope`; neither stage is attested complete.
+Records and inventories are committed in checkpoint 35704bd. Both Ruby full gates, coverage and
+browser checks pass; native records proof includes exact Undo/Redo, fresh reopen and two-Model
+isolation. Inventory native checks are underway. Builder source is implemented and reviewed;
+assignment and construction export integration is underway. No complete stage attestation is
+claimed.
 
 ## Next step
 
-Integrate the record operations and generated API reference, run focused and full gates, then
-verify the panel-closed walkthrough in a fresh native process. Integrate the inventories against
-that read contract. Manual checks are reserved for Ed's final batch; preceding attestations remain
-open. [Phase 2 status](../STATUS.md) and [groundwork evidence](../evidence/p2-01-groundwork.md)
-carry the current branch, checks and resume state. The SD assembly helper stays later.
+Complete the integrated Builder/assignment gates, install that verified build, then run their
+fresh-process native cases. Keep any inaccessible controls in Ed's final batch.
+[Phase 2 status](../STATUS.md), [record evidence](../evidence/p2-02-assembly-records.md),
+[inventory evidence](../evidence/p2-03-inventories.md) and
+[Builder evidence](../evidence/p2-04-assembly-builder.md) carry current proof and resume steps.
+The SD assembly helper stays later.
 
 ## Blockers
 
@@ -34,13 +38,11 @@ declare typed dependencies, so the face-to-construction join has its seam.
 
 ## Verification
 
-Records and pure commands are implemented from frozen predecessor `f358ebf`. Six focused Ruby
-files pass after review fixes on both supported versions: 42 tests and 402 assertions. The integrated Ruby coverage
-run passed 773 tests and 4,133 assertions at 96.6% line coverage. Independent review reproduced
-an unbounded thermal workload and inconsistent duplicate-name whitespace; corrections passed
-focused checks and the same reviewer's delta review. The combined coverage and full gates wait
-for stable inventory assets. See
-[record evidence](../evidence/p2-02-assembly-records.md) for the exact boundary and resume steps.
+Checkpoint 35704bd: 779 Ruby tests / 4,160 assertions, 248 JavaScript tests and 96 Python tests;
+full CI passes on Ruby 3.2.2 and 2.7.2. Coverage: Ruby 96.7%, JavaScript 96.3%, Python 94%.
+Records and inventory review findings are closed. Builder review findings are closed with
+14 Builder tests plus eight unchanged Canvas tests. New source still needs integrated gates
+and native acceptance; see the evidence files above.
 
 ## Ledger
 

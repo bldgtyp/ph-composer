@@ -2,6 +2,54 @@
   "run_id": "run-phase-one-two-zones",
   "schema_version": 1,
   "sections": {
+    "ph_composer.assemblies.export.constructions": {
+      "records": [
+        {
+          "id": "asm_Single000001",
+          "layers": [
+            {
+              "id": "lyr_000000000001",
+              "segments": [
+                {
+                  "id": "seg_000000000010",
+                  "material_id": "mat_Wool00000001",
+                  "steel_stud_spacing_mm": null,
+                  "width_mm": 1000
+                }
+              ],
+              "thickness_mm": 100
+            },
+            {
+              "id": "lyr_000000000002",
+              "segments": [
+                {
+                  "id": "seg_000000000020",
+                  "material_id": "mat_Wool00000001",
+                  "steel_stud_spacing_mm": null,
+                  "width_mm": 1000
+                }
+              ],
+              "thickness_mm": 50
+            }
+          ],
+          "materials": [
+            {
+              "category": "insulation",
+              "color": "#88aa44",
+              "conductivity_w_mk": 0.04,
+              "density_kg_m3": 40,
+              "emissivity": 0.9,
+              "id": "mat_Wool00000001",
+              "name": "Synthetic wool",
+              "specific_heat_j_kgk": 1400
+            }
+          ],
+          "name": "Two wool thicknesses",
+          "orientation": "first_layer_outside"
+        }
+      ],
+      "version": 1
+    },
     "ph_composer.zones.export.zones": {
       "records": [
         {
@@ -38,6 +86,7 @@
     "ph_composer.zones.faces.export.faces": {
       "records": [
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Ground",
           "face_type": "Floor",
           "geometry": {
@@ -78,6 +127,7 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "RoofCeiling",
           "geometry": {
@@ -118,6 +168,7 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
@@ -190,6 +241,7 @@
               "digest": "sha256:8b82bb2ae5a5277caa03e3f9b58417f5af27a4efe3b4e9e832d05f06ab00ff44"
             }
           },
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Surface",
           "face_type": "Wall",
           "geometry": {
@@ -230,6 +282,7 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
@@ -270,6 +323,7 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
@@ -310,6 +364,7 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Ground",
           "face_type": "Floor",
           "geometry": {
@@ -350,6 +405,7 @@
           "zone_id": "zon_BBBBBBBBBBBB"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "RoofCeiling",
           "geometry": {
@@ -422,6 +478,7 @@
               "digest": "sha256:27a6780a7a255f332018a8ee92abe5365f6a053937d1cdd95ce32e7750decf22"
             }
           },
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Surface",
           "face_type": "Wall",
           "geometry": {
@@ -462,6 +519,7 @@
           "zone_id": "zon_BBBBBBBBBBBB"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
@@ -502,6 +560,7 @@
           "zone_id": "zon_BBBBBBBBBBBB"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
@@ -542,6 +601,7 @@
           "zone_id": "zon_BBBBBBBBBBBB"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {

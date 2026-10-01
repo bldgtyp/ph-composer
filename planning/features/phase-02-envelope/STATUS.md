@@ -9,7 +9,7 @@ ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 The packet was drafted on 2026-09-30 against `main` at `052a7a1`, after Phase 1
 merged and was archived. Ed authorized the full implementation run on 2026-10-01, on a new feature branch.
-Active branch: `codex/phase-02-envelope`. P2-01 is in progress; no stage gate has closed.
+Active branch: `codex/phase-02-envelope`. P2-01 to P2-03 have a verified checkpoint; complete native attestations remain open.
 
 The three feature PRDs were interviewed on 2026-09-18, before any PH-Composer code existed.
 Phase 1 then built the foundation they assumed, and built parts of it differently. The
@@ -27,14 +27,21 @@ the top of each PRD.
 4. Met: [implementation issue #14](https://github.com/bldgtyp/ph-composer/issues/14) created;
    the coordinating and feature packet issue headers are linked.
 
-## Next step
+## Current checkpoint
 
-P2-01 groundwork is implemented in the working tree; final integrated checks and the complete
-native regression screen remain open. P2-02 records are implemented; two reproduced review
-findings were corrected and independently closed. P2-03 inventory source and browser checks are
-underway. The manual
-attestations are reserved for Ed's final batch, as requested. Stage completion remains gated. P2-10 and P2-11 (window records and Builder) can run in
-parallel with P2-02 to P2-06 after P2-01, if two branches are wanted.
+Checkpoint `35704bd` contains P2-01 to P2-03. Full `make ci` passes on Ruby 3.2.2 and
+2.7.2, coverage and all three browser scripts pass. The immutable package is installed in
+SketchUp 26.1.188. Records passed exact native Undo/Redo, fresh save/reopen and two-Model
+isolation checks. The actual inventory forms are being verified in that host.
+
+P2-04 Builder implementation is underway. P2-05 Ruby assignment and snapshot integration is
+implemented and independently reviewed; frontend integration and native proof remain open.
+P2-06 conversion source work is underway independently; its integration cannot close until
+its preceding gates close. Manual attestations remain reserved for Ed's final batch.
+
+The checkpoint RBZ is `_private/host/envelope/checkpoint-35704bd.rbz`, SHA-256
+`05532c783c7f615bac64bfee73d9e90cd5956593edc994230be15fafa1213415`.
+Later Builder and assignment worktree source has not been installed or fully gated.
 
 ## Blockers
 
@@ -46,11 +53,11 @@ parallel with P2-02 to P2-06 after P2-01, if two branches are wanted.
 | Stage | Roadmap | State | Evidence |
 | --- | --- | --- | --- |
 | [P2-01 Contracts and groundwork](phases/p2-01-contracts-and-groundwork.md) | 2.1 entry | In progress; implementation and review checked, native gate open | [Groundwork evidence](evidence/p2-01-groundwork.md) |
-| [P2-02 Material and Assembly records](phases/p2-02-material-and-assembly-records.md) | 2.1 | Implemented and reviewed; integrated/native gates open | [Record evidence](evidence/p2-02-assembly-records.md) |
-| [P2-03 Materials and Assemblies inventories](phases/p2-03-inventories.md) | 2.1 | Implemented and reviewed; offline/browser checks pass; full dual-Ruby CI and native gates open | [Inventory evidence](evidence/p2-03-inventories.md) |
-| [P2-04 Assembly Builder](phases/p2-04-assembly-builder.md) | 2.1 | Scoped | |
-| [P2-05 Assigning Assemblies to Faces](phases/p2-05-assign-assemblies-to-faces.md) | 2.1, 1.2 | Scoped | |
-| [P2-06 Construction export](phases/p2-06-construction-export.md) | 2.1, 1.3 | Scoped | |
+| [P2-02 Material and Assembly records](phases/p2-02-material-and-assembly-records.md) | 2.1 | Implemented and reviewed; dual-Ruby CI and native records proof pass; complete attestation open | [Record evidence](evidence/p2-02-assembly-records.md) |
+| [P2-03 Materials and Assemblies inventories](phases/p2-03-inventories.md) | 2.1 | Implemented and reviewed; dual-Ruby CI/coverage/browser pass; native inventory gate open | [Inventory evidence](evidence/p2-03-inventories.md) |
+| [P2-04 Assembly Builder](phases/p2-04-assembly-builder.md) | 2.1 | Implemented and reviewed; integrated/native gates open | [Builder evidence](evidence/p2-04-assembly-builder.md) |
+| [P2-05 Assigning Assemblies to Faces](phases/p2-05-assign-assemblies-to-faces.md) | 2.1, 1.2 | Ruby implemented and reviewed; UI/native gates open | |
+| [P2-06 Construction export](phases/p2-06-construction-export.md) | 2.1, 1.3 | Conversion source underway; integration gates open | |
 | [P2-07 Library seam and file provider](phases/p2-07-library-seam-and-file-provider.md) | 2.2 | Scoped | |
 | [P2-08 Library sidebar and setup](phases/p2-08-library-sidebar-and-setup.md) | 2.2 | Scoped | |
 | [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Scoped | |

@@ -14,6 +14,7 @@ require_relative "commands/material"
 require_relative "commands/layers"
 require_relative "snapshot"
 require_relative "operations"
+require_relative "export"
 require_relative "declarations/shapes"
 require_relative "declarations/inventories"
 require_relative "declarations/records"
@@ -32,6 +33,7 @@ module PhComposer
       RecordRegistration.install(feature)
       LayerRegistration.install(feature)
       SegmentRegistration.install(feature)
+      ExportProjection.install(feature)
     end
   end
 end

@@ -19,7 +19,7 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
-| 2 | Phase 2: envelope | phase packet | In progress; authorized 2026-10-01 on `codex/phase-02-envelope`; groundwork checked; records and inventories underway; native attestations open | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/](features/phase-02-envelope/README.md) |
+| 2 | Phase 2: envelope | phase packet | In progress; authorized 2026-10-01 on `codex/phase-02-envelope`; P2-01 to P2-03 checkpoint passes dual-Ruby CI; native records proof passes; Builder reviewed, assignment/export underway; complete attestations open | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/](features/phase-02-envelope/README.md) |
 | 2 | Face assignment | feature | In progress; Phase 1 classification scope merged to main; assembly assignment authorized in Phase 2 stages P2-05 and P2-06 | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/face-assignment/](features/phase-02-envelope/face-assignment/README.md) |
 | 2 | Assemblies and materials | feature | In progress; record and inventory implementation underway, stages P2-02 to P2-06 | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/assemblies/](features/phase-02-envelope/assemblies/README.md) |
 | 2 | Window Types and placement | feature | Scoped; interviewed; PLAN.md added 2026-09-30, stages P2-10 to P2-15 | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/window-types/](features/phase-02-envelope/window-types/README.md) |

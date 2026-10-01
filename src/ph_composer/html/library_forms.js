@@ -88,17 +88,25 @@ function (RecordForm, request, snapshot, unitFields, fields, ui, tables, viewCon
   };
   ReplacementForm.prototype.reconcile = function (record, records) {
     this.record = record;
-    this.inUse = Boolean(this.options.replacement && record.use_count);
+    var usage = this.options.usage ? this.options.usage(this.state, record.id) : null;
+    this.inUse = Boolean(this.options.replacement && (this.options.alwaysReplacement ||
+      (usage ? usage.count : record.use_count)));
     this.title.textContent = (this.inUse ? "Replace and delete " : "Delete ") + record.values.name;
-    this.uses.textContent = this.inUse ? "Used by: " + record.uses.map(function (use) { return use.name; }).join(", ") :
+    var uses = (record.uses || []).map(function (use) { return use.name; }).join(", ");
+    this.uses.textContent = this.inUse ? (usage ? usage.description : uses ? "Used by: " + uses :
+      "Choose a replacement or clear existing uses.") :
       "Delete " + this.options.label + ' "' + record.values.name + '"?';
     this.select.parentNode.hidden = !this.inUse;
     var selected = this.select.value;
+    this.select.setAttribute("aria-label", "Replacement " + this.options.label.toLowerCase());
     this.select.replaceChildren(ui.option("", "Choose a replacement"));
+    if (this.options.allowClear) this.select.appendChild(ui.option("__clear__", "Clear existing uses"));
     records.filter(function (candidate) { return candidate.id !== record.id; }).forEach(function (candidate) {
       this.select.appendChild(ui.option(candidate.id, candidate.values.name));
     }, this);
-    this.select.value = records.some(function (candidate) { return candidate.id === selected; }) ? selected : "";
+    this.select.value = (selected === "__clear__" && this.options.allowClear) || records.some(function (candidate) {
+      return candidate.id === selected;
+    }) ? selected : "";
     this.submitButton.textContent = this.inUse ? "Replace and delete" : "Delete";
     this.updateButton();
   };
@@ -115,10 +123,11 @@ function (RecordForm, request, snapshot, unitFields, fields, ui, tables, viewCon
     this.updateButton();
     if (!this.record || this.submitButton.disabled) return;
     var params = { id: this.record.id, expected_values: { name: this.record.values.name } };
-    if (this.inUse) params.replacement_id = this.select.value;
+    if (this.inUse) params.replacement_id = this.select.value === "__clear__" ? null : this.select.value;
     this.run(params);
   };
   ReplacementForm.prototype.refresh = function (state) {
+    this.state = state;
     var payload = snapshot.value(state, this.options.section), records = payload ? payload.records : [];
     var outcome = refreshForm(this, state, this.options.section);
     if (outcome && outcome.status === "completed") this.hide(outcome.value);
@@ -619,6 +628,16 @@ function (RecordForm, request, snapshot, unitFields, fields, ui, tables, viewCon
         return true;
       }, empty: payload ? "No " + config.label + " records match this view." :
         snapshot.message(snapshot.section(state, config.section) || {}, config.label + " records are unavailable.") };
+    if (config.tableId) this.tableOptions = ui.composeTable(config.tableId, this.tableOptions, state,
+      this.requests.transport);
+    var composedAction = this.tableOptions.action;
+    this.tableOptions.action = function (row, action, control) {
+      if (action.tableContributor) {
+        var reason = self.guard();
+        if (reason) { config.notice(reason); return; }
+      }
+      composedAction(row, action, control);
+    };
     tables.table(this.scroll, this.records, this.tableOptions);
     this.grid.refresh();
   };

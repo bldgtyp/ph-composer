@@ -9,8 +9,13 @@ module PhComposer
 
     def build(context)
       registry = Registry.current
+      outcomes = {}
       sections = registry.snapshot_sections.values.to_h do |section|
-        [section.name, section_outcome(context, section)]
+        # Several presentation sections may expose the same read. Cache only within this build;
+        # each section still receives a detached result, including independent nested values.
+        key = [section.query, section.params]
+        outcome = outcomes[key] ||= section_outcome(context, section)
+        [section.name, DeepCopy.call(outcome)]
       end
       session = Sessions.find(context.session_id)
       { "session" => context.session_id, "revision" => session&.revision, "sections" => sections }

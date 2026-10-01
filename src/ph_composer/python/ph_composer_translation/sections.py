@@ -45,10 +45,11 @@ class DependencyUnavailable(Exception):
     """A required object did not translate. The requiring record emits its own finding and produces no
     object: nothing stands in for the missing one."""
 
-    def __init__(self, section: str, object_id: str) -> None:
+    def __init__(self, section: str, object_id: str, context: str | None = None) -> None:
         super().__init__(f"{section} object {object_id} is unavailable")
         self.section = section
         self.object_id = object_id
+        self.context = context
 
 
 class Inputs:

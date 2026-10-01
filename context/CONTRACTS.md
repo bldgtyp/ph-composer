@@ -223,6 +223,14 @@ access and never fall back to selection, display name, proximity or the active M
 | Face assignment | `ph_composer.face_assignment` | Face | `fac_` id |
 | Attached zone | `ph_composer.records.ph_composer.face_assignment.attached_zone` (a legacy name, kept so saved Models still read) | Model | `atz_` id through the record engine |
 
+The Face values include an optional `assembly_id` reference to
+`ph_composer.assemblies.assembly`. An absent assignment and a dangling reference are distinct read
+states. Assembly-only assignment preserves Face type, boundary condition and reciprocal Surface
+pair data. Explicit targets carry their complete `expected_values`; the compound gesture refuses
+all writes if any target is stale or unreachable. Assembly delete may omit replacement (ordinary
+in-use refusal), name a replacement, or explicitly pass null to clear all references through the
+registered referrer handlers. Definitions never name Zones or Faces.
+
 A Face target uses this reference shape; a Zone target carries only `zone_id` and `zone_path`:
 
 ```json

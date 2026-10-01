@@ -9,8 +9,8 @@
  * let a user break a pair by painting over one of its ends.
  */
 PhComposerUI.define("sections/classify", ["panel", "workspace", "request", "snapshot",
-  "sections/face_words", "sections/attached_zone_fields"],
-function (panel, ui, requests, snapshot, words, attachedFields) {
+  "sections/face_words", "sections/attached_zone_fields", "sections/assembly_assignment"],
+function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   "use strict";
   var KEEP = "";
   var screen = null;
@@ -28,6 +28,7 @@ function (panel, ui, requests, snapshot, words, attachedFields) {
 
   function forSession(session, send) {
     if (screen && screen.session === session) return screen;
+    if (screen) { screen.disposed = true; screen.view.reset(); screen.edits.reset(); }
     if (screen && screen.draft) screen.draft.close();
     screen = { session: session, chooseWhenFree: null, draft: null,
       view: requests.channel(session, send, "palette", "view.invoke"),
@@ -53,6 +54,8 @@ function (panel, ui, requests, snapshot, words, attachedFields) {
   }
 
   function choose(state, field, value) {
+    if (state !== screen || state.disposed || !state.available ||
+        (field === "assembly_id" && !snapshot.value(state.snapshot, "ph_composer.zones.faces.assemblies"))) return;
     state.view.run("ph_composer.zones.faces.choose", { field: field, value: value });
   }
 
@@ -113,7 +116,7 @@ function (panel, ui, requests, snapshot, words, attachedFields) {
     form.appendChild(ui.actionRow(cancelButton, save, false));
     form.addEventListener("submit", function (event) {
       event.preventDefault();
-      if (state.edits.busy()) return;
+      if (state !== screen || state.disposed || !state.available || state.edits.busy()) return;
       var values = inputs.values();
       if (!values) {
         error.textContent = "Enter a name and a factor between 0 and 1.";
@@ -183,13 +186,16 @@ function (panel, ui, requests, snapshot, words, attachedFields) {
       { records: [] }).records;
     var screenState = forSession(state.session, send);
     screenState.active = Boolean(tool.active);
+    screenState.available = Boolean(snapshot.value(state, "ph_composer.zones.faces.palette"));
+    screenState.snapshot = state;
     screenState.view.consume(state);
     screenState.edits.consume(state);
     sendPending(screenState);
     // Repainted only when the palette, the records or a pending request have changed. A snapshot
     // follows every Face the user paints, and rebuilding the chips each time would take the focus
     // out from under them mid-gesture.
-    ui.memoPaint(root, "palette", [state.session, tool, records, screenState.view.busy(),
+    ui.memoPaint(root, "palette", [state.session, tool, records,
+      snapshot.value(state, "ph_composer.zones.faces.assemblies"), screenState.view.busy(),
       screenState.edits.busy()], function () {
       var heading = ui.element("div", "phc-zone-heading");
       var body = ui.element("div", "phc-palette");
@@ -201,6 +207,14 @@ function (panel, ui, requests, snapshot, words, attachedFields) {
         chips(screenState, "boundary_condition", tool.boundary_conditions,
           tool.palette.boundary_condition, words.BOUNDARIES)));
       body.appendChild(field("Attached zone", null, attachedZones(screenState, tool.palette, records)));
+      var assembly = ui.element("select");
+      assembly.setAttribute("aria-label", "Classify Assembly");
+      assemblies.options(assembly, assemblies.choices(state, [tool.palette.face_type]),
+        "Keep each Face's Assembly", false);
+      assembly.value = tool.palette.assembly_id || "";
+      assembly.disabled = screenState.view.busy() || !snapshot.value(state, "ph_composer.zones.faces.assemblies");
+      assembly.addEventListener("change", function () { choose(screenState, "assembly_id", assembly.value || null); });
+      body.appendChild(field("Assembly", "blank keeps what each Face has", assembly));
       root.className = "phc-classify" + (tool.active ? " is-active" : "");
       root.replaceChildren(heading, body);
     });

@@ -21,6 +21,10 @@ module PhComposer
           FIELDS.each do |field, spec|
             spec.fetch("values").each { |value| declare(feature, field, value, spec) }
           end
+          feature.menu_entries("#{PREFIX}.assembly_menu", :menu => MENU,
+                               :available => ->(session) { classifiable?(session) }) do |session|
+            Selection.client(session).assembly_entries
+          end
           feature.menu_entries("#{PREFIX}.attached_choices", :menu => MENU,
                                :available => ->(session) { classifiable?(session) }) do |session|
             Selection.client(session).attached_entries

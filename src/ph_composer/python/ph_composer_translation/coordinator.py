@@ -147,6 +147,8 @@ def run_section(
             findings.append(Finding(OBJECT_UNAVAILABLE, section.id, record_id, str(error), section.required_for_export))
         except DependencyUnavailable as error:
             message = f"needs {error.section} object {error.object_id}, which did not translate"
+            if error.context:
+                message = f"{error.context}: {message}"
             findings.append(
                 Finding(DEPENDENCY_UNAVAILABLE, section.id, record_id, message, section.required_for_export)
             )

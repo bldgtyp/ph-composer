@@ -70,7 +70,20 @@ reference owner registers `feature.reference_retargeter(name, target_kind:)`; a 
 calls `request.retarget_references` and gives its returned plan to `propose_delete`. The deletion
 and all rewrites share one proposal and Undo entry. See [CONTRACTS.md](CONTRACTS.md), "Handler-side
 dependency reads" and "Compound proposals", for schemas, refusals and final-state checks. The
-Assemblies and Windows features and table contributions remain future work.
+Assemblies is implemented as a definition feature requiring no geometry feature. Zones requires
+Assemblies, declares the Face's Assembly reference and owns assignment, usage and retargeting.
+Windows remains future work. The shared named-table contribution primitive is implemented;
+its first inventory integration is in progress in P2-05.
+
+`ui.contributeTable(tableId, contribution)` registers columns and row actions without retaining a
+snapshot. The owner calls `ui.composeTable(tableId, options, state, send)` for each paint.
+Callbacks receive the current row and snapshot; contributed actions invoke their own registered
+operation. Duplicate column or action ids refuse composition. The returned registration disposer
+removes the contribution. An absent contributor leaves the owner's table intact.
+
+Snapshot sections using the same query and equal parameters share one read within one build.
+Each receives a detached outcome; no Index or result survives into the next build. This lets the
+Face table and Assembly usage share one walk while keeping the shell independent of feature names.
 
 ## Contribution contracts
 

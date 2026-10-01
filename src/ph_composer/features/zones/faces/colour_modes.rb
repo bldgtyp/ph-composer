@@ -3,13 +3,13 @@
 module PhComposer
   module Zones
     module Faces
-      # This feature's Colour-by modes: face type and boundary condition. An Assembly mode arrives
-      # with Assemblies.
+      # This feature's Colour-by modes: face type, boundary condition and assigned Assembly.
       #
       # The hues are honeybee's own defaults, so a modeler sees the same colours in SketchUp, Rhino
       # and honeybee-display (`honeybee-core/honeybee/face.py` and `boundarycondition.py`). Stored
       # values keep honeybee's names; the legend shows the glossary's words.
       module ColourModes
+        BY_ASSEMBLY = "#{PREFIX}.by_assembly"
         BY_FACE_TYPE = "#{PREFIX}.by_face_type"
         BY_BOUNDARY_CONDITION = "#{PREFIX}.by_boundary_condition"
 
@@ -37,6 +37,33 @@ module PhComposer
                                                      :colours => ColourBy::Palette.fixed(BOUNDARY_COLOURS)) do |model|
             entries(model, "boundary_condition", BOUNDARY_LABELS)
           end
+          feature.colour_mode(BY_ASSEMBLY, :label => "Assembly", :entity_kind => "face",
+                                          :colours => method(:assembly_colour)) { |model| assembly_entries(model) }
+        end
+
+        # One dependency read per projection, never per Face. Entries carry detached colour values,
+        # so the shared service's colour callback needs no Model, feature access or cached Index.
+        def assembly_entries(model)
+          session = Sessions.for(model)
+          read = API.query(:context => API.connect(:session_id => session.id), :name => "#{PREFIX}.assembly_choices")
+          unless read["status"] == "completed"
+            raise CodedError.new(read.fetch("code"), read.fetch("message"))
+          end
+          rows = read.fetch("value").fetch("assemblies").to_h { |row| [row.fetch("id"), row] }
+          Zones::Index.new(model).all_faces.map do |face|
+            record = FACE_STORE.read(face.entity)
+            id = record && record["assembly_id"]
+            assembly = rows[id]
+            value = id && { "id" => id, "color" => assembly && assembly.fetch("color") }
+            ColourBy::Entry.new(:entity => face.entity, :transform => face.transform, :value => value,
+                                :label => assembly ? assembly.fetch("name") : id,
+                                :state => id && !assembly ? :incomplete : nil, :path => face.zone.path + face.path)
+          end
+        end
+
+        def assembly_colour(value)
+          color = value && value["color"]
+          color && color.delete_prefix("#").scan(/../).map { |component| component.to_i(16) }
         end
 
         # One entry per Face of every Zone, whether or not it carries a record. A Face with no record is

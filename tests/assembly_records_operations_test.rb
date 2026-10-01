@@ -21,7 +21,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     assert_empty registry.features.fetch(Assemblies::FEATURE_ID).requires
     declarations = registry.queries.values + registry.actions.values
     owned = declarations.select { |declaration| declaration.owner == Assemblies::FEATURE_ID }
-    assert_equal 24, owned.length
+    assert_equal 25, owned.length
     owned.each do |declaration|
       refute_empty declaration.examples, declaration.name
       declaration.examples.each do |example|

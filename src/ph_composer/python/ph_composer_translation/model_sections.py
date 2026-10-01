@@ -11,21 +11,16 @@ import hashlib
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any
 
 from . import stack
+from .constructions import CONSTRUCTIONS
 from .contract import JSONValue, RecordError, as_number, as_text
 from .result import Finding
-from .sections import Inputs, Requirement, Section
+from .sections import DependencyUnavailable, Inputs, Requirement, Section
 
 FACE_SECTION_ID = "ph_composer.zones.faces.export.faces"
 ZONE_SECTION_ID = "ph_composer.zones.export.zones"
-
-
-class ConstructionProvider(Protocol):
-    """An explicitly composed source for a face construction."""
-
-    def resolve(self, assembly_id: str | None) -> Any: ...
 
 
 @dataclass(frozen=True)
@@ -164,10 +159,7 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
     id = ZONE_SECTION_ID
     versions = frozenset({1})
     object_type = TranslatedZone
-    requires = (FACES,)
-
-    def __init__(self, construction_provider: ConstructionProvider | None = None) -> None:
-        self._construction_provider = construction_provider
+    requires = (FACES, CONSTRUCTIONS)
 
     def read(self, raw: Mapping[str, object]) -> ZoneRecord:
         identifier = as_text(raw.get("id"), "zone id")
@@ -182,9 +174,6 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
         return ZoneRecord(identifier, name, segment, level, tuple(as_text(value, "face id") for value in face_ids))
 
     def translate(self, record: ZoneRecord, inputs: Inputs) -> TranslatedZone:
-        if self._construction_provider is None:
-            raise RecordError("no authored construction provider is installed")
-
         hb_face = stack.load("honeybee.face")
         hb_room = stack.load("honeybee.room")
         hb_types = stack.load("honeybee.facetype")
@@ -210,6 +199,10 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
                 continue
             if specification.boundary_condition == "Surface":
                 _validate_surface(specification, inputs)
+            try:
+                construction = inputs.get(CONSTRUCTIONS, specification.assembly_id or "(unassigned)").construction
+            except DependencyUnavailable as error:
+                raise DependencyUnavailable(error.section, error.object_id, f"Face {face_id}") from error
             points = [[lb_point.Point3D(*point) for point in loop] for loop in specification.loops_m]
             geometry = lb_face.Face3D(points[0], holes=points[1:] or None)
             try:
@@ -220,7 +213,7 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
                         hb_boundaries.boundary_conditions, _boundary_name(specification.boundary_condition)
                     )
                 face = hb_face.Face(specification.identifier, geometry, face_type, boundary)
-                face.properties.energy.construction = self._construction_provider.resolve(specification.assembly_id)
+                face.properties.energy.construction = construction
             except (AssertionError, AttributeError, KeyError, ValueError) as error:
                 raise RecordError(f"face {face_id} could not be built: {error}") from error
             faces[face_id] = face
@@ -235,7 +228,7 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
 
     def result_fields(self, objects: Mapping[str, TranslatedZone]) -> Mapping[str, JSONValue]:
         if not objects:
-            return {}
+            return {"construction_usage": []}
         hb_model = stack.load("honeybee.model")
         stack.load("honeybee_energy._extend_honeybee")
         stack.load("honeybee_ph")
@@ -259,12 +252,22 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
             counterpart = specifications.get(counterpart_id)
             reciprocal = counterpart is not None and _counterpart_id(counterpart) == identifier
             if not reciprocal or counterpart_id not in emitted_faces:
-                return {}
+                return {"construction_usage": []}
             emitted_faces[identifier].set_adjacency(emitted_faces[counterpart_id])
             paired.update((identifier, counterpart_id))
         model = hb_model.Model("ph_composer_model", rooms=[zone.room for zone in zones], units="Meters")
         hbjson = json.dumps(model.to_dict(), sort_keys=True, separators=(",", ":"))
+        usage: dict[str, dict[str, JSONValue]] = {}
+        for zone in zones:
+            for identifier in zone.faces:
+                specification = zone.specifications[identifier]
+                assembly_id = specification.assembly_id
+                assert assembly_id is not None
+                row = usage.setdefault(assembly_id, {"assembly_id": assembly_id, "face_count": 0, "gross_area_m2": 0.0})
+                row["face_count"] = int(row["face_count"]) + 1  # type: ignore[arg-type]
+                row["gross_area_m2"] = float(row["gross_area_m2"]) + specification.area_m2  # type: ignore[arg-type]
         return {
+            "construction_usage": [usage[identifier] for identifier in sorted(usage)],
             "canonical_model": {
                 "hbjson": hbjson,
                 "rooms": len(zones),

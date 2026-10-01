@@ -1,7 +1,7 @@
 # Materials and Assemblies inventories: checkpoint
 
 DATE: 2026-10-01
-STATUS: Implemented in the working tree; lifecycle corrections and integrated/native gates open
+STATUS: Checkpoint committed; lifecycle review and dual-Ruby CI pass; native inventory gate open
 BRANCH: `codex/phase-02-envelope`
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -43,15 +43,24 @@ Coverage passes at Ruby 96.7%, JavaScript 96.3% and Python 94%. All three browse
 updated inventory screenshots are at
 `/var/folders/vm/mfby2rkn0g153d2tph6hz8r00000gn/T/ph-composer-inventories-fkoOZ9`.
 The archive contains 218 files, 7,163,634 compressed bytes and 22,118,334 installed bytes,
-above the 22,000,000-byte target and below the 24,000,000-byte ceiling. Full dual-Ruby CI and
-native acceptance remain open. No stale-manifest failure is counted as a pass.
+above the 22,000,000-byte target and below the 24,000,000-byte ceiling. Dual-Ruby CI passes; native inventory acceptance remains open. No stale-manifest failure is counted as a pass.
 
-## Resume and remaining work
+## Verified checkpoint and remaining native work
 
-Run both Ruby full gates on the committed stable checkpoint. `make fixtures-check` requires the intentional generated API
-reference to be committed before it can validate regeneration stability; preserve that repository
-check rather than overriding its paths.
+Full CI, including committed fixture regeneration, passes on checkpoint `35704bd` on both
+Rubies. Logs: `/tmp/phc-envelope-ci-final32.log`, `/tmp/phc-envelope-ci-final27.log`,
+`/tmp/phc-envelope-coverage-final3.log`, `/tmp/phc-envelope-uichecks-final3.log`.
+The installed package is running in a fresh SketchUp process. The Library inventory shows
+the persisted Materials in IP; New Material opens the actual HtmlDialog form. Native create,
+in-place edits, guarded replacement, Undo, narrow width and navigation/Escape checks remain
+in progress. Inaccessible controls stay in Ed's final manual batch.
 
-Install the verified package and start a fresh SketchUp process. Exercise the actual forms,
-in-place edits, guarded replacement, one native Undo per commit, narrow width, peer navigation
-and Escape order. Keep any automation-inaccessible controls in Ed's final manual batch.
+Native checks now include New Material with explicit SI conductivity while the display is IP
+(canonical readback 0.04 W/(m K)), native Undo/Redo of creation, in-place name editing, dirty
+peer-navigation guard and draft retention through a unit switch. In-use Material replacement
+rewrote both actual nested references and deleted the definition; the complete raw public
+catalog matched the expected projection. One native Undo restored the complete previous catalog.
+Private readbacks: `e03-before-replacement.json`, `e03-after-replacement.json`, `e03-latest.json`
+under `_private/host/envelope/`. Native Model Undo requires activating the Model window;
+the HtmlDialog's focused text control handles its own Undo. Assembly forms, duplicate/delete,
+narrow width and remaining Escape order still require checks.

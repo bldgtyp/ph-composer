@@ -28,6 +28,7 @@ require_relative "faces/classify_tool"
 require_relative "faces/classify_menu"
 require_relative "faces/locate"
 require_relative "faces/operations"
+require_relative "faces/assembly_assignment"
 require_relative "adjacency/overlap"
 require_relative "adjacency/adjacency"
 require_relative "adjacency/face_split"
@@ -44,6 +45,7 @@ require_relative "export"
 require_relative "colour_modes"
 require_relative "declarations/shapes"
 require_relative "declarations/zone"
+require_relative "declarations/assembly_assignment"
 require_relative "declarations/faces"
 require_relative "declarations/adjacency"
 require_relative "declarations/repair"
@@ -54,12 +56,14 @@ module PhComposer
     module_function
 
     def install(registry)
-      feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION)
+      feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION,
+                                 :requires => ["ph_composer.assemblies"])
       ZoneRegistration.install(feature)
       Names.install(feature)
       ZoneMenu.install(feature)
       SelectionRegistration.install(feature)
       Faces::Registration.install(feature)
+      Faces::AssemblyRegistration.install(feature)
       Faces::Settings.install(feature)
       AdjacencyRegistration.install(feature)
       ExportProjection.install(feature)

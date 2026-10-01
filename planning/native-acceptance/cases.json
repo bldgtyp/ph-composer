@@ -714,6 +714,56 @@
         "context/CONTRACTS.md"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "E03",
+      "label": "Phase 2 Material and Assembly inventories",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/html/*",
+        "src/ph_composer/features/assemblies/*",
+        "src/ph_composer/features/zones/declarations/*",
+        "src/ph_composer/shell/*",
+        "tests/inventory*",
+        "tests/record_edits*",
+        "tools/ui-preview/*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E04",
+      "label": "Phase 2 Assembly Builder",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/html/assembly*",
+        "src/ph_composer/html/library_*",
+        "src/ph_composer/html/sections/assemblies.js",
+        "src/ph_composer/features/assemblies/*",
+        "src/ph_composer/shell/*",
+        "tests/assembly_builder*",
+        "tests/assembly_canvas*",
+        "tools/ui-preview/*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E05",
+      "label": "Phase 2 Face Assembly assignment",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/features/assemblies/*",
+        "src/ph_composer/html/sections/*",
+        "src/ph_composer/html/table_contributions.js",
+        "src/ph_composer/html/library_forms.js",
+        "src/ph_composer/shell/*",
+        "tests/assembly_assignment*",
+        "tools/examples/authoring/assembly_assignment_walkthrough.rb"
+      ],
+      "native_control_required": true
     }
   ]
 }

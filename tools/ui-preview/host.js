@@ -29,6 +29,7 @@
     this.parts = (settings.parts || []).map(function (part) { return JSON.parse(JSON.stringify(part)); });
     this.zones = JSON.parse(JSON.stringify(settings.zones || []));
     this.faces = JSON.parse(JSON.stringify(settings.faces || []));
+    this.selectedFaces = JSON.parse(JSON.stringify(settings.selectedFaces || []));
     this.makeZone = settings.makeZone || null;
     this.zoneSettings = { suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130 };
     this.colourBy = { mode: null, isolated: null };
@@ -63,6 +64,20 @@
             units: { ground_depth_mm: "mm" } } },
         [FACES]: { status: "completed", code: "ok", revision: this.revision,
           value: { faces: JSON.parse(JSON.stringify(this.faces)), units: { area_m2: "m2" } } },
+        ["ph_composer.zones.faces.selected"]: { status: "completed", value: {
+          faces: this.selectedFaces, targets: this.faces.filter(function (face) {
+            return this.selectedFaces.some(function (reference) {
+              return JSON.stringify(reference) === JSON.stringify(face.reference);
+            });
+          }, this).map(function (face) { return { reference: face.reference, expected_values: face.values }; }) } },
+        ["ph_composer.zones.faces.assemblies"]: { status: "completed", value: {
+          assemblies: this.assemblies.records.map(function (record) { return { id: record.id,
+            name: record.values.name, type: record.values.type || null, color: record.values.color }; }) } },
+        ["ph_composer.zones.faces.usage"]: { status: "completed", value: {
+          faces: this.faces.map(function (face) {
+            var zone = this.zones.filter(function (candidate) { return candidate.id === face.reference.zone_id; })[0];
+            return Object.assign({ zone_name: zone ? zone.values.name : "Zone" }, face);
+          }, this), assembly_usage: this.usage() } },
         [LEGEND]: { status: "completed", code: "ok", revision: this.revision, value: this.legend() },
         [PALETTE]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.palette)) },
@@ -77,6 +92,17 @@
 
   /* The legend the shared service would build, counted from the preview's own Faces so the rows move
      when the panel classifies one. */
+  Host.prototype.usage = function () {
+    var rows = Object.create(null);
+    this.faces.forEach(function (face) {
+      var id = face.values.assembly_id;
+      if (!id) return;
+      var row = rows[id] || (rows[id] = { assembly_id: id, face_count: 0, gross_area_m2: 0, faces: [] });
+      row.face_count += 1; row.gross_area_m2 += face.area_m2; row.faces.push(face.reference);
+    });
+    return Object.keys(rows).map(function (id) { return rows[id]; });
+  };
+
   Host.prototype.legend = function () {
     var isolated = this.colourBy.isolated, rows = [];
     var counts = {};
@@ -138,9 +164,11 @@
       if (payload.name === "ph_composer.colour_by.isolate") this.colourBy.isolated = payload.params.row || null;
       if (payload.name === "ph_composer.zones.faces.choose") {
         this.palette.active = true;
+        if (payload.params.reset) this.palette.palette = {};
         if (payload.params.value === null) delete this.palette.palette[payload.params.field];
         else this.palette.palette[payload.params.field] = payload.params.value;
       }
+      if (payload.name === "ph_composer.zones.faces.locate") this.selectedFaces = payload.params.faces;
       if (payload.name === "ph_composer.zones.faces.stop_classifying") this.palette.active = false;
       outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
         value: {}, affected: [], findings: [], detail: null };
@@ -172,7 +200,20 @@
     if (payload.name.indexOf("ph_composer.assemblies.") === 0 ||
         payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) return this.inventoryAction(payload);
     var resultValue = {};
-    if (payload.name === "ph_composer.zones.settings.update") {
+    if (payload.name === "ph_composer.zones.faces.assign_assembly") {
+      var targets = payload.params.targets, affected = targets.map(function (target) {
+        return host.faces.filter(function (face) {
+          return JSON.stringify(face.reference) === JSON.stringify(target.reference);
+        })[0];
+      });
+      if (affected.some(function (face, index) {
+        return !face || JSON.stringify(face.values) !== JSON.stringify(targets[index].expected_values);
+      })) return refused("target.changed", "A selected Face changed. " + NOTHING_WRITTEN, this.revision);
+      affected.forEach(function (face) {
+        if (payload.params.assembly_id === null) delete face.values.assembly_id;
+        else face.values.assembly_id = payload.params.assembly_id;
+      });
+    } else if (payload.name === "ph_composer.zones.settings.update") {
       var values = payload.params.values, expected = payload.params.expected_values;
       var keys = Object.keys(this.zoneSettings);
       if (keys.some(function (key) { return expected[key] !== host.zoneSettings[key]; })) {
@@ -247,8 +288,11 @@
     if (params.id && !target) return refused("target.not_found", "That record is unavailable.", this.revision);
     if (params.expected_values && Object.keys(params.expected_values).some(function (field) {
       var current = target.values[field];
-      return (current === undefined ? null : current) !== params.expected_values[field];
+      return JSON.stringify(current === undefined ? null : current) !== JSON.stringify(params.expected_values[field]);
     })) return refused("target.changed", "The record changed. " + NOTHING_WRITTEN, this.revision);
+    if (section === ASSEMBLIES + ".layers" || section === ASSEMBLIES + ".segments") {
+      return this.builderAction(section, operation, target, params);
+    }
     var prefix = material ? "mat" : (attached ? "atz" : "asm"), id = params.id;
     if (operation === "create" || (operation === "save" && !target)) {
       id = prefix + "_preview" + String(++this.sequence).padStart(5, "0");
@@ -293,11 +337,80 @@
       if (attached && !params.replacement) {
         return refused("replacement.required", "Choose a destination.", this.revision);
       }
+      if (!material && !attached) {
+        var uses = this.faces.filter(function (face) { return face.values.assembly_id === target.id; });
+        if (uses.length && !Object.prototype.hasOwnProperty.call(params, "replacement_id")) {
+          return refused("replacement.required", "Choose a replacement Assembly.", this.revision);
+        }
+        uses.forEach(function (face) {
+          if (params.replacement_id === null) delete face.values.assembly_id;
+          else face.values.assembly_id = params.replacement_id;
+        });
+      }
       records.splice(records.indexOf(target), 1);
     } else return refused("request.unknown_operation", "Unavailable fixture action.", this.revision);
+    if (!material && !attached && operation === "update" && params.values.ventilated_cladding !== undefined) {
+      // Synthetic canonical responses, not a thermal calculation in the preview host.
+      target.display.thermal.rse = params.values.ventilated_cladding ? 0.13 : 0.04;
+      target.display.thermal.u_effective = params.values.ventilated_cladding ? 0.195 : 0.2;
+    }
     this.revision += 1;
     return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
       value: { id: id }, affected: [], findings: [], detail: null };
+  };
+
+  /* Synthetic topology responses exercise gestures and IDs; Ruby owns physical validation and calculations. */
+  Host.prototype.builderAction = function (section, operation, target, params) {
+    var values = target.values, layers = values.layers;
+    var layer = layers.filter(function (row) { return row.id === params.layer_id; })[0];
+    var segment = layer && layer.segments.filter(function (row) { return row.id === params.segment_id; })[0];
+    var isLayer = section === ASSEMBLIES + ".layers";
+    if (params.layer_id && !layer) return refused("target.not_found", "Layer unavailable.", this.revision);
+    if (params.segment_id && !segment) return refused("target.not_found", "Layer-Segment unavailable.", this.revision);
+    function freshSegment(id) {
+      return { id: "seg_builder" + id, width_mm: 600, material_id: null,
+        is_continuous_insulation: false, steel_stud_spacing_mm: null };
+    }
+    if (isLayer) {
+      if (operation === "add") {
+        var index = params.index === undefined ? layers.length : params.index;
+        if (params.anchor_layer_id) {
+          var anchor = layers.filter(function (row) { return row.id === params.anchor_layer_id; })[0];
+          if (!anchor) return refused("target.not_found", "Anchor unavailable.", this.revision);
+          var outside = values.orientation === "first_layer_outside" ? 0 : 1;
+          index = layers.indexOf(anchor) + (params.side === "outside" ? outside : 1 - outside);
+        }
+        layers.splice(index, 0, { id: "lyr_builder" + (++this.sequence),
+          thickness_mm: params.thickness_mm || 100, segments: [freshSegment(this.sequence)] });
+      } else if (operation === "update") layer.thickness_mm = params.thickness_mm;
+      else if (operation === "remove") {
+        if (layers.length === 1) return refused("validation.failed", "An Assembly needs a Layer.", this.revision);
+        layers.splice(layers.indexOf(layer), 1);
+      } else if (operation === "move") {
+        var position = layers.indexOf(layer), outward = values.orientation === "first_layer_outside" ? -1 : 1;
+        var destination = position + (params.direction === "outward" ? outward : -outward);
+        if (destination >= 0 && destination < layers.length) {
+          layers[position] = layers[destination]; layers[destination] = layer;
+        }
+      } else if (operation === "flip") layers.reverse();
+      else if (operation === "flip_orientation") values.orientation = values.orientation === "first_layer_outside" ?
+        "last_layer_outside" : "first_layer_outside";
+      else if (operation === "set_air_barrier") values.air_barrier = params.layer_id ?
+        { layer_id: params.layer_id, face: params.face } : null;
+      else return refused("request.unknown_operation", "Unknown Layer action.", this.revision);
+    } else if (operation === "add") {
+      layer.segments.splice(params.index === undefined ? layer.segments.length : params.index, 0,
+        Object.assign(freshSegment(++this.sequence), { width_mm: params.width_mm || 600 }));
+    } else if (operation === "remove") {
+      if (layer.segments.length === 1) return refused("validation.failed", "A Layer needs a segment.", this.revision);
+      layer.segments.splice(layer.segments.indexOf(segment), 1);
+    } else if (operation === "update") Object.assign(segment, params.values);
+    else if (operation === "set_material") segment.material_id = params.material_id;
+    else if (operation === "mirror") layers.forEach(function (row) { row.segments.reverse(); });
+    else return refused("request.unknown_operation", "Unknown Layer-Segment action.", this.revision);
+    this.revision += 1;
+    return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
+      value: { id: target.id }, affected: [], findings: [], detail: null };
   };
 
   Host.prototype.find = function (id) {

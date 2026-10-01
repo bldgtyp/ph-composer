@@ -1,0 +1,19 @@
+{
+  "built": [
+    "asm_Single000001",
+    "asm_Mixed0000001",
+    "asm_Steel0000001",
+    "asm_Repeat000001",
+    "asm_Membrane0001",
+    "asm_Default00001"
+  ],
+  "unavailable": [
+    "asm_OnlyFilm0001",
+    "asm_BadMixed0001"
+  ],
+  "mixed_conductivity": 0.0535,
+  "steel_conductivity": 0.33143333333333336,
+  "repeat_conductivity": 0.058,
+  "default_density_kg_m3": 600,
+  "default_specific_heat_j_kgk": 1000
+}

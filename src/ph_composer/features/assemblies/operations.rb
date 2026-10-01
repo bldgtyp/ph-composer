@@ -96,8 +96,16 @@ module PhComposer
 
       def delete_assembly(request, proposal)
         id = request.params.fetch("id")
+        plan = nil
+        if request.params.key?("replacement_id")
+          replacement = request.params["replacement_id"]
+          if replacement == id
+            raise CodedError.new("params.invalid", "Choose a different replacement Assembly.")
+          end
+          plan = request.retarget_references(ASSEMBLY_KIND, :from => id, :to => replacement)
+        end
         request.engine.propose_delete(ASSEMBLY_KIND, id, proposal,
-          :expected_values => request.params.fetch("expected_values", {}))
+          :expected_values => request.params.fetch("expected_values", {}), :reference_plan => plan)
         { "id" => id }
       end
 

@@ -22,6 +22,8 @@ class ApiReferenceTest < PhComposerTestCase
     assert_equal "mm", zone.dig("values", "properties", "ground_depth_mm", "x-unit")
     assert_equal %w[zone_id zone_path], zone.dig("occurrence_reference", "required")
     assert_equal [{ "key" => "attached_zone_id", "target_kind" => "ph_composer.zones.faces.attached_zone",
+                    "cardinality" => "one" },
+                  { "key" => "assembly_id", "target_kind" => "ph_composer.assemblies.assembly",
                     "cardinality" => "one" }], face.fetch("references")
     assert_includes face.dig("values", "properties", "boundary_condition", "enum"), "AttachedZone"
     assert_equal %w[zone_id zone_path entity_path entity_id], face.dig("occurrence_reference", "required")

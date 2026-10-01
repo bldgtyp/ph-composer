@@ -11,9 +11,9 @@
  */
 PhComposerUI.define("sections/overview", ["panel", "workspace", "request", "snapshot", "units", "unit_preferences",
   "unit_field", "table", "view_controls", "fields", "sections/face_words", "sections/attached_zone_assignment",
-  "sections/zone_settings", "sections/selection_assignment"],
+  "sections/zone_settings", "sections/selection_assignment", "sections/assembly_assignment"],
 function (panel, ui, requests, snapshot, units, preferences, unitFields, tables, viewControls, fields, words,
-          attachedAssignment, ZoneSettings, SelectionAssignment) {
+          attachedAssignment, ZoneSettings, SelectionAssignment, assemblies) {
   "use strict";
   var AREA = fields.AREA_M2;
   // What a chip offers comes from the host, through the same read the Classify palette uses, so this
@@ -40,6 +40,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   /* This screen's own state, rebuilt whenever the panel shows a different Model. */
   function forSession(session, send) {
     if (screen && screen.session === session) return screen;
+    if (screen) { screen.disposed = true; screen.edits.reset(); screen.look.reset(); }
     if (screen && screen.zoneEditor) screen.zoneEditor.dispose();
     if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
     if (screen && screen.settings) screen.settings.dispose();
@@ -94,7 +95,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function columns(profile) {
     return [["actions", "Actions"], ["hierarchy", "Hierarchy"], ["name", "Name"],
       ["face_type", "Type"], ["boundary_condition", "Boundary"],
-      ["area_m2", units.header("Area", AREA, profile)], ["state", "State"]];
+      ["area_m2", units.header("Gross area", AREA, profile)], ["assembly_id", "Assembly"], ["state", "State"]];
   }
 
   /* Zone rows from the Zones read, their Faces from the Faces read, matched by the path that names
@@ -203,6 +204,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
      control: an `AirBoundary` Face, or one the solver paired, reads what it is and refuses the edit. */
   function cell(td, row, field, text, state) {
     var face = row.record.face, offered, chip;
+    if (field === "assembly_id") return assemblies.cell(td, row, state, draftReason);
     if (!face || (field !== "face_type" && field !== "boundary_condition")) return false;
     if (field === "boundary_condition" && face.values.boundary_condition === "AttachedZone") {
       return attachedCell(td, row, state);
@@ -315,6 +317,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var tool = snapshot.value(state, "ph_composer.zones.faces.palette") || {};
     var screenState = forSession(state.session, send), profile = units.profile(AREA, preferences.current());
     screenState.send = send;
+    screenState.snapshot = state;
+    screenState.assemblyEnabled = Boolean(snapshot.value(state, "ph_composer.zones.faces.assemblies") &&
+      snapshot.value(state, "ph_composer.zones.faces.faces"));
     screenState.revision = state.revision;
     screenState.attachedRecords = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") ||
       { records: [] }).records;
@@ -329,13 +334,15 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     screenState.zoneKeys = rows.filter(depth(0)).map(function (row) { return row.key; });
     if (!root.querySelector(".phc-table-mount")) {
       root.className = "phc-overview";
-      root.replaceChildren(ui.element("div", "phc-heading-mount"), screenState.controls.root,
+      root.replaceChildren(ui.element("div", "phc-heading-mount"), ui.element("div", "phc-selection-mount"),
+        screenState.controls.root,
         ui.element("div", "phc-table-mount"), ui.element("div", "phc-details-mount"));
     }
     var actions = ui.element("div", "phc-zone-actions");
     actions.appendChild(makeButton(screenState, zones.make_zone));
     actions.appendChild(solveButton(screenState, zones.zones));
     actions.appendChild(screenState.settings.bubble.root);
+    root.querySelector(".phc-selection-mount").replaceChildren(screenState.selectionAssignment.root);
     root.querySelector(".phc-heading-mount").replaceChildren(heading("Zones", zones.zones.length, actions));
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
     paintDetails(root.querySelector(".phc-details-mount"), rows, screenState);
@@ -356,7 +363,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var projection = state.controls.project(zoneRows.map(function (row) { return row.record; }), {
       id: function (record) { return record.id; },
       value: function (record, field) { return field === "area_m2" ? totalArea(record.faces) : record.name; },
-      search: searchText,
+      search: function (record) { return searchText(record, state); },
       rows: function () { return rows; }
     });
     tables.table(mount, rows, {
@@ -385,9 +392,13 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     });
   }
 
-  function searchText(record) {
+  function searchText(record, state) {
     return [record.name].concat(record.faces.map(function (face) {
-      return words.faceType(face.values.face_type) + " " + words.boundary(face.values.boundary_condition);
+      var assigned = assemblies.choices(state.snapshot, []).filter(function (record) {
+        return record.id === face.values.assembly_id;
+      })[0];
+      return words.faceType(face.values.face_type) + " " + words.boundary(face.values.boundary_condition) + " " +
+        (assigned ? assigned.name : face.values.assembly_id || "");
     })).join(" ");
   }
 

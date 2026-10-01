@@ -105,10 +105,12 @@ test("Attached zones use only the existing save and duplicate actions", function
   assert.strictEqual(o.sent[0].payload.params.expected_values.name, "Garage");
 });
 
-test("Assembly Open shows a placeholder and exposes no deferred Face or provider controls", function () {
+test("Assembly Open shows the Builder and exposes no provider controls", function () {
   var o = setup(), view = o.roots.assemblies._view;
   view.open(o.state.sections["ph_composer.assemblies.assemblies"].value.records[0]);
-  assert.ok(text(o.roots.assemblies).includes("Assembly Builder is planned."));
+  assert.ok(view.editor);
+  assert.ok(view.listRoot.hidden);
+  assert.ok(text(view.editor.root).includes("Back to Assemblies"));
   assert.ok(!text(o.roots.assemblies).includes("designPH"));
   assert.ok(!o.roots.assemblies.querySelector("[data-row-action='faces']"));
   assert.strictEqual(o.sent.length, 0);
@@ -342,4 +344,23 @@ test("retained Assembly and Attached-zone Duplicate listeners cannot write after
   assert.strictEqual(o.sent.length, 0);
   assert.strictEqual(assemblies.inventory.disposed, true);
   assert.strictEqual(library.attached.disposed, true);
+});
+
+
+test("Assembly numeric inventory cells follow the displayed SI and IP units", function () {
+  var o = setup(), units = o.modules.units, fields = o.modules.fields;
+  var rows = o.state.sections["ph_composer.assemblies.assemblies"].value.records;
+  rows[0].display.total_thickness_mm = 165;
+  rows[0].display.thermal.u_effective = 0.2;
+  o.paint();
+  assert.ok(text(o.roots.assemblies).includes(units.format(165, fields.LENGTH_MM,
+    units.profile(fields.LENGTH_MM, { unit_system: "SI" }))));
+  o.modules.unit_preferences.set("unit_system", "IP");
+  o.paint();
+  var displayed = text(o.roots.assemblies);
+  assert.ok(displayed.includes(units.format(165, fields.LENGTH_MM,
+    units.profile(fields.LENGTH_MM, o.modules.unit_preferences.current()))));
+  assert.ok(displayed.includes(units.format(0.2, fields.U_VALUE,
+    units.profile(fields.U_VALUE, o.modules.unit_preferences.current()))));
+  assert.strictEqual(o.sent.length, 0);
 });

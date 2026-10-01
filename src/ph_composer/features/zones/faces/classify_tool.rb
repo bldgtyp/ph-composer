@@ -29,7 +29,7 @@ module PhComposer
         FILL_ALPHA = 90
         OUTLINE_ALPHA = 230
         OUTSIDE_ZONE = "That Face is in no Zone. Make it a Zone first, then classify its Faces."
-        NOTHING_CHOSEN = "Choose a face type or a boundary condition before painting."
+        NOTHING_CHOSEN = "Choose an Assembly, face type or boundary condition before painting."
         CANCELLED = "The Classify gesture was cancelled. Nothing was written."
 
         attr_reader :palette, :collected
@@ -51,7 +51,8 @@ module PhComposer
         # Choosing an Attached zone carries its boundary condition with it, and dropping it takes that
         # boundary condition back: an AttachedZone boundary naming no record is an incomplete Face, so
         # the two are one choice however the palette is reached.
-        def choose(field, value)
+        def choose(field, value, reset: false)
+          @palette = {} if reset
           set(field, value)
           set("boundary_condition", "AttachedZone") if field == "attached_zone_id" && value
           if field == "attached_zone_id" && value.nil? && chosen("boundary_condition") == "AttachedZone"

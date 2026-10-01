@@ -1,0 +1,40 @@
+# P2-06 evidence: authored constructions
+
+DATE: 2026-10-01
+STATUS: Implemented. Focused conversion proof complete; independent review and integrated/native gates pending.
+
+Assemblies contributes self-contained construction records. Zones references those records for
+emitted Faces and reports actual usage. Normal composition uses authored constructions without a
+development construction provider. Pinned-stack proof produces two Rooms, twelve Faces and one
+reciprocal Surface pair; every emitted Face carries the authored construction reference.
+
+The affected Ruby gate passes 130 tests and 1119 assertions on Ruby 2.7.2 and 3.2.2. The Python
+conversion gate passes 105 tests, including 24 new construction cases. Ruff, mypy over 17 files and
+Rubocop over thirteen affected Ruby files pass. Tests cover mixed layers, steel spacing, repeated
+grids, orientation, membranes, defaults, actual shared object identity, unused incomplete definitions,
+and independent Zone survival when another Zone has a failed Face dependency.
+
+Dependency failure retains the accepted Zone-record translation boundary: one invalid assigned
+Face omits its whole Zone. Independent Zones still translate. Face identity accompanies the failure.
+A missing reciprocal Surface endpoint may withhold canonical output under the existing validation.
+No partial Room or additional Face assembly seam has been introduced.
+
+Pinned Honeybee requires specific heat at least 100 J/kgK and at most ten thermal materials per
+OpaqueConstruction. Named preflight conditions disclose these export constraints, retain authored
+values and layers, and become blocking through assigned emitted Faces. Membranes do not count toward
+the thermal layer limit. Missing thermal mass uses 600 kg/m3 and 1000 J/kgK with disclosure.
+
+A synthetic native reference is saved at `_private/host/envelope/reference.skp`: two Zones,
+twelve classified Faces, floor area 36 m2, roof area 36 m2, outdoor wall area 78 m2, and both
+Surface endpoints totaling 24 m2. It contains mixed wall and roof constructions, a membrane,
+shared partition, floor and unused incomplete Assembly. Independent arithmetic is saved beside it.
+E05 still requires the integrated installed build, actual assignment, export read-back and native
+lifecycle evidence. These preparation records do not award E05.
+
+Independent review reproduced and closed an emissivity conversion mismatch. Authored emissivity,
+including zero, now becomes thermal absorptance in single and grid constructions; 27 construction
+tests pass. Report defaults and the membrane conversion limitation are disclosed once per Model.
+The affected report gate passes five tests and 62 assertions on both Rubies. The reviewer compared
+geometry, identifiers, Face types and reciprocal Surface endpoints against the checkpoint golden
+and confirmed them unchanged. Native reference thermal queries match the independent arithmetic
+to the displayed six decimals: wall 0.980247, roof 0.195816, floor 0.130378 and partition 1.515152 W/m2K.

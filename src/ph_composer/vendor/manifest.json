@@ -1,9 +1,44 @@
 {
   "assets": {
+    "html/assembly.css": {
+      "bytes": 6159,
+      "mime": "text/css; charset=utf-8",
+      "sha256": "fae1c39eed0798783579f758b54d66a9e846c3310ef5c508c5ae7ed7a22a8c69"
+    },
+    "html/assembly_canvas.js": {
+      "bytes": 9089,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "960300cff59357b07ec2b0c732587eb93253c632bf93c61bd2db455d200c28b9"
+    },
+    "html/assembly_editor.js": {
+      "bytes": 15173,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "107ad27aff2a7d630995bf9a28dd92a46f8215115ab2e718e3bfc31de3ac2f87"
+    },
+    "html/assembly_editor_shared.js": {
+      "bytes": 2294,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "9f90d177c5ed2b4c1a7922449ed23b98d853769c55a8152b856726f368355c5a"
+    },
     "html/assembly_form.js": {
       "bytes": 3431,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "e48a7c50be824b4829ab0e5159cb52b38b93e22aaf0b6261a50273f2fd91f657"
+    },
+    "html/assembly_header.js": {
+      "bytes": 3576,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "94a84a7edcd20a3943443b98b9ea2630df7800b7bfd910d656f03bd1a15aa8bb"
+    },
+    "html/assembly_inspector.js": {
+      "bytes": 6171,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "24addf6e5630b594b2220aecf0259f06e9626ae68976c7656d14842e8a0c5265"
+    },
+    "html/assembly_stage.js": {
+      "bytes": 5951,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "9b6aba7fa654361b062dda769ddd52bf6792858e2241501c43491bd02206f97f"
     },
     "html/base.css": {
       "bytes": 9588,
@@ -26,9 +61,9 @@
       "sha256": "4e017ce6f606c6559cfbb06425af382878f994b10066373b4e04c1332a07f90e"
     },
     "html/index.html": {
-      "bytes": 3704,
+      "bytes": 4286,
       "mime": "text/html; charset=utf-8",
-      "sha256": "8c6433a1578127a23dc143133890a059f02bd7afc7da876f718d3291ca203b2b"
+      "sha256": "8478ec93d9acb0cec6fec91a9bb35cb5683b3121a2e79c96b5d4eed5b5c83a4f"
     },
     "html/inventory_grid.js": {
       "bytes": 15480,
@@ -45,10 +80,30 @@
       "mime": "text/css; charset=utf-8",
       "sha256": "078fd1236c6c87f83a9b86e9264424c9b599e6a9fb0d7475a1cccde8ff431a32"
     },
-    "html/library_forms.js": {
-      "bytes": 31348,
+    "html/library_adapters.js": {
+      "bytes": 876,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "5e8ffe77eb70c222fcfe58a179395195d2b39d9b4b7aade2824a95b20092fc97"
+      "sha256": "a3e3c402b5d7ad9fa58076558191ed003bd74a3047a0a600f8337888443d5b66"
+    },
+    "html/library_drag.js": {
+      "bytes": 4700,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "942d743b54a70b73d738034a158f4e3039cbdcf1c3a1641ccf586987dc5847f2"
+    },
+    "html/library_forms.js": {
+      "bytes": 32392,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "14a37db68be42e05555827ad2eb7eff8af82fd632ffef0100ecef617ebfe9f2c"
+    },
+    "html/library_rows.js": {
+      "bytes": 4881,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "894c8f5a3be79b63820e81f53bad933fbcb3a1d5f4c6091e2d38248ae0168eb8"
+    },
+    "html/library_sidebar.js": {
+      "bytes": 3944,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "948a450eadc28c780464b9db1a887758fbfa85cbc46418ed09651b6a94e22104"
     },
     "html/material_form.js": {
       "bytes": 5028,
@@ -101,9 +156,14 @@
       "sha256": "d0ecc88e9f68278dcc73a66652093c4e218b6f860e008dde53d117c680f95b4f"
     },
     "html/sections/assemblies.js": {
-      "bytes": 7233,
+      "bytes": 7706,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "cc1efcbc445ede93bba6d27acf3294bae617530692956b81289898a874895583"
+      "sha256": "04c1ef39f5610c10e3aebf67e4c74933b1e0091378629b458e9ff0bc3c12fc28"
+    },
+    "html/sections/assembly_assignment.js": {
+      "bytes": 11980,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "d44cb373ca0c9dfc2414e280b3b4896fdd35b4508d1e9760b081bd01972fb299"
     },
     "html/sections/attached_zone_assignment.js": {
       "bytes": 4232,
@@ -116,9 +176,9 @@
       "sha256": "0206c6615e98937dd7977692d9c8ad84301a77cba53811fd0787245ad326f533"
     },
     "html/sections/classify.js": {
-      "bytes": 9799,
+      "bytes": 10983,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "b2bc5976a49b59ac29d9d904f9776c3fc1a20fb1c24a837a677f7309a774aee6"
+      "sha256": "b6bbd6f492f3a462101c9c43269642c9ff2901a6573621a3f4faf3d1aaffc8bb"
     },
     "html/sections/colour_by.js": {
       "bytes": 4961,
@@ -141,14 +201,14 @@
       "sha256": "ca60e327e97eac64241571bf05e99b3a1aea3634f59431526abaf60d7fd68627"
     },
     "html/sections/overview.js": {
-      "bytes": 26295,
+      "bytes": 27182,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "86824f88c4d02f3d7637e6de49d714d2c38c56f8dbdbf233272c8a5533378d11"
+      "sha256": "8a206ae5b276ddc0fa918efc2f82f9b53f762c67ecfd0aa08e42cca0fde7ff9e"
     },
     "html/sections/selection_assignment.js": {
-      "bytes": 2222,
+      "bytes": 2456,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "a4b535f3984e8fdc7f578e6a64f51d1a659776cf8766d6cd0ebe4a0d54261c3f"
+      "sha256": "19c460abc4a7ed56236698e996f75f5b5a50cea6fda5f9bcf51d9a7876a18a02"
     },
     "html/sections/shell.js": {
       "bytes": 758,
@@ -236,24 +296,34 @@
       "sha256": "884e2725e72e1d8e08c345067699790718ca70c6a0a3c83ae241abb9dce64dbd"
     },
     "python/ph_composer_translation/composition.py": {
-      "bytes": 545,
+      "bytes": 615,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "94ea5ad9bffede7100cc544e6e8150cb1a8f95cbc39af1940ab0ced74448be4a"
+      "sha256": "53703a9905eb609bab39fa89feed73b717323e366b31bc0fd472c5f1c317d717"
     },
     "python/ph_composer_translation/conformance.py": {
       "bytes": 2298,
       "mime": "text/plain; charset=utf-8",
       "sha256": "9b0b8f3194aa7844b4cdc3c1ad1f803c89f08fa90f0ac2fefc31541ed88afb6d"
     },
-    "python/ph_composer_translation/contract.py": {
+    "python/ph_composer_translation/constructions.py": {
+      "bytes": 7037,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "52a8dbbfd0dcc964e17750181e9294e5f46627a9280d40208273a6abe65262fb"
+    },
+    "python/ph_composer_translation/contract/__init__.py": {
       "bytes": 1494,
       "mime": "text/plain; charset=utf-8",
       "sha256": "f12db5332999d60bff17b39be4d9c53f7f57b86aa3e2d60a0bd90f9a3aee905c"
     },
-    "python/ph_composer_translation/coordinator.py": {
-      "bytes": 8550,
+    "python/ph_composer_translation/contract/assembly_records.py": {
+      "bytes": 6369,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "cb94ff8552f7f0beea39ad8102f8fd2c33beb7f9e80803b4b0570fdf345ace30"
+      "sha256": "ccdf74668bbfbe19fd018dbccd764b0db735f0b4ab62fd555634162e5001ce78"
+    },
+    "python/ph_composer_translation/coordinator.py": {
+      "bytes": 8636,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "252ab1075c97c65d443b6486bf50f81686ee7635c6dbb7e417c24a33857b771d"
     },
     "python/ph_composer_translation/entry.py": {
       "bytes": 1478,
@@ -266,9 +336,9 @@
       "sha256": "deaae8b808bf827dfc8911cbcea2d41458efa573b3d541d35cd076fbb6c0f00a"
     },
     "python/ph_composer_translation/model_sections.py": {
-      "bytes": 15681,
+      "bytes": 16292,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "970b57c4435a22ba56ed2162ade89fa49e31e2905b94635e855d0ac7703fa962"
+      "sha256": "357a8aed278ba98212c4c325ce1cc33bed75d00434c8b674c064ea9e33837ef6"
     },
     "python/ph_composer_translation/result.py": {
       "bytes": 3162,
@@ -276,14 +346,14 @@
       "sha256": "1ba3b6a6ee723d7c79dbb3db223aefb42ba7f27155a09b54ccdf396ce9ec501d"
     },
     "python/ph_composer_translation/sections.py": {
-      "bytes": 4138,
+      "bytes": 4197,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "22b00598baedff1f427372e015ebf6bbad1c5ae4645bb0a9fe346b98fdec48aa"
+      "sha256": "f49792e3323f1e82350298a9cee5b80ae14df24983197a98b7bc493e2a131682"
     },
     "python/ph_composer_translation/stack.py": {
-      "bytes": 1333,
+      "bytes": 1361,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "d66a54c02ffdc526283117dcb6c1c3346813bbba97c237d3223131ebe3e119a9"
+      "sha256": "34619134c806237f412f61ffe35a8034078773dd6302cc83cef771cd0cbfe829"
     },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,
@@ -484,7 +554,9 @@
     "python/ph_composer_translation/__init__.py",
     "python/ph_composer_translation/composition.py",
     "python/ph_composer_translation/conformance.py",
-    "python/ph_composer_translation/contract.py",
+    "python/ph_composer_translation/constructions.py",
+    "python/ph_composer_translation/contract/__init__.py",
+    "python/ph_composer_translation/contract/assembly_records.py",
     "python/ph_composer_translation/coordinator.py",
     "python/ph_composer_translation/entry.py",
     "python/ph_composer_translation/exporters.py",

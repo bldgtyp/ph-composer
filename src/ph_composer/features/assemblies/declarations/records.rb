@@ -48,11 +48,16 @@ module PhComposer
 
       def declare_delete(feature, prefix, kind, example_id)
         properties = { "id" => Shapes::ID, "expected_values" => kind.descriptor.patch_schema }
-        properties["replacement_id"] = Shapes::ID if kind.id == MATERIAL_KIND
+        properties["replacement_id"] = if kind.id == MATERIAL_KIND
+                                         Shapes::ID
+                                       else
+                                         { "type" => %w[string null],
+                                           "description" => "Replacement identity, or explicit null to clear uses." }
+                                       end
         feature.action("#{prefix}.delete", :description => "Delete #{kind.label}; remaining references refuse.",
                        :params => Shapes.object(properties, :optional => %w[expected_values replacement_id]),
                        :result => Shapes::RESULT, :undo_name => "Delete #{kind.label}",
-                       :side_effects => "Deletes the record; Material replacement rewrites all uses atomically.",
+                       :side_effects => "Replacement or explicit clearing rewrites uses and deletes atomically.",
                        :examples => [{ "id" => example_id }]) do |request, proposal|
           if kind.id == MATERIAL_KIND
             Operations.delete_material(request, proposal)

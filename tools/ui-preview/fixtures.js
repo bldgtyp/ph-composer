@@ -176,6 +176,42 @@
         values: { name: "Garage", kind: "garage", temperature_reduction_factor: 0.95 } }] }
   };
 
+  // Public synthetic Builder reference. Thermal fields are fixed canonical host responses.
+  FIXTURES.builder = JSON.parse(JSON.stringify(FIXTURES.inventories));
+  [FIXTURES.inventories, FIXTURES.builder].forEach(function (fixture) {
+    fixture.assemblies.records.forEach(function (record, index) {
+      record.values.orientation = "first_layer_outside";
+      record.values.air_barrier = null;
+      record.values.ventilated_cladding = false;
+      record.values.layers = [{ id: "lyr_board_" + index, thickness_mm: 12,
+        segments: [{ id: "seg_board_" + index, width_mm: 600, material_id: "mat_b",
+          is_continuous_insulation: false, steel_stud_spacing_mm: null }] },
+      { id: "lyr_studs_" + index, thickness_mm: 140, segments: [
+        { id: "seg_wool_" + index, width_mm: 560, material_id: "mat_a",
+          is_continuous_insulation: false, steel_stud_spacing_mm: null },
+        { id: "seg_stud_" + index, width_mm: 40, material_id: index ? null : "mat_b",
+          is_continuous_insulation: false, steel_stud_spacing_mm: 600 }] },
+      { id: "lyr_lining_" + index, thickness_mm: 13,
+        segments: [{ id: "seg_lining_" + index, width_mm: 600, material_id: "mat_b",
+          is_continuous_insulation: false, steel_stud_spacing_mm: null }] }];
+      record.display.total_thickness_mm = 165;
+      record.display.thermal.u_construction = index ? null : 0.21;
+      record.display.thermal.rsi = 0.13;
+      record.display.thermal.rse = 0.04;
+      record.display.thermal.direction = "horizontal";
+    });
+  });
+
+  FIXTURES.assignment = JSON.parse(JSON.stringify(FIXTURES.inventories));
+  FIXTURES.assignment.zones = JSON.parse(JSON.stringify(AUTHORING.zones));
+  FIXTURES.assignment.faces = JSON.parse(JSON.stringify(AUTHORING.faces));
+  FIXTURES.assignment.faces.forEach(function (face, index) {
+    if (face.values.face_type) face.values.assembly_id = index % 2 ? "asm_b" : "asm_a";
+  });
+  FIXTURES.assignment.selectedFaces = FIXTURES.assignment.faces.filter(function (face) {
+    return face.values.face_type;
+  }).slice(0, 2).map(function (face) { return face.reference; });
+
   global.PhComposerPreviewFixtures = {
     names: Object.keys(FIXTURES),
     fromQuery: function (search) {

@@ -172,3 +172,19 @@ def test_record_errors_raised_while_translating_are_object_failures() -> None:
 
     result = translate(document(synthetic_a=None, synthetic_b=None), (Refuses(),))
     assert [f.message for f in result.findings] == ["refused"]
+
+
+@pytest.mark.parametrize("context", [None, "Face fac_A00000000001"])
+def test_dependency_context_preserves_identity_and_legacy_message(context: str | None) -> None:
+    from ph_composer_translation.sections import DependencyUnavailable
+
+    class ContextPanel(SectionB):
+        def translate(self, record: Any, inputs: Inputs) -> Panel:
+            raise DependencyUnavailable("synthetic.a", "a1", context)
+
+    result = translate(document(), (SectionA(), ContextPanel(), SectionC()))
+    finding = next(f for f in result.findings if f.section == "synthetic.b")
+    expected = "needs synthetic.a object a1, which did not translate"
+    assert finding.message == (f"{context}: {expected}" if context else expected)
+    assert finding.object_id == "b1" and finding.blocks_export
+    assert result.results["synthetic.b"].unavailable == ["b1", "b2"]

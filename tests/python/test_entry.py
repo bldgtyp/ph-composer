@@ -20,8 +20,9 @@ def test_a_document_translates_with_the_given_sections() -> None:
     assert result["state"] == "complete" and result["summary"]["objects"] == 5
 
 
-def test_the_product_build_lists_face_then_zone_sections_and_no_exporter() -> None:
+def test_the_product_build_lists_authored_construction_face_zone_sections_and_no_exporter() -> None:
     assert [section.id for section in SECTIONS] == [
+        "ph_composer.assemblies.export.constructions",
         "ph_composer.zones.faces.export.faces",
         "ph_composer.zones.export.zones",
     ]

@@ -1,7 +1,7 @@
 # Material and Assembly records: implementation checkpoint
 
 DATE: 2026-10-01
-STATUS: Implemented in the working tree; review and integrated/native gates open
+STATUS: Checkpoint committed; dual-Ruby CI and native records proof pass; full attestation open
 BRANCH: `codex/phase-02-envelope`
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -42,21 +42,26 @@ selection. Both were reproduced, corrected and closed by the same reviewer. Exac
 allows at most 16,384 paths; larger records remain authored and editable, with
 `calculation_limit` withholding the thermal value and marking completeness false. Uniform Layers
 are collapsed into base resistance, bounding recursion depth. Boundary and deep-layer tests
-retain the reference values. No further material findings were reported. No source is committed
-or installed from this checkpoint yet.
+retain the reference values. No further material findings were reported. The verified checkpoint and installation are recorded below.
 
-## Native steps and resume
+## Verified checkpoint and native record proof
 
-Run `tools/examples/authoring/assemblies_walkthrough.rb` with the panel closed in a fresh process
-after building and installing the stable package. Capture actual catalog records after each
-committed gesture. Native Undo and Redo must reproduce those records at every step, followed by
-save and exact public readback after a fresh reopen. Verify two Models with identical synthetic
-record ids remain isolated.
+Checkpoint `35704bd` passed full CI on Ruby 3.2.2 and 2.7.2, coverage and browser checks.
+The immutable package was checked against all 218 installed entries with no byte differences.
+In fresh SketchUp 26.1.188, the public records walkthrough committed 14 gestures with the
+panel closed. All 14 native Undo and 14 native Redo states matched the raw public catalogs.
+Save and fresh normal reopen retained exact identities and actual references.
 
-The private helper `_private/host/envelope/e02-journal.rb` observes public API outcomes and
-readbacks only. It has been prepared but not run. Its prepend observer is development-only;
-restart normally before any final restoration attestation. The running SketchUp fixture still
-belongs to the preceding groundwork regression observations; do not treat it as this build.
+Two native Model windows containing identical record ids remained isolated: an update targeted
+the inactive first Model, the second remained unchanged, and native Undo restored the first.
+A further six-gesture public API sequence exercised nested user_data, duplication, fresh nested
+ids and retained Material references. All six native Undo/Redo states and final fresh reopen
+matched exactly (4 Materials, 3 Assemblies). Unknown-extension copy refusal is covered offline;
+it was not separately injected in this native run.
 
-No manual step is requested yet. The held-gesture checks that native automation cannot reach
-remain in the final batch tracked by the groundwork evidence.
+Private evidence lives under `_private/host/envelope/`: `e02-record-journal.json`,
+`e02-native-roundtrip.json`, `e02-two-models.rb`, `e02-metadata-journal.json`,
+`e02-metadata-native-roundtrip.json` and `e02-metadata-reopen.rb`. The final normal restart
+removed observers and API prepends. Current fixture: `e02.skp`, PID 50884, bridge port 57845.
+The panel is open for inventory verification. Later Builder/assignment source is not installed.
+Complete preceding native attestations, SketchUp 2023, Windows and distribution remain open.

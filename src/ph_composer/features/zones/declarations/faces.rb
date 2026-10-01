@@ -11,10 +11,14 @@ module PhComposer
         ATTACHED_ZONE_REFERENCE = Records::Reference.new(
           :key => "attached_zone_id", :target_kind => AttachedZone::KIND_ID, :cardinality => "one", :required => false
         )
+        ASSEMBLY_REFERENCE = Records::Reference.new(
+          :key => "assembly_id", :target_kind => "ph_composer.assemblies.assembly", :cardinality => "one",
+          :required => false
+        )
         TARGET = Records::ReferenceTarget.new(
           :id => REFERENCE_KIND, :label => "Face", :records => ReferenceTargets.method(:entries),
           :validate => Schema.method(:problems), :schema_version => 1, :values => FACE_VALUES,
-          :occurrence => FACE_REFERENCE, :references => [ATTACHED_ZONE_REFERENCE]
+          :occurrence => FACE_REFERENCE, :references => [ATTACHED_ZONE_REFERENCE, ASSEMBLY_REFERENCE]
         )
         ATTACHED_ZONE = AttachedZone::RECORD_KIND.descriptor
         EXAMPLE_FACE = { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201], "entity_path" => [1202],
@@ -32,8 +36,8 @@ module PhComposer
           # gesture.too_large rather than a generic schema error the palette cannot explain.
           "faces" => FACES.merge("description" => "One gesture's deduplicated Face occurrences."),
           "intent" => Shapes.object({ "face_type" => INTENT, "boundary_condition" => INTENT,
-                                      "attached_zone_id" => INTENT },
-                                    :optional => %w[face_type boundary_condition attached_zone_id]),
+                                      "attached_zone_id" => INTENT, "assembly_id" => INTENT },
+                                    :optional => %w[face_type boundary_condition attached_zone_id assembly_id]),
           "expected_values" => EXPECTED
         }, :optional => ["expected_values"]).freeze
         FACE_IDS_RESULT = Shapes.object({
@@ -60,11 +64,14 @@ module PhComposer
           "adjacency_state" => { "type" => %w[string null],
                                  "enum" => [nil, "current", "stale", "unresolved", "invalid"],
                                  "description" => "How a Surface pair stands; null for any other boundary." },
+          "assembly_state" => { "type" => "string", "enum" => %w[absent resolved dangling invalid] },
+          "findings" => AssemblyRegistration::FINDINGS,
           "state" => { "type" => "string", "enum" => %w[unclassified incomplete classified] }
         }).freeze
         ALL_RESULT = Shapes.object({
           "faces" => Shapes.list(FACE_ROW, :description => "Every Face occurrence inside a Zone, recorded or not."),
-          "units" => Shapes.object({ "area_m2" => { "type" => "string", "enum" => ["m2"] } })
+          "units" => Shapes.object({ "area_m2" => { "type" => "string", "enum" => ["m2"] } }),
+          "assembly_usage" => AssemblyRegistration::USAGE
         }).freeze
         # A row as `list` returns it: whole, or with `fields` only its reference and those values.
         PROJECTED_FACE_ROW = FACE_ROW.merge(
@@ -85,16 +92,17 @@ module PhComposer
         }, :optional => %w[zone_ids zone_paths ids fields limit cursor]).freeze
         LIST_EXAMPLE = { "zone_ids" => [EXAMPLE_FACE.fetch("zone_id")], "fields" => ["face_type"] }.freeze
         LIST_RESULT = Shapes.object(
-          ALL_RESULT.fetch("properties").merge(
+          ALL_RESULT.fetch("properties").reject { |key, _value| key == "assembly_usage" }.merge(
             "faces" => Shapes.list(PROJECTED_FACE_ROW, :description => "One page of Face occurrences in path order."),
             "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL
           )
         ).freeze
         CHOOSE_PARAMS = Shapes.object({
-          "field" => { "type" => "string", "enum" => %w[face_type boundary_condition attached_zone_id] },
+          "field" => { "type" => "string", "enum" => %w[face_type boundary_condition attached_zone_id assembly_id] },
           "value" => { "type" => %w[string null],
-                       "description" => "The value to set, or null to keep whatever each Face has." }
-        }).freeze
+                       "description" => "The value to set, or null to keep whatever each Face has." },
+          "reset" => { "type" => "boolean", "description" => "Clear other palette choices before this choice." }
+        }, :optional => ["reset"]).freeze
         TOOL_STATE = Shapes.object({
           "active" => { "type" => "boolean", "description" => "Whether the Classify tool has the viewport." },
           "palette" => { "type" => "object", "additionalProperties" => { "type" => %w[string null] },
@@ -173,7 +181,8 @@ module PhComposer
           feature.action("#{PREFIX}.classify",
                          :description => "Apply explicit keep, set or clear intent to Faces.",
                          :params => CLASSIFY_PARAMS, :result => FACE_IDS_RESULT, :undo_name => "Classify Faces",
-                         :examples => [classify],
+                         :examples => [classify, { "faces" => [EXAMPLE_FACE],
+                           "intent" => { "assembly_id" => { "mode" => "set", "value" => "asm_Ab12Cd34Ef56" } } }],
                          :side_effects => "Writes face assignments and Zone stamps.") do |request, proposal|
             Faces.classify(request, proposal)
           end
@@ -207,8 +216,13 @@ module PhComposer
           feature.view_command("#{PREFIX}.choose",
                                :description => "Set one Classify palette field and give the tool the viewport.",
                                :params => CHOOSE_PARAMS, :result => TOOL_STATE,
-                               :examples => [{ "field" => "face_type", "value" => "Wall" }]) do |request|
-            Faces.classify_tool(request.session).choose(request.params.fetch("field"), request.params.fetch("value"))
+                               :examples => [{ "field" => "face_type", "value" => "Wall" },
+                                             { "field" => "assembly_id", "value" => "asm_Ab12Cd34Ef56" }]) do |request|
+            if request.params["field"] == "assembly_id" && request.params["value"]
+              AssemblyAssignment.resolve(request, request.params.fetch("value"))
+            end
+            Faces.classify_tool(request.session).choose(request.params.fetch("field"), request.params.fetch("value"),
+                                                        :reset => request.params.fetch("reset", false))
             Faces.tool_state(request.session)
           end
           feature.view_command("#{PREFIX}.stop_classifying",

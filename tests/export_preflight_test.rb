@@ -49,7 +49,7 @@ class ExportPreflightTest < PhComposerTestCase
     assert_equal "construction.missing", first.dig("value", "findings", 0, "code")
     PhComposer::Zones::Faces::FACE_STORE.write(face, record.merge("assembly_id" => "asm_#{'A' * 12}"))
     second = API.export_preflight(:context => @context)
-    assert_equal "construction.unavailable", second.dig("value", "findings", 0, "code")
+    assert_equal "construction.dangling", second.dig("value", "findings", 0, "code")
     assert second.dig("value", "findings").all? { |finding| finding.fetch("blocks_export") }
     assert_empty @model.operations
   end

@@ -95,8 +95,7 @@ fs.mkdirSync(output, { recursive: true });
     await assemblies.getByRole("heading", { name: "Assemblies · 2", exact: true }).waitFor();
     assert((await assemblies.locator("[data-u-withheld]").getAttribute("aria-label")).includes("Choose a Material"));
     await assemblies.getByRole("button", { name: "Open Wall", exact: true }).click();
-    await assemblies.getByRole("dialog", { name: "Wall", exact: true }).getByText("Assembly Builder is planned.").waitFor();
-    await page.keyboard.press("Escape");
+    await assemblies.getByRole("button", { name: "Back to Assemblies", exact: true }).click();
     const type = assemblies.locator("[data-row-key='asm_a'] [data-record-field='type']");
     assert.equal(await type.inputValue(), "Wall");
     await type.selectOption("RoofCeiling");
@@ -111,7 +110,7 @@ fs.mkdirSync(output, { recursive: true });
     await assemblies.getByRole("button", { name: "Delete New slab (copy)", exact: true }).waitFor();
     await assemblies.getByRole("button", { name: "Delete New slab (copy)", exact: true }).click();
     const deleteAssembly = assemblies.getByRole("dialog", { name: "Delete New slab (copy)", exact: true });
-    await deleteAssembly.getByRole("button", { name: /Delete$/ }).click();
+    await deleteAssembly.locator("button[type=submit]").click();
     await deleteAssembly.waitFor({ state: "hidden" });
     assert.equal(await page.evaluate(() => window.previewHost.assemblies.records.length), 3);
 

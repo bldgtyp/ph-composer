@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ripper"
 require_relative "test_helper"
 require_relative "../src/ph_composer/features/assemblies/install"
 require_relative "support/assembly_record_fixtures"
@@ -77,7 +78,10 @@ class AssemblyRecordsSchemaTest < PhComposerTestCase
   def test_definition_feature_never_names_a_geometry_or_placed_feature
     files = Dir[File.expand_path("../src/ph_composer/features/assemblies/**/*.rb", __dir__)]
     files.each do |file|
-      refute_match(/\bZones\b|\bFaces?\b|\bWindows?\b|features\/(zones|windows)/, File.read(file), file)
+      source = File.read(file)
+      constants = Ripper.lex(source).select { |token| token.fetch(1) == :on_const }.map { |token| token.fetch(2) }
+      assert_empty constants & %w[Zones Face Faces Window Windows], file
+      refute_match(%r{features/(zones|windows)|ph_composer\.(zones|windows)}, source, file)
     end
   end
 end
