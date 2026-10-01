@@ -46,3 +46,25 @@ test("a refused creation keeps the form draft and permits retry after a new snap
     assert.strictEqual(o.view.form.submitButton.disabled, false);
   o.view.form.fields.name.value = "Other Frame"; o.view.form.submit(); assert.strictEqual(o.sent.length, 2);
 });
+test("new Frame parses authored width and thermal quantities and completion releases the form", function () {
+  var o = setup(), form = o.view.form; form.open("create", null, o.view.records);
+  form.fields.name.value = " New frame "; form.fields.manufacturer.value = " Synthetic maker ";
+  form.fields.width_m.value = "80 mm"; form.fields.uf_w_m2k.value = "1.2"; form.fields.psi_g_w_mk.value = "0.03";
+  form.submit(); assert.strictEqual(o.sent.length, 1);
+  var values = o.sent[0].payload.params.values; assert.strictEqual(values.name, "New frame");
+  assert.strictEqual(values.manufacturer, "Synthetic maker"); assert.strictEqual(values.width_m, 0.08);
+  assert.strictEqual(values.uf_w_m2k, 1.2); assert.strictEqual(values.psi_g_w_mk, 0.03);
+  o.state.ui.actionResult = { session: "session", request_id: o.sent[0].payload.request_id,
+    outcome: { status: "completed", value: { id: "frm_created" } } }; o.view.render(o.state);
+  assert.ok(form.root.hidden); assert.strictEqual(o.view.guard(), null);
+});
+test("new Glazing rejects an out-of-range g-value and preserves the draft for corrected Apply", function () {
+  var o = setup("glazings"), form = o.view.form; form.open("create", null, o.view.records);
+  form.fields.name.value = "New glazing"; form.fields.ug_w_m2k.value = "0.6"; form.fields.g_value.value = "1.2";
+  form.submit(); assert.strictEqual(o.sent.length, 0); assert.ok(form.error.textContent);
+  assert.strictEqual(form.fields.name.value, "New glazing"); assert.strictEqual(form.root.hidden, false);
+  form.fields.g_value.value = "0.5"; form.submit(); assert.strictEqual(o.sent.length, 1);
+  assert.strictEqual(o.sent[0].payload.name, "ph_composer.windows.glazings.create");
+  assert.strictEqual(o.sent[0].payload.params.values.ug_w_m2k, 0.6);
+  assert.strictEqual(o.sent[0].payload.params.values.g_value, 0.5);
+});

@@ -219,3 +219,123 @@ test("Window section navigation uses the Element name guard and missing target c
   assert.strictEqual(sectionGuard("library"), null); assert.strictEqual(bubble.panel.hidden, true);
   form.listeners.submit({ preventDefault: function () {} }); assert.strictEqual(o.sent.length, 1);
 });
+test("product picker filters replacements but keeps the current assignment and freezes the Frame patch", function () {
+  var o = setup(), replacement = fixtures.record("frm_b", { name: "Steel casement", manufacturer: "Other",
+    product_code: "SC-1", position: "head", operation: "swing", width_m: 0.06, uf_w_m2k: 1.5, psi_g_w_mk: 0.04 });
+  o.state.sections["ph_composer.windows.frames"].value.records.push(replacement); o.editor.render(o.state);
+  o.editor.picker("wel_a", "frames", "top", o.editor.cards.wel_a.rows.top.button);
+  var bubble = o.editor.bubble, search = bubble.content.querySelector("input");
+  search.value = "SC-1"; search.listeners.input({});
+  assert.ok(bubble.content.querySelector("[aria-current='true']"));
+  assert.ok(bubble.content.querySelector("[data-record-id='frm_b']"));
+  var position = bubble.heading.querySelector("[data-filter='position']");
+  position.value = "sill"; position.listeners.input({});
+  assert.strictEqual(bubble.content.querySelector("[data-record-id='frm_b']"), null);
+  var clear = bubble.heading.querySelectorAll("button").filter(function (button) {
+    return text(button).includes("Clear filters");
+  })[0]; click(clear);
+  o.editor.rawRecord().values.elements[0].frames.bottom = "Changed later";
+  click(bubble.content.querySelector("[data-record-id='frm_b']"));
+  assert.strictEqual(o.sent.length, 1); var params = o.sent[0].payload.params;
+  assert.strictEqual(params.field, "frames"); assert.strictEqual(params.value.top, "frm_b");
+  assert.strictEqual(params.value.bottom, "frm_a");
+  assert.strictEqual(params.expected_values.elements[0].frames.bottom, "frm_a");
+  outcome(o, "refused"); assert.strictEqual(bubble.panel.hidden, false);
+  click(bubble.content.querySelector("[data-record-id='frm_b']")); assert.strictEqual(o.sent.length, 2);
+  outcome(o, "completed"); assert.strictEqual(bubble.panel.hidden, true);
+});
+test("Glazing picker diagnoses a missing assignment and replacement or clear writes once", function () {
+  var o = setup(); o.editor.rawRecord().values.elements[0].glazing_id = "glz_missing"; o.editor.render(o.state);
+  o.editor.picker("wel_a", "glazings", null, o.editor.cards.wel_a.rows.glazing.button);
+  var bubble = o.editor.bubble; assert.ok(text(bubble.content).includes("no longer in this model"));
+  click(bubble.content.querySelector("[data-record-id='glz_a']"));
+  assert.strictEqual(o.sent[0].payload.params.value, "glz_a");
+  assert.strictEqual(o.sent[0].payload.params.expected_values.elements[0].glazing_id, "glz_missing");
+  outcome(o, "completed"); o.editor.picker("wel_a", "glazings", null, o.editor.cards.wel_a.rows.glazing.button);
+  var clear = o.editor.bubble.heading.querySelectorAll("button").filter(function (button) {
+    return text(button).includes("Clear assignment");
+  })[0]; click(clear); assert.strictEqual(o.sent[1].payload.params.value, null);
+  outcome(o, "completed"); o.state.sections["ph_composer.windows.glazings"].value.records = [];
+  o.editor.render(o.state); o.editor.picker("wel_b", "glazings", null, o.editor.title);
+  assert.ok(text(o.editor.bubble.content).includes("No glazings in this model yet"));
+  assert.strictEqual(o.sent.length, 2);
+});
+test("Empty cards hide products and missing construction findings identify the affected rows", function () {
+  var o = setup(), raw = o.editor.rawRecord(), detail = raw.display.thermal.elements[0];
+  assert.ok(o.editor.cards.wel_c.content.hidden); assert.ok(o.editor.cards.wel_c.value.hidden);
+  assert.strictEqual(o.editor.cards.wel_c.empty.hidden, false);
+  var cell = raw.values.elements[0]; cell.frames.left = null; cell.frames.right = "missing";
+  var frame = o.state.sections["ph_composer.windows.frames"].value.records[0].values;
+  frame.width_m = null; frame.uf_w_m2k = null; frame.psi_g_w_mk = null;
+  var glazing = o.state.sections["ph_composer.windows.glazings"].value.records[0].values;
+  glazing.ug_w_m2k = null; glazing.g_value = null;
+  detail.findings = ["unresolved_frame_width", "unresolved_construction", "Missing g-value.",
+    "top:unresolved_install", "nonpositive_glazing_geometry", "Choose operation and handedness.",
+    "Canonical warning."];
+  o.editor.render(o.state); var card = o.editor.cards.wel_a;
+  assert.ok(card.rows.glazing.flag.title.includes("Ug")); assert.ok(card.rows.glazing.flag.title.includes("g-value"));
+  assert.ok(card.rows.left.flag.title.includes("Product"));
+  assert.ok(card.rows.right.flag.title.includes("Product not found"));
+  assert.ok(card.rows.top.flag.title.includes("Width")); assert.ok(card.rows.top.flag.title.includes("Psi-Install"));
+  assert.ok(card.operationFlag.title.includes("direction"));
+  assert.ok(text(card.findings).includes("Frame widths leave no glazing area"));
+  assert.ok(text(card.findings).includes("Canonical warning")); assert.strictEqual(o.sent.length, 0);
+});
+test("operation direction buttons map Interior presentation to canonical handedness", function () {
+  var o = setup(), card = o.editor.cards.wel_a; card.operation.value = "swing";
+  card.operation.listeners.change({}); assert.strictEqual(o.sent[0].payload.params.value.type, "swing");
+  outcome(o, "completed"); o.editor.rawRecord().values.elements[0].operation = { type: "swing", directions: [] };
+  o.editor.interior = true; o.editor.render(o.state); click(card.directions.left);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[1].payload.params.value.directions)), ["right"]);
+  outcome(o, "completed"); o.editor.rawRecord().values.elements[0].operation.directions = ["right"];
+  o.editor.render(o.state); assert.strictEqual(card.directions.left.getAttribute("aria-pressed"), "true");
+  click(card.directions.left); assert.strictEqual(o.sent[2].payload.params.value.directions.length, 0);
+});
+test("Installs validates and stages Psi products, then saves their frozen updates atomically", function () {
+  var o = setup(), installs = o.editor.installEditor; installs.open(o.editor.rawRecord());
+  installs.editProduct(); var name = installs.form.querySelector("input");
+  installs.form.onsubmit({ preventDefault: function () {} }); assert.strictEqual(installs.products.length, 1);
+  name.value = " New junction "; installs.productField.input.value = "bad psi";
+  installs.productField.input.listeners.input({}); installs.form.onsubmit({ preventDefault: function () {} });
+  assert.strictEqual(installs.form.hidden, false); assert.strictEqual(installs.productField.error.hidden, false);
+  installs.productField.input.value = "0.05"; installs.productField.input.listeners.input({});
+  installs.form.onsubmit({ preventDefault: function () {} });
+  var created = installs.products[1], clientId = created.id; assert.strictEqual(created.values.name, "New junction");
+  assert.strictEqual(o.sent.length, 0); installs.editProduct(created);
+  installs.form.querySelector("input").value = "Renamed staged junction";
+  installs.form.onsubmit({ preventDefault: function () {} });
+  assert.strictEqual(Object.keys(installs.updates).length, 0);
+  installs.editProduct(installs.products[0]); installs.form.querySelector("input").value = "Edited existing junction";
+  installs.form.onsubmit({ preventDefault: function () {} }); installs.selected = clientId; installs.applyAll();
+  installs.saveAction(); var params = o.sent[0].payload.params;
+  assert.strictEqual(o.sent.length, 1); assert.strictEqual(params.psi_install_types.create[0].client_id, clientId);
+  assert.strictEqual(params.psi_install_types.create[0].values.name, "Renamed staged junction");
+  assert.strictEqual(params.psi_install_types.update[0].expected_values.name, "Insulated junction");
+  assert.strictEqual(params.psi_install_types.update[0].values.name, "Edited existing junction");
+  assert.strictEqual(params.types[0].installs.length, 2, "Empty contributes no installations");
+  assert.strictEqual(params.types[0].installs[0].sides.top, clientId);
+  assert.strictEqual(params.types[0].installs[0].sides.right, null, "shared edges stay derived");
+  outcome(o, "completed"); assert.strictEqual(installs.root.hidden, true); assert.strictEqual(installs.guard(), null);
+});
+test("Installs bulk paint and compatible copies stay local; missing defaults remain visible", function () {
+  var o = setup(), installs = o.editor.installEditor, target = JSON.parse(JSON.stringify(o.editor.rawRecord()));
+  target.id = "wnt_b"; target.values.name = "Compatible target";
+  target.values.elements.forEach(function (cell) { cell.id += "_target"; });
+  o.state.sections["ph_composer.windows.types"].value.records.push(target);
+  o.state.sections["ph_composer.windows.settings"].value.default_psi_install_id = "missing";
+  o.editor.render(o.state); installs.open(o.editor.rawRecord());
+  assert.ok(text(installs.list).includes("Model default · Missing"));
+  assert.ok(installs.drawing.querySelector("[aria-label='Element 1 top: Missing default']"));
+  installs.selected = "psi_a"; click(installs.apply); click(installs.copyButton);
+  var copy = installs.copyForm.querySelector("button"); assert.ok(copy.textContent.includes("Compatible target"));
+  click(copy); assert.strictEqual(installs.drafts.wnt_b.elements[0].installs.top, "psi_a");
+  assert.strictEqual(o.sent.length, 0); installs.selected = null; installs.applyAll();
+  assert.strictEqual(installs.drafts.wnt_a.elements[0].installs.top, null);
+  installs.cancelSession(true); installs.open(o.editor.rawRecord());
+  o.state.sections["ph_composer.windows.types"].value.records.pop(); o.editor.render(o.state); installs.showCopy();
+  assert.ok(text(installs.copyForm).includes("No compatible Window Types"));
+  installs.editProduct(installs.products[0]);
+  delete o.state.sections["ph_composer.windows.settings"]; o.editor.render(o.state);
+  assert.strictEqual(installs.root.hidden, true); assert.strictEqual(installs.productField, null);
+  assert.strictEqual(o.editor.guard(), null); installs.saveAction(); assert.strictEqual(o.sent.length, 0);
+});
