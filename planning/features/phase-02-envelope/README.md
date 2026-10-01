@@ -1,7 +1,7 @@
 # Phase 2: envelope
 
 DATE: 2026-09-30
-STATUS: In progress. Ed authorized the implementation run 2026-10-01; the current Slice B native replay runs on `codex/phase-02-envelope`. Gates and resume state are in [STATUS.md](STATUS.md).
+STATUS: In progress. Ed authorized the implementation run 2026-10-01; Slice B native replay passes on `codex/phase-02-envelope`. Gates and resume state are in [STATUS.md](STATUS.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 

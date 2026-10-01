@@ -1,10 +1,10 @@
 # Face assignment: status
 
-DATE: 2026-09-30
+DATE: 2026-10-01
 STATUS: In progress. Phase 1 scope (classification, the Classify tool, Suggest classification, Reverse,
 Attached zones, face Colour-by modes, the Overview faces table) merged to main through PR #3 and
 PR #6 and accepted in the archived Phase 1 packet. Assembly assignment is Phase 2. Ed's
-confirmation of the recorded interview answers is still pending.
+full Phase 2 implementation authorization was given 2026-10-01.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -20,13 +20,15 @@ Phase 1's allocation is complete and its evidence is in the archived
 assignment, planned in the [Phase 2 packet](../README.md): stage
 [P2-05](../phases/p2-05-assign-assemblies-to-faces.md) for the write, usage, routes and Colour-by
 mode, and [P2-06](../phases/p2-06-construction-export.md) for the export rows. [PLAN.md](PLAN.md)
-carries the allocation and the PRD carries the Phase 2 amendments. Nothing in Phase 2 is
-authorized.
+carries the allocation and the PRD carries the Phase 2 amendments. P2-05 and P2-06 are
+implemented; complete native acceptance remains open. Continue the outstanding assignment
+gestures and export checks against the installed source in [Phase 2 status](../STATUS.md).
 
 ## Blockers
 
-- Any row among D2-1, D2-2, D2-3 and D2-10 still open in the [Phase 2 decisions](../DECISIONS.md). Its answer column is current.
-- The remote exists at `bldgtyp/ph-composer`; an implementation issue has not been created.
+The relevant Phase 2 decisions are answered and implementation issue #14 exists. Complete
+E05/E06 and affected Phase 1 host attestations remain; the held Classify context case is in
+the [final manual batch](../MANUAL_BATCH.md).
 
 ## Verification
 
