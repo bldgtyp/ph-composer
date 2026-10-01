@@ -1,7 +1,7 @@
 # P2-15 evidence: Window product libraries
 
 DATE: 2026-10-01
-STATUS: Source implemented and independently reviewed; integrated gates pass; fresh native gate in progress.
+STATUS: Source implemented and independently reviewed; integrated gates pass; native E15 passes.
 
 Frame, Glazing and Psi-Install Type adapters live under the Windows owner. They declare SI
 wire schemas and closed mapped schemas, normalized semantic fingerprints, detached local
@@ -51,3 +51,21 @@ its Top Frame together. The actual native menu reports `Undo Copy Library Record
 native Undo restores all four complete inventory/reference projections exactly. Private
 proof: `e15-before.json`, `e15-frame.json`, `e15-frame-undo.json`. Glazing, staged Psi,
 export/readback and final case attestation remain next.
+
+Native Glazing drag copies and assigns the selected element in one operation; one native Undo
+restores all four inventory/reference projections. Native Psi selection and perimeter painting
+leave all four projections, revision and the unmodified Model unchanged until Save. Save
+creates one trusted-attribution product with one perimeter reference. One native Undo restores
+the entire baseline. Private proofs are `e15-glazing.json`, `e15-glazing-undo.json`,
+`e15-psi-staged.json`, `e15-psi-save.json`, `e15-psi-undo.json`.
+
+The native Export library form and Save picker write `e15-native-four-kinds.json`, library name
+`Native four-kind library`. The review reports 4 Materials, 1 Frame, 1 Glazing and 1 Psi Type,
+plus explicit omission of source metadata and unsupported Assembly/Window Type kinds.
+The installed FileProvider admits all seven rows with no warnings or unavailable rows.
+Every wire record resolves to its actual local id and maps back to the same normalized authored
+values after reverse mapping. The Model stays unmodified. Proof: `e15-four-kind-readback.json`.
+E15's required workflow passes on SketchUp 26.1.188 / Ruby 3.2.2, normal composition, fresh
+session `ceafd474-bfea-4b31-b611-07410cff0d23`. The dedicated structured case is recorded from
+the pre-action dependency baseline. Section 2.4 is delivered for its current stage scope;
+placed-Unit aggregate counts still depend on P2-13 and remain explicit unfinished phase work.

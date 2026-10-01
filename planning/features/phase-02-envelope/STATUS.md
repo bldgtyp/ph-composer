@@ -104,8 +104,8 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 | [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A partial; Slice B implemented and reviewed; integrated gates pass, native replay open; Slice C blocked on native Move Copy | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Scoped | |
 | [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
-| [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Scoped | |
-| [P2-16 Connection provider and sign-in](phases/p2-16-connection-provider.md) | 2.5 | Scoped; may slip to Phase 5 | |
+| [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Implemented, native E15 passes | 2026-10-01 |
+| [P2-16 Connection provider and sign-in](../phase-05-post-mvp/phases/p2-16-connection-provider.md) | 2.5 | Deferred to Phase 5 by D2-8 | 2026-10-01 |
 | [P2-17 Acceptance and handoff](phases/p2-17-acceptance-and-handoff.md) | all | Scoped | |
 
 ## Verification
@@ -156,3 +156,12 @@ Integrated dual-Ruby, coverage, runtime and all eight browser gates pass. Exact 
 is installed in fresh SketchUp PID 15247; native Frame copy/assignment and single Undo
 restore are observed. Glazing, staged Psi and four-kind export/readback are next. Slice B's affected native replay is still open;
 Slice C and subsequent placement/export stages still wait for the native Move-copy observation.
+
+## P2-15 closure and D2-8
+
+E15 passes from the recorded fresh native baseline, including both library drags, staged Psi
+Save, single native Undo for each and warning-free four-kind semantic export/readback.
+P2-16 and roadmap 2.5 move to Phase 5 under the previously accepted D2-8 rule. Endpoint
+evidence is [connection decision](evidence/p2-16-deferral.md). Phase 2 remains in progress:
+Slice B affected native replay, Move-copy, placement, Unit aggregates, Aperture translation
+and consolidated E01 to E14 / E17 acceptance remain. Next autonomous work: Slice B replay.

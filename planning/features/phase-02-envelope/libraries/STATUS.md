@@ -34,7 +34,7 @@ P2-09 registered file export is in implementation. Twelve generic starter Materi
 from public DOE guidance and original NIST measurements, with qualifications and CC0 notice;
 the reader admits all twelve without warnings. The outside provider will be prepared under
 `tools/examples/` before the separate repository approval is requested in Ed's final batch.
-P2-15 remains unimplemented. PH-Navigator's endpoint change is external to this repository and
+P2-15 is implemented and host-verified; see its evidence checkpoint. PH-Navigator's endpoint change is external to this repository and
 can defer P2-16. External provider-author review remains a format stability gate.
 
 ## Verification
@@ -74,6 +74,13 @@ no standalone review file is retained.
 Three Window kind adapters, owner copy/assignment callbacks and Window-owned provider sidebars
 are implemented and independently reviewed. Staged Psi imports resolve on the enclosing Save
 proposal through the preceding generic participant correction `04c4ff9`. Focused dual-Ruby and
-four-width browser checks pass; integration gates and fresh native E15 remain. The synthetic
-file and public format page describe all four kinds. Section 2.4 is not marked delivered until
-that host gate passes. Connection decision D2-8 follows E15.
+four-width browser checks, integrated gates and fresh native E15 pass. The synthetic
+file and public format page describe all four kinds. Section 2.4 is delivered. P2-13 still owns
+the pending placed-Unit aggregate counts. D2-8 is resolved after E15 below.
+
+## Connection decision
+
+At E15 closure, D2-8 defers section 2.5 to Phase 5. The production endpoint still has its older
+desktop catalog shape; the neutral routes are absent. P2-16 scope is unchanged. See
+[endpoint evidence](../evidence/p2-16-deferral.md). No connection implementation or external
+repository change was made.

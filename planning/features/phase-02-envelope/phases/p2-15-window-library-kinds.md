@@ -1,7 +1,7 @@
 # P2-15: Frame, Glazing and Psi-Install library kinds
 
 DATE: 2026-09-30
-STATUS: Implementation in progress; P2-08 workflows and P2-11 Builder entry evidence established.
+STATUS: Implemented and host-verified 2026-10-01; E15 passes. Unit aggregates wait for P2-13.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 

@@ -17,7 +17,7 @@ items the PRD left to its PLAN.
 | Sidebar sources, selector, drag and drop, source review, badges, provider setup | 2.2 | [P2-08](../phases/p2-08-library-sidebar-and-setup.md) |
 | Export model library to file, the starter library, the example provider | 2.2 | [P2-09](../phases/p2-09-library-export-starter-example.md) |
 | Frame, Glazing and Psi-Install Type adapters | 2.4 | [P2-15](../phases/p2-15-window-library-kinds.md) |
-| The generic connection, the protocol page, sign-in | 2.5 | [P2-16](../phases/p2-16-connection-provider.md), conditional on D2-8 |
+| The generic connection, the protocol page, sign-in | 2.5 | [P2-16](../../phase-05-post-mvp/phases/p2-16-connection-provider.md), deferred to Phase 5 by D2-8 on 2026-10-01 |
 
 The sidebar's shared modules and its In this file source land earlier, in
 [P2-04](../phases/p2-04-assembly-builder.md), because the Builder cannot choose a Material
