@@ -138,7 +138,9 @@ PhComposerUI.define("window_type_list", ["window_editor_shared", "workspace"], f
     ui.paintIconButton(this.sortTypes, this.manual ? "Use alphabetical Window Type order" :
       "Use manual Window Type order", "sort");
     this.sortTypes.setAttribute("aria-pressed", String(Boolean(this.manual)));
-    var listSignature = JSON.stringify([signature, this.active, this.groups, this.groupNames, this.manual]);
+    var listSignature = JSON.stringify([signature, this.active, this.groups, this.groupNames, this.manual,
+      this.placement.enabled, this.placement.channel.busy(), records.map(function (record) {
+        return self.placement.available(record.id); })]);
     // Keep the target row and its focused input keyed until Apply or Cancel. Deferred labels repaint then.
     if (this.renameDraft) return;
     if (listSignature === this.listSignature) return; this.listSignature = listSignature;
@@ -159,6 +161,9 @@ PhComposerUI.define("window_type_list", ["window_editor_shared", "workspace"], f
           self.order.splice(self.order.indexOf(record.id), 0, id); move(id); });
         var choose = ui.button(record.name, function () { self.choose(record.id); }); row.appendChild(choose);
         var actions = el("span", "window-type-row-actions");
+        var place = ui.iconButton("Place " + record.name, "add", function () { self.placement.choose(record.id); });
+        place.disabled = !self.placement.enabled || !self.placement.available(record.id);
+        actions.appendChild(place);
         actions.appendChild(ui.iconButton("Rename " + record.name, "pencil", function () { self.renameInline(record,
           choose); }));
         actions.appendChild(ui.iconButton("Duplicate " + record.name, "duplicate", function () {

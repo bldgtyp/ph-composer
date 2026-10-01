@@ -6295,6 +6295,103 @@ Example params:
 }
 ```
 
+### `ph_composer.windows.place_tool.get`
+
+This Model's Place tool choice and active state. Owner: `ph_composer.windows`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "active",
+    "type_id",
+    "anchor",
+    "host"
+  ],
+  "properties": {
+    "active": {
+      "type": "boolean"
+    },
+    "type_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "sill_left",
+        "sill_center",
+        "sill_right",
+        "center_left",
+        "center",
+        "center_right",
+        "head_left",
+        "head_center",
+        "head_right"
+      ]
+    },
+    "host": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path",
+        "entity_path",
+        "entity_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.windows.psi_install_types.all`
 
 The complete psi_install_types inventory for the panel snapshot. Owner: `ph_composer.windows`.
@@ -32891,6 +32988,354 @@ Example params:
 {
   "provider_id": "example",
   "kind": "example_parts"
+}
+```
+
+### `ph_composer.windows.place_tool.choose`
+
+Choose a Type and anchor, then start Place. Owner: `ph_composer.windows`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type_id"
+  ],
+  "properties": {
+    "type_id": {
+      "type": "string"
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "sill_left",
+        "sill_center",
+        "sill_right",
+        "center_left",
+        "center",
+        "center_right",
+        "head_left",
+        "head_center",
+        "head_right"
+      ]
+    },
+    "host": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path",
+        "entity_path",
+        "entity_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "active",
+    "type_id",
+    "anchor",
+    "host"
+  ],
+  "properties": {
+    "active": {
+      "type": "boolean"
+    },
+    "type_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "sill_left",
+        "sill_center",
+        "sill_right",
+        "center_left",
+        "center",
+        "center_right",
+        "head_left",
+        "head_center",
+        "head_right"
+      ]
+    },
+    "host": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path",
+        "entity_path",
+        "entity_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "type_id": "wnt_Ab12Cd34Ef56"
+}
+```
+
+### `ph_composer.windows.place_tool.stop`
+
+Stop Place and abandon its pending gesture. Owner: `ph_composer.windows`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "active",
+    "type_id",
+    "anchor",
+    "host"
+  ],
+  "properties": {
+    "active": {
+      "type": "boolean"
+    },
+    "type_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "sill_left",
+        "sill_center",
+        "sill_right",
+        "center_left",
+        "center",
+        "center_right",
+        "head_left",
+        "head_center",
+        "head_right"
+      ]
+    },
+    "host": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path",
+        "entity_path",
+        "entity_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.windows.units.locate`
+
+Select and zoom to explicit Window occurrences. Owner: `ph_composer.windows`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "units"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "entity_path"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "entity_path": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "units"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "entity_path"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "entity_path": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "units": [
+    {
+      "unit_id": "wun_Ab12Cd34Ef56",
+      "entity_path": [
+        1201,
+        1203
+      ]
+    }
+  ]
 }
 ```
 

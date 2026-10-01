@@ -741,6 +741,22 @@
   }
 };
 
+  FIXTURES.windows.zones = JSON.parse(JSON.stringify(AUTHORING.zones));
+  FIXTURES.windows.faces = JSON.parse(JSON.stringify(AUTHORING.faces));
+  FIXTURES.windows.windows.units = { units: [
+    { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [100, 300] },
+      values: { window_type_id: "wnt_a", anchor: "sill_center" },
+      host: JSON.parse(JSON.stringify(AUTHORING.faces[0].reference)),
+      findings: [{ code: "detached_definition", repair: "reset_to_type" }] },
+    { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [100, 301] },
+      values: { window_type_id: "wnt_a", anchor: "head_right" }, host: null,
+      findings: [{ code: "copy_id_pending", repair: "next_mutation" }, { code: "unhosted", repair: "rehost" }] },
+    { id: "wun_c", reference: { unit_id: "wun_c", entity_path: [200, 302] },
+      values: { window_type_id: "wnt_a", anchor: "sill_left" },
+      host: JSON.parse(JSON.stringify(AUTHORING.faces[4].reference)),
+      findings: [{ code: "mirrored", repair: "new_flipped_type" }] }
+  ] };
+
   FIXTURES.windows.libraryProviders = [{ id: "window_products", provider_kind: "ph_composer.library.file",
     label: "Synthetic Window products", kinds: ["frames", "glazings", "psi_install_types"] }];
   FIXTURES.windows.libraryCatalogs = { window_products: ["frames", "glazings", "psi_install_types"].map(

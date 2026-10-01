@@ -24,6 +24,7 @@ MB_YESNO = 4 unless defined?(MB_YESNO)
 IDYES = 6 unless defined?(IDYES)
 IDNO = 7 unless defined?(IDNO)
 GL_LINES = 1 unless defined?(GL_LINES)
+MK_LBUTTON = 1 unless defined?(MK_LBUTTON)
 # The modifier masks a tool callback's `flags` carries. These are the host's own values, measured on
 # 26.1.188, 2026-09-20: a plain click arrived as 2 and a Shift-click as 131074.
 CONSTRAIN_MODIFIER_MASK = 131_072 unless defined?(CONSTRAIN_MODIFIER_MASK)

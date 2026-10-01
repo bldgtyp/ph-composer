@@ -1,7 +1,7 @@
 # P2-13: Place tool, Schedule and the Window Type Colour-by mode
 
 DATE: 2026-09-30
-STATUS: Scoped. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: Implemented, reviewed, full offline gates passed and installed. E13 native gestures remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -83,3 +83,20 @@ Operation marks in the viewport. A toolbar button. Reveal geometry.
 - E13 has evidence in `evidence/p2-13-place-tool.md`, with the UI polish review recorded.
 - `context/EXTENSIBILITY.md` names Place as the second viewport tool. `make ci` and
   `make ui-checks` pass.
+
+## Implementation checkpoint, 2026-10-01
+
+Place, Schedule, Pick point and Window Type Colour-by are implemented and installed. The strong
+independent architecture/UI review findings are closed. Full CI passes on Ruby 2.7.2 and 3.2.2,
+coverage passes and all browser checks pass. Current native controls verify measurement parsing,
+Escape, Schedule contents, starting Place and Locate into a translated nested Zone. Actual
+canvas placement and viewport acceptance remain blocked by the computer-use controller.
+See [source, verification and prepared manual batch](../evidence/p2-13-place-tool.md).
+
+The initial anchor follows the PRD's `sill_center` default. Placement requires valid dimensions;
+incomplete thermal/product inputs remain export concerns. Measurement entry uses SketchUp's
+native length parser because the planned Ruby foundation reader does not exist. Click the native
+Measurements field before keyword input to avoid SketchUp global letter shortcuts. `sill=` is
+the opening bottom above the host's minimum up extent; `offset=` is the chosen anchor's inward
+perpendicular distance from the nearest outer host edge. Exact placed offsets remain a host gate.
+E13 is open and P2-14 has not advanced past this required dependency.

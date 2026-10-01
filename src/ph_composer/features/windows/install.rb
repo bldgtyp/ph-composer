@@ -22,6 +22,8 @@ require_relative "declarations/grid"
 require_relative "library_kinds"
 require_relative "declarations/installs"
 require_relative "declarations/units"
+require_relative "declarations/viewport"
+require_relative "colour_modes"
 
 module PhComposer
   module Windows
@@ -38,6 +40,8 @@ module PhComposer
       GridRegistration.install(feature)
       InstallsRegistration.install(feature)
       UnitRegistration.install(feature, registry)
+      ViewportRegistration.install(feature, registry)
+      ColourModes.install(feature)
       LibraryKinds.install(feature, registry)
     end
   end

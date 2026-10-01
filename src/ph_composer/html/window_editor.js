@@ -1,9 +1,10 @@
 /* Window definitions use the public record/grid actions. Selection, viewing and order are panel state. */
 PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs", "unit_field", "units",
   "window_audit", "window_canvas", "window_cards", "window_editor_shared", "window_install_editor",
-  "window_type_list", "library_sidebar", "window_library", "fields", "workspace"], function (panel, request,
-  snapshot, Subtabs, unitFields, units, audit, Canvas, cards, shared, InstallEditor, typeList, Sidebar, library, fields,
-  ui) {
+  "window_type_list", "library_sidebar", "window_library", "window_placement", "window_schedule",
+  "fields", "workspace"], function (panel, request,
+  snapshot, Subtabs, unitFields, units, audit, Canvas, cards, shared, InstallEditor, typeList, Sidebar, library,
+  Placement, Schedule, fields, ui) {
   "use strict";
   var el = ui.element, clone = shared.clone, WINDOW_DIMENSION = shared.WINDOW_DIMENSION,
     VIEW_SIDES = shared.VIEW_SIDES;
@@ -17,16 +18,22 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
     root.replaceChildren(); root.classList.add("window-workspace");
     this.notice = ui.floatingNotice(root);
     this.layout = el("div", "window-layout"); this.audit = el("div", "window-audit");
+    this.scheduleSurface = el("div");
     this.tabs = new Subtabs({ label: "Window Types sections", state: this.page, stateKey: "surface",
       tabs: [{ id: "builder", label: "Window Types", surface: this.layout },
-        { id: "audit", label: "U-Values", surface: this.audit }], guard: function () { return self.guard(); },
+        { id: "audit", label: "U-Values", surface: this.audit },
+        { id: "schedule", label: "Schedule", surface: this.scheduleSurface }], guard: function () {
+          return self.guard(); },
       refused: function (reason) { self.notice.show(reason); }, changed: function () { self.paint(); } });
     root.appendChild(this.tabs.root); root.appendChild(this.layout); root.appendChild(this.audit);
+    root.appendChild(this.scheduleSurface);
     this.installEditor = new InstallEditor(session, send, function (message) {
       self.layout.hidden = self.tabs.active !== "builder"; self.notice.show(message); self.paint();
       self.installButton.focus();
     }); root.appendChild(this.installEditor.root);
     this.buildRail(); this.buildHeading(); this.buildWorkspace(); this.buildSidebar(); this.buildKeyboard();
+    this.placement = new Placement.Controls(this); root.insertBefore(this.placement.root, this.layout);
+    this.schedule = new Schedule.Schedule(this); this.scheduleSurface.appendChild(this.schedule.root);
   }
   View.prototype.rawRecord = function (id) {
     return shared.records(this.state, "types").filter(function (row) { return row.id === (id || this.active); },
@@ -52,6 +59,8 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
     if (this.dimensionField && this.dimensionField.editing) return "Apply or cancel the dimension draft.";
     if (this.renameDraft) return "Finish or cancel the name edit.";
     if (this.formDraft && this.formDraft.dirty()) return "Apply or cancel the name draft.";
+    if (this.placement && this.placement.guard()) return this.placement.guard();
+    if (this.schedule && this.schedule.guard()) return this.schedule.guard();
     var review = this.sidebars && Object.keys(this.sidebars).map(function (kind) {
       return this.sidebars[kind].guard();
     }, this).filter(Boolean)[0];
@@ -91,11 +100,12 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
       var record = self.rawRecord(); if (record) { self.installEditor.open(record); self.paint(); }
     }); this.typeActions.appendChild(this.installButton);
     this.paintDimensionControl();
-    this.readinessButton = ui.helpButton("Before placing", "Window placement is available in the Window Units stage. " +
-      "A complete type needs dimensions, glazing, four Frames, operation and perimeter installations.");
+    this.readinessButton = ui.helpButton("Before placing", "Enter every row height and column width. " +
+      "Choose a Face in a Zone; paired Surface Faces, overhangs and overlaps are refused. " +
+      "For export, complete the products, operation and installs and classify the host Outdoors.");
     this.typeActions.appendChild(this.readinessButton);
-    this.placeButton = ui.button("Place"); this.placeButton.className = "primary"; this.placeButton.disabled = true;
-    this.placeButton.title = "Window placement is available in the next Window Units stage.";
+    this.placeButton = ui.button("Place", function () { self.placement.choose(self.active); });
+    this.placeButton.className = "primary";
     this.typeActions.appendChild(this.placeButton);
     this.moreActions = new ui.ActionMenu("More Window Type actions");
       this.typeActions.appendChild(this.moreActions.root);
@@ -247,7 +257,9 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
       if (/INPUT|SELECT|TEXTAREA/.test((event.target.tagName || "").toUpperCase())) return;
       if (event.key === "Escape") {
         if (self.picking || self.source) { self.picking = false; self.source = null; }
-        else self.selected = []; self.paint(); event.preventDefault();
+        else if (self.selected.length) self.selected = [];
+        else if (self.placement.tool.active) self.placement.run("place_tool.stop", {});
+        self.paint(); event.preventDefault();
       }
     };
     this.root.addEventListener("keydown", this.onKeydown);
@@ -273,8 +285,10 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
     this.surface = this.tabs.active;
     this.layout.hidden = this.surface !== "builder" || !this.installEditor.root.hidden;
     this.audit.hidden = this.surface !== "audit" || !this.installEditor.root.hidden;
+    this.scheduleSurface.hidden = this.surface !== "schedule" || !this.installEditor.root.hidden;
     this.renderList(); var record = this.record(); this.main.hidden = !record;
     this.paintPending();
+    this.placement.paint(); this.schedule.paint();
     this.installButton.disabled = this.installButton.disabled || !snapshot.value(this.state, shared.PREFIX +
       "settings");
     Object.assign(this.page, { active: this.active, order: this.order, groups: this.groups,
@@ -355,7 +369,8 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
       if (this.bubble) this.bubble.close(false);
     }
     if (!this.record()) this.active = this.entries.length ? this.entries[0].record.id : null;
-    this.requests.consume(state); this.installEditor.render(state); this.paint();
+    this.requests.consume(state); this.installEditor.render(state); this.placement.render(state);
+    this.schedule.render(state); this.paint();
   };
   View.prototype.openUse = function (use) {
     if (this.guard()) return;
@@ -367,6 +382,7 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
     if (this.cancelRename) this.cancelRename();
     if (this.formDraft) this.formDraft.cancel(false);
     this.installEditor.dispose(); if (this.dimensionField) this.dimensionField.dispose();
+    this.placement.dispose(); this.schedule.dispose();
     if (this.bubble) this.bubble.close(false);
     Object.keys(this.sidebars).forEach(function (kind) { this.sidebars[kind].dispose(); }, this);
     this.root.removeEventListener("keydown", this.onKeydown); document.removeEventListener("keydown", this.documentKey);

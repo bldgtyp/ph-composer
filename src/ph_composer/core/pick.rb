@@ -38,5 +38,41 @@ module PhComposer
       end
       nil
     end
+
+    # The same single native pick, plus the camera ray's intersection with that Face's world
+    # plane. Unlike InputPoint, this does not perform a second pick that could choose a nearby
+    # edge or another occurrence. The point remains in native inches, like every SDK Point3d.
+    def face_point(view, x, y)
+      path = face_path(view, x, y)
+      return nil unless path && view.respond_to?(:pickray)
+
+      transform = path[0...-1].reduce(Geom::Transformation.new) do |carried, entity|
+        carried * entity.transformation
+      end
+      face = path.last
+      origin = face.outer_loop.vertices.first.position.transform(transform)
+      inverse = transform.inverse.to_a
+      normal = [0, 4, 8].map do |offset|
+        inverse[offset] * face.normal.x + inverse[offset + 1] * face.normal.y + inverse[offset + 2] * face.normal.z
+      end
+      ray_origin, direction = view.pickray(x, y)
+      denominator = dot(normal, coordinates(direction))
+      return nil if denominator.abs < 1.0e-12
+
+      distance = dot(normal, coordinates(origin).zip(coordinates(ray_origin)).map { |a, b| a - b }) / denominator
+      return nil if distance.negative?
+
+      point = coordinates(ray_origin).zip(coordinates(direction)).map { |a, b| a + b * distance }
+      { :path => path, :point => Geom::Point3d.new(*point) }
+    end
+
+    def coordinates(vector)
+      [vector.x.to_f, vector.y.to_f, vector.z.to_f]
+    end
+
+    def dot(left, right)
+      left.zip(right).sum { |a, b| a * b }
+    end
+    private_class_method :coordinates, :dot
   end
 end

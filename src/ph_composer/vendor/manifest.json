@@ -61,9 +61,9 @@
       "sha256": "4e017ce6f606c6559cfbb06425af382878f994b10066373b4e04c1332a07f90e"
     },
     "html/index.html": {
-      "bytes": 5125,
+      "bytes": 5220,
       "mime": "text/html; charset=utf-8",
-      "sha256": "0709355cc0ff9f06fd9319d9342c55d2c927882b73b128a7569e41b8b66c8e6a"
+      "sha256": "6c6e7eb6d0cad82424722daaffb9c8e9e80208209778ea435c13714085a7b047"
     },
     "html/inventory_grid.js": {
       "bytes": 15480,
@@ -321,9 +321,9 @@
       "sha256": "9d48a8f44074ccf44d90d72172aab8ebca6a700455b02421654b1c9113507f0b"
     },
     "html/window_editor.js": {
-      "bytes": 25202,
+      "bytes": 26191,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "8c42d1f347bf0bdfb51379663ae0925f0f2961525909ae1b2ad690468a3e7b39"
+      "sha256": "8f92790254959ccc8e1609b32b952644732306d9754779a6de309c46c4f21bac"
     },
     "html/window_editor_shared.js": {
       "bytes": 2960,
@@ -355,15 +355,25 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "7bc073a28609798527df6bc049cecc6b73cd54846884b2a7ff4d67e13addac09"
     },
-    "html/window_type_list.js": {
-      "bytes": 12266,
+    "html/window_placement.js": {
+      "bytes": 4704,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "b0be3409788895fdf4432bbecc377488cf8140fb11855cb572c08bc98ff00306"
+      "sha256": "5db0cc63bc6f34f3978c8e8db9adb837631ee8996f4465ef28fb931ff3c84c75"
+    },
+    "html/window_schedule.js": {
+      "bytes": 13459,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "bdfb41533776ce7865b8ea16b29389d32a533d9e9248706a33ecfe34dba2bb15"
+    },
+    "html/window_type_list.js": {
+      "bytes": 12658,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "d17e7fd5f797ab1c5f7f1ff679a7f3af5922c665588f33e12b17ed7e903de6c6"
     },
     "html/windows.css": {
-      "bytes": 23270,
+      "bytes": 23783,
       "mime": "text/css; charset=utf-8",
-      "sha256": "e0f75d43a03d3d89b30322b7dd320accf4a1b0942b18018562c7aadf32198f91"
+      "sha256": "c1fe1f80f503b612e558cab211b516f7fbb08536db296d40bee8f8fdffad1daf"
     },
     "html/workspace.js": {
       "bytes": 1221,

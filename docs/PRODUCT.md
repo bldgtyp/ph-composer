@@ -1,6 +1,6 @@
 # Product shape
 
-**DATE:** 2026-09-30
+**DATE:** 2026-10-01
 
 PH-Composer is a free, open-source authoring tool for Phius passive building models. The SKP
 file holds the working building data. A consultant can enter every supported definition by hand,
@@ -10,7 +10,9 @@ Everything below describes agreed product behavior. The predecessor, PH-Navigato
 settled most of it through recorded interviews between 2026-09-06 and 2026-09-17, and the rules
 that did not depend on designPH carry over unchanged. Phase 1 implemented Zones, face
 classification and the HBJSON/report export described under Zones, Envelope and Handoff; assembly
-assignment, Window Types, Spaces, thermal bridges and libraries are not implemented yet.
+assignment, local libraries, Window Type records, the Builder and Unit operations are implemented
+on the Phase 2 feature branch. Place, Schedule and Window Type Colour-by are being verified;
+Aperture export remains pending. Spaces and thermal bridges remain proposed.
 
 ## The working environment
 
@@ -126,6 +128,17 @@ shading; METr handles it after export.
 Incomplete types can be saved and, with sufficient size and layout, assigned. Missing required
 thermal inputs on assigned types block ordinary export. Unused incomplete types do not. Export
 does not silently substitute values or omit windows.
+
+Place starts with the chosen Window Type from the Builder, Type browser or Schedule. It previews
+an outline on a host Face and stays active for repeated placements. Nine anchors are available.
+In SketchUp's measurement box, `sill=<length>` sets the opening bottom above the host's minimum
+up extent; `offset=<length>` sets the chosen anchor's inward distance from the nearest outer
+host edge. Stop or Escape ends the tool.
+
+The Schedule counts Unit occurrences by Type, including detached definitions, and shows Zone,
+host Face, Level and Locate. Differing or unhosted Units retain their state and offer explicit
+repair routes. Window Type Colour-by paints the generated panes through the shared drawing
+service and respects hidden geometry and tags.
 
 Optional external evidence follows its owner: product photos on Window Types, datasheets on frame
 and glazing records, installation photos and calculation reports on Psi-Install Types.

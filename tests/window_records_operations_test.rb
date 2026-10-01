@@ -19,8 +19,9 @@ class WindowRecordsOperationsTest < PhComposerTestCase
   def test_every_operation_and_reference_has_a_valid_declared_schema_and_example
     registry = PhComposer::Registry.current
     assert_equal ["ph_composer.zones", "ph_composer.library"], registry.features.fetch(W::FEATURE_ID).requires
-    declarations = (registry.queries.values + registry.actions.values).select { |entry| entry.owner == W::FEATURE_ID }
-    assert_equal 45, declarations.length
+    declarations = (registry.queries.values + registry.actions.values + registry.view_commands.values)
+      .select { |entry| entry.owner == W::FEATURE_ID }
+    assert_equal 49, declarations.length
     declarations.each do |entry|
       assert_empty PhComposer::JsonSchema.schema_problems(entry.params), entry.name
       assert_empty PhComposer::JsonSchema.schema_problems(entry.result), entry.name

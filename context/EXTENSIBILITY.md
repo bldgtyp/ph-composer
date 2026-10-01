@@ -296,13 +296,14 @@ the SKP. The panel sends `view.invoke` and settles the answer in its own result 
 
 ### Viewport tools
 
-Implemented in P1-D. A feature that authors by pointing writes a `Sketchup::Tool` and starts it
-from a menu item. Spaces' Mark floor, window placement and the thermal-bridge edge tool are all
-this shape, so the rules below are the shared ones, learned from the Classify tool's host gate
+Classify and Window Place use this contract. A feature that authors by pointing writes a
+`Sketchup::Tool` and starts it from a menu item or a registered view command. Spaces' Mark floor
+and the thermal-bridge edge tool share this shape. The rules below come from Classify's host gate
 ([evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-classify-tool.md)).
 
 - **Pick, never walk.** `Pick.face_path(view, x, y)` answers what is under the pointer as a
-  root-to-leaf instance path, and a feature turns that path into an occurrence without touching the
+  root-to-leaf instance path. `Pick.face_point` adds the world-space camera-ray intersection
+  with that same Face from one pick. A feature turns the path into an occurrence without touching the
   Model. A pointer move happens tens of times a second; a Model walk per move costs what P1-D
   measured a walk to cost. `core/pick.rb` and `core/drag_set.rb` name no feature.
 - **The tool owns the gesture, not the change.** It calls a registered action through `API.invoke`

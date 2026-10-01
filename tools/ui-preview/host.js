@@ -88,6 +88,10 @@
           value: JSON.parse(JSON.stringify(this.palette)) },
         ["ph_composer.windows.types"]: { status: "completed", value: JSON.parse(JSON.stringify(this.windows.types ||
           { records: [] })) },
+        ["ph_composer.windows.units"]: { status: "completed", value: JSON.parse(JSON.stringify(this.windows.units ||
+          { units: [] })) },
+        ["ph_composer.windows.place_tool"]: { status: "completed", value: JSON.parse(JSON.stringify(
+          this.windows.place_tool || { active: false, type_id: null, anchor: "sill_center", host: null })) },
         ["ph_composer.windows.frames"]: { status: "completed",
           value: JSON.parse(JSON.stringify(this.windows.frames || { records: [] })) },
         ["ph_composer.windows.glazings"]: { status: "completed",
@@ -192,6 +196,12 @@
       }
       if (payload.name === "ph_composer.zones.faces.locate") this.selectedFaces = payload.params.faces;
       if (payload.name === "ph_composer.zones.faces.stop_classifying") this.palette.active = false;
+      if (payload.name === "ph_composer.windows.place_tool.choose") {
+        this.windows.place_tool = { active: true, type_id: payload.params.type_id,
+          anchor: payload.params.anchor || "sill_center", host: payload.params.host || null };
+      }
+      if (payload.name === "ph_composer.windows.place_tool.stop") this.windows.place_tool.active = false;
+      if (payload.name === "ph_composer.windows.units.locate") this.selectedUnits = payload.params.units;
       outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
         value: {}, affected: [], findings: [], detail: null };
       this.snapshot();
