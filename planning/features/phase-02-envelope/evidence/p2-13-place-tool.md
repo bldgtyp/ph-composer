@@ -180,3 +180,13 @@ active after Roof placement. Exact rows/bounds are in `p213-restart-step-2.json`
 Steps 1 and 2 pass on the fresh Model. Steps 3 to 5 (native refusals, active-tool Model switch,
 and viewport Colour-by including hidden-tag follow-up) remain open. No source changed and the
 previous offline/independent-review gates still apply.
+
+## Restart step 3 readback
+
+Ed reports no Windows placed in step 3. Supplied native panel screenshots show the explicit
+paired-Surface refusal and the No Zone refusal. Live readback matches every Unit row from
+step 2 exactly: four Units, unchanged revision 26, Place still active. Private
+`p213-restart-step-3.json` captures this comparison. Surface and No Zone refusal reasons and
+no-write behavior pass. The overhang attempt is covered by Ed's step-3 no-placement report,
+but its visible refusal reason has not yet been recorded. Model switch and Colour-by remain
+pending; E13 stays open.
