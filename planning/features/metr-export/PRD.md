@@ -40,7 +40,7 @@ packet completes, PH-Composer cannot claim a METr outcome.
 
 ### Zone mapping carried from zones-and-adjacency
 
-Moved here on 2026-09-30 from the archived [zones-and-adjacency PRD](../../archive/zones-and-adjacency/PRD.md): one METr variant per
+Moved here on 2026-09-30 from the archived [zones-and-adjacency PRD](../../archive/phase-01-zones-and-adjacency/PRD.md): one METr variant per
 Building-Segment, with that Segment's Zones merged. A Surface pair inside one Building-Segment is
 omitted; a Surface pair across Building-Segments and a To neighbour Face are both written as
 to-neighbour. PHX's Building-Segment rule governs (zones Q10). Building-Segment names become the

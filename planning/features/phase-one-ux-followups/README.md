@@ -8,7 +8,7 @@ ISSUE: https://github.com/bldgtyp/ph-composer/issues/9
 
 Ed's notes from his first hands-on pass over the merged Phase 1 build (SketchUp 26.1, macOS), recorded
 on 2026-09-30. Where a note asked a question, the source baseline at intake is recorded under it.
-Item owners are the existing packets: [zones-and-adjacency](../../archive/zones-and-adjacency/README.md),
+Item owners are the existing packets: [zones-and-adjacency](../../archive/phase-01-zones-and-adjacency/README.md),
 [face-assignment](../face-assignment/README.md) and the shared Colour-by service
 (`src/ph_composer/colour_by/`).
 

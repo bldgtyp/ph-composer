@@ -113,7 +113,7 @@ new paths in this phase, so the screen stays meaningful.
 - Focused suites and the extraction golden pass on both Rubies.
 - `context/EXTENSIBILITY.md` and `context/TECH_STACK.md` describe `zones` as the owner of Zones,
   Faces and adjacency, and the entity descriptor contract. No new glossary term (R-D8).
-- `archive/zones-and-adjacency/` and `features/face-assignment/` each gain one line naming
+- `archive/phase-01-zones-and-adjacency/` and `features/face-assignment/` each gain one line naming
   `features/zones/` as the code owner; both stay product packets.
 - STATUS rows OWN, DESC, M3b, SNAP, CAT, REF-Z and RP set to `Implemented on branch`.
 

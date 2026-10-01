@@ -6,7 +6,7 @@ keep both for later.
 AUTHOR: Ed May, BLDGTYP
 ISSUE: none (local planning draft)
 
-The [zones-and-adjacency PRD](../../archive/zones-and-adjacency/PRD.md) Q23 named three Make Zone
+The [zones-and-adjacency PRD](../../archive/phase-01-zones-and-adjacency/PRD.md) Q23 named three Make Zone
 entry points. The right-click item on a selected Group shipped with the Phase 1 UX follow-ups,
 alongside the panel action. Two remain:
 

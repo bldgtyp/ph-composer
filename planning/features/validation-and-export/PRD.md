@@ -84,7 +84,7 @@ account. Unknown exceptions fail the pipeline; they do not become an `other` ite
 
 ### Zone rows carried from zones-and-adjacency
 
-Moved here on 2026-09-30 when the [zones-and-adjacency packet](../../archive/zones-and-adjacency/PRD.md) was archived. The table is
+Moved here on 2026-09-30 when the [zones-and-adjacency packet](../../archive/phase-01-zones-and-adjacency/PRD.md) was archived. The table is
 that PRD's validation contract with the state of each row in the merged code. Rows marked
 "Not implemented" are later work for this packet.
 

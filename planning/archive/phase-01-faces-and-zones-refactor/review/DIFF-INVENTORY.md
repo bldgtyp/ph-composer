@@ -69,10 +69,10 @@ Reviewed current status/acceptance and final evidence in depth; checked packet o
 | `planning/features/windows-support/PRD.md` | 40 | 0 |
 | `planning/features/windows-support/README.md` | 10 | 0 |
 | `planning/features/windows-support/STATUS.md` | 28 | 0 |
-| `planning/archive/zones-and-adjacency/PLAN.md` | 56 | 0 |
-| `planning/archive/zones-and-adjacency/PRD.md` | 30 | 5 |
-| `planning/archive/zones-and-adjacency/README.md` | 3 | 3 |
-| `planning/archive/zones-and-adjacency/STATUS.md` | 56 | 13 |
+| `planning/archive/phase-01-zones-and-adjacency/PLAN.md` | 56 | 0 |
+| `planning/archive/phase-01-zones-and-adjacency/PRD.md` | 30 | 5 |
+| `planning/archive/phase-01-zones-and-adjacency/README.md` | 3 | 3 |
+| `planning/archive/phase-01-zones-and-adjacency/STATUS.md` | 56 | 13 |
 | `planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md` | 53 | 0 |
 | `planning/archive/phase-01-faces-and-zones/CONTRACTS.md` | 322 | 0 |
 | `planning/archive/phase-01-faces-and-zones/D7-GATE-HANDOFF.md` | 272 | 0 |

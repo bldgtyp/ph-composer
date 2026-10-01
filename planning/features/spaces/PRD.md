@@ -308,7 +308,7 @@ as the table and the totals per Zone and Building-Segment.
 
 ### Carried from zones-and-adjacency
 
-Moved here on 2026-09-30 when the [zones-and-adjacency packet](../../archive/zones-and-adjacency/PRD.md) was archived. Its Phase 1
+Moved here on 2026-09-30 when the [zones-and-adjacency packet](../../archive/phase-01-zones-and-adjacency/PRD.md) was archived. Its Phase 1
 scope is implemented; these Space-dependent parts are not.
 
 - Every Space group carries the Zone stamp (Zone id, Building-Segment, Level). Limited Restore Zone

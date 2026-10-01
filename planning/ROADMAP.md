@@ -76,7 +76,7 @@ The early proof does not mark the full feature packets complete.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 1.1 | [Zones and adjacency](archive/zones-and-adjacency/README.md) | Phase 1 scope merged to main; later-phase scope remains | First, because a boundary condition names what is on the other side |
+| 1.1 | [Zones and adjacency](archive/phase-01-zones-and-adjacency/README.md) | Phase 1 scope merged to main; later-phase scope remains | First, because a boundary condition names what is on the other side |
 | 1.2 | [Face assignment](features/face-assignment/README.md) | Phase 1 scope merged to main and host-verified; assembly assignment waits for 2.1 | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
 | 1.3 | [Validation and export](features/validation-and-export/README.md) | Phase 1 HBJSON/report scope merged to main; METr exporter deferred | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
 

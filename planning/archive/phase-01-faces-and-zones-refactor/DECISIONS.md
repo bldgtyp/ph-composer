@@ -118,7 +118,7 @@ Phase 2 *Envelope* (Assemblies and Window Types), and the library file's wire fo
 | C. `thermal_boundary` / `enclosure` | Rejected: new terms carrying the same interior-face inaccuracy |
 
 Product language is unchanged: Zone, Face, Classify, Solve adjacencies. No new glossary term.
-`archive/zones-and-adjacency/` and `features/face-assignment/` remain product packets.
+`archive/phase-01-zones-and-adjacency/` and `features/face-assignment/` remain product packets.
 
 ## R-D9: phase order under "cleanest final state"
 

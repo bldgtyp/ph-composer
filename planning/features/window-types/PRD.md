@@ -385,4 +385,4 @@ appear in the METr model as window components with their frames, glazing and ins
 - honeybee-ph: `honeybee_ph/properties/aperture.py`, `honeybee_energy_ph/construction/window.py`,
   `honeybee_ph_utils/aperture_psi_install.py`.
 - PHX: `PHX/from_HBJSON/create_building.py`, `create_assemblies.py`.
-- [zones-and-adjacency PRD](../../archive/zones-and-adjacency/PRD.md), Q12 and Q14.
+- [zones-and-adjacency PRD](../../archive/phase-01-zones-and-adjacency/PRD.md), Q12 and Q14.
