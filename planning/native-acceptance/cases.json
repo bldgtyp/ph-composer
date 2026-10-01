@@ -662,6 +662,21 @@
         "tools/hostkit/host_helpers.rb"
       ],
       "native_control_required": false
+    },
+    {
+      "id": "UXK1",
+      "label": "UX follow-ups classified fills, selection edges and occlusion",
+      "mode": "native",
+      "authority": "planning/features/phase-one-ux-followups/README.md",
+      "paths": [
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/features/zones/colour_modes.rb",
+        "src/ph_composer/features/zones/faces/colour_modes.rb",
+        "src/ph_composer/session/*",
+        "tools/hostkit/host_bridge*",
+        "tools/hostkit/host_helpers.rb"
+      ],
+      "native_control_required": true
     }
   ]
 }

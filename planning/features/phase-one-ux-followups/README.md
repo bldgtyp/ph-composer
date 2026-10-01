@@ -57,9 +57,9 @@ current selection. Folded into `context/TECH_STACK.md` ("Rules for later feature
 ## Next step
 
 The implementation and independent review are complete. Native authoring, settings and name
-readback checks passed; cursor appearance and Colour-by pixels remain pending. Issue #9 tracks
-the packet. Run the final offline gate after committing the generated API reference, then record
-final native evidence before archive and delivery.
+readback checks passed; cursor appearance remains pending. Issue #9 tracks
+the packet. The final offline gate and K1 native evidence are recorded. Cursor appearance must pass before
+archive and completed delivery.
 
 ## Implementation checkpoints
 
@@ -74,7 +74,7 @@ No public-distribution, Windows or SketchUp 2023 support claim is included.
 | 1 | Z2 research and name synchronization; Z1 native Make Zone | Entity Info and Outliner rename; cancellation, blank-name restoration, stale edits, Undo/Redo, copies, save/reopen and export labels. Make Zone appears only for valid selection and calls the public operation | Passed |
 | 2 | Z4/Z5 model settings and creation classification | Defaults on, 60/130 degree thresholds; registered model write, validation, Undo/Redo, per-model isolation and reopen; Make plus Suggest atomic when feasible; tab settings bubble and renamed labels | Passed |
 | 3 | Z3/C1-C5/S1 selection actions and painting | Multi-Zone all-or-nothing edits; individual Face attributes on selected occurrences, 250-Face ceiling; Attached-zone selection/new form; cursor, conditional Exit tool; selected and whole-model Solve | Passed except cursor appearance |
-| 4 | K1 overlay and integrated closeout | Classified fills without coloured outlines, unclassified drawing remains legible; native selection/occlusion evidence; combined review, final suite, accurate archive/delivery | Pending |
+| 4 | K1 overlay and integrated closeout | Classified fills without coloured outlines, unclassified drawing remains legible; native selection/occlusion evidence; combined review, final suite, accurate archive/delivery | K1 and final suite passed; closeout awaits C1 |
 
 Commit at accepted checkpoints. Required native cases remain gates; an offline pass is not closure.
 
@@ -140,5 +140,19 @@ Native controls, rather than callback simulation, performed:
   sizes, including 360 px with the settings bubble open and the same Enter commit.
 
 Final coverage checkpoint: 718 Ruby tests / 3,676 assertions; Ruby 96.7%, JavaScript 97.8%, Python 94%.
-Rubocop checked 207 files with no offenses; JavaScript/Python lint passed. The updated coverage includes the paint fallback. The final suite remains pending. Cursor and Colour-by native pixels
-remain pending; no checkpoint is marked complete before its remaining gate passes.
+Rubocop checked 207 files with no offenses; JavaScript/Python lint passed. The updated coverage includes the paint fallback. Final `make ci` passed: 718 Ruby tests / 3,676 assertions, 198 JavaScript tests, 96 Python tests, hostkit tests, lint/type checks, manifests, fixtures and RBZ verification. The Chromium 88 runtime check also passed. Native Colour-by pixels pass. Cursor appearance remains pending; no checkpoint is marked complete before its remaining gate passes.
+
+### K1 native pixels
+
+The selected left Zone's blue native edges remain visible over Outdoors blue fills and Wall yellow
+fills. The two internal Surface Faces are occluded behind their exterior walls. A development-only
+fixture temporarily removed one front Face record: its hatch and outline were neutral gray, the
+legend counted one Unclassified Face, and the neighboring classified fill stayed legible. Restoring
+that exact record returned the classified drawing. The repeat is recorded as UXK1 in the
+[native evidence ledger](../../native-acceptance/evidence/ux-followups-k1-2026-09-30.md). No shipped palette or Model materials changed.
+
+Implementation checkpoint: `e7a556b` (DCO signed). Final closure/archive is held only for C1's cursor
+appearance: native controls delivered paint pointer events and started/stopped the tool. SketchUp's
+native cursor callback subsequently allocated cursor ID 50012. Ed has a pending request to move the
+physical pointer into the viewport and identify its appearance. This is a controller limitation until that observation
+establishes whether the normal native path works; no simulated callback is counted as acceptance.

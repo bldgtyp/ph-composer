@@ -154,8 +154,8 @@ they never write Model records directly. A selected-Face choice applies one attr
 Without selected Faces, the same choice loads the paint tool through its view command.
 
 `available: ->(session) { ... }` controls context-menu visibility. An optional
-`entries: ->(session) { [Declarations::MenuEntry.new(label: ..., handler: ...)] }` supplies current
-record-dependent items, such as Attached zones. Providers run only while building a context menu;
+`feature.menu_entries(name, menu: ..., available: ...) { |session| [Declarations::MenuEntry.new(label: ..., handler: ...)] }`
+supplies current record-dependent items, such as Attached zones. Providers run only while building a context menu;
 the Extensions menu is installed once. The shell validates the supplied entry shapes and remains
 independent of contributor vocabulary and record kinds.
 
