@@ -97,7 +97,8 @@ so the agent can read exact geometry, references and revisions through the bridg
 3. With Place active, select Surface and click its paired Face, then No Zone and click that Face.
    Read each refusal. Return to Wall and try an overhang at the left edge. Each must leave no Unit.
 4. Start Place, switch via Window to the saved `p212c-native.skp`, then back to `p213-native.skp`.
-   Confirm the old placement has stopped and no Unit was added by switching. Avoid editing p212c.
+   Confirm no Unit was added by switching. The original Model may retain Place when you return;
+   a pending gesture must not commit across the switch. Avoid editing p212c.
 5. In Zones / Faces, choose Colour by Window Type, inspect the pane fills/outlines, turn it off and
    confirm the normal view returns. Hidden-tag rendering remains an agent-prepared follow-up;
    do not improvise tag edits to the saved P2-12 model.
@@ -190,3 +191,17 @@ step 2 exactly: four Units, unchanged revision 26, Place still active. Private
 no-write behavior pass. The overhang attempt is covered by Ed's step-3 no-placement report,
 but its visible refusal reason has not yet been recorded. Model switch and Colour-by remain
 pending; E13 stays open.
+
+## Restart step 4: ordinary Model switching
+
+Ed reports that placement ends in the other Model and Place is still active when returning
+to the starting session. Live readback confirms that the restart Model retains Place, while
+every Unit row and revision remain unchanged from step 3. Private `p213-restart-step-4.json`
+records the result. The original manual instruction incorrectly required Place to stay stopped
+after returning. `context/EXTENSIBILITY.md` requires abandonment of pending gestures, not loss
+of the session's selected tool; `Sessions` deliberately retains open Model state across switches.
+No source defect is established by the resumed tool.
+
+Ordinary active-tool Model switching with no writes is observed. This check did not exercise a
+mouse-down held across the Model switch, and is not evidence for that distinct gesture case.
+Colour-by/hidden-tag rendering and the overhang refusal reason remain outstanding E13 evidence.
