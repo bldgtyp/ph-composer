@@ -49,6 +49,16 @@ def test_a_file_type_the_extension_does_not_ship_is_refused() -> None:
     assert problems({"ph_composer/model.skp": b""}) == ["ph_composer/model.skp: file type .skp does not ship"]
 
 
+def test_starter_library_is_refused_even_when_copied_under_extension() -> None:
+    assert problems({"ph_composer/starter-library/materials.json": b"{}"}) == [
+        "ph_composer/starter-library/materials.json: development material (starter-library)"
+    ]
+    assert any(
+        "development material (starter-library)" in problem
+        for problem in problems({"starter-library/materials.json": b"{}"})
+    )
+
+
 def test_designph_and_the_predecessor_namespace_are_refused_in_any_case() -> None:
     found = problems(
         {

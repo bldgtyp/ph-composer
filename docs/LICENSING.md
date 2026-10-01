@@ -56,6 +56,11 @@ boundary now.
 
 ## Library providers
 
+The separately distributed generic data in [`starter-library/`](../starter-library/README.md)
+is dedicated under CC0 1.0 Universal. Its authored records cite public sources and qualify their
+representative values. The dedication covers our records, not the linked publications. The starter
+library is excluded from the extension package; the extension code remains AGPL-3.0-or-later.
+
 A library file is data. A vendor or a firm that publishes one, or runs a server that answers the
 connection protocol, writes no PH-Composer code and the license does not reach them. A firm's
 intranet or company library is an intended use.

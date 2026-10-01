@@ -20,19 +20,29 @@ versioned bounded catalog loading, stable library-file export identity and expor
 
 ## Current work and remaining gates
 
-P2-07 registration declarations, pure resolver and bounded file-provider implementation are in
-progress on `codex/phase-02-envelope`. P2-02 Material records are present. Issue #14 and Ed's
-2026-10-01 implement-loop authorization own this work; D2-8 and D2-9 are resolved in DECISIONS.md.
-P2-08, P2-09 and P2-15 remain unimplemented. PH-Navigator's endpoint change is external to this
-repository and can defer P2-16. External provider-author review of the format remains a stability
-gate; native lifecycle and Windows credentials remain explicit acceptance requirements.
+P2-07 and P2-08 are implemented, independently reviewed and integrated on
+`codex/phase-02-envelope`. Installed checkpoint `146076e` passes every dual-Ruby full-gate
+target, all six browser scripts and Chromium 88 runtime export. Native library proof covers
+copy/reuse, every review answer, Add to file, atomic drag assignment, native Undo/Redo, Setup
+removal and provider-free reopen with editable local copies. Native file and aggregate budgets
+also pass at the declared limits. The report attribution proof and final case attestation remain
+open. See [seam evidence](../evidence/p2-07-library-seam.md) and
+[sidebar evidence](../evidence/p2-08-library-sidebar.md).
+
+P2-09 registered file export is in implementation. Twelve generic starter Materials are authored
+from public DOE guidance and original NIST measurements, with qualifications and CC0 notice;
+the reader admits all twelve without warnings. The outside provider will be prepared under
+`tools/examples/` before the separate repository approval is requested in Ed's final batch.
+P2-15 remains unimplemented. PH-Navigator's endpoint change is external to this repository and
+can defer P2-16. External provider-author review remains a format stability gate.
 
 ## Verification
 
-Focused documentation consistency review completed; no implementation or host verification.
-Added acceptance cases cover actual references, replacement round trips, ambiguity, failed refresh,
-export identity, privacy filtering, panel-closed operations and outside registration. Protocol and
-format review by another provider author, native lifecycle tests and Windows credentials remain gates.
+Current native and integrated evidence is linked above. Starter data validation passes on Ruby
+2.7.2 and 3.2.2 (1 test, 92 assertions); the focused archive suite passes 15 cases, including
+refusal when the starter library is copied into the extension. These are focused checks, not
+P2-09 acceptance. Protocol and format review by another provider author and Windows credentials
+remain separate gates.
 
 ## Architecture corrections
 

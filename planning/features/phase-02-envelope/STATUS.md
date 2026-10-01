@@ -47,14 +47,18 @@ Package: `_private/host/envelope/checkpoint-6a7e08f.rbz`, SHA-256
 It contains 235 files and 22,242,825 installed bytes, below the 24 MB ceiling but above the 22 MB
 size target. The actual native fixture is saved as `reference-assigned.skp` in that private folder.
 
-P2-07 is implemented in source with focused dual-Ruby tests. The bounded independent review
-closed name matching, write prevention during resolver reads and catalog invalidation on private
-setup changes. Typed public schemas, atomic copy/assignment, full replacement guards and source
-fingerprint comparison pass focused tests. This source is not installed or fully gated yet.
-P2-08 sidebar/setup and P2-10 Window records are in progress. Core ModelSettings and generic
-AuthoringFields are promoted with compatibility tests; the latter remains an exact Assemblies alias.
-Continue integrated gates, then the library native budget/copy/lifecycle proof. Manual items remain
-reserved for Ed's final batch; no acceptance cases have been awarded from partial evidence.
+P2-07, P2-08 and P2-10 are integrated in installed checkpoint `146076e`; every full-gate
+target passes on both Rubies, all six browser scripts pass, and Chromium 88 runtime export
+passes. Native library proof covers 20,000 rows at the 32 MiB per-file / 64 MiB aggregate limits,
+copy/reuse, review choices, atomic drag assignment, native Undo/Redo, removal and fresh persistence.
+Window record proof covers seven public commits, seven exact native Undo/Redo states and fresh
+reopen. See the owning evidence for limits and provenance; complete case attestations remain open.
+
+P2-09 registered file export is in implementation; twelve starter public-source records pass
+focused reader and packaging checks. The outside provider example is next. P2-11 Window editors are in implementation and are not installed.
+P2-12 Slice A has measured evidence except native Move Copy; Slice C waits on that specific
+host observation. API copies do not satisfy it. Manual items remain reserved for Ed's final
+batch while independent authorized work continues.
 
 ## Blockers
 
@@ -71,12 +75,12 @@ reserved for Ed's final batch; no acceptance cases have been awarded from partia
 | [P2-04 Assembly Builder](phases/p2-04-assembly-builder.md) | 2.1 | Implemented and reviewed; dual-Ruby CI/runtime/browser and initial native Builder proof pass; full native gate open | [Builder evidence](evidence/p2-04-assembly-builder.md) |
 | [P2-05 Assigning Assemblies to Faces](phases/p2-05-assign-assemblies-to-faces.md) | 2.1, 1.2 | Implemented and reviewed; dual-Ruby CI/browser and exact native Undo/Redo pass; UI attestation open | [Assignment evidence](evidence/p2-05-assign-assemblies.md) |
 | [P2-06 Construction export](phases/p2-06-construction-export.md) | 2.1, 1.3 | Implemented and reviewed; dual-Ruby CI/runtime and real-SKP export pass; final native gate open | [Construction evidence](evidence/p2-06-construction-export.md) |
-| [P2-07 Library seam and file provider](phases/p2-07-library-seam-and-file-provider.md) | 2.2 | Implemented in source; focused dual-Ruby coordinator checks and bounded review pass; integrated/native gates open | [Library evidence](evidence/p2-07-library-seam.md) |
-| [P2-08 Library sidebar and setup](phases/p2-08-library-sidebar-and-setup.md) | 2.2 | Scoped | |
-| [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Scoped | |
-| [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented in source; focused dual-Ruby checks and independent review pass; integrated/native gates open | [Window records evidence](evidence/p2-10-window-records.md) |
-| [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Scoped | |
-| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Scoped | |
+| [P2-07 Library seam and file provider](phases/p2-07-library-seam-and-file-provider.md) | 2.2 | Implemented and reviewed; integrated gates and native library proof pass; final attestation open | [Library evidence](evidence/p2-07-library-seam.md) |
+| [P2-08 Library sidebar and setup](phases/p2-08-library-sidebar-and-setup.md) | 2.2 | Implemented and reviewed; integrated gates and native UI workflows pass; final attestation open | [Sidebar evidence](evidence/p2-08-library-sidebar.md) |
+| [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | In progress; registered export backend and starter data underway; outside repository approval reserved for final batch | [Export evidence](evidence/p2-09-library-export.md) |
+| [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented and reviewed; integrated gates and native records Undo/Redo/reopen pass; final attestation open | [Window records evidence](evidence/p2-10-window-records.md) |
+| [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | In progress; UI implementation and focused tests underway | |
+| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A partial; native Move Copy observation outstanding; Slice C not started | [Host observations](evidence/p2-12-window-host.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Scoped | |
 | [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
 | [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Scoped | |

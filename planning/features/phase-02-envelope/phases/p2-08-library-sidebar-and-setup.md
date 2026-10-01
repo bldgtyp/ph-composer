@@ -1,7 +1,7 @@
 # P2-08: library sidebar and setup
 
 DATE: 2026-09-30
-STATUS: Implemented in source and reviewed; integrated/native gates open. Authorized 2026-10-01.
+STATUS: Implemented and reviewed; integrated gates and native UI proof pass, final attestation open. Authorized 2026-10-01.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
