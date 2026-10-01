@@ -79,3 +79,31 @@ All 296 installed files match package SHA-256
 `af377ff41e6dcf6a3b906acbc1a87ce7733ffec18b2a87981d65da1bb1cb22d3`.
 Both full CI gates, Chromium 88 and all eight browser scripts pass;
 `/tmp/phc-caption-{ci32,ci27,runtime,ui}.log` records this verification.
+
+## Current inventory continuation
+
+Normal package `8a43bec`, PID 33871, integrated session
+`d5b3f676-3518-443b-a814-9d423eece153`: native Material Duplicate creates exactly one new id,
+`Synthetic board (copy)`, with derived provenance and identical authored values/metadata except
+name/source. The six existing records remain identical. One native Model Undo restores the entire
+public inventory, including uses and categories. Private readbacks:
+`p214-p217-material-duplicate-{before,after,one-native-undo}.json`.
+
+Native Material filter `board`, category grouping, conductivity ordering and descending direction;
+Assembly filter `Reference`, Type grouping, thickness ordering and descending direction all work.
+The complete public inventories and their revisions remain identical to the captured baseline.
+Clearing filters and changing tabs also leave them identical. Readbacks:
+`p214-p217-inventory-navigation-{before,after,final}.json`.
+
+Both public update actions refuse stale `expected_values.name` with `target.changed`, effect none,
+at the current revision. Both complete inventories and revisions remain identical before/after.
+This is native-host API evidence, not a simulated HtmlDialog race.
+`p214-p217-inventory-stale-values.json` retains outcomes and readbacks.
+
+At a 904-pixel capture width (approximately 452 CSS px), native Material and Assembly controls wrap,
+the peer subtabs work and the New Material form scrolls internally to reachable Cancel/Create.
+Escape with its Category selector open dismisses only the selector; a second Escape closes the
+form and returns focus to New Material. Reopening retains the typed unsaved name. Cancel followed
+by Attached zones and return to Materials also permits reopening that retained draft. No Material
+is created. These are bounded layout/navigation observations, not a whole E03 attestation.
+Assembly inventory in-place edit/Undo/Redo is recorded in P2-17's colour recheck.

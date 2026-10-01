@@ -16,7 +16,7 @@ Ids use the prefix E so they do not collide with Phase 1's A and R rows in the c
 | E02 | Assemblies, P2-02 | Schema round trips for Material and Assembly; the membrane, steel stud and one-spacing-per-Layer rules; thermal values equal the predecessor's reference cases; `user_data` and understood local-only extension payloads survive edit, Duplicate, Undo/Redo and reopen; unavailable payloads survive edit and refuse Duplicate when copy rules are missing; a panel-closed script builds a three-layer Assembly through registered actions only | Open |
 | E03 | Assemblies, P2-03 | Both inventories on the host: create, in-place edit with stale-value refusal, duplicate, guarded delete, Material replace; filter, group and order never change the Model; unit switch keeps drafts | Open |
 | E04 | Assemblies, P2-04 | The Builder on the host: every toolbar gesture is one Undo step; partial Assemblies save and reopen; both U-values shown, withheld and never zero when inputs are missing; the ventilated cladding flag changes only the displayed exterior film | Open |
-| E05 | Zones and assemblies, P2-05 | Assign by selection, by right-click, by table and by paint, each one Undo step; hint fill and explicit-value precedence; the 250 ceiling and one above; delete with replacement across direct, nested and repeated-definition Faces, one Undo restoring the record and every `assembly_id`; a stale expected value and an unreachable Face each refuse the whole command; usage counts and area; the assembly Colour-by mode; paired Faces naming different Assemblies warn | Open |
+| E05 | Zones and assemblies, P2-05 | Assign by selection, by right-click, by table and by paint, each one Undo step; hint fill and explicit-value precedence; the 250 ceiling and one above; delete with replacement across direct and nested unique Faces, one Undo restoring the record and every `assembly_id`; repeated shared storage refuses atomically; a stale expected value and an unreachable Face each refuse the whole command; usage counts and area; the assembly Colour-by mode; paired Faces naming different Assemblies warn | Open |
 | E06 | Assemblies and export, P2-06 | The normal packaged RBZ exports the reference model with no development provider present; the exact HBJSON reloads; single, mixed, steel stud and membrane layers read back with their identifiers, division grid and `ph_composer` block; one Material at two thicknesses is two materials; a Face naming an absent id, an incomplete assigned Assembly and an unused incomplete Assembly each produce the PRD's outcome; the metadata guard passes | Open |
 | E07 | Library, P2-07 | The provider contract against a synthetic multi-kind file and folder; envelope refusals, row tolerance, duplicate ids across folder files, budget overflow and failed refresh each have a distinct outcome; resolver outcomes including ambiguity; copy plus assign rolls back together; panel closed: list, preview, apply, read back, stale revision, wrong session, duplicate retry | Open |
 | E08 | Library, P2-08 | On the host: add a library file, copy and assign by drag, Add to this file, Undo removes copy and assignment together, In this file, same-name source review with all three answers, a second provider with identity-scoped state, reopen on a machine with no providers and edit the copy | Open |
@@ -29,6 +29,16 @@ Ids use the prefix E so they do not collide with Phase 1's A and R rows in the c
 | E15 | Windows and library, P2-15 | Each of the three kinds copies from a library file; assigning a Frame or Glazing by drag copies and assigns in one Undo step; adding the kinds changed no file in `library/` | Pass: [E15 evidence](evidence/p2-15-window-library-kinds.md) |
 | E16 | Library, P2-16 | Each sign-in method; a static file host as a server; late responses after removal do nothing; no credential or address in the panel, a log, the SKP or an export. In scope only if D2-8 keeps it | Deferred to Phase 5 by D2-8 |
 | E17 | Integration, P2-17 | Both offline Ruby gates, coverage, browser and runtime checks; packaged inventory and footprint against the 22 MB target and 24 MB ceiling; fresh-process authoring to export of the reference model with nested edit paths, two Models, Undo/Redo and reopen | Open |
+
+## E05 shared-storage interpretation
+
+The repeated-definition clause is governed by P2-05 steps 3 and 4 and
+[CONTRACTS](../../../context/CONTRACTS.md#geometry-records-and-occurrence-references): retargeting uses the same unique,
+writable Face resolution as assignment. Repeated shared storage must refuse the whole delete,
+with every assignment and definition unchanged. Successful replacement is verified across unique
+direct and nested occurrences, including independently stored copies with distinct Face ids.
+The register wording above makes that existing constraint explicit; it does not authorize shared
+component mutation or waive the refusal check. E05 evidence records both outcomes separately.
 
 ## Synthetic reference model
 

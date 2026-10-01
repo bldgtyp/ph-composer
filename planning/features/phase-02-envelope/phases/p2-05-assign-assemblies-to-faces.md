@@ -110,7 +110,8 @@ Both:
 
 Fresh process on the reference model: assign by selection panel, by right-click, by table and by
 paint, each one Undo step; assign inside a nested edit path; delete with replacement across
-direct, nested and repeated-definition Faces and Undo it once; confirm the usage numbers against
+direct and nested unique Faces and Undo it once; confirm repeated shared storage refuses the
+whole delete without changing references or definitions, as steps 3 and 4 require; confirm the usage numbers against
 the hand calculation; turn the assembly Colour-by mode on and edit a colour; switch Models
 mid-way. Run the ledger screen for the changed Zones files and repeat A04, A07, A08 and A09 as
 it reports.

@@ -105,3 +105,18 @@ Private `assembly-native-three-layer-thermal.json`, `assembly-native-e04-wall-*.
 and `assemblies-native-three-layer.skp` retain values, exact journals and the completed Model.
 The native workflow set is now observed across the documented batches, including editing
 after fresh reopen. E04 remains open for consolidated attestation and the preceding E03 gate.
+
+## Current complementary Layer controls
+
+Normal installed `8a43bec`, PID 33871, integrated reference session
+`d5b3f676-3518-443b-a814-9d423eece153`: native Layer tools Add inside inserts one new
+Layer between the selected outer mixed roof Layer and the interior board. Existing adjacent
+Layer/Segment identities and references stay exact. One native Model Edit-menu Undo restores
+the complete Materials/Assemblies projection exactly. Native Move inward swaps the original
+two Layers without changing their identities, values or references; one native Cmd-Z restores
+the complete baseline. Other definitions and Materials stay unchanged in both gestures.
+Private readbacks: `p214-p217-builder-controls-before.json`,
+`p214-p217-builder-add-inside-{after,one-native-undo}.json` and
+`p214-p217-builder-move-inward-{after,one-native-undo}.json`. These close the two complementary
+Layer-menu observations identified by the E17 audit. Steel-spacing mathematics/validation stay
+with E02/E06 tests; the E04 host gate requires a stud wall, not an additional steel-input ceremony.

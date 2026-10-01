@@ -21,9 +21,11 @@ No shipping code or providers are patched in the host.
 
 Current resume point is the verified `8a43bec` colour correction below, normal installed package
 `f85b789455882d4ba39fafc0edd7266c7cafc973975b3a14832677f8f71537fd`, fresh process PID 33871.
-Two synthetic Models are open: integrated reference (active, restored authoring values) and
-`p217-replacement.skp` (unsaved additional cost/hint fixtures). Discard the latter's extra geometry
-and reopen its saved three-Face baseline for the remaining native nested edit-path assignment.
+Two synthetic Models are open: active integrated reference and `p217-replacement.skp`, reopened
+three-Face baseline. The extra cost/hint geometry was discarded. Native assignment inside the
+replacement Model's two-level edit path and exact one-step Undo pass. The integrated Library and
+Assembly inventories are now at a narrow native width with authoring values restored. Continue
+E04 missing Builder controls, E07 guards and integrated E17 export/restart consolidation.
 
 The canonical two-Zone reference now includes all four Window occurrences, the copied identity,
 one Empty panel per mulled Unit, exact g=0, complete Assemblies and reciprocal Surface pair.
@@ -79,6 +81,9 @@ The stale/unreachable batch refusals, 250/251 ceiling and single native Undo als
 fixture cleanup. E06 current-host missing/incomplete assigned construction refusals and unused
 incomplete disclosure pass through the normal canonical workflow, with exact aborted-fixture
 restoration; see [construction evidence](p2-06-construction-export.md).
+E05 replacement, shared-storage refusal, hint precedence, usage cost, colour edit/redraw,
+Model switch and deeper nested-path assignment now have bounded native observations as well.
+The remaining E05 work is assertion/ledger consolidation, not another ordinary assignment gesture.
 
 - Reconcile E01 to E11 retained observations with every register assertion, and execute remaining
   independently reachable native checks. E05 still needs the non-route register assertions;
@@ -94,3 +99,18 @@ restoration; see [construction evidence](p2-06-construction-export.md).
 All synthetic helpers, SKPs, full journals and exports are preserved privately. No main-repository
 push, PR or merge has been performed. SketchUp 2023, Windows, release, certification and METr
 consumer gates remain separate.
+
+### Inventory and complementary Builder continuation
+
+The current installed build now has native inventory Duplicate, presentation nonmutation, stale
+expected-value refusals, narrow form/subtab/Escape observations, plus Add inside and Move inward
+with exact individual native Undo. See E03/E04 continuation sections and the
+[assertion-level reuse matrix](p2-17-reuse-matrix.md). No further case is awarded yet.
+E05's repeated-definition wording now explicitly follows the existing shared-storage refusal
+contract; successful unique-occurrence replacement and unchanged shared-storage refusal are
+separate observations. Resume with E07 guards and integrated E17 export/restart consolidation.
+
+The E07 current normal-host public preview and stale/wrong-session refusal batch passes, with
+exact unchanged two-Model catalogs/revisions and provider setup restored empty. See
+[E07](p2-07-library-seam.md#current-native-sessionrevision-guards). The next integrated export
+and fresh reopen check is still pending; the panel is closed and authoring values are restored.

@@ -256,5 +256,20 @@ dual-Ruby full CI and normal installed-package verification pass. Fresh SketchUp
 the native colour edit, overlay/HUD redraw and exact Undo/Redo while the mode remains active.
 Current package SHA-256 is `f85b789455882d4ba39fafc0edd7266c7cafc973975b3a14832677f8f71537fd`.
 E05 now also has unique-occurrence replacement/Undo, real shared-definition refusal, hint precedence,
-2,003-Face usage cost and Model-switch evidence. Native deeper edit-path assignment and consolidated
-assertion reconciliation remain open. Resume from [P2-17 evidence](evidence/p2-17-acceptance.md).
+2,003-Face usage cost, Model-switch and native deeper edit-path assignment evidence. Consolidated
+assertion reconciliation remains open. Resume from [P2-17 evidence](evidence/p2-17-acceptance.md).
+
+P2-17 inventory continuation now verifies native Material Duplicate and exact one-step Undo,
+filter/group/order nonmutation for both inventories, current-host stale expected-value refusals,
+and narrow native form/subtab/Escape behavior. Integrated reference is active; authoring values
+are restored. Remaining reachable work is E04 controls, E07 guards and integrated E17 consolidation.
+See [inventory evidence](evidence/p2-03-inventories.md#current-inventory-continuation) and the
+[retained evidence matrix](evidence/p2-17-reuse-matrix.md). No further case is awarded yet.
+
+E04 Add inside and Move inward now have exact individual native Undo proof on `8a43bec`.
+E05 gate wording now explicitly matches the existing unique-target/shared-storage refusal
+contract. Native Model is active with the integrated catalog restored; the panel is closed.
+Next: E07 guard observations and E17 integrated export/restart plus formal case consolidation.
+
+Current E07 stale-revision/wrong-session guards pass with both Model inventories/revisions
+unchanged and provider setup restored empty. Next is integrated E17 export/restart consolidation.

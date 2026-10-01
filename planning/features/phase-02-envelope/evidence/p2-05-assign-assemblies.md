@@ -1,7 +1,7 @@
 # P2-05 evidence: Assembly assignment
 
 DATE: 2026-10-01
-STATUS: Implemented and reviewed. Integrated gates and exact native assignment Undo/Redo pass; full UI attestation open.
+STATUS: Implemented and reviewed. Native assignment assertions verified with the shared-storage qualification below; E05 consolidation remains open.
 
 Zones owns optional Face `assembly_id`, selection/table assignment, Clear, usage counts, Locate,
 Paint and replacement on Assembly deletion. Assemblies owns its records without a Zones dependency.
@@ -109,5 +109,10 @@ not a claim that all refresh costs are negligible. Journals:
 
 Native Window-menu switching back to the integrated reference preserves its entire Assembly catalog
 and active Assembly Colour-by state. Journal: `p214-p217-assembly-model-switch.json`.
-E05 remains open for the literal native assignment inside a deeper nested edit path and final
-assertion reconciliation; shared-storage refusal is kept distinct from unique-occurrence success.
+The saved three-Face fixture was reopened after discarding the temporary cost/hint additions.
+Native right-click Edit Group entered path `[48880, 48889]`; selecting Face 48896 and choosing
+Classify faces / Assembly: Temporary replacement Assembly changed only that Face's `assembly_id`.
+One native Undo restored the exact complete Face list, usage and both catalogs. Journals:
+`p214-p217-replacement-nested-assignment-{before,after,one-native-undo}.json`.
+The deeper native edit-path assertion is verified. E05 remains open for final assertion and ledger
+reconciliation; shared-storage refusal is kept distinct from unique-occurrence success.

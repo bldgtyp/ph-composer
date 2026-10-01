@@ -97,3 +97,17 @@ the output retains two Rooms, twelve Faces and one Surface pair. Private evidenc
 `library-source-report-before.json`, `library-source-report-status.json`,
 `library-source-report-proof.json` and the generated HTML report. All recorded proof checks pass.
 Final structured native case attestation remains open.
+
+## Current native session/revision guards
+
+Normal installed `8a43bec`, SketchUp PID 33871, panel closed: the shipped file provider loads
+the synthetic `tools/examples/library/materials.json` and public preview succeeds. Copy with
+an older expected revision refuses `revision.stale`, effect none. Pairing the active session's
+caller handle with the other open Model's session refuses `session.unknown`, effect none.
+Both complete Materials/Assemblies inventories and their revisions remain exactly unchanged.
+The development helper only configures the existing shipped provider; it introduces no provider
+implementation or runtime patch. Setup begins empty and is restored empty in ensure.
+Private `p214-p217-library-guards.json` retains list/load/preview, both refusals and two-Model
+readbacks; `p217-e07-baseline.json` was captured before this batch. Other E07 assertions retain
+their original native/offline provenance in the E17 matrix; this does not relabel them as a
+new full current-build walkthrough or close the case.
