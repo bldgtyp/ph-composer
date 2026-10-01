@@ -32,7 +32,8 @@ module PhComposer
           reads = ReadContext.new(request)
           counts = reads.occurrences.group_by { |item| item.record.fetch("id") }.transform_values(&:length)
           polygons = reads.occurrences.filter_map do |item|
-            [item.path, reads.polygon(item)] if reads.type(item)
+            polygon = reads.read_polygon(item)
+            [item.path, polygon] if polygon
           end.to_h
           items = reads.occurrences.sort_by(&:path)
           items = items.select { |item| request.params.fetch("ids").include?(item.record.fetch("id")) } if

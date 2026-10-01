@@ -62,7 +62,12 @@ Public placement, bounded/snapshot Unit reads and used-Type propagation are now 
 registration and independently reviewed. Five integration review findings are corrected and
 confirmed closed. Both full Ruby suites pass, 1156 tests / 8299 assertions; scoped lint and the
 generated API reference pass. No new package is installed. Registered repair operations, the
-full script walkthrough and native acceptance are next. See
+full script walkthrough and native acceptance are next. Follow-on uncommitted source now
+registers Remove, Re-host, batch Swap and Reset-to-Type, plus used-Type deletion retargeting and
+guarded primary cleanup. The panel-closed placement/copy/resize/swap walkthrough passes offline.
+New flipped Type and exploded-pane Restore are also registered. Independent review is complete;
+all reproduced findings are closed. Full CI passes on both Rubies, 1261 tests / 9082 assertions.
+No repair native acceptance is claimed. See
 [foundation and integration evidence](../evidence/p2-12-unit-geometry.md).
 The reference uses a root-to-instance path and Unit ID so an orphan remains addressable without
 inventing a Zone stamp. Full Slice C review and all placement/repair host gates remain open.

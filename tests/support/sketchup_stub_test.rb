@@ -3,6 +3,26 @@
 require_relative "../test_helper"
 
 class SketchupStubTest < PhComposerTestCase
+  def test_definition_instances_includes_unused_storage_and_deduplicates_shared_parents
+    model = Sketchup::Model.new
+    Sketchup.active_model = model
+    definition = model.definitions.add("Synthetic Window")
+    direct = model.entities.add_instance(definition, Geom::Transformation.new)
+    unused = model.definitions.add("Unused furniture")
+    nested = unused.entities.add_instance(definition, Geom::Transformation.new)
+    shared = Sketchup::Entities.new
+    grouped = shared.add_instance(definition, Geom::Transformation.new)
+    model.entities << Sketchup::Group.new(1100, shared)
+    model.entities << Sketchup::Group.new(1101, shared)
+    assert_equal [direct, nested, grouped].sort_by(&:persistent_id), definition.instances.sort_by(&:persistent_id)
+    unused.entities.erase_entities(nested)
+    assert_equal [direct, grouped].sort_by(&:persistent_id), definition.instances.sort_by(&:persistent_id)
+    replacement = model.definitions.add("Replacement")
+    direct.definition = replacement
+    assert_equal [grouped], definition.instances
+    assert_equal [direct], replacement.instances
+  end
+
   def test_commit_records_operation_and_notifies_observers
     model = Sketchup::Model.new
     observer = transaction_observer

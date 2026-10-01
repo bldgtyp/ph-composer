@@ -29268,6 +29268,85 @@ Example params:
 }
 ```
 
+### `ph_composer.windows.units.new_flipped_type`
+
+Create a horizontally flipped Type for one mirrored Window. Owner: `ph_composer.windows`.
+
+Undo step: New Flipped Window Type. Creates one independent Type; preserves physical panes, metadata and glue.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit"
+  ],
+  "properties": {
+    "unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit_id",
+        "entity_path"
+      ],
+      "properties": {
+        "unit_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit_id",
+    "type_id"
+  ],
+  "properties": {
+    "unit_id": {
+      "type": "string"
+    },
+    "type_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "unit": {
+    "unit_id": "wun_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1203
+    ]
+  }
+}
+```
+
 ### `ph_composer.windows.units.place`
 
 Place an anchored Window on an explicit writable Zone Face. Owner: `ph_composer.windows`.
@@ -29399,6 +29478,481 @@ Example params:
     "x_m": 1.0,
     "y_m": 0.8
   }
+}
+```
+
+### `ph_composer.windows.units.rehost`
+
+Glue an unmoved Window to an explicit same-storage Face. Owner: `ph_composer.windows`.
+
+Undo step: Re-host Window. Changes glue only, after containment and overlap checks.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "host"
+  ],
+  "properties": {
+    "unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit_id",
+        "entity_path"
+      ],
+      "properties": {
+        "unit_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path",
+        "entity_path",
+        "entity_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit_id"
+  ],
+  "properties": {
+    "unit_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "unit": {
+    "unit_id": "wun_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1203
+    ]
+  },
+  "host": {
+    "zone_id": "zon_Ab12Cd34Ef56",
+    "zone_path": [
+      1201
+    ],
+    "entity_path": [
+      1202
+    ],
+    "entity_id": null
+  }
+}
+```
+
+### `ph_composer.windows.units.remove`
+
+Remove explicit Window occurrences with reference guards. Owner: `ph_composer.windows`.
+
+Undo step: Remove Windows. Removes only the chosen instances; incoming references must remain valid.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "units"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "entity_path"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "entity_path": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit_ids"
+  ],
+  "properties": {
+    "unit_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "units": [
+    {
+      "unit_id": "wun_Ab12Cd34Ef56",
+      "entity_path": [
+        1201,
+        1203
+      ]
+    }
+  ]
+}
+```
+
+### `ph_composer.windows.units.reset_to_type`
+
+Reset explicit Windows of one Type to its authored geometry. Owner: `ph_composer.windows`.
+
+Undo step: Reset Windows to Type. Repairs selected instances; regenerating an edited primary affects all its Units.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "units"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "entity_path"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "entity_path": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit_ids"
+  ],
+  "properties": {
+    "unit_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "units": [
+    {
+      "unit_id": "wun_Ab12Cd34Ef56",
+      "entity_path": [
+        1201,
+        1203
+      ]
+    }
+  ]
+}
+```
+
+### `ph_composer.windows.units.restore`
+
+Recover a Unit from exact stamped pane Faces. Owner: `ph_composer.windows`.
+
+Undo step: Restore Window. Creates a new default-anchor Unit and removes only its exact loose panes and edges.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host",
+    "type_id",
+    "pane_paths"
+  ],
+  "properties": {
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path",
+        "entity_path",
+        "entity_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "type_id": {
+      "type": "string"
+    },
+    "pane_paths": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit_id"
+  ],
+  "properties": {
+    "unit_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "host": {
+    "zone_id": "zon_Ab12Cd34Ef56",
+    "zone_path": [
+      1201
+    ],
+    "entity_path": [
+      1202
+    ],
+    "entity_id": null
+  },
+  "type_id": "wnt_Ab12Cd34Ef56",
+  "pane_paths": [
+    [
+      1201,
+      1204
+    ]
+  ]
+}
+```
+
+### `ph_composer.windows.units.swap_type`
+
+Swap explicit Windows, preserving their anchors. Owner: `ph_composer.windows`.
+
+Undo step: Swap Window Type. Reuses one target definition and preserves each Unit's metadata and host.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "units",
+    "type_id"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "entity_path"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "entity_path": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500
+    },
+    "type_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit_ids"
+  ],
+  "properties": {
+    "unit_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "units": [
+    {
+      "unit_id": "wun_Ab12Cd34Ef56",
+      "entity_path": [
+        1201,
+        1203
+      ]
+    }
+  ],
+  "type_id": "wnt_Ab12Cd34Ef56"
 }
 ```
 

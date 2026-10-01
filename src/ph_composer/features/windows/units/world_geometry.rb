@@ -55,8 +55,8 @@ module PhComposer
           axes = basis(transform)
           lengths = axes.map { |axis| length(axis) }
           normalized = axes.zip(lengths).map { |axis, size| axis.map { |value| value / size } }
-          sheared = [[0, 1], [0, 2], [1, 2]].any? { |a, b| dot(normalized[a], normalized[b]).abs > TOLERANCE }
-          # Units are flat in XY. Scaling only the unused normal basis changes no aperture size.
+          sheared = dot(normalized[0], normalized[1]).abs > TOLERANCE
+          # Units are flat in XY. Changing only the unused normal basis changes no aperture size or shear.
           TransformState.new(:scaled => lengths.take(2).any? { |size| (size - 1.0).abs > TOLERANCE },
             :sheared => sheared, :mirrored => determinant(normalized).negative?).freeze
         end

@@ -240,4 +240,16 @@ class WindowUnitMutationScopeTest < PhComposerTestCase
     @model.undo
     assert @scope.unchanged?(@model, before)
   end
+
+  def test_null_definition_and_pane_stamps_are_not_absence
+    [[U::DEFINITION_STORE, @definition],
+     [U::PANE_STORE, @definition.entities.grep(Sketchup::Face).first]].each do |store, entity|
+      original = store.read(entity)
+      before = @scope.capture(@model)
+      entity.set_attribute(store.dictionary, store.key, "null")
+      assert_raises(PhComposer::CodedError) { @scope.capture(@model) }
+      refute @scope.unchanged?(@model, before)
+      store.write(entity, original)
+    end
+  end
 end

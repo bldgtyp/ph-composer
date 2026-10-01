@@ -72,6 +72,17 @@ class WindowUnitWorldGeometryTest < PhComposerTestCase
     assert mirrored.frozen?
   end
 
+  def test_unused_normal_basis_does_not_report_inplane_shear_or_scale
+    plan = Plans.build(window_values)
+    changed = matrix([1, 0, 0], [0, 1, 0], [0.3, 0.4, 2])
+    assert_equal Geometry.map(plan, matrix), Geometry.map(plan, changed)
+    state = Geometry.transform_state(changed)
+    refute state.scaled
+    refute state.sheared
+    refute state.mirrored
+    assert state.rigid?
+  end
+
   def test_new_layout_maps_merged_panes_and_retains_ids_with_physically_transformed_winding
     merged = W::Types.blank(:identity => window_allocator).merge("row_span" => [0, 1], "column_span" => [0, 1])
     small = W::Types.blank(0, 2, :identity => window_allocator)

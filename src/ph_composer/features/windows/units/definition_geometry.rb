@@ -15,6 +15,12 @@ module PhComposer
           CanonicalJson.digest(MutationScope.new.definition_snapshot(definition))
         end
 
+        # Detached corners for geometry matching; callers retain the original native topology
+        # separately for stale guards and removal. Collinear splits do not change a contour.
+        def normalized_contour(points)
+          normalized(points).map(&:dup)
+        end
+
         def matches?(definition, type_id:, plan:)
           stamp = DEFINITION_STORE.read(definition)
           return false unless stamp.is_a?(Hash) && stamp["window_type_id"] == type_id

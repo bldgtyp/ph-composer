@@ -699,6 +699,32 @@ module Sketchup
       @dictionaries[name]
     end
 
+    # Fixtures select their owning Model as active. Enumerate storage, including unused
+    # definitions, once so copied parent occurrences do not duplicate native instances.
+    def instances
+      model = Sketchup.active_model
+      return [] unless model
+
+      pending = [model.entities] + model.definitions.map(&:entities)
+      visited = {}
+      result = []
+      until pending.empty?
+        entities = pending.shift
+        next if visited[entities.object_id]
+
+        visited[entities.object_id] = true
+        entities.each do |entity|
+          if entity.is_a?(ComponentInstance)
+            result << entity if entity.definition.equal?(self)
+            pending << entity.definition.entities
+          elsif entity.is_a?(Group)
+            pending << entity.entities
+          end
+        end
+      end
+      result
+    end
+
     def attribute_dictionaries
       @dictionaries.values unless @dictionaries.empty?
     end

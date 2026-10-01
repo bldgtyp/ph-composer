@@ -182,3 +182,38 @@ on both Rubies; those repair steps are not part of this completed coherent integ
 No new RBZ is installed. The armed held-Classify fixture and installed `43a1418` remain intact.
 Native placement/topology/glue/Undo acceptance, registered repairs, the complete script walkthrough
 and consolidated Slice C/E12 remain open. Offline SDK stubs do not prove physical hole cutting.
+
+## Repair integration continuation
+
+The reviewed repair checkpoint registers explicit Remove, Re-host, batch Swap, Reset-to-Type,
+New flipped Type and Restore from stamped pane Faces. Used-Type deletion has an owner retargeter:
+a replacement swaps the full reachable Unit inventory; explicit null removes Units after incoming
+reference checks. Primary cleanup removes the deleted Type's pointer, releases only unused
+definitions and preserves unmanaged native users, including users inside unused definitions.
+
+The panel-closed walkthrough places, copies, resizes, swaps and reads back through public actions.
+Its native-copy callback is supplied by the host; offline fixtures do not claim a mouse gesture.
+Restore creates a fresh ID/default anchor and discards no foreign Face or Edge data silently.
+Subdivided rectangular boundaries are normalized only for matching; full topology remains guarded.
+Mirror repair creates an independent horizontally flipped Type and preserves physical panes,
+metadata and glue. Existing scale/shear is retained and reported; only XY shear affects flat Units.
+
+The same independent reviewer reproduced and confirmed closure of nested-reference loss,
+unmanaged primary users and underestimated detached collision footprints. The follow-up review
+also closed Reset's handling of geometry it will replace, Restore's affected label and subdivided
+contours. Late unmanaged users are checked again immediately before Type rewrites. No residual
+findings remain. Removal/replacement of a container holding nested authored Units refuses until
+the nested Units are recovered; it never projects disappearing child identities as survivors.
+
+Mutation outlines use validated generated dimensions when a detached or stale definition differs
+from the current Type. Unknown or edited geometry outside that footprint refuses; read-only
+outlines can be withheld while retaining state findings. Reset uses planned geometry for its own
+replacement rows and requires trustworthy current outlines only for untouched neighbors.
+
+Public Unit action checks pass 21 tests / 251 assertions on Ruby 3.2.2. The walkthrough passes
+one test / eight assertions on both Rubies. The immutable repair gate snapshot passes full CI
+on both Rubies, 1260 Ruby tests / 9079 assertions, 346 JavaScript tests and 135 Python tests;
+Ruby coverage is 96.9 percent before the final apply-time unmanaged-user guard. That guard passes
+15 focused tests / 142 assertions on both Rubies; updated full CI also passes on both versions,
+1261 Ruby tests / 9082 assertions. Generated API discovery
+is refreshed through its owning test. Native repair acceptance remains open.

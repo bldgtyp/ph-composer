@@ -201,4 +201,244 @@ class WindowUnitActionsTest < PhComposerTestCase
     assert rows.all? { |row| row.fetch("findings").any? { |finding| finding.fetch("code") == "copy_id_pending" } }
     assert rows.all? { |row| row.fetch("findings").any? { |finding| finding.fetch("code") == "invalid_host" } }
   end
+
+  def test_public_rehost_preserves_geometry_and_one_undo_restores_absent_glue
+    place
+    item = U::Occurrences.all(@model).first
+    item.entity.glued_to = nil
+    before = U::MutationScope.new.capture(@model)
+    result = assignment_invoke("#{PREFIX}.units.rehost", "unit" => item.reference, "host" => @face_reference)
+    assert_equal "completed", result.fetch("status"), result.inspect
+    assert_empty units.first.fetch("findings")
+    @model.undo
+    assert_equal before, U::MutationScope.new.capture(@model)
+    @model.redo
+    assert_empty units.first.fetch("findings")
+  end
+
+  def test_remove_copied_occurrence_is_path_scoped_and_undo_restores_pending_identity
+    place
+    original = U::Occurrences.all(@model).first
+    copy = @group.entities.add_instance(original.entity.definition,
+      Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
+    copy.glued_to = original.entity.glued_to
+    U.write(copy, original.record)
+    before = U::MutationScope.new.capture(@model)
+    reference = U::Occurrences.all(@model).last.reference
+    result = assignment_invoke("#{PREFIX}.units.remove", "units" => [reference])
+    assert_equal "completed", result.fetch("status"), result.inspect
+    assert_equal [original.path], U::Occurrences.all(@model).map(&:path)
+    assert_equal 1, @model.definitions.to_a.length
+    @model.undo
+    assert_equal before, U::MutationScope.new.capture(@model)
+    @model.redo
+    assert_equal [original.path], U::Occurrences.all(@model).map(&:path)
+  end
+
+  def test_remove_refuses_live_typed_incoming_reference_without_writes
+    place
+    item = U::Occurrences.all(@model).first
+    kind = PhComposer::Records::RecordKind.new(:id => "probe.unit_link.record", :label => "Synthetic Unit link",
+      :schema_version => 1, :id_prefix => "wpr", :fields => [
+        PhComposer::Records::AuthoringFields.field("unit_id", { "type" => "string" }, :required => true)
+      ], :references => [PhComposer::Records::Reference.new(:key => "unit_id",
+        :target_kind => U::REFERENCE_KIND, :cardinality => "one")])
+    contribution = Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("probe.unit_link", :contract_version => 1,
+          :requires => ["ph_composer.windows"]).record_kind(kind)
+      end
+    end
+    PhComposer::Registry.install([contribution])
+    kind.store.write(@model, "id" => "wpr_AAAAAAAAAAAA", "schema_version" => 1,
+      "unit_id" => item.record.fetch("id"))
+    before = U::MutationScope.new.capture(@model)
+    result = assignment_invoke("#{PREFIX}.units.remove", "units" => [item.reference])
+    assert_equal "reference.in_use", result.fetch("code"), result.inspect
+    assert_equal before, U::MutationScope.new.capture(@model)
+    assert_equal item.reference, units.first.fetch("reference")
+  end
+
+  def test_public_batch_swap_keeps_metadata_and_anchors_and_is_one_undo
+    place(2.0, "sill_left")
+    place(7.0, "head_right")
+    before_plan = U::DefinitionPlan.build(type)
+    rows = U::Occurrences.all(@model)
+    points = rows.to_h { |item| [item.path,
+      U::WorldGeometry.anchor(before_plan, item.record.fetch("anchor"), item.transform.to_a)] }
+    created = assignment_invoke("#{PREFIX}.types.create", "values" => { "name" => "Swap target" })
+    target = created.dig("value", "id")
+    scope = U::MutationScope.new(:definition_ids => rows.map { |item| item.entity.definition.persistent_id })
+    before = scope.capture(@model)
+    result = assignment_invoke("#{PREFIX}.units.swap_type", "units" => rows.map(&:reference), "type_id" => target)
+    assert_equal "completed", result.fetch("status"), result.inspect
+    assert_equal 2, result.dig("value", "unit_ids").length
+    assert_equal [target], units.map { |row| row.dig("values", "window_type_id") }.uniq
+    U::Occurrences.all(@model).each do |item|
+      assert_equal points.fetch(item.path), U::WorldGeometry.anchor(before_plan,
+        item.record.fetch("anchor"), item.transform.to_a)
+      assert_equal({ "note" => ["retain"] }, item.record.fetch("user_data"))
+    end
+    after = scope.capture(@model)
+    @model.undo
+    assert_equal before, scope.capture(@model)
+    @model.redo
+    assert_equal after, scope.capture(@model)
+  end
+
+  def test_public_reset_reports_shared_definition_and_restores_geometry_in_one_undo
+    place(2.0)
+    place(7.0)
+    rows = U::Occurrences.all(@model)
+    rows.first.entity.definition.entities.grep(Sketchup::Face).first.reverse!
+    scope = U::MutationScope.new(:definition_ids => [rows.first.entity.definition.persistent_id])
+    before = scope.capture(@model)
+    preview = API.preview(:context => @context, :name => "#{PREFIX}.units.reset_to_type",
+      :params => { "units" => [rows.first.reference] })
+    assert_equal "ok", preview.fetch("code"), preview.inspect
+    assert_equal 2, preview.fetch("findings").first.fetch("unit_count")
+    assert_equal before, scope.capture(@model)
+    result = assignment_invoke("#{PREFIX}.units.reset_to_type", "units" => [rows.first.reference])
+    assert_equal "completed", result.fetch("status"), result.inspect
+    assert units.all? { |row| row.fetch("findings").empty? }
+    after = scope.capture(@model)
+    @model.undo
+    assert_equal before, scope.capture(@model)
+    @model.redo
+    assert_equal after, scope.capture(@model)
+  end
+
+  def test_reset_does_not_require_writable_host_for_unselected_detached_unit
+    place(2.0)
+    selected = U::Occurrences.all(@model).first
+    face = Sketchup::Face.new(2001, {}, :points => [[0, 0, 0], [1000, 0, 0],
+      [1000, 1000, 0], [0, 1000, 0]].map { |point| Geom::Point3d.new(*point) })
+    other = Sketchup::Group.new(2000, Sketchup::Entities.new([face]),
+      :transformation => Geom::Transformation.translation([0, 0, 100]))
+    @model.entities << other
+    assignment_invoke("ph_composer.zones.make", "parent_path" => [], "entity_ids" => [2000])
+    detached = U::DefinitionWriter.create(:model => @model, :type => type, :plan => U::DefinitionPlan.build(type))
+    entity = other.entities.add_instance(detached, selected.entity.transformation)
+    entity.glued_to = face
+    U.write(entity, selected.record.merge("id" => "wun_AAAAAAAAAAAA"))
+    other.locked = true
+    selected.entity.definition.entities.grep(Sketchup::Face).first.reverse!
+    before = U::DefinitionGeometry.capture(detached)
+    result = assignment_invoke("#{PREFIX}.units.reset_to_type", "units" => [selected.reference])
+    assert_equal "completed", result.fetch("status"), result.inspect
+    assert_equal before, U::DefinitionGeometry.capture(detached)
+    assert_equal detached, entity.definition
+    assert other.locked?
+  end
+
+  def test_removal_and_replacement_refuse_nested_authored_units_without_writes
+    place
+    parent = U::Occurrences.all(@model).first
+    definition = U::DefinitionWriter.create(:model => @model, :type => type, :plan => U::DefinitionPlan.build(type))
+    child = parent.entity.definition.entities.add_instance(definition, Geom::Transformation.new)
+    U.write(child, parent.record.merge("id" => "wun_AAAAAAAAAAAA"))
+    replacement = assignment_invoke("#{PREFIX}.types.create", "values" => { "name" => "Nested guard target" })
+    scope = U::MutationScope.new(:definition_ids => @model.definitions.map(&:persistent_id))
+    before = scope.capture(@model)
+    [
+      ["units.remove", { "units" => [parent.reference] }],
+      ["units.swap_type", { "units" => [parent.reference], "type_id" => replacement.dig("value", "id") }],
+      ["types.delete", { "id" => @type_id, "replacement_id" => nil }],
+      ["types.update", { "id" => @type_id, "values" => { "columns_m" => [1.1] }, "expected_values" => {} }]
+    ].each do |name, params|
+      result = assignment_invoke("#{PREFIX}.#{name}", params)
+      refute_equal "committed", result.fetch("effect"), result.inspect
+      assert_equal before, scope.capture(@model)
+      assert_equal 2, U::Occurrences.all(@model).length
+    end
+  end
+
+  def test_public_new_flipped_type_preserves_panes_and_is_one_undo
+    place(3.0, "head_left")
+    item = U::Occurrences.all(@model).first
+    item.entity.transformation *= Geom::Transformation.scaling(-1, 1, 1)
+    item = U::Occurrences.all(@model).first
+    pane = U::WorldGeometry.map(U::DefinitionPlan.build(type), item.transform.to_a).panes.first.polygon_m
+    scope = U::MutationScope.new(:definition_ids => [item.entity.definition.persistent_id])
+    before = scope.capture(@model)
+    result = assignment_invoke("#{PREFIX}.units.new_flipped_type", "unit" => item.reference)
+    assert_equal "completed", result.fetch("status"), result.inspect
+    refute_equal @type_id, result.dig("value", "type_id")
+    changed = U::Occurrences.all(@model).first
+    target = PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).find(
+      W::TYPE_KIND, changed.record.fetch("window_type_id"))
+    actual = U::WorldGeometry.map(U::DefinitionPlan.build(target), changed.transform.to_a).panes.first.polygon_m
+    pane.each do |expected|
+      assert actual.any? { |point| expected.zip(point).all? { |a, b| (a - b).abs < 1e-12 } },
+        "A physical pane vertex moved."
+    end
+    assert_equal "head_right", changed.record.fetch("anchor")
+    assert_equal({ "note" => ["retain"] }, changed.record.fetch("user_data"))
+    assert_empty units.first.fetch("findings")
+    after = scope.capture(@model)
+    @model.undo
+    assert_equal before, scope.capture(@model)
+    @model.redo
+    assert_equal after, scope.capture(@model)
+  end
+
+  def test_public_restore_replaces_exact_loose_panes_with_new_default_anchor_unit
+    place(3.0, "head_left")
+    original = U::Occurrences.all(@model).first
+    pane = U::WorldGeometry.map(U::DefinitionPlan.build(type), original.transform.to_a).panes.first
+    points = pane.polygon_m.map { |point| Geom::Point3d.new(*point.map { |value| value / 0.0254 }) }
+    edges = points.each_with_index.map do |point, index|
+      edge = Sketchup::Edge.new(Sketchup::Entities.allocate_persistent_id, point, points[(index + 1) % 4])
+      @group.entities << edge
+      edge
+    end
+    face = Sketchup::Face.new(Sketchup::Entities.allocate_persistent_id, {}, :points => points, :edges => edges)
+    @group.entities << face
+    face.material = @model.materials[U::DefinitionWriter::GLASS_NAME]
+    face.back_material = face.material
+    U::PANE_STORE.write(face, "window_type_id" => @type_id, "element_id" => pane.element_id)
+    @group.entities.erase_entities(original.entity)
+    scope = U::RestorePaneScope.new([@group.persistent_id], [face.persistent_id], type)
+    before = scope.capture(@model)
+    result = assignment_invoke("#{PREFIX}.units.restore", "host" => @face_reference,
+      "type_id" => @type_id, "pane_paths" => [[@group.persistent_id, face.persistent_id]])
+    assert_equal "completed", result.fetch("status"), result.inspect
+    refute_equal original.record.fetch("id"), result.dig("value", "unit_id")
+    assert_equal "sill_center", units.first.dig("values", "anchor")
+    assert_equal({}, units.first.fetch("user_data"))
+    refute_includes @group.entities.to_a, face
+    @model.undo
+    assert_equal before, scope.capture(@model)
+    assert_empty units
+    @model.redo
+    assert_equal result.dig("value", "unit_id"), units.first.fetch("id")
+  end
+
+  def test_reset_can_discard_selected_geometry_beyond_the_generated_footprint
+    place
+    item = U::Occurrences.all(@model).first
+    item.entity.definition.entities.grep(Sketchup::Face).first.transform!(Geom::Transformation.scaling(2, 1, 1))
+    scope = U::MutationScope.new(:definition_ids => [item.entity.definition.persistent_id])
+    before = scope.capture(@model)
+    result = assignment_invoke("#{PREFIX}.units.reset_to_type", "units" => [item.reference])
+    assert_equal "completed", result.fetch("status"), result.inspect
+    assert_empty units.first.fetch("findings")
+    @model.undo
+    assert_equal before, scope.capture(@model)
+  end
+
+  def test_reset_refuses_uncertain_untouched_outsider_geometry
+    place(2.0)
+    place(7.0)
+    selected, outsider = U::Occurrences.all(@model)
+    detached = U::DefinitionWriter.create(:model => @model, :type => type, :plan => U::DefinitionPlan.build(type))
+    outsider.entity.definition = detached
+    detached.entities.grep(Sketchup::Face).first.transform!(Geom::Transformation.scaling(2, 1, 1))
+    selected.entity.definition.entities.grep(Sketchup::Face).first.reverse!
+    scope = U::MutationScope.new(:definition_ids => @model.definitions.map(&:persistent_id))
+    before = scope.capture(@model)
+    result = assignment_invoke("#{PREFIX}.units.reset_to_type", "units" => [selected.reference])
+    assert_equal "window.type_geometry_unknown", result.fetch("code"), result.inspect
+    assert_equal before, scope.capture(@model)
+  end
 end

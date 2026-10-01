@@ -22,6 +22,28 @@ module PhComposer
           walk(model.entities, [], Geom::Transformation.new, false, false, [])
         end
 
+        # Replacing/removing a generated container must not silently erase nested identities.
+        # Walk native storage once, including nested unused definitions, without adopting it.
+        def assert_leaf!(item)
+          pending = [item.entity.definition.entities]
+          seen = {}
+          until pending.empty?
+            entities = pending.shift
+            next if seen[entities.object_id]
+
+            seen[entities.object_id] = true
+            entities.each do |entity|
+              next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+
+              unless entity.get_attribute(STORE.dictionary, STORE.key).nil?
+                raise CodedError.new("window.nested_units",
+                  "Recover nested Window Units before removing or replacing their containing Window.")
+              end
+              pending << entity.definition.entities
+            end
+          end
+        end
+
         def resolve(model, reference, mutable: false)
           path = reference.fetch("entity_path")
           found = all(model).select { |item| item.path == path }

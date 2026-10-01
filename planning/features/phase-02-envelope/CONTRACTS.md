@@ -89,7 +89,7 @@ Entity-owned records, stored with `Records::EntityStore` and described to the en
 | Record | Dictionary | Entity | Identity | Values |
 | --- | --- | --- | --- | --- |
 | Window unit | `ph_composer.window_unit` | The ComponentInstance | `wun_` id | `window_type_id` (reference to the Window Type kind), `anchor` |
-| Window definition mark | `ph_composer.window_definition` | The ComponentDefinition | `window_type_id` | none |
+| Window definition mark | `ph_composer.window_definition` | The ComponentDefinition | `window_type_id` | Optional derived `generated_size_m` with `width_m` and `height_m`, for missing-Type repair |
 | Pane stamp | `ph_composer.window_pane` | Each pane Face in the definition | none | `window_type_id`, `element_id`. Recovery data for Restore unit |
 
 Reference target id: `ph_composer.windows.unit`. Model-level window defaults
@@ -100,9 +100,16 @@ The derived Model dictionary `ph_composer.window_definitions` maps Window Type I
 definition persistent IDs. This is a guarded pointer index, not an authored type field. Make Unique
 copies the definition mark, so that mark alone cannot identify the primary. A type rewrite uses
 the index and leaves detached definitions alone; Reset to type is the explicit reassociation.
-Names are presentation. Missing or differently stamped primary definitions refuse rather than
-silently adopting an arbitrary matching copy. The index is registered with the attribute guard
+Names are presentation. Ordinary mutations refuse missing or differently stamped primary
+definitions. Explicit Reset to type creates a new primary from the authored Type and updates
+its pointer; it never adopts an arbitrary matching copy. The index is registered with the attribute guard
 and its writes share the owning native proposal and Undo with definition changes.
+
+The optional generated dimensions are recovery data, written by the definition generator.
+Authored Type dimensions remain authoritative whenever the Type exists. A genuinely absent
+Type can be swapped using this validated footprint, including an all-Empty footprint that
+native geometry bounds cannot reconstruct. Legacy definitions without the datum refuse this
+repair and require explicit new placement. The datum carries no products or authored Type copy.
 
 Zones changes one declaration: `assembly_id` on the Face becomes a declared core reference to
 `ph_composer.assemblies.assembly`, beside `attached_zone_id` (`features/zones/declarations/faces.rb`).

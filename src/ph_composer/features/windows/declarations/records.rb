@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../units/type_retargeter"
+
 module PhComposer
   module Windows
     module RecordRegistration
@@ -7,6 +9,7 @@ module PhComposer
 
       def install(feature)
         (Products::KINDS.keys + ["types"]).each { |collection| declare(feature, collection) }
+        Units::TypeRetargeter.install(feature)
       end
 
       def declare(feature, collection)

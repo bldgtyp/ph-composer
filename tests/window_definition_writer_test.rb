@@ -21,7 +21,8 @@ class WindowDefinitionWriterTest < PhComposerTestCase
     definition = create
     assert_equal "PhComposer_Window_Test type", definition.name
     assert_equal [definition], @model.definitions.to_a
-    assert_equal({ "window_type_id" => @type.fetch("id") }, U::DEFINITION_STORE.read(definition))
+    assert_equal({ "window_type_id" => @type.fetch("id"),
+      "generated_size_m" => { "width_m" => 2.0, "height_m" => 1.2 } }, U::DEFINITION_STORE.read(definition))
     panes = definition.entities.grep(Sketchup::Face)
     assert_equal 2, panes.length
     panes.zip(U::DefinitionPlan.build(@type).panes).each do |face, planned|

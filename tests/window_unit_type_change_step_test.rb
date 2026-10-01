@@ -224,6 +224,16 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
     assert_same face, @definition.entities.first
   end
 
+  def test_primary_user_added_in_unused_definition_after_preview_refuses_before_rewrite
+    unit
+    unused = @model.definitions.add("Unused synthetic holder")
+    change = step
+    before = U::DefinitionGeometry.capture(@definition)
+    unused.entities.add_instance(@definition, Geom::Transformation.new)
+    assert_equal "target.changed", refusal { change.apply(@model, {}) }
+    assert_equal before, U::DefinitionGeometry.capture(@definition)
+  end
+
   def test_glued_resize_in_nonuniform_mirrored_parent_uses_actual_parent_basis
     group = @model.entities.add_group
     group.transformation = Geom::Transformation.new([0, -2, 0, 0, 3, 0, 0, 0, 0, 0, -0.5, 0, 100, 200, 300, 1])

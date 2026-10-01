@@ -72,6 +72,7 @@ module PhComposer
           definition = DefinitionIndex.resolve(model, @before.fetch("id"))
           current = Occurrences.all(model)
           resolved = @rows.map { |row| resolve_row!(current, row) }
+          verify_users!(definition, resolved, :code => "target.changed")
           @rows.zip(resolved).each { |row, item| check_host!(row, item) }
           DefinitionWriter.rewrite(:model => model, :definition => definition, :type => @after,
             :plan => @after_plan) if @geometry_changed
@@ -101,8 +102,11 @@ module PhComposer
           unless canonical.map(&:path).sort == native.keys.sort
             raise CodedError.new("record.unreadable", "Every primary Window instance needs a valid Unit record.")
           end
+          definition = model.definitions.to_a.find { |entry| entry.persistent_id == @definition_id }
+          verify_users!(definition, canonical)
           canonical.map do |item|
             mutable!(item)
+            Occurrences.assert_leaf!(item) if @geometry_changed
             record = expected.fetch(item.path, item.record)
             Units.validate!(record)
             unless record.fetch("window_type_id") == @before.fetch("id")
@@ -111,6 +115,13 @@ module PhComposer
             row = instance_row(item, record, native.fetch(item.path))
             capture_host!(row, item, hosts, others) if @geometry_changed && item.entity.glued_to
             row
+          end
+        end
+
+        def verify_users!(definition, items, code: "record.unreadable")
+          unless definition.instances.map(&:persistent_id).sort == items.map { |item|
+            item.entity.persistent_id }.uniq.sort
+            raise CodedError.new(code, "Every primary Window user must be a reachable authored Unit.")
           end
         end
 

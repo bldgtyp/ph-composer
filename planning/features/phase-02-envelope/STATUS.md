@@ -72,7 +72,7 @@ signed-off commit `d54a2ca`. Both Ruby provider checks pass (four tests / 36 ass
 and all six remote files match the verified local checkout.
 Remaining work: held-Classify replay, Slice C and downstream implementation, Assembly /
 assignment / export attestation, affected Phase 1 checks and integrated final acceptance.
-No placement or Aperture implementation is claimed yet.
+Public placement is implemented in source; native placement acceptance and Aperture implementation remain open.
 
 Slice C source foundations are implemented and independently reviewed, with the installed host
 fixture deliberately unchanged while the human held-Classify gesture is pending. Guarded reference
@@ -84,10 +84,20 @@ are corrected and confirmed closed. Follow-on public placement, Unit reads and u
 propagation are now wired into source registration and independently reviewed; five integration
 findings are fixed and confirmed closed. Complete Ruby suites pass on both versions, 1156 tests /
 8299 assertions; 78 focused checks / 800 assertions and scoped 35-file lint pass. The generated
-API reference is current. These changes are not installed; registered repairs, the full script
-walkthrough and native Slice C/E12 acceptance remain open. Remove/Re-host steps separately pass
-14 tests / 88 assertions on both Rubies but are not yet registered or included in the completed
-integration review. See [Unit foundation evidence](evidence/p2-12-unit-geometry.md).
+API reference is current at committed checkpoint `103eb8c`. These changes are not installed;
+the full script walkthrough and native Slice C/E12 acceptance remain open. Follow-on Remove/Re-host
+actions are registered in uncommitted source; their steps pass 14 tests / 88 assertions on both
+Rubies, and the public Unit action suite passes 13 tests / 148 assertions on Ruby 3.2.2, including
+incoming-reference refusal. Batch Swap and Reset-to-Type are now registered; the current public
+action suite passes 16 tests / 184 assertions on Ruby 3.2.2. Used-Type deletion retargets Units or
+removes them explicitly, with primary-pointer cleanup and unmanaged-definition preservation;
+15 dedicated tests / 103 assertions pass on both Rubies. The panel-closed placement/copy/resize/
+swap walkthrough passes offline. New flipped Type and Restore from stamped panes are registered;
+the coherent independent repair review is complete, with all reproduced findings closed.
+Generated API discovery is current. An immutable source snapshot passes full CI on both Rubies,
+1261 Ruby tests / 9082 assertions, 346 JavaScript tests and 135 Python tests. Native Slice C and
+repair acceptance remain open; P2-13/P2-14 have not advanced past their entry gates.
+See [Unit foundation evidence](evidence/p2-12-unit-geometry.md).
 
 ## Earlier implementation checkpoints
 

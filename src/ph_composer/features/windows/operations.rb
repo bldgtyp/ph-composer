@@ -108,6 +108,9 @@ module PhComposer
         end
         request.engine.propose_delete(definition.id, id, proposal,
           :expected_values => request.params.fetch("expected_values", {}), :reference_plan => plan)
+        if collection == "types" && !request.params.key?("replacement_id")
+          Units::TypeRetargeter.cleanup(request, proposal, current)
+        end
         { "id" => id }
       end
 

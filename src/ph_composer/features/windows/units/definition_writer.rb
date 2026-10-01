@@ -36,7 +36,8 @@ module PhComposer
           end
           configure(definition.behavior)
           stamp = DEFINITION_STORE.read(definition) || {}
-          DEFINITION_STORE.write(definition, stamp.merge("window_type_id" => type_id))
+          DEFINITION_STORE.write(definition, stamp.merge("window_type_id" => type_id,
+            "generated_size_m" => { "width_m" => plan.width_m, "height_m" => plan.height_m }))
           definition
         end
 
