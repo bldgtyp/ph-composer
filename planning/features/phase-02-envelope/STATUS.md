@@ -179,7 +179,7 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 | [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow observed; final attestation open | [Builder evidence](evidence/p2-11-window-type-builder.md) |
 | [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A/B verified; Slice C implemented/reviewed/installed; native actions, roundtrips and human Line split pass; E12 current-host verified | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Implemented, reviewed; E13 current-host passes | [Evidence and manual batch](evidence/p2-13-place-tool.md) |
-| [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Implemented, independently reviewed, both-Ruby full gates pass; E14 pending | [Checkpoint](evidence/p2-14-aperture-export.md) |
+| [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Implemented and reviewed; isolated and integrated native exports pass; close/reopen cleanup fix under final verification, E14 open | [Checkpoint](evidence/p2-14-aperture-export.md) |
 | [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Implemented, native E15 passes | 2026-10-01 |
 | [P2-16 Connection provider and sign-in](../phase-05-post-mvp/phases/p2-16-connection-provider.md) | 2.5 | Deferred to Phase 5 by D2-8 | 2026-10-01 |
 | [P2-17 Acceptance and handoff](phases/p2-17-acceptance-and-handoff.md) | all | Scoped | |
