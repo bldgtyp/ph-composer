@@ -36,3 +36,11 @@ SketchUp still has checkpoint `35704bd`, which does not contain this Builder.
 Integrated Builder browser checks pass after updating the assigned-segment deletion flow to
 confirm removal explicitly. Evidence: `ph-composer-builder-es8uNr`. Native Builder acceptance
 remains pending on the integrated installed build.
+
+The integrated native Builder opens the mixed reference wall at approximately 423 CSS pixels,
+showing membrane, segments, film values and thermal results. SI/IP presentation matches the
+canonical calculation. A `50 mm` segment-width draft entered in IP survives switching to SI;
+Apply stores exactly 50 mm through one action. One native Model Undo restores the complete
+Assembly catalog exactly. Evidence: private `reference-before-builder.json` and
+`reference-after-builder.json`, plus CUA screenshots in this chat. Remaining native gestures
+are still required before E03/E04 are awarded.

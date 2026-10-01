@@ -1,7 +1,7 @@
 # Libraries: status
 
 DATE: 2026-09-30
-STATUS: Scoped
+STATUS: In progress, authorized 2026-10-01
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -18,22 +18,14 @@ Architecture review corrections applied under Ed's 2026-09-18 authorization. The
 explicit registration and mutation boundaries, ambiguity handling, metadata-preserving replacement,
 versioned bounded catalog loading, stable library-file export identity and export filtering.
 
-## Next step
+## Current work and remaining gates
 
-Ed's answers to the [Phase 2 decisions](../DECISIONS.md) and authorization. [PLAN.md](PLAN.md)
-allocates the PRD to stages P2-07 to P2-09, P2-15 and P2-16. The order changed from the
-interview's: Export model library, the starter library and the example provider now come before
-the connection, because the connection can slip to Phase 5 and the other three prove the seam.
-
-## Blockers
-
-- D2-8 and D2-9, while open in the [Phase 2 decisions](../DECISIONS.md). Its answer column is current.
-- P2-07 needs the Material kind from P2-02.
-- PH-Navigator's endpoint and catalog export change to the neutral format. That work is in the
-  `ph-navigator` repository and is not scoped here.
-- The library file format should be read by at least one other provider author before it is
-  called stable. PassivSure and the METr team are the candidates.
-- No implementation issue has been created at `bldgtyp/ph-composer`.
+P2-07 registration declarations, pure resolver and bounded file-provider implementation are in
+progress on `codex/phase-02-envelope`. P2-02 Material records are present. Issue #14 and Ed's
+2026-10-01 implement-loop authorization own this work; D2-8 and D2-9 are resolved in DECISIONS.md.
+P2-08, P2-09 and P2-15 remain unimplemented. PH-Navigator's endpoint change is external to this
+repository and can defer P2-16. External provider-author review of the format remains a stability
+gate; native lifecycle and Windows credentials remain explicit acceptance requirements.
 
 ## Verification
 

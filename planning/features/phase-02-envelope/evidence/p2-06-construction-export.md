@@ -38,3 +38,26 @@ The affected report gate passes five tests and 62 assertions on both Rubies. The
 geometry, identifiers, Face types and reciprocal Surface endpoints against the checkpoint golden
 and confirmed them unchanged. Native reference thermal queries match the independent arithmetic
 to the displayed six decimals: wall 0.980247, roof 0.195816, floor 0.130378 and partition 1.515152 W/m2K.
+
+## Integrated checkpoint and current-host proof
+
+Checkpoint `6a7e08f` has dual-Ruby `make ci` passes from an immutable source archive: 818 Ruby
+tests and 4667 assertions, 281 JavaScript tests, 127 Python tests, hostkit nine Ruby tests and
+30 assertions plus 21 Python tests, and mypy over 32 files. Logs: `/tmp/phc-envelope-immutable-ci32.log`
+and `/tmp/phc-envelope-immutable-ci27.log`. The Chromium 88 runtime proof passes in
+`/tmp/phc-envelope-p206-runtime.log`. The installed RBZ is 235 files, 7,202,356 zipped bytes and
+22,242,825 installed bytes, below the 24 MB ceiling but above the 22 MB target. SHA-256:
+`35a7c2a90f87acb58b54c2ca4721cfce59b7ecf61ab85c0f8951172cece3b245`.
+
+A fresh normal SketchUp 26.1.188 process exported the actual assigned reference SKP through the
+public API and the installed runtime HtmlDialog. Artifacts contain two Rooms, twelve Faces, one
+reciprocal Surface pair and four referenced constructions. Six wall Faces total 78 m2; floor and
+roof each use two Faces totaling 36 m2; partition uses both endpoints totaling 24 m2. The unused
+incomplete Assembly produces a nonblocking finding and no emitted construction. Both partition
+Faces resolve to the same serialized construction identity. Private files: `reference.hbjson`,
+`reference-export-report.html`, `reference-export-outcome.json`, `reference-assigned.skp`.
+
+Four native Undo and four native Redo gestures each match the exact public Face journal state,
+including geometry/classification/adjacency. Evidence: `reference-assignment-journal.json` and
+`reference-native-roundtrip.json`. Fresh reopen, full E04 UI gesture set and E05 attestation remain
+open. Do not infer Windows, SketchUp 2023, certification or public distribution from this proof.
