@@ -112,7 +112,7 @@ an observed Zone name restores its last valid name in deferred transparent work.
 must commit rather than abort on failure: aborting a transparent operation can also abort the user's
 source operation. Native clipboard copies are observed when their authored dictionary arrives;
 Ruby `Group#copy` is not assumed to copy instance attributes. Evidence and current-host scope are in
-`planning/features/phase-one-ux-followups/README.md`.
+`planning/archive/phase-01-ux-followups/README.md`.
 
 Zones / Faces settings are Model records, reached through registered reads and actions. Automatic
 Suggest on Make defaults on, with roof/floor tilt thresholds of 60/130 degrees. Make and Suggest
@@ -481,7 +481,7 @@ these true of every feature it had, so a new one that follows them needs no chan
   attribute (face type, boundary condition, Assembly, Zone fields) is set on its own. A modal
   action-first tool (paint, place) is a secondary route, and it becomes the primary one only when a
   feature's plan records why its UX is demonstrably better. Ed confirmed this rule on 2026-09-30
-  ([Phase 1 UX follow-ups](../planning/features/phase-one-ux-followups/README.md)).
+  ([Phase 1 UX follow-ups](../planning/archive/phase-01-ux-followups/README.md)).
 
 ## Durable delivery rules
 

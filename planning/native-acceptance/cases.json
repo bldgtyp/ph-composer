@@ -667,7 +667,7 @@
       "id": "UXK1",
       "label": "UX follow-ups classified fills, selection edges and occlusion",
       "mode": "native",
-      "authority": "planning/features/phase-one-ux-followups/README.md",
+      "authority": "planning/archive/phase-01-ux-followups/README.md",
       "paths": [
         "src/ph_composer/colour_by/*",
         "src/ph_composer/features/zones/colour_modes.rb",

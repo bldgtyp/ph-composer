@@ -17,7 +17,6 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Phase 1 UX follow-ups | feature | Implemented on branch; review, coverage, make ci and native authoring/overlay checks pass; cursor appearance awaits native confirmation | [#9](https://github.com/bldgtyp/ph-composer/issues/9) | [features/phase-one-ux-followups/](features/phase-one-ux-followups/README.md) |
 | Make Zone entry points | feature | Requested; toolbar button and Classify-tool inline offer, carried from zones-and-adjacency | none (local planning draft) | [features/zones-entry-points/](features/zones-entry-points/README.md) |
 | Face assignment | feature | In progress; Phase 1 classification scope merged to main; assembly assignment is Phase 2; interview record awaits Ed's confirmation | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
 | Native acceptance tooling | workflow | Implemented; historical evidence indexed, observed-result validation and dependency screening | none (local tooling work) | [native-acceptance/](native-acceptance/README.md); tools and skills remain development-only |

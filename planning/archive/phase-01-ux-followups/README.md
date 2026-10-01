@@ -1,15 +1,15 @@
 # Phase 1 UX follow-ups
 
 DATE: 2026-09-30
-STATUS: In progress; implementation authorized by Ed through implement-loop on 2026-09-30.
-Items to resolve before Phase 2 (Assemblies) starts.
+STATUS: Complete 2026-09-30. Every item implemented and accepted on PR #10; Ed confirmed the Classify
+cursor natively on 2026-09-30. Archived.
 AUTHOR: Ed May, BLDGTYP
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/9
 
 Ed's notes from his first hands-on pass over the merged Phase 1 build (SketchUp 26.1, macOS), recorded
 on 2026-09-30. Where a note asked a question, the source baseline at intake is recorded under it.
 Item owners are the existing packets: [zones-and-adjacency](../../archive/phase-01-zones-and-adjacency/README.md),
-[face-assignment](../face-assignment/README.md) and the shared Colour-by service
+[face-assignment](../../features/face-assignment/README.md) and the shared Colour-by service
 (`src/ph_composer/colour_by/`).
 
 ## UX principle: geometry first, then action
@@ -56,10 +56,9 @@ current selection. Folded into `context/TECH_STACK.md` ("Rules for later feature
 
 ## Next step
 
-The implementation and independent review are complete. Native authoring, settings and name
-readback checks passed; cursor appearance remains pending. Issue #9 tracks
-the packet. The final offline gate and K1 native evidence are recorded. Cursor appearance must pass before
-archive and completed delivery.
+None. The implementation, independent review, final offline gate and native checks are complete,
+including the Classify cursor, which Ed confirmed in SketchUp on 2026-09-30. Issue #9 closes with
+PR #10.
 
 ## Implementation checkpoints
 
@@ -73,8 +72,8 @@ No public-distribution, Windows or SketchUp 2023 support claim is included.
 | --- | --- | --- | --- |
 | 1 | Z2 research and name synchronization; Z1 native Make Zone | Entity Info and Outliner rename; cancellation, blank-name restoration, stale edits, Undo/Redo, copies, save/reopen and export labels. Make Zone appears only for valid selection and calls the public operation | Passed |
 | 2 | Z4/Z5 model settings and creation classification | Defaults on, 60/130 degree thresholds; registered model write, validation, Undo/Redo, per-model isolation and reopen; Make plus Suggest atomic when feasible; tab settings bubble and renamed labels | Passed |
-| 3 | Z3/C1-C5/S1 selection actions and painting | Multi-Zone all-or-nothing edits; individual Face attributes on selected occurrences, 250-Face ceiling; Attached-zone selection/new form; cursor, conditional Exit tool; selected and whole-model Solve | Passed except cursor appearance |
-| 4 | K1 overlay and integrated closeout | Classified fills without coloured outlines, unclassified drawing remains legible; native selection/occlusion evidence; combined review, final suite, accurate archive/delivery | K1 and final suite passed; closeout awaits C1 |
+| 3 | Z3/C1-C5/S1 selection actions and painting | Multi-Zone all-or-nothing edits; individual Face attributes on selected occurrences, 250-Face ceiling; Attached-zone selection/new form; cursor, conditional Exit tool; selected and whole-model Solve | Passed; cursor confirmed by Ed 2026-09-30 |
+| 4 | K1 overlay and integrated closeout | Classified fills without coloured outlines, unclassified drawing remains legible; native selection/occlusion evidence; combined review, final suite, accurate archive/delivery | Passed |
 
 Commit at accepted checkpoints. Required native cases remain gates; an offline pass is not closure.
 
@@ -154,8 +153,8 @@ that exact record returned the classified drawing. The repeat is recorded as UXK
 Implementation checkpoint: `e7a556b` (DCO signed). Final closure/archive is held only for C1's cursor
 appearance: native controls delivered paint pointer events and started/stopped the tool. SketchUp's
 native cursor callback subsequently allocated cursor ID 50012. Ed has a pending request to move the
-physical pointer into the viewport and identify its appearance. This is a controller limitation until that observation
-establishes whether the normal native path works; no simulated callback is counted as acceptance.
+physical pointer into the viewport and identify its appearance. Ed did so on 2026-09-30 and confirmed
+the custom Classify cursor shows; C1 passes on that human observation, not on the simulated callback.
 
 ### PR review follow-through (2026-09-30)
 
