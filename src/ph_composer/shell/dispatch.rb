@@ -77,6 +77,12 @@ module PhComposer
       answer(context, "view", name, @registry.view_commands, params)
     end
 
+    # Registered local-file commands share validation and session targeting with reads. Their
+    # separate grant permits file writes, never a Model transaction or an action retry sequence.
+    def file_export(context, name, params)
+      answer(context, "export", name, @registry.file_exports, params)
+    end
+
     # What an operation would change, without changing anything. The result is bound to the revision
     # it reports; applying it later still revalidates everything.
     def preview(context, name, params)
@@ -150,6 +156,11 @@ module PhComposer
       value = declaration.handler.call(request_for(session, params, declaration))
       check_result!(declaration, value)
       Outcome.completed(:revision => session.revision, :value => value)
+    rescue Declarations::FileExportCancelled => error
+      return unexpected_outcome(error, session, name) unless capability == "export"
+
+      Outcome.build("cancelled", "export.cancelled", "Export cancelled. Nothing was written.", "none",
+                    session&.revision)
     rescue CodedError => error
       coded_outcome(error, session)
     rescue UserError => error

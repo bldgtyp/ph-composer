@@ -86,5 +86,14 @@ load, not panel rendering performance or a different host's budget.
 
 Fresh-process reopen with no provider configured retains the first copied Material exactly. A
 subsequent public conductivity edit to 0.045 W/mK succeeds with both temporary budget providers
-removed. The combined copied/assigned/edited catalog is saved; final fresh reopen and attribution
-report proof remain open. No source provider is required to edit local records.
+removed. The combined copied/assigned/edited catalog is saved and fresh-process provider-free
+reopen is exact, as recorded in P2-08 evidence. No source provider is required to edit local records.
+
+The fresh native `146076e` process (PID 91277, bridge 50967) also completes the actual Pyodide
+export from the synthetic two-Zone reference Model with an unused copied Material. The report
+contains exactly the five allowed attribution fields and no configured path or raw snapshot.
+The unused copy appears in the report and is absent from the seven Honeybee energy Materials;
+the output retains two Rooms, twelve Faces and one Surface pair. Private evidence:
+`library-source-report-before.json`, `library-source-report-status.json`,
+`library-source-report-proof.json` and the generated HTML report. All recorded proof checks pass.
+Final structured native case attestation remains open.

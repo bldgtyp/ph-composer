@@ -29,6 +29,9 @@ module PhComposer
       # Capture the original plane before drawing. The native Face may change shape after the
       # first outline, so measuring it again would exclude later pieces from the result.
       def apply_many(occurrence, polygons_m, complete: false)
+        if occurrence.entity.get_glued_instances.any?
+          raise CodedError.new("adjacency.glued_instances", "A Face with glued instances cannot be cut.")
+        end
         entities = container(occurrence.entity)
         original = FaceGeometry.capture(occurrence.entity, occurrence.transform)
         original_persistent_id = occurrence.entity.persistent_id

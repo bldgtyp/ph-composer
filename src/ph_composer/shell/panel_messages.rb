@@ -15,6 +15,7 @@ module PhComposer
       # expected revision: there is nothing for a stale one to protect.
       "view.invoke" => %w[request_id session name params],
       "query.invoke" => %w[request_id session name params],
+      "file_export.invoke" => %w[request_id session name params],
       "preferences.set" => %w[request_id key value scope system],
       # The Export command for the Model the panel showed. It is the shell's own command, not a Model action.
       "export.start" => %w[request_id session repairs],
@@ -29,6 +30,7 @@ module PhComposer
       "action.result" => %w[request_id session outcome],
       "view.result" => %w[request_id session outcome],
       "query.result" => %w[request_id session outcome],
+      "file_export.result" => %w[request_id session outcome],
       "preferences.result" => %w[request_id status message preferences],
       "export.result" => %w[request_id session outcome],
       "panel.notice" => %w[session message tone],

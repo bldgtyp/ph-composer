@@ -30,6 +30,22 @@ function enter(input, value) {
 }
 function text(node) { return node.textContent + node.children.map(text).join(" "); }
 
+test("library export offers deduped actual grid selection and defaults to all despite the filter", function () {
+  var o = setup(), view = o.roots.library._view, grid = view.material.grid;
+  grid.select(view.edits.cells["mat_a:name"]);
+  grid.select(view.edits.cells["mat_a:conductivity_w_mk"], true);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(view.selection())), {
+    record_kind: "ph_composer.assemblies.material", ids: ["mat_a"] });
+  view.exportLibrary.listeners.click({});
+  assert.strictEqual(o.sent[0].payload.params.scope, "all");
+  assert.strictEqual(view.exportForm.selection.length, 1); view.exportForm.hide();
+  view.controls.filter.value = "Wood"; view.controls.filter.listeners.input({});
+  assert.strictEqual(view.selection().ids.length, 0, "a hidden selected row is withdrawn");
+  view.exportLibrary.listeners.click({});
+  assert.strictEqual(o.sent[1].payload.params.scope, "all");
+  assert.strictEqual(view.exportForm.selection.length, 0, "visible filtered rows are not selected implicitly");
+});
+
 test("inventories render transport values, material uses and withheld U-value reasons", function () {
   var o = setup();
   assert.strictEqual(o.roots.library._view.edits.cells["mat_a:name"].input.value, "Mineral wool");

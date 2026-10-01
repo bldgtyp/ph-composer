@@ -135,6 +135,14 @@ restart. Cancellation only rolls back work where the operation explicitly guaran
 
 ### Implemented export task contract
 
+`API.export_file(context:, name:, params:)` invokes a registered synchronous FileExport under
+the explicit `export` grant. Discovery and description expose its owner, schemas and examples.
+It does not consume a Model mutation sequence or create an Undo entry. The library export uses
+native destination and review dialogs; a caller supplies explicit scope and identity choices.
+Cancellation returns `export.cancelled` with no file or Model change. Panel clients correlate
+`file_export.invoke` and `file_export.result` by request id and Model session in a separate result
+slot. This operation is separate from the longer-lived HBJSON runtime task below.
+
 `API.export_preflight` requires `read` and returns feature-owned findings and explicit repair actions.
 A caller invokes selected repairs through the ordinary `model_write` contract, then revalidates.
 `API.start_export`, `export_status`, `cancel_export` and `latest_export` require the separate `export`

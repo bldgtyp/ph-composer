@@ -109,6 +109,18 @@ test("a channel refuses a message the panel does not carry", function () {
     /does not carry/);
 });
 
+test("file commands settle their own correlated result and consume no action slot", function () {
+  var sent = [], channel = request.channel("session-a", function (type) { sent.push(type); }, "file",
+    "file_export.invoke");
+  var id = channel.run("example.write", {}), answer = result(id, "session-a", "cancelled");
+  assert.deepStrictEqual(sent, ["file_export.invoke"]);
+  assert.strictEqual(channel.consume(state(answer)), null);
+  var held = {}; held[id] = answer;
+  assert.strictEqual(channel.consume({ ui: { fileExportResults: held } }).status, "cancelled");
+  assert.strictEqual(channel.busy(), false);
+  assert.strictEqual(channel.consume({ ui: { fileExportResults: held } }), null);
+});
+
 test("read queries settle only their keyed query result and reset ignores a late answer", function () {
   var sent = [], channel = request.channel("session-a", function (type) { sent.push(type); }, "catalog",
     "query.invoke");

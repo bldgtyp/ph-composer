@@ -10,7 +10,7 @@ JSON Schema; a number's `x-unit` is the SI unit it is stored and exchanged in. E
 
 | Field | Meaning |
 | --- | --- |
-| `status` | `completed`, `refused`, `failed`, `busy` or `pending` |
+| `status` | `completed`, `refused`, `failed`, `busy`, `pending` or `cancelled` |
 | `code` | `ok`, or why the request did not complete, such as `revision.stale` or `target.changed` |
 | `effect` | What happened to the Model: `none`, `committed`, `rolled_back` or `unknown` |
 | `revision` | The Model revision after the call; send it back as `expected_revision` |
@@ -4153,6 +4153,144 @@ Example params:
   "kind": "example_parts",
   "limit": 100
 }
+```
+
+### `ph_composer.library.export_preview`
+
+Review local library export counts and omissions. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "scope": {
+      "type": "string",
+      "enum": [
+        "all",
+        "selected"
+      ]
+    },
+    "kinds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "record_kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "record_kind",
+          "id"
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false,
+  "required": []
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "kinds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "count"
+        ]
+      }
+    },
+    "omissions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "record_kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "record_kind",
+          "fields",
+          "reason"
+        ]
+      }
+    },
+    "projection_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "kinds",
+    "omissions",
+    "projection_digest",
+    "revision"
+  ]
+}
+```
+
+Example params:
+
+```json
+{}
 ```
 
 ### `ph_composer.library.in_file`
@@ -32017,9 +32155,193 @@ Example params:
 {}
 ```
 
+## File exports
+
+Called with a context granted `export`.
+
+### `ph_composer.library.export_file`
+
+Export local definitions to a reviewed library file. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "scope": {
+      "type": "string",
+      "enum": [
+        "all",
+        "selected"
+      ]
+    },
+    "identity": {
+      "type": "string",
+      "enum": [
+        "new",
+        "update"
+      ]
+    },
+    "kinds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "record_kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "record_kind",
+          "id"
+        ]
+      },
+      "minItems": 1
+    },
+    "library_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected_revision": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": []
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "kinds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "count"
+        ]
+      }
+    },
+    "omissions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "record_kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "record_kind",
+          "fields",
+          "reason"
+        ]
+      }
+    },
+    "library_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "library_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "identity": {
+      "type": "string",
+      "enum": [
+        "new",
+        "update"
+      ]
+    },
+    "written": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "kinds",
+    "omissions",
+    "library_id",
+    "library_name",
+    "identity",
+    "written"
+  ]
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "scope": "selected",
+  "records": [
+    {
+      "record_kind": "ph_composer.assemblies.material",
+      "id": "mat_AAAAAAAAAAAA"
+    }
+  ],
+  "identity": "new"
+}
+```
+
 ## Export tasks
 
-A file export is not a Model change, so these are task methods rather than actions. Each params key is the method's keyword argument.
+HBJSON runtime exports use retained task methods. Each params key is the method's keyword argument.
 
 ### `PhComposer::API.export_preflight`
 

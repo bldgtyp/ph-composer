@@ -1,7 +1,7 @@
 # P2-11: the Window Type Builder
 
 DATE: 2026-09-30
-STATUS: Scoped. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: Source implemented and independently reviewed; focused/browser checks pass; integrated/native gates open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 

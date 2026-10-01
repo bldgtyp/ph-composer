@@ -764,6 +764,120 @@
         "tools/examples/authoring/assembly_assignment_walkthrough.rb"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "E06",
+      "label": "Phase 2 Assembly HBJSON and report export",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/assemblies/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/export/*",
+        "src/ph_composer/python/*",
+        "src/ph_composer/runtime/*",
+        "src/ph_composer/vendor/manifest.json",
+        "tests/phase_one_export_test.rb"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E07",
+      "label": "Phase 2 neutral library and file provider",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/library/*",
+        "src/ph_composer/features/assemblies/library_kind.rb",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/session/*",
+        "tests/library*",
+        "tools/examples/library/*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E08",
+      "label": "Phase 2 native library sidebar",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/html/library*",
+        "src/ph_composer/html/sections/library.js",
+        "src/ph_composer/html/assembly*",
+        "src/ph_composer/library/*",
+        "src/ph_composer/shell/*",
+        "tools/ui-preview/library_checks.cjs"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E09",
+      "label": "Phase 2 library export and separate provider",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/library/*",
+        "src/ph_composer/html/library_export.js",
+        "src/ph_composer/html/sections/library.js",
+        "src/ph_composer/shell/*",
+        "starter-library/*",
+        "tools/examples/library_provider/*",
+        "tests/library_export*",
+        "tests/file_export_test.rb",
+        "tests/example_library_provider_test.rb",
+        "tools/rbz/*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E10",
+      "label": "Phase 2 Window product and type records",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/windows/*",
+        "src/ph_composer/core/model_settings*",
+        "src/ph_composer/core/records/*",
+        "src/ph_composer/shell/*",
+        "tests/window*",
+        "tools/examples/authoring/windows_walkthrough.rb"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E11",
+      "label": "Phase 2 native Window Builder and Installs",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/html/window*",
+        "src/ph_composer/html/sections/windows.js",
+        "src/ph_composer/html/sections/library.js",
+        "src/ph_composer/html/library_sidebar.js",
+        "src/ph_composer/features/windows/*",
+        "src/ph_composer/shell/*",
+        "tools/ui-preview/windows_checks.cjs",
+        "tests/window*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E12",
+      "label": "Phase 2 Window units and cutting-component rules",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/windows/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/core/face_geometry.rb",
+        "src/ph_composer/export/geometry_snapshot.rb",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/session/*",
+        "tools/spikes/window/*",
+        "tests/zone_cutting_components_test.rb"
+      ],
+      "native_control_required": true
     }
   ]
 }

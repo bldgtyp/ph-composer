@@ -21,7 +21,7 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | --- | --- |
 | Feature | Stable namespaced id, contract version, declared feature dependencies, install entrypoint |
 | Record kind | Kind id, schema version, validator, SI field descriptors, declared references, persistence adapter |
-| Query, action, view command | Namespaced id, description, input and result schemas, examples, handler |
+| Query, action, view command, FileExport | Namespaced id, description, input and result schemas, examples, handler |
 | Action additions | Side effects, confirmation policy (only `none` today), Undo name |
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
@@ -31,7 +31,7 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
 
 The capability an operation needs follows from its kind: a query and a preview need `read`, a view
-command `view`, an action and an outcome lookup `model_write`, and the export task `export`.
+command `view`, an action and an outcome lookup `model_write`, and a FileExport or export task `export`.
 
 Every declared name starts with its feature's id. Registrations are staged and validated together:
 duplicate ids, missing dependencies, cycles, incompatible contract majors, invalid schemas and
@@ -65,6 +65,9 @@ are clients of it.
   nothing to the Model, so it takes no request and leaves no Undo entry.
 - `invoke(context:, name:, params:, request:)`: a validated synchronous mutation.
 - `outcome(context:, request:)`: a retained mutation outcome, without rerunning it.
+- `export_file(context:, name:, params:)`: a registered synchronous FileExport, with an explicit
+  `export` grant. It has no mutation sequence and opens no Model operation. Its owner obtains and
+  reviews the native destination and performs the guarded file write.
 - The export task methods (`export_preflight`, `start_export`, `export_status`, `cancel_export`,
   `latest_export`) are specified in AGENT_INTERFACE.md, "Implemented export task contract".
 
@@ -257,6 +260,17 @@ name or geometry to repair a stale path. Mutation accepts only a unique, writabl
 through shared component storage, a locked Group or another Zone refuses with its `target.*` code.
 
 ## Zones geometry rules
+
+**Cutting components.** A ComponentInstance whose definition cuts an opening owns its contents.
+Those Faces are excluded from Zone discovery, Face inventories, classification, viewport picks
+and explicit Face resolution. The shared export snapshot retains the instance and its dictionaries
+and skips its descendants.
+
+Solve reports `adjacency.glued_instances` when a proposed partial match would cut a Face with
+glued instances. A full match still pairs. A wholly covered glued side may pair while its larger
+counterpart is split, because that glued side is not cut. Detached cut permissions enter the
+proposal digest separately from the unchanged geometry digest; the apply step checks live glue
+on every cut side before the first split. Native split primitives check it again.
 
 **Adjacency pair.** Each side of a Surface pair stores the same `pair_id` and both directed
 endpoints:

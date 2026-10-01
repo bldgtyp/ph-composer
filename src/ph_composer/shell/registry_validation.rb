@@ -101,7 +101,8 @@ module PhComposer
       end
 
       def check_operations
-        (@staging.declared_queries + @staging.declared_actions + @staging.declared_view_commands).each do |operation|
+        (@staging.declared_queries + @staging.declared_actions + @staging.declared_view_commands +
+         @staging.declared_file_exports).each do |operation|
           add_schema_problems(operation, "params", operation.params)
           add_schema_problems(operation, "result", operation.result)
           unless operation.params.is_a?(Hash) && operation.params["type"] == "object"
@@ -111,6 +112,15 @@ module PhComposer
           problem(operation, "needs a description") unless text?(operation.description)
           check_examples(operation)
           problem(operation, "needs a callable handler") unless operation.handler.respond_to?(:call)
+        end
+        @staging.declared_file_exports.each do |operation|
+          %i[params result].each do |part|
+            schema = operation[part]
+            next if schema.is_a?(Hash) && schema["type"] == "object" &&
+                    schema["properties"].is_a?(Hash) && schema["additionalProperties"] == false
+
+            problem(operation, "#{part} must be a closed object with declared properties")
+          end
         end
         @staging.declared_actions.reject { |action| action.confirmation == "none" }.each do |action|
           add("registration.schema_invalid", action.owner, action.name,

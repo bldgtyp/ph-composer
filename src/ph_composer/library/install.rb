@@ -4,6 +4,7 @@ require_relative "coordinator"
 require_relative "setup"
 require_relative "schemas"
 require_relative "setup_commands"
+require_relative "export_registration"
 
 module PhComposer
   module Library
@@ -53,7 +54,7 @@ module PhComposer
                     :examples => [{}]) do |r|
         State.for(r.session).metadata(r.registry)
       end
-      SetupCommands.install(feature)
+      install_commands(feature)
       feature.snapshot_section("#{FEATURE_ID}.provider_catalogs", :query => "#{FEATURE_ID}.providers")
       feature.query("#{FEATURE_ID}.catalog", :description => "A bounded page of one immutable library catalog.",
                     :params => page_params, :result => Schemas.page,
@@ -82,6 +83,12 @@ module PhComposer
         Coordinator.copy(r, proposal)
       end
     end
+
+    def install_commands(feature)
+      SetupCommands.install(feature)
+      ExportRegistration.install(feature)
+    end
+    private_class_method :install_commands
 
     def catalog_page(request)
       p = request.params

@@ -37,6 +37,7 @@ PhComposerUI.define("library_sidebar", ["library_adapters", "library_drag", "lib
       this.setupButton = ui.button("Library setup…", function () { if (!self.busy()) self.setup.open(); });
       var controls = el("div", "library-source-controls"); controls.appendChild(this.refreshButton);
       controls.appendChild(this.setupButton); this.content.appendChild(controls);
+      if (options.localOnly) { this.source.hidden = true; controls.hidden = true; }
       this.search = el("input");
       this.search.type = "search";
       this.search.placeholder = "Search name, category or notes";
@@ -49,7 +50,7 @@ PhComposerUI.define("library_sidebar", ["library_adapters", "library_drag", "lib
       this.content.appendChild(this.list);
       this.root.appendChild(this.toggleButton);
       this.root.appendChild(this.content);
-      if (options.session && options.send && this.adapter.wireKind) {
+      if (!options.localOnly && options.session && options.send && this.adapter.wireKind) {
         this.store = new Store(options.session, options.send, this.adapter.wireKind, this.changed);
         this.copy = new Copy(options.session, options.send, this.adapter, function (outcome) {
           if (outcome && outcome.status === "completed" && self.store.page) {

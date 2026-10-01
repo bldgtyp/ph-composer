@@ -112,6 +112,33 @@ class PanelTest < PhComposerTestCase
     assert_equal "session.inactive", messages(dialog, "query.result").last.dig("outcome", "code")
   end
 
+  def test_registered_file_export_uses_export_grant_without_mutating_or_refreshing_model
+    feature = Module.new do
+      def self.install(registry)
+        scope = registry.feature("test.file_export", :contract_version => 1)
+        scope.file_export("test.file_export.write", :description => "Synthetic file command.",
+          :params => { "type" => "object", "properties" => {}, "required" => [], "additionalProperties" => false },
+          :result => { "type" => "object", "properties" => {}, "required" => [],
+                       "additionalProperties" => false }) { |_request| {} }
+      end
+    end
+    PhComposer::Registry.install([feature])
+    dialog = open_panel
+    before = dialog.scripts.length
+    operations = @model.operations.length
+    send_message(dialog, "file_export.invoke", "request_id" => "a:file:1", "session" => @session.id,
+                                                "name" => "test.file_export.write", "params" => {})
+    assert_equal ["file_export.result"], dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
+    result = messages(dialog, "file_export.result").last
+    assert_equal ["a:file:1", @session.id], result.values_at("request_id", "session")
+    assert_equal "completed", result.dig("outcome", "status")
+    assert_equal "none", result.dig("outcome", "effect")
+    assert_equal operations, @model.operations.length
+    send_message(dialog, "file_export.invoke", "request_id" => "a:file:2", "session" => "other",
+                                                "name" => "test.file_export.write", "params" => {})
+    assert_equal "session.inactive", messages(dialog, "file_export.result").last.dig("outcome", "code")
+  end
+
   def test_a_view_command_answers_after_the_snapshot_and_leaves_the_revision_alone
     dialog = open_panel
     before = dialog.scripts.length

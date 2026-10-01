@@ -25,7 +25,8 @@ P2-07 and P2-08 are implemented, independently reviewed and integrated on
 target, all six browser scripts and Chromium 88 runtime export. Native library proof covers
 copy/reuse, every review answer, Add to file, atomic drag assignment, native Undo/Redo, Setup
 removal and provider-free reopen with editable local copies. Native file and aggregate budgets
-also pass at the declared limits. The report attribution proof and final case attestation remain
+also pass at the declared limits. Fresh native Pyodide export proves report-only attribution,
+including unused local copies and excluding paths and raw snapshots. Final case attestation remains
 open. See [seam evidence](../evidence/p2-07-library-seam.md) and
 [sidebar evidence](../evidence/p2-08-library-sidebar.md).
 

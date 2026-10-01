@@ -7,7 +7,10 @@ module PhComposer
     INCH_TO_M = 0.0254
     QUANTUM_M = 0.000001 # 0.001 mm, the geometry-stamp normalization.
 
-    Snapshot = Struct.new(:loops_m, :normal, :plane_offset_m, :area_m2, :digest, keyword_init: true) do
+    # Glue is detached host state used to decide whether adjacency may cut, not geometric identity.
+    # It stays out of the geometry digest and exported geometry payload.
+    Snapshot = Struct.new(:loops_m, :normal, :plane_offset_m, :area_m2, :digest, :has_glued_instances,
+                          keyword_init: true) do
       def outer_loop
         loops_m.first
       end
@@ -42,7 +45,8 @@ module PhComposer
         "holes" => loops.drop(1).map { |loop| canonical_loop(loop) }.sort
       }
       Snapshot.new(:loops_m => loops, :normal => normal, :plane_offset_m => plane, :area_m2 => area,
-                   :digest => "sha256:#{CanonicalJson.digest(canonical)}")
+                   :digest => "sha256:#{CanonicalJson.digest(canonical)}",
+                   :has_glued_instances => face.get_glued_instances.any?)
     end
 
     def equivalent_full_face?(left, right, plane_tolerance_m:, angle_tolerance_degrees:, point_tolerance_m:)

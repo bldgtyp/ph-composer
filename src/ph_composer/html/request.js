@@ -23,7 +23,8 @@ PhComposerUI.define("request", [], function () {
   "use strict";
   var sequence = 0;
   var SLOTS = { "action.invoke": { slot: "actionResult", keyed: false },
-    "view.invoke": { slot: "viewResults", keyed: true }, "query.invoke": { slot: "queryResults", keyed: true } };
+    "view.invoke": { slot: "viewResults", keyed: true }, "query.invoke": { slot: "queryResults", keyed: true },
+    "file_export.invoke": { slot: "fileExportResults", keyed: true } };
 
   function Channel(session, send, label, message) {
     this.session = session; this.transport = send; this.label = label;

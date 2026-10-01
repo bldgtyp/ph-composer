@@ -392,6 +392,13 @@ module Sketchup
       @edges.each { |edge| edge.attach_face(self) }
     end
 
+    # Membership and glue only: the stub does not simulate native opening-cut geometry.
+    def get_glued_instances
+      return [] unless parent_entities
+
+      parent_entities.to_a.grep(ComponentInstance).select { |instance| instance.glued_to.equal?(self) }
+    end
+
     # The host derives a Face's normal from its winding. A fixture that says nothing about the
     # normal gets the one its own points imply, so a Face built by add_face faces the right way.
     def self.newell_normal(points)
@@ -646,13 +653,22 @@ module Sketchup
     end
   end
 
+  class Behavior
+    attr_writer :cuts_opening
+
+    def cuts_opening?
+      @cuts_opening == true
+    end
+  end
+
   class ComponentDefinition
-    attr_reader :entities, :guid, :persistent_id
+    attr_reader :entities, :guid, :persistent_id, :behavior
     attr_accessor :name
 
     def initialize(entities = Entities.new, guid: nil, name: "Definition", dictionaries: {})
       @entities = entities
       @guid = guid || "definition-#{object_id}"
+      @behavior = Behavior.new
       @persistent_id = Entities.allocate_persistent_id
       @name = name
       @dictionaries = dictionaries.each_with_object({}) do |(dictionary_name, values), result|

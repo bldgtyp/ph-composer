@@ -59,6 +59,10 @@ class ApiReferenceTest < PhComposerTestCase
     text = PhComposerTools::ApiReference.markdown(PhComposer::Registry.current)
 
     refute_match(/[–—]/, text, "docs/ is client-facing: no em or en dashes")
+    PhComposer::Registry.current.file_exports.each_key do |name|
+      assert_includes text, "### `#{name}`", "Registered file export missing from public reference"
+      assert_equal "file_export", API.describe(:name => name).fetch("kind")
+    end
     if FixtureFiles::WRITING
       write_text(REFERENCE, text)
     else

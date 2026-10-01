@@ -227,6 +227,520 @@
         notes: "Revised library notes", datasheet_links: [] } }
   ], other: [] };
 
+  FIXTURES.windows = JSON.parse(JSON.stringify(FIXTURES.inventories));
+  FIXTURES.windows.windows = {
+  "types": {
+    "records": [
+      {
+        "id": "wnt_a",
+        "values": {
+          "name": "Three elements",
+          "notes": "",
+          "rows_m": [
+            1.5
+          ],
+          "columns_m": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "elements": [
+            {
+              "id": "wel_a",
+              "name": "Element 1",
+              "kind": "glazed",
+              "row_span": [
+                0,
+                0
+              ],
+              "column_span": [
+                0,
+                0
+              ],
+              "glazing_id": "glz_a",
+              "frames": {
+                "top": "frm_a",
+                "right": "frm_a",
+                "bottom": "frm_a",
+                "left": "frm_a"
+              },
+              "installs": {
+                "top": null,
+                "right": null,
+                "bottom": null,
+                "left": null
+              },
+              "operation": {
+                "type": "fixed",
+                "directions": []
+              }
+            },
+            {
+              "id": "wel_b",
+              "name": "Element 2",
+              "kind": "glazed",
+              "row_span": [
+                0,
+                0
+              ],
+              "column_span": [
+                1,
+                1
+              ],
+              "glazing_id": "glz_a",
+              "frames": {
+                "top": "frm_a",
+                "right": "frm_a",
+                "bottom": "frm_a",
+                "left": "frm_a"
+              },
+              "installs": {
+                "top": null,
+                "right": null,
+                "bottom": null,
+                "left": null
+              },
+              "operation": {
+                "type": "fixed",
+                "directions": []
+              }
+            },
+            {
+              "id": "wel_c",
+              "name": "Element 3",
+              "kind": "empty",
+              "row_span": [
+                0,
+                0
+              ],
+              "column_span": [
+                2,
+                2
+              ],
+              "glazing_id": null,
+              "frames": {
+                "top": null,
+                "right": null,
+                "bottom": null,
+                "left": null
+              },
+              "installs": {
+                "top": null,
+                "right": null,
+                "bottom": null,
+                "left": null
+              },
+              "operation": null
+            }
+          ]
+        },
+        "user_data": {},
+        "extension_data": {},
+        "findings": [],
+        "display": {
+          "width_m": 1.5,
+          "height_m": 1.5,
+          "install_depth_m": 0.1,
+          "thermal": {
+            "u_w": 0.8,
+            "u_effective": 0.9,
+            "complete": true,
+            "area_m2": 1.5,
+            "empty_area_m2": 0.75,
+            "findings": [],
+            "elements": [
+              {
+                "id": "wel_a",
+                "u_w": 0.8,
+                "findings": [],
+                "edges": [
+                  {
+                    "side": "top",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "right",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "shared",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "bottom",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "left",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "wel_b",
+                "u_w": 0.8,
+                "findings": [],
+                "edges": [
+                  {
+                    "side": "top",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "right",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "bottom",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "left",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "shared",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "wel_c",
+                "u_w": null,
+                "findings": [],
+                "edges": [
+                  {
+                    "side": "top",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "right",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "bottom",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "left",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "wnt_single",
+        "values": {
+          "name": "Single opening",
+          "notes": "",
+          "rows_m": [
+            1.5
+          ],
+          "columns_m": [
+            1
+          ],
+          "elements": [
+            {
+              "id": "wel_single",
+              "name": "Element 1",
+              "kind": "glazed",
+              "row_span": [
+                0,
+                0
+              ],
+              "column_span": [
+                0,
+                0
+              ],
+              "glazing_id": "glz_a",
+              "frames": {
+                "top": "frm_a",
+                "right": "frm_a",
+                "bottom": "frm_a",
+                "left": "frm_a"
+              },
+              "installs": {
+                "top": null,
+                "right": null,
+                "bottom": null,
+                "left": null
+              },
+              "operation": {
+                "type": "fixed",
+                "directions": []
+              }
+            }
+          ]
+        },
+        "user_data": {},
+        "extension_data": {},
+        "findings": [],
+        "display": {
+          "width_m": 1.5,
+          "height_m": 1.5,
+          "install_depth_m": 0.1,
+          "thermal": {
+            "u_w": 0.8,
+            "u_effective": 0.9,
+            "complete": true,
+            "area_m2": 1.5,
+            "empty_area_m2": 0.75,
+            "findings": [],
+            "elements": [
+              {
+                "id": "wel_single",
+                "u_w": 0.8,
+                "findings": [],
+                "edges": [
+                  {
+                    "side": "top",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "right",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "shared",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "bottom",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  },
+                  {
+                    "side": "left",
+                    "length_m": 0.5,
+                    "install": {
+                      "source": "default",
+                      "id": null,
+                      "psi": 0.04
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "wnt_two",
+        "values": {
+          "name": "Two elements · incomplete",
+          "notes": "",
+          "rows_m": [
+            1.5
+          ],
+          "columns_m": [
+            0.7,
+            null
+          ],
+          "elements": [
+            {
+              "id": "wel_two0",
+              "name": "Element 1",
+              "kind": "glazed",
+              "row_span": [
+                0,
+                0
+              ],
+              "column_span": [
+                0,
+                0
+              ],
+              "glazing_id": "glz_a",
+              "frames": {
+                "top": "frm_a",
+                "right": "frm_a",
+                "bottom": "frm_a",
+                "left": "frm_a"
+              },
+              "installs": {
+                "top": null,
+                "right": null,
+                "bottom": null,
+                "left": null
+              },
+              "operation": {
+                "type": "fixed",
+                "directions": []
+              }
+            },
+            {
+              "id": "wel_two1",
+              "name": "Element 2",
+              "kind": "glazed",
+              "row_span": [
+                0,
+                0
+              ],
+              "column_span": [
+                1,
+                1
+              ],
+              "glazing_id": "glz_a",
+              "frames": {
+                "top": "frm_a",
+                "right": "frm_a",
+                "bottom": "frm_a",
+                "left": "frm_a"
+              },
+              "installs": {
+                "top": null,
+                "right": null,
+                "bottom": null,
+                "left": null
+              },
+              "operation": {
+                "type": "fixed",
+                "directions": []
+              }
+            }
+          ]
+        },
+        "user_data": {},
+        "extension_data": {},
+        "findings": [],
+        "display": {
+          "width_m": 1.5,
+          "height_m": 1.5,
+          "install_depth_m": 0.1,
+          "thermal": {
+            "u_w": null,
+            "u_effective": null,
+            "elements": [],
+            "findings": [
+              "Enter all grid dimensions."
+            ]
+          }
+        }
+      }
+    ],
+    "unreadable": []
+  },
+  "frames": {
+    "records": [
+      {
+        "id": "frm_a",
+        "values": {
+          "name": "Timber frame",
+          "manufacturer": "Synthetic",
+          "notes": "",
+          "color": "#eeeeee",
+          "width_m": 0.08,
+          "uf_w_m2k": 1.1,
+          "psi_g_w_mk": 0.03
+        },
+        "user_data": {},
+        "extension_data": {},
+        "findings": []
+      }
+    ]
+  },
+  "glazings": {
+    "records": [
+      {
+        "id": "glz_a",
+        "values": {
+          "name": "Triple glazing",
+          "manufacturer": "Synthetic",
+          "notes": "",
+          "color": "#e8f4fa",
+          "ug_w_m2k": 0.6,
+          "g_value": 0.5
+        },
+        "user_data": {},
+        "extension_data": {},
+        "findings": []
+      }
+    ]
+  },
+  "psi_install_types": {
+    "records": [
+      {
+        "id": "psi_a",
+        "values": {
+          "name": "Insulated junction",
+          "notes": "",
+          "psi_w_mk": 0.04
+        },
+        "user_data": {},
+        "extension_data": {},
+        "findings": []
+      }
+    ]
+  },
+  "settings": {
+    "default_psi_install_id": "psi_a",
+    "default_install_depth_m": 0.1
+  }
+};
+
   global.PhComposerPreviewFixtures = {
     names: Object.keys(FIXTURES),
     fromQuery: function (search) {

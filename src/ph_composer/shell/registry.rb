@@ -17,7 +17,8 @@ module PhComposer
   class Registry
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
-    attr_reader :features, :queries, :actions, :view_commands, :record_kinds, :reference_targets, :extensions,
+    attr_reader :features, :queries, :actions, :view_commands, :file_exports, :record_kinds, :reference_targets,
+                :extensions,
                 :snapshot_sections,
                 :export_contributors, :reference_retargeters, :proposal_participants, :library_providers,
                 :library_kinds, :colour_modes, :menu_items,
@@ -53,6 +54,7 @@ module PhComposer
       @queries = {}
       @actions = {}
       @view_commands = {}
+      @file_exports = {}
       @record_kinds = {}
       @reference_targets = {}
       @extensions = {}
@@ -92,11 +94,13 @@ module PhComposer
 
     def publish(staging)
       staging.declared_features.each { |feature| @features[feature.id] = feature }
-      operations = staging.declared_queries + staging.declared_actions + staging.declared_view_commands
+      operations = staging.declared_queries + staging.declared_actions + staging.declared_view_commands +
+                   staging.declared_file_exports
       operations.each { |operation| freeze_operation(operation) }
       publish_each(staging.declared_queries, @queries, :name)
       publish_each(staging.declared_actions, @actions, :name)
       publish_each(staging.declared_view_commands, @view_commands, :name)
+      publish_each(staging.declared_file_exports, @file_exports, :name)
       publish_each(staging.declared_record_kinds, @record_kinds, :id)
       staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
       publish_each(staging.declared_reference_targets, @reference_targets, :id)
@@ -177,6 +181,7 @@ module PhComposer
     # Collects one batch's declarations and checks them against each other and the live registry.
     class Staging
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_view_commands,
+                  :declared_file_exports,
                   :declared_record_kinds, :declared_reference_targets, :declared_extensions,
                   :declared_snapshot_sections,
                   :declared_export_contributors, :declared_reference_retargeters, :declared_proposal_participants,
@@ -191,6 +196,7 @@ module PhComposer
         @declared_queries = []
         @declared_actions = []
         @declared_view_commands = []
+        @declared_file_exports = []
         @declared_record_kinds = []
         @declared_reference_targets = []
         @declared_extensions = []
@@ -285,6 +291,14 @@ module PhComposer
       def snapshot_section(name, query:, params: {})
         declaration = Declarations::SnapshotSection.new(:name => name, :owner => id, :query => query, :params => params)
         @staging.add(:declared_snapshot_sections, id, name, declaration)
+      end
+
+      def file_export(name, description:, params:, result:, examples: [], &handler)
+        declaration = Declarations::FileExport.new(
+          :name => name, :owner => id, :description => description, :params => params, :result => result,
+          :examples => examples, :handler => handler
+        )
+        @staging.add(:declared_file_exports, id, name, declaration)
       end
 
       # Adds a section to the export extraction and declares the result fields its translation adds.

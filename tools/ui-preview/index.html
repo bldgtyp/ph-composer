@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="../../src/ph_composer/html/zones.css">
     <link rel="stylesheet" href="../../src/ph_composer/html/library.css">
     <link rel="stylesheet" href="../../src/ph_composer/html/assembly.css">
+    <link rel="stylesheet" href="../../src/ph_composer/html/windows.css">
     <!-- panel-styles:end -->
   </head>
   <body class="phc-workspace live-panel">
@@ -23,7 +24,7 @@
         <button type="button" data-tab="overview">Zones / Faces</button>
         <button type="button" disabled>Spaces · Planned</button>
         <button type="button" data-tab="assemblies">Assemblies</button>
-        <button type="button" disabled>Window Types · Planned</button>
+        <button type="button" data-tab="windows">Window Types</button>
         <button type="button" disabled>Thermal Bridges · Planned</button>
         <button type="button" disabled>Systems · Planned</button>
         <button type="button" data-tab="library">Library</button>
@@ -37,6 +38,7 @@
     <div class="phc-notice-layer" data-notice-layer></div>
     <main class="panel-panes">
       <div data-pane="overview"></div>
+      <div data-pane="windows" hidden></div>
       <div data-pane="assemblies" hidden></div>
       <div data-pane="library" hidden></div>
       <div data-pane="export" hidden></div>
@@ -81,6 +83,7 @@
     <script src="../../src/ph_composer/html/library_store.js"></script>
     <script src="../../src/ph_composer/html/library_sidebar.js"></script>
     <script src="../../src/ph_composer/html/assembly_editor.js"></script>
+    <script src="../../src/ph_composer/html/library_export.js"></script>
     <script src="../../src/ph_composer/html/material_form.js"></script>
     <script src="../../src/ph_composer/html/panel.js"></script>
     <script src="../../src/ph_composer/html/sections/assemblies.js"></script>
@@ -97,6 +100,16 @@
     <script src="../../src/ph_composer/html/sections/zone_settings.js"></script>
     <script src="../../src/ph_composer/html/sections/overview.js"></script>
     <script src="../../src/ph_composer/html/sections/shell.js"></script>
+    <script src="../../src/ph_composer/html/window_editor_shared.js"></script>
+    <script src="../../src/ph_composer/html/window_audit.js"></script>
+    <script src="../../src/ph_composer/html/window_canvas.js"></script>
+    <script src="../../src/ph_composer/html/window_cards.js"></script>
+    <script src="../../src/ph_composer/html/window_install_editor.js"></script>
+    <script src="../../src/ph_composer/html/window_type_list.js"></script>
+    <script src="../../src/ph_composer/html/window_editor.js"></script>
+    <script src="../../src/ph_composer/html/window_form.js"></script>
+    <script src="../../src/ph_composer/html/window_inventory.js"></script>
+    <script src="../../src/ph_composer/html/sections/windows.js"></script>
     <!-- panel-modules:end -->
     <script src="fixtures.js"></script>
     <script>

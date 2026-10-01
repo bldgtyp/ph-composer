@@ -162,8 +162,24 @@ its owning feature; adding one requires no case in the neutral coordinator. Mate
 implemented example at `features/assemblies/library_kind.rb`. Providers use the
 [published file envelope](../docs/LIBRARY_FILE_FORMAT.md). The
 [panel-closed walkthrough](../tools/examples/library/materials_walkthrough.rb) uses public reads
-and actions after private per-machine setup. A connection provider and outside-provider acceptance
-remain assigned to later stages.
+and actions after private per-machine setup. The separate synthetic provider extension at
+`tools/examples/library_provider/` passes the shared provider contract, load-order diagnostics,
+registration refusal and panel-closed public API copy/read-back on both Rubies. Its native
+installation and standalone repository remain open. A connection provider is still proposed.
+
+### Registered file exports
+
+`feature.file_export(name, description:, params:, result:, examples:, &handler)` declares a
+synchronous file write under the owner's namespace and the explicit `export` grant. It runs
+without a Model proposal, sequence or Undo operation. The handler receives the validated request;
+the result is detached and validated against its declared schema. Raising `FileExportCancelled`
+returns a neutral cancellation outcome. Ruby contributors remain trusted code and own native
+destination review and safe writes.
+
+The library exporter uses reverse mappings from each registered kind and checks semantic equality
+after mapping the wire row back. Invalid or lossy reverse mappings refuse before the save dialog.
+Local record ids remain the wire ids; attribution is informational and excluded from semantic
+comparison. Only declared wire fields and sanitized origins reach the file.
 
 ### Colour-by modes
 
@@ -429,6 +445,8 @@ Prove implemented contracts with small synthetic examples and reusable contract 
 - Register a record kind and a simple editor.
 - Register an importer that proposes changes and applies them through model operations.
 - Register an exporter that consumes only HBJSON.
+- Register a provider from a separate extension. The [provider example](../docs/LIBRARY_PROVIDER_EXAMPLE.md)
+  proves the shared contract and public copy/read-back without editing core composition.
 - Register a Colour-by mode through the shared overlay interface. Phase 1's Face and Zone modes
   register through the public `colour_mode` call
   ([walkthrough](../tools/examples/authoring/colour_by_walkthrough.rb)).

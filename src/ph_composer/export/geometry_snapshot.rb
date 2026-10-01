@@ -72,6 +72,8 @@ module PhComposer
             block.call(Entry.new(:kind => kind, :path => child_path.freeze, :transform => child_transform.to_a.freeze,
                                  :dictionaries => dictionaries, :geometry => nil,
                                  :native_name => entity.name.to_s.dup.freeze))
+            next if entity.is_a?(Sketchup::ComponentInstance) && entity.definition.behavior.cuts_opening?
+
             child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
             walk(child_entities, child_path, child_transform, &block)
           else

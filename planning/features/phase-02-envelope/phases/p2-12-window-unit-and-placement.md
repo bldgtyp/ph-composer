@@ -1,7 +1,7 @@
 # P2-12: the window unit and placement operations
 
 DATE: 2026-09-30
-STATUS: Slice A in progress; native Move-copy remains unmeasured. Slice C has not started.
+STATUS: Slice A partial; Slice B implemented with focused checks and review/native replay open; Slice C blocked.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -146,3 +146,4 @@ and explicit door support.
 ## Current evidence
 
 See [Slice A measurements](../evidence/p2-12-window-host.md). One native modifier gesture remains a batched manual item.
+See [Slice B evidence](../evidence/p2-12-zone-cutting-rules.md) for focused checks and remaining replay.

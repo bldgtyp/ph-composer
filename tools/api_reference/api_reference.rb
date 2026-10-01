@@ -8,7 +8,7 @@ require "json"
 module PhComposerTools
   module ApiReference
     GROUPS = [["Queries", :queries, "read"], ["Actions", :actions, "model_write"],
-              ["View commands", :view_commands, "view"]].freeze
+              ["View commands", :view_commands, "view"], ["File exports", :file_exports, "export"]].freeze
 
     module_function
 
@@ -31,7 +31,7 @@ module PhComposerTools
 
         | Field | Meaning |
         | --- | --- |
-        | `status` | `completed`, `refused`, `failed`, `busy` or `pending` |
+        | `status` | `completed`, `refused`, `failed`, `busy`, `pending` or `cancelled` |
         | `code` | `ok`, or why the request did not complete, such as `revision.stale` or `target.changed` |
         | `effect` | What happened to the Model: `none`, `committed`, `rolled_back` or `unknown` |
         | `revision` | The Model revision after the call; send it back as `expected_revision` |
@@ -91,7 +91,7 @@ module PhComposerTools
         task.fetch("examples").each { |example| lines.concat(json_block("Example arguments", example)) }
         lines.join("\n")
       end
-      "## Export tasks\n\nA file export is not a Model change, so these are task methods rather than actions. " \
+      "## Export tasks\n\nHBJSON runtime exports use retained task methods. " \
         "Each params key is the method's keyword argument.\n\n#{sections.join("\n")}"
     end
 

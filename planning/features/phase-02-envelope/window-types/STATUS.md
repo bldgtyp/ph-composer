@@ -10,12 +10,18 @@ ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 Phase 2 implementation is authorized on `codex/phase-02-envelope`, issue #14. P2-10's product,
 Window Type, grid, Installs and model-settings records are implemented in source and independently
 reviewed. Focused tests pass on Ruby 2.7.2 and 3.2.2, 27 tests / 616 assertions. See
-[record evidence](../evidence/p2-10-window-records.md). Integrated and native record gates remain open.
+[record evidence](../evidence/p2-10-window-records.md). Installed `146076e` passes integrated gates,
+seven public commits with exact native Undo/Redo and fresh-process inventory persistence.
+Final structured E10 attestation remains open.
+
+P2-11 screens are implemented in source. Focused checks and browser workflows at four widths pass;
+independent review and native Builder acceptance remain open. See
+[Builder evidence](../evidence/p2-11-window-type-builder.md).
 
 P2-12 Slice A is in progress in a fresh SketchUp 2026 process with a synthetic Model. The
 [host investigation](../evidence/p2-12-window-host.md) records completed probes and the remaining
-native Move-copy gesture. Slice C has not started. Window screens, placement, schedules,
-Colour-by, translation and library adapters are not delivered.
+native Move-copy gesture. Independent Slice B cutting-component rules are in implementation;
+Slice C has not started. Placement, schedules, Colour-by, translation and library adapters are not delivered.
 
 ## Next step
 

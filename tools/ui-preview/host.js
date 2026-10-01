@@ -26,6 +26,7 @@
     this.libraryProviders = JSON.parse(JSON.stringify(settings.libraryProviders || []));
     this.libraryCatalogs = JSON.parse(JSON.stringify(settings.libraryCatalogs || {}));
     this.libraryGenerations = {}; this.libraryFailures = {};
+    this.windows = JSON.parse(JSON.stringify(settings.windows || {}));
     this.session = "preview-session";
     this.revision = 1;
     this.sequence = 0;
@@ -85,6 +86,17 @@
         [LEGEND]: { status: "completed", code: "ok", revision: this.revision, value: this.legend() },
         [PALETTE]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.palette)) },
+        ["ph_composer.windows.types"]: { status: "completed", value: JSON.parse(JSON.stringify(this.windows.types ||
+          { records: [] })) },
+        ["ph_composer.windows.frames"]: { status: "completed",
+          value: JSON.parse(JSON.stringify(this.windows.frames || { records: [] })) },
+        ["ph_composer.windows.glazings"]: { status: "completed",
+          value: JSON.parse(JSON.stringify(this.windows.glazings || { records: [] })) },
+        ["ph_composer.windows.psi_install_types"]: { status: "completed",
+          value: JSON.parse(JSON.stringify(this.windows.psi_install_types || { records: [] })) },
+        ["ph_composer.windows.settings"]: { status: "completed",
+          value: JSON.parse(JSON.stringify(this.windows.settings || {
+          default_psi_install_id: null, default_install_depth_m: 0 })) },
         [MATERIALS]: { status: "completed", value: JSON.parse(JSON.stringify(this.materials)) },
         [ASSEMBLIES]: { status: "completed", value: JSON.parse(JSON.stringify(this.assemblies)) },
         [ATTACHED]: { status: "completed", code: "ok", revision: this.revision,
@@ -136,6 +148,10 @@
     if (message.type === "panel.ready") this.snapshot();
     if (message.type === "action.invoke") this.invoke(message.payload);
     if (message.type === "query.invoke") this.libraryQuery(message.payload);
+    if (message.type === "file_export.invoke") this.publish("file_export.result", {
+      request_id: message.payload.request_id, session: message.payload.session,
+      outcome: refused("export.unavailable", "File writes are unavailable in this browser preview.", this.revision)
+    });
     if (message.type === "view.invoke") this.viewCommand(message.payload);
     if (message.type === "preferences.set") this.setPreference(message.payload);
     if (message.type === "export.start") this.exportStart(message.payload);
@@ -183,6 +199,161 @@
     this.publish("view.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
   };
 
+  /* Synthetic Window outcomes exercise panel transport only; thermal values are fixture projections. */
+  Host.prototype.windowAction = function (payload) {
+    var host = this, params = payload.params, name = payload.name.replace("ph_composer.windows.", "");
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+    function completed(value) { host.revision++; return { status: "completed", effect: "committed",
+      revision: host.revision, value: value || {} }; }
+    function matches(record, expected) {
+      return record && Object.keys(expected || {}).every(function (key) {
+        return JSON.stringify(record.values[key] === undefined ? null : record.values[key]) ===
+          JSON.stringify(expected[key]);
+      });
+    }
+    function emptySides() { return { top: null, right: null, bottom: null, left: null }; }
+    function invalidate(record) {
+      record.display = Object.assign({}, record.display, { thermal: { u_w: null, u_effective: null,
+        findings: ["Preview changed definition: canonical thermal results require the Ruby host."], elements: [] } });
+    }
+    if (name === "settings.update") {
+      if (JSON.stringify(params.expected_values) !== JSON.stringify(this.windows.settings)) {
+        return refused("target.changed", "Defaults changed.", this.revision);
+      }
+      this.windows.settings = clone(params.values); return completed(params.values);
+    }
+    if (name === "types.installs.save") {
+      if (JSON.stringify(params.expected_settings) !== JSON.stringify(this.windows.settings) ||
+        params.types.some(function (target) {
+        return !matches(host.windows.types.records.filter(function (row) { return row.id === target.id; })[0],
+          target.expected_values);
+      })) return refused("target.changed", "The Installs baseline changed. Reopen the session.", this.revision);
+      var mapping = {};
+      params.psi_install_types.create.forEach(function (row) {
+        var id = "psi_preview" + (++host.sequence); mapping[row.client_id] = id;
+        host.windows.psi_install_types.records.push({ id: id, values: clone(row.values), uses: [], use_count: 0 });
+      });
+      params.psi_install_types.update.forEach(function (patch) {
+        var row = host.windows.psi_install_types.records.filter(function (record) { return record.id === patch.id;
+          })[0];
+        if (row) Object.assign(row.values, patch.values);
+      });
+      params.types.forEach(function (patch) {
+        var row = host.windows.types.records.filter(function (record) { return record.id === patch.id; })[0];
+        patch.installs.forEach(function (edge) {
+          var cell = row.values.elements.filter(function (element) { return element.id === edge.element_id; })[0];
+          Object.keys(edge.sides).forEach(function (side) { cell.installs[side] = mapping[edge.sides[side]] ||
+            edge.sides[side]; });
+        }); invalidate(row);
+      }); return completed({ type_ids: params.types.map(function (row) { return row.id; }) });
+    }
+    var parts = name.split("."), kind = parts[0], operation = parts[parts.length - 1];
+    var records = (this.windows[kind] || {}).records || [];
+    var row = records.filter(function (record) { return record.id === params.id; })[0];
+    if (params.id && !matches(row, params.expected_values)) return refused("target.changed",
+      "The definition changed.", this.revision);
+    if (parts[1] === "grid") {
+      var values = row.values, cell = values.elements.filter(function (entry) {
+        return entry.id === params.element_id; })[0];
+      if (operation === "dimension") values[params.axis][params.index] = params.value;
+      else if (operation === "element") cell[params.field] = clone(params.value);
+      else if (operation === "kind") values.elements.forEach(function (element) {
+        if (params.ids.indexOf(element.id) < 0) return;
+        element.kind = params.kind;
+        if (params.kind === "empty") { element.frames = emptySides(); element.installs = emptySides();
+          element.glazing_id = null; element.operation = null; }
+      });
+      else if (operation === "paste") {
+        var source = values.elements.filter(function (entry) { return entry.id === params.source_id; })[0];
+        values.elements.forEach(function (entry) { if (params.ids.indexOf(entry.id) >= 0) {
+          ["frames", "installs", "operation", "glazing_id"].forEach(function (field) {
+            entry[field] = clone(source[field]); });
+        } });
+      } else if (operation === "flip") {
+        values.columns_m.reverse(); values.elements.forEach(function (entry) {
+          entry.column_span = [values.columns_m.length - entry.column_span[1] - 1,
+            values.columns_m.length - entry.column_span[0] - 1];
+          ["frames", "installs"].forEach(function (field) {
+            var left = entry[field].left; entry[field].left = entry[field].right; entry[field].right = left;
+          });
+        });
+      } else if (operation === "merge") {
+        var selected = values.elements.filter(function (entry) { return params.ids.indexOf(entry.id) >= 0; });
+        var merged = clone(selected[0]);
+        merged.row_span = [Math.min.apply(null, selected.map(function (entry) { return entry.row_span[0]; })),
+          Math.max.apply(null, selected.map(function (entry) { return entry.row_span[1]; }))];
+        merged.column_span = [Math.min.apply(null, selected.map(function (entry) { return entry.column_span[0]; })),
+          Math.max.apply(null, selected.map(function (entry) { return entry.column_span[1]; }))];
+        values.elements = values.elements.filter(function (entry) { return params.ids.indexOf(entry.id) < 0;
+          }).concat(merged);
+      } else if (operation === "split") {
+        values.elements = values.elements.filter(function (entry) { return entry.id !== cell.id; });
+        for (var r = cell.row_span[0]; r <= cell.row_span[1]; r++) for (var c = cell.column_span[0];
+          c <= cell.column_span[1]; c++) {
+          var part = clone(cell); part.id = "wel_preview" + (++host.sequence); part.row_span = [r, r];
+            part.column_span = [c, c];
+          values.elements.push(part);
+        }
+      } else if (operation === "insert") {
+        var axis = params.axis, span = axis === "rows_m" ? "row_span" : "column_span", other = axis === "rows_m" ?
+          "columns_m" : "rows_m";
+        values[axis].splice(params.index, 0, params.value);
+        values.elements.forEach(function (entry) { entry[span] = entry[span].map(function (at) {
+          return at >= params.index ? at + 1 : at; }); });
+        values[other].forEach(function (_value, index) {
+          var element = { id: "wel_preview" + (++host.sequence), name: "New element", kind: "glazed",
+            row_span: axis === "rows_m" ? [params.index, params.index] : [index, index],
+            column_span: axis === "columns_m" ? [params.index, params.index] : [index, index], glazing_id: null,
+            frames: emptySides(), installs: emptySides(), operation: null }; values.elements.push(element);
+        });
+      } else if (operation === "remove") {
+        var removedSpan = params.axis === "rows_m" ? "row_span" : "column_span";
+        values[params.axis].splice(params.index, 1);
+        values.elements = values.elements.filter(function (entry) {
+          return !(entry[removedSpan][0] === params.index && entry[removedSpan][1] === params.index);
+        });
+        values.elements.forEach(function (entry) { entry[removedSpan] = entry[removedSpan].map(function (at) {
+          return at > params.index ? at - 1 : at;
+        }); });
+      }
+      invalidate(row); return completed({ id: row.id });
+    }
+    if (operation === "update") {
+      Object.keys(params.values).forEach(function (key) {
+        if (params.values[key] === null) delete row.values[key]; else row.values[key] = clone(params.values[key]);
+      }); if (kind === "types") invalidate(row); return completed({ id: row.id });
+    }
+    if (operation === "create" || operation === "duplicate") {
+      var id = kind.slice(0, 3) + "_preview" + (++this.sequence);
+      var created = operation === "duplicate" ? clone(row) : { id: id, values: clone(params.values), uses: [],
+        use_count: 0 };
+      created.id = id;
+      if (operation === "duplicate") created.values.name = params.name || row.values.name + " (copy)";
+      if (kind === "types") {
+        if (operation === "create") { created.values.rows_m = [1.5]; created.values.columns_m = [1];
+          created.values.elements = [{ id: "wel_preview" + (++host.sequence), name: "Element 1", kind: "glazed",
+            row_span: [0, 0], column_span: [0, 0], frames: emptySides(), installs: emptySides(), glazing_id: null,
+              operation: null }]; }
+        else created.values.elements.forEach(function (entry) { entry.id = "wel_preview" + (++host.sequence); });
+        created.display = { install_depth_m: host.windows.settings.default_install_depth_m }; invalidate(created);
+      } records.push(created); return completed({ id: id });
+    }
+    if (operation === "delete") {
+      if (row.use_count && !params.replacement_id) return refused("reference.used", "Choose a replacement.",
+        this.revision);
+      var replacement = params.replacement_id;
+      if (replacement) this.windows.types.records.forEach(function (type) {
+        type.values.elements.forEach(function (entry) {
+        if (kind === "glazings" && entry.glazing_id === row.id) entry.glazing_id = replacement;
+        ["frames", "installs"].forEach(function (field) { Object.keys(entry[field]).forEach(function (side) {
+          if (entry[field][side] === row.id) entry[field][side] = replacement;
+        }); });
+      }); });
+      records.splice(records.indexOf(row), 1); return completed({ id: row.id });
+    }
+    return refused("request.unknown_operation", "Window fixture does not handle this action.", this.revision);
+  };
+
   Host.prototype.invoke = function (payload) {
     var host = this;
     function apply() {
@@ -190,7 +361,8 @@
       host.snapshot();
       host.publish("action.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
     }
-    if (payload.name.indexOf("ph_composer.assemblies.") === 0 ||
+    if (payload.name.indexOf("ph_composer.windows.") === 0 ||
+        payload.name.indexOf("ph_composer.assemblies.") === 0 ||
         payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) this.window.setTimeout(apply, 0);
     else apply();
   };
@@ -203,6 +375,7 @@
     if (payload.expected_revision !== this.revision) {
       return refused("revision.stale", "The Model changed since it was read. " + NOTHING_WRITTEN, this.revision);
     }
+    if (payload.name.indexOf("ph_composer.windows.") === 0) return this.windowAction(payload);
     if (payload.name === "ph_composer.library.copy") return this.libraryCopy(payload);
     if (payload.name.indexOf("ph_composer.assemblies.") === 0 ||
         payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) return this.inventoryAction(payload);
@@ -452,6 +625,7 @@
     return result;
   };
   Host.prototype.libraryQuery = function (payload) {
+    if (payload.name === "ph_composer.library.export_preview") { this.libraryExportPreview(payload); return; }
     var params = payload.params, rows = this.libraryCatalogs[params.provider_id] || [];
     var generation = this.libraryGenerations[params.provider_id], outcome;
     if (payload.session !== this.session) outcome = refused("session.inactive", "The Model changed.", null);
@@ -470,6 +644,26 @@
     this.window.setTimeout(function () {
       self.publish("query.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
     }, 0);
+  };
+  Host.prototype.libraryExportPreview = function (payload) {
+    var params = payload.params, selected = params.records || [], sources = [
+      ["materials", "ph_composer.assemblies.material", this.materials],
+      ["frames", "ph_composer.windows.frame", this.windows.frames],
+      ["glazings", "ph_composer.windows.glazing", this.windows.glazings],
+      ["psi_install_types", "ph_composer.windows.psi_install_type", this.windows.psi_install_types]
+    ];
+    var kinds = sources.filter(function (entry) { return entry[2]; }).map(function (entry) {
+      return { kind: entry[0], count: (entry[2].records || []).filter(function (record) {
+        return params.scope !== "selected" || selected.some(function (row) {
+          return row.record_kind === entry[1] && row.id === record.id;
+        });
+      }).length };
+    });
+    this.publish("query.result", { request_id: payload.request_id, session: payload.session,
+      outcome: payload.session !== this.session ? refused("session.inactive", "The Model changed.", null) : {
+        status: "completed", revision: this.revision,
+        value: { kinds: kinds, omissions: [], projection_digest: "preview", revision: this.revision }
+      } });
   };
   Host.prototype.libraryView = function (payload) {
     var params = payload.params, verb = payload.name.split(".").pop();

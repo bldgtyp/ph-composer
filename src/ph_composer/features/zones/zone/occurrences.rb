@@ -97,6 +97,7 @@ module PhComposer
         entities = Array(path)
         face = entities.last
         return nil unless face.is_a?(Sketchup::Face)
+        return nil if entities.any? { |entity| cutting_component?(entity) }
 
         # The innermost Zone on the path, because that is the one whose Faces this Face is among:
         # `walk_faces` stops descending at a nested Zone, so an outer Zone does not own it. Taking
@@ -151,6 +152,9 @@ module PhComposer
           if ZONE_STORE.read(entity)
             raise_target("target.wrong_hierarchy", "The Face path crosses another Zone.")
           elsif entity.is_a?(Sketchup::ComponentInstance)
+            if cutting_component?(entity)
+              raise_target("target.wrong_kind", "Cutting component geometry is not a Zone Face.")
+            end
             raise_target("target.shared_definition", "That Face is inside shared component storage.") if mutable
             current = entity.definition.entities
           elsif entity.is_a?(Sketchup::Group)
@@ -222,6 +226,7 @@ module PhComposer
       def walk_zones(entities, path, transform, shared, inside_zone, found)
         entities.each do |entity|
           next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+          next if cutting_component?(entity)
 
           child_path = path + [entity.persistent_id]
           child_transform = transform * entity.transformation
@@ -264,7 +269,7 @@ module PhComposer
             found << FaceOccurrence.new(:entity => entity, :zone => zone, :path => child_path,
                                         :transform => transform)
           elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
-            next if ZONE_STORE.read(entity)
+            next if ZONE_STORE.read(entity) || cutting_component?(entity)
 
             child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
             walk_faces(child_entities, child_path, transform * entity.transformation, zone, found)
@@ -272,11 +277,15 @@ module PhComposer
         end
       end
 
+      def cutting_component?(entity)
+        entity.is_a?(Sketchup::ComponentInstance) && entity.definition.behavior.cuts_opening?
+      end
+
       def raise_target(code, message)
         raise CodedError.new(code, message)
       end
       private_class_method :resolve_face_path, :shared_storage?, :walk_zones, :walk_faces, :raise_target,
-                           :zone_for_path
+                           :zone_for_path, :cutting_component?
     end
   end
 end

@@ -9,7 +9,17 @@ explicit all/selected scope and new/update identity, while native save and revie
 the destination. Reverse mappings publish local IDs and only declared wire properties. An
 optional `record_origins` envelope section carries informational allowlisted source IDs and a
 provider-kind label, never private setup or source snapshots. The reader ignores this section;
-semantic fingerprints remain unchanged. Implementation and independent review are still pending.
+semantic fingerprints remain unchanged. Backend implementation is frozen: both Ruby versions pass
+146 affected tests and 845 assertions, including actual file-provider load/copy into a fresh Model,
+invalid update destination semantics, cancellation, stage ownership and destination preservation.
+Scoped RuboCop passes twelve files. The independent backend/transport review is in progress.
+
+The panel carries FileExport results in a separate session-correlated slot. Both Ruby versions
+pass 29 panel tests and 93 assertions; 26 request/panel JavaScript tests pass. The explicit scope
+and identity form is integrated and passes four focused lifecycle tests plus the affected inventory
+suite. It defaults to all supported local definitions regardless of filters, offers selected
+records from the actual grid selection, and rereads its preview when the Model revision changes.
+Native dialog and integrated gates remain open.
 
 ## Starter data
 
@@ -26,6 +36,27 @@ The authored data has its separate CC0 notice and is excluded from the RBZ; lice
 documentation distinguishes it from the AGPL code. Full integrated gates are still pending.
 
 ## Resume
+
+The local separate-extension example now passes four tests and 36 assertions on both Rubies.
+These cover its shared immutable provider contract, an early-load subprocess with no core
+namespace, duplicate and incompatible registration, unavailable kinds and public copy/read-back
+with unchanged core composition. Its contributor walkthrough is documented. Native installation
+succeeds in the fresh `146076e` process (PID 91277, bridge 50967): a separate
+`SketchupExtension` loads from the Plugins directory and the panel-closed public walkthrough
+commits and reads back its synthetic Material. Private proof: `example-provider-native-proof.json`.
+No PH-Composer file was edited for registration. Final E09 provenance and the external repository
+remain open.
+
+The independent export review reproduced schema-valid semantic drift in a third-party reverse
+mapper. Export now captures a detached mapped baseline before calling reverse and requires exact
+mapped round-trip equality. The registered-adapter regression refuses before the save dialog and
+preserves file, Model and revision. Both Ruby versions pass 43 affected tests and 377 assertions;
+two changed files pass RuboCop. Independent drift and fresh-Model round-trip verification passes
+on both Rubies, closing the finding. No other confirmed backend/transport/form finding remains.
+
+The export form's five focused tests and actual selected-grid/filter regression pass. The combined
+Window/export browser workflow passes all four widths, including the preview's explicit file-write
+refusal and Cancel with no extra Model action. Log: `/tmp/phc-p209-window-export-browser.log`.
 
 Complete export projection/write/round-trip tests and coherent independent review. Prepare the
 separate-extension example under tools, prove load-order diagnostics and shared provider contract,

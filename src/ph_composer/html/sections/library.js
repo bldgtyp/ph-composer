@@ -1,11 +1,16 @@
 /* Model-owned Material and Attached-zone definitions occupy peer work surfaces. */
 PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subtabs", "material_form",
-  "library_forms", "fields", "library_sidebar"],
-  function (panel, snapshot, ui, Subtabs, MaterialForm, forms, fields, Sidebar) {
+  "library_forms", "fields", "library_sidebar", "library_export"],
+  function (panel, snapshot, ui, Subtabs, MaterialForm, forms, fields, Sidebar, ExportForm) {
   "use strict";
   var MATERIALS = "ph_composer.assemblies.materials";
   var ATTACHED = "ph_composer.zones.faces.attached_zone";
-  var pages = Object.create(null), current;
+  var pages = Object.create(null), current, registered = [];
+  function registerSurface(spec) {
+    if (registered.some(function (entry) { return entry.id === spec.id;
+      })) throw new Error("Duplicate Library surface");
+    registered.push(spec);
+  }
   var categoryClasses = { warm: "category-warm", rose: "category-rose", wood: "category-wood",
     neutral: "category-neutral", blue: "category-blue", violet: "category-violet" };
   var materialColumns = [["name", "Name"], ["color", "Color"], ["category", "Category"],
@@ -17,7 +22,8 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
   function guard(view) {
     if (!view) return null;
     if (view.forms.some(function (form) { return !form.root.hidden; })) return "Finish or cancel the open form.";
-    return view.sidebar.guard() || view.material.guard() || view.attached.guard();
+    var extra = (view.extra || []).map(function (entry) { return entry.view.guard(); }).filter(Boolean)[0];
+    return extra || view.sidebar.guard() || view.material.guard() || view.attached.guard();
   }
   function build(root, state, send) {
     var view = { session: state.session, categories: [], forms: [] };
@@ -35,25 +41,42 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
     root.appendChild(ui.element("p", "muted", "Definitions stored in this model."));
     view.materialRoot = ui.element("section", "phc-inventory-surface");
     view.attachedRoot = ui.element("section", "phc-inventory-surface");
+    view.extra = registered.map(function (spec) {
+      var surface = ui.element("section", "phc-inventory-surface");
+      return { spec: spec, root: surface, view: spec.build(surface, state, send) };
+    });
     view.tabs = new Subtabs({ label: "Library definitions", state: page, stateKey: "surface",
       tabs: [{ id: "materials", label: "Materials", surface: view.materialRoot },
-        { id: "attached_zones", label: "Attached zones", surface: view.attachedRoot }],
+        { id: "attached_zones", label: "Attached zones",
+          surface: view.attachedRoot }].concat(view.extra.map(function (entry) {
+          return { id: entry.spec.id, label: entry.spec.label, surface: entry.root };
+        })),
       guard: function () { return guard(view); }, refused: notice, changed: changed });
     root.appendChild(view.tabs.root);
     root.appendChild(view.materialRoot);
     root.appendChild(view.attachedRoot);
+    view.extra.forEach(function (entry) { root.appendChild(entry.root); });
     view.newMaterial = new MaterialForm(state.session, send, changed);
     view.duplicate = new forms.DuplicateForm(state.session, send, changed);
     view.replacement = new forms.ReplacementForm(state.session, send, changed);
     view.color = new forms.ColorForm(state.session, send, MATERIALS + ".update", changed);
     view.newAttached = new forms.AttachedForm(state.session, send, changed);
     view.deleteAttached = new forms.AttachedDelete(state.session, send, changed);
+    view.exportForm = new ExportForm(state.session, send, changed);
     view.forms = [view.newMaterial, view.duplicate, view.replacement, view.color, view.newAttached,
-      view.deleteAttached];
+      view.deleteAttached, view.exportForm];
     view.createMaterial = ui.button("+ New Material", function () { if (allowed()) view.newMaterial.open(); });
     view.createAttached = ui.button("+ New Attached zone", function () { if (allowed()) view.newAttached.open(); });
     view.headingRow.appendChild(view.createMaterial);
     view.headingRow.appendChild(view.createAttached);
+    view.exportLibrary = ui.button("Export library", function () {
+      if (!allowed()) return;
+      var selection = view.selection();
+      view.exportForm.open(selection ? selection.ids.map(function (id) {
+        return { record_kind: selection.record_kind, id: id };
+      }) : []);
+    });
+    view.headingRow.appendChild(view.exportLibrary);
     function category(record) {
       return view.categories.filter(function (entry) { return entry.id === record.values.category; })[0] ||
         { label: record.values.category || "None", tone: "neutral" };
@@ -130,12 +153,29 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
     view.controls = view.material.controls;
     view.attachedEdits = view.attached.edits;
     view.forms.forEach(function (form) { root.appendChild(form.root); });
+    view.selection = function () {
+      var active = view.tabs.active, recordKind, inventory;
+      if (active === "materials") { recordKind = "ph_composer.assemblies.material"; inventory = view.material; }
+      else {
+        var entry = view.extra.filter(function (item) { return item.spec.id === active; })[0];
+        if (!entry || !entry.spec.recordKind) return null;
+        recordKind = entry.spec.recordKind; inventory = entry.view.inventory;
+      }
+      inventory.grid.sync();
+      var ids = [], seen = Object.create(null);
+      inventory.grid.matrix().forEach(function (row) { row.forEach(function (cell) {
+        var id = cell && cell.row.record && cell.row.record.id;
+        if (id && !seen[id]) { seen[id] = true; ids.push(id); }
+      }); });
+      return { record_kind: recordKind, ids: ids };
+    };
     view.dispose = function () {
       view.tabs.dispose();
       view.forms.forEach(function (form) { form.dispose(); });
       view.sidebar.dispose();
       view.material.dispose();
       view.attached.dispose();
+      view.extra.forEach(function (entry) { entry.view.dispose(); });
     };
     return view;
   }
@@ -173,6 +213,7 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
     view.color.refresh(state, Boolean(payload), records);
     view.newAttached.refresh(state);
     view.deleteAttached.refresh(state);
+    view.exportForm.refresh(state);
     view.material.externalBusy = Boolean(view.sidebar.guard()) || view.forms.some(function (form) {
       return form.busy ? form.busy() : form.requests.busy();
     });
@@ -180,15 +221,22 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
     view.sidebar.refresh(state, {}, Boolean(payload));
     view.material.render(state);
     view.attached.render(state);
+    view.extra.forEach(function (entry) { entry.view.render(state); });
     view.createMaterial.disabled = !payload || view.material.busy();
     view.createAttached.disabled = !view.newAttached.enabled || view.attached.busy();
     view.createMaterial.hidden = view.tabs.active !== "materials";
     view.createAttached.hidden = view.tabs.active !== "attached_zones";
     var count = view.tabs.active === "materials" ? records.length : view.attached.records.length;
+    var extra = view.extra.filter(function (entry) { return entry.spec.id === view.tabs.active; })[0];
+    if (extra) count = extra.view.records.length;
     view.heading.textContent = "Library · " + count;
   }
   panel.navigationGuard("library", function (next) { return next === "library" ? null : guard(current); },
     panel.notify);
-  panel.section("library", render, { pane: "library" });
-  return { render: render };
+  panel.section("library", render, { pane: "library", onNavigate: function (root, intent) {
+    if (root._view && intent.kind) root._view.tabs.select(intent.kind);
+  } });
+  return { render: render, registerSurface: registerSurface, selection: function () {
+    return current ? current.selection() : null;
+  } };
 });

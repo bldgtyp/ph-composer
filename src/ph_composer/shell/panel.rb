@@ -145,6 +145,7 @@ module PhComposer
         when "action.invoke" then invoke(payload)
         when "view.invoke" then view(payload)
         when "query.invoke" then query(payload)
+        when "file_export.invoke" then file_export(payload)
         when "preferences.set" then set_preference(payload)
         when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
           export(type, payload)
@@ -155,6 +156,7 @@ module PhComposer
         when "action.invoke" then publish_result(payload, UNEXPECTED)
         when "view.invoke" then publish_view(payload, VIEW_FAILED)
         when "query.invoke" then publish_query(payload, QUERY_FAILED)
+        when "file_export.invoke" then publish_file_export(payload, EXPORT_FAILED)
         when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
           publish_export(payload, EXPORT_FAILED)
         when "preferences.set"
@@ -243,6 +245,23 @@ module PhComposer
       def publish_query(payload, outcome)
         publish("query.result", "request_id" => payload["request_id"], "session" => payload["session"],
                                 "outcome" => outcome)
+      end
+
+      # Registered local file commands use their export grant without a mutation sequence or snapshot refresh.
+      def file_export(payload)
+        session = Sessions.current
+        outcome = if session && payload["session"] == session.id
+                    API.export_file(:context => context_for(session), :name => payload["name"].to_s,
+                                    :params => payload.fetch("params", {}))
+                  else
+                    Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
+                  end
+        publish_file_export(payload, outcome)
+      end
+
+      def publish_file_export(payload, outcome)
+        publish("file_export.result", "request_id" => payload["request_id"], "session" => payload["session"],
+                                      "outcome" => outcome)
       end
 
       # Export acts on the Model the panel shows, like an action, but it is the shell's command: it opens a
