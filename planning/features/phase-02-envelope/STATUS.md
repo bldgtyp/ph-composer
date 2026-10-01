@@ -29,29 +29,29 @@ the top of each PRD.
 
 ## Current resume checkpoint
 
-Branch `codex/phase-02-envelope`, documentation checkpoint `1c5dfd2`; gross-area correction in progress.
-Shipping source `1dae77d` passes full CI on both Rubies: 991 tests / 6705 assertions,
-346 JS and 135 Python tests. Coverage 96.6% / 94.9% / 94.98%; all eight browser scripts and
-Chromium 88 runtime pass. Exact installed RBZ is `checkpoint-1dae77d.rbz`, SHA-256
-`8d2e72c73482d59a9b22c22affbbc170c38fd412ba28167d60285167e4492050`, 296 files,
-22,623,696 installed bytes. E15 has a passing structured native result. D2-8 defers P2-16 to
-Phase 5 against the deployed endpoint evidence. P2-09 and P2-11 native workflows are observed;
-full phase case consolidation remains pending. Two scoped browser selectors are committed since `1dae77d`. A shared geometry
-correction is independently reviewed and has not yet been installed.
+Branch `codex/phase-02-envelope`, shipping source `7932856`. Both Ruby full CI gates
+pass: 995 tests / 6725 assertions, 346 JS and 135 Python tests. Coverage is
+96.6% / 94.9% / 94.98%. Existing Chromium 88 and eight browser passes remain applicable
+because the correction changes no panel or Python assets. Exact installed 296-file RBZ is
+`checkpoint-7932856.rbz`, SHA-256
+`0c178acbf39842fe9d2206186e27051ba379c72fea6ce0d2fa62b0fa3751bf08`,
+22,624,647 installed bytes. Independent geometry review is clear.
 
-Current native batch: P2-12 Slice B, fresh normal SketchUp 26.1.188 / Ruby 3.2.2,
-PID 16514, bridge 61208, own `_private/host/envelope/p212b-native.skp`, initially unmodified
-root edit path, copied from the authored two-Zone reference fixture. E12 dependency baseline is
-captured before Slice B actions. The previous E15 provider configuration is removed; no outside
-provider or fault override remains. Exact installed-source checks still hold.
+P2-12 Slice B fresh normal SketchUp 26.1.188 / Ruby 3.2.2 replay passes cutting-descendant
+exclusion, both partial-glue refusals, full pairing, covered-side preservation and unchanged-
+geometry glue preview refusal. Native Undo/Redo restores both pairing and counterpart splits
+exactly. The replay found and corrected SDK cutter-adjusted area leaking into gross Face area;
+public glued hosts now report 12.0 m². Private evidence and safety checks are retained.
+Current own model: `_private/host/envelope/p212b-native.skp`, PID 21117 / bridge 61720;
+its probe changes are saved separately in `p212b-7932856-observed.skp`. No outside provider
+or fault override is installed. See [Slice B evidence](evidence/p2-12-zone-cutting-rules.md).
 
-Native reads, partial-glue refusals, full pairing and covered-side preservation are observed.
-SDK cutter-adjusted area leaked into gross Face area; its loop-based correction passes
-both-Ruby focused checks and independent review. Full gates and fresh installed replay
-remain. See [Slice B evidence](evidence/p2-12-zone-cutting-rules.md).
-Next: complete this correction and replay, then required affected-case closure. The final human batch contains the inaccessible native Option Move-copy observation,
-held-modal context workflow and outside-example repository decision. Slice C, P2-13 and P2-14
-still wait on Move-copy. Keep these gates open; no placement or Aperture implementation yet.
+E15 has a passing structured result; D2-8 defers P2-16 to Phase 5. P2-09/P2-11 native
+workflows are observed. Complete E12 and consolidated E01 to E14 / E17 remain open.
+Next autonomous work: remaining Assembly / assignment / export and affected Phase 1 host checks.
+The final human batch contains native Option Move-copy, held-modal context workflow and
+outside-example repository decision. Slice C, P2-13 and P2-14 still wait on Move-copy.
+Keep these gates open; no placement or Aperture implementation yet.
 
 ## Earlier implementation checkpoints
 
@@ -130,7 +130,7 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 | [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented and reviewed; full shipping gates pass; native export checks observed; outside repository approval and attestation open | [Export evidence](evidence/p2-09-library-export.md) |
 | [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented and reviewed; integrated gates and native records Undo/Redo/reopen pass; final attestation open | [Window records evidence](evidence/p2-10-window-records.md) |
 | [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow observed; final attestation open | [Builder evidence](evidence/p2-11-window-type-builder.md) |
-| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A partial; Slice B implemented and reviewed; integrated gates pass, native replay open; Slice C blocked on native Move Copy | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
+| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A partial; Slice B implemented and reviewed; integrated gates and Slice B native replay pass; Slice C blocked on native Move Copy | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Scoped | |
 | [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
 | [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Implemented, native E15 passes | 2026-10-01 |
@@ -193,4 +193,4 @@ Save, single native Undo for each and warning-free four-kind semantic export/rea
 P2-16 and roadmap 2.5 move to Phase 5 under the previously accepted D2-8 rule. Endpoint
 evidence is [connection decision](evidence/p2-16-deferral.md). Phase 2 remains in progress:
 Slice B affected native replay, Move-copy, placement, Unit aggregates, Aperture translation
-and consolidated E01 to E14 / E17 acceptance remain. Next autonomous work: Slice B replay.
+and consolidated E01 to E14 / E17 acceptance remain. Next autonomous work: remaining Assembly, assignment, export and affected Phase 1 checks.
