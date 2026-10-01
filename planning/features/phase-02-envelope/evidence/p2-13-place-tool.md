@@ -165,3 +165,18 @@ the two seeded repair examples and the passing step-1 readback. Place was stoppe
 started to clear both measurement overrides. The Wall baseline is saved with two Units; Place
 is active at sill center. Private `p213-restart-before-step-2-reset.json` and
 `p213-restart-step-2-ready.json` record the reset. The left side is clear for the offset check.
+
+## Restart step 2 verified
+
+Ed reports successful `offset=24"` placement on the left edge, Escape stopping Place, and
+successful Roof placement after restarting without sill or offset binding. Live readback
+confirms Wall Unit 48975 has left/right bounds 0.1596 / 1.0596 m, so its sill-center anchor is
+0.6096 m (24 inches) from the host's left edge. Its opening bottom is 0.9594883 m, distinct
+from the previous 0.9 m override. Roof Unit 48976 lies entirely in the host plane Z = 6 m,
+with a valid Roof host reference and no findings. It uses the selected Repair examples Type;
+that Type has the same valid 0.9 x 1.1 m geometry. Both new Units are valid and Place remains
+active after Roof placement. Exact rows/bounds are in `p213-restart-step-2.json`.
+
+Steps 1 and 2 pass on the fresh Model. Steps 3 to 5 (native refusals, active-tool Model switch,
+and viewport Colour-by including hidden-tag follow-up) remain open. No source changed and the
+previous offline/independent-review gates still apply.

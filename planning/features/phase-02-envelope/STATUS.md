@@ -97,7 +97,8 @@ without findings. Ed's actual Line-tool split preserves both Wall classification
 area, Unit records, geometry and glue; Re-host passes exact native Undo/Redo. E12 is
 current-host verified. P2-13 is implemented, reviewed, full-gated and installed. Schedule
 Locate/start, native measurement parsing, human hover/repeated Wall placement and exact 900 mm
-sill placement pass; exact offset and Roof readback plus the remaining E13 gestures are pending.
+sill placement, exact 24-inch anchor offset, Escape and Roof placement pass. E13 steps 3 to 5
+and hidden-tag rendering remain pending.
 Autonomous canvas gestures remain blocked by the
 computer-use controller. P2-14 awaits E13. The prepared manual batch and exact source/package
 provenance are in [P2-13 evidence](evidence/p2-13-place-tool.md). See
