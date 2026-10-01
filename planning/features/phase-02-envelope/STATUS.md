@@ -74,30 +74,32 @@ Remaining work: held-Classify replay, Slice C and downstream implementation, Ass
 assignment / export attestation, affected Phase 1 checks and integrated final acceptance.
 Public placement is implemented in source; native placement acceptance and Aperture implementation remain open.
 
-Slice C source foundations are implemented and independently reviewed, with the installed host
-fixture deliberately unchanged while the human held-Classify gesture is pending. Guarded reference
-removal is committed in `aca2e9b`. Unit records/occurrences, pane/anchor and placement geometry,
-native definition writing, the primary-definition index, copy planning and rollback capture pass
-74 focused tests / 680 assertions on both Rubies; 26 changed/new Ruby files pass lint. The broader
-Ruby suite before the two review fixes passes on both versions, 1076 / 7455. Both review findings
-are corrected and confirmed closed. Follow-on public placement, Unit reads and used-Type
-propagation are now wired into source registration and independently reviewed; five integration
-findings are fixed and confirmed closed. Complete Ruby suites pass on both versions, 1156 tests /
-8299 assertions; 78 focused checks / 800 assertions and scoped 35-file lint pass. The generated
-API reference is current at committed checkpoint `103eb8c`. These changes are not installed;
-the full script walkthrough and native Slice C/E12 acceptance remain open. Follow-on Remove/Re-host
-actions are registered in uncommitted source; their steps pass 14 tests / 88 assertions on both
-Rubies, and the public Unit action suite passes 13 tests / 148 assertions on Ruby 3.2.2, including
-incoming-reference refusal. Batch Swap and Reset-to-Type are now registered; the current public
-action suite passes 16 tests / 184 assertions on Ruby 3.2.2. Used-Type deletion retargets Units or
-removes them explicitly, with primary-pointer cleanup and unmanaged-definition preservation;
-15 dedicated tests / 103 assertions pass on both Rubies. The panel-closed placement/copy/resize/
-swap walkthrough passes offline. New flipped Type and Restore from stamped panes are registered;
-the coherent independent repair review is complete, with all reproduced findings closed.
-Generated API discovery is current. An immutable source snapshot passes full CI on both Rubies,
-1261 Ruby tests / 9082 assertions, 346 JavaScript tests and 135 Python tests. Native Slice C and
-repair acceptance remain open; P2-13/P2-14 have not advanced past their entry gates.
-See [Unit foundation evidence](evidence/p2-12-unit-geometry.md).
+Slice C source is committed, independently reviewed and installed at signed checkpoint
+`d376684`. Records, occurrence reads, generated definitions, public placement, used-Type
+propagation, copy identity repair, Remove, Re-host, Swap, Reset, New flipped Type, Restore
+and used-Type deletion retargeting are registered. All reproduced review findings are closed.
+Full CI passes on both Rubies: 1261 tests / 9082 assertions, 346 JavaScript tests and 135
+Python tests. Final Ruby coverage is 96.9% of 12,966 lines across 209 files.
+
+Fresh-process wall/roof placement, three-anchor Type resize, Swap, scaled/detached Reset,
+New flipped Type, Restore, Remove, Re-host and used-Type replacement deletion pass native
+Undo/Redo. Scale has no grips. Overhang, overlap, missing Zone, oversized Type edit, Surface
+host and merged-pane Restore refuse without writes. Solve reports the glued-unit partial
+match rather than cutting it. The panel-closed copy/resize/swap walkthrough and actual native
+Cut/Paste In Place across Zones pass. The pasted Unit retains its record, loses glue, and
+re-hosts after fixture positioning.
+
+Fresh-process readback preserves every public authoring row. A bounded second roundtrip
+also preserves every captured native definition, material, matrix, record and glue field.
+Inside-definition Reset, actual foreign-Model paste with unknown-Type Swap recovery, and
+used-Type deletion with explicit Unit removal all pass native Undo/Redo. Five Units are saved
+without findings. Native canvas clicks currently fail in the
+controller with `noWindowsAvailable`; screenshots, keys, menu commands and bridge actions
+work. The actual Line-tool split remains a batched manual item. The actual Line split/Re-host is now the remaining native-edit matrix item. The controller
+still fails after restart and reset, so this is the current real blocker. E12 and downstream
+P2-13/P2-14 entry gates remain open. See
+[Unit source evidence](evidence/p2-12-unit-geometry.md) and
+[native Unit evidence](evidence/p2-12-window-unit.md).
 
 ## Earlier implementation checkpoints
 
@@ -173,7 +175,7 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 | [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented and reviewed; full shipping gates pass; native export checks observed; approved outside repository published; final attestation open | [Export evidence](evidence/p2-09-library-export.md) |
 | [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented and reviewed; integrated gates and native records Undo/Redo/reopen pass; final attestation open | [Window records evidence](evidence/p2-10-window-records.md) |
 | [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow observed; final attestation open | [Builder evidence](evidence/p2-11-window-type-builder.md) |
-| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A observed; Slice B implemented/reviewed with native replay passing; Slice C source underway, integration and acceptance open | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
+| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A/B verified; Slice C implemented/reviewed/installed; native actions and roundtrips pass; Line split control blocker, E12 open | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Scoped | |
 | [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
 | [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Implemented, native E15 passes | 2026-10-01 |

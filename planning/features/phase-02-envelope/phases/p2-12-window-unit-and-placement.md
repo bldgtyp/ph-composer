@@ -1,7 +1,7 @@
 # P2-12: the window unit and placement operations
 
 DATE: 2026-09-30
-STATUS: Slice A current-host observations complete; Slice B implemented, reviewed and current-host verified; Slice C source work underway, integration and acceptance open.
+STATUS: Slice A and B current-host verified; Slice C implemented, reviewed and installed; native actions and roundtrips pass; actual Line-tool split blocked by controller, E12 open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -54,23 +54,19 @@ A result that contradicts a PRD rule stops the stage and goes to DECISIONS.
 
 ## Slice C: the unit
 
-Current source checkpoint: Unit records/full-Model occurrence reads, pure pane/anchor and placement
-geometry, definition writing, primary pointers, identity planning and rollback capture are implemented
-and independently reviewed. Final focused checks pass on both Rubies, 74 tests / 680 assertions;
-26 Ruby files pass lint. Guarded foundation reference removal is committed in `aca2e9b`.
-Public placement, bounded/snapshot Unit reads and used-Type propagation are now loaded by source
-registration and independently reviewed. Five integration review findings are corrected and
-confirmed closed. Both full Ruby suites pass, 1156 tests / 8299 assertions; scoped lint and the
-generated API reference pass. No new package is installed. Registered repair operations, the
-full script walkthrough and native acceptance are next. Follow-on uncommitted source now
-registers Remove, Re-host, batch Swap and Reset-to-Type, plus used-Type deletion retargeting and
-guarded primary cleanup. The panel-closed placement/copy/resize/swap walkthrough passes offline.
-New flipped Type and exploded-pane Restore are also registered. Independent review is complete;
-all reproduced findings are closed. Full CI passes on both Rubies, 1261 tests / 9082 assertions.
-No repair native acceptance is claimed. See
-[foundation and integration evidence](../evidence/p2-12-unit-geometry.md).
-The reference uses a root-to-instance path and Unit ID so an orphan remains addressable without
-inventing a Zone stamp. Full Slice C review and all placement/repair host gates remain open.
+Current source checkpoint `d376684` is signed, independently reviewed and installed. All
+Slice C operations below are registered, including used-Type deletion retargeting. The public
+API reference is current. Full CI passes on both Rubies, 1261 tests / 9082 assertions;
+346 JavaScript and 135 Python tests pass. See
+[source evidence](../evidence/p2-12-unit-geometry.md).
+
+Current-host Slice C verification is in progress. Placement, three-anchor Type resize, Swap,
+scaled/detached Reset, New flipped Type, Restore, Remove, Re-host and used-Type replacement
+deletion pass native Undo/Redo. Blocking cases, the public walkthrough and actual Cut/Paste
+In Place across Zones pass. Fresh-process reopen, inside-definition Reset, foreign-Model paste with unknown-Type Swap
+and explicit used-Type removal also pass. The actual Line-tool split/Re-host remains open. The controller cannot currently click the viewport; that
+split is a batched manual item. See [native evidence](../evidence/p2-12-window-unit.md).
+The Unit reference uses a root-to-instance path and Unit ID, including orphans. E12 remains open.
 
 1. **Records.** The unit record on the instance, the definition mark and the pane stamp per
    CONTRACTS section 2, with `Records::EntityStore`, and the `ph_composer.windows.unit` reference
