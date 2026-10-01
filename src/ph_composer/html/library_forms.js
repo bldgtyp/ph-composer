@@ -77,7 +77,7 @@ function (RecordForm, request, snapshot, unitFields, fields, ui, tables, viewCon
       pendingText: "Deleting...", failureText: "The record was not deleted.", destructive: true, changed: changed });
     this.uses = ui.element("p");
     this.root.appendChild(this.uses);
-    this.select = labelled(this.form, "Replacement material", ui.element("select"));
+    this.select = labelled(this.form, "Replacement " + this.options.label.toLowerCase(), ui.element("select"));
     this.select.addEventListener("change", function () { self.error.textContent = "";
     self.updateButton(); });
     this.finish();

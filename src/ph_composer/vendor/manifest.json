@@ -101,9 +101,9 @@
       "sha256": "bb3d68f5f49d00f676b896920deecd156f199a4f7836ac4a62fb7aefdfca5a4c"
     },
     "html/library_forms.js": {
-      "bytes": 32456,
+      "bytes": 32483,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "232947c9340da07f31cae6789456585ff4f8e6bbc14b4b7d99d36ec80b0d71bf"
+      "sha256": "f3461b7699e4a17487bcbf054a883f0d926baeaf57c6c6e24456ce0206ceea36"
     },
     "html/library_rows.js": {
       "bytes": 6727,
