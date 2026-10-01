@@ -106,3 +106,20 @@ Native wall/roof placement, exact typed placed offsets, repeated placement, refu
 Model-switch behavior and viewport/hidden-tag rendering are still pending. Held-Classify and
 consolidated Phase 2 acceptance remain later gates. SketchUp 2023, Windows, public distribution
 and certification claims are outside this current-host proof.
+
+## Human continuation, 2026-10-01 15:09
+
+Ed reports batch steps 1 and 2 complete and supplies four native screenshots. Live readback
+records eight Units: the two seeded repair examples and six new valid Wall Units. The first
+three new occurrences establish repeated placement; the tool remains active. Two later new
+Units have opening bottoms exactly 0.9 m above the host base, establishing typed sill placement.
+All six new Units have no findings. Native hover outlines are visible in the supplied images.
+Private exact rows/bounds are in `p213-human-steps-1-2.json` and `p213-human-geometry.json`.
+
+The offset screenshot shows `offset=24"` in the Measurements field, but readback has no Unit
+with a sill-center anchor 0.6096 m from the left edge. The leftmost new Unit's anchor is
+0.5501066 m from that edge. Exact offset placement is therefore unconfirmed; field contents
+alone do not establish a committed measurement or placed position. The live readback contains
+no Roof Unit, so retained roof-placement evidence is also pending. This is an acceptance
+evidence gap, not a confirmed product defect. Preserve the live model while Ed finishes the
+batch. Steps 3 to 5 remain pending; do not close E13 or advance P2-14 yet.
