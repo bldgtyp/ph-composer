@@ -1,10 +1,7 @@
 # Face assignment: status
 
 DATE: 2026-10-01
-STATUS: In progress. Phase 1 scope (classification, the Classify tool, Suggest classification, Reverse,
-Attached zones, face Colour-by modes, the Overview faces table) merged to main through PR #3 and
-PR #6 and accepted in the archived Phase 1 packet. Assembly assignment is Phase 2. Ed's
-full Phase 2 implementation authorization was given 2026-10-01.
+STATUS: Implemented on branch; named acceptance consolidated; Phase 2 integration/handoff remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -21,8 +18,7 @@ assignment, planned in the [Phase 2 packet](../README.md): stage
 [P2-05](../phases/p2-05-assign-assemblies-to-faces.md) for the write, usage, routes and Colour-by
 mode, and [P2-06](../phases/p2-06-construction-export.md) for the export rows. [PLAN.md](PLAN.md)
 carries the allocation and the PRD carries the Phase 2 amendments. P2-05 and P2-06 are
-implemented; complete native acceptance remains open. Continue the outstanding assignment
-gestures and export checks against the installed source in [Phase 2 status](../STATUS.md).
+implemented. E06 passes; E05 retains only affected held-Classify integration. Follow [Phase 2 status](../STATUS.md).
 
 ## Blockers
 
@@ -78,3 +74,7 @@ spike passed; it does not satisfy this feature's native lifecycle gate.
 | 2026-10-01 | D2-1 revised by Ed: definitions sit below Zones, and placed things above. See the [Phase 2 decisions](../DECISIONS.md). |
 | 2026-09-30 | Phase 2 planning: assembly assignment allocated to P2-05 and P2-06; PRD amended; packet moved under `features/phase-02-envelope/`. |
 | 2026-09-30 | PR #3 merge-set corrections implemented on the branch: code owner `src/ph_composer/features/zones/`, M1 to M4 fixed, native cases R01 to R04 pass ([evidence](../../../archive/phase-01-faces-and-zones/evidence/pr3-corrections-native.md)). |
+
+## Current Phase 2 checkpoint
+
+Implementation is delivered. E06 passes; E05 retains the affected A09 held-Classify gate. Historical notes above preserve their original frontiers. Continue only held-Classify and the final handoff in [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576). No packet is archived or released.

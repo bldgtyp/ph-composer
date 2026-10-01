@@ -175,6 +175,53 @@ actionable issue. Both full Ruby CI gates pass: 1,327 Ruby tests / 9,851 asserti
 168 Python tests and hostkit 9 tests / 30 assertions. All eight browser scripts pass at their
 specified widths; JS line coverage is 95.1%. Logs: `/tmp/phc-p217-draft-{ci-3.2.2,ci-2.7.2,ui,js-coverage}.log`.
 
-Fresh normal installed-package replay is pending. No earlier case is relabelled as observing
-this correction. Remaining host action: repeat dirty-Zone selection/table refusal and Save-focus,
-then prepare the held-Classify gesture after final evidence reconciliation.
+Fresh normal `f4f6576` replay passes in PID 45208, session
+`7e983bd9-8048-4de8-a1c1-15e11922068e`. RBZ SHA-256 is
+`c01eaa5593a467ba1e6ae30bfe3091850529c4290b40331508bd693ab771de26`:
+343 files, eight wheels, 7,418,375 archive bytes and 22,900,784 installed bytes. Every archive
+entry matches installation. The focus-only shipping delta changes no export, record or host-tool
+behavior, so their preceding normal-build observations retain their explicit provenance.
+
+At about 365 CSS px, both selection and table Assembly choices refuse the dirty Zone name,
+reset their selectors, scroll the Zone controls into view and focus Save. The next native Tab
+focuses Cancel. Dismissing the warning shows “Unsaved P217 fixed draft” still present. Native
+Cancel restores “east”. Complete public values after refusal and Cancel equal the baseline,
+including all catalogs, Faces, Units, glazed areas and settings. Private journals are
+`p214-p217-focus-fixed-{baseline,table-refused,cancelled}.json`. No shipping hotloads, providers or
+fault overrides are active. Native layout and focus are observed separately from test assertions.
+
+
+## Register consolidation at f4f6576
+
+The integrator checked each register assertion against its owning Tests, Host gate and Done
+clauses, the retained native journals, current source deltas and final gates. The
+[reuse matrix](p2-17-reuse-matrix.md) preserves original checkpoint identity and evidence type.
+E02, E03, E04, E06, E07, E08, E09, E10 and E11 pass their named acceptance requirements.
+This is a qualified evidence consolidation, not nine new current-package native executions.
+Extension payload injection, steel mathematical rules, malformed providers, rollback injection,
+secret filtering and other cases assigned to Tests remain offline evidence. Their required
+normal host workflows have separate native proof. Detailed conversion checks read actual
+references through the pinned stack; counts are secondary checks.
+
+E01 and E05 retain the affected A09 held-Classify gate. Their other named assertions are
+verified. E12 to E15 retain their passing outcomes. E17's dual-Ruby, coverage, browser/runtime,
+package, integrated export/reopen, nested-path/two-Model and cross-feature Undo/Redo assertions
+are verified across the explicitly identified batches. Held-Classify and the final document /
+hands-on handoff keep E17 open. No packet is archived and Phase 2 is not complete.
+
+Current full gates: 1,327 Ruby tests / 9,851 assertions on each Ruby, 360 JS tests, 168 Python
+tests, hostkit 9 / 30, no skips. Ruby coverage 96.9%, JS 95.1%, Python 95.27%. Current JS/full
+and browser logs are listed above; retained Ruby/Python coverage logs are
+`/tmp/phc-p214-lifecycle-ruby-coverage.log` and `/tmp/phc-p214-final-coverage.log`.
+The actual Chromium 88 runtime and pinned-wheel proofs are retained with their source scope.
+Installed size exceeds the 22 MB target but meets the 24 MB ceiling; no target waiver is implied.
+
+The append-only ledger records new native narrow-Overview/draft observations against snapshots
+captured before those actions. Historical evidence and the consolidation matrix remain distinct;
+missing old per-run provenance is never reconstructed. R01 shared native context-menu,
+R05 pending-state visibility and A04 cursor qualifications remain as previously accepted.
+
+Next action: prepare the isolated held-Classify fixture, capture its new build/session/baseline,
+then request only the physical held-button Model-switch and timer-driven edit-path gestures.
+After their readback, finish handoff documents and record Ed's hands-on findings. No main repo
+push, PR, merge, release, Windows, SketchUp 2023 or certification claim is authorized here.

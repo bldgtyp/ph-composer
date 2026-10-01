@@ -1,7 +1,7 @@
 # Assemblies and materials: status
 
 DATE: 2026-10-01
-STATUS: In progress
+STATUS: Implemented on branch; named acceptance consolidated; Phase 2 integration/handoff remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -52,3 +52,7 @@ findings are closed. Current-host proof and outstanding native gestures are reco
 | 2026-10-01 | D2-1 revised by Ed: definitions sit below Zones, and placed things above. See the [Phase 2 decisions](../DECISIONS.md). |
 | 2026-09-30 | Phase 2 planning: PRD amended for what Phase 1 merged, PLAN.md added, stale blockers cleared. Packet moved under `features/phase-02-envelope/`. Nothing implemented. |
 | 2026-09-18 | Architecture review run against `context/EXTENSIBILITY.md` and folded into the PRD, then removed. Q21: membranes ride in a `ph_composer` block on the construction's `user_data`. Q22: mixed and steel stud layers match PH-Navigator's Grasshopper route. Q23: named operations between assemblies and face-assignment, and a declared section dependency for the face-to-construction join. Also added: the membrane rule and validation rows, layer-keyed material identifiers, one spacing per Layer, `user_data` on both records. Open: the steel stud METr read-back in the PHX acceptance step, and whether the contributor registry can express a section dependency. |
+
+## Current Phase 2 checkpoint
+
+Implementation is delivered. E02–E04/E06 pass; E05 retains the affected A09 held-Classify gate. Historical notes above preserve their original frontiers. Continue only held-Classify and the final handoff in [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576). No packet is archived or released.

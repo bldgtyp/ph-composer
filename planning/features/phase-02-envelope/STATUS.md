@@ -27,7 +27,24 @@ the top of each PRD.
 4. Met: [implementation issue #14](https://github.com/bldgtyp/ph-composer/issues/14) created;
    the coordinating and feature packet issue headers are linked.
 
-## Current resume checkpoint
+## Current resume authority
+
+All in-scope implementation is delivered on `codex/phase-02-envelope`. Latest shipping signed
+checkpoint `f4f6576`; normal installed RBZ SHA-256
+`c01eaa5593a467ba1e6ae30bfe3091850529c4290b40331508bd693ab771de26`.
+Dual-Ruby full CI, coverage, browser/runtime and package gates pass. E02–E04 and E06–E15
+pass with their explicit retained/current provenance. E01/E05/E17 retain only the held-Classify
+native check and final handoff. Integrated export, exact full public-value fresh restart and
+staged artifact restart recovery pass. No packet is archived, merged or released.
+
+Fresh PID 45208 / session `7e983bd9-8048-4de8-a1c1-15e11922068e` confirms selection/table
+Assembly refusal preserves a dirty Zone draft, focuses Save and cancels without record changes.
+The integrated Model's public values are restored; providers/fault overrides are absent.
+Resume from [P2-17 evidence](evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576),
+[validated reuse matrix](evidence/p2-17-reuse-matrix.md) and [manual batch](MANUAL_BATCH.md).
+The following checkpoints retain historical provenance and do not describe current next work.
+
+## Historical resume checkpoint
 
 Branch `codex/phase-02-envelope`, installed checkpoint `43a1418`. Both Ruby full CI gates
 pass: 995 tests / 6725 assertions, 346 JS and 135 Python tests. Coverage is

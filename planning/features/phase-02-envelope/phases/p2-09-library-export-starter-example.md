@@ -1,7 +1,7 @@
 # P2-09: library file export, starter library, example provider
 
 DATE: 2026-09-30
-STATUS: In progress. Authorized 2026-10-01; final acceptance gates remain required.
+STATUS: Implemented on branch; named acceptance passes with qualified retained evidence; Phase 2 integration remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -79,3 +79,5 @@ Publishing back to any provider. A persistent cache. The window kinds (P2-15). T
 
 - E09 has evidence in `evidence/p2-09-library-export.md`.
 - The libraries packet STATUS records 2.2 as delivered and names what 2.4 and 2.5 still owe.
+
+Current consolidation and provenance: [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576).

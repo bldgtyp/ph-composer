@@ -1,7 +1,7 @@
 # P2-01: contracts and shared groundwork
 
 DATE: 2026-09-30
-STATUS: In progress. Authorized 2026-10-01; offline, review and native gates pending.
+STATUS: Implemented on branch; named assertions verified; affected A09 held-Classify remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -88,3 +88,5 @@ the pick point (P2-13) and the Zones cutting-instance rules (P2-12).
 - `make ci` passes on both Rubies with the manifests fresh.
 - E01 has evidence in `evidence/p2-01-groundwork.md` and the stage row reads
   `Implemented on branch`.
+
+Current consolidation and provenance: [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576).

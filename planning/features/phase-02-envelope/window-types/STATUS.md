@@ -1,7 +1,7 @@
 # Window Types and placement: status
 
 DATE: 2026-10-01
-STATUS: Implementation in progress
+STATUS: Implemented on branch; named acceptance consolidated; Phase 2 integration/handoff remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -12,7 +12,7 @@ Window Type, grid, Installs and model-settings records are implemented in source
 reviewed. Focused tests pass on Ruby 2.7.2 and 3.2.2, 27 tests / 616 assertions. See
 [record evidence](../evidence/p2-10-window-records.md). Installed `146076e` passes integrated gates,
 seven public commits with exact native Undo/Redo and fresh-process inventory persistence.
-Final structured E10 attestation remains open.
+E10/E11 acceptance is consolidated in P2-17 with original host provenance.
 
 P2-11 screens are implemented in source. Focused checks and browser workflows at four widths pass;
 independent review is closed; the native Builder workflow, exact Undo/Redo journals and fresh
@@ -29,7 +29,7 @@ P2-15 library adapters and native E15 pass. See [E12](../evidence/p2-12-window-u
 
 ## Next step
 
-Consolidate E10/E11 observations and the remaining Phase 2 register through P2-17. The Window
+E10/E11 observations are consolidated through P2-17. The Window
 implementation stages are delivered on branch. Held-Classify and the integrated final workflow
 remain separate checks. Follow the owning [PLAN.md](PLAN.md) and stage entry gates.
 
@@ -55,3 +55,7 @@ Phase 2 integration remain open.
 | 2026-09-18 | Architecture review run against `context/EXTENSIBILITY.md` and folded into the PRD, then removed. Q21: a unit id, and a copy gets its own at the feature's next mutation, a recorded exception to spaces Q20. Q22: Make unique is a detached-definition finding with Reset to type; Restore unit is a limited repair. Q23: g-value 0 is outside honeybee-schema's range and is disclosed. Q24: psi-install exports into the frame elements, no aperture install types, so PHX synthesizes no variant window types. Q25: seams restated against assemblies Q23 and spaces Q19 and Q22; no Zone stamp on the unit. Q26: the host Face exports gross, and the cut opening is measured in the spike. Also added: `user_data` on five records, a deterministic construction identifier, three validation rows, the Frame segment rename repaired. |
 
 | 2026-10-01 | P2-10 source and independent review complete; integrated/native gates open. P2-12 host investigations started; native Move-copy remains a batched manual item. |
+
+## Current Phase 2 checkpoint
+
+Implementation is delivered. E10–E15 pass. Historical notes above preserve their original frontiers. Continue only held-Classify and the final handoff in [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576). No packet is archived or released.

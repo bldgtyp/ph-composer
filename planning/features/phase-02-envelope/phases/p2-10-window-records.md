@@ -1,7 +1,7 @@
 # P2-10: window product and Window Type records
 
 DATE: 2026-09-30
-STATUS: In progress. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: Implemented on branch; named acceptance passes with qualified retained evidence; Phase 2 integration remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -96,3 +96,5 @@ of the three kinds (P2-15).
 
 - E10 has evidence in `evidence/p2-10-window-records.md`.
 - `context/CONTRACTS.md` describes the settings primitive. `make ci` passes on both Rubies.
+
+Current consolidation and provenance: [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576).

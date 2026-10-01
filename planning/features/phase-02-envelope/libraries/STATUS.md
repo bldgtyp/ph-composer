@@ -1,7 +1,7 @@
 # Libraries: status
 
 DATE: 2026-09-30
-STATUS: In progress, authorized 2026-10-01
+STATUS: Implemented on branch; named acceptance consolidated; Phase 2 integration/handoff remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -30,7 +30,7 @@ including unused local copies and excluding paths and raw snapshots. Final case 
 open. See [seam evidence](../evidence/p2-07-library-seam.md) and
 [sidebar evidence](../evidence/p2-08-library-sidebar.md).
 
-P2-09 registered file export is in implementation. Twelve generic starter Materials are authored
+P2-09 registered file export is implemented and accepted with retained native provenance. Twelve generic starter Materials are authored
 from public DOE guidance and original NIST measurements, with qualifications and CC0 notice;
 the reader admits all twelve without warnings. The outside provider will be prepared under
 `tools/examples/` before the separate repository approval is requested in Ed's final batch.
@@ -84,3 +84,7 @@ At E15 closure, D2-8 defers section 2.5 to Phase 5. The production endpoint stil
 desktop catalog shape; the neutral routes are absent. P2-16 scope is unchanged. See
 [endpoint evidence](../evidence/p2-16-deferral.md). No connection implementation or external
 repository change was made.
+
+## Current Phase 2 checkpoint
+
+Implementation is delivered. E07–E09/E15 pass; connection remains deferred to Phase 5. Historical notes above preserve their original frontiers. Continue only held-Classify and the final handoff in [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576). No packet is archived or released.

@@ -1,7 +1,7 @@
 # P2-02: Material and Assembly records
 
 DATE: 2026-09-30
-STATUS: In progress. Authorized 2026-10-01; preceding stage attestations remain open.
+STATUS: Implemented on branch; named acceptance passes with qualified retained evidence; Phase 2 integration remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -113,3 +113,5 @@ Colour-by mode (P2-05). Export (P2-06). Library import (P2-07). The SD assembly 
 - E02 has evidence in `evidence/p2-02-assembly-records.md`.
 - `make ci` passes on both Rubies; the generated API reference is current.
 - The assemblies packet STATUS records the delivered scope.
+
+Current consolidation and provenance: [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576).

@@ -1,7 +1,7 @@
 # P2-06: construction export
 
 DATE: 2026-09-30
-STATUS: In progress. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: Implemented on branch; named acceptance passes with qualified retained evidence; Phase 2 integration remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -125,3 +125,5 @@ METr and every "Through PHX" check. Apertures (P2-14). The SD assembly helper an
   the normal build exports and no synthetic provider exists.
 - The validation-and-export packet records the change. `make ci` passes on both Rubies with the
   manifest fresh and the footprint inside budget.
+
+Current consolidation and provenance: [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576).

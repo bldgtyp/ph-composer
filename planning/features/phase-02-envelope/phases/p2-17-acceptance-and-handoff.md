@@ -1,7 +1,7 @@
 # P2-17: acceptance and handoff
 
 DATE: 2026-09-30
-STATUS: In progress. Implementation stages delivered; E12 to E15 pass, other register rows remain open.
+STATUS: In progress. All implementation delivered; named acceptance consolidated; held-Classify and handoff remain.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -46,8 +46,6 @@ integrated run, the closure of the acceptance register and the document handoff.
 - The planning index, the roadmap and the archive agree with each other.
 - Nothing is described as released, supported on SketchUp 2023 or Windows, or certifiable.
 
-Integrated normal-package runtime export, exact full public-value fresh restart and staged-pair
-restart recovery now pass. Both original artifact bytes are restored; the prior task expires and
-all staging files are removed. Current host PID 38158 has the saved integrated Model only.
-Resume with E01 to E11 assertion/ledger consolidation and affected Phase 1 reuse, then prepare
-the held-Classify human gesture. Phase 2 remains open. See [P2-17 evidence](../evidence/p2-17-acceptance.md).
+Current normal-package export, exact full public-value reopen and staged-artifact recovery pass.
+E02–E04/E06–E15 pass with original/current provenance. E01/E05/E17 retain held-Classify and
+final handoff; see [consolidation](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576).

@@ -1,7 +1,7 @@
 # P2-03: Materials and Assemblies inventories
 
 DATE: 2026-09-30
-STATUS: In progress. Authorized 2026-10-01; preceding stage attestations remain open.
+STATUS: Implemented on branch; named acceptance passes with qualified retained evidence; Phase 2 integration remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -82,3 +82,5 @@ badges (P2-08). Saved table layout, which stays with the first screen that needs
 
 - E03 has evidence in `evidence/p2-03-inventories.md`, with the UI polish review recorded.
 - `make ci` and `make ui-checks` pass.
+
+Current consolidation and provenance: [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576).

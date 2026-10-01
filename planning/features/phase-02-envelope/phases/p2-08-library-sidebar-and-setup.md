@@ -1,7 +1,7 @@
 # P2-08: library sidebar and setup
 
 DATE: 2026-09-30
-STATUS: Implemented and reviewed; integrated gates and native UI proof pass, final attestation open. Authorized 2026-10-01.
+STATUS: Implemented on branch; named acceptance passes with qualified retained evidence; Phase 2 integration remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -91,3 +91,5 @@ states and sign-in (P2-16). The window kinds (P2-15).
 ## Current evidence
 
 See [source and review evidence](../evidence/p2-08-library-sidebar.md). The native host gate remains open.
+
+Current consolidation and provenance: [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576).

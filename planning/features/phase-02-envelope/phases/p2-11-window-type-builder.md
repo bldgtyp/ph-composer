@@ -1,7 +1,7 @@
 # P2-11: the Window Type Builder
 
 DATE: 2026-09-30
-STATUS: Implemented and independently reviewed; full offline/browser gates and native Builder workflow pass. Structured E11 consolidation remains.
+STATUS: Implemented on branch; named acceptance passes with qualified retained evidence; Phase 2 integration remains open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -87,3 +87,5 @@ Product photos UI.
 
 - E11 has evidence in `evidence/p2-11-window-type-builder.md`, with the UI polish review recorded.
 - `make ci` and `make ui-checks` pass.
+
+Current consolidation and provenance: [P2-17](../evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576).

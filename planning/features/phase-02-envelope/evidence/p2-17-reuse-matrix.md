@@ -1,20 +1,21 @@
 # P2-17 retained-observation and source-reuse matrix
 
 DATE: 2026-10-01
-STATUS: Draft for independent assertion and ledger consolidation; no case award
+STATUS: Integrator-validated assertion consolidation; E01/E05/E17 retain held-Classify gate
 SOURCE REVIEW BASE: `95a0ad9`; current E03/E05/E17 documentation incorporated
-DOCUMENT CHECKPOINT: Pending independent consolidation
-LATEST SHIPPING CORRECTION: `8a43bec`
+DOCUMENT CHECKPOINT: Consolidated against f4f6576
+LATEST SHIPPING CORRECTION: `f4f6576`
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 This matrix records retained observations, bounded source-reuse qualifications and unobserved
-assertions. It does not change [ACCEPTANCE](../ACCEPTANCE.md), award a case, or turn offline proof
-into native observation. The root integrator must validate consequential reuse decisions and append
-final provenance to the native ledger. Historical evidence retains its original source and package.
+assertions. It supports the qualified outcomes in [ACCEPTANCE](../ACCEPTANCE.md). The integrator validated
+consequential source comparisons through `8a43bec` and the focus-only `f4f6576` delta. Offline
+proof remains offline; only newly observed native assertions enter the observed ledger. Historical evidence retains its original source and package.
 
 All native observations below concern SketchUp 26.1.188 / Ruby 3.2.2 on macOS. Current normal
-installed package `f85b789455882d4ba39fafc0edd7266c7cafc973975b3a14832677f8f71537fd`
-contains signed shipping correction `8a43bec`. The preceding `e11a767` package was
+installed package `c01eaa5593a467ba1e6ae30bfe3091850529c4290b40331508bd693ab771de26`
+contains signed shipping correction `f4f6576`. The preceding colour observation used `8a43bec`
+and package `f85b789455882d4ba39fafc0edd7266c7cafc973975b3a14832677f8f71537fd`. The preceding `e11a767` package was
 `bcb9c024e20ce686b52e0b851e13fd2e762e97aa25d61551b838e6aaaf75c018`.
 Exact current installation and native colour recheck are recorded in
 [P2-17, Assembly colour redraw correction verified](p2-17-acceptance.md#assembly-colour-redraw-correction-verified).
@@ -68,12 +69,12 @@ Authority: [E03, Verified checkpoint and remaining native work](p2-03-inventorie
 
 | Assertion | Retained observation and original checkpoint | Source/reuse qualification | Current missing assertion or consolidation boundary |
 | --- | --- | --- | --- |
-| Material create/edit, in-use replacement, Undo | `35704bd`: explicit SI conductivity in IP, creation Undo/Redo, inline name edit; replacement rewrites both nested references and one Undo restores the complete catalog. | Material authoring path retained. Later provider/export additions do not change the recorded local edit. | Retain historical provenance; formal consolidation pending. |
-| Material Duplicate through inventory | Normal `8a43bec`, PID 33871: exactly one fresh id with derived provenance; values/metadata identical except name/source; all six existing records unchanged. One native Undo restores the complete inventory, uses and categories. | Direct current-host observation in the inventory continuation; no unchanged-source inference is needed for Duplicate. | Formal assertion/ledger consolidation pending. |
-| Assembly create/Duplicate/delete and in-place edit | `7932856`: native forms and fresh nested Duplicate ids. `43a1418`: corrected replacement caption and nonmutating Cancel. Normal `8a43bec`: in-place colour edit and exact Undo/Redo in P2-17's fresh colour recheck. | Historical Assembly inventory/form/grid and Builder path retained; changed Dispatch publication has separate direct current proof. | Formal consolidation pending; historical create/Duplicate/delete retain their original checkpoint. |
-| Stale expected values on both inventories | Normal `8a43bec`, PID 33871: both public update actions refuse stale `expected_values.name` with `target.changed`, effect none; complete inventories and revisions unchanged. | Direct native-host API evidence at the current revision; distinct from E02's `revision.stale` probe. | This proves the action guard, not a simulated HtmlDialog response race. Formal consolidation pending. |
-| Draft retention, navigation, units and narrow width | `35704bd`: dirty peer-navigation guard and retained draft through units. Normal `8a43bec`: 904-pixel capture (~452 CSS px), wrapped controls/working peer subtabs and internally scrolling New Material form with reachable Cancel/Create. First Escape dismisses Category selector only; second closes form/restores trigger focus. Reopen, Cancel, Attached zones and return preserve typed unsaved name without creating a Material. | Current inventory continuation supplies bounded native layout/Escape/subtab observations; historical unit-draft observation remains separately identified. | These observations do not constitute a whole-case award or universal width claim. Formal consolidation pending. |
-| Filter/group/order/direction never mutate the Model | Normal `8a43bec`, PID 33871: Material filter/category group/conductivity order/descending and Assembly filter/Type group/thickness order/descending; complete public inventory outcomes and revisions identical. Clearing filters/changing tabs also unchanged. | Direct native nonmutation readback in current inventory continuation; inventory grid was unchanged in the compared range. | Formal assertion/ledger consolidation pending. |
+| Material create/edit, in-use replacement, Undo | `35704bd`: explicit SI conductivity in IP, creation Undo/Redo, inline name edit; replacement rewrites both nested references and one Undo restores the complete catalog. | Material authoring path retained. Later provider/export additions do not change the recorded local edit. | Retain historical provenance; consolidated with original provenance. |
+| Material Duplicate through inventory | Normal `8a43bec`, PID 33871: exactly one fresh id with derived provenance; values/metadata identical except name/source; all six existing records unchanged. One native Undo restores the complete inventory, uses and categories. | Direct current-host observation in the inventory continuation; no unchanged-source inference is needed for Duplicate. | Consolidated with original provenance. |
+| Assembly create/Duplicate/delete and in-place edit | `7932856`: native forms and fresh nested Duplicate ids. `43a1418`: corrected replacement caption and nonmutating Cancel. Normal `8a43bec`: in-place colour edit and exact Undo/Redo in P2-17's fresh colour recheck. | Historical Assembly inventory/form/grid and Builder path retained; changed Dispatch publication has separate direct current proof. | Consolidated; historical create/Duplicate/delete retain their original checkpoint. |
+| Stale expected values on both inventories | Normal `8a43bec`, PID 33871: both public update actions refuse stale `expected_values.name` with `target.changed`, effect none; complete inventories and revisions unchanged. | Direct native-host API evidence at the current revision; distinct from E02's `revision.stale` probe. | This proves the action guard, not a simulated HtmlDialog response race. Consolidated. |
+| Draft retention, navigation, units and narrow width | `35704bd`: dirty peer-navigation guard and retained draft through units. Normal `8a43bec`: 904-pixel capture (~452 CSS px), wrapped controls/working peer subtabs and internally scrolling New Material form with reachable Cancel/Create. First Escape dismisses Category selector only; second closes form/restores trigger focus. Reopen, Cancel, Attached zones and return preserve typed unsaved name without creating a Material. | Current inventory continuation supplies bounded native layout/Escape/subtab observations; historical unit-draft observation remains separately identified. | These observations do not constitute a whole-case award or universal width claim. Consolidated. |
+| Filter/group/order/direction never mutate the Model | Normal `8a43bec`, PID 33871: Material filter/category group/conductivity order/descending and Assembly filter/Type group/thickness order/descending; complete public inventory outcomes and revisions identical. Clearing filters/changing tabs also unchanged. | Direct native nonmutation readback in current inventory continuation; inventory grid was unchanged in the compared range. | Consolidated with original provenance. |
 
 ## E04: Assembly Builder
 
@@ -82,7 +83,7 @@ Authority: [E04, Expanded native Builder journal](p2-04-assembly-builder.md#expa
 
 | Assertion | Retained observation and original checkpoint | Source/reuse qualification | Current missing assertion or consolidation boundary |
 | --- | --- | --- | --- |
-| Toolbar/drawing/material gestures are one Undo | `7932856`: drop, Add Segment, width, Add Layer, Mirror Segments, Flip Layers, Flip Orientation; seven exact Undo/Redo states. `43a1418`: Add outside, Move outward, thickness, continuous insulation, Clear Material, Delete Segment and Delete Layer; each exact Undo. | Editor, inspector, canvas, commands and thermal unchanged since `43a1418`. All twenty retained `assembly-native-*-verify.json` proofs are true. | Current `8a43bec` native Add inside and Move inward each have exact one-step Undo: see E04 complementary controls. The stage host gate requires a stud wall; steel-specific spacing remains in the schema/thermal tests. Formal consolidation remains pending. |
+| Toolbar/drawing/material gestures are one Undo | `7932856`: drop, Add Segment, width, Add Layer, Mirror Segments, Flip Layers, Flip Orientation; seven exact Undo/Redo states. `43a1418`: Add outside, Move outward, thickness, continuous insulation, Clear Material, Delete Segment and Delete Layer; each exact Undo. | Editor, inspector, canvas, commands and thermal unchanged since `43a1418`. All twenty retained `assembly-native-*-verify.json` proofs are true. | Current `8a43bec` native Add inside and Move inward each have exact one-step Undo: see E04 complementary controls. The stage host gate requires a stud wall; steel-specific spacing remains in the schema/thermal tests. Consolidated with original provenance. |
 | Partial save, fresh reopen and continued editing | `43a1418`: saved incomplete Assembly equals prior full authored catalog, then continued tools and wall-building edits. | Unchanged authored Builder path. | Historical provenance supports this assertion; E03 prerequisite consolidation remains separate. |
 | Complete three-layer stud wall, both thermal values, withholding | `43a1418`: board / mixed insulation and 0.13 W/(m K) wood framing / cladding; U with films 0.329263, construction U 0.348786. Independent scalar proof true. Incomplete values withheld with reasons. | Unchanged thermal projection. Wood framing supports the generic stud-wall workflow; it is not native steel-spacing authoring proof. | Native steel-spacing entry is not established by this wall. Membrane/steel mathematical rules remain covered under E02/E06 offline evidence. |
 | Keyboard Use and ventilated film flag | `43a1418`: details do not write; Enter assigns selected framing and one Undo restores catalog. Film flag changes Rse 0.04→0.13, retains construction R/U and Rsi; one exact Undo. | Unchanged header/material gesture path. | Supports assertion consolidation; no whole-case award here. |
@@ -95,9 +96,9 @@ Authority: [E05, P2-17 current-host route verification](p2-05-assign-assemblies.
 | Assertion | Retained observation and original checkpoint | Source/reuse qualification | Current missing assertion or consolidation boundary |
 | --- | --- | --- | --- |
 | Selection/right-click/table/Paint; one Undo; usage | Normal `e11a767` RBZ: four routes, exact public Face/Unit/area Undo; table Redo; correct 36/36/78/24 m2 reference usages. | Current-source observation before publication correction; `8a43bec` changes publication only. | Formal assertion/ledger consolidation pending, not another ordinary route gesture. |
-| 250/251 and stale/unreachable atomic refusal | `e11a767`: two-target `target.changed`/`target.not_found`; 251 refuses, 250 commits, one native Undo exact; fixture cleaned exactly. | Same guarded proposal/native steps after `8a43bec`. | Formal consolidation pending. |
+| 250/251 and stale/unreachable atomic refusal | `e11a767`: two-target `target.changed`/`target.not_found`; 251 refuses, 250 commits, one native Undo exact; fixture cleaned exactly. | Same guarded proposal/native steps after `8a43bec`. | Consolidated. |
 | Replacement across direct/nested occurrences and shared storage | `8a43bec`: direct plus two unique nested Groups retarget and one native Undo restores all values/catalogs. Real three-instance shared definition refuses atomically. Copied Face identity also refuses ambiguity until fixture explicitly reauthored. | Accepted mutable-occurrence contract governs. Unique-occurrence success cannot establish mutation of shared definitions or automatic copied-Face identity repair. | Reconcile literal repeated-definition success wording against the recorded shared-storage qualification. |
-| Hint precedence, mismatch, Colour-by, Model/nested-path behavior | Current batches: absent fields fill; explicit Floor/boundary-clear win; blank hints fill nothing; reciprocal different-id pair warns. `8a43bec`: corrected colour overlay/HUD/legend with Undo/Redo; Model switch preserves state; two-level native path assignment and Undo exact. | Colour correction has direct fresh-process proof; prior failed redraw is retained as a failure. Usage aggregation measured ~3 ms within ~1.26 s full snapshot at 2,003 Faces. | Formal consolidation pending. Do not claim a whole-snapshot performance budget or held-Classify coverage. |
+| Hint precedence, mismatch, Colour-by, Model/nested-path behavior | Current batches: absent fields fill; explicit Floor/boundary-clear win; blank hints fill nothing; reciprocal different-id pair warns. `8a43bec`: corrected colour overlay/HUD/legend with Undo/Redo; Model switch preserves state; two-level native path assignment and Undo exact. | Colour correction has direct fresh-process proof; prior failed redraw is retained as a failure. Usage aggregation measured ~3 ms within ~1.26 s full snapshot at 2,003 Faces. | Consolidated. Do not claim a whole-snapshot performance budget or held-Classify coverage. |
 
 ## E06: construction export
 
@@ -106,9 +107,9 @@ Authority: [E06, Integrated checkpoint and current-host proof](p2-06-constructio
 
 | Assertion | Retained observation and original checkpoint | Source/reuse qualification | Current missing assertion or consolidation boundary |
 | --- | --- | --- | --- |
-| Normal RBZ, actual assigned reference export and fresh reopen | `6a7e08f`: normal runtime export, two Rooms/twelve Faces/Surface pair/four referenced constructions; fresh SKP reopen and authored energy/reference comparison exact. Current E14 reference export retains normal composition. | Reuse the explicit authored-reference/energy comparison. Honeybee-PH generated default metadata prevents whole-text equality. | Formal consolidation pending; do not substitute construction counts for actual resolved identities. |
+| Normal RBZ, actual assigned reference export and fresh reopen | `6a7e08f`: normal runtime export, two Rooms/twelve Faces/Surface pair/four referenced constructions; fresh SKP reopen and authored energy/reference comparison exact. Current E14 reference export retains normal composition. | Reuse the explicit authored-reference/energy comparison. Honeybee-PH generated default metadata prevents whole-text equality. | Consolidated; do not substitute construction counts for actual resolved identities. |
 | Single/mixed/steel/membrane grids, repeated thickness, metadata allowlist | Pinned-stack offline HBJSON reload tests read actual construction/material references, division fields and namespace; closed emissivity/default-disclosure review. Native reference carries relevant mixed/membrane constructions. | Construction conversion has later Window integration; current reference export supplies integration evidence, while detailed adversarial mappings remain offline proofs. | Label detailed grid/thickness assertions by their actual evidence type, not all as native readbacks. |
-| Absent/incomplete assigned and unused incomplete outcomes | `e11a767`: exact Face-specific findings; normal canonical workflow refuses before destination dialog; aborted fixture restoration exact. Unused incomplete remains nonblocking and reference extracts normally. | `8a43bec` does not change canonical mapping or blocking policy. Extraction success is distinct from permission to write canonical artifacts. | These outcomes are observed; formal stage/prerequisite consolidation remains pending. |
+| Absent/incomplete assigned and unused incomplete outcomes | `e11a767`: exact Face-specific findings; normal canonical workflow refuses before destination dialog; aborted fixture restoration exact. Unused incomplete remains nonblocking and reference extracts normally. | `8a43bec` does not change canonical mapping or blocking policy. Extraction success is distinct from permission to write canonical artifacts. | These outcomes are observed; consolidated; global held-Classify integration remains open. |
 
 ## E07–E11: library and Window records/Builder
 
@@ -141,13 +142,45 @@ Held-Classify across Model/edit-path switching is a different assertion. Separat
 control remains unavailable; ordinary placement Model switching, E05 Paint/Escape and the three
 qualifications above do not close it.
 
-## Boundaries for final consolidation
+## Consolidated boundaries
 
-E12–E15 already have their current-host case outcomes; this draft does not reopen or reaward them.
-E16 is deferred to Phase 5. E17 integrated cross-feature Undo/Redo, nested paths and two Models retain their assertion/ledger reconciliation. The current normal runtime export, exact full public-value restart and staged-artifact restart recovery are observed in [P2-17](p2-17-acceptance.md#integrated-export-and-fresh-restart-continuation). SketchUp 2023, Windows,
-public distribution, certification and METr consumer gates remain separate.
+E02–E04 and E06–E11 pass with the stated evidence types and original checkpoints. E12–E15
+retain their outcomes. E01/E05 and aggregate E17 remain open for held-Classify and handoff.
+The E04 literal-menu checks now include native Add inside and Move inward. E05 wording matches
+the accepted shared-storage refusal contract; no shared mutation or automatic identity repair
+is inferred. Current package identity and focus-only delta are in
+[P2-17](p2-17-acceptance.md#added-assembly-controls-dirty-zone-focus-correction).
+SketchUp 2023, Windows, distribution, certification and METr remain separate gates.
 
-E03's current inventory continuation is incorporated above without a case award. Resolve the
-E04 literal-menu interpretation and E05
-repeated-definition wording against accepted contracts before final awards; do not invent native
-success for shared storage or automatically repaired copied Face identities.
+## Final affected Phase 1 screen
+
+Source comparison: Phase 1 `595323f`, UXK1 `c66f31a`, then current shipping `f4f6576`.
+The following is assertion reuse, not a fresh-host blanket pass. Original evidence is linked by
+[Phase 1 acceptance](../../../archive/phase-01-faces-and-zones/ACCEPTANCE.md), the
+[PR11 recheck](../../../native-acceptance/evidence/phase-1-recheck-pr11-2026-09-30.md) and
+[UXK1](../../../native-acceptance/evidence/uxk1-rerun-2026-09-30.md).
+
+| Cases | Retained scope and changed-path evidence |
+| --- | --- |
+| A01/A02 | Storage, split/group/explode, tolerance and Zone creation retain Phase 1 proof. E12 Slice B directly repeats changed cutting-descendant exclusion, gross area and glue guards. |
+| A03 | Proposal/native transaction mechanics retained; E01 stale/retry, E05 atomic refusals and E07 session/revision guards exercise changed dispatch/participant boundaries. Offline poisoned-duplicate cases remain offline. |
+| A04 | Collection/down-freeze/cancel/cursor/Reverse retained; E05 Paint Escape and 250/251 repeat added Assembly entry. Cursor is Ed's historical confirmation. |
+| A05 | Original tolerance, holes, transforms, slivers, retirement and scope retained. E12 Slice B repeats both glue refusals, full pair, covered-side preservation, split/stale glue and exact Undo/Redo. |
+| A06 | Identity/Restore/split-recovery paths retained; E01 reference reopen and E12 split/glue cover affected integration. No new execution of every historical repair is claimed. |
+| A07 | Attached-zone authoring/inline modal/native operation unchanged; retain atomic Escape/Enter, stale/rollback, Undo/Redo and reopen proof. Additive references are qualified separately. |
+| A08/UXK1 | Shared renderer/session and Zone modes unchanged; original GPU/visibility/selected edges/hatch proof retained. Added Assembly mode has fresh colour edit/HUD/legend Undo/Redo proof on 8a43bec. |
+| A09 | Original tree/table/navigation/modal/unit-draft retained. Added Assembly selection/table paths now have fresh narrow native and dirty-Zone Save-focus proof on f4f6576. Held Model/edit-path Classify remains pending. |
+| A10 | Translation changed: E06/E14/current E17 actual pinned-runtime reload and resolved references supply replacement integration proof. Old geometry/stale-omission adversaries retain original/offline labels. |
+| A11 | Missing construction replaced by real Assemblies. E06 absent/incomplete assigned blocks and unused incomplete disclosure provide current policy proof; normal package excludes development providers/tools. |
+| A12 | Export task/workflow/runtime/dialog/session lifecycle unchanged. Retain Phase 1 delayed lifecycle proof with its private development construction/latency composition explicitly qualified. Ordinary new export does not reobserve every delayed case. |
+| A13 | Artifact/reporter unchanged; current E17 staged restart directly restores both byte streams, expires old handle and cleans cancelled staging. Older fault/privacy/escaping/accounting proof remains original. |
+| A14 | Loader and pinned wheels unchanged. Current manifest/full gates, actual Pyodide export and updated package size cover changed Python/panel. Retain original lazy boot/teardown and Chromium 88 proof. |
+| A15 | METr remains deferred. No pass awarded. |
+| A16 | E17 current full public reopen/export/restart, E05 nested/two-Model and E14 integrated reference cover affected integration; historical lifecycle retains its composition qualification. |
+| R01–R04 | Retain shared refusal, ownership/orphan/partial Attached-zone exact references/Undo/reopen. E01 supporting repeats and E12 glue/cutting cover additions. R01 native shared-menu remains unknown; R03 exploded Restore is historical, not a new PR11 execution. |
+| R05 | Retain settings/row/filter/tab draft guard; current f4f6576 added Assembly controls focus/refusal and exact Cancel values supplement it. Pending Save/Cancel visibility remains unknown as previously accepted with offline proof. |
+| R06 | Retain panel-closed authoring/Locate/filter/cursor/retry/poll proof. New assembly_usage projection is separately tested; E01/Phase 2 operations cover changed dispatch, with fresh 8a43bec redraw proof. |
+
+This closes the source-reuse audit. It leaves only the named held-Classify native action before
+aggregate E01/E05/E17 closure and the ensuing document/hands-on handoff. The ordinary Window
+placement session-switch observation remains distinct from held-Classify.
