@@ -148,3 +148,12 @@ enter `offset=24"`, press Return, and place a fifth near the left edge at mid-he
 sill center, the expected anchor inset is 0.6096 m and the opening's left edge is 0.1596 m
 from the host edge. Escape and restart clears both overrides before Roof placement.
 Leave this Model open for exact agent readback. E13 remains open.
+
+## Restart step 1 verified
+
+Ed reports three placements without restarting and successful `sill=900mm` entry. Live readback
+confirms four new valid Wall Units, six Units total, and Place still active for the chosen Type.
+The fourth new Unit (entity 48974) has its opening bottom at 0.8999999999999998 m, equal to
+900 mm within floating-point precision. All four new Units have no findings. Exact rows and
+world bounds are preserved in `p213-restart-step-1.json`. Step 1 passes on the fresh baseline.
+Exact offset and Roof placement plus steps 3 to 5 remain pending.
