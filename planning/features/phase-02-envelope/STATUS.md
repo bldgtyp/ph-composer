@@ -279,3 +279,9 @@ restart recovery now pass. Both original artifact bytes are restored; the prior 
 all staging files are removed. Current host PID 38158 has the saved integrated Model only.
 Resume with E01 to E11 assertion/ledger consolidation and affected Phase 1 reuse, then prepare
 the held-Classify human gesture. Phase 2 remains open. See [P2-17 evidence](evidence/p2-17-acceptance.md).
+
+Acceptance replay found and corrected Save-focus restoration for added Assembly controls during
+a dirty Zone draft. Records stayed unchanged throughout the reproduced defect. Focused tests,
+independent review, both full CI gates, JS coverage and all browser checks pass. Fresh normal
+package replay is the next action; then finish retained-proof reconciliation and the held-Classify
+human batch. See the P2-17 dirty-Zone correction section.

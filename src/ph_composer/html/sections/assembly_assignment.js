@@ -18,10 +18,11 @@ PhComposerUI.define("sections/assembly_assignment", ["panel", "snapshot", "reque
     if (clear) select.appendChild(ui.option("__clear__", "Clear Assembly"));
     records.forEach(function (record) { select.appendChild(ui.option(record.id, record.name)); });
   }
-  function Picker(session, send, guard) {
+  function Picker(session, send, guard, refused) {
     var self = this;
     this.session = session;
     this.guard = guard;
+    this.refused = refused || function (reason) { panel.notify(reason, "warning"); };
     this.requests = requests.channel(session, send, "selected-assembly");
     this.root = ui.element("div", "phc-chips");
     this.count = ui.element("strong");
@@ -41,7 +42,7 @@ PhComposerUI.define("sections/assembly_assignment", ["panel", "snapshot", "reque
     this.select.addEventListener("change", function () {
       if (self.disposed || !self.enabled || self.requests.busy()) return;
       var reason = !self.dirty && self.guard && self.guard();
-      if (reason) { self.select.value = ""; panel.notify(reason, "warning"); return; }
+      if (reason) { self.select.value = ""; self.refused(reason); return; }
       if (!self.dirty) self.targets = clone(self.currentTargets);
       self.dirty = Boolean(self.select.value);
       self.paint();
@@ -107,13 +108,14 @@ PhComposerUI.define("sections/assembly_assignment", ["panel", "snapshot", "reque
     this.disposed = true; this.enabled = false; this.dirty = false;
     this.requests.reset(); this.paint();
   };
-  function cell(td, row, state, guard) {
+  function cell(td, row, state, guard, refused) {
     var face = row.record.face;
     if (!face) return false;
     var records = choices(state.snapshot, [face.values.face_type]);
     var chip = td._assemblyChip;
     if (!chip || td._assemblySession !== state.session) {
       var ownerSession = state.session;
+      var reject = refused || function (reason) { panel.notify(reason, "warning"); };
       td._assemblySession = ownerSession;
       chip = td._assemblyChip = ui.element("select", "phc-cell-input");
       chip.addEventListener("change", function () {
@@ -121,7 +123,7 @@ PhComposerUI.define("sections/assembly_assignment", ["panel", "snapshot", "reque
         if (!live || live.session !== ownerSession || live.disposed || !chip.isConnected ||
             !live.assemblyEnabled || live.edits.busy()) return;
         var reason = guard(live);
-        if (reason) { panel.notify(reason, "warning"); chip.value = td._assemblyFace.values.assembly_id || ""; return; }
+        if (reason) { reject(reason); chip.value = td._assemblyFace.values.assembly_id || ""; return; }
         live.edits.run(PREFIX + ".assign_assembly", { targets: [{ reference: clone(td._assemblyFace.reference),
           expected_values: clone(td._assemblyFace.values) }], assembly_id: chip.value || null });
       });

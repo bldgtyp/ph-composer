@@ -195,3 +195,21 @@ test("a retained Classify Assembly choice cannot write when its read is withdraw
   select.listeners.change({});
   assert.strictEqual(o.sent.length, 0);
 });
+
+test("Assembly selection and table refusals preserve the dirty Zone and return focus to Save", function () {
+  ["Assembly for selected Faces", "Wall 1 Assembly"].forEach(function (label) {
+    var o = setup(), overview = o.query("[data-section='ph_composer.overview']");
+    click(overview.querySelector(".row-target"));
+    var name = byLabel(overview, "Zone name");
+    name.value = "Unsaved Zone draft"; name.listeners.input({});
+    var select = byLabel(overview, label);
+    select.focus(); select.value = "asm_b"; select.listeners.change({});
+    var save = overview.querySelectorAll("button").filter(function (node) {
+      return node.textContent === "Save";
+    })[0];
+    assert.strictEqual(name.value, "Unsaved Zone draft");
+    assert.ok(o.document.activeElement === save, label + " returns to the active draft");
+    assert.strictEqual(o.sent.length, 0);
+    assert.strictEqual(select.value, label === "Wall 1 Assembly" ? "asm_missing" : "");
+  });
+});

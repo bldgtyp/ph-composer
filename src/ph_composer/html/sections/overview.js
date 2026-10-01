@@ -51,7 +51,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     screen.settings = new ZoneSettings(session, send, function () { return draftReason(screen); }, refuse);
     screen.selectionAssignment = new SelectionAssignment(session, send, function () {
       return draftReason(screen);
-    });
+    }, refuse);
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone, type or boundary", fields: ORDER_FIELDS, initialOrder: "name",
       expansion: expansion(screen), guard: function () { return draftReason(screen); }, refused: refuse
@@ -204,7 +204,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
      control: an `AirBoundary` Face, or one the solver paired, reads what it is and refuses the edit. */
   function cell(td, row, field, text, state) {
     var face = row.record.face, offered, chip;
-    if (field === "assembly_id") return assemblies.cell(td, row, state, draftReason);
+    if (field === "assembly_id") return assemblies.cell(td, row, state, draftReason, refuse);
     if (!face || (field !== "face_type" && field !== "boundary_condition")) return false;
     if (field === "boundary_condition" && face.values.boundary_condition === "AttachedZone") {
       return attachedCell(td, row, state);

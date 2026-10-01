@@ -152,3 +152,29 @@ It closes the staged-artifact restart assertion, not all aggregate E17/Phase 1 a
 The append-only native ledger now records these new E17 observations against the captured
 `a5cde95` baseline, with aggregate outcome `unknown` for the remaining consolidation boundary.
 It does not relabel retained historical observations as fresh current-package executions.
+
+### Added Assembly controls: dirty Zone focus correction
+
+Normal `8a43bec`, PID 38158: native Overview at a 730-pixel capture (about 365 CSS px) wraps
+the view controls and selected-Face Assembly controls. Keyboard traversal scrolls the Assembly
+column into view while retaining the sticky Actions column. Choosing an Assembly, cancelling
+the selection draft and opening the table selector leave complete public values unchanged.
+
+A dirty Zone name then exposed a focus defect: choosing an Assembly for selected Faces refused
+with “Save or cancel the Zone details first”, reset the picker and preserved all public values,
+but did not return focus to Save. The next native Tab reached the Assemblies navigation tab.
+Native Cancel restores the visible original name and exact complete public values. Private
+journals are `p214-p217-overview-{before,dirty-refused,cancelled}.json`.
+
+The correction passes Overview's existing refusal callback through its selection handoff and
+Assembly Picker, and uses it for table-cell refusals. Optional callbacks preserve other callers'
+existing warning behavior. Zone details remain owned by Overview. One deterministic integration
+test exercises both Assembly entry points and fails on the original source; after correction,
+45 focused JS cases and scoped ESLint pass. Independent routine architecture/UI review found no
+actionable issue. Both full Ruby CI gates pass: 1,327 Ruby tests / 9,851 assertions, 360 JS tests,
+168 Python tests and hostkit 9 tests / 30 assertions. All eight browser scripts pass at their
+specified widths; JS line coverage is 95.1%. Logs: `/tmp/phc-p217-draft-{ci-3.2.2,ci-2.7.2,ui,js-coverage}.log`.
+
+Fresh normal installed-package replay is pending. No earlier case is relabelled as observing
+this correction. Remaining host action: repeat dirty-Zone selection/table refusal and Save-focus,
+then prepare the held-Classify gesture after final evidence reconciliation.
