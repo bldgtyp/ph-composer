@@ -41,7 +41,7 @@ predecessor's designPH terms (adoption, push, origin row, designPH difference, T
 honeybee's names for its geometry units collide with ordinary building words, so this table is
 exact. The left column is what PH-Composer says on screen, in code and in this repository; the
 right column is what the export writes. The rules are in the zones-and-adjacency packet
-(`planning/features/zones-and-adjacency/PRD.md`); Phase 1 implemented them.
+(`planning/archive/zones-and-adjacency/PRD.md`); Phase 1 implemented them.
 
 | Term | Meaning | honeybee object | Note |
 | --- | --- | --- | --- |

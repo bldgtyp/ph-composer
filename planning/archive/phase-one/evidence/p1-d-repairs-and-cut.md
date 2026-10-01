@@ -56,7 +56,7 @@ definition has more than one instance. Re-measured on the host afterwards: the Z
 untouched. The offline stub gained group definitions and instances so a fixture models two Groups
 built on one collection as two copies behave on the host.
 
-This settles Q25 in the [Zones PRD](../../../features/zones-and-adjacency/PRD.md): a copied Zone
+This settles Q25 in the [Zones PRD](../../../archive/zones-and-adjacency/PRD.md): a copied Zone
 needs SketchUp's own Make Unique before identity repair is available, and PH-Composer does not run
 Make Unique inside a repair.
 

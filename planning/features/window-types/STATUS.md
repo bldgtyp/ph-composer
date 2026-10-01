@@ -26,6 +26,10 @@ Then PLAN.md.
 
 ## Blockers
 
+- Carried from the archived [zones-and-adjacency packet](../../archive/zones-and-adjacency/STATUS.md)
+  on 2026-09-30: Solve adjacencies reports, rather than cuts, an overlap involving a concave outline
+  or a Face with a hole. Windows cut holes in real walls, so this needs an answer before an
+  assembly- or window-bearing model relies on adjacency.
 - The foundation transplant has not started.
 - No GitHub remote, so no issue yet.
 

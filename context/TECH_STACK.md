@@ -166,7 +166,7 @@ PH-Composer owns all of it, in its own attribute namespace, through its own tool
 that owns a face is the Zone, one Group per honeybee Room, with Spaces inside it. Closure is a
 consumer-specific validation rule, not a requirement for creating or exporting every Zone. The
 rules are the zones-and-adjacency packet's to settle
-(`../planning/features/zones-and-adjacency/PRD.md`); Phase 1 implemented them. The durable
+(`../planning/archive/zones-and-adjacency/PRD.md`); Phase 1 implemented them. The durable
 constraints:
 
 - One feature, `zones`, owns this whole lifecycle: Zone containment, Face identity, Zone stamps,

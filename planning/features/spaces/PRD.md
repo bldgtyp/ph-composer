@@ -306,6 +306,23 @@ will show those rooms beside the building while PHX and METr read only areas, he
 (Q17). The Export report gets a Spaces schedule per Zone with the same columns
 as the table and the totals per Zone and Building-Segment.
 
+### Carried from zones-and-adjacency
+
+Moved here on 2026-09-30 when the [zones-and-adjacency packet](../../archive/zones-and-adjacency/PRD.md) was archived. Its Phase 1
+scope is implemented; these Space-dependent parts are not.
+
+- Every Space group carries the Zone stamp (Zone id, Building-Segment, Level). Limited Restore Zone
+  and orphaned-contents detection read Space stamps as well as Face stamps (zones Q14). Restore is
+  implemented for Faces only; test it with real Spaces once they exist.
+- Spaces cannot span Zones, and a Space group at the model root is the "Space outside any Zone" row
+  above.
+- Where Zones appear (zones Q13): the Zones / Faces tab alone until a second Zone exists, then a
+  Zones section above Spaces with the tree grouped by Zone. Re-rule this against the Zones / Faces
+  tab as built before implementing the Spaces tree.
+- Ventilation ownership (zones Q16): loads and schedules belong to the Zone, except that a Space
+  may hold its own fresh-air flow rates, which apply when present; otherwise the Zone's ventilation
+  load applies. The fields arrive with the loads work.
+
 ## Non-goals
 
 - Loads, schedules and equipment. They belong to the Zone and to later packets.

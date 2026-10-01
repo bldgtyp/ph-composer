@@ -3,7 +3,7 @@
 The third feature packet. It finishes the room-by-room half of the model that the predecessor
 started: floor area toward iCFA, net volume, and per-Space ventilation airflows, authored against
 the geometry and visible in it. It depends on
-[zones-and-adjacency](../zones-and-adjacency/README.md) for the Zone a Space lives in and on
+[zones-and-adjacency](../../archive/zones-and-adjacency/README.md) for the Zone a Space lives in and on
 [face-assignment](../face-assignment/README.md) for the Colour-by service. Mark floor is this
 packet's own tool, a sibling of Classify.
 

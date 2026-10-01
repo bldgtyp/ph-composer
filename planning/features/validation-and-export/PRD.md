@@ -82,6 +82,29 @@ Every export candidate ends in exactly one category:
 Panel totals, the HTML report's embedded result and HBJSON object counts reconcile from this one
 account. Unknown exceptions fail the pipeline; they do not become an `other` item bucket.
 
+### Zone rows carried from zones-and-adjacency
+
+Moved here on 2026-09-30 when the [zones-and-adjacency packet](../../archive/zones-and-adjacency/PRD.md) was archived. The table is
+that PRD's validation contract with the state of each row in the merged code. Rows marked
+"Not implemented" are later work for this packet.
+
+| Finding | Severity | Repair | State |
+| --- | --- | --- | --- |
+| No Zone in the model | blocking for export | Make Zone | Implemented: preflight `zone.none` |
+| Face outside any Zone | warning | Move into a Zone or ignore | Not implemented as a row; the Classify tool refuses such a Face |
+| Zone not closed (`manifold?` on the deferred pass; disclosed in the Zones table and the report) | info; blocking for EnergyPlus | Fix geometry | Not implemented |
+| Candidate interior face unsolved (multi-Zone model only) | warning; blocking for EnergyPlus | Solve adjacencies or mark To neighbour | Not implemented |
+| Adjacency stale | warning; blocking for EnergyPlus | Solve adjacencies | Partly: preflight offers the Solve repair and the report lists Surface omissions; no validation row |
+| Adjacency endpoint unresolved or ambiguous | warning; blocking for EnergyPlus | Resolve identity ambiguity, then Solve adjacencies | Partly: reported as a Surface omission |
+| Retired adjacency needs boundary classification | warning; blocking for EnergyPlus | Classify or Solve adjacencies | Partly: reported as a Surface omission |
+| Sliver skipped; overlapping Zones; Face overlaps more than one neighbour | warning | Named with both Zones or neighbours | Implemented as Solve findings, not export validation rows |
+| Orphaned stamped contents | warning | Native Undo, or limited Restore Zone when eligible | Not implemented as a row; Restore Zone exists |
+| Zone inside a Zone, or a component marked as a Zone | warning | Regroup | Export refuses instead (`face.wrong_zone` and resolution refusals); reconcile severity |
+| Interior window | blocking for export | Move the window to an Outdoors face | Owned by window-types |
+
+Consumer policy from the same PRD (zones Q10): closure and unsolved interior faces block only a
+later EnergyPlus exporter; the HBJSON artifact and METr accept an open Zone and disclose it.
+
 ## Workflow
 
 ### Ready and preflight

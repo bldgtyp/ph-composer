@@ -27,7 +27,7 @@ current-host checks, with native Undo/Redo and final reciprocal-reference reopen
 5. [ACCEPTANCE.md](ACCEPTANCE.md): evidence required to close the phase.
 
 The feature PRDs remain the behavior authorities. Their plans allocate work within this sequence:
-[Zones](../../features/zones-and-adjacency/PLAN.md),
+[Zones](../../archive/zones-and-adjacency/PLAN.md),
 [faces](../../features/face-assignment/PLAN.md), and
 [export](../../features/validation-and-export/PLAN.md).
 

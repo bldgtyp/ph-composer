@@ -1,9 +1,11 @@
 # Zones and adjacency: status
 
 DATE: 2026-09-30
-STATUS: In progress. Phase 1 scope (P1-A to P1-D: Make Zone, stamps, Solve with partial-overlap cut,
-copy/split repairs, Restore, Zone Colour-by modes) merged to main through PR #3 and PR #6 and
-accepted in the archived Phase 1 packet. Later-phase scope in PLAN.md remains.
+STATUS: Complete. Archived 2026-09-30. Phase 1 scope merged through PR #3 and PR #6; selection
+actions and native Zone names through PR #10. Remaining items moved: Space-dependent behavior to
+spaces, Zone validation rows to validation-and-export, the METr Zone mapping to metr-export, the
+holed/concave overlap blocker to window-types, and the two unbuilt Q23 entry points to
+zones-entry-points. This PRD stays the record of the accepted decisions.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
