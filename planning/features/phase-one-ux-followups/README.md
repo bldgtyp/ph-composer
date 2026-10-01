@@ -156,3 +156,32 @@ appearance: native controls delivered paint pointer events and started/stopped t
 native cursor callback subsequently allocated cursor ID 50012. Ed has a pending request to move the
 physical pointer into the viewport and identify its appearance. This is a controller limitation until that observation
 establishes whether the normal native path works; no simulated callback is counted as acceptance.
+
+### PR review follow-through (2026-09-30)
+
+- **Make Zone over shared children, fixed.** With Suggest on Make enabled, a Face inside a shared
+  or locked child Group refused the suggestion step, which rolled back the whole Make Zone
+  (`failed / operation.failed`). Make Zone's suggestion now skips those Faces and leaves them
+  unclassified, visible in validation; the standalone Suggest action keeps its refusal. Regression
+  test in `tests/zone_settings_test.rb`, which fails without the fix. `make ci` passed on Ruby
+  3.2.2 (719 tests). Fix commit: `4125758`.
+- **Right-click cost, measured.** SketchUp 26.1.188 / Ruby 3.2.2, installed RBZ from `4125758`,
+  fresh from `_private/host/blank-template.skp` to `_private/host/ux-rightclick.skp`, with
+  `GestureCostWalkthrough.build(334)`: 334 Zones, 2,004 Faces, 600 paired. Timed the Ruby side of
+  `Commands.install_feature_menus(menu, contextual: true)` against a stub menu, median of five
+  after one warm-up (development eval, not a native gesture):
+
+  | Selection | Median | Items |
+  | --- | ---: | ---: |
+  | Empty | 0.1 ms | 0 |
+  | 1 Zone Group | 52 ms | 5 |
+  | 10 Zone Groups | 45 ms | 5 |
+  | All 334 Zone Groups | 168 ms | 5 |
+  | 1 Face in an open Zone | 180 ms | 8 (+ Repair) |
+  | 6 Faces in an open Zone | 187 ms | 7 |
+
+  Each `available` check revalidates the whole selection with its own Model walk: about 20 ms per
+  Face item (eight of them) and 8 to 33 ms per Zone item (five), so cost grows with Model size
+  times item count. Proposed correction: validate the selection once per menu build and share the
+  result across that build's checks; expected about one walk (~20 to 35 ms here). Not yet applied.
+  The Zone-name rescan after a transaction measured 7.6 ms median on the same Model.
