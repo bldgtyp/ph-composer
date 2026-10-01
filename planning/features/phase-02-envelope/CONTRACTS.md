@@ -96,6 +96,14 @@ Reference target id: `ph_composer.windows.unit`. Model-level window defaults
 (`default_psi_install_id`, `default_install_depth_m`) are one settings value in the Model
 dictionary `ph_composer.windows_settings`, through the `core/` primitive in section 5.
 
+The derived Model dictionary `ph_composer.window_definitions` maps Window Type IDs to primary
+definition persistent IDs. This is a guarded pointer index, not an authored type field. Make Unique
+copies the definition mark, so that mark alone cannot identify the primary. A type rewrite uses
+the index and leaves detached definitions alone; Reset to type is the explicit reassociation.
+Names are presentation. Missing or differently stamped primary definitions refuse rather than
+silently adopting an arbitrary matching copy. The index is registered with the attribute guard
+and its writes share the owning native proposal and Undo with definition changes.
+
 Zones changes one declaration: `assembly_id` on the Face becomes a declared core reference to
 `ph_composer.assemblies.assembly`, beside `attached_zone_id` (`features/zones/declarations/faces.rb`).
 

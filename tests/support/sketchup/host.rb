@@ -30,6 +30,7 @@ CONSTRAIN_MODIFIER_MASK = 131_072 unless defined?(CONSTRAIN_MODIFIER_MASK)
 COPY_MODIFIER_MASK = 524_288 unless defined?(COPY_MODIFIER_MASK)
 ALT_MODIFIER_MASK = 1_048_576 unless defined?(ALT_MODIFIER_MASK)
 GL_TRIANGLES = 4 unless defined?(GL_TRIANGLES)
+SnapTo_Arbitrary = 0 unless defined?(SnapTo_Arbitrary)
 
 $stub_loaded_files = {}
 

@@ -378,6 +378,7 @@ module Sketchup
 
   class Face < Entity
     attr_reader :loops, :outer_loop, :normal, :edges
+    attr_accessor :material, :back_material
 
     # `edges` is opt-in. The host always gives a Face its bounding Edges, but most fixtures here do
     # not care about topology, so a Face built without them simply reports none and any rule that
@@ -534,7 +535,12 @@ module Sketchup
     end
 
     def register_group(group)
+      @group_definition_id ||= self.class.allocate_persistent_id
       group_instances << group unless group_instances.include?(group)
+    end
+
+    def group_definition_id
+      @group_definition_id
     end
 
     def initialize(values = [])
@@ -631,6 +637,10 @@ module Sketchup
       true
     end
 
+    def clear!
+      erase_entities(to_a)
+    end
+
     def transform_entities(transformation, entities)
       Array(entities).each { |entity| entity.transform!(transformation) if entity.respond_to?(:transform!) }
       true
@@ -654,10 +664,19 @@ module Sketchup
   end
 
   class Behavior
-    attr_writer :cuts_opening
+    attr_writer :cuts_opening, :is2d, :no_scale_mask
+    attr_accessor :snapto
 
     def cuts_opening?
       @cuts_opening == true
+    end
+
+    def is2d?
+      @is2d == true
+    end
+
+    def no_scale_mask?
+      @no_scale_mask || 0
     end
   end
 
@@ -678,6 +697,10 @@ module Sketchup
 
     def attribute_dictionary(name)
       @dictionaries[name]
+    end
+
+    def attribute_dictionaries
+      @dictionaries.values unless @dictionaries.empty?
     end
 
     def get_attribute(dictionary_name, key, default = nil)
@@ -734,7 +757,7 @@ module Sketchup
     end
 
     def persistent_id
-      @entities.object_id
+      @entities.group_definition_id
     end
   end
 

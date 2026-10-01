@@ -1,7 +1,7 @@
 # P2-12: the window unit and placement operations
 
 DATE: 2026-09-30
-STATUS: Slice A current-host observations complete; Slice B implemented, reviewed and current-host verified; Slice C ready under existing authorization.
+STATUS: Slice A current-host observations complete; Slice B implemented, reviewed and current-host verified; Slice C source work underway, integration and acceptance open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -53,6 +53,15 @@ A result that contradicts a PRD rule stops the stage and goes to DECISIONS.
    the changed files and repeat the Phase 1 cases it reports.
 
 ## Slice C: the unit
+
+Current source checkpoint: Unit records/full-Model occurrence reads, pure pane/anchor and placement
+geometry, definition writing, primary pointers, identity planning and rollback capture are implemented
+and independently reviewed. Final focused checks pass on both Rubies, 74 tests / 680 assertions;
+26 Ruby files pass lint. Guarded foundation reference removal is committed in `aca2e9b`.
+The Unit sources are not yet loaded by the shipping feature. Public placement and used-type
+propagation are next. See [foundation evidence](../evidence/p2-12-unit-geometry.md).
+The reference uses a root-to-instance path and Unit ID so an orphan remains addressable without
+inventing a Zone stamp. Full Slice C review and all placement/repair host gates remain open.
 
 1. **Records.** The unit record on the instance, the definition mark and the pane stamp per
    CONTRACTS section 2, with `Records::EntityStore`, and the `ph_composer.windows.unit` reference

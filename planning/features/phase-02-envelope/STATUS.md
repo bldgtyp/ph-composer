@@ -74,6 +74,16 @@ Remaining work: held-Classify replay, Slice C and downstream implementation, Ass
 assignment / export attestation, affected Phase 1 checks and integrated final acceptance.
 No placement or Aperture implementation is claimed yet.
 
+Slice C source foundations are implemented and independently reviewed, with the installed host
+fixture deliberately unchanged while the human held-Classify gesture is pending. Guarded reference
+removal is committed in `aca2e9b`. Unit records/occurrences, pane/anchor and placement geometry,
+native definition writing, the primary-definition index, copy planning and rollback capture pass
+74 focused tests / 680 assertions on both Rubies; 26 changed/new Ruby files pass lint. The broader
+Ruby suite before the two review fixes passes on both versions, 1076 / 7455. Both review findings
+are corrected and confirmed closed. These Unit files are not yet wired into feature registration
+or a shipping package; public placement, type propagation, repair and full Slice C acceptance
+remain open. See [Unit foundation evidence](evidence/p2-12-unit-geometry.md).
+
 ## Earlier implementation checkpoints
 
 Checkpoint `6a7e08f` contains P2-01 to P2-06. An immutable source archive passes full
@@ -129,7 +139,8 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 
 ## Blockers
 
-- Held-modal modifier/context acceptance needs a precise human workflow; keep it in the final batch.
+- The held-Classify fixture is armed for the requested human press/hold gesture. No gesture result
+  is recorded yet; preserve its host state while source work continues.
 - No repository decision remains: Ed approved the exact outside example, and it is published.
 
 ## Stage ledger
@@ -144,10 +155,10 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 | [P2-06 Construction export](phases/p2-06-construction-export.md) | 2.1, 1.3 | Implemented and reviewed; dual-Ruby CI/runtime and real-SKP export pass; final native gate open | [Construction evidence](evidence/p2-06-construction-export.md) |
 | [P2-07 Library seam and file provider](phases/p2-07-library-seam-and-file-provider.md) | 2.2 | Implemented and reviewed; integrated gates and native library proof pass; final attestation open | [Library evidence](evidence/p2-07-library-seam.md) |
 | [P2-08 Library sidebar and setup](phases/p2-08-library-sidebar-and-setup.md) | 2.2 | Implemented and reviewed; integrated gates and native UI workflows pass; final attestation open | [Sidebar evidence](evidence/p2-08-library-sidebar.md) |
-| [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented and reviewed; full shipping gates pass; native export checks observed; outside repository approval and attestation open | [Export evidence](evidence/p2-09-library-export.md) |
+| [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented and reviewed; full shipping gates pass; native export checks observed; approved outside repository published; final attestation open | [Export evidence](evidence/p2-09-library-export.md) |
 | [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented and reviewed; integrated gates and native records Undo/Redo/reopen pass; final attestation open | [Window records evidence](evidence/p2-10-window-records.md) |
 | [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow observed; final attestation open | [Builder evidence](evidence/p2-11-window-type-builder.md) |
-| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A observed; Slice B implemented/reviewed with native replay passing; Slice C ready under existing authorization | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
+| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A observed; Slice B implemented/reviewed with native replay passing; Slice C source underway, integration and acceptance open | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Scoped | |
 | [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
 | [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Implemented, native E15 passes | 2026-10-01 |
