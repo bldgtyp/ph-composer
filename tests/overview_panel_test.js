@@ -619,6 +619,19 @@ function assertRefused(p, zoneKey, label, draft) {
   assert.strictEqual(p.sent.filter(function (m) { return m.type === "action.invoke"; }).length, 0);
 }
 
+test("a Zone details draft refuses the settings gear until it is cancelled", function () {
+  var p = draftPage(), zoneKey = p.selectedKey(), gear = byLabel(p.section, "Zones / Faces settings");
+  type(byLabel(p.section, "Zone name"), "Unsaved name");
+
+  gear.listeners.click({});
+
+  assertRefused(p, zoneKey, "Zone name", "Unsaved name");
+  assert.strictEqual(gear.getAttribute("aria-expanded"), "false", "the settings bubble stays closed");
+  p.button("Cancel").listeners.click({});
+  gear.listeners.click({});
+  assert.strictEqual(gear.getAttribute("aria-expanded"), "true");
+});
+
 test("a Zone details draft refuses selecting one of its Face rows", function () {
   [["Zone name", "Unsaved name"], ["Building-Segment", "annex"], ["Level", "L3"], ["Ground depth", "250"]]
     .forEach(function (pair) {

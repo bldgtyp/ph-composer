@@ -47,7 +47,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     screen = { session: session, selected: null, expanded: Object.create(null), columnWidths: {},
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
-    screen.settings = new ZoneSettings(session, send);
+    screen.settings = new ZoneSettings(session, send, function () { return draftReason(screen); }, refuse);
     screen.selectionAssignment = new SelectionAssignment(session, send, function () {
       return draftReason(screen);
     });
