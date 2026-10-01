@@ -68,3 +68,23 @@ normal and synthetic composition declarations. The broader Ruby probe exposed ex
 assertions, stale manifests/API reference and a native setup menu leaking into viewport context
 menus. Composition assertions and the Extensions-only setup availability are corrected; refreshed
 manifest and final integrated verification are pending the sidebar source freeze.
+
+Integrated dual-Ruby gates, coverage, runtime/browser checks and exact installed checkpoint are
+recorded in [P2-08 evidence](p2-08-library-sidebar.md#integrated-checkpoint). Native proof remains open.
+
+## Current-host proof
+
+The exact installed `146076e` checkpoint passes the panel-closed native walkthrough, stable
+preview/apply digest, sequence retry and exact native Undo/Redo. Copy plus assignment creates a
+Material and sets an Assembly Segment in one operation; one native Undo restores both inventories
+exactly and one Redo restores both final inventories. Private proof: `library-native-roundtrip.json`.
+
+A 20,000-row synthetic catalog loaded in 2,720 ms. Two files exactly 32 MiB each, 64 MiB aggregate,
+with 20,000 total rows loaded in 2,779 ms without warnings or truncation. A one-row public page
+reports total 20,000. Exact-and-one-above refusal boundaries remain covered offline. This measures
+load, not panel rendering performance or a different host's budget.
+
+Fresh-process reopen with no provider configured retains the first copied Material exactly. A
+subsequent public conductivity edit to 0.045 W/mK succeeds with both temporary budget providers
+removed. The combined copied/assigned/edited catalog is saved; final fresh reopen and attribution
+report proof remain open. No source provider is required to edit local records.

@@ -209,6 +209,19 @@ export as `extension.invalid`. A payload without a usable declaration blocks ope
 invalidate its references and blocks export when its relevance is unknown. Never guess from a
 payload's text. Native SketchUp copy semantics are feature-owned.
 
+## Model settings
+
+`PhComposer::ModelSettings` provides one feature-owned dictionary, schema, effective defaults and a
+proposal step for settings stored on the Model. Reads do not persist defaults. A proposal guards
+the complete authored preimage, including absence, and writes the validated merged values in the
+same Model operation as its other changes. Undo restores the original dictionary state. Validation
+receives effective values; the authored baseline remains distinct from inherited defaults.
+
+A feature declares its settings fields and validation, labels, affected references and step name.
+Reference targets and retarget operations remain with the feature. Zones retains its existing
+`ph_composer.zones_settings` dictionary and public settings declarations; Windows uses its own
+dictionary and target, so introducing the primitive does not migrate saved Zone settings.
+
 ## Geometry records and occurrence references
 
 Records are canonical JSON under registered `ph_composer.*` dictionaries. A read never creates a
