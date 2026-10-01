@@ -249,3 +249,12 @@ The retained historical checkpoints above describe their original frontier; curr
 held-Classify and consolidated P2-17 acceptance. E12 to E15 pass on the
 current host; Phase 2 remains open. The first placement attempt and fresh restart are saved
 separately under `_private/host/envelope/`.
+
+P2-17 found and corrected a native Assembly Colour-by redraw failure. Signed `8a43bec` publishes
+committed changes after retaining their outcome and releasing the mutation lock. Independent review,
+dual-Ruby full CI and normal installed-package verification pass. Fresh SketchUp PID 33871 confirms
+the native colour edit, overlay/HUD redraw and exact Undo/Redo while the mode remains active.
+Current package SHA-256 is `f85b789455882d4ba39fafc0edd7266c7cafc973975b3a14832677f8f71537fd`.
+E05 now also has unique-occurrence replacement/Undo, real shared-definition refusal, hint precedence,
+2,003-Face usage cost and Model-switch evidence. Native deeper edit-path assignment and consolidated
+assertion reconciliation remain open. Resume from [P2-17 evidence](evidence/p2-17-acceptance.md).

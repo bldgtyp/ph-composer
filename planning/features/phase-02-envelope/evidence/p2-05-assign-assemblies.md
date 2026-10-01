@@ -71,4 +71,43 @@ current. One native Undo restores exact Face, Unit and area values. Journals are
 Native Assembly Colour-by activation showed the correct legend and viewport counts. Editing the
 Wall Assembly colour saved the chosen value but switched Colour-by Off. This is a confirmed failed
 redraw, not a passed colour check. The shared dispatcher correction and pending fresh-host recheck
-are tracked in [P2-17](p2-17-acceptance.md#assembly-colour-redraw-correction-in-progress).
+are tracked in [P2-17](p2-17-acceptance.md#assembly-colour-redraw-correction-verified).
+
+The signed dispatcher correction `8a43bec` now passes its fresh-process native colour-edit recheck
+against normally installed RBZ `f85b789455882d4ba39fafc0edd7266c7cafc973975b3a14832677f8f71537fd`.
+The active public legend, visible viewport overlay and HUD redraw to `#225588`, and native Undo,
+Redo and final Undo preserve the active mode and exact catalog values. Full details are in P2-17.
+
+Fresh process PID 33871 also passes public delete-with-replacement across a direct Face and two
+unique nested Group occurrences, followed by one native Undo restoring all Face values, usage and
+both Assembly records. The original native Group copy acquired its own definition but retained
+the copied Face identity; replacement correctly refused atomically with `reference.in_use` /
+`target.ambiguous`. The success fixture explicitly cleared and reauthored that synthetic copied
+Face identity before replacement. It proves retargeting of unique occurrences, not automatic
+copied-Face identity repair or mutation of shared definitions. Private journals:
+`p214-p217-replacement-{shared-refusal,unique-before,replaced,one-native-undo,outcomes}.json`.
+
+A separate real shared-definition fixture has three instances of one definition. Replacement
+refuses with `reference.in_use` / `target.shared_definition` for all three references and changes
+neither Faces nor catalogs. This confirms the accepted mutable-occurrence restriction; the
+stage's literal repeated-definition replacement wording cannot imply writes into shared storage.
+Journals are `p214-p217-replacement-actual-shared-{before,refused,outcome}.json`.
+
+Current-host public Classify checks also pass: absent fields take Wall/AttachedZone hints, explicit
+Floor and explicit boundary clear win, and an Assembly with blank hints fills nothing.
+Journal: `p214-p217-hint-precedence.json`. No placed Window or real project is involved.
+
+At 2,003 synthetic Faces, three full 21-section snapshots took 1.243, 1.280 and 1.265 seconds.
+An additional read-only TracePoint measurement found four usage aggregation calls per snapshot,
+totalling 2.977, 3.145 and 3.356 ms. TracePoint increases total snapshot time, so those totals are
+not used as the uninstrumented cost. The ordinary `selection.invalid` section refusal is expected
+with no selected Faces, not a failed model read. Usage count and gross area remain exact. Added
+aggregation cost does not warrant the scan-on-request fallback; no numeric whole-snapshot refresh
+budget is specified. The roughly 1.26-second total is retained as a large-model performance limit,
+not a claim that all refresh costs are negligible. Journals:
+`p214-p217-usage-{cost,incremental}.json`.
+
+Native Window-menu switching back to the integrated reference preserves its entire Assembly catalog
+and active Assembly Colour-by state. Journal: `p214-p217-assembly-model-switch.json`.
+E05 remains open for the literal native assignment inside a deeper nested edit path and final
+assertion reconciliation; shared-storage refusal is kept distinct from unique-occurrence success.
