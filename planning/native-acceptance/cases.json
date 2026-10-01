@@ -878,6 +878,26 @@
         "tests/zone_cutting_components_test.rb"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "E15",
+      "label": "Phase 2 Window product library copy and export",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/windows/*",
+        "src/ph_composer/library/*",
+        "src/ph_composer/html/window*",
+        "src/ph_composer/html/library*",
+        "src/ph_composer/html/sections/library.js",
+        "src/ph_composer/core/records/*",
+        "src/ph_composer/shell/*",
+        "tests/window_library*",
+        "tools/ui-preview/window_library_checks.cjs",
+        "tools/examples/library/materials.json",
+        "tools/rbz/*"
+      ],
+      "native_control_required": true
     }
   ]
 }

@@ -26,7 +26,7 @@ async function writes(page) {
       await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=libraries`);
       await page.locator("[data-tab='library']").click();
       const library = page.locator("[data-section='library']");
-      const sidebar = library.locator(".library-sidebar-root");
+      const sidebar = library.getByRole("tabpanel", { name: "Materials", exact: true }).locator(".library-sidebar-root");
       if (width < 900) await sidebar.getByRole("button", { name: "Material Library", exact: true }).click();
       await sidebar.getByLabel("Library source", { exact: true }).selectOption("synthetic");
       const fiber = sidebar.locator(".library-sidebar-row-button").filter({ hasText: "Synthetic fiber" });

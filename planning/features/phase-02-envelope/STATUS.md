@@ -152,5 +152,7 @@ are recorded. Structured case consolidation remains separate from these retained
 Generic copy composition is corrected in `04c4ff9` and independently reviewed. P2-15 source is
 implemented and independently reviewed, with focused dual-Ruby tests and four-width browser
 checks passing. It adds no library-core or shared-sidebar source changes against that correction.
-Integrated gates and fresh native E15 are next. Slice B's affected native replay is still open;
+Integrated dual-Ruby, coverage, runtime and all eight browser gates pass. Exact package
+is installed in fresh SketchUp PID 15247; native Frame copy/assignment and single Undo
+restore are observed. Glazing, staged Psi and four-kind export/readback are next. Slice B's affected native replay is still open;
 Slice C and subsequent placement/export stages still wait for the native Move-copy observation.

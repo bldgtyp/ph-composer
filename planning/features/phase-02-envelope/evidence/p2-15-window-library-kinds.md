@@ -1,7 +1,7 @@
 # P2-15 evidence: Window product libraries
 
 DATE: 2026-10-01
-STATUS: Source implemented and independently reviewed; focused/browser checks pass; integrated/native gates pending.
+STATUS: Source implemented and independently reviewed; integrated gates pass; fresh native gate in progress.
 
 Frame, Glazing and Psi-Install Type adapters live under the Windows owner. They declare SI
 wire schemas and closed mapped schemas, normalized semantic fingerprints, detached local
@@ -36,3 +36,18 @@ The sole independent architecture/simplify review reports no actionable findings
 import probe (one test / four assertions), which refuses atomically. Native E15 remains open.
 Next: integrated gates, exact package installation, fresh native Frame/Glazing drops, staged
 Psi Save and individual native Undo, then four-kind library export/readback.
+
+Integrated gates at `1dae77d` pass on Ruby 2.7.2 and 3.2.2: 991 tests / 6705 assertions,
+346 JavaScript tests and 135 Python tests. Coverage is Ruby 96.6%, JavaScript 94.9%, Python
+94.98%; Chromium 88 runtime check passes. All eight browser scripts pass after two older
+checks were scoped to their Materials sidebar and local Psi picker. The installed RBZ has
+296 files, 7,325,338 compressed bytes / 22,623,696 installed bytes, SHA-256
+`8d2e72c73482d59a9b22c22affbbc170c38fd412ba28167d60285167e4492050`. All installed
+files match. Fresh process PID 15247, bridge 60959, own `p215-native.skp` copied from the
+saved Builder fixture. E15 dependency baseline is retained before native actions.
+
+Native Frame provider drag onto the selected element card copied one product and assigned
+its Top Frame together. The actual native menu reports `Undo Copy Library Record`; one
+native Undo restores all four complete inventory/reference projections exactly. Private
+proof: `e15-before.json`, `e15-frame.json`, `e15-frame-undo.json`. Glazing, staged Psi,
+export/readback and final case attestation remain next.

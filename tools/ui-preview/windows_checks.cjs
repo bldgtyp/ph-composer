@@ -23,7 +23,7 @@ const { chromium } = require("playwright");
     const installs = pane.locator(".window-install-editor");
     await page.screenshot({ path: path.join(directory, "installs-" + width + ".png"), fullPage: true });
     const before = await page.evaluate(() => previewHost.sent.filter(message => message.type === "action.invoke").length);
-    await installs.getByRole("button", { name: /^Insulated junction/ }).click();
+    await installs.locator(".window-install-list").getByRole("button", { name: /^Insulated junction/ }).click();
     const edge = installs.locator("[data-install-element=wel_a][data-install-side=top]");
     const edgeBox = await edge.boundingBox();
     await page.mouse.click(edgeBox.x + edgeBox.width / 2, edgeBox.y);
