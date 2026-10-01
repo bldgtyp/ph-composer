@@ -61,8 +61,8 @@ nested references; revision and derived projections are excluded from journal co
 Proofs are `assembly-native-e04-*.json`; final synthetic Model is
 `assemblies-native-builder-observed.skp`. Native numeric key events plus Enter commit the
 width. The earlier CUA `typeText` attempt changed visible text but did not commit; it is
-not counted as a passing action or a confirmed product defect. Remaining Layer tools,
-Segment properties/removal, film toggle and fresh reopen still require observation. E04 stays open.
+not counted as a passing action or a confirmed product defect. The further observations below
+close additional gestures; the complete three-Layer stud-wall workflow remains required. E04 stays open.
 
 Fresh process PID 25109 / bridge 62465 runs the exact installed `43a1418` package.
 The saved partial Builder Assembly reopens with the complete Materials/Assemblies catalog
@@ -72,3 +72,15 @@ construction R remains 0.850151 m²K/W and Rsi remains 0.13. Rse changes 0.04 to
 and U with films changes 0.980247 to 0.900778. One native Undo restores the full catalog
 and unmodified Model state. Private `assembly-native-film-proof.json` and
 `assembly-native-e04-film-*.json` retain the comparisons.
+
+The same fresh `43a1418` process continues editing the reopened partial Assembly through
+seven further native commits: Add outside creates a third Layer, Move outward changes the
+selected Layer's order, the drawing dimension commits 75 mm on the clicked Layer,
+continuous insulation updates the selected segment, Clear Material clears that reference,
+Delete segment removes that segment, and Delete Layer removes the selected Layer.
+Seven individual native Model Undo steps each restore the immediately preceding complete
+Materials/Assemblies authored catalog exactly, including nested ids and references.
+The last Undo restores the starting catalog and the saved, unmodified Model state.
+Private journals `assembly-native-e04-tools-*.json` retain each before/after and verification.
+This batch does not award keyboard Material Use, the complete stud-wall calculation,
+or the full E04 gate.

@@ -52,6 +52,10 @@ exact catalog comparison; observed model saved privately. Caption-only correctio
 passes both full CI gates, Chromium 88 and eight browser scripts; fresh native caption
 readback and partial-Assembly reopen pass. Film toggle changes only the authored flag
 and exterior-film result; one Undo restores full catalog and unmodified state.
+Seven further native Layer/Segment commits and their individual Undo comparisons pass:
+Add outside, Move outward, 75 mm thickness, continuous insulation, Clear Material,
+Delete segment and Delete Layer. The complete three-Layer stud-wall workflow and keyboard
+Material Use remain open; E04 is not awarded.
 Current own `assemblies-native.skp`, PID 25109 / bridge 62465, is unmodified; panel is
 closed. Private journal and `assemblies-native-builder-observed.skp` preserve the batch.
 Next autonomous work: remaining Assembly / assignment / export and affected Phase 1 host checks.
