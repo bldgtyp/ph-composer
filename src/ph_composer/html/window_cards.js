@@ -268,7 +268,10 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
           product = cellNode("span", "window-element-product", "cell"), cells = [];
         var button = ui.button("", function () { self.picker(cell.id,
           entry[0] === "glazing" ? "glazings" : "frames", entry[0] === "glazing" ? null : entry[0], button); });
-          button.className = "window-product-select";
+          button.className = "window-product-select " + (entry[0] === "glazing" ? "window-glazing-target" :
+            "window-frame-target");
+        button.setAttribute("data-element-id", cell.id);
+        if (entry[0] !== "glazing") button.setAttribute("data-frame-side", entry[0]);
         product.appendChild(button); row.appendChild(product);
         CARD_COLUMNS.forEach(function () { var metric = cellNode("span", "window-element-metric", "cell");
           row.appendChild(metric); cells.push(metric); });

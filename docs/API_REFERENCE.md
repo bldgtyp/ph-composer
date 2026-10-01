@@ -27855,6 +27855,73 @@ Params:
           "x-unit": "m"
         }
       }
+    },
+    "imports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "client_id",
+          "copy"
+        ],
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "copy": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "provider_id",
+              "kind",
+              "generation",
+              "library_id",
+              "record_id",
+              "choice"
+            ],
+            "properties": {
+              "provider_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "psi_install_types"
+                ]
+              },
+              "generation": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "library_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "record_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "choice": {
+                "type": "string",
+                "enum": [
+                  "create",
+                  "keep_local",
+                  "use_library"
+                ]
+              },
+              "local_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expected_values": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

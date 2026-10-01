@@ -229,6 +229,11 @@
           target.expected_values);
       })) return refused("target.changed", "The Installs baseline changed. Reopen the session.", this.revision);
       var mapping = {};
+      for (var importIndex = 0; importIndex < (params.imports || []).length; importIndex++) {
+        var imported = params.imports[importIndex], copied = this.windowLibraryCopy(imported.copy, true);
+        if (copied.status !== "completed") return copied;
+        mapping[imported.client_id] = copied.value.local_id;
+      }
       params.psi_install_types.create.forEach(function (row) {
         var id = "psi_preview" + (++host.sequence); mapping[row.client_id] = id;
         host.windows.psi_install_types.records.push({ id: id, values: clone(row.values), uses: [], use_count: 0 });
@@ -603,11 +608,12 @@
       }, this) });
     }, this);
   };
-  Host.prototype.libraryResolution = function (row) {
+  Host.prototype.libraryResolution = function (row, kind) {
     var source = function (record) { var s = record.values.source;
       return s && s.kind === "library" && s.library_id === row.library_id && s.record_id === row.record_id; };
-    var exact = this.materials.records.filter(source);
-    var candidates = exact.length ? exact : this.materials.records.filter(function (record) {
+    var records = kind && kind !== "materials" ? this.windows[kind].records : this.materials.records;
+    var exact = records.filter(source);
+    var candidates = exact.length ? exact : records.filter(function (record) {
       return record.values.name === row.snapshot.name;
     });
     var result = { outcome: exact.length > 1 ? "ambiguous_source" : exact.length ? "reuse" :
@@ -627,6 +633,7 @@
   Host.prototype.libraryQuery = function (payload) {
     if (payload.name === "ph_composer.library.export_preview") { this.libraryExportPreview(payload); return; }
     var params = payload.params, rows = this.libraryCatalogs[params.provider_id] || [];
+    rows = rows.filter(function (row) { return (row.kind || "materials") === params.kind; });
     var generation = this.libraryGenerations[params.provider_id], outcome;
     if (payload.session !== this.session) outcome = refused("session.inactive", "The Model changed.", null);
     else if (params.generation !== generation) outcome = refused("library.generation_stale", "Refresh this library.",
@@ -634,8 +641,9 @@
     else {
       var metadata = this.libraryMetadata().filter(function (row) { return row.id === params.provider_id; })[0];
       var offset = params.offset || 0, end = Math.min(rows.length, offset + (params.limit || 100));
-      var page = Object.assign({}, metadata.catalogs[0], { rows: rows.slice(offset, end).map(function (row) {
-        return Object.assign({}, row, { resolution: this.libraryResolution(row) });
+      var catalog = metadata.catalogs.filter(function (row) { return row.kind === params.kind; })[0];
+      var page = Object.assign({}, catalog, { rows: rows.slice(offset, end).map(function (row) {
+        return Object.assign({}, row, { resolution: this.libraryResolution(row, params.kind) });
       }, this), total: rows.length, offset: offset, next_offset: end < rows.length ? end : null,
       warnings: [], unavailable: [] });
       outcome = { status: "completed", value: page, revision: this.revision };
@@ -677,12 +685,58 @@
         delete this.libraryFailures[params.provider_id]; }
     }
     var provider = this.libraryMetadata().filter(function (row) { return row.id === params.provider_id; })[0];
-    var value = provider ? provider.catalogs[0] : this.libraryMetadata();
+    var value = provider ? provider.catalogs.filter(function (row) { return row.kind === params.kind; })[0] :
+      this.libraryMetadata();
     this.snapshot();
     this.publish("view.result", { request_id: payload.request_id, session: payload.session,
       outcome: { status: "completed", effect: "none", revision: this.revision, value: value } });
   };
+  // A synthetic preview of Window copy targets. Ruby owns real transactions, provenance and thermal results.
+  Host.prototype.windowLibraryCopy = function (params, staged) {
+    var incoming = (this.libraryCatalogs[params.provider_id] || []).filter(function (row) {
+      return row.kind === params.kind && row.library_id === params.library_id && row.record_id === params.record_id;
+    })[0];
+    if (!incoming || params.generation !== this.libraryGenerations[params.provider_id]) {
+      return refused("library.generation_stale", "Refresh and choose again.", this.revision);
+    }
+    var target = params.assignment, type, cell;
+    if (target && target.mode === "model_default") {
+      if (JSON.stringify(target.expected_settings) !== JSON.stringify(this.windows.settings)) {
+        return refused("record.stale", "The defaults changed.", this.revision);
+      }
+    } else if (target) {
+      type = this.windows.types.records.filter(function (row) { return row.id === target.id; })[0];
+      cell = type && type.values.elements.filter(function (row) { return row.id === target.element_id; })[0];
+      if (!cell || cell.kind === "empty" || JSON.stringify(type.values) !== JSON.stringify(target.expected_values)) {
+        return refused("record.stale", "The target changed.", this.revision);
+      }
+    }
+    var records = this.windows[params.kind].records, local = records.filter(function (row) {
+      return row.id === params.local_id;
+    })[0];
+    if (params.choice === "use_library" && (!local ||
+      JSON.stringify(local.values) !== JSON.stringify(params.expected_values))) {
+      return refused("record.stale", "The local product changed.", this.revision);
+    }
+    if (params.choice === "create") {
+      local = { id: params.kind + "_preview_" + (++this.sequence), values: {}, uses: [], use_count: 0 };
+      records.push(local);
+    }
+    if (!local) return refused("library.choice_invalid", "Choose a local product.", this.revision);
+    if (params.choice !== "keep_local") local.values = JSON.parse(JSON.stringify(incoming.snapshot));
+    if (target && target.mode === "model_default") this.windows.settings.default_psi_install_id = local.id;
+    else if (cell) {
+      if (params.kind === "frames") cell.frames[target.side] = local.id;
+      else cell.glazing_id = local.id;
+      type.display.thermal = { u_w: null, u_effective: null, elements: [],
+        findings: ["Preview changed definition: canonical thermal results require the Ruby host."] };
+    }
+    if (!staged) this.revision++;
+    return { status: "completed", effect: "committed", revision: this.revision,
+      value: { local_id: local.id, assigned: Boolean(target) } };
+  };
   Host.prototype.libraryCopy = function (payload) {
+    if (payload.params.kind !== "materials") return this.windowLibraryCopy(payload.params, false);
     var params = payload.params, rows = this.libraryCatalogs[params.provider_id] || [];
     var incoming = rows.filter(function (row) {
       return row.library_id === params.library_id && row.record_id === params.record_id;

@@ -1,6 +1,7 @@
 /* Detached Installs session: products, perimeter assignments and compatible copies commit together. */
 PhComposerUI.define("window_install_editor", ["window_editor_shared", "request", "snapshot", "unit_field",
-  "fields", "workspace"], function (shared, request, snapshot, unitFields, fields, ui) {
+  "fields", "library_sidebar", "window_library", "window_library_stage", "workspace"],
+  function (shared, request, snapshot, unitFields, fields, Sidebar, library, StagedCopy, ui) {
   "use strict";
   var el = ui.element, clone = shared.clone, sides = shared.sides;
   function topology(record) {
@@ -26,6 +27,21 @@ PhComposerUI.define("window_install_editor", ["window_editor_shared", "request",
     this.add = ui.button("+ New Psi-Install Type", function () { self.editProduct(); });
       this.panel.appendChild(this.add);
     this.form = el("form", "window-install-form"); this.form.hidden = true; this.panel.appendChild(this.form);
+    this.sidebar = new Sidebar({ session: session, send: send, changed: function () { self.paint(); },
+      busy: function () { return self.requests.busy() || !self.form.hidden || Boolean(self.sidebar.guard()); },
+      adapter: library.adapter("psi_install_types", function () { return self.root.hidden ?
+        { hint: "Open an Installs session first." } : { params: {} }; }),
+      onUse: function (row) { if (self.root.hidden || self.disposed) return false;
+        self.selected = row.id; self.paint(); return true; } });
+    var oldCopy = this.sidebar.copy; oldCopy.dispose(); oldCopy.root.parentNode.removeChild(oldCopy.root);
+    this.sidebar.copy = new StagedCopy(session, send, this.sidebar.adapter, function () { self.paint(); },
+      function (copy, values) { return self.stageImport(copy, values); });
+    this.sidebar.root.appendChild(this.sidebar.copy.root);
+    this.body.appendChild(this.sidebar.root);
+    var details = this.sidebar.renderDetails;
+    this.sidebar.renderDetails = function () { details.call(this);
+      if (this.detail && this.detail.add) this.detail.add.textContent = "Stage in Installs";
+    };
     this.copyForm = el("div", "window-install-copy"); this.copyForm.hidden = true;
       this.panel.appendChild(this.copyForm);
     this.cancel = ui.button("Cancel", function () { self.cancelSession(); });
@@ -44,7 +60,8 @@ PhComposerUI.define("window_install_editor", ["window_editor_shared", "request",
     this.baselines = {}; this.drafts = {}; this.baselines[record.id] = clone(record.values);
     this.drafts[record.id] = clone(record.values); this.active = record.id; this.selected = null;
     this.products = shared.records(this.state, "psi_install_types").map(function (row) { return clone(row); });
-    this.creates = {}; this.updates = {}; this.settings = clone(snapshot.value(this.state, shared.PREFIX + "settings"));
+    this.creates = {}; this.updates = {}; this.imports = {};
+    this.settings = clone(snapshot.value(this.state, shared.PREFIX + "settings"));
     this.dirty = false; this.root.hidden = false; this.notice.textContent = "Assignments belong to this Window Type.";
     this.paint();
   };
@@ -54,6 +71,17 @@ PhComposerUI.define("window_install_editor", ["window_editor_shared", "request",
   };
   Editor.prototype.eligible = function (cell, side) {
     return cell.kind === "glazed" && shared.classification(this.drafts[this.active], cell, side) === "perimeter";
+  };
+  Editor.prototype.stageImport = function (copy, values) {
+    if (this.disposed || this.root.hidden || this.requests.busy()) return false;
+    var identity = JSON.stringify([copy.provider_id, copy.kind, copy.generation, copy.library_id, copy.record_id]);
+    var id = Object.keys(this.imports).filter(function (key) { return this.imports[key].identity === identity; },
+      this)[0] || "library_draft_" + (++Editor.sequence);
+    this.imports[id] = { identity: identity, client_id: id, copy: copy };
+    var existing = this.products.filter(function (row) { return row.id === id; })[0];
+    if (existing) existing.values = values;
+    else this.products.push({ id: id, values: values, libraryDraft: true });
+    this.selected = id; this.dirty = true; this.paint(); return true;
   };
   Editor.prototype.paintEdge = function (elementId, side) {
     if (this.disposed || this.root.hidden || this.requests.busy()) return false;
@@ -145,7 +173,9 @@ PhComposerUI.define("window_install_editor", ["window_editor_shared", "request",
     var defaultProduct = this.products.filter(function (row) {
       return row.id === self.settings.default_psi_install_id; })[0];
     choice(null, "Model default", defaultProduct && defaultProduct.values.psi_w_mk);
-    this.products.forEach(function (row) { choice(row.id, row.values.name, row.values.psi_w_mk, row); });
+    this.products.forEach(function (row) { choice(row.id, row.values.name, row.values.psi_w_mk,
+      row.libraryDraft ? null : row); });
+    this.sidebar.refresh(this.state, {}, true);
     this.paintDrawing(record);
     [this.save, this.cancel, this.apply, this.copyButton, this.add].forEach(function (button) {
       button.disabled = self.requests.busy();
@@ -199,7 +229,9 @@ PhComposerUI.define("window_install_editor", ["window_editor_shared", "request",
     }); this.drawing.replaceChildren(drawing);
   };
   Editor.prototype.saveAction = function () {
-    if (this.disposed || this.root.hidden || this.requests.busy() || !this.form.hidden) return false;
+    if (this.disposed || this.root.hidden || this.requests.busy() || !this.form.hidden || this.sidebar.guard()) {
+      return false;
+    }
     var self = this, params = { types: Object.keys(this.drafts).map(function (id) { return { id: id,
       expected_values: clone(self.baselines[id]), installs: self.drafts[id].elements.filter(function (cell) {
         return cell.kind === "glazed";
@@ -207,6 +239,9 @@ PhComposerUI.define("window_install_editor", ["window_editor_shared", "request",
       psi_install_types: { create: Object.keys(this.creates).map(function (id) { return self.creates[id]; }),
         update: Object.keys(this.updates).map(function (id) { return self.updates[id]; }) },
       expected_settings: clone(this.settings) };
+    if (Object.keys(this.imports).length) params.imports = Object.keys(this.imports).map(function (id) {
+      return { client_id: id, copy: clone(self.imports[id].copy) };
+    });
     if (!this.requests.run(shared.PREFIX + "types.installs.save", params)) return false;
     this.notice.textContent = "Saving the complete Installs session…"; this.paint(); return true;
   };
@@ -221,7 +256,8 @@ PhComposerUI.define("window_install_editor", ["window_editor_shared", "request",
           true));
       this.confirm.openModal(); return;
     }
-    this.dismissForm(); this.root.hidden = true; this.dirty = false; this.close("Installs cancelled.");
+    this.dismissForm(); this.root.hidden = true; this.dirty = false; this.sidebar.copy.withdraw();
+    this.sidebar.closeDetails(); this.close("Installs cancelled.");
       if (after) after();
   };
   Editor.prototype.render = function (state) {
@@ -229,16 +265,18 @@ PhComposerUI.define("window_install_editor", ["window_editor_shared", "request",
     var record = shared.records(state, "types").filter(function (row) { return row.id === this.active; }, this)[0];
     if (!this.root.hidden && (!record || !snapshot.value(state, shared.PREFIX + "settings"))) {
       this.requests.reset(); this.dismissForm(); this.confirm.closeModal(); this.root.hidden = true;
-        this.dirty = false; return;
+      this.sidebar.refresh(state, {}, false); this.dirty = false; return;
     }
     var outcome = this.requests.consume(state);
     if (outcome && outcome.status === "completed") {
       this.dismissForm(); this.root.hidden = true; this.dirty = false; this.close("Installs saved.");
+      this.sidebar.copy.withdraw(); this.sidebar.closeDetails();
     } else if (outcome) this.notice.textContent = outcome.message || "The draft is retained. Review and retry.";
     this.paint();
   };
   Editor.prototype.dispose = function () {
     this.disposed = true; this.requests.reset(); this.dismissForm(); this.confirm.closeModal(); this.root.hidden = true;
+    this.sidebar.dispose();
   };
   return Editor;
 });

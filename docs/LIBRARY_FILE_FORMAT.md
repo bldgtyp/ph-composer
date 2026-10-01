@@ -2,7 +2,7 @@
 
 The library file provider reads a UTF-8 JSON file, or the immediate JSON files in a folder. A
 library supplies definitions that the user copies into the SKP and edits locally. The implemented
-wire kind is `materials`. The connection provider remains proposed.
+wire kinds are `materials`, `frames`, `glazings` and `psi_install_types`. The connection provider remains proposed.
 
 ## Envelope
 
@@ -88,9 +88,34 @@ An unknown category becomes Uncategorized locally. Its original text remains in 
 source snapshot. PH-Composer omits undeclared row fields with a warning. Wire records do not
 carry local `source`, `user_data` or extension payloads.
 
+## Window products version 1
+
+Frames, Glazings and Psi-Install Types use the same envelope and identity rules as Materials.
+Only `id` and `name` are required on a wire row. Missing optional fields produce structured
+warnings. Missing quantities remain null. Numbers are SI values with the units in their key
+names; unsigned fields permit zero, and junction psi-values may be negative. Invalid mapped
+values refuse copying. Frame and Glazing colors use six-digit hexadecimal strings.
+
+| Kind | Quantity fields | Other fields and defaults |
+| --- | --- | --- |
+| `frames` | `width_m`: nonnegative m; `uf_w_m2k`: nonnegative W/m²K; `psi_g_w_mk`: signed W/mK | `manufacturer`, `product_code`, `position`, `operation`: empty strings; `color`: `#ffffff` |
+| `glazings` | `ug_w_m2k`: nonnegative W/m²K; `g_value`: 0 through 1 | `manufacturer`, `product_code`, `description`: empty strings; `color`: `#ffffff` |
+| `psi_install_types` | `psi_w_mk`: signed W/mK | No manufacturer or color field |
+
+All three kinds also accept `notes` (empty string by default) and `datasheet_links` (empty array
+by default). Their semantic fingerprints exclude local identity, source attribution and
+extension payloads. Export uses the same mapped values and retains local ids as wire row ids.
+The synthetic file at `tools/examples/library/materials.json` includes all four kinds.
+
+A copied Frame can assign to one element side, and a Glazing to one element, in the copy's
+single Undo step. Psi-Install Types can assign to a perimeter edge or the Model default.
+The Installs editor stages selected library identities and review choices; Save resolves the
+catalog generation again and copies products with all assignments in one Undo step. Cancelling
+that session makes no Model change.
+
 ## Versions, identity and limits
 
-Envelope version 1 and Materials wire version 1 are implemented. An unsupported envelope version
+Envelope version 1 and all four wire kinds at version 1 are implemented. An unsupported envelope version
 rejects that file. An unknown kind or unsupported kind version marks that library and kind
 unavailable while other supported kinds can load. In folder mode, a malformed file produces a
 code-only warning; valid neighboring files can load.

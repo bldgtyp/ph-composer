@@ -17,6 +17,7 @@ require_relative "snapshot"
 require_relative "declarations/records"
 require_relative "declarations/inventories"
 require_relative "declarations/grid"
+require_relative "library_kinds"
 require_relative "declarations/installs"
 
 module PhComposer
@@ -24,7 +25,8 @@ module PhComposer
     module_function
 
     def install(registry)
-      feature = registry.feature(FEATURE_ID, :contract_version => 1, :requires => ["ph_composer.zones"])
+      feature = registry.feature(FEATURE_ID, :contract_version => 1,
+        :requires => ["ph_composer.zones", "ph_composer.library"])
       Products::KINDS.each_value { |kind| feature.record_kind(kind) }
       feature.record_kind(Types::KIND)
       Settings.install(feature)
@@ -32,6 +34,7 @@ module PhComposer
       RecordRegistration.install(feature)
       GridRegistration.install(feature)
       InstallsRegistration.install(feature)
+      LibraryKinds.install(feature, registry)
     end
   end
 end

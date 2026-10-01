@@ -741,6 +741,15 @@
   }
 };
 
+  FIXTURES.windows.libraryProviders = [{ id: "window_products", provider_kind: "ph_composer.library.file",
+    label: "Synthetic Window products", kinds: ["frames", "glazings", "psi_install_types"] }];
+  FIXTURES.windows.libraryCatalogs = { window_products: ["frames", "glazings", "psi_install_types"].map(
+    function (kind) {
+      var values = JSON.parse(JSON.stringify(FIXTURES.windows.windows[kind].records[0].values));
+      values.name = "Library " + values.name;
+      return { kind: kind, library_id: "synthetic.windows", library_name: "Synthetic Window products",
+        record_id: kind + "_library", wire_schema_version: 1, snapshot: values };
+    }) };
   global.PhComposerPreviewFixtures = {
     names: Object.keys(FIXTURES),
     fromQuery: function (search) {

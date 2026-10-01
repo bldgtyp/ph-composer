@@ -48,7 +48,9 @@ class LibraryExportTest < PhComposerTestCase
     Assemblies::Materials::Schema::KIND.store.write(Sketchup.active_model, row)
     read = preview
     assert_equal "completed", read["status"], read.inspect
-    assert_equal [{ "kind" => "materials", "count" => 2 }], read.dig("value", "kinds")
+    assert_equal [{ "kind" => "frames", "count" => 0 }, { "kind" => "glazings", "count" => 0 },
+                  { "kind" => "materials", "count" => 2 }, { "kind" => "psi_install_types", "count" => 0 }],
+                 read.dig("value", "kinds")
     assert_equal %w[extension_data source user_data], read.dig("value", "omissions").first.fetch("fields")
     before = [@session.revision, Sketchup.active_model.operations.length, Sketchup.active_model.modified?]
     result = export

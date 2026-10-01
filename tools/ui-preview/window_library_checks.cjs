@@ -1,0 +1,70 @@
+"use strict";
+const assert = require("assert"), fs = require("fs"), os = require("os"), path = require("path");
+const { chromium } = require("playwright");
+(async function () {
+  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "phc-window-libraries-"));
+  console.log("Evidence: " + directory);
+  for (const width of [1280, 900, 420, 280]) {
+    const page = await browser.newPage({ viewport: { width, height: 900 } }), errors = [];
+    page.on("pageerror", error => errors.push(error.stack));
+    await page.goto("http://127.0.0.1:8765/tools/ui-preview/?fixture=windows");
+    await page.getByRole("button", { name: "Window Types", exact: true }).click();
+    const pane = page.locator("[data-pane=windows]");
+    const writes = () => page.evaluate(() => previewHost.sent.filter(item => item.type === "action.invoke").length);
+    async function chooseProvider(sidebar) {
+      if (await sidebar.locator(".library-sidebar-content").isHidden()) {
+        await sidebar.locator(".library-sidebar-toggle").click();
+      }
+      await sidebar.getByRole("combobox", { name: "Library source", exact: true }).selectOption("window_products");
+      await sidebar.locator(".library-sidebar-row-button").first().waitFor();
+    }
+    async function drop(source, target) {
+      await source.scrollIntoViewIfNeeded(); const start = await source.boundingBox();
+      await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2); await page.mouse.down();
+      await page.mouse.move(start.x + start.width / 2 + 10, start.y + start.height / 2 + 10);
+      await target.scrollIntoViewIfNeeded(); const end = await target.boundingBox();
+      await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 5 }); await page.mouse.up();
+    }
+    const frames = pane.locator(".library-sidebar-root[aria-label='Frame Library']");
+    await chooseProvider(frames);
+    const before = await writes();
+    await drop(frames.locator(".library-sidebar-row-button").first(),
+      pane.locator(".window-frame-target[data-element-id=wel_a][data-frame-side=top]"));
+    await pane.locator(".window-frame-target[data-element-id=wel_a][data-frame-side=top]")
+      .getByText(/^Library /).waitFor();
+    assert.strictEqual(await writes(), before + 1);
+    await pane.getByRole("combobox", { name: "Product Library" }).selectOption("glazings");
+    const glazings = pane.locator(".library-sidebar-root[aria-label='Glazing Library']");
+    await chooseProvider(glazings);
+    await drop(glazings.locator(".library-sidebar-row-button").first(),
+      pane.locator(".window-glazing-target[data-element-id=wel_a]"));
+    await pane.locator(".window-glazing-target[data-element-id=wel_a]").getByText(/^Library /).waitFor();
+    assert.strictEqual(await writes(), before + 2);
+    await page.screenshot({ path: path.join(directory, "builder-" + width + ".png"), fullPage: true });
+    await pane.getByRole("button", { name: "Edit Window Type installs" }).click();
+    const installs = pane.locator(".window-install-editor"), psi = installs.locator(".library-sidebar-root");
+    await chooseProvider(psi);
+    const psiRow = psi.locator(".library-sidebar-row-button").first(); await psiRow.scrollIntoViewIfNeeded();
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await psiRow.click();
+    await psi.getByRole("button", { name: "Use on selected target" }).click();
+    assert.strictEqual(await writes(), before + 2);
+    const edge = installs.locator("[data-install-element=wel_a][data-install-side=top]");
+    await edge.scrollIntoViewIfNeeded(); const edgeBox = await edge.boundingBox();
+    await page.mouse.click(edgeBox.x + edgeBox.width / 2, edgeBox.y);
+    await page.screenshot({ path: path.join(directory, "installs-" + width + ".png"), fullPage: true });
+    await installs.getByRole("button", { name: "Save Installs", exact: true }).click();
+    await installs.waitFor({ state: "hidden" }); assert.strictEqual(await writes(), before + 3);
+    const imports = await page.evaluate(() => previewHost.sent.filter(item =>
+      item.payload.name === "ph_composer.windows.types.installs.save").pop().payload.params.imports);
+    assert.strictEqual(imports.length, 1); assert.strictEqual(imports[0].copy.kind, "psi_install_types");
+    await page.getByRole("button", { name: "Library", exact: true }).click();
+    await page.getByRole("tab", { name: "Glazings", exact: true }).click();
+    const library = page.locator("[data-pane=library]");
+    await library.locator(".library-sidebar-root[aria-label='Glazing Library']").waitFor();
+    assert.strictEqual(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    assert.deepStrictEqual(errors, []); await page.close(); console.log("Window library screens " + width + "px: pass");
+  }
+  await browser.close();
+})().catch(error => { console.error(error); process.exit(1); });

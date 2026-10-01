@@ -1,7 +1,7 @@
 /* The three local product inventories share grid editing, lifecycle forms and use-site inspection. */
 PhComposerUI.define("window_inventory", ["panel", "library_forms", "window_form", "window_editor_shared",
-  "fields", "request", "snapshot", "unit_field", "workspace"],
-function (panel, forms, Form, shared, fields, request, snapshot, unitFields, ui) {
+  "fields", "request", "snapshot", "unit_field", "library_sidebar", "window_library", "workspace"],
+function (panel, forms, Form, shared, fields, request, snapshot, unitFields, Sidebar, library, ui) {
   "use strict";
   var quantities = {
     width_m: fields.with(fields.WIDTH_M_AS_MM, { label: "Width", allowBlank: true }),
@@ -31,7 +31,21 @@ function (panel, forms, Form, shared, fields, request, snapshot, unitFields, ui)
     this.add = ui.button("+ New " + spec.label, function () { if (!self.guard()) self.form.open("create", null,
       self.records); });
     this.heading.appendChild(this.add); root.appendChild(this.heading);
-    this.tableRoot = ui.element("div"); root.appendChild(this.tableRoot);
+    this.body = ui.element("div", "window-product-workspace"); root.appendChild(this.body);
+    this.tableRoot = ui.element("div", "window-product-table"); this.body.appendChild(this.tableRoot);
+    var adapter = library.adapter(kind, function () {
+      return kind === "psi_install_types" && self.settings ? { params: {
+        mode: "model_default", expected_settings: shared.clone(self.settings) } } :
+        { hint: "Choose a target in Window Types." };
+    });
+    this.sidebar = new Sidebar({ session: session, send: send, adapter: adapter, changed: changed,
+      busy: function () { return Boolean(self.guard()); }, onUse: kind === "psi_install_types" ?
+        function (row, target) {
+          return self.requests.run(shared.PREFIX + "settings.update", { values: {
+            default_psi_install_id: row.id, default_install_depth_m: target.expected_settings.default_install_depth_m },
+            expected_values: target.expected_settings });
+        } : null });
+    this.body.appendChild(this.sidebar.root);
     this.color = new forms.ColorForm(session, send, shared.PREFIX + kind + ".update", changed);
     this.inventory = new forms.Inventory(this.tableRoot, session, send, panel.notify, changed, {
       section: shared.PREFIX + kind, action: shared.PREFIX + kind + ".update", label: spec.label,
@@ -104,6 +118,7 @@ function (panel, forms, Form, shared, fields, request, snapshot, unitFields, ui)
     if (!this.form.root.hidden || !this.color.root.hidden) return "Finish or cancel the product form.";
     if (this.defaultDirty || this.depth && this.depth.editing) return "Apply or cancel the defaults draft.";
     if (this.requests.busy()) return "Wait for the defaults edit.";
+    if (this.sidebar.guard()) return this.sidebar.guard();
     return this.inventory.guard();
   };
   Inventory.prototype.render = function (state) {
@@ -114,6 +129,7 @@ function (panel, forms, Form, shared, fields, request, snapshot, unitFields, ui)
     function renderInventory() {
       self.inventory.externalBusy = self.form.busy() || self.color.requests.busy() || self.requests.busy();
       self.inventory.render(state); self.add.disabled = !self.enabled || self.inventory.busy();
+      self.sidebar.refresh(state, {}, self.enabled);
     }
     if (!this.defaults) { renderInventory(); return; }
     this.settings = snapshot.value(state, shared.PREFIX + "settings");
@@ -137,6 +153,7 @@ function (panel, forms, Form, shared, fields, request, snapshot, unitFields, ui)
   Inventory.prototype.dispose = function () {
     this.disposed = true; this.enabled = false; this.requests.reset(); this.form.dispose(); this.inventory.dispose();
     this.color.dispose(); if (this.depth) this.depth.dispose();
+    this.sidebar.dispose();
   };
   return { Inventory: Inventory, definitions: definitions, quantities: quantities };
 });

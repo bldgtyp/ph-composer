@@ -1,21 +1,70 @@
 {
   "format": "ph-composer.library",
   "schema_version": 1,
-  "kind_schema_versions": { "materials": 1 },
-  "library": { "id": "example.synthetic", "name": "Synthetic Materials" },
+  "kind_schema_versions": {
+    "materials": 1,
+    "frames": 1,
+    "glazings": 1,
+    "psi_install_types": 1
+  },
+  "library": {
+    "id": "example.synthetic",
+    "name": "Synthetic envelope products"
+  },
   "exported_at": "2026-10-01T12:00:00Z",
   "kinds": {
-    "materials": [{
-      "id": "example-insulation",
-      "name": "Walkthrough synthetic insulation",
-      "category": "insulation",
-      "conductivity_w_mk": 0.04,
-      "density_kg_m3": 40.0,
-      "specific_heat_j_kgk": 1000.0,
-      "emissivity": 0.9,
-      "color": "#c8d8b0",
-      "notes": "Synthetic example, not a product specification.",
-      "datasheet_links": []
-    }]
+    "materials": [
+      {
+        "id": "example-insulation",
+        "name": "Walkthrough synthetic insulation",
+        "category": "insulation",
+        "conductivity_w_mk": 0.04,
+        "density_kg_m3": 40.0,
+        "specific_heat_j_kgk": 1000.0,
+        "emissivity": 0.9,
+        "color": "#c8d8b0",
+        "notes": "Synthetic example, not a product specification.",
+        "datasheet_links": []
+      }
+    ],
+    "frames": [
+      {
+        "id": "example-frame",
+        "name": "Synthetic frame",
+        "manufacturer": "Synthetic manufacturer",
+        "product_code": "S-FRAME",
+        "position": "all",
+        "operation": "fixed",
+        "width_m": 0.08,
+        "uf_w_m2k": 1.0,
+        "psi_g_w_mk": 0.03,
+        "color": "#d4e6ec",
+        "notes": "Synthetic example, not a product specification.",
+        "datasheet_links": []
+      }
+    ],
+    "glazings": [
+      {
+        "id": "example-glazing",
+        "name": "Synthetic glazing",
+        "manufacturer": "Synthetic manufacturer",
+        "product_code": "S-GLASS",
+        "description": "Synthetic double glazing",
+        "ug_w_m2k": 0.6,
+        "g_value": 0.5,
+        "color": "#d4e6ec",
+        "notes": "Synthetic example, not a product specification.",
+        "datasheet_links": []
+      }
+    ],
+    "psi_install_types": [
+      {
+        "id": "example-psi",
+        "name": "Synthetic install junction",
+        "psi_w_mk": 0.04,
+        "notes": "Synthetic example, not a product specification.",
+        "datasheet_links": []
+      }
+    ]
   }
 }

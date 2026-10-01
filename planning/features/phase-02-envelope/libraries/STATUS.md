@@ -67,3 +67,13 @@ no standalone review file is retained.
 | 2026-09-18 | D6 confirmed: the export dialog defaults to all supported kinds, offers selected records when applicable, and ignores filters and hidden rows when determining scope. |
 | 2026-09-30 | Phase 2 planning: PRD amended for what Phase 1 merged, PLAN.md added, stale blockers cleared. Packet moved under `features/phase-02-envelope/`. Nothing implemented. |
 | 2026-09-18 | Authorized architecture corrections incorporated into PRD and shared library contracts; documentation reviewed, implementation and acceptance evidence pending. |
+
+
+## P2-15 source checkpoint
+
+Three Window kind adapters, owner copy/assignment callbacks and Window-owned provider sidebars
+are implemented and independently reviewed. Staged Psi imports resolve on the enclosing Save
+proposal through the preceding generic participant correction `04c4ff9`. Focused dual-Ruby and
+four-width browser checks pass; integration gates and fresh native E15 remain. The synthetic
+file and public format page describe all four kinds. Section 2.4 is not marked delivered until
+that host gate passes. Connection decision D2-8 follows E15.

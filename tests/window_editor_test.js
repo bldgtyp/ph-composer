@@ -125,9 +125,9 @@ test("product cards retain input identity, warn on missing quantities and audit 
   o.editor.tabs.select("audit"); assert.ok(text(o.editor.audit).includes("Empty, excluded wall area"));
   assert.ok(text(o.editor.audit).includes("Installed U"));
 });
-test("local product sidebar has no provider controls and read-only details send no actions", function () {
+test("local product sidebar remains available without providers and details send no actions", function () {
   var o = setup(), sidebar = o.editor.sidebars.frames;
-  assert.ok(sidebar.source.hidden); assert.strictEqual(sidebar.store, undefined);
+  assert.strictEqual(sidebar.store.available, false); assert.strictEqual(sidebar.source.value, "");
   sidebar.openDetails(sidebar.entries.frm_a); assert.strictEqual(o.sent.length, 0);
   o.editor.select("wel_a"); sidebar.use(sidebar.entries.frm_a.row);
   assert.strictEqual(o.sent[0].payload.params.field, "frames");

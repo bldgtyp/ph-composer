@@ -13,7 +13,7 @@ module PhComposer
       PARAMS = Shapes.object({ "types" => Shapes.list(TYPE),
                 "psi_install_types" => Shapes.object({
           "create" => Shapes.list(CREATE), "update" => Shapes.list(UPDATE) }),
-                "expected_settings" => Settings::VALUES })
+                "expected_settings" => Settings::VALUES, "imports" => LibraryImports.schema }, :optional => ["imports"])
       RESULT = Shapes.object({ "type_ids" => Shapes.list(Shapes::ID),
                 "psi_install_type_ids" => { "type" => "object", "additionalProperties" => Shapes::ID } })
 

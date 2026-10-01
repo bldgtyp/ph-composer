@@ -139,3 +139,18 @@ Two bounded corrections found in the host now pass focused tests: whole-field vi
 in Duplicate/Delete and readable omission kinds in the final file-export review. The next
 step is to install these corrections, recheck those screens and reopen persistence, then
 finish E09/E11 and continue P2-15. Full case awards remain open. See P2-09/P2-11 evidence.
+
+
+## P2-15 integration checkpoint
+
+P2-11's required native Builder workflow, exact journals and fresh persistence are observed;
+targeted form/incomplete-state checks pass on installed `74f7f05`. Its full offline gates pass
+on both Rubies (973 / 6383, 338 JS, 135 Python); all seven browser scripts pass. E09's remaining
+native selected-scope, fresh identity, reuse, failure preservation and outside-provider checks
+are recorded. Structured case consolidation remains separate from these retained observations.
+
+Generic copy composition is corrected in `04c4ff9` and independently reviewed. P2-15 source is
+implemented and independently reviewed, with focused dual-Ruby tests and four-width browser
+checks passing. It adds no library-core or shared-sidebar source changes against that correction.
+Integrated gates and fresh native E15 are next. Slice B's affected native replay is still open;
+Slice C and subsequent placement/export stages still wait for the native Move-copy observation.

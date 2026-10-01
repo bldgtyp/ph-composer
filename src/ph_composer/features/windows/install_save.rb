@@ -12,7 +12,9 @@ module PhComposer
           raise CodedError.new("target.changed", "Window defaults changed; reopen the Installs session.")
         end
         products = request.params.fetch("psi_install_types")
-        mapping = create_products(request, proposal, products.fetch("create"))
+        mapping = LibraryImports.resolve(request, proposal, request.params.fetch("imports", []),
+          products.fetch("create"))
+        mapping.merge!(create_products(request, proposal, products.fetch("create")))
         update_products(request, proposal, products.fetch("update"))
         unique_final_names!(request, proposal)
         types = request.params.fetch("types")

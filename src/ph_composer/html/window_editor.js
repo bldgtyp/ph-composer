@@ -1,8 +1,9 @@
 /* Window definitions use the public record/grid actions. Selection, viewing and order are panel state. */
 PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs", "unit_field", "units",
   "window_audit", "window_canvas", "window_cards", "window_editor_shared", "window_install_editor",
-  "window_type_list", "library_sidebar", "fields", "workspace"], function (panel, request, snapshot, Subtabs,
-  unitFields, units, audit, Canvas, cards, shared, InstallEditor, typeList, Sidebar, fields, ui) {
+  "window_type_list", "library_sidebar", "window_library", "fields", "workspace"], function (panel, request,
+  snapshot, Subtabs, unitFields, units, audit, Canvas, cards, shared, InstallEditor, typeList, Sidebar, library, fields,
+  ui) {
   "use strict";
   var el = ui.element, clone = shared.clone, WINDOW_DIMENSION = shared.WINDOW_DIMENSION,
     VIEW_SIDES = shared.VIEW_SIDES;
@@ -51,6 +52,10 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
     if (this.dimensionField && this.dimensionField.editing) return "Apply or cancel the dimension draft.";
     if (this.renameDraft) return "Finish or cancel the name edit.";
     if (this.formDraft && this.formDraft.dirty()) return "Apply or cancel the name draft.";
+    var review = this.sidebars && Object.keys(this.sidebars).map(function (kind) {
+      return this.sidebars[kind].guard();
+    }, this).filter(Boolean)[0];
+    if (review) return review;
     return this.installEditor.guard();
   };
   View.prototype.request = function (action, params, done, allowDraft) {
@@ -209,42 +214,27 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
     var self = this; this.sidebarKind = "frames";
     this.sidebars = {};
     ["frames", "glazings"].forEach(function (kind) {
-      var sidebar = new Sidebar({ localOnly: true, changed: function () { self.paint(); },
-        busy: function () { return Boolean(self.guard()); }, adapter: {
-          title: kind === "frames" ? "Frame Library" : "Glazing Library",
-          category: function (row) { return row.values.manufacturer || "manual"; },
-          categories: function (state) {
-            var seen = {};
-            return shared.records(state, kind).map(function (row) { return row.values.manufacturer || "manual"; })
-              .filter(function (name) { if (seen[name]) return false; seen[name] = true; return true; })
-              .map(function (name) { return { id: name, label: name === "manual" ? "Manual" : name }; });
-          }, searchText: function (row) {
-            return [row.values.name, row.values.manufacturer, row.values.product_code, row.values.notes].join(" ");
-          },
-          read: function (state) { return shared.records(state, kind); },
-          properties: kind === "frames" ? [["Width", "width_m", fields.WIDTH_M_AS_MM],
-            ["Uf", "uf_w_m2k", fields.U_VALUE], ["ψ-g", "psi_g_w_mk", fields.LINEAR_PSI]] :
-            [["Ug", "ug_w_m2k", fields.U_VALUE], ["g-value", "g_value", fields.FRACTION]],
-          target: function () {
-            var cell = self.record() && self.record().elements.filter(function (row) {
-              return row.id === self.selected[0];
-            })[0];
-            return cell && cell.kind === "glazed" ? { params: { element_id: cell.id } } :
-              { hint: "Select a glazed element first." };
-          } }, onUse: function (row, target) {
+      var adapter = library.adapter(kind, function (context) { return library.elementTarget(kind, context); });
+      adapter.dropSelector = kind === "frames" ? ".window-frame-target" : ".window-glazing-target";
+      adapter.dropSelection = function (hit) { return { element_id: hit.getAttribute("data-element-id"),
+        side: hit.getAttribute("data-frame-side") }; };
+      var sidebar = new Sidebar({ session: self.session, send: self.send, changed: function () { self.paint(); },
+        busy: function () { return Boolean(self.guard()); }, adapter: adapter, onUse: function (row, target) {
             var cell = self.record().elements.filter(function (entry) { return entry.id === target.element_id; })[0];
             var value = kind === "glazings" ? row.id : clone(cell.frames);
-            if (kind === "frames") value[self.interior ? ({ left: "right", right: "left" }[self.frameSide.value] ||
-              self.frameSide.value) : self.frameSide.value] = row.id;
+            if (kind === "frames") value[target.side] = row.id;
             return self.change("element", { element_id: cell.id,
               field: kind === "glazings" ? "glazing_id" : "frames", value: value });
           } });
       self.sidebars[kind] = sidebar; self.layout.appendChild(sidebar.root);
+      sidebar.dropHost = self.cardStack;
     });
     this.sidebarChoice = el("select"); this.sidebarChoice.setAttribute("aria-label", "Product Library");
     this.sidebarChoice.appendChild(ui.option("frames", "Frames"));
       this.sidebarChoice.appendChild(ui.option("glazings", "Glazings"));
-    this.sidebarChoice.addEventListener("change", function () { self.sidebarKind = self.sidebarChoice.value;
+    this.sidebarChoice.addEventListener("change", function () {
+      if (self.guard()) { self.sidebarChoice.value = self.sidebarKind; self.notice.show(self.guard()); return; }
+      self.sidebarKind = self.sidebarChoice.value;
       self.paint(); });
     this.frameSide = el("select"); this.frameSide.setAttribute("aria-label", "Frame side to assign");
     shared.sides.forEach(function (side) { self.frameSide.appendChild(ui.option(side, ui.titleCase(side))); });
@@ -290,7 +280,9 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
     Object.assign(this.page, { active: this.active, order: this.order, groups: this.groups,
       groupNames: this.groupNames, manual: this.manual, interior: this.interior, zoom: this.zoom,
         collapsed: this.collapsed });
-    if (!record) { this.audit.replaceChildren(el("p", "muted", this.enabled ? "Add a Window Type." :
+    if (!record) { Object.keys(this.sidebars).forEach(function (kind) {
+      self.sidebars[kind].refresh(self.state, {}, false);
+    }); this.audit.replaceChildren(el("p", "muted", this.enabled ? "Add a Window Type." :
       "Window Type definitions are unavailable.")); return; }
     this.title.textContent = record.name;
     if (!this.viewSide.children.length) VIEW_SIDES.forEach(function (side) {
@@ -333,7 +325,10 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
     this.cardFilterText.textContent = "Showing " + this.selected.length + " of " + ids.length + " elements";
     Object.keys(this.sidebars).forEach(function (kind) {
       self.sidebars[kind].root.hidden = kind !== self.sidebarKind;
-      self.sidebars[kind].refresh(self.state, {}, self.enabled);
+      var side = self.frameSide.value || "top";
+      if (self.interior) side = { left: "right", right: "left" }[side] || side;
+      self.sidebars[kind].refresh(self.state, { record: self.rawRecord(), selection: {
+        element_id: self.selected[0], side: side } }, self.enabled);
     }); this.frameSide.hidden = this.sidebarKind !== "frames";
     this.paintAudit();
     if (this.renameAfter === record.id) { this.renameAfter = null; this.renameInline(); }

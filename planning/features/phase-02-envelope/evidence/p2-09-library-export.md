@@ -80,3 +80,28 @@ now names each omitted record kind and field names without field values. A regre
 through the actual export callback passes with the file-export suite on Ruby 2.7.2 and
 3.2.2 (20 tests, 138 assertions). Installation and native recheck remain pending. Selected
 scope, fresh identity, subsequent reuse and complete E09 attestation remain open.
+
+
+## Remaining native export observations
+
+Installed `74f7f05` in fresh session `47ef05df-5c01-45f2-9f2b-8a35d288c96c` exports
+a filtered, explicitly selected Material to `native-export-selected.json`: exactly one record,
+retained local row id and new UUID `0d7bb8af-e15c-4578-892d-9c80abcfeb74`. The three hidden
+records are absent. The corrected final review names both omitted kinds and field names.
+Loading the earlier four-Material export through configured FileProvider returns no warnings;
+public copy preview resolves the original local id, and Keep Local returns effect `none` at
+the same revision. The temporary provider configuration is removed afterward.
+
+A private, destination-specific rename fault was armed in the host. The real form, Save panel
+and final consent run then report a write failure. Readback proves the prior file bytes exact,
+no owned temporary files, unchanged revision and an unmodified Model. The original rename
+method is restored immediately. Private proof is `e09-native-failure-74f7f05.json`.
+
+The corrected outside provider from `4193311` is installed as its two separate Plugin paths,
+registers its own SketchupExtension after core composition, and runs its public walkthrough
+with no catalog warnings or unavailable kinds. It copies the synthetic insulation with correct
+source attribution (`e09-outside-provider-74f7f05.json`). Native Undo removes that one copy
+and returns the four-Material Model to unmodified. Only those two owned Plugin paths are
+moved back into the private evidence folder. Fresh PID 12145 restores the normal six-feature
+composition, no configured providers and an unmodified synthetic Model. No external
+repository is created or published; that approval remains in Ed's final batch.

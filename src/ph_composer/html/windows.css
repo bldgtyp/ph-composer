@@ -206,3 +206,18 @@
 }
 .window-install-edge-label { fill:#314e50; font-size:12px; font-weight:600; paint-order:stroke;
   stroke:#fff; stroke-width:4px; stroke-linejoin:round; pointer-events:none; }
+.window-product-workspace { display:flex; align-items:flex-start; gap:18px; min-width:0; }
+.window-product-table { flex:1; min-width:0; }
+.window-product-select.is-drop-target { outline:2px solid var(--accent); background:#eef7f5; }
+@media (max-width:900px) {
+  .window-product-workspace { flex-direction:column; }
+  .window-product-table, .window-product-workspace > .library-sidebar-root { width:100%; box-sizing:border-box; }
+}
+.window-install-body { grid-template-columns:minmax(180px,1fr) minmax(180px,240px) 260px; }
+@media (max-width:900px) {
+  .window-install-body { grid-template-columns:minmax(0,1fr) minmax(160px,240px); }
+  .window-install-body > .library-sidebar-root { grid-column:1 / -1; }
+}
+@media (max-width:650px) {
+  .window-install-body { grid-template-columns:minmax(0,1fr); }
+}
