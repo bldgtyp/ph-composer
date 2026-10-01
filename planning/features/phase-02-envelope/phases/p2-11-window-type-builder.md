@@ -1,7 +1,7 @@
 # P2-11: the Window Type Builder
 
 DATE: 2026-09-30
-STATUS: Source implemented and independently reviewed; focused/browser checks pass; integrated/native gates open.
+STATUS: Implemented and independently reviewed; full offline/browser gates and native Builder workflow pass. Structured E11 consolidation remains.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 

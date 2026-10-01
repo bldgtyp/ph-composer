@@ -15,7 +15,8 @@ seven public commits with exact native Undo/Redo and fresh-process inventory per
 Final structured E10 attestation remains open.
 
 P2-11 screens are implemented in source. Focused checks and browser workflows at four widths pass;
-independent review is closed and native Builder acceptance is in progress on installed `7afe894`. See
+independent review is closed; the native Builder workflow, exact Undo/Redo journals and fresh
+persistence pass on installed `7afe894` plus targeted corrections on `74f7f05`. See
 [Builder evidence](../evidence/p2-11-window-type-builder.md).
 
 P2-12 Slice A is in progress in a fresh SketchUp 2026 process with a synthetic Model. The
@@ -25,9 +26,9 @@ Slice C has not started. Placement, schedules, Colour-by, translation and librar
 
 ## Next step
 
-Continue the fresh-process native P2-11 Builder workflow, then E09 export and the Slice B
-affected native replay. Creation and rename each restore exact inventories through one native
-Undo/Redo. Complete Slice A before
+Complete E09 export and Slice B affected native replay while implementing P2-15 library adapters.
+The P2-11 host workflow and targeted correction rechecks are complete; structured case consolidation
+remains. Complete Slice A before
 implementing Slice C. Proceed through the owning [PLAN.md](PLAN.md) and stage entry gates.
 
 ## Blockers and remaining acceptance

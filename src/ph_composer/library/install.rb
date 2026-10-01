@@ -5,6 +5,7 @@ require_relative "setup"
 require_relative "schemas"
 require_relative "setup_commands"
 require_relative "export_registration"
+require_relative "copy_participant"
 
 module PhComposer
   module Library
@@ -85,6 +86,7 @@ module PhComposer
     end
 
     def install_commands(feature)
+      feature.proposal_participant("#{FEATURE_ID}.copy_into_proposal", &CopyParticipant.method(:call))
       SetupCommands.install(feature)
       ExportRegistration.install(feature)
     end

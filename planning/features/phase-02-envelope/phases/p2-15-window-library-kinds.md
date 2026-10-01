@@ -1,7 +1,7 @@
 # P2-15: Frame, Glazing and Psi-Install library kinds
 
 DATE: 2026-09-30
-STATUS: Scoped. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: Implementation in progress; P2-08 workflows and P2-11 Builder entry evidence established.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -67,3 +67,19 @@ Window Type, Assembly and equipment libraries. The connection.
 - The libraries packet STATUS records 2.4 as delivered.
 - The D2-8 decision point is reached: check whether the PH-Navigator endpoint serves the neutral
   envelope, and record in the packet STATUS whether P2-16 runs now or moves to Phase 5.
+
+
+## Composition correction before this stage
+
+The staged Installs session exposed a generic P2-07 composition gap: library copy could only
+run as a dispatched action, so importing Psi products before Save would add a second Undo
+step. A separate foundation correction registers `ph_composer.library.copy_into_proposal`
+through the existing proposal-participant seam. It validates the same closed copy schemas,
+uses the same coordinator and owner callbacks, requires the caller's declared library
+dependency, and poisons the actual enclosing proposal on refusal. No nested dispatcher or
+Window special case is added. Its tests cover detached preview, trusted attribution, one
+commit, stale catalog and caught late failures, including wrong proposal arguments.
+
+The three adapters are measured against that correction's commit: adding kinds still changes
+no file under `library/` and no shared sidebar module. The new Windows Installs import payload
+stages source identities and review choices; Save resolves them again on the shared proposal.

@@ -62,3 +62,24 @@ This workflow exposed a form visibility defect: Duplicate/Delete hid numeric Uni
 but left their labels. Backend quantities copied correctly. The owned-label correction and a
 reproducing regression pass eight inventory tests and scoped ESLint. It must be packaged and
 rechecked natively before E11 closure. No structured E11 award is made from this partial run.
+
+
+## Corrected installed build and fresh persistence
+
+Installed `74f7f05` matches all 290 packaged files, SHA-256
+`2ffde8eb3bf3126dbeed50ab53b545feead246cb6be0293b8bb6c80c6686d975`.
+Fresh SketchUp 26.1.188 / Ruby 3.2.2, PID 7351, bridge 55807, session
+`47ef05df-5c01-45f2-9f2b-8a35d288c96c` reopens the saved fixture unmodified at root.
+All four Window inventories and their references equal the prior saved public captures exactly
+(`e11-reopened-74f7f05.json`). Native Duplicate shows only its name field; Delete shows only
+replacement controls and the 24-use explanation. The visibility correction is verified.
+
+A newly created incomplete type visibly highlights missing products and shows unresolved
+headline and element U-values. Public thermal projections contain null, not zero, and report
+`complete: false` (`e11-incomplete-74f7f05.json`). A native Undo restores all four original
+inventories exactly and returns the Model to unmodified. These targeted observations complete
+the Builder host gate, retaining the unchanged gesture/journal observations above at their
+original build identity. Full `make ci` passes on both Rubies: 973 tests / 6383 assertions,
+338 JavaScript tests and 135 Python tests. All seven browser scripts pass at their specified
+widths using the bundled Playwright dependency. The earlier invocation without NODE_PATH
+skipped and is not counted. P2-15 may proceed; structured E11 ledger consolidation remains.

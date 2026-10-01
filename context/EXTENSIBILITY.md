@@ -151,6 +151,14 @@ identity, references and metadata. Optional assignment accepts the generic wrapp
 `{ "target" => owner_target, "local_id" => copied_id }`; only the kind owner translates the
 wrapper into its assignment action's vocabulary. Copy and assignment refuse together.
 
+A feature requiring `ph_composer.library` may join a library copy to its own proposal through
+`request.participant("ph_composer.library.copy_into_proposal").call(request, proposal, copy_params)`.
+It uses the public copy operation's closed parameter and result schemas and the same trusted
+catalog resolution and owner callbacks. The supplied proposal must be the caller's active
+proposal. Preview remains detached; the enclosing action provides the only native transaction.
+Any participant refusal poisons the caller's active proposal, even when the caller catches it.
+This supports staged imports without exposing a nested action dispatcher.
+
 Registration validates ownership, unique ids and supported versions, plus schema and callable
 contracts. Any diagnostic refuses the whole batch. Published declaration metadata and schemas are
 defensively frozen. Invocation validates detached inputs and results and enforces catalog write
