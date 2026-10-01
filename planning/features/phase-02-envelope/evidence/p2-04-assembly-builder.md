@@ -45,3 +45,21 @@ Native Add Layer on the assigned mixed wall commits one incomplete 100 mm Layer.
 shows an unavailable U-value and the unassigned-segment warning rather than a fabricated zero.
 One native Model Undo restores the complete public Assembly catalog exactly. Evidence:
 `reference-layer-added.json` and `reference-layer-undo.json`.
+
+## Expanded native Builder journal
+
+Fresh normal installed source `7932856` in `assemblies-native.skp` observes seven distinct
+commits through native controls: Material pointer drop, Add Segment, width edit to 200 mm,
+Add Layer, Mirror Segments, Flip Layers and Flip Orientation. One native Undo per gesture
+restores each prior complete Materials/Assemblies authored catalog exactly. Seven native
+Redo steps restore the final catalog exactly. The incomplete state shows both U-values
+withheld with a missing-Material message; assigning the single board segment displays
+1.754386 W/(m² K) with films and 2.5 W/(m² K) construction only.
+
+Private read-only helper `assembly-native-journal.rb` records sorted ids/values, including
+nested references; revision and derived projections are excluded from journal comparison.
+Proofs are `assembly-native-e04-*.json`; final synthetic Model is
+`assemblies-native-builder-observed.skp`. Native numeric key events plus Enter commit the
+width. The earlier CUA `typeText` attempt changed visible text but did not commit; it is
+not counted as a passing action or a confirmed product defect. Remaining Layer tools,
+Segment properties/removal, film toggle and fresh reopen still require observation. E04 stays open.

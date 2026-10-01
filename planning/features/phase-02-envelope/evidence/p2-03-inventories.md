@@ -64,3 +64,11 @@ Private readbacks: `e03-before-replacement.json`, `e03-after-replacement.json`, 
 under `_private/host/envelope/`. Native Model Undo requires activating the Model window;
 the HtmlDialog's focused text control handles its own Undo. Assembly forms, duplicate/delete,
 narrow width and remaining Escape order still require checks.
+
+Fresh source `7932856` native Assembly create, Duplicate and guarded Delete are observed
+in the separate `assemblies-native.skp` fixture. Duplicate has new nested Layer/Segment ids
+and derived provenance; the incomplete original remains editable in its Builder. The delete
+dialog incorrectly captions its Assembly selector "Replacement material". Source `43a1418`
+corrects that caption to "Replacement assembly" using the caller's record-kind label;
+31 existing focused UI tests and scoped lint pass, followed by both full CI gates and
+Chromium 88. Fresh installed caption verification and full E03 consolidation remain pending.

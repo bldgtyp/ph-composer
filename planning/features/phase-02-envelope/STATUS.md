@@ -42,12 +42,17 @@ exclusion, both partial-glue refusals, full pairing, covered-side preservation a
 geometry glue preview refusal. Native Undo/Redo restores both pairing and counterpart splits
 exactly. The replay found and corrected SDK cutter-adjusted area leaking into gross Face area;
 public glued hosts now report 12.0 m². Private evidence and safety checks are retained.
-Current own model: `_private/host/envelope/p212b-native.skp`, PID 21117 / bridge 61720;
+Slice B observed model: `_private/host/envelope/p212b-native.skp`, PID 21117 / bridge 61720;
 its probe changes are saved separately in `p212b-7932856-observed.skp`. No outside provider
 or fault override is installed. See [Slice B evidence](evidence/p2-12-zone-cutting-rules.md).
 
 E15 has a passing structured result; D2-8 defers P2-16 to Phase 5. P2-09/P2-11 native
 workflows are observed. Complete E12 and consolidated E01 to E14 / E17 remain open.
+Native Assembly batch follows: seven Builder gestures pass one-step Undo and final Redo
+exact catalog comparison; observed model saved privately. Caption-only correction `43a1418`
+passes both full CI gates and Chromium 88; installed refresh and native caption readback are
+next. Last own Assembly process PID 22104 / bridge 61969 is quit. Resume from
+`assemblies-native-builder-observed.skp`, using the private read-only journal.
 Next autonomous work: remaining Assembly / assignment / export and affected Phase 1 host checks.
 The final human batch contains native Option Move-copy, held-modal context workflow and
 outside-example repository decision. Slice C, P2-13 and P2-14 still wait on Move-copy.
