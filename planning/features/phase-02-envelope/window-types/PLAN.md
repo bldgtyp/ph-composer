@@ -1,7 +1,7 @@
 # Window Types and placement: implementation plan
 
 DATE: 2026-09-30
-STATUS: Scoped. Authorized through the Phase 2 run 2026-10-01; preceding stage gates remain required.
+STATUS: Implementation stages delivered on branch; E12 to E15 pass, E10/E11 consolidation remains.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 

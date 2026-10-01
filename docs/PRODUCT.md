@@ -12,7 +12,7 @@ that did not depend on designPH carry over unchanged. Phase 1 implemented Zones,
 classification and the HBJSON/report export described under Zones, Envelope and Handoff; assembly
 assignment, local libraries, Window Type records, the Builder and Unit operations are implemented
 on the Phase 2 feature branch. Place, Schedule and Window Type Colour-by pass current-host
-acceptance on SketchUp 2026. Aperture export is being implemented and verified. Spaces and
+acceptance on SketchUp 2026. Aperture export also passes current-host acceptance. Spaces and
 thermal bridges remain proposed.
 
 ## The working environment

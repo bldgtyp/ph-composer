@@ -1,7 +1,7 @@
 # P2-14: aperture export
 
 DATE: 2026-09-30
-STATUS: Implemented, independently reviewed and dual-Ruby offline-gated; E14 native acceptance pending.
+STATUS: Implemented, independently reviewed and dual-Ruby offline-gated; E14 passes on current host.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -101,7 +101,7 @@ Explicit `Door` export.
 - The window-types and validation-and-export packets record the delivered scope. `make ci`
   passes on both Rubies with the manifest fresh and the footprint inside budget.
 
-## Implementation checkpoint, 2026-10-01
+## Historical implementation start checkpoint, 2026-10-01
 
 E13 passes on the current SketchUp 2026 host. Ruby snapshot projection/preflight and Python
 typed sections are being implemented against the shared synthetic
@@ -125,3 +125,11 @@ component/definition facts; contributors still consume one detached geometry tra
 Window report metadata is explicitly allowlisted, including Psi-Install names that do not
 travel in HBJSON. Exact schema, combined review, both-Ruby full gates, runtime manifest,
 footprint and native pinned-stack roundtrip remain required before E14 closes.
+
+## Delivery
+
+E14 passes on the current SketchUp 2026 host. Both full offline Ruby gates, independent review,
+normal-package native endpoint/blocking tests, canonical two-Zone export, pinned native comparison,
+Schedule areas and clean native close/reopen are recorded in the
+[E14 evidence](../evidence/p2-14-aperture-export.md). Milestone M3 is delivered on branch;
+Phase 2 consolidated acceptance remains open.

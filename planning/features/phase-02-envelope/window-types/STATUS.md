@@ -19,30 +19,29 @@ independent review is closed; the native Builder workflow, exact Undo/Redo journ
 persistence pass on installed `7afe894` plus targeted corrections on `74f7f05`. See
 [Builder evidence](../evidence/p2-11-window-type-builder.md).
 
-P2-12 Slice A is in progress in a fresh SketchUp 2026 process with a synthetic Model. The
-[host investigation](../evidence/p2-12-window-host.md) records completed probes and the remaining
-native Move-copy gesture. Independent Slice B cutting-component rules are implemented and reviewed; affected native replay is open;
-Slice C has not started. Placement, schedules, Colour-by and Aperture translation remain pending. P2-15 library
-adapters and native E15 are delivered on source `1dae77d`; placed-Unit aggregates await P2-13.
+P2-12 and E12 are complete on the current host, including the actual native Move-copy observation,
+cutting-component replay and Slice C operations. P2-13 Place, Schedule and Colour-by pass E13.
+P2-14 Aperture export passes E14, including the canonical two-Zone reference, exact g-value
+endpoints, all blocking rows, net-area read, pinned native comparison and clean native close/reopen.
+P2-15 library adapters and native E15 pass. See [E12](../evidence/p2-12-window-unit.md),
+[E13](../evidence/p2-13-place-tool.md), [E14](../evidence/p2-14-aperture-export.md) and
+[E15](../evidence/p2-15-window-library-kinds.md).
 
 ## Next step
 
-Complete Slice B affected native replay, then the batched native Move-copy observation.
-E09 export workflows and E15 library workflows are observed; final phase consolidation remains.
-The P2-11 host workflow and targeted correction rechecks are complete; structured case consolidation
-remains. Complete Slice A before
-implementing Slice C. Proceed through the owning [PLAN.md](PLAN.md) and stage entry gates.
+Consolidate E10/E11 observations and the remaining Phase 2 register through P2-17. The Window
+implementation stages are delivered on branch. Held-Classify and the integrated final workflow
+remain separate checks. Follow the owning [PLAN.md](PLAN.md) and stage entry gates.
 
 ## Blockers and remaining acceptance
 
-Native Move-copy needs an Option-key gesture that the current computer-use API cannot reliably
-issue. Clipboard copies, including cross-model paste, are measured separately. Keep this as one
-batched manual item; it does not prevent independent library and window-record work. SketchUp
-2023 and Windows gates remain separate from current-host evidence.
+The previous native Move-copy blocker is resolved by Ed's observed gesture and exact readback.
+SketchUp 2023 and Windows gates remain separate from current-host evidence.
 
 ## Verification
 
-See the linked source and host evidence. No full window-stage acceptance is claimed.
+See the linked source and host evidence. E12 to E15 pass; structured E10/E11 consolidation and
+Phase 2 integration remain open.
 
 ## Ledger
 

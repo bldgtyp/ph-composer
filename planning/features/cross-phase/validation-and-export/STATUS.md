@@ -16,6 +16,13 @@ exact implementation, package, native cases and independent-review corrections.
 
 ## Remaining scope and delivery boundaries
 
+Phase 2 P2-06 real Assembly export is implemented with native reference evidence. P2-14 Window
+construction/Aperture export passes current-host E14 on the normal RBZ: canonical two-Zone
+reference, gross parents, per-side installs, exact g endpoints, blocking findings, net opaque areas,
+pinned native comparison and clean native close/reopen. See
+[E14 evidence](../../phase-02-envelope/evidence/p2-14-aperture-export.md). Structured E06
+consolidation and Phase 2 integrated acceptance remain open.
+
 The normal build requires authored Assemblies; it safely refuses when none are available.
 Successful Phase 1 translation acceptance uses an explicit tools-only synthetic provider, excluded
 from shipping composition. Assemblies/materials authoring and later building validation belong to

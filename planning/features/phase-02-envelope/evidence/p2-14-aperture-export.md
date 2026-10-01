@@ -1,13 +1,12 @@
 # P2-14 Aperture export evidence
 
 DATE: 2026-10-01
-STATUS: Implemented, independently reviewed and offline-gated; normal package installed, E14 open.
+STATUS: Implemented, independently reviewed and offline-gated; E14 passes on current SketchUp 2026 host.
 
 E13 current-host acceptance passes. P2-14 now has typed Window constructions and Apertures,
 the declared Zone join, per-side PH psi-install, exact g endpoints, report metadata and a
 public net opaque area read used by the Schedule. The normal package is installed; native
-export, endpoint, Schedule and blocking-row checks pass below. Integrated reference acceptance
-remains open.
+export, endpoint, Schedule, blocking-row and integrated reference checks pass below.
 
 ## Current verification and review checkpoint
 
@@ -170,3 +169,33 @@ exactly. The defect is under correction; E14 remains open pending reviewed/gated
 reinstallation and the clean native close/reopen check. Source cleanup tolerates only this exact
 deleted-collection refusal, including pruning deleted definitions; other TypeErrors propagate.
 Three regression tests cover those distinctions. No shipping code is patched in the live host.
+
+## E14 current-host acceptance
+
+The lifecycle correction is signed checkpoint `e11a767`, independently reviewed with no actionable
+findings. Both Ruby 3.2.2 and 2.7.2 full `make ci` gates pass: 1,324 Ruby tests / 9,823 assertions,
+359 JavaScript tests, 168 Python tests, hostkit and package checks, no skipped Rubocop gate.
+Affected Ruby coverage is 96.9% of 13,708 lines; preceding unchanged JS/Python, browser and
+Chromium 88 runtime proofs remain applicable. Logs are `/tmp/phc-p214-lifecycle-ci-3.2.2.log`,
+`/tmp/phc-p214-lifecycle-ci-2.7.2.log` and `/tmp/phc-p214-lifecycle-ruby-coverage.log`.
+
+The new normal RBZ is 343 files, 7,418,208 compressed bytes and 22,900,236 installed bytes,
+eight wheels, within the 24 MB ceiling. SHA-256:
+`bcb9c024e20ce686b52e0b851e13fd2e762e97aa25d61551b838e6aaaf75c018`.
+Installed bytes match all archive entries and there are no extra files. Fresh SketchUp PID 26980
+runs 26.1.188 / Ruby 3.2.2 with `p214-integrated.skp` and no runtime patches.
+
+Two Models open normally. Native Window activation and document Close now allow the first
+`API.discover` call to complete and remove the closed session. SKP reopen creates a new session
+and preserves every public Unit, Face and area reference exactly. The actual installed runtime
+export `p214-integrated-fixed.hbjson` completes and passes the full pinned native comparison,
+including unchanged gross parent Face properties, the reciprocal pair, six Apertures, three
+constructions and the one exact g=0 exception. The native Schedule visibly shows east Wall
+9.76 m2, west Wall 14.01 m2 and west Roof 19.01 m2, agreeing with the hand calculation.
+
+The only shipping delta since the full endpoint/blocking matrix is Zone observer removal; no
+Window assessment, translation, report or Schedule source changed. Those assertions are retained
+from the preceding exact installed package. The changed close/reopen path and combined export are
+repeated against the fixed normal package. E14 passes on this current host. Held-Classify,
+consolidated acceptance and the remaining E17 workflow are separate gates; no release or platform
+support is inferred. Raw host identity and journals remain private.

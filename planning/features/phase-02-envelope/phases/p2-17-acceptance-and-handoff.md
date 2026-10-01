@@ -1,11 +1,13 @@
 # P2-17: acceptance and handoff
 
 DATE: 2026-09-30
-STATUS: Scoped. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: In progress. Implementation stages delivered; E12 to E15 pass, other register rows remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## Entry and scope
+
+Current continuation: [acceptance consolidation](../evidence/p2-17-acceptance.md).
 
 Requires every stage in scope to read `Implemented on branch` or `Merged to main`. Owns the
 integrated run, the closure of the acceptance register and the document handoff. No new behavior.

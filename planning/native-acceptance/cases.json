@@ -880,6 +880,46 @@
       "native_control_required": true
     },
     {
+      "id": "E13",
+      "label": "Phase 2 native Window placement, Schedule and Colour-by",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/windows/*",
+        "src/ph_composer/html/window*",
+        "src/ph_composer/html/sections/windows.js",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "tests/window*",
+        "tools/ui-preview/windows_checks.cjs"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E14",
+      "label": "Phase 2 Window Aperture export and net opaque area",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/windows/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/export/*",
+        "src/ph_composer/core/face_geometry.rb",
+        "src/ph_composer/session/*",
+        "src/ph_composer/python/*",
+        "src/ph_composer/html/window*",
+        "src/ph_composer/html/sections/windows.js",
+        "src/ph_composer/vendor/manifest.json",
+        "tests/window*",
+        "tests/python/*",
+        "tests/fixtures/windows/*",
+        "tools/runtime/*",
+        "tools/rbz/*"
+      ],
+      "native_control_required": true
+    },
+    {
       "id": "E15",
       "label": "Phase 2 Window product library copy and export",
       "mode": "mixed",
@@ -896,6 +936,21 @@
         "tools/ui-preview/window_library_checks.cjs",
         "tools/examples/library/materials.json",
         "tools/rbz/*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E17",
+      "label": "Phase 2 integrated authoring, lifecycle and export",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/*",
+        "tests/*",
+        "tools/hostkit/*",
+        "tools/runtime/*",
+        "tools/rbz/*",
+        "tools/examples/*"
       ],
       "native_control_required": true
     }

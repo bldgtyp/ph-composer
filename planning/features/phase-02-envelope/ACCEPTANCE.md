@@ -1,7 +1,7 @@
 # Phase 2 acceptance register
 
 DATE: 2026-09-30
-STATUS: In progress. E12, E13 and E15 pass on the current host; other rows retain their stated gates.
+STATUS: In progress. E12 to E15 pass on the current host; other rows retain their stated gates.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -25,7 +25,7 @@ Ids use the prefix E so they do not collide with Phase 1's A and R rows in the c
 | E11 | Windows, P2-11 | The Builder, Installs and U-Values on the host; one Save for an Installs session; incomplete elements visible and never counted as zero | Open |
 | E12 | Windows and zones, P2-12 | Fresh process: place by explicit Face reference on a wall and a flat roof; panes face out; glue verified geometrically; resize a used type with three anchors in play in one Undo step; Swap type; Re-host; scale, mirror, edit inside, Make unique, cross-Model paste, explode and Restore unit each produce the PRD's finding or repair; a copy gets its id at the next mutation; pane Faces are not Zone Faces; Solve reports a Face with glued units; the Phase 1 cases the ledger screens are repeated | Pass on current host: [E12 evidence](evidence/p2-12-window-unit.md), [Slice A](evidence/p2-12-window-host.md), [Slice B](evidence/p2-12-zone-cutting-rules.md) |
 | E13 | Windows, P2-13 | Place tool: hover outline, sill height and edge offset entry, refusals with reasons, Escape, tool stays active; Schedule with unhosted and differing units; the Window Type Colour-by mode | Pass, current SketchUp 2026 host; [evidence](evidence/p2-13-place-tool.md) |
-| E14 | Windows and export, P2-14 | The normal RBZ exports the reference model; one Aperture per glazed element on a gross parent Face; psi-install on each frame side and none on the Aperture; one window construction per distinct combination; a g-value 0 unit exports with the disclosed exception; every blocking row of the PRD blocks; net opaque area agrees with hand calculation | Open: [implementation and review checkpoint](evidence/p2-14-aperture-export.md) |
+| E14 | Windows and export, P2-14 | The normal RBZ exports the reference model; one Aperture per glazed element on a gross parent Face; psi-install on each frame side and none on the Aperture; one window construction per distinct combination; a g-value 0 unit exports with the disclosed exception; every blocking row of the PRD blocks; net opaque area agrees with hand calculation | Pass on current host: [E14 evidence](evidence/p2-14-aperture-export.md) |
 | E15 | Windows and library, P2-15 | Each of the three kinds copies from a library file; assigning a Frame or Glazing by drag copies and assigns in one Undo step; adding the kinds changed no file in `library/` | Pass: [E15 evidence](evidence/p2-15-window-library-kinds.md) |
 | E16 | Library, P2-16 | Each sign-in method; a static file host as a server; late responses after removal do nothing; no credential or address in the panel, a log, the SKP or an export. In scope only if D2-8 keeps it | Deferred to Phase 5 by D2-8 |
 | E17 | Integration, P2-17 | Both offline Ruby gates, coverage, browser and runtime checks; packaged inventory and footprint against the 22 MB target and 24 MB ceiling; fresh-process authoring to export of the reference model with nested edit paths, two Models, Undo/Redo and reopen | Open |
