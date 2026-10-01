@@ -292,7 +292,7 @@ Checked against `honeybee_ph/honeybee_ph/properties/aperture.py`,
 | --- | --- |
 | Glazed element of a unit | One `Aperture` on the host `Face`. Identifier from the unit id and the element id, display name from unit and element names. The host `Face` exports as its gross polygon with the Apertures as sub-faces, which is honeybee's shape (Q26) |
 | Empty element | Nothing. The area stays wall |
-| Products of an element | One `WindowConstruction` per distinct combination of glazing, four Frames and four resolved installs, as a simple glazing system with U-w and g-value, carrying `properties.ph.ph_glazing` and `properties.ph.ph_frame`. Its identifier is deterministic and keyed by those record ids, so two exports of one Model agree |
+| Products of an element | One `WindowConstruction` per distinct combination of glazing, four Frames, four resolved installs and translated thermal values including size-dependent U-w, as a simple glazing system with U-w and g-value, carrying `properties.ph.ph_glazing` and `properties.ph.ph_frame`. Its identifier is deterministic and keyed by those record ids and numeric values; presentation labels do not define identity, so two exports of one Model agree |
 | Frame | `PhWindowFrameElement`: `width`, `u_factor`, `psi_glazing`, and `psi_install` from that side's Psi-Install Type |
 | Psi-Install Type on a perimeter edge | The value goes to that side's `PhWindowFrameElement.psi_install`, the model default included. `Aperture.properties.ph.install_types` is left empty (Q24). The Export report lists each Window Type's installs by name, since the names do not travel in HBJSON |
 | Shared internal edge | `psi_install` 0.0 on that side's frame element |

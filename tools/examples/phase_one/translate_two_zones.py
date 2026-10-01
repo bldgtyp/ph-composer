@@ -44,6 +44,9 @@ def main() -> int:
     versions = {name: importlib.metadata.version(name) for name in PINNED}
     assert versions == PINNED, versions
     extraction = json.loads(FIXTURE.read_text())
+    # Complete the current contributor envelope without changing the retained Phase 1 records.
+    for name in ("window_constructions", "apertures"):
+        extraction["sections"][f"ph_composer.windows.export.{name}"] = {"version": 1, "records": []}
     translated = translate(extraction, SECTIONS)
     result = translated.to_document()
     assert result["state"] == "complete" and result["summary"] == {

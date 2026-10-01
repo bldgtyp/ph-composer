@@ -25,6 +25,8 @@ def test_the_product_build_lists_authored_report_face_zone_sections_and_no_expor
         "ph_composer.assemblies.export.constructions",
         "ph_composer.assemblies.export.material_sources",
         "ph_composer.zones.faces.export.faces",
+        "ph_composer.windows.export.window_constructions",
+        "ph_composer.windows.export.apertures",
         "ph_composer.zones.export.zones",
     ]
     assert EXPORTERS == ()

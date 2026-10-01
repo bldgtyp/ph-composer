@@ -1,6 +1,7 @@
 /* A Schedule counts authored occurrences, including detached definitions and copied identities. */
-PhComposerUI.define("window_schedule", ["request", "snapshot", "table", "sections/face_words", "workspace"],
-function (request, snapshot, tables, faceWords, ui) {
+PhComposerUI.define("window_schedule",
+["request", "snapshot", "table", "sections/face_words", "workspace", "units", "fields"],
+function (request, snapshot, tables, faceWords, ui, units, fields) {
   "use strict";
   var PREFIX = "ph_composer.windows.", clone = function (value) { return JSON.parse(JSON.stringify(value)); };
   var STATES = { detached_definition: "Detached definition", geometry_differs: "Geometry differs",
@@ -36,6 +37,16 @@ function (request, snapshot, tables, faceWords, ui) {
       JSON.stringify(reference.zone_path); });
     return (faceWords.faceType((found.values || {}).face_type) || "Unclassified Face") + " " + (own.indexOf(found) + 1);
   };
+  Schedule.prototype.netArea = function (unit) {
+    if (!unit.host) return "—";
+    var host = this.areas.filter(function (row) {
+      return row.reference.zone_id === unit.host.zone_id && row.reference.entity_id === unit.host.entity_id &&
+        JSON.stringify(row.reference.zone_path.concat(row.reference.entity_path)) ===
+          JSON.stringify(unit.host.zone_path.concat(unit.host.entity_path));
+    })[0];
+    return !host || host.net_opaque_area_m2 === null ? "—" :
+      units.format(host.net_opaque_area_m2, fields.AREA_M2, units.profile(fields.AREA_M2), { showUnit: false });
+  };
   Schedule.prototype.rows = function () {
     var self = this, types = this.owner.entries.map(function (entry) { return entry.record; }), ids = {};
     types.forEach(function (type) { ids[type.id] = true; });
@@ -53,7 +64,7 @@ function (request, snapshot, tables, faceWords, ui) {
           record: { name: "Window " + (index + 1), unit: unit, zone: zone ? zone.values.name : "—",
             audit: "Unit id: " + unit.id + "; occurrence path: " + unit.reference.entity_path.join(" / "),
             level: zone && zone.values.level !== null && zone.values.level !== undefined ? zone.values.level : "—",
-            host: unit.host ? self.faceName(unit.host) : "Unhosted",
+            host: unit.host ? self.faceName(unit.host) : "Unhosted", net_area: self.netArea(unit),
             state: (unit.findings || []).map(function (finding) {
               return STATES[finding.code] || ui.titleCase(finding.code);
             }).join("; ") || "Matches Type" } });
@@ -154,6 +165,7 @@ function (request, snapshot, tables, faceWords, ui) {
     if (this.disposed) return;
     var value = snapshot.value(state, PREFIX + "units"); this.enabled = Boolean(value);
     this.units = value ? value.units : [];
+    this.areas = (snapshot.value(state, PREFIX + "unit_areas") || {}).faces || [];
     this.zones = (snapshot.value(state, "ph_composer.zones.overview") || {}).zones || [];
     this.faces = (snapshot.value(state, "ph_composer.zones.faces.faces") || {}).faces || [];
     if (!this.enabled) { this.edits.reset(); this.views.reset(); this.close(); }
@@ -180,7 +192,9 @@ function (request, snapshot, tables, faceWords, ui) {
       "Window occurrences are unavailable.";
     tables.table(this.mount, this.units, { rows: this.rows(), expanded: this.expanded,
       columns: [["actions", ""], ["hierarchy", ""], ["name", "Window Type / Unit"], ["count", "Count"],
-        ["zone", "Zone"], ["host", "Host Face"], ["level", "Level"], ["state", "State"]],
+        ["zone", "Zone"], ["host", "Host Face"],
+        ["net_area", units.header("Net opaque host area", fields.AREA_M2, units.profile(fields.AREA_M2))],
+        ["level", "Level"], ["state", "State"]],
       value: function (row, field) { return row.record[field] === undefined ? "" : row.record[field]; },
       decorate: function (cell, row, field) {
         if (field === "name") {

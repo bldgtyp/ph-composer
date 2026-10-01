@@ -143,6 +143,11 @@ def test_nested_ids_are_scoped_by_assembly_in_actual_honeybee_definitions() -> N
 def model_document() -> dict[str, Any]:
     payload = cast(dict[str, Any], json.loads((ROOT.parent / "phase_one" / "two_zones_extraction.json").read_text()))
     payload["sections"].update(document()["sections"])
+    from ph_composer_translation.window_sections import ApertureSection, WindowConstructionSection
+
+    payload["sections"].update(
+        {section.id: {"version": 1, "records": []} for section in (WindowConstructionSection(), ApertureSection())}
+    )
     return payload
 
 

@@ -88,6 +88,8 @@
           value: JSON.parse(JSON.stringify(this.palette)) },
         ["ph_composer.windows.types"]: { status: "completed", value: JSON.parse(JSON.stringify(this.windows.types ||
           { records: [] })) },
+        ["ph_composer.windows.unit_areas"]: { status: "completed", value: JSON.parse(JSON.stringify(
+          this.windows.unit_areas || { faces: [], unhosted_units: [] })) },
         ["ph_composer.windows.units"]: { status: "completed", value: JSON.parse(JSON.stringify(this.windows.units ||
           { units: [] })) },
         ["ph_composer.windows.place_tool"]: { status: "completed", value: JSON.parse(JSON.stringify(

@@ -26,6 +26,8 @@ const { chromium } = require("playwright");
     await pane.getByRole("button", { name: "Stop placing", exact: true }).waitFor({ state: "hidden" });
     await pane.getByRole("tab", { name: "Schedule", exact: true }).click();
     const schedule = pane.locator(".window-schedule");
+    await schedule.getByText(/Net opaque host area/).waitFor();
+    assert.strictEqual(await schedule.locator("[data-row-key='[100,300]'] .col-net_area").textContent(), "—");
     assert.strictEqual(await schedule.locator("[data-row-key='type:wnt_a'] .col-count").textContent(), "3");
     await schedule.getByText("Living Zone", { exact: true }).first().waitFor();
     await schedule.getByText("Detached definition", { exact: true }).waitFor();

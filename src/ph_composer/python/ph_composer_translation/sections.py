@@ -67,6 +67,12 @@ class Inputs:
             raise DependencyUnavailable(requirement.section, object_id)
         return found
 
+    def all(self, requirement: Requirement[ObjectT]) -> tuple[ObjectT, ...]:
+        """Available typed objects of one explicitly declared requirement, in durable-id order."""
+        if requirement not in self._declared:
+            raise LookupError(f"{requirement.section} is not a declared requirement of this section")
+        return tuple(self.get(requirement, key) for key in sorted(self._objects.get(requirement.section, {})))
+
 
 class Section(ABC, Generic[RecordT, ObjectT]):
     """One translation section. Subclasses set the class attributes and implement `read` and `translate`."""

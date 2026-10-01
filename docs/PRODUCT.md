@@ -11,8 +11,9 @@ settled most of it through recorded interviews between 2026-09-06 and 2026-09-17
 that did not depend on designPH carry over unchanged. Phase 1 implemented Zones, face
 classification and the HBJSON/report export described under Zones, Envelope and Handoff; assembly
 assignment, local libraries, Window Type records, the Builder and Unit operations are implemented
-on the Phase 2 feature branch. Place, Schedule and Window Type Colour-by are being verified;
-Aperture export remains pending. Spaces and thermal bridges remain proposed.
+on the Phase 2 feature branch. Place, Schedule and Window Type Colour-by pass current-host
+acceptance on SketchUp 2026. Aperture export is being implemented and verified. Spaces and
+thermal bridges remain proposed.
 
 ## The working environment
 
@@ -139,6 +140,21 @@ The Schedule counts Unit occurrences by Type, including detached definitions, an
 host Face, Level and Locate. Differing or unhosted Units retain their state and offer explicit
 repair routes. Window Type Colour-by paints the generated panes through the shared drawing
 service and respects hidden geometry and tags.
+
+The Schedule shows net opaque host area: the gross host polygon minus the openings of glazed
+elements. Empty panels leave opaque area intact. Uncertain native Window geometry withholds
+the net value until repaired. Zones / Faces and assembly usage retain gross area.
+
+Export maps each glazed element to an Aperture on its gross parent Face. Construction identity
+includes product references and translated thermal values, including the element's size-dependent
+U-w and resolved Psi-Install values. Shared internal edges carry Psi-Install 0; perimeter edges
+use the assigned or model-default Psi-Install Type. The report lists installs by name and
+gross, glazed and net host areas.
+
+Exact g-values of 0 and 1 are preserved. The pinned honeybee-energy runtime accepts these
+endpoints; honeybee-schema's simple glazing range excludes them. Local conformance permits
+only this documented endpoint exception, and the Export report names each affected construction.
+PH-Composer does not substitute a nearby value.
 
 Optional external evidence follows its owner: product photos on Window Types, datasheets on frame
 and glazing records, installation photos and calculation reports on Psi-Install Types.

@@ -203,3 +203,17 @@ test("Schedule shows distinct occurrence words, friendly Face labels and identit
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params.units[0])),
     { unit_id: "wun_a", entity_path: [10, 30] });
 });
+
+test("Schedule shows net opaque area of the host occurrence and withholds uncertain area", function () {
+  var o = setup(), host = o.state.sections["ph_composer.windows.units"].value.units[0].host;
+  o.state.sections["ph_composer.windows.unit_areas"] = { status: "completed", value: {
+    faces: [{ reference: { entity_id: host.entity_id, entity_path: host.entity_path,
+      zone_path: host.zone_path, zone_id: host.zone_id }, net_opaque_area_m2: 10.01 }] } };
+  o.editor.render(o.state); o.editor.tabs.select("schedule");
+  var rows = o.editor.schedule.mount._table.rows;
+  assert.strictEqual(rows["[10,30]"].cells.net_area.textContent, "10.01");
+  assert.strictEqual(rows["[10,31]"].cells.net_area.textContent, "—");
+  o.state.sections["ph_composer.windows.unit_areas"].value.faces[0].net_opaque_area_m2 = null;
+  o.editor.render(o.state);
+  assert.strictEqual(o.editor.schedule.mount._table.rows["[10,30]"].cells.net_area.textContent, "—");
+});

@@ -269,8 +269,11 @@ through shared component storage, a locked Group or another Zone refuses with it
 
 **Cutting components.** A ComponentInstance whose definition cuts an opening owns its contents.
 Those Faces are excluded from Zone discovery, Face inventories, classification, viewport picks
-and explicit Face resolution. The shared export snapshot retains the instance and its dictionaries
-and skips its descendants.
+and explicit Face resolution. The shared export snapshot retains instance and record facts,
+including nested instances, but excludes all descendant Faces from Zone geometry. This allows
+Window export to account for Units inside foreign cutting components and refuse invalid hosts
+instead of silently omitting them. Definition facts are detached once per definition and captured
+in resumable work units; a contributor never walks the live Model again.
 
 Solve reports `adjacency.glued_instances` when a proposed partial match would cut a Face with
 glued instances. A full match still pairs. A wholly covered glued side may pair while its larger

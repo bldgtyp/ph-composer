@@ -218,6 +218,10 @@ def run_browser(binary: Path, translation: bool = False) -> dict[str, Any]:
 def check_translation(client: CDP) -> dict[str, Any]:
     """Exercise the shipped authored-construction composition and compare pinned native wheel output."""
     document = json.loads((ROOT / "tests/fixtures/phase_one/two_zones_extraction.json").read_text())
+    # The retained Phase 1 fixture predates Window contributors. The current composition declares
+    # their empty sections even when a Model has no Units; retain the historical authored records.
+    for name in ("window_constructions", "apertures"):
+        document["sections"][f"ph_composer.windows.export.{name}"] = {"version": 1, "records": []}
     request = {"request_id": "browser-export", "deadline_ms": 15000, "document": document}
     response = client.evaluate(
         """

@@ -67,7 +67,7 @@ class ZoneCuttingComponentsTest < PhComposerTestCase
     assert_nil Zones::Faces::FACE_STORE.read(@wall)
   end
 
-  def test_export_snapshot_retains_cutting_instance_dictionary_and_skips_its_entire_contents
+  def test_export_snapshot_retains_cutting_instance_records_and_suppresses_descendant_faces
     fixture
     marker = "ph_composer.test_window_unit"
     PhComposer::Records::EntityStore.new(marker).write(@instance, "id" => "unit-synthetic")
@@ -76,7 +76,8 @@ class ZoneCuttingComponentsTest < PhComposerTestCase
     snapshot = PhComposer::Export::GeometrySnapshot.capture(@model, :revision => @session.revision)
     entry = snapshot.entry_at([100, 201], :kind => "component_instance")
     assert_equal({ "id" => "unit-synthetic" }, entry.record(marker))
-    assert_empty snapshot.descendants(entry)
+    assert_empty snapshot.descendants(entry, :kind => "face")
+    assert_equal [[100, 201, 401]], snapshot.descendants(entry).map(&:path)
     assert_equal [[100, 101]], snapshot.entries.select { |row| row.kind == "face" }.map(&:path)
   end
 

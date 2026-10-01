@@ -1,7 +1,7 @@
 # P2-14: aperture export
 
 DATE: 2026-09-30
-STATUS: Implementation in progress. Authorized 2026-10-01; E13 current-host entry gate passes.
+STATUS: Implemented, independently reviewed and dual-Ruby offline-gated; E14 native acceptance pending.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -36,8 +36,8 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    geometry differs; leaves its host or overlaps; dangling product reference. All block. Frame
    and operation mismatch does not.
 5. **Python records and sections.** Typed records in `contract/`. A window constructions section:
-   one `WindowConstruction` per distinct combination of glazing, four Frames and four resolved
-   installs, with `ph_glazing` and `ph_frame`, each frame element carrying its side's
+   one `WindowConstruction` per distinct combination of glazing, four Frames, four resolved
+   installs and translated thermal values (including size-dependent U-w), with `ph_glazing` and `ph_frame`, each frame element carrying its side's
    `psi_install`, and a deterministic identifier from the record ids. An apertures section that
    requires it. Adapt `phn_windows.py` and the contract sections; drop `window_shading.py`.
 6. **Join.** `ZoneSection` declares the apertures `Requirement` and adds each aperture to its
@@ -100,3 +100,28 @@ Explicit `Door` export.
 - E14 has evidence in `evidence/p2-14-aperture-export.md`.
 - The window-types and validation-and-export packets record the delivered scope. `make ci`
   passes on both Rubies with the manifest fresh and the footprint inside budget.
+
+## Implementation checkpoint, 2026-10-01
+
+E13 passes on the current SketchUp 2026 host. Ruby snapshot projection/preflight and Python
+typed sections are being implemented against the shared synthetic
+`tests/fixtures/windows/aperture_export_section.json`. The pure net-area read and Schedule
+column are implemented with focused tests; public registration and combined gates are pending.
+No installed P2-14 package or E14 native export evidence exists yet. Current focused checks,
+independent review corrections and the exact remaining gate are in the
+[P2-14 evidence checkpoint](../evidence/p2-14-aperture-export.md).
+
+The product-ID-only deduplication rule needed a correctness clarification: a simple glazing
+system carries the actual element U-w, which can differ for two sizes using the same products.
+Deduplication therefore includes the full numeric translated construction signature and product
+IDs, including resolved psi-install and U-w. Presentation labels do not define identity. This
+preserves actual authored thermal values instead of sharing one size's U-w with another.
+The shared fixture includes same-products/different-U-w and exact g-value endpoint cases.
+
+The generic declared-section read gains `Inputs.all(requirement)` for the Aperture join. The
+public detached Face contexts provide occurrence paths and authoring state without Window
+export reading another feature's private dictionaries. Core snapshots carry generic native
+component/definition facts; contributors still consume one detached geometry traversal.
+Window report metadata is explicitly allowlisted, including Psi-Install names that do not
+travel in HBJSON. Exact schema, combined review, both-Ruby full gates, runtime manifest,
+footprint and native pinned-stack roundtrip remain required before E14 closes.

@@ -231,7 +231,7 @@ Ruby contributor and Python section share one id. Python sections are listed by 
 | --- | --- | --- | --- |
 | `ph_composer.assemblies.export.constructions` (new) | One honeybee `OpaqueConstruction` per complete Assembly, keyed by Assembly id | nothing | Contributor declares `user_data_keys: ["ph_composer.assembly_id", "ph_composer.membrane_layers"]`. An Assembly that fails to build costs one finding and produces no object |
 | `ph_composer.zones.faces.export.faces` (exists) | `FaceSpec` | nothing | Unchanged. It already carries `assembly_id` |
-| `ph_composer.windows.export.window_constructions` (new) | One `WindowConstruction` per distinct product combination | nothing | Deterministic identifier from the record ids |
+| `ph_composer.windows.export.window_constructions` (new) | One `WindowConstruction` per complete translated thermal signature and product combination | nothing | Deterministic identifier includes record ids and size-dependent U-w; presentation labels do not define identity |
 | `ph_composer.windows.export.apertures` (new) | One aperture specification per glazed element of a unit, with its host Face id | window constructions | The polygon comes from the unit's outline, never from `Face#area` |
 | `ph_composer.zones.export.zones` (exists) | `TranslatedZone` | faces, constructions, apertures | The `ConstructionProvider` constructor argument is removed. A Face whose Assembly did not build gets `dependency.unavailable` and no substitute |
 

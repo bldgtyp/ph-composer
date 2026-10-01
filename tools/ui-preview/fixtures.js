@@ -757,6 +757,15 @@
       findings: [{ code: "mirrored", repair: "new_flipped_type" }] }
   ] };
 
+  FIXTURES.windows.windows.unit_areas = { faces: AUTHORING.faces.map(function (face) {
+    var hosted = FIXTURES.windows.windows.units.units.filter(function (unit) {
+      return unit.host && JSON.stringify(unit.host) === JSON.stringify(face.reference);
+    }), uncertain = hosted.some(function (unit) { return unit.findings.length > 0; });
+    return { reference: JSON.parse(JSON.stringify(face.reference)), gross_area_m2: face.area_m2,
+      glazed_area_m2: uncertain ? null : 0, net_opaque_area_m2: uncertain ? null : face.area_m2,
+      unit_count: hosted.length, findings: uncertain ? ["geometry_differs"] : [] };
+  }), unhosted_units: [FIXTURES.windows.windows.units.units[1].reference] };
+
   FIXTURES.windows.libraryProviders = [{ id: "window_products", provider_kind: "ph_composer.library.file",
     label: "Synthetic Window products", kinds: ["frames", "glazings", "psi_install_types"] }];
   FIXTURES.windows.libraryCatalogs = { window_products: ["frames", "glazings", "psi_install_types"].map(

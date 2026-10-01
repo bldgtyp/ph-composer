@@ -8,6 +8,20 @@ module PhComposer
 
         module_function
 
+        # Detached native occurrences for contributors needing host context, including unclassified
+        # Faces. Classification validity remains the consuming feature's export policy.
+        def contexts(reader)
+          reader.snapshot.entries.select { |entry| entry.kind == "face" }.map do |entry|
+            stored = entry.record(FACE_DICTIONARY)
+            owner = Zones::ExportProjection.zone_owner(reader.snapshot, entry)
+            valid = stored && Schema.problems(stored).empty?
+            record = valid && reader.entity_record(stored,
+              :fields => %w[face_type boundary_condition assembly_id adjacency])
+            { "path" => entry.path, "record" => record || nil, "zone_id" => owner && owner[1]["id"],
+              "geometry" => entry.geometry }
+          end
+        end
+
         def install(feature)
           feature.query("#{PREFIX}.export_preflight", :description => "Face classification and Assembly checks.",
                         :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,

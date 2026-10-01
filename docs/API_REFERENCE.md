@@ -4935,6 +4935,126 @@ Example params:
 }
 ```
 
+### `ph_composer.windows.export_preflight`
+
+Placed Window geometry, hosts and thermal readiness for export. Owner: `ph_composer.windows`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings",
+    "repairs"
+  ],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "section",
+          "object_id",
+          "message",
+          "blocks_export"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The record the finding is about."
+          },
+          "message": {
+            "type": "string"
+          },
+          "blocks_export": {
+            "type": "boolean"
+          },
+          "locate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "params"
+            ],
+            "description": "A view command that shows what the finding is about.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "params": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "checked",
+          "action",
+          "params"
+        ],
+        "description": "An action the export workflow offers to run before exporting.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "checked": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.windows.frames.all`
 
 The complete frames inventory for the panel snapshot. Owner: `ph_composer.windows`.
@@ -8992,6 +9112,149 @@ Result:
                   "type": "string"
                 }
               }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.windows.units.glazed_area_by_face`
+
+Glazed opening and net opaque area; uncertain geometry withholds values. Owner: `ph_composer.windows`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "faces",
+    "unhosted_units"
+  ],
+  "properties": {
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "gross_area_m2",
+          "glazed_area_m2",
+          "net_opaque_area_m2",
+          "unit_count",
+          "findings"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "gross_area_m2": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "x-unit": "m2"
+          },
+          "glazed_area_m2": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "x-unit": "m2"
+          },
+          "net_opaque_area_m2": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "x-unit": "m2"
+          },
+          "unit_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "unhosted_units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "entity_path"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "entity_path": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
             }
           }
         }

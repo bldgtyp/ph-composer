@@ -361,9 +361,9 @@
       "sha256": "5db0cc63bc6f34f3978c8e8db9adb837631ee8996f4465ef28fb931ff3c84c75"
     },
     "html/window_schedule.js": {
-      "bytes": 13459,
+      "bytes": 14320,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "bdfb41533776ce7865b8ea16b29389d32a533d9e9248706a33ecfe34dba2bb15"
+      "sha256": "b1fe7e07678ca5833055374ee256c75008f53a0aeef060ccbb77fa210df19fd4"
     },
     "html/window_type_list.js": {
       "bytes": 12658,
@@ -391,14 +391,14 @@
       "sha256": "884e2725e72e1d8e08c345067699790718ca70c6a0a3c83ae241abb9dce64dbd"
     },
     "python/ph_composer_translation/composition.py": {
-      "bytes": 713,
+      "bytes": 841,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "6b0ac578c16d351b91da3d3490747fcef560d81f5b6169a79dde86aede69d530"
+      "sha256": "ea5efc1b11a3c701cddbf9a7fed4acb841b53dbeb11a78d5949ee1cf58d2408c"
     },
     "python/ph_composer_translation/conformance.py": {
-      "bytes": 2298,
+      "bytes": 4337,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "9b0b8f3194aa7844b4cdc3c1ad1f803c89f08fa90f0ac2fefc31541ed88afb6d"
+      "sha256": "04fdc9a69ba1f609ddc4275d7738862b82749e54dec0f2b8f74253cfa0e47191"
     },
     "python/ph_composer_translation/constructions.py": {
       "bytes": 7037,
@@ -415,15 +415,20 @@
       "mime": "text/plain; charset=utf-8",
       "sha256": "ccdf74668bbfbe19fd018dbccd764b0db735f0b4ab62fd555634162e5001ce78"
     },
+    "python/ph_composer_translation/contract/window_records.py": {
+      "bytes": 5792,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "ecb1bb1f780a89b8bf13bf2ac2357162a5a2c63c2752e54e3dab949a4240bb95"
+    },
     "python/ph_composer_translation/coordinator.py": {
       "bytes": 8636,
       "mime": "text/plain; charset=utf-8",
       "sha256": "252ab1075c97c65d443b6486bf50f81686ee7635c6dbb7e417c24a33857b771d"
     },
     "python/ph_composer_translation/entry.py": {
-      "bytes": 1478,
+      "bytes": 1522,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "83fb6702490d07fa67a57179569033081eb0ec9af24390cbbdfd77d42aa27a4a"
+      "sha256": "2a34c3e1ad025ce06594823d0a3657c2ed77a51963c1c8d8fc197dc8deda0f66"
     },
     "python/ph_composer_translation/exporters.py": {
       "bytes": 1952,
@@ -436,9 +441,9 @@
       "sha256": "81afd69d32d75db8e3e2b9f305fd568c4c000be8a8d0d37128bbf637ccfd734f"
     },
     "python/ph_composer_translation/model_sections.py": {
-      "bytes": 16293,
+      "bytes": 19327,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "1f6e7e6287affc01bb85c13475e648260c56bf7117934e3b6694f41bc29f1ca9"
+      "sha256": "dde71d15a025792628deeb551ebf8a999eb91f60ba811b5f1f5e91da93bf5bfd"
     },
     "python/ph_composer_translation/result.py": {
       "bytes": 3162,
@@ -446,14 +451,19 @@
       "sha256": "1ba3b6a6ee723d7c79dbb3db223aefb42ba7f27155a09b54ccdf396ce9ec501d"
     },
     "python/ph_composer_translation/sections.py": {
-      "bytes": 4197,
+      "bytes": 4633,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "f49792e3323f1e82350298a9cee5b80ae14df24983197a98b7bc493e2a131682"
+      "sha256": "47d133c8c277ef0fc72d62329b0af648dfaa537da8303d88d9c4e7f07cc3f3b9"
     },
     "python/ph_composer_translation/stack.py": {
       "bytes": 1361,
       "mime": "text/plain; charset=utf-8",
       "sha256": "1b73dab83dd4ee7d5b381d71d70e2a30a753b691f248b035903596f59ca6a740"
+    },
+    "python/ph_composer_translation/window_sections.py": {
+      "bytes": 6565,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "6753534840a507f8212623bbe6fdf40f99a485601ada19968e767f2f530a5992"
     },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,
@@ -657,6 +667,7 @@
     "python/ph_composer_translation/constructions.py",
     "python/ph_composer_translation/contract/__init__.py",
     "python/ph_composer_translation/contract/assembly_records.py",
+    "python/ph_composer_translation/contract/window_records.py",
     "python/ph_composer_translation/coordinator.py",
     "python/ph_composer_translation/entry.py",
     "python/ph_composer_translation/exporters.py",
@@ -664,7 +675,8 @@
     "python/ph_composer_translation/model_sections.py",
     "python/ph_composer_translation/result.py",
     "python/ph_composer_translation/sections.py",
-    "python/ph_composer_translation/stack.py"
+    "python/ph_composer_translation/stack.py",
+    "python/ph_composer_translation/window_sections.py"
   ],
   "wheel_order": [
     "ladybug_geometry-1.35.3-py3-none-any.whl",
