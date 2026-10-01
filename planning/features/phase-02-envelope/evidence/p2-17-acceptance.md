@@ -36,9 +36,13 @@ repeating unchanged passing work. Historical ledger evidence remains append-only
 
 ## Remaining work
 
+Current-host E05 native table, right-click, selection-panel Apply and inventory Paint routes pass,
+each with one native Undo restoring exact public values. Table Redo and the reference inventory
+usage calculation also pass. See [assignment evidence](p2-05-assign-assemblies.md).
+
 - Reconcile E01 to E11 retained observations with every register assertion, and execute remaining
-  independently reachable native checks. In particular E05 still has native UI routes to verify;
-  do not close it from the public assignment Undo journals or browser checks alone.
+  independently reachable native checks. E05 still needs the non-route register assertions;
+  its four native assignment routes are verified, but that alone does not close the case.
 - Record the affected Phase 1 repeat/reuse matrix and remaining narrow unknown assertions.
 - Complete integrated cross-feature Undo/Redo, nested path and staged-export restart assertions.
 - Batch genuinely inaccessible native gestures at the end. Held Classify across Model/edit-path

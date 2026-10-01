@@ -29,4 +29,26 @@ Checkpoint `6a7e08f` contains the assignment UI and passes dual-Ruby CI and all 
 scripts. It is installed. Four guarded assignments, four native Undo gestures and four native
 Redo gestures reproduce every exact public Face journal state; fresh reopen preserves those
 references. See [construction evidence](p2-06-construction-export.md). The remaining native UI
-gestures and complete E04 attestation are still open.
+gestures and complete E04 attestation were open at that checkpoint.
+
+## P2-17 current-host route verification
+
+Normal packaged RBZ `bcb9c024e20ce686b52e0b851e13fd2e762e97aa25d61551b838e6aaaf75c018`,
+SketchUp 26.1.188 / Ruby 3.2.2, fresh process PID 26980, saved synthetic
+`_private/host/envelope/p214-integrated.skp`: all four native UI assignment routes now pass.
+The Face table changed east Wall 4; native right-click, selection-panel Apply Assembly and
+inventory Paint each changed west Wall 4. Native double-click entered the west Zone edit path
+for right-click and selection. Every operation changed only `assembly_id`, preserved explicit
+Wall/Outdoors values and the reciprocal Surface pair, and one native Model Undo restored exact
+public Face, Window Unit and glazed/net area values. Table Redo also reproduced exact values.
+The expected Assembly exterior-condition mismatch finding appeared after assignment.
+Native inventory usage displayed Floor 2 / 36 m2, Roof 2 / 36 m2, partition 2 / 24 m2,
+Wall 6 / 78 m2 and unused Assembly 0 / 0 m2, matching the reference calculation.
+Paint's public palette contained only the chosen Assembly and Escape stopped Classify.
+
+Private before/after/Undo journals are `p214-p217-*-assign*.json`; assertion summaries are
+`p217-{table,context,selection-confirm,paint}-assignment-check.json`. An initial selection-picker
+attempt made no write because Apply Assembly had not been clicked; it is not counted
+as a successful assignment. No shipping methods were patched for these observations.
+E05 remains open for the other register assertions, including ceiling, stale/unreachable targets,
+replacement across occurrence shapes, hint precedence, pair mismatch and Assembly Colour-by.
