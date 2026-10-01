@@ -95,7 +95,7 @@ cell with a designPH row id beneath it, a Faces count with a refresh icon, and N
 
 | Part | Ruling |
 | --- | --- |
-| Table, control row, row actions, Faces count with refresh | Keep. The count now comes from face records and refresh reruns the usage scan (assemblies Q13) |
+| Table, control row, row actions, Faces count | Keep. The count comes from face records and is live, so the refresh icon goes (Phase 2 decision D2-3, 2026-09-30, superseding assemblies Q13). The icon returns only if the P2-05 measurement forces the scan-on-request fallback |
 | Push to designPH button, the designPH line under State, "not pushable" | Remove |
 | The declared-U warning | Remove. There are no assemblies without layers (assemblies Q4) |
 | Type chip: Wall, Floor | Change to Wall, Roof, Floor or blank, stored as honeybee's words (assemblies Q2) |

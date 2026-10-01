@@ -79,7 +79,7 @@ proving the capability it tested.
 ## Authorities
 
 - [Foundation scope](../foundation-transplant.md)
-- [Units PRD](../../features/units/PRD.md) and [status](../../features/units/STATUS.md)
+- [Units PRD](../../features/cross-phase/units/PRD.md) and [status](../../features/cross-phase/units/STATUS.md)
 - [Decisions](../../DECISIONS.md)
 - [Contributor architecture](../../../context/EXTENSIBILITY.md)
 - [Agent interface](../../../context/AGENT_INTERFACE.md)

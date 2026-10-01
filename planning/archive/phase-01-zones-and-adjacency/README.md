@@ -4,7 +4,7 @@ The first feature packet. It settles what the fundamental unit of geometry is, t
 that keeps PH-Composer's Zone distinct from honeybee's Room and honeybee's zone tag, and how
 interior faces between Zones are found, recorded and kept honest.
 
-Code owner: [`src/ph_composer/features/zones/`](../../../src/ph_composer/features/zones/install.rb), which also owns Faces ([R-D1](../../archive/phase-01-faces-and-zones-refactor/DECISIONS.md#r-d1-authored-geometry-ownership)); this packet remains the product contract.
+Code owner: [`src/ph_composer/features/zones/`](../../../src/ph_composer/features/zones/install.rb), which also owns Faces ([R-D1](../phase-01-faces-and-zones-refactor/DECISIONS.md#r-d1-authored-geometry-ownership)); this packet remains the product contract.
 
 ## Read order
 
@@ -13,7 +13,7 @@ Code owner: [`src/ph_composer/features/zones/`](../../../src/ph_composer/feature
 2. [STATUS.md](STATUS.md): current state, next step, blockers.
 
 3. [PLAN.md](PLAN.md): delivery against the merged foundation and the shared
-   [Phase 1 plan](../../archive/phase-01-faces-and-zones/PLAN.md). Entity storage, geometry transactions and feature
+   [Phase 1 plan](../phase-01-faces-and-zones/PLAN.md). Entity storage, geometry transactions and feature
    reconciliation still require implementation; the foundation alone does not supply them.
 
 ## Scope

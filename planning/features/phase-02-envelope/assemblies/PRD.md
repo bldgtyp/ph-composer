@@ -1,0 +1,378 @@
+# Assemblies and materials: behavior contract
+
+DATE: 2026-09-30
+STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 18 decisions recorded below. Architecture review folded in 2026-09-18 (Q21 to Q23). Amended 2026-09-30 for what Phase 1 merged. [PLAN.md](PLAN.md) allocates the work to Phase 2 stages.
+AUTHOR: Ed May, BLDGTYP, with Claude
+ISSUE: none (local planning draft)
+
+## Amendments after Phase 1
+
+Proposed 2026-09-30. The body below was written before the foundation existed. Rows that restate
+what the merged code does are facts. Rows that cite a D2 decision are proposals and govern only
+once Ed confirms them; until then the body stands. The reasons are in the Phase 2
+[DECISIONS](../DECISIONS.md), and the names in [CONTRACTS](../CONTRACTS.md).
+
+| Body text | Reads as |
+| --- | --- |
+| "face-assignment" as the owner or registrant of an operation | The `zones` feature, which owns Face code. The face-assignment packet still owns the behavior |
+| "The assemblies delete command owns the single `ModelOperation.perform` and calls Reassign inside it" | The assemblies delete handler builds one proposal, asks the foundation to retarget references to the Assembly kind, and passes the returned plan to `propose_delete`. Zones registered the retargeter; assemblies names no referrer. Dispatch opens the one operation. Still one Undo step, still all or nothing |
+| Reassign as an operation that "opens its own operation when called alone and joins the caller's" | Two registrations in Zones: the `assign_assembly` action and a reference retargeter for the Assembly kind |
+| Assembly read "owned by assemblies", used by the picker, the Colour-by mode, the hint fill and the mismatch finding | As written. Zones requires assemblies and reads the registered Assembly read (D2-1, revised by Ed 2026-10-01) |
+| "Contracts with face-assignment": this packet "reaches" Face records through operations face-assignment registers | Assemblies is a definitions feature and requires nothing; no file in it names Zones or a Face (D2-1, revised 2026-10-01). Usage, Locate and Paint onto faces are built by Zones and contributed to the Assemblies inventory by Zones' panel module. The only assemblies code involved is the delete action's retarget call |
+| Q13: usage scanned on panel open and on Refresh, with an as-of time and stale mark | D2-3, confirmed 2026-09-30: a live snapshot section, so no as-of time is needed |
+| Q14: Paint onto faces | Kept as the secondary route. Selecting Faces and choosing an Assembly is primary under the geometry-first rule (D2-2, confirmed 2026-09-30) |
+| `created_at`, `updated_at` in Records | D2-4, confirmed 2026-09-30: dropped |
+| Q21: "The key name is a working assumption until the namespace decision closes" | Closed. The key is `ph_composer`, already written by Zones, and the contributor declares its two leaf keys with `user_data_keys:` |
+| Q23: "If the transplanted contributor registry cannot express a dependency between sections, that is a foundation contract gap" | It can. Typed section requirements are implemented |
+| "Through PHX" in the Acceptance shape, and the steel stud METr read-back | Deferred with METr (D12) to the metr-export packet. Phase 2 closes on HBJSON reloaded in honeybee |
+| Port disposition, Python: `phn_assemblies/` ports | Its `thermal.py` cross-check and `declared.py` do not port. The export carries layers and claims no number |
+
+## Problem
+
+Every classified face needs an assembly, and a Phius model needs that assembly layer by layer:
+METr and WUFI-Passive take materials, thicknesses and mixed layers, not a bare U-value. The
+predecessor built the authoring half and proved it on the host: a graphical Assembly Builder, a
+Materials inventory, shared material records, usage, guarded delete and an HBJSON export.
+
+About a third of that feature existed to live beside designPH. designPH held the face-to-assembly
+assignment, so the predecessor pushed each assembly into designPH's library as an equivalent
+single layer, adopted assemblies designPH already had, and reviewed differences when a designPH
+row changed. PH-Composer owns the face record, so that whole loop has no job. This packet is
+the predecessor's feature with the loop removed and the honeybee mapping tightened.
+
+## Port disposition
+
+Measured on the predecessor at `f358ebf`: `features/assemblies/` is 4,103 lines of Ruby. Detail
+lives in `../ph-navigator-sketchup/planning/archive/assembly-builder/`; this table is the ruling.
+
+| Part | Lines | Disposition |
+| --- | --- | --- |
+| `material_schema`, `assembly_schema`, `attrs`, `model_library` | 364 | Port. Drop the `designph` field and the designPH source kind |
+| `builder`, `commands/` (assembly, layers, material, material_resolution, change) | 1,083 | Port unchanged in behavior |
+| `thermal`, `validation`, `snapshot`, `actions`, `message_parts` | 729 | Port. Validation loses its push and difference rows |
+| `usage/` (scan, row_index, task) | 416 | Adapt. The scan reads face records, not designPH tables |
+| `export_contract`, `export_report` | 178 | Adapt. Drops the push, difference and packed sections |
+| `push/`, `adoption/`, `designph/`, `states`, `origin`, `designph_cell` | 1,291 | Drop |
+| Python: `constructions/`, `phn_assemblies/`, `contract/sections/assemblies.py` and `assembly_records.py` in the translation package | about 900 | Port. This is the code that writes `OpaqueConstruction` and the division grid. Drop the declared-U sandwich and the designPH table resolution in `constructions/tables.py`. Adapt the `ph_nav` construction side channel in `phn_assemblies/values.py`: it becomes the `ph_composer` block under Export mapping and loses `air_barrier`, `kind` and the hint fields |
+| Panel: Builder SVG, toolbar, property bubbles, inventories, library sidebar | not counted | Port. Drop the push chip, the difference banner and the adoption view |
+
+The predecessor's panel is the starting UI, as Ed directed on 2026-09-18. Port from the frozen
+`f358ebf`, as the foundation packet recommends. A later predecessor fix to assemblies enters only
+as an explicit change to this table.
+
+## Decision
+
+- An **Assembly** is a model-local record of ordered **Layers**. A Layer owns a thickness and one
+  or more **Layer-Segments**. A Layer-Segment names one shared **Material**, a width, and
+  optionally a steel stud spacing. One Material record serves every assembly that uses it.
+- Assembly, Layer and Material are METr's own screen words and PH-Composer uses them on screen
+  and in records. honeybee says `OpaqueConstruction` and `EnergyMaterial`; the mapping is recorded
+  the way Zone maps to `Room` (Q1).
+- Every assembly has real layers. The predecessor's declared-U kind is removed (Q4). What is
+  exported is what the user sees in the Builder.
+- The face record's `assembly_id` is the only assignment. There is no second copy of an
+  assignment anywhere, and nothing to push, adopt or reconcile.
+- The assembly's `type` and `exterior_condition` stay as hints, as face-assignment Q7 uses them,
+  and store the face record's own values, shown in the Classify palette's words (Q2).
+- U-values are computed in Ruby for display. The Builder header shows two, with surface films and
+  without, as the predecessor does (Q8). The exported model carries the layers, and METr computes
+  its own result. PH-Composer claims nothing about METr's number.
+- An assigned incomplete assembly blocks export. An unused incomplete assembly does not.
+
+## Vocabulary
+
+| Term | Meaning | honeybee |
+| --- | --- | --- |
+| Assembly | A reusable construction definition: ordered layers, outside to inside or the reverse per its orientation | `OpaqueConstruction` |
+| Layer | One position in an assembly. Owns thickness. Holds one or more Layer-Segments | One `EnergyMaterial` in the construction's material list |
+| Layer-Segment | One side-by-side strip of a Layer: a Material and a width. Always written with its qualifier (Q3) | One column of the layer material's honeybee-ph `PhDivisionGrid` |
+| Building-Segment | The zones packet's unit that becomes one METr model. Always written with its qualifier (Q3) | honeybee-ph `BldgSegment` |
+| Mixed layer | A Layer with two or more Layer-Segments, such as studs and cavity insulation | An `EnergyMaterial` whose `properties.ph.divisions` is populated |
+| Steel stud layer | A mixed layer whose stud Layer-Segment carries a spacing | `PhDivisionGrid.is_a_steel_stud_cavity` |
+| Material | Shared thermal properties and a display colour. Thickness is never on the Material | `EnergyMaterial` properties, `properties.ph.ph_color` |
+| SD assembly (later) | A placeholder for early design: three real layers sized to a target U-value | An ordinary `OpaqueConstruction` |
+| Assembly usage | The faces whose record names this assembly, as of the last scan | Derived |
+
+## Records
+
+Carried from the predecessor with the changes the interview made. Units are in the key names.
+
+```
+Material     id (mat_), name, category, conductivity_w_mk, density_kg_m3,
+             specific_heat_j_kgk, emissivity, color, notes, source,
+             datasheet_links, user_data, schema_version
+
+Assembly     id (asm_), name, type, orientation, exterior_condition,
+             ventilated_cladding, color, layers[], air_barrier, notes,
+             photo_collections, source, user_data, schema_version
+
+  layer      id (lyr_), thickness_mm, segments[]
+  segment    id (seg_), width_mm, material_id, is_continuous_insulation,
+             steel_stud_spacing_mm
+```
+
+- Removed 2026-09-30 by Phase 2 decision D2-4: `created_at` and `updated_at`, on both records.
+- Removed: `kind`, `declared_u_w_m2k`, `declared_thickness_mm` (Q4), the `designph` push slot and
+  the `designph_model` source kind. `source` keeps `manual`, `derived` and `library`.
+- Added: `color` (Q6) and `ventilated_cladding` (Q8).
+- `type` is `Wall`, `RoofCeiling`, `Floor` or absent. `exterior_condition` is `Outdoors`, `Ground`,
+  `AttachedZone`, `Adiabatic` or absent, shown as the palette shows them, To neighbour included
+  (Q2).
+- `source` keeps `library` on the Assembly for a later Assembly library kind. Nothing in this
+  packet writes it, because the libraries packet publishes Materials and no Assemblies (its Q2).
+- **Membrane.** A Material whose category is Membrane is a membrane, the predecessor's rule in
+  `material_schema.rb`. A membrane needs no conductivity. It occupies a Layer with exactly one
+  Layer-Segment, contributes no resistance, and is left out of both U-values. An assembly whose
+  layers are all membranes has no U-value and counts as incomplete.
+- **Steel stud spacing.** honeybee-ph holds one `steel_stud_spacing_mm` per division grid, which
+  is one per Layer. The record key stays on the segment, as ported, and the schema refuses a Layer
+  in which more than one Layer-Segment carries a spacing.
+- **`user_data`.** Material and Assembly each carry the `user_data` mapping and structured
+  extension payloads that [EXTENSIBILITY.md](../../../../context/EXTENSIBILITY.md) requires, under
+  the foundation's storage contract. Layers and Layer-Segments are nested values and carry none.
+  Duplicate Assembly copies it, because the duplicate is the user's own record. Replacing a
+  Material discards the replaced record's metadata with the record. Whether a library row's
+  `user_data` is imported is the libraries packet's rule, applied by the Material kind adapter.
+  None of it is exported.
+- The record key stays `segments`. Only the written word carries the qualifier (Q3, Q19).
+- `air_barrier`, `photo_collections` and `ventilated_cladding` are local and not exported (Q9,
+  Q10, Q20). The Export report says so once per model.
+
+## Behaviors
+
+### Carried over unchanged
+
+These were settled in the predecessor's interviews and do not depend on designPH. They are already
+in [docs/PRODUCT.md](../../../../docs/PRODUCT.md) and are not reopened here.
+
+- Partially built assemblies save and reopen. Missing inputs withhold the U-value; they never
+  show zero.
+- A committed edit updates every face that names the assembly. To change only some faces,
+  duplicate the assembly and assign the copy.
+- Duplicate Assembly reuses its materials and datasheets and starts with empty photo collections.
+- Deleting an assigned assembly requires a replacement, shows the affected faces and can be
+  cancelled. Deleting an in-use material requires a replacement for every use.
+- Conductivity, density and specific heat belong to the Material. Thickness belongs to the layer.
+- Material categories are preset with Uncategorized available. A membrane material cannot sit in
+  a mixed layer.
+- The Builder edits the drawing through an always-visible toolbar and anchored property bubbles.
+  Total thickness and U-value stay in the header.
+- Both inventories share Filter, Group by, Order by and Direction. Filtering never changes the
+  model or the export scope.
+- The library sidebar sits beside the Builder and beside Library / Materials. Its rules are in the
+  [libraries packet](../libraries/PRD.md).
+
+### Changed by the pivot
+
+- **Usage.** The usage scan counts faces and area per `assembly_id` from face-assignment's face
+  read (see Contracts with face-assignment); it keeps no face reader of its own. It
+  runs when the panel opens and on Refresh, shows its as-of time and a stale mark, and is never
+  driven by an observer (Q13). It no longer needs designPH, so it has no unknown state.
+- **Locate.** A usage row selects its faces in the model, through face-assignment's Locate
+  operation.
+- **Assign from here.** The Assemblies inventory row gains **Paint onto faces**, which starts the
+  Classify tool with only this assembly chosen. It is the same tool, entered from the other end
+  (Q14).
+- **Colour.** The assembly Colour-by mode reads the Assembly's own `color`, defaulted from a ramp
+  by record id and editable in the inventory and the Builder header (Q6).
+- **Films and two U-values.** The Builder header shows the U-value with surface films and
+  without. Films come from `type`, `exterior_condition` and `ventilated_cladding`, with the
+  predecessor's constants. They are display only (Q8).
+- **Interior assemblies.** To neighbour is a hint value, so partition and party-wall assemblies
+  sort first for those faces. When Solve adjacencies pairs two faces naming different assemblies,
+  that is a warning. One side naming none is the ordinary incomplete face. The exporter writes
+  each face's own construction and reverses nothing (Q7).
+
+### Contracts with face-assignment
+
+Face records belong to face-assignment. This packet reaches them only through public operations
+that feature registers, named here and in its PRD. PLAN.md fixes the action names and schemas
+against the transplanted APIs.
+
+| Operation | Owner | Used here for |
+| --- | --- | --- |
+| Face read: face references with occurrence path, area in m2 and `assembly_id`. Read-only | face-assignment | The usage scan. The faces table uses the same read, so there is one scan |
+| Locate by face references | face-assignment | Usage rows |
+| Activate the Classify tool with a preset | face-assignment | Paint onto faces |
+| Reassign: an explicit face set, the new `assembly_id`, and the expected current value per face | face-assignment | Delete with replacement |
+| Assembly read: id, name, `color`, `type`, `exterior_condition`, completeness. Read-only | assemblies | The assembly picker, the assembly Colour-by mode, the hint fill and mismatch finding |
+
+Delete with replacement is one Undo step across two features. The assemblies delete command owns
+the single `ModelOperation.perform` and calls Reassign inside it, then removes the record. It is
+all or nothing: a stale expected value, an unreadable face record or a face the operation cannot
+reach refuses the whole command, and the refusal ends `Nothing was written.` Material replacement
+follows the same rule inside this feature. Every operation above works with the panel closed and
+returns the same outcome to the panel, a console script and an external client.
+
+The Builder's gestures each map to a command function that takes explicit layer and segment ids.
+Those commands are the registered actions, so a script or an agent builds an assembly without the
+drawing and no second API exists for it.
+
+### Dropped
+
+Declared-U assemblies (Q4). Push to designPH, push states, the equivalent-layer packer and its error disclosure, adoption from
+designPH rows, difference review, the digest migration, and every finding that names designPH.
+
+### Validation rows
+
+| Finding | Severity | When |
+| --- | --- | --- |
+| Assembly incomplete | Blocks export when assigned, info when unused | A segment has no material, a material that is not a membrane lacks conductivity, or every layer is a membrane |
+| Material incomplete | Same rule. Computed once per Material and attached to each Assembly that uses it, so it is one row in the rules table and no second scan | Conductivity missing on a Material that is not a membrane. Density and specific heat missing is a warning, with the export default disclosed |
+| Membrane in a mixed layer | Blocks export when assigned, info when unused | A Layer holding a membrane has more than one Layer-Segment |
+| Paired faces name different assemblies | Warning | Q7 |
+| Type hint mismatch | Info | Carried from face-assignment Q7 |
+| Unreadable record | Blocks export | The record fails its schema |
+
+### Export mapping
+
+Checked against `honeybee_ph/honeybee_energy_ph/properties/materials/opaque.py` and
+`PHX/from_HBJSON/create_assemblies.py` on 2026-09-18. The reference method is PH-Navigator's
+Grasshopper route, `ph-navigator-v2/backend/features/gh_api/constructions_export.py`, whose output
+"HBPH+ - PH-Nav Get Constructions" rebuilds with `OpaqueConstruction.from_dict`. PH-Composer
+matches it for mixed layers, steel stud layers and thermal-mass defaults (Q22). The predecessor's
+`phn_assemblies/layered.py` already follows the same method.
+
+| PH-Composer | honeybee |
+| --- | --- |
+| Assembly | `OpaqueConstruction`, identifier from the record id, display name from the name |
+| Layer order | Material list, outside first. `orientation` decides whether the stored order is reversed on write. Membrane layers are left out of the list |
+| Single-segment layer | One `EnergyMaterial` with the layer's thickness and the Material's properties |
+| Mixed layer | One host `EnergyMaterial` carrying a `PhDivisionGrid`: one row, one column per segment, column widths from `width_mm`, a cell material per segment. The host is a duplicate of the grid's base material, the cell with the largest area, with its conductivity replaced by `get_equivalent_conductivity()`. Density and specific heat stay the base material's. PHX reads `properties.ph.divisions`, takes the base cell as the METr layer material and writes the divisions |
+| Steel stud layer | The same host and grid, with the grid's `steel_stud_spacing_mm` set from the one Layer-Segment that carries a spacing. `is_a_steel_stud_cavity` is derived from that value and is never written. For this grid PHX takes the host, with its equivalent conductivity, as the METr layer material |
+| Membrane layer | No `EnergyMaterial`. Carried in the construction's `user_data["ph_composer"]` block (Q21) |
+| Material identifiers | Keyed by layer, never by Material and thickness: one for a single-segment layer, one per column for a cell, one for a host. The prefix follows the namespace decision. One Material at two thicknesses is two `EnergyMaterial` objects, and honeybee refuses two different materials under one identifier |
+| Material colour | `properties.ph.ph_color` |
+| Face assignment | `Face.properties.energy.construction` |
+
+**The `ph_composer` block (Q21).** `OpaqueConstruction.user_data["ph_composer"]` carries
+`assembly_id` and `membrane_layers`. Each membrane entry holds `outside_index` (its position in
+the full outside-to-inside layer list, membranes included), `layer_id`, `segment_id`,
+`thickness_mm`, and the Material's id, name, category, colour, density, specific heat and
+emissivity. That is the shape PH-Navigator's `ph_nav` block uses. The key name is a working
+assumption until the namespace decision closes. `air_barrier`, `photo_collections`,
+`ventilated_cladding`, the hint fields and the records' own `user_data` stay out of it. The
+assemblies export contributor declares every field of the block, so the composed allowlist admits
+it and nothing else on the construction. honeybee round-trips `user_data`; PHX ignores it, so
+membranes do not reach METr, and the Export report says so once per model.
+
+**Identifier consequences.** PHX merges division-grid cell materials whose display name and
+conductivity both match, which is the wanted result for a Material repeated across columns.
+honeybee-ph's `get_base_material` sums area by identifier, so with one identifier per column the
+base is the widest single column. In a stud and cavity layer that is the cavity.
+
+**Steel stud check.** The host of a steel stud layer reaches METr with a steel-weighted
+conductivity. That is the reference method and PH-Composer matches it (Q22). The "Through PHX"
+acceptance step reads the METr layer back and compares it with a steel stud layer built by hand
+in METr. A difference there is a PHX issue and changes this table only by a recorded decision.
+
+**Faces and constructions (Q23).** The assemblies builder package returns a typed
+`constructions_by_assembly_id`. The face section declares that result as a dependency in its
+registration, so the translation entrypoint orders the two and passes the result without naming
+either feature. If the transplanted contributor registry cannot express a dependency between
+sections, that is a foundation contract gap to settle there. Every face naming one assembly
+shares one construction object. An unused assembly is not written. A face whose `assembly_id` has
+no construction costs that face one finding, under the incomplete-face code, and the rest of the
+model translates. An assembly that fails to build names every face that used it.
+Continuing translation gathers findings; it does not authorize committing the canonical pair.
+The face-assignment assembly matrix makes a missing required construction blocking for canonical
+export. Faces already omitted under the adjacency rules follow that matrix's exceptions.
+
+`EnergyMaterial` needs values the Material record does not hold: roughness, thermal, solar and
+visible absorptance. The exporter writes honeybee's defaults (MediumRough, 0.9, 0.7, 0.7), uses
+the record's emissivity for thermal absorptance when present, and says so in the Export report.
+A Material with no density or specific heat exports with the reference method's defaults, 600
+kg/m3 and 1000 J/kgK, and a warning, because honeybee's `EnergyMaterial` requires both (Q5). They
+affect thermal mass only and never the steady-state U-value.
+
+## Later, decided now
+
+**New SD assembly** (Q16, later phase). The action asks for a name, a target U-value and a
+thickness, and builds three ordinary layers: a thin mass layer, a core whose Material's
+conductivity is back-solved, and a thin mass layer. The generated Materials are named for the
+assembly. No no-mass Material kind is added (Q17). The assembly carries a `placeholder` flag that
+the helper sets and the user clears, and an assigned placeholder is one warning at export (Q18).
+
+A per-component `Rse` carried through PHX to METr, so a ventilated film reaches the calculated
+model, is a recorded follow-up with no issue filed (Q20).
+
+## Non-goals
+
+Assemblies without layers. Hygrothermal properties. Assembly-level thermal bridge allowances. Cost and embodied carbon. A
+fourth layer kind for ventilated cavities beyond what the predecessor supports. Any write back to
+a library. designPH in any form.
+
+## Decisions recorded
+
+Round 1, 2026-09-18. Answers are Ed's.
+
+| # | Decision | Answer |
+| --- | --- | --- |
+| Q1 | Words | Assembly, Layer and Material on screen and in records, matching METr's own screen words. Mapped to `OpaqueConstruction` and `EnergyMaterial` |
+| Q2 | Hint values | `type` is Wall, RoofCeiling, Floor or blank. `exterior_condition` is Outdoors, Ground, Attached zone, To neighbour or blank. `ventilated` leaves the enum |
+| Q3 | Segment collision | Both carry a qualifier everywhere: **Building-Segment** (`BldgSegment`) and **Layer-Segment** (the strip in a layer). The bare word is not used |
+| Q4 | Declared-U assemblies | Removed. Every assembly has real layers. Early design uses the SD technique from honeybee-grasshopper-ph ("HBPH - Create SD Constructions": mass layer, resistance layer, mass layer), built as a visible layered assembly, so the user sees what is exported |
+| Q5 | Missing density or specific heat | Disclosed default and a warning. Missing conductivity blocks |
+| Q6 | Assembly colour | A `color` field on the Assembly, defaulted from a ramp by record id, editable |
+| Q8 | Films | Display only, the predecessor's constants. The Builder shows both U-values, with films and without, as the predecessor does. A `ventilated_cladding` flag on the Assembly changes only the displayed exterior film |
+| Q9 | Air barrier | Kept, local, not exported |
+| Q10 | Photo collections | Field kept. No photo UI in this packet |
+| Q12 | Orientation | Kept per assembly |
+| Q13 | Usage scan | On panel open and on Refresh, with the as-of time and stale mark. Never observer-driven. Superseded 2026-09-30 by Phase 2 decision D2-3: live, with this answer as the fallback |
+| Q14 | Paint onto faces | Yes, from the inventory row |
+| Q15 | Material categories | The predecessor's thirteen, unchanged |
+
+Measured for Q2 and Q8: METr's component carries `Rse` and `Rsi`. PHX's
+`to_METr_JSON/metr_schemas.py` writes them from face type and exposure only (0.04 for a wall or
+roof to air, 0.0 to ground), so a ventilated film does not reach METr today.
+
+Round 2, 2026-09-18.
+
+| # | Decision | Answer |
+| --- | --- | --- |
+| Q7 | Interior assemblies on paired Surface faces | Different assemblies is a warning; one missing is the incomplete-face finding; the exporter reverses nothing |
+| Q16 | SD assembly helper | Later phase |
+| Q17 | The SD core | An ordinary Material with back-solved conductivity. No no-mass kind |
+| Q18 | SD in export | A `placeholder` flag and one warning per assigned placeholder |
+| Q19 | Q3's ripple | Building-Segment applied across the zones, face-assignment and spaces PRDs and the ubiquitous language. Record keys unchanged |
+| Q20 | Ventilated film to METr | Not now. Recorded as a follow-up |
+
+Q11, opaque doors, moved to the window-types interview.
+
+Architecture review, 2026-09-18. Q21 and Q22 are Ed's answers; Q23 is the review's recommendation,
+accepted with the instruction to fold the review in.
+
+| # | Decision | Answer |
+| --- | --- | --- |
+| Q21 | Membranes in HBJSON | Carried under a PH-Composer namespace on the construction's `user_data`, declared by the export contributor. Never an `EnergyMaterial`. `air_barrier` stays local, per Q9 |
+| Q22 | Mixed and steel stud layers | Match PH-Navigator's Grasshopper route: a base-material duplicate as host with the grid's equivalent conductivity, one spacing per grid, thermal-mass defaults of 600 kg/m3 and 1000 J/kgK |
+| Q23 | Cross-feature seams | Face-assignment owns the face read, Locate, Classify activation and Reassign. Assemblies owns the assembly read and the delete transaction. The face section declares the constructions result as a dependency |
+
+## Acceptance shape
+
+Offline: schema round trips for every record kind; the thermal calculation against the
+predecessor's fixtures; the usage scan against synthetic face records; the export projection for a
+single Layer-Segment, a mixed and a steel stud layer, validated by loading the HBJSON in honeybee and
+reading the division grid back. The same projection for a membrane between two thermal layers, an
+all-membrane assembly, one Material at two thicknesses and a stud, cavity, stud, cavity layer:
+assert the material list, the identifiers, the `ph_composer` block, the finding severity and
+a passing allowlist check. A translation test with two faces sharing one assembly, one face
+naming an absent id and one unused assembly. `user_data` and an unknown extension payload through
+edit, Duplicate, Undo/Redo and save and reopen. Delete with replacement across direct, nested and
+repeated-definition faces: one Undo restores the record and every `assembly_id`, a stale expected
+value refuses the whole command, and a console script with the panel closed gets the same outcome.
+
+On the host: build a three-layer wall with a stud layer, paint it
+onto faces, edit a material, see the faces' usage update, delete with replacement, one Undo per
+gesture. Through PHX: the exported assembly appears in the METr model with its divisions, and the steel
+stud layer's METr material and divisions match a steel stud layer built by hand in METr.
+
+## Prior art and evidence
+
+- Predecessor packet: `../ph-navigator-sketchup/planning/archive/assembly-builder/`.
+- Predecessor code: `../ph-navigator-sketchup/src/ph_navigator_sketchup/features/assemblies/`.
+- honeybee-ph: `honeybee_energy_ph/properties/materials/opaque.py`.
+- PHX: `PHX/from_HBJSON/create_assemblies.py`.
+- Reference export method: `../ph-navigator-v2/backend/features/gh_api/constructions_export.py`,
+  and `features/envelope/hbjson_export.py` for the membrane block.
+- [face-assignment PRD](../face-assignment/PRD.md), Q7 and "Assigning assemblies".

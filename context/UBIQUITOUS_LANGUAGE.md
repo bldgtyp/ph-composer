@@ -71,7 +71,7 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Attached zone | A named unconditioned space outside the envelope (garage, attic, crawlspace) with one temperature reduction factor, default 0.95 per Phius guidebook 6.9.1. A model-local record kind owned by Zones, which a library can supply later, assigned to faces as a boundary condition. Maps to honeybee-ph `PhAdditionalZone` |
 | Ground depth | A per-Zone height, default the Model's z=0, below which the Classify tool suggests Ground |
 | Face record | The classification record on one face: face type, boundary condition, assembly id and Zone stamp. A retired pair can leave the boundary condition absent. Payload preservation and endpoint validity are distinct requirements, subject to native-host acceptance |
-| Face assignment | The act and the packet: writing face records with the Classify tool, the faces table or Suggest classification (`planning/features/face-assignment/`) |
+| Face assignment | The act and the packet: writing face records with the Classify tool, the faces table or Suggest classification (`planning/features/phase-02-envelope/face-assignment/`) |
 | Classify tool | The modal viewport tool that writes face records: palette in the panel, click, drag, Shift-click for connected coplanar faces, one Undo step per gesture |
 | Suggested classification | The face type and boundary condition the tool proposes for a hovered face from its normal and position, using honeybee's thresholds; shown, never written without a click |
 | Unclassified face | A face inside a Zone with no face record. Ignored in a single-Zone model; a finding in a multi-Zone one |

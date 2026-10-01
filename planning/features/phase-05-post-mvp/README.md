@@ -1,0 +1,15 @@
+# Phase 5: post-MVP
+
+DATE: 2026-09-30
+STATUS: Requested. Not planned in detail.
+AUTHOR: Ed May, BLDGTYP, with Claude
+ISSUE: none (local planning draft)
+
+Roadmap items 5.1 to 5.5 from [ROADMAP.md](../../ROADMAP.md). Items 5.4 and 5.5 have no packet
+yet. The connection provider (2.5) moves here if Phase 2 decision D2-8 says so.
+
+| Packet | Roadmap | State |
+| --- | --- | --- |
+| [climate-data](climate-data/README.md) | 5.1 | Requested, PRD drafted |
+| [sun-path-view](sun-path-view/README.md) | 5.2 | Requested, PRD drafted |
+| [window-performance-overlays](window-performance-overlays/README.md) | 5.3 | Requested, PRD drafted |

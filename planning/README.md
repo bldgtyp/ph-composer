@@ -19,7 +19,11 @@ planning/
   FOUNDING_BRIEF.md    # origin, transplant tables, decisions, naming record
   native-acceptance/   # real-host acceptance cases, results ledger and tooling notes
   ui-baseline/         # the predecessor's screens, ruled on part by part
-  features/            # new-capability packets     (features/<slug>/)
+  features/            # new-capability packets, grouped by roadmap phase
+    phase-NN-<name>/   #   one directory per roadmap phase (features/phase-NN-<name>/<slug>/);
+                       #   the active phase's directory is also its coordinating packet
+    cross-phase/       #   packets delivered in slices across several phases
+    unscheduled/       #   packets with no roadmap phase yet
   refactor/            # cross-cutting refactors    (refactor/<slug>.md or <slug>/)
   bugs/                # reproduced defects         (bugs/<slug>.md + README index)
   archive/             # completed/superseded work  (archive/<slug>/ + README index)

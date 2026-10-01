@@ -21,7 +21,7 @@ one commit per completed unit. P0-A checked the handoff against the frozen sourc
 6. [READINESS.md](READINESS.md): accepted decisions and technical gates still to run.
 
 [PHASES.md](PHASES.md) is a short stage index. The
-[foundation scope](../foundation-transplant.md), [Units PRD](../../features/units/PRD.md) and linked
+[foundation scope](../foundation-transplant.md), [Units PRD](../../features/cross-phase/units/PRD.md) and linked
 context authorities remain governing inputs.
 
 This packet coordinates roadmap items 0.1 through 0.7. The foundation scope and feature PRDs

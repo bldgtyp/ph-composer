@@ -27,9 +27,9 @@ current-host checks, with native Undo/Redo and final reciprocal-reference reopen
 5. [ACCEPTANCE.md](ACCEPTANCE.md): evidence required to close the phase.
 
 The feature PRDs remain the behavior authorities. Their plans allocate work within this sequence:
-[Zones](../../archive/phase-01-zones-and-adjacency/PLAN.md),
-[faces](../../features/face-assignment/PLAN.md), and
-[export](../../features/validation-and-export/PLAN.md).
+[Zones](../phase-01-zones-and-adjacency/PLAN.md),
+[faces](../../features/phase-02-envelope/face-assignment/PLAN.md), and
+[export](../../features/cross-phase/validation-and-export/PLAN.md).
 
 This packet coordinates those owners. Each stage still requires its own implementation scope; the
 packet does not replace accepted interviews or move the Phase 3 internal-release and Phase 4 MVP boundaries.

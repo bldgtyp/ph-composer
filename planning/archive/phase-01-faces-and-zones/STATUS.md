@@ -65,7 +65,7 @@ removes its overlay and displays a warning without replacing the last successful
 At 512 classified Faces, Ruby snapshot construction takes 39 to 47 ms. Discrete panel
 interactions were usable. JavaScript paint was observed rather than timed. Rebuilding a full
 snapshot on every pointer move is too expensive for hover-to-highlight; keep that feature
-deferred until a cheaper path is measured. It is now its own [packet](../../features/legend-hover-highlight/README.md). The existing Overview pane arrangement is retained;
+deferred until a cheaper path is measured. It is now its own [packet](../../features/unscheduled/legend-hover-highlight/README.md). The existing Overview pane arrangement is retained;
 Ed's pending arrangement ruling was not inferred from this verification work and remains open in
 [the UI baseline](../../ui-baseline/README.md) (Overview's pane order row).
 
@@ -110,8 +110,8 @@ Phase 1 now closes on HBJSON/report; the later METr milestone is unscheduled.
 - The implementation issue is [#2](https://github.com/bldgtyp/ph-composer/issues/2), created
   2026-09-30 with the pull request that closes it.
 - All six Phase 1 stages are complete and merged to main through PR #3. Floor-host/platform proof and public distribution require their own gates.
-  The deferred and separate gates now have owning packets: [METr export](../../features/metr-export/README.md),
-  [SketchUp 2023 floor](../../features/sketchup-2023-floor/README.md) and [Windows support](../../features/windows-support/README.md).
+  The deferred and separate gates now have owning packets: [METr export](../../features/unscheduled/metr-export/README.md),
+  [SketchUp 2023 floor](../../features/unscheduled/sketchup-2023-floor/README.md) and [Windows support](../../features/unscheduled/windows-support/README.md).
 
 ## Stages
 
