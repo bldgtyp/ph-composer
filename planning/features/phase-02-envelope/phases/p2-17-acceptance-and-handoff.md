@@ -45,3 +45,9 @@ integrated run, the closure of the acceptance register and the document handoff.
 - E17 has evidence in `evidence/p2-17-acceptance.md` and every in-scope row is `Pass`.
 - The planning index, the roadmap and the archive agree with each other.
 - Nothing is described as released, supported on SketchUp 2023 or Windows, or certifiable.
+
+Integrated normal-package runtime export, exact full public-value fresh restart and staged-pair
+restart recovery now pass. Both original artifact bytes are restored; the prior task expires and
+all staging files are removed. Current host PID 38158 has the saved integrated Model only.
+Resume with E01 to E11 assertion/ledger consolidation and affected Phase 1 reuse, then prepare
+the held-Classify human gesture. Phase 2 remains open. See [P2-17 evidence](../evidence/p2-17-acceptance.md).

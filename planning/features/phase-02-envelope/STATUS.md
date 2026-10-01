@@ -273,3 +273,9 @@ Next: E07 guard observations and E17 integrated export/restart plus formal case 
 
 Current E07 stale-revision/wrong-session guards pass with both Model inventories/revisions
 unchanged and provider setup restored empty. Next is integrated E17 export/restart consolidation.
+
+Integrated normal-package runtime export, exact full public-value fresh restart and staged-pair
+restart recovery now pass. Both original artifact bytes are restored; the prior task expires and
+all staging files are removed. Current host PID 38158 has the saved integrated Model only.
+Resume with E01 to E11 assertion/ledger consolidation and affected Phase 1 reuse, then prepare
+the held-Classify human gesture. Phase 2 remains open. See [P2-17 evidence](evidence/p2-17-acceptance.md).

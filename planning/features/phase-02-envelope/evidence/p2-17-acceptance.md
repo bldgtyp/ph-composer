@@ -19,13 +19,12 @@ Fresh SketchUp 26.1.188 / Ruby 3.2.2 process PID 26980 had two saved synthetic M
 `p214-reference.skp` and active `p214-integrated.skp` under `_private/host/envelope/`.
 No shipping code or providers are patched in the host.
 
-Current resume point is the verified `8a43bec` colour correction below, normal installed package
-`f85b789455882d4ba39fafc0edd7266c7cafc973975b3a14832677f8f71537fd`, fresh process PID 33871.
-Two synthetic Models are open: active integrated reference and `p217-replacement.skp`, reopened
-three-Face baseline. The extra cost/hint geometry was discarded. Native assignment inside the
-replacement Model's two-level edit path and exact one-step Undo pass. The integrated Library and
-Assembly inventories are now at a narrow native width with authoring values restored. Continue
-E04 missing Builder controls, E07 guards and integrated E17 export/restart consolidation.
+Current resume point: signed shipping correction `8a43bec`, normal installed package
+`f85b789455882d4ba39fafc0edd7266c7cafc973975b3a14832677f8f71537fd`.
+The integrated export, full public-value restart comparison and staged-artifact restart recovery
+below pass. Current fresh process PID 38158 has only the saved integrated synthetic Model open;
+its provider setup is empty. E01 to E11 assertion consolidation and the affected Phase 1
+repeat/reuse screen remain open. Held-Classify needs human input after the autonomous work.
 
 The canonical two-Zone reference now includes all four Window occurrences, the copied identity,
 one Empty panel per mulled Unit, exact g=0, complete Assemblies and reciprocal Surface pair.
@@ -114,3 +113,42 @@ The E07 current normal-host public preview and stale/wrong-session refusal batch
 exact unchanged two-Model catalogs/revisions and provider setup restored empty. See
 [E07](p2-07-library-seam.md#current-native-sessionrevision-guards). The next integrated export
 and fresh reopen check is still pending; the panel is closed and authoring values are restored.
+
+### Integrated export and fresh restart continuation
+
+Normal `8a43bec` package, SketchUp 26.1.188 / Ruby 3.2.2: PID 33871, session
+`d5b3f676-3518-443b-a814-9d423eece153`, exported the restored integrated reference through the
+public API and actual packaged Pyodide runtime. No development provider was configured. Exact
+HBJSON reload through the eight pinned native wheels passes, including resolved references,
+Frame sides and psi-install, Empty elements, g=0 disclosure, gross parent geometry and net areas.
+Two Rooms, twelve Faces, four Units, six Apertures and three Window constructions are secondary
+checks; actual identity/reference values were compared. Net areas are 14.01, 9.76 and 19.01 m2
+for west Wall, east Wall and west Roof. Journals are `p214-p217-integrated-current-{extraction,start,outcome,native-check}.json`
+and its HBJSON/report pair in the private host corpus.
+
+After native Save and Quit/reopen, PID 37652, session `4bd239e1-3a84-4c35-bd33-7ee06b5fe000`,
+returns exactly the full baseline public values for Materials, Assemblies, Frames, Glazings,
+Psi-Install Types, Window Types, Faces, Units, glazed areas and settings. The Model is unmodified
+at the root edit path. `p214-p217-complete-restart-{baseline,after}.json` compare equal without
+stripping any value fields. The earlier PID 37451 attempt overwrote its baseline on helper load
+and is invalid for this assertion; the corrected read-only helper has no automatic capture.
+Installed inventory/bytes were rechecked before the valid restart.
+
+### Staged artifact restart recovery
+
+PID 37652 used ArtifactPair's documented fault hook on a disposable copy of the completed
+synthetic pair. A nonlocal exit at `after_hbjson_commit` leaves the prepared journal, old backups
+and incomplete replacement. No shipping method was patched. Native Quit/reopen produced
+PID 38158, session `91c8870b-d5e5-4030-92a9-c6be7e865de4`.
+
+The next ordinary public `start_export` to that destination restores both original files
+byte-for-byte before queuing translation. The old process's export handle refuses with
+`task.expired`; recovery does not report the interrupted replacement as successful. Cancelling
+the new queued task writes nothing. No stage, backup or journal files remain. Private journals:
+`p214-p217-staged-restart-{before,after}.json`, helper `p217-staged-restart.rb`. This is tools-only
+fault injection through the shipped hook, separate from the normal successful runtime export.
+It closes the staged-artifact restart assertion, not all aggregate E17/Phase 1 assertions.
+
+The append-only native ledger now records these new E17 observations against the captured
+`a5cde95` baseline, with aggregate outcome `unknown` for the remaining consolidation boundary.
+It does not relabel retained historical observations as fresh current-package executions.
