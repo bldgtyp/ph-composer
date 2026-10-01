@@ -1,7 +1,7 @@
 # Phase 1 recheck for PR #11
 
-Observed 2026-09-30 local time (2026-10-01 UTC) by Codex from
-[PR11-RECHECK-HANDOFF.md](../PR11-RECHECK-HANDOFF.md), on SketchUp 26.1.188, Ruby 3.2.2, macOS,
+Observed 2026-09-30 local time (2026-10-01 UTC) by Codex for A02, A04, A05, A11 and R01 to R06
+in the [acceptance register](../../archive/phase-01-faces-and-zones/ACCEPTANCE.md), on SketchUp 26.1.188, Ruby 3.2.2, macOS,
 normal installed composition from branch `fix/settings-gear-draft-guard` at `595323f` (RBZ
 `9c341fa6…4fed4`). Every fixture was a fresh copy of `blank-template.skp` (`2ae1418d…21063`)
 with Suggest on Make switched off through the public settings action. Raw readbacks and captures

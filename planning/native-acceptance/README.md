@@ -5,14 +5,33 @@ STATUS: Development tooling implemented. Historical Phase 1 acceptance remains w
 ISSUE: none (local tooling work)
 
 [`cases.json`](cases.json) holds case identities, owning authorities, deferred scope and conservative
-source dependency patterns. [`results.jsonl`](results.jsonl) is an append-only result index. Initially
-it contains 15 historical evidence pointers, not reconstructed host runs. Detailed case requirements
+source dependency patterns. [`results.jsonl`](results.jsonl) is an append-only result index with
+15 historical evidence pointers and 34 observed results. Historical pointers are not reconstructed host runs. Detailed case requirements
 and closure remain in [the owning acceptance register](../archive/phase-01-faces-and-zones/ACCEPTANCE.md). Add finer case IDs
 when a gate needs independent reruns; a partial subcase does not close its parent.
 
-The Phase 1 packet is archived and stays unchanged. A rerun after that records its synthetic summary
-under [`evidence/`](evidence/) and, when another agent runs it, its procedure as a handoff beside
-this file, such as the [R06 rerun](R06-RERUN-HANDOFF.md) of 2026-09-30.
+The Phase 1 packet is archived and stays unchanged. Later reruns record synthetic summaries under
+[`evidence/`](evidence/). Completed run handoffs are disposable instructions; their outcomes and
+limitations belong in the evidence summary and result index. The three completed 2026-09-30
+handoffs have been deleted. Keep future temporary handoffs under gitignored `_private/host/`;
+keep reusable procedures in the owning packet, hostkit tooling and native acceptance skill.
+
+## Retained evidence
+
+Every summary below is referenced by the append-only result index. Older results identify the
+build actually tested and retain observations beyond a later rerun's scope; a newer result does
+not make them disposable.
+
+| Summary | Purpose |
+| --- | --- |
+| [R06 after PR #7](evidence/r06-rerun-2026-09-30.md) | Panel-closed API evidence and the control fallback cited by the native-control reference |
+| [UX follow-ups K1](evidence/ux-followups-k1-2026-09-30.md) | Colour-by evidence cited by the archived UX packet |
+| [UXK1 rerun](evidence/uxk1-rerun-2026-09-30.md) | Later build baseline for the bounded Colour-by case |
+| [Phase 1 after PR #10](evidence/phase-1-recheck-2026-09-30.md) | Ten-case recheck, walkthrough probe corrections and draft-settings observation |
+| [Phase 1 for PR #11](evidence/phase-1-recheck-pr11-2026-09-30.md) | Later ten-case recheck including the settings gear draft guard; R05 pending visibility remains `unknown` with Ed's acceptance of offline coverage |
+
+Raw Models, screenshots and traces live outside this folder in gitignored `_private/`. They are
+not part of this cleanup.
 
 ## Resume and screen affected checks
 

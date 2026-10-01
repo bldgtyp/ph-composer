@@ -1,7 +1,7 @@
 # Phase 1 recheck after PR #10
 
-Observed 2026-09-30 local time (2026-10-01 UTC) by Codex from
-[PHASE-1-RECHECK-HANDOFF.md](../PHASE-1-RECHECK-HANDOFF.md), on SketchUp 26.1.188, Ruby 3.2.2,
+Observed 2026-09-30 local time (2026-10-01 UTC) by Codex for A02, A04, A05, A11 and R01 to R06
+in the [acceptance register](../../archive/phase-01-faces-and-zones/ACCEPTANCE.md), on SketchUp 26.1.188, Ruby 3.2.2,
 macOS, normal installed composition from `main` at `badb481` (RBZ `5d7d9a43…c948b`; the installed
 files matched the built RBZ). Every fixture was a fresh copy of `blank-template.skp`
 (`2ae1418d…21063`) with Suggest on Make switched off through the public settings action, because
