@@ -177,7 +177,7 @@ establishes whether the normal native path works; no simulated callback is count
   | 1 Zone Group | 52 ms | 5 |
   | 10 Zone Groups | 45 ms | 5 |
   | All 334 Zone Groups | 168 ms | 5 |
-  | 1 Face in an open Zone | 180 ms | 8 (+ Repair) |
+  | 1 Face in an open Zone | 180 ms | 7 (+ 1 Repair) |
   | 6 Faces in an open Zone | 187 ms | 7 |
 
   Each `available` check revalidates the whole selection with its own Model walk: about 20 ms per
