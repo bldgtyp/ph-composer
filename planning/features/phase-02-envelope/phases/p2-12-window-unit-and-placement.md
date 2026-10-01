@@ -1,7 +1,7 @@
 # P2-12: the window unit and placement operations
 
 DATE: 2026-09-30
-STATUS: Slice A and B current-host verified; Slice C implemented, reviewed and installed; native actions and roundtrips pass; actual Line-tool split blocked by controller, E12 open.
+STATUS: Slice A and B current-host verified; Slice C implemented, reviewed and installed; native actions, roundtrips and human Line-tool split pass; E12 current-host verified.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -60,13 +60,13 @@ API reference is current. Full CI passes on both Rubies, 1261 tests / 9082 asser
 346 JavaScript and 135 Python tests pass. See
 [source evidence](../evidence/p2-12-unit-geometry.md).
 
-Current-host Slice C verification is in progress. Placement, three-anchor Type resize, Swap,
+Current-host Slice C verification passes. Placement, three-anchor Type resize, Swap,
 scaled/detached Reset, New flipped Type, Restore, Remove, Re-host and used-Type replacement
 deletion pass native Undo/Redo. Blocking cases, the public walkthrough and actual Cut/Paste
 In Place across Zones pass. Fresh-process reopen, inside-definition Reset, foreign-Model paste with unknown-Type Swap
-and explicit used-Type removal also pass. The actual Line-tool split/Re-host remains open. The controller cannot currently click the viewport; that
-split is a batched manual item. See [native evidence](../evidence/p2-12-window-unit.md).
-The Unit reference uses a root-to-instance path and Unit ID, including orphans. E12 remains open.
+and explicit used-Type removal also pass. The actual human Line-tool split preserves classification, gross area, Unit geometry and glue;
+Re-host passes native Undo/Redo. See [native evidence](../evidence/p2-12-window-unit.md).
+The Unit reference uses a root-to-instance path and Unit ID, including orphans. E12 is current-host verified.
 
 1. **Records.** The unit record on the instance, the definition mark and the pane stamp per
    CONTRACTS section 2, with `Records::EntityStore`, and the `ph_composer.windows.unit` reference
@@ -160,4 +160,4 @@ and explicit door support.
 ## Current evidence
 
 See [Slice A measurements](../evidence/p2-12-window-host.md). Native human Option Move-copy and its Copy Undo/Redo continuation now pass.
-See [Slice B evidence](../evidence/p2-12-zone-cutting-rules.md) for full gates, gross-area correction and fresh native replay. Consolidated E12 remains open.
+See [Slice B evidence](../evidence/p2-12-zone-cutting-rules.md) for full gates, gross-area correction and fresh native replay. Consolidated E12 is current-host verified.

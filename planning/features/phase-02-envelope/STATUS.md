@@ -46,7 +46,7 @@ its probe changes are saved separately in `p212b-7932856-observed.skp`. No outsi
 or fault override is installed. See [Slice B evidence](evidence/p2-12-zone-cutting-rules.md).
 
 E15 has a passing structured result; D2-8 defers P2-16 to Phase 5. P2-09/P2-11 native
-workflows are observed. Complete E12 and consolidated E01 to E14 / E17 remain open.
+workflows are observed. E12 now passes on the current host; other consolidated E01 to E14 / E17 items remain open.
 Native Assembly batch follows: seven Builder gestures pass one-step Undo and final Redo
 exact catalog comparison; observed model saved privately. Caption-only correction `43a1418`
 passes both full CI gates, Chromium 88 and eight browser scripts; fresh native caption
@@ -93,11 +93,11 @@ Fresh-process readback preserves every public authoring row. A bounded second ro
 also preserves every captured native definition, material, matrix, record and glue field.
 Inside-definition Reset, actual foreign-Model paste with unknown-Type Swap recovery, and
 used-Type deletion with explicit Unit removal all pass native Undo/Redo. Five Units are saved
-without findings. Native canvas clicks currently fail in the
-controller with `noWindowsAvailable`; screenshots, keys, menu commands and bridge actions
-work. The actual Line-tool split remains a batched manual item. The actual Line split/Re-host is now the remaining native-edit matrix item. The controller
-still fails after restart and reset, so this is the current real blocker. E12 and downstream
-P2-13/P2-14 entry gates remain open. See
+without findings. Ed's actual Line-tool split preserves both Wall classifications, total gross
+area, Unit records, geometry and glue; Re-host passes exact native Undo/Redo. E12 is
+current-host verified. P2-13 implementation is now in progress, with P2-14 next. Canvas
+coordinate clicks still fail in the controller, so later gesture checks remain batched human
+items. See
 [Unit source evidence](evidence/p2-12-unit-geometry.md) and
 [native Unit evidence](evidence/p2-12-window-unit.md).
 
@@ -175,7 +175,7 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 | [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented and reviewed; full shipping gates pass; native export checks observed; approved outside repository published; final attestation open | [Export evidence](evidence/p2-09-library-export.md) |
 | [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented and reviewed; integrated gates and native records Undo/Redo/reopen pass; final attestation open | [Window records evidence](evidence/p2-10-window-records.md) |
 | [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow observed; final attestation open | [Builder evidence](evidence/p2-11-window-type-builder.md) |
-| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A/B verified; Slice C implemented/reviewed/installed; native actions and roundtrips pass; Line split control blocker, E12 open | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
+| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A/B verified; Slice C implemented/reviewed/installed; native actions, roundtrips and human Line split pass; E12 current-host verified | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Scoped | |
 | [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
 | [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Implemented, native E15 passes | 2026-10-01 |
@@ -244,4 +244,5 @@ and consolidated E01 to E14 / E17 acceptance remain. Next autonomous work: remai
 
 Actual Option Move-copy, exact Copy Undo/Redo and example repository publication are complete.
 The retained historical checkpoints above describe their original frontier; current work is
-Slice C and the held-Classify replay. Full E12 and Phase 2 remain open.
+P2-13 and P2-14, followed by held-Classify and consolidated acceptance. E12 passes on the
+current host; Phase 2 remains open.

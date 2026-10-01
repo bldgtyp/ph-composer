@@ -1,7 +1,7 @@
 # P2-12 Window Unit native acceptance
 
 DATE: 2026-10-01
-STATUS: In progress. Current-host observations below pass; E12 is open.
+STATUS: Current-host verified. E12 passes on SketchUp 26.1.188; not merged or released.
 
 ## Provenance
 
@@ -82,24 +82,28 @@ remains saved. This interruption is not clean-shutdown evidence.
   one commit, and passes exact native Undo/Redo. A further Undo restores the complete fixture.
   There are now five Units, all without findings.
 
-## Required manual frontier
+## Native Line-tool split
 
-Only the actual Line-tool host split remains in the P2-12 native-edit matrix. The main fixture
-`_private/host/envelope/p212c-native.skp` is saved with five Units. Its left wall Zone is in edit
-context, and the Line tool is active. Draw a vertical line in the blank wall to the
-right of the Window, from the bottom wall edge to the top wall edge. Do not cut through the
-Window. After the human reports done, the agent reads native Face topology, Unit findings and
-physical geometry, invokes Re-host on the containing Face if needed, and verifies Undo/Redo.
-The pre-gesture snapshot and resume metadata are `p212c-manual-split-before.json` and
-`p212c-resume.json`. No manually called Tool callback can substitute for this gesture.
+Ed drew the requested vertical Line across the blank wall to the right of the Window in
+PID 83102. Native topology now has two wall Faces (persistent IDs 48890 and 49222), both
+classified Wall/Outdoors. Their gross areas total exactly 48 m2. The native Unit digest and
+all public Unit rows match the pre-gesture snapshot: the Window remains glued to the
+containing original Face, with no findings. The split inherits the historical Face stamp;
+the occurrence references still distinguish the two Faces.
 
-Canvas clicks continue to fail after a fresh SketchUp process and a controller reset; AX menu
-commands and keyboard controls still work. P2-13 requires P2-12, so implementation stops at this
-real control blocker, with all authorized implementation scope preserved. The held-Classify
-gesture and broader Phase 2 attestations remain batched later items, not completed evidence.
+Re-host previews without writes and commits on the containing Face. Native Undo/Redo each
+restore the exact expected snapshot. The probe initially expected this already-correct-host
+Re-host to be a no-op; that was a probe expectation error. The registered action commits a
+guarded glue assignment. The fixture is saved with five Units and no findings. Evidence is
+`p212c-manual-split-before.json`, `p212c-manual-split-after.json` and
+`p212c-manual-split-rehost.json` under the private evidence directory.
+
+Canvas coordinate clicks still fail in the controller; keys, menu commands and bridge reads
+work. The required human Line gesture supplies the missing native observation. No private
+Tool callback substitutes for it.
 
 ## Remaining
 
-Complete the native Line split and Re-host check, reconcile E12 and its ledger, then continue
-P2-13 and P2-14. Broader Phase 2 acceptance and held-Classify gestures remain open.
-SketchUp 2023, Windows and public distribution are separate pending gates.
+P2-12 is current-host verified; continue P2-13 and P2-14. Broader Phase 2 acceptance and
+held-Classify gestures remain open. SketchUp 2023, Windows and public distribution are
+separate pending gates.
