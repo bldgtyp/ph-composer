@@ -18,6 +18,8 @@ module BldgtypExampleLibraryWalkthrough
                               :params => { "provider_id" => provider_id, "kind" => "materials" }))
     selected = { "provider_id" => provider_id, "kind" => "materials", "generation" => loaded.fetch("generation") }
     catalog = checked(api.query(:context => context, :name => "ph_composer.library.catalog", :params => selected))
+    raise "The example catalog has warnings or unavailable kinds." unless catalog.fetch("warnings").empty? &&
+                                                                        catalog.fetch("unavailable").empty?
     row = catalog.fetch("rows").find { |entry| entry.fetch("record_id") == "insulation" }
     raise "The example catalog is unavailable." unless row
     params = selected.merge("library_id" => row.fetch("library_id"), "record_id" => row.fetch("record_id"),

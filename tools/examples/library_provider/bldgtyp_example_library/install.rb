@@ -19,10 +19,11 @@ module BldgtypExampleLibrary
 
       rows = [["insulation", "Example synthetic insulation", 0.04],
               ["finish", "Example synthetic finish", 0.2]].map do |id, name, conductivity|
-        snapshot = { "id" => id, "name" => name, "category" => "other", "color" => "#ffffff",
+        snapshot = { "id" => id, "name" => name, "category" => id == "insulation" ? "insulation" : "finishes",
+          "color" => "#ffffff",
           "conductivity_w_mk" => conductivity, "density_kg_m3" => nil, "specific_heat_j_kgk" => nil,
           "emissivity" => nil, "notes" => "Synthetic example. Not a product specification.",
-          "datasheet_urls" => [], "image_urls" => [] }
+          "datasheet_links" => [] }
         { "library_id" => "bldgtyp.example.synthetic", "library_name" => label,
           "record_id" => id, "wire_schema_version" => 1, "snapshot" => snapshot }
       end

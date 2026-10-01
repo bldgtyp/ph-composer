@@ -35,6 +35,17 @@ text. `exported_at` is an ISO 8601 timestamp with a timezone. Each `kinds` entry
 a version in `kind_schema_versions`. A row's `id` is the provider's stable record identity;
 PH-Composer gives a copied record its own local identity.
 
+Exporting local definitions publishes each local id as the wire record id. The optional
+`record_origins` object groups informational origins by wire kind and exported record id.
+An origin contains `label`, `provider_kind`, `library_id` and `record_id`. The label is a sanitized
+provider-kind label. Origins contain no configured path, credentials or raw source snapshot;
+the reader ignores them and they do not affect semantic fingerprints.
+
+The export form defaults to all supported local definitions. Selected scope uses explicit record
+ids and never derives its scope from a filter. New identity creates a library UUID; update keeps
+the validated destination identity. A native review lists omitted local metadata and unsupported
+records before a staged write replaces the destination. Cancellation or failure preserves its bytes.
+
 ## Materials version 1
 
 Only `id` and `name` are required on a wire row. Supply SI numbers directly; PH-Composer never
@@ -95,7 +106,8 @@ library id must also agree on its name.
 | Rows across their kind arrays, including unsupported kinds and skipped rows in parsed files | 20,000 |
 
 The provider refuses an over-budget catalog rather than truncating it. These are implemented
-bounds with exact-limit and one-above offline checks; host budget measurement remains open.
+bounds with exact-limit and one-above offline checks. Current-host measurements meet all three
+limits; other hosts remain subject to their own acceptance checks.
 
 ## Copy and read back
 
