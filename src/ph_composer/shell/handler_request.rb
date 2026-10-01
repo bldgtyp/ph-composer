@@ -39,7 +39,7 @@ module PhComposer
       engine.resolve_reference(kind, from)
       engine.resolve_reference(kind, to) unless to.nil?
       rows = registry.reference_retargeters.values.select { |item| item.target_kind == kind }.sort_by(&:name)
-      entries = rows.flat_map do |declaration|
+      plans = rows.map do |declaration|
         nested = dup
         nested.owner = declaration.owner
         plan = declaration.handler.call(nested, proposal, :from => from, :to => to)
@@ -47,13 +47,13 @@ module PhComposer
           raise InternalError, "#{declaration.name} must return a ReferencePlan."
         end
 
-        unless plan.entries.all? { |entry| registry.owner_of(entry.kind) == declaration.owner }
+        unless (plan.entries + plan.removals).all? { |entry| registry.owner_of(entry.kind) == declaration.owner }
           raise InternalError, "#{declaration.name} may project only its owner's entity targets."
         end
 
-        plan.entries
+        plan
       end
-      Records::ReferencePlan.new(:entries => entries)
+      Records::ReferencePlan.new(:entries => plans.flat_map(&:entries), :removals => plans.flat_map(&:removals))
     rescue StandardError => error
       proposal&.refuse(error)
       raise

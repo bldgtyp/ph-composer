@@ -93,6 +93,158 @@ class EntityReferencesTest < PhComposerTestCase
     assert_empty ATTACHED.problems(changes.writes.first.after)
   end
 
+  def test_removal_is_detached_and_retains_another_occurrence_with_the_same_uuid
+    _group, faces = zone(100, [101, 102])
+    before = FACE::FACE_STORE.read(faces.first)
+    FACE::FACE_STORE.write(faces.last, before)
+    key = [100, 101]
+    removal = R::ReferenceRemoval.new(:kind => FACE::REFERENCE_KIND, :key => key, :before => before)
+    plan = R::ReferencePlan.new(:entries => [], :removals => [removal])
+    key << 999
+    before["face_type"] = "Floor"
+
+    found = @engine.resolve_reference(FACE::REFERENCE_KIND, face_id(faces.last), :reference_plan => plan)
+
+    assert_equal [100, 102], found.key
+    assert_equal [100, 101], plan.removals.first.key
+    assert_equal "Wall", plan.removals.first.before.fetch("face_type")
+    assert_equal 2, PhComposer::Registry.current.catalog.reference_target(FACE::REFERENCE_KIND).entries(@model).length
+  end
+
+  def test_removals_are_distinct_from_valid_replacements_and_additions
+    _group, faces = zone(100, [101, 102])
+    removal = removal_for(faces.first, [100, 101])
+    replacement = R::ReferenceEntry.new(:kind => FACE::REFERENCE_KIND, :key => [100, 102],
+                                      :record => FACE::FACE_STORE.read(faces.last).merge("face_type" => "Floor"))
+    addition = R::ReferenceEntry.new(:kind => FACE::REFERENCE_KIND, :key => [100, 103],
+                                   :record => replacement.record.merge("id" => "fac_000000000103"))
+    plan = R::ReferencePlan.new(:entries => [replacement, addition], :removals => [removal])
+
+    code = refusal do
+      @engine.resolve_reference(FACE::REFERENCE_KIND, face_id(faces.first), :reference_plan => plan)
+    end
+    assert_equal "reference.invalid", code
+    assert_equal "Floor", @engine.resolve_reference(FACE::REFERENCE_KIND, face_id(faces.last),
+                                                    :reference_plan => plan).record.fetch("face_type")
+    assert_equal [100, 103], @engine.resolve_reference(FACE::REFERENCE_KIND, "fac_000000000103",
+                                                     :reference_plan => plan).key
+    assert_empty R::ReferencePlan.new(:entries => []).removals
+  end
+
+  def test_removal_shape_and_conflicting_occurrence_keys_are_rejected
+    _group, faces = zone(100, [101])
+    removal = removal_for(faces.first, [100, 101])
+    entry = R::ReferenceEntry.new(:kind => removal.kind, :key => removal.key, :record => removal.before)
+
+    [nil, entry, R::ReferenceRemoval.new(:kind => removal.kind, :key => removal.key, :before => nil)].each do |bad|
+      assert_raises(PhComposer::InternalError) { R::ReferencePlan.new(:entries => [], :removals => [bad]) }
+    end
+    assert_raises(PhComposer::InternalError) { R::ReferencePlan.new(:entries => [], :removals => [removal, removal]) }
+    assert_raises(PhComposer::InternalError) { R::ReferencePlan.new(:entries => [entry], :removals => [removal]) }
+  end
+
+  def test_removal_checks_full_before_record_exact_path_and_registered_entity_schema
+    _group, faces = zone(100, [101])
+    set_data(FACE::FACE_STORE, faces.first, "literal" => "authored")
+    before = FACE::FACE_STORE.read(faces.first)
+    cases = [
+      ["outside.missing", [100, 101], before, "reference.invalid"],
+      [ATTACHED.id, "atz_000000000001", before, "reference.invalid"],
+      [FACE::REFERENCE_KIND, [100, 101], before.merge("face_type" => "invalid"), "validation.failed"],
+      [FACE::REFERENCE_KIND, [101], before, "target.not_found"],
+      [FACE::REFERENCE_KIND, [100, 101], before.merge("user_data" => { "literal" => "changed" }), "target.changed"],
+      [FACE::REFERENCE_KIND, [100, 101], before.merge("extension_data" => {}), "target.changed"]
+    ]
+    cases.each do |kind, key, expected, code|
+      plan = R::ReferencePlan.new(:entries => [], :removals => [
+        R::ReferenceRemoval.new(:kind => kind, :key => key, :before => expected)
+      ])
+      assert_equal code, refusal { @engine.resolve_reference(FACE::REFERENCE_KIND, before.fetch("id"),
+                                                            :reference_plan => plan) }
+    end
+    assert_equal before, FACE::FACE_STORE.read(faces.first)
+  end
+
+  def test_removal_of_another_kind_is_guarded_when_resolving_a_target
+    group, faces = zone(100, [101])
+    removal = R::ReferenceRemoval.new(:kind => ZONES::REFERENCE_KIND, :key => [100],
+                                     :before => ZONES::ZONE_STORE.read(group))
+    plan = R::ReferencePlan.new(:entries => [], :removals => [removal])
+    assert_equal [100, 101], @engine.resolve_reference(FACE::REFERENCE_KIND, face_id(faces.first),
+                                                     :reference_plan => plan).key
+    ZONES::ZONE_STORE.write(group, removal.before.merge("name" => "Changed"))
+    code = refusal do
+      @engine.resolve_reference(FACE::REFERENCE_KIND, face_id(faces.first), :reference_plan => plan)
+    end
+    assert_equal "target.changed", code
+  end
+
+  def test_duplicate_storage_keys_cannot_satisfy_a_removal_guard
+    id = "outside.removal.object"
+    entry = R::ReferenceEntry.new(:kind => id, :key => [7], :record => { "id" => "obj_7" })
+    target = R::ReferenceTarget.new(:id => id, :label => "Outside object",
+                                   :records => ->(_model) { [entry, entry] }, :validate => ->(_record) { [] })
+    fixture = Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("outside.removal", :contract_version => 1).reference_target(target)
+      end
+    end
+    PhComposer::Registry.install([fixture])
+    engine = R::Engine.new(@model, PhComposer::Registry.current.catalog)
+    plan = R::ReferencePlan.new(:entries => [], :removals => [
+      R::ReferenceRemoval.new(:kind => id, :key => entry.key, :before => entry.record)
+    ])
+
+    assert_equal "target.ambiguous", refusal { engine.resolve_reference(id, "obj_7", :reference_plan => plan) }
+  end
+
+  def test_catalog_delete_requires_removal_of_all_exact_incoming_occurrences
+    record = attached("atz_000000000001")
+    _group, faces = zone(100, [101, 102])
+    faces.each do |face|
+      FACE::FACE_STORE.write(face, FACE::FACE_STORE.read(face).merge("boundary_condition" => "AttachedZone",
+                                                                  "attached_zone_id" => record.fetch("id")))
+    end
+    orphan = make_face(201)
+    @model.entities << orphan
+    FACE::FACE_STORE.write(orphan, FACE::FACE_STORE.read(faces.first))
+    removals = faces.map { |face| removal_for(face, [100, face.persistent_id]) }
+    [removals.first(1), removals].each do |partial|
+      changes = R::ChangeSet.new
+      plan = R::ReferencePlan.new(:entries => [], :removals => partial)
+      assert_equal "reference.in_use", refusal { @engine.propose_delete(ATTACHED.id, record.fetch("id"), changes,
+                                                                        :reference_plan => plan) }
+      assert_equal "reference.in_use", changes.refusal.code
+      assert_equal record, ATTACHED.store.read(@model, record.fetch("id"))
+    end
+    removals << removal_for(orphan, [201])
+    changes = R::ChangeSet.new
+    plan = R::ReferencePlan.new(:entries => [], :removals => removals)
+    @engine.propose_delete(ATTACHED.id, record.fetch("id"), changes, :reference_plan => plan)
+
+    assert_nil changes.writes.first.after
+    assert_empty @engine.incoming_references(ATTACHED.id, record.fetch("id"), :reference_plan => plan)
+    assert_equal 3, PhComposer::Registry.current.catalog.reference_target(FACE::REFERENCE_KIND).entries(@model).length
+    assert_equal record, ATTACHED.store.read(@model, record.fetch("id"))
+  end
+
+  def test_surviving_unavailable_extension_reference_blocks_identity_removal
+    record = attached("atz_000000000001")
+    _group, faces = zone(100, [101, 102])
+    set_data(FACE::FACE_STORE, faces.last, "catalog" => record.fetch("id"))
+    before = FACE::FACE_STORE.read(faces.last)
+    data = { "outside.unavailable" => before.fetch("extension_data").fetch(EXTENSION.namespace) }
+    FACE::FACE_STORE.write(faces.last, before.merge("extension_data" => data))
+    engine = R::Engine.new(@model, PhComposer::Registry.current.catalog)
+    plan = R::ReferencePlan.new(:entries => [], :removals => [removal_for(faces.first, [100, 101])])
+
+    assert_equal "reference.in_use", refusal { engine.check_identity_removal!(ATTACHED.id, record.fetch("id"),
+                                                                            :reference_plan => plan) }
+    all = R::ReferencePlan.new(:entries => [], :removals => [removal_for(faces.first, [100, 101]),
+                                                          removal_for(faces.last, [100, 102])])
+    assert_nil engine.check_identity_removal!(ATTACHED.id, record.fetch("id"), :reference_plan => all)
+  end
+
   def test_malformed_neighbor_identity_reports_its_occurrence_without_writing
     _zone, faces = zone(100, [101])
     orphan = make_face(201)
@@ -360,6 +512,10 @@ class EntityReferencesTest < PhComposerTestCase
   end
 
   private
+
+  def removal_for(face, key)
+    R::ReferenceRemoval.new(:kind => FACE::REFERENCE_KIND, :key => key, :before => FACE::FACE_STORE.read(face))
+  end
 
   def refusal
     assert_raises(PhComposer::CodedError) { yield }.code

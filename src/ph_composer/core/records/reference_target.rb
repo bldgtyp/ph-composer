@@ -6,6 +6,10 @@ module PhComposer
     # entities can have the same UUID while occupying different paths.
     ReferenceEntry = Struct.new(:kind, :key, :record, keyword_init: true)
 
+    # Removal names an existing storage occurrence and its complete expected record, never a
+    # nil-record tombstone or a UUID-wide exclusion that could hide another copied occurrence.
+    ReferenceRemoval = Struct.new(:kind, :key, :before, keyword_init: true)
+
     # A feature's read-only reference inventory. The provider returns ReferenceEntry values;
     # validation is pure and returns findings. Neither this contract nor the Engine exposes CRUD
     # for entity storage. Built-in and outside features register through FeatureScope alike.
@@ -38,28 +42,53 @@ module PhComposer
       end
     end
 
-    # The exact entity collection an operation will replace, supplied as typed before/after
-    # occurrences. Newly allocated records are checked through their feature's pure validator.
+    # The exact entity collection an operation will replace, add or remove. New final records
+    # and expected removed records are checked through their feature's pure validator.
     # This is a final-state projection, never a whitelist of arbitrary mapped UUID strings.
     class ReferencePlan
-      attr_reader :entries
+      attr_reader :entries, :removals
 
-      def initialize(entries:)
-        unless entries.all? { |entry| entry.is_a?(ReferenceEntry) && entry.key && entry.record.is_a?(Hash) }
+      def initialize(entries:, removals: [])
+        valid_entries = entries.all? { |entry| entry.is_a?(ReferenceEntry) && entry.key && entry.record.is_a?(Hash) }
+        valid_removals = removals.all? do |removal|
+          removal.is_a?(ReferenceRemoval) && removal.key && removal.before.is_a?(Hash)
+        end
+        unless valid_entries && valid_removals
           raise InternalError, "A reference plan needs typed record occurrences."
         end
-        keys = entries.map { |entry| [entry.kind, entry.key] }
+        keys = (entries + removals).map { |entry| [entry.kind, entry.key] }
         raise InternalError, "A reference plan repeats an occurrence." unless keys.uniq.length == keys.length
 
         @entries = entries.map do |entry|
-          ReferenceEntry.new(:kind => entry.kind, :key => DeepCopy.call(entry.key),
+          ReferenceEntry.new(:kind => DeepCopy.call(entry.kind), :key => DeepCopy.call(entry.key),
                              :record => DeepCopy.call(entry.record))
+        end.freeze
+        @removals = removals.map do |removal|
+          ReferenceRemoval.new(:kind => DeepCopy.call(removal.kind), :key => DeepCopy.call(removal.key),
+                               :before => DeepCopy.call(removal.before))
         end.freeze
       end
 
       def project(stored)
-        replaced = entries.map { |entry| [entry.kind, entry.key] }
+        removals.each { |removal| check_removal!(removal, stored) }
+        replaced = (entries + removals).map { |entry| [entry.kind, entry.key] }
         stored.reject { |entry| replaced.include?([entry.kind, entry.key]) } + entries
+      end
+
+      private
+
+      def check_removal!(removal, stored)
+        matches = stored.select { |entry| entry.kind == removal.kind && entry.key == removal.key }
+        detail = { "target_kind" => removal.kind, "key" => DeepCopy.call(removal.key) }
+        if matches.empty?
+          raise CodedError.new("target.not_found", "The planned removed occurrence no longer exists.", detail)
+        end
+        if matches.length > 1
+          raise CodedError.new("target.ambiguous", "The planned removed occurrence is not unique.", detail)
+        end
+        return if matches.first.record == removal.before
+
+        raise CodedError.new("target.changed", "The planned removed occurrence has changed.", detail)
       end
     end
   end

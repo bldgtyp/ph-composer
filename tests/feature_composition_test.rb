@@ -150,7 +150,28 @@ class FeatureCompositionTest < PhComposerTestCase
     end
   end
 
-  def install_entity_retargeter(refuse: false, foreign: false)
+  class RemoveReferenceStep < RetargetStep
+    def apply(model, _slots)
+      entity = model.entities.to_a.find { |item| item.persistent_id == @entity_id }
+      entity.delete_attribute("ph_composer.test_retarget", "record")
+    end
+
+    def affected
+      []
+    end
+  end
+
+  def removal_plan(proposal, entries, foreign)
+    removals = entries.map do |entry|
+      proposal.add_step(RemoveReferenceStep.new(entry.key.first, entry.record),
+                        :scopes => [PhComposer::Operations::EntityScope.new([])])
+      R::ReferenceRemoval.new(:kind => foreign ? "ph_composer.zones.zone" : entry.kind,
+        :key => entry.key, :before => entry.record)
+    end
+    R::ReferencePlan.new(:entries => [], :removals => removals)
+  end
+
+  def install_entity_retargeter(refuse: false, foreign: false, remove: false)
     reference = R::Reference.new(:key => "definition_id", :target_kind => KIND, :cardinality => "one")
     target = R::ReferenceTarget.new(:id => "test.consumer.entity", :label => "Entity", :validate => ->(_record) { [] },
       :references => [reference], :records => lambda do |model|
@@ -165,6 +186,7 @@ class FeatureCompositionTest < PhComposerTestCase
       scope.reference_target(target)
       scope.reference_retargeter("test.consumer.retarget", :target_kind => KIND) do |request, proposal, from:, to:|
         entries = target.entries(request.model).select { |entry| entry.record["definition_id"] == from }
+        next removal_plan(proposal, entries, foreign) if remove
         final = entries.map do |entry|
           record = entry.record.merge("definition_id" => to)
           proposal.add_step(RetargetStep.new(entry.key.first, record),
@@ -209,6 +231,29 @@ class FeatureCompositionTest < PhComposerTestCase
     PhComposer::API.invoke(:context => @context, :name => "test.deleting.delete",
                           :params => { "id" => ids.first, "replacement" => ids.last },
                           :request => { "sequence" => 1, "expected_revision" => @session.revision })
+  end
+
+  def test_owned_removal_composes_with_catalog_delete_and_native_undo
+    install_entity_retargeter(:remove => true)
+    engine, ids, entity, record = retarget_seed
+    result = retarget_invoke(ids)
+    assert_equal "completed", result.fetch("status")
+    assert_nil entity.get_attribute("ph_composer.test_retarget", "record")
+    assert_equal [ids.last], engine.ids(KIND)
+    @model.undo
+    restored = @model.entities.to_a.find { |item| item.persistent_id == entity.persistent_id }
+    assert_equal record, JSON.parse(restored.get_attribute("ph_composer.test_retarget", "record"))
+    assert_equal ids.sort, engine.ids(KIND).sort
+  end
+
+  def test_foreign_removal_is_refused_before_host_or_catalog_writes
+    install_entity_retargeter(:remove => true, :foreign => true)
+    engine, ids, entity, record = retarget_seed
+    result = retarget_invoke(ids)
+    assert_equal "operation.failed", result.fetch("code")
+    assert_equal record, JSON.parse(entity.get_attribute("ph_composer.test_retarget", "record"))
+    assert_equal ids.sort, engine.ids(KIND).sort
+    assert_empty @model.operations
   end
 
   def test_entity_retarget_and_delete_commit_in_one_operation_without_owner_naming_referrer

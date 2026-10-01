@@ -367,6 +367,18 @@ already in the proposal are read through its change set. The engine still refuse
 reference left in the final projected state. A retargeter failure marks the proposal refused;
 rescuing it does not permit a partial write. The definition feature names no referrer.
 
+`Records::ReferencePlan.new(entries:, removals: [])` preserves replacement and addition entries
+as typed `ReferenceEntry(kind:, key:, record:)` values. A removal is a separate typed
+`ReferenceRemoval(kind:, key:, before:)`, with the complete expected record, including metadata.
+It never supplies a nil record or hides every occurrence of a UUID. All entry and removal
+kind/key pairs must be distinct. The engine admits only registered entity reference targets and
+validates both final entries and removal pre-images through their target validators. Projection
+requires exactly one current occurrence at each removed kind/key and an exact full-record match;
+missing, ambiguous or changed occurrences refuse. Other occurrences sharing the removed UUID
+remain in the projected inventory and still participate in resolution and incoming-reference
+checks. The owning feature adds the actual removal steps to the same proposal; the plan alone
+does not remove entities or write dictionaries.
+
 Nested catalog references use the same `Records::Reference` declaration, supplied separately
 from fields through `RecordKind.new(..., references: [...])`. For example, key
 `layers[].segments[].material_id` visits the id in each segment; cardinality describes each leaf
