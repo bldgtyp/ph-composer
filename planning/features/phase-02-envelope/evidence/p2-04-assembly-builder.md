@@ -82,5 +82,10 @@ Seven individual native Model Undo steps each restore the immediately preceding 
 Materials/Assemblies authored catalog exactly, including nested ids and references.
 The last Undo restores the starting catalog and the saved, unmodified Model state.
 Private journals `assembly-native-e04-tools-*.json` retain each before/after and verification.
-This batch does not award keyboard Material Use, the complete stud-wall calculation,
-or the full E04 gate.
+The complete stud-wall calculation and full E04 gate remain open.
+
+Opening Synthetic framing's details bubble with a segment selected preserves the exact
+starting catalog and unmodified Model. Pressing native Enter activates the focused Use
+button and assigns that Material to the selected segment. One native Model Undo restores
+the complete starting catalog and unmodified state. Private `assembly-native-e04-keyboard-framing.json`
+records the committed assignment; `e04-tools-before-verify` records its restoration.
