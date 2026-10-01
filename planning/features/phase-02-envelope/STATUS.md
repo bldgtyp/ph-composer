@@ -27,7 +27,30 @@ the top of each PRD.
 4. Met: [implementation issue #14](https://github.com/bldgtyp/ph-composer/issues/14) created;
    the coordinating and feature packet issue headers are linked.
 
-## Current checkpoint
+## Current resume checkpoint
+
+Branch `codex/phase-02-envelope`, HEAD `60b8eb1` plus the current documentation tidy-up.
+Shipping source `1dae77d` passes full CI on both Rubies: 991 tests / 6705 assertions,
+346 JS and 135 Python tests. Coverage 96.6% / 94.9% / 94.98%; all eight browser scripts and
+Chromium 88 runtime pass. Exact installed RBZ is `checkpoint-1dae77d.rbz`, SHA-256
+`8d2e72c73482d59a9b22c22affbbc170c38fd412ba28167d60285167e4492050`, 296 files,
+22,623,696 installed bytes. E15 has a passing structured native result. D2-8 defers P2-16 to
+Phase 5 against the deployed endpoint evidence. P2-09 and P2-11 native workflows are observed;
+full phase case consolidation remains pending. The only source since `1dae77d` is two scoped
+browser selectors; shipping bytes are unchanged.
+
+Current native batch: P2-12 Slice B, fresh normal SketchUp 26.1.188 / Ruby 3.2.2,
+PID 16514, bridge 61208, own `_private/host/envelope/p212b-native.skp`, initially unmodified
+root edit path, copied from the authored two-Zone reference fixture. E12 dependency baseline is
+captured before Slice B actions. The previous E15 provider configuration is removed; no outside
+provider or fault override remains. Exact installed-source checks still hold.
+
+Next: native cutting-component exclusion and glued-Solve replay, then required affected-case
+closure. The final human batch contains the inaccessible native Option Move-copy observation,
+held-modal context workflow and outside-example repository decision. Slice C, P2-13 and P2-14
+still wait on Move-copy. Keep these gates open; no placement or Aperture implementation yet.
+
+## Earlier implementation checkpoints
 
 Checkpoint `6a7e08f` contains P2-01 to P2-06. An immutable source archive passes full
 `make ci` on Ruby 2.7.2 and 3.2.2: 818 Ruby tests, 4667 assertions, 281 JavaScript tests and
@@ -65,7 +88,7 @@ P2-12 Slice A has measured evidence except native Move Copy; Slice C waits on th
 host observation. API copies do not satisfy it. Manual items remain reserved for Ed's final
 batch while independent authorized work continues.
 
-## Installed verification checkpoint
+## Earlier installed verification checkpoint
 
 `make ci` passes on Ruby 2.7.2 and 3.2.2 for shipping source `d812540`: 972 Ruby tests /
 6373 assertions, 329 JavaScript tests and 135 Python tests, plus hostkit checks. Subsequent
@@ -83,8 +106,11 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 
 ## Blockers
 
-- P2-16 (connection provider) also waits on the PH-Navigator endpoint change, which is work in
-  another repository and is not scoped here. The roadmap already allows 2.5 to slip to Phase 5.
+- Native Option Move-copy cannot be generated reliably by the available computer-use controls.
+  API copy and clipboard evidence do not replace it. This holds P2-12 Slice C and P2-13/P2-14.
+- Held-modal modifier/context acceptance needs a precise human workflow; keep it in the final batch.
+- Creating the prepared outside-provider example as a separate public repository needs the final
+  repository decision. The local outside-plugin registration and copy proof already pass.
 
 ## Stage ledger
 
@@ -98,9 +124,9 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 | [P2-06 Construction export](phases/p2-06-construction-export.md) | 2.1, 1.3 | Implemented and reviewed; dual-Ruby CI/runtime and real-SKP export pass; final native gate open | [Construction evidence](evidence/p2-06-construction-export.md) |
 | [P2-07 Library seam and file provider](phases/p2-07-library-seam-and-file-provider.md) | 2.2 | Implemented and reviewed; integrated gates and native library proof pass; final attestation open | [Library evidence](evidence/p2-07-library-seam.md) |
 | [P2-08 Library sidebar and setup](phases/p2-08-library-sidebar-and-setup.md) | 2.2 | Implemented and reviewed; integrated gates and native UI workflows pass; final attestation open | [Sidebar evidence](evidence/p2-08-library-sidebar.md) |
-| [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented and reviewed; full shipping gates pass; native export and outside repository approval open | [Export evidence](evidence/p2-09-library-export.md) |
+| [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented and reviewed; full shipping gates pass; native export checks observed; outside repository approval and attestation open | [Export evidence](evidence/p2-09-library-export.md) |
 | [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented and reviewed; integrated gates and native records Undo/Redo/reopen pass; final attestation open | [Window records evidence](evidence/p2-10-window-records.md) |
-| [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow in progress | [Builder evidence](evidence/p2-11-window-type-builder.md) |
+| [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow observed; final attestation open | [Builder evidence](evidence/p2-11-window-type-builder.md) |
 | [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A partial; Slice B implemented and reviewed; integrated gates pass, native replay open; Slice C blocked on native Move Copy | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Scoped | |
 | [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
