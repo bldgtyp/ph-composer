@@ -118,8 +118,14 @@ module PhComposer
       digest = request_digest(name, params, expected_revision, proposal_digest)
       caller.highest_sequence = sequence
       session.outcomes.begin(caller.handle, sequence, digest)
-      outcome = session.exclusive { run(session, action, params, expected_revision, proposal_digest) }
-      session.outcomes.finish(caller.handle, sequence, outcome)
+      outcome = session.exclusive do
+        result = run(session, action, params, expected_revision, proposal_digest)
+        session.outcomes.finish(caller.handle, sequence, result)
+      end
+      # Subscribers may use public queries. Publish only after the request is retained and the
+      # mutation lock is released, so those reads see the committed Model rather than session.busy.
+      session.changed(:action, action.name) if outcome["effect"] == "committed"
+      outcome
     rescue CodedError => error
       coded_outcome(error, session, :mutation => true)
     rescue StandardError => error
@@ -323,7 +329,6 @@ module PhComposer
         ModelOperation.perform(session.model, action.undo_name) { proposal.apply(session.model, engine) }
         true
       end
-      session.changed(:action, action.name)
       Outcome.completed(:revision => session.revision, :value => value, :effect => "committed",
                         :affected => proposal.affected, :findings => proposal.findings,
                         :proposal_digest => proposal.digest)

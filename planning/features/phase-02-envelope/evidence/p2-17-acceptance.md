@@ -36,9 +36,33 @@ repeating unchanged passing work. Historical ledger evidence remains append-only
 
 ## Remaining work
 
+### Assembly colour redraw correction in progress
+
+On the normal installed package above, native Assembly inventory colour editing saved `#225588`
+but switched Assembly Colour-by Off. The host recorded `colour_by_failed` / `PhComposer::CodedError`.
+Exact public catalog readback confirmed the saved edit; one native Undo restored the entire catalog.
+Private journals are `p214-p217-assembly-colour-{before,edited,undo}.json` in the host corpus.
+The initial active legend and viewport counts pass, but colour-edit redraw does not pass yet.
+
+The dispatcher published the committed action while its mutation lock remained active. The
+Assembly projection's normal public query consequently returned `session.busy`. The bounded
+correction retains the outcome within exclusivity and publishes the committed action after the
+lock is released. It keeps the contributor's public query and existing refusal rules intact.
+Three regression tests cover the actual Assembly edit, Undo/Redo, the first panel snapshot and
+subscriber read/retry visibility. The affected 129 tests / 595 assertions pass on Ruby 2.7.2 and
+3.2.2, and the two-file Rubocop check passes. Independent architecture/simplify review found no
+actionable issue. Both full `make ci` gates pass: 1,327 Ruby tests / 9,851 assertions, 359 JS tests,
+168 Python tests and hostkit 9 tests / 30 assertions, with no lint skips. Logs are
+`/tmp/phc-p217-colour-ci-{3.2.2,2.7.2}.log`. A normal package installation and fresh native
+colour-edit verification remain pending. No correction is hotloaded.
+
 Current-host E05 native table, right-click, selection-panel Apply and inventory Paint routes pass,
 each with one native Undo restoring exact public values. Table Redo and the reference inventory
 usage calculation also pass. See [assignment evidence](p2-05-assign-assemblies.md).
+The stale/unreachable batch refusals, 250/251 ceiling and single native Undo also pass, with exact
+fixture cleanup. E06 current-host missing/incomplete assigned construction refusals and unused
+incomplete disclosure pass through the normal canonical workflow, with exact aborted-fixture
+restoration; see [construction evidence](p2-06-construction-export.md).
 
 - Reconcile E01 to E11 retained observations with every register assertion, and execute remaining
   independently reachable native checks. E05 still needs the non-route register assertions;

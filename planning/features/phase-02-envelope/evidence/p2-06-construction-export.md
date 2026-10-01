@@ -72,3 +72,23 @@ references and energy data rather than treating those generated defaults as auth
 
 All five integrated browser scripts pass after their final corrections. Log:
 `/tmp/phc-envelope-p206-ui-final.log`. This does not replace the remaining native UI gestures.
+
+## P2-17 dependency refusal consolidation
+
+The current normal RBZ is `bcb9c024e20ce686b52e0b851e13fd2e762e97aa25d61551b838e6aaaf75c018`,
+latest shipping source `e11a767`, on fresh SketchUp 26.1.188 / Ruby 3.2.2 process PID 26980.
+Current reference exports and fresh SKP readback are also covered by [E14](p2-14-aperture-export.md).
+No development construction provider is present. On `p214-integrated.skp`, development-only SDK
+fixture edits give east Wall 4 an absent Assembly id or the existing incomplete Assembly id.
+Public preflight names `construction.dangling` or `construction.incomplete` on that exact Face,
+and the normal canonical Export workflow refuses `export.blocked` / effect `none` before opening
+a destination dialog. The native operations are aborted and exact public Face, Window Unit and
+area values return to the baseline. The unused incomplete Assembly's `segment_without_material`
+finding is nonblocking; the restored reference has no blocking finding and extracts normally.
+Private evidence: `p214-p217-construction-guards.json` and the restored journals beside it.
+
+Extraction itself intentionally collects dependency findings for translation; its success does
+not authorize committing a canonical output pair. The first probe incorrectly expected extraction
+to refuse, then was corrected to assert the documented canonical-workflow boundary. No shipping
+change was needed. These checks supply the remaining dependency outcomes; E06 closure still awaits
+the assertion-level consolidation and its preceding stage gates.

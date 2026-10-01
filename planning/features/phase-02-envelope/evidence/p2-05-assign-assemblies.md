@@ -52,3 +52,23 @@ attempt made no write because Apply Assembly had not been clicked; it is not cou
 as a successful assignment. No shipping methods were patched for these observations.
 E05 remains open for the other register assertions, including ceiling, stale/unreachable targets,
 replacement across occurrence shapes, hint precedence, pair mismatch and Assembly Colour-by.
+
+The subsequent current-host public-action checks close the stale/unreachable and ceiling assertions.
+Two-target batches refuse atomically with `target.changed` and `target.not_found`; exact public
+Face, Window Unit and area values remain unchanged. A temporary native 251-Face Zone refuses
+251 targets with `gesture.too_large`, commits exactly 250 targets, and one native Undo restores
+all public values. Two further native Undo gestures remove Make Zone and the fixture geometry;
+the original reference values match exactly. Journals: `p214-p217-assignment-guards.json`,
+`p214-p217-limit-results.json`, `p214-p217-limit-one-native-undo.json` and
+`p214-p217-limit-cleaned.json`. Replacement, hint precedence, pair mismatch and Assembly Colour-by
+still need their remaining current-host evidence.
+
+The current reference's real reciprocal Surface pair also passes the mismatch assertion: changing
+one endpoint's Assembly produces `assembly.pair_mismatch` at both endpoints while adjacency remains
+current. One native Undo restores exact Face, Unit and area values. Journals are
+`p214-p217-pair-{before,mismatch,undo}.json`.
+
+Native Assembly Colour-by activation showed the correct legend and viewport counts. Editing the
+Wall Assembly colour saved the chosen value but switched Colour-by Off. This is a confirmed failed
+redraw, not a passed colour check. The shared dispatcher correction and pending fresh-host recheck
+are tracked in [P2-17](p2-17-acceptance.md#assembly-colour-redraw-correction-in-progress).
