@@ -1,9 +1,9 @@
 # Phase 2: envelope
 
 DATE: 2026-09-30
-STATUS: Scoped. Detailed plan drafted 2026-09-30 and its ten decisions answered the same day; implementation is not authorized. Remaining entry gates are in [STATUS.md](STATUS.md).
+STATUS: In progress. Ed authorized the implementation run 2026-10-01; P2-01 is underway on `codex/phase-02-envelope`. Gates and resume state are in [STATUS.md](STATUS.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 Phase 2 puts real Assemblies and real windows on the Phase 1 model and adds the file library.
 It ends when a two-Zone model with authored Assemblies and placed window units exports a

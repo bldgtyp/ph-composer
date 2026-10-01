@@ -1,9 +1,9 @@
 # Libraries: implementation plan
 
 DATE: 2026-09-30
-STATUS: Scoped. Not authorized.
+STATUS: Scoped. Authorized through the Phase 2 run 2026-10-01; preceding stage gates remain required.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 The [PRD](PRD.md) owns behavior. The [Phase 2 plan](../PLAN.md) sequences delivery and
 [CONTRACTS](../CONTRACTS.md) binds names. This file allocates the PRD to stages and settles the

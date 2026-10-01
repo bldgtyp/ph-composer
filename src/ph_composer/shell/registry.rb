@@ -19,7 +19,8 @@ module PhComposer
 
     attr_reader :features, :queries, :actions, :view_commands, :record_kinds, :reference_targets, :extensions,
                 :snapshot_sections,
-                :export_contributors, :proposal_participants, :colour_modes, :menu_items, :subscriptions
+                :export_contributors, :reference_retargeters, :proposal_participants, :colour_modes, :menu_items,
+                :subscriptions
 
     class << self
       def current
@@ -56,6 +57,7 @@ module PhComposer
       @extensions = {}
       @snapshot_sections = {}
       @export_contributors = {}
+      @reference_retargeters = {}
       @proposal_participants = {}
       @colour_modes = {}
       @menu_items = {}
@@ -98,6 +100,7 @@ module PhComposer
       publish_each(staging.declared_extensions, @extensions, :namespace)
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
+      publish_each(staging.declared_reference_retargeters, @reference_retargeters, :name)
       publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
       publish_each(staging.declared_colour_modes, @colour_modes, :name)
       publish_each(staging.declared_menu_items, @menu_items, :name)
@@ -142,7 +145,8 @@ module PhComposer
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_view_commands,
                   :declared_record_kinds, :declared_reference_targets, :declared_extensions,
                   :declared_snapshot_sections,
-                  :declared_export_contributors, :declared_proposal_participants, :declared_colour_modes,
+                  :declared_export_contributors, :declared_reference_retargeters, :declared_proposal_participants,
+                  :declared_colour_modes,
                   :declared_menu_items,
                   :declared_subscriptions, :owners, :named
 
@@ -157,6 +161,7 @@ module PhComposer
         @declared_extensions = []
         @declared_snapshot_sections = []
         @declared_export_contributors = []
+        @declared_reference_retargeters = []
         @declared_proposal_participants = []
         @declared_colour_modes = []
         @declared_menu_items = []
@@ -280,6 +285,12 @@ module PhComposer
         declaration = Declarations::MenuItem.new(:name => name, :owner => id, :menu => menu,
                                                  :available => available, :entries => entries)
         @staging.add(:declared_menu_items, id, name, declaration)
+      end
+
+      def reference_retargeter(name, target_kind:, &handler)
+        declaration = Declarations::ReferenceRetargeter.new(:name => name, :owner => id,
+                                                            :target_kind => target_kind, :handler => handler)
+        @staging.add(:declared_reference_retargeters, id, name, declaration)
       end
 
       def proposal_participant(name, &handler)

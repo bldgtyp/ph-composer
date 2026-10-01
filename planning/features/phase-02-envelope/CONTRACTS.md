@@ -3,7 +3,7 @@
 DATE: 2026-10-01
 STATUS: Scoped. Proposed bindings, drafted from source at `052a7a1`. P2-01 confirms or corrects every table against the code with the architecture review before any feature stage starts.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 The three PRDs each defer exact names and schemas to their PLAN. This file is that binding for
 the whole phase, in one place, because the seams run between the packets. It restates no behavior.
@@ -55,7 +55,7 @@ the Model dictionary `ph_composer.records.<kind id>`. Reserved keys are `id`, `s
 | Kind id | Prefix | Fields beyond the common set | Declared references |
 | --- | --- | --- | --- |
 | `ph_composer.assemblies.material` | `mat` | `category`, `conductivity_w_mk`, `density_kg_m3`, `specific_heat_j_kgk`, `emissivity`, `color` | none |
-| `ph_composer.assemblies.assembly` | `asm` | `type`, `orientation`, `exterior_condition`, `ventilated_cladding`, `color`, `layers`, `air_barrier`, `photo_collections` | `layers[].segments[].material_id` to the Material kind, cardinality many |
+| `ph_composer.assemblies.assembly` | `asm` | `type`, `orientation`, `exterior_condition`, `ventilated_cladding`, `color`, `layers`, `air_barrier`, `photo_collections` | `layers[].segments[].material_id` to the Material kind, cardinality one per leaf |
 | `ph_composer.windows.frame` | `frm` | `manufacturer`, `product_code`, `position`, `operation`, `width_m`, `uf_w_m2k`, `psi_g_w_mk`, `color` | none |
 | `ph_composer.windows.glazing` | `glz` | `manufacturer`, `product_code`, `description`, `ug_w_m2k`, `g_value`, `color` | none |
 | `ph_composer.windows.psi_install_type` | `psi` | `psi_w_mk` | none |
@@ -76,11 +76,12 @@ The five fields after `kind`, and `copied_at` and `snapshot`, are present only w
 `library`. `snapshot` admits only the wire fields the kind's adapter declares. No path, address
 or credential is a legal value anywhere in it.
 
-Whether `Records::Reference` can address a reference nested inside an array of objects
-(`layers[].segments[].material_id`, the element product ids) is not confirmed. P2-01 checks it. If
-it cannot, the kind's `validate:` callback checks the ids and P2-01 extends the reference
-declaration so the engine's incoming-reference scan still protects a Material or product in use.
-A delete that the scan cannot see is not acceptable.
+Confirmed by P2-01's focused tests: `Records::Reference` supports dotted nested keys and `[]`
+array traversal. Nested declarations are supplied separately with `RecordKind`'s `references:`
+argument; the containing field's JSON Schema validates the stored shape. Cardinality applies
+per leaf (`one` for `material_id`), not to the total number of visited segments. The incoming
+scan refuses deleting a used target, and collection duplication remaps actual nested references
+without changing metadata strings. Registration rejects unreachable paths.
 
 Entity-owned records, stored with `Records::EntityStore` and described to the engine with a
 `Records::ReferenceTarget`:
@@ -160,16 +161,15 @@ from hand-written copies.
 | `providers.add_file`, `providers.remove` | menu item and view command | Host-owned native dialogs. Stored per machine, never in the SKP |
 | `export_file` | export-capability operation | Write the Model's records as a library file. Local file write, not a Model mutation |
 
-Whether a session-state change that writes nothing to the Model (loading a catalog, adding a
-provider) is a view command or needs its own verb is the one open verb question. P2-07 settles
-it with the architecture review. The constraint is fixed: it is not an action, because it has
-nothing to undo.
+Session-state changes with no Model write use the existing view-command contract, as confirmed
+in P2-01. Native dialogs remain menu entry points to those commands. P2-07 adds the library
+implementation without a new transport verb or an Undo entry.
 
 ## 4. Cross-feature seams
 
 | From | To | Mechanism | Used for |
 | --- | --- | --- | --- |
-| Zones | Assemblies | The registered Assembly read, through the handler-side read P2-01 confirms; the record engine's catalog read where no request exists, as in a Colour-by projection | Picker rows, the Colour-by mode, the hint fill, the mismatch finding, the dangling and incomplete rows of the Face preflight |
+| Zones | Assemblies | The registered Assembly read, through `request.query`; the record engine's catalog read where no request exists, as in a Colour-by projection | Picker rows, the Colour-by mode, the hint fill, the mismatch finding, the dangling and incomplete rows of the Face preflight |
 | Assemblies delete handler | Whoever references the Assembly kind | `request.retarget_references` (G10). Zones registers the retargeter; assemblies names no referrer | Delete with replacement, one Undo step |
 | Zones panel module | The Assemblies inventory | A table contribution (G11): the Faces column, and the Select faces and Paint onto faces row actions | Usage in the inventory, with no Face knowledge in assemblies code |
 | Windows, unit and placement | Zones | The Face read and Zone read, through the handler-side read | Host Face state, the unit's Zone and Level |
@@ -181,11 +181,10 @@ nothing to undo.
 Every arrow above points down a layer, or goes through the foundation. Nothing in a lower layer
 names a higher one.
 
-How a query or preflight handler in one feature reads a feature it requires, in the same read
-phase, is not established: Phase 1 had one feature. P2-01 confirms whether the request object
-offers it and, if not, adds one generic method that names no feature and refuses a read of a
-feature the caller does not require. Direct calls into another feature's modules or stores are
-not the answer.
+Confirmed in P2-01: handlers call `request.query(name, params)` for a query they own or whose
+owner they explicitly require. The call validates params and results, returns detached JSON,
+and retains the same read phase, engine and revision. Undeclared dependencies and recursive
+read chains refuse. Nested queries receive no action proposal. No feature store is exposed.
 
 ## 5. Foundation additions
 
@@ -225,15 +224,19 @@ All sections are always composed, so a Model with no windows yields an empty ape
 and no finding. The record-level and contract-level failure policy in `context/CONTRACTS.md`,
 "Translation sections and artifacts", is unchanged.
 
-## 7. What P2-01 must confirm
+## 7. P2-01 contract answers
 
-1. Nested reference declarations (section 2).
-2. The handler-side cross-feature read (section 4, G3).
-3. That Zones requiring assemblies registers cleanly, and that the Zones tests run with the
-   assemblies feature installed beside it (D2-1, revised 2026-10-01).
-4. That the retargeter contract (G10) can be built on `proposal_participant` and `ReferencePlan`
-   as they exist, and that the Attached zone delete could move onto it later without a change
-   in behavior.
-5. The verb for session-state changes (section 3, Library).
-6. That `Records::Field` schemas express the nested `layers` and `elements` shapes within the
-   registered JSON Schema subset.
+1. Nested reference declarations: supported as described in section 2; deletion protection and
+   collection remapping tested against actual ids.
+2. Handler-side reads: `request.query`, explicit direct dependency, same phase; params/result,
+   missing dependency and recursion checks tested.
+3. Direction: an entity target naming a required feature's catalog kind registers; reciprocal
+   feature requirements refuse as `registration.cycle`. Production Zones requiring Assemblies
+   waits until that feature exists; the generic two-feature seam is verified now.
+4. Retargeting: a separate declared capability uses the existing proposal and `ReferencePlan`.
+   Entity rewrites plus catalog delete commit together; a refusing handler poisons the complete
+   proposal even when the caller rescues. Attached-zone deletion may adopt it later without
+   moving its existing behavior in this groundwork stage.
+5. Session-state changes: existing view commands, no Model mutation or new message type.
+6. Nested fields: the current JSON Schema subset accepts arrays of closed objects and validates
+   nested required/type constraints; invalid segment ids refuse before any write.

@@ -4,7 +4,7 @@ DATE: 2026-09-30
 STATUS: In progress; P1-B authoring core and P1-C export contribution complete. P1-D is authorized
 and implemented: D1 gestures, D2 Attached zones, D5 Colour-by, D6 the Classify tool and D7 the
 Overview screen, faces table, panel legend and panel palette. D7's host gate is outstanding.
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 The [PRD](PRD.md) owns behavior; the [Phase 1 plan](../../../archive/phase-01-faces-and-zones/PLAN.md) coordinates delivery.
 The overlay investigation [B2](../../../archive/phase-00-foundation/evidence/spike-overlay.md) passed on the

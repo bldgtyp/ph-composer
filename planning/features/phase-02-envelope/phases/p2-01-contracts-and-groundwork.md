@@ -1,9 +1,9 @@
 # P2-01: contracts and shared groundwork
 
 DATE: 2026-09-30
-STATUS: Scoped. Not authorized.
+STATUS: In progress. Authorized 2026-10-01; offline, review and native gates pending.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## Entry and scope
 

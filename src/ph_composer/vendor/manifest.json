@@ -1,9 +1,14 @@
 {
   "assets": {
+    "html/assembly_form.js": {
+      "bytes": 3431,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "e48a7c50be824b4829ab0e5159cb52b38b93e22aaf0b6261a50273f2fd91f657"
+    },
     "html/base.css": {
-      "bytes": 8066,
+      "bytes": 9588,
       "mime": "text/css; charset=utf-8",
-      "sha256": "83262b9ce8de9de74b0bc3b2c3d7a746574ed2ced953fc068c7c91665ce53b05"
+      "sha256": "b9060f08f7c27336be46eeb0f52a3a1e80bc21129e79f3608b349983192cfba4"
     },
     "html/dom.js": {
       "bytes": 4030,
@@ -11,9 +16,9 @@
       "sha256": "77a81a0114b32f260947f2325752b020736d2e5e3eeacd2768e20bdc64cc32f3"
     },
     "html/fields.js": {
-      "bytes": 1690,
+      "bytes": 1756,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "1e831a89b95a06ed1d97aa4b155b708ccdc700d3addaff7216493fdbb2e01241"
+      "sha256": "2660cb7dcce7b80171d3291e2d6e73f9e38d7d1491039985a27ea160be58e2dd"
     },
     "html/icons.js": {
       "bytes": 9045,
@@ -21,14 +26,34 @@
       "sha256": "4e017ce6f606c6559cfbb06425af382878f994b10066373b4e04c1332a07f90e"
     },
     "html/index.html": {
-      "bytes": 3149,
+      "bytes": 3704,
       "mime": "text/html; charset=utf-8",
-      "sha256": "f6321469d8f977251c74946cc9368e129eaca4f9919c4bda3293f675507211fe"
+      "sha256": "8c6433a1578127a23dc143133890a059f02bd7afc7da876f718d3291ca203b2b"
+    },
+    "html/inventory_grid.js": {
+      "bytes": 15480,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "6fc01afe24e0b4431ca15282d1f91a91a125fd0245b5c8f582f100dc8ecd4498"
     },
     "html/length_expression.js": {
       "bytes": 10503,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "d942d6d89516b7240efe9765627063743998d7455de9778c886d971d90ea718b"
+    },
+    "html/library.css": {
+      "bytes": 4720,
+      "mime": "text/css; charset=utf-8",
+      "sha256": "078fd1236c6c87f83a9b86e9264424c9b599e6a9fb0d7475a1cccde8ff431a32"
+    },
+    "html/library_forms.js": {
+      "bytes": 31348,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "5e8ffe77eb70c222fcfe58a179395195d2b39d9b4b7aade2824a95b20092fc97"
+    },
+    "html/material_form.js": {
+      "bytes": 5028,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "d1cb774289e190081bf2381b284440bb2746f79391bd70de0068b7a3dc0cde12"
     },
     "html/module.js": {
       "bytes": 2942,
@@ -50,10 +75,15 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "fbf24043a6b4c82207e169c17ef092a173b76f041e95ef661dffe540a7fd5ae1"
     },
-    "html/record_form.js": {
-      "bytes": 4121,
+    "html/record_edits.js": {
+      "bytes": 15190,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "c330b1b8f7e17ccfc16bf9c1f86d8e91acd41fa91b4d9625aafb6967b312a91a"
+      "sha256": "5282421740cf3fc11164379e3dd1ad0af6fd352a0225893b595063eb818910e1"
+    },
+    "html/record_form.js": {
+      "bytes": 4155,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "74d5af8f9ceaee986517cc824aeb6367bcfd58f404f5cba36b2babe8e240b310"
     },
     "html/request.js": {
       "bytes": 4448,
@@ -69,6 +99,11 @@
       "bytes": 9257,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "d0ecc88e9f68278dcc73a66652093c4e218b6f860e008dde53d117c680f95b4f"
+    },
+    "html/sections/assemblies.js": {
+      "bytes": 7233,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "cc1efcbc445ede93bba6d27acf3294bae617530692956b81289898a874895583"
     },
     "html/sections/attached_zone_assignment.js": {
       "bytes": 4232,
@@ -100,6 +135,11 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "df76102e3142ad9ff51ad03f24648a47e1710ccfacdb830ead4dacb064708d16"
     },
+    "html/sections/library.js": {
+      "bytes": 9387,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "ca60e327e97eac64241571bf05e99b3a1aea3634f59431526abaf60d7fd68627"
+    },
     "html/sections/overview.js": {
       "bytes": 26295,
       "mime": "text/javascript; charset=utf-8",
@@ -130,6 +170,11 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "ebd42866e75a1c4ba916861e9dfef089f80463ad8ce7ef7184ba459cd3da4fd7"
     },
+    "html/subtabs.js": {
+      "bytes": 4255,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "86f5a2bce949749bb98ea5558e62d0674142ba4264c5e8e0b8cce1b8b043d1dc"
+    },
     "html/table.css": {
       "bytes": 5418,
       "mime": "text/css; charset=utf-8",
@@ -139,6 +184,11 @@
       "bytes": 18281,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "e89934af3f1c49d666739cc3a21fa2533b377b1fa583ceffb517b595c09d6213"
+    },
+    "html/table_contributions.js": {
+      "bytes": 2905,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "6e166290e44905826f16ed56e5ff865ec6c2f853c8ea12a9c2dd8a0863929e4c"
     },
     "html/unit_field.js": {
       "bytes": 7917,
@@ -156,14 +206,14 @@
       "sha256": "bc56c03a4b3c49cda3ae812465de485180c0f56c348e412123e6f745e5f99450"
     },
     "html/unit_tables.js": {
-      "bytes": 11057,
+      "bytes": 11184,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "8681095484b685b9c67105244b370b55859f9070beea9ad8c89d6814d225f16a"
+      "sha256": "757e4417ccb5e07f6262a31f6ef3b3d37312098b63f5eb2660d5db475858d20f"
     },
     "html/units.js": {
-      "bytes": 12523,
+      "bytes": 12578,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "620ea3e3aa0184eb3f3b7b76adb969dcb977a9885eaadbc820e70c1158a877d1"
+      "sha256": "714e53b664934ec0537aca56b20cdac27ae286d8fc33a76c4927c62c8f855466"
     },
     "html/view_controls.js": {
       "bytes": 8627,
@@ -171,9 +221,9 @@
       "sha256": "da1c330d23bb73f529274144be083aff0589fe9225147831d4cdeb128c8dca23"
     },
     "html/workspace.js": {
-      "bytes": 1099,
+      "bytes": 1221,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "3ea0d2929b882fad80da8fb48d2998874bb265f59f72dd5599812dbae02b82a8"
+      "sha256": "122087fb3df64f0297beed0fcf14d5c5f138882a50e55d906ce3422d76ec07a6"
     },
     "html/zones.css": {
       "bytes": 3457,

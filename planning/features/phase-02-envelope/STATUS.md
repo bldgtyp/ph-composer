@@ -1,14 +1,15 @@
 # Phase 2: status
 
 DATE: 2026-10-01
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## State
 
-Planning only. The packet was drafted on 2026-09-30 against `main` at `052a7a1`, after Phase 1
-merged and was archived. Nothing in Phase 2 is implemented and no stage is authorized.
+The packet was drafted on 2026-09-30 against `main` at `052a7a1`, after Phase 1
+merged and was archived. Ed authorized the full implementation run on 2026-10-01, on a new feature branch.
+Active branch: `codex/phase-02-envelope`. P2-01 is in progress; no stage gate has closed.
 
 The three feature PRDs were interviewed on 2026-09-18, before any PH-Composer code existed.
 Phase 1 then built the foundation they assumed, and built parts of it differently. The
@@ -19,21 +20,24 @@ the top of each PRD.
 
 1. Met: Ed answered D2-1 to D2-10 in [DECISIONS.md](DECISIONS.md) on 2026-09-30 and revised D2-1 on
    2026-10-01.
-2. Ed confirms the interview records of the assemblies, window-types and face-assignment PRDs,
-   which each still say "pending Ed's confirmation".
-3. Ed authorizes implementation, per stage or for a run of stages.
-4. An implementation issue is created at `bldgtyp/ph-composer` and this packet's `ISSUE` lines are
-   updated. None was created during planning.
+2. The explicit 2026-10-01 instruction to implement this packet is the authority to proceed
+   with its accepted PRDs and decisions. Historical interview confirmation labels are retained
+   as provenance, not a second implementation approval request.
+3. Met: Ed authorized the full packet with `implement-loop` on 2026-10-01.
+4. Met: [implementation issue #14](https://github.com/bldgtyp/ph-composer/issues/14) created;
+   the coordinating and feature packet issue headers are linked.
 
 ## Next step
 
-P2-01, once the gates above are met. It confirms CONTRACTS against the code with the architecture
-review and lands the shared groundwork. P2-10 and P2-11 (window records and Builder) can run in
+P2-01 groundwork is implemented in the working tree; final integrated checks and the complete
+native regression screen remain open. P2-02 records are implemented; two reproduced review
+findings were corrected and independently closed. P2-03 inventory source and browser checks are
+underway. The manual
+attestations are reserved for Ed's final batch, as requested. Stage completion remains gated. P2-10 and P2-11 (window records and Builder) can run in
 parallel with P2-02 to P2-06 after P2-01, if two branches are wanted.
 
 ## Blockers
 
-- Entry gates 2 to 4 above. Gate 1 is met.
 - P2-16 (connection provider) also waits on the PH-Navigator endpoint change, which is work in
   another repository and is not scoped here. The roadmap already allows 2.5 to slip to Phase 5.
 
@@ -41,9 +45,9 @@ parallel with P2-02 to P2-06 after P2-01, if two branches are wanted.
 
 | Stage | Roadmap | State | Evidence |
 | --- | --- | --- | --- |
-| [P2-01 Contracts and groundwork](phases/p2-01-contracts-and-groundwork.md) | 2.1 entry | Scoped | |
-| [P2-02 Material and Assembly records](phases/p2-02-material-and-assembly-records.md) | 2.1 | Scoped | |
-| [P2-03 Materials and Assemblies inventories](phases/p2-03-inventories.md) | 2.1 | Scoped | |
+| [P2-01 Contracts and groundwork](phases/p2-01-contracts-and-groundwork.md) | 2.1 entry | In progress; implementation and review checked, native gate open | [Groundwork evidence](evidence/p2-01-groundwork.md) |
+| [P2-02 Material and Assembly records](phases/p2-02-material-and-assembly-records.md) | 2.1 | Implemented and reviewed; integrated/native gates open | [Record evidence](evidence/p2-02-assembly-records.md) |
+| [P2-03 Materials and Assemblies inventories](phases/p2-03-inventories.md) | 2.1 | Implemented and reviewed; offline/browser checks pass; full dual-Ruby CI and native gates open | [Inventory evidence](evidence/p2-03-inventories.md) |
 | [P2-04 Assembly Builder](phases/p2-04-assembly-builder.md) | 2.1 | Scoped | |
 | [P2-05 Assigning Assemblies to Faces](phases/p2-05-assign-assemblies-to-faces.md) | 2.1, 1.2 | Scoped | |
 | [P2-06 Construction export](phases/p2-06-construction-export.md) | 2.1, 1.3 | Scoped | |
@@ -61,15 +65,17 @@ parallel with P2-02 to P2-06 after P2-01, if two branches are wanted.
 
 ## Verification
 
-Planning documents only. Relative links in `planning/`, `context/`, `docs/` and `.agents/` were
-checked after the folder reorganization and all resolve. The bindings in CONTRACTS were read from
-source at `052a7a1`; items marked "confirm in P2-01" were not traced end to end. No code, test or
-host run was made.
+Groundwork has dual-Ruby full-gate and coverage results for the initial coherent build, followed
+by focused checks and independent review of final select corrections. Supporting native observations
+include reciprocal adjacency, native Undo/Redo, exact references after fresh reopen, and shared
+Group refusal. Complete native case attestations and final integrated gates remain open. See
+[groundwork evidence](evidence/p2-01-groundwork.md) for build provenance and resume instructions.
 
 ## Ledger
 
 | Date | Event |
 | --- | --- |
+| 2026-10-01 | Implementation authorized. Clean `main` checkout; created `codex/phase-02-envelope` and issue #14. High-assurance profile. P2-01 Ruby groundwork and bounded UI ports underway; required gates remain open. |
 | 2026-10-01 | Ed revised D2-1: definitions at the bottom. Assemblies requires nothing, Zones requires assemblies, window placement requires Zones. Delete with replacement moves onto a foundation retarget contract (G10) and inventory usage onto table contributions (G11). CONTRACTS, PLAN, the PRD amendments, stages P2-01, P2-02, P2-05, P2-06 and P2-10, and `context/EXTENSIBILITY.md` updated. D2-10 reaffirmed. |
 | 2026-09-30 | Ed answered D2-1 to D2-10, each as recommended. Answers recorded in DECISIONS and folded into the PRDs, CONTRACTS, stage documents, the UI baseline and `context/EXTENSIBILITY.md` (D2-1). The pane-as-Zone-Face finding behind D2-5 was reproduced offline. |
 | 2026-09-30 | Packet drafted: plan, contracts, decisions, acceptance register and seventeen stage documents. Feature packets moved into phased directories. PRD amendments recorded for the Phase 1 consequences. |

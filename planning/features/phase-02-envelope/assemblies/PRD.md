@@ -3,7 +3,7 @@
 DATE: 2026-09-30
 STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 18 decisions recorded below. Architecture review folded in 2026-09-18 (Q21 to Q23). Amended 2026-09-30 for what Phase 1 merged. [PLAN.md](PLAN.md) allocates the work to Phase 2 stages.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## Amendments after Phase 1
 

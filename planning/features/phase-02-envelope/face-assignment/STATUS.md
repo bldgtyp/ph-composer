@@ -6,7 +6,7 @@ Attached zones, face Colour-by modes, the Overview faces table) merged to main t
 PR #6 and accepted in the archived Phase 1 packet. Assembly assignment is Phase 2. Ed's
 confirmation of the recorded interview answers is still pending.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## State
 

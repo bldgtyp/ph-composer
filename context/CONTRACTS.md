@@ -27,6 +27,7 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Snapshot section | Owner id, query-backed projection |
 | Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys` |
 | Proposal participant | Name and handler another feature calls inside its own action |
+| Reference retargeter | Name, target kind and handler; the owner requires the target owner or owns the target itself |
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
 
 The capability an operation needs follows from its kind: a query and a preview need `read`, a view
@@ -193,6 +194,12 @@ legacy mapping reads as empty without repairing the stored record.
 | Migrate | Explicit version path; validate the result before writing | One atomic operation; failure keeps the original |
 | Export | Only declared supported fields and references | No arbitrary metadata; unknown correctness-relevant payload blocks |
 
+`propose_duplicate` may receive a block that transforms a detached copy of the authored values
+after identity and extension-reference remapping. The returned object replaces authored values
+only; reserved identity and metadata keys refuse. The engine validates the transformed schema and
+references before the proposal can write. This supports regenerated nested value identities without
+letting a feature replace the engine-owned record identity or metadata. Callback exceptions poison the whole proposal, including when the handler rescues them.
+
 `extension_data` is keyed by namespace. Each value carries `schema_version`, `payload`,
 `references` (JSON path, target kind, cardinality) and `export_relevance` (`required`,
 `local_only` or `unknown`; absent means unknown). A current-version envelope whose payload fails
@@ -274,6 +281,18 @@ dirty and queue a deferred pass, which reports missing or duplicate ids, changed
 and stale pairs. It emits findings and cache invalidations and never solves, rebinds identity or
 edits classification.
 
+## Handler-side dependency reads
+
+`request.query(name, params = {})` returns a detached registered query result in the caller's
+current read or proposal phase. It keeps the same Model session, engine and revision; it does not
+re-enter the public dispatcher or open an operation. The target must belong to the caller or to
+one of its explicitly required features. Each nested read uses its own owner's dependencies.
+Input and result schemas and plain JSON checks still apply. Unknown query names, undeclared
+reads and recursive query chains refuse with `operation.query_missing`,
+`operation.dependency_missing` and `operation.query_cycle`, respectively. A nested query has no
+action proposal and cannot call reference retargeting. View/session state changes remain view
+commands; queries never change that state.
+
 ## Compound proposals
 
 Feature handlers do not write the Model; they add steps to an `Operations::Proposal` of detached
@@ -297,6 +316,26 @@ in SketchUp's internal unit and transformations are compared exactly. An error b
 operation is `effect: none`. After an abort, a matching fingerprint is `rolled_back`; any mismatch
 or unreadable target is `unknown` with `operation.rollback_unverified`. Dispatch never attempts a
 best-effort repair after an abort.
+
+A definition delete handler calls `request.retarget_references(kind, from: old_id, to: replacement_id)`
+inside an action or preview. `to: nil` requests explicit clearing. Both non-null identities must
+resolve before any retargeter runs. Every matching `FeatureScope#reference_retargeter` handler
+runs in declaration-name order with its own owner on the request, the caller's proposal, and
+`from:`/`to:` keywords. It adds validated rewrite steps and returns a `Records::ReferencePlan`.
+The foundation combines final entity occurrences belonging to each retargeter's owner, refusing
+foreign target kinds or duplicate occurrence rows. The
+caller passes that plan to `engine.propose_delete(..., reference_plan: plan)`. Catalog rewrites
+already in the proposal are read through its change set. The engine still refuses any incoming
+reference left in the final projected state. A retargeter failure marks the proposal refused;
+rescuing it does not permit a partial write. The definition feature names no referrer.
+
+Nested catalog references use the same `Records::Reference` declaration, supplied separately
+from fields through `RecordKind.new(..., references: [...])`. For example, key
+`layers[].segments[].material_id` visits the id in each segment; cardinality describes each leaf
+(`one` for a string, `many` for an array of string ids). The JSON Schema remains on the containing
+`layers` field. Registration refuses unreachable paths or incompatible cardinality. Validation,
+incoming scans and collection duplication follow only declared leaves. Metadata strings that
+happen to equal an id are preserved. Existing top-level field references retain their shape.
 
 ## Translation sections and artifacts
 

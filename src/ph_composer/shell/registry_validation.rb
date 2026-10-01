@@ -21,6 +21,7 @@ module PhComposer
         check_extensions
         check_snapshot_sections
         check_export_contributors
+        check_reference_retargeters
         check_proposal_participants
         check_colour_modes
         check_menu_items
@@ -143,13 +144,29 @@ module PhComposer
         end
       end
 
+      def check_reference_retargeters
+        @staging.declared_reference_retargeters.each do |retargeter|
+          require_kind(retargeter.owner, retargeter.name, retargeter.target_kind)
+          problem(retargeter, "needs a callable handler") unless retargeter.handler.respond_to?(:call)
+          target_owner = @staging.owners[retargeter.target_kind] || @live.owner_of(retargeter.target_kind)
+          feature = @staging.declared_features.find { |item| item.id == retargeter.owner }
+          next if target_owner == retargeter.owner || feature.requires.include?(target_owner)
+
+          add("registration.missing_dependency", retargeter.owner, retargeter.name,
+              "#{retargeter.name} must require #{target_owner}.", target_owner)
+        end
+      end
+
       def check_record_kinds
         @staging.declared_record_kinds.each do |kind|
           owner = owner(kind.id)
           JsonSchema.schema_problems(kind.values_schema).each do |problem|
             add("registration.schema_invalid", owner, kind.id, "#{kind.id} fields: #{problem}.")
           end
-          kind.references.each { |reference| require_kind(owner, kind.id, reference.target_kind) }
+          kind.references.each do |reference|
+            require_kind(owner, kind.id, reference.target_kind)
+            check_reference_shape(owner, kind.id, reference, kind.values_schema)
+          end
         end
       end
 
@@ -157,12 +174,19 @@ module PhComposer
         @staging.declared_reference_targets.each do |target|
           target.descriptor.references.each do |reference|
             require_kind(owner(target.id), target.id, reference.target_kind)
+            check_reference_shape(owner(target.id), target.id, reference, target.descriptor.values_schema)
           end
           next if target.label.is_a?(String) && !target.label.empty? &&
                   target.provider.respond_to?(:call) && target.validator.respond_to?(:call)
 
           add("registration.schema_invalid", owner(target.id), target.id,
               "#{target.id} needs a label, a records provider and a pure validator.")
+        end
+      end
+
+      def check_reference_shape(owner, subject, reference, values_schema)
+        reference.declaration_problems(values_schema).each do |message|
+          add("registration.schema_invalid", owner, subject, "#{subject}: #{message}.")
         end
       end
 

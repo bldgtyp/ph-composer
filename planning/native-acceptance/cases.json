@@ -677,6 +677,43 @@
         "tools/hostkit/host_helpers.rb"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "E01",
+      "label": "Phase 2 shared groundwork",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/core/records/*",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/html/*",
+        "tests/feature_composition_test.rb",
+        "tests/subtabs_test.js",
+        "tests/record_edits_units_test.js",
+        "tests/inventory_grid_test.js",
+        "tools/ui-preview/*",
+        "context/CONTRACTS.md",
+        "context/EXTENSIBILITY.md",
+        "context/TECH_STACK.md"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "E02",
+      "label": "Phase 2 Material and Assembly records",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/assemblies/*",
+        "src/ph_composer/core/records/*",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/extension.rb",
+        "tests/assembly_records*",
+        "tests/support/assembly_record_fixtures.rb",
+        "tools/examples/authoring/assemblies_walkthrough.rb",
+        "context/CONTRACTS.md"
+      ],
+      "native_control_required": true
     }
   ]
 }

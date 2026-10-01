@@ -1,9 +1,9 @@
 # P2-02: Material and Assembly records
 
 DATE: 2026-09-30
-STATUS: Scoped. Not authorized.
+STATUS: In progress. Authorized 2026-10-01; preceding stage attestations remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## Entry and scope
 
@@ -53,7 +53,8 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    the pure command and calls `propose_create`, `propose_update` with `expected_values`,
    `propose_duplicate` or `propose_delete`. One gesture is one action and one Undo step.
    `materials.delete` with a `replacement_id` rewrites every Layer-Segment naming the Material in
-   the same proposal and passes those Assemblies to `propose_delete` as the `reference_plan`.
+   the same proposal through `propose_update`; `propose_delete` checks those staged catalog rewrites.
+   `reference_plan` is for entity targets, not catalog records.
    Without a replacement, a Material in use refuses as `reference.in_use`.
    `assemblies.delete` takes no replacement in this stage. Nothing can write a Face's
    `assembly_id` yet; the reference declaration and delete with replacement arrive in P2-05.
@@ -89,7 +90,9 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 4. Stale `expected_values` refuses with nothing written.
 5. Material delete: in use without replacement refuses; with replacement rewrites every use and
    deletes in one proposal; an injected failure on the last write leaves every record unchanged.
-6. Duplicate per step 9. `user_data` and an unknown extension payload survive edit and Duplicate.
+6. Duplicate per step 9. `user_data` survives edit and Duplicate. An unavailable extension payload survives edit;
+   Duplicate refuses `copy.rule_missing` under the foundation contract until its copy rules are
+   available. Understood local-only extension payloads survive Duplicate.
 7. Every registered operation has schemas and a validating example (`tests/api_reference_test.rb`).
 8. The walkthrough runs as written and names no feature module.
 9. The dependency-direction test: no file under `features/assemblies/` names `Zones`.

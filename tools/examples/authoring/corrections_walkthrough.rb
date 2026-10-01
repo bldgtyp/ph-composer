@@ -108,7 +108,8 @@ module CorrectionsWalkthrough
     { "inner_state" => client.zones.map { |row| row["state"] },
       "crossing" => [classify, reverse].map { |result| result.values_at("status", "code", "effect") },
       "inner_face_stamp_zone" => stamp_after && stamp_after["zone_id"],
-      "revision_unchanged_by_refusals" => revision == plain.fetch("revision") - 1,
+      "revision_unchanged_by_refusals" => revision == plain.fetch("revision") -
+                                               (plain["effect"] == "committed" ? 1 : 0),
       "ordinary_nested_group" => plain.values_at("status", "effect") }
   end
 

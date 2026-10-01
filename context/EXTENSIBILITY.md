@@ -64,6 +64,14 @@ hook needed by a built-in feature exposes a missing public capability. Fix that 
 presenting it as a supported extension point. Cross-feature access uses declared public contracts;
 neither a global service locator nor an event bus should conceal business dependencies.
 
+The handler-side dependency read and reference retargeter contracts are now implemented in the
+foundation. Use `request.query` for a registered read of an explicitly required feature. A
+reference owner registers `feature.reference_retargeter(name, target_kind:)`; a definition delete
+calls `request.retarget_references` and gives its returned plan to `propose_delete`. The deletion
+and all rewrites share one proposal and Undo entry. See [CONTRACTS.md](CONTRACTS.md), "Handler-side
+dependency reads" and "Compound proposals", for schemas, refusals and final-state checks. The
+Assemblies and Windows features and table contributions remain future work.
+
 ## Contribution contracts
 
 Use several small contracts. A contributor implements only the capabilities their contribution

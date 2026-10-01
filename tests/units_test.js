@@ -55,7 +55,7 @@ var dimensionField = field("length_mm", "mm");
 
 test("the registry lists every quantity in its published order", function () {
   assert.deepStrictEqual(Object.keys(units.quantities), [
-    "length", "length_mm", "area", "volume", "u_value", "thermal_resistance", "conductivity",
+    "fraction", "length", "length_mm", "area", "volume", "u_value", "thermal_resistance", "conductivity",
     "linear_psi", "heat_loss_rate", "density", "specific_heat", "airflow", "temperature",
     "temperature_difference", "air_permeance", "vapor_sd", "vapor_diffusion_resistance"
   ]);
@@ -269,4 +269,18 @@ test("an infinite vapour resistance is a value for vapour and a refusal elsewher
   assert.strictEqual(parse("∞ perm", field("vapor_sd", "sd_m"), "perm").value, 0);
   code("∞", field("area", "m2"), "m2", "nonfinite");
   assert.strictEqual(units.format(0, field("vapor_sd", "sd_m"), { system: "IP", numberFormat: US }), "∞ perm");
+});
+
+
+test("fractions keep their canonical value in SI and IP without a unit suffix", function () {
+  var fraction = { quantity: "fraction", unit: "1", label: "Emissivity", min: 0, max: 1, allowBlank: true };
+  ["SI", "IP"].forEach(function (system) {
+    assert.strictEqual(units.format(0.95, fraction, { system: system, numberFormat: US }), "0.95");
+    assert.strictEqual(units.formatEdit(0.95, fraction, { system: system, numberFormat: DE }), "0,95");
+    parsed("0,95", fraction, "1", 0.95, DE);
+    parsed("0", fraction, "1", 0);
+    parsed("1", fraction, "1", 1);
+  });
+  code("1.01", fraction, "1", "out_of_range");
+  assert.strictEqual(parse("1.01", fraction, "1").message, "Emissivity must be between 0 and 1.");
 });

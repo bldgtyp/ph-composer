@@ -1,9 +1,9 @@
 # Assemblies and materials: status
 
-DATE: 2026-09-30
-STATUS: Scoped
+DATE: 2026-10-01
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## State
 
@@ -11,26 +11,36 @@ PRD drafted 2026-09-18 as a port of the predecessor's Assembly Builder packet
 (`../ph-navigator-sketchup/planning/archive/assembly-builder/`) and its shipped code, with the
 designPH dependency removed and the export mapping checked against honeybee-ph and PHX source.
 Interviewed the same day: two rounds, 18 decisions, recorded in the PRD and folded into its
-behavior sections. Shared understanding reached, pending Ed's confirmation of the record.
+behavior sections. Ed authorized the full Phase 2 implementation on 2026-10-01.
+Material and Assembly records (P2-02) and inventories (P2-03) are being implemented on
+`codex/phase-02-envelope`; neither stage is attested complete.
 
 ## Next step
 
-Ed's answers to the [Phase 2 decisions](../DECISIONS.md), his confirmation of the interview
-record, and authorization. Then [P2-01](../phases/p2-01-contracts-and-groundwork.md) and
-[P2-02](../phases/p2-02-material-and-assembly-records.md). [PLAN.md](PLAN.md) allocates the PRD
-to stages P2-02 to P2-07. The SD assembly helper stays later.
+Integrate the record operations and generated API reference, run focused and full gates, then
+verify the panel-closed walkthrough in a fresh native process. Integrate the inventories against
+that read contract. Manual checks are reserved for Ed's final batch; preceding attestations remain
+open. [Phase 2 status](../STATUS.md) and [groundwork evidence](../evidence/p2-01-groundwork.md)
+carry the current branch, checks and resume state. The SD assembly helper stays later.
 
 ## Blockers
 
-- Any row among D2-1 to D2-4 still open in the [Phase 2 decisions](../DECISIONS.md). Its answer column is current.
-- No implementation issue has been created at `bldgtyp/ph-composer`.
+No record-stage product decision is open. Unavailable extension payloads remain preserved on
+unrelated edits; Duplicate needs available copy rules and refuses without them, as the foundation
+contract requires. The Phase 2 acceptance row now states that boundary explicitly.
 
 Cleared since the PRD was drafted: the foundation merged through PR #1, and translation sections
 declare typed dependencies, so the face-to-construction join has its seam.
 
 ## Verification
 
-None. Nothing is implemented.
+Records and pure commands are implemented from frozen predecessor `f358ebf`. Six focused Ruby
+files pass after review fixes on both supported versions: 42 tests and 402 assertions. The integrated Ruby coverage
+run passed 773 tests and 4,133 assertions at 96.6% line coverage. Independent review reproduced
+an unbounded thermal workload and inconsistent duplicate-name whitespace; corrections passed
+focused checks and the same reviewer's delta review. The combined coverage and full gates wait
+for stable inventory assets. See
+[record evidence](../evidence/p2-02-assembly-records.md) for the exact boundary and resume steps.
 
 ## Ledger
 

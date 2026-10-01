@@ -3,7 +3,7 @@
 DATE: 2026-10-01
 STATUS: Scoped. Part 1 is findings read from source at `052a7a1`. Part 2 was answered by Ed on 2026-09-30, every row as recommended; D2-1 was revised by Ed on 2026-10-01.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 The assemblies, libraries and window-types PRDs were interviewed on 2026-09-18, before the
 foundation existed. Each says its PLAN "fixes the action names and schemas against the

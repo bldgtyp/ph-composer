@@ -1,9 +1,9 @@
 # P2-03: Materials and Assemblies inventories
 
 DATE: 2026-09-30
-STATUS: Scoped. Not authorized.
+STATUS: In progress. Authorized 2026-10-01; preceding stage attestations remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## Entry and scope
 

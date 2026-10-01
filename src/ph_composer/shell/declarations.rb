@@ -76,6 +76,10 @@ module PhComposer
     MenuItem = Struct.new(:name, :owner, :label, :menu, :separator_after, :handler, :state, :available, :entries,
                           keyword_init: true)
 
+    # Referring features add their rewrite steps to a definition owner's proposal and
+    # return the final entity occurrences as Records::ReferencePlan.
+    ReferenceRetargeter = Struct.new(:name, :owner, :target_kind, :handler, keyword_init: true)
+
     ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)
 
     # One registration problem. `subject` is the declaration it concerns; `dependency` names what it

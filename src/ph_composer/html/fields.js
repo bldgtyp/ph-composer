@@ -5,6 +5,7 @@ PhComposerUI.define("fields", [], function () {
   "use strict";
   function descriptor(quantity, unit) { return Object.freeze({ quantity: quantity, unit: unit }); }
 
+  var FRACTION = descriptor("fraction", "1");
   var LENGTH_M = descriptor("length", "m");
   var LENGTH_MM = descriptor("length_mm", "mm");
   /* A length stored in metres but shown and entered in millimetres (a narrow width in a metre record). */
@@ -24,7 +25,7 @@ PhComposerUI.define("fields", [], function () {
     return Object.assign({ quantity: base.quantity, unit: base.unit }, settings);
   }
 
-  return { LENGTH_M: LENGTH_M, LENGTH_MM: LENGTH_MM, WIDTH_M_AS_MM: WIDTH_M_AS_MM, AREA_M2: AREA_M2,
+  return { FRACTION: FRACTION, LENGTH_M: LENGTH_M, LENGTH_MM: LENGTH_MM, WIDTH_M_AS_MM: WIDTH_M_AS_MM, AREA_M2: AREA_M2,
     VOLUME_M3: VOLUME_M3, U_VALUE: U_VALUE, R_VALUE: R_VALUE, CONDUCTIVITY: CONDUCTIVITY, LINEAR_PSI: LINEAR_PSI,
     HEAT_LOSS: HEAT_LOSS, DENSITY: DENSITY, SPECIFIC_HEAT: SPECIFIC_HEAT, with: withSettings };
 });

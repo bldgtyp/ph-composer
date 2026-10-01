@@ -3,7 +3,7 @@
 DATE: 2026-09-30
 STATUS: In progress. Interviewed 2026-09-18 in two rounds, 22 decisions recorded below. Phase 1 scope merged to main. Amended 2026-09-30 for the Phase 2 assembly-assignment scope. [PLAN.md](PLAN.md) allocates delivery.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## Amendments for Phase 2
 

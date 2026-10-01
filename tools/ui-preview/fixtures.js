@@ -38,6 +38,134 @@
   };
 
   var FIXTURES = {
+    inventories: {
+      "parts": [],
+      "materials": {
+        "records": [
+          {
+            "id": "mat_a",
+            "kind": "ph_composer.assemblies.material",
+            "schema_version": 1,
+            "user_data": {},
+            "extension_data": {},
+            "values": {
+              "name": "Mineral wool",
+              "notes": "",
+              "category": "insulation",
+              "color": "#fff2cc",
+              "conductivity_w_mk": 0.04,
+              "density_kg_m3": 30,
+              "specific_heat_j_kgk": 1000,
+              "emissivity": 0.9
+            },
+            "findings": [],
+            "uses": [
+              {
+                "assembly_id": "asm_a",
+                "name": "Wall"
+              }
+            ],
+            "use_count": 1
+          },
+          {
+            "id": "mat_b",
+            "kind": "ph_composer.assemblies.material",
+            "schema_version": 1,
+            "user_data": {},
+            "extension_data": {},
+            "values": {
+              "name": "Wood",
+              "notes": "",
+              "category": "woods",
+              "color": "#c69c6d",
+              "conductivity_w_mk": 0.12,
+              "density_kg_m3": 500,
+              "specific_heat_j_kgk": 1500,
+              "emissivity": null
+            },
+            "findings": [],
+            "uses": [],
+            "use_count": 0
+          }
+        ],
+        "unreadable": [],
+        "categories": [
+          {
+            "id": "insulation",
+            "label": "Insulation",
+            "tone": "warm"
+          },
+          {
+            "id": "woods",
+            "label": "Woods",
+            "tone": "wood"
+          }
+        ]
+      },
+      "assemblies": {
+        "records": [
+          {
+            "id": "asm_a",
+            "kind": "ph_composer.assemblies.assembly",
+            "schema_version": 1,
+            "user_data": {},
+            "extension_data": {},
+            "values": {
+              "name": "Wall",
+              "notes": "",
+              "color": "#c5e1a5",
+              "type": "Wall",
+              "exterior_condition": "Outdoors"
+            },
+            "findings": [],
+            "display": {
+              "total_thickness_mm": 200,
+              "thermal": {
+                "complete": true,
+                "u_effective": 0.2,
+                "warnings": []
+              }
+            }
+          },
+          {
+            "id": "asm_b",
+            "kind": "ph_composer.assemblies.assembly",
+            "schema_version": 1,
+            "user_data": {},
+            "extension_data": {},
+            "values": {
+              "name": "Incomplete roof",
+              "notes": "",
+              "color": "#bbdefb",
+              "type": "RoofCeiling",
+              "exterior_condition": "Outdoors"
+            },
+            "findings": [],
+            "display": {
+              "total_thickness_mm": 100,
+              "thermal": {
+                "complete": false,
+                "u_effective": null,
+                "warnings": [
+                  "Choose a Material for every Layer-Segment."
+                ]
+              }
+            }
+          }
+        ],
+        "unreadable": []
+      },
+      "attachedZones": [
+        {
+          "id": "atz_a",
+          "values": {
+            "name": "Garage",
+            "kind": "garage",
+            "temperature_reduction_factor": 0.95
+          }
+        }
+      ]
+    },
     parts: { parts: PARTS },
     empty: { parts: [] },
     // A German regional format: comma decimals and point grouping in what the user types and reads.

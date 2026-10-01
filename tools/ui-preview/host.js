@@ -15,6 +15,8 @@
   var ZONES = "ph_composer.zones.overview";
   var FACES = "ph_composer.zones.faces.faces";
   var SETTINGS = "ph_composer.zones.settings";
+  var MATERIALS = "ph_composer.assemblies.materials";
+  var ASSEMBLIES = "ph_composer.assemblies.assemblies";
   var NOTHING_WRITTEN = "Nothing was written.";
 
   function Host(window, options) {
@@ -33,6 +35,8 @@
     this.palette = { active: false, palette: {},
       face_types: ["Wall", "RoofCeiling", "Floor"],
       boundary_conditions: ["Outdoors", "Ground", "Adiabatic", "AttachedZone", "Surface"] };
+    this.materials = JSON.parse(JSON.stringify(settings.materials || { records: [], unreadable: [], categories: [] }));
+    this.assemblies = JSON.parse(JSON.stringify(settings.assemblies || { records: [], unreadable: [] }));
     this.attachedZones = JSON.parse(JSON.stringify(settings.attachedZones || []));
     this.preferences = { unit_system: settings.unitSystem || "SI", dimension_formats: {},
       number_format: { decimal: settings.decimal || ".", locale: settings.locale || "en-US" } };
@@ -62,6 +66,8 @@
         [LEGEND]: { status: "completed", code: "ok", revision: this.revision, value: this.legend() },
         [PALETTE]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.palette)) },
+        [MATERIALS]: { status: "completed", value: JSON.parse(JSON.stringify(this.materials)) },
+        [ASSEMBLIES]: { status: "completed", value: JSON.parse(JSON.stringify(this.assemblies)) },
         [ATTACHED]: { status: "completed", code: "ok", revision: this.revision,
           value: { records: JSON.parse(JSON.stringify(this.attachedZones)), next_cursor: null,
             total: this.attachedZones.length } }
@@ -144,9 +150,15 @@
   };
 
   Host.prototype.invoke = function (payload) {
-    var outcome = this.apply(payload);
-    this.snapshot();
-    this.publish("action.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
+    var host = this;
+    function apply() {
+      var outcome = host.apply(payload);
+      host.snapshot();
+      host.publish("action.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
+    }
+    if (payload.name.indexOf("ph_composer.assemblies.") === 0 ||
+        payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) this.window.setTimeout(apply, 0);
+    else apply();
   };
 
   Host.prototype.apply = function (payload) {
@@ -157,6 +169,8 @@
     if (payload.expected_revision !== this.revision) {
       return refused("revision.stale", "The Model changed since it was read. " + NOTHING_WRITTEN, this.revision);
     }
+    if (payload.name.indexOf("ph_composer.assemblies.") === 0 ||
+        payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) return this.inventoryAction(payload);
     var resultValue = {};
     if (payload.name === "ph_composer.zones.settings.update") {
       var values = payload.params.values, expected = payload.params.expected_values;
@@ -220,6 +234,70 @@
     this.revision += 1;
     return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
       value: resultValue, affected: [], findings: [], detail: null };
+  };
+
+  /* Definition fixture actions preserve transport and draft semantics; no PH calculation runs here. */
+  Host.prototype.inventoryAction = function (payload) {
+    var section = payload.name.slice(0, payload.name.lastIndexOf("."));
+    var operation = payload.name.slice(payload.name.lastIndexOf(".") + 1);
+    var material = section === MATERIALS, attached = section === ATTACHED.replace(/\.list$/, "");
+    var records = attached ? this.attachedZones : (material ? this.materials.records : this.assemblies.records);
+    var params = payload.params, target = records.filter(function (record) { return record.id === params.id; })[0];
+    function copy(value) { return JSON.parse(JSON.stringify(value)); }
+    if (params.id && !target) return refused("target.not_found", "That record is unavailable.", this.revision);
+    if (params.expected_values && Object.keys(params.expected_values).some(function (field) {
+      var current = target.values[field];
+      return (current === undefined ? null : current) !== params.expected_values[field];
+    })) return refused("target.changed", "The record changed. " + NOTHING_WRITTEN, this.revision);
+    var prefix = material ? "mat" : (attached ? "atz" : "asm"), id = params.id;
+    if (operation === "create" || (operation === "save" && !target)) {
+      id = prefix + "_preview" + String(++this.sequence).padStart(5, "0");
+      target = { id: id, schema_version: 1, user_data: {}, extension_data: {}, findings: [],
+        values: copy(params.values) };
+      if (material) {
+        target.uses = [];
+        target.use_count = 0;
+        target.values.color = "#ffffff";
+      } else if (!attached) {
+        target.values.layers = [{ id: "lyr_preview" + this.sequence, thickness_mm: 100,
+          segments: [{ id: "seg_preview" + this.sequence, width_mm: 100, material_id: null }] }];
+        target.display = { color: "#bbdefb", total_thickness_mm: 100, thermal: { complete: false,
+          u_effective: null, warnings: ["Choose a Material for every Layer-Segment."] } };
+      }
+      records.push(target);
+    } else if (operation === "update" || operation === "save") {
+      Object.keys(params.values).forEach(function (field) {
+        var value = params.values[field];
+        if (value === null && (field === "type" || field === "exterior_condition")) delete target.values[field];
+        else target.values[field] = value;
+      });
+    } else if (operation === "duplicate") {
+      var duplicate = copy(target);
+      id = prefix + "_preview" + String(++this.sequence).padStart(5, "0");
+      duplicate.id = id;
+      duplicate.values.name = params.name || target.values.name + " (copy)";
+      if (material) {
+        duplicate.uses = [];
+        duplicate.use_count = 0;
+        if (!params.copy_datasheets) duplicate.values.datasheet_links = [];
+      }
+      records.push(duplicate);
+    } else if (operation === "delete") {
+      if (material && target.use_count) {
+        var replacement = records.filter(function (record) { return record.id === params.replacement_id; })[0];
+        if (!replacement || replacement === target) return refused("replacement.required",
+          "Choose a replacement Material. " + NOTHING_WRITTEN, this.revision);
+        replacement.uses = replacement.uses.concat(target.uses);
+        replacement.use_count = replacement.uses.length;
+      }
+      if (attached && !params.replacement) {
+        return refused("replacement.required", "Choose a destination.", this.revision);
+      }
+      records.splice(records.indexOf(target), 1);
+    } else return refused("request.unknown_operation", "Unavailable fixture action.", this.revision);
+    this.revision += 1;
+    return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
+      value: { id: id }, affected: [], findings: [], detail: null };
   };
 
   Host.prototype.find = function (id) {

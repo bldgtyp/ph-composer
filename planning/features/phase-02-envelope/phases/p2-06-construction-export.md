@@ -1,9 +1,9 @@
 # P2-06: construction export
 
 DATE: 2026-09-30
-STATUS: Scoped. Not authorized.
+STATUS: Scoped. Authorized 2026-10-01; preceding stage gates remain required.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## Entry and scope
 

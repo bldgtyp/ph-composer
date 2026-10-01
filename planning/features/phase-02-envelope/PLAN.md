@@ -1,9 +1,9 @@
 # Phase 2 delivery plan
 
 DATE: 2026-09-30
-STATUS: Scoped. Not authorized. Entry gates are in [STATUS.md](STATUS.md).
+STATUS: In progress. Authorized 2026-10-01; execution and gates are in [STATUS.md](STATUS.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## Outcome and scope
 

@@ -508,29 +508,37 @@ these true of every feature it had, so a new one that follows them needs no chan
 
 ### A definition record, end to end
 
-Materials and assemblies established the shape every later definition kind follows. A new kind
-extends these seams rather than inventing a second pattern.
+Attached zones are the implemented definition-record example
+(`features/zones/faces/attached_zone.rb` and its declarations). Materials and Assemblies follow
+this foundation when their feature lands.
 
-- **Storage.** One attribute dictionary per kind, named and registered with `Dictionaries` where
-  the kind's schema lives, so the Export attribute guard covers every registered name; one key per
-  record; the value a JSON string carrying `schema_version`. Unreadable JSON or an unknown
-  `schema_version` becomes a blocking finding, never a silent drop.
-- **Schema.** One `RecordSchema` per kind, built from typed `Field` entries with a `:custom`
-  normalizer for nested shapes. `IDENTITY_FIELDS` is the name, notes, source, datasheet links and
-  timestamps every kind carries. Ids come from `Records::Identity`: a short kind prefix plus twelve
-  random characters, validated by regex on read and write, never derived from a name.
-- **Provenance.** The `source` field is one discriminated union: `manual`, `derived` and `library`
-  (with the provider, the record id and the whole imported row as a snapshot). A kind reuses the
-  default kinds; a feature adds a dialect by passing an object answering `matches?` and `normalize`.
-- **Commands and Undo.** Pure command functions produce record diffs; a builder wraps them in one
-  `ModelOperation.perform`, which is one Undo step. Fields that must revert together travel in one
-  call. Every update carries an `expected_value` so a stale edit is refused rather than overwriting.
-- **Panel.** The inventory table, view controls, row projection and anchored bubbles come from the
-  `workspace` toolkit; inline cell editing will come from a port of the predecessor's
-  `record_edits`, configured with an action name and a field list. The library sidebar is generic, driven by a per-kind adapter object.
-- **Export.** One `export_contributor` declaration whose block is the versioned wire contract, a
-  Python `Section` listed in `composition.py`, and a builder package. A block that must refuse
-  raises `Export::Blocked`.
+- **Storage.** `Records::RecordKind` defaults to `DictionaryStore`, one Model dictionary named
+  `ph_composer.records.<kind id>`, one JSON string per id. Registration adds the dictionary to
+  the export attribute guard. Reads reject invalid JSON, unknown fields and a different exact
+  `schema_version`; they never repair a record.
+- **Schema.** `Records::Field` carries a JSON Schema, including nested object/array shapes, and
+  whether the field is required. `Records::Reference` declares typed ids. Top-level references
+  can be fields; nested references are supplied with `RecordKind`'s `references:` argument,
+  using a dotted key and `[]` for array traversal. Registration checks the path against the
+  values schema. Ids use a kind prefix and twelve random alphanumeric characters. There is no
+  automatic common name/notes/source/timestamp field set or per-kind migration machinery.
+- **Metadata.** `user_data` and `extension_data` are reserved engine fields. Ordinary edits
+  preserve unrelated metadata and unavailable extension payloads. Provenance is an optional
+  feature-declared field, validated by that feature; the foundation does not interpret it.
+- **Commands and Undo.** A registered action reads through its request's engine and proposes
+  creates, updates or deletes into `Operations::Proposal`. Dispatch validates the proposal and
+  opens its one native operation. Updates carry `expected_values` keyed by stored field name;
+  a mismatch refuses the whole proposal. A definition owner calls
+  `request.retarget_references(kind, from:, to:)` without naming its referrers. Registered
+  referrers add steps to that same proposal and return typed final entity occurrences for the
+  incoming-reference check. Any refusal poisons the whole proposal even if a caller rescues it.
+- **Panel.** Shared table, view controls and anchored bubbles present detached snapshots.
+  `record_edits` is configured with an action and field list, sends `values` and
+  `expected_values`, and preserves refused drafts. It confirms an edit against both its
+  correlated outcome and the authoritative snapshot. Peer subtabs share one navigation module.
+- **Export.** A feature declares its versioned extraction contributor and the metadata keys it
+  permits in HBJSON. Its Python section is explicitly composed with declared requirements.
+  Export reads the authored records; it never repairs or substitutes for missing definitions.
 
 ### UI kit conventions carried over
 

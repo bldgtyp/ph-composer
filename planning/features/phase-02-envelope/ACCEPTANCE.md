@@ -3,7 +3,7 @@
 DATE: 2026-09-30
 STATUS: Scoped. No row has evidence.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 The owning PRDs supply the detailed cases. This register supplies the closure gates. Record a
 source-controlled evidence summary per stage under `evidence/` with commit, build, fixtures,
@@ -13,7 +13,7 @@ Ids use the prefix E so they do not collide with Phase 1's A and R rows in the c
 | ID | Owner, stage | Required evidence | State |
 | --- | --- | --- | --- |
 | E01 | Shared, P2-01 | CONTRACTS section 7 answered from code; architecture review recorded; the subtabs module, `record_edits` and `inventory_grid` pass their tests and preview checks; the real panel loads with Zones / Faces and Export unchanged | Open |
-| E02 | Assemblies, P2-02 | Schema round trips for Material and Assembly; the membrane, steel stud and one-spacing-per-Layer rules; thermal values equal the predecessor's reference cases; `user_data` and an unknown extension payload survive edit, Duplicate, Undo/Redo and reopen; a panel-closed script builds a three-layer Assembly through registered actions only | Open |
+| E02 | Assemblies, P2-02 | Schema round trips for Material and Assembly; the membrane, steel stud and one-spacing-per-Layer rules; thermal values equal the predecessor's reference cases; `user_data` and understood local-only extension payloads survive edit, Duplicate, Undo/Redo and reopen; unavailable payloads survive edit and refuse Duplicate when copy rules are missing; a panel-closed script builds a three-layer Assembly through registered actions only | Open |
 | E03 | Assemblies, P2-03 | Both inventories on the host: create, in-place edit with stale-value refusal, duplicate, guarded delete, Material replace; filter, group and order never change the Model; unit switch keeps drafts | Open |
 | E04 | Assemblies, P2-04 | The Builder on the host: every toolbar gesture is one Undo step; partial Assemblies save and reopen; both U-values shown, withheld and never zero when inputs are missing; the ventilated cladding flag changes only the displayed exterior film | Open |
 | E05 | Zones and assemblies, P2-05 | Assign by selection, by right-click, by table and by paint, each one Undo step; hint fill and explicit-value precedence; the 250 ceiling and one above; delete with replacement across direct, nested and repeated-definition Faces, one Undo restoring the record and every `assembly_id`; a stale expected value and an unreachable Face each refuse the whole command; usage counts and area; the assembly Colour-by mode; paired Faces naming different Assemblies warn | Open |
