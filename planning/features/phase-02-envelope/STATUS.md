@@ -63,15 +63,16 @@ The Assembly batch ends in its saved, unmodified state with the panel closed. Pr
 journals, `assemblies-native-builder-observed.skp` and `assemblies-native-three-layer.skp`
 preserve the observed states. The quit helper timed out and terminated that owned process;
 no work was lost, and no clean-shutdown acceptance is claimed for that transition.
-Current own `native-move-copy-ready.skp`, PID 27059 / bridge 64380, has exactly four synthetic
-Units, `direct` selected inside `zone_a`, native Move active and the complete pre-copy
-readback captured. See [the prepared human batch](MANUAL_BATCH.md). Actual Option Move-copy
-is the current dependency blocker before Unit placement and Aperture implementation.
-Remaining autonomous work: Assembly / assignment / export attestation and affected Phase 1 checks,
-then Slice C and downstream implementation once the native Move-copy gate passes.
-The final human batch contains native Option Move-copy, held-modal context workflow and
-outside-example repository decision. Slice C, P2-13 and P2-14 still wait on Move-copy.
-Keep these gates open; no placement or Aperture implementation yet.
+Native human Option Move-copy now passes separate Copy Undo/Redo verification. The preceding
+native Move is retained by Undo Copy, and exact Units/Faces/definitions return on Redo.
+Slice A is current-host observed; Slice C and P2-13/P2-14 are no longer held by this gate.
+Ed confirmed the held-Classify check and approved the separate public example repository,
+which is published at [bldgtyp/ph-composer-library-provider-example](https://github.com/bldgtyp/ph-composer-library-provider-example),
+signed-off commit `d54a2ca`. Both Ruby provider checks pass (four tests / 36 assertions each),
+and all six remote files match the verified local checkout.
+Remaining work: held-Classify replay, Slice C and downstream implementation, Assembly /
+assignment / export attestation, affected Phase 1 checks and integrated final acceptance.
+No placement or Aperture implementation is claimed yet.
 
 ## Earlier implementation checkpoints
 
@@ -107,9 +108,8 @@ P2-11 Window editors are independently reviewed and pass focused checks and four
 Checkpoint `7afe894` is installed byte-for-byte in a fresh SketchUp 26.1.188 process; native
 Builder acceptance is in progress. P2-12 Slice B is implemented and independently reviewed;
 its affected native Zone replay remains open.
-P2-12 Slice A has measured evidence except native Move Copy; Slice C waits on that specific
-host observation. API copies do not satisfy it. Manual items remain reserved for Ed's final
-batch while independent authorized work continues.
+At this earlier checkpoint Slice A lacked native Move-copy; the current continuation above
+closes that observation without substituting API or clipboard copies.
 
 ## Earlier installed verification checkpoint
 
@@ -129,11 +129,8 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 
 ## Blockers
 
-- Native Option Move-copy cannot be generated reliably by the available computer-use controls.
-  API copy and clipboard evidence do not replace it. This holds P2-12 Slice C and P2-13/P2-14.
 - Held-modal modifier/context acceptance needs a precise human workflow; keep it in the final batch.
-- Creating the prepared outside-provider example as a separate public repository needs the final
-  repository decision. The local outside-plugin registration and copy proof already pass.
+- No repository decision remains: Ed approved the exact outside example, and it is published.
 
 ## Stage ledger
 
@@ -150,7 +147,7 @@ one exact native Undo/Redo inventory restoration. The rest of E11 and E09 remain
 | [P2-09 Library file export, starter library, example provider](phases/p2-09-library-export-starter-example.md) | 2.2 | Implemented and reviewed; full shipping gates pass; native export checks observed; outside repository approval and attestation open | [Export evidence](evidence/p2-09-library-export.md) |
 | [P2-10 Window product and Window Type records](phases/p2-10-window-records.md) | 2.3 | Implemented and reviewed; integrated gates and native records Undo/Redo/reopen pass; final attestation open | [Window records evidence](evidence/p2-10-window-records.md) |
 | [P2-11 Window Type Builder](phases/p2-11-window-type-builder.md) | 2.3 | Implemented and reviewed; full shipping/browser/coverage gates pass; native workflow observed; final attestation open | [Builder evidence](evidence/p2-11-window-type-builder.md) |
-| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A partial; Slice B implemented and reviewed; integrated gates and Slice B native replay pass; Slice C blocked on native Move Copy | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
+| [P2-12 Window unit and placement operations](phases/p2-12-window-unit-and-placement.md) | 2.3 | Slice A observed; Slice B implemented/reviewed with native replay passing; Slice C ready under existing authorization | [Host observations](evidence/p2-12-window-host.md), [cutting rules](evidence/p2-12-zone-cutting-rules.md) |
 | [P2-13 Place tool, Schedule and Colour-by](phases/p2-13-place-tool-schedule-colour-by.md) | 2.3 | Scoped | |
 | [P2-14 Aperture export](phases/p2-14-aperture-export.md) | 2.3, 1.3 | Scoped | |
 | [P2-15 Frame, Glazing and Psi-Install library kinds](phases/p2-15-window-library-kinds.md) | 2.4 | Implemented, native E15 passes | 2026-10-01 |
@@ -214,3 +211,9 @@ P2-16 and roadmap 2.5 move to Phase 5 under the previously accepted D2-8 rule. E
 evidence is [connection decision](evidence/p2-16-deferral.md). Phase 2 remains in progress:
 Slice B affected native replay, Move-copy, placement, Unit aggregates, Aperture translation
 and consolidated E01 to E14 / E17 acceptance remain. Next autonomous work: remaining Assembly, assignment, export and affected Phase 1 checks.
+
+## Native human continuation
+
+Actual Option Move-copy, exact Copy Undo/Redo and example repository publication are complete.
+The retained historical checkpoints above describe their original frontier; current work is
+Slice C and the held-Classify replay. Full E12 and Phase 2 remain open.

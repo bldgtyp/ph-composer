@@ -1,7 +1,7 @@
 # Phase 2: final human batch
 
 DATE: 2026-10-01
-STATUS: Pending; prepared after autonomous source, browser and native work.
+STATUS: Move-copy observed and verified. Held-Classify check pending preparation. Outside example repository approved and published.
 
 The implementation remains authorized on `codex/phase-02-envelope`. This batch supplies
 specific native controls or a repository decision; it does not waive any open acceptance case.
@@ -57,3 +57,12 @@ After Move-copy passes, implement P2-12 Slice C, P2-13 and P2-14, including the 
 aggregate counts. Finish affected Phase 1 replay and E01 to E14/E17 consolidation, the fresh
 integrated authoring/export/reopen run and the final hands-on session. P2-16 is already deferred
 to Phase 5 under D2-8. SketchUp 2023, Windows, release and certification claims remain separate.
+
+## Human continuation on 2026-10-01
+
+Ed completed native Move followed by Option-copy. Codex verified shared definition, copied
+attributes/id, glue, separate Copy Undo and exact Redo. Slice C may proceed. Ed also confirmed
+the held-Classify check and approved the exact outside example repository. The public example
+is [bldgtyp/ph-composer-library-provider-example](https://github.com/bldgtyp/ph-composer-library-provider-example),
+signed-off commit `d54a2ca`. It passes Ruby 2.7 syntax and the shared provider/public-copy
+checks on both Rubies (four tests, 36 assertions each); remote contents match the six local files.

@@ -105,3 +105,13 @@ and returns the four-Material Model to unmodified. Only those two owned Plugin p
 moved back into the private evidence folder. Fresh PID 12145 restores the normal six-feature
 composition, no configured providers and an unmodified synthetic Model. No external
 repository is created or published; that approval remains in Ed's final batch.
+
+## Approved public example
+
+Ed approved publication on 2026-10-01. The separate
+[bldgtyp/ph-composer-library-provider-example](https://github.com/bldgtyp/ph-composer-library-provider-example)
+is public at signed-off commit `d54a2ca4fa5e20c81ef1c94353106bf2536d77f8`. It contains the
+unchanged prepared loader, install and walkthrough, a concise README, AGPL license and DCO.
+All three Ruby files pass Ruby 2.7 syntax; shared provider/public-copy checks against the separate
+checkout pass on both Rubies (four tests / 36 assertions each). All six remote blobs match the
+local checkout. No licensed or private material is included. No broader E09 award is inferred.

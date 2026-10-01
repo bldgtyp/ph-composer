@@ -156,11 +156,11 @@ Measured in PH-Composer on 26.1.188, 2026-09-20
 
 Measured in a fresh SketchUp 2026 process on 2026-10-01. The
 [owning investigation](../planning/features/phase-02-envelope/evidence/p2-12-window-host.md)
-distinguishes native gestures from API preparation and records the remaining Move-copy gate.
+distinguishes native gestures from API preparation, including Ed's native Option Move-copy continuation.
 
 | Fact | Consequence |
 | --- | --- |
-| Native clipboard copies within and across Models preserve instance dictionaries, definition marks and pane stamps. An isolated cross-model component arrives without glue. Ruby `ComponentInstance#copy` did not preserve its custom instance dictionary. | Reads may encounter shared unit ids after clipboard copy. Scripted copies must explicitly preserve authored values and metadata. Native Move-copy remains unmeasured. |
+| Native Option Move-copy and clipboard copies within and across Models preserve instance dictionaries, definition marks and pane stamps. An isolated cross-model component arrives without glue. Ruby `ComponentInstance#copy` did not preserve its custom instance dictionary. | Reads may encounter shared unit ids after native copy. Scripted copies must explicitly preserve authored values and metadata. |
 | Native Make Unique copies definition dictionaries and stamped pane Faces while creating a new definition identity. | A type mark alone does not prove the instance uses the canonical definition. |
 | Native Explode preserves the pane stamps on loose Faces. Its native Undo restores prior units and Faces; collection iteration order can change. | Limited Restore can inspect stamps, but must also verify geometry. Comparisons use identities rather than collection order. |
 | Rewriting a definition and translating all instances in one API operation is reversed by one native Undo, including pane geometry/stamps/ids and instance transforms. | Type geometry propagation belongs in the same proposal as the type record update. |
