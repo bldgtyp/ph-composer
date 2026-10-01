@@ -20,7 +20,8 @@ module PhComposer
           Operations.create(request, proposal, collection)
         end
         feature.action("#{prefix}.update", :description => "Edit guarded authored values of one #{kind.label}.",
-          :params => Shapes.update(kind), :result => Shapes::RESULT, :undo_name => "Edit #{kind.label}",
+          :params => Shapes.update(kind), :result => collection == "types" ? Shapes::TYPE_RESULT : Shapes::RESULT,
+          :undo_name => "Edit #{kind.label}",
           :side_effects => "Updates one definition and preserves its metadata.",
           :examples => [{ "id" => example_id, "values" => { "name" => "Edited" },
           "expected_values" => { "name" => "Original" } }]) do |request, proposal|

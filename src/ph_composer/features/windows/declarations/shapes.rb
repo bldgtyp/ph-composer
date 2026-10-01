@@ -7,6 +7,8 @@ module PhComposer
       OBJECT = { "type" => "object" }.freeze
       NONE = Fields.object({}).freeze
       RESULT = Fields.object({ "id" => ID }, :required => ["id"]).freeze
+      TYPE_RESULT = Fields.object({ "id" => ID, "unit_count" => { "type" => "integer", "minimum" => 0 } },
+        :required => %w[id unit_count]).freeze
       UNREADABLE = { "type" => "array", "items" => Fields.object(
         %w[id code message].to_h { |key| [key, ID] }, :required => %w[id code message]) }.freeze
       FINDING = Fields.object({ "code" => ID, "message" => ID, "element_id" => ID, "side" => ID,

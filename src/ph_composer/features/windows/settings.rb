@@ -35,6 +35,7 @@ module PhComposer
           :cardinality => "one")])
 
       def propose(request, proposal, values:, expected_values:)
+        Units::Mutation.prepare(request, proposal)
         if values["default_psi_install_id"]
           request.engine.find(PSI_INSTALL_KIND, values.fetch("default_psi_install_id"))
         end

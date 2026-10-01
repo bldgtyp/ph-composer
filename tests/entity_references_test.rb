@@ -502,7 +502,7 @@ class EntityReferencesTest < PhComposerTestCase
   def test_discovery_and_description_publish_detached_reference_target_inventory
     inventory = PhComposer::API.discover.fetch("reference_targets")
     assert_equal [FACE::REFERENCE_KIND, ZONES::REFERENCE_KIND,
-                  PhComposer::Windows::Settings::KIND].sort,
+                  PhComposer::Windows::Settings::KIND, PhComposer::Windows::Units::REFERENCE_KIND].sort,
                  inventory.map { |target| target.fetch("id") }.sort
     found = PhComposer::API.describe(:name => FACE::REFERENCE_KIND)
     assert_equal "reference_target", found.fetch("kind")

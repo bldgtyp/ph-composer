@@ -19,7 +19,7 @@ module PhComposer
           @path = ["ph_composer.windows.units.mutation", *@definition_ids.map { |id| id.to_s.freeze }].freeze
         end
 
-        def capture(model)
+        def capture(model, expected_records: {})
           # Dangling pointers are readable pre-images an explicit rebuild may repair.
           # Validate storage shape here; operation preparation owns semantic resolution.
           DefinitionIndex.read(model)
@@ -31,7 +31,7 @@ module PhComposer
           value = { "index" => model.get_attribute(DefinitionIndex::STORE.dictionary, DefinitionIndex::STORE.key),
             "definition_ids" => ids.sort, "definitions" => selected_definitions(definitions),
             "materials" => model.materials.map { |material| material_values(material) }.sort_by { |row| row["name"] },
-            "units" => unit_values(model) }
+            "units" => unit_values(model, expected_records) }
           unless JsonValue.problems(value).empty?
             raise CodedError.new("record.unreadable", "Window mutation state is not detached JSON.")
           end
@@ -48,6 +48,16 @@ module PhComposer
           false
         end
 
+        # The same detached native preimage is usable by a step's drift guard without including
+        # preceding identity repairs on unrelated instances.
+        def definition_snapshot(definition)
+          id = definition.persistent_id
+          check_stamp!(DEFINITION_STORE, definition, %w[window_type_id])
+          { "id" => id, "name" => definition.name, "dictionaries" => dictionaries(definition),
+            "behavior" => behavior_values(definition.behavior),
+            "entities" => entity_values(definition.entities, [id]) }
+        end
+
         private
 
         def selected_definitions(definitions)
@@ -55,11 +65,7 @@ module PhComposer
             definition = definitions.find { |item| item.persistent_id == id }
             raise CodedError.new("target.not_found", "A scoped Window definition no longer exists.") unless definition
 
-            check_stamp!(DEFINITION_STORE, definition, %w[window_type_id])
-
-            { "id" => id, "name" => definition.name, "dictionaries" => dictionaries(definition),
-              "behavior" => behavior_values(definition.behavior),
-              "entities" => entity_values(definition.entities, [id]) }
+            definition_snapshot(definition)
           end
         end
 
@@ -125,10 +131,20 @@ module PhComposer
             "dictionaries" => dictionaries(material) }
         end
 
-        def unit_values(model)
-          Occurrences.all(model).map do |occurrence|
+        def unit_values(model, expected_records)
+          occurrences = Occurrences.all(model)
+          unless expected_records.is_a?(Hash) && (expected_records.keys - occurrences.map(&:path)).empty?
+            raise CodedError.new("target.not_found", "A projected Window occurrence does not exist.")
+          end
+          occurrences.map do |occurrence|
             entity = occurrence.entity
-            { "path" => occurrence.path, "record" => occurrence.record, "dictionaries" => dictionaries(entity),
+            record = expected_records.fetch(occurrence.path, occurrence.record)
+            Units.validate!(record)
+            attrs = dictionaries(entity)
+            if expected_records.key?(occurrence.path)
+              attrs.fetch(STORE.dictionary)[STORE.key] = CanonicalJson.generate(record)
+            end
+            { "path" => occurrence.path, "record" => DeepCopy.call(record), "dictionaries" => attrs,
               "transformation" => entity.transformation.to_a, "world_transform" => occurrence.transform.to_a,
               "definition_id" => entity.definition.persistent_id, "glued_face_id" => entity.glued_to&.persistent_id }
           end.sort_by { |row| row.fetch("path") }

@@ -1,0 +1,172 @@
+# frozen_string_literal: true
+
+require_relative "definition_writer"
+require_relative "definition_index"
+require_relative "definition_geometry"
+require_relative "occurrences"
+require_relative "world_geometry"
+require_relative "../placement/host"
+require_relative "../placement/fit"
+require_relative "../placement/offsets"
+
+module PhComposer
+  module Windows
+    module Units
+      # One caller-owned proposal step. Paths and authored values survive preview; live entities are resolved at apply.
+      class PlaceStep
+        attr_reader :affected, :definition_ids
+
+        def initialize(model:, host:, type:, record:, point_m:, existing_polygons_m: [],
+                       expected_scope: nil, expected_state: nil)
+          @type = DeepCopy.call(type)
+          @record = DeepCopy.call(Units.validate!(record))
+          unless @record.fetch("window_type_id") == @type.fetch("id") && Types::KIND.problems(@type).empty?
+            raise CodedError.new("validation.failed", "Choose the authored Window Type referenced by this unit.")
+          end
+          @plan = DefinitionPlan.build(@type)
+          @parent_path = host.parent_path.dup
+          @face_id = host.entity.persistent_id
+          @host_reference = DeepCopy.call(host.reference)
+          @host_values = DeepCopy.call(host.values)
+          @host_geometry = DeepCopy.call(host.geometry.to_h)
+          @host_transform = host.transform.to_a
+          @point_m = DeepCopy.call(point_m)
+          @existing_polygons = DeepCopy.call(existing_polygons_m)
+          @expected_scope, @expected_state = expected_scope, DeepCopy.call(expected_state)
+          if expected_scope.nil? != expected_state.nil?
+            raise ArgumentError, "A placement scope and its expected state must be supplied together."
+          end
+          @expected_index = DeepCopy.call(DefinitionIndex.read(model))
+          @expected_index.each_key { |id| DefinitionIndex.resolve(model, id) }
+          definition = DefinitionIndex.resolve(model, @type.fetch("id"))
+          check_definition!(definition)
+          @definition_before = definition && DefinitionGeometry.capture(definition)
+          @definition_ids = definition ? [definition.persistent_id].freeze : [].freeze
+          @world_matrix = placement_matrix(host.geometry)
+          verify_type_and_identity!(model)
+          @affected = [{ "kind" => REFERENCE_KIND, "id" => @record.fetch("id"), "change" => "placed" }]
+        end
+
+        def descriptor
+          DeepCopy.call("name" => "place_window_unit", "record" => @record, "type" => @type,
+            "host" => @host_reference, "host_values" => @host_values, "parent_path" => @parent_path,
+            "face_id" => @face_id, "host_geometry" => @host_geometry, "host_transform" => @host_transform,
+            "point_m" => @point_m, "existing_polygons_m" => @existing_polygons,
+            "index_before" => @expected_index, "definition_before" => @definition_before,
+            "scope_path" => @expected_scope&.path, "scope_before" => @expected_state)
+        end
+
+        def temporary_ids
+          [@record.fetch("id")]
+        end
+
+        def apply(model, slots)
+          verify_type_and_identity!(model)
+          if @expected_scope && !@expected_scope.unchanged?(model, @expected_state)
+            changed!("The placement scope changed after preview.")
+          end
+          entities, face, transform = resolve_host(model)
+          geometry = FaceGeometry.capture(face, transform)
+          changed!("The host Face changed after preview.") unless geometry.to_h == @host_geometry &&
+            transform.to_a == @host_transform
+          unless DefinitionIndex.read(model) == @expected_index
+            changed!("The Window definition index changed after preview.")
+          end
+          @expected_index.each_key { |id| DefinitionIndex.resolve(model, id) }
+          definition = DefinitionIndex.resolve(model, @type.fetch("id"))
+          current = definition && DefinitionGeometry.capture(definition)
+          changed!("The canonical Window definition changed after preview.") unless current == @definition_before
+          check_definition!(definition)
+          Placement::Fit.check!(geometry, WorldGeometry.map(@plan, @world_matrix).outer_polygon_m,
+            :existing_polygons_m => @existing_polygons)
+          WorldGeometry.transform_state(transform.to_a)
+          local_transform = transform.inverse * Geom::Transformation.new(@world_matrix)
+          WorldGeometry.transform_state(local_transform.to_a)
+          definition ||= create_definition(model)
+          instance = entities.add_instance(definition, local_transform)
+          raise CodedError.new("geometry.failed", "The native Window instance could not be created.") unless instance
+
+          instance.glued_to = face
+          unless instance.glued_to == face
+            raise CodedError.new("geometry.failed", "The native Window instance could not glue to its host Face.")
+          end
+          Units.write(instance, @record)
+          reference = { "unit_id" => @record.fetch("id"), "entity_path" => @parent_path + [instance.persistent_id] }
+          slots[@record.fetch("id")] = reference
+          @affected = [{ "kind" => REFERENCE_KIND, "id" => @record.fetch("id"), "change" => "placed",
+            "reference" => reference }]
+        end
+
+        private
+
+        def placement_matrix(geometry)
+          plane = Placement::Plane.new(geometry)
+          mapped = plane.map(@plan, :point_m => @point_m, :anchor => @record.fetch("anchor"))
+          Placement::Fit.check!(geometry, mapped.outer_polygon_m, :existing_polygons_m => @existing_polygons)
+          origin = mapped.outer_polygon_m.last.map { |value| value / INCH_TO_M }
+          matrix = plane.x_axis + [0] + plane.y_axis + [0] + plane.normal + [0] + origin + [1]
+          WorldGeometry.transform_state(matrix)
+          matrix.freeze
+        end
+
+        def verify_type_and_identity!(model)
+          unless Types::KIND.store.read(model, @type.fetch("id")) == @type
+            changed!("The authored Window Type changed after preview.")
+          end
+          if Occurrences.all(model).any? { |item| item.record.fetch("id") == @record.fetch("id") }
+            changed!("The new Window unit identity is already in use.")
+          end
+        end
+
+        def check_definition!(definition)
+          return unless definition
+          behavior = definition.behavior
+          configured = behavior.is2d? && behavior.cuts_opening? && behavior.snapto == SnapTo_Arbitrary &&
+                       behavior.no_scale_mask? == 127
+          return if configured && DefinitionGeometry.matches?(definition, :type_id => @type.fetch("id"), :plan => @plan)
+
+          raise CodedError.new("window.definition_changed",
+            "The canonical Window definition geometry or behavior differs from its Type. Nothing was written.")
+        end
+
+        def create_definition(model)
+          definition = DefinitionWriter.create(:model => model, :type => @type, :plan => @plan)
+          DefinitionIndex.write(model, @expected_index.merge(@type.fetch("id") => definition.persistent_id),
+            :expected => @expected_index)
+          definition
+        end
+
+        def resolve_host(model)
+          transform = Geom::Transformation.new
+          entities = @parent_path.reduce(model.entities) do |collection, id|
+            group = unique(collection, id)
+            unless group.is_a?(Sketchup::Group) && group.definition.instances.length == 1
+              raise CodedError.new("target.shared_definition",
+                "Make the host's parent storage unique before placement.")
+            end
+            raise CodedError.new("target.locked", "The host's parent Group is locked.") if group.locked?
+
+            transform *= group.transformation
+            group.entities
+          end
+          face = unique(entities, @face_id)
+          unless face.is_a?(Sketchup::Face)
+            raise CodedError.new("target.wrong_kind", "The placement host must still be a Face.")
+          end
+
+          [entities, face, transform]
+        end
+
+        def unique(entities, id)
+          found = entities.to_a.select { |entity| entity.persistent_id == id }
+          changed!("The host occurrence no longer resolves uniquely.") unless found.length == 1
+          found.first
+        end
+
+        def changed!(message)
+          raise CodedError.new("target.changed", "#{message} Nothing was written.")
+        end
+      end
+    end
+  end
+end

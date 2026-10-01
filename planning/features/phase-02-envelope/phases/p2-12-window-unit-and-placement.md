@@ -58,8 +58,12 @@ Current source checkpoint: Unit records/full-Model occurrence reads, pure pane/a
 geometry, definition writing, primary pointers, identity planning and rollback capture are implemented
 and independently reviewed. Final focused checks pass on both Rubies, 74 tests / 680 assertions;
 26 Ruby files pass lint. Guarded foundation reference removal is committed in `aca2e9b`.
-The Unit sources are not yet loaded by the shipping feature. Public placement and used-type
-propagation are next. See [foundation evidence](../evidence/p2-12-unit-geometry.md).
+Public placement, bounded/snapshot Unit reads and used-Type propagation are now loaded by source
+registration and independently reviewed. Five integration review findings are corrected and
+confirmed closed. Both full Ruby suites pass, 1156 tests / 8299 assertions; scoped lint and the
+generated API reference pass. No new package is installed. Registered repair operations, the
+full script walkthrough and native acceptance are next. See
+[foundation and integration evidence](../evidence/p2-12-unit-geometry.md).
 The reference uses a root-to-instance path and Unit ID so an orphan remains addressable without
 inventing a Zone stamp. Full Slice C review and all placement/repair host gates remain open.
 

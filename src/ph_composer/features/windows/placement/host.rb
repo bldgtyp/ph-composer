@@ -4,41 +4,45 @@ module PhComposer
   module Windows
     module Placement
       Host = Struct.new(:entity, :entities, :parent_path, :transform, :reference, :values, :geometry,
-                        keyword_init: true)
+                        :zone_state, keyword_init: true)
 
       # Face semantics come through the declared Zones dependency. The SDK path walk resolves only
       # native geometry/storage, never another feature's dictionaries or private resolver.
       module Hosts
         module_function
 
-        def resolve(request, reference)
+        def resolve(request, reference, writable: true, zone_rows: nil, face_rows: nil)
           zone_reference = reference.slice("zone_id", "zone_path")
-          zones = request.query("ph_composer.zones.all").fetch("zones")
+          zones = zone_rows || request.query("ph_composer.zones.all").fetch("zones")
           zone = zones.find { |row| row.fetch("reference") == zone_reference }
-          unless zone && zone.fetch("state") == "found"
+          unless zone && (!writable || zone.fetch("state") == "found")
             raise CodedError.new("target.not_found", "Choose a Face in one writable, unambiguous Zone.")
           end
-          rows = request.query("ph_composer.zones.faces.all").fetch("faces")
+          rows = face_rows || request.query("ph_composer.zones.faces.all").fetch("faces")
           row = rows.find { |item| item.fetch("reference") == reference }
           raise CodedError.new("target.changed", "The host Face reference no longer matches the Zone read.") unless row
 
-          if row.fetch("values")["boundary_condition"] == "Surface"
+          if writable && row.fetch("values")["boundary_condition"] == "Surface"
             raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
           end
-          native(request.model, reference, row.fetch("values"))
+          native(request.model, reference, row.fetch("values"), writable).tap do |host|
+            host.zone_state = zone.fetch("state")
+          end
         end
 
-        def native(model, reference, values)
+        def native(model, reference, values, writable)
           path = reference.fetch("zone_path") + reference.fetch("entity_path")
           entities = model.entities
           transform = Geom::Transformation.new
           path[0...-1].each do |persistent_id|
             container = unique(entities, persistent_id)
-            unless container.is_a?(Sketchup::Group) && container.definition.instances.length == 1
+            unless container.is_a?(Sketchup::Group) && (!writable || container.definition.instances.length == 1)
               raise CodedError.new("target.shared_definition",
                 "Make the host's parent storage unique before placement.")
             end
-            raise CodedError.new("target.locked", "The host's parent Group is locked.") if container.locked?
+            if writable && container.locked?
+              raise CodedError.new("target.locked", "The host's parent Group is locked.")
+            end
 
             transform *= container.transformation
             entities = container.entities

@@ -29,7 +29,7 @@ the top of each PRD.
 
 ## Current resume checkpoint
 
-Branch `codex/phase-02-envelope`, shipping source `43a1418`. Both Ruby full CI gates
+Branch `codex/phase-02-envelope`, installed checkpoint `43a1418`. Both Ruby full CI gates
 pass: 995 tests / 6725 assertions, 346 JS and 135 Python tests. Coverage is
 96.6% / 94.9% / 94.98%. Chromium 88 and all eight browser scripts pass after the caption correction. Exact installed 296-file RBZ is
 `checkpoint-43a1418.rbz`, SHA-256
@@ -80,9 +80,14 @@ removal is committed in `aca2e9b`. Unit records/occurrences, pane/anchor and pla
 native definition writing, the primary-definition index, copy planning and rollback capture pass
 74 focused tests / 680 assertions on both Rubies; 26 changed/new Ruby files pass lint. The broader
 Ruby suite before the two review fixes passes on both versions, 1076 / 7455. Both review findings
-are corrected and confirmed closed. These Unit files are not yet wired into feature registration
-or a shipping package; public placement, type propagation, repair and full Slice C acceptance
-remain open. See [Unit foundation evidence](evidence/p2-12-unit-geometry.md).
+are corrected and confirmed closed. Follow-on public placement, Unit reads and used-Type
+propagation are now wired into source registration and independently reviewed; five integration
+findings are fixed and confirmed closed. Complete Ruby suites pass on both versions, 1156 tests /
+8299 assertions; 78 focused checks / 800 assertions and scoped 35-file lint pass. The generated
+API reference is current. These changes are not installed; registered repairs, the full script
+walkthrough and native Slice C/E12 acceptance remain open. Remove/Re-host steps separately pass
+14 tests / 88 assertions on both Rubies but are not yet registered or included in the completed
+integration review. See [Unit foundation evidence](evidence/p2-12-unit-geometry.md).
 
 ## Earlier implementation checkpoints
 

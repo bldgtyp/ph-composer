@@ -1035,6 +1035,69 @@ Values:
 }
 ```
 
+### `ph_composer.windows.unit`
+
+Window unit, a entity kind owned by `ph_composer.windows`, schema version 1.
+
+References: `window_type_id` names one `ph_composer.windows.window_type`.
+
+Values:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "window_type_id",
+    "anchor"
+  ],
+  "properties": {
+    "window_type_id": {
+      "type": "string"
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "sill_left",
+        "sill_center",
+        "sill_right",
+        "center_left",
+        "center",
+        "center_right",
+        "head_left",
+        "head_center",
+        "head_right"
+      ]
+    }
+  }
+}
+```
+
+Occurrence reference:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit_id",
+    "entity_path"
+  ],
+  "properties": {
+    "unit_id": {
+      "type": "string"
+    },
+    "entity_path": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer"
+      }
+    }
+  }
+}
+```
+
 ### `ph_composer.windows.window_type`
 
 Window Type, a catalog kind owned by `ph_composer.windows`, schema version 1.
@@ -8675,6 +8738,376 @@ Example params:
 {
   "limit": 20
 }
+```
+
+### `ph_composer.windows.units.all`
+
+All Window occurrences and native findings for the snapshot. Owner: `ph_composer.windows`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "units"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema_version",
+          "values",
+          "user_data",
+          "extension_data",
+          "reference",
+          "host",
+          "findings"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "window_type_id",
+              "anchor"
+            ],
+            "properties": {
+              "window_type_id": {
+                "type": "string"
+              },
+              "anchor": {
+                "type": "string",
+                "enum": [
+                  "sill_left",
+                  "sill_center",
+                  "sill_right",
+                  "center_left",
+                  "center",
+                  "center_right",
+                  "head_left",
+                  "head_center",
+                  "head_right"
+                ]
+              }
+            }
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "unit_id",
+              "entity_path"
+            ],
+            "properties": {
+              "unit_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "host": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "repair"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "repair": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.windows.units.list`
+
+Window occurrences and native findings, without writes. Owner: `ph_composer.windows`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "units",
+    "next_cursor",
+    "total"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema_version",
+          "values",
+          "user_data",
+          "extension_data",
+          "reference",
+          "host",
+          "findings"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "window_type_id",
+              "anchor"
+            ],
+            "properties": {
+              "window_type_id": {
+                "type": "string"
+              },
+              "anchor": {
+                "type": "string",
+                "enum": [
+                  "sill_left",
+                  "sill_center",
+                  "sill_right",
+                  "center_left",
+                  "center",
+                  "center_right",
+                  "head_left",
+                  "head_center",
+                  "head_right"
+                ]
+              }
+            }
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "unit_id",
+              "entity_path"
+            ],
+            "properties": {
+              "unit_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "host": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "repair"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "repair": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
 ```
 
 ### `ph_composer.zones.all`
@@ -22293,11 +22726,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -22881,11 +23319,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -23447,11 +23890,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -24032,11 +24480,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -24614,11 +25067,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -25189,11 +25647,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -25767,11 +26230,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -26347,11 +26815,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -26916,11 +27389,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -28761,11 +29239,16 @@ Result:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "unit_count"
   ],
   "properties": {
     "id": {
       "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
@@ -28781,6 +29264,140 @@ Example params:
   },
   "expected_values": {
     "name": "Original"
+  }
+}
+```
+
+### `ph_composer.windows.units.place`
+
+Place an anchored Window on an explicit writable Zone Face. Owner: `ph_composer.windows`.
+
+Undo step: Place Window. Creates or reuses the Type definition, glues an instance and stores its Unit record.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host",
+    "type_id",
+    "anchor",
+    "offsets"
+  ],
+  "properties": {
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path",
+        "entity_path",
+        "entity_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "type_id": {
+      "type": "string"
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "sill_left",
+        "sill_center",
+        "sill_right",
+        "center_left",
+        "center",
+        "center_right",
+        "head_left",
+        "head_center",
+        "head_right"
+      ]
+    },
+    "offsets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x_m",
+        "y_m"
+      ],
+      "properties": {
+        "x_m": {
+          "type": "number",
+          "x-unit": "m"
+        },
+        "y_m": {
+          "type": "number",
+          "x-unit": "m"
+        }
+      }
+    },
+    "user_data": {
+      "type": "object"
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit_id"
+  ],
+  "properties": {
+    "unit_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "host": {
+    "zone_id": "zon_Ab12Cd34Ef56",
+    "zone_path": [
+      1201
+    ],
+    "entity_path": [
+      1202
+    ],
+    "entity_id": null
+  },
+  "type_id": "wnt_Ab12Cd34Ef56",
+  "anchor": "sill_center",
+  "offsets": {
+    "x_m": 1.0,
+    "y_m": 0.8
   }
 }
 ```

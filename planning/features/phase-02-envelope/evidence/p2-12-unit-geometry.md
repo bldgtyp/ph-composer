@@ -122,3 +122,63 @@ suite before the review fixes passed on both versions: 1076 tests / 7455 asserti
 focused checks cover the changed fixes. An independent high-assurance review identified the
 extension-copy and definition-name defects; both are corrected, regression-tested and confirmed
 closed. Public action wiring and fresh native placement/propagation/repair acceptance remain open.
+
+## Placement integration in progress
+
+After `585ce6b`, source work adds physical world-matrix mapping and reanchoring, stable metre
+offsets from the host's minimum right/up extents, and a composable identity-repair step. Read-only
+geometry comparison measures current pane loops and stamps rather than trusting the copied Type
+stamp. Unit state projection distinguishes absent glue, off-plane/overhanging geometry, overlap,
+changed panes, detached definitions, unknown Types, transforms and pending copied identities.
+These helpers initially remained outside registration; the public integration checkpoint below
+now loads them through the Windows feature.
+
+The rollback scope supports a pure projected Unit-record preimage for a subsequent step in the
+same proposal as identity repair. It projects only the expected authored record and its serialized
+storage, preserving every other dictionary, native transform and glue value in the drift guard.
+Unknown occurrence paths refuse. Native placement and used-Type propagation steps are being
+implemented against those seams; their actions, repairs and acceptance are still open.
+
+Focused helper checks on Ruby 2.7.2 and 3.2.2 pass: 37 tests / 436 assertions. Twelve affected
+Ruby files pass scoped lint. This is an uncommitted integration checkpoint, not a Slice C award.
+The foundation review covered the preceding source only; the new integration received its own
+coherent review below.
+
+## Public placement and used-Type propagation checkpoint
+
+The Windows feature now registers the Unit reference target, bounded `units.list`, snapshot-backed
+`units.all` and `units.place`. Placement uses explicit Face references, nine anchors and metre
+offsets measured from the host's minimum right/up extents. One proposal creates or reuses the
+indexed definition, places and glues the instance and stores the Unit record. SDK-shaped checks
+prove preview is read-only, positive-area overlap refuses, shared definitions remain shared and
+one Undo/Redo restores exact Unit/native/index state.
+
+Type update and grid operations now rewrite the primary definition and retain each canonical
+instance's physical anchor in the same proposal. Name-only changes retain pane entities, and
+product/operation/install changes do not rebuild geometry. Detached definitions are excluded.
+Preview returns the Unit count, identifies blocked Unit references for fit failures and warns
+which Units will lose edited primary geometry. Every Window mutation prepares copied identity
+repair first; full-record projection composes the subsequent native guard with that repair.
+
+Read findings distinguish missing glue, off-host geometry, overlap, in-plane scaling, shear,
+mirroring, edited panes, detached definitions, unknown Types and pending copied IDs. Read-only
+host resolution retains copied Zone occurrences and reports invalid host state. Public Zone/Face
+rows are captured once per read context and reused. Subdivided collinear pane boundaries compare
+by geometry rather than raw vertex counts; an unrelated loose edge still differs.
+
+One independent high-assurance review found five defects: unglued canonical neighbors missing
+from resize overlap checks, absent edited-geometry preview warnings, copied Zones blocking reads,
+false geometry differences at boundary subdivisions and Z-only scaling of flat Units. All five
+are corrected with regressions and confirmed closed by the same reviewer. No second equivalent
+review was run. The existing framework now exposes `registry.record_descriptor` during staged
+registration so Windows can reuse the public Face schema without private Zone constants.
+
+After those fixes, complete Ruby suites pass on 2.7.2 and 3.2.2: 1156 tests / 8299 assertions.
+Focused integration checks pass on both: 78 tests / 800 assertions. Thirty-five scoped Ruby files
+pass lint; the API reference is regenerated through its owning test. The full Ruby runs include
+the separately developed, unregistered Remove/Re-host steps, whose 14 tests / 88 assertions pass
+on both Rubies; those repair steps are not part of this completed coherent integration review.
+
+No new RBZ is installed. The armed held-Classify fixture and installed `43a1418` remain intact.
+Native placement/topology/glue/Undo acceptance, registered repairs, the complete script walkthrough
+and consolidated Slice C/E12 remain open. Offline SDK stubs do not prove physical hole cutting.

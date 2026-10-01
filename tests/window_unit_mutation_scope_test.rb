@@ -36,6 +36,20 @@ class WindowUnitMutationScopeTest < PhComposerTestCase
     assert_raises(ArgumentError) { U::MutationScope.new(:definition_ids => [0]) }
   end
 
+  def test_projected_identity_preimage_matches_only_the_planned_record_write
+    unit = add_unit
+    path = [unit.persistent_id]
+    after = record.merge("id" => "wun_BBBBBBBBBBBB")
+    projected = @scope.capture(@model, :expected_records => { path => after })
+    refute_equal projected, @scope.capture(@model)
+    assert_equal record, U.read(unit)
+    U.write(unit, after)
+    assert_equal projected, @scope.capture(@model)
+    unit.set_attribute("ph_composer.synthetic", "note", "changed")
+    refute_equal projected, @scope.capture(@model)
+    assert_raises(PhComposer::CodedError) { @scope.capture(@model, :expected_records => { [999999] => after }) }
+  end
+
   def test_absent_index_and_valid_empty_index_are_distinct_without_repair
     before = @scope.capture(@model)
     assert_nil U::DefinitionIndex::STORE.read(@model)

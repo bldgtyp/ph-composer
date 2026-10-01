@@ -214,6 +214,14 @@ module PhComposer
         @failures = []
       end
 
+      # Contribution schemas may reuse a dependency's published record shape during registration.
+      # Same-batch declarations take precedence; already installed dependencies remain visible.
+      def record_descriptor(kind_id)
+        declared = declared_record_kinds.find { |kind| kind.id == kind_id } ||
+                   declared_reference_targets.find { |target| target.id == kind_id }
+        declared ? declared.descriptor : @live.catalog.descriptor(kind_id)
+      end
+
       # Declares a feature and returns the scope its other declarations are made through.
       def feature(id, contract_version:, requires: [])
         declaration = Declarations::Feature.new(:id => id, :contract_version => contract_version,

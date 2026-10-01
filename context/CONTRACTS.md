@@ -40,6 +40,12 @@ missing, the dependency. Any diagnostic refuses the whole batch and publishes no
 registration never silently wins. Published operations are deep-frozen. Repeated install adds no
 duplicate observers.
 
+During installation, `registry.record_descriptor(kind_id)` resolves a same-batch catalog kind or
+entity target, then an already installed kind or target, returning its descriptor or nil. A feature
+may copy a dependency's public occurrence schema into its declarations without reaching through
+the dependency's implementation constants. This grants no storage access and does not replace the
+declared dependency requirement or batch validation.
+
 Contract versions use exact major compatibility. Unknown fields in operation envelopes are
 rejected; record `user_data` remains intentionally extensible. Declarative schemas drive Ruby
 validation, discovery and the generated `docs/API_REFERENCE.md`; there is no second hand-maintained

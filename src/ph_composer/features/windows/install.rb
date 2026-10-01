@@ -10,8 +10,10 @@ require_relative "types/thermal"
 require_relative "types/installs"
 require_relative "types/graph"
 require_relative "declarations/shapes"
+require_relative "units/identity_step"
 require_relative "settings"
 require_relative "operations"
+require_relative "units/changes"
 require_relative "install_save"
 require_relative "snapshot"
 require_relative "declarations/records"
@@ -19,6 +21,7 @@ require_relative "declarations/inventories"
 require_relative "declarations/grid"
 require_relative "library_kinds"
 require_relative "declarations/installs"
+require_relative "declarations/units"
 
 module PhComposer
   module Windows
@@ -34,6 +37,7 @@ module PhComposer
       RecordRegistration.install(feature)
       GridRegistration.install(feature)
       InstallsRegistration.install(feature)
+      UnitRegistration.install(feature, registry)
       LibraryKinds.install(feature, registry)
     end
   end

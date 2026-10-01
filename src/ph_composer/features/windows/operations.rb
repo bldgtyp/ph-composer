@@ -42,6 +42,7 @@ module PhComposer
       end
 
       def create(request, proposal, collection)
+        Units::Mutation.prepare(request, proposal)
         definition = kind(collection)
         values = request.params.fetch("values")
         unique_name!(values.fetch("name"), records(request, definition))
@@ -53,8 +54,10 @@ module PhComposer
       end
 
       def update(request, proposal, collection)
+        Units::Mutation.prepare(request, proposal)
         definition = kind(collection)
         id = request.params.fetch("id")
+        before = request.engine.find(definition.id, id)
         values = DeepCopy.call(request.params.fetch("values"))
         if values["name"]
           values["name"] = values["name"].strip
@@ -62,10 +65,16 @@ module PhComposer
         end
         request.engine.propose_update(definition.id, id, proposal, :values => values,
           :expected_values => request.params.fetch("expected_values"), :user_data => request.params["user_data"])
+        if collection == "types"
+          after = proposal.find(definition.id, id)&.after || before
+          Units::Changes.type(request, proposal, :before => before, :after => after)
+          return { "id" => id, "unit_count" => Units::Changes.count(request.model, id) }
+        end
         { "id" => id }
       end
 
       def duplicate(request, proposal, collection)
+        Units::Mutation.prepare(request, proposal)
         definition = kind(collection)
         rows = records(request, definition)
         id = request.params.fetch("id")
@@ -85,6 +94,7 @@ module PhComposer
       end
 
       def delete(request, proposal, collection)
+        Units::Mutation.prepare(request, proposal)
         definition = kind(collection)
         id = request.params.fetch("id")
         current = request.engine.find(definition.id, id)
@@ -120,6 +130,7 @@ module PhComposer
       end
 
       def grid(request, proposal, command)
+        Units::Mutation.prepare(request, proposal)
         id = request.params.fetch("id")
         before = request.engine.find(TYPE_KIND, id)
         values = request.params.reject { |key, _| %w[id expected_values].include?(key) }
@@ -127,7 +138,9 @@ module PhComposer
         changed = Types::KIND.values(after).select { |key, value| before[key] != value }
         request.engine.propose_update(TYPE_KIND, id, proposal, :values => changed,
           :expected_values => request.params.fetch("expected_values"))
-        { "id" => id }
+        Units::Changes.type(request, proposal, :before => before,
+          :after => proposal.find(TYPE_KIND, id)&.after || before)
+        { "id" => id, "unit_count" => Units::Changes.count(request.model, id) }
       end
     end
   end

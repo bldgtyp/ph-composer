@@ -8,6 +8,7 @@ module PhComposer
       module_function
 
       def call(request, proposal)
+        Units::Mutation.prepare(request, proposal)
         unless Settings.read(request.model) == request.params.fetch("expected_settings")
           raise CodedError.new("target.changed", "Window defaults changed; reopen the Installs session.")
         end
