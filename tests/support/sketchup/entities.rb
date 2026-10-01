@@ -722,10 +722,11 @@ module Sketchup
   # ComponentDefinition with instances; here it is derived from the Entities collection, so two
   # Groups built on one collection report each other exactly as two copies do on the host.
   class GroupDefinition
-    attr_reader :entities
+    attr_reader :entities, :behavior
 
     def initialize(entities)
       @entities = entities
+      @behavior = Behavior.new
     end
 
     def instances

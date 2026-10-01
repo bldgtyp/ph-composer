@@ -1,7 +1,7 @@
 # P2-12 Slice B evidence: cutting components
 
 DATE: 2026-10-01
-STATUS: Implemented source and focused checks; independent review and native replay open.
+STATUS: Implemented source and focused checks; independent review closed; integrated/native replay open.
 
 Cutting ComponentInstances are excluded from Zone and Face occurrence discovery, including picks
 and explicit references. Their panes are absent from Face lists, counts and Suggest. The shared
@@ -17,6 +17,13 @@ Both Ruby versions pass 203 affected tests and 852 assertions; eleven files pass
 The registered read/classification and export tests are in `zone_cutting_components_test.rb`.
 `zone_solve_scope_test.rb` proves glue refusals, full/no-cut matches, unchanged-state preview
 refusal and direct-step guarding. These are offline checks, not native replay.
+
+The independent review found no actionable defects. Its focused probe passes eight tests and
+58 assertions on both Rubies, plus a separate partition probe that refuses late glue before any
+cut. The first combined full gate found a missing behavior API on the Group-definition test
+double used by an existing shared-occurrence Colour-by test. The stub now exposes that SDK-shaped
+API; the shipping predicate is unchanged. FileExport cancellation inheritance and underscore
+recognition in the message-agreement test were also corrected against the existing contracts.
 
 The dependency screen was run before the replay. It reports Phase 1 A01 to A06, A08 to A16,
 R01 to R04 and R06 for the occurrence/snapshot/overlap boundary; A15 remains deferred. The full

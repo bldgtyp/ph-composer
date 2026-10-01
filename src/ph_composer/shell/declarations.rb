@@ -39,7 +39,7 @@ module PhComposer
     # dispatch opens no Model transaction and consumes no action sequence. Native cancellation uses
     # FileExportCancelled; destinations stay private to the handler, outside its JSON result.
     FileExport = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
-    class FileExportCancelled < StandardError; end
+    class FileExportCancelled < UserError; end
 
     # A panel snapshot section: the result of one registered query, under the section's name.
     SnapshotSection = Struct.new(:name, :owner, :query, :params, keyword_init: true)
