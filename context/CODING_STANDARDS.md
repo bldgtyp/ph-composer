@@ -105,11 +105,19 @@ Four layers, one dependency direction. The founding brief names them; this is wh
 
 ## Comments
 
-Comments explain intent, domain assumptions, units and non-obvious behavior. Ordinary explanations
-need no historical citation. A measured host claim cites the evidence that established it, rather
-than the phase that discovered it. "Phase 3b found this" tells a later reader nothing they can
-check; a path into `context/`, `planning/` or the predecessor's archive does. Avoid comments that
+Comments explain intent, domain assumptions, units and non-obvious behavior. Avoid comments that
 only restate the line below them.
+
+**Code never cites planning.** Shipped code (`src/`) and tests cite no `planning/` path and no
+planning identifier (a PRD question number, a phase or stage name, a decision or acceptance id).
+Planning documents are provisional and move when archived; a citation into them breaks, and an
+interview number tells a reader nothing. A comment states its reason itself, including any
+measured number the design depends on, with the host and Model size it was measured on. A rule too
+long for a comment belongs in `context/`, and the comment names that file and section, for example
+`context/CONTRACTS.md, "Retries"`; a measured host fact belongs in `SKETCHUP_HOST_BEHAVIOR.md`.
+Planning and evidence documents point at code, never the reverse. Development-only tooling under
+`tools/spikes/` and `tools/examples/` produces evidence and may cite it. `make lint` enforces the
+rule for `src/` and `tests/`.
 
 ## Tests
 
@@ -117,9 +125,9 @@ only restate the line below them.
 - **Assert behaviour directly.** A golden file is for a registry or a contract shape, where the
   whole shape must be stable and a reviewer wants to read the diff. Exactly one test owns each
   golden.
-- **A stub that deviates from the host says so in a comment and cites the host evidence.** The
-  SketchUp API stub and the DOM stub are deliberate approximations, and the places they diverge are
-  where an offline pass can hide a host failure.
+- **A stub that deviates from the host says so in a comment and names the host fact** in
+  `context/SKETCHUP_HOST_BEHAVIOR.md`. The SketchUp API stub and the DOM stub are deliberate
+  approximations, and the places they diverge are where an offline pass can hide a host failure.
 - **The offline suite has no dependencies.** `make test` runs on a checkout with no bundler and no
   `node_modules`. Lint tooling is separate and skips when absent.
 

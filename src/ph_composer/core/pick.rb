@@ -4,11 +4,11 @@ module PhComposer
   # What is under the pointer, as a root-to-leaf instance path.
   #
   # A path is what an occurrence reference is built from, so a tool that picks one per pointer move
-  # never walks the Model to find out where the pointer is. That distinction is the whole reason
-  # this exists: a walk per pointer move would cost what P1-D measured a walk to cost
-  # (planning/archive/phase-01-faces-and-zones/evidence/p1-d-gesture-cost.md).
+  # never walks the Model to find out where the pointer is. That distinction is the whole reason this
+  # exists: a whole-Model walk costs tens to hundreds of milliseconds on a Model of a few thousand
+  # Faces (the measurement is in features/zones/zone/index.rb), far too much per move.
   #
-  # It names no feature; Spaces' Mark floor picks the same way (face-assignment PRD Q22).
+  # It names no feature; Spaces' Mark floor will pick the same way.
   module Pick
     module_function
 

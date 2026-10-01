@@ -7,7 +7,7 @@ module PhComposer
   class UserError < Error; end
 
   # A user-facing error that also carries a stable code a caller can key behavior on. The codes are
-  # listed in planning/archive/phase-00-foundation/CONTRACTS.md, "Outcome vocabulary".
+  # listed in context/CONTRACTS.md, "Outcomes and codes".
   class CodedError < UserError
     attr_reader :code, :detail
 

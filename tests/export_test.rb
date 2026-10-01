@@ -2,9 +2,9 @@
 
 require_relative "test_helper"
 
-# The export contributor contract (CONTRACTS.md C5 "Export" row and C6), driven by the development
-# example: what the extraction carries, what it leaves out or refuses, the composed privacy allowlist
-# and the report that embeds the translator's result unchanged.
+# The export contributor contract (context/CONTRACTS.md, "Translation sections and artifacts"),
+# driven by the development example: what the extraction carries, what it leaves out or refuses, the
+# composed privacy allowlist and the report that embeds the translator's result unchanged.
 class ExportTest < PhComposerTestCase
   API = PhComposer::API
   Export = PhComposer::Export

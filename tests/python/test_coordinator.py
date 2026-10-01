@@ -1,5 +1,6 @@
-"""CONTRACTS.md C6: typed section ordering, structural failures before translation, contract failures
-that stop the run, and object failures that cost one record."""
+"""Typed section ordering, structural failures before translation, contract failures that stop the
+run, and object failures that cost one record (context/CONTRACTS.md, "Translation sections and
+artifacts")."""
 
 from __future__ import annotations
 

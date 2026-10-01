@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 module PhComposer
-  # Every capability the extension offers, registered through one explicit entrypoint (CONTRACTS.md C1).
-  # A feature is a module with `install(registry)`; the composition root lists the features and calls
-  # `Registry.install`. Built-in and outside features use the same calls.
+  # Every capability the extension offers, registered through one explicit entrypoint
+  # (context/CONTRACTS.md, "Registration"). A feature is a module with `install(registry)`; the
+  # composition root lists the features and calls `Registry.install`. Built-in and outside features
+  # use the same calls.
   #
   #   def self.install(registry)
   #     feature = registry.feature("example.foundation", contract_version: 1)

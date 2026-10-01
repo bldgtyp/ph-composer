@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 module PhComposer
-  # The HtmlDialog panel: one client of the public interface (CONTRACTS.md C2), showing the active
-  # Model. It connects to each session it shows with its own caller handle and gives its mutations
-  # their sequence numbers; the page's request ids only correlate a result with the view that asked.
+  # The HtmlDialog panel: one client of the public interface (context/CONTRACTS.md, "Public
+  # interface"), showing the active Model. It connects to each session it shows with its own caller
+  # handle and gives its mutations their sequence numbers; the page's request ids only correlate a
+  # result with the view that asked.
   #
   # The panel never owns Model behavior. Features render into it through snapshot sections, and a
   # programmatic caller never opens or raises it.
@@ -169,8 +170,8 @@ module PhComposer
         delivered.each { |item| publish("panel.notice", item) }
       end
 
-      # The panel acts only on the Model it shows. The result follows the authoritative snapshot, so the
-      # page confirms an edit against values the Model already holds (CONTRACTS.md C3).
+      # The panel acts only on the Model it shows. The result follows the authoritative snapshot, so
+      # the page confirms an edit against values the Model already holds.
       def invoke(payload)
         session = Sessions.current
         unless session && payload["session"] == session.id

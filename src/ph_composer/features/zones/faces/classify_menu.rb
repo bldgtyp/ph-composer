@@ -45,8 +45,8 @@ module PhComposer
         end
 
         # Whether a right-click landed on something this palette paints, which is a Face and nothing
-        # else (PRD "a right-click on a face"). SketchUp selects what was right-clicked before it
-        # builds the menu, so the selection is the signal.
+        # else. SketchUp selects what was right-clicked before it builds the menu, so the selection is
+        # the signal.
         #
         # At the Model root a right-click on a Zone selects the Group, not a Face, so the palette is
         # not offered there: the Group is what the user pointed at, and Erase, Hide and Explode are

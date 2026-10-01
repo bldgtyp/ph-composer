@@ -2,8 +2,8 @@
 
 module PhComposer
   module Operations
-    # One immutable-preview proposal combining Phase 0 record writes with feature-owned SketchUp
-    # steps. Steps hold detached paths and values; they resolve live entities again when applied.
+    # One immutable-preview proposal combining record writes with feature-owned SketchUp steps. Steps
+    # hold detached paths and values; they resolve live entities again when applied.
     class Proposal
       attr_reader :record_changes, :steps, :findings
 

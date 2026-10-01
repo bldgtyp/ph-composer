@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 module PhComposer
-  # The one result shape every public query and operation answers with (CONTRACTS.md C2):
+  # The one result shape every public query and operation answers with (context/CONTRACTS.md,
+  # "Outcomes and codes"):
   #
   #   {"status": "completed", "code": "ok", "message": "...", "effect": "committed", "revision": 7,
   #    "value": {...}, "affected": [{"kind": "...", "id": "...", "change": "updated"}],
@@ -12,7 +13,7 @@ module PhComposer
   module Outcome
     NOTHING_WRITTEN = "Nothing was written."
     ROLLED_BACK = "The change could not be completed. No changes were retained."
-    # Pending Ed's wording decision (planning/archive/phase-00-foundation/STATUS.md): the abort ran, but the
+    # The abort ran, but the
     # unchanged-data check failed or could not run, so the message cannot confirm that nothing changed.
     UNVERIFIED = "The change could not be completed, and PH-Composer could not confirm that the Model " \
                  "is unchanged. Check the Model before continuing."

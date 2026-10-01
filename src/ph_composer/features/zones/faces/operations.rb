@@ -344,8 +344,8 @@ module PhComposer
       # so a Face can read complete in the viewport and incomplete in the table. That is the table
       # telling the user something the colours do not carry, not a disagreement about the same fact.
       #
-      # It is not the validation register, which owns severities and finding codes and is a later
-      # packet. It answers one question: is this row amber (face-assignment PRD, "The faces table").
+      # It is not the validation register, which owns severities and finding codes and is not built
+      # yet. It answers one question: is this row amber.
       def row_state(view)
         values = view.fetch("values")
         return "unclassified" if values.empty?
@@ -398,7 +398,7 @@ module PhComposer
       end
 
       # A counterpart dragged in by retirement that the gesture does not itself classify. It loses its
-      # boundary condition and keeps everything else, per the zones packet's Q21.
+      # boundary condition and keeps everything else.
       def retirement_only_updates(targets, retirements)
         classified = targets.map { |occurrence, _record| Zones::Occurrences.key(occurrence.reference) }
         retirements.reject { |key, _entry| classified.include?(key) }

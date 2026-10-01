@@ -3,7 +3,8 @@
    The panel keeps a single correlated result slot (`state.ui.actionResult`, set by panel.js only for the
    Model session it shows). A channel mints each request id (`<session>:<label>:<n>`, unique across the
    panel), sends `action.invoke`, and matches the slot against its own id and session. The request id is
-   presentation only: the host gives the panel's mutations their own sequence numbers (CONTRACTS.md C4).
+   presentation only: the host gives the panel's mutations their own sequence numbers
+   (context/CONTRACTS.md, "Retries").
 
    A result is `{ request_id, session, outcome }`, where `outcome` is the public operation outcome
    (`status`, `code`, `message`, `effect`, `revision`, `value`, ...).

@@ -3,10 +3,10 @@
 module PhComposer
   module Zones
     module Faces
-      # The Classify tool: the viewport half of the Classify gesture (face-assignment PRD "The
-      # Classify tool"). The operation is D1's `ph_composer.zones.faces.classify`, and this tool
-      # calls it through the public interface like any other client (CONTRACTS.md C2), with its own
-      # caller handle and its own sequence numbers.
+      # The Classify tool: the viewport half of the Classify gesture. The operation is
+      # `ph_composer.zones.faces.classify`, and this tool calls it through the public interface like
+      # any other client (context/CONTRACTS.md, "Public interface"), with its own caller handle and
+      # its own sequence numbers.
       #
       # What the tool owns is the gesture, not the change: which Faces the pointer collected, the
       # palette intent frozen when the button went down, and the refusals that belong to the pointer
@@ -46,7 +46,7 @@ module PhComposer
         end
 
         # Sets one palette field and starts the tool, which is what a native Classify menu item does.
-        # `nil` clears the field back to keeping whatever the Face has (PRD Q10, Q21).
+        # `nil` clears the field back to keeping whatever the Face has.
         #
         # Choosing an Attached zone carries its boundary condition with it, and dropping it takes that
         # boundary condition back: an AttachedZone boundary naming no record is an incomplete Face, so
@@ -235,11 +235,11 @@ module PhComposer
         end
 
         # A target outside any Zone refuses the whole pending gesture rather than painting the rest of
-        # it, which is the PRD's rule; Make Zone is its own explicit action and the user then retries.
+        # it; Make Zone is its own explicit action and the user then retries.
         #
         # Pointing at nothing is not that. A drag across a window opening, a re-entrant corner or the
-        # sky past a gable crosses empty space between Faces the user means, and the PRD's rule is
-        # that a drag paints every Face the cursor crosses.
+        # sky past a gable crosses empty space between Faces the user means, and a drag paints every
+        # Face the cursor crosses.
         def collect(path, flags)
           return if @collected.nil?
           return if path.nil?
@@ -355,10 +355,10 @@ module PhComposer
           announce(CANCELLED, :warning) if pending
         end
 
-        # PRD Q12: Colour-by is forced on while the tool is active, so the user sees what they are
-        # painting. What the tool forced is not what the user chose, so it is turned on without being
-        # remembered and turned off again when the tool ends. A mode the user already had on is left
-        # exactly as it was.
+        # Colour-by is forced on while the tool is active, so the user sees what they are painting.
+        # What the tool forced is not what the user chose, so it is turned on without being remembered
+        # and turned off again when the tool ends. A mode the user already had on is left exactly as
+        # it was.
         def force_colour_by
           service = ColourBy.for(@session)
           return if service.active?

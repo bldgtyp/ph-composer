@@ -2,9 +2,10 @@
 
 module PhComposer
   # Runs public queries and operations for every client: the panel, Ruby scripts and, later, external
-  # adapters (CONTRACTS.md C2 to C4). It owns the host execution boundary: one mutation at a time per
-  # session, validation before any operation opens, one native operation per accepted change, and a
-  # verified rollback when that operation fails. Handlers only read and propose.
+  # adapters (context/CONTRACTS.md, "Public interface" to "Retries"). It owns the host execution
+  # boundary: one mutation at a time per session, validation before any operation opens, one native
+  # operation per accepted change, and a verified rollback when that operation fails. Handlers only
+  # read and propose.
   class Dispatch
     REQUEST_KEYS = %w[sequence expected_revision proposal_digest].freeze
 
@@ -212,7 +213,7 @@ module PhComposer
       [sequence, expected_revision, proposal_digest]
     end
 
-    # CONTRACTS.md C4: a sequence at or below the caller's highest accepted one is a retry, never new work.
+    # A sequence at or below the caller's highest accepted one is a retry, never new work.
     def retained_outcome(session, caller, sequence, name, params, expected_revision, proposal_digest)
       entry = session.outcomes.lookup(caller.handle, sequence)
       if entry

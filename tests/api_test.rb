@@ -3,8 +3,8 @@
 require_relative "test_helper"
 require_relative "support/test_feature"
 
-# The public interface with no panel: discovery, reads, validated writes, retries and lifecycle,
-# as planning/archive/phase-00-foundation/phases/phase-03-operations.md "Required cases" lists them.
+# The public interface with no panel: discovery, reads, validated writes, retries and lifecycle
+# (context/CONTRACTS.md, "Public interface" to "Retries").
 class ApiTest < PhComposerTestCase
   API = PhComposer::API
   PART = "test.fixture.part"
@@ -359,7 +359,7 @@ class ApiTest < PhComposerTestCase
     assert_equal 1, stored(parts.first).dig("extension_data", "test.fixture.review", "schema_version")
   end
 
-  # CONTRACTS.md C4: a retry returns the original outcome, whatever a caller did to its copy.
+  # A retry returns the original outcome, whatever a caller did to its copy.
   def test_a_retained_outcome_is_isolated_from_every_returned_copy
     created = create_parts(2, 1, 1)
     part_ids = created.dig("value", "part_ids").dup

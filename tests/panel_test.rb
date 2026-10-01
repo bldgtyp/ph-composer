@@ -15,8 +15,7 @@ module BrokenSectionFeature
 end
 
 # The panel as one client of the public interface: the dialog's lifecycle, the snapshot it shows, the
-# mutations it sends on the user's behalf, and what it refuses to do (planning/archive/phase-00-foundation/
-# phases/phase-04-panel-units.md, work items 2 and 6).
+# mutations it sends on the user's behalf, and what it refuses to do.
 class PanelTest < PhComposerTestCase
   Panel = PhComposer::Panel
   PART = "test.fixture.part"

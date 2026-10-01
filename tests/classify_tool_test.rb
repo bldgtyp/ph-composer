@@ -7,7 +7,7 @@ require_relative "test_helper"
 # D1 already tests what `ph_composer.zones.faces.classify` does with a set of references. What
 # these tests hold is the half the pointer owns: which Faces a click, a drag and a Shift-click
 # collect, that the palette is frozen when the button goes down, that every cancel route writes
-# nothing, and that Colour-by is forced on for the tool's lifetime and no longer (PRD Q12).
+# nothing, and that Colour-by is forced on for the tool's lifetime and no longer.
 class ClassifyToolTest < PhComposerTestCase
   API = PhComposer::API
   ColourBy = PhComposer::ColourBy

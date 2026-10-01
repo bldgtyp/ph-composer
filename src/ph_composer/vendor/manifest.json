@@ -46,9 +46,9 @@
       "sha256": "8c9b14e5d2aada4e53f401f8313fe8601f2f33f7f028b0abd044e67664119478"
     },
     "html/panel.js": {
-      "bytes": 13562,
+      "bytes": 13587,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "356b90a128e4508c6121d150dfcb322369ae01eda0d4ed5b4b45fe2a8d9063a7"
+      "sha256": "fbf24043a6b4c82207e169c17ef092a173b76f041e95ef661dffe540a7fd5ae1"
     },
     "html/record_form.js": {
       "bytes": 4121,
@@ -56,9 +56,9 @@
       "sha256": "c330b1b8f7e17ccfc16bf9c1f86d8e91acd41fa91b4d9625aafb6967b312a91a"
     },
     "html/request.js": {
-      "bytes": 4429,
+      "bytes": 4448,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "6cc5af86e832c903c63d5a3b8a4e121f8da80c799ae3656561ad1935049e4a5e"
+      "sha256": "0b4b7d3181f08c4bf60a004a5191090f3c50760d43d5085516d12eec0838857d"
     },
     "html/runtime/index.html": {
       "bytes": 580,
@@ -81,14 +81,14 @@
       "sha256": "0206c6615e98937dd7977692d9c8ad84301a77cba53811fd0787245ad326f533"
     },
     "html/sections/classify.js": {
-      "bytes": 9870,
+      "bytes": 9799,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "39161f7a9714659417f74585b7f8c8c0ee6c761a91f9491bf90a24f63d658093"
+      "sha256": "b2bc5976a49b59ac29d9d904f9776c3fc1a20fb1c24a837a677f7309a774aee6"
     },
     "html/sections/colour_by.js": {
-      "bytes": 5087,
+      "bytes": 4974,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "1030770a4e37517e06d7a291888ba05946f37bf3e608c329f4578bb36d57e83a"
+      "sha256": "74a0ba1c8ee27d9cac9eb8060ba8ba6bc8ba52438e11371bd98ebd2ba2eda317"
     },
     "html/sections/export.js": {
       "bytes": 7479,
@@ -101,9 +101,9 @@
       "sha256": "df76102e3142ad9ff51ad03f24648a47e1710ccfacdb830ead4dacb064708d16"
     },
     "html/sections/overview.js": {
-      "bytes": 26360,
+      "bytes": 26261,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d3e46c816027b4f16a6caf70925c48783f301cb0a641804aab27adce1df9186e"
+      "sha256": "dd4a600db9e4af83077774218881bfb61542ce49aade652c04c20640e48b947f"
     },
     "html/sections/selection_assignment.js": {
       "bytes": 2222,
@@ -196,14 +196,14 @@
       "sha256": "9b0b8f3194aa7844b4cdc3c1ad1f803c89f08fa90f0ac2fefc31541ed88afb6d"
     },
     "python/ph_composer_translation/contract.py": {
-      "bytes": 1487,
+      "bytes": 1494,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "011c27edad6b9c98656c359be77f92a7e92bdb69be5161d09177242bf494a6b4"
+      "sha256": "f12db5332999d60bff17b39be4d9c53f7f57b86aa3e2d60a0bd90f9a3aee905c"
     },
     "python/ph_composer_translation/coordinator.py": {
-      "bytes": 8491,
+      "bytes": 8550,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "0afe23a08442bd3be098b0c8bd24d1070f52674b195795c43566b56f9669aea9"
+      "sha256": "cb94ff8552f7f0beea39ad8102f8fd2c33beb7f9e80803b4b0570fdf345ace30"
     },
     "python/ph_composer_translation/entry.py": {
       "bytes": 1478,
@@ -226,9 +226,9 @@
       "sha256": "1ba3b6a6ee723d7c79dbb3db223aefb42ba7f27155a09b54ccdf396ce9ec501d"
     },
     "python/ph_composer_translation/sections.py": {
-      "bytes": 4095,
+      "bytes": 4138,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "c226834c202461a23bf15e2fb9163a42b6202b7caffcba892620ccf1999d67e7"
+      "sha256": "22b00598baedff1f427372e015ebf6bbad1c5ae4645bb0a9fe346b98fdec48aa"
     },
     "python/ph_composer_translation/stack.py": {
       "bytes": 1333,

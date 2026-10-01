@@ -2,9 +2,9 @@
 
 module PhComposer
   # Retained mutation outcomes for one Model session, so a retried request returns its first result
-  # instead of running again (CONTRACTS.md C4). Bounded: at most CAPACITY entries across every caller,
-  # each kept for at most LIFETIME_SECONDS, the oldest evicted first. An evicted or expired entry is
-  # gone; the caller registry still remembers that its sequence was used.
+  # instead of running again (context/CONTRACTS.md, "Retries"). Bounded: at most CAPACITY entries
+  # across every caller, each kept for at most LIFETIME_SECONDS, the oldest evicted first. An evicted
+  # or expired entry is gone; the caller registry still remembers that its sequence was used.
   class OutcomeStore
     CAPACITY = 256
     LIFETIME_SECONDS = 15 * 60

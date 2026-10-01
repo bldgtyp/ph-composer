@@ -5,7 +5,7 @@ module PhComposer
   # representation, so a transform or digest cannot mean one thing to the solver and another to HBJSON.
   module FaceGeometry
     INCH_TO_M = 0.0254
-    QUANTUM_M = 0.000001 # 0.001 mm, the Phase 1 geometry-stamp contract.
+    QUANTUM_M = 0.000001 # 0.001 mm, the geometry-stamp normalization.
 
     Snapshot = Struct.new(:loops_m, :normal, :plane_offset_m, :area_m2, :digest, keyword_init: true) do
       def outer_loop

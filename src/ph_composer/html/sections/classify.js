@@ -1,10 +1,9 @@
-/* The Classify tool's palette in the panel (face-assignment PRD "The Classify tool"): face type
- * chips, boundary condition chips, the Attached zone picker with its inline New route, and the
- * control that gives the viewport back.
+/* The Classify tool's palette in the panel: face type chips, boundary condition chips, the Attached
+ * zone picker with its inline New route, and the control that gives the viewport back.
  *
  * A chip with nothing chosen means keep what each Face has, so the tool can set only the boundary
  * condition on already-typed Faces, or only the type. Choosing any chip also gives the tool the
- * viewport, which is what the native Classify menu does and what the PRD asks for.
+ * viewport, which is what the native Classify menu does.
  *
  * Surface is shown and refused: Solve adjacencies writes it, and a palette that offered it would
  * let a user break a pair by painting over one of its ends.

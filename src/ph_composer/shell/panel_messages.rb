@@ -4,8 +4,8 @@ require "json"
 
 module PhComposer
   # The messages between the panel page and Ruby. The panel is one client of the public interface
-  # (CONTRACTS.md C2): it sends `action.invoke` and reads snapshot sections, and nothing here carries
-  # business behavior. Every message is `{"type": ..., "payload": {...}}`.
+  # (context/CONTRACTS.md, "Public interface"): it sends `action.invoke` and reads snapshot sections,
+  # and nothing here carries business behavior. Every message is `{"type": ..., "payload": {...}}`.
   module PanelMessages
     INBOUND = {
       "panel.ready" => [],

@@ -65,7 +65,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   }
 
   /* The owning view reads the outcome; a refusal or failure also stays on screen as a warning until the
-     user dismisses it (CONTRACTS.md C2: the client shows the message). */
+     user dismisses it (context/CONTRACTS.md, "Public interface": the client shows the message). */
   function reduceActionResult(previous, payload) {
     var outcome = payload.outcome || {};
     var changes = { actionResult: payload };

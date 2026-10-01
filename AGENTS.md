@@ -23,6 +23,7 @@ not a dependency. Its designPH integration is retired and is never reintroduced 
 | Why the project exists, what transfers, open decisions | [`planning/FOUNDING_BRIEF.md`](planning/FOUNDING_BRIEF.md) |
 | Product language | [`context/UBIQUITOUS_LANGUAGE.md`](context/UBIQUITOUS_LANGUAGE.md) |
 | Architecture, host behavior, transactions, seams, runtime | [`context/TECH_STACK.md`](context/TECH_STACK.md) and [`context/SKETCHUP_HOST_BEHAVIOR.md`](context/SKETCHUP_HOST_BEHAVIOR.md) |
+| Core mechanics cited by code: registration, API, outcomes, revisions, retries, records, references | [`context/CONTRACTS.md`](context/CONTRACTS.md) |
 | Coding and compatibility rules | [`context/CODING_STANDARDS.md`](context/CODING_STANDARDS.md) |
 | Contributor architecture, scripting and extension contracts | [`context/EXTENSIBILITY.md`](context/EXTENSIBILITY.md) |
 | External agent access, discovery, model reads and writes | [`context/AGENT_INTERFACE.md`](context/AGENT_INTERFACE.md) |

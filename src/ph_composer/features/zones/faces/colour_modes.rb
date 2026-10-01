@@ -3,12 +3,12 @@
 module PhComposer
   module Zones
     module Faces
-      # This feature's Colour-by modes: face type and boundary condition. Assembly is the third mode the
-      # PRD names and arrives with assemblies in Phase 2.
+      # This feature's Colour-by modes: face type and boundary condition. An Assembly mode arrives
+      # with Assemblies.
       #
-      # The hues are honeybee's own defaults, so a modeler sees the same colours in SketchUp, Rhino and
-      # honeybee-display (PRD Q17; `honeybee-core/honeybee/face.py` and `boundarycondition.py`). Stored
-      # values keep honeybee's names; the legend shows the PRD's words.
+      # The hues are honeybee's own defaults, so a modeler sees the same colours in SketchUp, Rhino
+      # and honeybee-display (`honeybee-core/honeybee/face.py` and `boundarycondition.py`). Stored
+      # values keep honeybee's names; the legend shows the glossary's words.
       module ColourModes
         BY_FACE_TYPE = "#{PREFIX}.by_face_type"
         BY_BOUNDARY_CONDITION = "#{PREFIX}.by_boundary_condition"
@@ -19,7 +19,7 @@ module PhComposer
         }.freeze
         FACE_TYPE_LABELS = { "RoofCeiling" => "Roof or ceiling", "AirBoundary" => "Air boundary" }.freeze
 
-        # Attached zone takes honeybee's Other until the ventilation-colour interview gives it a hue.
+        # Attached zone takes honeybee's Other until it is given a hue of its own.
         BOUNDARY_COLOURS = {
           "Outdoors" => [64, 180, 255], "Ground" => [165, 82, 0], "Adiabatic" => [255, 128, 128],
           "Surface" => [0, 128, 0], "AttachedZone" => [255, 255, 200]

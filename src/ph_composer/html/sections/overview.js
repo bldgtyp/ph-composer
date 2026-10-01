@@ -1,14 +1,13 @@
 /* The Overview screen: the model tree of Zones with their classified Faces beneath, the shared view
- * controls above it, and the selected Zone's own fields below (zones Q13, face-assignment Q11,
- * planning/ui-baseline).
+ * controls above it, and the selected Zone's own fields below.
  *
  * The table is the shared record table; this file holds only this screen's vocabulary: its columns,
  * what each cell reads, its row actions and its editable chips. Every write goes through a registered
  * action carrying the values the row was painted from, and Locate goes through the view command,
  * which changes the selection and the camera and writes nothing.
  *
- * An unclassified Face is not a row (face-assignment PRD, "The faces table"). Its Zone's row carries
- * the count and the Suggest classification action that gives those Faces a record.
+ * An unclassified Face is not a row. Its Zone's row carries the count and the Suggest
+ * classification action that gives those Faces a record.
  */
 PhComposerUI.define("sections/overview", ["panel", "workspace", "request", "snapshot", "units", "unit_preferences",
   "unit_field", "table", "view_controls", "fields", "sections/face_words", "sections/attached_zone_assignment",

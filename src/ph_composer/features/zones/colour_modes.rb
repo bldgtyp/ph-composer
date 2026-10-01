@@ -3,7 +3,7 @@
 module PhComposer
   module Zones
     # This feature's Colour-by modes: Zone, Building-Segment and Level. Their values are open, so they
-    # take the shared categorical ramp rather than fixed hues (face-assignment PRD Q17).
+    # take the shared categorical ramp rather than fixed hues.
     #
     # Each mode paints the Zone Group itself, which the shared service tessellates; nothing here draws.
     module ColourModes
