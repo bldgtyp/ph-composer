@@ -1,7 +1,7 @@
 # Phase 2: envelope
 
 DATE: 2026-09-30
-STATUS: In progress. Ed authorized the implementation run 2026-10-01; P2-01 is underway on `codex/phase-02-envelope`. Gates and resume state are in [STATUS.md](STATUS.md).
+STATUS: In progress. Ed authorized the implementation run 2026-10-01; the current Slice B native replay runs on `codex/phase-02-envelope`. Gates and resume state are in [STATUS.md](STATUS.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -32,7 +32,7 @@ actually merged.
 | --- | --- | --- |
 | [assemblies](assemblies/README.md) | 2.1 | Material and Assembly records, the Builder, both inventories, thermal display values, construction export |
 | [face-assignment](face-assignment/README.md) | 1.2 remainder | Assigning an Assembly to a Face. The code owner is the `zones` feature |
-| [libraries](libraries/README.md) | 2.2, 2.4, 2.5 | The provider and record kind adapter contracts, the library file, the sidebar, the connection |
+| [libraries](libraries/README.md) | 2.2, 2.4 | The provider and record kind adapter contracts, library file and sidebar. Connection 2.5 moved to Phase 5 under D2-8 |
 | [window-types](window-types/README.md) | 2.3 | Frame, Glazing, Psi-Install Type and Window Type records, the Builder, the window unit, placement, aperture export |
 
 [validation-and-export](../cross-phase/validation-and-export/README.md) and

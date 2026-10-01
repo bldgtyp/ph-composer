@@ -22,11 +22,13 @@ persistence pass on installed `7afe894` plus targeted corrections on `74f7f05`. 
 P2-12 Slice A is in progress in a fresh SketchUp 2026 process with a synthetic Model. The
 [host investigation](../evidence/p2-12-window-host.md) records completed probes and the remaining
 native Move-copy gesture. Independent Slice B cutting-component rules are implemented and reviewed; affected native replay is open;
-Slice C has not started. Placement, schedules, Colour-by, translation and library adapters are not delivered.
+Slice C has not started. Placement, schedules, Colour-by and Aperture translation remain pending. P2-15 library
+adapters and native E15 are delivered on source `1dae77d`; placed-Unit aggregates await P2-13.
 
 ## Next step
 
-Complete E09 export and Slice B affected native replay while implementing P2-15 library adapters.
+Complete Slice B affected native replay, then the batched native Move-copy observation.
+E09 export workflows and E15 library workflows are observed; final phase consolidation remains.
 The P2-11 host workflow and targeted correction rechecks are complete; structured case consolidation
 remains. Complete Slice A before
 implementing Slice C. Proceed through the owning [PLAN.md](PLAN.md) and stage entry gates.
