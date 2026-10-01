@@ -1,7 +1,7 @@
 # Roadmap
 
-DATE: 2026-09-30
-STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 not yet authorized.
+DATE: 2026-10-01
+STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 planned in detail 2026-09-30 and not yet authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -58,7 +58,7 @@ through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1). The packet is ar
 | --- | --- | --- | --- | --- |
 | 0.1 | PHX without Excel, [PHX#157](https://github.com/PH-Tools/PHX/issues/157) | external spike | Complete 2026-09-18, [route viable](archive/phase-00-foundation/evidence/spike-phx.md) | The founding brief's first technical gate. If PHX cannot run in Pyodide, METr export needs a different route and phase 1 changes |
 | 0.2 | [Foundation transplant](archive/foundation-transplant.md) | refactor | Complete 2026-09-18, merged through PR #1 | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
-| 0.3 | [Units](features/units/README.md) | feature, port | Shared portion merged through PR #1; feature quantities remain | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
+| 0.3 | [Units](features/cross-phase/units/README.md) | feature, port | Shared portion merged through PR #1; feature quantities remain | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
 | 0.4 | Overlay fill spike | spike | Complete 2026-09-18, [pass](archive/phase-00-foundation/evidence/spike-overlay.md) | Gates Colour-by, which face-assignment needs in phase 1 |
 | 0.5 | Window component host spike | spike | Complete 2026-09-18, [flat component holds, five plan consequences](archive/phase-00-foundation/evidence/spike-window.md) | Gates window-types. Cheap to run with 0.4 |
 | 0.6 | Edge identity spike | spike | Complete 2026-09-18, [dictionaries survive, and multiply](archive/phase-00-foundation/evidence/spike-edge.md) | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
@@ -77,8 +77,8 @@ The early proof does not mark the full feature packets complete.
 | # | Item | State | Note |
 | --- | --- | --- | --- |
 | 1.1 | [Zones and adjacency](archive/phase-01-zones-and-adjacency/README.md) | Phase 1 scope merged to main; later-phase scope remains | First, because a boundary condition names what is on the other side |
-| 1.2 | [Face assignment](features/face-assignment/README.md) | Phase 1 scope merged to main and host-verified; assembly assignment waits for 2.1 | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
-| 1.3 | [Validation and export](features/validation-and-export/README.md) | Phase 1 HBJSON/report scope merged to main; METr exporter deferred | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
+| 1.2 | [Face assignment](features/phase-02-envelope/face-assignment/README.md) | Phase 1 scope merged to main and host-verified; assembly assignment waits for 2.1 | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
+| 1.3 | [Validation and export](features/cross-phase/validation-and-export/README.md) | Phase 1 HBJSON/report scope merged to main; METr exporter deferred | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
 
 Exit: draw two boxes, make them Zones, classify the faces, export and reload the exact HBJSON. Constructions
 use one deterministic development-only placeholder. That placeholder is a vertical-slice fixture,
@@ -91,20 +91,29 @@ claiming that outcome. This change leaves envelope and mechanical feature work i
 
 ## Phase 2: envelope
 
-| # | Item | State | Note |
-| --- | --- | --- | --- |
-| 2.1 | [Assemblies and materials](features/assemblies/README.md) | Scoped, interviewed | The largest port. Completes face assignment's assembly column |
-| 2.2 | [Libraries](features/libraries/README.md): file provider, Materials kind | Scoped, interviewed | The seam, the envelope format and the first kind. Starter library as a separate download |
-| 2.3 | [Window Types and placement](features/window-types/README.md) | Scoped, interviewed | Type editor is a port. Placement is new and depends on spike 0.5 |
-| 2.4 | Libraries: Frames, Glazings, Psi-Install Types | Scoped, interviewed | Three more kind adapters on the seam from 2.2 |
-| 2.5 | Libraries: connection provider and sign-in | Scoped, interviewed | Can slip to phase 5 without blocking anything. Waits on the PH-Navigator endpoint change either way |
+The [Phase 2 packet](features/phase-02-envelope/README.md) coordinates the three feature packets
+and the remainder of face assignment. Its [plan](features/phase-02-envelope/PLAN.md) has seventeen
+stages, P2-01 to P2-17, and its [decisions](features/phase-02-envelope/DECISIONS.md) list what
+Phase 1 changed in these packets and the ten choices Ed answered on 2026-09-30.
+
+| # | Item | State | Stages | Note |
+| --- | --- | --- | --- | --- |
+| 2.1 | [Assemblies and materials](features/phase-02-envelope/assemblies/README.md) | Scoped, interviewed, planned | P2-01 to P2-06 | The largest port. Completes face assignment's assembly column and closes the Phase 1 construction gate |
+| 2.2 | [Libraries](features/phase-02-envelope/libraries/README.md): file provider, Materials kind | Scoped, interviewed, planned | P2-07 to P2-09 | The seam, the envelope format and the first kind. Starter library as a separate download |
+| 2.3 | [Window Types and placement](features/phase-02-envelope/window-types/README.md) | Scoped, interviewed, planned | P2-10 to P2-14 | Type editor is a port. Placement is new and builds on spike 0.5 |
+| 2.4 | Libraries: Frames, Glazings, Psi-Install Types | Scoped, interviewed, planned | P2-15 | Three more kind adapters on the seam from 2.2 |
+| 2.5 | Libraries: connection provider and sign-in | Scoped, interviewed, planned | P2-16 | Can slip to phase 5 without blocking anything. Waits on the PH-Navigator endpoint change either way |
+
+Exit: the two-Zone model with authored Assemblies and placed window units exports a canonical
+HBJSON/report pair from the normal packaged build, and the four definition kinds copy in from a
+library file. METr conversion stays deferred.
 
 ## Phase 3: rooms and junctions
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 3.1 | [Spaces](features/spaces/README.md) | Scoped, interviewed | Mostly a port. Volume preview depends on spike 0.4 |
-| 3.2 | [Thermal bridges](features/thermal-bridges/README.md) | Requested, PRD drafted | New. Depends on spike 0.6. Brings the edge Classify tool that phase 4 reuses |
+| 3.1 | [Spaces](features/phase-03-rooms-and-junctions/spaces/README.md) | Scoped, interviewed | Mostly a port. Volume preview depends on spike 0.4 |
+| 3.2 | [Thermal bridges](features/phase-03-rooms-and-junctions/thermal-bridges/README.md) | Requested, PRD drafted | New. Depends on spike 0.6. Brings the edge Classify tool that phase 4 reuses |
 
 These two are independent of each other and of phase 2. Either can move earlier if a port is
 wanted as a warm-up. They sit here because neither is needed for the Phase 1 canonical HBJSON proof.
@@ -113,10 +122,10 @@ wanted as a warm-up. They sit here because neither is needed for the Phase 1 can
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 4.1 | [Equipment](features/equipment/README.md): shared shape and Ventilators | Requested, PRD drafted | Closes the two-Zone, two-ventilator proof. Regroups the Spaces airflow balance |
-| 4.2 | [ERV ducting](features/erv-ducting/README.md) | Requested, PRD drafted | Needs 4.1 and 3.2's edge tools; lives under Systems per D4 |
+| 4.1 | [Equipment](features/phase-04-mechanical/equipment/README.md): shared shape and Ventilators | Requested, PRD drafted | Closes the two-Zone, two-ventilator proof. Regroups the Spaces airflow balance |
+| 4.2 | [ERV ducting](features/phase-04-mechanical/erv-ducting/README.md) | Requested, PRD drafted | Needs 4.1 and 3.2's edge tools; lives under Systems per D4 |
 | 4.3 | Equipment: hot water system, tanks, heaters | Requested, PRD drafted | |
-| 4.4 | [Hot water piping](features/hot-water-piping/README.md) | Requested, PRD drafted | Needs 4.3; lives under Systems per D4 |
+| 4.4 | [Hot water piping](features/phase-04-mechanical/hot-water-piping/README.md) | Requested, PRD drafted | Needs 4.3; lives under Systems per D4 |
 | 4.5 | Equipment: heat pumps, electric heaters | Requested, PRD drafted | |
 | 4.6 | Equipment: pumps, fans, appliances | Requested, PRD drafted | Appliances may be the Phius default set only |
 
@@ -124,9 +133,9 @@ wanted as a warm-up. They sit here because neither is needed for the Phase 1 can
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 5.1 | [Climate data](features/climate-data/README.md) | Requested, PRD drafted | Ships no datasets. Reuses honeybee-ph EPW-to-monthly conversion for preliminary work; user-supplied peak loads are required for climate-bearing METr export per D9 |
-| 5.2 | [Sun-path view](features/sun-path-view/README.md) | Requested, PRD drafted | Can ship on SketchUp geolocation alone, before 5.1 |
-| 5.3 | [Window performance overlays](features/window-performance-overlays/README.md) | Requested, PRD drafted | Needs 5.1 for radiation. A U-w ramp needs nothing and could come earlier |
+| 5.1 | [Climate data](features/phase-05-post-mvp/climate-data/README.md) | Requested, PRD drafted | Ships no datasets. Reuses honeybee-ph EPW-to-monthly conversion for preliminary work; user-supplied peak loads are required for climate-bearing METr export per D9 |
+| 5.2 | [Sun-path view](features/phase-05-post-mvp/sun-path-view/README.md) | Requested, PRD drafted | Can ship on SketchUp geolocation alone, before 5.1 |
+| 5.3 | [Window performance overlays](features/phase-05-post-mvp/window-performance-overlays/README.md) | Requested, PRD drafted | Needs 5.1 for radiation. A U-w ramp needs nothing and could come earlier |
 | 5.4 | Further library kinds and providers | Not drafted | Thermal Bridge Types, Pipe and Duct Types, equipment, climates |
 | 5.5 | PV and site | Not drafted | Named in the founding brief |
 
@@ -177,3 +186,5 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-09-20 | P1-D D7 built the Overview Zone tree and faces table, the panel Colour-by legend and the Classify palette, on a sixth contribution seam for viewport-state commands. Its host gate is outstanding. |
 | 2026-09-20 | P1-C implemented whole-wall adjacency and the two-Zone HBJSON proof. Ed authorized P1-D, which is delivered in slices; D1 and D2 are implemented. |
 | 2026-09-30 | Phase 1 merged through PR #3 and PR #6, closing #2; Ed accepted R05 on offline coverage; the packet is archived. |
+| 2026-09-30 | Phase 2 planned in detail: a coordinating packet with seventeen stages. Feature packets regrouped into phase directories under `features/`. Ed answered Phase 2 decisions D2-1 to D2-10. No implementation authorized. |
+| 2026-10-01 | Ed revised Phase 2 decision D2-1: features sit in three layers, definitions below Zones and placed things above. |

@@ -16,33 +16,33 @@ PRD drafted and interviewed 2026-09-18. Three rounds, 24 decisions, all recorded
 
 ## Next step
 
-Follow [PLAN.md](PLAN.md) and the shared [Phase 1 sequence](../../archive/phase-01-faces-and-zones/PLAN.md).
-P1-A is complete: [CONTRACTS.md](../../archive/phase-01-faces-and-zones/CONTRACTS.md) binds entity-owned records,
+Follow [PLAN.md](PLAN.md) and the shared [Phase 1 sequence](../phase-01-faces-and-zones/PLAN.md).
+P1-A is complete: [CONTRACTS.md](../phase-01-faces-and-zones/CONTRACTS.md) binds entity-owned records,
 occurrence references and compound geometry transactions, and the
-[host evidence](../../archive/phase-01-faces-and-zones/evidence/p1-a-geometry.md) establishes the native premises.
+[host evidence](../phase-01-faces-and-zones/evidence/p1-a-geometry.md) establishes the native premises.
 P1-B implemented entity stores, the proposal boundary, Make Zone, Zone details, occurrence reads
 and the minimal Overview UI. P1-C implemented whole-wall adjacency, stale/retire behavior, the
 Zone extraction contributor and the early pinned-stack HBJSON proof. P1-D is authorized and
 delivered in slices: the batch pair-retirement participant, explicit identity repair, limited
 Restore, the pure overlap geometry, whole-scope Solve with the Q18 out-of-scope refusal, and the
 partial-overlap cut are implemented, with a
-[host gate](../../archive/phase-01-faces-and-zones/evidence/p1-d-repairs-and-cut.md) passed on 26.1.188. Colour-by Zone
-modes and the Overview tree are implemented. D7's [host continuation](../../archive/phase-01-faces-and-zones/evidence/p1-d-overview.md)
+[host gate](../phase-01-faces-and-zones/evidence/p1-d-repairs-and-cut.md) passed on 26.1.188. Colour-by Zone
+modes and the Overview tree are implemented. D7's [host continuation](../phase-01-faces-and-zones/evidence/p1-d-overview.md)
 corrected their recorded defects and verified all three Zone modes on real Groups.
 
-The subsequent [A05 to A09 host run](../../archive/phase-01-faces-and-zones/evidence/p1-d-broader-acceptance.md)
+The subsequent [A05 to A09 host run](../phase-01-faces-and-zones/evidence/p1-d-broader-acceptance.md)
 records additional lifecycle evidence and corrections. Follow that record and the shared
 acceptance register for the completed current-host cases and separate remaining gates.
 
-The [native reference continuation](../../archive/phase-01-faces-and-zones/evidence/p1-d-native-references.md) verifies
+The [native reference continuation](../phase-01-faces-and-zones/evidence/p1-d-native-references.md) verifies
 cut/paste and native split preservation, Undo/Redo and reopen. The false current endpoint state
 is corrected. Explicit Solve recovery after changed paths now passes with unique authored
 identities, exact native rollback, Undo/Redo and fresh reopen. Copied split-Face UUID recovery
 now passes the public action and native Repair menu, with exact rollback, Undo/Redo and fresh reopen.
-[Split recovery](../../archive/phase-01-faces-and-zones/evidence/p1-d-split-identity-recovery.md). The [extension-copy correction](../../archive/phase-01-faces-and-zones/evidence/p1-d-extension-copy-safety.md)
+[Split recovery](../phase-01-faces-and-zones/evidence/p1-d-split-identity-recovery.md). The [extension-copy correction](../phase-01-faces-and-zones/evidence/p1-d-extension-copy-safety.md)
 replaces warning-only unknown-payload carriage with pre-write refusal, while supported catalog
-references pass native copy/cut rollback, Undo/Redo and reopen. The [entity-reference continuation](../../archive/phase-01-faces-and-zones/evidence/p1-d-entity-reference-targets.md)
-now verifies Face/Zone targets and incoming references; independent review and its two resolver corrections pass. The [clean multi-neighbour continuation](../../archive/phase-01-faces-and-zones/evidence/p1-d-multi-neighbour-adjacency.md)
+references pass native copy/cut rollback, Undo/Redo and reopen. The [entity-reference continuation](../phase-01-faces-and-zones/evidence/p1-d-entity-reference-targets.md)
+now verifies Face/Zone targets and incoming references; independent review and its two resolver corrections pass. The [clean multi-neighbour continuation](../phase-01-faces-and-zones/evidence/p1-d-multi-neighbour-adjacency.md)
 verifies coordinated one-to-many partitions, current reciprocal references, scope/unsafe refusal,
 exact rollback, native Undo/Redo, no-op repeat and fresh reopen.
 
@@ -62,9 +62,9 @@ closure, scaled/mirrored wrappers, Undo/Redo and fresh-process reopen. The 0.001
 boundary is recorded. P1-B's public operations and current-host gates pass. P1-C's whole-wall
 solve, measured plane and normal tolerances, stale/retire lifecycle, no-op repeat solve, native
 Undo/Redo, reopen and exact HBJSON reference round trip pass. The D3/D4
-[repair and cut evidence](../../archive/phase-01-faces-and-zones/evidence/p1-d-repairs-and-cut.md) records partial-cut
+[repair and cut evidence](../phase-01-faces-and-zones/evidence/p1-d-repairs-and-cut.md) records partial-cut
 Undo/Redo, shared-copy refusal and limited Restore. Remaining cases are listed in the
-[acceptance register](../../archive/phase-01-faces-and-zones/ACCEPTANCE.md).
+[acceptance register](../phase-01-faces-and-zones/ACCEPTANCE.md).
 
 ## Ledger
 
@@ -80,10 +80,10 @@ Undo/Redo, shared-copy refusal and limited Restore. Remaining cases are listed i
 | 2026-09-20 | P1-B complete. Make Zone, Zone details, explicit occurrence reads and entity persistence passed offline and on SketchUp 26.1.188 through Undo/Redo and reopen. |
 | 2026-09-20 | P1-C complete on the implementation branch. Whole-wall adjacency, stale/retire behavior and the exact two-Zone HBJSON proof passed offline and on SketchUp 26.1.188. |
 
-The [native adjacency boundary continuation](../../archive/phase-01-faces-and-zones/evidence/p1-d-adjacency-boundaries.md)
+The [native adjacency boundary continuation](../phase-01-faces-and-zones/evidence/p1-d-adjacency-boundaries.md)
 completes A05's named current-host plane/angle, sliver, same-normal and scope cases, with native
 Undo/Redo and final reopen/reference verification. Native split recovery now passes its A06 slice;
-[P1-Q5](../../archive/phase-01-faces-and-zones/DECISIONS.md#p1-q5-native-split-identity-frontier) records Ed's accepted
+[P1-Q5](../phase-01-faces-and-zones/DECISIONS.md#p1-q5-native-split-identity-frontier) records Ed's accepted
 policy for which piece retains the old Face UUID; its public action and native menu are implemented
-and current-host verified. A06's [extension-reference continuation](../../archive/phase-01-faces-and-zones/evidence/p1-d-entity-reference-targets.md) passes native cases; independent review, resolver corrections, final gates and targeted fresh-host checks pass. Clean one-to-many pairing is current-host verified.
-| 2026-09-30 | PR #3 merge-set corrections implemented on the branch: code owner `src/ph_composer/features/zones/`, M1 to M4 fixed, native cases R01 to R04 pass ([evidence](../../archive/phase-01-faces-and-zones/evidence/pr3-corrections-native.md)). |
+and current-host verified. A06's [extension-reference continuation](../phase-01-faces-and-zones/evidence/p1-d-entity-reference-targets.md) passes native cases; independent review, resolver corrections, final gates and targeted fresh-host checks pass. Clean one-to-many pairing is current-host verified.
+| 2026-09-30 | PR #3 merge-set corrections implemented on the branch: code owner `src/ph_composer/features/zones/`, M1 to M4 fixed, native cases R01 to R04 pass ([evidence](../phase-01-faces-and-zones/evidence/pr3-corrections-native.md)). |

@@ -343,7 +343,7 @@ METr's own catalog and a firm's intranet server are each an address that impleme
 protocol, with sign-in by none, a static token or device-code approval as the server declares.
 The PH-Navigator connection is the second implementation to land, after the library file, and
 nothing specific to it exists in the code. Decisions are in
-`planning/features/libraries/PRD.md`.
+`planning/features/phase-02-envelope/libraries/PRD.md`.
 
 ## Errors
 

@@ -40,8 +40,24 @@ endpoints and split and copy transitions are one authoring lifecycle. Its `insta
 layout: `zone/`, `faces/` and `adjacency/` hold each part's domain code and handlers, with pure
 geometry and pair rules apart from the SketchUp write steps, and `declarations/` holds what each
 part registers. Zone actions are `ph_composer.zones.*`; Face actions are `ph_composer.zones.faces.*`.
-A feature that needs authored Face identity, such as assemblies or windows, depends on `zones`
-through its queries, actions, reference targets and descriptors, never through its stores.
+A feature that needs authored Face identity, such as window placement, depends on `zones` through
+its queries, actions, reference targets and descriptors, never through its stores.
+
+Features sit in three layers and depend only downward. Ed set this on 2026-10-01, ahead of its
+implementation:
+
+1. **Definitions.** Materials, Assemblies, Frames, Glazings, Psi-Install Types, Window Types,
+   Attached zones. A definition knows nothing about geometry or about what uses it.
+2. **Geometry and assignment.** Zones and Faces. A Face names its Assembly, so `zones` requires
+   the feature that owns Assemblies and reads them through its registered read.
+3. **Things placed on geometry.** Window units, and later Spaces and thermal bridges. Each names
+   a definition and sits on a host from the layer below.
+
+A lower layer never names a higher one. When a definition is deleted with a replacement, the
+references to it are rewritten by whoever declared them, through a foundation contract the
+deleting feature calls without knowing who answers. When a higher layer has facts worth showing in
+a lower layer's screen, such as how many Faces use an Assembly, its own panel module contributes
+them. A feature that both requires another and is required by it is refused at registration.
 
 Built-in features use the same public interfaces available to external contributors. A private
 hook needed by a built-in feature exposes a missing public capability. Fix that contract before

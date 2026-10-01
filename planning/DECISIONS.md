@@ -1,29 +1,38 @@
 # Decision register
 
-DATE: 2026-09-30
+DATE: 2026-10-01
 STATUS: D1-D11 confirmed 2026-09-18; D12 confirmed 2026-09-20. Phase 1 merged to main and archived 2026-09-30.
 AUTHOR: Ed May, BLDGTYP, with Codex review
 
 This register collects only choices that change the product boundary, architecture, roadmap or
 public posture. Feature-local interview questions remain in their owning PRDs. Confirmed decisions
-are folded into their owners. No program decision in this register remains open.
+are folded into their owners. No program decision in this register remains open; phase-level
+decisions are listed below.
 
 ## Program decisions
 
 | ID | Status | Decision | Consequence | Owner |
 | --- | --- | --- | --- | --- |
 | D1 | Confirmed | Phase 3 is the first internal envelope-model release candidate; Phase 4 is the complete MVP. Trial notes must state that Phase 3 still needs downstream mechanical entry | Fixes the sequence without delaying the first end-to-end trial for mechanical breadth; public release still needs Gate A | [ROADMAP.md](ROADMAP.md) |
-| D2 | Confirmed | If HBJSON succeeds and an optional METr exporter fails, commit the canonical HBJSON/report pair, record the exporter failure in both report and panel, and leave any prior METr file untouched | Keeps HBJSON independently useful and the exporter seam honest | [validation-and-export](features/validation-and-export/PRD.md) |
-| D3 | Confirmed | The MVP supports linear thermal bridges only. Point thermal bridges and chi-values are wholly outside MVP; never encode one as a fake 1 m linear bridge | Limits the public promise to what the canonical artifact can represent correctly | [thermal-bridges](features/thermal-bridges/PRD.md) |
+| D2 | Confirmed | If HBJSON succeeds and an optional METr exporter fails, commit the canonical HBJSON/report pair, record the exporter failure in both report and panel, and leave any prior METr file untouched | Keeps HBJSON independently useful and the exporter seam honest | [validation-and-export](features/cross-phase/validation-and-export/PRD.md) |
+| D3 | Confirmed | The MVP supports linear thermal bridges only. Point thermal bridges and chi-values are wholly outside MVP; never encode one as a fake 1 m linear bridge | Limits the public promise to what the canonical artifact can represent correctly | [thermal-bridges](features/phase-03-rooms-and-junctions/thermal-bridges/PRD.md) |
 | D4 | Confirmed | The primary tab is **Systems**, with Equipment, ERV ducting and Hot-water piping as peer subtabs and one work surface at a time | Avoids primary-tab sprawl and keeps drawn distribution systems distinct from equipment | [UI baseline](ui-baseline/README.md) |
 | D5 | Confirmed | Keep the repository and UI kit AGPL for MVP. Closed systems connect through HBJSON, a library file or HTTPS. In-process closed-source embedding is unsupported; revisit a separate package only for a real adopter | Preserves the useful integration boundaries without a premature package and license split | [LICENSING.md](../docs/LICENSING.md) |
-| D6 | Confirmed | **Export model library to file** opens an explicit choice dialog, defaults to all supported kinds, offers selected records only when a selection exists, and never derives scope from filters or hidden rows | Makes the complete export the safe default without confusing table state with data scope | [libraries](features/libraries/PRD.md) |
-| D7 | Confirmed | Ship and distribute no climate datasets. Permit manual entry/paste and user-owned climate files. Permit public EPW use by sending the user to the Ladybug EPW Map to obtain a file, then convert the selected local hourly EPW with honeybee-ph `Site.from_epw()`. Store a model-owned snapshot with provenance; never imply certification approval | Reuses the existing converter, keeps the core offline after import, and avoids a bundled catalog or redistribution claim | [climate-data](features/climate-data/PRD.md) |
+| D6 | Confirmed | **Export model library to file** opens an explicit choice dialog, defaults to all supported kinds, offers selected records only when a selection exists, and never derives scope from filters or hidden rows | Makes the complete export the safe default without confusing table state with data scope | [libraries](features/phase-02-envelope/libraries/PRD.md) |
+| D7 | Confirmed | Ship and distribute no climate datasets. Permit manual entry/paste and user-owned climate files. Permit public EPW use by sending the user to the Ladybug EPW Map to obtain a file, then convert the selected local hourly EPW with honeybee-ph `Site.from_epw()`. Store a model-owned snapshot with provenance; never imply certification approval | Reuses the existing converter, keeps the core offline after import, and avoids a bundled catalog or redistribution claim | [climate-data](features/phase-05-post-mvp/climate-data/PRD.md) |
 | D8 | Confirmed for development | Keep the current PH-Composer name and `bldgtyp/ph-composer` repository home during development. Ed confirmed the bldgtyp organization on 2026-09-18. The public name and long-term organization remain open; move later by explicit decision if needed | Retains the current repository without treating its name or organization as permanent | [FOUNDING_BRIEF.md](FOUNDING_BRIEF.md) |
-| D9 | Confirmed | EPW-derived monthly data may be used for preliminary demand work and overlays. A climate-bearing METr export remains blocked until the user supplies authorized peak-load values by manual entry, paste or a user-owned dataset. Never synthesize peak loads | Preserves useful EPW-derived monthly data without disguising it as a complete or certification-ready climate | [climate-data](features/climate-data/PRD.md) |
+| D9 | Confirmed | EPW-derived monthly data may be used for preliminary demand work and overlays. A climate-bearing METr export remains blocked until the user supplies authorized peak-load values by manual entry, paste or a user-owned dataset. Never synthesize peak loads | Preserves useful EPW-derived monthly data without disguising it as a complete or certification-ready climate | [climate-data](features/phase-05-post-mvp/climate-data/PRD.md) |
 | D10 | Confirmed | Contributor comprehension and extensibility govern architecture and coding standards. Built-in features use public contracts; provide scripting, namespaced metadata and registered extension data. Apply a repository-local architecture skill within the existing implementation review | Records accepted direction without implementing APIs; exact scripting, lifecycle and registration contracts remain design work. Size metrics guide review rather than force fragmentation | [EXTENSIBILITY.md](../context/EXTENSIBILITY.md), [CODING_STANDARDS.md](../context/CODING_STANDARDS.md) |
 | D11 | Confirmed priority | Users' agents must be able to inspect, view and write through a clear public interface designed into the foundation. PH-Composer does not build an agent | Public operations support external clients as well as UI and scripts. MCP is a recommended adapter, with transport and delivery choices still open; no implementation authorized | [AGENT_INTERFACE.md](../context/AGENT_INTERFACE.md) |
 | D12 | Confirmed 2026-09-20 | Defer METr exporter development and consumer acceptance until feature development is further along. Phase 1 ends with canonical HBJSON/report | PHX integration, optional-output recovery and METr floor-area/import decisions are deferred; return milestone unscheduled. HBJSON development continues through separately authorized Phase 1 stages | [Phase 1](archive/phase-01-faces-and-zones/README.md), [ROADMAP.md](ROADMAP.md) |
+
+## Phase-level decisions
+
+Choices that belong to one phase are kept with that phase's packet and are not repeated here.
+Phase 2 has ten, D2-1 to D2-10, in
+[its decisions file](features/phase-02-envelope/DECISIONS.md). Ed answered all ten on 2026-09-30
+and revised D2-1 on 2026-10-01. D2-1 sets the layering between features, definitions below
+Zones and placed things above, and is recorded in `context/EXTENSIBILITY.md`.
 
 ## Technical gates that need an answer, not a product preference
 
