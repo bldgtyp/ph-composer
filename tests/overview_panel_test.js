@@ -584,7 +584,7 @@ test("native batch assignment can select an existing definition and closes its h
   assert.strictEqual(p.sent[1].payload.name, "ph_composer.zones.faces.close_attached_assignment");
 });
 
-/* U1, R-D4: one Zone details draft at a time. While the form is dirty or its Save is pending, row
+/* One Zone details draft at a time. While the form is dirty or its Save is pending, row
    selection, filtering and tab changes that would hide it are refused with a warning notice. */
 function draftPage(payload) {
   var p = page();

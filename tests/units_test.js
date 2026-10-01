@@ -76,8 +76,8 @@ test("every conversion factor agrees with the web application it was ported from
   };
 
   Object.keys(webFactors).forEach(function (quantity) {
-    // The web density literal has only eight significant figures; C2 explicitly allows its wider
-    // comparison tolerance.
+    // The web density literal has only eight significant figures, so it needs a
+    // wider comparison tolerance.
     var tolerance = quantity === "density" ? 1e-7 : 1e-9;
     relative(units.quantities[quantity].factor, webFactors[quantity], tolerance, quantity + " web factor");
   });

@@ -58,7 +58,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     return screen;
   }
 
-  /* One Zone details draft at a time (R-D4). While the form holds unsaved edits or a Save in flight,
+  /* One Zone details draft at a time. While the form holds unsaved edits or a Save in flight,
      anything that would hide it is refused rather than discarding the draft; the user saves or
      cancels first. Model switch still withdraws the editor, because that draft is for another Model. */
   function draftReason(state) {
@@ -99,7 +99,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
 
   /* Zone rows from the Zones read, their Faces from the Faces read, matched by the path that names
      one Zone occurrence. Not by the Zone's record id: a copied Zone Group shares its original's
-     dictionary until the copy is repaired (zones Q25), so two occurrences can carry one id, and the
+     dictionary until the copy is repaired, so two occurrences can carry one id, and the
      zones read reports both and says so in `state`. Keying on the id would put the copy's Faces
      under the original's row, sum both areas into it and drop one Zone off the screen entirely.
 

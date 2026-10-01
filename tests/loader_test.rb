@@ -36,8 +36,8 @@ class LoaderTest < PhComposerTestCase
     refute PhComposer::Registry.installed?("ph_composer.face_assignment")
   end
 
-  # R-D1: one feature owns Zones, Faces and adjacency, so the published dependency graph is the whole
-  # truth and no registered name survives from the retired face_assignment feature.
+  # One feature owns Zones, Faces and adjacency, so the published dependency graph is the whole truth
+  # and no registered name survives from the retired face_assignment feature.
   def test_zones_owns_every_zone_face_and_adjacency_registration
     registry = PhComposer::Registry.current
     names = [registry.queries, registry.actions, registry.view_commands, registry.record_kinds,

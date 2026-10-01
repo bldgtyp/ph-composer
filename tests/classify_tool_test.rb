@@ -2,10 +2,10 @@
 
 require_relative "test_helper"
 
-# P1-D D6: the Classify tool, which is the gesture rather than the operation.
+# The Classify tool, which is the gesture rather than the operation.
 #
-# D1 already tests what `ph_composer.zones.faces.classify` does with a set of references. What
-# these tests hold is the half the pointer owns: which Faces a click, a drag and a Shift-click
+# face_gesture_test.rb tests what `ph_composer.zones.faces.classify` does with a set of references.
+# What these tests hold is the half the pointer owns: which Faces a click, a drag and a Shift-click
 # collect, that the palette is frozen when the button goes down, that every cancel route writes
 # nothing, and that Colour-by is forced on for the tool's lifetime and no longer.
 class ClassifyToolTest < PhComposerTestCase
@@ -309,8 +309,8 @@ class ClassifyToolTest < PhComposerTestCase
                  PhComposer::Zones::Faces.classify_tool(@session).palette.fetch("boundary_condition"))
   end
 
-  # Q12: the tool forces Colour-by on while it is active, and what it forced is not what the user
-  # chose, so the remembered mode is left alone and the mode goes off again with the tool.
+  # The tool forces Colour-by on while it is active, and what it forced is not what the user chose, so
+  # the remembered mode is left alone and the mode goes off again with the tool.
   def test_the_tool_forces_colour_by_on_and_off_again_without_remembering_it
     zone(1_000)
     Sketchup.clear_default_writes

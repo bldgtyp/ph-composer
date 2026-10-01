@@ -42,7 +42,7 @@ PhComposerUI.define("units", ["length_expression", "unit_numbers", "unit_tables"
       label + " must be at least " + min + " " + units + ".");
     if (max !== undefined && value > max) return errorResult("out_of_range",
       label + " must be at most " + max + " " + units + ".");
-    // Rounding in the canonical unit removes floating-point noise before a value reaches a command (C4).
+    // Rounding in the canonical unit removes floating-point noise before a value reaches a command.
     return { ok: true, value: Math.round(value * 1000000000) / 1000000000 };
   }
 

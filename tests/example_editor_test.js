@@ -3,7 +3,7 @@
 /* The synthetic editor (tools/examples/foundation/editor.js) on the real panel and the preview's stand-in
    host: typed entry with suffixes, invalid input kept with its message, regional numbers, a draft that
    keeps its starting unit through a display switch, Save and Cancel in the New part form, and a refused
-   edit that leaves the Model's value in the field (Units A1, A4 to A6, A10, A15). */
+   edit that leaves the Model's value in the field. */
 
 var assert = require("assert");
 var fs = require("fs");

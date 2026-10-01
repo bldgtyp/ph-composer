@@ -26,9 +26,9 @@
       "sha256": "f6321469d8f977251c74946cc9368e129eaca4f9919c4bda3293f675507211fe"
     },
     "html/length_expression.js": {
-      "bytes": 10498,
+      "bytes": 10503,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "590223183863b9d702d93a450978d8fe072d72563c0cde99514feef6fad452cf"
+      "sha256": "d942d6d89516b7240efe9765627063743998d7455de9778c886d971d90ea718b"
     },
     "html/module.js": {
       "bytes": 2942,
@@ -86,9 +86,9 @@
       "sha256": "b2bc5976a49b59ac29d9d904f9776c3fc1a20fb1c24a837a677f7309a774aee6"
     },
     "html/sections/colour_by.js": {
-      "bytes": 4974,
+      "bytes": 4961,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "74a0ba1c8ee27d9cac9eb8060ba8ba6bc8ba52438e11371bd98ebd2ba2eda317"
+      "sha256": "1ee0e1484862da2695af4a84642e97679a6da391842faa5f96fd9459231f21c2"
     },
     "html/sections/export.js": {
       "bytes": 7479,
@@ -101,9 +101,9 @@
       "sha256": "df76102e3142ad9ff51ad03f24648a47e1710ccfacdb830ead4dacb064708d16"
     },
     "html/sections/overview.js": {
-      "bytes": 26314,
+      "bytes": 26295,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "a6430052bdf10b1108fd708123e3121b8c46bfc8b6efdb0a289fc74ad79998ff"
+      "sha256": "86824f88c4d02f3d7637e6de49d714d2c38c56f8dbdbf233272c8a5533378d11"
     },
     "html/sections/selection_assignment.js": {
       "bytes": 2222,
@@ -141,9 +141,9 @@
       "sha256": "e89934af3f1c49d666739cc3a21fa2533b377b1fa583ceffb517b595c09d6213"
     },
     "html/unit_field.js": {
-      "bytes": 7928,
+      "bytes": 7917,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "32cf802bf709f773f39c94d5a94fa5b1e755e1f3c3d280c0debd90cbc287840a"
+      "sha256": "2cbc89beabe2d041bc6d331f17c1a4fe3096769455d9ec426d16bc7aeef7a495"
     },
     "html/unit_numbers.js": {
       "bytes": 4112,
@@ -161,9 +161,9 @@
       "sha256": "8681095484b685b9c67105244b370b55859f9070beea9ad8c89d6814d225f16a"
     },
     "html/units.js": {
-      "bytes": 12528,
+      "bytes": 12523,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "a092c02f3cc376b33177db3c9f90180f51aca82465f6ae7b85b99d38e8b57539"
+      "sha256": "620ea3e3aa0184eb3f3b7b76adb969dcb977a9885eaadbc820e70c1158a877d1"
     },
     "html/view_controls.js": {
       "bytes": 8627,

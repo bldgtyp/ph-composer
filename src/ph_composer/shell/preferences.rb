@@ -108,7 +108,7 @@ module PhComposer
         end
       end
 
-      # The computer's regional convention for typed and displayed numbers (I10). Stored values and JSON
+      # The computer's regional convention for typed and displayed numbers. Stored values and JSON
       # never use it.
       def number_format
         @number_format ||= {

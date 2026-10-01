@@ -2,7 +2,7 @@
 
 require_relative "test_helper"
 
-# P1-D D6: one walk of the Model per read phase, instead of about two per target.
+# One walk of the Model per read phase, instead of about two per target.
 #
 # The host measured the old behaviour as O(targets x Model Faces): a 50-target gesture cost 459 ms
 # in a 252-Face Model and 3,352 ms in a 2,004-Face one, and the Face read was quadratic through the

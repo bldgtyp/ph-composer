@@ -1,4 +1,4 @@
-"""Exporters consume the canonical HBJSON and explicit options, and nothing else (C6)."""
+"""Exporters consume the canonical HBJSON and explicit options, and nothing else."""
 
 from __future__ import annotations
 

@@ -2,8 +2,8 @@
 
 require_relative "test_helper"
 
-# P1-D D5: the shared Colour-by service. The registry seam, the mode projections the two shipping
-# features register, what the overlay batches and what invalidates the cache.
+# The shared Colour-by service. The registry seam, the mode projections the two shipping features
+# register, what the overlay batches and what invalidates the cache.
 class ColourByTest < PhComposerTestCase
   ColourBy = PhComposer::ColourBy
   Registry = PhComposer::Registry
@@ -639,7 +639,7 @@ class ColourByTest < PhComposerTestCase
     outer = zone_group(1900, [])
     outer.transformation = Geom::Transformation.translation([10, 0, 0])
     inner_face = Sketchup::Face.new(1999, {}, :points => [point(0, 0, 0), point(2, 0, 0), point(2, 2, 0)])
-    # Real Groups contain Edges too; the older fixture hid the F4 host failure by containing Faces only.
+    # Real Groups contain Edges too; a fixture with Faces only once hid a host failure.
     edge = Sketchup::Edge.new(1998, point(0, 0, 0), point(2, 0, 0))
     inner = Sketchup::Group.new(1990, Sketchup::Entities.new([edge, inner_face]))
     inner.transformation = Geom::Transformation.translation([0, 5, 0])

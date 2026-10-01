@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-# How the offline stub models a Face split. It is a model of the host, not evidence about it: the
-# real split, its new persistent ids and its attribute survival were measured on SketchUp in the
-# P1-A probe, and the repair walkthrough re-measures them. What this exists for is to let the
-# record consequences of a split be tested offline, which is a separate question from the geometry.
+# How the offline stub models a Face split. It is a model of the host, not evidence about it: the real
+# split, its new persistent ids and its attribute survival were measured on SketchUp in the geometry
+# probe, and the repair walkthrough re-measures them. What this exists for is to let the record
+# consequences of a split be tested offline, which is a separate question from the geometry.
 #
 # It leans on the production overlap code to work out the remainder, which is fine for that purpose
 # and would not be fine for testing the overlap code itself; that has its own tests against

@@ -4,7 +4,7 @@ module PhComposer
   module Operations
     # One explicit Entities collection and a canonical snapshot used only to verify a host abort.
     # Paths contain Group persistent ids from the Model root. Component definitions are refused for
-    # P1-B mutations because their storage is shared by every instance.
+    # mutations because their storage is shared by every instance.
     class EntityScope
       attr_reader :path
 

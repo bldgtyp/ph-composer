@@ -53,7 +53,7 @@ function (panel, ui, requests, snapshot) {
     return node;
   }
 
-  /* The row itself is the Locate control, as Q18 asks: clicking it selects and zooms to what it
+  /* The row itself is the Locate control: clicking it selects and zooms to what it
      counts. "Show only this" is a separate toggle, because it changes the drawing rather than the
      selection, and pressing it again puts everything back. */
   function legendRow(state, row) {

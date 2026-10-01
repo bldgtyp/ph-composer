@@ -2,9 +2,9 @@
 
 require_relative "test_helper"
 
-# R-D2: the artifact guard parses a copy of the canonical HBJSON. `user_data` may hold only the keys
-# export contributors declare; extension envelopes, usernames and paths refuse at any depth; the
-# bytes written are the translator's own.
+# The artifact guard parses a copy of the canonical HBJSON. `user_data` may hold only the keys export
+# contributors declare; extension envelopes, usernames and paths refuse at any depth; the bytes
+# written are the translator's own.
 class HbjsonMetadataTest < PhComposerTestCase
   FIXTURE = File.join(TESTS_ROOT, "fixtures", "phase_one", "two_zones.hbjson")
   Privacy = PhComposer::Export::Privacy

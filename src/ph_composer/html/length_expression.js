@@ -89,7 +89,7 @@ PhComposerUI.define("length_expression", ["unit_numbers", "unit_tables"], functi
     return DIMENSION_BY_ID[value] && DIMENSION_BY_ID[value].architectural ? "in" : (LENGTH_UNITS[value] ? value : "mm");
   }
 
-  /* Evaluates the C4 grammar to metres, or returns { error, data }. */
+  /* Evaluates a length expression to metres, or returns { error, data }. */
   function parseLengthExpression(text, context) {
     var tokenized = tokenizeLength(normalizeLengthQuotes(text, context.numberFormat), context.numberFormat);
     var defaultMetres = LENGTH_UNITS[defaultLengthUnit(context)].metres;

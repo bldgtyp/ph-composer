@@ -20,7 +20,7 @@ class RegistryTest < PhComposerTestCase
     error.diagnostics
   end
 
-  # A06: registration checks the schema subset's values, not only its keywords.
+  # Registration checks the schema subset's values, not only its keywords.
   def test_malformed_schema_values_and_inconsistent_required_refuse
     bad = [
       { "type" => "object", "properties" => { "n" => { "type" => "integer", "minimum" => "one" } } },
