@@ -996,6 +996,90 @@ Example params:
 {}
 ```
 
+### `ph_composer.zones.faces.attached_assignment`
+
+The pending native Face assignment handoff. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token",
+    "revision",
+    "faces"
+  ],
+  "properties": {
+    "token": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "revision": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.zones.faces.classify_tool`
 
 The Classify tool's palette and whether it runs. Owner: `ph_composer.zones`.
@@ -1477,6 +1561,76 @@ Example params:
 }
 ```
 
+### `ph_composer.zones.faces.selection`
+
+Validated selected Face occurrence references. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "faces"
+  ],
+  "properties": {
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.zones.list`
 
 One page of Zone occurrences, filtered and projected, and the Make Zone target. Owner: `ph_composer.zones`.
@@ -1781,6 +1935,151 @@ Example params:
   ],
   "limit": 20
 }
+```
+
+### `ph_composer.zones.selection`
+
+Valid selected Zone occurrences and current values. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zones"
+  ],
+  "properties": {
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "values"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "building_segment",
+              "level",
+              "ground_depth_mm"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "building_segment": {
+                "type": "string",
+                "minLength": 1
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ground_depth_mm": {
+                "type": "number",
+                "x-unit": "mm"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.settings.get`
+
+This Model's classification settings. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "suggest_on_make",
+    "roof_angle_deg",
+    "floor_angle_deg"
+  ],
+  "properties": {
+    "suggest_on_make": {
+      "type": "boolean"
+    },
+    "roof_angle_deg": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 180
+    },
+    "floor_angle_deg": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 180
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
 ```
 
 ## Actions
@@ -3249,6 +3548,121 @@ Example params:
 }
 ```
 
+### `ph_composer.zones.settings.update`
+
+Set this Model's classification settings. Owner: `ph_composer.zones`.
+
+Undo step: Change Zone Settings. Stores classification settings in this SKP in one Undo step.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "values",
+    "expected_values"
+  ],
+  "properties": {
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "suggest_on_make",
+        "roof_angle_deg",
+        "floor_angle_deg"
+      ],
+      "properties": {
+        "suggest_on_make": {
+          "type": "boolean"
+        },
+        "roof_angle_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180
+        },
+        "floor_angle_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180
+        }
+      }
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "suggest_on_make",
+        "roof_angle_deg",
+        "floor_angle_deg"
+      ],
+      "properties": {
+        "suggest_on_make": {
+          "type": "boolean"
+        },
+        "roof_angle_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180
+        },
+        "floor_angle_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180
+        }
+      }
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "suggest_on_make",
+    "roof_angle_deg",
+    "floor_angle_deg"
+  ],
+  "properties": {
+    "suggest_on_make": {
+      "type": "boolean"
+    },
+    "roof_angle_deg": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 180
+    },
+    "floor_angle_deg": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 180
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "values": {
+    "suggest_on_make": true,
+    "roof_angle_deg": 60.0,
+    "floor_angle_deg": 130.0
+  },
+  "expected_values": {
+    "suggest_on_make": true,
+    "roof_angle_deg": 60.0,
+    "floor_angle_deg": 130.0
+  }
+}
+```
+
 ### `ph_composer.zones.solve_adjacency`
 
 Reconcile and pair shared Faces within an explicit Zone scope. Owner: `ph_composer.zones`.
@@ -3481,6 +3895,152 @@ Example params:
     "level": null,
     "ground_depth_mm": 0.0
   }
+}
+```
+
+### `ph_composer.zones.update_field`
+
+Set one attribute on explicit Zone occurrences. Owner: `ph_composer.zones`.
+
+Undo step: Edit Selected Zones. Updates each Zone and its membership stamps.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "targets",
+    "field",
+    "value"
+  ],
+  "properties": {
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "expected_values"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "expected_values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "building_segment",
+              "level",
+              "ground_depth_mm"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "building_segment": {
+                "type": "string",
+                "minLength": 1
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ground_depth_mm": {
+                "type": "number",
+                "x-unit": "mm"
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "field": {
+      "type": "string",
+      "enum": [
+        "name",
+        "building_segment",
+        "level",
+        "ground_depth_mm"
+      ]
+    },
+    "value": {
+      "type": [
+        "string",
+        "number",
+        "null"
+      ]
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zone_ids"
+  ],
+  "properties": {
+    "zone_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "targets": [
+    {
+      "reference": {
+        "zone_id": "zon_Ab12Cd34Ef56",
+        "zone_path": [
+          1201
+        ]
+      },
+      "expected_values": {
+        "name": "Zone 1",
+        "building_segment": "House",
+        "level": null,
+        "ground_depth_mm": 0.0
+      }
+    }
+  ],
+  "field": "level",
+  "value": "L1"
 }
 ```
 
@@ -3820,6 +4380,99 @@ Example params:
 }
 ```
 
+### `ph_composer.zones.faces.close_attached_assignment`
+
+Close the native assignment handoff. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token"
+  ],
+  "properties": {
+    "token": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token",
+    "revision",
+    "faces"
+  ],
+  "properties": {
+    "token": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "revision": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "token": "example-review-token"
+}
+```
+
 ### `ph_composer.zones.faces.locate`
 
 Select an explicit set of Faces and bring them into view. Owner: `ph_composer.zones`.
@@ -3917,6 +4570,149 @@ Example params:
       "entity_id": null
     }
   ]
+}
+```
+
+### `ph_composer.zones.faces.open_attached_assignment`
+
+Review a new Attached zone assignment for explicit Faces. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "faces",
+    "revision"
+  ],
+  "properties": {
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "revision": {
+      "type": "integer"
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token",
+    "revision",
+    "faces"
+  ],
+  "properties": {
+    "token": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "revision": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "faces": [
+    {
+      "zone_id": "zon_Ab12Cd34Ef56",
+      "zone_path": [
+        1201
+      ],
+      "entity_path": [
+        1202
+      ],
+      "entity_id": null
+    }
+  ],
+  "revision": 1
 }
 ```
 

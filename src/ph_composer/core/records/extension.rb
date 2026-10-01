@@ -2,8 +2,8 @@
 
 module PhComposer
   module Records
-    # A maintained extension's structured data on records (CONTRACTS.md C5). A record carries one
-    # envelope per namespace under `extension_data`:
+    # A maintained extension's structured data on records (context/CONTRACTS.md, "Records and
+    # extension data"). A record carries one envelope per namespace under `extension_data`:
     #
     #   {"example.review": {"schema_version": 2, "payload": {...},
     #    "references": [{"path": "$.checked_against", "target_kind": "example.part", "cardinality": "one"}],

@@ -1,4 +1,4 @@
-"""What a translation section declares (CONTRACTS.md C6).
+"""What a translation section declares (context/CONTRACTS.md, "Translation sections and artifacts").
 
 A section reads one section of the extraction, one record at a time, into typed objects keyed by the
 record's durable id. It names the other sections whose objects it needs, and the type it expects from

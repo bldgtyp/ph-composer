@@ -4,8 +4,8 @@ module PhComposer
   # The foundation's own read of stored records, registered through the same interface a feature uses.
   # It serves every record kind, so a new kind is readable by every client without adding a query.
   #
-  # Pages are bound to the revision they were read at (CONTRACTS.md C2), and to the session, query
-  # and filter (shell/pages.rb): a cursor from anything else is refused.
+  # Pages are bound to the revision they were read at (context/CONTRACTS.md, "Public interface"), and
+  # to the session, query and filter (shell/pages.rb): a cursor from anything else is refused.
   module RecordQueries
     FEATURE_ID = "ph_composer.records"
     LIST = "#{FEATURE_ID}.list"

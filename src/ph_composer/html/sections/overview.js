@@ -1,19 +1,19 @@
 /* The Overview screen: the model tree of Zones with their classified Faces beneath, the shared view
- * controls above it, and the selected Zone's own fields below (zones Q13, face-assignment Q11,
- * planning/ui-baseline).
+ * controls above it, and the selected Zone's own fields below.
  *
  * The table is the shared record table; this file holds only this screen's vocabulary: its columns,
  * what each cell reads, its row actions and its editable chips. Every write goes through a registered
  * action carrying the values the row was painted from, and Locate goes through the view command,
  * which changes the selection and the camera and writes nothing.
  *
- * An unclassified Face is not a row (face-assignment PRD, "The faces table"). Its Zone's row carries
- * the count and the Suggest classification action that gives those Faces a record.
+ * An unclassified Face is not a row. Its Zone's row carries the count and the Suggest
+ * classification action that gives those Faces a record.
  */
 PhComposerUI.define("sections/overview", ["panel", "workspace", "request", "snapshot", "units", "unit_preferences",
-  "unit_field", "table", "view_controls", "fields", "sections/face_words", "sections/attached_zone_assignment"],
+  "unit_field", "table", "view_controls", "fields", "sections/face_words", "sections/attached_zone_assignment",
+  "sections/zone_settings", "sections/selection_assignment"],
 function (panel, ui, requests, snapshot, units, preferences, unitFields, tables, viewControls, fields, words,
-          attachedAssignment) {
+          attachedAssignment, ZoneSettings, SelectionAssignment) {
   "use strict";
   var AREA = fields.AREA_M2;
   // What a chip offers comes from the host, through the same read the Classify palette uses, so this
@@ -42,9 +42,15 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     if (screen && screen.session === session) return screen;
     if (screen && screen.zoneEditor) screen.zoneEditor.dispose();
     if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
+    if (screen && screen.settings) screen.settings.dispose();
+    if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
     screen = { session: session, selected: null, expanded: Object.create(null), columnWidths: {},
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
+    screen.settings = new ZoneSettings(session, send);
+    screen.selectionAssignment = new SelectionAssignment(session, send, function () {
+      return draftReason(screen);
+    });
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone, type or boundary", fields: ORDER_FIELDS, initialOrder: "name",
       expansion: expansion(screen), guard: function () { return draftReason(screen); }, refused: refuse
@@ -56,6 +62,11 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
      anything that would hide it is refused rather than discarding the draft; the user saves or
      cancels first. Model switch still withdraws the editor, because that draft is for another Model. */
   function draftReason(state) {
+    if (state && state.attachedDraft) return "Finish the Attached zone assignment first.";
+    if (state && state.selectionAssignment && state.selectionAssignment.active()) {
+      return "Finish the selected Faces assignment first.";
+    }
+    if (state && state.settings && state.settings.busy()) return "Wait for the Zone settings change to finish.";
     var editor = state && state.zoneEditor;
     return editor && (editor.dirty || editor.pending) ? DRAFT_OPEN : null;
   }
@@ -245,7 +256,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function openAttached(state, face, trigger) {
     if (state.attachedDraft) return;
     state.attachedDraft = attachedAssignment.open(state.session, state.send, state.revision, face,
-      state.attachedRecords, trigger, function () { state.attachedDraft = null; });
+      state.attachedRecords, trigger, function () { state.attachedDraft = null; panel.repaint(); });
   }
 
   function apply(state, face, field, chosen) {
@@ -284,6 +295,20 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     return make;
   }
 
+  function solveButton(state, zones) {
+    var button = ui.element("button", "", "Solve adjacencies");
+    button.disabled = state.edits.busy() || !zones.length;
+    button.setAttribute("aria-label", "Solve adjacencies for all Zones in this Model");
+    button.addEventListener("click", function () {
+      var reason = draftReason(state);
+      if (reason) return refuse(reason);
+      state.edits.run("ph_composer.zones.solve_adjacency", {
+        zones: zones.map(function (zone) { return zone.reference; })
+      });
+    });
+    return button;
+  }
+
   function render(root, state, send) {
     var zones = snapshot.value(state, "ph_composer.zones.overview") || { zones: [], make_zone: null };
     var faces = (snapshot.value(state, "ph_composer.zones.faces.faces") || { faces: [] }).faces;
@@ -294,19 +319,24 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     screenState.attachedRecords = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") ||
       { records: [] }).records;
     if (screenState.attachedDraft) screenState.attachedDraft.consume(state);
+    screenState.selectionAssignment.consume(state, screenState.attachedRecords);
     screenState.faceTypes = tool.face_types || [];
     screenState.boundaries = tool.boundary_conditions || [];
     var rows = project(zones.zones, faces);
     screenState.edits.consume(state);
     screenState.look.consume(state);
+    screenState.settings.consume(state, snapshot.value(state, "ph_composer.zones.settings"));
     screenState.zoneKeys = rows.filter(depth(0)).map(function (row) { return row.key; });
     if (!root.querySelector(".phc-table-mount")) {
       root.className = "phc-overview";
       root.replaceChildren(ui.element("div", "phc-heading-mount"), screenState.controls.root,
         ui.element("div", "phc-table-mount"), ui.element("div", "phc-details-mount"));
     }
-    root.querySelector(".phc-heading-mount")
-        .replaceChildren(heading("Zones", zones.zones.length, makeButton(screenState, zones.make_zone)));
+    var actions = ui.element("div", "phc-zone-actions");
+    actions.appendChild(makeButton(screenState, zones.make_zone));
+    actions.appendChild(solveButton(screenState, zones.zones));
+    actions.appendChild(screenState.settings.bubble.root);
+    root.querySelector(".phc-heading-mount").replaceChildren(heading("Zones", zones.zones.length, actions));
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
     paintDetails(root.querySelector(".phc-details-mount"), rows, screenState);
   }
@@ -425,7 +455,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       value: depthValue,
       onCommit: function (committed) { depthValue = committed; }
     });
-    var save = ui.element("button", "", "Save"), cancel = ui.button("Cancel", function () { editor.cancel(); });
+    var save = ui.element("button", "", "Save"), cancel = ui.button("Cancel", function () {
+      editor.cancel(); panel.repaint();
+    });
     save.type = "submit";
     cancel.type = "button";
     card.appendChild(labelled("Name", name));

@@ -50,6 +50,7 @@ module Sketchup
 
   class AppObserver; end
   class ModelObserver; end
+  class EntityObserver; end
   class EntitiesObserver; end
   class SelectionObserver; end
   class PagesObserver; end
@@ -319,6 +320,26 @@ module Sketchup
       @hidden
     end
 
+    def add_observer(observer)
+      (@observers ||= []) << observer
+      true
+    end
+
+    def remove_observer(observer)
+      (@observers ||= []).delete(observer)
+      true
+    end
+
+    # Native observers do not persist in SKP/Undo state. Marshal models those boundaries here.
+    def marshal_dump
+      instance_variables.reject { |key| key == :@observers }.to_h { |key| [key, instance_variable_get(key)] }
+    end
+
+    def marshal_load(values)
+      values.each { |key, value| instance_variable_set(key, value) }
+      @observers = []
+    end
+
     def attribute_dictionaries
       @dictionaries.values unless @dictionaries.empty?
     end
@@ -518,6 +539,16 @@ module Sketchup
       values.each { |entity| self << entity }
     end
 
+    # Collection observers, like entity observers, are live attachments rather than saved data.
+    def marshal_dump
+      instance_variables.reject { |key| key == :@observers }.to_h { |key| [key, instance_variable_get(key)] }
+    end
+
+    def marshal_load(values)
+      values.each { |key, value| instance_variable_set(key, value) }
+      @observers = []
+    end
+
     def each(&block)
       @each_count += 1 if @root
       @values.each(&block)
@@ -692,7 +723,8 @@ module Sketchup
 
   class Group < Entity
     attr_reader :entities
-    attr_accessor :transformation, :name
+    attr_accessor :transformation
+    attr_reader :name
 
     def initialize(persistent_id, entities = Entities.new, dictionaries = {},
                    transformation: nil, name: "", locked: false)
@@ -706,6 +738,16 @@ module Sketchup
 
     def locked?
       @locked
+    end
+
+    # This delivers a property notification only; native transaction timing and Undo callbacks
+    # must be measured on the host, not inferred from the setter used by offline tests.
+    def name=(value)
+      @name = value
+      (@observers ||= []).each do |observer|
+        observer.onChangeEntity(self) if observer.respond_to?(:onChangeEntity)
+      end
+      value
     end
 
     def locked=(value)

@@ -14,6 +14,7 @@
   var ATTACHED = "ph_composer.zones.faces.attached_zone.list";
   var ZONES = "ph_composer.zones.overview";
   var FACES = "ph_composer.zones.faces.faces";
+  var SETTINGS = "ph_composer.zones.settings";
   var NOTHING_WRITTEN = "Nothing was written.";
 
   function Host(window, options) {
@@ -27,6 +28,7 @@
     this.zones = JSON.parse(JSON.stringify(settings.zones || []));
     this.faces = JSON.parse(JSON.stringify(settings.faces || []));
     this.makeZone = settings.makeZone || null;
+    this.zoneSettings = { suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130 };
     this.colourBy = { mode: null, isolated: null };
     this.palette = { active: false, palette: {},
       face_types: ["Wall", "RoofCeiling", "Floor"],
@@ -48,6 +50,8 @@
       product: "PH-Composer", version: "preview", session: this.session, revision: this.revision,
       file_name: "preview.skp", edit_path: [], preferences: JSON.parse(JSON.stringify(this.preferences)),
       sections: {
+        [SETTINGS]: { status: "completed", code: "ok", revision: this.revision,
+          value: JSON.parse(JSON.stringify(this.zoneSettings)) },
         [PARTS]: { status: "completed", code: "ok", revision: this.revision,
           value: { records: records, units: { length_mm: "mm" }, next_cursor: null, total: records.length } },
         [ZONES]: { status: "completed", code: "ok", revision: this.revision,
@@ -153,7 +157,24 @@
     if (payload.expected_revision !== this.revision) {
       return refused("revision.stale", "The Model changed since it was read. " + NOTHING_WRITTEN, this.revision);
     }
-    if (payload.name === "example.foundation.update_parts") {
+    var resultValue = {};
+    if (payload.name === "ph_composer.zones.settings.update") {
+      var values = payload.params.values, expected = payload.params.expected_values;
+      var keys = Object.keys(this.zoneSettings);
+      if (keys.some(function (key) { return expected[key] !== host.zoneSettings[key]; })) {
+        return refused("target.changed", "Zone settings changed. " + NOTHING_WRITTEN, this.revision);
+      }
+      if (typeof values.suggest_on_make !== "boolean" || !Number.isFinite(values.roof_angle_deg) ||
+          !Number.isFinite(values.floor_angle_deg) || values.roof_angle_deg < 0 ||
+          values.floor_angle_deg > 180 || values.roof_angle_deg >= values.floor_angle_deg) {
+        return refused("request.invalid", "Check the angle thresholds. " + NOTHING_WRITTEN, this.revision);
+      }
+      this.zoneSettings = JSON.parse(JSON.stringify(values));
+      resultValue = JSON.parse(JSON.stringify(values));
+    } else if (payload.name === "ph_composer.zones.solve_adjacency") {
+      return { status: "completed", code: "ok", message: "No adjacency changes in this preview.",
+        effect: "none", revision: this.revision, value: {}, affected: [], findings: [], detail: null };
+    } else if (payload.name === "example.foundation.update_parts") {
       var edits = payload.params.edits;
       var conflict = edits.filter(function (edit) {
         var part = host.find(edit.id);
@@ -198,7 +219,7 @@
     }
     this.revision += 1;
     return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
-      value: {}, affected: [], findings: [], detail: null };
+      value: resultValue, affected: [], findings: [], detail: null };
   };
 
   Host.prototype.find = function (id) {

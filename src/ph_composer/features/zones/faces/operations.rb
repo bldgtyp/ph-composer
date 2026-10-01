@@ -7,6 +7,9 @@ module PhComposer
       # owns the native operation.
       module_function
 
+      # Refusals that leave a Face unwritable where it sits; the user's remedy is on the Group.
+      UNWRITABLE_CODES = %w[target.shared_definition target.locked].freeze
+
       # What the palette shows: what the tool is set to, and what it may be set to. The words each
       # value is shown by belong to whichever surface shows it; the stored honeybee string is the
       # contract (context/UBIQUITOUS_LANGUAGE.md).
@@ -115,7 +118,9 @@ module PhComposer
                                .map { |update| update.fetch("after").fetch("id") } }
       end
 
-      def auto_classify(request, proposal)
+      # `skip_unwritable` is Make Zone's suggestion: a Face in a shared or locked child Group stays
+      # unclassified, visible in validation, rather than refusing the Zone it is being made in.
+      def auto_classify(request, proposal, skip_unwritable: false)
         # One walk for the whole batch, so the Zone it resolves is the Zone the index walked and the
         # Faces come back from that same walk.
         index = Zones::Index.new(request.model)
@@ -128,12 +133,17 @@ module PhComposer
                                        .reject { |occurrence| FACE_STORE.read(occurrence.entity) }
         # Each target resolves for mutation now, so a Face in a shared or locked Group refuses here,
         # with its instruction, rather than failing when the step applies.
-        unrecorded.each do |occurrence|
+        unrecorded = unrecorded.select do |occurrence|
           Zones::Occurrences.resolve_face(request.model, occurrence.reference,
                                           :mutable => true, :allow_unassigned => true, :index => index)
+          true
+        rescue CodedError => error
+          raise unless skip_unwritable && UNWRITABLE_CODES.include?(error.code)
+
+          false
         end
         updates = unrecorded.map do |occurrence|
-          suggested = Geometry.suggested_values(occurrence)
+          suggested = Geometry.suggested_values(occurrence, :settings => Settings.read(request.model))
           record = new_record(request, occurrence).merge(suggested)
           { "reference" => occurrence.reference, "before" => nil, "after" => Schema.validate!(record),
             "stamp" => stamp, "change" => "created" }
@@ -315,7 +325,7 @@ module PhComposer
           "area_m2" => Geometry.area_m2(occurrence), "values" => record ? Schema.values(record) : {},
           "user_data" => record ? DeepCopy.call(record.fetch("user_data", {})) : {},
           "extension_data" => record ? DeepCopy.call(record.fetch("extension_data", {})) : {},
-          "suggested" => Geometry.suggested_values(occurrence),
+          "suggested" => Geometry.suggested_values(occurrence, :settings => Settings.read(request.model)),
           "attached_zone_state" => AttachedZone.reference_state(request.engine, record),
           "adjacency_state" => Zones::Adjacency.state(request.model, occurrence, record, :index => index)
         }
@@ -334,8 +344,8 @@ module PhComposer
       # so a Face can read complete in the viewport and incomplete in the table. That is the table
       # telling the user something the colours do not carry, not a disagreement about the same fact.
       #
-      # It is not the validation register, which owns severities and finding codes and is a later
-      # packet. It answers one question: is this row amber (face-assignment PRD, "The faces table").
+      # It is not the validation register, which owns severities and finding codes and is not built
+      # yet. It answers one question: is this row amber.
       def row_state(view)
         values = view.fetch("values")
         return "unclassified" if values.empty?
@@ -388,7 +398,7 @@ module PhComposer
       end
 
       # A counterpart dragged in by retirement that the gesture does not itself classify. It loses its
-      # boundary condition and keeps everything else, per the zones packet's Q21.
+      # boundary condition and keeps everything else.
       def retirement_only_updates(targets, retirements)
         classified = targets.map { |occurrence, _record| Zones::Occurrences.key(occurrence.reference) }
         retirements.reject { |key, _entry| classified.include?(key) }

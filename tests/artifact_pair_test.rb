@@ -3,7 +3,7 @@
 require_relative "test_helper"
 
 # The HBJSON and its report are written as one pair or not at all, only into test-owned temporary
-# folders (CONTRACTS.md C6). Every injected failure leaves the previous pair, and any unrelated file
+# folders. Every injected failure leaves the previous pair, and any unrelated file
 # beside it, byte for byte as it was.
 class ArtifactPairTest < PhComposerTestCase
   Pair = PhComposer::Export::ArtifactPair

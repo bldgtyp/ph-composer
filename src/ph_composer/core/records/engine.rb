@@ -5,11 +5,11 @@ require "json"
 module PhComposer
   module Records
     # Reads records and proposes changes to them for one Model. It owns identity, reference checks,
-    # metadata and extension-data rules (CONTRACTS.md C5). Reads never repair or write. Proposals add
-    # writes to a ChangeSet and never write; `apply` writes a validated set and is called only inside
-    # the dispatcher's operation (shell/dispatch.rb).
+    # metadata and extension-data rules (context/CONTRACTS.md, "Records and extension data"). Reads
+    # never repair or write. Proposals add writes to a ChangeSet and never write; `apply` writes a
+    # validated set and is called only inside the dispatcher's operation (shell/dispatch.rb).
     #
-    # Refusals raise CodedError with a code from CONTRACTS.md "Outcome vocabulary".
+    # Refusals raise CodedError with a code from context/CONTRACTS.md, "Outcomes and codes".
     class Engine
       def initialize(model, catalog)
         @model = model

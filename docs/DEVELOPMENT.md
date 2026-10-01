@@ -1,7 +1,7 @@
 # Development
 
 **DATE:** 2026-09-30 | **STATUS:** Partly implemented. The commands below exist unless marked
-"not yet". The extension has its foundation, the Overview screen with its Zone tree and faces table,
+"not yet". The extension has its foundation, the Zones / Faces screen with its Zone tree and faces table,
 the Classify tool and its palette, the shared Colour-by service, the Python runtime payload and the
 HBJSON/report workflow with pinned translation wheels. The normal build refuses canonical export
 until an authored construction provider is available. Phase 1 acceptance uses a separately composed
@@ -55,6 +55,8 @@ installs both. A local skip is not gate evidence.
   pnpm's one-day minimum release age and refuses non-registry subdependencies.
 - `lint-python` runs ruff over `tools/`, `tests/python` and the translation package, lint and
   format check.
+- `lint-citations` fails if shipped code or a test cites a planning document. Comments cite
+  `context/` instead, because planning documents move when they are archived.
 
 The line ceiling is 120 characters in every language. What the linters cannot express is in
 [`context/CODING_STANDARDS.md`](../context/CODING_STANDARDS.md).
@@ -158,7 +160,7 @@ Host work defaults to the development bridge, not to a person at the Ruby Consol
 `make bridge-install` places the bridge in the SketchUp Plugins folder, never in the RBZ, and
 `make bridge-uninstall` removes it. `launch` always opens a document, because the bridge did not
 start while SketchUp waited at its Welcome screen
-([host evidence](../planning/archive/phase-zero/evidence/phase-02-bootstrap.md)):
+([host evidence](../planning/archive/phase-00-foundation/evidence/phase-02-bootstrap.md)):
 
 ```sh
 uv run tools/hostkit/host_bridge.py launch _private/host/run.skp --fresh-from _private/host/blank.skp
@@ -176,24 +178,24 @@ the bridge depends on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SK
 Phase-specific native probes live under [`tools/spikes/`](../tools/spikes/) and never ship. The
 P1-A Zone geometry probe and its stepwise bridge commands are documented in
 [`tools/spikes/geometry/README.md`](../tools/spikes/geometry/README.md); its accepted results are
-in [`planning/archive/phase-one/evidence/p1-a-geometry.md`](../planning/archive/phase-one/evidence/p1-a-geometry.md).
+in [`planning/archive/phase-01-faces-and-zones/evidence/p1-a-geometry.md`](../planning/archive/phase-01-faces-and-zones/evidence/p1-a-geometry.md).
 The panel-closed walkthroughs are in
 [`tools/examples/authoring/`](../tools/examples/authoring/README.md): P1-B's Zone and Face
 authoring, P1-C's adjacency, P1-D's Zone repairs, P1-D's adjacency cut, P1-D's Colour-by overlay,
-P1-D's Classify tool, P1-D's Overview screen, P1-D's split identity repair, the gesture cost
+P1-D's Classify tool, P1-D's Zones / Faces screen, P1-D's split identity repair, the gesture cost
 measurement, and a panel-closed client that repeats the API quickstart against a real Model. The
 Classify tool's walkthrough ran on 2026-09-20 with an operator at the mouse,
 because SketchUp delivers pointer events to the active tool and the Ruby API synthesizes none; it
 covered the parts of Colour-by's that a drawing tool exercises. Colour-by's own questions were
-closed later by the [Colour-by continuation](../planning/archive/phase-one/evidence/p1-d-colour-by-continuation.md).
+closed later by the [Colour-by continuation](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-colour-by-continuation.md).
 Accepted current-host results are in
-[`p1-b-authoring.md`](../planning/archive/phase-one/evidence/p1-b-authoring.md),
-[`p1-c-adjacency-hbjson.md`](../planning/archive/phase-one/evidence/p1-c-adjacency-hbjson.md),
-[`p1-d-repairs-and-cut.md`](../planning/archive/phase-one/evidence/p1-d-repairs-and-cut.md) and
-[`p1-d-classify-tool.md`](../planning/archive/phase-one/evidence/p1-d-classify-tool.md).
+[`p1-b-authoring.md`](../planning/archive/phase-01-faces-and-zones/evidence/p1-b-authoring.md),
+[`p1-c-adjacency-hbjson.md`](../planning/archive/phase-01-faces-and-zones/evidence/p1-c-adjacency-hbjson.md),
+[`p1-d-repairs-and-cut.md`](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-repairs-and-cut.md) and
+[`p1-d-classify-tool.md`](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-classify-tool.md).
 
-The Overview screen's eight handoff questions were completed with native computer use on
-2026-09-26. The [evidence](../planning/archive/phase-one/evidence/p1-d-overview.md) records the fixes,
+The Zones / Faces screen's eight handoff questions were completed with native computer use on
+2026-09-26. The [evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-overview.md) records the fixes,
 fresh-process checks and remaining acceptance boundaries. Its walkthrough builds the Model and
 reads back what the panel's commands did; native controls drive the HtmlDialog interactions.
 
@@ -264,5 +266,5 @@ normalized for comparison; authored identities, references and values are compar
 The files themselves are not rewritten. This browser gate supplements real SketchUp acceptance.
 
 Current-host acceptance and remaining distribution limits are recorded in the
-[Phase 1 evidence](../planning/archive/phase-one/evidence/p1-e-export-workflow.md). SketchUp 2023,
+[Phase 1 evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md). SketchUp 2023,
 Windows, public distribution and certification claims retain their separate gates.

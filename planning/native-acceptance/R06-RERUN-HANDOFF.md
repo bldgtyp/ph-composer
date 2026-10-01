@@ -3,7 +3,7 @@
 DATE: 2026-09-30
 STATUS: Complete 2026-09-30; pass. Codex ran steps 0 to 2 and stopped at native check A (no
 screenshot); the requesting session finished on the same process. [Evidence](evidence/r06-rerun-2026-09-30.md)
-OWNER: [acceptance register, R06](../archive/phase-one/ACCEPTANCE.md#pr-3-foundation-correction-cases);
+OWNER: [acceptance register, R06](../archive/phase-01-faces-and-zones/ACCEPTANCE.md#pr-3-foundation-correction-cases);
 ledger case `R06` in [cases.json](cases.json)
 ISSUE: none (local tooling work)
 

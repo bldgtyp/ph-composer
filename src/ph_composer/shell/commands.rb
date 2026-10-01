@@ -49,19 +49,42 @@ module PhComposer
       # One submenu per declared `menu` name, its items in registration order. The submenu name and
       # every label come from the declaring feature; this groups them and knows nothing else.
       def install_feature_menus(parent, contextual: false)
-        session = Sessions.current if contextual
+        session = Sessions.current
         Registry.current.menu_items.each_value.group_by(&:menu).filter_map do |name, declarations|
+          declarations = declarations.reject(&:entries) unless contextual
           declarations = declarations.select { |item| available?(item, session) } if contextual
-          next if declarations.empty?
+          entries = declarations.flat_map { |item| menu_entries(item, session) }
+          next if entries.empty?
 
           menu = parent.add_submenu(name)
-          declarations.each do |declaration|
-            item = menu.add_item(declaration.label) { with_session { |session| declaration.handler.call(session) } }
+          entries.each do |declaration|
+            item = menu.add_item(declaration.label) do
+              with_session do |current|
+                if declaration.is_a?(Declarations::MenuEntry) && !current.equal?(session)
+                  raise CodedError.new("session.changed", "The active Model changed. Reopen the context menu.")
+                end
+                declaration.handler.call(current)
+              end
+            end
             menu.set_validation_proc(item) { item_check(declaration) } if declaration.state
             menu.add_separator if declaration.separator_after
           end
           [name, menu]
         end.to_h
+      end
+
+      def menu_entries(item, session)
+        return [item] unless item.entries
+        return [] unless session && available?(item, session)
+
+        entries = item.entries.call(session)
+        unless entries.is_a?(Array) && entries.all? do |entry|
+          entry.is_a?(Declarations::MenuEntry) && entry.label.is_a?(String) && !entry.label.strip.empty? &&
+            entry.handler.respond_to?(:call) && (entry.state.nil? || entry.state.respond_to?(:call))
+        end
+          raise InternalError, "#{item.name} returned invalid native menu entries."
+        end
+        entries
       end
 
       # An item with no `available` is always offered. One that declines is left out of the

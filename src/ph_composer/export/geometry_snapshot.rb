@@ -7,7 +7,7 @@ module PhComposer
     # One detached traversal of the Model for every geometry contributor. Entries contain no live
     # SketchUp object, so a contributor cannot mutate the Model or rescan a definition behind export.
     class GeometrySnapshot
-      Entry = Struct.new(:kind, :path, :transform, :dictionaries, :geometry, keyword_init: true) do
+      Entry = Struct.new(:kind, :path, :transform, :dictionaries, :geometry, :native_name, keyword_init: true) do
         def record(dictionary)
           text = dictionaries.dig(dictionary, "record")
           text.nil? ? nil : JSON.parse(text)
@@ -70,7 +70,8 @@ module PhComposer
             child_transform = transform * entity.transformation
             kind = entity.is_a?(Sketchup::Group) ? "group" : "component_instance"
             block.call(Entry.new(:kind => kind, :path => child_path.freeze, :transform => child_transform.to_a.freeze,
-                                 :dictionaries => dictionaries, :geometry => nil))
+                                 :dictionaries => dictionaries, :geometry => nil,
+                                 :native_name => entity.name.to_s.dup.freeze))
             child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
             walk(child_entities, child_path, child_transform, &block)
           else

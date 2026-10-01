@@ -1,0 +1,2 @@
+# Vector cursor PDFs are binary assets; their xref records contain required trailing spaces.
+*.pdf binary

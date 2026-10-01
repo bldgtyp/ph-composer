@@ -13,7 +13,7 @@ JSONObject: TypeAlias = dict[str, JSONValue]
 class ContractError(Exception):
     """The document, or a whole section of it, cannot be read. The run stops before any translation.
 
-    `code` is one of the translation codes in CONTRACTS.md ("Outcome vocabulary").
+    `code` is one of the translation codes in context/CONTRACTS.md, "Outcomes and codes".
     """
 
     def __init__(self, code: str, detail: str) -> None:

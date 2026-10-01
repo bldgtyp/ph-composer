@@ -7,8 +7,9 @@ module PhComposer
   # observers. What a feature keeps per Model lives in that feature's state object, reached through
   # `feature_state`, so a new feature adds no line here.
   #
-  # The revision is one whole-Model counter (CONTRACTS.md C3). It advances on a committed mutation,
-  # Undo, Redo and an edit-path change, and never on a read, a selection change or a save.
+  # The revision is one whole-Model counter (context/CONTRACTS.md, "Revisions, transactions and host
+  # execution"). It advances on a committed mutation, Undo, Redo and an edit-path change, and never on
+  # a read, a selection change or a save.
   class ModelSession
     attr_reader :model, :id, :revision, :export_generation, :refresh, :observers, :callers, :outcomes
 
@@ -51,8 +52,8 @@ module PhComposer
     end
 
     # Runs one change request from its first read to its recorded outcome. While it runs the session
-    # is busy, so no other change can start, even one a handler starts itself (CONTRACTS.md C3). The
-    # dispatcher checks `busy_reason` before calling this.
+    # is busy, so no other change can start, even one a handler starts itself. The dispatcher checks
+    # `busy_reason` before calling this.
     def exclusive
       @exclusive = true
       yield

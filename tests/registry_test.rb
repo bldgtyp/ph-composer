@@ -87,6 +87,45 @@ class RegistryTest < PhComposerTestCase
     assert Registry.installed?("probe.empty")
   end
 
+  def test_dynamic_context_menu_entries_are_rebuilt_for_current_session
+    labels = ["First"]
+    called = []
+    Registry.install([feature do |registry|
+      registry.feature("probe.menu", :contract_version => 1)
+              .menu_entries("probe.menu.current", :menu => "Probe") do |session|
+        labels.map do |label|
+          PhComposer::Declarations::MenuEntry.new(:label => label, :handler => ->(current) { called << current })
+        end.tap { assert_same PhComposer::Sessions.current, session }
+      end
+    end])
+    refute PhComposer::Commands.install_feature_menus(UI::Menu.new("Global")).key?("Probe")
+    menus = PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)
+    first = menus.fetch("Probe").entries.first
+    assert_equal "First", first.first
+    first.last.call
+    assert_equal [PhComposer::Sessions.current], called
+    labels.replace(["Second", "Third"])
+    menus = PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)
+    assert_equal %w[Second Third], menus.fetch("Probe").entries.map(&:first)
+    Sketchup.active_model = Sketchup::Model.new
+    first.last.call
+    assert_equal 1, called.length, "a catalog entry belongs to the session that built it"
+  end
+
+  def test_dynamic_context_menu_provider_and_entries_are_validated
+    diagnostics = refused(feature do |registry|
+      registry.feature("probe.menu", :contract_version => 1).menu_entries("probe.menu.missing", :menu => "Probe")
+    end)
+    assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
+    Registry.install([feature do |registry|
+      registry.feature("probe.menu", :contract_version => 1)
+              .menu_entries("probe.menu.invalid", :menu => "Probe") { |_session| ["invalid entry"] }
+    end])
+    assert_raises(PhComposer::InternalError) do
+      PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)
+    end
+  end
+
   def test_published_declarations_are_frozen
     Registry.install([feature do |registry|
       registry.feature("probe.frozen", :contract_version => 1)

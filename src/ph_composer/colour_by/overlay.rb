@@ -4,15 +4,14 @@ module PhComposer
   module ColourBy
     # The one `Sketchup::Overlay` a Model gets while a Colour-by mode is active. It draws what the
     # service already cached and nothing else: no Model read, no record read and no repair, so the
-    # cost of a frame is the marshalling B2 measured
-    # ([spike](../../../planning/archive/phase-zero/evidence/spike-overlay.md)).
+    # cost of a frame is Ruby marshalling (context/SKETCHUP_HOST_BEHAVIOR.md, "Overlays").
     #
     # Fills are batched per colour, one `View#draw` a legend row rather than one a face, because that
     # marshalling is what dominates past about 10,000 triangles.
     class Overlay < Sketchup::Overlay
       OVERLAY_ID = "#{EXTENSION_ID}.colour_by"
       LINE_WIDTH = 2
-      # The HUD sits in the upper left of the viewport (face-assignment PRD "Viewport HUD legend").
+      # The HUD sits in the upper left of the viewport.
       HUD_ORIGIN = [12, 12].freeze
       HUD_ROW_HEIGHT = 18
       HUD_SWATCH = 12
@@ -48,12 +47,8 @@ module PhComposer
 
       def draw_outlines(view)
         view.line_width = LINE_WIDTH
-        @service.outlines.each do |colour, points|
-          next if points.empty?
-
-          view.drawing_color = outline_colour(colour)
-          view.draw(GL_LINES, Tessellation.lift(points, view))
-        end
+        # Classified Faces carry fills only. Their native edges remain available to SketchUp's
+        # selection, hover and inference highlights, including Outdoors' similar blue.
         return if @service.unclassified_outlines.empty? && @service.unclassified_hatch.empty?
 
         # A solid boundary remains legible on tiny Faces where no six-inch stripe crosses the mesh.

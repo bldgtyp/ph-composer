@@ -28,7 +28,7 @@ justify it. Resolve new quantity rows through their owning feature interviews.
 
 The Phase 0 portion merged through PR #1 (P0-E): the six shared unit
 modules, the length-expression reader, the Ruby mirror and the shared vectors, with the A1 to A15
-allocation in [the P0-E evidence](../../archive/phase-zero/evidence/phase-04-panel-units.md).
+allocation in [the P0-E evidence](../../archive/phase-00-foundation/evidence/phase-04-panel-units.md).
 New quantity rows and the feature follow-ups remain with their owners.
 
 ## Ledger

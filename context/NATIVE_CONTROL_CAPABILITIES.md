@@ -32,7 +32,7 @@ with a harmless synthetic case and update this reference. Do not require human h
 After development provider/fault overrides, restart the normal installed extension, verify no
 helper override/live runtime remains, and record the normal build's expected behavior.
 
-Sources: [Colour-by toggle continuation](../planning/archive/phase-one/evidence/p1-d-colour-by-continuation.md),
-[held gesture/context continuation](../planning/archive/phase-one/evidence/p1-d-keyboard-context.md),
-[export lifecycle and restoration](../planning/archive/phase-one/evidence/p1-e-export-workflow.md),
+Sources: [Colour-by toggle continuation](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-colour-by-continuation.md),
+[held gesture/context continuation](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-keyboard-context.md),
+[export lifecycle and restoration](../planning/archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md),
 [R06 rerun](../planning/native-acceptance/evidence/r06-rerun-2026-09-30.md).

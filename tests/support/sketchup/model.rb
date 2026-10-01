@@ -92,8 +92,7 @@ module Sketchup
     end
 
     # SketchUp 26.1.188 fires onTransactionUndo, not onTransactionAbort, for an aborted operation,
-    # synchronously inside the call (host evidence 2026-09-18,
-    # planning/archive/phase-zero/evidence/phase-03-operations.md).
+    # synchronously inside the call (context/SKETCHUP_HOST_BEHAVIOR.md, "Observers and edit contexts").
     def abort_operation
       return false unless @current_operation
       name, disable_ui, _next_transparent, _transparent, snapshot = @current_operation

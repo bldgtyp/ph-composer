@@ -148,6 +148,17 @@ declaring feature, which is also where `context/UBIQUITOUS_LANGUAGE.md`'s glossa
 A menu item is the native-menu route to those things. The same state has to be reachable from the
 panel and from a client, and that is a view command.
 
+Native menu handlers also serve as entry points to registered Model actions. They obtain explicit
+references and the read revision, then invoke the same public action used by the panel and agents;
+they never write Model records directly. A selected-Face choice applies one attribute immediately.
+Without selected Faces, the same choice loads the paint tool through its view command.
+
+`available: ->(session) { ... }` controls context-menu visibility. An optional
+`feature.menu_entries(name, menu: ..., available: ...) { |session| [Declarations::MenuEntry.new(label: ..., handler: ...)] }`
+supplies current record-dependent items, such as Attached zones. Providers run only while building a context menu;
+the Extensions menu is installed once. The shell validates the supplied entry shapes and remains
+independent of contributor vocabulary and record kinds.
+
 ### View commands
 
 Implemented in P1-D. A view command changes what the host shows and nothing else: the selection, the
@@ -185,7 +196,7 @@ the SKP. The panel sends `view.invoke` and settles the answer in its own result 
 Implemented in P1-D. A feature that authors by pointing writes a `Sketchup::Tool` and starts it
 from a menu item. Spaces' Mark floor, window placement and the thermal-bridge edge tool are all
 this shape, so the rules below are the shared ones, learned from the Classify tool's host gate
-([evidence](../planning/archive/phase-one/evidence/p1-d-classify-tool.md)).
+([evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-classify-tool.md)).
 
 - **Pick, never walk.** `Pick.face_path(view, x, y)` answers what is under the pointer as a
   root-to-leaf instance path, and a feature turns that path into an occurrence without touching the
@@ -206,7 +217,7 @@ this shape, so the rules below are the shared ones, learned from the Classify to
   notice, and a viewport tool is used with the panel closed, so a refusal delivered only that way
   is silent exactly where it matters. Results and refusals reach both `Sketchup.status_text=`
   and the session notice. Routine activation guidance uses the status bar alone so it does not
-  cover the panel controls; see [D7 F8](../planning/archive/phase-one/evidence/p1-d-overview.md).
+  cover the panel controls; see [D7 F8](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-overview.md).
 - **Cancel on every route, and leave nothing behind.** Escape, deactivation, a suspended context
   and a callback that raised all abandon the pending gesture. Track whether the button is actually
   down: a press whose release the host never delivered must not leave later hovers collecting. The

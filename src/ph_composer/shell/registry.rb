@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 module PhComposer
-  # Every capability the extension offers, registered through one explicit entrypoint (CONTRACTS.md C1).
-  # A feature is a module with `install(registry)`; the composition root lists the features and calls
-  # `Registry.install`. Built-in and outside features use the same calls.
+  # Every capability the extension offers, registered through one explicit entrypoint
+  # (context/CONTRACTS.md, "Registration"). A feature is a module with `install(registry)`; the
+  # composition root lists the features and calls `Registry.install`. Built-in and outside features
+  # use the same calls.
   #
   #   def self.install(registry)
   #     feature = registry.feature("example.foundation", contract_version: 1)
@@ -270,6 +271,14 @@ module PhComposer
           :name => name, :owner => id, :label => label, :menu => menu,
           :separator_after => separator_after, :state => state, :available => available, :handler => handler
         )
+        @staging.add(:declared_menu_items, id, name, declaration)
+      end
+
+      # Current context-menu entries supplied when it opens, rather than a catalog snapshot captured
+      # at extension install. The provider returns Declarations::MenuEntry values for this session.
+      def menu_entries(name, menu:, available: nil, &entries)
+        declaration = Declarations::MenuItem.new(:name => name, :owner => id, :menu => menu,
+                                                 :available => available, :entries => entries)
         @staging.add(:declared_menu_items, id, name, declaration)
       end
 

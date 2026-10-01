@@ -117,7 +117,7 @@ linked evidence is in proposed scope and adds none of those services.
 The foundation merged through PR #1: records and public operations, sessions, panel/UI kit and
 shared units, the runtime shell and export infrastructure. Phase 1 merged on
 2026-09-30: Zones, Faces and the adjacency between them, the Classify tool, Auto-classify,
-Attached zones, Colour-by, the Overview screen, copy and split repairs, the public scripting
+Attached zones, Colour-by, the Zones / Faces screen, copy and split repairs, the public scripting
 interface, and the export run to canonical HBJSON and its report. Export needs authored
 Assemblies, which arrive in Phase 2, so the normal build refuses to export today; Phase 1 was
 proven with a development-only construction provider. Merging is separate from any release. METr

@@ -15,7 +15,7 @@ behavior sections. Shared understanding reached, pending Ed's confirmation of th
 
 ## Next step
 
-The component host spike ran in P0-B on 2026-09-18 ([B3](../../archive/phase-zero/evidence/spike-window.md)). The flat cutting component
+The component host spike ran in P0-B on 2026-09-18 ([B3](../../archive/phase-00-foundation/evidence/spike-window.md)). The flat cutting component
 stays. PLAN.md must carry five consequences:
 1. panes authored facing out;
 2. net area never read from `Face#area`;
@@ -26,6 +26,10 @@ Then PLAN.md.
 
 ## Blockers
 
+- Carried from the archived [zones-and-adjacency packet](../../archive/phase-01-zones-and-adjacency/STATUS.md)
+  on 2026-09-30: Solve adjacencies reports, rather than cuts, an overlap involving a concave outline
+  or a Face with a hole. Windows cut holes in real walls, so this needs an answer before an
+  assembly- or window-bearing model relies on adjacency.
 - The foundation transplant has not started.
 - No GitHub remote, so no issue yet.
 

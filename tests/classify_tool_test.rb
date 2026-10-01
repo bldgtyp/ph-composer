@@ -7,7 +7,7 @@ require_relative "test_helper"
 # D1 already tests what `ph_composer.zones.faces.classify` does with a set of references. What
 # these tests hold is the half the pointer owns: which Faces a click, a drag and a Shift-click
 # collect, that the palette is frozen when the button goes down, that every cancel route writes
-# nothing, and that Colour-by is forced on for the tool's lifetime and no longer (PRD Q12).
+# nothing, and that Colour-by is forced on for the tool's lifetime and no longer.
 class ClassifyToolTest < PhComposerTestCase
   API = PhComposer::API
   ColourBy = PhComposer::ColourBy
@@ -15,6 +15,9 @@ class ClassifyToolTest < PhComposerTestCase
   def setup
     super
     @model = Sketchup.active_model
+    # This fixture exercises hand classification; default-on Make/Suggest has its own settings tests.
+    settings = PhComposer::Zones::Faces::Settings
+    settings::STORE.write(@model, settings::DEFAULTS.merge("suggest_on_make" => false))
     @session = PhComposer::Sessions.for(@model)
     @context = API.connect(:session_id => @session.id)
     @sequence = 0
@@ -44,6 +47,21 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty @notices
     assert_includes Sketchup.status_texts.last, "Click or drag over Faces"
     assert_includes Sketchup.status_texts.last, "Outdoors"
+  end
+
+  def test_classify_cursor_is_loaded_once_and_reused_across_model_sessions
+    # A fresh tool class gives this assertion its own cache without changing the production cache.
+    tool_class = Class.new(PhComposer::Zones::Faces::ClassifyTool)
+    first = tool_class.new(@session)
+    second = tool_class.new(PhComposer::Sessions.for(Sketchup::Model.new))
+
+    assert first.onSetCursor
+    assert second.onSetCursor
+    assert_equal 1, UI.created_cursors.length
+    assert_equal 1, UI.last_cursor
+    path, hot_x, hot_y = UI.created_cursors.first
+    assert File.file?(path)
+    assert_equal [1, 1], [hot_x, hot_y]
   end
 
   def test_native_tool_choices_and_deactivation_publish_current_state_without_model_operations
@@ -354,26 +372,28 @@ class ClassifyToolTest < PhComposerTestCase
                  @view.draws.first.fetch(2).to_a.first(3)
   end
 
-  # The Classify palette is declared by the feature and built by `shell/` from whatever menu items
-  # are registered, exactly as the Colour by menu is built from whatever modes are. A menu item
-  # sets one field and starts the tool; a second sets the other and leaves the first.
-  def test_the_menu_sets_one_palette_field_at_a_time_and_checks_the_chosen_one
+  # Native choices assign selected Faces immediately; the secondary palette remains independent.
+  def test_the_menu_assigns_one_field_at_a_time_without_starting_the_tool
     zone(1_150)
+    @model.active_path = [@zone_group]
+    @model.selection.add(@faces.fetch(0))
     PhComposer::Commands.install
-    menu = PhComposer::Commands.feature_menus.fetch(PhComposer::Zones::Faces::ClassifyMenu::MENU)
+    menu = UI.build_context_menu.entries.find do |entry|
+      entry.is_a?(UI::Menu) && entry.name == PhComposer::Zones::Faces::ClassifyMenu::MENU
+    end
 
     item(menu, "Wall").call
     item(menu, "Ground").call
 
-    assert_equal "Wall", tool.palette.dig("face_type", "value")
-    assert_equal "Ground", tool.palette.dig("boundary_condition", "value")
-    assert_equal MF_CHECKED, checked(menu, "Wall")
-    assert_equal MF_UNCHECKED, checked(menu, "Floor")
-    assert_same tool, @model.active_tool
-
-    item(menu, PhComposer::Zones::Faces::ClassifyMenu::OFF).call
-
+    assert_equal "Wall", values("face_type").first
+    assert_equal "Ground", values("boundary_condition").first
+    assert_empty tool.palette
+    refute tool.active?
     assert_nil @model.active_tool
+    has_exit = menu.entries.any? do |entry|
+      entry.is_a?(Array) && entry.first == PhComposer::Zones::Faces::ClassifyMenu::OFF
+    end
+    refute has_exit
   end
 
   # The viewport context menu offers the palette only where it applies, and the feature decides
@@ -389,17 +409,17 @@ class ClassifyToolTest < PhComposerTestCase
     # not what the user is reaching for there.
     @model.selection.add(@zone_group)
 
-    assert_empty submenu_names(UI.build_context_menu)
+    refute_includes submenu_names(UI.build_context_menu), PhComposer::Zones::Faces::ClassifyMenu::MENU
 
     @model.selection.clear
+    @model.active_path = [@zone_group]
     @model.selection.add(@faces.fetch(0))
 
     assert_includes submenu_names(UI.build_context_menu), PhComposer::Zones::Faces::ClassifyMenu::MENU
   end
 
-  # While the tool is running, SketchUp hands the right-click to the tool instead of selecting, so
-  # the tool builds the same menu from the coordinates the handler route never had.
-  def test_the_running_tool_offers_the_palette_where_the_pointer_is_over_a_face
+  # While the tool is running, Exit remains reachable regardless of what is under the pointer.
+  def test_the_running_tool_offers_exit_without_a_selected_face
     zone(1_180)
     tool.start
     point_at([10, 10], @faces.fetch(0))
@@ -410,7 +430,10 @@ class ClassifyToolTest < PhComposerTestCase
     tool.getMenu(over_nothing, 0, 99, 99, @view)
 
     assert_includes submenu_names(over_face), PhComposer::Zones::Faces::ClassifyMenu::MENU
-    assert_empty submenu_names(over_nothing)
+    assert_includes submenu_names(over_nothing), PhComposer::Zones::Faces::ClassifyMenu::MENU
+    menu = over_nothing.entries.find { |entry| entry.is_a?(UI::Menu) }
+    item(menu, PhComposer::Zones::Faces::ClassifyMenu::OFF).call
+    refute tool.active?
   end
 
   # The words on the menu are the glossary's, and they come from the same tables the Colour-by
@@ -424,6 +447,7 @@ class ClassifyToolTest < PhComposerTestCase
     assert_includes labels, "To neighbour"
     refute_includes labels, "RoofCeiling"
     refute_includes labels, "Surface", "Surface is the solver's, never the palette's"
+    refute labels.any? { |label| label.include?("Keep") }
   end
 
   # A tool callback that raises reaches the host, which has nowhere to put it, so the tool catches
@@ -489,11 +513,11 @@ class ClassifyToolTest < PhComposerTestCase
     assert_equal revision, @session.revision
   end
 
-  # The panel palette: a client sets a field and the tool takes the viewport, the same thing a
-  # native menu item does, and nothing is written.
+  # The secondary panel palette sets a field and gives the tool the viewport without writing.
   def test_a_client_sets_one_palette_field_and_the_tool_takes_the_viewport
     context = PhComposer::API.connect(:session_id => @session.id)
     revision = @session.revision
+    modified = @model.modified?
 
     outcome = PhComposer::API.view(:context => context, :name => "ph_composer.zones.faces.choose",
                                    :params => { "field" => "face_type", "value" => "RoofCeiling" })
@@ -501,7 +525,8 @@ class ClassifyToolTest < PhComposerTestCase
     assert_equal true, outcome.dig("value", "active")
     assert_equal({ "face_type" => "RoofCeiling" }, outcome.dig("value", "palette"))
     assert_equal revision, @session.revision
-    refute @model.modified?
+    assert_equal modified, @model.modified?
+    assert_empty @model.operations
 
     stopped = PhComposer::API.view(:context => context, :name => "ph_composer.zones.faces.stop_classifying",
                                    :params => {})

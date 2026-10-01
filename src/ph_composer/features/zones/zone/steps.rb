@@ -32,6 +32,7 @@ module PhComposer
 
         ZONE_STORE.write(group, @record)
         group.name = @record.fetch("name") if group.respond_to?(:name=)
+        Names.track(model, group)
         reference = { "zone_id" => @record.fetch("id"), "zone_path" => @parent_path + [group.persistent_id] }
         slots[@record.fetch("id")] = reference
         @affected = [{ "kind" => "zone", "id" => @record.fetch("id"), "change" => "grouped",
@@ -71,11 +72,12 @@ module PhComposer
 
       def apply(model, _slots)
         occurrence = Occurrences.resolve_zone(model, @reference, :mutable => true)
-        current = ZONE_STORE.read(occurrence.entity)
+        current = occurrence.record
         raise CodedError.new("target.changed", "The Zone changed after it was previewed.") unless current == @before
 
         ZONE_STORE.write(occurrence.entity, @after)
         occurrence.entity.name = @after.fetch("name") if occurrence.entity.respond_to?(:name=)
+        Names.track(model, occurrence.entity)
         stamp = Schema.stamp(@after)
         Occurrences.faces(occurrence).each do |face|
           existing = STAMP_STORE.read(face.entity)

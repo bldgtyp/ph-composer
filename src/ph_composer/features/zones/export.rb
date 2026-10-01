@@ -61,6 +61,7 @@ module PhComposer
       def records(reader)
         zones = reader.snapshot.records(ZONE_DICTIONARY, :kind => "group")
         zones.map do |entry, record|
+          record = Names.project(record, entry.native_name)
           Schema.validate!(record)
           owned = reader.snapshot.descendants(entry, :kind => "face")
           assigned = owned.map { |face| [face, face.record(Faces::FACE_DICTIONARY)] }

@@ -5,4 +5,4 @@ by Make Zone, face splitting, occurrence references and limited Restore Zone. Th
 only to a fresh synthetic Model and uses one native operation per action.
 
 Run through the development bridge as described at the top of `geometry_spike.rb`. Record results
-in `planning/archive/phase-one/evidence/p1-a-geometry.md`. This tool never ships in the RBZ.
+in `planning/archive/phase-01-faces-and-zones/evidence/p1-a-geometry.md`. This tool never ships in the RBZ.

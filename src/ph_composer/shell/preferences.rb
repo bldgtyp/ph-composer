@@ -4,9 +4,9 @@ require "json"
 require "open3"
 
 module PhComposer
-  # User-wide display preferences (planning/features/units/PRD.md I2 to I6, I10): local to this computer,
-  # shared by every panel and open Model, restored after restart. They live in SketchUp's own preference
-  # store, so choosing one never dirties an SKP, adds an Undo step or advances a session revision.
+  # User-wide display preferences: local to this computer, shared by every panel and open Model,
+  # restored after restart. They live in SketchUp's own preference store, so choosing one never
+  # dirties an SKP, adds an Undo step or advances a session revision.
   #
   # A dimension scope is one editor's remembered length format, such as a graphical builder's. The panel
   # names the scope; a scope is a dotted name under the owning feature's id, like every declared name.
@@ -29,7 +29,7 @@ module PhComposer
       end
 
       # The Colour-by mode the user last turned on, or nil. Colour-by itself is off at rest; only the
-      # choice is remembered (face-assignment PRD Q12).
+      # choice is remembered.
       def colour_by_mode
         stored = Sketchup.read_default(SECTION, "colour_by_mode", nil)
         stored.is_a?(String) && Registry::ID_PATTERN.match?(stored) ? stored : nil

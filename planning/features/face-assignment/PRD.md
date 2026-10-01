@@ -303,7 +303,7 @@ fourth contribution seam beside feature, provider and exporter.
   use a categorical ramp. In every mode, unclassified is hatched and incomplete is amber.
 - **Default (Q12).** Off at rest, remembered per user; forced on while the Classify tool is
   active, in the mode the palette last touched.
-- **Spike complete (Q22).** [Phase 0 B2](../../archive/phase-zero/evidence/spike-overlay.md)
+- **Spike complete (Q22).** [Phase 0 B2](../../archive/phase-00-foundation/evidence/spike-overlay.md)
   passed alpha, depth, picking and performance checks on the proving host. Plan filled modes;
   feature-specific cache invalidation and performance acceptance remain outstanding. Other
   platforms require their own host evidence.
@@ -427,7 +427,7 @@ requirements for that future work.
 
 Architecture corrections authorized 2026-09-18 supplement the interview: Attached zone reference
 lifecycle, the assembly matrix, field-level intent and atomic gesture completion are now part of
-this contract. Q22's spike passed in Phase 0; see [B2 evidence](../../archive/phase-zero/evidence/spike-overlay.md).
+this contract. Q22's spike passed in Phase 0; see [B2 evidence](../../archive/phase-00-foundation/evidence/spike-overlay.md).
 Feature cache invalidation and native acceptance remain pending.
 
 Offline: fixtures for a single-Zone box (six faces, one gesture per type), a Zone under a rotated

@@ -22,14 +22,13 @@ module PhComposer
     # state and names no mode.
     #
     # The cache is whole and keyed on the session revision, which advances on a committed change,
-    # Undo, Redo and an edit-path change (CONTRACTS.md C3). A tag being hidden changes what may be
-    # painted without necessarily advancing that revision, so `tags_changed` forces a rebuild.
-    # Rebuilding happens when the invalidating event arrives, never inside `draw`: a draw callback
-    # repairs nothing (context/TECH_STACK.md).
+    # Undo, Redo and an edit-path change (context/CONTRACTS.md, "Revisions, transactions and host
+    # execution"). A tag being hidden changes what may be painted without necessarily advancing that
+    # revision, so `tags_changed` forces a rebuild. Rebuilding happens when the invalidating event
+    # arrives, never inside `draw`: a draw callback repairs nothing (context/TECH_STACK.md).
     #
-    # Scene tag visibility reaches the layer invalidation path on the current proving host
-    # (planning/archive/phase-one/evidence/p1-d-broader-acceptance.md). Other scene visibility state still
-    # needs its own host evidence; there is no general scene-change subscription here.
+    # Scene tag visibility reaches the layer invalidation path, verified on SketchUp 26.1. Other scene
+    # visibility state is not verified; there is no general scene-change subscription here.
     class Service
       attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines, :unclassified_hatch, :isolated
       attr_reader :wash_triangles
@@ -61,8 +60,8 @@ module PhComposer
       # changes: no record is written, no material is assigned and no operation opens.
       #
       # `remember: false` turns a mode on without recording the choice. The Classify tool forces
-      # Colour-by on while it is active (PRD Q12), and what the tool forced is not what the user
-      # chose, so it must not displace the remembered mode when the tool ends.
+      # Colour-by on while it is active, and what the tool forced is not what the user chose, so it
+      # must not displace the remembered mode when the tool ends.
       def activate(name, remember: true)
         declaration = Registry.current.colour_modes[name]
         raise UserError, "There is no Colour-by mode named #{name}." unless declaration
@@ -117,10 +116,10 @@ module PhComposer
       end
 
       # Selects the entities one legend row stands for and brings them into view: the legend's own
-      # Locate (PRD Q18). It counts an entity the drawing omits, a hidden Face or one on a hidden
-      # tag, because the legend tells the truth about the Model rather than about the viewport. Such
-      # an entity is still selected here; SketchUp shows the selection where it can, and a count the
-      # user can reach nothing from would be worse than one that reaches a hidden thing.
+      # Locate. It counts an entity the drawing omits, a hidden Face or one on a hidden tag, because
+      # the legend tells the truth about the Model rather than about the viewport. Such an entity is
+      # still selected here; SketchUp shows the selection where it can, and a count the user can reach
+      # nothing from would be worse than one that reaches a hidden thing.
       def select_row(value, state)
         model = live_model
         # The cache holds live entities from the last rebuild. One can be erased by something that

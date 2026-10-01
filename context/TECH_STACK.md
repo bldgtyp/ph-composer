@@ -15,8 +15,8 @@ Phase 1 merged through PR #3 and PR #6 on 2026-09-30. The build registers one bu
 `zones` (`src/ph_composer/features/zones/`), which owns Zones, their Faces and the adjacency between
 them, plus two foundation capabilities, `RecordQueries` and `ColourBy`, and the export run to
 canonical HBJSON and its report. No exporter beyond HBJSON ships. The archived
-[Phase 0](../planning/archive/phase-zero/README.md) and
-[Phase 1](../planning/archive/phase-one/README.md) packets record implementation and host evidence.
+[Phase 0](../planning/archive/phase-00-foundation/README.md) and
+[Phase 1](../planning/archive/phase-01-faces-and-zones/README.md) packets record implementation and host evidence.
 Spaces, Volumes, Assemblies, Window Types, libraries and exporters are not implemented; the rules
 below that describe them remain requirements until their owning packets land.
 
@@ -106,6 +106,18 @@ Undo step. Direct panel or toolbar commits use named one-step Model operations. 
 editing path again immediately before commit, because the user can change context between the
 event and the deferred work.
 
+Zone names read from the native Group name, including export's detached snapshot. The schema-v1
+stored name is a compatibility fallback. Native valid renames cause no mirror transaction. Clearing
+an observed Zone name restores its last valid name in deferred transparent work. The restoration
+must commit rather than abort on failure: aborting a transparent operation can also abort the user's
+source operation. Native clipboard copies are observed when their authored dictionary arrives;
+Ruby `Group#copy` is not assumed to copy instance attributes. Evidence and current-host scope are in
+`planning/archive/phase-01-ux-followups/README.md`.
+
+Zones / Faces settings are Model records, reached through registered reads and actions. Automatic
+Suggest on Make defaults on, with roof/floor tilt thresholds of 60/130 degrees. Make and Suggest
+share one proposal, transaction and Undo step. A settings edit has its own named Undo step.
+
 Observer suppression must span commit, abort, Undo and Redo paths. Suppression is not a reason to
 skip explicit recovery. Leaving it set after an exception makes later edits appear randomly dead.
 
@@ -154,7 +166,7 @@ PH-Composer owns all of it, in its own attribute namespace, through its own tool
 that owns a face is the Zone, one Group per honeybee Room, with Spaces inside it. Closure is a
 consumer-specific validation rule, not a requirement for creating or exporting every Zone. The
 rules are the zones-and-adjacency packet's to settle
-(`../planning/features/zones-and-adjacency/PRD.md`); Phase 1 implemented them. The durable
+(`../planning/archive/phase-01-zones-and-adjacency/PRD.md`); Phase 1 implemented them. The durable
 constraints:
 
 - One feature, `zones`, owns this whole lifecycle: Zone containment, Face identity, Zone stamps,
@@ -173,7 +185,7 @@ constraints:
   (a query, target resolution before a proposal, `ClassifyStep`) shares one `Zones::Index`, which
   walks once and is valid only while the Model is unchanged; a step that mutates and then reads its
   own result walks the live Model. Per-target walks measured O(targets x Model Faces) on the host
-  ([gesture cost evidence](../planning/archive/phase-one/evidence/p1-d-gesture-cost.md)).
+  ([gesture cost evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-gesture-cost.md)).
 - A Classify gesture affects at most `GESTURE_FACE_LIMIT` (250) Face occurrences, reciprocal
   counterparts included and deduplicated; one over refuses the whole gesture as
   `gesture.too_large`. The ceiling bounds the blast radius, not elapsed time. Suggest
@@ -209,7 +221,7 @@ budget. One native Face capture and one contributor callback are indivisible. Th
 separate export content generation during collection, on translation return and before canonical
 commit. Camera, selection and edit-path navigation do not invalidate it; content commits and
 Undo/Redo do. SketchUp 26.1's navigation-only commit and the preceding content-commit ordering
-are measured in [P1-E evidence](../planning/archive/phase-one/evidence/p1-e-export-workflow.md).
+are measured in [P1-E evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md).
 
 The HBJSON and its report are written as one pair or not at all (`export/artifact_pair.rb`). Both
 are staged beside the destination and verified, a journal records the plan, the previous pair moves
@@ -272,7 +284,7 @@ HBJSON document and the user's export choices. It never reads the export contrac
 The METr exporter is the first. It calls PHX to build a PHX project from HBJSON and PHX's WUFI
 writer to produce the METr model. Two facts gate it:
 
-- [Phase 0 B1](../planning/archive/phase-zero/evidence/spike-phx.md) proved PHX 1.57.1
+- [Phase 0 B1](../planning/archive/phase-00-foundation/evidence/spike-phx.md) proved PHX 1.57.1
   conversion with nine pinned wheels installed without dependency resolution. The METr path
   does not import the omitted dependencies. D12 defers METr integration and actual import until
   further feature development. Phase 1 selects its HBJSON translation payload independently;
@@ -356,19 +368,20 @@ reads the page sources and fails when the page sends or handles a type the table
 
 Features add no transport types. A feature's panel request is `action.invoke` naming a registered
 action, a viewport-state request is `view.invoke` naming a registered view command, and its
-panel data is a registered snapshot section ([CONTRACTS.md](../planning/archive/phase-one/CONTRACTS.md) C1, C2).
+panel data is a registered snapshot section ([CONTRACTS.md](CONTRACTS.md), "Registration" and "Public interface").
 
 ## Panel
 
-The panel is one client of `PhComposer::API`, not the owner of any Model behavior ([CONTRACTS.md](../planning/archive/phase-one/CONTRACTS.md) C2).
+The panel is one client of `PhComposer::API`, not the owner of any Model behavior ([CONTRACTS.md](CONTRACTS.md), "Public interface").
 `shell/panel.rb` owns the dialog and nothing else a feature reaches:
 
 - It shows the active Model. For each session it shows it connects once with its own caller
-  handle and gives the panel's mutations their own sequence numbers (C4). The page's request ids
-  only correlate a result with the view that asked.
+  handle and gives the panel's mutations their own sequence numbers (CONTRACTS.md, "Retries"). The
+  page's request ids only correlate a result with the view that asked.
 - `action.invoke` carries the session the page showed and the revision it last rendered. An action
   for a session the panel no longer shows is refused as `session.inactive` with nothing written.
-  The result is published after the authoritative snapshot (C3).
+  The result is published after the authoritative snapshot (CONTRACTS.md, "Revisions, transactions
+  and host execution").
 - The page loads from the shipped file with `set_file`. The message callback is bound to its
   dialog, so a closed page's late message is ignored. The panel refreshes the shown Model's
   snapshot after committed changes, Undo, Redo, an edit-path change and activation, through the
@@ -408,7 +421,7 @@ leaves, and `consume(state)` settles the action-result slot for that request onc
 refuses, for views that keep several requests in flight. Record forms are `record_form.js` specs,
 snapshot reads go through `snapshot.js`, and unit descriptors for stored fields are `fields.js`. The
 record table and inventory controls (`table.js`, `table.css`, `view_controls.js`) arrived with the
-Overview screen, ported from the predecessor and trimmed to what it uses; neither names a feature.
+Zones / Faces screen, ported from the predecessor and trimmed to what it uses; neither names a feature.
 Inline cell drafts (the predecessor's `record_edits`) arrive with the first screen that edits
 record cells in place.
 
@@ -469,7 +482,7 @@ these true of every feature it had, so a new one that follows them needs no chan
   attribute (face type, boundary condition, Assembly, Zone fields) is set on its own. A modal
   action-first tool (paint, place) is a secondary route, and it becomes the primary one only when a
   feature's plan records why its UX is demonstrably better. Ed confirmed this rule on 2026-09-30
-  ([Phase 1 UX follow-ups](../planning/features/phase-one-ux-followups/README.md)).
+  ([Phase 1 UX follow-ups](../planning/archive/phase-01-ux-followups/README.md)).
 
 ## Durable delivery rules
 

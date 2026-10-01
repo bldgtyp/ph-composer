@@ -3,9 +3,9 @@
 module PhComposer
   module Zones
     module Faces
-      # Locate: select an explicit set of Face references and bring them into view (face-assignment
-      # PRD "Operations other features use"). It changes the selection and the camera and nothing
-      # else, so it writes no record, opens no Model operation and leaves no Undo entry.
+      # Locate: select an explicit set of Face references and bring them into view. Other features use
+      # it. It changes the selection and the camera and nothing else, so it writes no record, opens no
+      # Model operation and leaves no Undo entry.
       #
       # That is also why it is not a registered action: registering it as one would manufacture an Undo
       # entry for a read. It is a view command instead (Declarations::ViewCommand), registered as
@@ -32,7 +32,8 @@ module PhComposer
         # Whether SketchUp shows a selection made outside the active edit context is not measured, and
         # the host gate asks it (tools/examples/authoring/classify_tool_walkthrough.rb). Locate does
         # not open the context itself: changing `active_path` advances the session revision
-        # (CONTRACTS.md C3) and would cancel a pending gesture, which is too much for a read.
+        # (context/CONTRACTS.md, "Revisions, transactions and host execution") and would cancel a
+        # pending gesture, which is too much for a read.
         def select(model, entities)
           selection = model.selection
           selection.clear

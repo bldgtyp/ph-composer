@@ -11,7 +11,7 @@ ISSUE: none (local planning draft)
 P1-E implements preflight, explicit repairs, per-Model asynchronous tasks, bounded collection,
 pinned lazy translation, cancellation, result retention and coordinated HBJSON/report replacement
 and recovery. Blocking findings remain visible and write no canonical pair. Export does not save
-or modify the SKP. [P1-E/F evidence](../../archive/phase-one/evidence/p1-e-export-workflow.md) records the
+or modify the SKP. [P1-E/F evidence](../../archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md) records the
 exact implementation, package, native cases and independent-review corrections.
 
 ## Remaining scope and delivery boundaries

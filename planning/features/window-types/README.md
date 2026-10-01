@@ -3,7 +3,7 @@
 The fifth feature packet. It carries the predecessor's Window Type Builder, the Frames, Glazings
 and Psi-Install Types libraries and the U-Values report, and replaces everything that existed to
 live beside designPH's window component with PH-Composer's own window unit. It depends on
-[zones-and-adjacency](../zones-and-adjacency/README.md) and
+[zones-and-adjacency](../../archive/phase-01-zones-and-adjacency/README.md) and
 [face-assignment](../face-assignment/README.md) for the host face, and
 [libraries](../libraries/README.md) depends on it for the Frame, Glazing and Psi-Install
 Type record kinds.

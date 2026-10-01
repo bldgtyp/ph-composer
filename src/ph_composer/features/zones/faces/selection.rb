@@ -1,0 +1,171 @@
+# frozen_string_literal: true
+
+module PhComposer
+  module Zones
+    module Faces
+      module Selection
+        module_function
+
+        def selected(model)
+          entities = model.selection.to_a
+          unless !entities.empty? && entities.all? { |entity| entity.is_a?(Sketchup::Face) }
+            raise CodedError.new("selection.invalid", "Select Faces inside authored Zones. Nothing was written.")
+          end
+          if entities.length > Faces.gesture_face_limit
+            raise CodedError.new("gesture.too_large", "Select at most #{Faces.gesture_face_limit} Faces. " \
+                                                    "Nothing was written.")
+          end
+          index = Zones::Index.new(model)
+          parent = Array(model.active_path)
+          entities.map do |entity|
+            picked = Zones::Occurrences.occurrence_for_path(parent + [entity])
+            unless picked
+              raise CodedError.new("target.wrong_zone", "A selected Face is outside an authored Zone.")
+            end
+            record = FACE_STORE.read(entity)
+            Schema.validate!(record) if record
+            reference = picked.reference(record && record.fetch("id"))
+            resolved = Zones::Occurrences.resolve_face(model, reference, :mutable => true,
+                                                      :allow_unassigned => record.nil?, :index => index)
+            Zones::Selection.resolve(model, resolved.zone.reference, index)
+            reference
+          end
+        end
+
+        def available?(session)
+          !selected(session.model).empty?
+        rescue UserError
+          false
+        end
+
+        def handoff(session)
+          session.feature_state(:faces_selection_assignment) { AssignmentState.new }
+        end
+
+        def open_assignment(request)
+          if request.params.fetch("revision") != request.revision
+            raise CodedError.new("revision.stale", "The Model changed after the selected Faces were read.")
+          end
+          references = request.params.fetch("faces")
+          index = Zones::Index.new(request.model)
+          if references.length > Faces.gesture_face_limit
+            raise CodedError.new("gesture.too_large", "Choose at most #{Faces.gesture_face_limit} Faces.")
+          end
+          references.each do |reference|
+            face = Zones::Occurrences.resolve_face(request.model, reference, :mutable => true,
+                                                  :allow_unassigned => reference["entity_id"].nil?, :index => index)
+            Zones::Selection.resolve(request.model, face.zone.reference, index)
+          end
+          state = handoff(request.session)
+          if state.snapshot.fetch("token")
+            raise CodedError.new("assignment.pending", "Finish the open Attached zone assignment first.")
+          end
+          state.open(references, request.revision)
+          request.session.changed(:zones, :attached_assignment)
+          state.snapshot
+        end
+
+        def client(session)
+          session.feature_state(:faces_selection_menu) { Client.new(session) }
+        end
+
+        class AssignmentState
+          def initialize
+            clear
+          end
+
+          def open(faces, revision)
+            @value = { "token" => SecureRandom.uuid, "revision" => revision, "faces" => DeepCopy.call(faces) }
+          end
+
+          def snapshot
+            DeepCopy.call(@value)
+          end
+
+          def close(token)
+            clear if @value.fetch("token") == token
+            snapshot
+          end
+
+          def clear
+            @value = { "token" => nil, "revision" => nil, "faces" => [] }
+          end
+
+          def detach
+            clear
+          end
+        end
+
+        class Client
+          def initialize(session)
+            @session = session
+            @context = API.connect(:session_id => session.id)
+            @sequence = 0
+          end
+
+          def classify(field, value)
+            if @session.model.selection.to_a.empty? && field != "attached_zone_id"
+              return show(API.view(:context => @context, :name => "#{PREFIX}.choose",
+                                   :params => { "field" => field, "value" => value }))
+            end
+            read = API.query(:context => @context, :name => "#{PREFIX}.selection")
+            return show(read) unless read["status"] == "completed"
+
+            intent = { field => { "mode" => "set", "value" => value } }
+            if field == "attached_zone_id"
+              intent["boundary_condition"] = { "mode" => "set", "value" => "AttachedZone" }
+            end
+            @sequence += 1
+            show(API.invoke(:context => @context, :name => "#{PREFIX}.classify",
+                            :params => { "faces" => read.fetch("value").fetch("faces"), "intent" => intent },
+                            :request => { "sequence" => @sequence, "expected_revision" => read.fetch("revision") }))
+          end
+
+          def open_assignment
+            read = API.query(:context => @context, :name => "#{PREFIX}.selection")
+            return show(read) unless read["status"] == "completed"
+
+            result = API.view(:context => @context, :name => "#{PREFIX}.open_attached_assignment",
+                              :params => { "faces" => read.fetch("value").fetch("faces"),
+                                           "revision" => read.fetch("revision") })
+            return show(result) unless result["status"] == "completed"
+
+            Commands.open_panel.proc.call
+            result
+          end
+
+          # All existing records are current at menu construction, including pages beyond the first.
+          def attached_entries
+            records = []
+            cursor = nil
+            loop do
+              params = { "kind" => AttachedZone::KIND_ID, "fields" => ["name"], "limit" => Pages::MAXIMUM_LIMIT }
+              params["cursor"] = cursor if cursor
+              read = API.query(:context => @context, :name => RecordQueries::LIST, :params => params)
+              return [] unless read["status"] == "completed"
+
+              records.concat(read.fetch("value").fetch("records"))
+              cursor = read.fetch("value").fetch("next_cursor")
+              break unless cursor
+            end
+            records.map do |record|
+              id = record.fetch("id")
+              Declarations::MenuEntry.new(:label => "Attached zone: #{record.fetch('values').fetch('name')}",
+                                           :handler => ->(session) do
+                                             Selection.client(session).classify("attached_zone_id", id)
+                                           end)
+            end
+          end
+
+          private
+
+          def show(result)
+            @session.notice(result.fetch("message"), :tone => result["status"] == "completed" ? :info : :warning)
+            Sketchup.status_text = result.fetch("message")
+            result
+          end
+        end
+      end
+    end
+  end
+end

@@ -350,7 +350,7 @@ class RecordsEngineTest < PhComposerTestCase
   end
 
   # A readable envelope at the installed version is understood only when its payload passes the
-  # installed validator and it declares the installed references (CONTRACTS.md C5).
+  # installed validator and it declares the installed references.
   def test_current_extension_data_failing_its_payload_or_reference_contract_is_invalid
     target = seed_part
     bad_payload = seed_part("extension_data" => { "test.fixture.review" => REVIEW.envelope("review_status" => "lost") })

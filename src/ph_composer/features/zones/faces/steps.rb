@@ -3,6 +3,37 @@
 module PhComposer
   module Zones
     module Faces
+      # Make Zone supplies its new occurrence through the proposal's temporary slots. Reuse Suggest's
+      # planning and write steps inside that same native operation, so refusal rolls back the grouping.
+      class SuggestMadeZoneStep
+        attr_reader :affected
+
+        def initialize(zone_id:, request:, settings:)
+          @zone_id = zone_id
+          @request = request
+          @settings = DeepCopy.call(settings)
+          @affected = []
+        end
+
+        def descriptor
+          { "name" => "suggest_made_zone", "zone_id" => @zone_id, "settings" => @settings }
+        end
+
+        def apply(model, slots)
+          unless Settings.read(model) == @settings
+            raise CodedError.new("target.changed", "Zone settings changed after preview. Nothing was written.")
+          end
+          request = Dispatch::Request.new(:session => @request.session, :model => model,
+                                           :params => { "zone" => slots.fetch(@zone_id) },
+                                           :engine => @request.engine, :revision => @request.revision,
+                                           :registry => @request.registry)
+          suggestion = Operations::Proposal.new
+          Faces.auto_classify(request, suggestion, :skip_unwritable => true)
+          suggestion.apply(model, request.engine)
+          @affected = suggestion.affected
+        end
+      end
+
       # Every Face one gesture touches, written in one step so a drag over forty Faces, and the
       # counterparts its retirements drag in, are one Undo entry and one all-or-nothing apply.
       class ClassifyStep

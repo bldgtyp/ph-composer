@@ -3,10 +3,10 @@
 module PhComposer
   module Zones
     module Faces
-      # The Classify tool: the viewport half of the Classify gesture (face-assignment PRD "The
-      # Classify tool"). The operation is D1's `ph_composer.zones.faces.classify`, and this tool
-      # calls it through the public interface like any other client (CONTRACTS.md C2), with its own
-      # caller handle and its own sequence numbers.
+      # The Classify tool: the viewport half of the Classify gesture. The operation is
+      # `ph_composer.zones.faces.classify`, and this tool calls it through the public interface like
+      # any other client, with its own caller handle and its own sequence numbers (context/CONTRACTS.md,
+      # "Retries").
       #
       # What the tool owns is the gesture, not the change: which Faces the pointer collected, the
       # palette intent frozen when the button went down, and the refusals that belong to the pointer
@@ -46,7 +46,7 @@ module PhComposer
         end
 
         # Sets one palette field and starts the tool, which is what a native Classify menu item does.
-        # `nil` clears the field back to keeping whatever the Face has (PRD Q10, Q21).
+        # `nil` clears the field back to keeping whatever the Face has.
         #
         # Choosing an Attached zone carries its boundary condition with it, and dropping it takes that
         # boundary condition back: an AttachedZone boundary naming no record is an incomplete Face, so
@@ -92,6 +92,20 @@ module PhComposer
         end
 
         # Sketchup::Tool. The host calls these; nothing else does.
+
+        def onSetCursor
+          UI.set_cursor(self.class.cursor)
+        end
+
+        # Native cursor images are never released by SketchUp. Cache once across Model sessions.
+        # UI.create_cursor uses PDF on macOS and SVG on Windows; keep the hotspot near the origin
+        # for the SketchUp 2023.1 macOS hotspot defect (ruby.sketchup.com/UI#create_cursor-class_method).
+        def self.cursor
+          return @cursor if @cursor
+
+          format = Sketchup.platform == :platform_win ? "svg" : "pdf"
+          @cursor = UI.create_cursor(File.join(__dir__, "cursors", "classify.#{format}"), 1, 1)
+        end
 
         def activate
           @active = true
@@ -181,14 +195,10 @@ module PhComposer
           draw_occurrences(view, @hover ? [@hover] : [], HOVER_COLOUR) unless collecting?
         end
 
-        # SketchUp hands a right-click to the active tool rather than selecting what is under it, so
-        # the context-menu handler in `shell/` cannot fire while this tool runs, and its
-        # selection-based test for "is a Face under the cursor" would answer no in any case. This is
-        # the same menu built by the same code, with the coordinates that route never had.
-        def getMenu(menu, _flags = 0, x_value = nil, y_value = nil, view = nil)
-          return unless view && Zones::Occurrences.occurrence_for_path(Pick.face_path(view, x_value, y_value) || [])
-
-          Commands.install_feature_menus(menu)
+        # The active tool receives right-clicks itself. Build the current selection menu here too;
+        # its Exit entry is available even when no Face is selected or under the pointer.
+        def getMenu(menu, _flags = 0, _x_value = nil, _y_value = nil, _view = nil)
+          Commands.install_feature_menus(menu, :contextual => true)
         end
 
         def getInstructorContentDirectory
@@ -225,11 +235,11 @@ module PhComposer
         end
 
         # A target outside any Zone refuses the whole pending gesture rather than painting the rest of
-        # it, which is the PRD's rule; Make Zone is its own explicit action and the user then retries.
+        # it; Make Zone is its own explicit action and the user then retries.
         #
         # Pointing at nothing is not that. A drag across a window opening, a re-entrant corner or the
-        # sky past a gable crosses empty space between Faces the user means, and the PRD's rule is
-        # that a drag paints every Face the cursor crosses.
+        # sky past a gable crosses empty space between Faces the user means, and a drag paints every
+        # Face the cursor crosses.
         def collect(path, flags)
           return if @collected.nil?
           return if path.nil?
@@ -345,10 +355,10 @@ module PhComposer
           announce(CANCELLED, :warning) if pending
         end
 
-        # PRD Q12: Colour-by is forced on while the tool is active, so the user sees what they are
-        # painting. What the tool forced is not what the user chose, so it is turned on without being
-        # remembered and turned off again when the tool ends. A mode the user already had on is left
-        # exactly as it was.
+        # Colour-by is forced on while the tool is active, so the user sees what they are painting.
+        # What the tool forced is not what the user chose, so it is turned on without being remembered
+        # and turned off again when the tool ends. A mode the user already had on is left exactly as
+        # it was.
         def force_colour_by
           service = ColourBy.for(@session)
           return if service.active?

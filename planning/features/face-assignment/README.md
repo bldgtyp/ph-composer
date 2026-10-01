@@ -2,10 +2,10 @@
 
 The second feature packet, and the first thing a user does in every model: say which faces are
 the envelope, what each is, what is on the other side, and which assembly it carries. It depends
-on [zones-and-adjacency](../zones-and-adjacency/README.md), which fixed the container a face is
+on [zones-and-adjacency](../../archive/phase-01-zones-and-adjacency/README.md), which fixed the container a face is
 classified in and the Zone stamp every face record carries.
 
-Code owner: [`src/ph_composer/features/zones/`](../../../src/ph_composer/features/zones/install.rb), under `faces/` ([R-D1](../../archive/pr3-foundation-corrections/DECISIONS.md#r-d1-authored-geometry-ownership)); this packet remains the product contract.
+Code owner: [`src/ph_composer/features/zones/`](../../../src/ph_composer/features/zones/install.rb), under `faces/` ([R-D1](../../archive/phase-01-faces-and-zones-refactor/DECISIONS.md#r-d1-authored-geometry-ownership)); this packet remains the product contract.
 
 ## Read order
 

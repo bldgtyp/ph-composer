@@ -33,10 +33,10 @@ module PhComposer
 
     # One partial overlap, cut on both sides and paired, in a single step.
     #
-    # Both cuts and every record write live here together because the pair's endpoints only exist
-    # once both Faces have been cut: naming them earlier would name Faces that do not exist yet.
-    # A failure anywhere aborts the whole thing, so a model never holds one side cut and the other
-    # whole (PRD: a failed native split aborts the transaction rather than becoming a skip).
+    # Both cuts and every record write live here together because the pair's endpoints only exist once
+    # both Faces have been cut: naming them earlier would name Faces that do not exist yet. A failure
+    # anywhere aborts the whole thing, so a model never holds one side cut and the other whole: a
+    # failed native split aborts the transaction rather than becoming a skip.
     class SplitAndPairStep
       attr_reader :affected
 

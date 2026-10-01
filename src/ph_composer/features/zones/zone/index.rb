@@ -6,11 +6,10 @@ module PhComposer
     #
     # Resolution is the same shape every time: find the Zone occurrence a reference names, find the
     # Face inside it, and check whether that Face's id is duplicated anywhere in the Model. Each of
-    # those asks `Occurrences` to walk the Model, so a gesture over N Faces walked it about 2N
-    # times. Measured on SketchUp 26.1.188, that is O(targets x Model Faces): a 50-target gesture
-    # cost 459 ms in a 252-Face Model and 3,352 ms in a 2,004-Face one, and the Face read had the
-    # same defect through `Adjacency.state`
-    # ([evidence](../../../../planning/archive/phase-one/evidence/p1-d-gesture-cost.md)).
+    # those asks `Occurrences` to walk the Model, so a gesture over N Faces walked it about 2N times.
+    # Measured on SketchUp 26.1.188, that is O(targets x Model Faces): a 50-target gesture cost 459 ms
+    # in a 252-Face Model and 3,352 ms in a 2,004-Face one, and the Face read had the same defect
+    # through `Adjacency.state`. With the index, the 50-target gesture costs 164 ms at 2,004 Faces.
     #
     # An index walks once and answers from what it found. Every walk is lazy, so a caller that
     # passes one pays for exactly the walks it would have paid for anyway, and no more.

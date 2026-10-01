@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# The development runtime probe (planning/archive/phase-zero/phases/phase-05-runtime.md, work item 7).
+# The development runtime probe (planning/archive/phase-00-foundation/phases/phase-05-runtime.md, work item 7).
 # Never shipped. Load it through the bridge after PH-Composer, then drive it one eval at a time, reading
 # state in a call of its own so the runtime's UI timers and the page can run in between:
 #

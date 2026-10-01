@@ -2,7 +2,7 @@
 
 module PhComposer
   # The shared Colour-by service: a contribution seam beside feature, provider and exporter
-  # (face-assignment PRD "Colour-by", Q16). A feature declares a mode in its own `install`:
+  # (context/EXTENSIBILITY.md, "Colour-by modes"). A feature declares a mode in its own `install`:
   #
   #   feature.colour_mode("ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone",
   #                       colours: ColourBy::Palette.ramp) do |model|
@@ -135,7 +135,7 @@ module PhComposer
     end
 
     # The mode the user last chose, so a mode turned on is the one their palette last touched
-    # (face-assignment PRD Q12). Colour-by itself is off at rest.
+    # Colour-by itself is off at rest.
     def remembered_mode
       name = Preferences.colour_by_mode
       name && Registry.current.colour_modes.key?(name) ? name : nil

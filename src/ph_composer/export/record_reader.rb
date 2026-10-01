@@ -6,8 +6,8 @@ module PhComposer
     # out. The message says what to do; nothing is written.
     class Blocked < CodedError; end
 
-    # How an export contributor reads records (CONTRACTS.md C5, "Export" row). Only a kind's declared
-    # values and the extension fields the contributor names leave the Model:
+    # How an export contributor reads records (context/CONTRACTS.md, "Records and extension data").
+    # Only a kind's declared values and the extension fields the contributor names leave the Model:
     #
     # - `user_data` never does; a record that has some gets a finding saying it was left out.
     # - An extension envelope the contributor names must be understood, and only the named payload

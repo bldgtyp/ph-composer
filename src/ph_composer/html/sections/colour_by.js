@@ -1,6 +1,6 @@
-/* The panel's Colour-by legend (face-assignment PRD Q18): the mode control, one row per colour with
- * its label and count, click a row to select and zoom to what it counts, and "Show only this" to set
- * every other row aside.
+/* The panel's Colour-by legend: the mode control, one row per colour with its label and count,
+ * click a row to select and zoom to what it counts, and "Show only this" to set every other row
+ * aside.
  *
  * Nothing here names a mode, a face type or a Zone. The rows, their labels, their colours and their
  * counts all come from the shared service's legend, so a feature that registers a mode reaches this
@@ -8,8 +8,8 @@
  *
  * Every control sends a view command: turning a mode on, selecting a row and showing one row on its
  * own all change what the host draws and none of them writes to the Model, so none leaves an Undo
- * entry. Hover-to-highlight, the fourth affordance Q18 names, is not built: it would send one command
- * per pointer move and its cost is a question only a host can answer (planning/archive/phase-one/PLAN.md).
+ * entry. Hover-to-highlight is not built: it would send one command per pointer move, and its cost
+ * has to be measured on a host first.
  */
 PhComposerUI.define("sections/colour_by", ["panel", "workspace", "request", "snapshot"],
 function (panel, ui, requests, snapshot) {

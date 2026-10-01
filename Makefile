@@ -1,4 +1,4 @@
-.PHONY: ci syntax lint lint-ruby lint-js lint-python test fixtures fixtures-check coverage hostkit-test python-check \
+.PHONY: ci syntax lint lint-ruby lint-js lint-python lint-citations test fixtures fixtures-check coverage hostkit-test python-check \
         panel-manifest panel-manifest-check ui-preview ui-checks rbz rbz-check install clean bridge-install \
         bridge-uninstall runtime-check runtime-pin-check runtime-manifest runtime-browser-check phase-one-proof
 
@@ -37,7 +37,7 @@ test:
 # Three rule sets, one target. Rubocop and eslint are developer tools the extension does not
 # need, so each prints a named skip when absent and `make test` keeps working on a checkout with
 # neither. CI installs both, so nothing skips there; a local skip is not gate evidence.
-lint: lint-ruby lint-js lint-python
+lint: lint-ruby lint-js lint-python lint-citations
 
 lint-ruby:
 	@if [ -x "$(BUNDLE)" ] && $(BUNDLE) check >/dev/null 2>&1; then \
@@ -51,6 +51,15 @@ lint-js:
 	  pnpm exec eslint .; \
 	else \
 	  echo "lint-js: skipped, eslint is not installed (run 'pnpm install')"; \
+	fi
+
+# Shipped code and tests never cite planning documents (context/CODING_STANDARDS.md, "Comments").
+# Planning moves when it is archived; a citation into it breaks. The vendored payload is exempt.
+lint-citations:
+	@if git grep --untracked -nE 'planning/|\bPRD\b|CONTRACTS\.md C[0-9]' -- src tests ':!src/ph_composer/vendor'; then \
+	  echo "lint-citations: cite context/ instead of planning (context/CODING_STANDARDS.md)"; exit 1; \
+	else \
+	  echo "lint-citations: ok"; \
 	fi
 
 # No skip: `test` and `python-check` already require `uv`.

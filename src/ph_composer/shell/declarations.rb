@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module PhComposer
-  # What a feature declares in its `install(registry)` (CONTRACTS.md C1). Each is a plain value; the
-  # registry validates a feature's declarations together before any becomes available.
+  # What a feature declares in its `install(registry)` (context/CONTRACTS.md, "Registration"). Each is
+  # a plain value; the registry validates a feature's declarations together before any becomes
+  # available.
   module Declarations
     # The contract major every declaration here belongs to. A feature declares the major it was
     # written against; an incompatible major is refused at registration.
@@ -14,9 +15,9 @@ module PhComposer
     Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
 
     # A validated Model change. `handler` is `->(request, changes) { value }`: it proposes record
-    # writes into `changes` (a Records::ChangeSet) and never writes itself. The dispatcher applies
-    # the proposal as one native operation named `undo_name`. `confirmation` is the policy every
-    # client must satisfy before the operation opens; Phase 0 supports only "none".
+    # writes into `changes` (a Records::ChangeSet) and never writes itself. The dispatcher applies the
+    # proposal as one native operation named `undo_name`. `confirmation` is the policy every client
+    # must satisfy before the operation opens; only "none" is supported.
     Action = Struct.new(
       :name, :owner, :description, :params, :result, :examples, :undo_name, :side_effects, :confirmation, :handler,
       keyword_init: true
@@ -39,22 +40,23 @@ module PhComposer
 
     HostEventSubscription = Struct.new(:owner, :kind, :handler, keyword_init: true)
 
-    # One section of the export extraction (CONTRACTS.md C6). `contract` is `->(reader) { [record, ...] }`:
-    # it reads through an Export::RecordReader, which applies the metadata and extension-data rules, and
-    # never writes. `name` is the section id the translation package reads, at `section_version`.
-    # `result` declares the top-level result fields the feature's translation adds, in Export::Privacy's
-    # schema form; `report` is `->(result, display_units) { [html_section, ...] }` over those fields.
-    # `preflight` optionally names a registered read query returning findings and explicit repair actions.
+    # One section of the export extraction (context/CONTRACTS.md, "Translation sections and
+    # artifacts"). `contract` is `->(reader) { [record, ...] }`: it reads through an
+    # Export::RecordReader, which applies the metadata and extension-data rules, and never writes.
+    # `name` is the section id the translation package reads, at `section_version`. `result` declares
+    # the top-level result fields the feature's translation adds, in Export::Privacy's schema form;
+    # `report` is `->(result, display_units) { [html_section, ...] }` over those fields. `preflight`
+    # optionally names a registered read query returning findings and explicit repair actions.
     # `user_data_keys` are the dotted HBJSON user_data keys the contributor's translation writes, such
     # as "ph_composer.level"; the artifact guard refuses any other (export/hbjson_metadata.rb).
     ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, :preflight,
                                    :user_data_keys, keyword_init: true)
 
-    # One Colour-by mode (face-assignment PRD "Colour-by"). `projection`
-    # is `->(model) { [ColourBy::Entry, ...] }`: a pure read of the feature's own entities, their
-    # world transforms and the value each one carries. `colours` is `->(value) { [r, g, b] }`, nil for
-    # a value the mode cannot colour, which the service draws as incomplete. `entity_kind` is open
-    # prose naming what the mode paints; the service tessellates whatever entity an entry carries.
+    # One Colour-by mode. `projection` is `->(model) { [ColourBy::Entry, ...] }`: a pure read of the
+    # feature's own entities, their world transforms and the value each one carries. `colours` is
+    # `->(value) { [r, g, b] }`, nil for a value the mode cannot colour, which the service draws as
+    # incomplete. `entity_kind` is open prose naming what the mode paints; the service tessellates
+    # whatever entity an entry carries.
     # `sort` is an optional `->(row) { key }` over legend rows.
     ColourMode = Struct.new(:name, :owner, :label, :entity_kind, :colours, :sort, :projection, keyword_init: true)
 
@@ -66,10 +68,12 @@ module PhComposer
     # built, so an item appears on a right-click only where it applies; `shell/` cannot decide that
     # for a feature, because deciding it means knowing what the feature's entities are.
     #
-    # A menu item writes no record and opens no operation; that is the whole difference between one
-    # and an action. Starting a tool, choosing its palette and turning a Colour-by mode on are the
-    # three things in Phase 1 that are reached this way.
-    MenuItem = Struct.new(:name, :owner, :label, :menu, :separator_after, :handler, :state, :available,
+    # Native entry points delegate Model writes to registered actions. Direct handlers may only
+    # change view/session state, such as starting a tool or turning a Colour-by mode on.
+    # `entries` optionally supplies current per-session context-menu entries instead of one static
+    # item. Contributors own catalog/selection reads; global menus do not capture dynamic catalogs.
+    MenuEntry = Struct.new(:label, :handler, :state, :separator_after, keyword_init: true)
+    MenuItem = Struct.new(:name, :owner, :label, :menu, :separator_after, :handler, :state, :available, :entries,
                           keyword_init: true)
 
     ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)

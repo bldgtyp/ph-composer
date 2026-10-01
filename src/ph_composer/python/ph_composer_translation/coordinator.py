@@ -1,4 +1,6 @@
-"""Orders sections by their declared requirements and runs them (CONTRACTS.md C6).
+"""Orders sections by their declared requirements and runs them.
+
+The contract is context/CONTRACTS.md, "Translation sections and artifacts".
 
 Three kinds of failure, kept apart:
 

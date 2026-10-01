@@ -36,7 +36,7 @@ RUNTIME_MANIFEST = f"{EXTENSION_ID}/vendor/manifest.json"
 
 # What the extension ships. A new kind of asset is a packaging decision, made here.
 SHIPPED_SUFFIXES = frozenset(
-    {".rb", ".js", ".css", ".html", ".svg", ".json", ".py", ".md", ".txt", ".wasm", ".zip", ".whl"}
+    {".rb", ".js", ".css", ".html", ".svg", ".pdf", ".json", ".py", ".md", ".txt", ".wasm", ".zip", ".whl"}
 )
 
 # Development material never ships, whatever its suffix: the host bridge and probes, synthetic

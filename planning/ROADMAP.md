@@ -6,7 +6,7 @@ AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 The high-level order of the core features and where each one stands. [STATUS.md](STATUS.md) is
-the index of every tracked item. This file is the sequence. The archived [Phase 1 packet](archive/phase-one/README.md)
+the index of every tracked item. This file is the sequence. The archived [Phase 1 packet](archive/phase-01-faces-and-zones/README.md)
 coordinated the three owning feature plans and their acceptance gates. Feature behavior remains in each PRD.
 
 Cross-cutting choices that need Ed's answer are in [DECISIONS.md](DECISIONS.md). Feature-local
@@ -48,7 +48,7 @@ is the complete MVP Ed described. Ed confirmed both boundaries in D1 on 2026-09-
 
 ## Phase 0: gates and foundation
 
-The [Phase 0 planning packet](archive/phase-zero/README.md) supplies seven stage plans, contract
+The [Phase 0 planning packet](archive/phase-00-foundation/README.md) supplies seven stage plans, contract
 designs, frozen source disposition and acceptance checks. Product decisions are resolved.
 Ed authorized implementation on 2026-09-18; progress is tracked in the packet's STATUS. All seven
 stages and the four spikes ran on 2026-09-18, every acceptance row is met, and Phase 0 was merged
@@ -56,12 +56,12 @@ through [PR #1](https://github.com/bldgtyp/ph-composer/pull/1). The packet is ar
 
 | # | Item | Kind | State | Why here |
 | --- | --- | --- | --- | --- |
-| 0.1 | PHX without Excel, [PHX#157](https://github.com/PH-Tools/PHX/issues/157) | external spike | Complete 2026-09-18, [route viable](archive/phase-zero/evidence/spike-phx.md) | The founding brief's first technical gate. If PHX cannot run in Pyodide, METr export needs a different route and phase 1 changes |
+| 0.1 | PHX without Excel, [PHX#157](https://github.com/PH-Tools/PHX/issues/157) | external spike | Complete 2026-09-18, [route viable](archive/phase-00-foundation/evidence/spike-phx.md) | The founding brief's first technical gate. If PHX cannot run in Pyodide, METr export needs a different route and phase 1 changes |
 | 0.2 | [Foundation transplant](archive/foundation-transplant.md) | refactor | Complete 2026-09-18, merged through PR #1 | Shell, session, record engine, panel module graph, Pyodide runtime shell and test harness. No user feature lands here |
 | 0.3 | [Units](features/units/README.md) | feature, port | Shared portion merged through PR #1; feature quantities remain | Shared unit files move with the transplant; editor follow-ups and new quantities remain with their features |
-| 0.4 | Overlay fill spike | spike | Complete 2026-09-18, [pass](archive/phase-zero/evidence/spike-overlay.md) | Gates Colour-by, which face-assignment needs in phase 1 |
-| 0.5 | Window component host spike | spike | Complete 2026-09-18, [flat component holds, five plan consequences](archive/phase-zero/evidence/spike-window.md) | Gates window-types. Cheap to run with 0.4 |
-| 0.6 | Edge identity spike | spike | Complete 2026-09-18, [dictionaries survive, and multiply](archive/phase-zero/evidence/spike-edge.md) | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
+| 0.4 | Overlay fill spike | spike | Complete 2026-09-18, [pass](archive/phase-00-foundation/evidence/spike-overlay.md) | Gates Colour-by, which face-assignment needs in phase 1 |
+| 0.5 | Window component host spike | spike | Complete 2026-09-18, [flat component holds, five plan consequences](archive/phase-00-foundation/evidence/spike-window.md) | Gates window-types. Cheap to run with 0.4 |
+| 0.6 | Edge identity spike | spike | Complete 2026-09-18, [dictionaries survive, and multiply](archive/phase-00-foundation/evidence/spike-edge.md) | Gates thermal bridges, piping, ducting. Cheap to run with 0.4 |
 | 0.7 | Development repository home and MVP license boundary | decisions | Confirmed | D5 keeps the UI kit AGPL and external integrations at file/HTTPS seams. D8 keeps development at `bldgtyp/ph-composer`; the public name and any future organization move remain open |
 
 The host investigations are complete. Their evidence records the PH-Composer development bridge
@@ -69,14 +69,14 @@ and current proving host; feature-specific lifecycle and geometry gates remain w
 
 ## Phase 1: walking skeleton
 
-The [execution plan](archive/phase-one/PLAN.md) starts from the merged foundation. P1-A binds entity-owned
+The [execution plan](archive/phase-01-faces-and-zones/PLAN.md) starts from the merged foundation. P1-A binds entity-owned
 records and geometry transactions, P1-B builds Zone/face authoring, P1-C proves two-Zone HBJSON,
 P1-D completes authoring behavior, P1-E closes the HBJSON/report handoff, and P1-F records acceptance.
 The early proof does not mark the full feature packets complete.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 1.1 | [Zones and adjacency](features/zones-and-adjacency/README.md) | Phase 1 scope merged to main; later-phase scope remains | First, because a boundary condition names what is on the other side |
+| 1.1 | [Zones and adjacency](archive/phase-01-zones-and-adjacency/README.md) | Phase 1 scope merged to main; later-phase scope remains | First, because a boundary condition names what is on the other side |
 | 1.2 | [Face assignment](features/face-assignment/README.md) | Phase 1 scope merged to main and host-verified; assembly assignment waits for 2.1 | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
 | 1.3 | [Validation and export](features/validation-and-export/README.md) | Phase 1 HBJSON/report scope merged to main; METr exporter deferred | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
 
@@ -150,7 +150,7 @@ wanted as a warm-up. They sit here because neither is needed for the Phase 1 can
 
 P1-A through P1-F are complete and merged to main through PR #3 and PR #6 (2026-09-30); the
 packet is archived. The
-[execution plan](archive/phase-one/PLAN.md) and [final evidence](archive/phase-one/evidence/p1-e-export-workflow.md)
+[execution plan](archive/phase-01-faces-and-zones/PLAN.md) and [final evidence](archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md)
 record authoring, export tasks, the pinned wheel payload and fresh integrated acceptance.
 The normal build safely refuses without authored Assemblies; successful Phase 1 translation uses
 an explicit tools-only provider. Phase 2 supplies real Assembly/material authoring and its gates.

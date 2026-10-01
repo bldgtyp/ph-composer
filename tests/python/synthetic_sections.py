@@ -1,4 +1,4 @@
-"""Synthetic translation sections for the coordinator's tests (CONTRACTS.md C6). Development only.
+"""Synthetic translation sections for the coordinator's tests. Development only.
 
 A reads frames. B reads panels that name their frame by durable id and need A's typed object. C reads
 tags and needs nothing, so it proves one section's failures do not reach another.

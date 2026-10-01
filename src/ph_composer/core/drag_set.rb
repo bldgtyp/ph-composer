@@ -5,13 +5,11 @@ module PhComposer
   # pointer first reached each target. A viewport tool collects into one of these while the button
   # is down and hands the values to its operation at mouse-up.
   #
-  # It stops one past the limit rather than at it. A gesture that ran over the ceiling then arrives
-  # at its operation over the ceiling and is refused by the one rule that owns the ceiling, instead
-  # of arriving full and legal-looking and silently painting part of what the pointer crossed, which
-  # the face-assignment PRD refuses.
+  # It stops one past the limit rather than at it. A gesture that ran over the ceiling then arrives at
+  # its operation over the ceiling and is refused by the one rule that owns the ceiling, instead of
+  # arriving full and legal-looking and silently painting part of what the pointer crossed.
   #
-  # It names no feature and knows nothing about Faces: Spaces' Mark floor collects the same way
-  # (face-assignment PRD Q22).
+  # It names no feature and knows nothing about Faces: Spaces' Mark floor will collect the same way.
   class DragSet
     attr_reader :limit
 

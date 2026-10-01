@@ -17,11 +17,10 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Item | Kind | State | Issue | Pointer |
 | ---- | ---- | ----- | ----- | ------- |
-| Phase 1 UX follow-ups | feature | Requested; Ed's hands-on notes, to resolve before Phase 2; geometry-first principle and Z4 decided 2026-09-30; Z2 needs research | none (local planning draft) | [features/phase-one-ux-followups/](features/phase-one-ux-followups/README.md) |
-| Zones and adjacency | feature | In progress; Phase 1 scope merged to main and archived; later-phase scope remains | none (local planning draft) | [features/zones-and-adjacency/](features/zones-and-adjacency/README.md) |
+| Make Zone entry points | feature | Requested; toolbar button and Classify-tool inline offer, carried from zones-and-adjacency | none (local planning draft) | [features/zones-entry-points/](features/zones-entry-points/README.md) |
 | Face assignment | feature | In progress; Phase 1 classification scope merged to main; assembly assignment is Phase 2; interview record awaits Ed's confirmation | none (local planning draft) | [features/face-assignment/](features/face-assignment/README.md) |
 | Native acceptance tooling | workflow | Implemented; historical evidence indexed, observed-result validation and dependency screening | none (local tooling work) | [native-acceptance/](native-acceptance/README.md); tools and skills remain development-only |
-| Validation and export | feature | In progress; Phase 1 HBJSON/report scope merged to main; later feature scope remains | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); [evidence](archive/phase-one/evidence/p1-e-export-workflow.md); authored Assemblies required in normal composition |
+| Validation and export | feature | In progress; Phase 1 HBJSON/report scope merged to main; later feature scope remains | none (local planning draft) | [features/validation-and-export/](features/validation-and-export/README.md); [evidence](archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md); authored Assemblies required in normal composition |
 | METr export | feature | Deferred; return milestone unscheduled | none (local planning draft) | [features/metr-export/](features/metr-export/README.md); Phase 1 row A15; Ed deferred until further feature development on 2026-09-20 |
 | SketchUp 2023 floor verification | feature, host gate | Requested | none (local planning draft) | [features/sketchup-2023-floor/](features/sketchup-2023-floor/README.md); no 2023 host run yet |
 | Windows support verification | feature, host gate | Requested | none (local planning draft) | [features/windows-support/](features/windows-support/README.md); first release candidate is macOS-only |
@@ -39,7 +38,7 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 | Sun-path view | feature, post-MVP | Requested, PRD drafted | none (no remote) | [features/sun-path-view/](features/sun-path-view/README.md) |
 | Window performance overlays | feature, post-MVP | Requested, PRD drafted | none (no remote) | [features/window-performance-overlays/](features/window-performance-overlays/README.md) |
 | UI baseline from the predecessor's six screens | reference | Scoped | none (no remote) | [ui-baseline/](ui-baseline/README.md) |
-| PHX dependency packaging | external follow-up | Deferred; Phase 0 runtime route proved | [PH-Tools/PHX#157](https://github.com/PH-Tools/PHX/issues/157) | [B1 disposition](archive/phase-zero/evidence/spike-phx.md); METr integration deferred; retain pinned-wheel evidence for resumption |
+| PHX dependency packaging | external follow-up | Deferred; Phase 0 runtime route proved | [PH-Tools/PHX#157](https://github.com/PH-Tools/PHX/issues/157) | [B1 disposition](archive/phase-00-foundation/evidence/spike-phx.md); METr integration deferred; retain pinned-wheel evidence for resumption |
 | Cross-cutting decisions | decision register | D1-D12 confirmed; contributor architecture and external-agent priority recorded | none (no remote) | [DECISIONS.md](DECISIONS.md); [contributor architecture](../context/EXTENSIBILITY.md); [agent interface](../context/AGENT_INTERFACE.md) |
 
 States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·

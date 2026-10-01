@@ -56,6 +56,49 @@ function byLabel(root, label) {
   })[0];
 }
 
+function settingsPage() {
+  var p = page(), state = snapshot();
+  state.sections["ph_composer.zones.settings"] = { status: "completed", value: {
+    suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130
+  } };
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  p.section = p.query("[data-section='ph_composer.overview']");
+  p.settings = byLabel(p.section, "Zones / Faces settings");
+  p.settings.listeners.click({});
+  return p;
+}
+
+test("Zones / Faces settings commit Enter once with the reviewed values and revision", function () {
+  var p = settingsPage(), roof = byLabel(p.section, "Roof maximum tilt [deg]");
+  assert.ok(panelSource.markup("index.html").includes('data-tab="overview">Zones / Faces'));
+  roof.value = "45";
+  roof.listeners.keydown({ key: "Enter", preventDefault: function () {} });
+  roof.listeners.change({});
+
+  assert.strictEqual(p.sent.length, 1);
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.settings.update");
+  assert.strictEqual(p.sent[0].payload.expected_revision, 4);
+  assert.deepStrictEqual(p.sent[0].payload.params, {
+    values: { suggest_on_make: true, roof_angle_deg: 45, floor_angle_deg: 130 },
+    expected_values: { suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130 }
+  });
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview");
+  var bubble = p.section.querySelector(".phc-bubble");
+  bubble._bubble.close(true);
+  assert.strictEqual(bubble.hidden, false, "the pending operation keeps its work surface visible");
+});
+
+test("Zones / Faces settings reject invalid angles locally and Escape restores the field", function () {
+  var p = settingsPage(), roof = byLabel(p.section, "Roof maximum tilt [deg]");
+  roof.value = "140";
+  roof.listeners.change({});
+  assert.strictEqual(p.sent.length, 0);
+  assert.ok(p.section.querySelector(".phc-form-status").textContent.includes("roof angle below"));
+  roof.listeners.keydown({ key: "Escape" });
+  assert.strictEqual(roof.value, "60");
+});
+
 
 function rowAction(root, id) {
   return root.querySelectorAll("[data-row-action]").filter(function (node) {
@@ -116,6 +159,25 @@ test("Overview exposes Make Zone and sends its explicit selection target", funct
     request_id: "session-a:overview:1", session: "session-a", name: "ph_composer.zones.make",
     params: { parent_path: [], entity_ids: [200] }, expected_revision: 4
   } });
+});
+
+test("whole-model Solve includes unsafe occurrences for all-or-nothing refusal", function () {
+  var p = page(), state = snapshot();
+  var zones = state.sections["ph_composer.zones.overview"].value.zones;
+  var copy = JSON.parse(JSON.stringify(zones[0]));
+  copy.reference.zone_path = [300];
+  copy.state = "ambiguous";
+  zones.push(copy);
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var button = byLabel(section, "Solve adjacencies for all Zones in this Model");
+  button.listeners.click({});
+
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.solve_adjacency");
+  assert.strictEqual(p.sent[0].payload.expected_revision, 4);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), {
+    zones: [{ zone_id: "zon_a", zone_path: [100] }, { zone_id: "zon_a", zone_path: [300] }]
+  });
 });
 
 test("a Face chip sets one field, keeps the other, and guards on the values it painted", function () {
@@ -432,6 +494,94 @@ test("switching Models withdraws the pending Attached-zone draft", function () {
   p.panel.receive({ type: "panel.snapshot", payload: other });
   assert.strictEqual(p.query("dialog"), null);
   assert.strictEqual(p.sent.length, 0);
+});
+
+function batchSnapshot(token) {
+  var payload = snapshot();
+  payload.sections["ph_composer.zones.faces.selection_assignment"] = { status: "completed", value: {
+    token: token || "review-1", revision: 4,
+    faces: payload.sections["ph_composer.zones.faces.faces"].value.faces.map(function (face) { return face.reference; })
+  } };
+  return payload;
+}
+
+test("native assignment retries a refused tab switch after the guard releases", function () {
+  var p = page(), blocked = true;
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  p.panel.showTab("export");
+  p.panel.navigationGuard("export-work", function () { return blocked ? "Export is busy." : null; });
+  p.panel.receive({ type: "panel.snapshot", payload: batchSnapshot() });
+  assert.strictEqual(p.panel.state.ui.activeTab, "export");
+  assert.strictEqual(p.query("dialog"), null);
+  blocked = false;
+  p.panel.repaint();
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview");
+  assert.ok(p.query("dialog"));
+  assert.strictEqual(p.sent.length, 0);
+});
+
+test("native batch assignment switches to Zones / Faces and freezes heterogeneous targets and revision", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  p.panel.showTab("export");
+  p.panel.receive({ type: "panel.snapshot", payload: batchSnapshot() });
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview");
+  var dialog = p.query("dialog");
+  assert.ok(dialog);
+  assert.strictEqual(p.sent.length, 0);
+  var newer = batchSnapshot(); newer.revision = 12;
+  p.panel.receive({ type: "panel.snapshot", payload: newer });
+  dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  var sent = JSON.parse(JSON.stringify(p.sent[0].payload));
+  assert.strictEqual(sent.name, "ph_composer.zones.faces.attached_zone.create_and_assign");
+  assert.strictEqual(sent.expected_revision, 4);
+  var reviewedFaces = batchSnapshot().sections["ph_composer.zones.faces.selection_assignment"].value.faces;
+  assert.deepStrictEqual(sent.params.faces, reviewedFaces);
+  assert.strictEqual(sent.params.expected_values, undefined);
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview");
+  dialog.listeners.cancel({ preventDefault: function () {} });
+  assert.strictEqual(p.query("dialog"), dialog, "pending batch cannot disappear");
+  p.panel.receive({ type: "action.result", payload: { session: "session-a", request_id: sent.request_id,
+    outcome: { status: "refused", message: "The Model changed." } } });
+  assert.strictEqual(p.query("dialog"), dialog);
+  assert.strictEqual(dialog.querySelector(".cell-error").textContent, "The Model changed.");
+  dialog.listeners.cancel({ preventDefault: function () {} });
+  assert.strictEqual(p.query("dialog"), null);
+  assert.strictEqual(p.sent[1].type, "view.invoke");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[1].payload.params)), { token: "review-1" });
+  p.panel.repaint();
+  assert.strictEqual(p.query("dialog"), null, "unchanged handoff snapshot cannot reopen a closed form");
+});
+
+test("native batch handoff waits for dirty Zone details and opens after Cancel", function () {
+  var p = draftPage();
+  type(byLabel(p.section, "Zone name"), "Unsaved draft");
+  p.panel.receive({ type: "panel.snapshot", payload: batchSnapshot() });
+  assert.strictEqual(p.query("dialog"), null);
+  assert.strictEqual(byLabel(p.section, "Zone name").value, "Unsaved draft");
+  assert.match(p.notice().message.textContent, /Save or cancel the Zone details/);
+  p.button("Cancel").listeners.click({});
+  assert.ok(p.query("dialog"));
+  assert.strictEqual(p.sent.length, 0);
+});
+
+test("native batch assignment can select an existing definition and closes its handoff on success", function () {
+  var p = page(), payload = batchSnapshot();
+  payload.sections["ph_composer.zones.faces.attached_zone.list"] = { status: "completed", value: {
+    records: [{ id: "atz_existing", values: { name: "Garage" } }]
+  } };
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var dialog = p.query("dialog"), picker = byLabel(dialog, "Attached zone");
+  picker.value = "atz_existing"; picker.listeners.change({});
+  dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.classify");
+  assert.strictEqual(p.sent[0].payload.params.expected_values, undefined);
+  assert.strictEqual(p.sent[0].payload.params.faces.length, 2);
+  p.panel.receive({ type: "action.result", payload: { session: "session-a", request_id: p.sent[0].payload.request_id,
+    outcome: { status: "completed", value: { face_ids: ["fac_a", "fac_b"] } } } });
+  assert.strictEqual(p.query("dialog"), null);
+  assert.strictEqual(p.sent[1].payload.name, "ph_composer.zones.faces.close_attached_assignment");
 });
 
 /* U1, R-D4: one Zone details draft at a time. While the form is dirty or its Save is pending, row

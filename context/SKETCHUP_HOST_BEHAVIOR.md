@@ -52,7 +52,7 @@ and Dynamic Components facts this file drops, is
 | Copying a Group does not copy what is inside it: both Groups become instances of one definition and share every entity in it, while each instance keeps its own attribute dictionaries. `Group#definition.instances` then reports both. Measured in PH-Composer on 26.1.188, 2026-09-20. | A copied Zone has a duplicated UUID and shared members at the same time. Storage is shared whenever a container is a ComponentInstance **or** its definition has more than one instance; treating only the first as shared let a repair of the copy rewrite the original's Faces. | `Occurrences.shared_storage?`; stub `GroupDefinition`; `test_a_zone_copied_the_way_sketchup_copies_one_reads_as_shared_storage` |
 | There is no `Sketchup::Model#undo`. Native Undo and Redo are menu actions, reached with `Sketchup.send_action("editUndo:")`, and they run on the UI queue rather than before the call returns. Measured in PH-Composer on 26.1.188, 2026-09-20. | Host code sends the action and reads the result in a later call. The offline stub keeps `Model#undo` because a test has no UI queue to run an action on, which is a deviation, not the host's API. | `test_the_stub_steps_undo_itself_because_the_host_has_no_model_undo`; the walkthroughs under `tools/examples/authoring/` |
 | Drawing a coplanar outline onto a Face splits it and the original Face object keeps its `persistent_id` and every attribute dictionary; each further piece is new. An outline sharing part of the Face's boundary leaves separate Faces, while one wholly inside it leaves a single Face carrying a hole, whose `Face#area` is already net of that hole. Measured in PH-Composer on 26.1.188, 2026-09-20. | The adjacency solver reads the container after the cut and matches pieces by outline and surviving persistent id rather than assuming which is which. Its sliver thresholds judge area per Face the host will make, so a ring is judged whole and disjoint pieces separately. | `Zones::FaceSplit`; `tests/support/sketchup/split_model.rb`; `tools/examples/authoring/cut_walkthrough.rb` |
-| A coordinated clean partition supports two 6 m² Faces against one 12 m² counterpart and one full-height Zone beside two stacked Zones on SketchUp 26.1.188. | Capture the original plane and local normal before drawing; validate actual pieces and write reciprocal records in one operation. Native rollback, Undo/Redo and fresh reopen preserve the complete result. | [P1-D multi-neighbour evidence](../planning/archive/phase-one/evidence/p1-d-multi-neighbour-adjacency.md) |
+| A coordinated clean partition supports two 6 m² Faces against one 12 m² counterpart and one full-height Zone beside two stacked Zones on SketchUp 26.1.188. | Capture the original plane and local normal before drawing; validate actual pieces and write reciprocal records in one operation. Native rollback, Undo/Redo and fresh reopen preserve the complete result. | [P1-D multi-neighbour evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-multi-neighbour-adjacency.md) |
 | Grouping stamped Faces takes their bounding Edges with them: the restored Group returned `manifold? == true` with 6 Faces and 12 Edges and nothing left in the parent context. Measured in PH-Composer on 26.1.188, 2026-09-20. | Limited Restore passes only the stamped Faces and lets the host collect the Edges. | `Zones::Repair.restore_plan`; `tools/examples/authoring/repair_walkthrough.rb` |
 | SketchUp cut and paste can replace a `persistent_id`. | A durable UUID in PH-Composer's own dictionary survives the operation when the object is still logically the same; placement references stay path-qualified; session `entityID` is never durable identity. | Predecessor B2 evidence |
 | `Sketchup::Model#delete_attribute` returned `nil` without removing the key. Deleting the key from `model.attribute_dictionary(namespace, false)` succeeded. | Remove Model-level keys through `AttributeDictionary#delete_key`, and model this in the stub. | Predecessor phase 6c2 |
@@ -118,7 +118,7 @@ and Dynamic Components facts this file drops, is
 
 ## Components, glue and edge attributes
 
-Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/archive/phase-zero/evidence/spike-window.md), [B4](../planning/archive/phase-zero/evidence/spike-edge.md)).
+Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/archive/phase-00-foundation/evidence/spike-window.md), [B4](../planning/archive/phase-00-foundation/evidence/spike-edge.md)).
 
 | Fact | Consequence |
 | --- | --- |
@@ -130,7 +130,7 @@ Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/archive/phase-
 ## Zone grouping and face topology
 
 Measured in PH-Composer on 26.1.188, 2026-09-20
-([P1-A](../planning/archive/phase-one/evidence/p1-a-geometry.md)).
+([P1-A](../planning/archive/phase-01-faces-and-zones/evidence/p1-a-geometry.md)).
 
 | Fact | Consequence |
 | --- | --- |
@@ -145,7 +145,7 @@ Measured in PH-Composer on 26.1.188, 2026-09-20
 
 | Fact | Consequence |
 | --- | --- |
-| A filled, translucent overlay (`GL_TRIANGLES`, alpha 110) is depth-tested against Model geometry, leaves native picking unaffected and adds no measurable median frame cost at 1,000 triangles; at 10,000 it adds about 4 to 5 ms a frame, mostly Ruby marshalling in `draw`. Measured in PH-Composer on 26.1.188, M1 Max, 2026-09-18 ([B2](../planning/archive/phase-zero/evidence/spike-overlay.md)). | Filled Colour-by modes and the volume preview are available; cache per instance and budget past about 10,000 triangles. |
+| A filled, translucent overlay (`GL_TRIANGLES`, alpha 110) is depth-tested against Model geometry, leaves native picking unaffected and adds no measurable median frame cost at 1,000 triangles; at 10,000 it adds about 4 to 5 ms a frame, mostly Ruby marshalling in `draw`. Measured in PH-Composer on 26.1.188, M1 Max, 2026-09-18 ([B2](../planning/archive/phase-00-foundation/evidence/spike-overlay.md)). | Filled Colour-by modes and the volume preview are available; cache per instance and budget past about 10,000 triangles. |
 | A `Sketchup::Overlay` drawing through the accumulated world transform lands on the right geometry under rotated parents; 44 items drew in 0.17 ms median with a one-off 1.4 s walk. `View#write_image` does not render overlays; `view.invalidate` inside an eval does not repaint before the eval returns. | Cache per instance and invalidate from the observers; capture overlay evidence with a window capture. |
 | SketchUp 2023 to 2025 require a child drawing element appended to a component or group leaf path for `Model#drawing_element_visible?`; SketchUp 2026 accepts the occurrence path directly. | Branch on the host version in the visibility reader. |
 | `Sketchup::Overlay` is a 2023.0 API. | It is why SketchUp 2023 is the compatibility floor. |

@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module PhComposer
-  # The public application interface (CONTRACTS.md C2, context/AGENT_INTERFACE.md). The panel, Ruby
-  # scripts and future external adapters all call these methods; none of them needs the panel open.
+  # The public application interface (context/CONTRACTS.md, "Public interface";
+  # context/AGENT_INTERFACE.md). The panel, Ruby scripts and future external adapters all call these
+  # methods; none of them needs the panel open.
   #
   #   found = PhComposer::API.discover
   #   context = PhComposer::API.connect(session_id: found["sessions"].first["id"])
