@@ -1,7 +1,7 @@
 # P2-10: window product and Window Type records
 
 DATE: 2026-09-30
-STATUS: Scoped. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: In progress. Authorized 2026-10-01; preceding stage gates remain required.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 

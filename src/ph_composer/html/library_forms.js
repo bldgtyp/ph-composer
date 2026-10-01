@@ -625,6 +625,7 @@ function (RecordForm, request, snapshot, unitFields, fields, ui, tables, viewCon
         if (config.cell && config.cell(td, row, field, value)) return true;
         if (!self.edits.render(td, row, field)) return false;
         self.grid.bind(td, row, field, !payload || self.ranges.busy());
+        if (config.afterCell) config.afterCell(td, row, field);
         return true;
       }, empty: payload ? "No " + config.label + " records match this view." :
         snapshot.message(snapshot.section(state, config.section) || {}, config.label + " records are unavailable.") };

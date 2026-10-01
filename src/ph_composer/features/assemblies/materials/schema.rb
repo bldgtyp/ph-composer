@@ -55,6 +55,9 @@ module PhComposer
           SchemaFields.field("color", { "type" => "string" })
         ]
         SNAPSHOT_SCHEMA = SchemaFields.source_snapshot_schema(FIELDS)
+        # The original provider category remains attribution even when its authored local category
+        # falls back to Uncategorized. This does not widen the authored category vocabulary.
+        SNAPSHOT_SCHEMA.fetch("properties")["category"] = { "type" => "string" }
         FIELDS.find { |field| field.key == "source" }.schema.fetch("properties")["snapshot"] = SNAPSHOT_SCHEMA
 
         KIND = Records::RecordKind.new(

@@ -23,19 +23,15 @@ confirmation, drawing selection lost focus after repaint, and pointer-drag suppr
 later keyboard activation. Corrections add consequence confirmation with frozen expected values,
 keyed focus restoration and suppression limited to the trailing pointer click. Three regression
 tests pass; the reviewer independently reran all 14 Builder tests and closed all three findings.
-The eight Canvas tests are unchanged. Full integrated/browser checks after the corrections and
-fresh-process native Builder acceptance remain open. No acceptance award is claimed.
+The eight Canvas tests are unchanged. Integrated gates and browser checks after the corrections pass.
+Complete fresh-process native Builder acceptance remains open. No acceptance award is claimed.
 
 ## Resume
 
-P2-05 UI integration is currently editing the inventory and selection routes. The reviewed
-Builder/sidebar modules are stable. Refresh panel/runtime manifests after integration, run the
-required dual-Ruby gates, install the verified package, then run native E04 against it. Current
-SketchUp still has checkpoint `35704bd`, which does not contain this Builder.
-
-Integrated Builder browser checks pass after updating the assigned-segment deletion flow to
-confirm removal explicitly. Evidence: `ph-composer-builder-es8uNr`. Native Builder acceptance
-remains pending on the integrated installed build.
+Checkpoint `6a7e08f` contains the reviewed Builder and assignment UI. Dual-Ruby CI,
+Chromium 88 runtime and all five browser scripts pass; `/tmp/phc-envelope-p206-ui-final.log`
+records the final browser run. Its immutable package is installed in SketchUp 26.1.188.
+Finish the native UI gesture set against that build before awarding E03/E04.
 
 The integrated native Builder opens the mixed reference wall at approximately 423 CSS pixels,
 showing membrane, segments, film values and thermal results. SI/IP presentation matches the
@@ -44,3 +40,8 @@ Apply stores exactly 50 mm through one action. One native Model Undo restores th
 Assembly catalog exactly. Evidence: private `reference-before-builder.json` and
 `reference-after-builder.json`, plus CUA screenshots in this chat. Remaining native gestures
 are still required before E03/E04 are awarded.
+
+Native Add Layer on the assigned mixed wall commits one incomplete 100 mm Layer. The panel
+shows an unavailable U-value and the unassigned-segment warning rather than a fabricated zero.
+One native Model Undo restores the complete public Assembly catalog exactly. Evidence:
+`reference-layer-added.json` and `reference-layer-undo.json`.

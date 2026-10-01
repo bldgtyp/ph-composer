@@ -50,6 +50,10 @@
       ],
       "version": 1
     },
+    "ph_composer.assemblies.export.material_sources": {
+      "records": [],
+      "version": 1
+    },
     "ph_composer.zones.export.zones": {
       "records": [
         {

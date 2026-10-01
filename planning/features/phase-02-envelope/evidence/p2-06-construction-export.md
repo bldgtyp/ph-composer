@@ -1,7 +1,7 @@
 # P2-06 evidence: authored constructions
 
 DATE: 2026-10-01
-STATUS: Implemented. Focused conversion proof complete; independent review and integrated/native gates pending.
+STATUS: Implemented and independently reviewed. Integrated gates and current-host export/reopen proof pass; complete native attestation open.
 
 Assemblies contributes self-contained construction records. Zones references those records for
 emitted Faces and reports actual usage. Normal composition uses authored constructions without a
@@ -28,8 +28,8 @@ A synthetic native reference is saved at `_private/host/envelope/reference.skp`:
 twelve classified Faces, floor area 36 m2, roof area 36 m2, outdoor wall area 78 m2, and both
 Surface endpoints totaling 24 m2. It contains mixed wall and roof constructions, a membrane,
 shared partition, floor and unused incomplete Assembly. Independent arithmetic is saved beside it.
-E05 still requires the integrated installed build, actual assignment, export read-back and native
-lifecycle evidence. These preparation records do not award E05.
+Integrated assignment, runtime export and fresh-reopen evidence are recorded below.
+These individual checks do not award E05.
 
 Independent review reproduced and closed an emissivity conversion mismatch. Authored emissivity,
 including zero, now becomes thermal absorptance in single and grid constructions; 27 construction
@@ -59,5 +59,16 @@ Faces resolve to the same serialized construction identity. Private files: `refe
 
 Four native Undo and four native Redo gestures each match the exact public Face journal state,
 including geometry/classification/adjacency. Evidence: `reference-assignment-journal.json` and
-`reference-native-roundtrip.json`. Fresh reopen, full E04 UI gesture set and E05 attestation remain
-open. Do not infer Windows, SketchUp 2023, certification or public distribution from this proof.
+`reference-native-roundtrip.json`. The full E04 UI gesture set and E05 attestation remain open. Do not infer Windows, SketchUp 2023, certification or public distribution from this proof.
+
+
+After a fresh normal process reopened `reference-assigned.skp`, the complete public Face list
+and Assembly catalog matched the saved baselines exactly. A second actual runtime export to
+`reference-reopen.hbjson` preserved every Room, geometry/classification/adjacency reference,
+and every energy construction/material exactly. Evidence: `reference-reopen.json`.
+Whole HBJSON text is not deterministic: Honeybee-PH regenerates identifiers and display names for
+its default site, climate, setpoint and certification metadata. The comparison isolates the authored
+references and energy data rather than treating those generated defaults as authored record loss.
+
+All five integrated browser scripts pass after their final corrections. Log:
+`/tmp/phc-envelope-p206-ui-final.log`. This does not replace the remaining native UI gestures.

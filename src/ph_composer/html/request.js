@@ -13,7 +13,8 @@
    `state.ui.actionResult` slot; `view.invoke` is the viewport-state channel (selection, camera, the
    active Colour-by mode), whose results land in `state.ui.viewResults` keyed by request id. Several
    views send viewport commands independently, so one slot would let the second answer strand the first
-   in a pending state it could never settle out of.
+   in a pending state it could never settle out of. Read-only `query.invoke` results use the same keyed
+   correlation in `state.ui.queryResults` and never republish a snapshot or open a Model operation.
 
    Two shapes: `run` is single flight (refuses while a request is pending, and `consume` settles it once);
    `send` never refuses and returns the id, for callers that keep several requests in flight, which match
@@ -22,7 +23,7 @@ PhComposerUI.define("request", [], function () {
   "use strict";
   var sequence = 0;
   var SLOTS = { "action.invoke": { slot: "actionResult", keyed: false },
-    "view.invoke": { slot: "viewResults", keyed: true } };
+    "view.invoke": { slot: "viewResults", keyed: true }, "query.invoke": { slot: "queryResults", keyed: true } };
 
   function Channel(session, send, label, message) {
     this.session = session; this.transport = send; this.label = label;

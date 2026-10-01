@@ -1,7 +1,7 @@
 # P2-08: library sidebar and setup
 
 DATE: 2026-09-30
-STATUS: Scoped. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: Implemented in source and reviewed; integrated/native gates open. Authorized 2026-10-01.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -87,3 +87,7 @@ states and sign-in (P2-16). The window kinds (P2-15).
 
 - E08 has evidence in `evidence/p2-08-library-sidebar.md`, with the UI polish review recorded.
 - `make ci` and `make ui-checks` pass.
+
+## Current evidence
+
+See [source and review evidence](../evidence/p2-08-library-sidebar.md). The native host gate remains open.

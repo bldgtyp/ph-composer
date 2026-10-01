@@ -1,0 +1,125 @@
+{
+  "schema": "w1-thermal-proof-1",
+  "columns_m": [
+    1.2,
+    1.2
+  ],
+  "rows_m": [
+    1.5,
+    1.5
+  ],
+  "default_install_id": "standard",
+  "frames": {
+    "top": {
+      "width_m": 0.08,
+      "psi_g_w_mk": 0.03,
+      "uf_w_m2k": 1
+    },
+    "right": {
+      "width_m": 0.1,
+      "psi_g_w_mk": 0.04,
+      "uf_w_m2k": 1.1
+    },
+    "bottom": {
+      "width_m": 0.12,
+      "psi_g_w_mk": 0.05,
+      "uf_w_m2k": 1.2
+    },
+    "left": {
+      "width_m": 0.14,
+      "psi_g_w_mk": 0.06,
+      "uf_w_m2k": 1.3
+    }
+  },
+  "glazings": {
+    "g1": {
+      "g_value": 0.5,
+      "ug_w_m2k": 0.6
+    },
+    "g2": {
+      "g_value": 0.6,
+      "ug_w_m2k": 0.8
+    }
+  },
+  "installs": {
+    "standard": {
+      "psi_w_mk": 0.04
+    },
+    "variant": {
+      "psi_w_mk": 0.08
+    },
+    "zero": {
+      "psi_w_mk": 0
+    }
+  },
+  "cells": [
+    {
+      "id": "0",
+      "kind": "glazed",
+      "frames": {
+        "top": "top",
+        "right": "right",
+        "bottom": "bottom",
+        "left": "left"
+      },
+      "glazing_id": "g1",
+      "installs": {
+        "top": null,
+        "right": null,
+        "bottom": null,
+        "left": "zero"
+      }
+    },
+    {
+      "id": "1",
+      "kind": "glazed",
+      "frames": {
+        "top": "top",
+        "right": "right",
+        "bottom": "bottom",
+        "left": "left"
+      },
+      "glazing_id": "g2",
+      "installs": {
+        "top": null,
+        "right": null,
+        "bottom": null,
+        "left": null
+      }
+    },
+    {
+      "id": "2",
+      "kind": "glazed",
+      "frames": {
+        "top": "top",
+        "right": "right",
+        "bottom": "bottom",
+        "left": "left"
+      },
+      "glazing_id": "g1",
+      "installs": {
+        "top": null,
+        "right": null,
+        "bottom": null,
+        "left": null
+      }
+    },
+    {
+      "id": "3",
+      "kind": "glazed",
+      "frames": {
+        "top": "top",
+        "right": "right",
+        "bottom": "bottom",
+        "left": "left"
+      },
+      "glazing_id": "g2",
+      "installs": {
+        "top": null,
+        "right": null,
+        "bottom": null,
+        "left": null
+      }
+    }
+  ]
+}

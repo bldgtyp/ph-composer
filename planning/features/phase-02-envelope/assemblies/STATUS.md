@@ -12,16 +12,15 @@ PRD drafted 2026-09-18 as a port of the predecessor's Assembly Builder packet
 designPH dependency removed and the export mapping checked against honeybee-ph and PHX source.
 Interviewed the same day: two rounds, 18 decisions, recorded in the PRD and folded into its
 behavior sections. Ed authorized the full Phase 2 implementation on 2026-10-01.
-Records and inventories are committed in checkpoint 35704bd. Both Ruby full gates, coverage and
-browser checks pass; native records proof includes exact Undo/Redo, fresh reopen and two-Model
-isolation. Inventory native checks are underway. Builder source is implemented and reviewed;
-assignment and construction export integration is underway. No complete stage attestation is
-claimed.
+Checkpoint `6a7e08f` contains records, inventories, Builder, assignment and construction export.
+Dual-Ruby CI, Chromium 88 runtime and all five browser scripts pass. Native proof includes exact
+assignment Undo/Redo, fresh reopen and actual authored export from the installed build. The Builder
+retains explicit-unit drafts and restores its exact catalog with native Undo. Complete native UI
+attestations remain open.
 
 ## Next step
 
-Complete the integrated Builder/assignment gates, install that verified build, then run their
-fresh-process native cases. Keep any inaccessible controls in Ed's final batch.
+Finish the remaining Builder/assignment native gestures against the installed verified build. Keep any inaccessible controls in Ed's final batch.
 [Phase 2 status](../STATUS.md), [record evidence](../evidence/p2-02-assembly-records.md),
 [inventory evidence](../evidence/p2-03-inventories.md) and
 [Builder evidence](../evidence/p2-04-assembly-builder.md) carry current proof and resume steps.
@@ -38,11 +37,11 @@ declare typed dependencies, so the face-to-construction join has its seam.
 
 ## Verification
 
-Checkpoint 35704bd: 779 Ruby tests / 4,160 assertions, 248 JavaScript tests and 96 Python tests;
-full CI passes on Ruby 3.2.2 and 2.7.2. Coverage: Ruby 96.7%, JavaScript 96.3%, Python 94%.
-Records and inventory review findings are closed. Builder review findings are closed with
-14 Builder tests plus eight unchanged Canvas tests. New source still needs integrated gates
-and native acceptance; see the evidence files above.
+Checkpoint `6a7e08f`: 818 Ruby tests / 4,667 assertions, 281 JavaScript tests and 127 Python tests;
+full CI passes on Ruby 3.2.2 and 2.7.2. Earlier checkpoint `35704bd` coverage was Ruby 96.7%,
+JavaScript 96.3%, Python 94%; those percentages do not measure later source. Independent review
+findings are closed. Current-host proof and outstanding native gestures are recorded in the
+[construction evidence](../evidence/p2-06-construction-export.md).
 
 ## Ledger
 

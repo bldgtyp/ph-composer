@@ -10,8 +10,14 @@ from typing import Any
 
 from .constructions import ConstructionSection
 from .exporters import Exporter
+from .material_sources import MaterialSourcesSection
 from .model_sections import FaceSection, ZoneSection
 from .sections import Section
 
-SECTIONS: tuple[Section[Any, Any], ...] = (ConstructionSection(), FaceSection(), ZoneSection())
+SECTIONS: tuple[Section[Any, Any], ...] = (
+    ConstructionSection(),
+    MaterialSourcesSection(),
+    FaceSection(),
+    ZoneSection(),
+)
 EXPORTERS: tuple[Exporter, ...] = ()

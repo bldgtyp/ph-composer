@@ -1,42 +1,38 @@
 # Window Types and placement: status
 
 DATE: 2026-09-30
-STATUS: Scoped
+STATUS: Implementation in progress
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
 ## State
 
-PRD drafted 2026-09-18 as a port of the predecessor's Window Types packet
-(`../ph-navigator-sketchup/planning/archive/window-types/`) and its shipped code, with the
-designPH dependency removed and the export mapping checked against honeybee-ph and PHX source.
-Interviewed the same day: two rounds, 20 decisions, recorded in the PRD and folded into its
-behavior sections. Shared understanding reached, pending Ed's confirmation of the record.
+Phase 2 implementation is authorized on `codex/phase-02-envelope`, issue #14. P2-10's product,
+Window Type, grid, Installs and model-settings records are implemented in source and independently
+reviewed. Focused tests pass on Ruby 2.7.2 and 3.2.2, 27 tests / 616 assertions. See
+[record evidence](../evidence/p2-10-window-records.md). Integrated and native record gates remain open.
+
+P2-12 Slice A is in progress in a fresh SketchUp 2026 process with a synthetic Model. The
+[host investigation](../evidence/p2-12-window-host.md) records completed probes and the remaining
+native Move-copy gesture. Slice C has not started. Window screens, placement, schedules,
+Colour-by, translation and library adapters are not delivered.
 
 ## Next step
 
-Ed's answers to the [Phase 2 decisions](../DECISIONS.md), his confirmation of the interview
-record, and authorization. [PLAN.md](PLAN.md) allocates the PRD to stages P2-10 to P2-15 and binds
-each of the five consequences of the component spike
-([B3](../../../archive/phase-00-foundation/evidence/spike-window.md)) to a stage step.
+Gate the integrated P2-07/P2-08/P2-10 checkpoint, install that exact source and exercise the
+panel-closed window-record walkthrough, native Undo and save/reopen. Complete Slice A before
+implementing Slice C. Proceed through the owning [PLAN.md](PLAN.md) and stage entry gates.
 
-## Blockers
+## Blockers and remaining acceptance
 
-- Any row among D2-2, D2-4, D2-5, D2-6 and D2-10 still open in the [Phase 2 decisions](../DECISIONS.md). Its answer column is current.
-- No implementation issue has been created at `bldgtyp/ph-composer`.
-
-Restated 2026-09-30. The blocker carried from the archived
-[zones-and-adjacency packet](../../../archive/phase-01-zones-and-adjacency/STATUS.md) said that
-windows cut holes in real walls, so Solve's refusal to cut a holed Face needed an answer. B3
-measured that a glued cutting unit leaves its host Face at one loop, so a windowed wall is not a
-holed Face. Two things remain. A host Face that Solve splits leaves its units glued to the wrong
-piece, which D2-5 answers by having Solve report such a Face. And a truly holed or concave Face,
-which only an explode or hand drawing produces, is still reported and not cut; that limit stays
-with Zones and does not block this packet.
+Native Move-copy needs an Option-key gesture that the current computer-use API cannot reliably
+issue. Clipboard copies, including cross-model paste, are measured separately. Keep this as one
+batched manual item; it does not prevent independent library and window-record work. SketchUp
+2023 and Windows gates remain separate from current-host evidence.
 
 ## Verification
 
-None. Nothing is implemented.
+See the linked source and host evidence. No full window-stage acceptance is claimed.
 
 ## Ledger
 
@@ -48,3 +44,5 @@ None. Nothing is implemented.
 | 2026-10-01 | D2-1 revised by Ed: definitions sit below Zones, and placed things above. See the [Phase 2 decisions](../DECISIONS.md). |
 | 2026-09-30 | Phase 2 planning: PRD amended for what Phase 1 merged, PLAN.md added, the carried holed-Face blocker restated against B3. Packet moved under `features/phase-02-envelope/`. Nothing implemented. |
 | 2026-09-18 | Architecture review run against `context/EXTENSIBILITY.md` and folded into the PRD, then removed. Q21: a unit id, and a copy gets its own at the feature's next mutation, a recorded exception to spaces Q20. Q22: Make unique is a detached-definition finding with Reset to type; Restore unit is a limited repair. Q23: g-value 0 is outside honeybee-schema's range and is disclosed. Q24: psi-install exports into the frame elements, no aperture install types, so PHX synthesizes no variant window types. Q25: seams restated against assemblies Q23 and spaces Q19 and Q22; no Zone stamp on the unit. Q26: the host Face exports gross, and the cut opening is measured in the spike. Also added: `user_data` on five records, a deterministic construction identifier, three validation rows, the Frame segment rename repaired. |
+
+| 2026-10-01 | P2-10 source and independent review complete; integrated/native gates open. P2-12 host investigations started; native Move-copy remains a batched manual item. |

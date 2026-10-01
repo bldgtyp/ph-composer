@@ -96,6 +96,22 @@ class PanelTest < PhComposerTestCase
 
   # A view command carries no expected revision, because it changes no record. The snapshot still
   # follows it, so a section reading what it changed repaints.
+  def test_a_query_answers_without_snapshot_or_model_operation_and_rejects_other_sessions
+    dialog = open_panel
+    before = dialog.scripts.length
+    operations = @model.operations.length
+    send_message(dialog, "query.invoke", "request_id" => "a:read:1", "session" => @session.id,
+                                         "name" => "test.fixture.total_length", "params" => {})
+    assert_equal ["query.result"], dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
+    result = messages(dialog, "query.result").last
+    assert_equal ["a:read:1", @session.id], result.values_at("request_id", "session")
+    assert_equal "completed", result.dig("outcome", "status")
+    assert_equal operations, @model.operations.length
+    send_message(dialog, "query.invoke", "request_id" => "a:read:2", "session" => "other",
+                                         "name" => "test.fixture.total_length", "params" => {})
+    assert_equal "session.inactive", messages(dialog, "query.result").last.dig("outcome", "code")
+  end
+
   def test_a_view_command_answers_after_the_snapshot_and_leaves_the_revision_alone
     dialog = open_panel
     before = dialog.scripts.length

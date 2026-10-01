@@ -7,6 +7,7 @@ PhComposerUI.define("library_rows", ["units", "workspace"], function (units, ui)
     var self = this, adapter = this.adapter, query = this.search.value.trim().toLowerCase();
     var categories = adapter.categories(this.state), grouped = Object.create(null);
     this.visible = [];
+    var scrollTop = this.list.scrollTop;
     this.list.replaceChildren();
     this.records.filter(function (row) { return adapter.searchText(row).toLowerCase().includes(query); })
       .sort(function (a, b) { return adapter.compare(adapter.name(a), adapter.name(b)); })
@@ -28,15 +29,33 @@ PhComposerUI.define("library_rows", ["units", "workspace"], function (units, ui)
         var entry = self.entries[row.id];
         if (!entry) entry = self.entries[row.id] = self.makeRow(row);
         entry.row = row;
+        if (entry.badge) entry.badge.remove();
+        if (row.resolution && row.resolution.candidates.length) {
+          entry.badge = el("small", "library-local-badge", "In this file"); entry.button.appendChild(entry.badge);
+        }
         entry.name.textContent = adapter.name(row);
+        entry.bubble.panel.setAttribute("aria-label", adapter.name(row));
+        entry.bubble.heading.querySelector("strong").textContent = adapter.name(row);
+        entry.bubble.closeButton.setAttribute("aria-label", "Close " + adapter.name(row));
         self.visible.push(entry);
         group.appendChild(entry.root);
       });
       self.list.appendChild(group);
     });
-    this.count.textContent = this.visible.length + " shown · " + this.records.length + " in this file";
-    if (!Object.keys(grouped).length) this.list.appendChild(el("p", "muted",
-      query ? "No records match this search." : adapter.emptyText));
+    this.list.scrollTop = scrollTop;
+    this.count.textContent = this.visible.length + " shown · " +
+      (this.store && this.store.selected && this.store.page ? this.store.page.total : this.records.length) +
+      (this.store && this.store.selected ? " in library" : " in this file");
+    if (!Object.keys(grouped).length) {
+      var empty = adapter.emptyText;
+      if (this.store && this.store.selected) {
+        empty = this.store.busy() ? "Loading library…" : "No records in this library.";
+        if (this.store.page && this.store.page.state === "failed" && !this.store.page.generation) {
+          empty = "No catalog is available.";
+        }
+      }
+      this.list.appendChild(el("p", "muted", query ? "No records match this search." : empty));
+    }
   };
   methods.makeRow = function (row) {
     var self = this, entry = { row: row, root: el("div", "library-sidebar-row") };
@@ -77,14 +96,25 @@ PhComposerUI.define("library_rows", ["units", "workspace"], function (units, ui)
   methods.renderDetails = function () {
     var self = this, entry = this.detail;
     if (!entry) return;
-    var content = entry.bubble.content, values = entry.row.values;
-    content.replaceChildren();
+    var content = entry.bubble.content, values = entry.row.values, library = entry.row.library;
+    if (library) {
+      content.replaceChildren(el("small", "muted", "Library: " + library.library_name));
+      content.appendChild(el("strong", "", "Copied properties"));
+    } else content.replaceChildren();
     this.adapter.properties.forEach(function (item) {
       var value = values[item[1]];
       content.appendChild(ui.propertyRow(item[0], item[2] ? units.format(value, item[2], units.profile(item[2])) :
         (ui.blank(value) ? "—" : value), ""));
     });
     content.appendChild(el("p", "muted", values.notes || "No notes."));
+    if (library) {
+      var sourceProperties = this.adapter.sourceProperties || [];
+      if (sourceProperties.length) content.appendChild(el("strong", "", "Source information"));
+      sourceProperties.forEach(function (item) {
+        content.appendChild(ui.propertyRow(item[0], values[item[1]] || "—", ""));
+      });
+      entry.add = ui.button("Add to file", function () { self.add(entry.row); }); content.appendChild(entry.add);
+    }
     entry.use = ui.button("Use", function () { self.use(entry.row); });
     entry.use.setAttribute("aria-label", "Use on selected target");
     entry.hint = el("small", "muted");
@@ -95,8 +125,10 @@ PhComposerUI.define("library_rows", ["units", "workspace"], function (units, ui)
   methods.paintActions = function () {
     if (!this.detail) return;
     var target = this.adapter.target(this.context);
+    this.detail.use.hidden = !this.onUse;
     this.detail.use.disabled = !this.enabled || this.busy() || Boolean(target.hint);
-    this.detail.hint.textContent = target.hint || "";
+    if (this.detail.add) this.detail.add.disabled = !this.enabled || this.busy();
+    this.detail.hint.textContent = this.onUse ? (target.hint || "") : "";
   };
   return methods;
 });

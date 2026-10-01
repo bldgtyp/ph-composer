@@ -15,11 +15,13 @@ require_relative "commands/layers"
 require_relative "snapshot"
 require_relative "operations"
 require_relative "export"
+require_relative "source_report"
 require_relative "declarations/shapes"
 require_relative "declarations/inventories"
 require_relative "declarations/records"
 require_relative "declarations/layers"
 require_relative "declarations/segments"
+require_relative "library_kind"
 
 module PhComposer
   module Assemblies
@@ -33,8 +35,9 @@ module PhComposer
       RecordRegistration.install(feature)
       LayerRegistration.install(feature)
       SegmentRegistration.install(feature)
+      MaterialsLibrary.install(feature, registry)
       ExportProjection.install(feature)
+      SourceReport.install(feature)
     end
   end
 end
-

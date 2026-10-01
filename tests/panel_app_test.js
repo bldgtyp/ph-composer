@@ -37,6 +37,17 @@ function snapshot(session, revision, extra) {
 
 function types(sent) { return sent.map(function (message) { return message.type; }); }
 
+test("query results stay keyed, reject another session and clear on Model switch", function () {
+  var p = page(); p.receive("panel.snapshot", snapshot("session-a", 7));
+  p.receive("query.result", { request_id: "q1", session: "session-a", outcome: { status: "completed", value: [] } });
+  p.receive("query.result", { request_id: "q2", session: "session-b", outcome: { status: "completed" } });
+  assert.strictEqual(p.panel.state.ui.queryResults.q1.request_id, "q1");
+  assert.strictEqual(p.panel.state.ui.queryResults.q2, undefined);
+  assert.strictEqual(p.panel.state.ui.actionResult, null);
+  p.receive("panel.snapshot", snapshot("session-b", 1));
+  assert.deepStrictEqual(Object.keys(p.panel.state.ui.queryResults), []);
+});
+
 test("ready asks for the first snapshot, which fills the status bar", function () {
   var p = page();
   p.panel.ready();

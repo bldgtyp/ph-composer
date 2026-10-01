@@ -29,6 +29,9 @@ module PhComposer
     VIEW_FAILED = Outcome.build(
       "failed", "operation.failed", "The panel could not change what the viewport shows.", "none", nil
     ).freeze
+    QUERY_FAILED = Outcome.build(
+      "failed", "operation.failed", "The panel could not read that information.", "none", nil
+    ).freeze
     # The panel could not tell whether an action ran, so it does not claim the Model is unchanged.
     UNEXPECTED = Outcome.build(
       "failed", "operation.failed",
@@ -141,6 +144,7 @@ module PhComposer
         when "panel.ready" then ready
         when "action.invoke" then invoke(payload)
         when "view.invoke" then view(payload)
+        when "query.invoke" then query(payload)
         when "preferences.set" then set_preference(payload)
         when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
           export(type, payload)
@@ -150,6 +154,7 @@ module PhComposer
         case type
         when "action.invoke" then publish_result(payload, UNEXPECTED)
         when "view.invoke" then publish_view(payload, VIEW_FAILED)
+        when "query.invoke" then publish_query(payload, QUERY_FAILED)
         when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
           publish_export(payload, EXPORT_FAILED)
         when "preferences.set"
@@ -221,6 +226,23 @@ module PhComposer
       def publish_view(payload, outcome)
         publish("view.result", "request_id" => payload["request_id"], "session" => payload["session"],
                                "outcome" => outcome)
+      end
+
+      # Read-only queries answer directly; they neither refresh the page nor consume a mutation sequence.
+      def query(payload)
+        session = Sessions.current
+        outcome = if session && payload["session"] == session.id
+                    API.query(:context => context_for(session), :name => payload["name"].to_s,
+                              :params => payload.fetch("params", {}))
+                  else
+                    Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
+                  end
+        publish_query(payload, outcome)
+      end
+
+      def publish_query(payload, outcome)
+        publish("query.result", "request_id" => payload["request_id"], "session" => payload["session"],
+                                "outcome" => outcome)
       end
 
       # Export acts on the Model the panel shows, like an action, but it is the shell's command: it opens a

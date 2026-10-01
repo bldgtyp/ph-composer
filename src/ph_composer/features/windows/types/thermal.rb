@@ -1,0 +1,147 @@
+# frozen_string_literal: true
+
+module PhComposer
+  module Windows
+    # Unrounded heat coefficients from the predecessor's independently characterized fixture.
+    # Missing terms withhold the corresponding value; an incomplete element never contributes zero.
+    module Thermal
+      SIDES = Types::SIDES
+      module_function
+
+      def number(value, positive: false, signed: false)
+        return nil unless value.is_a?(Numeric) && value.finite? &&
+                (signed || (positive ? value > 0 : value >= 0))
+        value.to_f
+      end
+
+      def calculate(record, products, default_id)
+        unless (record.fetch("rows_m") + record.fetch("columns_m")).all? { |n| number(n, :positive => true) }
+          return { "elements" => [], "findings" => ["Enter all grid dimensions."], "u_w" => nil,
+                "u_effective" => nil, "complete" => false }
+        end
+        layout = Grid.new(record)
+        input = products.merge("default_install_id" => default_id)
+        details = record.fetch("elements").reject { |cell| cell.fetch("kind") == "empty" }.map do |cell|
+          width = layout.side_length(cell, 0)
+          height = layout.side_length(cell, 1)
+          classifications = layout.classify(cell)
+          detail = element(input, cell, width, height, classifications.map { |edge| edge == :shared })
+          complete_element(detail, cell, products, classifications)
+        end
+        area = details.sum { |detail| detail.fetch("area_m2") }
+        construction = total(details, "h_construction_w_k")
+        installation = total(details, "h_install_w_k")
+        { "elements" => details, "findings" => details.empty? ? ["No glazed elements."] : [], "area_m2" => area,
+          "empty_area_m2" => record.fetch("rows_m").sum * record.fetch("columns_m").sum - area,
+          "h_construction_w_k" => construction, "h_install_w_k" => installation,
+          "u_w" => construction && construction / area,
+          "u_effective" => construction && installation && (construction + installation) / area,
+          "complete" => !details.empty? && details.all? { |detail| detail.fetch("complete") } }
+      end
+
+      def operation_complete?(cell)
+        operation = cell["operation"]
+        operation && (operation.fetch("type") == "fixed" || !operation.fetch("directions").empty?)
+      end
+
+      def complete_element(detail, cell, products, classifications)
+        if classifications.include?(:partial)
+          classifications.each_with_index do |classification, i|
+            next unless classification == :partial
+            detail.fetch("edges")[i]["install"] = { "source" => "unsupported_partial", "id" => nil, "psi" => nil }
+          end
+          detail["h_install_w_k"] = nil
+          detail.fetch("findings") << "Partially shared edges need a proved installation mapping."
+        end
+        glazing = products.fetch("glazings")[cell["glazing_id"]]
+        detail["g_value"] = glazing && glazing["g_value"]
+        detail.fetch("findings") << "Missing g-value." if detail["g_value"].nil?
+        detail.fetch("findings") << "Choose operation and handedness." unless operation_complete?(cell)
+        frame_mismatches(detail, cell, products.fetch("frames"))
+        construction, installation = detail.values_at("h_construction_w_k", "h_install_w_k")
+        detail["complete"] = !construction.nil? && !installation.nil? && !detail["g_value"].nil? &&
+                !!operation_complete?(cell)
+        detail["u_w"] = construction && construction / detail.fetch("area_m2")
+        detail["u_effective"] = construction && installation && (construction + installation) / detail.fetch("area_m2")
+        detail
+      end
+
+      def frame_mismatches(detail, cell, frames)
+        return unless cell["operation"]
+        cell.fetch("frames").each do |side, id|
+          frame = frames[id]
+          next unless frame
+          operation = frame["operation"].to_s.downcase
+          next unless %w[fixed swing slide].include?(operation) && operation != cell["operation"]["type"]
+          detail.fetch("findings") << "#{side}: frame operation #{operation} differs from element operation."
+        end
+      end
+
+      def total(details, field)
+        return nil if details.empty? || details.any? { |detail| detail[field].nil? }
+        details.sum { |detail| detail.fetch(field) }
+      end
+
+      def install(input, cell, side, shared)
+        return { "source" => "shared", "id" => nil, "psi" => 0.0 } if shared
+        resolution = EdgeResolution.resolve(cell, side, :perimeter, input["default_install_id"])
+        id = resolution.effective_id
+        record = input.fetch("installs")[id]
+        { "source" => resolution.source.to_s, "id" => id,
+          "psi" => record && number(record["psi_w_mk"], :signed => true) }
+      end
+
+      def element(input, cell, width, height, shared)
+        findings = []
+        edges = SIDES.each_with_index.map do |side, i|
+          resolved = install(input, cell, side, shared[i])
+          findings << "#{side}:unresolved_install" if resolved["psi"].nil?
+          { "side" => side, "length_m" => i.even? ? width : height, "install" => resolved }
+        end
+        result = { "id" => cell.fetch("id"), "area_m2" => width * height, "edges" => edges, "findings" => findings,
+                "h_construction_w_k" => nil, "h_install_w_k" => nil }
+        if edges.all? { |edge| !edge.fetch("install")["psi"].nil? }
+          result["h_install_w_k"] = edges.sum { |edge| edge.fetch("length_m") * edge.fetch("install").fetch("psi") }
+        end
+        frames = SIDES.map { |side| input.fetch("frames")[cell.fetch("frames").fetch(side)] }
+        widths = frames.map { |frame| frame && number(frame["width_m"]) }
+        if widths.any?(&:nil?)
+          findings << "unresolved_frame_width"
+          return result
+        end
+        top, right, bottom, left = widths
+        gw, gh = width - left - right, height - top - bottom
+        if gw <= 0 || gh <= 0
+          findings << "nonpositive_glazing_geometry"
+          return result
+        end
+        result["glazing_area_m2"] = gw * gh
+        result["frame_area_m2"] = result.fetch("area_m2") - gw * gh
+        coefficients(result, input, cell, frames, widths, gw, gh)
+      end
+
+      def coefficients(result, input, cell, frames, widths, gw, gh)
+        uf = frames.map { |frame| frame && number(frame["uf_w_m2k"]) }
+        psi = frames.map { |frame| frame && number(frame["psi_g_w_mk"], :signed => true) }
+        glazing = input.fetch("glazings")[cell["glazing_id"]]
+        ug = glazing && number(glazing["ug_w_m2k"])
+        top, right, bottom, left = widths
+        result.fetch("edges").each_with_index do |edge, i|
+          adjacent = i.even? ? left + right : top + bottom
+          edge["frame_area_m2"] = widths[i] * (edge.fetch("length_m") - adjacent / 2.0)
+          edge["glass_edge_m"] = i.even? ? gw : gh
+          edge["h_frame_w_k"] = uf[i] && uf[i] * edge.fetch("frame_area_m2")
+          edge["h_spacer_w_k"] = psi[i] && psi[i] * edge.fetch("glass_edge_m")
+        end
+        result["h_glazing_w_k"] = ug && ug * gw * gh
+        if ug.nil? || uf.any?(&:nil?) || psi.any?(&:nil?)
+          result.fetch("findings") << "unresolved_construction"
+        else
+          result["h_construction_w_k"] = result.fetch("h_glazing_w_k") +
+            result.fetch("edges").sum { |edge| edge.fetch("h_frame_w_k") + edge.fetch("h_spacer_w_k") }
+        end
+        result
+      end
+    end
+  end
+end

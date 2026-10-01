@@ -1,7 +1,7 @@
 # P2-12: the window unit and placement operations
 
 DATE: 2026-09-30
-STATUS: Scoped. Authorized 2026-10-01; preceding stage gates remain required.
+STATUS: Slice A in progress; native Move-copy remains unmeasured. Slice C has not started.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 
@@ -142,3 +142,7 @@ and explicit door support.
 - E12 has evidence in `evidence/p2-12-window-unit.md`, with slice A recorded separately.
 - `context/SKETCHUP_HOST_BEHAVIOR.md` and `context/CONTRACTS.md` carry the new facts and rules.
 - `make ci` passes on both Rubies; the generated API reference is current.
+
+## Current evidence
+
+See [Slice A measurements](../evidence/p2-12-window-host.md). One native modifier gesture remains a batched manual item.

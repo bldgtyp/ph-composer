@@ -23,6 +23,7 @@ module PhComposer
         check_export_contributors
         check_reference_retargeters
         check_proposal_participants
+        @diagnostics.concat(LibraryValidation.new(@live, @staging).diagnostics)
         check_colour_modes
         check_menu_items
         check_subscriptions
@@ -338,6 +339,126 @@ module PhComposer
         @diagnostics << Declarations::Diagnostic.new(:code => code, :owner => owner, :subject => subject,
                                                      :message => message, :dependency => dependency)
       end
+    end
+
+    # The two library seams form one registration boundary. Reuse the shared schema and diagnostic
+    # helpers, while keeping these ownership and wire-contract checks together.
+    class LibraryValidation < Validation
+      def diagnostics
+        check_library_kinds
+        check_library_providers
+        @diagnostics
+      end
+
+      private
+
+      def check_library_version(item, part, version)
+        return if version == Declarations::CONTRACT_VERSION
+
+        add("registration.contract_major", item.owner, item.name,
+            "#{item.name} #{part} #{version.inspect} is unsupported; this build provides 1.")
+      end
+
+      def wire_kind?(value)
+        value.is_a?(String) && /\A[a-z][a-z0-9_]*\z/.match?(value)
+      end
+
+      def check_library_kinds
+        seen = @live.library_kinds.values.to_h { |item| [item.adapter.wire_kind, item.name] }
+        @staging.declared_library_kinds.each do |item|
+          check_library_version(item, "contract", item.contract_version)
+          check_library_kind_owner(item)
+          adapter = item.adapter
+          unless adapter.is_a?(Declarations::LibraryAdapter)
+            problem(item, "needs a LibraryAdapter")
+            next
+          end
+          check_library_wire_kind(item, adapter, seen)
+          check_library_version(item, "wire version", adapter.wire_version)
+          check_library_version(item, "fingerprint version", adapter.fingerprint_version)
+          %i[wire_schema mapped_schema].each do |part|
+            add_schema_problems(item, part, adapter[part])
+            problem(item, "#{part} must be an object") unless adapter[part].is_a?(Hash) &&
+                                                                       adapter[part]["type"] == "object"
+          end
+          check_library_fingerprint_fields(item, adapter)
+          %i[map reverse fingerprint].each do |part|
+            problem(item, "needs callable #{part}") unless adapter[part].respond_to?(:call)
+          end
+          %i[local_read create replace assign].each do |part|
+            next if part == :assign && adapter[part].nil?
+
+            check_library_callback(item, part, adapter[part])
+          end
+        end
+      end
+
+      def check_library_kind_owner(item)
+        registered = @staging.declared_record_kinds.any? { |kind| kind.id == item.record_kind } ||
+                     @live.record_kinds.key?(item.record_kind)
+        unless registered
+          add("registration.missing_dependency", item.owner, item.name,
+              "#{item.name} needs registered catalog kind #{item.record_kind.inspect}.", item.record_kind)
+          return
+        end
+        kind_owner = @staging.owners[item.record_kind] || @live.owner_of(item.record_kind)
+        problem(item, "must own record kind #{item.record_kind}") unless kind_owner == item.owner
+      end
+
+      def check_library_wire_kind(item, adapter, seen)
+        unless wire_kind?(adapter.wire_kind)
+          problem(item, "wire kind must be a lowercase identifier")
+          return
+        end
+        if seen.key?(adapter.wire_kind)
+          add("registration.duplicate_id", item.owner, item.name,
+              "Wire kind #{adapter.wire_kind} is declared by #{seen[adapter.wire_kind]} and #{item.name}.")
+        end
+        seen[adapter.wire_kind] ||= item.name
+      end
+
+      def check_library_fingerprint_fields(item, adapter)
+        fields = adapter.fingerprint_fields
+        properties = adapter.mapped_schema.is_a?(Hash) ? adapter.mapped_schema["properties"] : nil
+        valid = fields.is_a?(Array) && !fields.empty? && fields.uniq.length == fields.length &&
+                fields.all? { |field| text?(field) && properties.is_a?(Hash) && properties.key?(field) }
+        problem(item, "fingerprint_fields must be ordered unique mapped property names") unless valid
+      end
+
+      def check_library_callback(item, part, callback)
+        unless callback.is_a?(Declarations::LibraryCallback)
+          problem(item, "#{part} needs a LibraryCallback")
+          return
+        end
+        %i[params result].each { |schema| add_schema_problems(item, "#{part}.#{schema}", callback[schema]) }
+        problem(item, "#{part} params must be an object") unless callback.params.is_a?(Hash) &&
+                                                                callback.params["type"] == "object"
+        problem(item, "#{part} needs a callable handler") unless callback.handler.respond_to?(:call)
+      end
+
+      def check_library_providers
+        adapters = @live.library_kinds.values + @staging.declared_library_kinds
+        known = adapters.filter_map do |item|
+          item.adapter.wire_kind if item.adapter.is_a?(Declarations::LibraryAdapter)
+        end
+        @staging.declared_library_providers.each do |item|
+          check_library_version(item, "contract", item.contract_version)
+          problem(item, "needs a callable factory") unless item.factory.respond_to?(:call)
+          kinds = item.kinds
+          next if kinds == ["*"]
+
+          unless kinds.is_a?(Array) && !kinds.empty? && kinds.uniq.length == kinds.length &&
+                 kinds.all? { |kind| wire_kind?(kind) }
+            problem(item, "kinds must be unique wire identifiers or the exclusive wildcard [\"*\"]")
+            next
+          end
+          (kinds - known).each do |kind|
+            add("registration.missing_dependency", item.owner, item.name,
+                "#{item.name} serves #{kind}, which has no registered adapter.", kind)
+          end
+        end
+      end
+
     end
   end
 end

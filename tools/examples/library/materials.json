@@ -1,0 +1,21 @@
+{
+  "format": "ph-composer.library",
+  "schema_version": 1,
+  "kind_schema_versions": { "materials": 1 },
+  "library": { "id": "example.synthetic", "name": "Synthetic Materials" },
+  "exported_at": "2026-10-01T12:00:00Z",
+  "kinds": {
+    "materials": [{
+      "id": "example-insulation",
+      "name": "Walkthrough synthetic insulation",
+      "category": "insulation",
+      "conductivity_w_mk": 0.04,
+      "density_kg_m3": 40.0,
+      "specific_heat_j_kgk": 1000.0,
+      "emissivity": 0.9,
+      "color": "#c8d8b0",
+      "notes": "Synthetic example, not a product specification.",
+      "datasheet_links": []
+    }]
+  }
+}

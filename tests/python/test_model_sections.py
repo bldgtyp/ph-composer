@@ -11,6 +11,7 @@ from ph_composer_translation.composition import SECTIONS
 from ph_composer_translation.constructions import ConstructionSection, TranslatedConstruction
 from ph_composer_translation.contract import RecordError
 from ph_composer_translation.coordinator import translate
+from ph_composer_translation.material_sources import MaterialSourcesSection
 from ph_composer_translation.model_sections import FaceSection, ZoneSection
 from ph_composer_translation.sections import Inputs
 
@@ -94,7 +95,7 @@ def test_model_sections_build_rooms_then_resolve_surface_pairs(monkeypatch: pyte
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     result = translate(
         json.loads(FIXTURE.read_text()),
-        (FakeConstructionSection(), FaceSection(), ZoneSection()),
+        (FakeConstructionSection(), MaterialSourcesSection(), FaceSection(), ZoneSection()),
     ).to_document()
 
     assert result["state"] == "complete"
@@ -112,7 +113,9 @@ def test_invalid_face_vocabulary_becomes_a_record_error(monkeypatch: pytest.Monk
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     document = json.loads(FIXTURE.read_text())
     document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0]["face_type"] = "Ceiling"
-    result = translate(document, (FakeConstructionSection(), FaceSection(), ZoneSection())).to_document()
+    result = translate(
+        document, (FakeConstructionSection(), MaterialSourcesSection(), FaceSection(), ZoneSection())
+    ).to_document()
 
     assert result["state"] == "complete_with_findings"
     summary = result["summary"]
@@ -134,7 +137,9 @@ def test_surface_requires_an_available_reciprocal_counterpart(monkeypatch: pytes
     else:
         surfaces[1]["adjacency"]["counterpart"]["entity_id"] = surfaces[1]["id"]
 
-    result = translate(document, (FakeConstructionSection(), FaceSection(), ZoneSection())).to_document()
+    result = translate(
+        document, (FakeConstructionSection(), MaterialSourcesSection(), FaceSection(), ZoneSection())
+    ).to_document()
 
     assert result["state"] == "complete_with_findings"
     summary = result["summary"]
@@ -184,7 +189,9 @@ def test_explicit_and_reciprocal_omissions_preserve_inputs_and_publish_remaining
     omit(surfaces[0])
     before = json.dumps(document, sort_keys=True)
 
-    translation = translate(document, (FakeConstructionSection(), FaceSection(), ZoneSection()))
+    translation = translate(
+        document, (FakeConstructionSection(), MaterialSourcesSection(), FaceSection(), ZoneSection())
+    )
     result = cast(dict[str, Any], translation.to_document())
 
     assert result["state"] == "complete_with_findings"
@@ -211,7 +218,10 @@ def test_retired_face_with_no_boundary_is_a_nonblocking_reported_omission(monkey
     face.pop("boundary_condition")
 
     result = cast(
-        dict[str, Any], translate(document, (FakeConstructionSection(), FaceSection(), ZoneSection())).to_document()
+        dict[str, Any],
+        translate(
+            document, (FakeConstructionSection(), MaterialSourcesSection(), FaceSection(), ZoneSection())
+        ).to_document(),
     )
 
     assert result["summary"]["publishable"] is True
@@ -250,7 +260,10 @@ def test_malformed_omission_metadata_remains_a_blocker(
     face["omission"].update(change)
 
     result = cast(
-        dict[str, Any], translate(document, (FakeConstructionSection(), FaceSection(), ZoneSection())).to_document()
+        dict[str, Any],
+        translate(
+            document, (FakeConstructionSection(), MaterialSourcesSection(), FaceSection(), ZoneSection())
+        ).to_document(),
     )
 
     assert result["summary"]["publishable"] is False
@@ -263,7 +276,10 @@ def test_missing_boundary_without_explicit_omission_remains_a_blocker(monkeypatc
     document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0].pop("boundary_condition")
 
     result = cast(
-        dict[str, Any], translate(document, (FakeConstructionSection(), FaceSection(), ZoneSection())).to_document()
+        dict[str, Any],
+        translate(
+            document, (FakeConstructionSection(), MaterialSourcesSection(), FaceSection(), ZoneSection())
+        ).to_document(),
     )
 
     assert result["summary"]["publishable"] is False
@@ -278,7 +294,10 @@ def test_omitted_face_invalid_classification_still_blocks(monkeypatch: pytest.Mo
     face["face_type"] = "Ceiling"
 
     result = cast(
-        dict[str, Any], translate(document, (FakeConstructionSection(), FaceSection(), ZoneSection())).to_document()
+        dict[str, Any],
+        translate(
+            document, (FakeConstructionSection(), MaterialSourcesSection(), FaceSection(), ZoneSection())
+        ).to_document(),
     )
 
     assert result["summary"]["publishable"] is False

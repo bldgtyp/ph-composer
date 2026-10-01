@@ -1,7 +1,7 @@
 # P2-05 evidence: Assembly assignment
 
 DATE: 2026-10-01
-STATUS: Implemented. Offline, browser and independent Ruby review recorded; integrated and native gates pending.
+STATUS: Implemented and reviewed. Integrated gates and exact native assignment Undo/Redo pass; full UI attestation open.
 
 Zones owns optional Face `assembly_id`, selection/table assignment, Clear, usage counts, Locate,
 Paint and replacement on Assembly deletion. Assemblies owns its records without a Zones dependency.
@@ -25,5 +25,8 @@ inventory SI/IP mismatch: headers switched while numeric cells stayed SI. The ro
 unit profile and added a display regression; all 22 inventory tests and scoped ESLint pass.
 A four-pixel column-resizer overhang remains contained in the table, also present without G11.
 
-Native acceptance E04 remains pending on the integrated build. The installed checkpoint has no
-assignment UI. Do not award E04 from browser checks or this source state.
+Checkpoint `6a7e08f` contains the assignment UI and passes dual-Ruby CI and all five browser
+scripts. It is installed. Four guarded assignments, four native Undo gestures and four native
+Redo gestures reproduce every exact public Face journal state; fresh reopen preserves those
+references. See [construction evidence](p2-06-construction-export.md). The remaining native UI
+gestures and complete E04 attestation are still open.

@@ -23,6 +23,9 @@
     var settings = options || {};
     this.window = window;
     this.sent = [];
+    this.libraryProviders = JSON.parse(JSON.stringify(settings.libraryProviders || []));
+    this.libraryCatalogs = JSON.parse(JSON.stringify(settings.libraryCatalogs || {}));
+    this.libraryGenerations = {}; this.libraryFailures = {};
     this.session = "preview-session";
     this.revision = 1;
     this.sequence = 0;
@@ -55,6 +58,7 @@
       product: "PH-Composer", version: "preview", session: this.session, revision: this.revision,
       file_name: "preview.skp", edit_path: [], preferences: JSON.parse(JSON.stringify(this.preferences)),
       sections: {
+        ["ph_composer.library.provider_catalogs"]: { status: "completed", value: this.libraryMetadata() },
         [SETTINGS]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.zoneSettings)) },
         [PARTS]: { status: "completed", code: "ok", revision: this.revision,
@@ -131,6 +135,7 @@
     this.sent.push(message);
     if (message.type === "panel.ready") this.snapshot();
     if (message.type === "action.invoke") this.invoke(message.payload);
+    if (message.type === "query.invoke") this.libraryQuery(message.payload);
     if (message.type === "view.invoke") this.viewCommand(message.payload);
     if (message.type === "preferences.set") this.setPreference(message.payload);
     if (message.type === "export.start") this.exportStart(message.payload);
@@ -154,6 +159,7 @@
   /* A viewport-state command: nothing to write and no revision to guard, so the preview answers that it
      ran and leaves its Model alone. There is no viewport here to move. */
   Host.prototype.viewCommand = function (payload) {
+    if (payload.name.indexOf("ph_composer.library.") === 0) { this.libraryView(payload); return; }
     var outcome;
     if (payload.session !== this.session) {
       outcome = refused("session.inactive", "The panel now shows a different Model.", null);
@@ -197,6 +203,7 @@
     if (payload.expected_revision !== this.revision) {
       return refused("revision.stale", "The Model changed since it was read. " + NOTHING_WRITTEN, this.revision);
     }
+    if (payload.name === "ph_composer.library.copy") return this.libraryCopy(payload);
     if (payload.name.indexOf("ph_composer.assemblies.") === 0 ||
         payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) return this.inventoryAction(payload);
     var resultValue = {};
@@ -411,6 +418,114 @@
     this.revision += 1;
     return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
       value: { id: target.id }, affected: [], findings: [], detail: null };
+  };
+
+  Host.prototype.libraryMetadata = function () {
+    return this.libraryProviders.map(function (provider) {
+      var generation = this.libraryGenerations[provider.id] || null;
+      return Object.assign({}, provider, { catalogs: provider.kinds.map(function (kind) {
+        return { kind: kind, generation: generation, state: this.libraryFailures[provider.id] ? "failed" :
+          (!generation ? "unloaded" : ((this.libraryCatalogs[provider.id] || []).length ? "loaded" : "empty")),
+        failure: this.libraryFailures[provider.id] || null, age_seconds: generation ? 65 : null, freshness: {} };
+      }, this) });
+    }, this);
+  };
+  Host.prototype.libraryResolution = function (row) {
+    var source = function (record) { var s = record.values.source;
+      return s && s.kind === "library" && s.library_id === row.library_id && s.record_id === row.record_id; };
+    var exact = this.materials.records.filter(source);
+    var candidates = exact.length ? exact : this.materials.records.filter(function (record) {
+      return record.values.name === row.snapshot.name;
+    });
+    var result = { outcome: exact.length > 1 ? "ambiguous_source" : exact.length ? "reuse" :
+      candidates.length > 1 ? "ambiguous_name" : candidates.length ? "review_required" : "create", candidates: [] };
+    candidates.forEach(function (record) {
+      var differences = Object.keys(row.snapshot).filter(function (key) { return key !== "id" &&
+        JSON.stringify(record.values[key]) !== JSON.stringify(row.snapshot[key]); }).map(function (key) {
+        return { field: key, local: record.values[key], incoming: row.snapshot[key],
+          local_present: Object.prototype.hasOwnProperty.call(record.values, key), incoming_present: true };
+      });
+      result.candidates.push({ id: record.id, name: record.values.name, differences: differences,
+        expected_values: JSON.parse(JSON.stringify(record.values)), comparison_available: source(record),
+        source_changed: source(record) ? record.values.source.snapshot.notes !== row.snapshot.notes : null });
+    });
+    return result;
+  };
+  Host.prototype.libraryQuery = function (payload) {
+    var params = payload.params, rows = this.libraryCatalogs[params.provider_id] || [];
+    var generation = this.libraryGenerations[params.provider_id], outcome;
+    if (payload.session !== this.session) outcome = refused("session.inactive", "The Model changed.", null);
+    else if (params.generation !== generation) outcome = refused("library.generation_stale", "Refresh this library.",
+      this.revision);
+    else {
+      var metadata = this.libraryMetadata().filter(function (row) { return row.id === params.provider_id; })[0];
+      var offset = params.offset || 0, end = Math.min(rows.length, offset + (params.limit || 100));
+      var page = Object.assign({}, metadata.catalogs[0], { rows: rows.slice(offset, end).map(function (row) {
+        return Object.assign({}, row, { resolution: this.libraryResolution(row) });
+      }, this), total: rows.length, offset: offset, next_offset: end < rows.length ? end : null,
+      warnings: [], unavailable: [] });
+      outcome = { status: "completed", value: page, revision: this.revision };
+    }
+    var self = this;
+    this.window.setTimeout(function () {
+      self.publish("query.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
+    }, 0);
+  };
+  Host.prototype.libraryView = function (payload) {
+    var params = payload.params, verb = payload.name.split(".").pop();
+    if (verb === "remove") this.libraryProviders = this.libraryProviders.filter(function (row) {
+      return row.id !== params.provider_id;
+    });
+    if (verb === "load" || verb === "refresh") {
+      if (this.failLibraryRefresh) this.libraryFailures[params.provider_id] =
+        { code: "library.file_unreadable", message: "The configured library could not be read." };
+      else { this.libraryGenerations[params.provider_id] = (this.libraryGenerations[params.provider_id] || 0) + 1;
+        delete this.libraryFailures[params.provider_id]; }
+    }
+    var provider = this.libraryMetadata().filter(function (row) { return row.id === params.provider_id; })[0];
+    var value = provider ? provider.catalogs[0] : this.libraryMetadata();
+    this.snapshot();
+    this.publish("view.result", { request_id: payload.request_id, session: payload.session,
+      outcome: { status: "completed", effect: "none", revision: this.revision, value: value } });
+  };
+  Host.prototype.libraryCopy = function (payload) {
+    var params = payload.params, rows = this.libraryCatalogs[params.provider_id] || [];
+    var incoming = rows.filter(function (row) {
+      return row.library_id === params.library_id && row.record_id === params.record_id;
+    })[0];
+    if (!incoming || params.generation !== this.libraryGenerations[params.provider_id]) {
+      return refused("library.generation_stale", "The catalog changed. Refresh and choose again.", this.revision);
+    }
+    var assignment = params.assignment, assembly, layer, segment;
+    if (assignment) {
+      assembly = this.assemblies.records.filter(function (row) { return row.id === assignment.id; })[0];
+      layer = assembly && assembly.values.layers.filter(function (row) { return row.id === assignment.layer_id; })[0];
+      segment = layer && layer.segments.filter(function (row) { return row.id === assignment.segment_id; })[0];
+      if (!segment || JSON.stringify(assignment.expected_values) !== JSON.stringify(assembly.values)) {
+        return refused("record.stale", "The assignment target changed. Nothing was written.", this.revision);
+      }
+    }
+    var local = this.materials.records.filter(function (record) { return record.id === params.local_id; })[0];
+    if (params.choice === "use_library" && (!local ||
+      JSON.stringify(local.values) !== JSON.stringify(params.expected_values))) {
+      return refused("record.stale", "The local values changed. Nothing was written.", this.revision);
+    }
+    if (params.choice === "create") {
+      local = { id: "mat_library_" + (++this.sequence), values: {}, user_data: {}, uses: [], use_count: 0 };
+      this.materials.records.push(local);
+    }
+    if (params.choice === "create" || params.choice === "use_library") {
+      Object.assign(local.values, JSON.parse(JSON.stringify(incoming.snapshot))); delete local.values.id;
+      local.values.source = { kind: "library", provider_kind: "ph_composer.library.file",
+        record_kind: "materials", library_id: incoming.library_id, record_id: incoming.record_id,
+        fingerprint_version: 1, fingerprint: "0".repeat(64), copied_at: "2026-10-01T12:00:00Z",
+        snapshot: JSON.parse(JSON.stringify(incoming.snapshot)) };
+    }
+    if (!local) return refused("library.choice_invalid", "Choose a local copy.", this.revision);
+    if (segment) segment.material_id = local.id;
+    this.revision += 1;
+    return { status: "completed", effect: "committed", revision: this.revision, value: {
+      local_id: local.id, assigned: Boolean(segment) }, message: "Library copy applied." };
   };
 
   Host.prototype.find = function (id) {

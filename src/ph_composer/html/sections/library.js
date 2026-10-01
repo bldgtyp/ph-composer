@@ -1,6 +1,7 @@
 /* Model-owned Material and Attached-zone definitions occupy peer work surfaces. */
 PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subtabs", "material_form",
-  "library_forms", "fields"], function (panel, snapshot, ui, Subtabs, MaterialForm, forms, fields) {
+  "library_forms", "fields", "library_sidebar"],
+  function (panel, snapshot, ui, Subtabs, MaterialForm, forms, fields, Sidebar) {
   "use strict";
   var MATERIALS = "ph_composer.assemblies.materials";
   var ATTACHED = "ph_composer.zones.faces.attached_zone";
@@ -16,7 +17,7 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
   function guard(view) {
     if (!view) return null;
     if (view.forms.some(function (form) { return !form.root.hidden; })) return "Finish or cancel the open form.";
-    return view.material.guard() || view.attached.guard();
+    return view.sidebar.guard() || view.material.guard() || view.attached.guard();
   }
   function build(root, state, send) {
     var view = { session: state.session, categories: [], forms: [] };
@@ -57,7 +58,18 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
       return view.categories.filter(function (entry) { return entry.id === record.values.category; })[0] ||
         { label: record.values.category || "None", tone: "neutral" };
     }
-    view.material = new forms.Inventory(view.materialRoot, state.session, send, notice, changed, {
+    view.sidebar = new Sidebar({ session: state.session, send: send, changed: changed,
+      busy: function () { return Boolean(view.material && view.material.guard()); },
+      adapter: { title: "Material Library", wireKind: "materials", read: function (live) {
+        return (snapshot.value(live, MATERIALS) || {}).records || [];
+      }, categories: function () { return view.categories; }, properties: [
+        ["Conductivity", "conductivity_w_mk", fields.CONDUCTIVITY], ["Density", "density_kg_m3", fields.DENSITY],
+        ["Specific heat", "specific_heat_j_kgk", fields.SPECIFIC_HEAT],
+        ["Emissivity", "emissivity", fields.FRACTION]] } });
+    view.materialTable = ui.element("div", "library-material-table");
+    view.materialRoot.classList.add("library-material-workspace"); view.materialRoot.appendChild(view.materialTable);
+    view.materialRoot.appendChild(view.sidebar.root);
+    view.material = new forms.Inventory(view.materialTable, state.session, send, notice, changed, {
       section: MATERIALS, action: MATERIALS + ".update", label: "Material", columns: materialColumns,
       editable: materialColumns.map(function (entry) { return entry[0]; }).filter(function (field) {
         return field !== "color";
@@ -74,6 +86,21 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
         if (command.id === "duplicate") view.duplicate.open(row.record);
         else view.replacement.open(row.record, view.material.records);
       }, actionsCell: function (td, row) { uses(td, row.record); },
+      afterCell: function (td, row, field) {
+        if (field !== "name") return;
+        if (td._sourceBadge) td._sourceBadge.remove();
+        var info = view.sidebar.store && view.sidebar.store.localInfo(row.record);
+        if (!info) return;
+        var badge = ui.button(info.changed ? "Library · source changed" : "Library", function () {
+          if (!allowed() || !info.row || !info.comparisonAvailable) return;
+          view.sidebar.copy.open(info.row);
+        });
+        badge.className = "library-source-badge"; badge.title = info.label;
+        badge.setAttribute("aria-label", row.record.values.name + " library source: " + info.label +
+          (info.changed ? ", source changed" : ""));
+        badge.disabled = !info.row || !info.comparisonAvailable;
+        td._sourceBadge = badge; td.appendChild(badge);
+      },
       cell: function (td, row, field) {
         if (field === "color") { forms.colorCell(td, row.record, view.color, allowed);
         return true; }
@@ -106,6 +133,7 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
     view.dispose = function () {
       view.tabs.dispose();
       view.forms.forEach(function (form) { form.dispose(); });
+      view.sidebar.dispose();
       view.material.dispose();
       view.attached.dispose();
     };
@@ -145,10 +173,11 @@ PhComposerUI.define("sections/library", ["panel", "snapshot", "workspace", "subt
     view.color.refresh(state, Boolean(payload), records);
     view.newAttached.refresh(state);
     view.deleteAttached.refresh(state);
-    view.material.externalBusy = view.forms.some(function (form) {
+    view.material.externalBusy = Boolean(view.sidebar.guard()) || view.forms.some(function (form) {
       return form.busy ? form.busy() : form.requests.busy();
     });
     view.attached.externalBusy = view.material.externalBusy;
+    view.sidebar.refresh(state, {}, Boolean(payload));
     view.material.render(state);
     view.attached.render(state);
     view.createMaterial.disabled = !payload || view.material.busy();

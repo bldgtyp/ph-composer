@@ -34,8 +34,9 @@ PhComposerUI.define("assembly_editor", ["assembly_editor_shared", "assembly_head
         if ((field === "type" || field === "exterior_condition") && !value) return null;
       } });
     this.color = new forms.ColorForm(session, send, SECTION + ".update", function () { self.repaint(); });
-    this.sidebar = new Sidebar({ busy: function () { return self.busy() || Boolean(self.guard()); },
-      adapter: { title: "Material Library", read: function (state) {
+    this.sidebar = new Sidebar({ session: session, send: send, changed: function () { self.repaint();
+    }, busy: function () { return self.busy() || Boolean(self.guard()); },
+      adapter: { title: "Material Library", wireKind: "materials", read: function (state) {
         var payload = snapshot.value(state, MATERIALS);
         return payload ? payload.records : [];
       }, categories: function (state) { return (snapshot.value(state, MATERIALS) || {}).categories || []; },
@@ -52,6 +53,9 @@ PhComposerUI.define("assembly_editor", ["assembly_editor_shared", "assembly_head
         var chosen = shared.selected(context.record, context.selection);
         return chosen ? { params: { layer_id: chosen.layer.id, segment_id: chosen.segment.id } } :
           { hint: "Select a Layer-Segment in the drawing first." };
+      }, assignment: function (context, target) {
+        return Object.assign({}, target, { id: context.record.id,
+          expected_values: shared.clone(context.record.values) });
       } }, onUse: function (row, target) {
         return self.action("segments.set_material", Object.assign({}, target, { material_id: row.id }));
       } });
@@ -83,6 +87,7 @@ PhComposerUI.define("assembly_editor", ["assembly_editor_shared", "assembly_head
   };
   Editor.prototype.guard = function () {
     if (this.disposed || !this.enabled) return "This Builder is no longer available.";
+    if (this.sidebar && this.sidebar.guard()) return this.sidebar.guard();
     if (this.busy()) return "Wait for the Assembly change to finish.";
     if (this.hasDimensionDraft() || this.hasRecordDraft() || !this.color.root.hidden || !this.removal.hidden) {
       return "Apply or cancel the Assembly draft before leaving.";

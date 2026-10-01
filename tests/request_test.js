@@ -108,3 +108,15 @@ test("a channel refuses a message the panel does not carry", function () {
   assert.throws(function () { request.channel("session-a", function () {}, "x", "sketchup.invoke"); },
     /does not carry/);
 });
+
+test("read queries settle only their keyed query result and reset ignores a late answer", function () {
+  var sent = [], channel = request.channel("session-a", function (type) { sent.push(type); }, "catalog",
+    "query.invoke");
+  var id = channel.run("example.catalog", {}), answer = result(id, "session-a", "completed");
+  assert.deepStrictEqual(sent, ["query.invoke"]);
+  assert.strictEqual(channel.consume(viewState([answer])), null);
+  var held = {}; held[id] = answer;
+  assert.strictEqual(channel.consume({ ui: { queryResults: held } }).status, "completed");
+  channel.run("example.catalog", {}); channel.reset();
+  assert.strictEqual(channel.consume({ ui: { queryResults: held } }), null);
+});

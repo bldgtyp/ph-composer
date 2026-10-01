@@ -19,7 +19,8 @@ module PhComposer
 
     attr_reader :features, :queries, :actions, :view_commands, :record_kinds, :reference_targets, :extensions,
                 :snapshot_sections,
-                :export_contributors, :reference_retargeters, :proposal_participants, :colour_modes, :menu_items,
+                :export_contributors, :reference_retargeters, :proposal_participants, :library_providers,
+                :library_kinds, :colour_modes, :menu_items,
                 :subscriptions
 
     class << self
@@ -59,6 +60,8 @@ module PhComposer
       @export_contributors = {}
       @reference_retargeters = {}
       @proposal_participants = {}
+      @library_providers = {}
+      @library_kinds = {}
       @colour_modes = {}
       @menu_items = {}
       @subscriptions = []
@@ -102,6 +105,10 @@ module PhComposer
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
       publish_each(staging.declared_reference_retargeters, @reference_retargeters, :name)
       publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
+      staging.declared_library_providers.each { |item| freeze_library_provider(item) }
+      staging.declared_library_kinds.each { |item| freeze_library_kind(item) }
+      publish_each(staging.declared_library_providers, @library_providers, :name)
+      publish_each(staging.declared_library_kinds, @library_kinds, :name)
       publish_each(staging.declared_colour_modes, @colour_modes, :name)
       publish_each(staging.declared_menu_items, @menu_items, :name)
       staging.owners.each { |name, owner| @owners[name] = owner }
@@ -136,6 +143,33 @@ module PhComposer
       value.freeze
     end
 
+    def freeze_library_provider(item)
+      item.name = item.name.dup.freeze
+      item.owner = item.owner.dup.freeze
+      item.kinds = deep_freeze(DeepCopy.call(item.kinds))
+      item.freeze
+    end
+
+    def freeze_library_kind(item)
+      adapter = item.adapter.dup
+      adapter.wire_kind = adapter.wire_kind.dup.freeze
+      adapter.wire_schema = deep_freeze(DeepCopy.call(adapter.wire_schema))
+      adapter.mapped_schema = deep_freeze(DeepCopy.call(adapter.mapped_schema))
+      adapter.fingerprint_fields = deep_freeze(DeepCopy.call(adapter.fingerprint_fields))
+      %i[local_read create replace assign].each do |method|
+        callback = adapter[method]
+        next unless callback
+
+        callback = callback.dup
+        callback.params = deep_freeze(DeepCopy.call(callback.params))
+        callback.result = deep_freeze(DeepCopy.call(callback.result))
+        adapter[method] = callback.freeze
+      end
+      item.adapter = adapter.freeze
+      %i[name owner record_kind].each { |part| item[part] = item[part].dup.freeze }
+      item.freeze
+    end
+
     def publish_each(declarations, target, key)
       declarations.each { |declaration| target[declaration.public_send(key)] = declaration }
     end
@@ -146,6 +180,7 @@ module PhComposer
                   :declared_record_kinds, :declared_reference_targets, :declared_extensions,
                   :declared_snapshot_sections,
                   :declared_export_contributors, :declared_reference_retargeters, :declared_proposal_participants,
+                  :declared_library_providers, :declared_library_kinds,
                   :declared_colour_modes,
                   :declared_menu_items,
                   :declared_subscriptions, :owners, :named
@@ -163,6 +198,8 @@ module PhComposer
         @declared_export_contributors = []
         @declared_reference_retargeters = []
         @declared_proposal_participants = []
+        @declared_library_providers = []
+        @declared_library_kinds = []
         @declared_colour_modes = []
         @declared_menu_items = []
         @declared_subscriptions = []
@@ -296,6 +333,18 @@ module PhComposer
       def proposal_participant(name, &handler)
         declaration = Declarations::ProposalParticipant.new(:name => name, :owner => id, :handler => handler)
         @staging.add(:declared_proposal_participants, id, name, declaration)
+      end
+
+      def library_provider(name, contract_version:, kinds:, &factory)
+        declaration = Declarations::LibraryProvider.new(:name => name, :owner => id,
+          :contract_version => contract_version, :kinds => kinds, :factory => factory)
+        @staging.add(:declared_library_providers, id, name, declaration)
+      end
+
+      def library_kind(name, contract_version:, record_kind:, adapter:)
+        declaration = Declarations::LibraryKind.new(:name => name, :owner => id,
+          :contract_version => contract_version, :record_kind => record_kind, :adapter => adapter)
+        @staging.add(:declared_library_kinds, id, name, declaration)
       end
 
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).

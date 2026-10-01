@@ -17,8 +17,9 @@ them, plus two foundation capabilities, `RecordQueries` and `ColourBy`, and the 
 canonical HBJSON and its report. No exporter beyond HBJSON ships. The archived
 [Phase 0](../planning/archive/phase-00-foundation/README.md) and
 [Phase 1](../planning/archive/phase-01-faces-and-zones/README.md) packets record implementation and host evidence.
-Spaces, Volumes, Assemblies, Window Types, libraries and exporters are not implemented; the rules
-below that describe them remain requirements until their owning packets land.
+That overview records the merged Phase 1 baseline. The owning Phase 2 packets record subsequent
+implementation and acceptance; the library section below describes the current file-provider
+implementation. Proposed capabilities remain requirements until their owning packets land.
 
 [EXTENSIBILITY.md](EXTENSIBILITY.md) owns the accepted contributor architecture, including the
 separation of pure Ruby domain behavior from SketchUp adapters, public scripting, metadata and
@@ -301,49 +302,52 @@ and findings. It receives a copy of the options and nothing else. No exporter is
 
 ## The library provider seam
 
-A library provider is an outside source of definitions. The user browses it from the panel and
-copies a record into the Model, where the copy is editable and carries source attribution. No
-provider is required, none is privileged, and no provider address is a default the code ships.
+The implemented library foundation supplies the file/folder provider, session catalogs, resolution
+and guarded copy. Materials supplies its own kind adapter. The model owns each editable copy;
+no provider is required or privileged. No provider address is a shipped default.
 
-The contract, carried over from the predecessor's organization library and generalized:
+A registered provider factory takes no arguments and returns configured provider instances. Each
+instance answers `id`, `provider_kind`, `label`, `kinds`, `list(kind)` and `freshness`. It receives
+neither a Model nor a handler request. A list returns an immutable `Library::Provider::Batch` with
+complete row snapshots, structured warnings and unavailable-kind identities. Provider metadata
+contains configured ids and labels. Private paths stay in per-machine `Library::Setup`, stored as
+one base64 JSON value in SketchUp defaults, and inside the provider that reads them. Provider
+exceptions become code-only public failures; their text and causes do not enter results.
 
-- A provider answers `kinds` (which record kinds it publishes) and `list(kind)`. The list carries
-  every field, so there is no per-record fetch. Records arrive in the same wire shape regardless
-  of provider, and each carries the provider's stable record id.
-- PH-Composer sets one neutral JSON envelope. It is the library file on disk and the response
-  of a connection. Providers accommodate it; no vendor translator lives in the code. Every number
-  on the wire is SI with the unit in its key name.
-- The first provider is a **library file**: a folder or single JSON file on disk. It needs no
-  account, makes the tests trivial, and is the reference implementation of the contract.
-- A **connection** provider reaches a server over HTTPS with a read-only grant. Host HTTP goes
-  through `Sketchup::Http::Request` with a single-shot timer as the timeout and every request
-  retained until it finishes; callbacks refresh sessions, never notice them. A response is ignored
-  when the source revision moved while it was in flight.
-- A credential or a server address never crosses the panel boundary, enters a log, the Model or an
-  export. The connection's summary carries the host name and booleans only; approval opens through
-  an action, never from a URL the panel holds. A catalog body that echoes the token or the address
-  is refused before any field becomes data. The macOS Keychain adapter passes the secret as the
-  `-w` argument of one short-lived `/usr/bin/security` process; feeding it on stdin stored an empty
-  secret on the proving host.
-- Only HTTPS addresses and loopback HTTP are accepted.
-- On the Ruby side a record kind is one adapter file that registers itself and answers the
-  provider-kind contract, including its "In this file" projection. The feature that imports the
-  kind hands over its local records. The library feature names no other feature.
+The file provider reads the neutral envelope in [LIBRARY_FILE_FORMAT.md](../docs/LIBRARY_FILE_FORMAT.md).
+It loads a single file or the immediate JSON files of a folder, with implemented bounds of 32 MiB
+per file, 64 MiB aggregate and 20,000 rows. Exact-limit and one-above offline checks cover these
+bounds; host budget measurement remains required. Admission validates wire schemas and omits
+undeclared fields before publishing a generation. Duplicate record ids withhold the affected
+library and kind rather than selecting a winner.
 
-The libraries packet defines source identity, ambiguity, catalog generations and copy/replacement
-semantics. Providers only return catalog values. Pure kind adapters validate, map, fingerprint and
-project library-file exports; owning features supply public record queries and mutation operations.
-The library coordinator applies a reviewed proposal through those operations in one transaction,
-including assignment when requested. Reads never copy or open dialogs. UI and scripts use the same
-revision-checked operations with explicit model targets. Registration diagnoses duplicate ids,
-missing dependencies and incompatible versions. These remain requirements pending implementation.
+Catalogs live only on the ModelSession, keyed by configured provider and wire kind. A successful
+refresh publishes an immutable generation. Failure retains the prior generation with failure state
+and age. Setup changes invalidate the affected provider ids across open sessions, including removal
+and re-addition. Public reads never copy records or open a dialog. The providers query is
+`ph_composer.library.providers`; its snapshot section has the distinct global id
+`ph_composer.library.provider_catalogs`.
 
-The core holds the library file provider and one generic connection provider. PH-Navigator web,
-METr's own catalog and a firm's intranet server are each an address that implements the published
-protocol, with sign-in by none, a static token or device-code approval as the server declares.
-The PH-Navigator connection is the second implementation to land, after the library file, and
-nothing specific to it exists in the code. Decisions are in
-`planning/features/phase-02-envelope/libraries/PRD.md`.
+Kind owners register pure wire mapping, reverse mapping and versioned fingerprints, plus schema-
+validated callbacks for local projection, create, replacement and optional assignment. The neutral
+coordinator names no feature or assignment field. Local projection is read-only, but can see staged
+records through its owner-bound projected engine. Mutation callbacks share the caller's proposal;
+input, result or ownership failures poison that proposal even if contributor code rescues them.
+Trusted Ruby callbacks still obey the normal host-write contract; this is not a Ruby sandbox.
+
+Resolution checks exact source identity before canonical local names and mapped values. Reviewed
+replacement retains the local id and references, preserves metadata and unavailable extension
+payloads, and requires the reviewed raw authored fields as guards. Copy plus assignment commits as
+one native transaction. Preview and invoke recheck session revision and catalog generation. Their
+first gesture timestamp is stable within that revision and excluded from semantic fingerprints.
+The owning feature supplies one source-attribution report line per copied record without changing
+HBJSON. The [panel-closed example](../tools/examples/library/materials_walkthrough.rb) exercises
+load, preview, copy, retry and read-back.
+
+The connection provider remains proposed. Its HTTPS transport, grants, credential storage and
+asynchronous reconfiguration/disposal guards belong to the
+[libraries packet](../planning/features/phase-02-envelope/libraries/PRD.md). The file provider's
+implementation does not establish those host contracts.
 
 ## Errors
 

@@ -23,7 +23,7 @@ module PhComposer
   # alphabetically within each. A file whose body names a later file's constant at load names that
   # file with `require_relative`.
   unless const_defined?(:FOUNDATION_DIRECTORIES)
-    FOUNDATION_DIRECTORIES = %w[core session shell runtime export colour_by].freeze
+    FOUNDATION_DIRECTORIES = %w[core session shell runtime export colour_by library].freeze
   end
   FOUNDATION_DIRECTORIES.each do |directory|
     Dir[File.join(__dir__, directory, "**", "*.rb")].sort.each { |path| require path }
@@ -34,10 +34,11 @@ module PhComposer
   # module to this list; nothing else in the foundation changes.
   require_relative "features/assemblies/install"
   require_relative "features/zones/install"
-  FEATURES = [Assemblies, Zones].freeze unless const_defined?(:FEATURES)
+  require_relative "features/windows/install"
+  FEATURES = [Assemblies, Zones, Windows].freeze unless const_defined?(:FEATURES)
 
   # Capabilities the foundation itself provides, registered through the same interface as a feature.
-  FOUNDATION_FEATURES = [RecordQueries, ColourBy].freeze unless const_defined?(:FOUNDATION_FEATURES)
+  FOUNDATION_FEATURES = [RecordQueries, ColourBy, Library].freeze unless const_defined?(:FOUNDATION_FEATURES)
 
   # Registers the foundation and every listed feature. A registration problem fails loading here,
   # with every diagnostic in the message, rather than leaving a partly available extension.

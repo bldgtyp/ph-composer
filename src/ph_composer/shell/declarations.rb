@@ -82,6 +82,20 @@ module PhComposer
 
     ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)
 
+    # Zero-argument factories return configured provider instances, never a Model or request.
+    # `kinds: ["*"]` exclusively declares every registered wire kind; it cannot mix with named kinds.
+    # The coordinator resolves that capability against current adapters before constructing a provider.
+    LibraryProvider = Struct.new(:name, :owner, :contract_version, :kinds, :factory, keyword_init: true)
+
+    # Pure wire methods use detached values. Local callbacks will run under this declaration's
+    # owner, validating these schemas and sharing the caller's proposal; registration never runs them.
+    LibraryCallback = Struct.new(:params, :result, :handler, keyword_init: true)
+    LibraryAdapter = Struct.new(:wire_kind, :wire_version, :fingerprint_version, :wire_schema,
+                                :mapped_schema, :fingerprint_fields,
+                                :map, :reverse, :fingerprint, :local_read, :create, :replace, :assign,
+                                keyword_init: true)
+    LibraryKind = Struct.new(:name, :owner, :contract_version, :record_kind, :adapter, keyword_init: true)
+
     # One registration problem. `subject` is the declaration it concerns; `dependency` names what it
     # needed, when that is the problem.
     Diagnostic = Struct.new(:code, :owner, :subject, :message, :dependency, keyword_init: true) do

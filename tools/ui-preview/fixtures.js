@@ -212,6 +212,21 @@
     return face.values.face_type;
   }).slice(0, 2).map(function (face) { return face.reference; });
 
+  FIXTURES.libraries = JSON.parse(JSON.stringify(FIXTURES.builder));
+  FIXTURES.libraries.libraryProviders = [{ id: "synthetic", provider_kind: "ph_composer.library.file",
+    label: "Synthetic library", kinds: ["materials"] }, { id: "other", provider_kind: "example.provider",
+    label: "Other provider", kinds: ["materials"] }];
+  FIXTURES.libraries.libraryCatalogs = { synthetic: [
+    { library_id: "public.insulation", library_name: "Public insulation", record_id: "new", wire_schema_version: 1,
+      snapshot: { id: "new", name: "Synthetic fiber", category: "insulation", conductivity_w_mk: 0.045,
+        density_kg_m3: 45, specific_heat_j_kgk: 1400, emissivity: 0.8, color: "#ddeedd",
+        notes: "Synthetic public source", datasheet_links: [] } },
+    { library_id: "public.insulation", library_name: "Public insulation", record_id: "review", wire_schema_version: 1,
+      snapshot: { id: "review", name: "Mineral wool", category: "insulation", conductivity_w_mk: 0.04,
+        density_kg_m3: 55, specific_heat_j_kgk: 1000, emissivity: 0.9, color: "#fff2cc",
+        notes: "Revised library notes", datasheet_links: [] } }
+  ], other: [] };
+
   global.PhComposerPreviewFixtures = {
     names: Object.keys(FIXTURES),
     fromQuery: function (search) {

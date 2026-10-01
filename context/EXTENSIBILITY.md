@@ -123,6 +123,48 @@ feature branch inside shell, session, export orchestration or UI-kit internals i
 defect. Explicit registration does not promise dynamic plugin loading, a marketplace or separate
 installation in the MVP.
 
+### Library providers and kind adapters
+
+`feature.library_provider(name, contract_version: 1, kinds: [...], &factory)` registers a
+zero-argument factory returning configured provider instances. Named wire kinds must already
+have adapters in the registration batch. `kinds: ["*"]` explicitly serves all registered wire
+kinds; the wildcard is exclusive and cannot mix with named ids. The file provider uses this
+capability, so adding an adapter requires no edit to its declaration. Factories receive no Model
+or request; private configuration belongs to the provider and its setup store.
+
+`feature.library_kind(name, contract_version: 1, record_kind:, adapter:)` registers the owner's
+adapter for a catalog record kind it owns. Entity reference targets cannot be imported as catalog
+kinds. A wire kind has one adapter. `Declarations::LibraryAdapter` declares `wire_kind`,
+`wire_version`, `fingerprint_version`, `wire_schema`, `mapped_schema`, ordered `fingerprint_fields`,
+`map`, `reverse`, `fingerprint`, `local_read`, `create`, `replace` and optional `assign`. Supported
+contract, wire and fingerprint versions are 1. Fingerprint fields are unique mapped-schema
+property names in canonical order. Pure mapping and reverse mapping use detached values; the
+fingerprint returns a lowercase SHA-256 hex string and excludes provenance and local identities.
+
+Local operations are `Declarations::LibraryCallback` values with `params`, `result` schemas and
+`handler(request, proposal)`. Local reads receive no mutable proposal and cannot stage writes;
+their projected engine still reads the current caller's staged records. They return detached
+projections with `id`, semantic `mapped` values, raw authored `expected_values` and optional
+`source`. Create and replacement run under the adapter's owner and share the coordinator's
+proposal. Their schemas describe the owner's normal values and guards. Replacement preserves
+identity, references and metadata. Optional assignment accepts the generic wrapper
+`{ "target" => owner_target, "local_id" => copied_id }`; only the kind owner translates the
+wrapper into its assignment action's vocabulary. Copy and assignment refuse together.
+
+Registration validates ownership, unique ids and supported versions, plus schema and callable
+contracts. Any diagnostic refuses the whole batch. Published declaration metadata and schemas are
+defensively frozen. Invocation validates detached inputs and results and enforces catalog write
+ownership, with refusal retained on the shared proposal. These checks supplement the trusted Ruby
+contributor contract; callbacks never write raw dictionaries or open their own Model operation.
+
+Provider row admission and coordination live under `library/`. A record kind's adapter lives in
+its owning feature; adding one requires no case in the neutral coordinator. Materials is the
+implemented example at `features/assemblies/library_kind.rb`. Providers use the
+[published file envelope](../docs/LIBRARY_FILE_FORMAT.md). The
+[panel-closed walkthrough](../tools/examples/library/materials_walkthrough.rb) uses public reads
+and actions after private per-machine setup. A connection provider and outside-provider acceptance
+remain assigned to later stages.
+
 ### Colour-by modes
 
 Implemented in P1-D. A feature declares a mode in its own `install`, through the same

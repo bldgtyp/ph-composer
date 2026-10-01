@@ -14,6 +14,7 @@ module PhComposer
       # A viewport-state command for the Model the panel showed. It changes no record, so it carries no
       # expected revision: there is nothing for a stale one to protect.
       "view.invoke" => %w[request_id session name params],
+      "query.invoke" => %w[request_id session name params],
       "preferences.set" => %w[request_id key value scope system],
       # The Export command for the Model the panel showed. It is the shell's own command, not a Model action.
       "export.start" => %w[request_id session repairs],
@@ -27,6 +28,7 @@ module PhComposer
       "panel.snapshot" => %w[product version session revision file_name edit_path preferences sections],
       "action.result" => %w[request_id session outcome],
       "view.result" => %w[request_id session outcome],
+      "query.result" => %w[request_id session outcome],
       "preferences.result" => %w[request_id status message preferences],
       "export.result" => %w[request_id session outcome],
       "panel.notice" => %w[session message tone],

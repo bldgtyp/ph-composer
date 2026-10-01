@@ -110,7 +110,7 @@ class PhaseOneExportTest < PhComposerTestCase
 
   def contributor_names
     [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION,
-     PhComposer::Assemblies::ExportProjection::SECTION]
+     PhComposer::Assemblies::ExportProjection::SECTION, PhComposer::Assemblies::SourceReport::SECTION]
   end
 
   def seed_two_boxes
