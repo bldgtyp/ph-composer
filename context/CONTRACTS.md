@@ -502,7 +502,9 @@ changes drop the affected provider's entries in every open session. Nothing is c
 **Pages.** `catalog` and `in_file` page through `shell/pages.rb` like every other list: `limit`
 (default 100, maximum 500), `cursor` and `next_cursor`, with `total` on every page. Rows keep the
 provider's order; a cursor is bound to the generation it was read from, and an `in_file` cursor to
-the Model revision as well, so a reload or an edit refuses it with `query.cursor_expired`.
+the Model revision as well. A reload refuses it as `library.catalog_stale` when the caller names the
+generation, and as `query.cursor_expired` otherwise; an edit refuses an `in_file` cursor as
+`query.cursor_expired`.
 
 **Copy.** `ph_composer.library.copy` runs inside the ordinary action order of "Compound
 proposals". Its own checks run in this order, each refusing the whole proposal:

@@ -30,7 +30,7 @@ module PhComposer
       "failed", "operation.failed", "The panel could not change what the viewport shows.", "none", nil
     ).freeze
     SETUP_FAILED = Outcome.build(
-      "failed", "operation.failed", "The panel could not change the library setup.", "none", nil
+      "failed", "operation.failed", "The panel could not change that setup.", "none", nil
     ).freeze
     QUERY_FAILED = Outcome.build(
       "failed", "operation.failed", "The panel could not read that information.", "none", nil

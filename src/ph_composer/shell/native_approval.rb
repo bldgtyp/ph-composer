@@ -13,6 +13,13 @@ module PhComposer
       def inspect
         "#<#{self.class.name}>"
       end
+      alias_method :to_s, :inspect
+
+      # Printing or serializing an approval never shows its path; read `path` explicitly.
+      def to_h
+        { "replace" => replace }
+      end
+      alias_method :to_a, :to_h
     end
 
     NOUNS = { "save_file" => "destination file", "open_file" => "file", "open_folder" => "folder" }.freeze

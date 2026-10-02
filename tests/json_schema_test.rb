@@ -54,7 +54,9 @@ class JsonSchemaTest < PhComposerTestCase
     id = { "type" => "string", "pattern" => "^asm_[A-Za-z0-9]{12}$" }
     assert_empty Schema.validate("asm_Ab12Cd34Ef56", id)
     assert_equal ["$ must match ^asm_[A-Za-z0-9]{12}$"], Schema.validate("asm_Ab12Cd34Ef56\nx", id)
-    assert_equal ["$.pattern must be a regular expression"],
-                 Schema.schema_problems("type" => "string", "pattern" => "(")
+    %w[^( asm_ ^a$|^b$].each do |text|
+      assert_equal ["$.pattern must be an anchored regular expression"],
+                   Schema.schema_problems("type" => "string", "pattern" => text)
+    end
   end
 end

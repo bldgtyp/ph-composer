@@ -1,7 +1,7 @@
 # R03: agent access gaps in the Phase 2 surface
 
 DATE: 2026-10-01
-STATUS: Requested
+STATUS: Implemented on branch `refactor/r03-agent-access`, 2026-10-01. Host acceptance of the changed screens not run (none named below)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Mixed. Each item states its class.
@@ -236,3 +236,56 @@ the synthetic client test runs as written.
 - F: a test fails when a registered operation has a param without a description.
 - H: the `types.create` result is identical under both unit systems.
 - `make fixtures` regenerates `docs/API_REFERENCE.md`; review the diff for A to H.
+
+## Outcome
+
+Implemented 2026-10-01 on `refactor/r03-agent-access`, one commit per item (D and E share one).
+
+- **B.** A fourth operation kind, the setup command (`FeatureScope#setup_command`, `API.setup`,
+  `setup.invoke`/`setup.result`), under a `setup` capability that `API.connect` never grants by
+  default. `library.load` and `providers.add_file`, `add_folder` and `remove` moved to it; the
+  `refresh` alias is gone. Test: a `view`-only or default context is refused; `setup` succeeds.
+- **A.** A setup command or file export may declare `approval: Declarations::Approval` (save_file,
+  open_file, open_folder). `shell/native_approval.rb` opens the dialog for the panel and the
+  Libraries menu, asks before replacing an existing file and hands the answer to dispatch outside
+  params. `PhComposer::API` never passes one, so a script is refused with `access.user_required`
+  before the handler runs. No `UI.*` dialog remains in a registered handler. The library review
+  message box is gone; the panel's `export_preview` shows counts and omissions before the dialog.
+  A destination keyword on the public API was rejected: it would accept plain paths from any
+  in-process caller, a closed alternative.
+- **D.** `catalog` and `in_file` page through `shell/pages.rb`, keyed by row position in the
+  immutable generation; `Pages.slice` takes `revision:` so the cursor binds the generation (and the
+  Model revision for `in_file`).
+- **E.** `copy` accepts only `create`, `keep_local`, `use_library`; `choice` is required.
+- **C.** `ph_composer.windows.units.repair_copied_identities` with preview; `copy_id_pending` names
+  it; every other Windows action says in `side_effects` that it repairs copies first
+  (`Shapes.side_effects`). The placement walkthrough uses it.
+- **G.** `types.grid.element` became `set_element_name`, `set_element_glazing`,
+  `set_element_frame` (one side) and `set_element_operation`.
+- **H.** `Types.defaults` no longer reads the display system; the panel passes 1.016 by 1.524 m
+  under IP. `types.installs.save` is described as the batch edge assignment.
+- **F.** All 307 top-level params of the 130 operations are described; `tests/api_reference_test.rb`
+  fails on any that is not. The JSON Schema subset gained an anchored `pattern`; Assembly and
+  Window id params carry their prefix pattern. Generic string shapes renamed `TEXT`. Layer,
+  Layer-Segment and grid actions have hand-written descriptions, Undo names and side effects.
+- **I.** `docs/API_QUICKSTART.md` step 7 creates a Material and Assembly and assigns it to a Face;
+  `tests/api_client_test.rb` runs it. `context/AGENT_INTERFACE.md` records the dialog-only limits.
+
+Gates: `make ci` passed on Ruby 2.7.2 and 3.2.2.
+
+Review: one independent Opus pass with the architecture rubric found no blocking defect. Fixed:
+the shell's setup failure text named the library; `docs/AGENT_ACCESS.md` lacked `setup`; the
+Pages paragraph omitted `library.catalog_stale` (the panel now restarts on it too); `pattern` now
+requires `^...$`, refuses inner line anchors and binds the whole string; a stale reverse-mapping
+sentence; `NativeApproval::Granted` no longer prints its path through `to_s` or `to_h`;
+`NativeApproval` documented as a shell internal; a stale preview fixture.
+
+Follow-ups left out:
+
+- `NativeApproval` opens the dialog before dispatch checks grant, params, busy state and
+  `expected_revision`; a pre-check would spare the user a dialog that then refuses.
+- The schedule still offers Reset to Type, not the named repair, for `copy_id_pending`.
+- `tools/examples/library_provider/walkthrough.rb` reads only the first `in_file` page.
+- Host acceptance of the library setup and export dialogs, the Libraries menu add flow, grid
+  gestures and library paging was not run; this file names no host gate. Whether the macOS save
+  panel and the replace message box both ask (as for HBJSON) is unobserved.

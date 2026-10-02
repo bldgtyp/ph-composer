@@ -25,8 +25,10 @@ parameters and results, read Zones and Faces in bounded pages, preview a change 
 conflict check, and run, poll and cancel an export, all with the panel closed. The
 [API quickstart](API_QUICKSTART.md) walks one session from discovery to a verified edit and runs as
 an automated test; the [API reference](API_REFERENCE.md) is generated from the registered
-operations. A caller connects with only the grants it needs: `read`, `view`, `model_write` and
-`export`.
+operations. A caller connects with only the grants it needs: `read`, `view`, `model_write`, `setup`
+and `export`. Adding a library file or folder and exporting a library file need a location only the
+user can choose, so they run from the panel or the Libraries menu; a script is refused with
+`access.user_required`.
 
 ## Not yet available
 

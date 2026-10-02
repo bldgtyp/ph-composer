@@ -99,6 +99,10 @@ PhComposerUI.define("library_store", ["request", "snapshot"], function (request,
         self.page = page; self.pageRevision = revision; self.error = ""; self.changed();
       }, onFail: function (outcome) {
         if (cursor && outcome.code === "query.cursor_expired") { self.read(null, generation); return; }
+        /* A reload replaced the generation: the next snapshot names the new one and reads it from the start. */
+        if (cursor && outcome.code === "library.catalog_stale") {
+          self.rows = []; self.page = null; self.changed(); return;
+        }
         self.error = outcome.message; self.changed();
       } });
     return true;

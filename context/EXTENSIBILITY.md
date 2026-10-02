@@ -207,12 +207,14 @@ choose is declared, not asked for: `approval: Declarations::Approval.new(kind: "
 default_name:)`. The handler then reads `request.approval.path` and `.replace`, opens no dialog, and
 refuses an existing destination the user did not agree to replace. A setup command takes the same
 `approval:` with kind `open_file` or `open_folder`. The panel and native menus obtain the answer
-through `NativeApproval`; any other caller is refused with `access.user_required`
+through `NativeApproval`, a shell internal and not a supported API; any other caller is refused with
+`access.user_required`
 ([AGENT_INTERFACE.md](AGENT_INTERFACE.md), "Locations only the user can choose"). Ruby contributors
 remain trusted code and own safe writes.
 
 The library exporter uses reverse mappings from each registered kind and checks semantic equality
-after mapping the wire row back. Invalid or lossy reverse mappings refuse before the save dialog.
+after mapping the wire row back. Invalid or lossy reverse mappings refuse in `export_preview`, which
+the panel reads before it offers the save dialog, and again in the export itself.
 Local record ids remain the wire ids; attribution is informational and excluded from semantic
 comparison. Only declared wire fields and sanitized origins reach the file.
 
