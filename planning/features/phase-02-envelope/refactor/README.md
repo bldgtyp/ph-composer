@@ -2,7 +2,7 @@
 
 DATE: 2026-10-01
 STATUS: In progress. Review complete and Ed's eight decisions recorded on 2026-10-01. R01 is
-merged (PR #16); R02 is merged (PR #17) with its host gate passed; R03 is merged (PR #18); R04 is merged (PR #19); R05 is merged (PR #20) with its host gate passed; R06 is merged (PR #21) with its host gate passed; R07 to R11 are requested.
+merged (PR #16); R02 is merged (PR #17) with its host gate passed; R03 is merged (PR #18); R04 is merged (PR #19); R05 is merged (PR #20) with its host gate passed; R06 is merged (PR #21) with its host gate passed; R07 is merged (PR #22); R08 to R11 are requested.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft). Reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15), merged 2026-10-01 as `c687a73`, which closed [#14](https://github.com/bldgtyp/ph-composer/issues/14).
 
@@ -76,7 +76,7 @@ reproduced defect, evidenced contract violation, unverified risk, optional impro
 | [R04](R04-findings-and-codes.md) | Finding codes: no `noun.condition` form, two codes for one condition, codes derived from message text, Zones matching Assemblies' codes, `request.stale_revision` (reproduced), 48 codes missing from the table | Evidenced contract violation. **Merged 2026-10-02, PR #19**, with R09 item 5 | Medium, touches panel and report |
 | [R05](R05-export-layering.md) | Export and translation layering runs upward: `ZoneSection` requires Apertures, Zones declares Window result fields, Windows calls a Zones module directly, shared conformance names Windows | Evidenced contract violation. **Merged 2026-10-02, PR #20; E06/E14 host readbacks pass** | Large, architecture |
 | [R06](R06-entity-target-resolution.md) | No public way to resolve a Face reference to a live Face; Windows re-implements Zones' path resolution in six places and loads the whole Face table per Unit operation | Evidenced contract gap, one unverified performance risk. **Merged 2026-10-02, PR #21; host gate passed** | Medium, architecture |
-| [R07](R07-operations-coupled-to-request.md) | Operations read `request.params`; reuse duplicates the request, pulls actions out of registration staging and replays handler blocks; partial engine stand-in built with `define_method` | Evidenced contract violation | Medium |
+| [R07](R07-operations-coupled-to-request.md) | Operations read `request.params`; reuse duplicates the request, pulls actions out of registration staging and replays handler blocks; partial engine stand-in built with `define_method` | Evidenced contract violation. **Merged 2026-10-02, PR #22** | Medium |
 | [R08](R08-window-unit-steps.md) | Seven Unit steps each carry their own copy of the same guards and vector maths; planning lives in long constructors; one matcher swallows every error | Optional improvement, one silent-failure pattern | Medium |
 | [R09](R09-definition-feature-pattern.md) | Definition features fork one generic path by kind, build kinds and actions from positional tables, and repeat schema builders six times | Optional improvement | Medium |
 | [R10](R10-ui-kit-organization.md) | Library pane hard-codes Materials and Attached zones beside a surface seam only Windows uses; feature screens share a flat directory with the kit | One evidenced, rest optional | Small to medium |

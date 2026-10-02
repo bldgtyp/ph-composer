@@ -1,7 +1,7 @@
 # R07: domain operations read the request envelope, so reuse means replaying handlers
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r07-operations-and-request`, 2026-10-02
+STATUS: Merged to main 2026-10-02 (PR #22); dual-Ruby `make ci` passes; no host gate named
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation (readability and dependency rules). Structural.
