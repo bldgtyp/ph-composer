@@ -8,18 +8,6 @@ module PhComposer
     module Definitions
       module_function
 
-      # Preview and invoke rebuild the same nested identities at the same revision. The allocator
-      # is proposal-local and deterministic; it retains no state across Models or requests. `inputs`
-      # are the operation's arguments, so two different edits at one revision derive different ids.
-      def identity_allocator(request, inputs)
-        sequence = 0
-        lambda do |prefix|
-          sequence += 1
-          Records::Identity.derived(prefix, "session" => request.session.id, "revision" => request.revision,
-                                    "params" => inputs, "position" => sequence)
-        end
-      end
-
       def records(request, kind)
         request.engine.ids(kind).map { |id| request.engine.find(kind, id) }
       end

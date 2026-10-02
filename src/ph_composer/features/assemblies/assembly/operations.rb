@@ -11,7 +11,7 @@ module PhComposer
 
         def create(request, proposal, values:, user_data: nil)
           Commands.unique_name!(values.fetch("name"), Definitions.records(request, ASSEMBLY_KIND))
-          defaults = Schema.defaults(values, :identity => Definitions.identity_allocator(request, "values" => values))
+          defaults = Schema.defaults(values, :identity => Records::Identity.allocator(request, "values" => values))
           id = request.engine.propose_create(ASSEMBLY_KIND, proposal, :values => defaults, :user_data => user_data)
           { "id" => id }
         end
@@ -30,7 +30,7 @@ module PhComposer
 
         def duplicate(request, proposal, id:)
           catalog = Definitions.records(request, ASSEMBLY_KIND)
-          identity = Definitions.identity_allocator(request, "id" => id)
+          identity = Records::Identity.allocator(request, "id" => id)
           mapping = request.engine.propose_duplicate(ASSEMBLY_KIND, [id], proposal) do |values|
             Commands.duplicate_assembly_values(values, catalog, :identity => identity)
           end

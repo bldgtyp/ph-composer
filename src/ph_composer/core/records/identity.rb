@@ -34,6 +34,19 @@ module PhComposer
       def derived(prefix, value)
         "#{prefix}_#{Digest::SHA256.hexdigest(CanonicalJson.generate(value))[0, 12]}"
       end
+
+      # A callable that derives the next id for a prefix, for an operation that creates several
+      # records. The session, revision, `inputs` and the call's position seed each one, so a preview
+      # and its invoke allocate the same ids in the same order and it keeps no state across requests.
+      # `inputs` are the operation's arguments, so two different edits at one revision differ.
+      def allocator(request, inputs)
+        position = 0
+        lambda do |prefix|
+          position += 1
+          derived(prefix, "session" => request.session.id, "revision" => request.revision, "params" => inputs,
+                          "position" => position)
+        end
+      end
     end
   end
 end

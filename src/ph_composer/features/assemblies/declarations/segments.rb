@@ -58,7 +58,7 @@ module PhComposer
           Commands.add_segment(record, :layer_id => params.fetch("layer_id"),
                                 :materials => Definitions.materials(request),
                                 :width_mm => params.fetch("width_mm", 1000.0), :index => params["index"],
-                                :identity => Definitions.identity_allocator(request, params))
+                                :identity => Records::Identity.allocator(request, params))
         end
         action(feature, "remove", { "layer_id" => Shapes.id("lyr", LAYER_ID),
                                     "segment_id" => Shapes.id("seg", SEGMENT_ID) },
