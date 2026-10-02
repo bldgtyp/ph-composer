@@ -4,7 +4,10 @@ DATE: 2026-09-30
 STATUS: Accepted architectural direction. Registration, record kinds, metadata and extension data
 merged through PR #1 from Phase 0 P0-D; see the example under `tools/examples/foundation/`. Phase 1
 (PR #3, PR #6) added view commands, menu items, Colour-by modes, entity reference targets and
-descriptors, and the `zones` feature built on them.
+descriptors, and the `zones` feature built on them. Phase 2 (PR #15, merge `c687a73`) added
+handler-side dependency reads, reference retargeters, table contributions, the library provider
+and kind adapter contracts, registered file exports, and the `assemblies` and `windows` features
+built on them.
 
 PH-Composer exists to support an open-source community in the Phius sphere. A contributor
 should be able to understand and extend one part without understanding the whole application.
@@ -43,8 +46,12 @@ part registers. Zone actions are `ph_composer.zones.*`; Face actions are `ph_com
 A feature that needs authored Face identity, such as window placement, depends on `zones` through
 its queries, actions, reference targets and descriptors, never through its stores.
 
-Features sit in three layers and depend only downward. Ed set this on 2026-10-01, ahead of its
-implementation:
+Features sit in three layers and depend only downward. Ed set this on 2026-10-01, and the Ruby
+feature dependencies follow it. The export and translation side does not yet: Windows' export
+contributor calls a Zones export module directly, Zones' translation section
+requires the Apertures section, Zones declares Window result fields, and the shared conformance
+code names Windows. The review of PR #15 records these as finding R05, to be corrected before
+Phase 3:
 
 1. **Definitions.** Materials, Assemblies, Frames, Glazings, Psi-Install Types, Window Types,
    Attached zones. A definition knows nothing about geometry or about what uses it.
@@ -69,11 +76,22 @@ foundation. Use `request.query` for a registered read of an explicitly required 
 reference owner registers `feature.reference_retargeter(name, target_kind:)`; a definition delete
 calls `request.retarget_references` and gives its returned plan to `propose_delete`. The deletion
 and all rewrites share one proposal and Undo entry. See [CONTRACTS.md](CONTRACTS.md), "Handler-side
-dependency reads" and "Compound proposals", for schemas, refusals and final-state checks. The
-Assemblies is implemented as a definition feature requiring no geometry feature. Zones requires
-Assemblies, declares the Face's Assembly reference and owns assignment, usage and retargeting.
-Windows remains future work. The shared named-table contribution primitive is implemented;
-its first inventory integration is in progress in P2-05.
+dependency reads" and "Compound proposals", for schemas, refusals and final-state checks.
+
+Phase 2 built three features on these contracts. `assemblies` is a definition feature (layer 1)
+and requires no geometry feature. `zones` requires `assemblies`, declares the Face's Assembly
+reference and owns assignment, usage and retargeting. `windows` requires `zones` and spans two
+layers inside one feature: Frames, Glazings, Psi-Install Types and Window Types are layer 1 and
+call nothing in Zones; Window units and their placement are layer 3 and read Zones. Zones never
+requires `windows`. The Assemblies inventory shows Face usage through a table contribution from
+Zones' panel module, so the inventory names no Face.
+
+The panel has three contribution seams. `panel.section(name, render, { pane })` registers a
+feature's section renderer in a pane ([TECH_STACK.md](TECH_STACK.md), "Panel"). `ui.contributeTable`, below, adds columns and row actions to
+another module's named table. `library.registerSurface(spec)`, exported by the Library section
+(`html/sections/library.js`), adds a record inventory surface to the Library pane; the Windows
+section uses it for Frames, Glazings and Psi-Install Types. Materials and Attached zones are
+still built inside the Library section rather than through this seam (review finding R10).
 
 `ui.contributeTable(tableId, contribution)` registers columns and row actions without retaining a
 snapshot. The owner calls `ui.composeTable(tableId, options, state, send)` for each paint.
@@ -282,6 +300,13 @@ end
 The handler takes the same `request` a query's does and returns a JSON value against its declared
 result schema. What it must not do is write a record, open a `ModelOperation` or advance the session
 revision; a handler that needs to wants `action`.
+
+Known deviation: five library commands are registered as view commands although they change
+session or machine state rather than the viewport. `ph_composer.library.load` and `.refresh` read
+provider files into the session catalog; `.providers.add_file`, `.providers.add_folder` and
+`.providers.remove` change the per-machine provider setup. Ed decided on 2026-10-01 to move them
+to a separate operation kind with its own grant (working name `setup`), review finding R03. Until
+then a `view` grant reaches them; this is not the contract.
 
 A view command that fails part-way leaves viewport state unspecified. Its outcome reports `effect`
 `none`, which is a statement about the Model: the SKP is untouched, because nothing here opens an

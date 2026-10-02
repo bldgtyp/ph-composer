@@ -3,13 +3,15 @@
 The binding mechanics of the foundation: how capabilities register, how every client calls the
 public interface, what an outcome says, how revisions, transactions and retries behave, how
 records and extension data survive edits, how geometry targets are named, how Zones keep
-adjacency and identity honest, and how translation sections compose. Code and tests cite these
+adjacency and identity honest, how library catalogs admit and copy records, and how translation
+sections compose. Code and tests cite these
 sections by name.
 
 The policies these mechanics serve are in [EXTENSIBILITY.md](EXTENSIBILITY.md) (contributors,
 metadata, copy rules), [AGENT_INTERFACE.md](AGENT_INTERFACE.md) (external clients, writes, the
 export task, host lifecycle) and [TECH_STACK.md](TECH_STACK.md) (runtime, panel, export). This file
-was consolidated on 2026-09-30 from the archived Phase 0 and Phase 1 contract designs, which remain
+was consolidated on 2026-09-30 from the archived Phase 0 and Phase 1 contract designs, and extended
+on 2026-10-01 with Phase 2's Window Unit storage and library mechanics. The archived designs remain
 in `planning/archive/` as the record of how each rule was reached.
 
 ## Registration
@@ -129,20 +131,24 @@ Codes are stable `noun.condition` strings, one per outcome:
 | Session | `session.unknown` (closed, reopened or never issued), `session.busy`, `session.closed`, `session.changed` (a native menu built for another Model), `session.inactive` (panel client only: its Model is no longer shown) |
 | Preconditions | `revision.stale`, `proposal.changed`, `record.unreadable` |
 | Targets | `target.not_found`, `target.changed`, `target.ambiguous`, `target.locked`, `target.wrong_kind`, `target.wrong_hierarchy`, `target.wrong_zone`, `target.same_zone`, `target.shared_definition`, `target.edit_path_changed` |
-| Validation | `params.invalid`, `validation.failed`, `reference.invalid`, `reference.in_use`, `geometry.invalid` |
+| Validation | `params.invalid`, `validation.failed`, `reference.invalid`, `reference.in_use`, `geometry.invalid`, `geometry.failed`, `geometry.split_failed` |
 | Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_required`, `extension.migration_failed`, `extension.invalid`, `copy.rule_missing` |
 | Query | `query.limit_invalid`, `query.cursor_expired` |
-| Operation | `operation.failed`, `operation.rollback_unverified`, `operation.participant_missing` |
+| Operation | `operation.failed`, `operation.rollback_unverified`, `operation.participant_missing`, `operation.proposal_required`, `operation.query_missing`, `operation.dependency_missing`, `operation.query_cycle` |
+| Identity and scope | `identity.conflict`, `identity.choice_required`, `identity.choice_conflicts`, `scope.incomplete`, `selection.invalid` |
 | Registration | `registration.duplicate_id`, `registration.missing_dependency`, `registration.cycle`, `registration.contract_major`, `registration.schema_invalid` |
 | Translation | `payload.contract`, `section.missing_dependency`, `section.cycle`, `section.duplicate`, `section.version_unsupported`, `object.unavailable`, `dependency.unavailable` |
 | Export | `export.blocked`, `export.busy`, `export.cancelled`, `export.failed`, `export.refused`, `export.model_changed`, `export.destination_changed`, `export.replace_required`, `export.privacy_undeclared`, `export.relevance_unknown`, `export.metadata_omitted` (a finding), `task.expired` |
+| Library | `library.adapter_invalid`, `library.assignment_unavailable`, `library.callback_invalid`, `library.catalog_budget`, `library.catalog_stale`, `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.kind_unavailable`, `library.local_choice_required`, `library.mutation_owner`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_unavailable`, `library.schema_unsupported`, `library.setup_invalid`, `library.setup_too_large`, `library.setup_unavailable`, `library.update_destination_invalid`, `library.update_destination_required`. Catalog notes are listed in "Library providers and catalogs" |
 | Runtime | `runtime.asset_refused`, `runtime.boot_timeout`, `runtime.boot_failed`, `runtime.translation_failed`, `runtime.stopped`, `runtime.closed` |
 
 Shared nouns (`request`, `session`, `revision`, `proposal`, `target`, `params`, `validation`,
 `reference`, `geometry`, `query`, `operation`, `selection`, `scope`, `identity`) mean the same
 thing wherever they appear; a feature uses them for those conditions. A condition only one feature
-can have takes that feature's noun (for example `zone.*`, `face.*`, `adjacency.*`, `gesture.*`).
-Add a foundation code here, with a test, before a caller relies on it.
+can have takes that feature's noun (for example `zone.*`, `face.*`, `adjacency.*`, `gesture.*`,
+`window.*`). This table lists foundation codes, the codes of the `ph_composer.library`
+foundation feature, and shared-noun codes a feature raises; feature-noun codes are not listed. Add a foundation code here, with a test,
+before a caller relies on it.
 
 ## Revisions, transactions and host execution
 
@@ -229,7 +235,9 @@ receives effective values; the authored baseline remains distinct from inherited
 A feature declares its settings fields and validation, labels, affected references and step name.
 Reference targets and retarget operations remain with the feature. Zones retains its existing
 `ph_composer.zones_settings` dictionary and public settings declarations; Windows uses its own
-dictionary and target, so introducing the primitive does not migrate saved Zone settings.
+dictionary and target, so introducing the primitive does not migrate saved Zone settings. The
+Windows dictionary is `ph_composer.windows_settings`, holding `default_psi_install_id` (a core
+reference to `ph_composer.windows.psi_install_type`, or null) and `default_install_depth_m`.
 
 ## Geometry records and occurrence references
 
@@ -244,6 +252,10 @@ access and never fall back to selection, display name, proximity or the active M
 | Zone membership stamp | `ph_composer.zone_stamp` | Classified Face (and Space Groups when they exist) | Zone id plus Building-Segment and Level, as recovery data |
 | Face assignment | `ph_composer.face_assignment` | Face | `fac_` id |
 | Attached zone | `ph_composer.records.ph_composer.face_assignment.attached_zone` (a legacy name, kept so saved Models still read) | Model | `atz_` id through the record engine |
+| Window unit | `ph_composer.window_unit` | The Unit's ComponentInstance | `wun_` id; values `window_type_id` (a core reference to `ph_composer.windows.window_type`) and `anchor` |
+| Window definition mark | `ph_composer.window_definition` | The generated ComponentDefinition | `window_type_id`, plus optional derived `generated_size_m` (`width_m`, `height_m`) used only to repair a Unit whose Type is gone |
+| Pane stamp | `ph_composer.window_pane` | Each pane Face inside the definition | None; `window_type_id` and `element_id` as recovery data for Restore |
+| Primary definition index | `ph_composer.window_definitions`, key `index` | Model | None; `{ "schema_version": 1, "definitions": { "wnt_...": persistent_id } }` |
 
 The Face values include an optional `assembly_id` reference to
 `ph_composer.assemblies.assembly`. An absent assignment and a dangling reference are distinct read
@@ -264,6 +276,36 @@ starts inside the Zone and ends at the target. Persistent ids locate candidates;
 identity. Resolution verifies every parent-child step and the Zone record and never searches by
 name or geometry to repair a stale path. Mutation accepts only a unique, writable target: a path
 through shared component storage, a locked Group or another Zone refuses with its `target.*` code.
+
+A Window unit target is reached from the Model root, not from a Zone, because a Unit may sit
+outside every Zone and still blocks deletion of its Type:
+
+```json
+{ "unit_id": "wun_...", "entity_path": [1201, 1203] }
+```
+
+`entity_path` is the root-to-instance persistent-id path. The reference target id is
+`ph_composer.windows.unit`; its occurrence inventory includes Units outside Zones and every
+placement of shared storage, so a pasted orphan or a repeated parent still makes a duplicate id
+visible.
+
+**Copied Unit identities.** A native copy duplicates the Unit record, so several occurrences can
+carry one `wun_` id. Reads report the copy and never repair it. The next Windows action repairs
+it inside its own proposal: the occurrence first in path order keeps the id and every other copy
+gets a fresh one, with `user_data` copied verbatim and structured extension data copied through
+its declared rules (`copy.rule_missing` when they are unavailable). Copies behind shared parent
+storage refuse as `target.shared_definition`; a locked copy refuses as `target.locked`.
+
+**Primary definitions.** Each Window Type has at most one primary generated definition, named by
+the index above. Make Unique copies the definition mark, so a mark alone cannot identify the
+primary: the index and a matching mark together do. A Type rewrite changes only the primary and
+leaves detached definitions alone. Ordinary mutations refuse a missing or differently stamped
+primary as `window.definition_missing`. An index write checks the authored pre-image
+(`target.changed`) and that each pointer names exactly one definition carrying the same Type,
+inside the owning native proposal and Undo step. Reset to type is the explicit reassociation: it
+regenerates the primary from the authored Type, creating a new one when the indexed primary is
+missing or differently stamped, and never adopts an arbitrary matching copy.
+Definition names are presentation.
 
 ## Zones geometry rules
 
@@ -395,6 +437,76 @@ from fields through `RecordKind.new(..., references: [...])`. For example, key
 `layers` field. Registration refuses unreachable paths or incompatible cardinality. Validation,
 incoming scans and collection duplication follow only declared leaves. Metadata strings that
 happen to equal an id are preserved. Existing top-level field references retain their shape.
+
+## Library providers and catalogs
+
+The binding numbers and refusal order of the `ph_composer.library` foundation feature. The
+contributor contracts are in [EXTENSIBILITY.md](EXTENSIBILITY.md), "Library providers and kind
+adapters"; the runtime shape is in [TECH_STACK.md](TECH_STACK.md), "The library provider seam";
+the file envelope is in [LIBRARY_FILE_FORMAT.md](../docs/LIBRARY_FILE_FORMAT.md).
+
+| Limit | Value | Over the limit |
+| --- | --- | --- |
+| One library file, read or written | 32 MiB | `library.file_too_large` |
+| One provider's catalog, aggregate bytes | 64 MiB | `library.catalog_too_large` (file provider), `library.catalog_budget` (admission of any provider) |
+| One provider's catalog, rows | 20,000 | `library.catalog_too_many_rows` (file provider and export), `library.catalog_budget` (admission) |
+| Per-machine provider setup, stored | 256 KiB | `library.setup_too_large` |
+| Contract, wire and fingerprint versions | 1 | `registration.*` at install |
+
+An over-budget catalog is refused whole, never truncated. Every provider's response passes the
+same admission before it is published: budget, then duplicate record ids and unsupported wire
+versions withheld per library and kind, then per-row schema normalization and the adapter's
+semantic check. Third-party text never passes admission; diagnostics are reduced to the fields
+`code`, `kind`, `library_id`, `record_id` and `index`.
+
+**Catalog notes.** Admission and the file reader attach notes to a published catalog instead of
+failing it. Withheld libraries are listed under `unavailable` with `library.duplicate_record_id`,
+`library.identity_conflict`, `library.kind_unavailable`, `library.kind_schema_missing`,
+`library.kind_schema_unsupported` or `library.kind_malformed`. Skipped or trimmed rows are listed
+under `warnings` with `library.row_required_invalid`, `library.row_optional_invalid`,
+`library.unit_invalid` or `library.row_semantic_invalid` (row skipped), or
+`library.row_optional_absent` and `library.row_fields_omitted` (row kept). A folder provider
+skips an unreadable or invalid file with a code-only warning carrying that file's outcome code,
+such as `library.file_malformed` or `library.format_invalid`. These are the notes the file
+provider and admission produce; another provider may add its own `library.*` codes, which
+admission passes through reduced to the note fields. A note is not an outcome.
+
+**Generations.** A session holds one generation counter shared by every provider and kind. A
+successful refresh publishes the next integer as an immutable entry, with state `loaded` or
+`empty`. A failed refresh keeps the previous entry unchanged except for state `failed` and a
+failure carrying its code and a fixed message; a provider exception that is not a `library.*` error becomes
+`library.provider_failed`. An entry never read has generation null and state `unloaded`. Setup
+changes drop the affected provider's entries in every open session. Nothing is cached to disk.
+
+**Copy.** `ph_composer.library.copy` runs inside the ordinary action order of "Compound
+proposals". Its own checks run in this order, each refusing the whole proposal:
+
+1. The named kind has an installed adapter (`library.kind_unavailable`), and the named provider
+   is configured and serves it (`library.provider_unavailable`, `library.kind_unavailable`).
+2. The supplied `generation` equals the current one (`library.catalog_stale`).
+3. Exactly one row has the named library and record id (`library.row_unavailable`).
+4. The adapter maps the row to valid mapped values and a lowercase SHA-256 fingerprint
+   (`library.adapter_invalid`).
+5. The resolver runs: exact source identity (provider kind, library id, record kind, record id)
+   first, then a case-insensitive name match and mapped-value equality. Outcomes are `create`,
+   `reuse`, `review_required`, `ambiguous_source` and `ambiguous_name`. A stored fingerprint of
+   another version reports no comparison rather than a change.
+6. The choice must fit the outcome. A supplied `local_id` that is not a reviewed candidate
+   refuses first (`library.local_choice_required`); an unknown choice is `params.invalid`. `create` needs outcome `create` (`library.review_required`);
+   `keep_local` and `use_library` need one reviewed candidate (`library.local_choice_required`);
+   `use_library` needs the candidate's reviewed `expected_values` (`params.invalid`).
+7. The owner's callbacks run with validated params (`params.invalid`) and results
+   (`library.callback_invalid`), then assignment when requested
+   (`library.assignment_unavailable` when the adapter has none).
+
+**Callback write ownership.** A create, replace or assign callback shares the caller's proposal.
+After it returns, every write staged before it must be unchanged and every write it added must
+be to a record kind its owner registered; otherwise `library.mutation_owner`. Local reads get no
+proposal. Any refusal inside the coordinator or a callback poisons the proposal, so a rescued
+error still writes nothing. `ph_composer.library.copy_into_proposal` applies the same rules
+inside another feature's action and refuses without that action's active proposal
+(`operation.proposal_required`) or when its owner neither is nor requires the library
+(`operation.dependency_missing`).
 
 ## Translation sections and artifacts
 

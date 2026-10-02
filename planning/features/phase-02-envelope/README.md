@@ -8,4 +8,4 @@ The `evidence` symlink preserves original paths cited by the append-only native 
 It points to the archived synthetic summaries; private host artifacts remain outside Git.
 
 The [refactor packet](refactor/README.md) records the independent review of PR #15: eleven findings
-for later scoping. It authorizes no code.
+worked one branch per finding in number order. R01 is merged (PR #16); R02 is next.

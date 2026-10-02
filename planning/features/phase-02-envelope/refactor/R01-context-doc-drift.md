@@ -1,7 +1,7 @@
 # R01: `context/` did not absorb what Phase 2 settled
 
 DATE: 2026-10-01
-STATUS: Requested
+STATUS: Merged to main through [PR #16](https://github.com/bldgtyp/ph-composer/pull/16), 2026-10-01. Documentation only.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced. Documentation only; no code or host gate.
@@ -64,3 +64,22 @@ dashes or en dashes.
 
 Focused consistency review only. `make lint-citations` still passes. Every `context/` section name
 cited in a `src/` comment still exists (`grep -rn "context/CONTRACTS.md, \"" src`).
+
+## Outcome
+
+Implemented 2026-10-01 on `refactor/r01-context-doc-drift`; merged through PR #16.
+
+| Item | Disposition |
+| --- | --- |
+| 1, 2 | `EXTENSIBILITY.md`: STATUS through Phase 2; the three-layer paragraph says the Ruby features follow the rule and names the export-side departure (R05); the stale Assemblies/Windows/P2-05 paragraph is replaced by what Phase 2 built |
+| 3 | `CONTRACTS.md`, "Geometry records and occurrence references": rows for `ph_composer.window_unit`, `.window_definition`, `.window_pane` and the `ph_composer.window_definitions` index; the Unit reference shape; the copied-identity and primary-definition rules. "Model settings" names `ph_composer.windows_settings` |
+| 4 | New `CONTRACTS.md` section "Library providers and catalogs": limits, admission order, catalog notes, generations, copy refusal order, callback write ownership. Cross-cites `TECH_STACK.md` and `EXTENSIBILITY.md` rather than restating them |
+| 5 | Code table: Library row (29 outcome codes raised from `library/`), an Identity and scope row, `geometry.failed`, `geometry.split_failed`, and `operation.proposal_required` plus the three `operation.query_*`/`dependency_missing` codes. The table is stated to hold foundation, library and shared-noun codes; feature-noun codes (`window.*`, `construction.*` and the rest) stay out, as Zones' always have. Library catalog notes are listed in the new section, not the table. `request.stale_revision` is left out: it is the R04 defect, to become `revision.stale` |
+| 6 | `AGENT_INTERFACE.md`: per-feature reads and writes for Assemblies, Face assignment, Windows and Library, with the two dialog-only Library limits and the implicit Unit identity repair. The quickstart's stale export sentence is corrected. **Deferred to R03 item I:** the Phase 2 quickstart workflow, because `tests/api_client_test.rb` runs the quickstart as written and extending that test is R03's |
+| 7 | `EXTENSIBILITY.md`, "View commands": the five library commands are recorded as a known deviation pending R03's `setup` verb; the contract is not widened |
+| 8 | Glossary: Library kind, Catalog, Catalog generation, Element and Primary definition added. "Window anchor" already covers Anchor. Frame, Glazing, Psi-Install Type, Window Type, Layer, Layer-Segment, Library provider and Definition source were checked and left as they are |
+| 9 | Left for R05, as the finding says |
+| 10 | `library.registerSurface` documented beside `panel.section` and `ui.contributeTable` in `EXTENSIBILITY.md`; the worked example and the Materials/Attached zones move stay with R10 |
+
+Verification: one source-checked consistency review (four wording corrections applied); `make lint-citations` passes, and every `CONTRACTS.md` and `EXTENSIBILITY.md` section
+name cited from `src/` or `tests/` still exists.
