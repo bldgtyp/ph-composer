@@ -19,6 +19,9 @@ accepted decisions, the existing independent reviewer and unchanged evidence wit
 3. Establish the case preconditions: synthetic fixture identity/hash, active Model session and edit
    path, host/Ruby version, installed RBZ hash and source fingerprint. Confirm the installed build
    matches the reviewed source. A bridge connection or installation alone is not a passing case.
+   Apply the [run preflight and receipt procedure](../../../tools/hostkit/ACCEPTANCE_RUN.md):
+   verify window activation, tool/edit path, target, actual probe callbacks and evidence writer before
+   a human handoff. Capture an immutable run baseline; loading a helper must not overwrite it.
    Record private baseline metadata with the ledger's `snapshot` command, then native observations.
 4. Execute action and readback in separate calls so UI timers run. Capture native window pixels for
    drawing/UI claims and actual references/records for persistence claims. Use the case's required
@@ -37,6 +40,10 @@ Restore normal composition after private fault/provider overrides: fresh process
 installed RBZ, no development monkeypatches or live runtimes, clean saved synthetic Model and
 expected normal refusal/success. Check open documents before `launch`, which can quit/kill the host.
 Never discard other work. Restoration is a separate observed result, not an assumed teardown.
+
+Use the [current execution receipt](../../../tools/hostkit/ACCEPTANCE_RUN.md#current-execution-receipt)
+in the owning packet, replacing current state while preserving linked historical evidence.
+Human instructions include the expected visual cue as well as action and release condition.
 
 Keep a compact resume note: batch/case, fixture/session/build, accepted decisions, last verified
 checks and their invalidation, reviewer, remaining action and normal-build restoration state.

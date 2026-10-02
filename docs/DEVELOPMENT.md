@@ -269,3 +269,10 @@ The files themselves are not rewritten. This browser gate supplements real Sketc
 Current-host acceptance and remaining distribution limits are recorded in the
 [Phase 1 evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md). SketchUp 2023,
 Windows, public distribution and certification claims retain their separate gates.
+
+## Acceptance run receipts
+
+The development [acceptance run harness](../tools/hostkit/ACCEPTANCE_RUN.md) freezes observed
+preconditions, screens assertion dependencies, records evidence hashes and checks installed package
+bytes and local Markdown links. It complements the native ledger and does not award host acceptance.
+`make hostkit-test` covers its refusal and evidence-integrity behavior.

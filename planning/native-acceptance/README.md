@@ -94,3 +94,23 @@ The ledger reports observations, not merge/release readiness. Normal-build resto
 private providers, faults or runtime delays is an additional observed case, with its own readback.
 Use the [project skill](../../.agents/skills/ph-composer-native-acceptance/SKILL.md) and
 [control reference](../../context/NATIVE_CONTROL_CAPABILITIES.md) for the native procedure.
+
+## Immutable run and verification receipts
+
+Use the [run harness and current execution receipt](../../tools/hostkit/ACCEPTANCE_RUN.md) for
+preflight, assertion-specific dependencies, private observed evidence and repeatable package/link
+checks. Baselines refuse overwrite, including the ledger snapshot command. The harness supplements
+the case ledger without rewriting history, narrowing catalog dependencies automatically or granting
+acceptance. Keep current state compact and link historical observations.
+
+### Current tooling checkpoint, 2026-10-01
+
+Implemented the immutable run harness and execution receipt procedure after the Phase 2
+retrospective. Preflight requires actual observations; assertion screens never award acceptance.
+Independent review identified unmatched dependency patterns as a reuse risk; capture now refuses
+them, with regression coverage. Historical results and product acceptance are unchanged.
+
+Verification: `make ci` passed, plus final hostkit ruff/format/mypy checks and 31 Python hostkit
+tests. Ruby hostkit: 9 tests, 30 assertions. Local links and ledger validation passed. No shipping
+behavior changed and no new native gate is claimed. Next use: capture the owning case's observed
+preflight and immutable baseline before its next required native acceptance run.

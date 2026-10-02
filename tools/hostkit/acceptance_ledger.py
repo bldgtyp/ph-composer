@@ -34,10 +34,15 @@ def read_catalog(root: Path) -> dict[str, dict[str, Any]]:
     return cases
 
 
+def source_names(root: Path) -> list[str]:
+    """Tracked and nonignored names, including tracked deletions."""
+    output = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root)
+    return sorted(set(output.decode().split("\0")) - {""})
+
+
 def source_fingerprint(root: Path, patterns: list[str]) -> str:
     """Hash names and contents, including additions/deletions, without private/ignored material."""
-    output = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root)
-    names = sorted(set(output.decode().split("\0")) - {""})
+    names = source_names(root)
     digest = hashlib.sha256()
     for name in names:
         if any(fnmatch.fnmatchcase(name, pattern) for pattern in patterns):
@@ -190,7 +195,8 @@ def main() -> None:
     cases = read_catalog(root)
     if args.command == "snapshot":
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(json.dumps(snapshot(root, cases[args.case_id]), indent=2) + "\n")
+        with args.output.open("x") as stream:
+            stream.write(json.dumps(snapshot(root, cases[args.case_id]), indent=2) + "\n")
     elif args.command == "record":
         result = json.loads(args.input.read_text())
         validate_result(root, cases, result)
@@ -210,5 +216,5 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except (KeyError, TypeError, ValueError) as error:
+    except (KeyError, TypeError, ValueError, OSError) as error:
         raise SystemExit(f"Invalid acceptance input: {error}") from error

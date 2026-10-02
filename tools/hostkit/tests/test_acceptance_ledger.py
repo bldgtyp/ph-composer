@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
+from unittest.mock import patch
 
 import acceptance_ledger as ledger
 
@@ -48,6 +49,18 @@ class AcceptanceLedgerTest(unittest.TestCase):
         path = self.root / ledger.RESULTS
         path.parent.mkdir(parents=True)
         path.write_text(json.dumps(self.result) + "\n")
+
+    def test_snapshot_cli_refuses_to_replace_an_existing_baseline(self) -> None:
+        output = self.root / "baseline.json"
+        output.write_text("original baseline")
+        argv = ["acceptance_ledger", "--root", str(self.root), "snapshot", "C1", "--output", str(output)]
+        with (
+            patch("sys.argv", argv),
+            patch.object(ledger, "read_catalog", return_value=self.cases),
+            self.assertRaises(FileExistsError),
+        ):
+            ledger.main()
+        self.assertEqual("original baseline", output.read_text())
 
     def test_changes_additions_and_deletions_invalidate_but_unrelated_file_does_not(self) -> None:
         baseline = self.result["source_fingerprint"]

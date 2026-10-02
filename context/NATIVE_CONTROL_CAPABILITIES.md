@@ -21,7 +21,12 @@ these are observed limitations of this run, not permanent limits of SketchUp or 
 | Window-bounded capture and menu labels | Current native computer-use controller: bind SketchUp, capture its window, read fresh accessibility state and invoke the observed menu item | Window screenshots and native menu targeting worked on 2026-10-01 for SketchUp and PH-Composer. The 2026-09-30 capture limitation is historical. `getScreenshot` returned pixels; an AX-plus-screenshot call did not consistently include pixels. Use the explicit screenshot call when needed. Never capture the full screen. |
 | Fresh process / install | Existing hostkit launch and build/install workflow | Inspect all open documents first. `launch` quits the host and may kill it after timeout; a scratch save does not authorize discarding unrelated work. |
 
-A human handoff names one action, its starting state, when to release/stop, and the observation needed.
+A human handoff names one action, its starting state, when to release/stop, the expected visible cue,
+and the observation needed. Activate the document before a held gesture; verify tool/edit path and
+target through current native state plus bridge readback. In the Phase 2 run, coordinate targeting
+failed while accessibility window activation worked. A dotted Group boundary indicated entry into
+an edit context; no confirmation dialog was expected. Test actual probe callbacks and evidence
+writing before asking for a hold/release. See the [run procedure](../tools/hostkit/ACCEPTANCE_RUN.md).
 Tools should collect console/state/results themselves. Human confirmation establishes only the
 reported observation; bridge readback supplies the corresponding Model/task assertion.
 
