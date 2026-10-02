@@ -173,7 +173,7 @@ parsed JSON). Key order changed where Library's builder ordered keys differently
 Zones schemas gained `"required": []`. One description changed: product duplicates no longer claim
 to give new element ids, since products have no elements.
 
-Tests: no assertion changes. Call sites changed: `window_records_domain_test.rb` and
+Tests: no assertion changes; setups and call sites changed: `window_records_domain_test.rb` and
 `window_unit_flip_step_test.rb` call the named gesture functions; `window_export_test.rb` and the
 thermal-proof fixture helper key products by `psi_install_types` (the fixture file itself is
 unchanged); `window_library_kinds_test.rb` reads `Products.number_keys` and `KINDS` instead of
