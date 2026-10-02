@@ -135,7 +135,9 @@ class WindowRecordsDomainTest < PhComposerTestCase
     input["frames"].each_value { |frame| frame["operation"] = "swing" }
     calculated = W::Thermal.calculate(record, input, input.fetch("default_install_id"))
     assert calculated.fetch("complete")
-    assert calculated.fetch("elements").first.fetch("findings").any? { |message| message.include?("differs") }
+    assert calculated.fetch("elements").first.fetch("findings").any? do |finding|
+      finding.fetch("code") == "window_type.frame_operation_mismatch"
+    end
     missing = W::Thermal.calculate(record, input, nil)
     assert_nil missing["u_effective"]
     refute_nil missing["u_w"]

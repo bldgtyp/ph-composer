@@ -44,7 +44,7 @@ class WindowAreasTest < PhComposerTestCase
     item["values"]["window_type_id"] = "wnt_unknown"
     face = measure([item]).fetch("faces").first
     assert_nil face.fetch("net_opaque_area_m2")
-    assert_includes face.fetch("findings"), "unknown_type"
+    assert_includes face.fetch("findings"), "window.unknown_type"
     item["host"] = nil
     result = measure([item])
     assert_equal [item.fetch("reference")], result.fetch("unhosted_units")
@@ -63,7 +63,7 @@ class WindowAreasTest < PhComposerTestCase
     units = 13.times.map { |i| unit([10, 30 + i]) }
     row = measure(units).fetch("faces").first
     assert_nil row.fetch("net_opaque_area_m2")
-    assert_includes row.fetch("findings"), "opening_area_exceeds_host"
+    assert_includes row.fetch("findings"), "window.opening_area_exceeds_host"
   end
 
   def test_public_area_query_and_snapshot_are_declared_read_only_with_valid_contracts

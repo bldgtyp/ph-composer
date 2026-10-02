@@ -10,14 +10,16 @@ module PhComposer
                 "glass_edge_m" => NUM.merge("x-unit" => "m"), "h_frame_w_k" => NUM.merge("x-unit" => "W/K"),
                 "h_spacer_w_k" => NUM.merge("x-unit" => "W/K") },
         :optional => %w[frame_area_m2 glass_edge_m h_frame_w_k h_spacer_w_k])
+      THERMAL_FINDING = Shapes.object({ "code" => Shapes::TEXT, "message" => Shapes::TEXT, "side" => Shapes::TEXT },
+        :optional => %w[side])
       ELEMENT_THERMAL = Shapes.object({ "id" => Shapes::TEXT, "area_m2" => NUM.merge("x-unit" => "m2"),
-                "edges" => Shapes.list(EDGE), "findings" => Shapes.list(Shapes::TEXT),
+                "edges" => Shapes.list(EDGE), "findings" => Shapes.list(THERMAL_FINDING),
                 "h_construction_w_k" => NUM.merge("x-unit" => "W/K"), "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
                 "glazing_area_m2" => NUM.merge("x-unit" => "m2"), "frame_area_m2" => NUM.merge("x-unit" => "m2"),
                 "h_glazing_w_k" => NUM.merge("x-unit" => "W/K"), "g_value" => NUM,
                 "u_w" => NUM.merge("x-unit" => "W/m2K"), "u_effective" => NUM.merge("x-unit" => "W/m2K"),
                 "complete" => { "type" => "boolean" } }, :optional => %w[glazing_area_m2 frame_area_m2 h_glazing_w_k])
-      THERMAL = Shapes.object({ "elements" => Shapes.list(ELEMENT_THERMAL), "findings" => Shapes.list(Shapes::TEXT),
+      THERMAL = Shapes.object({ "elements" => Shapes.list(ELEMENT_THERMAL), "findings" => Shapes.list(THERMAL_FINDING),
                 "area_m2" => NUM.merge("x-unit" => "m2"), "empty_area_m2" => NUM.merge("x-unit" => "m2"),
                 "h_construction_w_k" => NUM.merge("x-unit" => "W/K"), "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
                 "u_w" => NUM.merge("x-unit" => "W/m2K"), "u_effective" => NUM.merge("x-unit" => "W/m2K"),

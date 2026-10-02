@@ -37,37 +37,41 @@ class WindowUnitStateTest < PhComposerTestCase
   def test_clean_hosted_unit_and_shared_id_reads_leave_model_unchanged
     before = U::MutationScope.new(:definition_ids => [@definition.persistent_id]).capture(@model)
     assert_empty codes
-    assert_equal [{ "code" => "copy_id_pending", "repair" => "repair_copied_identities" }], findings(:shared_id => true)
+    reference = { "unit_id" => "wun_AAAAAAAAAAAA", "entity_path" => [@unit.persistent_id] }
+    assert_equal [{ "code" => "window.copy_id_pending", "repair" => {
+      "name" => "ph_composer.windows.units.repair_copied_identities", "params" => { "units" => [reference] } } }],
+      findings(:shared_id => true)
     assert_equal before, U::MutationScope.new(:definition_ids => [@definition.persistent_id]).capture(@model)
   end
 
   def test_missing_glue_off_plane_overhang_and_overlap_are_distinct
     @unit.glued_to = nil
-    assert_equal ["unhosted"], codes
+    assert_equal ["window.unhosted"], codes
     @unit.glued_to = @host
     @unit.transformation = Geom::Transformation.translation([0, 0, 1])
-    assert_equal ["off_host"], codes
+    assert_equal ["window.off_host"], codes
     @unit.transformation = Geom::Transformation.translation([200, 0, 0])
-    assert_equal ["off_host"], codes
+    assert_equal ["window.overhang"], codes
     @unit.transformation = Geom::Transformation.new
     polygon = U::WorldGeometry.map(U::DefinitionPlan.build(@type), @unit.transformation.to_a).outer_polygon_m
-    assert_equal ["overlapping"], codes(:existing_polygons_m => [polygon])
+    assert_equal ["window.overlap"], codes(:existing_polygons_m => [polygon])
   end
 
   def test_unknown_type_detached_and_actual_pane_edit_findings
-    assert_equal ["unknown_type"], codes(:type => nil)
-    assert_equal ["detached_definition"], codes(:canonical_definition => nil)
+    assert_equal ["window.unknown_type"], codes(:type => nil)
+    assert_equal ["window.definition_detached"], codes(:canonical_definition => nil)
     @definition.entities.grep(Sketchup::Face).first.reverse!
-    assert_equal ["geometry_differs"], codes
+    assert_equal ["window.geometry_differs"], codes
   end
 
   def test_scaled_and_mirrored_transform_findings_are_not_silent_repairs
     matrix = Geom::Transformation.new.to_a
     matrix[0] = -1.2
     @unit.transformation = Geom::Transformation.new(matrix)
-    result = codes
-    assert_includes result, "scaled"
-    assert_includes result, "mirrored"
+    result = findings.to_h { |finding| [finding.fetch("code"), finding.fetch("repair")] }
+    assert_equal %w[window.scaled window.mirrored], result.keys
+    assert_nil result.fetch("window.scaled"), "Reset to Type refuses a mirrored Window, so it is not offered"
+    assert_equal "ph_composer.windows.units.new_flipped_type", result.fetch("window.mirrored").fetch("name")
     assert_equal matrix, @unit.transformation.to_a
   end
 

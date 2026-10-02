@@ -255,7 +255,8 @@ Phase 2 features, programmatic reads and writes. Each has a panel-closed walkthr
   explicit-reference equivalent. A native copy of a Unit shares its identity until repaired:
   `units.repair_copied_identities` takes explicit Unit references and gives the copies sharing
   their identities new ones, with a preview listing each old and new id, and the
-  `copy_id_pending` finding names it as its repair. Every other Windows action makes the same
+  `window.copy_id_pending` finding names it as its repair. Each Unit finding's `repair` is that
+  operation's name and params for the Window, or null. Every other Windows action makes the same
   repair over every copy first, and says so in its `side_effects`.
   [Walkthrough](../tools/examples/authoring/windows_walkthrough.rb),
   [placement](../tools/examples/authoring/windows_placement_walkthrough.rb).

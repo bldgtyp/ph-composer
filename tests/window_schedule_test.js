@@ -11,11 +11,14 @@ function setup() {
   state.sections["ph_composer.windows.units"] = { status: "completed", value: { units: [
     { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [10, 30] },
       values: { window_type_id: "wnt_a", anchor: "sill_center" }, host: host,
-      findings: [{ code: "detached_definition", repair: "reset_to_type" }] },
+      findings: [{ code: "window.definition_detached", repair: { name: "ph_composer.windows.units.reset_to_type",
+        params: { units: [{ unit_id: "wun_a", entity_path: [10, 30] }] } } }] },
     { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [10, 31] },
       values: { window_type_id: "wnt_a", anchor: "head_left" }, host: null,
-      findings: [{ code: "copy_id_pending", repair: "repair_copied_identities" },
-        { code: "unhosted", repair: "rehost" }] }
+      findings: [{ code: "window.copy_id_pending", repair: { name: "ph_composer.windows.units.repair_copied_identities",
+        params: { units: [{ unit_id: "wun_a", entity_path: [10, 31] }] } } },
+        { code: "window.unhosted", repair: { name: "ph_composer.windows.units.rehost",
+        params: { unit: { unit_id: "wun_a", entity_path: [10, 31] } } } }] }
   ] } };
   state.sections["ph_composer.zones.overview"] = { status: "completed", value: { zones: [
     { reference: { zone_id: "zon_a", zone_path: [10] }, values: { name: "Room A", level: "Ground" } }
@@ -79,6 +82,16 @@ test("Schedule repairs freeze occurrence targets and confirm consequences before
     "ph_composer.windows.units.reset_to_type");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params.units)), [
     { unit_id: "wun_a", entity_path: [10, 30] } ]);
+});
+test("the row menu offers the repairs the findings name and sends their params", function () {
+  var o = setup(); o.editor.tabs.select("schedule");
+  var copied = o.editor.schedule.mount._table.rows[JSON.stringify([10, 31])];
+  assert.strictEqual(copied.node.querySelector("[data-row-action='reset_to_type']"), null);
+  click(copied.node.querySelector("[data-row-action='repair_copied_identities']"));
+  click(o.editor.schedule.apply);
+  assert.strictEqual(o.sent[0].payload.name, "ph_composer.windows.units.repair_copied_identities");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params)), {
+    units: [{ unit_id: "wun_a", entity_path: [10, 31] }] });
 });
 test("drafts guard Schedule and Place; withdrawn/disposed controls cannot send", function () {
   var o = setup(); o.editor.dimension("columns_m", 0, o.editor.title);
@@ -145,8 +158,10 @@ test("a changed unit blocks held repair Apply until Cancel; missing Types cancel
 });
 test("unknown Type occurrences remain counted; mirrored repair uses its singular public parameter", function () {
   var o = setup(), rows = o.state.sections["ph_composer.windows.units"].value.units;
-  rows[0].values.window_type_id = "wnt_missing"; rows[0].findings = [{ code: "unknown_type", repair: "swap_type" }];
-  rows[1].findings = [{ code: "mirrored", repair: "new_flipped_type" }]; o.editor.render(o.state);
+  rows[0].values.window_type_id = "wnt_missing"; rows[0].findings = [{ code: "window.unknown_type", repair: {
+    name: "ph_composer.windows.units.swap_type", params: { units: [rows[0].reference] } } }];
+  rows[1].findings = [{ code: "window.mirrored", repair: { name: "ph_composer.windows.units.new_flipped_type",
+        params: { unit: rows[1].reference } } }]; o.editor.render(o.state);
   o.editor.tabs.select("schedule");
   assert.strictEqual(o.editor.schedule.mount._table.rows["type:wnt_missing"].cells.count.textContent, "1");
   click(o.editor.schedule.root.querySelector("[data-row-action='new_flipped_type']"));

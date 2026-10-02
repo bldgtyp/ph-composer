@@ -39,7 +39,10 @@ module PhComposer
       end
 
       def reads(feature, face, reference)
-        finding = Shapes.object({ "code" => Shapes::TEXT, "repair" => Shapes::TEXT })
+        repair = Shapes.described(Shapes.object({ "name" => Shapes::TEXT, "params" => Shapes::OBJECT }),
+          "The action that repairs this condition and its params for this Window; a rehost adds `host` and a " \
+          "swap adds `type_id`. Null when no single action repairs it.").merge("type" => %w[object null])
+        finding = Shapes.object({ "code" => Shapes::TEXT, "repair" => repair })
         view = Shapes.with(Units::RECORD_KIND.descriptor.view_schema,
           "reference" => reference, "host" => face.merge("type" => %w[object null]),
           "findings" => Shapes.list(finding))

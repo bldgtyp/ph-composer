@@ -53,17 +53,17 @@ module PhComposer
         validate_record(entry, record, reference)
         type = @types[record["window_type_id"]]
         unless type
-          issue("unknown_type", "The Unit's Window Type is unavailable. Choose a known Type.", record, reference)
+          issue("window.unknown_type", "The Unit's Window Type is unavailable. Choose a known Type.", record, reference)
           return
         end
         plan = @plans[type["id"]]
         unless plan
-          issue("incomplete_type", "Complete the placed Window Type's finite positive dimensions.", record, reference)
+          issue("window_type.dimensions_incomplete", "Complete the placed Window Type's finite positive dimensions.", record, reference)
           return
         end
         definition = entry.native && entry.native["definition"]
         unless definition
-          issue("invalid_unit", "A Window Unit must be a native ComponentInstance.", record, reference)
+          issue("window.not_component", "A Window Unit must be a native ComponentInstance.", record, reference)
           return
         end
         validate_definition(definition, type, plan, record, reference)
@@ -81,10 +81,10 @@ module PhComposer
 
       def validate_record(entry, record, reference)
         Units.validate!(record)
-        issue("copy_id_pending", "Copied Units share an identity; resolve their identities before export.",
+        issue("window.copy_id_pending", "Copied Units share an identity; resolve their identities before export.",
           record, reference) if @ids.fetch(record["id"]).length > 1
         if @units.any? { |other, _| other != entry && @snapshot.contains?(other, entry) }
-          issue("nested_units", "A Window Unit is nested inside another Unit.", record, reference)
+          issue("window.nested_units", "A Window Unit is nested inside another Unit.", record, reference)
         end
       end
 
@@ -109,20 +109,20 @@ module PhComposer
 
       def validate_definition(definition, type, plan, record, reference)
         if index[type["id"]] != definition["id"]
-          issue("detached_definition", "The Unit does not use its Type's primary definition. Reset to Type.",
+          issue("window.definition_detached", "The Unit does not use its Type's primary definition. Reset to Type.",
             record, reference)
         end
         unless ExportGeometry.matches?(definition, :type_id => type["id"], :plan => plan)
-          issue("geometry_differs", "The Unit's generated geometry or cutting behavior differs from its Type.",
+          issue("window.geometry_differs", "The Unit's generated geometry or cutting behavior differs from its Type.",
             record, reference)
         end
       end
 
       def validate_transform(entry, record, reference)
         state = Units::WorldGeometry.transform_state(entry.transform)
-        issue("scaled", "The Unit has native in-plane scaling. Reset to Type.", record, reference) if state.scaled
-        issue("sheared", "The Unit has native in-plane shear. Reset to Type.", record, reference) if state.sheared
-        issue("mirrored", "The Unit is mirrored. Make a new flipped Type.", record, reference) if state.mirrored
+        issue("window.scaled", "The Unit has native in-plane scaling. Reset to Type.", record, reference) if state.scaled
+        issue("window.sheared", "The Unit has native in-plane shear. Reset to Type.", record, reference) if state.sheared
+        issue("window.mirrored", "The Unit is mirrored. Make a new flipped Type.", record, reference) if state.mirrored
       end
 
       def host(entry)
@@ -132,20 +132,22 @@ module PhComposer
 
       def validate_host(entry, face, record, reference)
         unless face
-          issue("unhosted", "The Unit has no resolvable native glued host Face. Rehost it before export.",
+          issue("window.unhosted", "The Unit has no resolvable native glued host Face. Rehost it before export.",
             record, reference)
           return
         end
         values = face["record"]
         unless values && values["face_type"] && face["zone_id"]
-          issue("host_unclassified", "The Unit's host Face needs classification and an owning Zone.", record, reference)
+          issue("window.host_unclassified", "The Unit's host Face needs classification and an owning Zone.", record, reference)
         end
         if values && values["face_type"] && !%w[Wall RoofCeiling].include?(values["face_type"])
-          issue("host_type", "Window export requires a Wall or Roof/Ceiling host Face.", record, reference)
+          issue("window.host_type_unsupported", "Window export requires a Wall or Roof/Ceiling host Face.", record, reference)
         end
-        unless values && values["boundary_condition"] == "Outdoors"
-          issue("host_boundary", "Windows require an Outdoors host Face; Surface and other boundaries are unsupported.",
-            record, reference)
+        boundary = values && values["boundary_condition"]
+        if boundary == "Surface"
+          issue("window.surface_host", "A paired Surface Face cannot host a Window unit.", record, reference)
+        elsif boundary != "Outdoors"
+          issue("window.host_boundary_unsupported", "Windows require an Outdoors host Face.", record, reference)
         end
         mapped = @outlines[entry.path]
         return unless mapped
@@ -164,26 +166,23 @@ module PhComposer
           detail = thermal.fetch("elements").find { |row| row["id"] == cell["id"] }
           identifiers += detail.fetch("edges").map { |edge| [edge.fetch("install")["id"], "installs"] } if detail
           if identifiers.any? { |id, collection| id && !@products.fetch(collection).key?(id) }
-            issue("dangling_product", "A placed Type names an unavailable Frame, Glazing or Psi-Install Type.",
+            issue("window_type.product_dangling", "A placed Type names an unavailable Frame, Glazing or Psi-Install Type.",
               record, reference)
           end
         end
-        unless thermal["complete"]
-          details = thermal.fetch("elements").flat_map { |row| row.fetch("findings") }.uniq.join("; ")
-          issue("incomplete_type", "Complete the placed Type's products, operation and perimeter installs: #{details}",
-            record, reference)
+        conditions = thermal.fetch("findings") + thermal.fetch("elements").flat_map { |row| row.fetch("findings") }
+        conditions.uniq { |finding| finding.values_at("code", "message") }.each do |finding|
+          code = finding.fetch("code")
+          issue(code, finding.fetch("message"), record, reference,
+            :blocking => code != "window_type.frame_operation_mismatch")
         end
         thermal.fetch("elements").each do |element|
           u_w = element["u_w"]
           next if u_w.nil? || (u_w.finite? && u_w.positive? && u_w <= 12)
 
-          issue("construction_unavailable", "The placed element's Uw must be greater than zero and no more than " \
+          issue("window_type.construction_unavailable", "The placed element's Uw must be greater than zero and no more than " \
             "12 W/m2K for the pinned Honeybee simple glazing material. Authored values remain unchanged.",
             record, reference)
-        end
-        mismatches = thermal.fetch("elements").flat_map { |row| row.fetch("findings") }.grep(/frame operation/).uniq
-        mismatches.each do |message|
-          issue("frame_operation_mismatch", message, record, reference, :blocking => false)
         end
       end
 
@@ -233,7 +232,6 @@ module PhComposer
       end
 
       def issue(code, message, record, reference, blocking: true)
-        code = "window.#{code}" unless code.start_with?("window.", "record.", "geometry.", "validation.")
         id = record["id"].is_a?(String) ? record["id"] : nil
         finding = { "code" => code, "section" => ExportProjection::APERTURES, "object_id" => id,
           "message" => message, "blocks_export" => blocking }
@@ -241,13 +239,13 @@ module PhComposer
           finding["locate"] = { "name" => "#{FEATURE_ID}.units.locate", "params" => { "units" => [reference] } }
         end
         @findings << finding
-        repair = Units::State::REPAIRS[code.delete_prefix("window.")]
-        return unless %w[reset_to_type new_flipped_type].include?(repair)
+        action = Units::State::REPAIRS[code]
+        return unless %w[reset_to_type new_flipped_type].include?(action)
 
+        repair = Units::State.repair(code, reference, [])
         @repairs << { "id" => "#{code}:#{reference['entity_path'].join('.')}",
-          "label" => repair == "reset_to_type" ? "Reset to Type" : "New flipped Type", "checked" => false,
-          "action" => "#{FEATURE_ID}.units.#{repair}",
-          "params" => repair == "reset_to_type" ? { "units" => [reference] } : { "unit" => reference } }
+          "label" => action == "reset_to_type" ? "Reset to Type" : "New flipped Type", "checked" => false,
+          "action" => repair.fetch("name"), "params" => repair.fetch("params") }
       end
     end
   end

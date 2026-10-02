@@ -44,7 +44,7 @@ PhComposerUI.define("window_audit", ["units", "window_editor_shared", "workspace
       entry.record.elements.filter(function (cell) { return cell.kind === "empty"; }).forEach(function (cell) {
         group.appendChild(el("p", "", cell.name + " · Empty, excluded wall area; no window thermal contribution."));
       });
-      (calc.findings || []).forEach(function (reason) { group.appendChild(el("p", "", reason)); });
+      (calc.findings || []).forEach(function (finding) { group.appendChild(el("p", "", finding.message)); });
       this.audit.appendChild(group);
     }, this);
     Array.prototype.forEach.call(this.audit.querySelectorAll("details"), function (node, index) {

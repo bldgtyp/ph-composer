@@ -675,7 +675,7 @@
             "u_effective": null,
             "elements": [],
             "findings": [
-              "Enter all grid dimensions."
+              { "code": "window_type.dimensions_incomplete", "message": "Enter all grid dimensions." }
             ]
           }
         }
@@ -747,15 +747,19 @@
     { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [100, 300] },
       values: { window_type_id: "wnt_a", anchor: "sill_center" },
       host: JSON.parse(JSON.stringify(AUTHORING.faces[0].reference)),
-      findings: [{ code: "detached_definition", repair: "reset_to_type" }] },
+      findings: [{ code: "window.definition_detached", repair: { name: "ph_composer.windows.units.reset_to_type",
+        params: { units: [{ unit_id: "wun_a", entity_path: [100, 300] }] } } }] },
     { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [100, 301] },
       values: { window_type_id: "wnt_a", anchor: "head_right" }, host: null,
-      findings: [{ code: "copy_id_pending", repair: "repair_copied_identities" },
-        { code: "unhosted", repair: "rehost" }] },
+      findings: [{ code: "window.copy_id_pending", repair: { name: "ph_composer.windows.units.repair_copied_identities",
+        params: { units: [{ unit_id: "wun_a", entity_path: [100, 301] }] } } },
+        { code: "window.unhosted", repair: { name: "ph_composer.windows.units.rehost",
+        params: { unit: { unit_id: "wun_a", entity_path: [100, 301] } } } }] },
     { id: "wun_c", reference: { unit_id: "wun_c", entity_path: [200, 302] },
       values: { window_type_id: "wnt_a", anchor: "sill_left" },
       host: JSON.parse(JSON.stringify(AUTHORING.faces[4].reference)),
-      findings: [{ code: "mirrored", repair: "new_flipped_type" }] }
+      findings: [{ code: "window.mirrored", repair: { name: "ph_composer.windows.units.new_flipped_type",
+        params: { unit: { unit_id: "wun_c", entity_path: [200, 302] } } } }] }
   ] };
 
   FIXTURES.windows.windows.unit_areas = { faces: AUTHORING.faces.map(function (face) {
@@ -764,7 +768,7 @@
     }), uncertain = hosted.some(function (unit) { return unit.findings.length > 0; });
     return { reference: JSON.parse(JSON.stringify(face.reference)), gross_area_m2: face.area_m2,
       glazed_area_m2: uncertain ? null : 0, net_opaque_area_m2: uncertain ? null : face.area_m2,
-      unit_count: hosted.length, findings: uncertain ? ["geometry_differs"] : [] };
+      unit_count: hosted.length, findings: uncertain ? ["window.geometry_differs"] : [] };
   }), unhosted_units: [FIXTURES.windows.windows.units.units[1].reference] };
 
   FIXTURES.windows.libraryProviders = [{ id: "window_products", provider_kind: "ph_composer.library.file",
