@@ -2,7 +2,7 @@
 
 DATE: 2026-10-01
 STATUS: In progress. Review complete and Ed's eight decisions recorded on 2026-10-01. R01 is
-merged (PR #16); R02 is merged (PR #17) with its host gate passed; R03 is merged (PR #18); R04 is merged (PR #19); R05 is merged (PR #20) with its host gate passed; R06 to R11 are requested.
+merged (PR #16); R02 is merged (PR #17) with its host gate passed; R03 is merged (PR #18); R04 is merged (PR #19); R05 is merged (PR #20) with its host gate passed; R06 is implemented on its branch with its host gate passed; R07 to R11 are requested.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft). Reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15), merged 2026-10-01 as `c687a73`, which closed [#14](https://github.com/bldgtyp/ph-composer/issues/14).
 
@@ -75,7 +75,7 @@ reproduced defect, evidenced contract violation, unverified risk, optional impro
 | [R03](R03-agent-access.md) | Agent access: native dialogs inside public operations; `view` grant removes machine configuration (reproduced); implicit Unit identity repair; offset paging; 218 of 233 params undescribed; untyped `grid.element`; defaults depend on display preference (reproduced, a recorded port); agent docs not extended | Mixed, two reproduced. **Merged 2026-10-01, PR #18** | Medium, several small |
 | [R04](R04-findings-and-codes.md) | Finding codes: no `noun.condition` form, two codes for one condition, codes derived from message text, Zones matching Assemblies' codes, `request.stale_revision` (reproduced), 48 codes missing from the table | Evidenced contract violation. **Merged 2026-10-02, PR #19**, with R09 item 5 | Medium, touches panel and report |
 | [R05](R05-export-layering.md) | Export and translation layering runs upward: `ZoneSection` requires Apertures, Zones declares Window result fields, Windows calls a Zones module directly, shared conformance names Windows | Evidenced contract violation. **Merged 2026-10-02, PR #20; E06/E14 host readbacks pass** | Large, architecture |
-| [R06](R06-entity-target-resolution.md) | No public way to resolve a Face reference to a live Face; Windows re-implements Zones' path resolution in six places and loads the whole Face table per Unit operation | Evidenced contract gap, one unverified performance risk | Medium, architecture |
+| [R06](R06-entity-target-resolution.md) | No public way to resolve a Face reference to a live Face; Windows re-implements Zones' path resolution in six places and loads the whole Face table per Unit operation | Evidenced contract gap, one unverified performance risk. **Implemented on branch; host gate passed** | Medium, architecture |
 | [R07](R07-operations-coupled-to-request.md) | Operations read `request.params`; reuse duplicates the request, pulls actions out of registration staging and replays handler blocks; partial engine stand-in built with `define_method` | Evidenced contract violation | Medium |
 | [R08](R08-window-unit-steps.md) | Seven Unit steps each carry their own copy of the same guards and vector maths; planning lives in long constructors; one matcher swallows every error | Optional improvement, one silent-failure pattern | Medium |
 | [R09](R09-definition-feature-pattern.md) | Definition features fork one generic path by kind, build kinds and actions from positional tables, and repeat schema builders six times | Optional improvement | Medium |
