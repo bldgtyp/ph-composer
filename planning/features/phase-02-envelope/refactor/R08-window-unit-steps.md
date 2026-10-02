@@ -58,6 +58,22 @@ also rescue everything to `false`; those feed rollback verification where false 
 `ExportAssessment` (`export_assessment.rb`) is a constructor that runs the whole assessment and
 exposes four arrays. It is a function wearing a class.
 
+The counts above predate R06, which removed the three `parent_transform` copies and the Windows
+host-resolution copies (see its Outcome). Re-count before extracting.
+
+**Added 2026-10-02 from R06's follow-ups.** All four are in the Unit steps and their reads:
+
+- **Batch locate cost.** `units.swap_type` over many distinct hosts locates each one separately,
+  each paying a Zones walk and a Face-id scan (R06 measured 12 ms per host; 50 Units 2.56 s against
+  2.28 s before R06). The resolver has no read-phase index it could share.
+- **Place tool hover.** `host_context` returns no writable verdict, so the Place tool previews over a
+  locked Zone or locked or shared storage and refuses only when the gesture commits. Before R06 it
+  refused on hover.
+- **Over-reading for Place.** `ReadContext` reads `ph_composer.zones.all` and the whole glued-host
+  batch even for `units.place`, which needs only the one explicit host.
+- **A redundant comparison.** `reset_step` compares a read host's transform with the Unit's parent
+  transform; since R06 both come from the same source.
+
 ## Consequence
 
 - A change to one guard (for example a new unsupported host state) has to be found and made in four
@@ -84,6 +100,15 @@ Extract only what is identical in meaning. Do not build a step base class with h
 6. `matches?` rescues nothing. Malformed stamps already return false through explicit checks; let an
    unexpected error surface through the dispatcher's `operation.failed` path and the log.
 7. Split `restore_step.rb` into one file per class.
+8. **R06 follow-ups.** Measure first, as R06 did, on the same 2,000-Face, 200-Unit synthetic Model:
+   - Let `locate:` take an optional read-phase index the caller builds once per action
+     (`request.locate(kind, reference, index:)`), so a batch pays one walk. This is a contract change
+     to `Records::ReferenceTarget`; record it in `context/EXTENSIBILITY.md`.
+   - Give each `host_context` row a `writable` verdict computed from the path alone (no walk), and
+     let the Place tool refuse on hover again with Zones' code.
+   - Let `ReadContext` take what the action needs, so `units.place` reads its one host and no
+     `zones.all`.
+   - Drop the transform comparison in `reset_step` if the tests still pass without it.
 
 ## Verification
 
@@ -92,5 +117,9 @@ Extract only what is identical in meaning. Do not build a step base class with h
 - A new focused test seeds a definition that makes the matcher raise and asserts the outcome is not
   `geometry_differs`.
 - Line counts: each step file drops; no new file exceeds the class-length signal.
+- R06 follow-ups: `units.swap_type` over 50 Units on distinct hosts and one Place button-down are
+  measured before and after and recorded in `context/SKETCHUP_HOST_BEHAVIOR.md`, "Window-edit
+  measurements"; a hover over a locked Zone refuses again (focused test in
+  `window_place_tool_test.rb`).
 - Host gate: repeat E12 (resize a used Type with three anchors, Swap, Re-host, Reset, flipped Type,
   Restore) because every native write path moves.

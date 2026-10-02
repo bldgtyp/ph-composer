@@ -52,6 +52,10 @@ frozen-string comment, `Style/Semicolon`, line length 120, method length 40, cla
 9. **Stale corrupted setup reads as empty.** `library/setup.rb:23-24` returns `[]` when the stored
    provider configuration fails to parse or validate; the next `add_file` then saves over it.
    Unverified risk: no report of it happening. `CODING_STANDARDS.md`: "Distinguish failure states."
+10. **The frozen request's params are not frozen.** Added 2026-10-02 from R07's review.
+    `HandlerRequest` freezes the struct (`shell/handler_request.rb`), but `params` stays a mutable
+    Hash, so an operation could alter the params a later nested read or the dispatcher's digest
+    sees. Nothing mutates them today; the contract is stated, not enforced.
 
 ## Decision
 
@@ -74,9 +78,12 @@ touches.
 7. Item 7: use the synthetic `example_parts` kind the other library examples use.
 8. Item 9: return a distinct `library.setup_unreadable` state that the panel shows and that refuses
    `add_file` until the user confirms replacing it.
+9. Item 10: deep-freeze `params` when a request is built (`HandlerRequest#initialize`, after the
+   existing `DeepCopy`), so an in-place edit raises `FrozenError`. Run the suite to find any operation
+   that edits its params in place and give it a copy. One focused test in `handler_request_test.rb`.
 
 ## Verification
 
-For this packet's remaining items (3 to 9): `make lint` passes on both Rubies under the current
-configuration. No behaviour change except items 6 and 9, each with one focused test. The widened cop
+For this packet's remaining items (3 to 10): `make lint` passes on both Rubies under the current
+configuration. No behaviour change except items 6, 9 and 10, each with one focused test. The widened cop
 list is verified in the formatting pull request.

@@ -138,9 +138,10 @@ left the projection, which the old class never offered; comments on the shallow 
 shared Faces helpers; tests for a write into another change set and for `retarget_references`
 inside a callback.
 
-Follow-ups, not done here:
+Follow-ups, not done here, each folded into a later finding:
 
 - The projection's `find` refuses a missing record with `reference.invalid`, the plain engine with
   `target.not_found`. A library replace of a deleted record answers the first. Pre-existing.
+  Recorded as [R09](R09-definition-feature-pattern.md) item 6.
 - A frozen request still holds a mutable `params` Hash; deep-freezing it would make the contract
-  enforced rather than stated.
+  enforced rather than stated. Recorded as [R11](R11-readability-and-lint.md) item 10.
