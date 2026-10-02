@@ -13,7 +13,7 @@ module PhComposer
         result = Schemas.list(Schemas.object({ "id" => Schemas::TEXT, "label" => Schemas::TEXT,
                                               "provider_kind" => Schemas::TEXT }))
         %w[add_file add_folder].each do |verb|
-          feature.view_command("#{PREFIX}.#{verb}", :description => "Configure a library through a native picker.",
+          feature.setup_command("#{PREFIX}.#{verb}", :description => "Configure a library through a native picker.",
                                :params => Library.object({}), :result => result, :examples => [{}]) do |request|
             path = if verb == "add_file"
                      UI.openpanel("Add library file", nil, "*.json")
@@ -28,11 +28,11 @@ module PhComposer
           feature.menu_item("#{PREFIX}.#{verb}_menu", :label => verb == "add_file" ? "Add Library File…" :
                             "Add Library Folder…", :menu => "Libraries",
                             :available => ->(_read) { false }) do |session|
-            outcome = API.view(:context => menu_context(session), :name => "#{PREFIX}.#{verb}", :params => {})
+            outcome = API.setup(:context => menu_context(session), :name => "#{PREFIX}.#{verb}", :params => {})
             session.notice(outcome.fetch("message"), :tone => outcome["status"] == "completed" ? :info : :warning)
           end
         end
-        feature.view_command("#{PREFIX}.remove", :description => "Remove a configured library from this machine.",
+        feature.setup_command("#{PREFIX}.remove", :description => "Remove a configured library from this machine.",
                              :params => Library.object({ "provider_id" => Library::TEXT }), :result => result,
                              :examples => [{ "provider_id" => "example" }]) do |request|
           id = request.params.fetch("provider_id")
@@ -44,7 +44,9 @@ module PhComposer
 
       # The native menu is one client per session, as the panel is.
       def menu_context(session)
-        session.feature_state(:library_menu_context) { API.connect(:session_id => session.id) }
+        session.feature_state(:library_menu_context) do
+          API.connect(:session_id => session.id, :capabilities => %w[read setup])
+        end
       end
 
       def kind_adapters(registry)

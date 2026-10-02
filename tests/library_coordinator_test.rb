@@ -17,7 +17,7 @@ class LibraryCoordinatorTest < PhComposerTestCase
     @path = write_library(File.join(@directory, "synthetic.json"))
     PhComposer::Library::Setup.add_file(:id => "synthetic.file", :label => "Synthetic", :path => @path)
     @session = PhComposer::Sessions.for(Sketchup.active_model)
-    @context = API.connect(:session_id => @session.id)
+    @context = API.connect(:session_id => @session.id, :capabilities => %w[read view model_write setup])
     @sequence = 0
     @generation = load_catalog.fetch("value").fetch("generation")
   end
@@ -28,7 +28,7 @@ class LibraryCoordinatorTest < PhComposerTestCase
   end
 
   def load_catalog
-    API.view(:context => @context, :name => "#{PREFIX}.load",
+    API.setup(:context => @context, :name => "#{PREFIX}.load",
              :params => { "provider_id" => "synthetic.file", "kind" => "materials" })
   end
 

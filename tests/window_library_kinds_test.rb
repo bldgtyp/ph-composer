@@ -14,7 +14,7 @@ class WindowLibraryKindsTest < PhComposerTestCase
     super
     @model = Sketchup.active_model
     @session = PhComposer::Sessions.for(@model)
-    @context = API.connect(:session_id => @session.id)
+    @context = API.connect(:session_id => @session.id, :capabilities => %w[read view model_write setup])
     @sequence = 0
     @directory = Dir.mktmpdir("window-libraries")
     @path = File.join(@directory, "synthetic.json")
@@ -28,7 +28,7 @@ class WindowLibraryKindsTest < PhComposerTestCase
       "kind_schema_versions" => @rows.to_h { |kind, _row| [kind, 1] }))
     PhComposer::Library::Setup.add_file(:id => "synthetic.windows", :label => "Synthetic", :path => @path)
     @generations = @rows.to_h do |collection, _row|
-      loaded = API.view(:context => @context, :name => "#{L}.load",
+      loaded = API.setup(:context => @context, :name => "#{L}.load",
         :params => { "provider_id" => "synthetic.windows", "kind" => collection })
       [collection, loaded.dig("value", "generation")]
     end
@@ -252,7 +252,7 @@ copy_params("psi_install_types", "keep_local").merge("assignment" => input["assi
     input["imports"][0]["copy"]["assignment"] = {}
     assert_equal "params.invalid", invoke("#{W::FEATURE_ID}.types.installs.save", input)["code"]
     input["imports"][0]["copy"].delete("assignment")
-    API.view(:context => @context, :name => "#{L}.refresh", :params => { "provider_id" => "synthetic.windows",
+    API.setup(:context => @context, :name => "#{L}.load", :params => { "provider_id" => "synthetic.windows",
                                                                                     "kind" => "psi_install_types" })
     assert_equal "library.catalog_stale", invoke("#{W::FEATURE_ID}.types.installs.save", input)["code"]
     assert_empty W::Products::KINDS.fetch("psi_install_types").store.ids(@model)
@@ -278,11 +278,11 @@ copy_params("psi_install_types", "keep_local").merge("assignment" => input["assi
     @model = Sketchup::Model.new
     Sketchup.active_model = @model
     @session = PhComposer::Sessions.for(@model)
-    @context = API.connect(:session_id => @session.id)
+    @context = API.connect(:session_id => @session.id, :capabilities => %w[read view model_write setup])
     @sequence = 0
     PhComposer::Library::Setup.add_file(:id => "synthetic.windows", :label => "Roundtrip", :path => export_path)
     @rows.each_key do |collection|
-      loaded = API.view(:context => @context, :name => "#{L}.load", :params => { "provider_id" => "synthetic.windows",
+      loaded = API.setup(:context => @context, :name => "#{L}.load", :params => { "provider_id" => "synthetic.windows",
                                                                              "kind" => collection })
       assert_equal "loaded", loaded.dig("value", "state"), loaded.inspect
       assert_empty loaded.dig("value", "warnings")
@@ -323,7 +323,7 @@ adapter(collection).map.call(stored(collection, id))
       @rows[collection]["notes"] = "Changed provider content"
       write_library(@path, envelope(:kinds => @rows.transform_values { |row| [row] }).merge(
         "kind_schema_versions" => @rows.to_h { |kind, _row| [kind, 1] }))
-      loaded = API.view(:context => @context, :name => "#{L}.refresh", :params => {
+      loaded = API.setup(:context => @context, :name => "#{L}.load", :params => {
         "provider_id" => "synthetic.windows", "kind" => collection })
       @generations[collection] = loaded.dig("value", "generation")
       inspect = invoke("#{L}.copy", copy_params(collection, "inspect"))

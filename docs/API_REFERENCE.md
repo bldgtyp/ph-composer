@@ -32734,526 +32734,6 @@ Example params:
 }
 ```
 
-### `ph_composer.library.load`
-
-Read a configured library into session memory. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "kind": {
-      "type": "string",
-      "minLength": 1
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind"
-  ]
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string"
-    },
-    "kind": {
-      "type": "string"
-    },
-    "generation": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "minimum": 1
-    },
-    "state": {
-      "type": "string",
-      "enum": [
-        "unloaded",
-        "empty",
-        "loaded",
-        "failed"
-      ]
-    },
-    "warnings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "library_id": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "index": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
-      }
-    },
-    "unavailable": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "library_id": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "index": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
-      }
-    },
-    "freshness": {
-      "type": "object",
-      "properties": {
-        "loaded_at": {
-          "type": "string"
-        },
-        "exported_at": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": []
-    },
-    "published_at": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "failure": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "message"
-      ]
-    },
-    "age_seconds": {
-      "type": [
-        "number",
-        "null"
-      ],
-      "minimum": 0
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind",
-    "generation",
-    "state",
-    "warnings",
-    "unavailable",
-    "freshness",
-    "published_at",
-    "failure",
-    "age_seconds"
-  ]
-}
-```
-
-Example params:
-
-```json
-{
-  "provider_id": "example",
-  "kind": "example_parts"
-}
-```
-
-### `ph_composer.library.providers.add_file`
-
-Configure a library through a native picker. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false,
-  "required": []
-}
-```
-
-Result:
-
-```json
-{
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "string"
-      },
-      "label": {
-        "type": "string"
-      },
-      "provider_kind": {
-        "type": "string"
-      }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "label",
-      "provider_kind"
-    ]
-  }
-}
-```
-
-Example params:
-
-```json
-{}
-```
-
-### `ph_composer.library.providers.add_folder`
-
-Configure a library through a native picker. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false,
-  "required": []
-}
-```
-
-Result:
-
-```json
-{
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "string"
-      },
-      "label": {
-        "type": "string"
-      },
-      "provider_kind": {
-        "type": "string"
-      }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "label",
-      "provider_kind"
-    ]
-  }
-}
-```
-
-Example params:
-
-```json
-{}
-```
-
-### `ph_composer.library.providers.remove`
-
-Remove a configured library from this machine. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string",
-      "minLength": 1
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id"
-  ]
-}
-```
-
-Result:
-
-```json
-{
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "string"
-      },
-      "label": {
-        "type": "string"
-      },
-      "provider_kind": {
-        "type": "string"
-      }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "label",
-      "provider_kind"
-    ]
-  }
-}
-```
-
-Example params:
-
-```json
-{
-  "provider_id": "example"
-}
-```
-
-### `ph_composer.library.refresh`
-
-Read a configured library into session memory. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "kind": {
-      "type": "string",
-      "minLength": 1
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind"
-  ]
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string"
-    },
-    "kind": {
-      "type": "string"
-    },
-    "generation": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "minimum": 1
-    },
-    "state": {
-      "type": "string",
-      "enum": [
-        "unloaded",
-        "empty",
-        "loaded",
-        "failed"
-      ]
-    },
-    "warnings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "library_id": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "index": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
-      }
-    },
-    "unavailable": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "library_id": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "index": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
-      }
-    },
-    "freshness": {
-      "type": "object",
-      "properties": {
-        "loaded_at": {
-          "type": "string"
-        },
-        "exported_at": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": []
-    },
-    "published_at": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "failure": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "message"
-      ]
-    },
-    "age_seconds": {
-      "type": [
-        "number",
-        "null"
-      ],
-      "minimum": 0
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind",
-    "generation",
-    "state",
-    "warnings",
-    "unavailable",
-    "freshness",
-    "published_at",
-    "failure",
-    "age_seconds"
-  ]
-}
-```
-
-Example params:
-
-```json
-{
-  "provider_id": "example",
-  "kind": "example_parts"
-}
-```
-
 ### `ph_composer.windows.place_tool.choose`
 
 Choose a Type and anchor, then start Place. Owner: `ph_composer.windows`.
@@ -34099,6 +33579,348 @@ Example params:
 
 ```json
 {}
+```
+
+## Setup commands
+
+Called with a context granted `setup`.
+
+### `ph_composer.library.load`
+
+Read a configured library into session memory. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "provider_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind"
+  ]
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "provider_id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "generation": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "unloaded",
+        "empty",
+        "loaded",
+        "failed"
+      ]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "library_id": {
+            "type": "string"
+          },
+          "record_id": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ]
+      }
+    },
+    "unavailable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "library_id": {
+            "type": "string"
+          },
+          "record_id": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ]
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "properties": {
+        "loaded_at": {
+          "type": "string"
+        },
+        "exported_at": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "published_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "failure": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "age_seconds": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind",
+    "generation",
+    "state",
+    "warnings",
+    "unavailable",
+    "freshness",
+    "published_at",
+    "failure",
+    "age_seconds"
+  ]
+}
+```
+
+Example params:
+
+```json
+{
+  "provider_id": "example",
+  "kind": "example_parts"
+}
+```
+
+### `ph_composer.library.providers.add_file`
+
+Configure a library through a native picker. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false,
+  "required": []
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "provider_kind": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ]
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.library.providers.add_folder`
+
+Configure a library through a native picker. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false,
+  "required": []
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "provider_kind": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ]
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.library.providers.remove`
+
+Remove a configured library from this machine. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "provider_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "provider_id"
+  ]
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "provider_kind": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ]
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "provider_id": "example"
+}
 ```
 
 ## File exports

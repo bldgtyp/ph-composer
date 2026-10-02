@@ -5,7 +5,7 @@ PhComposerUI.define("library_setup", ["request", "snapshot", "workspace"], funct
   function Setup(session, send, changed) {
     var self = this;
     this.changed = changed; this.providers = []; this.enabled = false;
-    this.requests = request.channel(session, send, "library-setup", "view.invoke");
+    this.requests = request.channel(session, send, "library-setup", "setup.invoke");
     this.root = ui.formDialog("library-setup", function () { self.close(); });
     this.root.appendChild(el("h2", "", "Libraries"));
     this.root.appendChild(el("p", "muted", "Configure library files or folders on this machine."));

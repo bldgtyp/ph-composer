@@ -8,7 +8,8 @@ require "json"
 module PhComposerTools
   module ApiReference
     GROUPS = [["Queries", :queries, "read"], ["Actions", :actions, "model_write"],
-              ["View commands", :view_commands, "view"], ["File exports", :file_exports, "export"]].freeze
+              ["View commands", :view_commands, "view"], ["Setup commands", :setup_commands, "setup"],
+              ["File exports", :file_exports, "export"]].freeze
 
     module_function
 

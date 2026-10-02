@@ -163,9 +163,10 @@ unknown interrupted task succeeded.
 ## User-controlled local access
 
 External access is explicit and revocable, with a visible connection/access state. Separate read,
-view, model-write and file/import/export capabilities so the user can grant useful scope. `view`
-is the selection, reveal and camera operations below: it moves nothing in the SKP, so it is granted
-apart from model-write, and a read never carries it. Enforce grants
+view, model-write, setup and file/import/export capabilities so the user can grant useful scope.
+`view` is the selection, reveal and camera operations below: it moves nothing in the SKP, so it is
+granted apart from model-write, and a read never carries it. `setup` changes session or machine
+state, such as the libraries configured on this machine; it is never in the default grant. Enforce grants
 at dispatch; an action description or a client-supplied confirmation flag is not authorization.
 Do not require renewed permission for every request already covered by a valid grant.
 

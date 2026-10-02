@@ -12,10 +12,10 @@ class LibrarySetupCommandsTest < PhComposerTestCase
 
   def test_public_native_picker_cancel_is_readonly_and_setup_menus_are_extensions_only
     session = PhComposer::Sessions.for(Sketchup.active_model)
-    context = PhComposer::API.connect(:session_id => session.id)
+    context = PhComposer::API.connect(:session_id => session.id, :capabilities => %w[read setup])
     revision = session.revision
     UI.stub(:openpanel, nil) do
-      outcome = PhComposer::API.view(:context => context,
+      outcome = PhComposer::API.setup(:context => context,
                                     :name => "ph_composer.library.providers.add_file", :params => {})
       assert_equal "completed", outcome.fetch("status")
       assert_empty outcome.fetch("value")
@@ -29,6 +29,26 @@ class LibrarySetupCommandsTest < PhComposerTestCase
     end)
     refute_empty PhComposer::Commands.install_feature_menus(UI.menu("Extensions"))
     refute PhComposer::Commands.install_feature_menus(UI.menu("Context"), :contextual => true).key?("Libraries")
+  end
+
+  # Removing a library changes this machine's configuration, which neither the viewport-state `view`
+  # grant nor the default grant covers; only an explicit `setup` grant does.
+  def test_only_a_setup_grant_changes_library_configuration
+    Setup.add_file(:id => "synthetic", :label => "Synthetic library", :path => "/nowhere/library.json")
+    session = PhComposer::Sessions.for(Sketchup.active_model)
+    remove = lambda do |capabilities|
+      context = capabilities ? PhComposer::API.connect(:session_id => session.id, :capabilities => capabilities)
+                             : PhComposer::API.connect(:session_id => session.id)
+      PhComposer::API.setup(:context => context, :name => "#{Commands::PREFIX}.remove",
+                            :params => { "provider_id" => "synthetic" })
+    end
+    [["view"], nil].each do |capabilities|
+      assert_equal "request.capability_denied", remove.call(capabilities).fetch("code")
+      assert_equal ["synthetic"], Setup.load.map { |provider| provider.fetch("id") }
+    end
+    assert_equal "setup_command", PhComposer::API.describe(:name => "#{Commands::PREFIX}.remove").fetch("kind")
+    assert_equal "completed", remove.call(%w[setup]).fetch("status")
+    assert_empty Setup.load
   end
 
   def test_add_file_uses_envelope_label_and_keeps_path_out_of_public_result

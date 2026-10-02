@@ -23,7 +23,7 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | --- | --- |
 | Feature | Stable namespaced id, contract version, declared feature dependencies, install entrypoint |
 | Record kind | Kind id, schema version, validator, SI field descriptors, declared references, persistence adapter |
-| Query, action, view command, FileExport | Namespaced id, description, input and result schemas, examples, handler |
+| Query, action, view command, setup command, FileExport | Namespaced id, description, input and result schemas, examples, handler |
 | Action additions | Side effects, confirmation policy (only `none` today), Undo name |
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
@@ -33,7 +33,9 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
 
 The capability an operation needs follows from its kind: a query and a preview need `read`, a view
-command `view`, an action and an outcome lookup `model_write`, and a FileExport or export task `export`.
+command `view`, a setup command `setup`, an action and an outcome lookup `model_write`, and a
+FileExport or export task `export`. Library loading and provider setup are setup commands; this
+replaces the archived Phase 2 choice of view commands for them (refactor R03, 2026-10-01).
 
 Every declared name starts with its feature's id. Registrations are staged and validated together:
 duplicate ids, missing dependencies, cycles, incompatible contract majors, invalid schemas and
@@ -65,12 +67,14 @@ are clients of it.
 - `describe(name:)`: one operation's schemas and examples, as a detached copy. Schemas come only
   from here.
 - `connect(session_id:, capabilities:)`: an explicit context for one Model session. Capabilities
-  default to `read`, `view` and `model_write`; `export` is granted explicitly.
+  default to `read`, `view` and `model_write`; `setup` and `export` are granted explicitly.
 - `query(context:, name:, params:)`: a bounded read returning values, never live SketchUp objects.
 - `preview(context:, name:, params:)`: builds and validates an action's proposal without writing,
   and returns its `proposal_digest`.
 - `view(context:, name:, params:)`: a view command that changes what the host shows and writes
   nothing to the Model, so it takes no request and leaves no Undo entry.
+- `setup(context:, name:, params:)`: a setup command that changes session or machine state, such
+  as the libraries configured on this machine, and never the Model. No request, no Undo entry.
 - `invoke(context:, name:, params:, request:)`: a validated synchronous mutation.
 - `outcome(context:, request:)`: a retained mutation outcome, without rerunning it.
 - `export_file(context:, name:, params:)`: a registered synchronous FileExport, with an explicit

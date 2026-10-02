@@ -370,15 +370,16 @@ dispatcher, an observer callback, a task tick, or the Export run. Input coercion
 
 Implemented in P0-E and extended in Phase 1. `shell/panel_messages.rb` declares every message
 between the page and Ruby, with the payload keys each carries: `panel.ready`, `action.invoke`,
-`view.invoke`, `preferences.set` and the shell's Export command (`export.start`,
+`view.invoke`, `setup.invoke`, `query.invoke`, `file_export.invoke`, `preferences.set` and the shell's Export command (`export.start`,
 `export.preflight`, `export.status`, `export.cancel`, `export.latest`) inbound; `panel.snapshot`,
-`action.result`, `view.result`, `preferences.result`, `export.result`, `panel.notice` and
-`panel.failure` outbound. Ruby refuses an inbound type or payload key the table does not declare and answers with
+`action.result`, `view.result`, `setup.result`, `query.result`, `file_export.result`,
+`preferences.result`, `export.result`, `panel.notice` and `panel.failure` outbound. Ruby refuses an inbound type or payload key the table does not declare and answers with
 `panel.failure`; it refuses to publish an undeclared outbound key. `tests/panel_messages_test.rb`
 reads the page sources and fails when the page sends or handles a type the table does not declare.
 
 Features add no transport types. A feature's panel request is `action.invoke` naming a registered
-action, a viewport-state request is `view.invoke` naming a registered view command, and its
+action, a viewport-state request is `view.invoke` naming a registered view command, a session- or
+machine-state request is `setup.invoke` naming a registered setup command, and its
 panel data is a registered snapshot section ([CONTRACTS.md](CONTRACTS.md), "Registration" and "Public interface").
 
 ## Panel

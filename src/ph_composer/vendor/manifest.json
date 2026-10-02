@@ -111,9 +111,9 @@
       "sha256": "687b2ad8aac50d319992346ee10dab8249b84224a0fb6d02f8c69228b9d4df35"
     },
     "html/library_setup.js": {
-      "bytes": 3691,
+      "bytes": 3692,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "03d7e77258b6fb66dafba5698221f8d8f94ddecea5888987e5b984d069d9c31e"
+      "sha256": "6e9f7362c9f4a329d88e00cd7af10a06f75ad02cf160d2da4a11d94ddfe37945"
     },
     "html/library_sidebar.js": {
       "bytes": 9052,
@@ -121,9 +121,9 @@
       "sha256": "7d484a417218baba6429f1a9510988008627657ffdc0e79ce84b68a24b8cbce1"
     },
     "html/library_store.js": {
-      "bytes": 7006,
+      "bytes": 6985,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "e8ef3bb41a96e29ae2089e0a63580f651d493eb194f311a7a6105a739427ece1"
+      "sha256": "efab6f23b2c73cca43e043bb2c6f404d33e4a82e3cc835bff06bc9d080087e57"
     },
     "html/material_form.js": {
       "bytes": 5028,
@@ -146,9 +146,9 @@
       "sha256": "8c9b14e5d2aada4e53f401f8313fe8601f2f33f7f028b0abd044e67664119478"
     },
     "html/panel.js": {
-      "bytes": 14329,
+      "bytes": 14726,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "8f28d64bb926a48fef8f2b0d5e164c39c4ae87f6b0ea6886e62296849823842d"
+      "sha256": "cdb42571fb3c8aedd56c64e675916abfe086e7f8c2687d704d9fa4978d58edbb"
     },
     "html/record_edits.js": {
       "bytes": 15190,
@@ -161,9 +161,9 @@
       "sha256": "74d5af8f9ceaee986517cc824aeb6367bcfd58f404f5cba36b2babe8e240b310"
     },
     "html/request.js": {
-      "bytes": 4725,
+      "bytes": 4967,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "047fcbf93f4fa2c9aa9ac657e149f1f536f5b4dc8529e7e95187f82d0c51e5c2"
+      "sha256": "9f22df4bdb35a80711488a9d60fc94f1b7eaf3fcd230742eb735665e9a904542"
     },
     "html/runtime/index.html": {
       "bytes": 580,

@@ -77,6 +77,12 @@ module PhComposer
       answer(context, "view", name, @registry.view_commands, params)
     end
 
+    # A change to session or machine state (Declarations::SetupCommand). It runs as a view command
+    # does, under its own grant: it carries no sequence number and returns no proposal.
+    def setup(context, name, params)
+      answer(context, "setup", name, @registry.setup_commands, params)
+    end
+
     # Registered local-file commands share validation and session targeting with reads. Their
     # separate grant permits file writes, never a Model transaction or an action retry sequence.
     def file_export(context, name, params)
@@ -152,8 +158,8 @@ module PhComposer
 
     # ---------------------------------------------------------------- acceptance
 
-    # A read and a view command run the same way: validate, refuse while busy, call the handler, check
-    # the result against its declared schema. They differ in the capability they need and in what the
+    # A read, a view command and a setup command run the same way: validate, refuse while busy, call the
+    # handler, check the result against its declared schema. They differ in the capability they need and in what the
     # handler is allowed to touch, which is the declaration's business rather than this method's.
     def answer(context, capability, name, declarations, params)
       session, _caller, declaration = resolve(context, capability, name, declarations)

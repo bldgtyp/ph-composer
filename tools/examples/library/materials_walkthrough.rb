@@ -18,7 +18,7 @@ module LibraryMaterialsWalkthrough
     session_id ||= discovery.fetch("sessions").find { |row| row.fetch("active") }&.fetch("id")
     raise ArgumentError, "No open Model session." unless session_id
 
-    context = API.connect(:session_id => session_id, :capabilities => %w[read view model_write])
+    context = API.connect(:session_id => session_id, :capabilities => %w[read view model_write setup])
     require_empty_inventories!(context)
 
     configured = false
@@ -44,7 +44,7 @@ module LibraryMaterialsWalkthrough
   end
 
   def load_fixture(context)
-    loaded = checked(API.view(:context => context, :name => "#{LIBRARY}.load",
+    loaded = checked(API.setup(:context => context, :name => "#{LIBRARY}.load",
                               :params => { "provider_id" => PROVIDER_ID, "kind" => "materials" }))
     raise "The synthetic catalog did not load." unless loaded.fetch("state") == "loaded"
 

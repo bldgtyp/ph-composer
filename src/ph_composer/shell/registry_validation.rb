@@ -101,8 +101,7 @@ module PhComposer
       end
 
       def check_operations
-        (@staging.declared_queries + @staging.declared_actions + @staging.declared_view_commands +
-         @staging.declared_file_exports).each do |operation|
+        @staging.declared_operations.each do |operation|
           add_schema_problems(operation, "params", operation.params)
           add_schema_problems(operation, "result", operation.result)
           unless operation.params.is_a?(Hash) && operation.params["type"] == "object"

@@ -9,7 +9,7 @@ function setup() {
     sections: { "ph_composer.library.provider_catalogs": { status: "completed",
     value: [{ id: "p", label: "Synthetic", kinds: ["materials"],
       catalogs: [{ kind: "materials", state: "unloaded" }] }] } },
-    ui: { viewResults: {}, queryResults: {} } };
+    ui: { setupResults: {}, queryResults: {} } };
   return { store: store, sent: sent, state: state };
 }
 function answer(o, slot, value) {
@@ -20,9 +20,9 @@ function answer(o, slot, value) {
 }
 test("selecting one unloaded provider loads then queries one bounded immutable generation", function () {
   var o = setup(); o.store.update(o.state); o.store.select("p");
-  assert.strictEqual(o.sent[0].type, "view.invoke");
+  assert.strictEqual(o.sent[0].type, "setup.invoke");
   assert.strictEqual(o.sent[0].payload.name, "ph_composer.library.load");
-  answer(o, "viewResults", { generation: 1, state: "loaded" });
+  answer(o, "setupResults", { generation: 1, state: "loaded" });
   assert.strictEqual(o.sent[1].type, "query.invoke");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[1].payload.params)),
     { provider_id: "p", kind: "materials", generation: 1, offset: 0, limit: 100 });
@@ -36,7 +36,7 @@ test("selecting one unloaded provider loads then queries one bounded immutable g
 test("late old-source answers and retained calls after withdrawal/dispose cannot restore rows or send", function () {
   var o = setup(); o.store.update(o.state); o.store.select("p");
   var pending = o.sent[0].payload; o.store.select("");
-  o.state.ui.viewResults[pending.request_id] = { session: "s", request_id: pending.request_id,
+  o.state.ui.setupResults[pending.request_id] = { session: "s", request_id: pending.request_id,
     outcome: { status: "completed", value: { generation: 1 } } };
   o.store.update(o.state); assert.strictEqual(o.sent.length, 1);
   delete o.state.sections["ph_composer.library.provider_catalogs"]; o.store.update(o.state);

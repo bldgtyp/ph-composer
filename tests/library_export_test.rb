@@ -303,8 +303,8 @@ class LibraryExportTest < PhComposerTestCase
     LIBRARY::Setup.add_file(:id => "exported", :label => "Exported", :path => @path)
     Sketchup.active_model = Sketchup::Model.new
     session = PhComposer::Sessions.for(Sketchup.active_model)
-    context = API.connect(:session_id => session.id)
-    loaded = API.view(:context => context, :name => "ph_composer.library.load",
+    context = API.connect(:session_id => session.id, :capabilities => %w[read model_write setup])
+    loaded = API.setup(:context => context, :name => "ph_composer.library.load",
                       :params => { "provider_id" => "exported", "kind" => "materials" })
     assert_equal "completed", loaded["status"], loaded.inspect
     row = batch.rows.first

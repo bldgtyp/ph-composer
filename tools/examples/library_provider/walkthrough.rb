@@ -12,9 +12,9 @@ module BldgtypExampleLibraryWalkthrough
     api = PhComposer::API
     session = api.discover.fetch("sessions").find { |row| row.fetch("active") }
     raise "Open a synthetic Model first." unless session
-    context = api.connect(:session_id => session.fetch("id"), :capabilities => %w[read view model_write])
+    context = api.connect(:session_id => session.fetch("id"), :capabilities => %w[read view model_write setup])
     provider_id = "bldgtyp.example_library.materials"
-    loaded = checked(api.view(:context => context, :name => "ph_composer.library.load",
+    loaded = checked(api.setup(:context => context, :name => "ph_composer.library.load",
                               :params => { "provider_id" => provider_id, "kind" => "materials" }))
     selected = { "provider_id" => provider_id, "kind" => "materials", "generation" => loaded.fetch("generation") }
     catalog = checked(api.query(:context => context, :name => "ph_composer.library.catalog", :params => selected))

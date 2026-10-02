@@ -29,6 +29,9 @@ module PhComposer
     VIEW_FAILED = Outcome.build(
       "failed", "operation.failed", "The panel could not change what the viewport shows.", "none", nil
     ).freeze
+    SETUP_FAILED = Outcome.build(
+      "failed", "operation.failed", "The panel could not change the library setup.", "none", nil
+    ).freeze
     QUERY_FAILED = Outcome.build(
       "failed", "operation.failed", "The panel could not read that information.", "none", nil
     ).freeze
@@ -144,6 +147,7 @@ module PhComposer
         when "panel.ready" then ready
         when "action.invoke" then invoke(payload)
         when "view.invoke" then view(payload)
+        when "setup.invoke" then setup(payload)
         when "query.invoke" then query(payload)
         when "file_export.invoke" then file_export(payload)
         when "preferences.set" then set_preference(payload)
@@ -155,6 +159,7 @@ module PhComposer
         case type
         when "action.invoke" then publish_result(payload, UNEXPECTED)
         when "view.invoke" then publish_view(payload, VIEW_FAILED)
+        when "setup.invoke" then publish_setup(payload, SETUP_FAILED)
         when "query.invoke" then publish_query(payload, QUERY_FAILED)
         when "file_export.invoke" then publish_file_export(payload, EXPORT_FAILED)
         when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
@@ -228,6 +233,28 @@ module PhComposer
       def publish_view(payload, outcome)
         publish("view.result", "request_id" => payload["request_id"], "session" => payload["session"],
                                "outcome" => outcome)
+      end
+
+      # Session and machine state for the Model the panel shows. A completed command is followed by a
+      # snapshot, because a section may show what it changed; the revision does not move.
+      def setup(payload)
+        session = Sessions.current
+        unless session && payload["session"] == session.id
+          return publish_setup(payload, Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil))
+        end
+
+        outcome = API.setup(:context => context_for(session), :name => payload["name"].to_s,
+                            :params => payload.fetch("params", {}))
+        if outcome.fetch("status") == "completed"
+          session.refresh.cancel
+          publish_snapshot(session)
+        end
+        publish_setup(payload, outcome)
+      end
+
+      def publish_setup(payload, outcome)
+        publish("setup.result", "request_id" => payload["request_id"], "session" => payload["session"],
+                                "outcome" => outcome)
       end
 
       # Read-only queries answer directly; they neither refresh the page nor consume a mutation sequence.
@@ -347,7 +374,7 @@ module PhComposer
         @contexts ||= {}
         @contexts.delete_if { |id, _context| Sessions.find(id).nil? }
         @contexts[session.id] ||= API.connect(:session_id => session.id,
-                                             :capabilities => %w[read view model_write export])
+                                             :capabilities => %w[read view model_write setup export])
       end
 
       def next_sequence(session)

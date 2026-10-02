@@ -35,6 +35,13 @@ module PhComposer
     # (context/EXTENSIBILITY.md, "View commands").
     ViewCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
 
+    # A change to session or machine state that never reaches the Model: reading a configured library
+    # into session memory, adding or removing a library on this machine. `handler` is
+    # `->(request) { value }`, as a view command's is. It writes no record, opens no Model operation
+    # and leaves no Undo entry; it is granted apart from `view`, because a view command changes only
+    # what the host shows (context/EXTENSIBILITY.md, "Setup commands").
+    SetupCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
+
     # A local file write under the explicit export grant. Its handler validates and writes the file;
     # dispatch opens no Model transaction and consumes no action sequence. Native cancellation uses
     # FileExportCancelled; destinations stay private to the handler, outside its JSON result.

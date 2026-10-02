@@ -12,7 +12,7 @@ function setup() {
   }, adapter: { title: "Synthetic library", wireKind: "test_parts", read: function () { return []; },
     properties: [], target: function () { return { params: target }; } }, onUse: function () {} });
   context.document.body.appendChild(sidebar.root);
-  var state = { session: "session", revision: 1, ui: { queryResults: {}, viewResults: {} }, sections: {
+  var state = { session: "session", revision: 1, ui: { queryResults: {}, setupResults: {} }, sections: {
     "ph_composer.library.provider_catalogs": { status: "completed", value: [{ id: "p", label: "Public provider",
       provider_kind: "example.provider", kinds: ["test_parts"], catalogs: [{ kind: "test_parts", generation: 1,
         state: "loaded" }] }] } } };

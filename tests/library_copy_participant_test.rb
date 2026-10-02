@@ -15,8 +15,8 @@ class LibraryCopyParticipantTest < PhComposerTestCase
     path = write_library(File.join(@directory, "synthetic.json"))
     LIBRARY::Setup.add_file(:id => "synthetic.file", :label => "Synthetic", :path => path)
     @session = PhComposer::Sessions.for(Sketchup.active_model)
-    @context = API.connect(:session_id => @session.id)
-    generation = API.view(:context => @context, :name => "ph_composer.library.load",
+    @context = API.connect(:session_id => @session.id, :capabilities => %w[read view model_write setup])
+    generation = API.setup(:context => @context, :name => "ph_composer.library.load",
                          :params => { "provider_id" => "synthetic.file", "kind" => "materials" })
                    .dig("value", "generation")
     @copy = { "provider_id" => "synthetic.file", "kind" => "materials", "generation" => generation,

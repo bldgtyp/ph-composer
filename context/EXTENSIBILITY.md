@@ -119,6 +119,7 @@ names, monkey-patching and incidental load order must not discover behavior.
 | Exporter | Conversion of HBJSON to another format |
 | Colour-by mode | Values, colouring and legend information |
 | View command | A change to what the host shows: selection, camera, the active Colour-by mode |
+| Setup command | A change to session or machine state that never reaches the Model: library setup and loading |
 
 An importer does not write raw model dictionaries. The application validates its proposed
 changes and applies accepted changes through normal model operations and Undo. A model importer
@@ -131,7 +132,7 @@ contract versions. Keep supported public APIs distinguishable from implementatio
 
 Implemented registration checks: the JSON Schema subset's keyword values (counts, bounds, text,
 non-empty enums whose values fit their type, no lower bound above its upper, a closed object requiring only what it declares); a description, a callable
-handler and examples for every query, action and view command, where an operation whose params
+handler and examples for every query, action, view command, setup command and file export, where an operation whose params
 accept `{}` may omit examples and every example must validate; callable participants, menu items,
 subscriptions and Colour-by projections. Published operations are frozen with deep-frozen schemas
 and examples, so a test or a contributor registers a new declaration rather than editing one.
@@ -309,13 +310,6 @@ The handler takes the same `request` a query's does and returns a JSON value aga
 result schema. What it must not do is write a record, open a `ModelOperation` or advance the session
 revision; a handler that needs to wants `action`.
 
-Known deviation: five library commands are registered as view commands although they change
-session or machine state rather than the viewport. `ph_composer.library.load` and `.refresh` read
-provider files into the session catalog; `.providers.add_file`, `.providers.add_folder` and
-`.providers.remove` change the per-machine provider setup. Ed decided on 2026-10-01 to move them
-to a separate operation kind with its own grant (working name `setup`), review finding R03. Until
-then a `view` grant reaches them; this is not the contract.
-
 A view command that fails part-way leaves viewport state unspecified. Its outcome reports `effect`
 `none`, which is a statement about the Model: the SKP is untouched, because nothing here opens an
 operation. A client that needs to know what the viewport now shows re-reads it rather than assuming.
@@ -326,6 +320,30 @@ protect. It refuses while the session is busy, as a read does, so it cannot move
 under an operation that is still running. Access is the `view` capability, separate from `read`
 because a read never moves either, and separate from `model_write` because nothing it does reaches
 the SKP. The panel sends `view.invoke` and settles the answer in its own result slot.
+
+### Setup commands
+
+A setup command changes session or machine state and never the Model or the viewport: reading a
+configured library into session memory (`ph_composer.library.load`), adding a library file or folder
+on this machine (`.providers.add_file`, `.providers.add_folder`) and removing one
+(`.providers.remove`). It is a fourth verb because none of the other three fits: a read never
+changes state, an action is an undoable Model operation, and a view command changes only what the
+host shows.
+
+```ruby
+feature.setup_command("ph_composer.library.providers.remove",
+                      description: "Remove a configured library from this machine.",
+                      params: REMOVE_PARAMS, result: PROVIDERS) do |request|
+  Library::Setup.remove(request.params.fetch("provider_id"))
+end
+```
+
+The handler takes the same `request` a query's does. It must not write a record, open a
+`ModelOperation` or advance the revision. Every client calls `API.setup(context:, name:, params:)`
+with no sequence and no expected revision; it refuses while the session is busy. Access is the
+`setup` capability, which `API.connect` never grants by default: changing what is configured on the
+user's machine is granted explicitly, as `export` is. The panel sends `setup.invoke` and settles
+the answer in its own result slot.
 
 ### Viewport tools
 

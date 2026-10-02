@@ -17,8 +17,8 @@ module PhComposer
   class Registry
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
-    attr_reader :features, :queries, :actions, :view_commands, :file_exports, :record_kinds, :reference_targets,
-                :extensions,
+    attr_reader :features, :queries, :actions, :view_commands, :setup_commands, :file_exports, :record_kinds,
+                :reference_targets, :extensions,
                 :snapshot_sections,
                 :export_contributors, :reference_retargeters, :proposal_participants, :library_providers,
                 :library_kinds, :colour_modes, :menu_items,
@@ -54,6 +54,7 @@ module PhComposer
       @queries = {}
       @actions = {}
       @view_commands = {}
+      @setup_commands = {}
       @file_exports = {}
       @record_kinds = {}
       @reference_targets = {}
@@ -94,12 +95,11 @@ module PhComposer
 
     def publish(staging)
       staging.declared_features.each { |feature| @features[feature.id] = feature }
-      operations = staging.declared_queries + staging.declared_actions + staging.declared_view_commands +
-                   staging.declared_file_exports
-      operations.each { |operation| freeze_operation(operation) }
+      staging.declared_operations.each { |operation| freeze_operation(operation) }
       publish_each(staging.declared_queries, @queries, :name)
       publish_each(staging.declared_actions, @actions, :name)
       publish_each(staging.declared_view_commands, @view_commands, :name)
+      publish_each(staging.declared_setup_commands, @setup_commands, :name)
       publish_each(staging.declared_file_exports, @file_exports, :name)
       publish_each(staging.declared_record_kinds, @record_kinds, :id)
       staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
@@ -181,7 +181,7 @@ module PhComposer
     # Collects one batch's declarations and checks them against each other and the live registry.
     class Staging
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_view_commands,
-                  :declared_file_exports,
+                  :declared_setup_commands, :declared_file_exports,
                   :declared_record_kinds, :declared_reference_targets, :declared_extensions,
                   :declared_snapshot_sections,
                   :declared_export_contributors, :declared_reference_retargeters, :declared_proposal_participants,
@@ -196,6 +196,7 @@ module PhComposer
         @declared_queries = []
         @declared_actions = []
         @declared_view_commands = []
+        @declared_setup_commands = []
         @declared_file_exports = []
         @declared_record_kinds = []
         @declared_reference_targets = []
@@ -243,6 +244,11 @@ module PhComposer
 
       def diagnostics
         Validation.new(@live, self).diagnostics + @failures
+      end
+
+      # Every operation the batch declared, of every kind a client can call.
+      def declared_operations
+        declared_queries + declared_actions + declared_view_commands + declared_setup_commands + declared_file_exports
       end
     end
 
@@ -294,6 +300,16 @@ module PhComposer
           :examples => examples, :handler => handler
         )
         @staging.add(:declared_view_commands, id, name, declaration)
+      end
+
+      # One session- or machine-state command: it never touches the Model, so it takes no `undo_name`
+      # and no sequence number, and it changes nothing the viewport shows unless a refresh follows.
+      def setup_command(name, description:, params:, result:, examples: [], &handler)
+        declaration = Declarations::SetupCommand.new(
+          :name => name, :owner => id, :description => description, :params => params, :result => result,
+          :examples => examples, :handler => handler
+        )
+        @staging.add(:declared_setup_commands, id, name, declaration)
       end
 
       def snapshot_section(name, query:, params: {})

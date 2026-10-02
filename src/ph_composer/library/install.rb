@@ -67,14 +67,12 @@ module PhComposer
                     :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |r|
         in_file(r)
       end
-      %w[load refresh].each do |verb|
-        feature.view_command("#{FEATURE_ID}.#{verb}", :description => "Read a configured library into session memory.",
-          :params => object(selected_params.fetch("properties").slice("provider_id", "kind")),
-          :result => Schemas.summary,
-          :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |r|
-          State.for(r.session).refresh(r.params.fetch("provider_id"), r.params.fetch("kind"), r.registry)
-               .reject { |key, _value| key == "rows" }
-        end
+      feature.setup_command("#{FEATURE_ID}.load", :description => "Read a configured library into session memory.",
+        :params => object(selected_params.fetch("properties").slice("provider_id", "kind")),
+        :result => Schemas.summary,
+        :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |r|
+        State.for(r.session).refresh(r.params.fetch("provider_id"), r.params.fetch("kind"), r.registry)
+             .reject { |key, _value| key == "rows" }
       end
       feature.action("#{FEATURE_ID}.copy", :description => "Copy or reuse one library record with optional assignment.",
         :params => copy_params, :result => Schemas.copy_result, :undo_name => "Copy Library Record",

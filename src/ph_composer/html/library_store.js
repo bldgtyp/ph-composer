@@ -6,7 +6,7 @@ PhComposerUI.define("library_store", ["request", "snapshot"], function (request,
     this.session = session; this.kind = kind; this.changed = changed;
     this.loaded = Object.create(null);
     this.providers = []; this.selected = ""; this.rows = []; this.page = null; this.available = false;
-    this.views = request.channel(session, send, "library-load", "view.invoke");
+    this.views = request.channel(session, send, "library-load", "setup.invoke");
     this.queries = request.channel(session, send, "library-page", "query.invoke");
   }
   Store.prototype.busy = function () { return this.views.busy() || this.queries.busy(); };
@@ -63,14 +63,14 @@ PhComposerUI.define("library_store", ["request", "snapshot"], function (request,
     if (!provider) return true;
     var catalog = this.catalog(provider);
     if (catalog && catalog.generation) this.read(0, catalog.generation);
-    else this.load("load");
+    else this.load();
     this.changed(); return true;
   };
-  Store.prototype.load = function (verb) {
+  Store.prototype.load = function () {
     if (this.disposed || !this.provider() || this.busy()) return false;
     var self = this;
     this.error = "";
-    this.views.run(PREFIX + "." + verb, { provider_id: this.selected, kind: this.kind }, {
+    this.views.run(PREFIX + ".load", { provider_id: this.selected, kind: this.kind }, {
       onDone: function (outcome) {
         self.page = outcome.value;
         if (outcome.value.generation) self.read(0, outcome.value.generation);
@@ -117,7 +117,7 @@ PhComposerUI.define("library_store", ["request", "snapshot"], function (request,
     });
     return found || { label: source.library_id, changed: false, comparisonAvailable: false };
   };
-  Store.prototype.refresh = function () { return this.load("refresh"); };
+  Store.prototype.refresh = function () { return this.load(); };
   Store.prototype.more = function () {
     return this.page && Number.isInteger(this.page.next_offset) && !this.busy() &&
       this.read(this.page.next_offset, this.page.generation);
