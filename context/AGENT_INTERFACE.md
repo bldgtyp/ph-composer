@@ -211,6 +211,42 @@ Face IDs. The Zones / Faces inline dialog uses that public operation; scripts ca
 it with the panel closed. [Current-host evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-attached-zone-atomic.md)
 records validation, exact rollback and persistence checks.
 
+Phase 2 features, programmatic reads and writes. Each has a panel-closed walkthrough under
+`tools/examples/`.
+
+- **Assemblies** (`ph_composer.assemblies.*`). Reads: `materials.list`, `assemblies.list` (with
+  thickness, U-values or the reason they are withheld, and row findings) and `export_preflight`.
+  Writes: create, update, duplicate and delete for Materials and Assemblies, delete taking an
+  optional replacement; one action per Builder gesture under `assemblies.layers.*` and
+  `assemblies.segments.*`, each naming its Layer and Layer-Segment explicitly. Nothing requires
+  picking. [Walkthrough](../tools/examples/authoring/assemblies_walkthrough.rb).
+- **Face assignment** (`ph_composer.zones.faces.*`). `assign_assembly` sets or clears the
+  Assembly on explicit Face references with expected values; `classify` takes the same
+  `assembly_id` intent. `assembly_usage` and `assembly_choices` are reads. Deleting an Assembly
+  with a replacement rewrites Face references in the same action. The Classify tool and
+  `choose` are pointer routes to the same actions.
+  [Walkthrough](../tools/examples/authoring/assembly_assignment_walkthrough.rb).
+- **Windows** (`ph_composer.windows.*`). Reads: product, Type and Unit lists, `settings.get`,
+  `units.glazed_area_by_face` and `export_preflight`. Writes: product and Type create, update,
+  duplicate and delete; Type grid gestures under `types.grid.*`; per-edge installs through the
+  batch `types.installs.save`; `settings.update`; and Unit `place`, `remove`, `rehost`,
+  `swap_type`, `reset_to_type`, `restore` and `new_flipped_type`. `units.place` takes an explicit
+  host Face reference, anchor and offsets in metres, so the Place tool's picking has an
+  explicit-reference equivalent. A copied Unit identity has no named repair: the next Windows
+  action repairs it implicitly (review finding R03, item C).
+  [Walkthrough](../tools/examples/authoring/windows_walkthrough.rb),
+  [placement](../tools/examples/authoring/windows_placement_walkthrough.rb).
+- **Library** (`ph_composer.library.*`). Reads: `providers`, `catalog`, `in_file` and
+  `export_preview`. Writes: `copy`, with preview, an explicit choice and optional assignment, and
+  the `copy_into_proposal` participant for a feature's own action. `load` and `refresh` read a
+  configured provider into the session catalog. Two parts are dialog-only: adding a provider
+  (`providers.add_file`, `providers.add_folder`) opens a native file or folder picker, and
+  `export_file` opens a native save dialog and a confirmation. A scripted caller cannot supply
+  either. Ed decided on 2026-10-01 that these will refuse scripted calls cleanly (review finding
+  R03, item A); user-approved file access for agents is recorded in
+  [agent-authorized-file-access](../planning/features/unscheduled/agent-authorized-file-access/README.md).
+  [Walkthrough](../tools/examples/library/materials_walkthrough.rb).
+
 Discovery also lists read-only `reference_targets`; description returns their descriptor: ID, owner,
 label, schema version, values schema, occurrence-reference schema and declared core references.
 Every registered operation publishes specific params and result schemas and at least one worked

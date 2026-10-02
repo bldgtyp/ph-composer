@@ -123,5 +123,6 @@ status["outcome"]             # nil while running; then completed, refused, fail
 PhComposer::API.latest_export(context: context)
 ```
 
-Until authored Assemblies arrive, the normal build refuses the export as `export.blocked`, naming
-each Face without a construction in the preflight findings.
+A Face without an authored Assembly blocks the export as `export.blocked`, and the preflight
+findings name each one with the code `construction.missing`. Assign Assemblies with
+`ph_composer.zones.faces.assign_assembly` before starting a real export.

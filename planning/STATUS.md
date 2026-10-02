@@ -19,7 +19,7 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
-| 2 | Phase 2 envelope: PR #15 review findings | refactor | Requested; eleven findings recorded, Ed's eight decisions answered 2026-10-01. PR #15 merged as is on 2026-10-01; one new branch per finding | none (local planning draft); reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15) | [features/phase-02-envelope/refactor/](features/phase-02-envelope/refactor/README.md); no code authorized yet |
+| 2 | Phase 2 envelope: PR #15 review findings | refactor | In progress; eleven findings recorded, Ed's eight decisions answered 2026-10-01. PR #15 merged as is on 2026-10-01; one new branch per finding. R01 implemented 2026-10-01; R02 next | none (local planning draft); reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15) | [features/phase-02-envelope/refactor/](features/phase-02-envelope/refactor/README.md) |
 | 3 | Spaces | feature | Scoped, interviewed | none (no remote) | [features/phase-03-rooms-and-junctions/spaces/](features/phase-03-rooms-and-junctions/spaces/README.md) |
 | 3 | Thermal bridges | feature | Requested, PRD drafted | none (no remote) | [features/phase-03-rooms-and-junctions/thermal-bridges/](features/phase-03-rooms-and-junctions/thermal-bridges/README.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
