@@ -48,6 +48,14 @@ class WindowLibraryKindsTest < PhComposerTestCase
       "library_id" => "synthetic.one", "record_id" => @rows.fetch(collection).fetch("id"), "choice" => choice }
   end
 
+  # What a copy of `collection`'s library row would resolve to, read without proposing anything.
+  def resolution(collection)
+    page = API.query(:context => @context, :name => "#{L}.in_file",
+                     :params => copy_params(collection).slice("provider_id", "kind", "generation"))
+    page.dig("value", "rows").find { |row| row.fetch("record_id") == @rows.fetch(collection).fetch("id") }
+        .fetch("resolution")
+  end
+
   def invoke(name, params)
     @sequence += 1
     API.invoke(:context => @context, :name => name, :params => params,
@@ -99,8 +107,7 @@ class WindowLibraryKindsTest < PhComposerTestCase
       reused = invoke("#{L}.copy", copy_params(collection, "keep_local"))
       assert_equal id, reused.dig("value", "local_id")
       assert_equal "none", reused["effect"]
-      inspection = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      candidate = inspection.dig("value", "resolution", "candidates", 0)
+      candidate = resolution(collection).dig("candidates", 0)
       assert_equal false, candidate["source_changed"]
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge(
         "expected_values" => candidate.fetch("expected_values")))
@@ -299,21 +306,19 @@ adapter(collection).map.call(stored(collection, id))
       a = adapter(collection)
       manual = invoke("#{W::FEATURE_ID}.#{collection}.create", "values" => a.map.call(@rows[collection]))
       id = manual.dig("value", "id")
-      inspect = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      assert_equal "reuse", inspect.dig("value", "resolution", "outcome")
+      assert_equal "reuse", resolution(collection).fetch("outcome")
       before = stored(collection, id)
       edited = before.merge("notes" => "Differing manual content")
       W::Products::KINDS.fetch(collection).store.write(@model, edited)
-      inspect = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      assert_equal "review_required", inspect.dig("value", "resolution", "outcome")
-      expected = inspect.dig("value", "resolution", "candidates", 0, "expected_values")
+      inspected = resolution(collection)
+      assert_equal "review_required", inspected.fetch("outcome")
+      expected = inspected.dig("candidates", 0, "expected_values")
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge("expected_values" => expected))
       assert_equal "committed", replaced["effect"], replaced.inspect
       second = stored(collection, id).merge("id" => PhComposer::Records::Identity.mint(
         W::Products::SPECS.fetch(collection).fetch(:prefix)), "name" => "Second #{collection}")
       W::Products::KINDS.fetch(collection).store.write(@model, second)
-      inspect = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      assert_equal "ambiguous_source", inspect.dig("value", "resolution", "outcome")
+      assert_equal "ambiguous_source", resolution(collection).fetch("outcome")
       refused = invoke("#{L}.copy", copy_params(collection, "keep_local"))
       assert_equal "library.local_choice_required", refused["code"]
       W::Products::KINDS.fetch(collection).store.delete(@model, second.fetch("id"))
@@ -323,8 +328,7 @@ adapter(collection).map.call(stored(collection, id))
       loaded = API.setup(:context => @context, :name => "#{L}.load", :params => {
         "provider_id" => "synthetic.windows", "kind" => collection })
       @generations[collection] = loaded.dig("value", "generation")
-      inspect = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      candidate = inspect.dig("value", "resolution", "candidates", 0)
+      candidate = resolution(collection).dig("candidates", 0)
       assert_equal true, candidate["source_changed"]
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge(
         "expected_values" => candidate.fetch("expected_values")))

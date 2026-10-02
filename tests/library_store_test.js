@@ -25,10 +25,10 @@ test("selecting one unloaded provider loads then queries one bounded immutable g
   answer(o, "setupResults", { generation: 1, state: "loaded" });
   assert.strictEqual(o.sent[1].type, "query.invoke");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[1].payload.params)),
-    { provider_id: "p", kind: "materials", generation: 1, offset: 0, limit: 100 });
+    { provider_id: "p", kind: "materials", generation: 1, limit: 100 });
   answer(o, "queryResults", { generation: 1, state: "loaded", rows: [{ library_id: "one", library_name: "One",
     record_id: "r", snapshot: { id: "r", name: "Public" }, resolution: { outcome: "create", candidates: [] } }],
-    total: 1, next_offset: null });
+    total: 1, next_cursor: null });
   assert.strictEqual(o.store.rows[0].values.name, "Public");
   assert.strictEqual(o.store.rows[0].library.provider_id, "p");
   assert.strictEqual(o.store.rows[0].library.generation, 1);
@@ -50,13 +50,13 @@ test("refresh keeps row identity stable and follows generation changes from anot
   o.store.update(o.state); o.store.select("p");
   var row = { library_id: "one", library_name: "One", record_id: "r", snapshot: { id: "r", name: "Public" },
     resolution: { outcome: "create", candidates: [] } };
-  answer(o, "queryResults", { generation: 1, state: "loaded", rows: [row], total: 1, next_offset: null });
+  answer(o, "queryResults", { generation: 1, state: "loaded", rows: [row], total: 1, next_cursor: null });
   var identity = o.store.rows[0].id;
   o.state.sections["ph_composer.library.provider_catalogs"].value[0].catalogs[0].generation = 2;
   o.store.update(o.state);
   assert.strictEqual(o.sent[o.sent.length - 1].payload.params.generation, 2);
   assert.strictEqual(o.store.loaded.p, undefined, "old generation resolution is not advertised");
-  answer(o, "queryResults", { generation: 2, state: "loaded", rows: [row], total: 1, next_offset: null });
+  answer(o, "queryResults", { generation: 2, state: "loaded", rows: [row], total: 1, next_cursor: null });
   assert.strictEqual(o.store.rows[0].id, identity);
   assert.strictEqual(o.store.rows[0].library.generation, 2);
   o.store.select(""); o.state.revision = 2; o.store.update(o.state);
@@ -71,7 +71,7 @@ test("a Model change while a page is pending re-reads current guards; refusals d
   o.state.revision = 2; o.store.update(o.state);
   o.state.ui.queryResults[first.request_id] = { session: "s", request_id: first.request_id,
     outcome: { status: "completed", revision: 1, value: { generation: 1, state: "loaded", rows: [],
-      total: 0, next_offset: null } } };
+      total: 0, next_cursor: null } } };
   o.store.update(o.state); assert.strictEqual(o.sent.length, 2, "stale returned local guards are read again");
   var retry = o.sent[1].payload;
   o.state.ui.queryResults[retry.request_id] = { session: "s", request_id: retry.request_id,

@@ -19,7 +19,7 @@ function setup() {
   sidebar.refresh(state, {}, true); sidebar.store.select("p");
   var request = sent[0].payload;
   state.ui.queryResults[request.request_id] = { session: "session", request_id: request.request_id,
-    outcome: { status: "completed", value: { generation: 1, state: "loaded", total: 1, next_offset: null,
+    outcome: { status: "completed", value: { generation: 1, state: "loaded", total: 1, next_cursor: null,
       rows: [{ library_id: "lib", library_name: "Public library", record_id: "r", snapshot: { id: "r", name: "Part" },
         resolution: { outcome: "create", candidates: [] } }] } } };
   sidebar.refresh(state, {}, true);

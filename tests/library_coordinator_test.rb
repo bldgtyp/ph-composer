@@ -32,7 +32,7 @@ class LibraryCoordinatorTest < PhComposerTestCase
              :params => { "provider_id" => "synthetic.file", "kind" => "materials" })
   end
 
-  def params(choice = "inspect")
+  def params(choice = "create")
     { "provider_id" => "synthetic.file", "kind" => "materials", "generation" => @generation,
       "library_id" => "synthetic.one", "record_id" => "public-1", "choice" => choice }
   end
@@ -53,11 +53,31 @@ class LibraryCoordinatorTest < PhComposerTestCase
                        :params => params.slice("provider_id", "kind", "generation").merge("limit" => 1))
     assert_equal "completed", result["status"]
     assert_equal 1, result.dig("value", "total")
-    assert_nil result.dig("value", "next_offset")
+    assert_nil result.dig("value", "next_cursor")
     refute_includes JSON.generate(result), @directory
     refute_includes JSON.generate(API.query(:context => @context, :name => "#{PREFIX}.providers")), @directory
     assert_equal revision, @session.revision
     assert_empty materials
+  end
+
+  # Library reads page as every other list does, with the cursor bound to the catalog generation it
+  # was read from: a reload publishes a new generation and the old cursor is refused.
+  def test_catalog_pages_by_cursor_bound_to_its_generation
+    write_library(@path, envelope(%w[public-1 public-2 public-3].map { |id| library_row(id) }))
+    load_catalog
+    selected = { "provider_id" => "synthetic.file", "kind" => "materials" }
+    first = API.query(:context => @context, :name => "#{PREFIX}.catalog", :params => selected.merge("limit" => 2))
+    assert_equal [2, 3], [first.dig("value", "rows").length, first.dig("value", "total")]
+    cursor = first.dig("value", "next_cursor")
+    second = API.query(:context => @context, :name => "#{PREFIX}.catalog",
+                       :params => selected.merge("limit" => 2, "cursor" => cursor))
+    seen = (first.dig("value", "rows") + second.dig("value", "rows")).map { |row| row.fetch("record_id") }
+    assert_equal %w[public-1 public-2 public-3], seen.sort
+    assert_nil second.dig("value", "next_cursor")
+    load_catalog
+    expired = API.query(:context => @context, :name => "#{PREFIX}.catalog",
+                        :params => selected.merge("limit" => 2, "cursor" => cursor))
+    assert_equal "query.cursor_expired", expired["code"]
   end
 
   def test_preview_and_apply_share_digest_and_retry_cannot_copy_twice
@@ -85,8 +105,7 @@ API.invoke(:context => @context, :name => "#{PREFIX}.copy", :params => input, :r
     id = created.dig("value", "local_id")
     invoke("#{MATERIALS}.update", "id" => id, "values" => { "name" => "Edited", "conductivity_w_mk" => 0.08 },
                                     "expected_values" => { "name" => "Synthetic insulation" })
-    read = invoke("#{PREFIX}.copy", params)
-    assert_equal "reuse", read.dig("value", "resolution", "outcome"), read.inspect
+    assert_equal "reuse", in_file.fetch("rows").first.dig("resolution", "outcome")
     reused = invoke("#{PREFIX}.copy", params("keep_local"))
     assert_equal id, reused.dig("value", "local_id")
     assert_equal "none", reused["effect"]
@@ -130,8 +149,6 @@ API.invoke(:context => @context, :name => "#{PREFIX}.copy", :params => input, :r
     candidate = in_file.fetch("rows").first.fetch("resolution").fetch("candidates").first
     assert_equal false, candidate.fetch("comparison_available")
     assert_nil candidate.fetch("source_changed")
-    cancel = invoke("#{PREFIX}.copy", params("cancel"))
-    assert_equal "none", cancel["effect"]
     input = params("use_library").merge("expected_values" => { "name" => record["name"] })
     incomplete = invoke("#{PREFIX}.copy", input)
     assert_equal "params.invalid", incomplete["code"]

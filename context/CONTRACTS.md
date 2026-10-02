@@ -499,6 +499,11 @@ failure carrying its code and a fixed message; a provider exception that is not 
 `library.provider_failed`. An entry never read has generation null and state `unloaded`. Setup
 changes drop the affected provider's entries in every open session. Nothing is cached to disk.
 
+**Pages.** `catalog` and `in_file` page through `shell/pages.rb` like every other list: `limit`
+(default 100, maximum 500), `cursor` and `next_cursor`, with `total` on every page. Rows keep the
+provider's order; a cursor is bound to the generation it was read from, and an `in_file` cursor to
+the Model revision as well, so a reload or an edit refuses it with `query.cursor_expired`.
+
 **Copy.** `ph_composer.library.copy` runs inside the ordinary action order of "Compound
 proposals". Its own checks run in this order, each refusing the whole proposal:
 
@@ -512,7 +517,8 @@ proposals". Its own checks run in this order, each refusing the whole proposal:
    first, then a case-insensitive name match and mapped-value equality. Outcomes are `create`,
    `reuse`, `review_required`, `ambiguous_source` and `ambiguous_name`. A stored fingerprint of
    another version reports no comparison rather than a change.
-6. The choice must fit the outcome. A supplied `local_id` that is not a reviewed candidate
+6. The choice, which is required, must fit the outcome. A read of the resolution is `in_file` or
+   a preview, never a copy that writes nothing. A supplied `local_id` that is not a reviewed candidate
    refuses first (`library.local_choice_required`); an unknown choice is `params.invalid`. `create` needs outcome `create` (`library.review_required`);
    `keep_local` and `use_library` need one reviewed candidate (`library.local_choice_required`);
    `use_library` needs the candidate's reviewed `expected_values` (`params.invalid`).

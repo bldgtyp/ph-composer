@@ -26,20 +26,17 @@ module PhComposer
     end
 
     def page_params
-      properties = selected_params.fetch("properties").merge(
-        "offset" => { "type" => "integer", "minimum" => 0 },
-        "limit" => { "type" => "integer", "minimum" => 1, "maximum" => 200 }
-      )
-      object(properties, :optional => %w[generation offset limit])
+      properties = selected_params.fetch("properties").merge("limit" => Pages::LIMIT, "cursor" => Pages::CURSOR)
+      object(properties, :optional => %w[generation limit cursor])
     end
 
     def copy_params
       properties = selected_params.fetch("properties").merge(
         "library_id" => TEXT, "record_id" => TEXT,
-        "choice" => { "type" => "string", "enum" => %w[inspect create keep_local use_library cancel] },
+        "choice" => { "type" => "string", "enum" => %w[create keep_local use_library] },
         "local_id" => TEXT, "expected_values" => OBJECT, "assignment" => OBJECT
       )
-      object(properties, :optional => %w[choice local_id expected_values assignment])
+      object(properties, :optional => %w[local_id expected_values assignment])
     end
 
     def install(registry)
@@ -60,7 +57,7 @@ module PhComposer
       feature.query("#{FEATURE_ID}.catalog", :description => "A bounded page of one immutable library catalog.",
                     :params => page_params, :result => Schemas.page,
                     :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |r|
-        catalog_page(r)
+        catalog_page(r, "#{FEATURE_ID}.catalog")
       end
       feature.query("#{FEATURE_ID}.in_file", :description => "Resolve catalog rows against local definitions.",
                     :params => page_params, :result => Schemas.page(:resolved => true),
@@ -78,7 +75,7 @@ module PhComposer
         :params => copy_params, :result => Schemas.copy_result, :undo_name => "Copy Library Record",
         :side_effects => "Copies or replaces local definitions and optional assignments in one Undo step.",
         :examples => [{ "provider_id" => "example", "kind" => "example_parts", "generation" => 1,
-                       "library_id" => "synthetic", "record_id" => "one", "choice" => "inspect" }]) do |r, proposal|
+                       "library_id" => "synthetic", "record_id" => "one", "choice" => "create" }]) do |r, proposal|
         Coordinator.copy(r, proposal)
       end
     end
@@ -90,19 +87,21 @@ module PhComposer
     end
     private_class_method :install_commands
 
-    def catalog_page(request)
+    # A catalog generation is immutable, so a row's position in it is a stable page key. The cursor
+    # is bound to the generation, and, for `in_file`, whose resolution reads local definitions, to
+    # the Model revision as well.
+    def catalog_page(request, query, revision: nil)
       p = request.params
       entry = State.for(request.session).fetch(p.fetch("provider_id"), p.fetch("kind"), request.registry,
                                                 :generation => p["generation"])
-      offset = p.fetch("offset", 0)
-      rows = entry.fetch("rows").slice(offset, p.fetch("limit", 100)) || []
-      next_offset = offset + rows.length
-      entry.merge("rows" => rows, "total" => entry.fetch("rows").length, "offset" => offset,
-                  "next_offset" => next_offset < entry.fetch("rows").length ? next_offset : nil)
+      rows = entry.fetch("rows").each_with_index.to_a
+      page, next_cursor = Pages.slice(request, query, rows, :key => ->((_row, index)) { [index] },
+                                                            :revision => [entry.fetch("generation"), revision])
+      entry.merge("rows" => page.map(&:first), "total" => rows.length, "next_cursor" => next_cursor)
     end
 
     def in_file(request)
-      page = catalog_page(request)
+      page = catalog_page(request, "#{FEATURE_ID}.in_file", :revision => request.revision)
       declaration = State.kind(request.params.fetch("kind"), request.registry)
       locals = CallbackInvoker.call(request, declaration, declaration.adapter.local_read, {}, :readonly => true)
       provider = State.for(request.session).provider(request.params.fetch("provider_id"), request.registry)

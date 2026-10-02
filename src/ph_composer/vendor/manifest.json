@@ -116,14 +116,14 @@
       "sha256": "e304b9a13cd77a3641ab42ac8b436961429fd475599a98c739e0b6cafb80bf0f"
     },
     "html/library_sidebar.js": {
-      "bytes": 9052,
+      "bytes": 9045,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "7d484a417218baba6429f1a9510988008627657ffdc0e79ce84b68a24b8cbce1"
+      "sha256": "22955c22dd24212b1b6ce6a028e54ded7bf419c554a43a82825bcedc8a73ce2e"
     },
     "html/library_store.js": {
-      "bytes": 6985,
+      "bytes": 7228,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "efab6f23b2c73cca43e043bb2c6f404d33e4a82e3cc835bff06bc9d080087e57"
+      "sha256": "e90eac27a62add2468e236b1a4ffefaa86e8dfa0f0075d02cb4a83e980d8b81f"
     },
     "html/material_form.js": {
       "bytes": 5028,

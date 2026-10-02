@@ -50,7 +50,7 @@ PhComposerUI.define("library_store", ["request", "snapshot"], function (request,
     if (current && current.generation && !this.busy() &&
       this.attempted !== current.generation + ":" + state.revision &&
       (!this.page || this.page.generation !== current.generation || this.pageRevision !== state.revision)) {
-      this.read(0, current.generation);
+      this.read(null, current.generation);
     } else if (current && this.page && current.generation === this.page.generation) {
       this.page = Object.assign({}, this.page, current);
     }
@@ -62,7 +62,7 @@ PhComposerUI.define("library_store", ["request", "snapshot"], function (request,
     var provider = this.provider();
     if (!provider) return true;
     var catalog = this.catalog(provider);
-    if (catalog && catalog.generation) this.read(0, catalog.generation);
+    if (catalog && catalog.generation) this.read(null, catalog.generation);
     else this.load();
     this.changed(); return true;
   };
@@ -73,23 +73,23 @@ PhComposerUI.define("library_store", ["request", "snapshot"], function (request,
     this.views.run(PREFIX + ".load", { provider_id: this.selected, kind: this.kind }, {
       onDone: function (outcome) {
         self.page = outcome.value;
-        if (outcome.value.generation) self.read(0, outcome.value.generation);
+        if (outcome.value.generation) self.read(null, outcome.value.generation);
         self.changed();
       }, onFail: function (outcome) { self.error = outcome.message; self.changed(); } });
     this.changed(); return true;
   };
-  Store.prototype.read = function (offset, generation) {
+  /* A null cursor reads the first page. A later page is bound to the generation and revision the first
+     was read at; when either moved, the host refuses the cursor and the read starts again. */
+  Store.prototype.read = function (cursor, generation) {
     if (this.disposed || !this.provider() || this.queries.busy()) return false;
-    var self = this, provider = this.selected;
+    var self = this, provider = this.selected, params = { provider_id: provider, kind: this.kind,
+      generation: generation, limit: 100 };
+    if (cursor) params.cursor = cursor;
     this.attempted = generation + ":" + this.revision;
-    this.queries.run(PREFIX + ".in_file", { provider_id: provider, kind: this.kind,
-      generation: generation, offset: offset, limit: 100 }, {
+    this.queries.run(PREFIX + ".in_file", params, {
       onDone: function (outcome) {
         var page = outcome.value, revision = outcome.revision === undefined ? self.revision : outcome.revision;
-        if (offset && self.pageRevision !== revision) {
-          self.read(0, page.generation); return;
-        }
-        if (!offset || !self.page || self.page.generation !== page.generation) self.rows = [];
+        if (!cursor || !self.page || self.page.generation !== page.generation) self.rows = [];
         self.rows = self.rows.concat(page.rows.map(function (row) {
           return { id: JSON.stringify([provider, self.kind, row.library_id, row.record_id]),
             values: row.snapshot, resolution: row.resolution,
@@ -97,7 +97,10 @@ PhComposerUI.define("library_store", ["request", "snapshot"], function (request,
         }));
         self.loaded[provider] = { rows: self.rows.slice(), generation: page.generation, revision: revision };
         self.page = page; self.pageRevision = revision; self.error = ""; self.changed();
-      }, onFail: function (outcome) { self.error = outcome.message; self.changed(); } });
+      }, onFail: function (outcome) {
+        if (cursor && outcome.code === "query.cursor_expired") { self.read(null, generation); return; }
+        self.error = outcome.message; self.changed();
+      } });
     return true;
   };
   Store.prototype.localInfo = function (record) {
@@ -119,8 +122,8 @@ PhComposerUI.define("library_store", ["request", "snapshot"], function (request,
   };
   Store.prototype.refresh = function () { return this.load(); };
   Store.prototype.more = function () {
-    return this.page && Number.isInteger(this.page.next_offset) && !this.busy() &&
-      this.read(this.page.next_offset, this.page.generation);
+    return this.page && Boolean(this.page.next_cursor) && !this.busy() &&
+      this.read(this.page.next_cursor, this.page.generation);
   };
   Store.prototype.dispose = function () { this.disposed = true; this.available = false; this.reset(); };
   return Store;

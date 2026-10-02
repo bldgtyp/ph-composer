@@ -41,10 +41,8 @@ module PhComposer
 
       def copy(request, proposal)
         declaration, entry, row, mapped, identity, resolution = inspect_row(request)
-        choice = request.params.fetch("choice", "inspect")
+        choice = request.params.fetch("choice")
         result = { "resolution" => resolution, "local_id" => nil, "assigned" => false }
-        return result if %w[inspect cancel].include?(choice)
-
         id = local_id(request.params["local_id"], resolution)
         case choice
         when "create"

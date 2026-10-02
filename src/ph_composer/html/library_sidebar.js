@@ -147,7 +147,7 @@ PhComposerUI.define("library_sidebar", ["library_adapters", "library_drag", "lib
       this.refreshButton.hidden = !this.store || !this.store.selected;
       this.refreshButton.disabled = this.busy() || Boolean(this.store && this.store.busy());
       this.setupButton.disabled = !this.setup || !this.setup.enabled || this.busy();
-      this.more.hidden = !this.store || !this.store.page || this.store.page.next_offset == null;
+      this.more.hidden = !this.store || !this.store.page || !this.store.page.next_cursor;
       this.more.disabled = this.busy() || Boolean(this.store && this.store.busy());
       var page = this.store && this.store.selected && this.store.page;
       var status = this.store && this.store.selected && this.store.busy() ? "Loading library…" : "";

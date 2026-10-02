@@ -3993,14 +3993,13 @@ Params:
       "type": "integer",
       "minimum": 1
     },
-    "offset": {
-      "type": "integer",
-      "minimum": 0
-    },
     "limit": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 200
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
     }
   },
   "additionalProperties": false,
@@ -4174,18 +4173,15 @@ Result:
     },
     "total": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
     },
-    "offset": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "next_offset": {
+    "next_cursor": {
       "type": [
-        "integer",
+        "string",
         "null"
       ],
-      "minimum": 0
+      "description": "Pass back as cursor for the next page; null on the last page."
     }
   },
   "additionalProperties": false,
@@ -4202,8 +4198,7 @@ Result:
     "age_seconds",
     "rows",
     "total",
-    "offset",
-    "next_offset"
+    "next_cursor"
   ]
 }
 ```
@@ -4378,14 +4373,13 @@ Params:
       "type": "integer",
       "minimum": 1
     },
-    "offset": {
-      "type": "integer",
-      "minimum": 0
-    },
     "limit": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 200
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
     }
   },
   "additionalProperties": false,
@@ -4660,18 +4654,15 @@ Result:
     },
     "total": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
     },
-    "offset": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "next_offset": {
+    "next_cursor": {
       "type": [
-        "integer",
+        "string",
         "null"
       ],
-      "minimum": 0
+      "description": "Pass back as cursor for the next page; null on the last page."
     }
   },
   "additionalProperties": false,
@@ -4688,8 +4679,7 @@ Result:
     "age_seconds",
     "rows",
     "total",
-    "offset",
-    "next_offset"
+    "next_cursor"
   ]
 }
 ```
@@ -18905,11 +18895,9 @@ Params:
     "choice": {
       "type": "string",
       "enum": [
-        "inspect",
         "create",
         "keep_local",
-        "use_library",
-        "cancel"
+        "use_library"
       ]
     },
     "local_id": {
@@ -18929,7 +18917,8 @@ Params:
     "kind",
     "generation",
     "library_id",
-    "record_id"
+    "record_id",
+    "choice"
   ]
 }
 ```
@@ -19068,7 +19057,7 @@ Example params:
   "generation": 1,
   "library_id": "synthetic",
   "record_id": "one",
-  "choice": "inspect"
+  "choice": "create"
 }
 ```
 

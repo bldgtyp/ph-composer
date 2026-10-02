@@ -652,11 +652,11 @@
       this.revision);
     else {
       var metadata = this.libraryMetadata().filter(function (row) { return row.id === params.provider_id; })[0];
-      var offset = params.offset || 0, end = Math.min(rows.length, offset + (params.limit || 100));
+      var offset = Number(params.cursor || 0), end = Math.min(rows.length, offset + (params.limit || 100));
       var catalog = metadata.catalogs.filter(function (row) { return row.kind === params.kind; })[0];
       var page = Object.assign({}, catalog, { rows: rows.slice(offset, end).map(function (row) {
         return Object.assign({}, row, { resolution: this.libraryResolution(row, params.kind) });
-      }, this), total: rows.length, offset: offset, next_offset: end < rows.length ? end : null,
+      }, this), total: rows.length, next_cursor: end < rows.length ? String(end) : null,
       warnings: [], unavailable: [] });
       outcome = { status: "completed", value: page, revision: this.revision };
     }

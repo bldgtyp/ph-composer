@@ -25,7 +25,7 @@ function provider(o, sidebar, kind) {
   values.name = "Library " + values.name;
   o.state.ui.queryResults = {}; o.state.ui.queryResults[message.request_id] = { session: "session",
     request_id: message.request_id, outcome: { status: "completed", value: { generation: 1, state: "loaded",
-      total: 1, next_offset: null, rows: [{ library_id: "lib", library_name: "Synthetic", record_id: "incoming",
+      total: 1, next_cursor: null, rows: [{ library_id: "lib", library_name: "Synthetic", record_id: "incoming",
         snapshot: values, resolution: { outcome: "create", candidates: [] } }] } } };
   o.view.render(o.state); return sidebar.records[0];
 }
