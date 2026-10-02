@@ -137,14 +137,18 @@ module PhComposer
         GESTURES.each do |name, gesture|
           properties = gesture.properties.merge("id" => Shapes.id("wnt", "The Window Type to edit."),
                                                 "expected_values" => Shapes.expected(Types::KIND))
-          feature.action("#{FEATURE_ID}.types.grid.#{name}", :description => gesture.description,
-                                                             :params => Shapes.object(properties), :result => Shapes::TYPE_RESULT, :undo_name => gesture.undo_name,
-                                                             :side_effects => Shapes.side_effects("Changes this Window Type; its placed Windows follow."),
-                                                             :examples => [gesture.example.merge("id" => EXAMPLE_ID, "expected_values" => {})]) do |request, proposal|
+          feature.action("#{FEATURE_ID}.types.grid.#{name}",
+                         :description => gesture.description,
+                         :params => Shapes.object(properties), :result => Shapes::TYPE_RESULT,
+                         :undo_name => gesture.undo_name,
+                         :side_effects => Shapes.side_effects("Changes this Window Type; its placed Windows follow."),
+                         :examples => [gesture.example.merge("id" => EXAMPLE_ID,
+                                                             "expected_values" => {})]) do |request, proposal|
             params = request.params
             values = params.reject { |key, _| %w[id expected_values].include?(key) }
-            Types::Operations.grid(request, proposal, :gesture => name, :id => params.fetch("id"), :values => values,
-                                                      :expected_values => params.fetch("expected_values")) do |record, identity|
+            Types::Operations.grid(request, proposal,
+                                   :gesture => name, :id => params.fetch("id"), :values => values,
+                                   :expected_values => params.fetch("expected_values")) do |record, identity|
               gesture.change.call(record, values, identity)
             end
           end

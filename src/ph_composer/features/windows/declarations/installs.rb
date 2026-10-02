@@ -29,12 +29,12 @@ module PhComposer
 
       def install(feature)
         feature.action("#{FEATURE_ID}.types.installs.save",
-                       :description => "Assign Psi-Install Types to the edges of Window Type elements, in one Undo step, " \
-                                       "with any Psi-Install Types they need created, edited or copied from a library. Each " \
-                                       "listed element's four sides are replaced as given; null clears a side. A side may name " \
-                                       "a temporary client_id from psi_install_types.create or imports instead of a saved id. " \
-                                       "The panel's Installs session and the library assignment both use it; for one edge, list " \
-                                       "one Type with one element.",
+                       :description => "Assign Psi-Install Types to the edges of Window Type elements, in one Undo " \
+                                       "step, with any Psi-Install Types they need created, edited or copied from a " \
+                                       "library. Each listed element's four sides are replaced as given; null clears " \
+                                       "a side. A side may name a temporary client_id from psi_install_types.create " \
+                                       "or imports instead of a saved id. The panel's Installs session and the " \
+                                       "library assignment both use it; for one edge, list one Type with one element.",
                        :params => PARAMS, :result => RESULT, :undo_name => "Edit Window Installations",
                        :side_effects => Shapes.side_effects(
                          "Creates or edits installation products and updates type edges atomically."
@@ -42,9 +42,11 @@ module PhComposer
                        :examples => [{ "types" => [], "psi_install_types" => { "create" => [], "update" => [] },
                                        "expected_settings" => Settings::DEFAULTS }]) do |request, proposal|
           params = request.params
-          InstallSave.call(request, proposal, :types => params.fetch("types"),
-                                              :psi_install_types => params.fetch("psi_install_types"),
-                                              :expected_settings => params.fetch("expected_settings"), :imports => params.fetch("imports", []))
+          InstallSave.call(request, proposal,
+                           :types => params.fetch("types"),
+                           :psi_install_types => params.fetch("psi_install_types"),
+                           :expected_settings => params.fetch("expected_settings"), :imports => params.fetch("imports",
+                                                                                                             []))
         end
       end
     end

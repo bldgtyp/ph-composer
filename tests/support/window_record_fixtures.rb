@@ -27,16 +27,19 @@ module WindowRecordFixtures
   def zone_host(face, group, values = {})
     zone_id = "zon_#{group.persistent_id.to_s.rjust(12, '0')}"
     unless PhComposer::Zones::ZONE_STORE.read(group)
-      PhComposer::Zones::ZONE_STORE.write(group, "id" => zone_id, "schema_version" => 1, "name" => "Zone",
-                                                 "building_segment" => "Building", "level" => nil, "ground_depth_mm" => 0.0, "user_data" => {},
-                                                 "extension_data" => {})
+      PhComposer::Zones::ZONE_STORE.write(group,
+                                          "id" => zone_id, "schema_version" => 1, "name" => "Zone",
+                                          "building_segment" => "Building", "level" => nil, "ground_depth_mm" => 0.0,
+                                          "user_data" => {},
+                                          "extension_data" => {})
     end
     reference = { "zone_id" => zone_id, "zone_path" => [group.persistent_id], "entity_path" => [face.persistent_id],
                   "entity_id" => nil }
     locator = PhComposer::Zones::Faces::Registration::TARGET.method(:locate)
     located = locator.call(Sketchup.active_model, reference, :mutable => true)
     W::Placement::Host.new(:entity => located.entity, :entities => located.entities,
-                           :parent_path => located.parent_path, :transform => located.transform, :reference => reference,
+                           :parent_path => located.parent_path, :transform => located.transform,
+                           :reference => reference,
                            :values => values, :zone_state => "found", :locator => locator,
                            :geometry => PhComposer::FaceGeometry.capture(located.entity, located.transform))
   end

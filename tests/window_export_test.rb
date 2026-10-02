@@ -46,10 +46,10 @@ class WindowExportTest < PhComposerTestCase
   def assess(face_values: {}, types: { @type["id"] => @type })
     snapshot = PhComposer::Export::GeometrySnapshot.capture(@model, :revision => 0)
     face = snapshot.entries.find { |e| e.kind == "face" }
-    X.assess(:snapshot => snapshot, :types => types, :products => @products,
-             :settings => @settings, :faces => [{ "path" => face.path, "geometry" => face.geometry,
-                                                  "zone_id" => "zon_AAAAAAAAAAAA", "record" => { "id" => "fac_AAAAAAAAAAAA",
-                                                                                                 "face_type" => "Wall", "boundary_condition" => "Outdoors" }.merge(face_values) }])
+    X.assess(:snapshot => snapshot, :types => types, :products => @products, :settings => @settings,
+             :faces => [{ "path" => face.path, "geometry" => face.geometry, "zone_id" => "zon_AAAAAAAAAAAA",
+                          "record" => { "id" => "fac_AAAAAAAAAAAA", "face_type" => "Wall",
+                                        "boundary_condition" => "Outdoors" }.merge(face_values) }])
   end
 
   def codes
@@ -143,7 +143,9 @@ class WindowExportTest < PhComposerTestCase
     @type["rows_m"] = [0.75, 0.75]
     empty = W::Types.blank(0, 1, :identity => window_allocator).merge("kind" => "empty")
     @type["elements"] = [first.merge("row_span" => [0, 1]), empty.merge("row_span" => [0, 1]),
-                         PhComposer::DeepCopy.call(first).merge("id" => "wel_BBBBBBBBBBBB", "row_span" => [0, 1], "column_span" => [2, 2])]
+                         PhComposer::DeepCopy.call(first).merge("id" => "wel_BBBBBBBBBBBB", "row_span" => [0, 1],
+                                                                "column_span" => [2,
+                                                                                  2])]
     U::DefinitionWriter.rewrite(:model => @model, :definition => @definition,
                                 :type => @type, :plan => U::DefinitionPlan.build(@type))
     result = assess
@@ -166,8 +168,10 @@ class WindowExportTest < PhComposerTestCase
       rows.each_value { |row| kind.store.write(@model, row.merge("schema_version" => 1)) }
     end
     W::Settings::SERVICE.store.write(@model, @settings)
-    PhComposer::Zones::ZONE_STORE.write(@group, "id" => "zon_AAAAAAAAAAAA", "schema_version" => 1,
-                                                "name" => "Room", "building_segment" => "Main", "level" => "Ground", "ground_depth_mm" => 0)
+    PhComposer::Zones::ZONE_STORE.write(@group,
+                                        "id" => "zon_AAAAAAAAAAAA", "schema_version" => 1,
+                                        "name" => "Room", "building_segment" => "Main", "level" => "Ground",
+                                        "ground_depth_mm" => 0)
     PhComposer::Zones::Faces::FACE_STORE.write(@face, "id" => "fac_AAAAAAAAAAAA", "schema_version" => 1,
                                                       "face_type" => "Wall", "boundary_condition" => "Outdoors")
   end
@@ -181,7 +185,9 @@ class WindowExportTest < PhComposerTestCase
     context = PhComposer::API.connect(:session_id => session.id)
     request = PhComposer::HandlerRequest.new(:model => @model, :session => session,
                                              :registry => PhComposer::Registry.current,
-                                             :engine => PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog))
+                                             :engine => PhComposer::Records::Engine.new(
+                                               @model, PhComposer::Registry.current.catalog
+                                             ))
     assert_empty X.preflight(request).fetch("findings")
     result = PhComposer::API.query(:context => context, :name => X::PREFLIGHT)
     assert_equal "completed", result["status"], result.inspect
@@ -302,8 +308,10 @@ class WindowExportTest < PhComposerTestCase
   def test_required_extension_data_refuses_and_public_face_context_is_detached_and_metadata_safe
     seed_export_records
     snapshot = PhComposer::Export::GeometrySnapshot.capture(@model, :revision => 0)
-    records = PhComposer::Export::RecordReader.new(PhComposer::Records::Engine.new(@model,
-                                                                                   PhComposer::Registry.current.catalog), PhComposer::Registry.current.catalog)
+    records = PhComposer::Export::RecordReader.new(
+      PhComposer::Records::Engine.new(@model,
+                                      PhComposer::Registry.current.catalog), PhComposer::Registry.current.catalog
+    )
     reader = PhComposer::Export::SnapshotReader.new(records, snapshot)
     stored = PhComposer::Zones::Faces::FACE_STORE.read(@face)
     PhComposer::Zones::Faces::FACE_STORE.write(@face, stored.merge("boundary_condition" => "Ground"))
@@ -339,7 +347,8 @@ class WindowExportTest < PhComposerTestCase
 
   def test_report_uses_translated_counts_names_areas_and_explicit_schema_exceptions
     result = { "window_usage" => [{ "type_id" => @type["id"], "type_name" => "<Window>",
-                                    "zone_id" => "Room", "unit_count" => 2, "aperture_count" => 4, "install_names" => ["Standard"] }],
+                                    "zone_id" => "Room", "unit_count" => 2, "aperture_count" => 4,
+                                    "install_names" => ["Standard"] }],
                "window_face_areas" => [{ "face_id" => "Host", "zone_id" => "Room", "gross_area_m2" => 10,
                                          "glazed_area_m2" => 3, "net_area_m2" => 7 }],
                "window_schema_exceptions" => [{ "construction_id" => "Construction", "g_value" => 0 }] }
@@ -414,7 +423,8 @@ class WindowExportTest < PhComposerTestCase
                                                          "psi_w_mk" => values.fetch("psi_install_w_mk") }
     end
     cell = @type.fetch("elements").first.merge("id" => fixture_identity("wel", input.fetch("element_id")),
-                                               "glazing_id" => glazing["id"], "frames" => frames, "installs" => installs)
+                                               "glazing_id" => glazing["id"], "frames" => frames,
+                                               "installs" => installs)
     @type.merge("id" => type_id, "name" => input.fetch("variant_type"), "rows_m" => [height],
                 "columns_m" => [width], "elements" => [cell], "install_depth_m" => input.fetch("install_depth_m"))
   end

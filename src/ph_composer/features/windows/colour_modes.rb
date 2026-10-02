@@ -19,7 +19,8 @@ module PhComposer
         Units::Occurrences.all(read.model).map do |unit|
           type = types[unit.record.fetch("window_type_id")]
           ColourBy::Entry.new(:entity => unit.entity, :transform => unit.transform,
-                              :value => type && type.fetch("id"), :label => type && type.fetch("name"), :path => unit.path)
+                              :value => type && type.fetch("id"), :label => type && type.fetch("name"),
+                              :path => unit.path)
         end
       end
     end

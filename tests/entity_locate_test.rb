@@ -25,9 +25,10 @@ class EntityLocateTest < PhComposerTestCase
   def zone(id, base, children)
     group = Sketchup::Group.new(base, Sketchup::Entities.new(children))
     @model.entities << group
-    ZONE_STORE.write(group, "id" => id, "schema_version" => 1, "name" => "Zone #{base}",
-                            "building_segment" => "Building", "level" => nil, "ground_depth_mm" => 0.0, "user_data" => {},
-                            "extension_data" => {})
+    ZONE_STORE.write(group,
+                     "id" => id, "schema_version" => 1, "name" => "Zone #{base}",
+                     "building_segment" => "Building", "level" => nil, "ground_depth_mm" => 0.0, "user_data" => {},
+                     "extension_data" => {})
     group
   end
 
@@ -67,9 +68,10 @@ class EntityLocateTest < PhComposerTestCase
     group = Sketchup::Group.new(100, Sketchup::Entities.new([Sketchup::Face.new(102)]))
     outer = Sketchup::Group.new(99, Sketchup::Entities.new([group]))
     @model.entities << outer
-    ZONE_STORE.write(group, "id" => "zon_AAAAAAAAAAAA", "schema_version" => 1, "name" => "Zone",
-                            "building_segment" => "Building", "level" => nil, "ground_depth_mm" => 0.0, "user_data" => {},
-                            "extension_data" => {})
+    ZONE_STORE.write(group,
+                     "id" => "zon_AAAAAAAAAAAA", "schema_version" => 1, "name" => "Zone",
+                     "building_segment" => "Building", "level" => nil, "ground_depth_mm" => 0.0, "user_data" => {},
+                     "extension_data" => {})
     outer.locked = true
     reference = { "zone_id" => "zon_AAAAAAAAAAAA", "zone_path" => [99, 100], "entity_path" => [102],
                   "entity_id" => nil }

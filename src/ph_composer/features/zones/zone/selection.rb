@@ -90,10 +90,11 @@ module PhComposer
             client(session).edit(field)
           end
         end
-        feature.menu_item("#{FEATURE_ID}.solve_selected_menu", :label => "Solve adjacencies for selected Zones",
-                                                               :menu => EXTENSION_NAME, :available => ->(read) {
-                                                                                                        available?(read.session)
-                                                                                                      }) do |session|
+        feature.menu_item("#{FEATURE_ID}.solve_selected_menu",
+                          :label => "Solve adjacencies for selected Zones",
+                          :menu => EXTENSION_NAME, :available => ->(read) {
+                                                                   available?(read.session)
+                                                                 }) do |session|
           client(session).solve
         end
       end

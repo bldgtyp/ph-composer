@@ -30,13 +30,16 @@ module PhComposer
       end
 
       def action(feature, name, properties, example, description:, undo_name:, side_effects:, optional: [], &command)
-        feature.action("#{FEATURE_ID}.assemblies.segments.#{name}", :description => description,
-                                                                    :params => params(properties, :optional => optional), :result => Shapes::RESULT,
-                                                                    :undo_name => undo_name, :side_effects => side_effects,
-                                                                    :examples => [example.merge("id" => Shapes::EXAMPLE_ID, "expected_values" => {})]) do |request, proposal|
+        feature.action("#{FEATURE_ID}.assemblies.segments.#{name}",
+                       :description => description,
+                       :params => params(properties, :optional => optional), :result => Shapes::RESULT,
+                       :undo_name => undo_name, :side_effects => side_effects,
+                       :examples => [example.merge("id" => Shapes::EXAMPLE_ID,
+                                                   "expected_values" => {})]) do |request, proposal|
           params = request.params
-          Assembly::Operations.gesture(request, proposal, :id => params.fetch("id"),
-                                                          :expected_values => params.fetch("expected_values")) do |record|
+          Assembly::Operations.gesture(request, proposal,
+                                       :id => params.fetch("id"),
+                                       :expected_values => params.fetch("expected_values")) do |record|
             command.call(record, params, request)
           end
         end
@@ -51,11 +54,12 @@ module PhComposer
                        "description" => "Where to insert it among the Layer's Layer-Segments, 0 first; last when " \
                                         "absent." }
         }
-        action(feature, "add", properties, { "layer_id" => Shapes::EXAMPLE_LAYER }, :optional => %w[width_mm index],
-                                                                                    :description => "Add a Layer-Segment of no Material to one Layer. A membrane Layer holds one " \
+        action(feature, "add", properties, { "layer_id" => Shapes::EXAMPLE_LAYER },
+               :optional => %w[width_mm index],
+               :description => "Add a Layer-Segment of no Material to one Layer. A membrane Layer holds one " \
                                "Layer-Segment.",
-                                                                                    :undo_name => "Add Layer-Segment",
-                                                                                    :side_effects => "Adds one Layer-Segment.") do |record, params, request|
+               :undo_name => "Add Layer-Segment",
+               :side_effects => "Adds one Layer-Segment.") do |record, params, request|
           Commands.add_segment(record, :layer_id => params.fetch("layer_id"),
                                        :materials => Definitions.materials(request),
                                        :width_mm => params.fetch("width_mm", 1000.0), :index => params["index"],
@@ -97,9 +101,11 @@ module PhComposer
 
       # The set_material gesture, shared by its action and the Materials library kind's assignment.
       def set_material(record, params, request)
-        Commands.set_segment_material(record, :layer_id => params.fetch("layer_id"),
-                                              :segment_id => params.fetch("segment_id"), :material_id => params.fetch("material_id"),
-                                              :materials => Definitions.materials(request))
+        Commands.set_segment_material(record,
+                                      :layer_id => params.fetch("layer_id"),
+                                      :segment_id => params.fetch("segment_id"),
+                                      :material_id => params.fetch("material_id"),
+                                      :materials => Definitions.materials(request))
       end
 
       def declare_material(feature)

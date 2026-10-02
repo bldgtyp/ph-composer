@@ -111,7 +111,9 @@ class ZoneSolveScopeTest < PhComposerTestCase
     request = PhComposer::HandlerRequest.new(:session => @session, :model => @model,
                                              :params => { "zones" => all_references }, :revision => @session.revision,
                                              :registry => PhComposer::Registry.current,
-                                             :engine => PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog))
+                                             :engine => PhComposer::Records::Engine.new(
+                                               @model, PhComposer::Registry.current.catalog
+                                             ))
     proposal = PhComposer::Operations::Proposal.new
     action = PhComposer::Registry.current.actions.fetch("ph_composer.zones.solve_adjacency")
     action.handler.call(request, proposal)
@@ -791,7 +793,8 @@ class ZoneSolveScopeTest < PhComposerTestCase
     original = left.entities.to_a.first
     record = store.read(original)
     copied_face = Sketchup::Face.new(936, {},
-                                     :points => original.outer_loop.vertices.map(&:position), :normal => original.normal)
+                                     :points => original.outer_loop.vertices.map(&:position),
+                                     :normal => original.normal)
     left.entities << copied_face
     store.write(copied_face, record)
     wrapper = Sketchup::Group.new(937, Sketchup::Entities.new)

@@ -193,8 +193,9 @@ module PhComposer
           # happen to name the factor.
           values = merged_values(request.engine.kind(AttachedZone::KIND_ID)
                                    .values(request.engine.find(AttachedZone::KIND_ID, id)), patch)
-          request.engine.propose_update(AttachedZone::KIND_ID, id, proposal, :values => patch,
-                                                                             :user_data => user_data, :expected_values => expected_values)
+          request.engine.propose_update(AttachedZone::KIND_ID, id, proposal,
+                                        :values => patch,
+                                        :user_data => user_data, :expected_values => expected_values)
         else
           values = { "temperature_reduction_factor" => AttachedZone::DEFAULT_FACTOR }.merge(patch)
           id = request.engine.propose_create(AttachedZone::KIND_ID, proposal, :values => values,

@@ -94,8 +94,10 @@ class WindowUnitActionsTest < PhComposerTestCase
                                                       item.entity.definition.persistent_id
                                                     })
     before = scope.capture(@model)
-    result = assignment_invoke("#{PREFIX}.types.update", "id" => @type_id,
-                                                         "values" => { "columns_m" => [1.2] }, "expected_values" => { "columns_m" => before_type.fetch("columns_m") })
+    result = assignment_invoke("#{PREFIX}.types.update",
+                               "id" => @type_id,
+                               "values" => { "columns_m" => [1.2] },
+                               "expected_values" => { "columns_m" => before_type.fetch("columns_m") })
     assert_equal "completed", result.fetch("status"), result.inspect
     assert_equal 3, result.dig("value", "unit_count")
     after_plan = U::DefinitionPlan.build(type)
@@ -122,8 +124,10 @@ class WindowUnitActionsTest < PhComposerTestCase
     assert_equal 1, U::Occurrences.all(@model).map { |item| item.record.fetch("id") }.uniq.length
     scope = U::MutationScope.new(:definition_ids => [original.entity.definition.persistent_id])
     before = scope.capture(@model)
-    result = assignment_invoke("#{PREFIX}.types.update", "id" => @type_id,
-                                                         "values" => { "name" => "Renamed synthetic" }, "expected_values" => { "name" => type.fetch("name") })
+    result = assignment_invoke("#{PREFIX}.types.update",
+                               "id" => @type_id,
+                               "values" => { "name" => "Renamed synthetic" },
+                               "expected_values" => { "name" => type.fetch("name") })
     assert_equal "completed", result.fetch("status"), result.inspect
     assert_equal 2, U::Occurrences.all(@model).map { |item| item.record.fetch("id") }.uniq.length
     assert units.all? { |row| row.fetch("user_data") == { "note" => ["retain"] } }
@@ -233,8 +237,9 @@ class WindowUnitActionsTest < PhComposerTestCase
     place(5.0, "sill_left")
     U::Occurrences.all(@model).last.entity.glued_to = nil
     before = U::MutationScope.new.capture(@model)
-    result = assignment_invoke("#{PREFIX}.types.update", "id" => @type_id,
-                                                         "values" => { "columns_m" => [4.0] }, "expected_values" => { "columns_m" => [1.0] })
+    result = assignment_invoke("#{PREFIX}.types.update",
+                               "id" => @type_id,
+                               "values" => { "columns_m" => [4.0] }, "expected_values" => { "columns_m" => [1.0] })
     assert_equal "window.overlap", result.fetch("code"), result.inspect
     assert_equal before, U::MutationScope.new.capture(@model)
   end
@@ -301,11 +306,12 @@ class WindowUnitActionsTest < PhComposerTestCase
   def test_remove_refuses_live_typed_incoming_reference_without_writes
     place
     item = U::Occurrences.all(@model).first
-    kind = PhComposer::Records::RecordKind.new(:id => "probe.unit_link.record", :label => "Synthetic Unit link",
-                                               :schema_version => 1, :id_prefix => "wpr", :fields => [
-                                                 PhComposer::Records::AuthoringFields.field("unit_id", { "type" => "string" }, :required => true)
-                                               ], :references => [PhComposer::Records::Reference.new(:key => "unit_id",
-                                                                                                     :target_kind => U::REFERENCE_KIND, :cardinality => "one")])
+    kind = PhComposer::Records::RecordKind.new(
+      :id => "probe.unit_link.record", :label => "Synthetic Unit link", :schema_version => 1, :id_prefix => "wpr",
+      :fields => [PhComposer::Records::AuthoringFields.field("unit_id", { "type" => "string" }, :required => true)],
+      :references => [PhComposer::Records::Reference.new(:key => "unit_id", :target_kind => U::REFERENCE_KIND,
+                                                         :cardinality => "one")]
+    )
     contribution = Module.new do
       define_singleton_method(:install) do |registry|
         registry.feature("probe.unit_link", :contract_version => 1,
@@ -376,8 +382,9 @@ class WindowUnitActionsTest < PhComposerTestCase
   def test_reset_does_not_require_writable_host_for_unselected_detached_unit
     place(2.0)
     selected = U::Occurrences.all(@model).first
-    face = Sketchup::Face.new(2001, {}, :points => [[0, 0, 0], [1000, 0, 0],
-                                                    [1000, 1000, 0], [0, 1000, 0]].map { |point| Geom::Point3d.new(*point) })
+    face = Sketchup::Face.new(2001, {},
+                              :points => [[0, 0, 0], [1000, 0, 0],
+                                          [1000, 1000, 0], [0, 1000, 0]].map { |point| Geom::Point3d.new(*point) })
     other = Sketchup::Group.new(2000, Sketchup::Entities.new([face]),
                                 :transformation => Geom::Transformation.translation([0, 0, 100]))
     @model.entities << other
@@ -466,8 +473,9 @@ class WindowUnitActionsTest < PhComposerTestCase
     @group.entities.erase_entities(original.entity)
     scope = U::RestorePaneScope.new([@group.persistent_id], [face.persistent_id], type)
     before = scope.capture(@model)
-    result = assignment_invoke("#{PREFIX}.units.restore", "host" => @face_reference,
-                                                          "type_id" => @type_id, "pane_paths" => [[@group.persistent_id, face.persistent_id]])
+    result = assignment_invoke("#{PREFIX}.units.restore",
+                               "host" => @face_reference,
+                               "type_id" => @type_id, "pane_paths" => [[@group.persistent_id, face.persistent_id]])
     assert_equal "completed", result.fetch("status"), result.inspect
     refute_equal original.record.fetch("id"), result.dig("value", "unit_id")
     assert_equal "sill_center", units.first.dig("values", "anchor")

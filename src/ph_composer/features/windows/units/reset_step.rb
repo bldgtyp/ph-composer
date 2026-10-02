@@ -51,7 +51,8 @@ module PhComposer
           @guard = scope.capture(model, :expected_records => @projected)
           @affected = needed? ? @rows.select { |row| changed_row?(row) }.map { |row| affected_row(row) } : []
           @findings = @rewrite ? [{ "code" => "window.shared_definition_reset",
-                                    "message" => "Reset replaces the edited primary Window definition for all of its units.",
+                                    "message" => "Reset replaces the edited primary Window definition for all of " \
+                                                 "its units.",
                                     "unit_count" => @rows.length,
                                     "references" => @rows.map { |row| DeepCopy.call(row.fetch("reference")) } }] : []
         end

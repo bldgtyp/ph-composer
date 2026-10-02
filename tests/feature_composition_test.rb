@@ -55,11 +55,19 @@ class FeatureCompositionTest < PhComposerTestCase
   def test_nested_reference_protects_target_and_duplicate_remaps_actual_references
     reference = R::Reference.new(:key => "layers[].segments[].definition_id", :target_kind => KIND,
                                  :cardinality => "one")
-    layers = { "type" => "array", "items" => { "type" => "object", "required" => ["segments"],
-                                               "additionalProperties" => false, "properties" => { "segments" => { "type" => "array", "items" => {
-                                                 "type" => "object", "required" => ["definition_id"], "additionalProperties" => false,
-                                                 "properties" => { "definition_id" => { "type" => "string" } }
-                                               } } } } }
+    layers = {
+      "type" => "array",
+      "items" => {
+        "type" => "object", "required" => ["segments"], "additionalProperties" => false,
+        "properties" => {
+          "segments" => {
+            "type" => "array",
+            "items" => { "type" => "object", "required" => ["definition_id"], "additionalProperties" => false,
+                         "properties" => { "definition_id" => { "type" => "string" } } }
+          }
+        }
+      }
+    }
     kind = R::RecordKind.new(:id => "test.consumer.layered", :label => "Layered", :schema_version => 1,
                              :id_prefix => "lay", :fields => [R::Field.new(:key => "layers", :schema => layers)],
                              :references => [reference])
@@ -90,7 +98,8 @@ class FeatureCompositionTest < PhComposerTestCase
     target = R::ReferenceTarget.new(:id => "test.consumer.entity", :label => "Entity", :records => ->(_model) { [] },
                                     :validate => ->(_record) {
                                                    []
-                                                 }, :references => [R::Reference.new(:key => "definition_id", :target_kind => KIND,
+                                                 }, :references => [R::Reference.new(:key => "definition_id",
+                                                                                     :target_kind => KIND,
                                                                                      :cardinality => "one")])
     PhComposer::Registry.install([feature do |registry|
       registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID]).reference_target(target)
@@ -115,8 +124,10 @@ class FeatureCompositionTest < PhComposerTestCase
         proposal.add_finding("code" => "test.retarget", "message" => "Planned")
         R::ReferencePlan.new(:entries => [])
       end
-      scope.action("test.consumer.delete", :description => "Delete with retargeting.", :params => OBJECT,
-                                           :result => OBJECT, :undo_name => "Delete", :side_effects => "Deletes definitions.") do |request, proposal|
+      scope.action("test.consumer.delete",
+                   :description => "Delete with retargeting.", :params => OBJECT,
+                   :result => OBJECT, :undo_name => "Delete",
+                   :side_effects => "Deletes definitions.") do |request, proposal|
         plan = request.retarget_references(KIND, :from => request.params.fetch("id"), :to => nil)
         request.engine.propose_delete(KIND, request.params.fetch("id"), proposal, :reference_plan => plan)
         {}
@@ -177,14 +188,16 @@ class FeatureCompositionTest < PhComposerTestCase
 
   def install_entity_retargeter(refuse: false, foreign: false, remove: false)
     reference = R::Reference.new(:key => "definition_id", :target_kind => KIND, :cardinality => "one")
-    target = R::ReferenceTarget.new(:id => "test.consumer.entity", :label => "Entity", :validate => ->(_record) { [] },
-                                    :references => [reference], :records => lambda do |model|
-                                                                              model.entities.to_a.filter_map do |entity|
-                                                                                text = entity.get_attribute("ph_composer.test_retarget", "record")
-                                                                                R::ReferenceEntry.new(:kind => "test.consumer.entity", :key => [entity.persistent_id],
-                                                                                                      :record => JSON.parse(text)) if text
-                                                                              end
-                                                                            end)
+    target = R::ReferenceTarget.new(
+      :id => "test.consumer.entity", :label => "Entity", :validate => ->(_record) { [] },
+      :references => [reference], :records => lambda do |model|
+        model.entities.to_a.filter_map do |entity|
+          text = entity.get_attribute("ph_composer.test_retarget", "record")
+          R::ReferenceEntry.new(:kind => "test.consumer.entity", :key => [entity.persistent_id],
+                                :record => JSON.parse(text)) if text
+        end
+      end
+    )
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID])
       scope.reference_target(target)
@@ -303,9 +316,11 @@ class FeatureCompositionTest < PhComposerTestCase
     reference = R::Reference.new(:key => "links[].peer_id", :target_kind => "test.consumer.linked",
                                  :cardinality => "one")
     kind = R::RecordKind.new(:id => "test.consumer.linked", :label => "Linked", :schema_version => 1,
-                             :id_prefix => "lnk", :references => [reference], :fields => [R::Field.new(:key => "links", :schema => {
-                               "type" => "array", "items" => { "type" => "object", "additionalProperties" => false,
-                                                               "properties" => { "peer_id" => { "type" => "string" } } }
+                             :id_prefix => "lnk", :references => [reference],
+                             :fields => [R::Field.new(:key => "links", :schema => {
+                               "type" => "array",
+                               "items" => { "type" => "object", "additionalProperties" => false,
+                                            "properties" => { "peer_id" => { "type" => "string" } } }
                              })])
     PhComposer::Registry.install([feature do |registry|
       registry.feature("test.consumer", :contract_version => 1).record_kind(kind)
@@ -336,8 +351,9 @@ class FeatureCompositionTest < PhComposerTestCase
         request.retarget_references(KIND, :from => "tdf_AAAAAAAAAAAA", :to => nil)
         {}
       end
-      scope.action("test.consumer.write", :description => "Read from action.", :params => OBJECT,
-                                          :result => OBJECT, :undo_name => "Read", :side_effects => "None.") do |request, _proposal|
+      scope.action("test.consumer.write",
+                   :description => "Read from action.", :params => OBJECT,
+                   :result => OBJECT, :undo_name => "Read", :side_effects => "None.") do |request, _proposal|
         request.query("test.consumer.read")
       end
     end])
@@ -402,8 +418,10 @@ class FeatureCompositionTest < PhComposerTestCase
     observed = []
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID])
-      scope.action("test.consumer.duplicate", :description => "Duplicate with failing transform.", :params => OBJECT,
-                                              :result => OBJECT, :undo_name => "Duplicate", :side_effects => "Duplicates records.") do |request, proposal|
+      scope.action("test.consumer.duplicate",
+                   :description => "Duplicate with failing transform.", :params => OBJECT,
+                   :result => OBJECT, :undo_name => "Duplicate",
+                   :side_effects => "Duplicates records.") do |request, proposal|
         calls = 0
         begin
           request.engine.propose_duplicate(KIND, ids, proposal) do |values|

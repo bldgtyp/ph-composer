@@ -14,7 +14,8 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
     @engine = PhComposer::Records::Engine.new(Sketchup.active_model, @registry.catalog)
     @proposal = PhComposer::Records::ChangeSet.new
     @request = PhComposer::HandlerRequest.new(:model => Sketchup.active_model, :engine => @engine,
-                                              :registry => @registry, :owner => "ph_composer.library", :proposal => @proposal, :params => {})
+                                              :registry => @registry, :owner => "ph_composer.library",
+                                              :proposal => @proposal, :params => {})
     @declaration = PhComposer::Declarations::LibraryKind.new(:owner => OWNER, :record_kind => KIND)
   end
 
@@ -133,7 +134,9 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
                                                              :handler => lambda do |request, changes|
                                                                            assert_nil changes
                                                                            assert_nil request.proposal
-                                                                           assert_equal "Copied material", request.engine.find(KIND, id)["name"]
+                                                                           assert_equal "Copied material",
+                                                                                        request.engine.find(KIND,
+                                                                                                            id)["name"]
                                                                            create(request, changes)
                                                                            {}
                                                                          end)

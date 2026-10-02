@@ -205,7 +205,8 @@ class LibraryExportTest < PhComposerTestCase
 
   def test_registered_reverse_adapter_cannot_change_schema_valid_authored_semantics
     kind = PhComposer::Records::RecordKind.new(:id => "test.export.material", :label => "Probe Material",
-                                               :schema_version => 1, :id_prefix => "pmt", :fields => Assemblies::Materials::Schema::KIND.fields)
+                                               :schema_version => 1, :id_prefix => "pmt",
+                                               :fields => Assemblies::Materials::Schema::KIND.fields)
     row = @records.first.merge("id" => "pmt_AAAAAAAAAAAA")
     kind.store.write(Sketchup.active_model, row)
     adapter = PhComposer::Registry.current.library_kinds.values.first.adapter.dup

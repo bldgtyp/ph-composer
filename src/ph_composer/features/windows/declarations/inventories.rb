@@ -8,26 +8,35 @@ module PhComposer
                                      "psi_w_mk" => NUM.merge("x-unit" => "W/mK") })
       EDGE = Shapes.object({ "side" => Shapes::TEXT, "length_m" => NUM.merge("x-unit" => "m"),
                              "install" => EDGE_INSTALL, "frame_area_m2" => NUM.merge("x-unit" => "m2"),
-                             "glass_edge_m" => NUM.merge("x-unit" => "m"), "h_frame_w_k" => NUM.merge("x-unit" => "W/K"),
+                             "glass_edge_m" => NUM.merge("x-unit" => "m"),
+                             "h_frame_w_k" => NUM.merge("x-unit" => "W/K"),
                              "h_spacer_w_k" => NUM.merge("x-unit" => "W/K") },
                            :optional => %w[frame_area_m2 glass_edge_m h_frame_w_k h_spacer_w_k])
       THERMAL_FINDING = Shapes.object({ "code" => Shapes::TEXT, "message" => Shapes::TEXT, "side" => Shapes::TEXT },
                                       :optional => %w[side])
       ELEMENT_THERMAL = Shapes.object({ "id" => Shapes::TEXT, "area_m2" => NUM.merge("x-unit" => "m2"),
                                         "edges" => Shapes.list(EDGE), "findings" => Shapes.list(THERMAL_FINDING),
-                                        "h_construction_w_k" => NUM.merge("x-unit" => "W/K"), "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
-                                        "glazing_area_m2" => NUM.merge("x-unit" => "m2"), "frame_area_m2" => NUM.merge("x-unit" => "m2"),
+                                        "h_construction_w_k" => NUM.merge("x-unit" => "W/K"),
+                                        "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
+                                        "glazing_area_m2" => NUM.merge("x-unit" => "m2"),
+                                        "frame_area_m2" => NUM.merge("x-unit" => "m2"),
                                         "h_glazing_w_k" => NUM.merge("x-unit" => "W/K"), "g_value" => NUM,
-                                        "uw_w_m2k" => NUM.merge("x-unit" => "W/m2K"), "u_effective_w_m2k" => NUM.merge("x-unit" => "W/m2K"),
-                                        "complete" => { "type" => "boolean" } }, :optional => %w[glazing_area_m2 frame_area_m2 h_glazing_w_k])
+                                        "uw_w_m2k" => NUM.merge("x-unit" => "W/m2K"),
+                                        "u_effective_w_m2k" => NUM.merge("x-unit" => "W/m2K"),
+                                        "complete" => { "type" => "boolean" } },
+                                      :optional => %w[glazing_area_m2 frame_area_m2 h_glazing_w_k])
       THERMAL = Shapes.object({ "elements" => Shapes.list(ELEMENT_THERMAL), "findings" => Shapes.list(THERMAL_FINDING),
-                                "area_m2" => NUM.merge("x-unit" => "m2"), "empty_area_m2" => NUM.merge("x-unit" => "m2"),
-                                "h_construction_w_k" => NUM.merge("x-unit" => "W/K"), "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
-                                "uw_w_m2k" => NUM.merge("x-unit" => "W/m2K"), "u_effective_w_m2k" => NUM.merge("x-unit" => "W/m2K"),
+                                "area_m2" => NUM.merge("x-unit" => "m2"),
+                                "empty_area_m2" => NUM.merge("x-unit" => "m2"),
+                                "h_construction_w_k" => NUM.merge("x-unit" => "W/K"),
+                                "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
+                                "uw_w_m2k" => NUM.merge("x-unit" => "W/m2K"),
+                                "u_effective_w_m2k" => NUM.merge("x-unit" => "W/m2K"),
                                 "complete" => { "type" => "boolean" } },
                               :optional => %w[area_m2 empty_area_m2 h_construction_w_k h_install_w_k])
       DISPLAY = Shapes.object({ "thermal" => THERMAL, "width_m" => NUM.merge("x-unit" => "m"),
-                                "height_m" => NUM.merge("x-unit" => "m"), "install_depth_m" => NUM.merge("x-unit" => "m"),
+                                "height_m" => NUM.merge("x-unit" => "m"),
+                                "install_depth_m" => NUM.merge("x-unit" => "m"),
                                 "complete" => { "type" => "boolean" } })
       USE = Shapes.object(%w[kind type_id element_id side name].to_h { |key| [key, Shapes::TEXT] },
                           :optional => %w[type_id element_id side])
@@ -62,8 +71,10 @@ module PhComposer
                                         :examples => [{}, { "limit" => 20 }]) do |request|
           read.call(request, true)
         end
-        feature.query("#{prefix}.all", :description => "The complete #{collection} inventory for the panel snapshot.",
-                                       :params => Shapes::NONE, :result => result(kind, row, :paged => false), :examples => [{}]) do |request|
+        feature.query("#{prefix}.all",
+                      :description => "The complete #{collection} inventory for the panel snapshot.",
+                      :params => Shapes::NONE, :result => result(kind, row,
+                                                                 :paged => false), :examples => [{}]) do |request|
           read.call(request, false)
         end
         feature.snapshot_section(prefix, :query => "#{prefix}.all")

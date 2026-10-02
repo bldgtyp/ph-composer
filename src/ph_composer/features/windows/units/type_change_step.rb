@@ -138,8 +138,12 @@ module PhComposer
 
         def instance_row(item, record, parent)
           matrix = item.entity.transformation.to_a
-          changed = @geometry_changed ? WorldGeometry.reanchor(matrix, :before => @before_plan,
-                                                                       :after => @after_plan, :anchor => record.fetch("anchor")) : matrix
+          changed = if @geometry_changed
+                      WorldGeometry.reanchor(matrix, :before => @before_plan, :after => @after_plan,
+                                                     :anchor => record.fetch("anchor"))
+                    else
+                      matrix
+                    end
           { "reference" => { "unit_id" => record.fetch("id"), "entity_path" => item.path.dup },
             "record" => DeepCopy.call(record), "matrix" => matrix, "after_matrix" => changed,
             "world_matrix" => item.transform.to_a,

@@ -78,8 +78,10 @@ class WindowDefinitionGeometryTest < PhComposerTestCase
       raise TypeError, "synthetic matcher defect"
     end
     occurrence = U::Occurrence.new(:entity => @model.entities.add_instance(@definition, Geom::Transformation.new),
-                                   :path => [1], :transform => Geom::Transformation.new, :parent_transform => Geom::Transformation.new,
-                                   :record => { "id" => "wun_000000000001", "window_type_id" => @type.fetch("id") }, :shared_storage => false,
+                                   :path => [1], :transform => Geom::Transformation.new,
+                                   :parent_transform => Geom::Transformation.new,
+                                   :record => { "id" => "wun_000000000001", "window_type_id" => @type.fetch("id") },
+                                   :shared_storage => false,
                                    :locked => false)
     assert_raises(TypeError) do
       U::State.findings(occurrence, :type => @type, :canonical_definition => @definition)

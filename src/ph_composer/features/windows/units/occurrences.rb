@@ -40,7 +40,8 @@ module PhComposer
 
               unless entity.get_attribute(STORE.dictionary, STORE.key).nil?
                 raise CodedError.new("window.nested_units",
-                                     "Recover nested Window Units before removing or replacing their containing Window.")
+                                     "Recover nested Window Units before removing or replacing their containing " \
+                                     "Window.")
               end
               pending << entity.definition.entities
             end
@@ -100,17 +101,14 @@ module PhComposer
         private_class_method :walk
       end
 
-      TARGET = Records::ReferenceTarget.new(:id => REFERENCE_KIND, :label => "Window unit",
-                                            :schema_version => 1, :values => RECORD_KIND.values_schema,
-                                            :occurrence => Shapes.object({ "unit_id" => Shapes::TEXT,
-                                                                           "entity_path" => { "type" => "array",
-                                                                                              "minItems" => 1, "items" => { "type" => "integer" } } }),
-                                            :records => ->(model) {
-                                                          Occurrences.all(model).map(&:entry)
-                                                        },
-                                            :validate => ->(record) {
-                                                           RECORD_KIND.problems(record)
-                                                         }, :references => RECORD_KIND.references)
+      TARGET = Records::ReferenceTarget.new(
+        :id => REFERENCE_KIND, :label => "Window unit", :schema_version => 1, :values => RECORD_KIND.values_schema,
+        :occurrence => Shapes.object({ "unit_id" => Shapes::TEXT,
+                                       "entity_path" => { "type" => "array", "minItems" => 1,
+                                                          "items" => { "type" => "integer" } } }),
+        :records => ->(model) { Occurrences.all(model).map(&:entry) },
+        :validate => ->(record) { RECORD_KIND.problems(record) }, :references => RECORD_KIND.references
+      )
     end
   end
 end

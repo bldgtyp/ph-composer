@@ -83,8 +83,9 @@ module PhComposer
         Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
         fresh.each do |id|
           copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
-                                                    { record.fetch("id") => id }, :engine => request.engine,
-                                                                                  :reference_plan => split_reference_plan(occurrence, record, id))
+                                                    { record.fetch("id") => id },
+                                                    :engine => request.engine,
+                                                    :reference_plan => split_reference_plan(occurrence, record, id))
         end
       end
       { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
@@ -151,8 +152,9 @@ module PhComposer
         Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
         fresh.each do |id|
           copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
-                                                    { record.fetch("id") => id }, :engine => request.engine,
-                                                                                  :reference_plan => split_reference_plan(occurrence, record, id))
+                                                    { record.fetch("id") => id },
+                                                    :engine => request.engine,
+                                                    :reference_plan => split_reference_plan(occurrence, record, id))
         end
       end
       { "reference" => occurrence.reference(record.fetch("id")), "before" => record,

@@ -24,11 +24,10 @@ class RegistryTest < PhComposerTestCase
     live = Registry.new
     first = Registry::Staging.new(live)
     scope = first.feature("probe", :contract_version => 1)
-    target = PhComposer::Records::ReferenceTarget.new(:id => "probe.entity", :label => "Synthetic",
-                                                      :records => ->(_model) { [] }, :validate => ->(_record) {
-                                                                                                    []
-                                                                                                  },
-                                                      :occurrence => { "type" => "object", "properties" => { "path" => { "type" => "array" } } })
+    target = PhComposer::Records::ReferenceTarget.new(
+      :id => "probe.entity", :label => "Synthetic", :records => ->(_model) { [] }, :validate => ->(_record) { [] },
+      :occurrence => { "type" => "object", "properties" => { "path" => { "type" => "array" } } }
+    )
     scope.reference_target(target)
     assert_same target.descriptor, first.record_descriptor("probe.entity")
     assert_nil first.record_descriptor("probe.missing")

@@ -12,8 +12,9 @@ class WindowPlacementWalkthroughTest < PhComposerTestCase
   def test_public_walkthrough_places_copies_resizes_and_swaps_with_panel_closed
     assignment_setup
     PhComposer::Registry.install([W]) unless PhComposer::Registry.installed?(W::FEATURE_ID)
-    face = Sketchup::Face.new(1001, {}, :points => [[0, 0, 0], [1000, 0, 0],
-                                                    [1000, 1000, 0], [0, 1000, 0]].map { |point| Geom::Point3d.new(*point) })
+    face = Sketchup::Face.new(1001, {},
+                              :points => [[0, 0, 0], [1000, 0, 0],
+                                          [1000, 1000, 0], [0, 1000, 0]].map { |point| Geom::Point3d.new(*point) })
     group = Sketchup::Group.new(1000, Sketchup::Entities.new([face]))
     @model.entities << group
     assignment_invoke("ph_composer.zones.make", "parent_path" => [], "entity_ids" => [1000])

@@ -34,10 +34,11 @@ class WindowUnitFlipStepTest < PhComposerTestCase
 
   def unit(anchor = "sill_center", matrix = Geom::Transformation.scaling(-1, 1, 1))
     entity = @model.entities.add_instance(@definition, matrix)
-    U.write(entity, "id" => window_allocator.call("wun"), "schema_version" => 1,
-                    "window_type_id" => @source.fetch("id"), "anchor" => anchor,
-                    "user_data" => { "literal" => ["preserve"] },
-                    "extension_data" => { "outside.example" => { "version" => 1, "payload" => { "note" => "literal" } } })
+    U.write(entity,
+            "id" => window_allocator.call("wun"), "schema_version" => 1,
+            "window_type_id" => @source.fetch("id"), "anchor" => anchor,
+            "user_data" => { "literal" => ["preserve"] },
+            "extension_data" => { "outside.example" => { "version" => 1, "payload" => { "note" => "literal" } } })
     entity
   end
 

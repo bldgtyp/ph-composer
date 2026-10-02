@@ -20,12 +20,13 @@ module PhComposer
       USE = Shapes.object({ "assembly_id" => Shapes::TEXT, "name" => Shapes::TEXT })
       MATERIAL_ROW = Shapes.with(Shapes.view(Materials::Schema::KIND),
                                  "uses" => Shapes.list(USE), "use_count" => { "type" => "integer", "minimum" => 0 })
-      ASSEMBLY_ROW = Shapes.with(Shapes.view(Assembly::Schema::KIND), "display" => DISPLAY,
-                                                                      "export_ready" => Shapes.described({ "type" => "boolean" },
-                                                                                                         "Whether a Face can export with this Assembly."),
-                                                                      "export_blockers" => Shapes.described(Shapes::FINDINGS,
-                                                                                                            "Why a Face cannot export with it; empty " \
-                                                                                                            "when export_ready."))
+      ASSEMBLY_ROW = Shapes.with(Shapes.view(Assembly::Schema::KIND),
+                                 "display" => DISPLAY,
+                                 "export_ready" => Shapes.described({ "type" => "boolean" },
+                                                                    "Whether a Face can export with this Assembly."),
+                                 "export_blockers" => Shapes.described(Shapes::FINDINGS,
+                                                                       "Why a Face cannot export with it; empty " \
+                                                                       "when export_ready."))
       CATEGORY = Shapes.object(%w[id label tone].to_h { |key| [key, Shapes::TEXT] })
 
       module_function
@@ -53,9 +54,10 @@ module PhComposer
                                         :examples => [{}, { "limit" => 20 }]) do |request|
           read.call(request, true)
         end
-        feature.query("#{prefix}.all", :description => "The complete #{collection} inventory for the panel snapshot.",
-                                       :params => Shapes::NONE, :result => result(row, :paged => false, :categories => categories),
-                                       :examples => [{}]) do |request|
+        feature.query("#{prefix}.all",
+                      :description => "The complete #{collection} inventory for the panel snapshot.",
+                      :params => Shapes::NONE, :result => result(row, :paged => false, :categories => categories),
+                      :examples => [{}]) do |request|
           read.call(request, false)
         end
         feature.snapshot_section(prefix, :query => "#{prefix}.all")

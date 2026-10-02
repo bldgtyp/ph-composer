@@ -241,7 +241,10 @@ class ZoneFaceTest < PhComposerTestCase
 
     @model.undo
     assert_equal %w[Outdoors Outdoors], query("ph_composer.zones.faces.list").dig("value", "faces")
-                                                                             .map { |row| row.dig("values", "boundary_condition") }.sort
+                                                                             .map { |row|
+                                          row.dig("values",
+                                                  "boundary_condition")
+                                        }.sort
     @model.redo
     assert_equal %w[current current], query("ph_composer.zones.faces.list").dig("value", "faces")
                                                                            .map { |row| row.fetch("adjacency_state") }

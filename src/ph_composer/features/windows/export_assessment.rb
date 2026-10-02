@@ -234,9 +234,11 @@ module PhComposer
                           "unit_id" => record["id"], "type_id" => type["id"], "element_id" => cell["id"],
                           "name" => "#{type.fetch('name')} / #{cell.fetch('name')}",
                           "host_face_id" => face.fetch("record").fetch("id"),
-                          "zone_id" => face.fetch("zone_id"), "construction_id" => construction["id"], "polygon_m" => polygon,
+                          "zone_id" => face.fetch("zone_id"), "construction_id" => construction["id"],
+                          "polygon_m" => polygon,
                           "variant_type" => type.fetch("name"),
-                          "install_depth_m" => type.fetch("install_depth_m", @settings.fetch("default_install_depth_m")),
+                          "install_depth_m" => type.fetch("install_depth_m",
+                                                          @settings.fetch("default_install_depth_m")),
                           "is_operable" => cell.fetch("operation").fetch("type") != "fixed" }
         end
       end

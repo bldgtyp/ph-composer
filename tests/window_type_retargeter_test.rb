@@ -25,7 +25,8 @@ class WindowTypeRetargeterTest < PhComposerTestCase
   def unit(x = 0, record: nil, entities: @model.entities)
     entity = entities.add_instance(@definition, Geom::Transformation.translation([x / 0.0254, 0, 0]))
     U.write(entity, record || { "id" => window_allocator.call("wun"), "schema_version" => 1,
-                                "window_type_id" => @source.fetch("id"), "anchor" => "center", "user_data" => { "literal" => ["keep"] } })
+                                "window_type_id" => @source.fetch("id"), "anchor" => "center",
+                                "user_data" => { "literal" => ["keep"] } })
     entity
   end
 
@@ -123,7 +124,9 @@ class WindowTypeRetargeterTest < PhComposerTestCase
   def test_surviving_typed_unit_reference_blocks_removal_but_allows_replacement
     entity = unit
     extension = PhComposer::Records::Extension.new(:namespace => "outside.unit_link", :schema_version => 1,
-                                                   :references => [{ "path" => "$.unit", "target_kind" => U::REFERENCE_KIND, "cardinality" => "one" }])
+                                                   :references => [{ "path" => "$.unit",
+                                                                     "target_kind" => U::REFERENCE_KIND,
+                                                                     "cardinality" => "one" }])
     @target["extension_data"] = { extension.namespace => extension.envelope("unit" => U.read(entity).fetch("id")) }
     W::Types::KIND.store.write(@model, @target)
     before = capture
@@ -223,7 +226,9 @@ class WindowTypeRetargeterTest < PhComposerTestCase
     first = unit
     second = unit(4)
     extension = PhComposer::Records::Extension.new(:namespace => "outside.peer", :schema_version => 1,
-                                                   :references => [{ "path" => "$.peer", "target_kind" => U::REFERENCE_KIND, "cardinality" => "one" }])
+                                                   :references => [{ "path" => "$.peer",
+                                                                     "target_kind" => U::REFERENCE_KIND,
+                                                                     "cardinality" => "one" }])
     U.write(second, U.read(second).merge("extension_data" => {
       extension.namespace => extension.envelope("peer" => U.read(first).fetch("id"))
     }))

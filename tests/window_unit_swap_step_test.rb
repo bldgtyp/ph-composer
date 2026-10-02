@@ -25,10 +25,11 @@ class WindowUnitSwapStepTest < PhComposerTestCase
 
   def unit(anchor = "sill_center", x: 0, definition: @definition, entities: @model.entities)
     item = entities.add_instance(definition, Geom::Transformation.translation([x / 0.0254, 0, 0]))
-    U.write(item, "id" => window_allocator.call("wun"), "schema_version" => 1,
-                  "window_type_id" => @source.fetch("id"), "anchor" => anchor,
-                  "user_data" => { "literal" => [@source.fetch("id"), "unchanged"] },
-                  "extension_data" => { "outside.fixture" => { "version" => 1, "payload" => { "literal" => "preserved" } } })
+    U.write(item,
+            "id" => window_allocator.call("wun"), "schema_version" => 1,
+            "window_type_id" => @source.fetch("id"), "anchor" => anchor,
+            "user_data" => { "literal" => [@source.fetch("id"), "unchanged"] },
+            "extension_data" => { "outside.fixture" => { "version" => 1, "payload" => { "literal" => "preserved" } } })
     item
   end
 
@@ -345,7 +346,7 @@ class WindowUnitSwapStepTest < PhComposerTestCase
 
   def host_for(item)
     P::Host.new(:entity => item.glued_to, :parent_path => [], :transform => Geom::Transformation.new,
-                :reference => {}, :values => {}, :geometry => PhComposer::FaceGeometry.capture(item.glued_to,
-                                                                                               Geom::Transformation.new))
+                :reference => {}, :values => {},
+                :geometry => PhComposer::FaceGeometry.capture(item.glued_to, Geom::Transformation.new))
   end
 end

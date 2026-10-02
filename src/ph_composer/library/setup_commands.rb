@@ -26,9 +26,10 @@ module PhComposer
         result = Schemas.list(Schemas.object({ "id" => Schemas::TEXT, "label" => Schemas::TEXT,
                                                "provider_kind" => Schemas::TEXT }))
         ADDS.each do |verb, approval|
-          feature.setup_command("#{PREFIX}.#{verb}", :description => DESCRIPTIONS.fetch(verb),
-                                                     :params => Library.object({}), :result => result, :examples => [{}],
-                                                     :approval => approval) do |request|
+          feature.setup_command("#{PREFIX}.#{verb}",
+                                :description => DESCRIPTIONS.fetch(verb),
+                                :params => Library.object({}), :result => result, :examples => [{}],
+                                :approval => approval) do |request|
             kinds, adapters = kind_adapters(request.registry)
             value = add_path(request.approval.path, :kinds => kinds, :adapters => adapters)
             refresh_sessions
@@ -47,10 +48,13 @@ module PhComposer
           end
         end
         install_reset(feature, result)
-        feature.setup_command("#{PREFIX}.remove", :description => "Remove a configured library from this machine.",
-                                                  :params => Library.object({ "provider_id" => Library.described(Library::TEXT,
-                                                                                                                 "The configured library to remove from this machine.") }), :result => result,
-                                                  :examples => [{ "provider_id" => "example" }]) do |request|
+        feature.setup_command("#{PREFIX}.remove",
+                              :description => "Remove a configured library from this machine.",
+                              :params => Library.object({ "provider_id" => Library.described(
+                                Library::TEXT, "The configured library to remove from this machine."
+                              ) }),
+                              :result => result,
+                              :examples => [{ "provider_id" => "example" }]) do |request|
           id = request.params.fetch("provider_id")
           value = Setup.remove(id)
           refresh_sessions

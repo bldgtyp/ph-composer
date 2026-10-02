@@ -51,7 +51,8 @@ module PhComposer
               result = Commands.replace_material(record, :material_id => id, :replacement => replacement,
                                                          :materials => catalog)
               request.engine.propose_update(ASSEMBLY_KIND, record.fetch("id"), proposal,
-                                            :values => Definitions.changed_values(Assembly::Schema::KIND, record, result.record),
+                                            :values => Definitions.changed_values(Assembly::Schema::KIND, record,
+                                                                                  result.record),
                                             :expected_values => { "layers" => record.fetch("layers") })
             end
           end

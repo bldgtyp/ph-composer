@@ -58,8 +58,10 @@ module PhComposer
             Definitions.unique_name!(values["name"], known, :except => row.fetch("id"))
             known.find { |record| record.fetch("id") == row.fetch("id") }&.merge!("name" => values["name"])
           end
-          request.engine.propose_update(PSI_INSTALL_KIND, row.fetch("id"), proposal, :values => values,
-                                                                                     :expected_values => row.fetch("expected_values"), :user_data => row["user_data"])
+          request.engine.propose_update(PSI_INSTALL_KIND, row.fetch("id"), proposal,
+                                        :values => values,
+                                        :expected_values => row.fetch("expected_values"),
+                                        :user_data => row["user_data"])
         end
       end
 
@@ -91,7 +93,8 @@ module PhComposer
         end
         Installs.validate(after)
         request.engine.propose_update(TYPE_KIND, target.fetch("id"), proposal,
-                                      :values => { "elements" => after.fetch("elements") }, :expected_values => target.fetch("expected_values"))
+                                      :values => { "elements" => after.fetch("elements") },
+                                      :expected_values => target.fetch("expected_values"))
       end
     end
   end

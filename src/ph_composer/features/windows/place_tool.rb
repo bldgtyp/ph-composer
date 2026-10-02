@@ -116,8 +116,10 @@ module PhComposer
         return unless chosen
 
         @gesture = { "params" => { "host" => chosen.fetch(:host).reference, "type_id" => @type_id,
-                                   "anchor" => @anchor, "offsets" => Placement::Offsets.from_point(chosen.fetch(:host).geometry,
-                                                                                                   chosen.fetch(:point)) }, "revision" => @session.revision, "edit_path" => edit_path }
+                                   "anchor" => @anchor,
+                                   "offsets" => Placement::Offsets.from_point(chosen.fetch(:host).geometry,
+                                                                              chosen.fetch(:point)) },
+                     "revision" => @session.revision, "edit_path" => edit_path }
         @gesture = DeepCopy.call(@gesture)
         view.invalidate
       rescue StandardError => error

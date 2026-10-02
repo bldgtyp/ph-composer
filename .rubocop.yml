@@ -31,7 +31,9 @@ Layout/LineLength:
   Enabled: true
   Max: 120
 
-# Keys align with the first key, for `:key => value` and `key: value` alike.
+# Keys align with the first key, for `:key => value` and `key: value` alike, including a trailing
+# hash argument without braces. Where that first key would push a line past 120, it starts its own
+# line under the call's first argument.
 Layout/HashAlignment:
   EnforcedHashRocketStyle: key
   EnforcedColonStyle: key

@@ -94,9 +94,11 @@ module PhComposer
                        :description => "Make one Zone from explicit entities in one edit context.",
                        :params => MAKE_PARAMS, :result => ZONE_ID_RESULT, :undo_name => "Make Zone",
                        :examples => [{ "parent_path" => [], "entity_ids" => [1201] }],
-                       :side_effects => "Groups loose geometry when needed and writes a Zone record.") do |request, proposal|
-          Zones.make(request, proposal, :parent_path => request.params.fetch("parent_path"),
-                                        :entity_ids => request.params.fetch("entity_ids"), :name => request.params["name"])
+                       :side_effects => "Groups loose geometry when needed and writes a Zone " \
+                                        "record.") do |request, proposal|
+          Zones.make(request, proposal,
+                     :parent_path => request.params.fetch("parent_path"),
+                     :entity_ids => request.params.fetch("entity_ids"), :name => request.params["name"])
         end
         feature.action("#{FEATURE_ID}.update", :description => "Update one explicit Zone occurrence.",
                                                :params => UPDATE_PARAMS, :result => ZONE_ID_RESULT,
@@ -106,8 +108,10 @@ module PhComposer
                                                                "expected_values" => EXAMPLE_VALUES }],
                                                :side_effects => "Updates Zone values and membership stamps.") do |
                                                     request, proposal|
-          Zones.update(request, proposal, :reference => request.params.fetch("reference"),
-                                          :values => request.params.fetch("values"), :expected_values => request.params.fetch("expected_values"))
+          Zones.update(request, proposal,
+                       :reference => request.params.fetch("reference"),
+                       :values => request.params.fetch("values"),
+                       :expected_values => request.params.fetch("expected_values"))
         end
         feature.snapshot_section("#{FEATURE_ID}.overview", :query => "#{FEATURE_ID}.all")
         feature.on_host_event(:selection_changed) { |session| session.request_refresh }

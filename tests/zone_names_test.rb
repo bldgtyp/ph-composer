@@ -77,8 +77,9 @@ class ZoneNamesTest < PhComposerTestCase
     row = zone_row
     native_rename("North")
 
-    result = invoke("ph_composer.zones.update", "reference" => row.fetch("reference"),
-                                                "expected_values" => row.fetch("values"), "values" => row.fetch("values"))
+    result = invoke("ph_composer.zones.update",
+                    "reference" => row.fetch("reference"),
+                    "expected_values" => row.fetch("values"), "values" => row.fetch("values"))
 
     assert_equal "target.changed", result.fetch("code")
     assert_equal "none", result.fetch("effect")

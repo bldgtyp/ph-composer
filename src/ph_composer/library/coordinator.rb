@@ -136,7 +136,8 @@ module PhComposer
         snapshot = row.fetch("snapshot").slice(*keys)
         identity.merge("kind" => "library", "fingerprint" => fingerprint,
                        "fingerprint_version" => adapter.fingerprint_version,
-                       "copied_at" => State.for(request.session).copy_time(request.revision, [entry.fetch("generation"), identity]),
+                       "copied_at" => State.for(request.session).copy_time(request.revision, [entry.fetch("generation"),
+                                                                                              identity]),
                        "snapshot" => DeepCopy.call(snapshot))
       end
 

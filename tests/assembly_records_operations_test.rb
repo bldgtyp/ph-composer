@@ -195,8 +195,9 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     assert_equal original, record(Assemblies::ASSEMBLY_KIND, id)
     @model.redo
     assert_equal 50, record(Assemblies::ASSEMBLY_KIND, id)["layers"].first["thickness_mm"]
-    wrong = invoke("assemblies.segments.update", "id" => id, "layer_id" => layer["id"],
-                                                 "segment_id" => "seg_MISSING00000", "values" => { "width_mm" => 150 }, "expected_values" => {})
+    wrong = invoke("assemblies.segments.update",
+                   "id" => id, "layer_id" => layer["id"],
+                   "segment_id" => "seg_MISSING00000", "values" => { "width_mm" => 150 }, "expected_values" => {})
     assert_equal %w[refused target.not_found none], wrong.values_at("status", "code", "effect")
   end
 

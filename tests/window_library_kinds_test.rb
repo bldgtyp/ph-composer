@@ -103,7 +103,8 @@ class WindowLibraryKindsTest < PhComposerTestCase
       refute_includes JSON.generate(before), @directory
       edited = before.merge("name" => "Edited #{collection}", "notes" => "local edits",
                             "user_data" => { "fixture" => ["retain"] },
-                            "extension_data" => { "fixture.unknown" => { "schema_version" => 8, "payload" => { "retain" => true } } })
+                            "extension_data" => { "fixture.unknown" => { "schema_version" => 8,
+                                                                         "payload" => { "retain" => true } } })
       W::Products::KINDS.fetch(collection).store.write(@model, edited)
       reused = invoke("#{L}.copy", copy_params(collection, "keep_local"))
       assert_equal id, reused.dig("value", "local_id")
@@ -295,7 +296,8 @@ class WindowLibraryKindsTest < PhComposerTestCase
       assert_equal "loaded", loaded.dig("value", "state"), loaded.inspect
       assert_empty loaded.dig("value", "warnings")
       input = copy_params(collection).merge("generation" => loaded.dig("value", "generation"),
-                                            "library_id" => exported.dig("library", "id"), "record_id" => originals[collection].fetch("id"))
+                                            "library_id" => exported.dig("library", "id"),
+                                            "record_id" => originals[collection].fetch("id"))
       result = invoke("#{L}.copy", input)
       assert_equal "committed", result["effect"], result.inspect
       id = result.dig("value", "local_id")

@@ -24,7 +24,8 @@ module WindowPlacementWalkthrough
     # copy's new ID; any other Windows action would also repair it first.
     repair = { "units" => [copied] }
     preview = PhComposer::API.preview(:context => client.context,
-                                      :name => "#{WindowAuthoringWalkthrough::PREFIX}.units.repair_copied_identities", :params => repair)
+                                      :name => "#{WindowAuthoringWalkthrough::PREFIX}.units.repair_copied_identities",
+                                      :params => repair)
     raise "The copy repair preview failed: #{preview['code']}" unless preview["status"] == "completed"
 
     invoke(client, "units.repair_copied_identities", repair)

@@ -58,8 +58,9 @@ module PhComposer
 
             old_id = update.before.fetch("id")
             update.after["extension_data"] = Records::Extension.copy_data(data, catalog, "Window unit", old_id,
-                                                                          { old_id => update.after.fetch("id") }, :engine => engine, :reference_plan => plan,
-                                                                                                                  :mapping_kind => REFERENCE_KIND)
+                                                                          { old_id => update.after.fetch("id") },
+                                                                          :engine => engine, :reference_plan => plan,
+                                                                          :mapping_kind => REFERENCE_KIND)
           end
         end
         private_class_method :copy_extensions!

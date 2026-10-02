@@ -98,13 +98,17 @@ module ExampleFoundation
 
   def declare_create(feature)
     feature.action(
-      "#{ID}.create_parts", :description => "Create one definition and parts that name it.",
-                            :params => { "type" => "object", "required" => %w[definition_label parts], "additionalProperties" => false,
-                                         "properties" => { "definition_label" => { "type" => "string", "minLength" => 1 },
-                                                           "parts" => { "type" => "array", "items" => PART_VALUES,
-                                                                        "minItems" => 1 } } },
-                            :result => OBJECT, :undo_name => "Create Example Parts", :side_effects => "Creates records.",
-                            :examples => [{ "definition_label" => "Frame", "parts" => [{ "label" => "Sill", "length_mm" => 1200 }] }]
+      "#{ID}.create_parts",
+      :description => "Create one definition and parts that name it.",
+      :params => { "type" => "object", "required" => %w[definition_label parts],
+                   "additionalProperties" => false,
+                   "properties" => { "definition_label" => { "type" => "string", "minLength" => 1 },
+                                     "parts" => { "type" => "array", "items" => PART_VALUES,
+                                                  "minItems" => 1 } } },
+      :result => OBJECT, :undo_name => "Create Example Parts",
+      :side_effects => "Creates records.",
+      :examples => [{ "definition_label" => "Frame", "parts" => [{ "label" => "Sill",
+                                                                   "length_mm" => 1200 }] }]
     ) do |request, changes|
       engine = request.engine
       definition = engine.propose_create(DEFINITION, changes,
@@ -121,9 +125,12 @@ module ExampleFoundation
     feature.action(
       "#{ID}.update_parts", :description => "Edit parts' values, user_data or review, all or none.",
                             :params => { "type" => "object", "required" => ["edits"], "additionalProperties" => false,
-                                         "properties" => { "edits" => { "type" => "array", "items" => EDIT, "minItems" => 1 } } },
-                            :result => OBJECT, :undo_name => "Edit Example Parts", :side_effects => "Changes part values and metadata.",
-                            :examples => [{ "edits" => [{ "id" => "exp_Ab12Cd34Ef56", "values" => { "length_mm" => 900 } }] }]
+                                         "properties" => { "edits" => { "type" => "array", "items" => EDIT,
+                                                                        "minItems" => 1 } } },
+                            :result => OBJECT, :undo_name => "Edit Example Parts",
+                            :side_effects => "Changes part values and metadata.",
+                            :examples => [{ "edits" => [{ "id" => "exp_Ab12Cd34Ef56",
+                                                          "values" => { "length_mm" => 900 } }] }]
     ) do |request, changes|
       request.params.fetch("edits").each do |edit|
         request.engine.propose_update(
@@ -139,19 +146,23 @@ module ExampleFoundation
 
   def declare_duplicate_and_migrate(feature)
     feature.action(
-      "#{ID}.duplicate_parts", :description => "Duplicate parts as one collection.",
-                               :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
-                               :result => OBJECT, :undo_name => "Duplicate Example Parts", :side_effects => "Creates records.",
-                               :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
+      "#{ID}.duplicate_parts",
+      :description => "Duplicate parts as one collection.",
+      :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
+      :result => OBJECT, :undo_name => "Duplicate Example Parts",
+      :side_effects => "Creates records.",
+      :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
     ) do |request, changes|
       { "mapping" => request.engine.propose_duplicate(PART, request.params.fetch("ids"), changes) }
     end
 
     feature.action(
-      "#{ID}.migrate_review", :description => "Raise review data to the installed version.",
-                              :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
-                              :result => OBJECT, :undo_name => "Migrate Example Review", :side_effects => "Rewrites extension data.",
-                              :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
+      "#{ID}.migrate_review",
+      :description => "Raise review data to the installed version.",
+      :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
+      :result => OBJECT, :undo_name => "Migrate Example Review",
+      :side_effects => "Rewrites extension data.",
+      :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
     ) do |request, changes|
       { "results" => request.engine.propose_migration(PART, request.params.fetch("ids"), REVIEW, changes) }
     end
@@ -165,9 +176,11 @@ module ExampleFoundation
       reader.records(DEFINITION)
     end
     feature.export_contributor(
-      "#{ID}.export.parts", :section_version => 1,
-                            :result => { "example_parts" => PhComposer::Export::Privacy.fields(%w[count total_length_mm]) },
-                            :report => method(:parts_report)
+      "#{ID}.export.parts",
+      :section_version => 1,
+      :result => { "example_parts" => PhComposer::Export::Privacy.fields(%w[count
+                                                                            total_length_mm]) },
+      :report => method(:parts_report)
     ) { |reader| reader.records(PART, :extensions => { REVIEW => ["review_status"] }) }
   end
 

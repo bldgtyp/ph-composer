@@ -41,14 +41,16 @@ module WindowAuthoringWalkthrough
       { "element_id" => element.fetch("id"), "sides" => sides }
     end
     settings = query(client, "settings.get", {}).fetch("value")
-    invoke_checked(client, "types.installs.save", "types" => [{ "id" => id,
-                                                                "expected_values" => type.fetch("values"), "installs" => edges }],
-                                                  "psi_install_types" => { "create" => [], "update" => [] }, "expected_settings" => settings)
+    invoke_checked(client, "types.installs.save",
+                   "types" => [{ "id" => id,
+                                 "expected_values" => type.fetch("values"), "installs" => edges }],
+                   "psi_install_types" => { "create" => [], "update" => [] }, "expected_settings" => settings)
     result = read_type(client, id)
     thermal = result.fetch("display").fetch("thermal")
-    client.steps << { "step" => "thermal read", "passed" => thermal.fetch("complete") &&
-                                                            thermal.fetch("uw_w_m2k").is_a?(Numeric) && thermal.fetch("u_effective_w_m2k") > thermal.fetch("uw_w_m2k") &&
-                                                            thermal.fetch("elements").length == 2 }
+    client.steps << { "step" => "thermal read",
+                      "passed" => thermal.fetch("complete") && thermal.fetch("uw_w_m2k").is_a?(Numeric) &&
+                                  thermal.fetch("u_effective_w_m2k") > thermal.fetch("uw_w_m2k") &&
+                                  thermal.fetch("elements").length == 2 }
     { "session" => session_id, "type_id" => id, "product_ids" => [glazing, frame, install],
       "thermal" => thermal, "passed" => client.steps.all? { |row| row.fetch("passed") }, "steps" => client.steps }
   end

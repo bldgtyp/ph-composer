@@ -32,11 +32,17 @@ class AssemblyRecordsCommandsTest < PhComposerTestCase
     added = Assemblies::Commands.add_segment(@record, :layer_id => @layer["id"], :width_mm => 38)
     layer = added.record["layers"][0]
     assert_equal 2, layer["segments"].length
-    edited = Assemblies::Commands.update_segment(added.record, :layer_id => layer["id"],
-                                                               :segment_id => layer["segments"][1]["id"], :values => { "width_mm" => 150, "steel_stud_spacing_mm" => 600 })
+    edited = Assemblies::Commands.update_segment(added.record,
+                                                 :layer_id => layer["id"],
+                                                 :segment_id => layer["segments"][1]["id"],
+                                                 :values => { "width_mm" => 150,
+                                                              "steel_stud_spacing_mm" => 600 })
     assert_equal 600, edited.record["layers"][0]["segments"][1]["steel_stud_spacing_mm"]
-    assigned = Assemblies::Commands.set_segment_material(edited.record, :materials => fixture_materials,
-                                                                        :layer_id => layer["id"], :segment_id => layer["segments"][1]["id"], :material_id => material_id("wood"))
+    assigned = Assemblies::Commands.set_segment_material(edited.record,
+                                                         :materials => fixture_materials,
+                                                         :layer_id => layer["id"],
+                                                         :segment_id => layer["segments"][1]["id"],
+                                                         :material_id => material_id("wood"))
     assert_equal material_id("wood"), assigned.record["layers"][0]["segments"][1]["material_id"]
     mirrored = Assemblies::Commands.mirror_segments(assigned.record)
     assert_equal assigned.record["layers"][0]["segments"].reverse, mirrored.record["layers"][0]["segments"]
@@ -59,8 +65,10 @@ class AssemblyRecordsCommandsTest < PhComposerTestCase
     one = fixture_assembly([[140, [[850, "wool"], [150, "wood"]]]])
     one["layers"][0]["segments"][0]["steel_stud_spacing_mm"] = 600
     assert_raises(PhComposer::CodedError) do
-      Assemblies::Commands.update_segment(one, :layer_id => one["layers"][0]["id"],
-                                               :segment_id => one["layers"][0]["segments"][1]["id"], :values => { "steel_stud_spacing_mm" => 600 })
+      Assemblies::Commands.update_segment(one,
+                                          :layer_id => one["layers"][0]["id"],
+                                          :segment_id => one["layers"][0]["segments"][1]["id"],
+                                          :values => { "steel_stud_spacing_mm" => 600 })
     end
   end
 
@@ -75,13 +83,18 @@ class AssemblyRecordsCommandsTest < PhComposerTestCase
   end
 
   def test_membrane_is_single_segment_and_snaps_to_one_mm
-    result = Assemblies::Commands.set_segment_material(@record, :materials => fixture_materials,
-                                                                :layer_id => @layer["id"], :segment_id => @segment["id"], :material_id => material_id("membrane"))
+    result = Assemblies::Commands.set_segment_material(@record,
+                                                       :materials => fixture_materials,
+                                                       :layer_id => @layer["id"], :segment_id => @segment["id"],
+                                                       :material_id => material_id("membrane"))
     # The existing 12 mm layer stays because only layers above 25 mm snap.
     assert_equal 12, result.record["layers"][0]["thickness_mm"]
     thick = @record["layers"][1]
-    result = Assemblies::Commands.set_segment_material(@record, :materials => fixture_materials,
-                                                                :layer_id => thick["id"], :segment_id => thick["segments"][0]["id"], :material_id => material_id("membrane"))
+    result = Assemblies::Commands.set_segment_material(@record,
+                                                       :materials => fixture_materials,
+                                                       :layer_id => thick["id"],
+                                                       :segment_id => thick["segments"][0]["id"],
+                                                       :material_id => material_id("membrane"))
     assert_equal 1.0, result.record["layers"][1]["thickness_mm"]
     assert_raises(PhComposer::CodedError) do
       Assemblies::Commands.add_segment(result.record, :materials => fixture_materials, :layer_id => thick["id"])

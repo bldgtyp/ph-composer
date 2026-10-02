@@ -219,8 +219,9 @@ class WindowRecordsOperationsTest < PhComposerTestCase
       assert_equal "reference.in_use", invoke("#{collection}.delete", "id" => first)["code"]
       assert_equal "validation.failed", invoke("#{collection}.delete", "id" => first,
                                                                        "replacement_id" => incomplete)["code"]
-      assert_equal "target.changed", invoke("#{collection}.delete", "id" => first,
-                                                                    "replacement_id" => second, "expected_values" => { "name" => "stale" })["code"]
+      assert_equal "target.changed", invoke("#{collection}.delete",
+                                            "id" => first, "replacement_id" => second,
+                                            "expected_values" => { "name" => "stale" })["code"]
       assert_equal "committed", invoke("#{collection}.delete", "id" => first, "replacement_id" => second)["effect"]
       refs = W::Types::KIND.references.select { |reference| reference.target_kind == W::Products::KINDS[collection].id }
       assert_equal [second], refs.flat_map { |reference| reference.ids(stored(W::Types::KIND, id)) }.uniq

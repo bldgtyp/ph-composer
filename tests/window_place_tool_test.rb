@@ -140,8 +140,10 @@ class WindowPlaceToolTest < PhComposerTestCase
   def test_revision_changed_after_down_refuses_and_next_click_refreshes_semantics
     choose
     down
-    changed = assignment_invoke("ph_composer.windows.types.update", "id" => @type_id,
-                                                                    "values" => { "notes" => "Changed" }, "expected_values" => { "notes" => type.fetch("notes") })
+    changed = assignment_invoke("ph_composer.windows.types.update",
+                                "id" => @type_id,
+                                "values" => { "notes" => "Changed" },
+                                "expected_values" => { "notes" => type.fetch("notes") })
     assert_equal "completed", changed.fetch("status"), changed.inspect
     before = @model.operations.length
     up
@@ -366,8 +368,10 @@ class WindowPlaceToolTest < PhComposerTestCase
     picked { @tool.onMouseMove(0, 10, 10, @view) }
     @tool.draw(@view)
     before = @view.draws.length
-    changed = assignment_invoke("ph_composer.windows.types.update", "id" => @type_id,
-                                                                    "values" => { "notes" => "New revision" }, "expected_values" => { "notes" => type.fetch("notes") })
+    changed = assignment_invoke("ph_composer.windows.types.update",
+                                "id" => @type_id,
+                                "values" => { "notes" => "New revision" },
+                                "expected_values" => { "notes" => type.fetch("notes") })
     assert_equal "completed", changed.fetch("status"), changed.inspect
     picked { @tool.onMouseMove(0, 10, 10, @view) }
     @tool.draw(@view)

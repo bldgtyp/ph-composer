@@ -116,10 +116,12 @@ class PanelTest < PhComposerTestCase
     feature = Module.new do
       def self.install(registry)
         scope = registry.feature("test.file_export", :contract_version => 1)
-        scope.file_export("test.file_export.write", :description => "Synthetic file command.",
-                                                    :params => { "type" => "object", "properties" => {}, "required" => [], "additionalProperties" => false },
-                                                    :result => { "type" => "object", "properties" => {}, "required" => [],
-                                                                 "additionalProperties" => false }) { |_request| {} }
+        scope.file_export("test.file_export.write",
+                          :description => "Synthetic file command.",
+                          :params => { "type" => "object", "properties" => {},
+                                       "required" => [], "additionalProperties" => false },
+                          :result => { "type" => "object", "properties" => {}, "required" => [],
+                                       "additionalProperties" => false }) { |_request| {} }
       end
     end
     PhComposer::Registry.install([feature])

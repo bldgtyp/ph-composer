@@ -33,8 +33,9 @@ class WindowUnitRehostStepTest < PhComposerTestCase
     native = [[0, 0, 0], [8, 0, 0], [8, 0, 6], [0, 0, 6]].map { |point|
       Geom::Point3d.new(*point.map { |value| value / 0.0254 })
     }
-    entities << Sketchup::Face.new(Sketchup::Entities.allocate_persistent_id, {}, :points => native,
-                                                                                  :normal => Geom::Vector3d.new(0, -1, 0))
+    entities << Sketchup::Face.new(Sketchup::Entities.allocate_persistent_id, {},
+                                   :points => native,
+                                   :normal => Geom::Vector3d.new(0, -1, 0))
     entities.to_a.last
   end
 

@@ -45,7 +45,8 @@ module PhComposer
             codes << "window.definition_detached" unless canonical_definition &&
                                                          definition.persistent_id == canonical_definition.persistent_id
             codes << "window.geometry_differs" unless DefinitionGeometry.matches?(definition,
-                                                                                  :type_id => type.fetch("id"), :plan => plan)
+                                                                                  :type_id => type.fetch("id"),
+                                                                                  :plan => plan)
             hosted(codes, occurrence, plan, host_geometry, existing_polygons_m)
           elsif !occurrence.entity.glued_to || !host_geometry
             codes << "window.unhosted"

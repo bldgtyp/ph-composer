@@ -159,11 +159,13 @@ module PhComposer
           "faces" => FACES.merge("description" => "The Face occurrences to assign the new Attached zone to."),
           "values" => ATTACHED_ZONE.patch_schema.merge("description" => "The new Attached zone's values."),
           "user_data" => USER_DATA,
-          "intent" => Shapes.object({ "face_type" => INTENT }, :optional => ["face_type"],
-                                                               :description => "Optionally keep, set or clear the Faces' face_type in the " \
+          "intent" => Shapes.object({ "face_type" => INTENT },
+                                    :optional => ["face_type"],
+                                    :description => "Optionally keep, set or clear the Faces' face_type in the " \
                                                     "same step."),
           "expected_values" => EXPECTED
-        }, :optional => %w[user_data intent expected_values]).freeze
+        },
+                                                           :optional => %w[user_data intent expected_values]).freeze
         ATTACHED_ZONE_CREATE_ASSIGN_RESULT = Shapes.with(ATTACHED_ZONE_ID_RESULT,
                                                          FACE_IDS_RESULT.fetch("properties")).freeze
         ATTACHED_ZONE_DELETE_PARAMS = Shapes.object({
@@ -228,9 +230,10 @@ module PhComposer
           feature.action("#{PREFIX}.classify",
                          :description => "Apply explicit keep, set or clear intent to Faces.",
                          :params => CLASSIFY_PARAMS, :result => FACE_IDS_RESULT, :undo_name => "Classify Faces",
-                         :examples => [classify, { "faces" => [EXAMPLE_FACE],
-                                                   "intent" => { "assembly_id" => { "mode" => "set",
-                                                                                    "value" => "asm_Ab12Cd34Ef56" } } }],
+                         :examples => [classify,
+                                       { "faces" => [EXAMPLE_FACE],
+                                         "intent" => { "assembly_id" => { "mode" => "set",
+                                                                          "value" => "asm_Ab12Cd34Ef56" } } }],
                          :side_effects => "Writes face assignments and Zone stamps.") do |request, proposal|
             params = request.params
             Faces.classify(request, proposal, :faces => params.fetch("faces"), :intent => params.fetch("intent"),
@@ -241,7 +244,8 @@ module PhComposer
                          :params => AUTO_CLASSIFY_PARAMS, :result => AUTO_CLASSIFY_RESULT,
                          :undo_name => "Suggest Classification",
                          :examples => [{ "zone" => EXAMPLE_FACE.slice("zone_id", "zone_path") }],
-                         :side_effects => "Writes suggested values to Faces that have no record yet.") do |request, proposal|
+                         :side_effects => "Writes suggested values to Faces that have no record " \
+                                          "yet.") do |request, proposal|
             Faces.auto_classify(request, proposal, :zone => request.params.fetch("zone"))
           end
           feature.action("#{PREFIX}.reverse",
@@ -301,19 +305,25 @@ module PhComposer
                          :undo_name => "Save Attached Zone", :examples => [{ "values" => EXAMPLE_ATTACHED }],
                          :side_effects => "Writes one Attached zone record.") do |request, proposal|
             params = request.params
-            Faces.save_attached_zone(request, proposal, :values => params.fetch("values"), :id => params["id"],
-                                                        :expected_values => params.fetch("expected_values", {}), :user_data => params["user_data"])
+            Faces.save_attached_zone(request, proposal,
+                                     :values => params.fetch("values"), :id => params["id"],
+                                     :expected_values => params.fetch("expected_values", {}),
+                                     :user_data => params["user_data"])
           end
           feature.action("#{AttachedZone::KIND_ID}.create_and_assign",
                          :description => "Create one Attached zone and assign it to explicit Face occurrences.",
                          :params => ATTACHED_ZONE_CREATE_ASSIGN_PARAMS, :result => ATTACHED_ZONE_CREATE_ASSIGN_RESULT,
                          :undo_name => "Create and Assign Attached Zone",
                          :examples => [{ "faces" => [EXAMPLE_FACE], "values" => EXAMPLE_ATTACHED }],
-                         :side_effects => "Creates one Attached zone and classifies its Faces in one Undo step.") do |request, proposal|
+                         :side_effects => "Creates one Attached zone and classifies its Faces in one Undo " \
+                                          "step.") do |request, proposal|
             params = request.params
-            Faces.create_and_assign_attached_zone(request, proposal, :values => params.fetch("values"),
-                                                                     :faces => params.fetch("faces"), :intent => params.fetch("intent", {}),
-                                                                     :expected_values => params.fetch("expected_values", {}), :user_data => params["user_data"])
+            Faces.create_and_assign_attached_zone(request, proposal,
+                                                  :values => params.fetch("values"),
+                                                  :faces => params.fetch("faces"),
+                                                  :intent => params.fetch("intent", {}),
+                                                  :expected_values => params.fetch("expected_values", {}),
+                                                  :user_data => params["user_data"])
           end
           feature.action("#{AttachedZone::KIND_ID}.duplicate",
                          :description => "Copy Attached zones without reassigning any Face.",
@@ -332,7 +342,8 @@ module PhComposer
                          :description => "Delete one Attached zone, moving every Face that names it in the same step.",
                          :params => ATTACHED_ZONE_DELETE_PARAMS, :result => ATTACHED_ZONE_DELETE_RESULT,
                          :undo_name => "Delete Attached Zone", :examples => [delete],
-                         :side_effects => "Reassigns or reclassifies referencing Faces and deletes the record.") do |request, proposal|
+                         :side_effects => "Reassigns or reclassifies referencing Faces and deletes the " \
+                                          "record.") do |request, proposal|
             Faces.delete_attached_zone(request, proposal, :id => request.params.fetch("id"),
                                                           :replacement => request.params.fetch("replacement"))
           end

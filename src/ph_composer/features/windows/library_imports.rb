@@ -10,9 +10,11 @@ module PhComposer
       def copy_schema
         text = { "type" => "string", "minLength" => 1 }
         Shapes.object({ "provider_id" => text, "kind" => { "type" => "string", "enum" => ["psi_install_types"] },
-                        "generation" => { "type" => "integer", "minimum" => 1 }, "library_id" => text, "record_id" => text,
+                        "generation" => { "type" => "integer", "minimum" => 1 }, "library_id" => text,
+                        "record_id" => text,
                         "choice" => { "type" => "string", "enum" => %w[create keep_local use_library] },
-                        "local_id" => text, "expected_values" => Shapes::OBJECT }, :optional => %w[local_id expected_values])
+                        "local_id" => text, "expected_values" => Shapes::OBJECT },
+                      :optional => %w[local_id expected_values])
       end
 
       def schema

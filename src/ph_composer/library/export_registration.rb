@@ -33,20 +33,23 @@ module PhComposer
         text = { "type" => "string", "minLength" => 1 }
         counted = Library.object({ "kind" => text, "count" => { "type" => "integer", "minimum" => 0 } })
         omitted = Library.object({ "record_kind" => text, "id" => text,
-                                   "fields" => { "type" => "array", "items" => text }, "reason" => text }, :optional => ["id"])
+                                   "fields" => { "type" => "array", "items" => text }, "reason" => text },
+                                 :optional => ["id"])
         { "kinds" => { "type" => "array", "items" => counted },
           "omissions" => { "type" => "array", "items" => omitted } }
       end
 
       def install(feature)
         shape = Library.object(summary_fields.merge("library_id" => Library::TEXT, "library_name" => Library::TEXT,
-                                                    "identity" => { "type" => "string", "enum" => %w[new update] }, "written" => { "type" => "boolean" }))
+                                                    "identity" => { "type" => "string", "enum" => %w[new update] },
+                                                    "written" => { "type" => "boolean" }))
         feature.file_export("#{FEATURE_ID}.export_file",
-                            :description => "Write local definitions to a library file the user chooses in the native save " \
-                                            "dialog; export_preview shows what it will hold.",
+                            :description => "Write local definitions to a library file the user chooses in the " \
+                                            "native save dialog; export_preview shows what it will hold.",
                             :params => params, :result => shape, :approval => ExportWorkflow::APPROVAL,
                             :examples => [{}, { "scope" => "selected", "records" => [
-                                                                         { "record_kind" => "example_parts", "id" => "part_AAAAAAAAAAAA" }
+                                                                         { "record_kind" => "example_parts",
+                                                                           "id" => "part_AAAAAAAAAAAA" }
                                                                        ],
                                                 "identity" => "new" }]) do |request|
           ExportWorkflow.run(request)

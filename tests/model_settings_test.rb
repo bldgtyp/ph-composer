@@ -12,8 +12,10 @@ class ModelSettingsTest < PhComposerTestCase
     super
     @model = Sketchup.active_model
     @settings = PhComposer::ModelSettings.new(:dictionary => "ph_composer.test_settings", :defaults => DEFAULTS,
-                                              :schema => VALUES, :label => "Example", :step_name => "update_example_settings",
-                                              :affected => [{ "kind" => "example_settings", "id" => "test.settings", "change" => "updated" }]) do |values|
+                                              :schema => VALUES, :label => "Example",
+                                              :step_name => "update_example_settings",
+                                              :affected => [{ "kind" => "example_settings", "id" => "test.settings",
+                                                              "change" => "updated" }]) do |values|
       values.fetch("lower") < values.fetch("upper") ? [] : ["Lower must precede upper."]
     end
     settings = @settings
@@ -23,9 +25,10 @@ class ModelSettingsTest < PhComposerTestCase
         scope = registry.feature("test.settings", :contract_version => 1)
         params = { "type" => "object", "additionalProperties" => false, "required" => %w[values expected_values],
                    "properties" => { "values" => VALUES, "expected_values" => VALUES } }
-        scope.action("test.settings.update", :description => "Update model settings.", :params => params,
-                                             :result => VALUES, :undo_name => "Change Example Settings", :side_effects => "Writes settings.",
-                                             :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }]) do |request, proposal|
+        scope.action("test.settings.update",
+                     :description => "Update model settings.", :params => params,
+                     :result => VALUES, :undo_name => "Change Example Settings", :side_effects => "Writes settings.",
+                     :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }]) do |request, proposal|
           settings.propose(request.model, proposal, :values => request.params.fetch("values"),
                                                     :expected_values => request.params.fetch("expected_values"))
         end

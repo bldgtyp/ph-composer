@@ -154,8 +154,10 @@ class WindowUnitResetStepTest < PhComposerTestCase
     assert_equal 3, @model.definitions.length
     assert_equal other.persistent_id, U::DefinitionIndex.read(@model).fetch(other_type.fetch("id"))
     @first.definition = old
-    U::DefinitionIndex::STORE.write(@model, "schema_version" => 1,
-                                            "definitions" => { @type.fetch("id") => 999999, other_type.fetch("id") => other.persistent_id })
+    U::DefinitionIndex::STORE.write(@model,
+                                    "schema_version" => 1,
+                                    "definitions" => { @type.fetch("id") => 999999,
+                                                       other_type.fetch("id") => other.persistent_id })
     reset.apply(@model, {})
     refute_equal 999999, U::DefinitionIndex.read(@model).fetch(@type.fetch("id"))
     refute_same fresh, @first.definition

@@ -105,7 +105,8 @@ module PhComposer
       KIND = Records::RecordKind.new(:id => TYPE_KIND, :label => "Window Type", :schema_version => 1,
                                      :id_prefix => "wnt", :fields => FIELDS, :references => REFERENCES,
                                      :validate => ->(values) {
-                                                    Fields.problems(values) + Fields.source_problems(values["source"], SNAPSHOT_SCHEMA) +
+                                                    Fields.problems(values) + Fields.source_problems(values["source"],
+                                                                                                     SNAPSHOT_SCHEMA) +
                                                     layout_problems(values)
                                                   })
 

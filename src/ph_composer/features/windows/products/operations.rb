@@ -27,8 +27,9 @@ module PhComposer
             values["name"] = values["name"].strip
             Definitions.unique_name!(values["name"], Definitions.records(request, kind), :except => id)
           end
-          request.engine.propose_update(kind.id, id, proposal, :values => values,
-                                                               :expected_values => expected_values, :user_data => user_data)
+          request.engine.propose_update(kind.id, id, proposal,
+                                        :values => values,
+                                        :expected_values => expected_values, :user_data => user_data)
           { "id" => id }
         end
 

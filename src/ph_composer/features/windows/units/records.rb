@@ -16,8 +16,10 @@ module PhComposer
                                               Fields.field("window_type_id",
                                                            { "type" => "string" }, :required => true),
                                               Fields.field("anchor",
-                                                           { "type" => "string", "enum" => Anchors::ALL }, :required => true)
-                                            ], :references => [Records::Reference.new(:key => "window_type_id", :target_kind => TYPE_KIND,
+                                                           { "type" => "string", "enum" => Anchors::ALL },
+                                                           :required => true)
+                                            ], :references => [Records::Reference.new(:key => "window_type_id",
+                                                                                      :target_kind => TYPE_KIND,
                                                                                       :cardinality => "one")])
 
       module_function

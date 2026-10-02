@@ -62,7 +62,8 @@ module PhComposer
         def reference_entries
           @rows.map do |row|
             Records::ReferenceEntry.new(:kind => REFERENCE_KIND,
-                                        :key => row.fetch("reference").fetch("entity_path").dup, :record => DeepCopy.call(row.fetch("after")))
+                                        :key => row.fetch("reference").fetch("entity_path").dup,
+                                        :record => DeepCopy.call(row.fetch("after")))
           end
         end
 

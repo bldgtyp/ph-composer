@@ -58,8 +58,9 @@ module PhComposer
       def propose_update(kind_id, id, change_set, values: {}, user_data: nil, extension_payloads: {},
                          expected_values: {})
         writable!(kind_id, change_set)
-        @engine.propose_update(kind_id, id, change_set, :values => values, :user_data => user_data,
-                                                        :extension_payloads => extension_payloads, :expected_values => expected_values)
+        @engine.propose_update(kind_id, id, change_set,
+                               :values => values, :user_data => user_data,
+                               :extension_payloads => extension_payloads, :expected_values => expected_values)
       end
 
       def propose_delete(kind_id, id, change_set, expected_values: {}, reference_plan: nil)

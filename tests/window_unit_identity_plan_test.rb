@@ -58,9 +58,11 @@ class WindowUnitIdentityPlanTest < PhComposerTestCase
     items.last.record["extension_data"] = { "outside" => { "schema_version" => 1, "payload" => {} } }
     before = PhComposer::DeepCopy.call(items.map(&:record))
     error = assert_raises(PhComposer::CodedError) do
-      U::IdentityPlan.build(items, :identity => ->(_prefix) { "wun_BBBBBBBBBBBB" },
-                                   :catalog => PhComposer::Registry.current.catalog,
-                                   :engine => PhComposer::Records::Engine.new(Sketchup.active_model, PhComposer::Registry.current.catalog))
+      U::IdentityPlan.build(items,
+                            :identity => ->(_prefix) { "wun_BBBBBBBBBBBB" },
+                            :catalog => PhComposer::Registry.current.catalog,
+                            :engine => PhComposer::Records::Engine.new(Sketchup.active_model,
+                                                                       PhComposer::Registry.current.catalog))
     end
     assert_equal "copy.rule_missing", error.code
     assert_equal before, items.map(&:record)

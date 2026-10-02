@@ -142,7 +142,8 @@ module PhComposer
                     DefinitionGeometry.matches?(definition, :type_id => @type.fetch("id"), :plan => @plan)
 
           raise CodedError.new("window.definition_changed",
-                               "The canonical Window definition geometry or behavior differs from its Type. Nothing was written.")
+                               "The canonical Window definition geometry or behavior differs from its Type. " \
+                               "Nothing was written.")
         end
 
         def create_definition(model)

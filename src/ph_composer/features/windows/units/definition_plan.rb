@@ -20,8 +20,8 @@ module PhComposer
           columns = record.fetch("columns_m")
           unless valid_bands?(rows) && valid_bands?(columns)
             raise CodedError.new("validation.failed",
-                                 "Complete every Window Type dimension with a finite positive size before generating a Window Unit. " \
-                                 "Nothing was written.")
+                                 "Complete every Window Type dimension with a finite positive size before generating " \
+                                 "a Window Unit. Nothing was written.")
           end
           grid = Grid.new(record)
           glazed = record.fetch("elements").select { |cell| cell.fetch("kind") == "glazed" }

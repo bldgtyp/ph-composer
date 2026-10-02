@@ -45,7 +45,8 @@ module PhComposer
 
                 result[[kind, id]] << { "kind" => "window_element", "type_id" => record.fetch("id"),
                                         "element_id" => element.fetch("id"), "side" => side,
-                                        "name" => "#{record['name']} / #{element['name']} / #{side}#{inherited ? ' (default)' : ''}" }
+                                        "name" => "#{record['name']} / #{element['name']} / " \
+                                                  "#{side}#{inherited ? ' (default)' : ''}" }
               end
             end
           end

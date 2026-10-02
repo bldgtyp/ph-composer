@@ -50,8 +50,10 @@ class ExportTest < PhComposerTestCase
   # The `request.query` rule: a contributor reads only sections of its own feature or one it requires.
   def test_a_section_read_from_a_feature_not_required_is_refused
     feature = feature_declaring do |scope|
-      scope.export_contributor("test.export.reader", :section_version => 1,
-                                                     :requires => ["example.foundation.export.parts", "test.export.nowhere"]) { [] }
+      scope.export_contributor("test.export.reader",
+                               :section_version => 1,
+                               :requires => ["example.foundation.export.parts",
+                                             "test.export.nowhere"]) { [] }
     end
 
     error = assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([feature]) }

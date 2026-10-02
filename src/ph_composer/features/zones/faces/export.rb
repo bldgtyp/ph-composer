@@ -34,11 +34,12 @@ module PhComposer
           feature.query("#{PREFIX}.export_preflight", :description => "Face classification and Assembly checks.",
                                                       :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
                                                       :examples => [{}]) { |request| preflight(request) }
-          feature.export_contributor(SECTION, :section_version => 1,
-                                              :preflight => "#{PREFIX}.export_preflight", :projection => method(:contexts),
-                                              :result => { "surface_omissions" => [
-                                                Export::Privacy.fields(%w[face_id zone_id code reason area_m2])
-                                              ] }, :report => method(:omission_report)) { |reader| records(reader) }
+          feature.export_contributor(SECTION,
+                                     :section_version => 1,
+                                     :preflight => "#{PREFIX}.export_preflight", :projection => method(:contexts),
+                                     :result => { "surface_omissions" => [
+                                       Export::Privacy.fields(%w[face_id zone_id code reason area_m2])
+                                     ] }, :report => method(:omission_report)) { |reader| records(reader) }
         end
 
         def omission_report(result, display_units)

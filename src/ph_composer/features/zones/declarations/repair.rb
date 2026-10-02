@@ -49,10 +49,13 @@ module PhComposer
                        :examples => [{ "zone" => EXAMPLE_ZONE, "face_id" => "fac_Mn34Op56Qr78",
                                        "zones" => [EXAMPLE_ZONE] }],
                        :undo_name => "Repair Split Face Identity",
-                       :side_effects => "Reidentifies split pieces and retires invalid Surface links.") do |request, proposal|
+                       :side_effects => "Reidentifies split pieces and retires invalid Surface " \
+                                        "links.") do |request, proposal|
           params = request.params
-          Zones.repair_split_face(request, proposal, :zone => params.fetch("zone"), :face_id => params.fetch("face_id"),
-                                                     :zones => params.fetch("zones"), :retaining_entity_path => params["retaining_entity_path"])
+          Zones.repair_split_face(request, proposal,
+                                  :zone => params.fetch("zone"), :face_id => params.fetch("face_id"),
+                                  :zones => params.fetch("zones"),
+                                  :retaining_entity_path => params["retaining_entity_path"])
         end
         feature.action("#{FEATURE_ID}.repair_identity",
                        :description => "Give one copied Zone occurrence an identity of its own.",
@@ -66,7 +69,8 @@ module PhComposer
                        :description => "Regroup the stamped members of an exploded Zone, recovering only their stamp.",
                        :params => RESTORE_PARAMS, :result => RESTORE_RESULT, :undo_name => "Restore Zone",
                        :examples => [{ "parent_path" => [], "zone_id" => "zon_Ab12Cd34Ef56" }],
-                       :side_effects => "Groups stamped Faces in one parent context and writes a Zone record.") do |request, proposal|
+                       :side_effects => "Groups stamped Faces in one parent context and writes a Zone " \
+                                        "record.") do |request, proposal|
           Zones.restore(request, proposal, :parent_path => request.params.fetch("parent_path"),
                                            :zone_id => request.params.fetch("zone_id"))
         end

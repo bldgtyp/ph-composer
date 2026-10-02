@@ -13,8 +13,9 @@ module PhComposer
       def install(feature)
         Products::KINDS.each_key do |collection|
           adapter = ProductAdapter.new(collection)
-          feature.library_kind("#{FEATURE_ID}.library_#{collection}", :contract_version => 1,
-                                                                      :record_kind => adapter.kind.id, :adapter => adapter.declaration)
+          feature.library_kind("#{FEATURE_ID}.library_#{collection}",
+                               :contract_version => 1,
+                               :record_kind => adapter.kind.id, :adapter => adapter.declaration)
         end
       end
 
@@ -70,7 +71,8 @@ module PhComposer
           expected = kind.descriptor.patch_schema
           expected["properties"] = expected.fetch("properties").slice(*fields)
           row = Shapes.object({ "id" => Shapes::TEXT, "mapped" => schema, "expected_values" => expected,
-                                "source" => kind.values_schema.fetch("properties").fetch("source") }, :optional => ["source"])
+                                "source" => kind.values_schema.fetch("properties").fetch("source") },
+                              :optional => ["source"])
           callback(Shapes::NONE, Shapes.list(row)) do |request, _proposal|
             Definitions.records(request, kind).map do |record|
               projection = { "id" => record.fetch("id"), "mapped" => map(record),
@@ -87,20 +89,24 @@ module PhComposer
           params.fetch("properties").fetch("values").fetch("properties")["source"] =
             kind.values_schema.fetch("properties").fetch("source")
           callback(params, Shapes::RESULT) do |request, proposal|
-            Products::Operations.update(request, proposal, @collection, :id => request.params.fetch("id"),
-                                                                        :values => request.params.fetch("values"), :expected_values => request.params.fetch("expected_values"))
+            Products::Operations.update(request, proposal, @collection,
+                                        :id => request.params.fetch("id"),
+                                        :values => request.params.fetch("values"),
+                                        :expected_values => request.params.fetch("expected_values"))
           end
         end
 
         def declaration
-          Declarations::LibraryAdapter.new(:wire_kind => @collection, :wire_version => 1,
-                                           :fingerprint_version => 1, :wire_schema => wire_schema, :mapped_schema => schema,
-                                           :fingerprint_fields => fields, :map => method(:map), :reverse => method(:reverse),
-                                           :fingerprint => method(:fingerprint), :local_read => local_read,
-                                           :create => callback(Shapes.create(kind), Shapes::RESULT) do |request, proposal|
-                                                        Products::Operations.create(request, proposal, @collection, :values => request.params.fetch("values"),
-                                                                                                                    :user_data => request.params["user_data"])
-                                                      end, :replace => replace, :assign => LibraryAssignment.callback(@collection))
+          Declarations::LibraryAdapter.new(
+            :wire_kind => @collection, :wire_version => 1, :fingerprint_version => 1, :wire_schema => wire_schema,
+            :mapped_schema => schema, :fingerprint_fields => fields, :map => method(:map), :reverse => method(:reverse),
+            :fingerprint => method(:fingerprint), :local_read => local_read,
+            :create => callback(Shapes.create(kind), Shapes::RESULT) do |request, proposal|
+              Products::Operations.create(request, proposal, @collection, :values => request.params.fetch("values"),
+                                                                          :user_data => request.params["user_data"])
+            end,
+            :replace => replace, :assign => LibraryAssignment.callback(@collection)
+          )
         end
       end
     end

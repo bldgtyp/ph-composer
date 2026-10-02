@@ -72,8 +72,10 @@ module PhComposer
           source = request.engine.find(TYPE_KIND, item.record.fetch("window_type_id"))
           target = flipped_type(request, proposal, source, :name => name, :seed => { "unit" => unit, "name" => name })
           step = FlipStep.new(:model => request.model, :source_type => source, :target_type => target,
-                              :reference => item.reference, :expected_record => expected.fetch(item.path), :expected_records => expected,
-                              :host => reads.host(item), :other_polygons_m => reads.other_polygons(:except => [item.path]))
+                              :reference => item.reference, :expected_record => expected.fetch(item.path),
+                              :expected_records => expected,
+                              :host => reads.host(item),
+                              :other_polygons_m => reads.other_polygons(:except => [item.path]))
           proposal.add_step(step, :scopes => [step.scope])
           step.findings.each { |finding| proposal.add_finding(finding) }
           { "unit_id" => expected.fetch(item.path).fetch("id"), "type_id" => target.fetch("id") }
@@ -106,7 +108,8 @@ module PhComposer
           step = SwapStep.new(:model => request.model, :target_type => type, :expected_records => expected,
                               :items => items.map do |item|
                                           { :reference => item.reference, :expected_record => expected.fetch(item.path),
-                                            :from_type => reads.type(item), :host => reads.host(item), :other_polygons_m => others }
+                                            :from_type => reads.type(item), :host => reads.host(item),
+                                            :other_polygons_m => others }
                                         end)
           proposal.add_step(step, :scopes => [step.scope]) if step.needed?
           { "unit_ids" => items.map { |item| expected.fetch(item.path).fetch("id") } }
@@ -157,8 +160,10 @@ module PhComposer
           end
           steps.each do |step|
             reference = step.affected.first.fetch("reference")
-            proposal.add_step(step, :scopes => [MutationScope.new,
-                                                PhComposer::Operations::EntityScope.new(reference.fetch("entity_path")[0...-1])])
+            proposal.add_step(step, :scopes => [
+              MutationScope.new,
+              PhComposer::Operations::EntityScope.new(reference.fetch("entity_path")[0...-1])
+            ])
           end
           { "unit_ids" => steps.map { |step| step.affected.first.fetch("id") } }
         end

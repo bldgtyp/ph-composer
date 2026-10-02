@@ -103,7 +103,8 @@ module PhComposer
 
         def refuse!
           raise CodedError.new("window.restore_unavailable",
-                               "The stamped Faces do not uniquely match the complete Window Type outline. Use Place instead.")
+                               "The stamped Faces do not uniquely match the complete Window Type outline. Use " \
+                               "Place instead.")
         end
       end
     end

@@ -39,14 +39,16 @@ module PhComposer
                                        :target_kind => AssemblyAssignment::KIND) do |request, proposal, from:, to:|
             AssemblyAssignment.retarget(request, proposal, :from => from, :to => to)
           end
-          feature.query("#{PREFIX}.assembly_usage", :description => "Face counts and gross areas by Assembly.",
-                                                    :params => Shapes::NONE, :result => Shapes.object({ "assemblies" => USAGE }),
-                                                    :examples => [{}]) { |request| { "assemblies" => Faces.all(request).fetch("assembly_usage") } }
+          feature.query("#{PREFIX}.assembly_usage",
+                        :description => "Face counts and gross areas by Assembly.",
+                        :params => Shapes::NONE, :result => Shapes.object({ "assemblies" => USAGE }),
+                        :examples => [{}]) { |request| { "assemblies" => Faces.all(request).fetch("assembly_usage") } }
           # Identical snapshot queries are memoized for this build by the shared shell. Usage and the
           # Face table therefore share one walk, without retaining an Index after the read phase.
           feature.snapshot_section("#{PREFIX}.usage", :query => "#{PREFIX}.all")
-          feature.query("#{PREFIX}.assembly_choices", :description => "Current Assembly names, hints and colours.",
-                                                      :params => Shapes::NONE, :result => CHOICES, :examples => [{}]) do |request|
+          feature.query("#{PREFIX}.assembly_choices",
+                        :description => "Current Assembly names, hints and colours.",
+                        :params => Shapes::NONE, :result => CHOICES, :examples => [{}]) do |request|
             { "assemblies" => AssemblyAssignment.catalog(request).fetch(:records).values.map do |row|
               { "id" => row.fetch("id"), "name" => row.fetch("values").fetch("name"),
                 "type" => row.fetch("values")["type"], "color" => row.fetch("display").fetch("color") }

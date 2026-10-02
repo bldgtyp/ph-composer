@@ -23,16 +23,19 @@ module PhComposer
         feature.export_contributor(CONSTRUCTIONS, :section_version => 1, :requires => [FACES]) do |reader|
           ready(reader).constructions
         end
-        feature.export_contributor(APERTURES, :section_version => 1, :preflight => PREFLIGHT, :requires => [FACES],
-                                              :result => {
-                                                "window_usage" => [Export::Privacy.fields(%w[type_id type_name zone_id unit_count aperture_count
-                                                                                             install_names])],
-                                                "window_schema_exceptions" => [Export::Privacy.fields(%w[
-                                                  construction_id g_value
-                                                ])],
-                                                "window_face_areas" => [Export::Privacy.fields(%w[face_id zone_id gross_area_m2 glazed_area_m2
-                                                                                                  net_area_m2])]
-                                              }, :report => method(:report)) { |reader| ready(reader).apertures }
+        feature.export_contributor(APERTURES,
+                                   :section_version => 1, :preflight => PREFLIGHT, :requires => [FACES],
+                                   :result => {
+                                     "window_usage" => [Export::Privacy.fields(%w[type_id type_name zone_id unit_count
+                                                                                  aperture_count
+                                                                                  install_names])],
+                                     "window_schema_exceptions" => [Export::Privacy.fields(%w[
+                                       construction_id g_value
+                                     ])],
+                                     "window_face_areas" => [Export::Privacy.fields(%w[face_id zone_id gross_area_m2
+                                                                                       glazed_area_m2
+                                                                                       net_area_m2])]
+                                   }, :report => method(:report)) { |reader| ready(reader).apertures }
       end
 
       def assess(**values)

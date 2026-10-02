@@ -13,7 +13,8 @@ module PhComposer
                                                                     "x-unit" => "m" } }).freeze
       SERVICE = ModelSettings.new(:dictionary => "ph_composer.windows_settings", :defaults => DEFAULTS,
                                   :schema => VALUES, :label => "Window", :step_name => "update_window_settings",
-                                  :affected => [{ "kind" => "window_settings", "id" => FEATURE_ID, "change" => "updated" }])
+                                  :affected => [{ "kind" => "window_settings", "id" => FEATURE_ID,
+                                                  "change" => "updated" }])
       SLOT_ID = "wst_ModelDefaults"
       KEY = "ph_composer.windows_settings"
 
@@ -27,18 +28,16 @@ module PhComposer
         Records::ReferenceEntry.new(:kind => KIND, :key => KEY, :record => values.merge("id" => SLOT_ID))
       end
 
-      TARGET = Records::ReferenceTarget.new(:id => KIND, :label => "Window defaults", :schema_version => 1,
-                                            :values => VALUES, :records => ->(model) {
-                                                                             [entry(read(model))]
-                                                                           },
-                                            :validate => ->(record) {
-                                                           (record["id"] == SLOT_ID ? [] : ["The Model settings identity is invalid."]) +
-                                                           JsonSchema.validate(record.reject { |key, _|
-                                                                                 key == "id"
-                                                                               }, VALUES)
-                                                         },
-                                            :references => [Records::Reference.new(:key => "default_psi_install_id", :target_kind => PSI_INSTALL_KIND,
-                                                                                   :cardinality => "one")])
+      TARGET = Records::ReferenceTarget.new(
+        :id => KIND, :label => "Window defaults", :schema_version => 1, :values => VALUES,
+        :records => ->(model) { [entry(read(model))] },
+        :validate => ->(record) {
+          (record["id"] == SLOT_ID ? [] : ["The Model settings identity is invalid."]) +
+            JsonSchema.validate(record.reject { |key, _| key == "id" }, VALUES)
+        },
+        :references => [Records::Reference.new(:key => "default_psi_install_id", :target_kind => PSI_INSTALL_KIND,
+                                               :cardinality => "one")]
+      )
 
       def propose(request, proposal, values:, expected_values:)
         Units::Mutation.prepare(request, proposal)
@@ -63,17 +62,21 @@ module PhComposer
                                      :target_kind => PSI_INSTALL_KIND) do |request, proposal, from:, to:|
           retarget(request, proposal, :from => from, :to => to)
         end
-        feature.query("#{FEATURE_ID}.settings.get", :description => "The Model's installation defaults.",
-                                                    :params => Shapes::NONE, :result => VALUES, :examples => [{}]) { |request| read(request.model) }
+        feature.query("#{FEATURE_ID}.settings.get",
+                      :description => "The Model's installation defaults.",
+                      :params => Shapes::NONE, :result => VALUES, :examples => [{}]) { |request| read(request.model) }
         feature.snapshot_section("#{FEATURE_ID}.settings", :query => "#{FEATURE_ID}.settings.get")
-        feature.action("#{FEATURE_ID}.settings.update", :description => "Set guarded installation defaults.",
-                                                        :params => Shapes.object({ "values" => Shapes.described(VALUES, "The complete new defaults."),
-                                                                                   "expected_values" => Shapes.described(VALUES,
-                                                                                                                         "The defaults last read; a change refuses.") }),
-                                                        :result => VALUES,
-                                                        :undo_name => "Change Window Defaults",
-                                                        :side_effects => Shapes.side_effects("Stores installation defaults in this SKP."),
-                                                        :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }]) do |request, proposal|
+        feature.action("#{FEATURE_ID}.settings.update",
+                       :description => "Set guarded installation defaults.",
+                       :params => Shapes.object({ "values" => Shapes.described(VALUES, "The complete new defaults."),
+                                                  "expected_values" => Shapes.described(
+                                                    VALUES, "The defaults last read; a change refuses."
+                                                  ) }),
+                       :result => VALUES,
+                       :undo_name => "Change Window Defaults",
+                       :side_effects => Shapes.side_effects("Stores installation defaults in this SKP."),
+                       :examples => [{ "values" => DEFAULTS,
+                                       "expected_values" => DEFAULTS }]) do |request, proposal|
           propose(request, proposal, :values => request.params.fetch("values"),
                                      :expected_values => request.params.fetch("expected_values"))
         end

@@ -221,8 +221,9 @@ class SelectionTest < PhComposerTestCase
 
   def make_zone(id)
     faces = 3.times.map do |index|
-      Sketchup::Face.new(id + index + 1, {}, :points => [Geom::Point3d.new(0, 0, index),
-                                                         Geom::Point3d.new(2, 0, index), Geom::Point3d.new(2, 2, index)])
+      Sketchup::Face.new(id + index + 1, {},
+                         :points => [Geom::Point3d.new(0, 0, index),
+                                     Geom::Point3d.new(2, 0, index), Geom::Point3d.new(2, 2, index)])
     end
     group = Sketchup::Group.new(id, Sketchup::Entities.new(faces))
     @model.entities << group
@@ -244,7 +245,8 @@ class SelectionTest < PhComposerTestCase
   def update(rows, field, value, revision)
     invoke("ph_composer.zones.update_field", { "field" => field, "value" => value,
                                                "targets" => rows.map do |row|
-                                                              { "reference" => row.fetch("reference"), "expected_values" => row.fetch("values") }
+                                                              { "reference" => row.fetch("reference"),
+                                                                "expected_values" => row.fetch("values") }
                                                             end },
            revision)
   end
