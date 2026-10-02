@@ -26,7 +26,7 @@ module PhComposer
         @target ||= Placement::ToolTarget.new(@session, @context)
         Units::Anchors.point(anchor, :width_m => 1, :height_m => 1)
         plan = @target.refresh(type_id)
-        @target.host(host) if host
+        @target.check!(host) if host
         @type_id, @anchor, @host = type_id.dup, anchor.dup, DeepCopy.call(host)
         @plan = plan
         @session.model.select_tool(self) unless active?

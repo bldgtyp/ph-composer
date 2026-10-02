@@ -123,7 +123,7 @@ module PhComposer
             record == expected.fetch(item.path, item.record)
           from_type = input.fetch(:from_type)
           old_plan = source_plan(model, item, record, from_type)
-          parent = parent_transform(model, item.path[0...-1])
+          parent = item.parent_transform
           row = instance_row(item, record, old_plan, parent)
           row["other_polygons_m"] = DeepCopy.call(input.fetch(:other_polygons_m))
           capture_host!(row, item, input[:host], parent)
@@ -272,20 +272,6 @@ module PhComposer
             raise CodedError.new("geometry.failed", "The swapped Window transform or glue could not be preserved.")
           end
           Units.write(entity, row.fetch("after"))
-        end
-
-        def parent_transform(model, path)
-          transform = Geom::Transformation.new
-          entities = model.entities
-          path.each do |id|
-            found = entities.to_a.select { |entity| entity.persistent_id == id }
-            unless found.length == 1 && found.first.is_a?(Sketchup::Group)
-              changed!("The Window parent occurrence no longer resolves uniquely.")
-            end
-            transform *= found.first.transformation
-            entities = found.first.entities
-          end
-          transform
         end
 
         def changed!(message)

@@ -18,7 +18,8 @@ module PhComposer
         TARGET = Records::ReferenceTarget.new(
           :id => REFERENCE_KIND, :label => "Face", :records => ReferenceTargets.method(:entries),
           :validate => Schema.method(:problems), :schema_version => 1, :values => FACE_VALUES,
-          :occurrence => FACE_REFERENCE, :references => [ATTACHED_ZONE_REFERENCE, ASSEMBLY_REFERENCE]
+          :occurrence => FACE_REFERENCE, :references => [ATTACHED_ZONE_REFERENCE, ASSEMBLY_REFERENCE],
+          :locate => Zones::Occurrences.method(:locate_face)
         )
         ATTACHED_ZONE = AttachedZone::RECORD_KIND.descriptor
         EXAMPLE_FACE = { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201], "entity_path" => [1202],
@@ -106,6 +107,17 @@ module PhComposer
             "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL
           )
         ).freeze
+        HOST_CONTEXT_PARAMS = Shapes.object({
+          "paths" => { "type" => "array", "items" => PATH.merge("minItems" => 1), "minItems" => 1,
+                       "maxItems" => Pages::MAXIMUM_LIMIT,
+                       "description" => "Root-to-Face persistent-id paths, as a pick or a glued instance holds them." }
+        }).freeze
+        HOST_CONTEXT_RESULT = Shapes.object({
+          "faces" => Shapes.list(Shapes.object({
+            "path" => PATH, "reference" => FACE_REFERENCE,
+            "values" => FACE_VALUES.merge("description" => "Empty for a Face with no record.")
+          }), :description => "One row per path that names a Zone Face, in request order. Other paths are omitted.")
+        }).freeze
         CHOOSE_PARAMS = Shapes.object({
           "field" => { "type" => "string", "enum" => %w[face_type boundary_condition attached_zone_id assembly_id],
                        "description" => "The Classify palette field to choose a value for." },
@@ -186,6 +198,12 @@ module PhComposer
                         :params => Shapes::NONE, :result => ALL_RESULT, :examples => [{}]) do |request|
             Faces.all(request)
           end
+          feature.query("#{PREFIX}.host_context",
+                        :description => "The reference and values of the Faces at explicit native paths, for a " \
+                                        "feature that hosts objects on Faces. Scans only each path, never the " \
+                                        "whole Model; Zone state is in ph_composer.zones.all.",
+                        :params => HOST_CONTEXT_PARAMS, :result => HOST_CONTEXT_RESULT,
+                        :examples => [{ "paths" => [[1201, 1202]] }]) { |request| Faces.host_context(request) }
           declare_writes(feature)
           declare_viewport(feature)
           declare_attached_zones(feature)

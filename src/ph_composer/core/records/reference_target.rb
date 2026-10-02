@@ -10,6 +10,11 @@ module PhComposer
     # nil-record tombstone or a UUID-wide exclusion that could hide another copied occurrence.
     ReferenceRemoval = Struct.new(:kind, :key, :before, keyword_init: true)
 
+    # One live entity a reference target's `locate:` found: the entity, the collection holding it,
+    # the accumulated parent-to-world transform and the persistent-id path of its parent. A caller
+    # may read its geometry and glue to it; writes to its records stay with the owner.
+    LocatedEntity = Struct.new(:kind, :reference, :entity, :entities, :transform, :parent_path, keyword_init: true)
+
     # A feature's read-only reference inventory. The provider returns ReferenceEntry values;
     # validation is pure and returns findings. Neither this contract nor the Engine exposes CRUD
     # for entity storage. Built-in and outside features register through FeatureScope alike.
@@ -17,15 +22,19 @@ module PhComposer
     # The optional `schema_version`, `values`, `occurrence` and `references` describe the kind
     # (descriptor.rb). `references` are the record's outgoing core references, which the engine's
     # incoming-reference scan enforces as it does a catalog kind's reference fields.
+    #
+    # The optional `locate:` is the owner's resolver, `->(model, reference, mutable:) { LocatedEntity }`,
+    # raising the owner's `target.*` refusals. Other features reach it through `request.locate`.
     class ReferenceTarget
       attr_reader :id, :label, :provider, :validator, :descriptor
 
       def initialize(id:, label:, records:, validate:, schema_version: nil, values: Descriptor::ANY_OBJECT,
-                     occurrence: nil, references: [])
+                     occurrence: nil, references: [], locate: nil)
         @id = id
         @label = label
         @provider = records
         @validator = validate
+        @resolver = locate
         @descriptor = Descriptor.new(:kind => id, :label => label, :schema_version => schema_version,
                                      :values_schema => values, :occurrence_schema => occurrence,
                                      :references => references)
@@ -39,6 +48,22 @@ module PhComposer
 
           ReferenceEntry.new(:kind => id, :key => DeepCopy.call(entry.key), :record => DeepCopy.call(entry.record))
         end
+      end
+
+      def locatable?
+        !@resolver.nil?
+      end
+
+      def locate(model, reference, mutable:)
+        raise InternalError, "#{id} declares no locate." unless locatable?
+
+        located = @resolver.call(model, DeepCopy.call(reference), :mutable => mutable)
+        unless located.is_a?(LocatedEntity) && located.kind == id && located.entity && located.entities &&
+               located.transform && located.parent_path.is_a?(Array)
+          raise InternalError, "#{id} returned an invalid located entity."
+        end
+
+        located
       end
     end
 

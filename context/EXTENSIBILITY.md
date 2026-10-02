@@ -487,6 +487,17 @@ built-in targets are `ph_composer.zones.zone` and `ph_composer.zones.faces.face`
 missing or ambiguous identities refuse without repairing storage. The owning feature continues
 to control all writes through its normal public actions.
 
+A target may also declare `locate:`, the owner's resolver from an occurrence reference to the live
+entity: `->(model, reference, mutable:) { Records::LocatedEntity }`, raising the owner's `target.*`
+refusals. A feature that requires the owner reaches it through `request.locate(kind, reference)`,
+or keeps `request.locator(kind)` for a step to call at apply. The owner stays the one authority on
+what a valid target is, so a rule it adds reaches every caller. The permitted use is to read the
+entity's geometry and glue to it. Writes to its records stay with the owner, through its actions.
+Ruby cannot enforce that limit; it is a rule of this contract and is checked in review. The Face
+target `ph_composer.zones.faces.face` is locatable; Window placement locates its host Face this way
+(`features/windows/placement/host.rb`). Zones' select-and-zoom view command,
+`ph_composer.zones.faces.locate`, is a different thing with the same verb.
+
 Identity-changing proposals use a typed `Records::ReferencePlan` of the exact occurrences they
 will replace. This establishes the final identity set, including the untouched original or
 retaining split piece, before copied payloads are accepted. A remap applies only to the declared

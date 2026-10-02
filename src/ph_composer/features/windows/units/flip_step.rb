@@ -39,7 +39,7 @@ module PhComposer
           @after = @before.merge("window_type_id" => @target.fetch("id"),
             "anchor" => flipped_anchor(@before.fetch("anchor")))
           @after_matrix = (Geom::Transformation.new(@matrix) * reflection).to_a
-          parent = parent_transform(model, item.path[0...-1])
+          parent = item.parent_transform
           @after_world = (parent * Geom::Transformation.new(@after_matrix)).to_a
           @glued_face_id = item.entity.glued_to&.persistent_id
           @parent_matrix = parent.to_a
@@ -234,18 +234,6 @@ module PhComposer
           end
           raise CodedError.new("window.definition_editing",
             "Close the source Window definition before creating a flipped Type.")
-        end
-
-        def parent_transform(model, path)
-          entities = model.entities
-          path.reduce(Geom::Transformation.new) do |transform, id|
-            found = entities.to_a.select { |entity| entity.persistent_id == id }
-            unless found.length == 1 && found.first.is_a?(Sketchup::Group)
-              changed!("The mirrored Window parent no longer resolves uniquely.")
-            end
-            entities = found.first.entities
-            transform * found.first.transformation
-          end
         end
 
         def changed!(message)

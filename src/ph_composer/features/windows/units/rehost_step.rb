@@ -32,6 +32,7 @@ module PhComposer
           @reference["unit_id"] = @expected_record.fetch("id")
           @plan = DefinitionPlan.build(@type)
           @native_before = native(item)
+          @locator = host.locator or raise ArgumentError, "A re-host target must be located."
           @host_path = host.parent_path.dup
           @host_id = host.entity.persistent_id
           @host_reference, @host_values = DeepCopy.call(host.reference), DeepCopy.call(host.values)
@@ -94,7 +95,8 @@ module PhComposer
             raise CodedError.new("window.definition_changed",
               "Reset the Window geometry to its Type before re-hosting.")
           end
-          face, transform = resolve_host(model)
+          located = @locator.call(model, @host_reference, :mutable => true)
+          face, transform = located.entity, located.transform
           geometry = FaceGeometry.capture(face, transform)
           unless geometry.to_h == @host_geometry && transform.to_a == @host_transform
             changed!("The re-host Face geometry changed after preview.")
@@ -108,27 +110,6 @@ module PhComposer
           return unless @host_values["boundary_condition"] == "Surface"
 
           raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
-        end
-
-        def resolve_host(model)
-          transform = Geom::Transformation.new
-          entities = @host_path.reduce(model.entities) do |collection, id|
-            matches = collection.to_a.select { |entity| entity.persistent_id == id }
-            changed!("The re-host parent no longer resolves uniquely.") unless matches.length == 1
-            group = matches.first
-            unless group.is_a?(Sketchup::Group) && group.definition.instances.length == 1
-              raise CodedError.new("target.shared_definition", "Make the re-host parent storage unique first.")
-            end
-            raise CodedError.new("target.locked", "The re-host parent Group is locked.") if group.locked?
-
-            transform *= group.transformation
-            group.entities
-          end
-          faces = entities.to_a.select { |entity| entity.persistent_id == @host_id }
-          unless faces.length == 1 && faces.first.is_a?(Sketchup::Face)
-            changed!("The new host occurrence must still resolve to one Face.")
-          end
-          [faces.first, transform]
         end
 
         def native(item)

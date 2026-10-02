@@ -20,10 +20,7 @@ class WindowUnitResetStepTest < PhComposerTestCase
     @face = @group.entities.add_face([[0, 0, 0], [12, 0, 0], [12, 0, 8], [0, 0, 8]].map { |point|
       Geom::Point3d.new(*point.map { |value| value / 0.0254 })
     })
-    @host = P::Host.new(:entity => @face, :entities => @group.entities, :parent_path => [@group.persistent_id],
-      :transform => @group.transformation, :reference => { "zone_id" => "zone_synthetic",
-        "zone_path" => [@group.persistent_id], "entity_path" => [@face.persistent_id] }, :values => {},
-      :geometry => PhComposer::FaceGeometry.capture(@face, @group.transformation), :zone_state => "found")
+    @host = zone_host(@face, @group)
     @first = place("wun_AAAAAAAAAAAA", [2, 0, 1])
   end
 

@@ -31,10 +31,7 @@ class WindowUnitRestoreStepTest < PhComposerTestCase
   end
 
   def host
-    transform = @group.transformation
-    P::Host.new(:entity => @host_face, :entities => @group.entities, :parent_path => [@group.persistent_id],
-      :transform => transform, :reference => { "entity_path" => [@group.persistent_id, @host_face.persistent_id] },
-      :values => {}, :geometry => PhComposer::FaceGeometry.capture(@host_face, transform))
+    zone_host(@host_face, @group)
   end
 
   def add_panes

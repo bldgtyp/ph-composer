@@ -2,13 +2,16 @@
 
 module PhComposer
   module Zones
-    ZoneOccurrence = Struct.new(:entity, :path, :transform, :record, :shared_definition, :nested, keyword_init: true) do
+    # `locked_parent` is a locked container above the Zone on its path; a write refuses through it.
+    ZoneOccurrence = Struct.new(:entity, :path, :transform, :record, :shared_definition, :nested, :locked_parent,
+                                keyword_init: true) do
       def reference
         { "zone_id" => record.fetch("id"), "zone_path" => path.dup }
       end
     end
 
-    FaceOccurrence = Struct.new(:entity, :zone, :path, :transform, keyword_init: true) do
+    # `entities` is the collection holding the Face, `transform` its parent-to-world transform.
+    FaceOccurrence = Struct.new(:entity, :zone, :path, :transform, :entities, keyword_init: true) do
       def reference(entity_id = nil)
         {
           "zone_id" => zone.record.fetch("id"), "zone_path" => zone.path.dup,
@@ -30,7 +33,7 @@ module PhComposer
 
       def scan_zones(model)
         found = []
-        walk_zones(model.entities, [], identity, false, false, found)
+        walk_zones(model.entities, [], identity, false, false, false, found)
         found
       end
 
@@ -47,6 +50,7 @@ module PhComposer
           raise_target("target.shared_definition", "That Zone is inside shared component storage.")
         end
         raise_target("target.wrong_hierarchy", "A Zone cannot be nested inside another Zone.") if mutable && zone.nested
+        raise_target("target.locked", "A Group containing the Zone is locked.") if mutable && zone.locked_parent
         zone
       end
 
@@ -85,6 +89,35 @@ module PhComposer
         occurrence
       end
 
+      # The Face reference target's `locate:` (Records::ReferenceTarget): the owner's strict resolution,
+      # so a reference read before the Face gained a record refuses rather than naming a different one.
+      def locate_face(model, reference, mutable:)
+        occurrence = resolve_face(model, reference, :mutable => mutable)
+        Records::LocatedEntity.new(:kind => Faces::REFERENCE_KIND, :reference => DeepCopy.call(reference),
+                                   :entity => occurrence.entity, :entities => occurrence.entities,
+                                   :transform => occurrence.transform,
+                                   :parent_path => occurrence.zone.path + occurrence.path[0...-1])
+      end
+
+      # The Face occurrence a root-to-Face persistent-id path names, or nil when the path no longer
+      # resolves uniquely or names no Zone Face. A read, under the same rule as `occurrence_for_path`.
+      def occurrence_at(model, path)
+        entities = model.entities
+        found = integer_path(path).map do |persistent_id|
+          matches = entities.to_a.select { |entity| entity.persistent_id == persistent_id }
+          return nil unless matches.length == 1
+
+          entity = matches.first
+          entities = if entity.is_a?(Sketchup::Group)
+                       entity.entities
+                     elsif entity.is_a?(Sketchup::ComponentInstance)
+                       entity.definition.entities
+                     end
+          entity
+        end
+        occurrence_for_path(found)
+      end
+
       # The occurrence one picked instance path names, or nil when the path reaches no Face or the
       # Face lies inside no Zone. Nothing here walks the Model: the pick already knows the whole
       # root-to-leaf path, and a viewport tool picks once per pointer move.
@@ -112,7 +145,7 @@ module PhComposer
         inside = entities[(zone_index + 1)..-1]
         transform = inside[0...-1].reduce(zone.transform) { |carried, entity| carried * entity.transformation }
         FaceOccurrence.new(:entity => face, :zone => zone, :path => inside.map(&:persistent_id),
-                           :transform => transform)
+                           :transform => transform, :entities => contents(entities[-2]))
       end
 
       # The Zone occurrence for a root-to-Zone entity path, composed exactly as `walk_zones` does.
@@ -121,7 +154,7 @@ module PhComposer
         ZoneOccurrence.new(:entity => entities.last, :path => entities.map(&:persistent_id),
                            :transform => transform, :record => Schema.validate!(Names.read(entities.last)),
                            :shared_definition => entities.any? { |entity| shared_storage?(entity) },
-                           :nested => nested)
+                           :nested => nested, :locked_parent => entities[0...-1].any?(&:locked?))
       end
 
       # One Face inside an already-resolved Zone occurrence, by path alone. Identity repair needs
@@ -129,12 +162,13 @@ module PhComposer
       # refuse the very ambiguity the repair exists to remove.
       def face_at(zone, entity_path, mutable: false)
         path = integer_path(entity_path)
-        entity, transform = resolve_face_path(zone, path, mutable)
+        entity, transform, entities = resolve_face_path(zone, path, mutable)
         unless entity.is_a?(Sketchup::Face)
           raise_target("target.wrong_kind", "The occurrence does not resolve to a Face.")
         end
 
-        FaceOccurrence.new(:entity => entity, :zone => zone, :path => path, :transform => transform)
+        FaceOccurrence.new(:entity => entity, :zone => zone, :path => path, :transform => transform,
+                           :entities => entities)
       end
 
       # Every container on the path is checked the way `walk_faces` bounds a Zone's Faces: a child
@@ -170,7 +204,7 @@ module PhComposer
           end
           transform *= entity.transformation
         end
-        [entity, transform]
+        [entity, transform, current]
       end
 
       # The identity of one Face occurrence inside a gesture: the full root-to-Face persistent-id
@@ -223,7 +257,7 @@ module PhComposer
         matches.first
       end
 
-      def walk_zones(entities, path, transform, shared, inside_zone, found)
+      def walk_zones(entities, path, transform, shared, inside_zone, locked, found)
         entities.each do |entity|
           next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
           next if cutting_component?(entity)
@@ -239,11 +273,11 @@ module PhComposer
             end
             found << ZoneOccurrence.new(:entity => entity, :path => child_path, :transform => child_transform,
                                         :record => record, :shared_definition => child_shared,
-                                        :nested => inside_zone)
+                                        :nested => inside_zone, :locked_parent => locked)
           end
           child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
           walk_zones(child_entities, child_path, child_transform, child_shared,
-                     inside_zone || !record.nil?, found)
+                     inside_zone || !record.nil?, locked || entity.locked?, found)
         end
       end
 
@@ -267,7 +301,7 @@ module PhComposer
           child_path = path + [entity.persistent_id]
           if entity.is_a?(Sketchup::Face)
             found << FaceOccurrence.new(:entity => entity, :zone => zone, :path => child_path,
-                                        :transform => transform)
+                                        :transform => transform, :entities => entities)
           elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
             next if ZONE_STORE.read(entity) || cutting_component?(entity)
 
@@ -275,6 +309,10 @@ module PhComposer
             walk_faces(child_entities, child_path, transform * entity.transformation, zone, found)
           end
         end
+      end
+
+      def contents(container)
+        container.is_a?(Sketchup::Group) ? container.entities : container.definition.entities
       end
 
       def cutting_component?(entity)
@@ -285,7 +323,7 @@ module PhComposer
         raise CodedError.new(code, message)
       end
       private_class_method :resolve_face_path, :shared_storage?, :walk_zones, :walk_faces, :raise_target,
-                           :zone_for_path, :cutting_component?
+                           :zone_for_path, :cutting_component?, :contents
     end
   end
 end

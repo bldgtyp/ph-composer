@@ -44,6 +44,19 @@ class WindowPlaceToolTest < PhComposerTestCase
     PhComposer::Pick.stub(:face_point, ->(*_args) { @picked }) { yield }
   end
 
+  # Pointer moves may read only Zones' walk-free host context, once per newly picked Face. Returns
+  # those reads.
+  def host_reads(message)
+    reads = []
+    query = API.method(:query)
+    API.stub(:query, lambda do |**args|
+      flunk message unless args.fetch(:name) == W::Placement::Hosts::CONTEXT
+      reads << args.fetch(:params)
+      query.call(**args)
+    end) { yield }
+    reads
+  end
+
   def down
     picked { @tool.onLButtonDown(0, 10, 10, @view) }
   end
@@ -209,14 +222,18 @@ class WindowPlaceToolTest < PhComposerTestCase
     assert_in_delta 8 - 0.3048, anchor_point(row).first, 1e-12
   end
 
-  def test_hover_never_queries_or_walks_model_and_draws_world_outline
+  def test_hover_reads_one_host_context_per_face_never_walks_units_and_draws_world_outline
     choose
-    API.stub(:query, ->(**_args) { flunk "Hover queried the Model" }) do
+    reads = host_reads("Hover queried more than the host Face") do
       W::Units::Occurrences.stub(:all, ->(_model) { flunk "Hover walked Units" }) do
         picked { @tool.onMouseMove(0, 10, 10, @view) }
         @tool.draw(@view)
       end
     end
+    assert_equal 1, reads.length
+    assert_empty(host_reads("A second hover over the same Face read again") do
+      picked { @tool.onMouseMove(0, 10, 10, @view) }
+    end)
     assert_equal GL_LINES, @view.draws.last.first
     assert_equal 8, @view.draws.last[1].length
     before = @view.draws.length
@@ -238,6 +255,21 @@ class WindowPlaceToolTest < PhComposerTestCase
     down
     up
     assert_includes @notices.last.first, "no Zone"
+    assert_equal before, @model.operations.length
+  end
+
+  # The preview does not locate; the Place action does, so locked storage refuses with Zones' code on commit.
+  def test_locked_zone_previews_on_hover_and_refuses_when_the_gesture_commits
+    choose
+    @group.locked = true
+    picked { @tool.onMouseMove(0, 10, 10, @view) }
+    @tool.draw(@view)
+    assert_equal GL_LINES, @view.draws.last.first
+    before = @model.operations.length
+    down
+    up
+    assert_empty units
+    assert_includes @notices.last.first, "locked"
     assert_equal before, @model.operations.length
   end
 
@@ -288,10 +320,11 @@ class WindowPlaceToolTest < PhComposerTestCase
     up
     assert_equal @type_id, units.first.dig("values", "window_type_id")
     assert_equal "sill_center", units.first.dig("values", "anchor")
-    API.stub(:query, ->(**_args) { flunk "Pointer move refreshed semantic reads" }) do
+    reads = host_reads("Pointer move refreshed semantic reads") do
       picked { @tool.onMouseMove(0, 10, 10, @view) }
       @tool.draw(@view)
     end
+    assert_equal 1, reads.length
     assert_equal 8, @view.draws.last[1].length
     assert_equal created.dig("value", "id"), @tool.state.fetch("type_id")
   end

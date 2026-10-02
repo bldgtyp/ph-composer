@@ -78,6 +78,53 @@ is a valid target", consistent with Ed's principle of independent inner entities
 ones. Closed alternatives: a Zones-owned gluing participant (pushes a higher-level concern into
 Zones); leaving the copied path walks.
 
+## Design
+
+Written 2026-10-02 against the decision above, before code.
+
+- **The contract.** `Records::ReferenceTarget` takes an optional `locate:` callable,
+  `->(model, reference, mutable:) { Records::LocatedEntity }`. `LocatedEntity` carries `kind`,
+  `reference`, `entity`, `entities` (the parent collection, for glue and sibling reads), `transform`
+  (accumulated, parent to world) and `parent_path`. The target checks the returned shape.
+- **The request.** `request.locator(kind)` applies `request.query`'s dependency rule (owner, or a
+  feature the owner requires; `operation.dependency_missing`), refuses an unregistered kind
+  (`reference.invalid`) and a target with no `locate:` (`operation.locate_missing`), and returns the
+  target's bound `locate`. `request.locate(kind, reference, mutable: true)` calls it on the request's
+  Model. A step has no request at apply, so it keeps the locator its planning handler obtained and
+  re-locates the same reference on the live Model. The dependency is checked once, at plan time.
+- **Zones' resolver.** The Face target's `locate:` is `Occurrences.resolve_face` with the owner's
+  strict rule: a reference with no `entity_id` refuses a Face that has since gained a record
+  (`target.changed`). `FaceOccurrence` gains `entities`, which every resolution path already holds,
+  so the resolver returns the parent collection rather than deriving it from `face.parent`. The
+  owner's rule governs where the Windows copies differed: it checks the Zone record on the path, the
+  crossed-Zone and cutting-component rules, and ambiguity. The copies also refused a locked Group
+  above the Zone, which Zones did not; review found it, and Zones now refuses it for every write
+  (`ZoneOccurrence#locked_parent`), as `context/CONTRACTS.md` already said.
+- **Name.** `Zones::Faces::Locate` remains the select-and-zoom view command. The resolver is a
+  reference target's `locate`; the two are named for the same act at different layers.
+- **The narrow read.** `ph_composer.zones.faces.host_context` takes `paths` (root-to-Face
+  persistent-id paths) and returns, for each path that names a Zone Face, its `reference` and
+  `values`. Paths not naming a Zone Face are omitted. Two deviations from the proposal. Params are
+  paths, not references, because two of the three callers, a glued Unit and a picked Face, hold a
+  native path. Zone state and geometry are not in it: Zone state needs every Zone occurrence, which
+  is a Model walk, and the Place tool calls this on a pointer move ("Pick, never walk",
+  `context/EXTENSIBILITY.md`). It resolves each path by scanning the collections along it, then
+  applies the pick rule (`Occurrences.occurrence_for_path`); it never walks the whole Model. Zone state comes from `ph_composer.zones.all`, read once per action and
+  at Place tool choose and button-down. Geometry comes from the located or glued Face.
+- **Read hosts stay as lenient as before.** `reads.host(item, writable: false)` does not call
+  `locate`, because the owner refuses an ambiguous Zone, and a Unit in a copied Zone is a finding
+  (`window.host_zone_unresolved`), not a refusal. It takes the glued Face, the Unit's own parent
+  path and transform, the `host_context` row and the Zone state.
+- **Unit parent transforms.** `flip_step`, `reset_step` and `swap_step` resolve the Unit's own parent
+  path, not a Face. The Unit `Occurrence` gains `parent_transform`, which `Occurrences.walk` already
+  holds, and the three copies go.
+- **Callers.** `ReadContext` reads `host_context` once for every glued path plus `zones.all`, and no
+  longer loads `faces.all`. Place, Re-host and Restore keep the host's locator and re-locate at
+  apply. `ToolTarget` cannot locate: R02 keeps features from building read requests, and a tool
+  reads through its public caller handle. It previews from the `host_context` row on the picked
+  Face, refuses a Zone that is not found or a Surface Face as before, and leaves locked and shared
+  storage to the Place action's `locate`, which refuses with Zones' code when the gesture commits.
+
 ## Verification
 
 - `grep -rn "def resolve_host\|def parent_transform\|def unique(" features/windows` returns nothing.
