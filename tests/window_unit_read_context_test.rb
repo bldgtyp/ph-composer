@@ -57,6 +57,15 @@ class WindowUnitReadContextTest < PhComposerTestCase
     context.occurrences.find { |item| item.entity == entity }
   end
 
+  # Placing on one explicit host needs the other outlines and nothing from Zones.
+  def test_other_outlines_for_a_placement_make_no_zones_read
+    request = Request.new(@model, Engine.new(@model))
+    def request.query(name, _params = {})
+      raise "unexpected Zones read #{name}"
+    end
+    assert_equal 2, U::ReadContext.new(request).other_polygons.length
+  end
+
   def test_detached_old_width_blocks_reset_overlap_with_current_narrow_type
     @selected.transformation *= Geom::Transformation.scaling(2, 1, 1)
     context = reads

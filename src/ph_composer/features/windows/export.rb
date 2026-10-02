@@ -12,7 +12,6 @@ module PhComposer
       PREFLIGHT = "#{FEATURE_ID}.export_preflight"
       # The Zones Faces section, whose registered projection gives each Face's host context.
       FACES = "ph_composer.zones.faces.export.faces"
-      Assessment = ExportAssessment
 
       module_function
 
@@ -35,7 +34,7 @@ module PhComposer
       end
 
       def assess(**values)
-        Assessment.new(**values)
+        ExportAssessment.call(**values)
       end
 
       def projection(reader)

@@ -20,6 +20,8 @@ class WindowUnitActionsTest < PhComposerTestCase
     @model.entities << @group
     result = assignment_invoke("ph_composer.zones.make", "parent_path" => [], "entity_ids" => [1000])
     assert_equal "completed", result.fetch("status"), result.inspect
+    assignment_classify(assignment_faces, "face_type" => { "mode" => "set", "value" => "Wall" },
+                                         "boundary_condition" => { "mode" => "set", "value" => "Outdoors" })
     @face_reference = assignment_faces.first.fetch("reference")
     result = assignment_invoke("#{PREFIX}.types.create", "values" => { "name" => "Synthetic placement" })
     assert_equal "completed", result.fetch("status"), result.inspect
@@ -140,6 +142,16 @@ class WindowUnitActionsTest < PhComposerTestCase
     preflight = assignment_query("#{PREFIX}.export_preflight").fetch("findings").map { |row| row.fetch("code") }.uniq
     assert_equal ["window.copy_id_pending"], listed
     assert_includes preflight, "window.copy_id_pending"
+  end
+
+  # A Ground host is one condition with one code, in the Unit read and the export preflight alike.
+  def test_unit_read_and_export_preflight_report_a_ground_host_alike
+    place
+    assignment_classify(assignment_faces, "boundary_condition" => { "mode" => "set", "value" => "Ground" })
+    listed = units.flat_map { |row| codes(row) }.uniq
+    preflight = assignment_query("#{PREFIX}.export_preflight").fetch("findings").map { |row| row.fetch("code") }.uniq
+    assert_equal ["window.host_boundary_unsupported"], listed
+    assert_includes preflight, "window.host_boundary_unsupported"
   end
 
   # The named repair: a preview lists the copy's old and new id, the invoke gives only the copy a new

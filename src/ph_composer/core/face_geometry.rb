@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "vector3"
+
 module PhComposer
   # Detached, SI geometry for one SketchUp Face occurrence. Both adjacency and export use this
   # representation, so a transform or digest cannot mean one thing to the solver and another to HBJSON.
@@ -37,7 +39,7 @@ module PhComposer
         end
       end
       normal = world_normal(face.normal, transform)
-      plane = dot(normal, loops.fetch(0).fetch(0))
+      plane = Vector3.dot(normal, loops.fetch(0).fetch(0))
       area = loop_area_m2(loops.fetch(0)) - loops.drop(1).sum { |loop| loop_area_m2(loop) }
       canonical = {
         "plane" => quantize(plane), "normal" => normal.map { |value| quantize(value) },
@@ -81,7 +83,7 @@ module PhComposer
     end
 
     def opposite_normals?(left, right, tolerance_degrees)
-      dot(left, right) <= -Math.cos(tolerance_degrees * Math::PI / 180.0) + 1.0e-12
+      Vector3.dot(left, right) <= -Math.cos(tolerance_degrees * Math::PI / 180.0) + 1.0e-12
     end
 
     # Whether two captured Faces lie in one plane, to within `tolerance` metres. Public because the
@@ -90,8 +92,8 @@ module PhComposer
     def coplanar?(left, right, tolerance)
       left_points = left.loops_m.flatten(1)
       right_points = right.loops_m.flatten(1)
-      left_points.all? { |point| (dot(right.normal, point) - right.plane_offset_m).abs <= tolerance } &&
-        right_points.all? { |point| (dot(left.normal, point) - left.plane_offset_m).abs <= tolerance }
+      left_points.all? { |point| (Vector3.dot(right.normal, point) - right.plane_offset_m).abs <= tolerance } &&
+        right_points.all? { |point| (Vector3.dot(left.normal, point) - left.plane_offset_m).abs <= tolerance }
     end
 
     def same_loops?(left, right, tolerance)
@@ -165,12 +167,8 @@ module PhComposer
       rounded.zero? ? 0.0 : rounded
     end
 
-    def dot(left, right)
-      left.zip(right).sum { |a, b| a * b }
-    end
-
     private_class_method :opposite_normals?, :same_loops?, :match_unordered,
-                         :point_close?, :minimum_edge, :distance, :world_normal, :canonical_loop, :quantize, :dot,
+                         :point_close?, :minimum_edge, :distance, :world_normal, :canonical_loop, :quantize,
                          :loop_area_m2
   end
 end

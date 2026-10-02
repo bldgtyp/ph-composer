@@ -296,8 +296,12 @@ and a feature that requires Zones reaches the live Face through `request.locate`
 refusals (see "Handler-side dependency reads"). A reference with no `entity_id` refuses a Face that
 has since gained a record (`target.changed`). A feature that holds a native path rather than a
 reference, a pick or a glued instance, reads `ph_composer.zones.faces.host_context`: each path
-naming a Zone Face answers its reference and values. It scans only the collections along each path,
-never the whole Model, so a viewport tool may call it on a pointer move. Zone state needs every Zone occurrence and stays in `ph_composer.zones.all`.
+naming a Zone Face answers its reference, its values and its `write_refusal`: the `target.*` refusal
+a write to it meets from its path alone (a shared, nested or locked Zone, or locked or shared
+storage on the path), or null. It scans only the collections along each path, never the whole
+Model, so a viewport tool may call it on a pointer move. A duplicated Zone or Face id needs a walk,
+so `write_refusal` cannot show it and the write still resolves strictly. Zone state needs every
+Zone occurrence and stays in `ph_composer.zones.all`.
 
 A Window unit target is reached from the Model root, not from a Zone, because a Unit may sit
 outside every Zone and still blocks deletion of its Type:
@@ -412,10 +416,12 @@ do not pass dispatch: they are not refused while the session is busy, and a fail
 rather than answering an outcome. The Colour-by service turns a raising projection off with a
 notice; the shell logs a raising menu test or provider and leaves out that item alone.
 
-`request.locate(kind, reference, mutable: true)` returns the live entity a reference target's
+`request.locate(kind, reference, mutable: true, index: nil)` returns the live entity a reference target's
 `locate:` resolves, as a `Records::LocatedEntity`: the entity, the collection holding it, its
 parent-to-world transform and its parent path. `request.locator(kind)` returns the bound resolver,
-which a step keeps and calls again on the live Model at apply, where it has no request. Both apply
+which a step keeps and calls again on the live Model at apply, where it has no request.
+`request.locate_index(kind)` returns the owner's read-phase index, or nil, for a caller locating
+many references before it proposes anything. All three apply
 the `query` rule: the target must belong to the caller or a feature it requires
 (`operation.dependency_missing`); an unregistered kind refuses with `reference.invalid` and a target
 with no resolver with `operation.locate_missing`. The owner's `target.*` refusals pass through

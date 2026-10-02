@@ -8,7 +8,8 @@ function (request, snapshot, tables, faceWords, ui, units, fields) {
     "window.unknown_type": "Unknown Type", "window.copy_id_pending": "Copy, id pending",
     "window.unhosted": "Unhosted", "window.off_host": "Off host", "window.overhang": "Overhangs host",
     "window.overlap": "Overlapping", "window.surface_host": "Surface host",
-    "window.host_zone_unresolved": "Host Zone unresolved",
+    "window.host_zone_unresolved": "Host Zone unresolved", "window.host_unclassified": "Host unclassified",
+    "window.host_type_unsupported": "Host not a wall or roof", "window.host_boundary_unsupported": "Host not outdoors",
     "window.scaled": "Scaled", "window.sheared": "Sheared", "window.mirrored": "Mirrored" };
   /* Each repair the Ruby findings name, in the order the row menu offers them. */
   var REPAIRS = [["reset_to_type", "Reset to Type", "undo"], ["new_flipped_type", "New flipped Type", "mirror"],

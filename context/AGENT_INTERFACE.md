@@ -74,8 +74,8 @@ and the revision; reusing it against any other refuses (`params.invalid`, or
 row's reference and the named values without geometry or metadata. The panel reads the complete
 projections `ph_composer.zones.all` and `ph_composer.zones.faces.all`; scripts page the lists.
 `ph_composer.zones.faces.host_context` answers explicit root-to-Face paths with each Face's
-reference and values, scanning only the collections on each path, for a caller that holds a path and needs no Face
-table.
+reference, values and the write refusal its path shows, scanning only the collections on each path,
+for a caller that holds a path and needs no Face table.
 
 Support explicit selection, reveal and camera operations for visual inspection, plus viewport
 capture where the host permits it. Captures identify their model session, revision, camera and

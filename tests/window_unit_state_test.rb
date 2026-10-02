@@ -27,7 +27,8 @@ class WindowUnitStateTest < PhComposerTestCase
   def findings(**options)
     item = U::Occurrences.all(@model).first
     U::State.findings(item, **{ :type => @type, :canonical_definition => @definition,
-      :host_geometry => @geometry }.merge(options))
+      :host_geometry => @geometry, :host_values => { "face_type" => "Wall", "boundary_condition" => "Outdoors" } }
+      .merge(options))
   end
 
   def codes(**options)

@@ -23,18 +23,22 @@ module PhComposer
     # (descriptor.rb). `references` are the record's outgoing core references, which the engine's
     # incoming-reference scan enforces as it does a catalog kind's reference fields.
     #
-    # The optional `locate:` is the owner's resolver, `->(model, reference, mutable:) { LocatedEntity }`,
-    # raising the owner's `target.*` refusals. Other features reach it through `request.locate`.
+    # The optional `locate:` is the owner's resolver, `->(model, reference, mutable:, index:)`, returning a
+    # LocatedEntity or raising the owner's `target.*` refusals. Other features reach it through
+    # `request.locate`. The optional `locate_index:`, `->(model) { index }`, builds the owner's read-phase
+    # index: an opaque value that a caller locating many references in a phase with no write in it builds
+    # once and passes as `index:`, so the owner walks the Model once rather than once per reference.
     class ReferenceTarget
       attr_reader :id, :label, :provider, :validator, :descriptor
 
       def initialize(id:, label:, records:, validate:, schema_version: nil, values: Descriptor::ANY_OBJECT,
-                     occurrence: nil, references: [], locate: nil)
+                     occurrence: nil, references: [], locate: nil, locate_index: nil)
         @id = id
         @label = label
         @provider = records
         @validator = validate
         @resolver = locate
+        @index_builder = locate_index
         @descriptor = Descriptor.new(:kind => id, :label => label, :schema_version => schema_version,
                                      :values_schema => values, :occurrence_schema => occurrence,
                                      :references => references)
@@ -54,10 +58,15 @@ module PhComposer
         !@resolver.nil?
       end
 
-      def locate(model, reference, mutable:)
+      # The owner's read-phase index for `model`, or nil when the owner declares none.
+      def locate_index(model)
+        @index_builder&.call(model)
+      end
+
+      def locate(model, reference, mutable:, index: nil)
         raise InternalError, "#{id} declares no locate." unless locatable?
 
-        located = @resolver.call(model, DeepCopy.call(reference), :mutable => mutable)
+        located = @resolver.call(model, DeepCopy.call(reference), :mutable => mutable, :index => index)
         unless located.is_a?(LocatedEntity) && located.kind == id && located.entity && located.entities &&
                located.transform && located.parent_path.is_a?(Array)
           raise InternalError, "#{id} returned an invalid located entity."

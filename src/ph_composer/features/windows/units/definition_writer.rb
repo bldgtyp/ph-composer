@@ -51,6 +51,13 @@ module PhComposer
           end
         end
 
+        # Whether `behavior` is what `configure` sets: a two-dimensional component that cuts its opening,
+        # glues to any plane and refuses every native scale handle.
+        def configured?(behavior)
+          behavior.is2d? && behavior.cuts_opening? && behavior.snapto == SnapTo_Arbitrary &&
+            behavior.no_scale_mask? == 127
+        end
+
         def configure(behavior)
           behavior.is2d = true
           behavior.cuts_opening = true

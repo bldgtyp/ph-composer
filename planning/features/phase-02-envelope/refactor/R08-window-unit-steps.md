@@ -1,7 +1,7 @@
 # R08: the Window Unit steps repeat one set of mechanics seven times
 
 DATE: 2026-10-01
-STATUS: Requested
+STATUS: Merged to main 2026-10-02 (PR #25); dual-Ruby `make ci` passes; E12 host gate passed with two pre-existing refusals recorded
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement with correctness exposure. One evidenced silent-failure pattern.
@@ -142,3 +142,104 @@ Extract only what is identical in meaning. Do not build a step base class with h
   a Type missing g on two elements gives two preflight rows, each naming its element.
 - Host gate: repeat E12 (resize a used Type with three anchors, Swap, Re-host, Reset, flipped Type,
   Restore) because every native write path moves.
+
+## Outcome
+
+Implemented 2026-10-02 on `refactor/r08-window-unit-steps`, cut from the docs branch of PR #24,
+which merged first. Merged as PR #25.
+
+1. **Shared guards (items 1 to 4).** `units/native_unit.rb` holds `resolve!` (two semantics kept:
+   Remove and Re-host accept the identity a pending repair gives, Swap and Reset require the live
+   one), `unchanged!`, `preimage`, `editing?`, `replace_definition!` and `changed!`.
+   `Occurrences.mutable!` is the one writable check, used by `Occurrences.resolve` too.
+   `units/host_guard.rb` holds `capture`, `verify!` and `fit!` with the no-host plane.
+   `DefinitionWriter.configured?` replaces four copies, `TypeCleanupStep` included.
+   `core/vector3.rb` replaces the helpers in `core/pick.rb`, `core/face_geometry.rb`,
+   `placement/plane.rb`, `units/world_geometry.rb`, `units/reset_step.rb` and the Restore geometry.
+   Zones' `overlap.rb` 2D orientation test and `polygons.rb` and `tessellation.rb` were left alone.
+   The seven step files and `restore_step.rb` went from 1,801 lines to 1,563 with its four-file
+   split; the three shared modules add 177.
+2. **Item 5, deviation.** Steps keep `initialize` as their entry. Most checks run at plan and at
+   apply (`check_fit!`, the edit context, the Type and target checks, `HostGuard.verify!`), so
+   `.plan` class methods would need `send` or public class methods for them. That adds to what a
+   reader has to know rather than removing it. Instead, Reset's and Type-change's constructors set
+   each value once from a returned value: Reset no longer threads a projected map and selected
+   paths through row planning, and Type-change no longer sets four values from inside a helper.
+   `PlaceStep` takes an optional `world_matrix:` (checked by `transform_state`), so `RestoreStep`
+   no longer overrides a private method its superclass constructor calls. `ResetStep#initialize`
+   is still about 37 lines and runs its steps in order.
+3. **Item 6.** `DefinitionGeometry.matches?` rescues only `CodedError` (a stamp that is not JSON,
+   a degenerate pane Face). A new test makes the matcher raise and gets the error, not a
+   `geometry_differs` finding.
+4. **Item 7.** `restore_geometry.rb`, `restore_panes.rb`, `restore_pane_scope.rb`, `restore_step.rb`.
+5. **Item 8.** `Records::ReferenceTarget` takes `locate_index:` and `locate(..., index:)`;
+   `request.locate_index(kind)`; Zones declares `Zones::Index`. `ReadContext` shares one index
+   across the hosts it locates and makes its Zones reads on first use, so `units.place` reads no
+   Zone state or glued-host batch. `host_context` rows carry `write_refusal`
+   (`Zones::Occurrences.write_refusal`, the strict resolver's path checks without a walk), and
+   `Hosts.placeable!` raises it, so the Place tool refuses a locked Zone or locked or shared
+   storage on hover again. The redundant host-transform comparison is gone from every step:
+   `HostGuard.verify!` recomputes the host geometry against the live parent transform.
+   Recorded in `context/EXTENSIBILITY.md`, `context/CONTRACTS.md` and `context/AGENT_INTERFACE.md`;
+   `docs/API_REFERENCE.md` regenerated.
+6. **Item 9.** `ExportAssessment.call` returns a `Result`. `Placement::Hosts.conditions` is the
+   one host-condition check for `units.list` and the preflight, so a Ground or unclassified host
+   reports the same code in both. The Schedule labels the three host codes. An element's Type
+   condition names the element in its message, so two elements missing g are two rows. The
+   preflight row schema is closed, so the element is named in the message, not a new field.
+
+Behaviour changes a direct step caller can see, none reachable through the shipped actions: a
+host that does not match its occurrence refuses `target.changed` where Flip and Reset said
+`window.host_required`; Reset reports a locked or shared selected Unit before a conflicting
+projected record. Host-condition preflight messages now come from `Codes::ALL`.
+
+Tests: the sixteen `window_unit_*` files pass with no assertion changes. Two setups changed:
+`window_unit_actions_test.rb` and `window_placement_walkthrough_test.rb` classify their wall
+Wall/Outdoors, and `window_unit_state_test.rb`'s helper passes those values, because an
+unclassified host is now a finding in the Unit read. `window_place_tool_test.rb`'s deferred-refusal
+test became a hover-refusal test. New: the matcher defect, the Ground host agreement, two element
+rows, one Zones walk for a batch of locates, `write_refusal` against the strict resolver, and no
+Zones read for a placement's outlines.
+
+Gates: `make ci` passed on Ruby 3.2.2 and 2.7.2 (1370 Ruby runs, 172 Python). Runtime manifest
+refreshed for the Schedule.
+
+Host: SketchUp 26.1.188, Ruby 3.2.2, normal composition, development bridge, public API with the
+panel closed; fixture setup and native faults (unglue, scale, mirror, explode) by labelled
+development eval on copies of `blank-template.skp`. Branch RBZ SHA-256
+`1b02453e51edf68550d1c7b0112b20bb42fcde31c7d169133ab62bbd8e0fa2ae` from `f208d80`; the R07
+baseline RBZ `573e20f2…7c15` built from `main` at `d13370a`.
+
+- Measurement, recorded in `context/SKETCHUP_HOST_BEHAVIOR.md`, "Window-edit measurements": on
+  2,000 Faces and 200 Units, swap over 50 hosts 1.98 s against 2.54 s; Place 88 ms against 109 ms
+  median; button-down 9.5 ms against 9.6 ms; the matcher 0.09 ms per definition.
+- E12, `r08-gate-branch.skp`, fresh process: three Units at `sill_left`, `center`, `head_right`
+  place clean; resizing the used Type keeps all three anchors and reads clean; Swap, Re-host after
+  an unglue, Reset after a native scale and New flipped Type after a native mirror each commit and
+  read back clean. 95 assertions. In `r08-gate.skp`, one native Undo of the resize restored the
+  native state. A hover over the locked Zone refuses `target.locked` through the Place tool's
+  target and previews once unlocked.
+- Not passed, on both builds: Reset after a native Undo of the resize fails `operation.failed` and
+  rolls back (the `#1` rename, see Follow-ups). Restore of an Exploded Unit on its own wall refuses
+  `window.restore_unavailable` on this fixture; the cause was not established. Redo through
+  `editRedo:` did not re-apply the resize, so Redo is unchecked here.
+
+Private artifacts are `_private/host/envelope/r08-*`. SketchUp was quit cleanly with this branch's
+RBZ installed.
+
+Review: one independent Opus pass with the architecture rubric found no blocking regression.
+Fixed: the Schedule's labels for the new host codes; `write_refusal` missed the stamp check;
+Swap again refuses a host supplied for an unglued Unit; `transform_state` on a given world
+matrix; a stale Place tool comment; `write_refusal` tested against the strict resolver. Accepted:
+the code changes listed above and the item 5 deviation.
+
+Follow-ups, not done here:
+
+- `DefinitionWriter.rewrite` assigns the definition name even when unchanged, and SketchUp then
+  renames it with `#1`; Reset's `clean?` compares the name exactly. After a native Undo of a Type
+  resize, Reset fails. Set the name only when it differs, and decide whether `clean?` should
+  compare names at all.
+- Restore of an Exploded Unit on its own host refused on the gate fixture on both builds. Find out
+  which `RestorePanes` check refuses (likely pane Edges shared with the host Face) and whether the
+  E12 Restore case needs a different fixture or a product change.
+- `units.all` takes 3.1 s at 200 Units on the scale Model.

@@ -258,18 +258,19 @@ class WindowPlaceToolTest < PhComposerTestCase
     assert_equal before, @model.operations.length
   end
 
-  # The preview does not locate; the Place action does, so locked storage refuses with Zones' code on commit.
-  def test_locked_zone_previews_on_hover_and_refuses_when_the_gesture_commits
+  # The host read carries Zones' write refusal from the Face's path, so locked storage refuses on hover.
+  def test_hover_over_a_locked_zone_refuses_with_zones_code_and_draws_no_preview
     choose
     @group.locked = true
+    draws = @view.draws.length
     picked { @tool.onMouseMove(0, 10, 10, @view) }
     @tool.draw(@view)
-    assert_equal GL_LINES, @view.draws.last.first
+    assert_equal draws, @view.draws.length
+    assert_includes Sketchup.status_texts.last, "locked"
     before = @model.operations.length
     down
     up
     assert_empty units
-    assert_includes @notices.last.first, "locked"
     assert_equal before, @model.operations.length
   end
 

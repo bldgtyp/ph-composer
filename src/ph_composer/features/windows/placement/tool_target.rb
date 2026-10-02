@@ -28,8 +28,9 @@ module PhComposer
           @revision == @session.revision && @edit_path == Array(@session.model.active_path).map(&:persistent_id)
         end
 
-        # A preview host on the picked Face. The Place action locates it through Zones' resolver, so a
-        # locked or shared host refuses there, with the owner's code, when the gesture commits.
+        # A preview host on the picked Face. A host whose path Zones refuses for writing (a locked Zone,
+        # locked or shared storage) refuses here with Zones' code; the Place action still locates it
+        # through Zones' resolver when the gesture commits, which catches a duplicated id as well.
         def resolve(picked, fixed_host = nil)
           return unless picked
           entities = picked.fetch(:path)

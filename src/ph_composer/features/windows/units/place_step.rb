@@ -4,6 +4,7 @@ require_relative "definition_writer"
 require_relative "definition_index"
 require_relative "definition_geometry"
 require_relative "occurrences"
+require_relative "native_unit"
 require_relative "world_geometry"
 require_relative "../placement/host"
 require_relative "../placement/fit"
@@ -16,8 +17,10 @@ module PhComposer
       class PlaceStep
         attr_reader :affected, :definition_ids
 
+        # `point_m` is where the record's anchor lands on the host. A caller that already knows the whole
+        # world placement, as Restore does from the panes it adopts, passes `world_matrix` as well.
         def initialize(model:, host:, type:, record:, point_m:, existing_polygons_m: [],
-                       expected_scope: nil, expected_state: nil)
+                       expected_scope: nil, expected_state: nil, world_matrix: nil)
           @type = DeepCopy.call(type)
           @record = DeepCopy.call(Units.validate!(record))
           unless @record.fetch("window_type_id") == @type.fetch("id") && Types::KIND.problems(@type).empty?
@@ -43,7 +46,7 @@ module PhComposer
           check_definition!(definition)
           @definition_before = definition && DefinitionGeometry.capture(definition)
           @definition_ids = definition ? [definition.persistent_id].freeze : [].freeze
-          @world_matrix = placement_matrix(host.geometry)
+          @world_matrix = world_matrix ? fitted(world_matrix, host.geometry) : placement_matrix(host.geometry)
           verify_type_and_identity!(model)
           @affected = [{ "kind" => REFERENCE_KIND, "id" => @record.fetch("id"), "change" => "placed" }]
         end
@@ -64,20 +67,23 @@ module PhComposer
         def apply(model, slots)
           verify_type_and_identity!(model)
           if @expected_scope && !@expected_scope.unchanged?(model, @expected_state)
-            changed!("The placement scope changed after preview.")
+            NativeUnit.changed!("The placement scope changed after preview.")
           end
           located = @locator.call(model, @host_reference, :mutable => true)
           entities, face, transform = located.entities, located.entity, located.transform
           geometry = FaceGeometry.capture(face, transform)
-          changed!("The host Face changed after preview.") unless geometry.to_h == @host_geometry &&
-            transform.to_a == @host_transform
+          unless geometry.to_h == @host_geometry && transform.to_a == @host_transform
+            NativeUnit.changed!("The host Face changed after preview.")
+          end
           unless DefinitionIndex.read(model) == @expected_index
-            changed!("The Window definition index changed after preview.")
+            NativeUnit.changed!("The Window definition index changed after preview.")
           end
           @expected_index.each_key { |id| DefinitionIndex.resolve(model, id) }
           definition = DefinitionIndex.resolve(model, @type.fetch("id"))
           current = definition && DefinitionGeometry.capture(definition)
-          changed!("The canonical Window definition changed after preview.") unless current == @definition_before
+          unless current == @definition_before
+            NativeUnit.changed!("The canonical Window definition changed after preview.")
+          end
           check_definition!(definition)
           Placement::Fit.check!(geometry, WorldGeometry.map(@plan, @world_matrix).outer_polygon_m,
             :existing_polygons_m => @existing_polygons)
@@ -111,21 +117,26 @@ module PhComposer
           matrix.freeze
         end
 
+        def fitted(world_matrix, geometry)
+          WorldGeometry.transform_state(world_matrix)
+          Placement::Fit.check!(geometry, WorldGeometry.map(@plan, world_matrix).outer_polygon_m,
+            :existing_polygons_m => @existing_polygons)
+          world_matrix
+        end
+
         def verify_type_and_identity!(model)
           unless Types::KIND.store.read(model, @type.fetch("id")) == @type
-            changed!("The authored Window Type changed after preview.")
+            NativeUnit.changed!("The authored Window Type changed after preview.")
           end
           if Occurrences.all(model).any? { |item| item.record.fetch("id") == @record.fetch("id") }
-            changed!("The new Window unit identity is already in use.")
+            NativeUnit.changed!("The new Window unit identity is already in use.")
           end
         end
 
         def check_definition!(definition)
           return unless definition
-          behavior = definition.behavior
-          configured = behavior.is2d? && behavior.cuts_opening? && behavior.snapto == SnapTo_Arbitrary &&
-                       behavior.no_scale_mask? == 127
-          return if configured && DefinitionGeometry.matches?(definition, :type_id => @type.fetch("id"), :plan => @plan)
+          return if DefinitionWriter.configured?(definition.behavior) &&
+                    DefinitionGeometry.matches?(definition, :type_id => @type.fetch("id"), :plan => @plan)
 
           raise CodedError.new("window.definition_changed",
             "The canonical Window definition geometry or behavior differs from its Type. Nothing was written.")
@@ -136,10 +147,6 @@ module PhComposer
           DefinitionIndex.write(model, @expected_index.merge(@type.fetch("id") => definition.persistent_id),
             :expected => @expected_index)
           definition
-        end
-
-        def changed!(message)
-          raise CodedError.new("target.changed", "#{message} Nothing was written.")
         end
       end
     end

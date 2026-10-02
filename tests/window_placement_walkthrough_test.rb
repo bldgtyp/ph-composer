@@ -17,6 +17,8 @@ class WindowPlacementWalkthroughTest < PhComposerTestCase
     group = Sketchup::Group.new(1000, Sketchup::Entities.new([face]))
     @model.entities << group
     assignment_invoke("ph_composer.zones.make", "parent_path" => [], "entity_ids" => [1000])
+    assignment_classify(assignment_faces, "face_type" => { "mode" => "set", "value" => "Wall" },
+                                         "boundary_condition" => { "mode" => "set", "value" => "Outdoors" })
     copy = lambda do |reference|
       item = W::Units::Occurrences.resolve(@model, reference)
       @model.start_operation("Native Copy", true)

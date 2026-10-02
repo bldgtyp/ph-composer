@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "vector3"
+
 module PhComposer
   # What is under the pointer, as a root-to-leaf instance path.
   #
@@ -56,10 +58,10 @@ module PhComposer
         inverse[offset] * face.normal.x + inverse[offset + 1] * face.normal.y + inverse[offset + 2] * face.normal.z
       end
       ray_origin, direction = view.pickray(x, y)
-      denominator = dot(normal, coordinates(direction))
+      denominator = Vector3.dot(normal, coordinates(direction))
       return nil if denominator.abs < 1.0e-12
 
-      distance = dot(normal, coordinates(origin).zip(coordinates(ray_origin)).map { |a, b| a - b }) / denominator
+      distance = Vector3.dot(normal, Vector3.subtract(coordinates(origin), coordinates(ray_origin))) / denominator
       return nil if distance.negative?
 
       point = coordinates(ray_origin).zip(coordinates(direction)).map { |a, b| a + b * distance }
@@ -69,10 +71,6 @@ module PhComposer
     def coordinates(vector)
       [vector.x.to_f, vector.y.to_f, vector.z.to_f]
     end
-
-    def dot(left, right)
-      left.zip(right).sum { |a, b| a * b }
-    end
-    private_class_method :coordinates, :dot
+    private_class_method :coordinates
   end
 end

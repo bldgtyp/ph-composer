@@ -3,6 +3,7 @@
 require_relative "world_geometry"
 require_relative "definition_geometry"
 require_relative "../placement/fit"
+require_relative "../placement/host"
 
 module PhComposer
   module Windows
@@ -29,7 +30,8 @@ module PhComposer
                      existing_polygons_m: [], shared_id: false, host_values: {}, host_state: "found")
           codes = []
           codes << "window.copy_id_pending" if shared_id
-          codes << "window.surface_host" if host_values["boundary_condition"] == "Surface"
+          # A host read is a Face in a Zone, so its Zone state is reported below rather than as unclassified.
+          codes.concat(Placement::Hosts.conditions(host_values, :zoned => true)) if host_geometry
           codes << "window.host_zone_unresolved" if host_geometry && host_state != "found"
           transform = WorldGeometry.transform_state(occurrence.transform.to_a)
           codes << "window.scaled" if transform.scaled

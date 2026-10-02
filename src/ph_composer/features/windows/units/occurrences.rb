@@ -57,11 +57,19 @@ module PhComposer
           unless item.record.fetch("id") == reference.fetch("unit_id")
             raise CodedError.new("target.changed", "The Window unit identity has changed.")
           end
-          if mutable && item.shared_storage
-            raise CodedError.new("target.shared_definition", "Make the parent storage unique before editing this unit.")
-          end
-          raise CodedError.new("target.locked", "The Window unit or its parent is locked.") if mutable && item.locked
+          mutable!(item) if mutable
           item
+        end
+
+        # Shared storage would carry a write to every other placement, and a lock forbids it.
+        def mutable!(item)
+          if item.shared_storage
+            raise CodedError.new("target.shared_definition",
+              "Make the Window's parent storage unique before editing it. Nothing was written.")
+          end
+          return unless item.locked
+
+          raise CodedError.new("target.locked", "The Window unit or its parent is locked. Nothing was written.")
         end
 
         def walk(entities, path, transform, shared, locked, found)

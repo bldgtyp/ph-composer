@@ -5,6 +5,8 @@ require_relative "definition_index"
 require_relative "definition_geometry"
 require_relative "generated_geometry"
 require_relative "world_geometry"
+require_relative "native_unit"
+require_relative "host_guard"
 require_relative "../placement/host"
 require_relative "../placement/fit"
 
@@ -73,16 +75,21 @@ module PhComposer
 
           verify_types!(model)
           check_edit_context!(model)
-          changed!("Window native state changed after preview.") unless scope.capture(model) == @guard
+          NativeUnit.changed!("Window native state changed after preview.") unless scope.capture(model) == @guard
           occurrences = Occurrences.all(model)
-          resolved = @rows.map { |row| resolve_item!(occurrences, row) }
-          @rows.zip(resolved).each { |row, item| check_host!(row, item) }
+          resolved = @rows.map do |row|
+            NativeUnit.unchanged!(occurrences, row.fetch("reference").fetch("entity_path"), row.fetch("before"))
+          end
+          @rows.zip(resolved).each { |row, item| HostGuard.verify!(item, row["host_geometry"]) }
           target = DefinitionIndex.resolve(model, @target.fetch("id"))
           check_target!(target)
           check_fit!
           target ||= create_target(model)
           @rows.zip(resolved).each do |row, item|
-            write_item!(item.entity, row, target) if native_change?(row)
+            next unless native_change?(row)
+
+            NativeUnit.replace_definition!(item.entity, target, row.fetch("after_matrix"))
+            Units.write(item.entity, row.fetch("after"))
           end
         end
 
@@ -102,7 +109,7 @@ module PhComposer
           if source && stored.nil?
             raise CodedError.new("window.unknown_type", "The source Window Type is unavailable.")
           end
-          changed!("An authored Window Type no longer matches the supplied baseline.") unless stored == type
+          NativeUnit.changed!("An authored Window Type no longer matches the supplied baseline.") unless stored == type
           if @types.key?(type.fetch("id")) && @types.fetch(type.fetch("id")) != type
             raise CodedError.new("params.invalid", "The batch supplies conflicting Type baselines.")
           end
@@ -110,23 +117,20 @@ module PhComposer
         end
 
         def prepare_item(model, occurrences, input, expected)
-          reference = input.fetch(:reference)
-          found = occurrences.select { |item| item.path == reference.fetch("entity_path") }
-          unless found.length == 1 && found.first.record.fetch("id") == reference.fetch("unit_id")
-            changed!("A Window swap reference no longer resolves uniquely.")
-          end
-          item = found.first
-          mutable!(item)
+          item = NativeUnit.resolve!(occurrences, input.fetch(:reference))
           Occurrences.assert_leaf!(item)
           record = DeepCopy.call(Units.validate!(input.fetch(:expected_record)))
-          changed!("A Window record differs from the planned identity repair.") unless
+          NativeUnit.changed!("A Window record differs from the planned identity repair.") unless
             record == expected.fetch(item.path, item.record)
           from_type = input.fetch(:from_type)
           old_plan = source_plan(model, item, record, from_type)
-          parent = item.parent_transform
-          row = instance_row(item, record, old_plan, parent)
+          row = instance_row(item, record, old_plan)
           row["other_polygons_m"] = DeepCopy.call(input.fetch(:other_polygons_m))
-          capture_host!(row, item, input[:host], parent)
+          if item.entity.glued_to
+            row["host_geometry"] = HostGuard.capture(item, input[:host])
+          elsif input[:host]
+            NativeUnit.changed!("A host was supplied for a Window that is no longer glued.")
+          end
           row
         end
 
@@ -150,33 +154,16 @@ module PhComposer
           !Types::KIND.store.ids(model).include?(type_id)
         end
 
-        def instance_row(item, record, old_plan, parent)
+        def instance_row(item, record, old_plan)
           matrix = item.entity.transformation.to_a
           changed = WorldGeometry.reanchor(matrix, :before => old_plan, :after => @target_plan,
             :anchor => record.fetch("anchor"))
           { "reference" => { "unit_id" => record.fetch("id"), "entity_path" => item.path.dup },
             "before" => record, "after" => record.merge("window_type_id" => @target.fetch("id")),
             "definition_id" => item.entity.definition.persistent_id, "matrix" => matrix,
-            "glued_face_id" => item.entity.glued_to&.persistent_id, "parent_matrix" => parent.to_a,
-            "after_matrix" => changed, "world_matrix" => item.transform.to_a,
-            "after_world_matrix" => (parent * Geom::Transformation.new(changed)).to_a }
-        end
-
-        def capture_host!(row, item, host, parent)
-          if item.entity.glued_to && host.nil?
-            raise CodedError.new("window.host_required", "Supply the public host read for each glued Window.")
-          end
-          return unless host
-
-          if host.values["boundary_condition"] == "Surface"
-            raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
-          end
-          unless host.parent_path == item.path[0...-1] && host.transform.to_a == parent.to_a &&
-                 host.entity.persistent_id == row.fetch("glued_face_id")
-            changed!("The supplied Window host does not match its occurrence.")
-          end
-          row["host_geometry"] = DeepCopy.call(host.geometry.to_h)
-          check_host!(row, item)
+            "glued_face_id" => item.entity.glued_to&.persistent_id, "after_matrix" => changed,
+            "world_matrix" => item.transform.to_a,
+            "after_world_matrix" => (item.parent_transform * Geom::Transformation.new(changed)).to_a }
         end
 
         def check_fit!
@@ -184,59 +171,24 @@ module PhComposer
             WorldGeometry.map(@target_plan, row.fetch("after_world_matrix")).outer_polygon_m
           end
           @rows.each_with_index do |row, index|
-            geometry = row["host_geometry"]
-            host = geometry ? FaceGeometry::Snapshot.new(:loops_m => geometry.fetch("loops_m"),
-              :normal => geometry.fetch("normal")) : outline_plane(polygons[index])
             others = polygons.each_with_index.filter_map { |polygon, i| polygon unless i == index }
-            Placement::Fit.check!(host, polygons[index], :existing_polygons_m => row.fetch("other_polygons_m") + others)
+            HostGuard.fit!(row["host_geometry"], polygons[index], row.fetch("other_polygons_m") + others)
           end
-        end
-
-        def outline_plane(polygon)
-          a, b, c = polygon.take(3)
-          x = b.zip(a).map { |v, origin| v - origin }
-          y = c.zip(a).map { |v, origin| v - origin }
-          normal = [x[1] * y[2] - x[2] * y[1], x[2] * y[0] - x[0] * y[2], x[0] * y[1] - x[1] * y[0]]
-          FaceGeometry::Snapshot.new(:loops_m => [polygon], :normal => normal)
-        end
-
-        def check_host!(row, item)
-          return unless row["host_geometry"]
-
-          current = FaceGeometry.capture(item.entity.glued_to, Geom::Transformation.new(row.fetch("parent_matrix")))
-          changed!("The Window host geometry changed after preview.") unless current.to_h == row.fetch("host_geometry")
         end
 
         def verify_types!(model)
           @missing_types.uniq.each do |id|
-            changed!("The missing source Window Type reappeared after preview.") unless
+            NativeUnit.changed!("The missing source Window Type reappeared after preview.") unless
               source_absent?(model, id)
           end
           @types.each_value do |type|
-            changed!("An authored Window Type changed after preview.") unless
+            NativeUnit.changed!("An authored Window Type changed after preview.") unless
               Types::KIND.store.read(model, type.fetch("id")) == type
           end
         end
 
-        def resolve_item!(occurrences, row)
-          found = occurrences.select { |item| item.path == row.fetch("reference").fetch("entity_path") }
-          changed!("A Window record changed after preview.") unless found.length == 1 &&
-            found.first.record == row.fetch("before")
-          mutable!(found.first)
-          found.first
-        end
-
-        def mutable!(item)
-          if item.shared_storage
-            raise CodedError.new("target.shared_definition", "Make the Window parent storage unique before swapping.")
-          end
-          raise CodedError.new("target.locked", "The Window or its parent is locked.") if item.locked
-        end
-
         def check_edit_context!(model)
-          return unless @target_definition_id && Array(model.active_path).any? do |entity|
-            entity.definition.persistent_id == @target_definition_id
-          end
+          return unless NativeUnit.editing?(model, @target_definition_id)
 
           raise CodedError.new("window.definition_editing", "Close the target Window definition before swapping.")
         end
@@ -244,11 +196,8 @@ module PhComposer
         def check_target!(definition, code: "window.definition_changed")
           return unless definition
 
-          behavior = definition.behavior
-          configured = behavior.is2d? && behavior.cuts_opening? && behavior.snapto == SnapTo_Arbitrary &&
-            behavior.no_scale_mask? == 127
-          return if configured && DefinitionGeometry.matches?(definition, :type_id => @target.fetch("id"),
-            :plan => @target_plan)
+          return if DefinitionWriter.configured?(definition.behavior) &&
+                    DefinitionGeometry.matches?(definition, :type_id => @target.fetch("id"), :plan => @target_plan)
 
           raise CodedError.new(code, "The target Window definition geometry or behavior differs from its Type.")
         end
@@ -259,23 +208,6 @@ module PhComposer
           DefinitionIndex.write(model, @index.merge(@target.fetch("id") => definition.persistent_id),
             :expected => @index)
           definition
-        end
-
-        def write_item!(entity, row, definition)
-          glue = entity.glued_to
-          entity.definition = definition
-          raise CodedError.new("geometry.failed", "The native Window definition could not be swapped.") unless
-            entity.definition == definition
-          entity.transformation = Geom::Transformation.new(row.fetch("after_matrix"))
-          entity.glued_to = glue
-          unless entity.glued_to == glue && entity.transformation.to_a == row.fetch("after_matrix")
-            raise CodedError.new("geometry.failed", "The swapped Window transform or glue could not be preserved.")
-          end
-          Units.write(entity, row.fetch("after"))
-        end
-
-        def changed!(message)
-          raise CodedError.new("target.changed", "#{message} Nothing was written.")
         end
       end
     end

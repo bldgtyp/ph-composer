@@ -131,4 +131,40 @@ class EntityLocateTest < PhComposerTestCase
     assert_equal({}, row.fetch("values"))
     refute row.key?("zone_state")
   end
+
+  def test_a_read_phase_index_walks_the_zones_once_for_a_batch_of_locates
+    faces = Array.new(3) { |index| Sketchup::Face.new(101 + index) }
+    zone("zon_AAAAAAAAAAAA", 100, faces)
+    read = request
+    walks = 0
+    scan = PhComposer::Zones::Occurrences.method(:scan_zones)
+    counted = lambda do |model|
+      walks += 1
+      scan.call(model)
+    end
+    PhComposer::Zones::Occurrences.stub(:scan_zones, counted) do
+      index = read.locate_index(FACE_KIND)
+      located = faces.map do |face|
+        read.locate(FACE_KIND, reference("zon_AAAAAAAAAAAA", [100, face.persistent_id]), :index => index)
+      end
+      assert_equal faces, located.map(&:entity)
+    end
+    assert_equal 1, walks
+  end
+
+  def test_host_context_carries_the_write_refusal_its_path_shows
+    group = zone("zon_AAAAAAAAAAAA", 100, [Sketchup::Face.new(101)])
+    row = -> { request.query("ph_composer.zones.faces.host_context", "paths" => [[100, 101]]).fetch("faces").first }
+    assert_nil row.call.fetch("write_refusal")
+    group.locked = true
+    assert_equal "target.locked", row.call.fetch("write_refusal").fetch("code")
+    group.locked = false
+    face = Sketchup::Face.new(202)
+    wrapper = Sketchup::Group.new(201, Sketchup::Entities.new([face]))
+    group.entities << wrapper
+    group.entities << Sketchup::Group.new(203, wrapper.entities)
+    path = [100, 201, 202]
+    rows = request.query("ph_composer.zones.faces.host_context", "paths" => [path]).fetch("faces")
+    assert_equal refusal("zon_AAAAAAAAAAAA", path), rows.first.fetch("write_refusal").fetch("code")
+  end
 end

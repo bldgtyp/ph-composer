@@ -10848,7 +10848,8 @@ Result:
         "required": [
           "path",
           "reference",
-          "values"
+          "values",
+          "write_refusal"
         ],
         "properties": {
           "path": {
@@ -10933,6 +10934,26 @@ Result:
               }
             },
             "description": "Empty for a Face with no record."
+          },
+          "write_refusal": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "description": "The refusal a write to this Face meets from its path alone (a shared, nested or locked Zone, locked or shared storage, or a stamp naming another Zone), or null. A duplicated Zone or Face id is not visible here; the write itself still checks it."
           }
         }
       },

@@ -5,6 +5,8 @@ require_relative "definition_index"
 require_relative "definition_geometry"
 require_relative "mutation_scope"
 require_relative "world_geometry"
+require_relative "native_unit"
+require_relative "host_guard"
 require_relative "../types/grid_operations"
 require_relative "../placement/fit"
 
@@ -39,12 +41,9 @@ module PhComposer
           @after = @before.merge("window_type_id" => @target.fetch("id"),
             "anchor" => flipped_anchor(@before.fetch("anchor")))
           @after_matrix = (Geom::Transformation.new(@matrix) * reflection).to_a
-          parent = item.parent_transform
-          @after_world = (parent * Geom::Transformation.new(@after_matrix)).to_a
-          @glued_face_id = item.entity.glued_to&.persistent_id
-          @parent_matrix = parent.to_a
+          @after_world = (item.parent_transform * Geom::Transformation.new(@after_matrix)).to_a
           @others = DeepCopy.call(other_polygons_m)
-          capture_host!(item, host)
+          @host_geometry = HostGuard.capture(item, host) if item.entity.glued_to
           verify_geometry!(model, item.entity.definition)
           check_fit!
           definition_ids = Occurrences.all(model).map { |row| row.entity.definition.persistent_id }
@@ -60,7 +59,7 @@ module PhComposer
             "reference" => @reference, "before" => @before, "after" => @after, "native_guard" => @guard,
             "index_before" => @index, "matrix" => @matrix, "after_matrix" => @after_matrix,
             "world_matrix" => @world_matrix, "after_world_matrix" => @after_world,
-            "host_geometry" => @host_geometry, "parent_matrix" => @parent_matrix, "other_polygons_m" => @others)
+            "host_geometry" => @host_geometry, "other_polygons_m" => @others)
         end
 
         def temporary_ids
@@ -79,11 +78,11 @@ module PhComposer
         def apply(model, _slots)
           verify_source!(model)
           target_absent!(model)
-          changed!("Window native state changed after flip preview.") unless scope.capture(model) == @guard
+          NativeUnit.changed!("Window native state changed after flip preview.") unless scope.capture(model) == @guard
           item = Occurrences.resolve(model, @reference, :mutable => true)
-          changed!("The mirrored Window record changed after preview.") unless item.record == @before
+          NativeUnit.changed!("The mirrored Window record changed after preview.") unless item.record == @before
           verify_geometry!(model, item.entity.definition)
-          check_host!(item)
+          HostGuard.verify!(item, @host_geometry)
           check_fit!
           definition = DefinitionWriter.create(:model => model, :type => @target, :plan => @target_plan)
           unless DefinitionGeometry.matches?(definition, :type_id => @target.fetch("id"), :plan => @target_plan)
@@ -91,14 +90,7 @@ module PhComposer
           end
           next_index = @index.merge(@target.fetch("id") => definition.persistent_id)
           DefinitionIndex.write(model, next_index, :expected => @index)
-          glue = item.entity.glued_to
-          item.entity.definition = definition
-          item.entity.transformation = Geom::Transformation.new(@after_matrix)
-          item.entity.glued_to = glue
-          unless item.entity.definition == definition && item.entity.transformation.to_a == @after_matrix &&
-                 item.entity.glued_to == glue
-            raise CodedError.new("geometry.failed", "The flipped Window transform or glue could not be preserved.")
-          end
+          NativeUnit.replace_definition!(item.entity, definition, @after_matrix)
           Units.write(item.entity, @after)
         end
 
@@ -107,7 +99,7 @@ module PhComposer
         def verify_source!(model)
           unless @source.is_a?(Hash) && Types::KIND.problems(@source).empty? &&
                  Types::KIND.store.read(model, @source.fetch("id")) == @source
-            changed!("Supply the unchanged authored source Window Type.")
+            NativeUnit.changed!("Supply the unchanged authored source Window Type.")
           end
           unless @target.is_a?(Hash) && Types::KIND.problems(@target).empty?
             raise CodedError.new("validation.failed", "Supply a valid new flipped Window Type.")
@@ -117,7 +109,7 @@ module PhComposer
         def target_absent!(model)
           id = @target.fetch("id")
           if Types::KIND.store.ids(model).include?(id) || DefinitionIndex.read(model).key?(id)
-            changed!("The new flipped Type identity is already in use.")
+            NativeUnit.changed!("The new flipped Type identity is already in use.")
           end
         end
 
@@ -184,37 +176,8 @@ module PhComposer
           end && remaining.empty?
         end
 
-        def capture_host!(item, host)
-          return unless item.entity.glued_to
-          unless host && host.parent_path == item.path[0...-1] && host.entity.persistent_id == @glued_face_id &&
-                 host.transform.to_a == @parent_matrix
-            raise CodedError.new("window.host_required", "Supply the matching public host for the mirrored Window.")
-          end
-          if host.values["boundary_condition"] == "Surface"
-            raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
-          end
-          @host_geometry = DeepCopy.call(host.geometry.to_h)
-          check_host!(item)
-        end
-
-        def check_host!(item)
-          return unless @host_geometry
-          current = FaceGeometry.capture(item.entity.glued_to, Geom::Transformation.new(@parent_matrix))
-          changed!("The mirrored Window host changed after preview.") unless current.to_h == @host_geometry
-        end
-
         def check_fit!
-          polygon = WorldGeometry.map(@target_plan, @after_world).outer_polygon_m
-          host = if @host_geometry
-                   FaceGeometry::Snapshot.new(:loops_m => @host_geometry.fetch("loops_m"),
-                     :normal => @host_geometry.fetch("normal"))
-                 else
-                   a, b, c = polygon.take(3)
-                   x, y = [b, c].map { |point| point.zip(a).map { |value, origin| value - origin } }
-                   FaceGeometry::Snapshot.new(:loops_m => [polygon],
-                     :normal => [x[1] * y[2] - x[2] * y[1], x[2] * y[0] - x[0] * y[2], x[0] * y[1] - x[1] * y[0]])
-                 end
-          Placement::Fit.check!(host, polygon, :existing_polygons_m => @others)
+          HostGuard.fit!(@host_geometry, WorldGeometry.map(@target_plan, @after_world).outer_polygon_m, @others)
         end
 
         def remaining_findings
@@ -229,15 +192,10 @@ module PhComposer
         end
 
         def check_edit_context!(model, definition)
-          return unless Array(model.active_path).any? do |entity|
-            entity.definition.persistent_id == definition.persistent_id
-          end
+          return unless NativeUnit.editing?(model, definition.persistent_id)
+
           raise CodedError.new("window.definition_editing",
             "Close the source Window definition before creating a flipped Type.")
-        end
-
-        def changed!(message)
-          raise CodedError.new("target.changed", "#{message} Nothing was written.")
         end
       end
     end

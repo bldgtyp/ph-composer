@@ -361,9 +361,9 @@
       "sha256": "5db0cc63bc6f34f3978c8e8db9adb837631ee8996f4465ef28fb931ff3c84c75"
     },
     "html/window_schedule.js": {
-      "bytes": 14722,
+      "bytes": 14891,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "20f850ab91c3f54ab76c663e2664a7d2aeb8771e1898a6cc5df6550bc7b85d7a"
+      "sha256": "554f5c5623433193d11f5b75d960bf9f405fda5a5d3f9055f0bd299871b98b2f"
     },
     "html/window_type_list.js": {
       "bytes": 13106,
