@@ -1,7 +1,7 @@
 # R02: projections and menus have no read context, so features improvise one
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r02-handler-read-context`, 2026-10-01. `make ci` passes on Ruby 3.2.2 and the offline suite on 2.7.2. Host gate outstanding.
+STATUS: Implemented on branch `refactor/r02-handler-read-context`, 2026-10-01. `make ci` passes on Ruby 3.2.2 and the offline suite on 2.7.2. Host gate passed 2026-10-01.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Reproduced defect (caller-handle growth) inside an evidenced contract gap.
@@ -141,5 +141,19 @@ own. CONTRACTS records that these reads bypass busy checks and raise, and that a
 observe later staged writes. Memo reuse, the Colour-by failure path and Ruby 2.7 compatibility
 were traced clean.
 
-Host gate: Assembly and Window Type modes redraw after an edit, Undo and Redo. Outstanding. Because
-`shell/` and `colour_by/` changed, the acceptance ledger flags every case for recheck.
+Host gate, passed 2026-10-01: SketchUp 26.1.188, Ruby 3.2.2, macOS, development bridge. Installed
+RBZ `f46eea20…3081` built from `e75c9c7`; synthetic fixture from the blank template
+(`2ae1418d…1063`) with one 4 x 3 x 3 m box made a Zone through `ph_composer.zones.make`. Fixture
+geometry used development eval; every product write used the public API; Undo and Redo used the
+native menu actions with SketchUp frontmost (they do nothing while it is in the background).
+
+| Check | Edit | Undo | Redo |
+| --- | --- | --- | --- |
+| Assembly mode, colour `#123456` to `#225588` on six Faces | legend `[34, 85, 136]`, rebuild, revision 6 | `[18, 52, 86]`, revision 7 | `[34, 85, 136]`, revision 8 |
+| Window Type mode, one Unit, Type renamed | legend "R02 Type Edited (1)", revision 11 | "R02 Type", revision 12 | "R02 Type Edited", revision 13 |
+
+Native window captures show the overlay tint and the HUD legend change with each step. The caller
+count stayed at 1 across every redraw; context-menu builds with one wall Face selected added one
+caller on first use (the Zones selection client, once per session) and none over five further
+builds and five forced redraws. Private evidence: `_private/host/r02/`. The broader ledger cases
+the screen flags for `shell/` and `colour_by/` changes were not rerun.
