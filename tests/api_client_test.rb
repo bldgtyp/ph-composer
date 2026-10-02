@@ -5,8 +5,8 @@ require "tmpdir"
 
 # Offline: a client that knows only the public interface and docs/API_QUICKSTART.md makes a Zone,
 # reads its Faces, classifies one, previews and makes an edit, verifies what changed, recovers from a
-# stale revision and retries a lost response. It names no feature module; the host side of the test
-# only draws geometry and selects it, as a user would.
+# stale revision, retries a lost response and gives the Face an Assembly. It names no feature module;
+# the host side of the test only draws geometry and selects it, as a user would.
 class ApiClientTest < PhComposerTestCase
   API = PhComposer::API
 
@@ -46,6 +46,7 @@ class ApiClientTest < PhComposerTestCase
     assert_equal updated, API.outcome(:context => context, :request => { "sequence" => 3 })
     assert_equal undo_steps, Sketchup.active_model.instance_variable_get(:@undo_stack).length
 
+    assign_an_assembly(context, updated)
     read_in_pages_and_export(context)
   end
 
@@ -67,7 +68,42 @@ class ApiClientTest < PhComposerTestCase
     API.connect(:session_id => session["id"], :capabilities => %w[read view model_write export])
   end
 
-  # 7. Read in pages, and export. The task is cancelled before its runtime starts, as the offline suite
+  # 7. Give the Face an Assembly.
+  def assign_an_assembly(context, updated)
+    material = API.invoke(
+      :context => context, :name => "ph_composer.assemblies.materials.create",
+      :params => { "values" => { "name" => "Mineral wool", "conductivity_w_mk" => 0.035 } },
+      :request => { "sequence" => 5, "expected_revision" => updated["revision"] }
+    )
+    assembly = API.invoke(
+      :context => context, :name => "ph_composer.assemblies.assemblies.create",
+      :params => { "values" => { "name" => "Wall A" } },
+      :request => { "sequence" => 6, "expected_revision" => material["revision"] }
+    )
+    assembly_id = assembly["value"]["id"]
+    read = API.query(:context => context, :name => "ph_composer.assemblies.assemblies.list",
+                     :params => { "ids" => [assembly_id] })
+    layer = read["value"]["records"].first["values"]["layers"].first
+    filled = API.invoke(
+      :context => context, :name => "ph_composer.assemblies.assemblies.segments.set_material",
+      :params => { "id" => assembly_id, "expected_values" => {}, "layer_id" => layer["id"],
+                   "segment_id" => layer["segments"].first["id"], "material_id" => material["value"]["id"] },
+      :request => { "sequence" => 7, "expected_revision" => read["revision"] }
+    )
+    face = faces(context).find { |row| row["values"]["face_type"] == "Wall" }
+    assigned = API.invoke(
+      :context => context, :name => "ph_composer.zones.faces.assign_assembly",
+      :params => { "targets" => [{ "reference" => face["reference"], "expected_values" => face["values"] }],
+                   "assembly_id" => assembly_id },
+      :request => { "sequence" => 8, "expected_revision" => filled["revision"] }
+    )
+    assert_equal %w[committed committed committed committed],
+                 [material, assembly, filled, assigned].map { |outcome| outcome["effect"] }
+    assert_equal assembly_id, faces(context).find { |row| row["reference"] == face["reference"] }
+                                            .dig("values", "assembly_id")
+  end
+
+  # 8. Read in pages, and export. The task is cancelled before its runtime starts, as the offline suite
   # has no translation runtime; the host run takes it to its outcome.
   def read_in_pages_and_export(context)
     page = API.query(:context => context, :name => "ph_composer.zones.faces.list",

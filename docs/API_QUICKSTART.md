@@ -1,6 +1,6 @@
 # API quickstart
 
-DATE: 2026-09-30
+DATE: 2026-10-01
 STATUS: Implemented and merged to main for in-process Ruby clients. No external connection is
 supported yet; see [AGENT_ACCESS.md](AGENT_ACCESS.md).
 
@@ -19,9 +19,11 @@ session = found["sessions"].find { |row| row["active"] }
 context = PhComposer::API.connect(session_id: session["id"], capabilities: %w[read view model_write export])
 ```
 
-Ask only for the grants you need; `export` is required for step 7 alone.
+Ask only for the grants you need; `export` is required for step 8 alone. `setup`, for loading
+and configuring libraries on this machine, is never granted unless asked for.
 
-`discover` lists the registered queries, actions, view commands and record kinds by name.
+`discover` lists the registered queries, actions, view commands, setup commands, file exports and
+record kinds by name.
 `describe` returns one of them in full:
 
 ```ruby
@@ -99,7 +101,50 @@ comes back and nothing is written twice. `PhComposer::API.outcome(context:, requ
 answers the same without resending. A request refused as `request.malformed` never took its
 sequence, so the corrected request may reuse it.
 
-## 7. Read in pages, and export
+## 7. Give the Face an Assembly
+
+Materials and Assemblies are records in the Model. Create a Material and an Assembly, put the
+Material in the Assembly's one Layer-Segment, then assign the Assembly to the classified Face. Each
+Builder gesture is its own action, naming its Layer and Layer-Segment by id. Sending `{}` as
+`expected_values` skips the stale-value check; the Assembly's values as last read keep it.
+Sequence 4 went to the refused write in step 5, because a refusal after acceptance still takes its
+sequence, so this step starts at 5.
+
+```ruby
+material = PhComposer::API.invoke(
+  context: context, name: "ph_composer.assemblies.materials.create",
+  params: { "values" => { "name" => "Mineral wool", "conductivity_w_mk" => 0.035 } },
+  request: { "sequence" => 5, "expected_revision" => updated["revision"] }
+)
+assembly = PhComposer::API.invoke(
+  context: context, name: "ph_composer.assemblies.assemblies.create",
+  params: { "values" => { "name" => "Wall A" } },
+  request: { "sequence" => 6, "expected_revision" => material["revision"] }
+)
+assembly_id = assembly["value"]["id"]
+read = PhComposer::API.query(context: context, name: "ph_composer.assemblies.assemblies.list",
+                             params: { "ids" => [assembly_id] })
+layer = read["value"]["records"].first["values"]["layers"].first
+filled = PhComposer::API.invoke(
+  context: context, name: "ph_composer.assemblies.assemblies.segments.set_material",
+  params: { "id" => assembly_id, "expected_values" => {}, "layer_id" => layer["id"],
+            "segment_id" => layer["segments"].first["id"], "material_id" => material["value"]["id"] },
+  request: { "sequence" => 7, "expected_revision" => read["revision"] }
+)
+face = PhComposer::API.query(context: context, name: "ph_composer.zones.faces.list")["value"]["faces"]
+                      .find { |row| row["values"]["face_type"] == "Wall" }
+assigned = PhComposer::API.invoke(
+  context: context, name: "ph_composer.zones.faces.assign_assembly",
+  params: { "targets" => [{ "reference" => face["reference"], "expected_values" => face["values"] }],
+            "assembly_id" => assembly_id },
+  request: { "sequence" => 8, "expected_revision" => filled["revision"] }
+)
+```
+
+Read the Faces again: the Wall's `values` now carry `assembly_id`, and the Assembly's row in
+`assemblies.list` reports its thickness and U-values, or why they are withheld.
+
+## 8. Read in pages, and export
 
 Every list read answers one page. Name the values you need and pass `next_cursor` back for the next
 page; a cursor only answers the same query and filter at the same revision.
