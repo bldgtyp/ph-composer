@@ -60,7 +60,7 @@ module PhComposer
 
     def translate(request_id, document, deadline_ms: RuntimeGate.fetch("boot_deadline_ms"))
       message = { "type" => "runtime.translate", "payload" => { "request_id" => request_id,
-                                                               "document" => document, "deadline_ms" => deadline_ms } }
+                                                                "document" => document, "deadline_ms" => deadline_ms } }
       @state == "ready" ? deliver(message) : @queued << message
       request_id
     end

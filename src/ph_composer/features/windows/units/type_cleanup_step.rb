@@ -31,8 +31,8 @@ module PhComposer
 
         def descriptor
           DeepCopy.call("name" => "cleanup_deleted_window_type", "type_id" => @type_id,
-            "index_before" => @index, "replacement_type" => @target, "definition_before" => @native_before,
-            "remaining_instance_ids" => @remaining_ids)
+                        "index_before" => @index, "replacement_type" => @target, "definition_before" => @native_before,
+                        "remaining_instance_ids" => @remaining_ids)
         end
 
         def affected

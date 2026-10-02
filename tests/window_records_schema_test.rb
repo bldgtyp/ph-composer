@@ -10,9 +10,9 @@ class WindowRecordsSchemaTest < PhComposerTestCase
   def test_four_final_version_one_closed_schemas_round_trip_optional_values
     W::Products::KINDS.each do |collection, kind|
       values = W::Products.defaults(collection, "name" => "Synthetic", "notes" => "Kept",
-        "datasheet_links" => ["https://example.invalid/data.pdf"])
+                                                "datasheet_links" => ["https://example.invalid/data.pdf"])
       record = values.merge("id" => "#{kind.id_prefix}_AAAAAAAAAAAA", "schema_version" => 1,
-        "user_data" => { "fixture" => { "comments" => ["kept"] } })
+                            "user_data" => { "fixture" => { "comments" => ["kept"] } })
       assert_empty kind.problems(record), collection
       kind.store.write(Sketchup.active_model, record)
       assert_equal record, kind.store.read(Sketchup.active_model, record.fetch("id"))
@@ -33,7 +33,7 @@ class WindowRecordsSchemaTest < PhComposerTestCase
       "psi_install_types" => { "psi_w_mk" => -0.2 } }.each do |collection, values|
       kind = W::Products::KINDS.fetch(collection)
       record = W::Products.defaults(collection, values.merge("name" => "Zero"))
-                .merge("id" => "#{kind.id_prefix}_AAAAAAAAAAAA", "schema_version" => 1)
+                          .merge("id" => "#{kind.id_prefix}_AAAAAAAAAAAA", "schema_version" => 1)
       assert_empty kind.problems(record)
       if collection == "glazings"
         assert_empty kind.problems(record.merge("g_value" => 1))

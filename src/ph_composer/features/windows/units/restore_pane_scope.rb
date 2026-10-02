@@ -17,7 +17,7 @@ module PhComposer
           @type_id = type.fetch("id").dup.freeze
           @plan = DefinitionPlan.build(type)
           @path = ["ph_composer.windows.units.restore", *parent_path.map(&:to_s), "panes",
-            *@pane_ids.sort.map(&:to_s)].freeze
+                   *@pane_ids.sort.map(&:to_s)].freeze
         end
 
         def capture(model)

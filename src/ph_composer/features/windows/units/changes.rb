@@ -25,7 +25,8 @@ module PhComposer
             reads = ReadContext.new(request)
             definition = DefinitionIndex.resolve(request.model, before.fetch("id"))
             canonical = reads.occurrences.select { |item|
- item.entity.definition.persistent_id == definition.persistent_id }
+              item.entity.definition.persistent_id == definition.persistent_id
+            }
             polygons = reads.other_polygons(:except => canonical.map(&:path))
             canonical.each do |item|
               next unless item.entity.glued_to
@@ -35,7 +36,7 @@ module PhComposer
             end
           end
           step = TypeChangeStep.new(:model => request.model, :before => before, :after => after,
-            :expected_records => expected, :hosts => hosts, :other_polygons_m => others)
+                                    :expected_records => expected, :hosts => hosts, :other_polygons_m => others)
           step.findings.each { |finding| proposal.add_finding(finding) }
           proposal.add_step(step, :scopes => [step.scope]) if step.needed?
         end

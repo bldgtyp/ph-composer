@@ -39,6 +39,7 @@ module PhComposer
         if rows.values.sum(&:length) > FileProvider::MAX_ROWS
           raise Error.new("library.catalog_too_many_rows", "The library export exceeds the 20,000 row limit.")
         end
+
         rows.each_value { |items| items.sort_by! { |row| row.fetch("id") } }
         versions = kinds.sort.to_h do |kind|
           [kind, declarations.find { |row| row.adapter.wire_kind == kind }.adapter.wire_version]
@@ -56,12 +57,14 @@ module PhComposer
         if (scope == "selected" && selected.empty?) || (scope == "all" && !selected.empty?)
           raise Error.new("params.invalid", "Selected scope needs local records; all scope takes no selection.")
         end
+
         available = request.registry.library_kinds.values.map { |row| row.adapter.wire_kind }
         kinds = params.fetch("kinds", available)
         raise Error.new("params.invalid", "Each export kind may be selected only once.") unless kinds.uniq == kinds
         unless (kinds - available).empty?
           raise Error.new("library.kind_unavailable", "An export kind has no installed library adapter.")
         end
+
         [scope, selected, kinds]
       end
 
@@ -74,6 +77,7 @@ module PhComposer
             unless request.registry.record_kinds.key?(kind)
               raise Error.new("target.not_found", "A selected local record kind is unavailable.")
             end
+
             read_record(request, kind, id)
           end
           return pairs.sort
@@ -103,6 +107,7 @@ module PhComposer
         unless mapped_values(adapter, row) == baseline
           raise Error.new("library.adapter_invalid", "The reverse adapter changed authored library export values.")
         end
+
         DeepCopy.call(row)
       rescue CodedError
         raise Error.new("library.adapter_invalid", "The adapter could not produce valid library export values."),
@@ -114,6 +119,7 @@ module PhComposer
         unless JsonValue.problems(mapped).empty? && JsonSchema.validate(mapped, adapter.mapped_schema).empty?
           raise Error.new("library.adapter_invalid", "The adapter returned invalid mapped export values.")
         end
+
         DeepCopy.call(mapped)
       end
 

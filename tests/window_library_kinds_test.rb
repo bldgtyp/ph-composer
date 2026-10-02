@@ -25,11 +25,12 @@ class WindowLibraryKindsTest < PhComposerTestCase
       [collection, row.merge("id" => "public-#{collection}")]
     end
     write_library(@path, envelope(:kinds => @rows.transform_values { |row| [row] }).merge(
-      "kind_schema_versions" => @rows.to_h { |kind, _row| [kind, 1] }))
+      "kind_schema_versions" => @rows.to_h { |kind, _row| [kind, 1] }
+    ))
     PhComposer::Library::Setup.add_file(:id => "synthetic.windows", :label => "Synthetic", :path => @path)
     @generations = @rows.to_h do |collection, _row|
       loaded = API.setup(:context => @context, :name => "#{L}.load",
-        :params => { "provider_id" => "synthetic.windows", "kind" => collection })
+                         :params => { "provider_id" => "synthetic.windows", "kind" => collection })
       [collection, loaded.dig("value", "generation")]
     end
   end
@@ -59,7 +60,7 @@ class WindowLibraryKindsTest < PhComposerTestCase
   def invoke(name, params)
     @sequence += 1
     API.invoke(:context => @context, :name => name, :params => params,
-      :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
+               :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
   end
 
   def stored(collection, id)
@@ -101,8 +102,9 @@ class WindowLibraryKindsTest < PhComposerTestCase
       refute before.dig("source", "snapshot").key?("id")
       refute_includes JSON.generate(before), @directory
       edited = before.merge("name" => "Edited #{collection}", "notes" => "local edits",
-        "user_data" => { "fixture" => ["retain"] },
-        "extension_data" => { "fixture.unknown" => { "schema_version" => 8, "payload" => { "retain" => true } } })
+                            "user_data" => { "fixture" => ["retain"] },
+                            "extension_data" => { "fixture.unknown" => { "schema_version" => 8,
+                                                                         "payload" => { "retain" => true } } })
       W::Products::KINDS.fetch(collection).store.write(@model, edited)
       reused = invoke("#{L}.copy", copy_params(collection, "keep_local"))
       assert_equal id, reused.dig("value", "local_id")
@@ -110,7 +112,8 @@ class WindowLibraryKindsTest < PhComposerTestCase
       candidate = resolution(collection).dig("candidates", 0)
       assert_equal false, candidate["source_changed"]
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge(
-        "expected_values" => candidate.fetch("expected_values")))
+        "expected_values" => candidate.fetch("expected_values")
+      ))
       assert_equal "committed", replaced["effect"], replaced.inspect
       assert_equal before.fetch("name"), stored(collection, id).fetch("name")
       assert_equal edited.fetch("user_data"), stored(collection, id).fetch("user_data")
@@ -126,8 +129,8 @@ class WindowLibraryKindsTest < PhComposerTestCase
       target = { "id" => id, "element_id" => before.fetch("elements").first.fetch("id"),
                  "expected_values" => W::Types::KIND.values(before) }
       target["side"] = "left" unless collection == "glazings"
-      target.merge!("mode" => "perimeter", 
-"expected_settings" => W::Settings.read(@model)) if collection == "psi_install_types"
+      target.merge!("mode" => "perimeter",
+                    "expected_settings" => W::Settings.read(@model)) if collection == "psi_install_types"
       revision = @session.revision
       result = invoke("#{L}.copy", copy_params(collection).merge("assignment" => target))
       assert_equal "committed", result["effect"], result.inspect
@@ -148,13 +151,14 @@ class WindowLibraryKindsTest < PhComposerTestCase
     @rows.each_key do |collection|
       target = { "id" => "missing", "element_id" => "missing", "expected_values" => {} }
       target["side"] = "top" unless collection == "glazings"
-      target.merge!("mode" => "perimeter", 
-"expected_settings" => W::Settings.read(@model)) if collection == "psi_install_types"
+      target.merge!("mode" => "perimeter",
+                    "expected_settings" => W::Settings.read(@model)) if collection == "psi_install_types"
       result = invoke("#{L}.copy", copy_params(collection).merge("assignment" => target))
       assert_equal "refused", result["status"], result.inspect
       assert_empty W::Products::KINDS.fetch(collection).store.ids(@model)
     end
   end
+
   def type_target(collection)
     id = invoke("#{W::FEATURE_ID}.types.create", "values" => { "name" => "#{collection} target" }).dig("value", "id")
     record = W::Types::KIND.store.read(@model, id)
@@ -175,8 +179,8 @@ class WindowLibraryKindsTest < PhComposerTestCase
       store.define_singleton_method(:write) { |*_args| raise PhComposer::InternalError, "Injected type write." }
       begin
         failed = invoke("#{L}.copy", copy_params(collection).merge("assignment" => target))
-        assert_equal %w[failed operation.failed rolled_back], failed.values_at("status", "code", "effect"), 
-failed.inspect
+        assert_equal %w[failed operation.failed rolled_back], failed.values_at("status", "code", "effect"),
+                     failed.inspect
         assert_equal before, store.read(@model, before.fetch("id"))
         assert_empty W::Products::KINDS.fetch(collection).store.ids(@model)
       ensure
@@ -187,7 +191,8 @@ failed.inspect
 
   def test_psi_default_assignment_and_late_product_failure_restore_settings
     input = copy_params("psi_install_types").merge("assignment" => {
-      "mode" => "model_default", "expected_settings" => W::Settings.read(@model) })
+      "mode" => "model_default", "expected_settings" => W::Settings.read(@model)
+    })
     store = W::Products::KINDS.fetch("psi_install_types").store
     writing = store.method(:write)
     store.define_singleton_method(:write) { |*_args| raise PhComposer::InternalError, "Injected product write." }
@@ -203,16 +208,16 @@ failed.inspect
     assert_equal "committed", saved["effect"], saved.inspect
     assert_equal saved.dig("value", "local_id"), W::Settings.read(@model).fetch("default_psi_install_id")
     assert_equal 0.0, W::Settings.read(@model).fetch("default_install_depth_m")
-    stale = invoke("#{L}.copy", 
-copy_params("psi_install_types", "keep_local").merge("assignment" => input["assignment"]))
+    stale = invoke("#{L}.copy",
+                   copy_params("psi_install_types", "keep_local").merge("assignment" => input["assignment"]))
     assert_equal "target.changed", stale["code"]
   end
 
   def imports_params
     before, target = type_target("imports")
     { "types" => [{ "id" => before.fetch("id"), "expected_values" => target.fetch("expected_values"),
-                   "installs" => [{ "element_id" => target.fetch("element_id"),
-                                    "sides" => W::Types::SIDES.to_h { |side| [side, "draft:import"] } }] }],
+                    "installs" => [{ "element_id" => target.fetch("element_id"),
+                                     "sides" => W::Types::SIDES.to_h { |side| [side, "draft:import"] } }] }],
       "psi_install_types" => { "create" => [], "update" => [] },
       "expected_settings" => W::Settings.read(@model),
       "imports" => [{ "client_id" => "draft:import", "copy" => copy_params("psi_install_types") }] }
@@ -226,13 +231,13 @@ copy_params("psi_install_types", "keep_local").merge("assignment" => input["assi
     revision = @session.revision
     @sequence += 1
     result = API.invoke(:context => @context, :name => "#{W::FEATURE_ID}.types.installs.save", :params => input,
-      :request => { "sequence" => @sequence, "expected_revision" => revision,
-                    "proposal_digest" => preview.fetch("proposal_digest") })
+                        :request => { "sequence" => @sequence, "expected_revision" => revision,
+                                      "proposal_digest" => preview.fetch("proposal_digest") })
     assert_equal "committed", result["effect"], result.inspect
     assert_equal revision + 1, @session.revision
     id = result.dig("value", "psi_install_type_ids", "draft:import")
     assert_equal [id], W::Types::KIND.store.read(@model, input["types"].first["id"])
-                                   .fetch("elements").first.fetch("installs").values.uniq
+                                     .fetch("elements").first.fetch("installs").values.uniq
     source = stored("psi_install_types", id).fetch("source")
     assert_equal "public-psi_install_types", source.fetch("record_id")
     assert_equal "ph_composer.library.file", source.fetch("provider_kind")
@@ -260,7 +265,7 @@ copy_params("psi_install_types", "keep_local").merge("assignment" => input["assi
     assert_equal "params.invalid", invoke("#{W::FEATURE_ID}.types.installs.save", input)["code"]
     input["imports"][0]["copy"].delete("assignment")
     API.setup(:context => @context, :name => "#{L}.load", :params => { "provider_id" => "synthetic.windows",
-                                                                                    "kind" => "psi_install_types" })
+                                                                       "kind" => "psi_install_types" })
     assert_equal "library.catalog_stale", invoke("#{W::FEATURE_ID}.types.installs.save", input)["code"]
     assert_empty W::Products::KINDS.fetch("psi_install_types").store.ids(@model)
   end
@@ -287,17 +292,18 @@ copy_params("psi_install_types", "keep_local").merge("assignment" => input["assi
     PhComposer::Library::Setup.add_file(:id => "synthetic.windows", :label => "Roundtrip", :path => export_path)
     @rows.each_key do |collection|
       loaded = API.setup(:context => @context, :name => "#{L}.load", :params => { "provider_id" => "synthetic.windows",
-                                                                             "kind" => collection })
+                                                                                  "kind" => collection })
       assert_equal "loaded", loaded.dig("value", "state"), loaded.inspect
       assert_empty loaded.dig("value", "warnings")
       input = copy_params(collection).merge("generation" => loaded.dig("value", "generation"),
-        "library_id" => exported.dig("library", "id"), "record_id" => originals[collection].fetch("id"))
+                                            "library_id" => exported.dig("library", "id"),
+                                            "record_id" => originals[collection].fetch("id"))
       result = invoke("#{L}.copy", input)
       assert_equal "committed", result["effect"], result.inspect
       id = result.dig("value", "local_id")
       refute_equal originals[collection]["id"], id
-      assert_equal adapter(collection).map.call(originals[collection]), 
-adapter(collection).map.call(stored(collection, id))
+      assert_equal adapter(collection).map.call(originals[collection]),
+                   adapter(collection).map.call(stored(collection, id))
     end
   end
 
@@ -316,7 +322,8 @@ adapter(collection).map.call(stored(collection, id))
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge("expected_values" => expected))
       assert_equal "committed", replaced["effect"], replaced.inspect
       second = stored(collection, id).merge("id" => PhComposer::Records::Identity.mint(
-        W::Products::KINDS.fetch(collection).id_prefix), "name" => "Second #{collection}")
+        W::Products::KINDS.fetch(collection).id_prefix
+      ), "name" => "Second #{collection}")
       W::Products::KINDS.fetch(collection).store.write(@model, second)
       assert_equal "ambiguous_source", resolution(collection).fetch("outcome")
       refused = invoke("#{L}.copy", copy_params(collection, "keep_local"))
@@ -324,14 +331,17 @@ adapter(collection).map.call(stored(collection, id))
       W::Products::KINDS.fetch(collection).store.delete(@model, second.fetch("id"))
       @rows[collection]["notes"] = "Changed provider content"
       write_library(@path, envelope(:kinds => @rows.transform_values { |row| [row] }).merge(
-        "kind_schema_versions" => @rows.to_h { |kind, _row| [kind, 1] }))
+        "kind_schema_versions" => @rows.to_h { |kind, _row| [kind, 1] }
+      ))
       loaded = API.setup(:context => @context, :name => "#{L}.load", :params => {
-        "provider_id" => "synthetic.windows", "kind" => collection })
+        "provider_id" => "synthetic.windows", "kind" => collection
+      })
       @generations[collection] = loaded.dig("value", "generation")
       candidate = resolution(collection).dig("candidates", 0)
       assert_equal true, candidate["source_changed"]
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge(
-        "expected_values" => candidate.fetch("expected_values")))
+        "expected_values" => candidate.fetch("expected_values")
+      ))
       assert_equal "committed", replaced["effect"], replaced.inspect
       assert_equal id, replaced.dig("value", "local_id")
       assert_equal "Changed provider content", stored(collection, id).fetch("notes")
@@ -354,5 +364,4 @@ adapter(collection).map.call(stored(collection, id))
       assert_equal "#abcdef", a.map.call(@rows[collection].merge("color" => "#ABCDEF"))["color"]
     end
   end
-
 end

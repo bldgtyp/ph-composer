@@ -14,16 +14,17 @@ module PhComposer
         # The action that repairs each condition. A host Zone that is not unique has no Windows repair: the
         # Zone's identity is repaired first, and rehost refuses such a Face.
         REPAIRS = { "window.unhosted" => "rehost", "window.off_host" => "rehost", "window.overhang" => "rehost",
-          "window.overlap" => "rehost", "window.surface_host" => "rehost",
-          "window.scaled" => "reset_to_type", "window.sheared" => "reset_to_type",
-          "window.geometry_differs" => "reset_to_type", "window.definition_detached" => "reset_to_type",
-          "window.mirrored" => "new_flipped_type", "window.unknown_type" => "swap_type",
-          "window.copy_id_pending" => "repair_copied_identities" }.freeze
+                    "window.overlap" => "rehost", "window.surface_host" => "rehost",
+                    "window.scaled" => "reset_to_type", "window.sheared" => "reset_to_type",
+                    "window.geometry_differs" => "reset_to_type", "window.definition_detached" => "reset_to_type",
+                    "window.mirrored" => "new_flipped_type", "window.unknown_type" => "swap_type",
+                    "window.copy_id_pending" => "repair_copied_identities" }.freeze
         # These actions name one occurrence; the others take a list.
         SINGLE_UNIT_REPAIRS = %w[rehost new_flipped_type].freeze
         # Reset to Type refuses a mirrored Window and one glued to a Surface Face or a Face outside one
         # unique Zone, so it is not offered beside those conditions.
         RESET_REFUSED = %w[window.mirrored window.surface_host window.host_zone_unresolved].freeze
+
         module_function
 
         def findings(occurrence, type:, canonical_definition:, host_geometry: nil,
@@ -42,9 +43,10 @@ module PhComposer
             plan = DefinitionPlan.build(type)
             definition = occurrence.entity.definition
             codes << "window.definition_detached" unless canonical_definition &&
-              definition.persistent_id == canonical_definition.persistent_id
+                                                         definition.persistent_id == canonical_definition.persistent_id
             codes << "window.geometry_differs" unless DefinitionGeometry.matches?(definition,
-              :type_id => type.fetch("id"), :plan => plan)
+                                                                                  :type_id => type.fetch("id"),
+                                                                                  :plan => plan)
             hosted(codes, occurrence, plan, host_geometry, existing_polygons_m)
           elsif !occurrence.entity.glued_to || !host_geometry
             codes << "window.unhosted"

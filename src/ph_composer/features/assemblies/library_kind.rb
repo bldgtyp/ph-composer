@@ -9,6 +9,7 @@ module PhComposer
       NAME = "#{FEATURE_ID}.library_materials"
       FIELDS = Commands::MATERIAL_EDITABLE
       NUMBERS = %w[conductivity_w_mk density_kg_m3 specific_heat_j_kgk emissivity].freeze
+
       module_function
 
       def map(row)
@@ -20,6 +21,7 @@ module PhComposer
         unless Fields.problems(values).empty?
           raise CodedError.new("library.row_semantic_invalid", "The library row violates the Material value contract.")
         end
+
         values
       end
 
@@ -82,23 +84,25 @@ module PhComposer
           result = Commands.update_material(record, :values => values.reject { |key, _value| key == "source" })
           changes = Definitions.changed_values(Materials::Schema::KIND, record, result.record)
           changes["source"] = DeepCopy.call(values["source"]) if values.key?("source")
-          request.engine.propose_update(MATERIAL_KIND, id, proposal, :values => changes,
+          request.engine.propose_update(MATERIAL_KIND, id, proposal,
+                                        :values => changes,
                                         :expected_values => request.params.fetch("expected_values"))
           { "id" => id }
         end
       end
 
       def install(feature)
-        adapter = Declarations::LibraryAdapter.new(:wire_kind => "materials", :wire_version => 1,
-          :fingerprint_version => 1, :wire_schema => wire_schema, :mapped_schema => schema,
-          :fingerprint_fields => FIELDS, :map => method(:map), :reverse => method(:reverse),
+        adapter = Declarations::LibraryAdapter.new(
+          :wire_kind => "materials", :wire_version => 1, :fingerprint_version => 1, :wire_schema => wire_schema,
+          :mapped_schema => schema, :fingerprint_fields => FIELDS, :map => method(:map), :reverse => method(:reverse),
           :fingerprint => method(:fingerprint), :local_read => local_read,
           :create => callback(Shapes.create(Materials::Schema::KIND, :labelled => Materials::Schema::LABELLED_FIELDS),
-                             Shapes::RESULT) do |request, proposal|
-            Materials::Operations.create(request, proposal, :values => request.params.fetch("values"),
-                                                            :user_data => request.params["user_data"])
-          end, :replace => replace,
-          :assign => assign)
+                              Shapes::RESULT) do |request, proposal|
+                       Materials::Operations.create(request, proposal, :values => request.params.fetch("values"),
+                                                                       :user_data => request.params["user_data"])
+                     end,
+          :replace => replace, :assign => assign
+        )
         feature.library_kind(NAME, :contract_version => 1, :record_kind => MATERIAL_KIND, :adapter => adapter)
       end
 
@@ -112,8 +116,9 @@ module PhComposer
         params = Shapes.object({ "target" => target, "local_id" => Shapes::TEXT })
         callback(params, Shapes::RESULT) do |request, proposal|
           gesture = request.params.fetch("target").merge("material_id" => request.params.fetch("local_id"))
-          Assembly::Operations.gesture(request, proposal, :id => gesture.fetch("id"),
-                                                :expected_values => gesture.fetch("expected_values")) do |record|
+          Assembly::Operations.gesture(request, proposal,
+                                       :id => gesture.fetch("id"),
+                                       :expected_values => gesture.fetch("expected_values")) do |record|
             SegmentRegistration.set_material(record, gesture, request)
           end
         end

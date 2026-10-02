@@ -131,14 +131,15 @@ module PhComposer
             copy["id"] = mapping.fetch(record.fetch("id"))
             if record.key?("extension_data")
               copy["extension_data"] = Extension.copy_data(record.fetch("extension_data"), @catalog,
-                                                            kind.label, record.fetch("id"), mapping,
-                                                            :mapping_kind => kind_id)
+                                                           kind.label, record.fetch("id"), mapping,
+                                                           :mapping_kind => kind_id)
             end
             if block_given?
               values = yield DeepCopy.call(kind.values(copy))
               unless values.is_a?(Hash)
                 raise CodedError.new("params.invalid", "#{kind.label} duplicate values must be a JSON object.")
               end
+
               check_value_keys!(kind, values)
               copy = copy.select { |key, _value| RecordKind::RESERVED_KEYS.include?(key) }.merge(DeepCopy.call(values))
             end

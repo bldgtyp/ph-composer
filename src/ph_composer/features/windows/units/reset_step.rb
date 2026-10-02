@@ -37,7 +37,7 @@ module PhComposer
           canonical = @rewrite ? canonical_items(model, occurrences) : []
           @rows = (selected.map(&:first) + canonical).uniq(&:path).map do |item|
             plan_row(item, :record => @projected.fetch(item.path, item.record),
-              :selected => selected_paths.include?(item.path), :host => hosts[item.path])
+                           :selected => selected_paths.include?(item.path), :host => hosts[item.path])
           end
           check_edit_context!(model)
           if needed?
@@ -51,9 +51,10 @@ module PhComposer
           @guard = scope.capture(model, :expected_records => @projected)
           @affected = needed? ? @rows.select { |row| changed_row?(row) }.map { |row| affected_row(row) } : []
           @findings = @rewrite ? [{ "code" => "window.shared_definition_reset",
-            "message" => "Reset replaces the edited primary Window definition for all of its units.",
-            "unit_count" => @rows.length,
-            "references" => @rows.map { |row| DeepCopy.call(row.fetch("reference")) } }] : []
+                                    "message" => "Reset replaces the edited primary Window definition for all of " \
+                                                 "its units.",
+                                    "unit_count" => @rows.length,
+                                    "references" => @rows.map { |row| DeepCopy.call(row.fetch("reference")) } }] : []
         end
 
         def needed?
@@ -62,8 +63,8 @@ module PhComposer
 
         def descriptor
           DeepCopy.call("name" => "reset_window_units_to_type", "type" => @type, "index_before" => @index,
-            "definition_id" => @definition_id, "rebuild" => @rebuild, "rewrite" => @rewrite,
-            "native_guard" => @guard, "items" => @rows, "findings" => @findings)
+                        "definition_id" => @definition_id, "rebuild" => @rebuild, "rewrite" => @rewrite,
+                        "native_guard" => @guard, "items" => @rows, "findings" => @findings)
         end
 
         def temporary_ids
@@ -128,6 +129,7 @@ module PhComposer
             if expected_records.key?(item.path) && expected_records.fetch(item.path) != record
               raise CodedError.new("params.invalid", "The reset supplies conflicting projected Unit records.")
             end
+
             [item, record]
           end
         end
@@ -140,7 +142,7 @@ module PhComposer
           native_ids = definition.instances.map(&:persistent_id).sort
           unless all.keys.sort == canonical.map(&:path).sort && native_ids == managed_ids
             raise CodedError.new("record.unreadable",
-              "Every primary Window instance needs a valid Unit record for reset.")
+                                 "Every primary Window instance needs a valid Unit record for reset.")
           end
           canonical
         end
@@ -156,16 +158,17 @@ module PhComposer
           if selected && WorldGeometry.transform_state(item.transform.to_a).mirrored
             raise CodedError.new("window.mirrored", "Create a new flipped Type to repair a mirrored Window.")
           end
+
           parent = item.parent_transform
           matrix = item.entity.transformation.to_a
           world = item.transform.to_a
           world_after = selected && inplane_changed?(world) ? normalized_world(world, record) : world
           local_after = world_after == world ? matrix : (parent.inverse * Geom::Transformation.new(world_after)).to_a
           row = { "reference" => { "unit_id" => record.fetch("id"), "entity_path" => item.path.dup },
-            "record" => record, "matrix" => matrix, "after_matrix" => local_after,
-            "world_matrix" => world, "after_world_matrix" => world_after,
-            "definition_id" => item.entity.definition.persistent_id,
-            "glued_face_id" => item.entity.glued_to&.persistent_id }
+                  "record" => record, "matrix" => matrix, "after_matrix" => local_after,
+                  "world_matrix" => world, "after_world_matrix" => world_after,
+                  "definition_id" => item.entity.definition.persistent_id,
+                  "glued_face_id" => item.entity.glued_to&.persistent_id }
           Occurrences.assert_leaf!(item) if changing_definition?(row)
           capture_host!(row, item, host) if item.entity.glued_to && changed_row?(row)
           row
@@ -175,14 +178,14 @@ module PhComposer
         def outsider_outlines(occurrences, inventory)
           unless inventory.is_a?(Hash) && inventory.keys.sort == occurrences.map(&:path).sort
             raise CodedError.new("window.outlines_required",
-              "Supply the complete Window outline inventory keyed by occurrence path.")
+                                 "Supply the complete Window outline inventory keyed by occurrence path.")
           end
           planned_paths = @rows.map { |row| row.fetch("reference").fetch("entity_path") }
           outsiders = inventory.reject { |path, _polygon| planned_paths.include?(path) }.values
           return outsiders unless outsiders.any?(&:nil?)
 
           raise CodedError.new("window.type_geometry_unknown",
-            "Recover the untouched Window geometry before resetting a neighboring Unit.")
+                               "Recover the untouched Window geometry before resetting a neighboring Unit.")
         end
 
         def changed_row?(row)
@@ -209,7 +212,7 @@ module PhComposer
           x = Vector3.normalize(matrix.take(3), :message => degenerate)
           raw_y = matrix[4, 3]
           y = Vector3.normalize(raw_y.zip(x).map { |value, right| value - right * Vector3.dot(raw_y, x) },
-            :message => degenerate)
+                                :message => degenerate)
           z = Vector3.cross(x, y)
           fixed = WorldGeometry.anchor(@plan, record.fetch("anchor"), matrix)
           anchor = Anchors.point(record.fetch("anchor"), :width_m => @plan.width_m, :height_m => @plan.height_m)
@@ -224,6 +227,7 @@ module PhComposer
           if host && host.zone_state != "found"
             raise CodedError.new("window.host_required", "Reset requires a host in a unique authored Zone.")
           end
+
           row["host_geometry"] = HostGuard.capture(item, host)
         end
 
@@ -258,13 +262,14 @@ module PhComposer
         def native_parents(entities, path = [], transform = Geom::Transformation.new, ancestors = [])
           entities.each_with_object({}) do |entity, found|
             next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+
             id = entity.definition.persistent_id
             raise CodedError.new("record.unreadable", "Window native storage is recursive.") if ancestors.include?(id)
 
             current = path + [entity.persistent_id]
             found[current] = transform if entity.is_a?(Sketchup::ComponentInstance) && id == @definition_id
             found.merge!(native_parents(entity.definition.entities, current, transform * entity.transformation,
-              ancestors + [id]))
+                                        ancestors + [id]))
           end
         end
       end

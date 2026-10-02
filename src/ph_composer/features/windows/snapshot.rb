@@ -13,6 +13,7 @@ module PhComposer
           rows << engine.find(kind.id, id)
         rescue CodedError => error
           raise unless error.code == "record.unreadable"
+
           unreadable << { "id" => id, "code" => error.code, "message" => error.message }
         end
         [rows, unreadable]
@@ -77,13 +78,13 @@ module PhComposer
         default_id = settings.fetch("default_psi_install_id")
         if default_id && !products.fetch("psi_install_types").key?(default_id)
           findings << { "code" => "window_type.default_install_dangling",
-                "message" => "The Model default Psi-Install Type is missing." }
+                        "message" => "The Model default Psi-Install Type is missing." }
         end
         view.merge("findings" => findings, "display" => {
           "thermal" => thermal, "width_m" => dimensions(record.fetch("columns_m")),
-                "height_m" => dimensions(record.fetch("rows_m")),
-                "install_depth_m" => record.fetch("install_depth_m", settings.fetch("default_install_depth_m")),
-                "complete" => thermal.fetch("complete")
+          "height_m" => dimensions(record.fetch("rows_m")),
+          "install_depth_m" => record.fetch("install_depth_m", settings.fetch("default_install_depth_m")),
+          "complete" => thermal.fetch("complete")
         })
       end
 
@@ -102,6 +103,7 @@ module PhComposer
         record.fetch("elements").flat_map do |element|
           product_slots(element).filter_map do |collection, side, id|
             next unless id && !products.fetch(collection).key?(id)
+
             { "code" => "window_type.product_dangling", "message" => "#{side}: the assigned product is missing.",
               "element_id" => element.fetch("id"), "side" => side, "product_id" => id }
           end
@@ -114,8 +116,9 @@ module PhComposer
           rows << { "kind" => "model_default", "name" => "Model default" }
         end
         view.merge("findings" => [], "uses" => rows, "use_count" => rows.length,
-          "element_use_count" => rows.filter_map { |row|
- [row["type_id"], row["element_id"]] if row["element_id"] }.uniq.length)
+                   "element_use_count" => rows.filter_map { |row|
+                                            [row["type_id"], row["element_id"]] if row["element_id"]
+                                          }.uniq.length)
       end
     end
   end

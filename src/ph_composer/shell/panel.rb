@@ -308,8 +308,10 @@ module PhComposer
         case type
         when "export.start"
           Export::Workflow.start(session, :context => context, :repairs => payload.fetch("repairs", []),
-                                 :request => -> { { "sequence" => next_sequence(session),
-                                                   "expected_revision" => session.revision } })
+                                          :request => -> {
+                                                        { "sequence" => next_sequence(session),
+                                                          "expected_revision" => session.revision }
+                                                      })
         when "export.preflight" then API.export_preflight(:context => context)
         when "export.status" then API.export_status(:context => context, :task_id => payload["task_id"])
         when "export.cancel" then API.cancel_export(:context => context, :task_id => payload["task_id"])
@@ -374,7 +376,7 @@ module PhComposer
         @contexts ||= {}
         @contexts.delete_if { |id, _context| Sessions.find(id).nil? }
         @contexts[session.id] ||= API.connect(:session_id => session.id,
-                                             :capabilities => %w[read view model_write setup export])
+                                              :capabilities => %w[read view model_write setup export])
       end
 
       def next_sequence(session)

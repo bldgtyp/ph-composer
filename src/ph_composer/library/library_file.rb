@@ -11,12 +11,14 @@ module PhComposer
     module LibraryFile
       MAX_BYTES = 32 * 1024 * 1024
       FORMAT = "ph-composer.library"
+
       module_function
 
       def parse(text, adapters:, max_rows: nil)
         if !text.is_a?(String) || text.bytesize > MAX_BYTES
           raise Error.new("library.file_too_large", "A library file exceeds the 32 MiB limit.")
         end
+
         envelope = JSON.parse(text)
         validate_envelope!(envelope)
         library = envelope.fetch("library")
@@ -24,6 +26,7 @@ module PhComposer
         if max_rows && count > max_rows
           raise Error.new("library.catalog_too_many_rows", "The catalog exceeds the 20,000 row aggregate limit.")
         end
+
         rows = {}
         warnings = []
         unavailable = []
@@ -53,6 +56,7 @@ module PhComposer
         unless value["schema_version"] == 1
           raise Error.new("library.schema_unsupported", "The library envelope version is not supported.")
         end
+
         library = value["library"]
         valid = value["kind_schema_versions"].is_a?(Hash) && value["kinds"].is_a?(Hash) && library.is_a?(Hash) &&
                 text?(library["id"]) && text?(library["name"]) && timestamp?(value["exported_at"])
@@ -64,6 +68,7 @@ module PhComposer
       def kind_problem(envelope, kind, input, adapter)
         return "library.kind_unavailable" unless adapter
         return "library.kind_schema_missing" unless envelope.fetch("kind_schema_versions").key?(kind)
+
         version = envelope.fetch("kind_schema_versions")[kind]
         return "library.kind_schema_unsupported" unless version == adapter.wire_version
         return "library.kind_malformed" unless input.is_a?(Array)
@@ -87,7 +92,8 @@ module PhComposer
                     "record_id" => snapshot.fetch("id"), "wire_schema_version" => version, "snapshot" => snapshot }
         end
         [rows.sort_by { |row|
- [row.dig("snapshot", "name").to_s.downcase, row.fetch("record_id")] }, warnings, duplicate]
+           [row.dig("snapshot", "name").to_s.downcase, row.fetch("record_id")]
+         }, warnings, duplicate]
       end
 
       # Shared pure schema admission for file and contributor-provider rows. Returns an allowlisted
@@ -102,6 +108,7 @@ module PhComposer
         if missing.any? { |field| properties.fetch(field).key?("x-unit") }
           return [nil, ["library.unit_invalid"]]
         end
+
         bad_required = required.any? do |field|
           !snapshot.key?(field) || !JsonSchema.validate(snapshot[field], properties.fetch(field)).empty? ||
             (%w[id name].include?(field) && !text?(snapshot[field]))

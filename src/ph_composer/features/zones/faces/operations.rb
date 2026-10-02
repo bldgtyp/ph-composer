@@ -5,6 +5,7 @@ module PhComposer
     module Faces
       # The Face handlers the declarations register. Each only reads and proposes; the dispatcher
       # owns the native operation.
+
       module_function
 
       # Refusals that leave a Face unwritable where it sits; the user's remedy is on the Group.
@@ -114,7 +115,7 @@ module PhComposer
         targets = references.map do |reference|
           occurrence = Zones::Occurrences.resolve_face(
             request.model, reference, :mutable => true, :allow_unassigned => reference["entity_id"].nil?,
-            :index => index
+                                      :index => index
           )
           record = FACE_STORE.read(occurrence.entity)
           check_expected!(record, expected)
@@ -192,12 +193,13 @@ module PhComposer
           # happen to name the factor.
           values = merged_values(request.engine.kind(AttachedZone::KIND_ID)
                                    .values(request.engine.find(AttachedZone::KIND_ID, id)), patch)
-          request.engine.propose_update(AttachedZone::KIND_ID, id, proposal, :values => patch,
+          request.engine.propose_update(AttachedZone::KIND_ID, id, proposal,
+                                        :values => patch,
                                         :user_data => user_data, :expected_values => expected_values)
         else
           values = { "temperature_reduction_factor" => AttachedZone::DEFAULT_FACTOR }.merge(patch)
           id = request.engine.propose_create(AttachedZone::KIND_ID, proposal, :values => values,
-                                             :user_data => user_data)
+                                                                              :user_data => user_data)
         end
         AttachedZone.findings(values.merge("id" => id)).each { |finding| proposal.add_finding(finding) }
         { "id" => id }
@@ -421,10 +423,10 @@ module PhComposer
       def retirement_only_updates(targets, retirements)
         classified = targets.map { |occurrence, _record| Zones::Occurrences.key(occurrence.reference) }
         retirements.reject { |key, _entry| classified.include?(key) }
-          .map do |_key, (reference, before, after)|
-            { "reference" => reference, "before" => before, "after" => after, "stamp" => nil,
-              "change" => "retired" }
-          end
+                   .map do |_key, (reference, before, after)|
+          { "reference" => reference, "before" => before, "after" => after, "stamp" => nil,
+            "change" => "retired" }
+        end
       end
 
       def new_record(request, occurrence)
@@ -474,6 +476,7 @@ module PhComposer
           if field == "face_type" && mode == "set" && !ASSIGNABLE_FACE_TYPES.include?(value)
             raise CodedError.new("params.invalid", "Classify sets Wall, RoofCeiling or Floor.")
           end
+
           if field == "boundary_condition" && mode == "set" && !ASSIGNABLE_BOUNDARIES.include?(value)
             raise CodedError.new("params.invalid",
                                  "Classify sets #{ASSIGNABLE_BOUNDARIES.join(', ')}; Surface is the solver's.")

@@ -10,7 +10,7 @@ class WindowUnitIdentityStepTest < PhComposerTestCase
   def seed
     model = Sketchup.active_model
     record = { "id" => "wun_AAAAAAAAAAAA", "schema_version" => 1, "window_type_id" => "wnt_AAAAAAAAAAAA",
-      "anchor" => "sill_center", "user_data" => { "note" => ["preserve"] } }
+               "anchor" => "sill_center", "user_data" => { "note" => ["preserve"] } }
     definition = model.definitions.add("Synthetic")
     2.times do
       unit = model.entities.add_instance(definition, Geom::Transformation.new)
@@ -32,7 +32,7 @@ class WindowUnitIdentityStepTest < PhComposerTestCase
     model.commit_operation
     assert_equal %w[wun_AAAAAAAAAAAA wun_BBBBBBBBBBBB], U::Occurrences.all(model).map { |item| item.record.fetch("id") }
     assert_equal before.map { |record| record.fetch("user_data") },
-      U::Occurrences.all(model).map { |item| item.record.fetch("user_data") }
+                 U::Occurrences.all(model).map { |item| item.record.fetch("user_data") }
     model.undo
     assert_equal before, U::Occurrences.all(model).map(&:record)
     model.redo

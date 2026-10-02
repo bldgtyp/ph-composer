@@ -81,6 +81,7 @@ module PhComposer
             cell[field]["left"], cell[field]["right"] = cell[field]["right"], cell[field]["left"]
           end
           next unless cell["operation"]
+
           cell["operation"]["directions"].map! { |side| { "left" => "right", "right" => "left" }.fetch(side, side) }
         end
         record
@@ -91,6 +92,7 @@ module PhComposer
         refuse("Choose Glazed or Empty.") unless %w[glazed empty].include?(values["kind"])
         cells(record, values.fetch("ids")).each do |cell|
           next if cell.fetch("kind") == values.fetch("kind")
+
           cell["kind"] = values.fetch("kind")
           cell["frames"] = Types::SIDES.to_h { |side| [side, nil] }
           cell["installs"] = Types::SIDES.to_h { |side| [side, nil] }
@@ -187,6 +189,7 @@ module PhComposer
         layout = Grid.new(record)
         record.fetch("elements").each do |cell|
           next unless (edges = before[cell.fetch("id")])
+
           layout.classify(cell).each_with_index do |classification, i|
             cell["installs"][Types::SIDES[i]] = nil if edges[i] == :perimeter && classification != :perimeter
           end

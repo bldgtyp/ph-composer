@@ -250,7 +250,7 @@ class ZoneSplitIdentityRepairTest < PhComposerTestCase
     [@first, @second].each do |face|
       record = FACE_STORE.read(face)
       assert_equal "atz_000000000001", record.dig("extension_data", EXTENSION.namespace,
-                                                    "payload", "external_id")
+                                                  "payload", "external_id")
       assert_equal OLD_ID, record.dig("user_data", "literal")
     end
   end
@@ -342,7 +342,7 @@ class ZoneSplitIdentityRepairTest < PhComposerTestCase
 
   def face(id)
     Sketchup::Face.new(id, {}, :points => [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(2, 0, 0),
-                                            Geom::Point3d.new(2, 2, 0)])
+                                           Geom::Point3d.new(2, 2, 0)])
   end
 
   def zone_with_face(group_id, face_id, zone_id, assigned_id)

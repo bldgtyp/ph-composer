@@ -32,6 +32,7 @@ module PhComposer
         if occurrence.entity.get_glued_instances.any?
           raise CodedError.new("adjacency.glued_instances", "A Face with glued instances cannot be cut.")
         end
+
         entities = container(occurrence.entity)
         original = FaceGeometry.capture(occurrence.entity, occurrence.transform)
         original_persistent_id = occurrence.entity.persistent_id

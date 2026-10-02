@@ -12,9 +12,11 @@ module PhComposer
 
         def point(host_geometry, x_m:, y_m:)
           unless [x_m, y_m].all? { |value|
-            (value.is_a?(Integer) || value.is_a?(Float)) && value.to_f.finite? }
+                   (value.is_a?(Integer) || value.is_a?(Float)) && value.to_f.finite?
+                 }
             raise CodedError.new("params.invalid", "Placement offsets must be finite metre coordinates.")
           end
+
           plane = Plane.new(host_geometry)
           projected = host_geometry.outer_loop.map { |point| plane.project(point) }
           x = projected.map(&:first).min + x_m

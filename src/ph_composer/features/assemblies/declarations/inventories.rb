@@ -19,8 +19,9 @@ module PhComposer
       })
       USE = Shapes.object({ "assembly_id" => Shapes::TEXT, "name" => Shapes::TEXT })
       MATERIAL_ROW = Shapes.with(Shapes.view(Materials::Schema::KIND),
-                                "uses" => Shapes.list(USE), "use_count" => { "type" => "integer", "minimum" => 0 })
-      ASSEMBLY_ROW = Shapes.with(Shapes.view(Assembly::Schema::KIND), "display" => DISPLAY,
+                                 "uses" => Shapes.list(USE), "use_count" => { "type" => "integer", "minimum" => 0 })
+      ASSEMBLY_ROW = Shapes.with(Shapes.view(Assembly::Schema::KIND),
+                                 "display" => DISPLAY,
                                  "export_ready" => Shapes.described({ "type" => "boolean" },
                                                                     "Whether a Face can export with this Assembly."),
                                  "export_blockers" => Shapes.described(Shapes::FINDINGS,
@@ -48,12 +49,13 @@ module PhComposer
       def declare(feature, collection, row, categories: false, &read)
         prefix = "#{FEATURE_ID}.#{collection}"
         feature.query("#{prefix}.list", :description => "One bounded page of #{collection}, with display findings.",
-                      :params => Shapes.list_params,
-                      :result => result(row, :paged => true, :categories => categories),
-                      :examples => [{}, { "limit" => 20 }]) do |request|
+                                        :params => Shapes.list_params,
+                                        :result => result(row, :paged => true, :categories => categories),
+                                        :examples => [{}, { "limit" => 20 }]) do |request|
           read.call(request, true)
         end
-        feature.query("#{prefix}.all", :description => "The complete #{collection} inventory for the panel snapshot.",
+        feature.query("#{prefix}.all",
+                      :description => "The complete #{collection} inventory for the panel snapshot.",
                       :params => Shapes::NONE, :result => result(row, :paged => false, :categories => categories),
                       :examples => [{}]) do |request|
           read.call(request, false)

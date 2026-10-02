@@ -55,7 +55,7 @@ module PhComposer
         # skip, and "skipped" implies the solver would otherwise have paired them. An unsupported
         # shape is left alone: there the solver never learned whether they overlap.
         return Result.new(:kind => :same_normal, :area_m2 => shared.area_m2) if aligned == :same &&
-                                                                               %i[partial sliver].include?(shared.kind)
+                                                                                %i[partial sliver].include?(shared.kind)
 
         if shared.kind == :partial &&
            ((left.has_glued_instances && !shared.left_remainders_m.empty?) ||
@@ -279,7 +279,7 @@ module PhComposer
         shortest = edges.map { |from, to| distance(from, to) }.min
         spans = polygon.flat_map do |point|
           edges.reject { |from, to| same_point?(from, point) || same_point?(to, point) }
-            .map { |from, to| distance_to_segment(point, from, to) }
+               .map { |from, to| distance_to_segment(point, from, to) }
         end
         [shortest, *spans].compact.min || 0.0
       end

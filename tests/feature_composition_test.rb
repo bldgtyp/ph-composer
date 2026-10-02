@@ -55,14 +55,22 @@ class FeatureCompositionTest < PhComposerTestCase
   def test_nested_reference_protects_target_and_duplicate_remaps_actual_references
     reference = R::Reference.new(:key => "layers[].segments[].definition_id", :target_kind => KIND,
                                  :cardinality => "one")
-    layers = { "type" => "array", "items" => { "type" => "object", "required" => ["segments"],
-      "additionalProperties" => false, "properties" => { "segments" => { "type" => "array", "items" => {
-        "type" => "object", "required" => ["definition_id"], "additionalProperties" => false,
-        "properties" => { "definition_id" => { "type" => "string" } }
-      } } } } }
+    layers = {
+      "type" => "array",
+      "items" => {
+        "type" => "object", "required" => ["segments"], "additionalProperties" => false,
+        "properties" => {
+          "segments" => {
+            "type" => "array",
+            "items" => { "type" => "object", "required" => ["definition_id"], "additionalProperties" => false,
+                         "properties" => { "definition_id" => { "type" => "string" } } }
+          }
+        }
+      }
+    }
     kind = R::RecordKind.new(:id => "test.consumer.layered", :label => "Layered", :schema_version => 1,
-                            :id_prefix => "lay", :fields => [R::Field.new(:key => "layers", :schema => layers)],
-                            :references => [reference])
+                             :id_prefix => "lay", :fields => [R::Field.new(:key => "layers", :schema => layers)],
+                             :references => [reference])
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID])
       scope.record_kind(kind)
@@ -81,14 +89,18 @@ class FeatureCompositionTest < PhComposerTestCase
     assert_equal [target], reference.ids(values)
     invalid = { "layers" => [{ "segments" => [{ "definition_id" => 7 }] }] }
     error = assert_raises(PhComposer::CodedError) {
- engine.propose_create(kind.id, R::ChangeSet.new, :values => invalid) }
+      engine.propose_create(kind.id, R::ChangeSet.new, :values => invalid)
+    }
     assert_equal "validation.failed", error.code
   end
 
   def test_entity_reference_dependency_registers_and_reverse_requirement_refuses_cycle
     target = R::ReferenceTarget.new(:id => "test.consumer.entity", :label => "Entity", :records => ->(_model) { [] },
-      :validate => ->(_record) { [] }, :references => [R::Reference.new(:key => "definition_id", :target_kind => KIND,
-                                                                     :cardinality => "one")])
+                                    :validate => ->(_record) {
+                                                   []
+                                                 }, :references => [R::Reference.new(:key => "definition_id",
+                                                                                     :target_kind => KIND,
+                                                                                     :cardinality => "one")])
     PhComposer::Registry.install([feature do |registry|
       registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID]).reference_target(target)
     end])
@@ -112,8 +124,10 @@ class FeatureCompositionTest < PhComposerTestCase
         proposal.add_finding("code" => "test.retarget", "message" => "Planned")
         R::ReferencePlan.new(:entries => [])
       end
-      scope.action("test.consumer.delete", :description => "Delete with retargeting.", :params => OBJECT,
-        :result => OBJECT, :undo_name => "Delete", :side_effects => "Deletes definitions.") do |request, proposal|
+      scope.action("test.consumer.delete",
+                   :description => "Delete with retargeting.", :params => OBJECT,
+                   :result => OBJECT, :undo_name => "Delete",
+                   :side_effects => "Deletes definitions.") do |request, proposal|
         plan = request.retarget_references(KIND, :from => request.params.fetch("id"), :to => nil)
         request.engine.propose_delete(KIND, request.params.fetch("id"), proposal, :reference_plan => plan)
         {}
@@ -130,6 +144,7 @@ class FeatureCompositionTest < PhComposerTestCase
     assert_equal [[revision, id, nil]], calls
     assert_empty engine.ids(KIND)
   end
+
   class RetargetStep
     def initialize(entity_id, record)
       @entity_id = entity_id
@@ -166,33 +181,41 @@ class FeatureCompositionTest < PhComposerTestCase
       proposal.add_step(RemoveReferenceStep.new(entry.key.first, entry.record),
                         :scopes => [PhComposer::Operations::EntityScope.new([])])
       R::ReferenceRemoval.new(:kind => foreign ? "ph_composer.zones.zone" : entry.kind,
-        :key => entry.key, :before => entry.record)
+                              :key => entry.key, :before => entry.record)
     end
     R::ReferencePlan.new(:entries => [], :removals => removals)
   end
 
-  def install_entity_retargeter(refuse: false, foreign: false, remove: false)
+  # Entities in the active Model that name a definition in a test attribute.
+  def entity_target
     reference = R::Reference.new(:key => "definition_id", :target_kind => KIND, :cardinality => "one")
-    target = R::ReferenceTarget.new(:id => "test.consumer.entity", :label => "Entity", :validate => ->(_record) { [] },
+    R::ReferenceTarget.new(
+      :id => "test.consumer.entity", :label => "Entity", :validate => ->(_record) { [] },
       :references => [reference], :records => lambda do |model|
         model.entities.to_a.filter_map do |entity|
           text = entity.get_attribute("ph_composer.test_retarget", "record")
           R::ReferenceEntry.new(:kind => "test.consumer.entity", :key => [entity.persistent_id],
                                 :record => JSON.parse(text)) if text
         end
-      end)
+      end
+    )
+  end
+
+  def install_entity_retargeter(refuse: false, foreign: false, remove: false)
+    target = entity_target
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID])
       scope.reference_target(target)
       scope.reference_retargeter("test.consumer.retarget", :target_kind => KIND) do |request, proposal, from:, to:|
         entries = target.entries(request.model).select { |entry| entry.record["definition_id"] == from }
         next removal_plan(proposal, entries, foreign) if remove
+
         final = entries.map do |entry|
           record = entry.record.merge("definition_id" => to)
           proposal.add_step(RetargetStep.new(entry.key.first, record),
                             :scopes => [PhComposer::Operations::EntityScope.new([])])
           R::ReferenceEntry.new(:kind => foreign ? "ph_composer.zones.zone" : entry.kind,
-                               :key => entry.key, :record => record)
+                                :key => entry.key, :record => record)
         end
         raise PhComposer::CodedError.new("target.locked", "Referrer is locked.") if refuse
 
@@ -200,11 +223,11 @@ class FeatureCompositionTest < PhComposerTestCase
       end
       owner = registry.feature("test.deleting", :contract_version => 1, :requires => [TestFeature::ID])
       owner.action("test.deleting.delete", :description => "Delete definition.", :params => OBJECT,
-        :result => OBJECT, :undo_name => "Delete definition",
-        :side_effects => "Retarget and delete.") do |request, proposal|
+                                           :result => OBJECT, :undo_name => "Delete definition",
+                                           :side_effects => "Retarget and delete.") do |request, proposal|
         begin
           plan = request.retarget_references(KIND, :from => request.params.fetch("id"),
-                                             :to => request.params["replacement"])
+                                                   :to => request.params["replacement"])
           request.engine.propose_delete(KIND, request.params.fetch("id"), proposal, :reference_plan => plan)
         rescue StandardError
           # A careless caller cannot turn a refused participant into a partial commit.
@@ -229,8 +252,8 @@ class FeatureCompositionTest < PhComposerTestCase
 
   def retarget_invoke(ids)
     PhComposer::API.invoke(:context => @context, :name => "test.deleting.delete",
-                          :params => { "id" => ids.first, "replacement" => ids.last },
-                          :request => { "sequence" => 1, "expected_revision" => @session.revision })
+                           :params => { "id" => ids.first, "replacement" => ids.last },
+                           :request => { "sequence" => 1, "expected_revision" => @session.revision })
   end
 
   def test_owned_removal_composes_with_catalog_delete_and_native_undo
@@ -282,8 +305,9 @@ class FeatureCompositionTest < PhComposerTestCase
   def test_nested_reference_registration_rejects_unreachable_path
     reference = R::Reference.new(:key => "layers[].missing.id", :target_kind => KIND, :cardinality => "one")
     kind = R::RecordKind.new(:id => "test.consumer.bad", :label => "Bad", :schema_version => 1, :id_prefix => "bad",
-      :fields => [R::Field.new(:key => "layers", :schema => { "type" => "array", "items" => {
-        "type" => "object", "properties" => {} } })], :references => [reference])
+                             :fields => [R::Field.new(:key => "layers", :schema => { "type" => "array", "items" => {
+                               "type" => "object", "properties" => {}
+                             } })], :references => [reference])
     error = assert_raises(PhComposer::RegistrationError) do
       PhComposer::Registry.install([feature do |registry|
         registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID]).record_kind(kind)
@@ -297,9 +321,12 @@ class FeatureCompositionTest < PhComposerTestCase
     reference = R::Reference.new(:key => "links[].peer_id", :target_kind => "test.consumer.linked",
                                  :cardinality => "one")
     kind = R::RecordKind.new(:id => "test.consumer.linked", :label => "Linked", :schema_version => 1,
-      :id_prefix => "lnk", :references => [reference], :fields => [R::Field.new(:key => "links", :schema => {
-        "type" => "array", "items" => { "type" => "object", "additionalProperties" => false,
-          "properties" => { "peer_id" => { "type" => "string" } } } })])
+                             :id_prefix => "lnk", :references => [reference],
+                             :fields => [R::Field.new(:key => "links", :schema => {
+                               "type" => "array",
+                               "items" => { "type" => "object", "additionalProperties" => false,
+                                            "properties" => { "peer_id" => { "type" => "string" } } }
+                             })])
     PhComposer::Registry.install([feature do |registry|
       registry.feature("test.consumer", :contract_version => 1).record_kind(kind)
     end])
@@ -308,7 +335,7 @@ class FeatureCompositionTest < PhComposerTestCase
     b = "lnk_BBBBBBBBBBBB"
     [a, b].each do |id|
       kind.store.write(@model, "id" => id, "schema_version" => 1, "links" => [{ "peer_id" => a }],
-                              "user_data" => { "test.provenance" => { "text" => a } })
+                               "user_data" => { "test.provenance" => { "text" => a } })
     end
     proposal = R::ChangeSet.new
     mapping = engine.propose_duplicate(kind.id, [a, b], proposal)
@@ -325,17 +352,18 @@ class FeatureCompositionTest < PhComposerTestCase
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.consumer", :contract_version => 1)
       scope.query("test.consumer.read", :description => "Attempt mutation in read.", :params => OBJECT,
-        :result => OBJECT) do |request|
+                                        :result => OBJECT) do |request|
         request.retarget_references(KIND, :from => "tdf_AAAAAAAAAAAA", :to => nil)
         {}
       end
-      scope.action("test.consumer.write", :description => "Read from action.", :params => OBJECT,
-        :result => OBJECT, :undo_name => "Read", :side_effects => "None.") do |request, _proposal|
+      scope.action("test.consumer.write",
+                   :description => "Read from action.", :params => OBJECT,
+                   :result => OBJECT, :undo_name => "Read", :side_effects => "None.") do |request, _proposal|
         request.query("test.consumer.read")
       end
     end])
     outcome = PhComposer::API.invoke(:context => @context, :name => "test.consumer.write", :params => {},
-      :request => { "sequence" => 1, "expected_revision" => @session.revision })
+                                     :request => { "sequence" => 1, "expected_revision" => @session.revision })
     assert_equal "operation.failed", outcome.fetch("code")
     assert_empty @model.operations
   end
@@ -343,7 +371,7 @@ class FeatureCompositionTest < PhComposerTestCase
   def test_array_leaf_uses_cardinality_and_cannot_be_declared_as_an_array_step
     field = R::Reference.new(:key => "ids[]", :target_kind => KIND, :cardinality => "one")
     schema = { "type" => "object", "properties" => { "ids" => { "type" => "array",
-      "items" => { "type" => "string" } } } }
+                                                                "items" => { "type" => "string" } } } }
     refute_empty field.declaration_problems(schema)
     field.key = "ids"
     field.cardinality = "many"
@@ -358,16 +386,16 @@ class FeatureCompositionTest < PhComposerTestCase
       schema = { "type" => "object", "properties" => { "count" => { "type" => "integer" } } }
       lower.query("test.lower.read", :description => "Read.", :params => schema, :result => OBJECT) { shared }
       lower.query("test.lower.bad", :description => "Bad result.", :params => OBJECT,
-        :result => { "type" => "object", "required" => ["missing"] }) { {} }
+                                    :result => { "type" => "object", "required" => ["missing"] }) { {} }
       upper = registry.feature("test.upper", :contract_version => 1, :requires => ["test.lower"])
       upper.query("test.upper.read", :description => "Read dependency.", :params => OBJECT,
-        :result => OBJECT) do |request|
+                                     :result => OBJECT) do |request|
         result = request.query("test.lower.read", request.params)
         result.fetch("items") << "local"
         result
       end
       upper.query("test.upper.bad", :description => "Read bad result.", :params => OBJECT,
-        :result => OBJECT) { |request| request.query("test.lower.bad") }
+                                    :result => OBJECT) { |request| request.query("test.lower.bad") }
     end])
     assert_equal ["original", "local"], read("test.upper.read").dig("value", "items")
     assert_equal({ "items" => ["original"] }, shared)
@@ -395,8 +423,10 @@ class FeatureCompositionTest < PhComposerTestCase
     observed = []
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID])
-      scope.action("test.consumer.duplicate", :description => "Duplicate with failing transform.", :params => OBJECT,
-        :result => OBJECT, :undo_name => "Duplicate", :side_effects => "Duplicates records.") do |request, proposal|
+      scope.action("test.consumer.duplicate",
+                   :description => "Duplicate with failing transform.", :params => OBJECT,
+                   :result => OBJECT, :undo_name => "Duplicate",
+                   :side_effects => "Duplicates records.") do |request, proposal|
         calls = 0
         begin
           request.engine.propose_duplicate(KIND, ids, proposal) do |values|
@@ -414,11 +444,10 @@ class FeatureCompositionTest < PhComposerTestCase
     end])
     before = @model.operations.length
     outcome = PhComposer::API.invoke(:context => @context, :name => "test.consumer.duplicate", :params => {},
-      :request => { "sequence" => 1, "expected_revision" => @session.revision })
+                                     :request => { "sequence" => 1, "expected_revision" => @session.revision })
     assert_equal [1, 2], observed
     assert_equal "operation.failed", outcome.fetch("code")
     assert_equal ids.sort, engine.ids(KIND).sort
     assert_equal before, @model.operations.length
   end
-
 end

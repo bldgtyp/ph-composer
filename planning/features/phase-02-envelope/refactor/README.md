@@ -120,7 +120,8 @@ moved files are free now and should be done completely rather than staged.
 
    R05, R06 and R07 land before Phase 3's first stage.
 2. **Last: the formatting-only pull request** in
-   [planning/refactor/rubocop-layout.md](../../../refactor/rubocop-layout.md).
+   [planning/refactor/rubocop-layout.md](../../../refactor/rubocop-layout.md). Merged
+   2026-10-02 as PR #32.
 3. **Owed before this packet closes: R11's carried host gate.** Native dialogs with Ed at the host;
    the checks are listed in [R11](R11-readability-and-lint.md), "Verification" and "Outcome". It can
    run before or after the formatting pull request. The packet archives once both are done.

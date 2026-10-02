@@ -88,7 +88,7 @@ class WindowUnitWorldGeometryTest < PhComposerTestCase
     small = W::Types.blank(0, 2, :identity => window_allocator)
     empty = W::Types.blank(1, 2, :identity => window_allocator).merge("kind" => "empty")
     plan = Plans.build(window_values("rows_m" => [0.8, 0.7], "columns_m" => [0.6, 0.4, 0.5],
-      "elements" => [merged, small, empty]))
+                                     "elements" => [merged, small, empty]))
     transform = matrix([0, -2, 0], [0, 0, 3], [1, 0, 0], [10, 20, 30])
     mapped = Geometry.map(plan, transform)
     assert_equal [merged.fetch("id"), small.fetch("id")], mapped.panes.map(&:element_id)
@@ -106,9 +106,9 @@ class WindowUnitWorldGeometryTest < PhComposerTestCase
     original = window_values
     edited = PhComposer::DeepCopy.call(original)
     edited.merge!("name" => "New name", "notes" => "Note", "install_depth_m" => 0.2,
-      "user_data" => { "synthetic" => true })
+                  "user_data" => { "synthetic" => true })
     edited.fetch("elements").first.merge!("glazing_id" => "glz_changed", "name" => "Pane",
-      "operation" => { "type" => "swing", "directions" => ["right"] })
+                                          "operation" => { "type" => "swing", "directions" => ["right"] })
     before, after = [original, edited].map { |values| Plans.build(values) }
     transform = matrix([0, 1, 0], [-1, 0, 0], [0, 0, 1], [3, 4, 5])
     assert_equal Geometry.map(before, transform), Geometry.map(after, transform)

@@ -94,6 +94,7 @@ module PhComposer
         def on_segment?(point, segment)
           first, last = segment
           return true if close?(point, first) || close?(point, last)
+
           delta = first.zip(last).map { |a, b| b - a }
           square = delta.sum { |value| value * value }
           return close?(point, first) unless square.positive? && square.finite?

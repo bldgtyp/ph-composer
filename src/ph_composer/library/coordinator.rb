@@ -28,6 +28,7 @@ module PhComposer
         unless fingerprint.is_a?(String) && /\A[0-9a-f]{64}\z/.match?(fingerprint)
           raise Error.new("library.adapter_invalid", "The kind adapter returned an invalid semantic fingerprint.")
         end
+
         result.fetch("candidates").each do |candidate|
           attribution = locals.find { |row| row.fetch("id") == candidate.fetch("id") }["source"]
           compatible = attribution.is_a?(Hash) && attribution["kind"] == "library" &&
@@ -49,6 +50,7 @@ module PhComposer
           unless resolution.fetch("outcome") == "create"
             raise Error.new("library.review_required", "Resolve the existing local candidates before copying.")
           end
+
           source = attribution(request, declaration.adapter, entry, row, identity, mapped)
           value = CallbackInvoker.call(request, declaration, declaration.adapter.create,
                                        { "values" => mapped.merge("source" => source) })
@@ -62,6 +64,7 @@ module PhComposer
           unless reviewed_values?(expected, id, resolution)
             raise Error.new("params.invalid", "Replacement needs the reviewed local values.")
           end
+
           source = attribution(request, declaration.adapter, entry, row, identity, mapped)
           CallbackInvoker.call(request, declaration, declaration.adapter.replace,
                                { "id" => id, "values" => mapped.merge("source" => source),
@@ -83,6 +86,7 @@ module PhComposer
         unless declaration.adapter.assign
           raise Error.new("library.assignment_unavailable", "This record kind does not support assignment.")
         end
+
         CallbackInvoker.call(request, declaration, declaration.adapter.assign, { "target" => target, "local_id" => id })
         true
       end
@@ -99,13 +103,14 @@ module PhComposer
         params = request.params
         declaration = State.kind(params.fetch("kind"), request.registry)
         entry = State.for(request.session).fetch(params.fetch("provider_id"), params.fetch("kind"), request.registry,
-                                                  :generation => params.fetch("generation"))
+                                                 :generation => params.fetch("generation"))
         rows = entry.fetch("rows").select do |row|
           row.fetch("library_id") == params.fetch("library_id") && row.fetch("record_id") == params.fetch("record_id")
         end
         unless rows.length == 1
           raise Error.new("library.row_unavailable", "The selected library record is unavailable or ambiguous.")
         end
+
         [declaration, entry, rows.first]
       end
 
@@ -126,12 +131,14 @@ module PhComposer
         unless fingerprint.is_a?(String) && /\A[0-9a-f]{64}\z/.match?(fingerprint)
           raise Error.new("library.adapter_invalid", "The kind adapter returned an invalid semantic fingerprint.")
         end
+
         keys = adapter.mapped_schema.fetch("properties").keys
         snapshot = row.fetch("snapshot").slice(*keys)
         identity.merge("kind" => "library", "fingerprint" => fingerprint,
-          "fingerprint_version" => adapter.fingerprint_version,
-          "copied_at" => State.for(request.session).copy_time(request.revision, [entry.fetch("generation"), identity]),
-          "snapshot" => DeepCopy.call(snapshot))
+                       "fingerprint_version" => adapter.fingerprint_version,
+                       "copied_at" => State.for(request.session).copy_time(request.revision, [entry.fetch("generation"),
+                                                                                              identity]),
+                       "snapshot" => DeepCopy.call(snapshot))
       end
 
       def local_id(id, resolution)

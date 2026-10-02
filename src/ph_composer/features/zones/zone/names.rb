@@ -230,6 +230,7 @@ module PhComposer
           unless targets.all? { |group, name| Names.valid?(name) && group.name.to_s.empty? }
             raise InternalError, "The Zone name restoration target changed."
           end
+
           model = @session.model
           started = model.start_operation("Restore Zone Name", true, false, true)
           raise InternalError, "SketchUp refused to restore the Zone name." unless started

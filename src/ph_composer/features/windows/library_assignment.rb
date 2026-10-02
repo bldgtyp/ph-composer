@@ -15,7 +15,7 @@ module PhComposer
         return Shapes.object(target) unless collection == "psi_install_types"
 
         target.merge!("mode" => { "type" => "string", "enum" => %w[perimeter model_default] },
-          "expected_settings" => Settings::VALUES)
+                      "expected_settings" => Settings::VALUES)
         Shapes.object(target, :optional => %w[id element_id expected_values side])
       end
 
@@ -46,8 +46,11 @@ module PhComposer
 
       # The same grid gesture the action of that name makes, guarded by the target's expected values.
       def assign_grid(request, proposal, target, gesture, values, &change)
-        Types::Operations.grid(request, proposal, :gesture => gesture, :id => target.fetch("id"), :values => values,
-          :expected_values => target.fetch("expected_values")) { |record, _identity| change.call(record) }
+        Types::Operations.grid(request, proposal,
+                               :gesture => gesture, :id => target.fetch("id"), :values => values,
+                               :expected_values => target.fetch("expected_values")) do |record, _identity|
+          change.call(record)
+        end
       end
 
       def assign_psi(request, proposal, target, id)
@@ -55,6 +58,7 @@ module PhComposer
           unless target.keys.sort == %w[expected_settings mode]
             raise CodedError.new("params.invalid", "A Model default target cannot contain element fields.")
           end
+
           values = Settings.read(request.model).merge("default_psi_install_id" => id)
           Settings.propose(request, proposal, :values => values, :expected_values => target.fetch("expected_settings"))
           return
@@ -62,15 +66,16 @@ module PhComposer
         unless target.keys.sort == %w[element_id expected_settings expected_values id mode side]
           raise CodedError.new("params.invalid", "A perimeter target needs a guarded element and side.")
         end
+
         record = request.engine.find(TYPE_KIND, target.fetch("id"))
         after = Installs.paint(record, target.fetch("element_id"), target.fetch("side"), id)
         element = after.fetch("elements").find { |cell| cell.fetch("id") == target.fetch("element_id") }
         edge = { "element_id" => element.fetch("id"), "sides" => element.fetch("installs") }
         InstallSave.call(request, proposal,
-          :types => [{ "id" => target.fetch("id"), "expected_values" => target.fetch("expected_values"),
-                       "installs" => [edge] }],
-          :psi_install_types => { "create" => [], "update" => [] },
-          :expected_settings => target.fetch("expected_settings"))
+                         :types => [{ "id" => target.fetch("id"), "expected_values" => target.fetch("expected_values"),
+                                      "installs" => [edge] }],
+                         :psi_install_types => { "create" => [], "update" => [] },
+                         :expected_settings => target.fetch("expected_settings"))
       end
     end
   end

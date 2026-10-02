@@ -13,6 +13,7 @@ module PhComposer
         unless Settings.read(request.model) == expected_settings
           raise CodedError.new("target.changed", "Window defaults changed; reopen the Installs session.")
         end
+
         mapping = LibraryImports.resolve(request, proposal, imports, psi_install_types.fetch("create"))
         mapping.merge!(create_products(request, proposal, psi_install_types.fetch("create")))
         update_products(request, proposal, psi_install_types.fetch("update"))
@@ -36,10 +37,11 @@ module PhComposer
           if request.engine.ids(PSI_INSTALL_KIND).include?(row.fetch("client_id"))
             raise CodedError.new("params.invalid", "A temporary identity collides with a saved product.")
           end
+
           values = Products.defaults("psi_install_types", row.fetch("values"))
           Definitions.unique_name!(values.fetch("name"), known)
           id = request.engine.propose_create(PSI_INSTALL_KIND, proposal, :values => values,
-            :user_data => row["user_data"])
+                                                                         :user_data => row["user_data"])
           known << values.merge("id" => id)
           [row.fetch("client_id"), id]
         end
@@ -56,19 +58,22 @@ module PhComposer
             Definitions.unique_name!(values["name"], known, :except => row.fetch("id"))
             known.find { |record| record.fetch("id") == row.fetch("id") }&.merge!("name" => values["name"])
           end
-          request.engine.propose_update(PSI_INSTALL_KIND, row.fetch("id"), proposal, :values => values,
-            :expected_values => row.fetch("expected_values"), :user_data => row["user_data"])
+          request.engine.propose_update(PSI_INSTALL_KIND, row.fetch("id"), proposal,
+                                        :values => values,
+                                        :expected_values => row.fetch("expected_values"),
+                                        :user_data => row["user_data"])
         end
       end
 
       def unique_final_names!(request, proposal)
         rows = Definitions.records(request, Products::KINDS.fetch("psi_install_types"))
-                .to_h { |record| [record.fetch("id"), record] }
+                          .to_h { |record| [record.fetch("id"), record] }
         proposal.writes.select { |write| write.kind == PSI_INSTALL_KIND }.each do |write|
           rows[write.id] = write.after
         end
         names = rows.values.map { |record| record.fetch("name").strip.downcase }
         return if names.uniq.length == names.length
+
         raise CodedError.new("validation.failed", "Installation products need unique names after this session.")
       end
 
@@ -83,11 +88,13 @@ module PhComposer
           if element.fetch("kind") == "empty"
             raise CodedError.new("validation.failed", "Empty elements have no installation edges.")
           end
+
           element["installs"] = edge.fetch("sides").transform_values { |id| mapping.fetch(id, id) }
         end
         Installs.validate(after)
         request.engine.propose_update(TYPE_KIND, target.fetch("id"), proposal,
-          :values => { "elements" => after.fetch("elements") }, :expected_values => target.fetch("expected_values"))
+                                      :values => { "elements" => after.fetch("elements") },
+                                      :expected_values => target.fetch("expected_values"))
       end
     end
   end

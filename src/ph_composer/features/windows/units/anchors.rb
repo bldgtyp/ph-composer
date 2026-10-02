@@ -27,7 +27,7 @@ module PhComposer
           validate!(anchor)
           unless DefinitionPlan.positive_dimension?(width_m) && DefinitionPlan.positive_dimension?(height_m)
             raise CodedError.new("validation.failed",
-              "Anchor dimensions must be finite and positive. Nothing was written.")
+                                 "Anchor dimensions must be finite and positive. Nothing was written.")
           end
           x, y = FRACTIONS.fetch(anchor)
           [width_m * x, -height_m * y, 0.0].freeze

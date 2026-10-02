@@ -18,14 +18,15 @@ class WindowTypeRetargeterTest < PhComposerTestCase
     @target = window_record("name" => "Replacement", "columns_m" => [1.2]).merge("id" => "wnt_BBBBBBBBBBBB")
     [@source, @target].each { |type| W::Types::KIND.store.write(@model, type) }
     @definition = U::DefinitionWriter.create(:model => @model, :type => @source,
-      :plan => U::DefinitionPlan.build(@source))
+                                             :plan => U::DefinitionPlan.build(@source))
     U::DefinitionIndex.write(@model, { @source.fetch("id") => @definition.persistent_id }, :expected => {})
   end
 
   def unit(x = 0, record: nil, entities: @model.entities)
     entity = entities.add_instance(@definition, Geom::Transformation.translation([x / 0.0254, 0, 0]))
     U.write(entity, record || { "id" => window_allocator.call("wun"), "schema_version" => 1,
-      "window_type_id" => @source.fetch("id"), "anchor" => "center", "user_data" => { "literal" => ["keep"] } })
+                                "window_type_id" => @source.fetch("id"), "anchor" => "center",
+                                "user_data" => { "literal" => ["keep"] } })
     entity
   end
 
@@ -123,7 +124,9 @@ class WindowTypeRetargeterTest < PhComposerTestCase
   def test_surviving_typed_unit_reference_blocks_removal_but_allows_replacement
     entity = unit
     extension = PhComposer::Records::Extension.new(:namespace => "outside.unit_link", :schema_version => 1,
-      :references => [{ "path" => "$.unit", "target_kind" => U::REFERENCE_KIND, "cardinality" => "one" }])
+                                                   :references => [{ "path" => "$.unit",
+                                                                     "target_kind" => U::REFERENCE_KIND,
+                                                                     "cardinality" => "one" }])
     @target["extension_data"] = { extension.namespace => extension.envelope("unit" => U.read(entity).fetch("id")) }
     W::Types::KIND.store.write(@model, @target)
     before = capture
@@ -133,7 +136,7 @@ class WindowTypeRetargeterTest < PhComposerTestCase
     result = assignment_invoke("#{PREFIX}.delete", params)
     assert_equal "completed", result.fetch("status"), result.inspect
     assert_equal @target.fetch("extension_data"),
-      W::Types::KIND.store.read(@model, @target.fetch("id"))["extension_data"]
+                 W::Types::KIND.store.read(@model, @target.fetch("id"))["extension_data"]
     assert_equal U.read(entity).fetch("id"), @target.dig("extension_data", extension.namespace, "payload", "unit")
   end
 
@@ -142,7 +145,7 @@ class WindowTypeRetargeterTest < PhComposerTestCase
     unused = @model.definitions.add("Unused containing definition")
     unmanaged = unused.entities.add_instance(@definition, Geom::Transformation.new)
     detached = U::DefinitionWriter.create(:model => @model, :type => @source,
-      :plan => U::DefinitionPlan.build(@source))
+                                          :plan => U::DefinitionPlan.build(@source))
     result = assignment_invoke("#{PREFIX}.delete", params(nil))
     assert_equal "completed", result.fetch("status"), result.inspect
     assert_includes @model.definitions.to_a, @definition
@@ -210,7 +213,7 @@ class WindowTypeRetargeterTest < PhComposerTestCase
 
   def test_explicit_null_removes_glued_orphan_without_adopting_a_zone
     face = @model.entities.add_face([Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(100, 0, 0),
-      Geom::Point3d.new(100, 100, 0)])
+                                     Geom::Point3d.new(100, 100, 0)])
     entity = unit
     entity.glued_to = face
     result = assignment_invoke("#{PREFIX}.delete", params(nil))
@@ -223,9 +226,12 @@ class WindowTypeRetargeterTest < PhComposerTestCase
     first = unit
     second = unit(4)
     extension = PhComposer::Records::Extension.new(:namespace => "outside.peer", :schema_version => 1,
-      :references => [{ "path" => "$.peer", "target_kind" => U::REFERENCE_KIND, "cardinality" => "one" }])
+                                                   :references => [{ "path" => "$.peer",
+                                                                     "target_kind" => U::REFERENCE_KIND,
+                                                                     "cardinality" => "one" }])
     U.write(second, U.read(second).merge("extension_data" => {
-      extension.namespace => extension.envelope("peer" => U.read(first).fetch("id")) }))
+      extension.namespace => extension.envelope("peer" => U.read(first).fetch("id"))
+    }))
     result = assignment_invoke("#{PREFIX}.delete", params(nil))
     assert_equal "completed", result.fetch("status"), result.inspect
     assert_empty U::Occurrences.all(@model)
@@ -234,7 +240,7 @@ class WindowTypeRetargeterTest < PhComposerTestCase
 
   def test_replacement_of_glued_orphan_without_public_host_refuses_atomically
     face = @model.entities.add_face([Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(100, 0, 0),
-      Geom::Point3d.new(100, 100, 0)])
+                                     Geom::Point3d.new(100, 100, 0)])
     unit.glued_to = face
     before = capture
     result = API.preview(:context => @context, :name => "#{PREFIX}.delete", :params => params)

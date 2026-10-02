@@ -10,7 +10,6 @@ module PhComposer
 
       module_function
 
-
       # Everything one Solve would do, settled before a single write: which Faces pair, which cuts
       # each pairing needs, and every case reported instead of paired. Reading is unbounded and
       # writing is not, so a pairing that would touch a Zone outside the scope refuses the whole
@@ -67,11 +66,13 @@ module PhComposer
                    stored_self.path == occurrence.path && stored_self.entity.equal?(occurrence.entity)
               raise CodedError.new("adjacency.unresolved", "The Surface endpoint no longer matches its stored path.")
             end
+
             counterpart = retirement_endpoint(model, envelope.fetch("counterpart"), index, authored_face_counts)
             counts = authored_face_counts[:all]
             if counts && counts.fetch(record.fetch("id"), 0) != 1
               raise CodedError.new("target.ambiguous", "The Surface Face id occurs more than once.")
             end
+
             if counterpart
               check_retirement_pair!(occurrence, record, counterpart, scope.map(&:path), updates,
                                      authored_face_counts)
@@ -89,10 +90,12 @@ module PhComposer
         unless reciprocal?(record, other)
           raise CodedError.new("adjacency.unresolved", "The reciprocal Surface endpoint cannot be retired safely.")
         end
+
         counts = authored_face_counts[:all]
         if counts && counts.fetch(other.fetch("id"), 0) != 1
           raise CodedError.new("target.ambiguous", "A Surface Face id occurs more than once.")
         end
+
         check_scope!({ :occurrence => occurrence }, { :occurrence => counterpart }, in_scope)
         updates[Occurrences.key(other_reference)] = [other_reference, other, retired(other)]
       end
@@ -118,6 +121,7 @@ module PhComposer
           if endpoint_survives?(model.entities, reference)
             raise CodedError.new("adjacency.unresolved", "The Surface endpoint survives outside its stored path.")
           end
+
           return nil
         end
         unless candidates.length == 1 && candidates.first.zone.path == zones.first.path && face_count == 1
@@ -193,7 +197,7 @@ module PhComposer
       # Refusing names both, so the caller can offer a retry that includes them.
       def check_scope!(left, right, in_scope)
         outside = [left, right].map { |side| side.fetch(:occurrence).zone }
-          .reject { |zone| in_scope.include?(zone.path) }
+                               .reject { |zone| in_scope.include?(zone.path) }
         return if outside.empty?
 
         raise CodedError.new(
@@ -289,7 +293,7 @@ module PhComposer
         case result.kind
         when :same_normal
           "#{names.join(' and ')} overlap: these coplanar Faces point the same way, so neither is a " \
-            "boundary of the other."
+          "boundary of the other."
         when :sliver
           "A shared region between #{names.join(' and ')} was skipped because #{result.reason}."
         else
@@ -313,6 +317,7 @@ module PhComposer
 
       def state(model, occurrence, record, index: nil)
         return nil unless record && record["boundary_condition"] == "Surface"
+
         envelope = record["adjacency"]
         return "invalid" unless envelope.is_a?(Hash)
 
@@ -369,12 +374,14 @@ module PhComposer
         unless record && record["boundary_condition"] == "Surface" && record["adjacency"].is_a?(Hash)
           raise CodedError.new("adjacency.not_surface", "That Face has no Surface pair to retire.")
         end
+
         counterpart = Occurrences.resolve_face(model, record.fetch("adjacency").fetch("counterpart"),
                                                :mutable => true, :index => index)
         other = Faces::FACE_STORE.read(counterpart.entity)
         unless other && reciprocal?(record, other)
           raise CodedError.new("adjacency.unresolved", "The reciprocal Surface endpoint cannot be retired safely.")
         end
+
         [retired(record), counterpart, other, retired(other)]
       end
 
@@ -410,7 +417,6 @@ module PhComposer
       private_class_method :examine, :check_scope!, :resolve_contested, :face_key,
                            :multiple_neighbours, :reported, :message_for
       private_class_method :candidates
-
 
       def current_pair?(left, right)
         left_record = left.fetch(:record)

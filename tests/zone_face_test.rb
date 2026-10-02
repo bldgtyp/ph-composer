@@ -46,7 +46,7 @@ class ZoneFaceTest < PhComposerTestCase
     assert_equal %w[completed committed], classified.values_at("status", "effect")
     face_id = classified.dig("value", "face_ids", 0)
     read_back = query("ph_composer.zones.faces.list").dig("value", "faces")
-      .find { |face| face.dig("reference", "entity_id") == face_id }
+                                                     .find { |face| face.dig("reference", "entity_id") == face_id }
     assert_equal({ "face_type" => "Wall", "boundary_condition" => "Outdoors" }, read_back.fetch("values"))
 
     @model.undo
@@ -198,7 +198,7 @@ class ZoneFaceTest < PhComposerTestCase
 
   def test_suggestions_use_world_normal_and_zone_ground_depth_without_writing
     face = Sketchup::Face.new(701, {}, :points => [point(0, 0, 0), point(2, 0, 0), point(2, 2, 0)],
-                                      :normal => Geom::Vector3d.new(0, 0, 1))
+                                       :normal => Geom::Vector3d.new(0, 0, 1))
     group = Sketchup::Group.new(700, Sketchup::Entities.new([face]), {},
                                 :transformation => Geom::Transformation.translation([0, 0, 20]))
     @model.entities << group
@@ -241,10 +241,13 @@ class ZoneFaceTest < PhComposerTestCase
 
     @model.undo
     assert_equal %w[Outdoors Outdoors], query("ph_composer.zones.faces.list").dig("value", "faces")
-      .map { |row| row.dig("values", "boundary_condition") }.sort
+                                                                             .map { |row|
+                                          row.dig("values",
+                                                  "boundary_condition")
+                                        }.sort
     @model.redo
     assert_equal %w[current current], query("ph_composer.zones.faces.list").dig("value", "faces")
-      .map { |row| row.fetch("adjacency_state") }
+                                                                           .map { |row| row.fetch("adjacency_state") }
   end
 
   def test_moved_zone_is_stale_until_explicit_retire_and_resolve
@@ -307,7 +310,7 @@ class ZoneFaceTest < PhComposerTestCase
 
     assert_equal [[910, 901], [920, 901]],
                  query("ph_composer.zones.faces.list").dig("value", "faces")
-                   .map { |row| row.dig("reference", "entity_path") }
+                                                      .map { |row| row.dig("reference", "entity_path") }
     assert_shared_group_refusals
   end
 
@@ -468,16 +471,15 @@ class ZoneFaceTest < PhComposerTestCase
 
   def classify_only_face(zone, boundary)
     face = query("ph_composer.zones.faces.list").dig("value", "faces")
-      .find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
+                                                .find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
     invoke("ph_composer.zones.faces.classify", classify_params(face, "Wall", boundary))
     query("ph_composer.zones.faces.list").dig("value", "faces")
-      .find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
+                                         .find { |row| row.dig("reference", "zone_id") == zone.fetch("id") }
   end
 
   def point(x, y, z)
     Geom::Point3d.new(x, y, z)
   end
-
 
   def zone_record(id, name)
     {

@@ -61,7 +61,7 @@ module PhComposer
           return if entity.definition == definition && entity.transformation.to_a == matrix && entity.glued_to == glue
 
           raise CodedError.new("geometry.failed",
-            "The Window definition, transform or glue could not be preserved.")
+                               "The Window definition, transform or glue could not be preserved.")
         end
 
         def changed!(message)

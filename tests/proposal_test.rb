@@ -138,6 +138,7 @@ class ProposalTest < PhComposerTestCase
       :request => { "sequence" => 1, "expected_revision" => @session.revision }
     )
   end
+
   def invoke_compound(sequence)
     PhComposer::API.invoke(
       :context => @context, :name => "test.geometry.record_fail", :params => {},

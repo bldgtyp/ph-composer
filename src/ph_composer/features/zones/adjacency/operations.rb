@@ -4,6 +4,7 @@ module PhComposer
   module Zones
     # The adjacency handlers the declarations register: Solve, retire one pair, and the retirement
     # plan Classify composes into its own step.
+
     module_function
 
     def solve_adjacency(request, proposal, zones:)
@@ -82,7 +83,8 @@ module PhComposer
         Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
         fresh.each do |id|
           copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
-                                                    { record.fetch("id") => id }, :engine => request.engine,
+                                                    { record.fetch("id") => id },
+                                                    :engine => request.engine,
                                                     :reference_plan => split_reference_plan(occurrence, record, id))
         end
       end
@@ -150,7 +152,8 @@ module PhComposer
         Records::Extension.check_copy_rules!(data, catalog, "Face", record.fetch("id"))
         fresh.each do |id|
           copies[id] = Records::Extension.copy_data(data, catalog, "Face", record.fetch("id"),
-                                                    { record.fetch("id") => id }, :engine => request.engine,
+                                                    { record.fetch("id") => id },
+                                                    :engine => request.engine,
                                                     :reference_plan => split_reference_plan(occurrence, record, id))
         end
       end

@@ -10,8 +10,8 @@ module AssemblyRecordFixtures
       "soft" => [0.035, "insulation"], "wood" => [0.13, "woods"], "membrane" => [nil, "membrane"] }.to_h do |key, pair|
       id = material_id(key)
       [id, Assemblies::Materials::Schema.defaults("name" => key, "category" => pair.last,
-                                                "conductivity_w_mk" => pair.first)
-                                            .merge("id" => id, "schema_version" => 1)]
+                                                  "conductivity_w_mk" => pair.first)
+                                        .merge("id" => id, "schema_version" => 1)]
     end
   end
 

@@ -40,7 +40,8 @@ module PhComposer
 
               unless entity.get_attribute(STORE.dictionary, STORE.key).nil?
                 raise CodedError.new("window.nested_units",
-                  "Recover nested Window Units before removing or replacing their containing Window.")
+                                     "Recover nested Window Units before removing or replacing their containing " \
+                                     "Window.")
               end
               pending << entity.definition.entities
             end
@@ -57,6 +58,7 @@ module PhComposer
           unless item.record.fetch("id") == reference.fetch("unit_id")
             raise CodedError.new("target.changed", "The Window unit identity has changed.")
           end
+
           mutable!(item) if mutable
           item
         end
@@ -65,7 +67,7 @@ module PhComposer
         def mutable!(item)
           if item.shared_storage
             raise CodedError.new("target.shared_definition",
-              "Make the Window's parent storage unique before editing it. Nothing was written.")
+                                 "Make the Window's parent storage unique before editing it. Nothing was written.")
           end
           return unless item.locked
 
@@ -84,9 +86,10 @@ module PhComposer
               unless entity.is_a?(Sketchup::ComponentInstance)
                 raise CodedError.new("target.wrong_kind", "A Window unit record is stored on a Group.")
               end
+
               found << Occurrence.new(:entity => entity, :path => current, :transform => carried,
-                :parent_transform => transform, :record => record, :shared_storage => shared,
-                :locked => child_locked)
+                                      :parent_transform => transform, :record => record, :shared_storage => shared,
+                                      :locked => child_locked)
             end
             definition_shared = entity.is_a?(Sketchup::ComponentInstance) ||
                                 (entity.respond_to?(:definition) && entity.definition.instances.length > 1)
@@ -98,12 +101,14 @@ module PhComposer
         private_class_method :walk
       end
 
-      TARGET = Records::ReferenceTarget.new(:id => REFERENCE_KIND, :label => "Window unit",
-        :schema_version => 1, :values => RECORD_KIND.values_schema,
+      TARGET = Records::ReferenceTarget.new(
+        :id => REFERENCE_KIND, :label => "Window unit", :schema_version => 1, :values => RECORD_KIND.values_schema,
         :occurrence => Shapes.object({ "unit_id" => Shapes::TEXT,
-          "entity_path" => { "type" => "array", "minItems" => 1, "items" => { "type" => "integer" } } }),
+                                       "entity_path" => { "type" => "array", "minItems" => 1,
+                                                          "items" => { "type" => "integer" } } }),
         :records => ->(model) { Occurrences.all(model).map(&:entry) },
-        :validate => ->(record) { RECORD_KIND.problems(record) }, :references => RECORD_KIND.references)
+        :validate => ->(record) { RECORD_KIND.problems(record) }, :references => RECORD_KIND.references
+      )
     end
   end
 end

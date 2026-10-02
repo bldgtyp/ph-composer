@@ -29,6 +29,7 @@ module PhComposer
         if File.size(@destination) > LibraryFile::MAX_BYTES
           raise Error.new("library.file_too_large", "The destination exceeds the 32 MiB library file limit.")
         end
+
         bytes = File.binread(@destination)
         verify_unchanged!
         bytes
@@ -47,6 +48,7 @@ module PhComposer
         unless File.binread(stage) == bytes
           raise Error.new("library.export_write_failed", "The staged library file could not be verified.")
         end
+
         yield if block_given?
         verify_unchanged!
         File.rename(stage, @destination)
@@ -75,6 +77,7 @@ module PhComposer
         unless File.file?(@destination) && !File.symlink?(@destination)
           raise Error.new("library.destination_invalid", "Choose a regular library file destination.")
         end
+
         Digest::SHA256.file(@destination).hexdigest
       end
     end

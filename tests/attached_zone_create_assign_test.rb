@@ -152,8 +152,10 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
     result = invoke(params([left], :expected_values => left.fetch("values")))
 
     assert_equal %w[completed committed], result.values_at("status", "effect")
-    paired = faces.select { |face| [left, right].map { |row| row.dig("reference", "entity_id") }
-                                         .include?(face.dig("reference", "entity_id")) }
+    paired = faces.select { |face|
+      [left, right].map { |row| row.dig("reference", "entity_id") }
+                   .include?(face.dig("reference", "entity_id"))
+    }
     attached = paired.find { |face| face.dig("values", "boundary_condition") == "AttachedZone" }
     counterpart = paired.find { |face| face.dig("reference", "entity_id") == before_id }
     assert_equal result.dig("value", "id"), attached.dig("values", "attached_zone_id")
@@ -203,7 +205,7 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
 
   def records
     API.query(:context => @context, :name => "ph_composer.records.list", :params => { "kind" => KIND })
-      .dig("value", "records")
+       .dig("value", "records")
   end
 
   def faces

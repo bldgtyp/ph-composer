@@ -13,15 +13,15 @@ class MaterialSourceReportTest < PhComposerTestCase
     session = PhComposer::Sessions.for(Sketchup.active_model)
     context = PhComposer::API.connect(:session_id => session.id, :capabilities => %w[read view model_write setup])
     loaded = PhComposer::API.setup(:context => context, :name => "ph_composer.library.load",
-                                 :params => { "provider_id" => "synthetic", "kind" => "materials" })
+                                   :params => { "provider_id" => "synthetic", "kind" => "materials" })
     params = { "provider_id" => "synthetic", "kind" => "materials", "generation" => loaded.dig("value", "generation"),
                "library_id" => "synthetic.one", "record_id" => "public-1", "choice" => "create" }
     copied = PhComposer::API.invoke(:context => context, :name => "ph_composer.library.copy", :params => params,
-                                   :request => { "sequence" => 1, "expected_revision" => session.revision })
+                                    :request => { "sequence" => 1, "expected_revision" => session.revision })
     assert_equal "committed", copied["effect"], copied.inspect
     section = PhComposer::Assemblies::SourceReport::SECTION
     extracted = PhComposer::Export::Collection.build(Sketchup.active_model, :run_id => "sources",
-                                                    :contributors => [section])
+                                                                            :contributors => [section])
     rows = extracted.document.fetch("sections").fetch(section).fetch("records")
     assert_equal 1, rows.length
     assert_equal PhComposer::Assemblies::SourceReport::FIELDS.sort, rows.first.keys.sort

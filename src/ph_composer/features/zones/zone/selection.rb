@@ -6,6 +6,7 @@ module PhComposer
     module Selection
       FIELDS = { "name" => "Name", "building_segment" => "Building-Segment", "level" => "Level",
                  "ground_depth_mm" => "Ground depth (mm)" }.freeze
+
       module_function
 
       def selected(model)
@@ -13,6 +14,7 @@ module PhComposer
         unless !entities.empty? && entities.all? { |entity| entity.is_a?(Sketchup::Group) && ZONE_STORE.read(entity) }
           raise CodedError.new("selection.invalid", "Select one or more Zone Groups. Nothing was written.")
         end
+
         index = Index.new(model)
         path = Occurrences.active_path(model)
         entities.map do |entity|
@@ -30,6 +32,7 @@ module PhComposer
           if entity.respond_to?(:locked?) && entity.locked?
             raise CodedError.new("target.locked", "A selected Zone or its parent Group is locked.")
           end
+
           parent = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
         end
         zone
@@ -53,12 +56,14 @@ module PhComposer
         if targets.map { |target| target.fetch("reference").fetch("zone_path") }.uniq.length != targets.length
           raise CodedError.new("params.invalid", "A Zone may appear only once in the batch.")
         end
+
         changes = targets.map do |target|
           zone = resolve(request.model, target.fetch("reference"), index)
           before = zone.record
           unless Schema.view(before).fetch("values") == target.fetch("expected_values")
             raise CodedError.new("target.changed", "A Zone changed since the selection was read.")
           end
+
           after = DeepCopy.call(before).merge(field => DeepCopy.call(value))
           Schema.validate!(after)
           [zone, before, after]
@@ -79,12 +84,17 @@ module PhComposer
       def install(feature)
         FIELDS.each do |field, label|
           feature.menu_item("#{FEATURE_ID}.edit_#{field}_menu", :label => "Set #{label}…", :menu => EXTENSION_NAME,
-                            :available => ->(read) { available?(read.session) }) do |session|
+                                                                :available => ->(read) {
+                                                                                available?(read.session)
+                                                                              }) do |session|
             client(session).edit(field)
           end
         end
-        feature.menu_item("#{FEATURE_ID}.solve_selected_menu", :label => "Solve adjacencies for selected Zones",
-                          :menu => EXTENSION_NAME, :available => ->(read) { available?(read.session) }) do |session|
+        feature.menu_item("#{FEATURE_ID}.solve_selected_menu",
+                          :label => "Solve adjacencies for selected Zones",
+                          :menu => EXTENSION_NAME, :available => ->(read) {
+                                                                   available?(read.session)
+                                                                 }) do |session|
           client(session).solve
         end
       end
@@ -109,8 +119,10 @@ module PhComposer
           value = Float(value) if field == "ground_depth_mm"
           value = nil if field == "level" && value.to_s.empty?
           params = { "field" => field, "value" => value,
-                     "targets" => rows.map { |row| { "reference" => row.fetch("reference"),
-                                                     "expected_values" => row.fetch("values") } } }
+                     "targets" => rows.map { |row|
+                                    { "reference" => row.fetch("reference"),
+                                      "expected_values" => row.fetch("values") }
+                                  } }
           invoke("#{FEATURE_ID}.update_field", params, read.fetch("revision"))
         rescue ArgumentError, TypeError
           show("status" => "refused", "message" => "Enter a valid ground depth. Nothing was written.")
@@ -131,6 +143,7 @@ module PhComposer
           unless Sketchup.active_model.equal?(@session.model)
             return show("status" => "refused", "message" => "The active Model changed. Nothing was written.")
           end
+
           @sequence += 1
           show(API.invoke(:context => @context, :name => name, :params => params,
                           :request => { "sequence" => @sequence, "expected_revision" => revision }))

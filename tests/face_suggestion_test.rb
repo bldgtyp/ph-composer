@@ -79,7 +79,7 @@ class FaceSuggestionTest < PhComposerTestCase
     @model.entities << Sketchup::Group.new(id, Sketchup::Entities.new(entities))
     invoke("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [id] })
     API.query(:context => @context, :name => "ph_composer.zones.list")
-      .dig("value", "zones").find { |zone| zone.dig("reference", "zone_path") == [id] }
+       .dig("value", "zones").find { |zone| zone.dig("reference", "zone_path") == [id] }
   end
 
   def raise_ground_depth(zone, depth_mm)

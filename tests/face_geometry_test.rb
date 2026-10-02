@@ -35,11 +35,11 @@ class FaceGeometryTest < PhComposerTestCase
   def test_digest_covers_holes_world_transform_and_oriented_normal
     hole = rectangle(0.5, 1.0, 0.5, 1.0)
     face = Sketchup::Face.new(1, {}, :points => rectangle(0, 2, 0, 3), :holes => [hole],
-                                      :normal => Geom::Vector3d.new(1, 0, 0))
+                                     :normal => Geom::Vector3d.new(1, 0, 0))
     original = Geometry.capture(face, Geom::Transformation.new)
     moved = Geometry.capture(face, Geom::Transformation.translation([1, 0, 0]))
     opposite = Sketchup::Face.new(2, {}, :points => rectangle(0, 2, 0, 3), :holes => [hole],
-                                          :normal => Geom::Vector3d.new(-1, 0, 0))
+                                         :normal => Geom::Vector3d.new(-1, 0, 0))
 
     refute_equal original.digest, moved.digest
     refute_equal original.digest, Geometry.capture(opposite, Geom::Transformation.new).digest
@@ -87,7 +87,7 @@ class FaceGeometryTest < PhComposerTestCase
 
   def test_area_of_arbitrary_world_plane_with_nonuniform_mirrored_transform_and_real_holes
     face = Sketchup::Face.new(13, {}, :points => rectangle(0, 4, 0, 3),
-      :holes => [rectangle(0.5, 1.5, 0.5, 1.5), rectangle(2.0, 2.5, 1.0, 1.5).reverse])
+                                      :holes => [rectangle(0.5, 1.5, 0.5, 1.5), rectangle(2.0, 2.5, 1.0, 1.5).reverse])
     # Orthonormal axes rotate the original y-z rectangle onto an oblique world plane;
     # independent y/z factors 2 and -3 mirror it and multiply every loop area by six.
     a, b, c = 1.0 / Math.sqrt(3), 1.0 / Math.sqrt(2), 1.0 / Math.sqrt(6)
@@ -104,14 +104,14 @@ class FaceGeometryTest < PhComposerTestCase
   def equivalent?(left, right)
     Geometry.equivalent_full_face?(
       left, right, :plane_tolerance_m => PhComposer::Zones::Adjacency::PLANE_TOLERANCE_M,
-      :angle_tolerance_degrees => PhComposer::Zones::Adjacency::NORMAL_ANGLE_TOLERANCE_DEGREES,
-      :point_tolerance_m => PhComposer::Zones::Adjacency::POINT_TOLERANCE_M
+                   :angle_tolerance_degrees => PhComposer::Zones::Adjacency::NORMAL_ANGLE_TOLERANCE_DEGREES,
+                   :point_tolerance_m => PhComposer::Zones::Adjacency::POINT_TOLERANCE_M
     )
   end
 
   def snapshot(normal, transform = Geom::Transformation.new, width_m: 2.0)
     face = Sketchup::Face.new(1, {}, :points => rectangle(0, width_m, 0, 3),
-                                      :normal => Geom::Vector3d.new(*normal))
+                                     :normal => Geom::Vector3d.new(*normal))
     Geometry.capture(face, transform)
   end
 

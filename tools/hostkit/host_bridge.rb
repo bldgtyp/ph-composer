@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # Development host bridge. Not shipped with the extension.
 #
 # `make bridge-install` copies this file into the SketchUp Plugins folder, where SketchUp loads it
@@ -107,6 +108,7 @@ module PhComposerHostBridge
 
     def stop
       return false if @stopped
+
       @stopped = true
       @timer_api.stop_timer(@pump_timer) if @pump_timer
       @pump_timer = nil
@@ -170,6 +172,7 @@ module PhComposerHostBridge
 
     def schedule_pump
       return if @stopped
+
       @pump_timer = @timer_api.start_timer(PUMP_INTERVAL, false) do
         @pump_timer = nil
         begin
@@ -199,6 +202,7 @@ module PhComposerHostBridge
       }
     rescue Exception => error # rubocop:disable Lint/RescueException
       raise if error.is_a?(SystemExit)
+
       {
         "ok" => false, "error" => "#{error.class}: #{error.message}",
         "backtrace" => Array(error.backtrace).first(12), "stdout" => captured.string
@@ -210,6 +214,7 @@ module PhComposerHostBridge
 
     def log_eval_output(text)
       return if text.empty? || !@tee_console
+
       File.open(@console_path, "a") { |file| file.write(text.end_with?("\n") ? text : text + "\n") }
     rescue StandardError
       nil

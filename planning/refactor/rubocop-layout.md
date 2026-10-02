@@ -1,8 +1,8 @@
 # Enable RuboCop's Layout department
 
 DATE: 2026-10-01
-STATUS: Requested. Scheduled by Ed on 2026-10-01 to run on its own pull request, after PR #15 merges
-and after the Phase 2 review refactors are done.
+STATUS: Merged to main 2026-10-02 (PR #32); dual-Ruby `make ci` passes. No host gate (no behaviour
+change)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -66,3 +66,63 @@ hash is re-recorded.
 PR #15 merged on 2026-10-01. Blocked on: the Phase 2 review refactor packet closed or its remaining items explicitly
 deferred. Should land before Phase 3's first stage opens a long-lived branch, or immediately after
 that phase merges, never in the middle of one.
+
+## Outcome
+
+Implemented 2026-10-02 on `refactor/rubocop-layout`; merged as PR #32. `.rubocop.yml` enables the whole `Layout`
+department, including the four cops RuboCop 1.50 still marks pending. `context/CODING_STANDARDS.md`
+describes the result for a reader.
+
+**Styles.** Each cop with a choice took the style with the fewest offences against the code as it
+stood, measured before any change:
+
+| Cop | Style | Offences |
+| --- | --- | --- |
+| HashAlignment | key, rockets and colons | 928 |
+| ArgumentAlignment | with_first_argument | 495 |
+| ArrayAlignment | with_first_element | 53 |
+| FirstHashElementIndentation | consistent | 20, against 208 for the default |
+| FirstArrayElementIndentation | consistent | 5 |
+| FirstArgumentIndentation | consistent | 0 |
+| MultilineMethodCallIndentation | aligned | 56 |
+| MultilineOperationIndentation | aligned | 34 |
+| EndAlignment | keyword | 1 |
+
+`HashAlignment` keeps its default `EnforcedLastArgumentHashStyle: always_inspect`.
+`ignore_implicit` would have moved fewer lines, but then no cop checks the keys of a trailing hash
+argument without braces, and those were the lines R11 item 2 was about.
+
+**Commits.**
+
+1. `.rubocop.yml` and the standards text.
+2. `rubocop -a` (safe auto-correct only).
+3. Hand repairs of the 373 lines the realignment pushed past 120 columns. Two scripted repairs did
+   most of it:
+   - a call whose trailing hash started mid-line starts its first key on its own line under the
+     first argument;
+   - a line holding several elements breaks before the first one crossing column 120, and a
+     concatenated string literal is rewrapped at word boundaries.
+
+   The rest were done by hand at argument boundaries, including the column-0 continuations R11
+   item 1 listed. One ternary became the equivalent `if`/`else`.
+4. **A deviation from "no method extraction", decided by Ed on 2026-10-02.** The new layout pushed
+   six methods past `Metrics/MethodLength` 40, and none could be compacted under 120 columns. Ed
+   chose to split them rather than disable or loosen the gate. Each splits along its seam and
+   registers in the same order:
+   - Windows `declare_product` and `declare_type`;
+   - Zones `install_faces`;
+   - Library `install`;
+   - `feature_composition_test.rb` `install_entity_retargeter`;
+   - the Assemblies walkthrough's `run`.
+5. Enabling the four pending cops; one cop's auto-correct and one line break.
+
+**Verification.** Commits 2, 3 and 5 change no meaning. Every changed Ruby file parses to the same
+tree as before the pass once adjacent string-literal parts are joined, so every string value is
+unchanged. The check is a scratch script; it is not committed. `make ci` passes on Ruby 3.2.2 and
+2.7.2, with the same test counts (1,380 Ruby runs) and no golden or fixture change; `rbz-check`
+passes. Commits 2, 3 and 5 are listed in `.git-blame-ignore-revs`.
+
+**Follow-up.** `make lint-ruby` prints a `rubocop-ast` deprecation trace (`EnsureNode#body`, from
+`Layout/IndentationWidth`): the locked `rubocop-ast` is newer than RuboCop 1.50.2 expects. It is
+noise, not an offence. Upgrading RuboCop is a separate change; recorded in `planning/STATUS.md`.
+

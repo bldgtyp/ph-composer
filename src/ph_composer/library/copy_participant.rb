@@ -11,6 +11,7 @@ module PhComposer
         unless proposal && proposal.equal?(request.proposal)
           raise CodedError.new("operation.proposal_required", "Library copy needs the caller's active proposal.")
         end
+
         feature = request.registry.features.fetch(request.owner)
         unless request.owner == FEATURE_ID || feature.requires.include?(FEATURE_ID)
           raise CodedError.new("operation.dependency_missing", "The caller must require the library feature.")

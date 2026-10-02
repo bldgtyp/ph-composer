@@ -30,14 +30,14 @@ module SplitIdentityWalkthrough
 
     def duplicates
       query("ph_composer.zones.faces.all").dig("value", "faces")
-        .group_by { |face| face.dig("reference", "entity_id") }
-        .reject { |id, faces| id.nil? || faces.length < 2 }
-        .transform_values do |faces|
-          faces.map do |face|
-            { "reference" => face.fetch("reference"), "zone_name" => face.fetch("zone_name"),
-              "area_m2" => face.fetch("area_m2"), "values" => face.fetch("values") }
-          end
+                                          .group_by { |face| face.dig("reference", "entity_id") }
+                                          .reject { |id, faces| id.nil? || faces.length < 2 }
+                                          .transform_values do |faces|
+        faces.map do |face|
+          { "reference" => face.fetch("reference"), "zone_name" => face.fetch("zone_name"),
+            "area_m2" => face.fetch("area_m2"), "values" => face.fetch("values") }
         end
+      end
     end
 
     def query(name)

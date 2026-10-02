@@ -225,6 +225,7 @@ module UI
     def run_timer(timer_id)
       timer = (@timers ||= []).find { |item| item[0] == timer_id }
       return false unless timer
+
       @timers.delete(timer)
       timer[2].call
       true
@@ -233,6 +234,7 @@ module UI
     def run_next_timer
       timer = (@timers ||= []).shift
       return false unless timer
+
       id, repeat, block = timer
       block.call
       @timers << [id, repeat, block] if repeat

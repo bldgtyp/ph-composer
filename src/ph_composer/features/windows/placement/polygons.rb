@@ -8,6 +8,7 @@ module PhComposer
       # as the rectangular case; corner-only tests would admit an opening across a recess.
       module Polygons
         TOLERANCE_M = FaceGeometry::QUANTUM_M
+
         module_function
 
         def contained?(candidate, boundary)
@@ -45,8 +46,10 @@ module PhComposer
         def on_edge?(point, a, b)
           length = Math.hypot(b[0] - a[0], b[1] - a[1])
           turn(a, b, point).abs <= TOLERANCE_M * length &&
-            2.times.all? { |axis| point[axis].between?([a[axis], b[axis]].min - TOLERANCE_M,
-              [a[axis], b[axis]].max + TOLERANCE_M) }
+            2.times.all? { |axis|
+              point[axis].between?([a[axis], b[axis]].min - TOLERANCE_M,
+                                   [a[axis], b[axis]].max + TOLERANCE_M)
+            }
         end
 
         def intersections(a, b, c, d)
@@ -56,6 +59,7 @@ module PhComposer
           if determinant.zero?
             return [c, d].filter_map { |point| parameter(point, a, b) if on_edge?(point, a, b) }
           end
+
           ac = difference(c, a)
           along = cross(ac, cd) / determinant.to_f
           across = cross(ac, ab) / determinant.to_f

@@ -6,6 +6,7 @@ module PhComposer
     # carries its own description, Undo name and side effects, written for an agent reading describe.
     module LayerRegistration
       LAYER_ID = "The Layer, by its id within this Assembly."
+
       module_function
 
       def install(feature)
@@ -18,13 +19,16 @@ module PhComposer
       def action(feature, name, properties, example, description:, undo_name:, side_effects:, optional: [], &command)
         properties = { "id" => Shapes.id("asm", "The Assembly to edit."),
                        "expected_values" => Shapes.expected(Assembly::Schema::KIND) }.merge(properties)
-        feature.action("#{FEATURE_ID}.assemblies.layers.#{name}", :description => description,
-          :params => Shapes.object(properties, :optional => optional), :result => Shapes::RESULT,
-          :undo_name => undo_name, :side_effects => side_effects,
-          :examples => [example.merge("id" => Shapes::EXAMPLE_ID, "expected_values" => {})]) do |request, proposal|
+        feature.action("#{FEATURE_ID}.assemblies.layers.#{name}",
+                       :description => description,
+                       :params => Shapes.object(properties, :optional => optional), :result => Shapes::RESULT,
+                       :undo_name => undo_name, :side_effects => side_effects,
+                       :examples => [example.merge("id" => Shapes::EXAMPLE_ID,
+                                                   "expected_values" => {})]) do |request, proposal|
           params = request.params
-          Assembly::Operations.gesture(request, proposal, :id => params.fetch("id"),
-                                                :expected_values => params.fetch("expected_values")) do |record|
+          Assembly::Operations.gesture(request, proposal,
+                                       :id => params.fetch("id"),
+                                       :expected_values => params.fetch("expected_values")) do |record|
             command.call(record, params, request)
           end
         end
@@ -36,19 +40,20 @@ module PhComposer
                        "description" => "Where to insert the Layer in the stored order, 0 first. Not with " \
                                         "anchor_layer_id." },
           "thickness_mm" => Shapes.described(Fields.number("mm"), "The new Layer's thickness; 100 mm when " \
-                                                                        "absent."),
+                                                                  "absent."),
           "anchor_layer_id" => Shapes.id("lyr", "An existing Layer to place the new one beside, with side."),
           "side" => { "type" => "string", "enum" => %w[outside inside],
                       "description" => "Which side of anchor_layer_id, by the Assembly's orientation." }
         }
-        action(feature, "add", properties, { "thickness_mm" => 100 }, :optional => properties.keys,
-          :description => "Add a Layer with one Layer-Segment of no Material. With no position it goes after the " \
-                          "last Layer in the stored order; give index, or anchor_layer_id and side.",
-          :undo_name => "Add Assembly Layer",
-          :side_effects => "Adds one Layer to this Assembly.") do |record, params, request|
+        action(feature, "add", properties, { "thickness_mm" => 100 },
+               :optional => properties.keys,
+               :description => "Add a Layer with one Layer-Segment of no Material. With no position it goes after " \
+                               "the last Layer in the stored order; give index, or anchor_layer_id and side.",
+               :undo_name => "Add Assembly Layer",
+               :side_effects => "Adds one Layer to this Assembly.") do |record, params, request|
           Commands.add_layer(record, :index => params["index"], :thickness_mm => params.fetch("thickness_mm", 100.0),
-            :anchor_layer_id => params["anchor_layer_id"], :side => params["side"],
-            :identity => Records::Identity.allocator(request, params))
+                                     :anchor_layer_id => params["anchor_layer_id"], :side => params["side"],
+                                     :identity => Records::Identity.allocator(request, params))
         end
       end
 
@@ -68,7 +73,7 @@ module PhComposer
                :description => "Set one Layer's thickness.", :undo_name => "Change Layer Thickness",
                :side_effects => "Changes one Layer's thickness.") do |record, params|
           Commands.update_layer(record, :layer_id => params.fetch("layer_id"),
-                                 :thickness_mm => params.fetch("thickness_mm"))
+                                        :thickness_mm => params.fetch("thickness_mm"))
         end
         action(feature, "move", { "layer_id" => Shapes.id("lyr", LAYER_ID),
                                   "direction" => { "type" => "string", "enum" => %w[outward inward],
@@ -105,7 +110,8 @@ module PhComposer
                       "description" => "Which face of the Layer is the air barrier." }
         }
         action(feature, "set_air_barrier", properties,
-               { "layer_id" => Shapes::EXAMPLE_LAYER, "face" => "interior" }, :optional => ["face"],
+               { "layer_id" => Shapes::EXAMPLE_LAYER, "face" => "interior" },
+               :optional => ["face"],
                :description => "Mark one face of one Layer as the Assembly's air barrier, or clear it.",
                :undo_name => "Set Air Barrier",
                :side_effects => "Replaces the Assembly's one air barrier.") do |record, params|

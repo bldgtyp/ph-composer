@@ -52,7 +52,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     id = create("materials", "name" => "Wool", "conductivity_w_mk" => 0.04)
     original = record(Assemblies::MATERIAL_KIND, id)
     result = invoke("materials.update", "id" => id, "values" => { "conductivity_w_mk" => 0.035 },
-                                          "expected_values" => { "conductivity_w_mk" => 0.05 })
+                                        "expected_values" => { "conductivity_w_mk" => 0.05 })
     assert_equal %w[refused target.changed none], result.values_at("status", "code", "effect")
     assert_equal original, record(Assemblies::MATERIAL_KIND, id)
   end
@@ -66,7 +66,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     assert_equal "committed", result["effect"]
     ids.each do |id|
       assert_equal [replacement], Assemblies::Assembly::Schema::KIND.references.first
-        .ids(record(Assemblies::ASSEMBLY_KIND, id)).uniq
+                                                                    .ids(record(Assemblies::ASSEMBLY_KIND, id)).uniq
     end
     assert_raises(PhComposer::CodedError) { record(Assemblies::MATERIAL_KIND, old) }
     @model.undo
@@ -75,7 +75,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     @model.redo
     ids.each do |id|
       assert_equal [replacement], Assemblies::Assembly::Schema::KIND.references.first
-        .ids(record(Assemblies::ASSEMBLY_KIND, id)).uniq
+                                                                    .ids(record(Assemblies::ASSEMBLY_KIND, id)).uniq
     end
   end
 
@@ -151,11 +151,11 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     row = record(Assemblies::ASSEMBLY_KIND, id)
     first_ids = row["layers"].flat_map { |layer| [layer["id"]] + layer["segments"].map { |segment| segment["id"] } }
     preview_invoke("assemblies.layers.add", "id" => id, "thickness_mm" => 140,
-                   "expected_values" => { "layers" => row.fetch("layers") })
+                                            "expected_values" => { "layers" => row.fetch("layers") })
     row = record(Assemblies::ASSEMBLY_KIND, id)
     last = row.fetch("layers").last
     preview_invoke("assemblies.segments.add", "id" => id, "layer_id" => last.fetch("id"), "width_mm" => 150,
-                   "expected_values" => { "layers" => row.fetch("layers") })
+                                              "expected_values" => { "layers" => row.fetch("layers") })
     copy = preview_invoke("assemblies.duplicate", "id" => id).fetch("value").fetch("id")
     duplicate = record(Assemblies::ASSEMBLY_KIND, copy)
     duplicate_ids = duplicate["layers"].flat_map do |layer|
@@ -165,7 +165,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     row = record(Assemblies::ASSEMBLY_KIND, id)
     previous = row["layers"].last["id"]
     preview_invoke("assemblies.layers.add", "id" => id, "thickness_mm" => 140,
-                   "expected_values" => { "layers" => row.fetch("layers") })
+                                            "expected_values" => { "layers" => row.fetch("layers") })
     refute_equal previous, record(Assemblies::ASSEMBLY_KIND, id)["layers"].last["id"]
   end
 
@@ -180,7 +180,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     refused = invoke("materials.create", "values" => { "name" => "framing" })
     assert_equal %w[refused validation.failed none], refused.values_at("status", "code", "effect")
     invalid = invoke("materials.update", "id" => id, "values" => { "category" => "invented" },
-                                           "expected_values" => { "category" => "woods" })
+                                         "expected_values" => { "category" => "woods" })
     assert_equal "validation.failed", invalid["code"]
   end
 
@@ -189,14 +189,15 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     original = record(Assemblies::ASSEMBLY_KIND, id)
     layer = original["layers"].first
     edit = invoke("assemblies.layers.update", "id" => id, "layer_id" => layer["id"], "thickness_mm" => 50,
-                  "expected_values" => { "layers" => original["layers"] })
+                                              "expected_values" => { "layers" => original["layers"] })
     assert_equal "committed", edit["effect"]
     @model.undo
     assert_equal original, record(Assemblies::ASSEMBLY_KIND, id)
     @model.redo
     assert_equal 50, record(Assemblies::ASSEMBLY_KIND, id)["layers"].first["thickness_mm"]
-    wrong = invoke("assemblies.segments.update", "id" => id, "layer_id" => layer["id"],
-      "segment_id" => "seg_MISSING00000", "values" => { "width_mm" => 150 }, "expected_values" => {})
+    wrong = invoke("assemblies.segments.update",
+                   "id" => id, "layer_id" => layer["id"],
+                   "segment_id" => "seg_MISSING00000", "values" => { "width_mm" => 150 }, "expected_values" => {})
     assert_equal %w[refused target.not_found none], wrong.values_at("status", "code", "effect")
   end
 
@@ -213,7 +214,9 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
 
   def test_supported_extension_and_metadata_duplicate_as_independent_json_copies
     extension = PhComposer::Records::Extension.new(:namespace => "fixture.assemblies.review", :schema_version => 1,
-      :export_relevance => "local_only", :validate => ->(_payload) { [] })
+                                                   :export_relevance => "local_only", :validate => ->(_payload) {
+                                                                                                     []
+                                                                                                   })
     feature = Module.new do
       define_singleton_method(:install) do |registry|
         registry.feature("fixture.assemblies", :contract_version => 1).extension(extension)
@@ -256,7 +259,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
                     :params => { "ids" => [one.fetch("id")] }).dig("value", "records", 0)
     assert_equal "Other Model", row.dig("values", "name")
     edit = invoke("materials.update", "id" => one.fetch("id"), "values" => { "name" => "First Model" },
-                                     "expected_values" => { "name" => one.fetch("name") })
+                                      "expected_values" => { "name" => one.fetch("name") })
     assert_equal "committed", edit["effect"]
     assert_equal "Other Model", kind.store.read(other, one.fetch("id"))["name"]
     assert_equal "First Model", record(kind.id, one.fetch("id"))["name"]

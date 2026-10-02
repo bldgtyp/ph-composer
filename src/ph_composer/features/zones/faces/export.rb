@@ -24,7 +24,7 @@ module PhComposer
             owner = Zones::ExportProjection.zone_owner(reader.snapshot, entry)
             valid = stored && Schema.problems(stored).empty?
             record = valid && reader.entity_record(stored,
-              :fields => %w[face_type boundary_condition assembly_id adjacency])
+                                                   :fields => %w[face_type boundary_condition assembly_id adjacency])
             { "path" => entry.path, "record" => record || nil, "zone_id" => owner && owner[1]["id"],
               "geometry" => entry.geometry }
           end
@@ -32,9 +32,10 @@ module PhComposer
 
         def install(feature)
           feature.query("#{PREFIX}.export_preflight", :description => "Face classification and Assembly checks.",
-                        :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
-                        :examples => [{}]) { |request| preflight(request) }
-          feature.export_contributor(SECTION, :section_version => 1,
+                                                      :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
+                                                      :examples => [{}]) { |request| preflight(request) }
+          feature.export_contributor(SECTION,
+                                     :section_version => 1,
                                      :preflight => "#{PREFIX}.export_preflight", :projection => method(:contexts),
                                      :result => { "surface_omissions" => [
                                        Export::Privacy.fields(%w[face_id zone_id code reason area_m2])
@@ -161,6 +162,7 @@ module PhComposer
             unless stamp && stamp["zone_id"].is_a?(String) && owner && owner.fetch(1)["id"] == stamp["zone_id"]
               raise Export::Blocked.new("face.wrong_zone", "Face #{record.fetch('id')} has no owning Zone stamp.")
             end
+
             exported = reader.entity_record(
               record, :fields => %w[face_type boundary_condition assembly_id adjacency]
             ).merge(

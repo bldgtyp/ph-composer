@@ -34,11 +34,13 @@ module PhComposer
           unless valid
             raise Error.new("library.provider_invalid", "The registered provider factory returned invalid metadata.")
           end
+
           instances
         end
         if rows.map(&:id).uniq.length != rows.length
           raise Error.new("library.provider_ambiguous", "Configured provider ids are ambiguous.")
         end
+
         rows
       end
 
@@ -70,6 +72,7 @@ module PhComposer
         unless selected.kinds.include?(kind)
           raise Error.new("library.kind_unavailable", "This provider does not serve the requested kind.")
         end
+
         declaration = self.class.kind(kind, registry)
         @catalog.refresh(selected, :kind => kind) do |batch|
           Admission.call(batch, :kind => kind, :adapter => declaration.adapter)
@@ -81,6 +84,7 @@ module PhComposer
         unless selected.kinds.include?(kind)
           raise Error.new("library.kind_unavailable", "This provider does not serve the requested kind.")
         end
+
         @catalog.fetch(id, kind, :generation => generation)
       end
 

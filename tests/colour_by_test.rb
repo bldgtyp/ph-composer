@@ -505,7 +505,7 @@ class ColourByTest < PhComposerTestCase
   def test_public_make_zone_refreshes_an_active_overlay_after_the_revision_advances
     zone_group(1_250, [nil])
     loose_face = Sketchup::Face.new(1_261, {}, :points => [point(0, 0, 0), point(24, 0, 0),
-                                                          point(24, 24, 0)])
+                                                           point(24, 24, 0)])
     loose_group = Sketchup::Group.new(1_260, Sketchup::Entities.new([loose_face]))
     @model.entities << loose_group
     service = activate("ph_composer.zones.faces.by_face_type")

@@ -4,6 +4,7 @@ module PhComposer
   module Zones
     # The Zone handlers the declarations register: reads, Make, Edit and the repairs. Each only reads
     # and proposes; the dispatcher owns the native operation.
+
     module_function
 
     def reference_entries(model)
@@ -88,10 +89,11 @@ module PhComposer
       entity_ids = entity_ids.map { |id| Integer(id) }
       validate_make_target!(request.model, parent_path, entity_ids)
       zone_id = Records::Identity.derived("zon", "model" => request.model.guid, "revision" => request.revision,
-                                                "parent_path" => parent_path, "entity_ids" => entity_ids.sort)
+                                                 "parent_path" => parent_path, "entity_ids" => entity_ids.sort)
       if Occurrences.zones(request.model).any? { |zone| zone.record.fetch("id") == zone_id }
         raise CodedError.new("target.ambiguous", "The proposed Zone identity is already present.")
       end
+
       name ||= default_name(request.model)
       record = {
         "id" => zone_id, "schema_version" => 1, "name" => name,
@@ -118,6 +120,7 @@ module PhComposer
       unless changed.empty?
         raise CodedError.new("target.changed", "The Zone changed since it was read (#{changed.join(', ')}).")
       end
+
       after = DeepCopy.call(before)
       values.each { |key, value| after[key] = DeepCopy.call(value) }
       Schema.validate!(after)
@@ -160,6 +163,7 @@ module PhComposer
       unless Occurrences.active_path(model) == parent_path
         raise CodedError.new("target.edit_path_changed", "The active edit path changed before Make Zone.")
       end
+
       entities = Occurrences.entities_at(model, parent_path)
       selected = entity_ids.map { |id| Occurrences.unique_entity(entities, id) }
       valid = (selected.length == 1 && selected.first.is_a?(Sketchup::Group)) ||
@@ -168,6 +172,7 @@ module PhComposer
       if Array(model.active_path).any? { |entity| ZONE_STORE.read(entity) }
         raise CodedError.new("target.wrong_hierarchy", "A Zone cannot be made inside another Zone.")
       end
+
       selected.each do |entity|
         if entity.is_a?(Sketchup::Group)
           prefix = parent_path + [entity.persistent_id]

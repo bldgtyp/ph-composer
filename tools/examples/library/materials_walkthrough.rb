@@ -40,12 +40,11 @@ module LibraryMaterialsWalkthrough
     if PhComposer::Library::Setup.providers.any? { |provider| provider.fetch("id") == PROVIDER_ID }
       raise ArgumentError, "The walkthrough provider id is already configured."
     end
-
   end
 
   def load_fixture(context)
     loaded = checked(API.setup(:context => context, :name => "#{LIBRARY}.load",
-                              :params => { "provider_id" => PROVIDER_ID, "kind" => "materials" }))
+                               :params => { "provider_id" => PROVIDER_ID, "kind" => "materials" }))
     raise "The synthetic catalog did not load." unless loaded.fetch("state") == "loaded"
 
     selected = { "provider_id" => PROVIDER_ID, "kind" => "materials", "generation" => loaded.fetch("generation") }

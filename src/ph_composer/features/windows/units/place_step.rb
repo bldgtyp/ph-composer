@@ -26,6 +26,7 @@ module PhComposer
           unless @record.fetch("window_type_id") == @type.fetch("id") && Types::KIND.problems(@type).empty?
             raise CodedError.new("validation.failed", "Choose the authored Window Type referenced by this unit.")
           end
+
           @plan = DefinitionPlan.build(@type)
           @locator = host.locator or raise ArgumentError, "A placement host must be located."
           @parent_path = host.parent_path.dup
@@ -40,6 +41,7 @@ module PhComposer
           if expected_scope.nil? != expected_state.nil?
             raise ArgumentError, "A placement scope and its expected state must be supplied together."
           end
+
           @expected_index = DeepCopy.call(DefinitionIndex.read(model))
           @expected_index.each_key { |id| DefinitionIndex.resolve(model, id) }
           definition = DefinitionIndex.resolve(model, @type.fetch("id"))
@@ -53,11 +55,11 @@ module PhComposer
 
         def descriptor
           DeepCopy.call("name" => "place_window_unit", "record" => @record, "type" => @type,
-            "host" => @host_reference, "host_values" => @host_values, "parent_path" => @parent_path,
-            "face_id" => @face_id, "host_geometry" => @host_geometry, "host_transform" => @host_transform,
-            "point_m" => @point_m, "existing_polygons_m" => @existing_polygons,
-            "index_before" => @expected_index, "definition_before" => @definition_before,
-            "scope_path" => @expected_scope&.path, "scope_before" => @expected_state)
+                        "host" => @host_reference, "host_values" => @host_values, "parent_path" => @parent_path,
+                        "face_id" => @face_id, "host_geometry" => @host_geometry, "host_transform" => @host_transform,
+                        "point_m" => @point_m, "existing_polygons_m" => @existing_polygons,
+                        "index_before" => @expected_index, "definition_before" => @definition_before,
+                        "scope_path" => @expected_scope&.path, "scope_before" => @expected_state)
         end
 
         def temporary_ids
@@ -86,7 +88,7 @@ module PhComposer
           end
           check_definition!(definition)
           Placement::Fit.check!(geometry, WorldGeometry.map(@plan, @world_matrix).outer_polygon_m,
-            :existing_polygons_m => @existing_polygons)
+                                :existing_polygons_m => @existing_polygons)
           WorldGeometry.transform_state(transform.to_a)
           local_transform = transform.inverse * Geom::Transformation.new(@world_matrix)
           WorldGeometry.transform_state(local_transform.to_a)
@@ -98,11 +100,12 @@ module PhComposer
           unless instance.glued_to == face
             raise CodedError.new("geometry.failed", "The native Window instance could not glue to its host Face.")
           end
+
           Units.write(instance, @record)
           reference = { "unit_id" => @record.fetch("id"), "entity_path" => @parent_path + [instance.persistent_id] }
           slots[@record.fetch("id")] = reference
           @affected = [{ "kind" => REFERENCE_KIND, "id" => @record.fetch("id"), "change" => "placed",
-            "reference" => reference }]
+                         "reference" => reference }]
         end
 
         private
@@ -120,7 +123,7 @@ module PhComposer
         def fitted(world_matrix, geometry)
           WorldGeometry.transform_state(world_matrix)
           Placement::Fit.check!(geometry, WorldGeometry.map(@plan, world_matrix).outer_polygon_m,
-            :existing_polygons_m => @existing_polygons)
+                                :existing_polygons_m => @existing_polygons)
           world_matrix
         end
 
@@ -139,13 +142,14 @@ module PhComposer
                     DefinitionGeometry.matches?(definition, :type_id => @type.fetch("id"), :plan => @plan)
 
           raise CodedError.new("window.definition_changed",
-            "The canonical Window definition geometry or behavior differs from its Type. Nothing was written.")
+                               "The canonical Window definition geometry or behavior differs from its Type. " \
+                               "Nothing was written.")
         end
 
         def create_definition(model)
           definition = DefinitionWriter.create(:model => model, :type => @type, :plan => @plan)
           DefinitionIndex.write(model, @expected_index.merge(@type.fetch("id") => definition.persistent_id),
-            :expected => @expected_index)
+                                :expected => @expected_index)
           definition
         end
       end

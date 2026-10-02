@@ -65,8 +65,10 @@ module PhComposer
 
         KIND = Records::RecordKind.new(
           :id => MATERIAL_KIND, :label => "Material", :schema_version => 1, :id_prefix => "mat",
-          :fields => FIELDS, :validate => ->(values) { Fields.problems(values) +
-            Fields.source_problems(values["source"], SNAPSHOT_SCHEMA) }
+          :fields => FIELDS, :validate => ->(values) {
+                                            Fields.problems(values) +
+                                                      Fields.source_problems(values["source"], SNAPSHOT_SCHEMA)
+                                          }
         )
       end
     end

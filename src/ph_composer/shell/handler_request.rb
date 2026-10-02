@@ -132,10 +132,12 @@ module PhComposer
       unless target
         raise CodedError.new("reference.invalid", "Reference target #{kind} is not registered.", "target_kind" => kind)
       end
+
       target_owner = registry.owner_of(kind)
       unless target_owner == owner || registry.features.fetch(owner).requires.include?(target_owner)
         raise CodedError.new("operation.dependency_missing", "#{owner} does not require #{target_owner}.")
       end
+
       unless target.locatable?
         raise CodedError.new("operation.locate_missing", "Reference target #{kind} cannot be located.",
                              "target_kind" => kind)

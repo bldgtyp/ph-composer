@@ -20,8 +20,8 @@ module PhComposer
           columns = record.fetch("columns_m")
           unless valid_bands?(rows) && valid_bands?(columns)
             raise CodedError.new("validation.failed",
-              "Complete every Window Type dimension with a finite positive size before generating a Window Unit. " \
-              "Nothing was written.")
+                                 "Complete every Window Type dimension with a finite positive size before generating " \
+                                 "a Window Unit. Nothing was written.")
           end
           grid = Grid.new(record)
           glazed = record.fetch("elements").select { |cell| cell.fetch("kind") == "glazed" }
@@ -29,7 +29,7 @@ module PhComposer
             Pane.new(:element_id => cell.fetch("id").dup.freeze, :polygon_m => polygon(grid.rectangle(cell))).freeze
           end.freeze
           Plan.new(:width_m => columns.sum, :height_m => rows.sum, :outer_polygon_m => polygon(grid.outer_rectangle),
-            :panes => panes, :signature => signature(rows, columns, glazed)).freeze
+                   :panes => panes, :signature => signature(rows, columns, glazed)).freeze
         end
 
         def positive_dimension?(value)
@@ -49,8 +49,8 @@ module PhComposer
         def signature(rows, columns, glazed)
           elements = glazed.sort_by { |cell| cell.fetch("id") }.map do |cell|
             ElementGeometry.new(:element_id => cell.fetch("id").dup.freeze,
-              :row_span => cell.fetch("row_span").dup.freeze,
-              :column_span => cell.fetch("column_span").dup.freeze).freeze
+                                :row_span => cell.fetch("row_span").dup.freeze,
+                                :column_span => cell.fetch("column_span").dup.freeze).freeze
           end.freeze
           Signature.new(:rows_m => rows.dup.freeze, :columns_m => columns.dup.freeze, :elements => elements).freeze
         end

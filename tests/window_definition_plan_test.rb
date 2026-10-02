@@ -89,9 +89,13 @@ class WindowDefinitionPlanTest < PhComposerTestCase
     after = PhComposer::DeepCopy.call(before)
     after.merge!("name" => "Renamed", "notes" => "Note", "install_depth_m" => 0.4, "user_data" => { "x" => 1 })
     after.fetch("elements").first.merge!("name" => "Renamed pane", "glazing_id" => "glz_new",
-      "frames" => W::Types::SIDES.to_h { |side| [side, "frm_new"] },
-      "installs" => W::Types::SIDES.to_h { |side| [side, "psi_new"] },
-      "operation" => { "type" => "swing", "directions" => ["left"] })
+                                         "frames" => W::Types::SIDES.to_h { |side|
+                                                       [side, "frm_new"]
+                                                     },
+                                         "installs" => W::Types::SIDES.to_h { |side|
+                                                         [side, "psi_new"]
+                                                       },
+                                         "operation" => { "type" => "swing", "directions" => ["left"] })
     after.fetch("elements").last["id"] = "wel_changed_empty_id"
     after["elements"].reverse!
     assert_equal Plan.build(before).signature, Plan.build(after).signature

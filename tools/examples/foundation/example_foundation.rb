@@ -85,10 +85,11 @@ module ExampleFoundation
   def declare_summary(feature)
     feature.query(
       "#{ID}.summary", :description => "Count and total length of every part.",
-      :params => { "type" => "object", "additionalProperties" => false },
-      :result => { "type" => "object", "properties" => {
-        "parts" => { "type" => "integer" }, "total_length_mm" => { "type" => "number", "x-unit" => "mm" }
-      } }
+                       :params => { "type" => "object", "additionalProperties" => false },
+                       :result => { "type" => "object", "properties" => {
+                         "parts" => { "type" => "integer" }, "total_length_mm" => { "type" => "number",
+                                                                                    "x-unit" => "mm" }
+                       } }
     ) do |request|
       lengths = request.engine.ids(PART).map { |id| request.engine.find(PART, id).fetch("length_mm") }
       { "parts" => lengths.length, "total_length_mm" => lengths.sum }
@@ -97,12 +98,17 @@ module ExampleFoundation
 
   def declare_create(feature)
     feature.action(
-      "#{ID}.create_parts", :description => "Create one definition and parts that name it.",
-      :params => { "type" => "object", "required" => %w[definition_label parts], "additionalProperties" => false,
+      "#{ID}.create_parts",
+      :description => "Create one definition and parts that name it.",
+      :params => { "type" => "object", "required" => %w[definition_label parts],
+                   "additionalProperties" => false,
                    "properties" => { "definition_label" => { "type" => "string", "minLength" => 1 },
-                                     "parts" => { "type" => "array", "items" => PART_VALUES, "minItems" => 1 } } },
-      :result => OBJECT, :undo_name => "Create Example Parts", :side_effects => "Creates records.",
-      :examples => [{ "definition_label" => "Frame", "parts" => [{ "label" => "Sill", "length_mm" => 1200 }] }]
+                                     "parts" => { "type" => "array", "items" => PART_VALUES,
+                                                  "minItems" => 1 } } },
+      :result => OBJECT, :undo_name => "Create Example Parts",
+      :side_effects => "Creates records.",
+      :examples => [{ "definition_label" => "Frame", "parts" => [{ "label" => "Sill",
+                                                                   "length_mm" => 1200 }] }]
     ) do |request, changes|
       engine = request.engine
       definition = engine.propose_create(DEFINITION, changes,
@@ -118,10 +124,13 @@ module ExampleFoundation
   def declare_update(feature)
     feature.action(
       "#{ID}.update_parts", :description => "Edit parts' values, user_data or review, all or none.",
-      :params => { "type" => "object", "required" => ["edits"], "additionalProperties" => false,
-                   "properties" => { "edits" => { "type" => "array", "items" => EDIT, "minItems" => 1 } } },
-      :result => OBJECT, :undo_name => "Edit Example Parts", :side_effects => "Changes part values and metadata.",
-      :examples => [{ "edits" => [{ "id" => "exp_Ab12Cd34Ef56", "values" => { "length_mm" => 900 } }] }]
+                            :params => { "type" => "object", "required" => ["edits"], "additionalProperties" => false,
+                                         "properties" => { "edits" => { "type" => "array", "items" => EDIT,
+                                                                        "minItems" => 1 } } },
+                            :result => OBJECT, :undo_name => "Edit Example Parts",
+                            :side_effects => "Changes part values and metadata.",
+                            :examples => [{ "edits" => [{ "id" => "exp_Ab12Cd34Ef56",
+                                                          "values" => { "length_mm" => 900 } }] }]
     ) do |request, changes|
       request.params.fetch("edits").each do |edit|
         request.engine.propose_update(
@@ -137,18 +146,22 @@ module ExampleFoundation
 
   def declare_duplicate_and_migrate(feature)
     feature.action(
-      "#{ID}.duplicate_parts", :description => "Duplicate parts as one collection.",
+      "#{ID}.duplicate_parts",
+      :description => "Duplicate parts as one collection.",
       :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
-      :result => OBJECT, :undo_name => "Duplicate Example Parts", :side_effects => "Creates records.",
+      :result => OBJECT, :undo_name => "Duplicate Example Parts",
+      :side_effects => "Creates records.",
       :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
     ) do |request, changes|
       { "mapping" => request.engine.propose_duplicate(PART, request.params.fetch("ids"), changes) }
     end
 
     feature.action(
-      "#{ID}.migrate_review", :description => "Raise review data to the installed version.",
+      "#{ID}.migrate_review",
+      :description => "Raise review data to the installed version.",
       :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
-      :result => OBJECT, :undo_name => "Migrate Example Review", :side_effects => "Rewrites extension data.",
+      :result => OBJECT, :undo_name => "Migrate Example Review",
+      :side_effects => "Rewrites extension data.",
       :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
     ) do |request, changes|
       { "results" => request.engine.propose_migration(PART, request.params.fetch("ids"), REVIEW, changes) }
@@ -163,8 +176,10 @@ module ExampleFoundation
       reader.records(DEFINITION)
     end
     feature.export_contributor(
-      "#{ID}.export.parts", :section_version => 1,
-      :result => { "example_parts" => PhComposer::Export::Privacy.fields(%w[count total_length_mm]) },
+      "#{ID}.export.parts",
+      :section_version => 1,
+      :result => { "example_parts" => PhComposer::Export::Privacy.fields(%w[count
+                                                                            total_length_mm]) },
       :report => method(:parts_report)
     ) { |reader| reader.records(PART, :extensions => { REVIEW => ["review_status"] }) }
   end

@@ -183,7 +183,7 @@ module ColourByWalkthrough
 
   def zone_groups
     Sketchup.active_model.entities.grep(Sketchup::Group)
-      .select { |group| group.name.start_with?(PREFIX) || %w[west east].include?(group.name) }
+            .select { |group| group.name.start_with?(PREFIX) || %w[west east].include?(group.name) }
   end
 
   def box(entities, name, origin, width, depth, height = 3000.mm)

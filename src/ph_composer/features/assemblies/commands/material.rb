@@ -42,6 +42,7 @@ module PhComposer
             if Materials::Schema.membrane?(replacement) && layer.fetch("segments").length > 1
               raise CodedError.new("validation.failed", "A membrane Layer must hold one Layer-Segment.")
             end
+
             uses.each { |segment| segment["material_id"] = replacement.fetch("id") }
             snap_membrane!(layer, materials)
           end

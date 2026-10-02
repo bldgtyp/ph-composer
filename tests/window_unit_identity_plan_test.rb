@@ -12,11 +12,11 @@ class WindowUnitIdentityPlanTest < PhComposerTestCase
 
   def occurrence(path, overrides = {})
     U::Occurrence.new(:path => path, :shared_storage => false, :locked => false,
-      :record => { "id" => "wun_AAAAAAAAAAAA", "schema_version" => 1,
-        "window_type_id" => "wnt_AAAAAAAAAAAA", "anchor" => "sill_center",
-        "user_data" => { "note" => "wun_AAAAAAAAAAAA" },
-        "extension_data" => {} })
-      .tap { |item| overrides.each { |key, value| item.public_send("#{key}=", value) } }
+                      :record => { "id" => "wun_AAAAAAAAAAAA", "schema_version" => 1,
+                                   "window_type_id" => "wnt_AAAAAAAAAAAA", "anchor" => "sill_center",
+                                   "user_data" => { "note" => "wun_AAAAAAAAAAAA" },
+                                   "extension_data" => {} })
+                 .tap { |item| overrides.each { |key, value| item.public_send("#{key}=", value) } }
   end
 
   def test_copy_reidentification_is_occurrence_specific_pure_and_preserves_metadata
@@ -58,9 +58,11 @@ class WindowUnitIdentityPlanTest < PhComposerTestCase
     items.last.record["extension_data"] = { "outside" => { "schema_version" => 1, "payload" => {} } }
     before = PhComposer::DeepCopy.call(items.map(&:record))
     error = assert_raises(PhComposer::CodedError) do
-      U::IdentityPlan.build(items, :identity => ->(_prefix) { "wun_BBBBBBBBBBBB" },
-        :catalog => PhComposer::Registry.current.catalog,
-        :engine => PhComposer::Records::Engine.new(Sketchup.active_model, PhComposer::Registry.current.catalog))
+      U::IdentityPlan.build(items,
+                            :identity => ->(_prefix) { "wun_BBBBBBBBBBBB" },
+                            :catalog => PhComposer::Registry.current.catalog,
+                            :engine => PhComposer::Records::Engine.new(Sketchup.active_model,
+                                                                       PhComposer::Registry.current.catalog))
     end
     assert_equal "copy.rule_missing", error.code
     assert_equal before, items.map(&:record)
@@ -70,7 +72,7 @@ class WindowUnitIdentityPlanTest < PhComposerTestCase
     references = [{ "path" => "$.self", "target_kind" => U::REFERENCE_KIND, "cardinality" => "one" },
                   { "path" => "$.type", "target_kind" => PhComposer::Windows::TYPE_KIND, "cardinality" => "one" }]
     extension = PhComposer::Records::Extension.new(:namespace => "test.window_copy", :schema_version => 1,
-      :references => references)
+                                                   :references => references)
     model = Sketchup.active_model
     type = window_record
     PhComposer::Windows::Types::KIND.store.write(model, type)
@@ -81,14 +83,15 @@ class WindowUnitIdentityPlanTest < PhComposerTestCase
       U.write(instance, occurrence([1]).record.merge("extension_data" => data))
     end
     catalog = PhComposer::Records::Catalog.new(:kinds => [PhComposer::Windows::Types::KIND],
-      :extensions => [extension], :reference_targets => [U::TARGET])
+                                               :extensions => [extension], :reference_targets => [U::TARGET])
     engine = PhComposer::Records::Engine.new(model, catalog)
     updates = U::IdentityPlan.build(U::Occurrences.all(model), :identity => ->(_prefix) { "wun_BBBBBBBBBBBB" },
-      :catalog => catalog, :engine => engine)
+                                                               :catalog => catalog, :engine => engine)
     copied = updates.first.after.dig("extension_data", extension.namespace, "payload")
     assert_equal({ "self" => "wun_BBBBBBBBBBBB", "type" => type.fetch("id") }, copied)
     assert_equal payload, data.dig(extension.namespace, "payload")
     assert U::Occurrences.all(model).all? { |item|
-      item.record.dig("extension_data", extension.namespace) == data[extension.namespace] }
+             item.record.dig("extension_data", extension.namespace) == data[extension.namespace]
+           }
   end
 end

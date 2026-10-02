@@ -17,20 +17,25 @@ module PhComposer
 
       def install(feature)
         feature.query(PREFLIGHT, :description => "Placed Window geometry, hosts and thermal readiness for export.",
-          :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
-          :examples => [{}]) { |request| preflight(request) }
+                                 :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
+                                 :examples => [{}]) { |request| preflight(request) }
         # Both sections read one assessment, which places each Unit on its host Face.
         feature.export_contributor(CONSTRUCTIONS, :section_version => 1, :requires => [FACES]) do |reader|
           ready(reader).constructions
         end
-        feature.export_contributor(APERTURES, :section_version => 1, :preflight => PREFLIGHT, :requires => [FACES],
-          :result => {
-            "window_usage" => [Export::Privacy.fields(%w[type_id type_name zone_id unit_count aperture_count
-              install_names])],
-            "window_schema_exceptions" => [Export::Privacy.fields(%w[construction_id g_value])],
-            "window_face_areas" => [Export::Privacy.fields(%w[face_id zone_id gross_area_m2 glazed_area_m2
-              net_area_m2])]
-          }, :report => method(:report)) { |reader| ready(reader).apertures }
+        feature.export_contributor(APERTURES,
+                                   :section_version => 1, :preflight => PREFLIGHT, :requires => [FACES],
+                                   :result => {
+                                     "window_usage" => [Export::Privacy.fields(%w[type_id type_name zone_id unit_count
+                                                                                  aperture_count
+                                                                                  install_names])],
+                                     "window_schema_exceptions" => [Export::Privacy.fields(%w[
+                                       construction_id g_value
+                                     ])],
+                                     "window_face_areas" => [Export::Privacy.fields(%w[face_id zone_id gross_area_m2
+                                                                                       glazed_area_m2
+                                                                                       net_area_m2])]
+                                   }, :report => method(:report)) { |reader| ready(reader).apertures }
       end
 
       def assess(**values)
@@ -44,14 +49,14 @@ module PhComposer
             [collection, reader.records(kind.id).to_h { |row| [row.fetch("id"), row] }]
           end
           settings = ExportGeometry.record(reader.snapshot.model_dictionaries, Settings::SERVICE.store) ||
-            DeepCopy.call(Settings::DEFAULTS)
+                     DeepCopy.call(Settings::DEFAULTS)
           Settings::SERVICE.validate!(settings)
           reader.snapshot.records(Units::STORE.dictionary).each do |_entry, record|
             Units.validate!(record)
             reader.entity_record(record, :fields => %w[window_type_id anchor])
           end
           assess(:snapshot => reader.snapshot, :types => types, :products => products, :settings => settings,
-            :faces => reader.section(FACES))
+                 :faces => reader.section(FACES))
         end
       end
 
@@ -61,6 +66,7 @@ module PhComposer
         if blocking
           raise Export::Blocked.new(blocking.fetch("code"), blocking.fetch("message"), "section" => APERTURES)
         end
+
         result
       end
 
@@ -72,7 +78,7 @@ module PhComposer
         { "findings" => result.findings, "repairs" => result.repairs.uniq { |row| row.fetch("id") } }
       rescue CodedError => error
         { "findings" => [{ "code" => error.code, "section" => APERTURES, "object_id" => nil,
-          "message" => error.message, "blocks_export" => true }], "repairs" => [] }
+                           "message" => error.message, "blocks_export" => true }], "repairs" => [] }
       end
 
       def report(result, display_units)
@@ -81,7 +87,7 @@ module PhComposer
 
         rows = usage.map do |row|
           [row.fetch("type_name"), row.fetch("zone_id"), row.fetch("unit_count"), row.fetch("aperture_count"),
-            row.fetch("install_names").join(", ")]
+           row.fetch("install_names").join(", ")]
         end
         html = Export::ReportHtml.table(["Window Type", "Zone", "Units", "Apertures", "Psi-Install Types"], rows)
         areas = result.fetch("window_face_areas", []).map do |row|
@@ -92,7 +98,7 @@ module PhComposer
         end
         unit = PhComposer::Units.label(:quantity => "area", :system => display_units)
         html += Export::ReportHtml.table(["Host Face", "Gross area (#{unit})", "Glazed area (#{unit})",
-          "Net opaque area (#{unit})"], areas)
+                                          "Net opaque area (#{unit})"], areas)
         html += "<p>PH-Composer authors no Window shading factors. Honeybee serializes its own shading defaults. " \
                 "Psi-install values are carried on the construction Frames; Aperture install types remain empty.</p>"
         result.fetch("window_schema_exceptions", []).each do |row|

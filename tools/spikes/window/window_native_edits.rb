@@ -7,6 +7,7 @@ require_relative "window_spike"
 module WindowNativeEdits
   DICTIONARY = "phc_window_edit_spike"
   TYPE = WindowSpike::TYPE_ID
+
   module_function
 
   def setup

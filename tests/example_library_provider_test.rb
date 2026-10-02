@@ -12,8 +12,8 @@ class ExampleLibraryProviderTest < PhComposerTestCase
 
   def test_loaded_before_core_reports_diagnostic_and_creates_no_core_namespace
     path = File.expand_path("../tools/examples/library_provider/bldgtyp_example_library/install.rb", __dir__)
-    out, err, status = Open3.capture3(RbConfig.ruby, "-e", "load ARGV.fetch(0); puts defined?(PhComposer).inspect", 
-path)
+    out, err, status = Open3.capture3(RbConfig.ruby, "-e", "load ARGV.fetch(0); puts defined?(PhComposer).inspect",
+                                      path)
     assert status.success?, err
     assert_equal "nil\n", out
     assert_includes err, "after PH-Composer has finished loading"

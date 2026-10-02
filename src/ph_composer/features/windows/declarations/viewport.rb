@@ -8,32 +8,40 @@ module PhComposer
     module ViewportRegistration
       PREFIX = "#{FEATURE_ID}.place_tool"
       MENU = "Place Windows"
+
       module_function
 
       def install(feature, registry)
         face = DeepCopy.call(registry.record_descriptor("ph_composer.zones.faces.face").occurrence_schema)
         nullable_face = face.merge("type" => %w[object null])
         state = Shapes.object({ "active" => { "type" => "boolean" },
-          "type_id" => { "type" => %w[string null] }, "anchor" => { "type" => "string", "enum" => Units::Anchors::ALL },
-          "host" => nullable_face })
+                                "type_id" => { "type" => %w[string null] },
+                                "anchor" => { "type" => "string", "enum" => Units::Anchors::ALL },
+                                "host" => nullable_face })
         params = Shapes.object({ "type_id" => Shapes.id("wnt", "The Window Type to place."),
-          "anchor" => UnitRegistration::ANCHOR.merge("description" => "#{UnitRegistration::ANCHOR_TEXT} " \
-                                                                      "sill_center when absent."),
-          "host" => nullable_face.merge("description" => "A Face to place on, or null to pick one in the " \
-                                                         "viewport.") },
-          :optional => %w[anchor host])
+                                 "anchor" => UnitRegistration::ANCHOR.merge(
+                                   "description" => "#{UnitRegistration::ANCHOR_TEXT} sill_center when absent."
+                                 ),
+                                 "host" => nullable_face.merge("description" => "A Face to place on, or null to pick " \
+                                                                                "one in the viewport.") },
+                               :optional => %w[anchor host])
         feature.query("#{PREFIX}.get", :description => "This Model's Place tool choice and active state.",
-          :params => Shapes::NONE, :result => state, :examples => [{}]) do |request|
+                                       :params => Shapes::NONE, :result => state, :examples => [{}]) do |request|
           Windows.place_tool(request.session).state
         end
         feature.snapshot_section(PREFIX, :query => "#{PREFIX}.get")
-        feature.view_command("#{PREFIX}.choose", :description => "Choose a Type and anchor, then start Place.",
-          :params => params, :result => state, :examples => [{ "type_id" => "wnt_Ab12Cd34Ef56" }]) do |request|
+        feature.view_command("#{PREFIX}.choose",
+                             :description => "Choose a Type and anchor, then start Place.",
+                             :params => params, :result => state,
+                             :examples => [{ "type_id" => "wnt_Ab12Cd34Ef56" }]) do |request|
           Windows.place_tool(request.session).choose(request.params.fetch("type_id"),
-            :anchor => request.params.fetch("anchor", PlaceTool::DEFAULT_ANCHOR), :host => request.params["host"])
+                                                     :anchor => request.params.fetch("anchor",
+                                                                                     PlaceTool::DEFAULT_ANCHOR),
+                                                     :host => request.params["host"])
         end
-        feature.view_command("#{PREFIX}.stop", :description => "Stop Place and abandon its pending gesture.",
-          :params => Shapes::NONE, :result => state, :examples => [{}]) do |request|
+        feature.view_command("#{PREFIX}.stop",
+                             :description => "Stop Place and abandon its pending gesture.",
+                             :params => Shapes::NONE, :result => state, :examples => [{}]) do |request|
           Windows.place_tool(request.session).stop
         end
         locate(feature)
@@ -43,20 +51,24 @@ module PhComposer
       def locate(feature)
         reference = Units::TARGET.descriptor.occurrence_schema
         feature.view_command("#{FEATURE_ID}.units.locate",
-          :description => "Select and zoom to explicit Window occurrences.",
-          :params => Shapes.object({ "units" => Shapes.list(reference).merge("minItems" => 1, "maxItems" => 500,
-            "description" => "The Window occurrences to select, as units.list references them.") }),
-          :result => Shapes.object({ "units" => Shapes.list(reference) }),
-          :examples => [{ "units" => [UnitRegistration::EXAMPLE_UNIT] }]) do |request|
+                             :description => "Select and zoom to explicit Window occurrences.",
+                             :params => Shapes.object({ "units" => Shapes.list(reference).merge(
+                               "minItems" => 1, "maxItems" => 500,
+                               "description" => "The Window occurrences to select, as units.list references them."
+                             ) }),
+                             :result => Shapes.object({ "units" => Shapes.list(reference) }),
+                             :examples => [{ "units" => [UnitRegistration::EXAMPLE_UNIT] }]) do |request|
           Units::Locate.call(request.model, request.params.fetch("units"))
         end
       end
 
       def menus(feature)
         feature.menu_item("#{PREFIX}.menu", :label => "Place Window…", :menu => MENU,
-          :available => ->(read) { !type_rows(read.engine).empty? }) { |session| choose_from_menu(session) }
+                                            :available => ->(read) {
+                                                            !type_rows(read.engine).empty?
+                                                          }) { |session| choose_from_menu(session) }
         feature.menu_entries("#{PREFIX}.face_menu", :menu => MENU,
-          :available => ->(read) { !selected_face(read).nil? }) do |read|
+                                                    :available => ->(read) { !selected_face(read).nil? }) do |read|
           host = selected_face(read)
           type_rows(read.engine).map do |row|
             id = row.fetch("id")
@@ -66,7 +78,9 @@ module PhComposer
           end
         end
         feature.menu_item("#{PREFIX}.exit_menu", :label => "Stop Place", :menu => MENU,
-          :available => ->(read) { Windows.place_tool(read.session).active? }) do |session|
+                                                 :available => ->(read) {
+                                                                 Windows.place_tool(read.session).active?
+                                                               }) do |session|
           Windows.place_tool(session).stop
         end
       end
@@ -89,12 +103,15 @@ module PhComposer
       def choose_from_menu(session)
         rows = type_choices(session)
         return if rows.nil? || rows.empty?
+
         choices = [rows.map { |row| row.fetch("name") }.join("|")]
         choice = UI.inputbox(["Window Type"], [rows.first.fetch("name")], choices,
-          "Place Window")
+                             "Place Window")
         return unless choice
+
         selected = rows.find { |row| row.fetch("name") == choice.first }
         return unless selected
+
         params = { "type_id" => selected.fetch("id") }
         host = selected_host(session)
         params["host"] = host if host

@@ -33,13 +33,15 @@ module PhComposer
           unless @before.fetch("window_type_id") == @source.fetch("id")
             raise CodedError.new("reference.invalid", "The mirrored Window must refer to the supplied source Type.")
           end
+
           @definition_id = item.entity.definition.persistent_id
           @matrix, @world_matrix = item.entity.transformation.to_a, item.transform.to_a
           unless WorldGeometry.transform_state(@world_matrix).mirrored
             raise CodedError.new("window.not_mirrored", "Choose a mirrored Window for a new flipped Type.")
           end
+
           @after = @before.merge("window_type_id" => @target.fetch("id"),
-            "anchor" => flipped_anchor(@before.fetch("anchor")))
+                                 "anchor" => flipped_anchor(@before.fetch("anchor")))
           @after_matrix = (Geom::Transformation.new(@matrix) * reflection).to_a
           @after_world = (item.parent_transform * Geom::Transformation.new(@after_matrix)).to_a
           @others = DeepCopy.call(other_polygons_m)
@@ -50,16 +52,16 @@ module PhComposer
           @scope = MutationScope.new(:definition_ids => definition_ids)
           @guard = scope.capture(model, :expected_records => projected_records(expected_records, item.path))
           @affected = [{ "kind" => REFERENCE_KIND, "id" => @after.fetch("id"), "change" => "flipped_type_created",
-            "reference" => DeepCopy.call(@reference) }]
+                         "reference" => DeepCopy.call(@reference) }]
           @findings = remaining_findings
         end
 
         def descriptor
           DeepCopy.call("name" => "new_flipped_window_type", "source_type" => @source, "target_type" => @target,
-            "reference" => @reference, "before" => @before, "after" => @after, "native_guard" => @guard,
-            "index_before" => @index, "matrix" => @matrix, "after_matrix" => @after_matrix,
-            "world_matrix" => @world_matrix, "after_world_matrix" => @after_world,
-            "host_geometry" => @host_geometry, "other_polygons_m" => @others)
+                        "reference" => @reference, "before" => @before, "after" => @after, "native_guard" => @guard,
+                        "index_before" => @index, "matrix" => @matrix, "after_matrix" => @after_matrix,
+                        "world_matrix" => @world_matrix, "after_world_matrix" => @after_world,
+                        "host_geometry" => @host_geometry, "other_polygons_m" => @others)
         end
 
         def temporary_ids
@@ -68,7 +70,7 @@ module PhComposer
 
         def reference_entries
           [Records::ReferenceEntry.new(:kind => REFERENCE_KIND, :key => @reference.fetch("entity_path").dup,
-            :record => DeepCopy.call(@after))]
+                                       :record => DeepCopy.call(@after))]
         end
 
         def reference_plan
@@ -88,6 +90,7 @@ module PhComposer
           unless DefinitionGeometry.matches?(definition, :type_id => @target.fetch("id"), :plan => @target_plan)
             raise CodedError.new("geometry.failed", "The flipped Window definition could not be generated.")
           end
+
           next_index = @index.merge(@target.fetch("id") => definition.persistent_id)
           DefinitionIndex.write(model, next_index, :expected => @index)
           NativeUnit.replace_definition!(item.entity, definition, @after_matrix)
@@ -120,11 +123,11 @@ module PhComposer
           same_grid = %w[rows_m columns_m].all? { |key| expected.fetch(key) == @target.fetch(key) }
           cells = lambda do |type|
             type.fetch("elements").map { |cell| cell.reject { |key, _value| key == "id" } }
-              .sort_by { |cell| cell.fetch("row_span") + cell.fetch("column_span") }
+                .sort_by { |cell| cell.fetch("row_span") + cell.fetch("column_span") }
           end
           unless same_grid && cells.call(expected) == cells.call(@target) && (source_ids & target_ids).empty?
             raise CodedError.new("validation.failed",
-              "The new Type must be the horizontal grid flip with fresh element ids.")
+                                 "The new Type must be the horizontal grid flip with fresh element ids.")
           end
         end
 
@@ -134,6 +137,7 @@ module PhComposer
 
         def flipped_anchor(anchor)
           return anchor.sub("left", "right") if anchor.end_with?("left")
+
           anchor.sub("right", "left")
         end
 
@@ -141,6 +145,7 @@ module PhComposer
           if records.key?(path) && records.fetch(path) != @before
             raise CodedError.new("params.invalid", "The flip supplies conflicting projected Unit records.")
           end
+
           records.merge(path => @before)
         end
 
@@ -148,7 +153,7 @@ module PhComposer
           check_edit_context!(model, definition)
           unless DefinitionGeometry.matches?(definition, :type_id => @source.fetch("id"), :plan => @source_plan)
             raise CodedError.new("window.definition_changed",
-              "Reset edited Window geometry before creating a flipped Type.")
+                                 "Reset edited Window geometry before creating a flipped Type.")
           end
           old = WorldGeometry.map(@source_plan, @world_matrix)
           fresh = WorldGeometry.map(@target_plan, @after_world)
@@ -194,7 +199,7 @@ module PhComposer
           return unless NativeUnit.editing?(model, definition.persistent_id)
 
           raise CodedError.new("window.definition_editing",
-            "Close the source Window definition before creating a flipped Type.")
+                               "Close the source Window definition before creating a flipped Type.")
         end
       end
     end

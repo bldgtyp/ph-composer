@@ -15,7 +15,7 @@ class LibraryAdmissionTest < PhComposerTestCase
 
   def admit(rows, warnings = [], freshness = {})
     batch = PhComposer::Library::Provider::Batch.new(:rows => rows, :warnings => warnings,
-                                                    :unavailable => [], :freshness => freshness)
+                                                     :unavailable => [], :freshness => freshness)
     PhComposer::Library::Admission.call(batch, :kind => "materials", :adapter => @adapter)
   end
 

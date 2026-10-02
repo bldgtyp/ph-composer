@@ -21,7 +21,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     result = assignment_invoke("ph_composer.zones.make", "parent_path" => [], "entity_ids" => [1000])
     assert_equal "completed", result.fetch("status"), result.inspect
     assignment_classify(assignment_faces, "face_type" => { "mode" => "set", "value" => "Wall" },
-                                         "boundary_condition" => { "mode" => "set", "value" => "Outdoors" })
+                                          "boundary_condition" => { "mode" => "set", "value" => "Outdoors" })
     @face_reference = assignment_faces.first.fetch("reference")
     result = assignment_invoke("#{PREFIX}.types.create", "values" => { "name" => "Synthetic placement" })
     assert_equal "completed", result.fetch("status"), result.inspect
@@ -91,10 +91,13 @@ class WindowUnitActionsTest < PhComposerTestCase
       [item.path, U::WorldGeometry.anchor(before_plan, item.record.fetch("anchor"), item.transform.to_a)]
     end
     scope = U::MutationScope.new(:definition_ids => U::Occurrences.all(@model).map { |item|
- item.entity.definition.persistent_id })
+                                                      item.entity.definition.persistent_id
+                                                    })
     before = scope.capture(@model)
-    result = assignment_invoke("#{PREFIX}.types.update", "id" => @type_id,
-      "values" => { "columns_m" => [1.2] }, "expected_values" => { "columns_m" => before_type.fetch("columns_m") })
+    result = assignment_invoke("#{PREFIX}.types.update",
+                               "id" => @type_id,
+                               "values" => { "columns_m" => [1.2] },
+                               "expected_values" => { "columns_m" => before_type.fetch("columns_m") })
     assert_equal "completed", result.fetch("status"), result.inspect
     assert_equal 3, result.dig("value", "unit_count")
     after_plan = U::DefinitionPlan.build(type)
@@ -114,15 +117,17 @@ class WindowUnitActionsTest < PhComposerTestCase
     place
     original = U::Occurrences.all(@model).first
     copy = @group.entities.add_instance(original.entity.definition,
-      Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
+                                        Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
     copy.glued_to = original.entity.glued_to
     U.write(copy, original.record)
     assert(units.all? { |row| codes(row).include?("window.copy_id_pending") })
     assert_equal 1, U::Occurrences.all(@model).map { |item| item.record.fetch("id") }.uniq.length
     scope = U::MutationScope.new(:definition_ids => [original.entity.definition.persistent_id])
     before = scope.capture(@model)
-    result = assignment_invoke("#{PREFIX}.types.update", "id" => @type_id,
-      "values" => { "name" => "Renamed synthetic" }, "expected_values" => { "name" => type.fetch("name") })
+    result = assignment_invoke("#{PREFIX}.types.update",
+                               "id" => @type_id,
+                               "values" => { "name" => "Renamed synthetic" },
+                               "expected_values" => { "name" => type.fetch("name") })
     assert_equal "completed", result.fetch("status"), result.inspect
     assert_equal 2, U::Occurrences.all(@model).map { |item| item.record.fetch("id") }.uniq.length
     assert units.all? { |row| row.fetch("user_data") == { "note" => ["retain"] } }
@@ -135,7 +140,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     place
     original = U::Occurrences.all(@model).first
     copy = @group.entities.add_instance(original.entity.definition,
-      Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
+                                        Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
     copy.glued_to = original.entity.glued_to
     U.write(copy, original.record)
     listed = units.flat_map { |row| codes(row) }.uniq
@@ -160,7 +165,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     place
     original = U::Occurrences.all(@model).first
     copy = @group.entities.add_instance(original.entity.definition,
-      Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
+                                        Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
     copy.glued_to = original.entity.glued_to
     U.write(copy, original.record)
     copied = U::Occurrences.all(@model).find { |item| item.entity.equal?(copy) }
@@ -207,7 +212,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     assert_nil second.fetch("next_cursor")
     place(12.0)
     expired = API.query(:context => @context, :name => "#{PREFIX}.units.list",
-      :params => { "limit" => 1, "cursor" => cursor })
+                        :params => { "limit" => 1, "cursor" => cursor })
     assert_equal "query.cursor_expired", expired.fetch("code")
   end
 
@@ -217,8 +222,8 @@ class WindowUnitActionsTest < PhComposerTestCase
     scope = U::MutationScope.new(:definition_ids => [U::Occurrences.all(@model).first.entity.definition.persistent_id])
     before = scope.capture(@model)
     result = API.preview(:context => @context, :name => "#{PREFIX}.types.update",
-      :params => { "id" => @type_id, "values" => { "columns_m" => [2.0] },
-        "expected_values" => { "columns_m" => before_type.fetch("columns_m") } })
+                         :params => { "id" => @type_id, "values" => { "columns_m" => [2.0] },
+                                      "expected_values" => { "columns_m" => before_type.fetch("columns_m") } })
     assert_equal "window.overhang", result.fetch("code"), result.inspect
     assert_equal 1, result.dig("detail", "unit_count")
     blocked = result.dig("detail", "blocked_units").map { |row| row.fetch("reference") }
@@ -232,8 +237,9 @@ class WindowUnitActionsTest < PhComposerTestCase
     place(5.0, "sill_left")
     U::Occurrences.all(@model).last.entity.glued_to = nil
     before = U::MutationScope.new.capture(@model)
-    result = assignment_invoke("#{PREFIX}.types.update", "id" => @type_id,
-      "values" => { "columns_m" => [4.0] }, "expected_values" => { "columns_m" => [1.0] })
+    result = assignment_invoke("#{PREFIX}.types.update",
+                               "id" => @type_id,
+                               "values" => { "columns_m" => [4.0] }, "expected_values" => { "columns_m" => [1.0] })
     assert_equal "window.overlap", result.fetch("code"), result.inspect
     assert_equal before, U::MutationScope.new.capture(@model)
   end
@@ -244,7 +250,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     item.entity.definition.entities.grep(Sketchup::Face).first.reverse!
     before = U::MutationScope.new(:definition_ids => [item.entity.definition.persistent_id]).capture(@model)
     result = API.preview(:context => @context, :name => "#{PREFIX}.types.update",
-      :params => { "id" => @type_id, "values" => { "columns_m" => [1.2] }, "expected_values" => {} })
+                         :params => { "id" => @type_id, "values" => { "columns_m" => [1.2] }, "expected_values" => {} })
     assert_equal "ok", result.fetch("code"), result.inspect
     warning = result.fetch("findings").find { |finding| finding.fetch("code") == "window.edited_geometry_replaced" }
     refute_nil warning
@@ -282,7 +288,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     place
     original = U::Occurrences.all(@model).first
     copy = @group.entities.add_instance(original.entity.definition,
-      Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
+                                        Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
     copy.glued_to = original.entity.glued_to
     U.write(copy, original.record)
     before = U::MutationScope.new.capture(@model)
@@ -300,20 +306,21 @@ class WindowUnitActionsTest < PhComposerTestCase
   def test_remove_refuses_live_typed_incoming_reference_without_writes
     place
     item = U::Occurrences.all(@model).first
-    kind = PhComposer::Records::RecordKind.new(:id => "probe.unit_link.record", :label => "Synthetic Unit link",
-      :schema_version => 1, :id_prefix => "wpr", :fields => [
-        PhComposer::Records::AuthoringFields.field("unit_id", { "type" => "string" }, :required => true)
-      ], :references => [PhComposer::Records::Reference.new(:key => "unit_id",
-        :target_kind => U::REFERENCE_KIND, :cardinality => "one")])
+    kind = PhComposer::Records::RecordKind.new(
+      :id => "probe.unit_link.record", :label => "Synthetic Unit link", :schema_version => 1, :id_prefix => "wpr",
+      :fields => [PhComposer::Records::AuthoringFields.field("unit_id", { "type" => "string" }, :required => true)],
+      :references => [PhComposer::Records::Reference.new(:key => "unit_id", :target_kind => U::REFERENCE_KIND,
+                                                         :cardinality => "one")]
+    )
     contribution = Module.new do
       define_singleton_method(:install) do |registry|
         registry.feature("probe.unit_link", :contract_version => 1,
-          :requires => ["ph_composer.windows"]).record_kind(kind)
+                                            :requires => ["ph_composer.windows"]).record_kind(kind)
       end
     end
     PhComposer::Registry.install([contribution])
     kind.store.write(@model, "id" => "wpr_AAAAAAAAAAAA", "schema_version" => 1,
-      "unit_id" => item.record.fetch("id"))
+                             "unit_id" => item.record.fetch("id"))
     before = U::MutationScope.new.capture(@model)
     result = assignment_invoke("#{PREFIX}.units.remove", "units" => [item.reference])
     assert_equal "reference.in_use", result.fetch("code"), result.inspect
@@ -326,8 +333,10 @@ class WindowUnitActionsTest < PhComposerTestCase
     place(7.0, "head_right")
     before_plan = U::DefinitionPlan.build(type)
     rows = U::Occurrences.all(@model)
-    points = rows.to_h { |item| [item.path,
-      U::WorldGeometry.anchor(before_plan, item.record.fetch("anchor"), item.transform.to_a)] }
+    points = rows.to_h { |item|
+      [item.path,
+       U::WorldGeometry.anchor(before_plan, item.record.fetch("anchor"), item.transform.to_a)]
+    }
     created = assignment_invoke("#{PREFIX}.types.create", "values" => { "name" => "Swap target" })
     target = created.dig("value", "id")
     scope = U::MutationScope.new(:definition_ids => rows.map { |item| item.entity.definition.persistent_id })
@@ -338,7 +347,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     assert_equal [target], units.map { |row| row.dig("values", "window_type_id") }.uniq
     U::Occurrences.all(@model).each do |item|
       assert_equal points.fetch(item.path), U::WorldGeometry.anchor(before_plan,
-        item.record.fetch("anchor"), item.transform.to_a)
+                                                                    item.record.fetch("anchor"), item.transform.to_a)
       assert_equal({ "note" => ["retain"] }, item.record.fetch("user_data"))
     end
     after = scope.capture(@model)
@@ -356,7 +365,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     scope = U::MutationScope.new(:definition_ids => [rows.first.entity.definition.persistent_id])
     before = scope.capture(@model)
     preview = API.preview(:context => @context, :name => "#{PREFIX}.units.reset_to_type",
-      :params => { "units" => [rows.first.reference] })
+                          :params => { "units" => [rows.first.reference] })
     assert_equal "ok", preview.fetch("code"), preview.inspect
     assert_equal 2, preview.fetch("findings").first.fetch("unit_count")
     assert_equal before, scope.capture(@model)
@@ -373,10 +382,11 @@ class WindowUnitActionsTest < PhComposerTestCase
   def test_reset_does_not_require_writable_host_for_unselected_detached_unit
     place(2.0)
     selected = U::Occurrences.all(@model).first
-    face = Sketchup::Face.new(2001, {}, :points => [[0, 0, 0], [1000, 0, 0],
-      [1000, 1000, 0], [0, 1000, 0]].map { |point| Geom::Point3d.new(*point) })
+    face = Sketchup::Face.new(2001, {},
+                              :points => [[0, 0, 0], [1000, 0, 0],
+                                          [1000, 1000, 0], [0, 1000, 0]].map { |point| Geom::Point3d.new(*point) })
     other = Sketchup::Group.new(2000, Sketchup::Entities.new([face]),
-      :transformation => Geom::Transformation.translation([0, 0, 100]))
+                                :transformation => Geom::Transformation.translation([0, 0, 100]))
     @model.entities << other
     assignment_invoke("ph_composer.zones.make", "parent_path" => [], "entity_ids" => [2000])
     detached = U::DefinitionWriter.create(:model => @model, :type => type, :plan => U::DefinitionPlan.build(type))
@@ -428,11 +438,12 @@ class WindowUnitActionsTest < PhComposerTestCase
     refute_equal @type_id, result.dig("value", "type_id")
     changed = U::Occurrences.all(@model).first
     target = PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).find(
-      W::TYPE_KIND, changed.record.fetch("window_type_id"))
+      W::TYPE_KIND, changed.record.fetch("window_type_id")
+    )
     actual = U::WorldGeometry.map(U::DefinitionPlan.build(target), changed.transform.to_a).panes.first.polygon_m
     pane.each do |expected|
       assert actual.any? { |point| expected.zip(point).all? { |a, b| (a - b).abs < 1e-12 } },
-        "A physical pane vertex moved."
+             "A physical pane vertex moved."
     end
     assert_equal "head_right", changed.record.fetch("anchor")
     assert_equal({ "note" => ["retain"] }, changed.record.fetch("user_data"))
@@ -462,8 +473,9 @@ class WindowUnitActionsTest < PhComposerTestCase
     @group.entities.erase_entities(original.entity)
     scope = U::RestorePaneScope.new([@group.persistent_id], [face.persistent_id], type)
     before = scope.capture(@model)
-    result = assignment_invoke("#{PREFIX}.units.restore", "host" => @face_reference,
-      "type_id" => @type_id, "pane_paths" => [[@group.persistent_id, face.persistent_id]])
+    result = assignment_invoke("#{PREFIX}.units.restore",
+                               "host" => @face_reference,
+                               "type_id" => @type_id, "pane_paths" => [[@group.persistent_id, face.persistent_id]])
     assert_equal "completed", result.fetch("status"), result.inspect
     refute_equal original.record.fetch("id"), result.dig("value", "unit_id")
     assert_equal "sill_center", units.first.dig("values", "anchor")

@@ -33,22 +33,27 @@ module PhComposer
         unless kinds.include?(kind)
           raise Error.new("library.kind_unavailable", "This provider does not serve that record kind.")
         end
+
         documents, warnings = read_documents
         rows, unavailable = merge(documents, kind)
-        warnings.concat(documents.flat_map { |document| document.fetch("warnings").select { |row|
- row["kind"] == kind } })
+        warnings.concat(documents.flat_map { |document|
+                          document.fetch("warnings").select { |row|
+                            row["kind"] == kind
+                          }
+                        })
         exported = documents.map { |document| document.fetch("exported_at") }.max
         @freshness = Provider.immutable("loaded_at" => Time.now.utc.iso8601(6), "exported_at" => exported)
         Provider::Batch.new(:rows => rows, :warnings => warnings, :unavailable => unavailable, :freshness => freshness)
       rescue SystemCallError, IOError, EncodingError
-        raise Error.new("library.file_unreadable", "The configured library file or folder could not be read."), 
-:cause => nil
+        raise Error.new("library.file_unreadable", "The configured library file or folder could not be read."),
+              :cause => nil
       end
 
       private
 
       def candidate_files
         return [@path] if File.file?(@path)
+
         return Dir.children(@path).sort.filter_map do |name|
           path = File.join(@path, name)
           path if File.file?(path) && File.extname(name).downcase == ".json"
@@ -66,6 +71,7 @@ module PhComposer
         if sizes.sum > MAX_BYTES
           raise Error.new("library.catalog_too_large", "The catalog exceeds the 64 MiB aggregate limit.")
         end
+
         documents = []
         warnings = []
         bytes = 0
@@ -73,8 +79,8 @@ module PhComposer
         files.each do |path|
           text = File.open(path, "rb") { |file| file.read(LibraryFile::MAX_BYTES + 1) }
           bytes += text.bytesize
-          raise Error.new("library.catalog_too_large", 
-"The catalog exceeds the 64 MiB aggregate limit.") if bytes > MAX_BYTES
+          raise Error.new("library.catalog_too_large",
+                          "The catalog exceeds the 64 MiB aggregate limit.") if bytes > MAX_BYTES
 
           document = read_candidate(text, File.directory?(@path), warnings, MAX_ROWS - rows)
           next unless document

@@ -11,13 +11,13 @@ class SnapshotQueriesTest < PhComposerTestCase
       define_singleton_method(:install) do |registry|
         scope = registry.feature('test.snapshot', :contract_version => 1)
         scope.query('test.snapshot.read', :description => 'Read one detached projection.',
-                    :params => OBJECT, :result => OBJECT, &handler)
+                                          :params => OBJECT, :result => OBJECT, &handler)
         scope.snapshot_section('test.snapshot.first', :query => 'test.snapshot.read',
-                               :params => { 'offset' => 3, 'limit' => 1 })
+                                                      :params => { 'offset' => 3, 'limit' => 1 })
         scope.snapshot_section('test.snapshot.second', :query => 'test.snapshot.read',
-                               :params => { 'limit' => 1, 'offset' => 3 })
+                                                       :params => { 'limit' => 1, 'offset' => 3 })
         scope.snapshot_section('test.snapshot.third', :query => 'test.snapshot.read',
-                               :params => { 'offset' => 4, 'limit' => 1 })
+                                                      :params => { 'offset' => 4, 'limit' => 1 })
       end
     end
     PhComposer::Registry.install([feature])

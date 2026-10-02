@@ -37,8 +37,10 @@ module CorrectionsWalkthrough
     # Two placements of one definition. Each `Group#entities` call returns a fresh wrapper, so compare
     # definitions, never wrapper object ids.
     shared = children.length == 2 && children.map(&:definition).uniq.length == 1
-    rows = client.faces.select { |row| row.dig("reference", "zone_path") == [zone.persistent_id] &&
-                                       row.dig("reference", "entity_path").length == 2 }
+    rows = client.faces.select { |row|
+      row.dig("reference", "zone_path") == [zone.persistent_id] &&
+        row.dig("reference", "entity_path").length == 2
+    }
     before = [client.revision, children.map { |group| face_record(group.entities.grep(Sketchup::Face).first) }]
     target = rows.first.fetch("reference")
     classify = { "faces" => [target], "expected_values" => {},
@@ -99,8 +101,10 @@ module CorrectionsWalkthrough
     classify = client.invoke("ph_composer.zones.faces.classify", "faces" => [crossing], "intent" => intent)
     reverse = client.invoke("ph_composer.zones.faces.reverse", "face" => crossing)
     stamp_after = PhComposer::Zones::STAMP_STORE.read(face)
-    plain_row = client.faces.find { |row| row.dig("reference", "entity_path").length == 2 &&
-                                          row.dig("reference", "zone_path") == [outer.persistent_id] }
+    plain_row = client.faces.find { |row|
+      row.dig("reference", "entity_path").length == 2 &&
+        row.dig("reference", "zone_path") == [outer.persistent_id]
+    }
     plain = client.invoke("ph_composer.zones.faces.classify",
                           "faces" => [plain_row.fetch("reference")], "expected_values" => plain_row.fetch("values"),
                           "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
@@ -109,7 +113,7 @@ module CorrectionsWalkthrough
       "crossing" => [classify, reverse].map { |result| result.values_at("status", "code", "effect") },
       "inner_face_stamp_zone" => stamp_after && stamp_after["zone_id"],
       "revision_unchanged_by_refusals" => revision == plain.fetch("revision") -
-                                               (plain["effect"] == "committed" ? 1 : 0),
+                                                      (plain["effect"] == "committed" ? 1 : 0),
       "ordinary_nested_group" => plain.values_at("status", "effect") }
   end
 
@@ -202,7 +206,8 @@ module CorrectionsWalkthrough
     east = box(Sketchup.active_model.entities, "#{PREFIX}r04_east", [4000.mm, 2000.mm, 0], 4000.mm)
     [west, east].each { |group| make_zone(group) }
     client.zones.each { |zone|
- client.invoke("ph_composer.zones.faces.auto_classify", "zone" => zone.fetch("reference")) }
+      client.invoke("ph_composer.zones.faces.auto_classify", "zone" => zone.fetch("reference"))
+    }
     garage = client.invoke("ph_composer.zones.faces.attached_zone.save", "values" => GARAGE).dig("value", "id")
     walls = facing_walls(client)
     (both ? walls : walls.first(1)).each do |row|
@@ -230,7 +235,8 @@ module CorrectionsWalkthrough
     { "faces" => faces.length, "surface" => surface.map { |row| row["adjacency_state"] },
       "surface_carry_attached_zone_id" => surface.any? { |row| row.fetch("values").key?("attached_zone_id") },
       "attached_remainders" => attached.map { |row|
- [row.dig("values", "attached_zone_id").nil?, row["area_m2"].round(3)] } }
+                                 [row.dig("values", "attached_zone_id").nil?, row["area_m2"].round(3)]
+                               } }
   end
 
   # ---------------------------------------------------------------- R06 panel-closed API client
@@ -356,9 +362,11 @@ module CorrectionsWalkthrough
   def state
     client = Client.new
     { "revision" => client.revision, "zones" => client.zones.map { |row|
- [row.dig("reference", "zone_path"), row["state"]] },
+                                                  [row.dig("reference", "zone_path"), row["state"]]
+                                                },
       "faces" => client.faces.map { |row|
- [row.dig("reference", "entity_id"), row.dig("values", "boundary_condition")] },
+                   [row.dig("reference", "entity_id"), row.dig("values", "boundary_condition")]
+                 },
       "restorable" => client.zones_value.fetch("restorable").map { |row| row.values_at("zone_id", "refusal") },
       "attached_zones" => client.attached_ids,
       "loose_faces" => Sketchup.active_model.entities.grep(Sketchup::Face).length }

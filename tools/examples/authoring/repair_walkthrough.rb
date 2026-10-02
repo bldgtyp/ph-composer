@@ -66,9 +66,9 @@ module RepairWalkthrough
     client = Client.new
     # By definition name: a stock template ships with components of its own.
     instance = Sketchup.active_model.entities.grep(Sketchup::ComponentInstance)
-      .find { |candidate| candidate.definition.name.start_with?(PREFIX) }
+                       .find { |candidate| candidate.definition.name.start_with?(PREFIX) }
     inner = instance.definition.entities.grep(Sketchup::Group)
-      .find { |group| PhComposer::Zones::ZONE_STORE.read(group) }
+                    .find { |group| PhComposer::Zones::ZONE_STORE.read(group) }
     params = { "zone_path" => [instance.persistent_id, inner.persistent_id] }
     result = client.invoke("ph_composer.zones.repair_identity", params)
     verify.merge("repair" => result.values_at("status", "code", "effect"))
@@ -164,7 +164,7 @@ module RepairWalkthrough
   def stamp_agrees?(face)
     zone_id = face.dig("reference", "zone_id")
     zone = PhComposer::Zones::Occurrences.zones(Sketchup.active_model)
-      .find { |candidate| candidate.record.fetch("id") == zone_id }
+                                         .find { |candidate| candidate.record.fetch("id") == zone_id }
     return false unless zone
 
     occurrence = PhComposer::Zones::Occurrences.face_at(zone, face.dig("reference", "entity_path"))
@@ -187,7 +187,7 @@ module RepairWalkthrough
   def named_group(name)
     short = name.sub(PREFIX, "")
     Sketchup.active_model.entities.grep(Sketchup::Group)
-      .find { |group| [name, short, short.capitalize].include?(group.name) }
+            .find { |group| [name, short, short.capitalize].include?(group.name) }
   end
 
   class Client

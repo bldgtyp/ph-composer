@@ -6,6 +6,7 @@ module PhComposerAssemblyAssignmentWalkthrough
   API = PhComposer::API
   FACES = "ph_composer.zones.faces"
   ASSEMBLIES = "ph_composer.assemblies.assemblies"
+
   module_function
 
   def run(session_id:)

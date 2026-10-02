@@ -19,6 +19,7 @@ module PhComposer
         unless Faces::ID_PATTERN.match?(old_id)
           raise CodedError.new("params.invalid", "face_id is not a Face identity.")
         end
+
         originals = split_entries(model, index, zone, old_id)
         envelope = copied_surface_envelope!(originals)
         keeper, basis = keeper_path(originals, envelope, zone, old_id, retaining_entity_path)
@@ -53,10 +54,12 @@ module PhComposer
         if pieces.length < 2
           raise CodedError.new("face.identity_unique", "Face #{old_id} does not have split copies to repair.")
         end
+
         counts = live_identity_counts(model.entities, old_id)
         unless counts.fetch(:ids) == pieces.length && pieces.all? { |piece| piece.zone.path == zone.path }
           raise CodedError.new("target.ambiguous", "The copied Face identity also occurs outside this Zone.")
         end
+
         parents = pieces.map { |piece| piece.path[0...-1] }.uniq
         if parents.length != 1
           raise CodedError.new("target.ambiguous", "The copied Faces are not in one parent context.")
@@ -87,6 +90,7 @@ module PhComposer
           if id != old_id && (occupied.include?(id) || live_identity_counts(model.entities, id).fetch(:ids) > 0)
             raise CodedError.new("target.ambiguous", "The proposed Face identity already exists.")
           end
+
           after = DeepCopy.call(before).merge("id" => id)
           after = retired(after) if envelope
           Faces::Schema.validate!(after)
@@ -99,8 +103,8 @@ module PhComposer
 
         reference_plan = Records::ReferencePlan.new(:entries => changes.map do |entry|
           Records::ReferenceEntry.new(:kind => Faces::REFERENCE_KIND,
-                                     :key => zone.path + entry.fetch(:reference).fetch("entity_path"),
-                                     :record => entry.fetch(:after))
+                                      :key => zone.path + entry.fetch(:reference).fetch("entity_path"),
+                                      :record => entry.fetch(:after))
         end)
         changes.each do |entry|
           after = entry.fetch(:after)
@@ -188,6 +192,7 @@ module PhComposer
           if selected && selected != proved
             raise CodedError.new("identity.choice_conflicts", "The stored original endpoint proves another piece.")
           end
+
           return [proved, "stored_endpoint"]
         end
         unless selected && paths.include?(selected)
@@ -219,6 +224,7 @@ module PhComposer
         if other_id == old_id || stored.fetch("zone_id") == envelope.fetch("self").fetch("zone_id")
           raise CodedError.new("adjacency.unresolved", "The Surface counterpart must be in another Zone.")
         end
+
         global = live_identity_counts(model.entities, other_id, stored.fetch("entity_path").last)
         if global.fetch(:ids).zero?
           return nil if global.fetch(:original_pid).zero?
@@ -228,11 +234,13 @@ module PhComposer
         unless global.fetch(:ids) == 1 && index.faces_with_id(other_id).length == 1
           raise CodedError.new("target.ambiguous", "The Surface counterpart identity is ambiguous.")
         end
+
         candidate = index.faces_with_id(other_id).first
         stored_zones = index.zones.select { |zone| zone.record.fetch("id") == stored.fetch("zone_id") }
         unless stored_zones.length == 1 && candidate.zone.path == stored_zones.first.path
           raise CodedError.new("adjacency.unresolved", "The Surface counterpart left its authored Zone.")
         end
+
         actual = candidate.reference(other_id)
         occurrence = Occurrences.resolve_face(model, actual, :mutable => true, :index => index)
         unless scope_paths.include?(occurrence.zone.path)
@@ -245,6 +253,7 @@ module PhComposer
         unless Adjacency.reciprocal?(copied, before)
           raise CodedError.new("adjacency.unresolved", "The Surface counterpart is not reciprocal.")
         end
+
         # The stored counterpart may have moved. Its unique identity and complete reciprocal
         # envelope prove which actual path to retire; no geometry is involved.
         { :reference => actual, :before => before }
@@ -288,6 +297,7 @@ module PhComposer
           unless present == @piece_paths.sort && global.fetch(:ids) == @piece_paths.length
             raise CodedError.new("target.changed", "The split Face set changed after preview.")
           end
+
           resolved = @changes.map do |entry|
             reference = entry.fetch(:reference)
             occurrence = if reference.fetch("zone_path") == @zone.fetch("zone_path")
@@ -299,6 +309,7 @@ module PhComposer
             unless before == entry.fetch(:before)
               raise CodedError.new("target.changed", "A Face changed after the repair preview.")
             end
+
             if entry.key?(:stamp)
               stamp = STAMP_STORE.read(occurrence.entity)
               SplitIdentityRepair.check_stamp!(stamp, zone)

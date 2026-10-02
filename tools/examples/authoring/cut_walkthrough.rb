@@ -86,7 +86,7 @@ module CutWalkthrough
       "wall_faces_after" => after.length,
       "original_persistent_ids_surviving" => kept.map { |row| row.fetch("persistent_id") },
       "face_ids_reused" => kept.map { |row| row.fetch("face_id") } &
-                           @before.map { |row| row.fetch("face_id") },
+        @before.map { |row| row.fetch("face_id") },
       "every_piece_has_a_record" => after.all? { |row| row.fetch("face_id") },
       "every_piece_has_a_stamp" => after.all? { |row| row.fetch("stamped") },
       "payloads_kept" => after.map { |row| row.fetch("user_data") },
@@ -144,7 +144,7 @@ module CutWalkthrough
 
   def zone_groups
     Sketchup.active_model.entities.grep(Sketchup::Group)
-      .select { |group| group.name.start_with?(PREFIX) || %w[west east].include?(group.name) }
+            .select { |group| group.name.start_with?(PREFIX) || %w[west east].include?(group.name) }
   end
 
   def box(entities, name, origin, width, depth, height = 3000.mm)

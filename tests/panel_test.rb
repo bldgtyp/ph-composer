@@ -116,10 +116,12 @@ class PanelTest < PhComposerTestCase
     feature = Module.new do
       def self.install(registry)
         scope = registry.feature("test.file_export", :contract_version => 1)
-        scope.file_export("test.file_export.write", :description => "Synthetic file command.",
-          :params => { "type" => "object", "properties" => {}, "required" => [], "additionalProperties" => false },
-          :result => { "type" => "object", "properties" => {}, "required" => [],
-                       "additionalProperties" => false }) { |_request| {} }
+        scope.file_export("test.file_export.write",
+                          :description => "Synthetic file command.",
+                          :params => { "type" => "object", "properties" => {},
+                                       "required" => [], "additionalProperties" => false },
+                          :result => { "type" => "object", "properties" => {}, "required" => [],
+                                       "additionalProperties" => false }) { |_request| {} }
       end
     end
     PhComposer::Registry.install([feature])
@@ -127,7 +129,7 @@ class PanelTest < PhComposerTestCase
     before = dialog.scripts.length
     operations = @model.operations.length
     send_message(dialog, "file_export.invoke", "request_id" => "a:file:1", "session" => @session.id,
-                                                "name" => "test.file_export.write", "params" => {})
+                                               "name" => "test.file_export.write", "params" => {})
     assert_equal ["file_export.result"], dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
     result = messages(dialog, "file_export.result").last
     assert_equal ["a:file:1", @session.id], result.values_at("request_id", "session")
@@ -135,7 +137,7 @@ class PanelTest < PhComposerTestCase
     assert_equal "none", result.dig("outcome", "effect")
     assert_equal operations, @model.operations.length
     send_message(dialog, "file_export.invoke", "request_id" => "a:file:2", "session" => "other",
-                                                "name" => "test.file_export.write", "params" => {})
+                                               "name" => "test.file_export.write", "params" => {})
     assert_equal "session.inactive", messages(dialog, "file_export.result").last.dig("outcome", "code")
   end
 
@@ -166,7 +168,7 @@ class PanelTest < PhComposerTestCase
 
     refute_predicate @session.refresh, :pending?
     assert_equal 1, dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
-                              .count("panel.snapshot")
+                          .count("panel.snapshot")
   end
 
   # A section reading through a busy session refuses with the same reason, so republishing would
@@ -409,10 +411,10 @@ class PanelTest < PhComposerTestCase
     dialog = open_panel
     repair = { "id" => "solve", "action" => "ph_composer.zones.solve_adjacency", "params" => {} }
     before = PhComposer::Outcome.completed(:revision => @session.revision,
-                                          :value => { "findings" => [], "repairs" => [repair] })
+                                           :value => { "findings" => [], "repairs" => [repair] })
     after = PhComposer::Outcome.completed(:revision => @session.revision, :value => {
       "repairs" => [], "findings" => [{ "code" => "face.invalid", "blocks_export" => true,
-                                       "message" => "Invalid Face after Solve." }]
+                                        "message" => "Invalid Face after Solve." }]
     })
     preflights = [before, after]
     calls = []
@@ -501,7 +503,7 @@ class PanelTest < PhComposerTestCase
 
   def messages(dialog, type)
     dialog.scripts.map { |script| decode(script) }.select { |item| item.fetch("type") == type }
-                  .map { |item| item.fetch("payload") }
+          .map { |item| item.fetch("payload") }
   end
 
   def decode(script)

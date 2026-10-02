@@ -363,6 +363,7 @@ module Sketchup
       if key
         dictionary = @dictionaries[dictionary_name]
         return nil unless dictionary
+
         value = dictionary.delete_key(key)
         @dictionaries.delete(dictionary_name) if dictionary.empty?
         value
@@ -589,7 +590,7 @@ module Sketchup
 
     def <<(entity)
       entity.parent_entities.delete(entity) if entity.respond_to?(:parent_entities) && entity.parent_entities &&
-                                                !entity.parent_entities.equal?(self)
+                                               !entity.parent_entities.equal?(self)
       entity.parent_entities = self if entity.respond_to?(:parent_entities=)
       @values << entity
       @observers.each { |observer| observer.onElementAdded(self, entity) if observer.respond_to?(:onElementAdded) }
@@ -605,6 +606,7 @@ module Sketchup
       unless members.all? { |entity| include?(entity) }
         raise ArgumentError, "all grouped entities must belong to this collection"
       end
+
       members.each { |entity| delete(entity) }
       group = Group.new(self.class.allocate_persistent_id, Entities.new(members))
       self << group
@@ -829,6 +831,7 @@ module Sketchup
 
     def explode
       raise ArgumentError, "group has no parent entities" unless parent_entities
+
       destination = parent_entities
       members = @entities.to_a
       destination.delete(self)
@@ -869,6 +872,7 @@ module Sketchup
       candidates.each do |value|
         next if @model && !Array(@model.active_path).empty? && !@model.active_entities.include?(value)
         next if @values.include?(value)
+
         @values << value
         changed = true
         @observers.each do |observer|

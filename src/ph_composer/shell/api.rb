@@ -33,9 +33,9 @@ module PhComposer
         "contract_versions" => [Declarations::CONTRACT_VERSION],
         "capabilities" => CallerRegistry::CAPABILITIES,
         "tasks" => { "export" => { "preflight" => "export_preflight", "start" => "start_export",
-                                    "status" => "export_status", "cancel" => "cancel_export",
-                                    "latest" => "latest_export", "retention_limit" => Export::Tasks::LIMIT,
-                                    "retention_seconds" => Export::Tasks::RETENTION_SECONDS } },
+                                   "status" => "export_status", "cancel" => "cancel_export",
+                                   "latest" => "latest_export", "retention_limit" => Export::Tasks::LIMIT,
+                                   "retention_seconds" => Export::Tasks::RETENTION_SECONDS } },
         "sessions" => Sessions.all.map { |session| session_summary(session) },
         "features" => registry.features.values.map do |feature|
           { "id" => feature.id, "contract_version" => feature.contract_version, "requires" => feature.requires }
@@ -171,7 +171,7 @@ module PhComposer
         "params" => operation.params, "result" => operation.result, "examples" => operation.examples
       }.merge(
         operation.is_a?(Declarations::Action) ? { "side_effects" => operation.side_effects,
-                                                   "confirmation" => operation.confirmation } : {}
+                                                  "confirmation" => operation.confirmation } : {}
       ).merge(operation.respond_to?(:approval) && operation.approval ? { "approval" => operation.approval.to_h } : {})
     end
 

@@ -14,7 +14,8 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
     @engine = PhComposer::Records::Engine.new(Sketchup.active_model, @registry.catalog)
     @proposal = PhComposer::Records::ChangeSet.new
     @request = PhComposer::HandlerRequest.new(:model => Sketchup.active_model, :engine => @engine,
-      :registry => @registry, :owner => "ph_composer.library", :proposal => @proposal, :params => {})
+                                              :registry => @registry, :owner => "ph_composer.library",
+                                              :proposal => @proposal, :params => {})
     @declaration = PhComposer::Declarations::LibraryKind.new(:owner => OWNER, :record_kind => KIND)
   end
 
@@ -92,8 +93,10 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
 
   def test_invalid_result_poison_is_retained_after_callback_stages_a_copy
     assert_raises(PhComposer::CodedError) do
-      invoke { |request, changes| create(request, changes)
- { "unexpected" => true } }
+      invoke { |request, changes|
+        create(request, changes)
+        { "unexpected" => true }
+      }
     end
     refute_nil @proposal.refusal
     assert_empty @engine.ids(KIND)
@@ -101,8 +104,12 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
 
   def test_invalid_input_never_calls_owner_and_poison_is_retained
     called = false
-    assert_raises(PhComposer::CodedError) { invoke({ "unexpected" => true }) { called = true
- {} } }
+    assert_raises(PhComposer::CodedError) {
+      invoke({ "unexpected" => true }) {
+        called = true
+        {}
+      }
+    }
     refute called
     refute_nil @proposal.refusal
   end
@@ -124,13 +131,15 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
   def test_readonly_callback_sees_projection_but_cannot_stage_a_write
     id = create(@request, @proposal)
     callback = PhComposer::Declarations::LibraryCallback.new(:params => OBJECT, :result => OBJECT,
-      :handler => lambda do |request, changes|
-        assert_nil changes
-        assert_nil request.proposal
-        assert_equal "Copied material", request.engine.find(KIND, id)["name"]
-        create(request, changes)
-        {}
-      end)
+                                                             :handler => lambda do |request, changes|
+                                                                           assert_nil changes
+                                                                           assert_nil request.proposal
+                                                                           assert_equal "Copied material",
+                                                                                        request.engine.find(KIND,
+                                                                                                            id)["name"]
+                                                                           create(request, changes)
+                                                                           {}
+                                                                         end)
     error = assert_raises(PhComposer::CodedError) do
       PhComposer::Library::CallbackInvoker.call(@request, @declaration, callback, {}, :readonly => true)
     end
@@ -141,8 +150,12 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
   end
 
   def test_plain_callback_failure_poison_is_retained
-    assert_raises(RuntimeError) { invoke { |request, changes| create(request, changes)
- raise "assignment failed" } }
+    assert_raises(RuntimeError) {
+      invoke { |request, changes|
+        create(request, changes)
+        raise "assignment failed"
+      }
+    }
     refute_nil @proposal.refusal
     assert_empty @engine.ids(KIND)
   end

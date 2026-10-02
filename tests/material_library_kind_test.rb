@@ -18,8 +18,9 @@ class MaterialLibraryKindTest < PhComposerTestCase
     @engine = PhComposer::Records::Engine.new(@model, @registry.catalog)
     @proposal = PhComposer::Operations::Proposal.new
     @request = PhComposer::HandlerRequest.new(:model => @model, :engine => @engine, :registry => @registry,
-      :owner => "ph_composer.library", :proposal => @proposal, :params => {}, :revision => 0,
-      :session => PhComposer::Sessions.for(@model))
+                                              :owner => "ph_composer.library", :proposal => @proposal, :params => {},
+                                              :revision => 0,
+                                              :session => PhComposer::Sessions.for(@model))
   end
 
   def wire(extra = {})
@@ -66,7 +67,8 @@ class MaterialLibraryKindTest < PhComposerTestCase
   def test_fingerprint_uses_ordered_semantic_fields_and_canonical_numbers_only
     first = wire("density_kg_m3" => 12)
     reordered = first.to_a.reverse.to_h.merge("id" => "other", "density_kg_m3" => 12.0,
-      "source" => source, "user_data" => { "note" => 2 }, "provider_label" => "Other", "updated_at" => "later")
+                                              "source" => source, "user_data" => { "note" => 2 },
+                                              "provider_label" => "Other", "updated_at" => "later")
     fingerprint = @adapter.fingerprint.call(first)
     assert_match(/\A[0-9a-f]{64}\z/, fingerprint)
     assert_equal fingerprint, @adapter.fingerprint.call(reordered)
@@ -91,7 +93,8 @@ class MaterialLibraryKindTest < PhComposerTestCase
 
   def test_reverse_exports_declared_wire_fields_and_local_identity_without_provenance
     record = Mapping.map(wire).merge("id" => "mat_000000000001", "schema_version" => 1,
-      "source" => source, "user_data" => { "firm.note" => "retain" }, "extension_data" => {})
+                                     "source" => source, "user_data" => { "firm.note" => "retain" },
+                                     "extension_data" => {})
     result = @adapter.reverse.call(record)
     assert_equal "mat_000000000001", result.fetch("id")
     assert_equal (Mapping::FIELDS + ["id"]).sort, result.keys.sort
@@ -156,8 +159,8 @@ class MaterialLibraryKindTest < PhComposerTestCase
     id = invoke(:create, "values" => Mapping.map(wire).merge("source" => source)).fetch("id")
     layer = assembly.fetch("layers").first
     invoke(:assign, "local_id" => id, "target" => { "id" => assembly.fetch("id"), "layer_id" => layer.fetch("id"),
-      "segment_id" => layer.fetch("segments").first.fetch("id"),
-      "expected_values" => { "layers" => assembly.fetch("layers") } })
+                                                    "segment_id" => layer.fetch("segments").first.fetch("id"),
+                                                    "expected_values" => { "layers" => assembly.fetch("layers") } })
     assert_equal 2, @proposal.writes.length
     assert_empty @engine.ids(Kind.id)
     @engine.apply(@proposal.record_changes)
@@ -170,7 +173,7 @@ class MaterialLibraryKindTest < PhComposerTestCase
     id = invoke(:create, "values" => Mapping.map(wire)).fetch("id")
     error = assert_raises(PhComposer::CodedError) do
       invoke(:assign, "local_id" => id, "target" => { "id" => "asm_missing00000", "layer_id" => "lyr_missing00000",
-        "segment_id" => "seg_missing00000", "expected_values" => {} })
+                                                      "segment_id" => "seg_missing00000", "expected_values" => {} })
     end
     assert_same error, @proposal.refusal
     assert_empty @engine.ids(Kind.id)

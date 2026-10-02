@@ -88,7 +88,7 @@ class WindowPlacementPlaneTest < PhComposerTestCase
       end
     end
     assert_equal plane.map(before, :point_m => target, :anchor => "sill_center"),
-      plane.map(before, :point_m => target)
+                 plane.map(before, :point_m => target)
   end
 
   def test_mapped_panes_keep_dimensions_winding_and_empty_regions_do_not_emit_panes

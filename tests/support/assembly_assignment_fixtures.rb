@@ -43,8 +43,8 @@ module AssemblyAssignmentFixtures
     faces = count.times.map do |offset|
       z = offset * 10
       Sketchup::Face.new(base + offset + 1, {}, :points => [Geom::Point3d.new(0, 0, z),
-                                                          Geom::Point3d.new(100, 0, z),
-                                                          Geom::Point3d.new(100, 100, z)])
+                                                            Geom::Point3d.new(100, 0, z),
+                                                            Geom::Point3d.new(100, 100, z)])
     end
     entities = nested ? [Sketchup::Group.new(base + count + 1, Sketchup::Entities.new(faces))] : faces
     group = Sketchup::Group.new(base, Sketchup::Entities.new(entities))
@@ -55,8 +55,10 @@ module AssemblyAssignmentFixtures
   end
 
   def assignment_params(rows, id)
-    { "targets" => rows.map { |row| { "reference" => row.fetch("reference"),
-                                      "expected_values" => row.fetch("values") } }, "assembly_id" => id }
+    { "targets" => rows.map { |row|
+                     { "reference" => row.fetch("reference"),
+                       "expected_values" => row.fetch("values") }
+                   }, "assembly_id" => id }
   end
 
   def assignment_classify(rows, intent)
@@ -71,14 +73,14 @@ module AssemblyAssignmentFixtures
   def assignment_pair(base)
     metres = 1.0 / 0.0254
     points = [[0, 0, 0], [0, 4 * metres, 0], [0, 4 * metres, 3 * metres], [0, 0, 3 * metres]]
-      .map { |xyz| Geom::Point3d.new(*xyz) }
+             .map { |xyz| Geom::Point3d.new(*xyz) }
     [[base, points, 1], [base + 10, points.reverse, -1]].each do |id, outline, normal|
       face = Sketchup::Face.new(id + 1, {}, :points => outline, :normal => Geom::Vector3d.new(normal, 0, 0))
       @model.entities << Sketchup::Group.new(id, Sketchup::Entities.new([face]))
       assignment_invoke("ph_composer.zones.make", "parent_path" => [], "entity_ids" => [id])
     end
     assignment_classify(assignment_faces, "face_type" => { "mode" => "set", "value" => "Wall" },
-                                         "boundary_condition" => { "mode" => "set", "value" => "Outdoors" })
+                                          "boundary_condition" => { "mode" => "set", "value" => "Outdoors" })
     zones = assignment_query("ph_composer.zones.list").fetch("zones")
     result = assignment_invoke("ph_composer.zones.solve_adjacency",
                                "zones" => zones.map { |zone| zone.fetch("reference") })

@@ -1,5 +1,6 @@
 # A deliberately small rule set, carried from the predecessor's 2026-09-15 review. Every department
-# is off; the cops below are the ones enabled, and widening the list is a separate decision.
+# is off except Layout; the other cops below are the ones enabled, and widening the list is a separate
+# decision. Ed enabled the whole Layout department on 2026-10-01 (planning/refactor/rubocop-layout.md).
 # There is no burn-down register: this repository starts at the ceilings, so every file is held.
 
 AllCops:
@@ -20,10 +21,63 @@ Style/FrozenStringLiteralComment:
 Style/Semicolon:
   Enabled: true
 
+# Every Layout cop. Where a cop offers several styles, the one chosen is the style the code already
+# followed most when the department was enabled, so the formatting pass moved the fewest lines.
+Layout:
+  Enabled: true
+
+# Cops RuboCop 1.50 still marks pending; the whole department includes them.
+Layout/LineContinuationLeadingSpace:
+  Enabled: true
+
+Layout/LineContinuationSpacing:
+  Enabled: true
+
+Layout/LineEndStringConcatenationIndentation:
+  Enabled: true
+
+Layout/SpaceBeforeBrackets:
+  Enabled: true
+
 # context/CODING_STANDARDS.md "Line and size limits": 120, including transplanted code.
 Layout/LineLength:
   Enabled: true
   Max: 120
+
+# Keys align with the first key, for `:key => value` and `key: value` alike, including a trailing
+# hash argument without braces. Where that first key would push a line past 120, it starts its own
+# line under the call's first argument.
+Layout/HashAlignment:
+  EnforcedHashRocketStyle: key
+  EnforcedColonStyle: key
+
+# A continued argument list or array lines up with its first element.
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_first_argument
+
+Layout/ArrayAlignment:
+  EnforcedStyle: with_first_element
+
+# A first element on its own line is indented one step from the line that opens it, inside
+# parentheses or not.
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+Layout/FirstArgumentIndentation:
+  EnforcedStyle: consistent
+
+# A continued method chain or operation lines up with its first operand.
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: aligned
+
+Layout/MultilineOperationIndentation:
+  EnforcedStyle: aligned
+
+Layout/EndAlignment:
+  EnforcedStyleAlignWith: keyword
 
 # Size limits are review signals, not a reason to fragment a cohesive operation. A justified local
 # exception says why the longer unit is easier to understand.

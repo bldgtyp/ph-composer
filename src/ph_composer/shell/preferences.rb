@@ -56,7 +56,7 @@ module PhComposer
           write_dimension_format(value, scope, system)
         when "colour_by_mode"
           raise UserError, "That Colour-by mode name is not valid." unless value.is_a?(String) &&
-                                                                          Registry::ID_PATTERN.match?(value)
+                                                                           Registry::ID_PATTERN.match?(value)
 
           Sketchup.write_default(SECTION, "colour_by_mode", value)
         else
@@ -86,7 +86,7 @@ module PhComposer
 
         formats = dimension_formats
         raise UserError, "Too many dimension formats are remembered." if !formats.key?(scope) &&
-                                                                          formats.length >= MAX_SCOPES
+                                                                         formats.length >= MAX_SCOPES
 
         formats[scope] = DEFAULT_DIMENSION_FORMAT.merge(formats.fetch(scope, {})).merge(system => value)
         # SketchUp 26.1 stores a string containing a double quote but reads it back as nil, so the JSON

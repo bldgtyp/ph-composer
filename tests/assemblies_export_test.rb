@@ -20,7 +20,7 @@ class AssembliesExportTest < PhComposerTestCase
   def test_shared_extraction_contract_contains_only_declared_fields_and_reports_metadata_omission
     expected = JSON.parse(File.read(File.join(ROOT, "extraction.json")))
     extracted = PhComposer::Export::Collection.build(@model, :run_id => expected.fetch("run_id"),
-                                                    :contributors => [SECTION])
+                                                             :contributors => [SECTION])
     assert_equal expected, extracted.document
     assert extracted.findings.all? { |finding| finding.fetch("code") == "export.metadata_omitted" }
     assert_operator extracted.findings.length, :>=, 8
@@ -61,8 +61,8 @@ class AssembliesExportTest < PhComposerTestCase
     keys = PhComposer::Registry.current.export_contributors.fetch(SECTION).user_data_keys
     assert_equal %w[ph_composer.assembly_id ph_composer.membrane_layers], keys
     allowed = JSON.generate("type" => "OpaqueConstruction", "user_data" => {
-                              "ph_composer" => { "assembly_id" => "asm_Single000001", "membrane_layers" => [] }
-                            })
+      "ph_composer" => { "assembly_id" => "asm_Single000001", "membrane_layers" => [] }
+    })
     assert PhComposer::Export::Privacy.validate!(translation_result(allowed))
     foreign = JSON.parse(allowed)
     foreign["user_data"]["ph_composer"]["private_note"] = "must stay local"
@@ -70,6 +70,7 @@ class AssembliesExportTest < PhComposerTestCase
       PhComposer::Export::Privacy.validate!(translation_result(JSON.generate(foreign)))
     end
   end
+
   def test_report_lists_each_definition_and_discloses_defaults_membranes_and_local_fields_once
     row = { "assembly_id" => "asm_Single000001", "name" => "<Synthetic>", "thermal_layer_count" => 2,
             "membrane_names" => ["Film"], "defaulted_material_ids" => ["mat_Wool00000001"] }

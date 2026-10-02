@@ -13,14 +13,16 @@ module PhComposer
       end
 
       def create_action(feature, prefix, kind, labelled, &handler)
-        feature.action("#{prefix}.create", :description => "Create one #{kind.label}, with default authoring values.",
+        feature.action("#{prefix}.create",
+                       :description => "Create one #{kind.label}, with default authoring values.",
                        :params => Shapes.create(kind, :labelled => labelled), :result => Shapes::RESULT,
                        :undo_name => "Create #{kind.label}", :side_effects => "Creates one catalog record.",
                        :examples => [{ "values" => { "name" => "Example #{kind.label}" } }], &handler)
       end
 
       def update_action(feature, prefix, kind, editable, labelled, example_id, &handler)
-        feature.action("#{prefix}.update", :description => "Edit one #{kind.label}; changed expected values refuse.",
+        feature.action("#{prefix}.update",
+                       :description => "Edit one #{kind.label}; changed expected values refuse.",
                        :params => Shapes.update(kind, editable, :labelled => labelled), :result => Shapes::RESULT,
                        :undo_name => "Edit #{kind.label}", :side_effects => "Updates values and optional metadata.",
                        :examples => [{ "id" => example_id, "values" => { "name" => "Edited" },
@@ -28,7 +30,8 @@ module PhComposer
       end
 
       def duplicate_action(feature, prefix, kind, properties, example_id, &handler)
-        feature.action("#{prefix}.duplicate", :description => "Duplicate one #{kind.label} with independent identity.",
+        feature.action("#{prefix}.duplicate",
+                       :description => "Duplicate one #{kind.label} with independent identity.",
                        :params => Shapes.object(properties, :optional => %w[name copy_datasheets]),
                        :result => Shapes::RESULT, :undo_name => "Duplicate #{kind.label}",
                        :side_effects => "Creates one catalog record, preserving shared definition references.",
@@ -38,7 +41,8 @@ module PhComposer
       def delete_action(feature, prefix, kind, replacement, example_id, &handler)
         properties = { "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to delete."),
                        "expected_values" => Shapes.expected(kind), "replacement_id" => replacement }
-        feature.action("#{prefix}.delete", :description => "Delete #{kind.label}; remaining references refuse.",
+        feature.action("#{prefix}.delete",
+                       :description => "Delete #{kind.label}; remaining references refuse.",
                        :params => Shapes.object(properties, :optional => %w[expected_values replacement_id]),
                        :result => Shapes::RESULT, :undo_name => "Delete #{kind.label}",
                        :side_effects => "Replacement or explicit clearing rewrites uses and deletes atomically.",
@@ -56,26 +60,33 @@ module PhComposer
         update_action(feature, prefix, kind, Commands::MATERIAL_EDITABLE, Materials::Schema::LABELLED_FIELDS,
                       example_id) do |request, proposal|
           params = request.params
-          Materials::Operations.update(request, proposal, :id => params.fetch("id"), :values => params.fetch("values"),
-            :expected_values => params.fetch("expected_values"), :user_data => params["user_data"])
+          Materials::Operations.update(request, proposal,
+                                       :id => params.fetch("id"), :values => params.fetch("values"),
+                                       :expected_values => params.fetch("expected_values"),
+                                       :user_data => params["user_data"])
         end
         duplicate = {
           "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to copy."),
           "name" => { "type" => "string", "minLength" => 1,
                       "description" => "The copy's name; \"<name> (copy)\" when absent. Names are unique." },
           "copy_datasheets" => { "type" => "boolean", "description" => "Keep the datasheet links on the copy; " \
-                                                                     "false when absent." }
+                                                                       "false when absent." }
         }
         duplicate_action(feature, prefix, kind, duplicate, example_id) do |request, proposal|
-          Materials::Operations.duplicate(request, proposal, :id => request.params.fetch("id"),
-            :name => request.params["name"], :copy_datasheets => request.params.fetch("copy_datasheets", false))
+          Materials::Operations.duplicate(request, proposal,
+                                          :id => request.params.fetch("id"),
+                                          :name => request.params["name"],
+                                          :copy_datasheets => request.params.fetch("copy_datasheets",
+                                                                                   false))
         end
         replacement = Shapes.id("mat", "The Material every Layer-Segment using the deleted one takes instead. " \
                                        "Needed while any Assembly uses it.")
         delete_action(feature, prefix, kind, replacement, example_id) do |request, proposal|
           params = request.params
-          Materials::Operations.delete(request, proposal, :id => params.fetch("id"),
-            :expected_values => params.fetch("expected_values", {}), :replacement_id => params["replacement_id"])
+          Materials::Operations.delete(request, proposal,
+                                       :id => params.fetch("id"),
+                                       :expected_values => params.fetch("expected_values", {}),
+                                       :replacement_id => params["replacement_id"])
         end
       end
 
@@ -89,8 +100,10 @@ module PhComposer
         end
         update_action(feature, prefix, kind, Commands::ASSEMBLY_EDITABLE, [], example_id) do |request, proposal|
           params = request.params
-          Assembly::Operations.update(request, proposal, :id => params.fetch("id"), :values => params.fetch("values"),
-            :expected_values => params.fetch("expected_values"), :user_data => params["user_data"])
+          Assembly::Operations.update(request, proposal,
+                                      :id => params.fetch("id"), :values => params.fetch("values"),
+                                      :expected_values => params.fetch("expected_values"),
+                                      :user_data => params["user_data"])
         end
         duplicate = { "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to copy.") }
         duplicate_action(feature, prefix, kind, duplicate, example_id) do |request, proposal|
@@ -100,9 +113,11 @@ module PhComposer
                                        "clear those Faces' Assembly. Needed while any Face uses it.", :nullable => true)
         delete_action(feature, prefix, kind, replacement, example_id) do |request, proposal|
           params = request.params
-          Assembly::Operations.delete(request, proposal, :id => params.fetch("id"),
-            :expected_values => params.fetch("expected_values", {}), :retarget => params.key?("replacement_id"),
-            :replacement_id => params["replacement_id"])
+          Assembly::Operations.delete(request, proposal,
+                                      :id => params.fetch("id"),
+                                      :expected_values => params.fetch("expected_values", {}),
+                                      :retarget => params.key?("replacement_id"),
+                                      :replacement_id => params["replacement_id"])
         end
       end
     end

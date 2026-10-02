@@ -13,7 +13,9 @@ class WindowDefinitionWriterTest < PhComposerTestCase
     super
     @model = Sketchup.active_model
     @type = window_record("rows_m" => [1.2], "columns_m" => [0.7, 0.8, 0.5],
-      "elements" => 3.times.map { |column| W::Types.blank(0, column, :identity => window_allocator) })
+                          "elements" => 3.times.map { |column|
+                                          W::Types.blank(0, column, :identity => window_allocator)
+                                        })
     @type.fetch("elements").last["kind"] = "empty"
   end
 
@@ -22,13 +24,14 @@ class WindowDefinitionWriterTest < PhComposerTestCase
     assert_equal "PhComposer_Window_Test type", definition.name
     assert_equal [definition], @model.definitions.to_a
     assert_equal({ "window_type_id" => @type.fetch("id"),
-      "generated_size_m" => { "width_m" => 2.0, "height_m" => 1.2 } }, U::DEFINITION_STORE.read(definition))
+                   "generated_size_m" => { "width_m" => 2.0,
+                                           "height_m" => 1.2 } }, U::DEFINITION_STORE.read(definition))
     panes = definition.entities.grep(Sketchup::Face)
     assert_equal 2, panes.length
     panes.zip(U::DefinitionPlan.build(@type).panes).each do |face, planned|
       assert_operator face.normal.z, :>, 0
       assert_equal({ "window_type_id" => @type.fetch("id"), "element_id" => planned.element_id },
-        U::PANE_STORE.read(face))
+                   U::PANE_STORE.read(face))
       face.outer_loop.vertices.zip(planned.polygon_m).each do |vertex, expected|
         point = vertex.position
         [point.x, point.y, point.z].zip(expected).each do |actual, metres|
@@ -68,7 +71,7 @@ class WindowDefinitionWriterTest < PhComposerTestCase
     glass.color = Sketchup::Color.new(9, 8, 7)
     glass.alpha = 0.8
     user = @model.entities.add_face([Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(1, 0, 0),
-      Geom::Point3d.new(1, 1, 0)])
+                                     Geom::Point3d.new(1, 1, 0)])
     user.material = glass
     definition = create
     assert_equal [9, 8, 7, 255], glass.color.to_a
@@ -131,7 +134,7 @@ class WindowDefinitionWriterTest < PhComposerTestCase
   def test_abort_restores_rewritten_geometry_behavior_stamps_and_material_catalog
     definition = @model.definitions.add("Existing")
     definition.entities.add_face([Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(1, 0, 0),
-      Geom::Point3d.new(1, 1, 0)])
+                                  Geom::Point3d.new(1, 1, 0)])
     definition.behavior.no_scale_mask = 4
     definition.set_attribute("outside.fixture", "literal", "before")
     U::DEFINITION_STORE.write(definition, "window_type_id" => "wnt_previous")
@@ -195,7 +198,7 @@ class WindowDefinitionWriterTest < PhComposerTestCase
 
   def rewrite(definition)
     Writer.rewrite(:model => @model, :definition => definition, :type => @type,
-      :plan => U::DefinitionPlan.build(@type))
+                   :plan => U::DefinitionPlan.build(@type))
   end
 
   def state
@@ -206,8 +209,8 @@ class WindowDefinitionWriterTest < PhComposerTestCase
         [face.persistent_id, points, U::PANE_STORE.read(face), face.material&.name, face.back_material&.name]
       end
       [definition.persistent_id, definition.name, U::DEFINITION_STORE.read(definition),
-        definition.get_attribute("outside.fixture", "literal"), behavior.is2d?, behavior.cuts_opening?,
-        behavior.snapto, behavior.no_scale_mask?, faces]
+       definition.get_attribute("outside.fixture", "literal"), behavior.is2d?, behavior.cuts_opening?,
+       behavior.snapto, behavior.no_scale_mask?, faces]
     end
     materials = @model.materials.map { |material| [material.name, material.color.to_a, material.alpha] }
     instances = @model.entities.to_a.map { |instance| [instance.persistent_id, instance.definition.persistent_id] }

@@ -15,6 +15,7 @@ module PhComposer
           unless outer_polygon_m.is_a?(Array) && outer_polygon_m.length == 4
             raise CodedError.new("geometry.invalid", "A four-corner Window outline is required.")
           end
+
           plane = Plane.new(host)
           candidate = outer_polygon_m.map do |point|
             plane.assert_on_plane!(point)
@@ -33,6 +34,7 @@ module PhComposer
           if existing_polygons_m.any? { |polygon| conflict?(plane, candidate, polygon) }
             raise CodedError.new("window.overlap", "The Window outline overlaps another unit on this host plane.")
           end
+
           true
         end
 

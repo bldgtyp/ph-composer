@@ -32,7 +32,7 @@ class WindowUnitPlaceStepTest < PhComposerTestCase
 
   def step(id: "wun_AAAAAAAAAAAA", point_m: [2, 0, 1], **options)
     U::PlaceStep.new(:model => @model, :host => host, :type => @type, :record => record(id),
-      :point_m => point_m, **options)
+                     :point_m => point_m, **options)
   end
 
   def apply(placement)
@@ -66,7 +66,7 @@ class WindowUnitPlaceStepTest < PhComposerTestCase
     assert_equal 1, @model.operation_starts.length
     assert_equal reference, placement.affected.first.fetch("reference")
     anchor = U::WorldGeometry.anchor(U::DefinitionPlan.build(@type), "sill_center",
-      (@group.transformation * placed.transformation).to_a)
+                                     (@group.transformation * placed.transformation).to_a)
     [2, 0, 1].zip(anchor).each { |expected, actual| assert_in_delta expected, actual, 1e-12 }
   end
 
@@ -150,7 +150,7 @@ class WindowUnitPlaceStepTest < PhComposerTestCase
   def test_missing_canonical_definition_and_stale_index_refuse_without_fallback_definition
     placement = step
     U::DefinitionIndex::STORE.write(@model, "schema_version" => 1,
-      "definitions" => { @type.fetch("id") => 999999 })
+                                            "definitions" => { @type.fetch("id") => 999999 })
     assert_raises(PhComposer::CodedError) { apply(placement) }
     assert_raises(PhComposer::CodedError) { step }
     assert_empty @model.definitions.to_a
@@ -163,7 +163,7 @@ class WindowUnitPlaceStepTest < PhComposerTestCase
     @face.reverse!
     wrong_type = @type.merge("columns_m" => [0.9])
     definition = U::DefinitionWriter.create(:model => @model, :type => wrong_type,
-      :plan => U::DefinitionPlan.build(wrong_type))
+                                            :plan => U::DefinitionPlan.build(wrong_type))
     U::DefinitionIndex.write(@model, { @type.fetch("id") => definition.persistent_id }, :expected => {})
     before = capture
     error = assert_raises(PhComposer::CodedError) { step }

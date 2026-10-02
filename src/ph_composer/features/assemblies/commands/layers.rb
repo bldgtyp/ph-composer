@@ -25,6 +25,7 @@ module PhComposer
         unless %w[outside inside].include?(side)
           raise CodedError.new("params.invalid", "Choose the outside or inside of the anchor Layer.")
         end
+
         outside_delta = assembly.fetch("orientation") == "first_layer_outside" ? 0 : 1
         layers.index(anchor) + (side == "outside" ? outside_delta : 1 - outside_delta)
       end
@@ -49,6 +50,7 @@ module PhComposer
         unless %w[outward inward].include?(direction)
           raise CodedError.new("params.invalid", "Layer direction must be outward or inward.")
         end
+
         mutate(record) do |assembly|
           layers = assembly.fetch("layers")
           index = layers.index(layer!(assembly, layer_id))
@@ -80,6 +82,7 @@ module PhComposer
           if Materials::Schema.membrane_layer?(layer, materials)
             raise CodedError.new("validation.failed", "A membrane Layer holds one Layer-Segment.")
           end
+
           segments = layer.fetch("segments")
           position = index.nil? ? segments.length : index!(index, segments.length)
           segments.insert(position, Assembly::Schema.segment(width_mm, :identity => identity))
@@ -93,6 +96,7 @@ module PhComposer
           if layer.fetch("segments").length == 1
             raise CodedError.new("validation.failed", "A Layer needs at least one Layer-Segment.")
           end
+
           layer.fetch("segments").delete(segment)
         end
       end
@@ -102,6 +106,7 @@ module PhComposer
         unless (values.keys - allowed).empty?
           raise CodedError.new("params.invalid", "These Layer-Segment fields cannot be edited.")
         end
+
         mutate(record) do |assembly|
           segment = segment!(layer!(assembly, layer_id), segment_id)
           values.each { |key, value| segment[key] = DeepCopy.call(value) }
@@ -117,6 +122,7 @@ module PhComposer
           if material && Materials::Schema.membrane?(material) && layer.fetch("segments").length > 1
             raise CodedError.new("validation.failed", "A membrane Layer holds one Layer-Segment.")
           end
+
           segment!(layer, segment_id)["material_id"] = material_id
           snap_membrane!(layer, materials)
         end

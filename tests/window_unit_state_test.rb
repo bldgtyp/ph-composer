@@ -14,20 +14,22 @@ class WindowUnitStateTest < PhComposerTestCase
     @model = Sketchup.active_model
     @type = window_record
     @definition = U::DefinitionWriter.create(:model => @model, :type => @type,
-      :plan => U::DefinitionPlan.build(@type))
+                                             :plan => U::DefinitionPlan.build(@type))
     @unit = @model.entities.add_instance(@definition, Geom::Transformation.new)
     U.write(@unit, "id" => "wun_AAAAAAAAAAAA", "schema_version" => 1,
-      "window_type_id" => @type.fetch("id"), "anchor" => "sill_center")
+                   "window_type_id" => @type.fetch("id"), "anchor" => "sill_center")
     @host = @model.entities.add_face([[-100, -100, 0], [100, -100, 0],
-      [100, 100, 0], [-100, 100, 0]].map { |point| Geom::Point3d.new(*point) })
+                                      [100, 100, 0], [-100, 100, 0]].map { |point| Geom::Point3d.new(*point) })
     @unit.glued_to = @host
     @geometry = PhComposer::FaceGeometry.capture(@host, Geom::Transformation.new)
   end
 
   def findings(**options)
     item = U::Occurrences.all(@model).first
-    U::State.findings(item, **{ :type => @type, :canonical_definition => @definition,
-      :host_geometry => @geometry, :host_values => { "face_type" => "Wall", "boundary_condition" => "Outdoors" } }
+    U::State.findings(item,
+                      **{ :type => @type, :canonical_definition => @definition,
+                          :host_geometry => @geometry, :host_values => { "face_type" => "Wall",
+                                                                         "boundary_condition" => "Outdoors" } }
       .merge(options))
   end
 
@@ -40,8 +42,9 @@ class WindowUnitStateTest < PhComposerTestCase
     assert_empty codes
     reference = { "unit_id" => "wun_AAAAAAAAAAAA", "entity_path" => [@unit.persistent_id] }
     assert_equal [{ "code" => "window.copy_id_pending", "repair" => {
-      "name" => "ph_composer.windows.units.repair_copied_identities", "params" => { "units" => [reference] } } }],
-      findings(:shared_id => true)
+      "name" => "ph_composer.windows.units.repair_copied_identities", "params" => { "units" => [reference] }
+    } }],
+                 findings(:shared_id => true)
     assert_equal before, U::MutationScope.new(:definition_ids => [@definition.persistent_id]).capture(@model)
   end
 

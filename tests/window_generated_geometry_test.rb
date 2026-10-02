@@ -27,7 +27,7 @@ class WindowGeneratedGeometryTest < PhComposerTestCase
     model = Sketchup.active_model
     definition = model.definitions.add("Synthetic orphan")
     invalid = [nil, {}, { "width_m" => 0, "height_m" => 1 }, { "width_m" => 1, "height_m" => "2" },
-      { "width_m" => 1, "height_m" => 2, "extra" => 1 }]
+               { "width_m" => 1, "height_m" => 2, "extra" => 1 }]
     invalid.each do |size|
       stamp = { "window_type_id" => "wnt_AAAAAAAAAAAA" }
       stamp["generated_size_m"] = size if size
@@ -44,7 +44,7 @@ class WindowGeneratedGeometryTest < PhComposerTestCase
   def test_different_type_stamp_cannot_supply_the_old_anchor_dimensions
     type = window_record
     definition = U::DefinitionWriter.create(:model => Sketchup.active_model, :type => type,
-      :plan => U::DefinitionPlan.build(type))
+                                            :plan => U::DefinitionPlan.build(type))
     error = assert_raises(PhComposer::CodedError) do
       U::GeneratedGeometry.plan(definition, :type_id => "wnt_BBBBBBBBBBBB")
     end
@@ -55,7 +55,7 @@ class WindowGeneratedGeometryTest < PhComposerTestCase
     type = window_record
     [[2, -1, 0], [0.5, -1, 0.2]].each do |extra|
       definition = U::DefinitionWriter.create(:model => Sketchup.active_model, :type => type,
-        :plan => U::DefinitionPlan.build(type))
+                                              :plan => U::DefinitionPlan.build(type))
       points = [[0, 0, 0], extra, [0, -1, 0]].map do |point|
         Geom::Point3d.new(*point.map { |value| value / 0.0254 })
       end
@@ -70,7 +70,7 @@ class WindowGeneratedGeometryTest < PhComposerTestCase
   def test_nested_native_geometry_cannot_be_guessed_from_the_parent_generation_stamp
     type = window_record
     definition = U::DefinitionWriter.create(:model => Sketchup.active_model, :type => type,
-      :plan => U::DefinitionPlan.build(type))
+                                            :plan => U::DefinitionPlan.build(type))
     definition.entities.add_group
     error = assert_raises(PhComposer::CodedError) do
       U::GeneratedGeometry.plan(definition, :type_id => type.fetch("id"))
@@ -81,7 +81,7 @@ class WindowGeneratedGeometryTest < PhComposerTestCase
   def test_valid_in_rectangle_edits_and_empty_regions_keep_the_full_generated_footprint
     type = window_record
     definition = U::DefinitionWriter.create(:model => Sketchup.active_model, :type => type,
-      :plan => U::DefinitionPlan.build(type))
+                                            :plan => U::DefinitionPlan.build(type))
     definition.entities.first.reverse!
     plan = U::GeneratedGeometry.plan(definition, :type_id => type.fetch("id"))
     assert_equal U::DefinitionPlan.build(type).outer_polygon_m, plan.outer_polygon_m

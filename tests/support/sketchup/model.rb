@@ -7,7 +7,7 @@ require_relative "catalogs"
 module Sketchup
   class Model
     attr_reader :entities, :operations, :operation_starts, :path, :selection, :observers, :overlays,
-      :active_view, :active_tool, :layers, :pages, :guid, :definitions, :materials
+                :active_view, :active_tool, :layers, :pages, :guid, :definitions, :materials
     attr_accessor :title, :shadow_info
 
     def initialize(dictionaries = {}, entities: Entities.new)
@@ -85,6 +85,7 @@ module Sketchup
 
     def start_operation(name, disable_ui = false, next_transparent = false, transparent = false)
       return false if @current_operation
+
       @operation_starts << [name, disable_ui, next_transparent, transparent]
       @current_operation = [name, disable_ui, next_transparent, transparent, transaction_snapshot]
       true
@@ -92,6 +93,7 @@ module Sketchup
 
     def commit_operation
       return false unless @current_operation
+
       name, disable_ui, _next_transparent, transparent, snapshot = @current_operation
       @undo_stack << snapshot unless transparent && @undo_stack.any?
       @redo_stack.clear unless transparent
@@ -107,6 +109,7 @@ module Sketchup
     # synchronously inside the call (context/SKETCHUP_HOST_BEHAVIOR.md, "Observers and edit contexts").
     def abort_operation
       return false unless @current_operation
+
       name, disable_ui, _next_transparent, _transparent, snapshot = @current_operation
       restore_transaction_snapshot(snapshot)
       @operations << [name, disable_ui, :aborted]
@@ -120,6 +123,7 @@ module Sketchup
     def undo
       snapshot = @undo_stack.pop
       return false unless snapshot
+
       @redo_stack << transaction_snapshot
       restore_transaction_snapshot(snapshot)
       @active_path = nil
@@ -133,6 +137,7 @@ module Sketchup
     def redo
       snapshot = @redo_stack.pop
       return false unless snapshot
+
       @undo_stack << transaction_snapshot
       restore_transaction_snapshot(snapshot)
       @active_path = nil
@@ -146,6 +151,7 @@ module Sketchup
     def active_entities
       path = Array(@active_path)
       return @entities if path.empty?
+
       container = path.last
       container.respond_to?(:entities) ? container.entities : container.definition.entities
     end
@@ -180,6 +186,7 @@ module Sketchup
 
     def save(path = nil)
       raise ArgumentError, "model has no path" if (path.nil? || path.empty?) && @path.empty?
+
       @path = path unless path.nil? || path.empty?
       fire_pre_save
       Sketchup.store_model(@path, self)
@@ -203,6 +210,7 @@ module Sketchup
       unless @active_path.nil?
         raise "active_path changed inside onPreSaveModel; SketchUp saves the reopened context in world coordinates"
       end
+
       @active_path = restored
     end
 
@@ -277,6 +285,7 @@ module Sketchup
 
     def find_support_file(name)
       return STUB_PLUGINS_DIR if name == "Plugins"
+
       nil
     end
 
@@ -330,6 +339,7 @@ module Sketchup
     def open_file(path, with_status: false)
       data = (@saved_models ||= {})[path]
       return false unless data
+
       opened_model = Marshal.load(data)
       opened_model.path = path
       if @reuse_active_model_on_open && @active_model

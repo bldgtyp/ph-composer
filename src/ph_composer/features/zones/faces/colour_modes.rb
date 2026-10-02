@@ -38,7 +38,7 @@ module PhComposer
             entries(read.model, "boundary_condition", BOUNDARY_LABELS)
           end
           feature.colour_mode(BY_ASSEMBLY, :label => "Assembly", :entity_kind => "face",
-                                          :colours => method(:assembly_colour)) { |read| assembly_entries(read) }
+                                           :colours => method(:assembly_colour)) { |read| assembly_entries(read) }
         end
 
         # One dependency read per projection, never per Face. Entries carry detached colour values,

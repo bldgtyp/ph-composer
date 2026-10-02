@@ -10,9 +10,11 @@ module PhComposer
       def copy_schema
         text = { "type" => "string", "minLength" => 1 }
         Shapes.object({ "provider_id" => text, "kind" => { "type" => "string", "enum" => ["psi_install_types"] },
-          "generation" => { "type" => "integer", "minimum" => 1 }, "library_id" => text, "record_id" => text,
-          "choice" => { "type" => "string", "enum" => %w[create keep_local use_library] },
-          "local_id" => text, "expected_values" => Shapes::OBJECT }, :optional => %w[local_id expected_values])
+                        "generation" => { "type" => "integer", "minimum" => 1 }, "library_id" => text,
+                        "record_id" => text,
+                        "choice" => { "type" => "string", "enum" => %w[create keep_local use_library] },
+                        "local_id" => text, "expected_values" => Shapes::OBJECT },
+                      :optional => %w[local_id expected_values])
       end
 
       def schema
@@ -27,10 +29,13 @@ module PhComposer
           if known.include?(row.fetch("client_id"))
             raise CodedError.new("params.invalid", "A temporary identity collides with a saved product.")
           end
+
           result = request.participant("ph_composer.library.copy_into_proposal").call(
-            request, proposal, row.fetch("copy"))
+            request, proposal, row.fetch("copy")
+          )
           id = result.fetch("local_id")
           raise CodedError.new("library.local_choice_required", "Choose a product for each staged import.") unless id
+
           [row.fetch("client_id"), id]
         end
       end

@@ -73,7 +73,7 @@ module PhComposer
           end
           panes = plan.panes.map do |pane|
             Units::DefinitionPlan::Pane.new(:element_id => pane.element_id.dup.freeze,
-              :polygon_m => polygon.call(pane.polygon_m)).freeze
+                                            :polygon_m => polygon.call(pane.polygon_m)).freeze
           end.freeze
           MappedPlan.new(:outer_polygon_m => polygon.call(plan.outer_polygon_m), :panes => panes).freeze
         end

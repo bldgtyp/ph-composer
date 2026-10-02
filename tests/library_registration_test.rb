@@ -15,9 +15,14 @@ class LibraryRegistrationTest < PhComposerTestCase
   def adapter(wire_kind = "widgets")
     schema = { "type" => "object", "properties" => { "name" => { "type" => "string" } } }
     D::LibraryAdapter.new(:wire_kind => wire_kind.dup, :wire_version => 1, :fingerprint_version => 1,
-      :wire_schema => PhComposer::DeepCopy.call(schema), :mapped_schema => PhComposer::DeepCopy.call(schema),
-      :fingerprint_fields => ["name"], :map => ->(row) { row }, :reverse => ->(row) { row },
-      :fingerprint => ->(_row) { "digest" }, :local_read => callback, :create => callback, :replace => callback)
+                          :wire_schema => PhComposer::DeepCopy.call(schema),
+                          :mapped_schema => PhComposer::DeepCopy.call(schema),
+                          :fingerprint_fields => ["name"], :map => ->(row) { row }, :reverse => ->(row) {
+                                                                                                  row
+                                                                                                },
+                          :fingerprint => ->(_row) {
+                                            "digest"
+                                          }, :local_read => callback, :create => callback, :replace => callback)
   end
 
   def feature(id = "test.library", kind_adapter = adapter, requires: [], &extra)
@@ -26,9 +31,9 @@ class LibraryRegistrationTest < PhComposerTestCase
       define_singleton_method(:install) do |registry|
         scope = registry.feature(id, :contract_version => 1, :requires => requires)
         scope.record_kind(PhComposer::Records::RecordKind.new(:id => "#{id}.widget", :label => "Widget",
-          :schema_version => 1, :id_prefix => "wid", :fields => []))
+                                                              :schema_version => 1, :id_prefix => "wid", :fields => []))
         scope.library_kind("#{id}.wire", :contract_version => 1, :record_kind => "#{id}.widget",
-                           :adapter => kind_adapter) if kind_adapter
+                                         :adapter => kind_adapter) if kind_adapter
         extra.call(scope) if extra
       end
     end
@@ -148,7 +153,7 @@ class LibraryRegistrationTest < PhComposerTestCase
     ["missing.kind", "test.other.widget"].each do |record_kind|
       probe = feature("test.library", nil, :requires => ["test.other"]) do |scope|
         scope.library_kind("test.library.wire", :contract_version => 1, :record_kind => record_kind,
-                           :adapter => adapter)
+                                                :adapter => adapter)
       end
       diagnostics = refused(feature("test.other", nil), probe)
       assert diagnostics.any? { |item| item.message.include?(record_kind) }
@@ -163,7 +168,7 @@ class LibraryRegistrationTest < PhComposerTestCase
     end
     diagnostics = refused(feature("test.library", nil) do |scope|
       scope.library_kind("test.library.wire", :contract_version => 2,
-        :record_kind => "test.library.widget", :adapter => adapter)
+                                              :record_kind => "test.library.widget", :adapter => adapter)
       scope.library_provider("test.library.file", :contract_version => 2, :kinds => ["widgets"]) {}
     end)
     assert_equal 2, diagnostics.count { |item| item.code == "registration.contract_major" }
@@ -172,10 +177,12 @@ class LibraryRegistrationTest < PhComposerTestCase
   def test_entity_reference_inventory_is_not_a_copyable_catalog_kind
     diagnostics = refused(feature("test.library", nil) do |scope|
       target = PhComposer::Records::ReferenceTarget.new(:id => "test.library.entity", :label => "Entity",
-        :records => ->(_model) { [] }, :validate => ->(_record) { [] })
+                                                        :records => ->(_model) { [] }, :validate => ->(_record) {
+                                                                                                      []
+                                                                                                    })
       scope.reference_target(target)
       scope.library_kind("test.library.wire", :contract_version => 1,
-        :record_kind => target.id, :adapter => adapter)
+                                              :record_kind => target.id, :adapter => adapter)
     end)
     assert_includes diagnostics.map(&:code), "registration.missing_dependency"
     refute Registry.current.reference_targets.key?("test.library.entity")
@@ -195,12 +202,14 @@ class LibraryRegistrationTest < PhComposerTestCase
 
   def test_adapter_schemas_pure_methods_and_callbacks_are_validated
     mutations = [->(a) { a.wire_schema = nil }, ->(a) { a.mapped_schema = { "type" => "array" } },
-      ->(a) { a.map = nil }, ->(a) { a.reverse = false }, ->(a) { a.fingerprint = "digest" },
-      ->(a) { a.local_read = nil }, ->(a) { a.create = {} }, ->(a) { a.replace.handler = false },
-      ->(a) { a.create.params = { "type" => "string" } }, ->(a) { a.local_read.result = { "type" => "bad" } },
-      ->(a) { a.assign = {} }, ->(a) { a.fingerprint_fields = [] },
-      ->(a) { a.fingerprint_fields = ["name", "name"] }, ->(a) { a.fingerprint_fields = ["unknown"] },
-      ->(a) { a.wire_kind = "Bad kind" }]
+                 ->(a) { a.map = nil }, ->(a) { a.reverse = false }, ->(a) { a.fingerprint = "digest" },
+                 ->(a) { a.local_read = nil }, ->(a) { a.create = {} }, ->(a) { a.replace.handler = false },
+                 ->(a) { a.create.params = { "type" => "string" } }, ->(a) {
+                                                                       a.local_read.result = { "type" => "bad" }
+                                                                     },
+                 ->(a) { a.assign = {} }, ->(a) { a.fingerprint_fields = [] },
+                 ->(a) { a.fingerprint_fields = ["name", "name"] }, ->(a) { a.fingerprint_fields = ["unknown"] },
+                 ->(a) { a.wire_kind = "Bad kind" }]
     mutations.each do |mutate|
       value = adapter
       mutate.call(value)
@@ -208,7 +217,7 @@ class LibraryRegistrationTest < PhComposerTestCase
     end
     assert_includes refused(feature("test.library", nil) do |scope|
       scope.library_kind("test.library.wire", :contract_version => 1,
-        :record_kind => "test.library.widget", :adapter => {})
+                                              :record_kind => "test.library.widget", :adapter => {})
     end).map(&:code), "registration.schema_invalid"
   end
 end

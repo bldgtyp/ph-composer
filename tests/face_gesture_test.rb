@@ -195,7 +195,7 @@ class FaceGestureTest < PhComposerTestCase
     @model.entities << group
     invoke("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [base] })
     API.query(:context => @context, :name => "ph_composer.zones.list").dig("value", "zones")
-      .find { |zone| zone.dig("reference", "zone_path") == [base] }
+       .find { |zone| zone.dig("reference", "zone_path") == [base] }
   end
 
   # Two Zones sharing `count` full walls, classified and solved, so a gesture has real pairs to
@@ -209,9 +209,9 @@ class FaceGestureTest < PhComposerTestCase
       high = (index * 5 + 3) * metres
       outline = [point(0, 0, low), point(0, 4 * metres, low), point(0, 4 * metres, high), point(0, 0, high)]
       lefts << Sketchup::Face.new(base + 1 + index, {}, :points => outline,
-                                  :normal => Geom::Vector3d.new(1, 0, 0))
+                                                        :normal => Geom::Vector3d.new(1, 0, 0))
       rights << Sketchup::Face.new(base + 101 + index, {}, :points => outline.reverse,
-                                   :normal => Geom::Vector3d.new(-1, 0, 0))
+                                                           :normal => Geom::Vector3d.new(-1, 0, 0))
     end
     [[base, lefts], [base + 10, rights]].each do |persistent_id, faces|
       @model.entities << Sketchup::Group.new(persistent_id, Sketchup::Entities.new(faces))

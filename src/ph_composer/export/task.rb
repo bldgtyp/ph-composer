@@ -19,9 +19,12 @@ module PhComposer
         if !replace && [@destination, @pair.report_path].any? { |path| File.exist?(path) }
           raise Blocked.new("export.replace_required", "Confirm replacement of the existing HBJSON/report pair.")
         end
+
         @prior = artifact_fingerprint
-        @runtime_factory = runtime_factory || ->(&callback) { RuntimeHost.new(:session_id => session.id,
-                                                                              :on_message => callback) }
+        @runtime_factory = runtime_factory || ->(&callback) {
+          RuntimeHost.new(:session_id => session.id,
+                          :on_message => callback)
+        }
         @timer = CoalescedTimer.new
         @stage = "queued"
         @count = 0
@@ -94,6 +97,7 @@ module PhComposer
         if payload["error"]
           raise Blocked.new("runtime.translation_failed", "The export runtime could not translate this Model.")
         end
+
         @stage = "checking"
         result = payload.fetch("result")
         raise InternalError, "The runtime returned another run." unless result["run_id"] == id
@@ -105,7 +109,7 @@ module PhComposer
         unless result.dig("summary", "publishable") && result.dig("canonical_model", "hbjson")
           return finish(Outcome.build("refused", "export.blocked", "Export not created. Resolve the blocking findings.",
                                       "none", @session.revision, :findings => result.fetch("findings"),
-                                      :value => { "result" => compact_result(result) }))
+                                                                 :value => { "result" => compact_result(result) }))
         end
         @result = result
         # Writing is a separate tick, so cancellation and queued host mutations are admitted after Python.
@@ -128,7 +132,7 @@ module PhComposer
         pair = @pair.commit(@result.fetch("canonical_model").fetch("hbjson"), html)
         finish(Outcome.build("completed", "export.complete", "HBJSON and Export report created.", "none",
                              @session.revision, :value => { "result" => compact_result(@result),
-                                                           "artifacts" => [pair.hbjson_path, pair.report_path] }))
+                                                            "artifacts" => [pair.hbjson_path, pair.report_path] }))
       rescue StandardError => error
         failed(error)
       end

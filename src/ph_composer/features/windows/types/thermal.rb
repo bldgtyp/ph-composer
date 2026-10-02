@@ -6,11 +6,13 @@ module PhComposer
     # Missing terms withhold the corresponding value; an incomplete element never contributes zero.
     module Thermal
       SIDES = Types::SIDES
+
       module_function
 
       def number(value, positive: false, signed: false)
         return nil unless value.is_a?(Numeric) && value.finite? &&
-                (signed || (positive ? value > 0 : value >= 0))
+                          (signed || (positive ? value > 0 : value >= 0))
+
         value.to_f
       end
 
@@ -25,7 +27,7 @@ module PhComposer
           return { "elements" => [],
                    "findings" => [finding("window_type.dimensions_incomplete", "Enter all grid dimensions.")],
                    "uw_w_m2k" => nil,
-                "u_effective_w_m2k" => nil, "complete" => false }
+                   "u_effective_w_m2k" => nil, "complete" => false }
         end
         layout = Grid.new(record)
         input = products.merge("default_install_id" => default_id)
@@ -57,6 +59,7 @@ module PhComposer
         if classifications.include?(:partial)
           classifications.each_with_index do |classification, i|
             next unless classification == :partial
+
             detail.fetch("edges")[i]["install"] = { "source" => "unsupported_partial", "id" => nil, "psi_w_mk" => nil }
           end
           detail["h_install_w_k"] = nil
@@ -72,7 +75,7 @@ module PhComposer
         frame_mismatches(detail, cell, products.fetch("frames"))
         construction, installation = detail.values_at("h_construction_w_k", "h_install_w_k")
         detail["complete"] = !construction.nil? && !installation.nil? && !detail["g_value"].nil? &&
-                !!operation_complete?(cell)
+                             !!operation_complete?(cell)
         detail["uw_w_m2k"] = construction && construction / detail.fetch("area_m2")
         detail["u_effective_w_m2k"] = construction && installation &&
                                       (construction + installation) / detail.fetch("area_m2")
@@ -81,11 +84,14 @@ module PhComposer
 
       def frame_mismatches(detail, cell, frames)
         return unless cell["operation"]
+
         cell.fetch("frames").each do |side, id|
           frame = frames[id]
           next unless frame
+
           operation = frame["operation"].to_s.downcase
           next unless %w[fixed swing slide].include?(operation) && operation != cell["operation"]["type"]
+
           detail.fetch("findings") << finding("window_type.frame_operation_mismatch",
                                               "#{side}: frame operation #{operation} differs from element operation.",
                                               :side => side)
@@ -94,11 +100,13 @@ module PhComposer
 
       def total(details, field)
         return nil if details.empty? || details.any? { |detail| detail[field].nil? }
+
         details.sum { |detail| detail.fetch(field) }
       end
 
       def install(input, cell, side, shared)
         return { "source" => "shared", "id" => nil, "psi_w_mk" => 0.0 } if shared
+
         resolution = EdgeResolution.resolve(cell, side, :perimeter, input["default_install_id"])
         id = resolution.effective_id
         record = input.fetch("psi_install_types")[id]
@@ -117,7 +125,7 @@ module PhComposer
           { "side" => side, "length_m" => i.even? ? width : height, "install" => resolved }
         end
         result = { "id" => cell.fetch("id"), "area_m2" => width * height, "edges" => edges, "findings" => findings,
-                "h_construction_w_k" => nil, "h_install_w_k" => nil }
+                   "h_construction_w_k" => nil, "h_install_w_k" => nil }
         if edges.all? { |edge| !edge.fetch("install")["psi_w_mk"].nil? }
           result["h_install_w_k"] = edges.sum do |edge|
             edge.fetch("length_m") * edge.fetch("install").fetch("psi_w_mk")
@@ -159,7 +167,9 @@ module PhComposer
                                               "A Glazing Ug, Frame Uf or Frame psi-g value is missing.")
         else
           result["h_construction_w_k"] = result.fetch("h_glazing_w_k") +
-            result.fetch("edges").sum { |edge| edge.fetch("h_frame_w_k") + edge.fetch("h_spacer_w_k") }
+                                         result.fetch("edges").sum { |edge|
+                                           edge.fetch("h_frame_w_k") + edge.fetch("h_spacer_w_k")
+                                         }
         end
         result
       end

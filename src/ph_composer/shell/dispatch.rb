@@ -114,6 +114,7 @@ module PhComposer
       proposal = Operations::Proposal.new
       value = action.handler.call(request_for(session, params, action, proposal), proposal)
       raise proposal.refusal if proposal.refusal
+
       check_result!(action, value)
       Outcome.completed(:revision => session.revision, :value => value, :affected => proposal.affected,
                         :findings => proposal.findings, :proposal_digest => proposal.digest,
@@ -210,6 +211,7 @@ module PhComposer
       unless context.is_a?(OperationContext)
         raise CodedError.new("request.malformed", "The context must come from PhComposer::API.connect.")
       end
+
       unless context.api_major == API::MAJOR
         raise CodedError.new("request.api_version", "This build answers API #{API::MAJOR}, " \
                                                     "not #{context.api_major.inspect}.")
@@ -257,6 +259,7 @@ module PhComposer
       entry = session.outcomes.lookup(caller.handle, sequence)
       if entry
         return pending(session) if entry.pending?
+
         same_request = entry.digest == request_digest(name, params, expected_revision, proposal_digest)
         return session.outcomes.retained(caller.handle, sequence) if same_request
 
@@ -276,7 +279,7 @@ module PhComposer
 
     def pending(session)
       Outcome.refused("request.pending", "That request is still running.", :status => "pending",
-                                                                            :revision => session.revision)
+                                                                           :revision => session.revision)
     end
 
     def refuse_if_busy!(session)
@@ -339,6 +342,7 @@ module PhComposer
       if expected_proposal_digest && expected_proposal_digest != proposal.digest
         raise CodedError.new("proposal.changed", "The proposed change no longer matches the preview.")
       end
+
       if proposal.empty?
         # Nothing to write is not nothing to say. A handler that only had findings, such as a Solve
         # whose every candidate was a sliver, still has to hand them back.
@@ -355,8 +359,8 @@ module PhComposer
       Diagnostics.log("operation_failed", "operation" => action.name, "code" => "operation.failed",
                                           "error_class" => error.class.name)
       Outcome.refused("operation.failed", "The change could not be prepared.", :status => "failed",
-                                                                                :revision => session.revision,
-                                                                                :mutation => true)
+                                                                               :revision => session.revision,
+                                                                               :mutation => true)
       # `failed` with effect `none`: the error came before any operation opened.
     end
 
@@ -391,7 +395,7 @@ module PhComposer
       Diagnostics.log("operation_failed", "operation" => name, "code" => "operation.failed",
                                           "error_class" => error.class.name)
       Outcome.refused("operation.failed", "The request could not be answered.", :status => "failed",
-                                                                                 :revision => session&.revision)
+                                                                                :revision => session&.revision)
     end
 
     def coded_outcome(error, session, mutation: false)

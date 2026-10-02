@@ -27,7 +27,7 @@ class WindowUnitRecordsTest < PhComposerTestCase
     U.read(unit).fetch("user_data").fetch("tags") << "changed"
     assert_equal record, U.read(unit)
     assert_equal [PhComposer::Windows::TYPE_KIND, record.fetch("window_type_id")],
-      [U::RECORD_KIND.references.first.target_kind, U::RECORD_KIND.references.first.ids(record).first]
+                 [U::RECORD_KIND.references.first.target_kind, U::RECORD_KIND.references.first.ids(record).first]
   end
 
   def test_invalid_anchor_version_metadata_and_entity_kind_refuse_before_write
@@ -50,7 +50,8 @@ class WindowUnitRecordsTest < PhComposerTestCase
     assert_equal [record.fetch("id")], entries.map { |entry| entry.record.fetch("id") }.uniq
     assert_equal before, [U.read(first), U.read(second)]
     assert_equal second, U::Occurrences.resolve(model,
-      { "unit_id" => record.fetch("id"), "entity_path" => [second.persistent_id] }).entity
+                                                { "unit_id" => record.fetch("id"),
+                                                  "entity_path" => [second.persistent_id] }).entity
   end
 
   def test_shared_parent_storage_is_readable_but_not_mutable

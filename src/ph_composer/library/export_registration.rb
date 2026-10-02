@@ -33,33 +33,39 @@ module PhComposer
         text = { "type" => "string", "minLength" => 1 }
         counted = Library.object({ "kind" => text, "count" => { "type" => "integer", "minimum" => 0 } })
         omitted = Library.object({ "record_kind" => text, "id" => text,
-          "fields" => { "type" => "array", "items" => text }, "reason" => text }, :optional => ["id"])
+                                   "fields" => { "type" => "array", "items" => text }, "reason" => text },
+                                 :optional => ["id"])
         { "kinds" => { "type" => "array", "items" => counted },
           "omissions" => { "type" => "array", "items" => omitted } }
       end
 
       def install(feature)
         shape = Library.object(summary_fields.merge("library_id" => Library::TEXT, "library_name" => Library::TEXT,
-          "identity" => { "type" => "string", "enum" => %w[new update] }, "written" => { "type" => "boolean" }))
+                                                    "identity" => { "type" => "string", "enum" => %w[new update] },
+                                                    "written" => { "type" => "boolean" }))
         feature.file_export("#{FEATURE_ID}.export_file",
-          :description => "Write local definitions to a library file the user chooses in the native save " \
-                          "dialog; export_preview shows what it will hold.",
-          :params => params, :result => shape, :approval => ExportWorkflow::APPROVAL,
-          :examples => [{}, { "scope" => "selected", "records" => [
-            { "record_kind" => "example_parts", "id" => "part_AAAAAAAAAAAA" }],
-            "identity" => "new" }]) do |request|
+                            :description => "Write local definitions to a library file the user chooses in the " \
+                                            "native save dialog; export_preview shows what it will hold.",
+                            :params => params, :result => shape, :approval => ExportWorkflow::APPROVAL,
+                            :examples => [{}, { "scope" => "selected", "records" => [
+                                                                         { "record_kind" => "example_parts",
+                                                                           "id" => "part_AAAAAAAAAAAA" }
+                                                                       ],
+                                                "identity" => "new" }]) do |request|
           ExportWorkflow.run(request)
         end
         preview_shape = Library.object(summary_fields.merge("projection_digest" => Library::TEXT,
-          "revision" => { "type" => "integer", "minimum" => 0 }))
+                                                            "revision" => {
+                                                              "type" => "integer", "minimum" => 0
+                                                            }))
         preview_params = Library.object(params.fetch("properties").slice("scope", "kinds", "records"),
                                         :optional => %w[scope kinds records])
         feature.query("#{FEATURE_ID}.export_preview",
-          :description => "Review local library export counts and omissions.",
-          :params => preview_params, :result => preview_shape, :examples => [{}]) do |request|
+                      :description => "Review local library export counts and omissions.",
+                      :params => preview_params, :result => preview_shape, :examples => [{}]) do |request|
           projection = ExportProjection.build(request)
           ExportProjection.summary(projection).merge("projection_digest" => projection.fetch("projection_digest"),
-                                                    "revision" => request.session.revision)
+                                                     "revision" => request.session.revision)
         end
       end
     end

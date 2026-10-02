@@ -32,13 +32,13 @@ module PhComposer
                    remove(request, proposal, occurrences, items, expected)
                  end
           cleanup(request, proposal, request.engine.find(TYPE_KIND, from),
-            :moved_ids => items.map { |item| item.entity.persistent_id }, :target_type => target)
+                  :moved_ids => items.map { |item| item.entity.persistent_id }, :target_type => target)
           plan
         end
 
         def cleanup(request, proposal, type, moved_ids: [], target_type: nil)
           step = TypeCleanupStep.new(:model => request.model, :type_id => type.fetch("id"),
-            :moved_ids => moved_ids, :target_type => target_type)
+                                     :moved_ids => moved_ids, :target_type => target_type)
           proposal.add_step(step, :scopes => [step.scope]) if step.needed?
         end
 
@@ -47,10 +47,11 @@ module PhComposer
           others = reads.other_polygons(:except => items.map(&:path))
           source = request.engine.find(TYPE_KIND, items.first.record.fetch("window_type_id"))
           step = SwapStep.new(:model => request.model, :target_type => target, :expected_records => expected,
-            :items => items.map do |item|
-              { :reference => item.reference, :expected_record => expected.fetch(item.path), :from_type => source,
-                :host => reads.host(item), :other_polygons_m => others }
-            end)
+                              :items => items.map do |item|
+                                          { :reference => item.reference, :expected_record => expected.fetch(item.path),
+                                            :from_type => source,
+                                            :host => reads.host(item), :other_polygons_m => others }
+                                        end)
           proposal.add_step(step, :scopes => [step.scope]) if step.needed?
           step.reference_plan
         end
@@ -58,22 +59,24 @@ module PhComposer
         def remove(request, proposal, occurrences, items, expected)
           steps = items.map do |item|
             RemoveStep.new(:model => request.model, :reference => item.reference,
-              :expected_record => expected.fetch(item.path))
+                           :expected_record => expected.fetch(item.path))
           end
           removed_paths = items.map(&:path)
-          plan = Records::ReferencePlan.new(:entries => occurrences.reject { |item|
- removed_paths.include?(item.path) }.map do |item|
-            Records::ReferenceEntry.new(:kind => REFERENCE_KIND, :key => item.path,
-              :record => expected.fetch(item.path))
-          end, :removals => steps.zip(items).map { |step, item| step.removal(:before_record => item.record) })
+          plan = Records::ReferencePlan.new(
+            :entries => occurrences.reject { |item| removed_paths.include?(item.path) }.map do |item|
+              Records::ReferenceEntry.new(:kind => REFERENCE_KIND, :key => item.path,
+                                          :record => expected.fetch(item.path))
+            end,
+            :removals => steps.zip(items).map { |step, item| step.removal(:before_record => item.record) }
+          )
           steps.each do |step|
             request.engine.check_identity_removal!(REFERENCE_KIND, step.affected.first.fetch("id"),
-              :change_set => proposal.record_changes, :reference_plan => plan)
+                                                   :change_set => proposal.record_changes, :reference_plan => plan)
           end
           steps.each do |step|
             path = step.affected.first.fetch("reference").fetch("entity_path")
             proposal.add_step(step, :scopes => [MutationScope.new,
-              PhComposer::Operations::EntityScope.new(path[0...-1])])
+                                                PhComposer::Operations::EntityScope.new(path[0...-1])])
           end
           plan
         end

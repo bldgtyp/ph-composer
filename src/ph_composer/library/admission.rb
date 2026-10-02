@@ -11,6 +11,7 @@ module PhComposer
       MAX_ROWS = 20_000
       MAX_BYTES = 64 * 1024 * 1024
       NOTE_FIELDS = %w[code kind library_id record_id index].freeze
+
       module_function
 
       def call(batch, kind:, adapter:)
@@ -20,6 +21,7 @@ module PhComposer
         if batch.rows.length > MAX_ROWS || JSON.generate(batch.to_h).bytesize > MAX_BYTES
           raise Error.new("library.catalog_budget", "The provider response exceeds the catalog budget.")
         end
+
         warnings = notes(batch.warnings)
         unavailable = notes(batch.unavailable)
         duplicate = batch.rows.group_by { |row| [row.fetch("library_id"), row.fetch("record_id")] }
@@ -34,12 +36,14 @@ module PhComposer
         end
         rows = batch.rows.filter_map do |row|
           next if duplicate.include?(row.fetch("library_id")) || unsupported.include?(row.fetch("library_id"))
+
           snapshot, codes = LibraryFile.normalize_row(row.fetch("snapshot"), adapter.wire_schema)
           warnings.concat(codes.map do |code|
             { "code" => code, "kind" => kind, "library_id" => row.fetch("library_id"),
               "record_id" => row.fetch("record_id") }
           end)
           next unless snapshot
+
           unless semantic_row?(snapshot, adapter)
             warnings << { "code" => "library.row_semantic_invalid", "kind" => kind,
                           "library_id" => row.fetch("library_id"), "record_id" => row.fetch("record_id") }

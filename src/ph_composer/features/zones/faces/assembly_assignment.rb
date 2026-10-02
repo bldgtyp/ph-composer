@@ -12,6 +12,7 @@ module PhComposer
         MISMATCHES = { "face_type" => ["type", "face.assembly_type_mismatch"],
                        "boundary_condition" => ["exterior_condition", "face.assembly_exterior_condition_mismatch"] }
                      .freeze
+
         module_function
 
         def catalog(request)
@@ -104,6 +105,7 @@ module PhComposer
           if unique.values.any? { |group| group.uniq.length > 1 }
             raise CodedError.new("params.invalid", "Repeated Face targets disagree on identity or expected values.")
           end
+
           Faces.check_limit!(unique.length)
           index = Zones::Index.new(request.model)
           updates = unique.values.filter_map do |group|
@@ -117,7 +119,8 @@ module PhComposer
         end
 
         def target_record(request, reference, index)
-          occurrence = Occurrences.resolve_face(request.model, reference, :mutable => true,
+          occurrence = Occurrences.resolve_face(request.model, reference,
+                                                :mutable => true,
                                                 :allow_unassigned => reference["entity_id"].nil?, :index => index)
           Zones::Selection.resolve(request.model, occurrence.zone.reference, index)
           before = FACE_STORE.read(occurrence.entity)

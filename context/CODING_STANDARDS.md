@@ -8,9 +8,10 @@ Rules about the product and its language live in `../docs/` and this folder, chi
 Read [TECH_STACK.md](TECH_STACK.md) before work that touches observers, transactions, the pinned
 runtime or the real-host loop.
 
-The lint rule sets that enforce part of this are `.rubocop.yml`, `eslint.config.mjs` and
-`[tool.ruff.lint]` in `pyproject.toml`; `make lint` runs all three. Everything below that a linter
-cannot express is here because a reader has to apply it.
+The lint rule sets that enforce part of this are `.rubocop.yml` (Ruby layout, line length, size
+limits and two style cops), `eslint.config.mjs` and `[tool.ruff.lint]` in `pyproject.toml`;
+`make lint` runs all three. Everything below that a linter cannot express is here because a reader
+has to apply it.
 
 ## Layering
 
@@ -139,6 +140,10 @@ tiny helpers that force readers to jump between files. Assess responsibility, br
 amount of context a reader must retain alongside size and complexity measurements.
 
 The lint configuration sets the 120 ceiling in all three languages and carries method and class
-size limits as review signals. A justified local exception records why the longer unit is easier
+size limits as review signals. Ruby layout is RuboCop's whole `Layout` department: keys and
+continued arguments align with the first one, a first element on its own line is indented one step,
+a continued chain or operation aligns with its first operand, and a guard clause is followed by a
+blank line. `.rubocop.yml` records each chosen style; break a long line at an argument or operator
+boundary, never mid-expression. A justified local exception records why the longer unit is easier
 to understand; it does not disable unrelated checks. Do not weaken an existing gate
 opportunistically to pass a feature change.

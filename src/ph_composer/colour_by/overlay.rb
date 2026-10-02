@@ -86,11 +86,11 @@ module PhComposer
 
         view.drawing_color = fill_colour(colour)
         view.draw2d(GL_TRIANGLES, [
-                      Geom::Point3d.new(left, top, 0), Geom::Point3d.new(left + HUD_SWATCH, top, 0),
-                      Geom::Point3d.new(left + HUD_SWATCH, top + HUD_SWATCH, 0),
-                      Geom::Point3d.new(left, top, 0), Geom::Point3d.new(left + HUD_SWATCH, top + HUD_SWATCH, 0),
-                      Geom::Point3d.new(left, top + HUD_SWATCH, 0)
-                    ])
+          Geom::Point3d.new(left, top, 0), Geom::Point3d.new(left + HUD_SWATCH, top, 0),
+          Geom::Point3d.new(left + HUD_SWATCH, top + HUD_SWATCH, 0),
+          Geom::Point3d.new(left, top, 0), Geom::Point3d.new(left + HUD_SWATCH, top + HUD_SWATCH, 0),
+          Geom::Point3d.new(left, top + HUD_SWATCH, 0)
+        ])
       end
 
       def draw_hud_text(view, left, top, text)

@@ -8,8 +8,10 @@ class WindowPlacementOffsetsTest < PhComposerTestCase
   OFFSETS = PhComposer::Windows::Placement::Offsets
 
   def geometry(rotation = 0)
-    PhComposer::FaceGeometry::Snapshot.new(:normal => [0.0, -1.0, 0.0],
-      :loops_m => [[[0.0, 2.0, 0.0], [4.0, 2.0, 0.0], [4.0, 2.0, 3.0], [0.0, 2.0, 3.0]].rotate(rotation)])
+    PhComposer::FaceGeometry::Snapshot.new(
+      :normal => [0.0, -1.0, 0.0],
+      :loops_m => [[[0.0, 2.0, 0.0], [4.0, 2.0, 0.0], [4.0, 2.0, 3.0], [0.0, 2.0, 3.0]].rotate(rotation)]
+    )
   end
 
   def test_offsets_have_stable_host_corner_origin_after_loop_rotation

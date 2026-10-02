@@ -12,10 +12,12 @@ module PhComposer
       module_function
 
       def install(feature)
-        feature.query("#{FEATURE_ID}.export_preflight", :description => "Material and Assembly export conditions.",
+        feature.query("#{FEATURE_ID}.export_preflight",
+                      :description => "Material and Assembly export conditions.",
                       :params => { "type" => "object", "properties" => {}, "additionalProperties" => false },
                       :result => Export::PREFLIGHT_RESULT, :examples => [{}]) { |request| preflight(request) }
-        feature.export_contributor(SECTION, :section_version => 1, :preflight => "#{FEATURE_ID}.export_preflight",
+        feature.export_contributor(SECTION,
+                                   :section_version => 1, :preflight => "#{FEATURE_ID}.export_preflight",
                                    :user_data_keys => %w[ph_composer.assembly_id ph_composer.membrane_layers],
                                    :result => { "construction_definitions" => [Export::Privacy.fields(
                                      %w[assembly_id name thermal_layer_count membrane_names defaulted_material_ids]

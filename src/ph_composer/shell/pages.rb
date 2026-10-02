@@ -55,6 +55,7 @@ module PhComposer
       if asked != expected.reject { |key, _value| key == "revision" }
         raise CodedError.new("params.invalid", "That cursor belongs to another query, filter or Model.")
       end
+
       unless decoded["revision"] == expected["revision"]
         raise CodedError.new("query.cursor_expired", "What this page was read from has changed; start again " \
                                                      "from the first page.")

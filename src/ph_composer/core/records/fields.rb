@@ -37,7 +37,8 @@ module PhComposer
 
           current = parent[leaf]
           parent[leaf] = current.is_a?(Array) ? current.map { |id|
- mapping.fetch(id, id) } : mapping.fetch(current, current)
+                                                  mapping.fetch(id, id)
+                                                } : mapping.fetch(current, current)
         end
         copy
       end

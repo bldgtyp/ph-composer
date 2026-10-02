@@ -14,7 +14,7 @@ class WindowUnitMutationScopeTest < PhComposerTestCase
     @model = Sketchup.active_model
     @type = window_record
     @definition = U::DefinitionWriter.create(:model => @model, :type => @type,
-      :plan => U::DefinitionPlan.build(@type))
+                                             :plan => U::DefinitionPlan.build(@type))
     @scope = U::MutationScope.new(:definition_ids => [@definition.persistent_id])
   end
 
@@ -72,17 +72,17 @@ class WindowUnitMutationScopeTest < PhComposerTestCase
   def test_canonical_index_is_detached_and_dangling_pointer_stays_capturable_for_rebuild
     type_id = @type.fetch("id")
     U::DefinitionIndex::STORE.write(@model, "schema_version" => 1,
-      "definitions" => { type_id => @definition.persistent_id })
+                                            "definitions" => { type_id => @definition.persistent_id })
     before = @scope.capture(@model)
     U::DefinitionIndex.read(@model)[type_id] = 99
     assert @scope.unchanged?(@model, before)
     U::DefinitionIndex::STORE.write(@model, "schema_version" => 1,
-      "definitions" => { type_id => @definition.persistent_id + 1 })
+                                            "definitions" => { type_id => @definition.persistent_id + 1 })
     refute @scope.unchanged?(@model, before)
     dangling = @scope.capture(@model)
     assert @scope.unchanged?(@model, dangling)
     U::DefinitionIndex::STORE.write(@model, "schema_version" => 1,
-      "definitions" => { type_id => @definition.persistent_id })
+                                            "definitions" => { type_id => @definition.persistent_id })
     refute @scope.unchanged?(@model, dangling)
   end
 
@@ -171,7 +171,7 @@ class WindowUnitMutationScopeTest < PhComposerTestCase
     refute @scope.unchanged?(@model, before)
     first.transformation = Geom::Transformation.new
     first.glued_to = @model.entities.add_face([Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(1, 0, 0),
-      Geom::Point3d.new(0, 1, 0)])
+                                               Geom::Point3d.new(0, 1, 0)])
     refute @scope.unchanged?(@model, before)
   end
 
@@ -180,13 +180,13 @@ class WindowUnitMutationScopeTest < PhComposerTestCase
     before = @scope.capture(@model)
     @model.start_operation("Scope proof", true, false, false)
     U::DefinitionWriter.rewrite(:model => @model, :definition => @definition,
-      :type => @type, :plan => U::DefinitionPlan.build(@type))
+                                :type => @type, :plan => U::DefinitionPlan.build(@type))
     @model.definitions.add("Ghost")
     @model.materials.add("Ghost")
     U::DefinitionIndex::STORE.write(@model, "schema_version" => 1, "definitions" => {})
     unit.transformation = Geom::Transformation.translation([1, 0, 0])
     unit.glued_to = @model.entities.add_face([Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(1, 0, 0),
-      Geom::Point3d.new(0, 1, 0)])
+                                              Geom::Point3d.new(0, 1, 0)])
     @model.abort_operation
     assert @scope.unchanged?(@model, before)
     @model.start_operation("Scope proof", true, false, false)

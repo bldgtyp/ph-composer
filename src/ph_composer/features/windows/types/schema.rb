@@ -14,14 +14,17 @@ module PhComposer
                "items" => { "type" => "integer", "minimum" => 0 } }.freeze
       SIDE_SCHEMA = SchemaShapes.object(SIDES.to_h { |side| [side, ID] }).freeze
       OPERATION = SchemaShapes.object({ "type" => { "type" => "string", "enum" => %w[fixed swing slide] },
-                "directions" => { "type" => "array",
-                "items" => { "type" => "string",
-                "enum" => %w[left right up down] } } }).merge("type" => %w[object null]).freeze
+                                        "directions" => { "type" => "array",
+                                                          "items" => { "type" => "string",
+                                                                       "enum" => %w[left right up
+                                                                                    down] } } }).merge("type" => %w[
+                                                                                      object null
+                                                                                    ]).freeze
       ELEMENT = SchemaShapes.object({
         "id" => { "type" => "string" }, "name" => { "type" => "string" },
-                "kind" => { "type" => "string", "enum" => %w[glazed empty] },
-                "row_span" => SPAN, "column_span" => SPAN, "glazing_id" => ID,
-                "frames" => SIDE_SCHEMA, "installs" => SIDE_SCHEMA, "operation" => OPERATION
+        "kind" => { "type" => "string", "enum" => %w[glazed empty] },
+        "row_span" => SPAN, "column_span" => SPAN, "glazing_id" => ID,
+        "frames" => SIDE_SCHEMA, "installs" => SIDE_SCHEMA, "operation" => OPERATION
       }).freeze
       BANDS = { "type" => "array", "minItems" => 1, "maxItems" => 40,
                 "items" => { "type" => %w[number null], "exclusiveMinimum" => 0, "x-unit" => "m" } }.freeze
@@ -92,15 +95,20 @@ module PhComposer
       ])
       SNAPSHOT_SCHEMA = Fields.source_snapshot_schema(FIELDS)
       REFERENCES = [Records::Reference.new(:key => "elements[].glazing_id", :target_kind => GLAZING_KIND,
-        :cardinality => "one")] +
-                { "frames" => FRAME_KIND, "installs" => PSI_INSTALL_KIND }.flat_map do |field, target|
-                  SIDES.map { |side| Records::Reference.new(:key => "elements[].#{field}.#{side}",
-                    :target_kind => target, :cardinality => "one") }
-                end
+                                           :cardinality => "one")] +
+                   { "frames" => FRAME_KIND, "installs" => PSI_INSTALL_KIND }.flat_map do |field, target|
+                     SIDES.map { |side|
+                       Records::Reference.new(:key => "elements[].#{field}.#{side}",
+                                              :target_kind => target, :cardinality => "one")
+                     }
+                   end
       KIND = Records::RecordKind.new(:id => TYPE_KIND, :label => "Window Type", :schema_version => 1,
-        :id_prefix => "wnt", :fields => FIELDS, :references => REFERENCES,
-        :validate => ->(values) { Fields.problems(values) + Fields.source_problems(values["source"], SNAPSHOT_SCHEMA) +
-  layout_problems(values) })
+                                     :id_prefix => "wnt", :fields => FIELDS, :references => REFERENCES,
+                                     :validate => ->(values) {
+                                                    Fields.problems(values) + Fields.source_problems(values["source"],
+                                                                                                     SNAPSHOT_SCHEMA) +
+                                                    layout_problems(values)
+                                                  })
 
       def references(record)
         KIND.references.flat_map { |reference| reference.ids(record).map { |id| [reference.target_kind, id] } }.uniq

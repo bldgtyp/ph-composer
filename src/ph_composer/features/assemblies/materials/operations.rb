@@ -23,8 +23,8 @@ module PhComposer
           end
           result = Commands.update_material(record, :values => values)
           request.engine.propose_update(MATERIAL_KIND, id, proposal,
-            :values => Definitions.changed_values(Schema::KIND, record, result.record),
-            :expected_values => expected_values, :user_data => user_data)
+                                        :values => Definitions.changed_values(Schema::KIND, record, result.record),
+                                        :expected_values => expected_values, :user_data => user_data)
           { "id" => id }
         end
 
@@ -49,10 +49,11 @@ module PhComposer
               next unless Assembly::Schema::MATERIAL_REFERENCE.ids(record).include?(id)
 
               result = Commands.replace_material(record, :material_id => id, :replacement => replacement,
-                                                          :materials => catalog)
+                                                         :materials => catalog)
               request.engine.propose_update(ASSEMBLY_KIND, record.fetch("id"), proposal,
-                :values => Definitions.changed_values(Assembly::Schema::KIND, record, result.record),
-                :expected_values => { "layers" => record.fetch("layers") })
+                                            :values => Definitions.changed_values(Assembly::Schema::KIND, record,
+                                                                                  result.record),
+                                            :expected_values => { "layers" => record.fetch("layers") })
             end
           end
           request.engine.propose_delete(MATERIAL_KIND, id, proposal, :expected_values => expected_values)

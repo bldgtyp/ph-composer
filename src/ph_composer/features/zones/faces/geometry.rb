@@ -30,7 +30,6 @@ module PhComposer
           boundary = highest_mm <= occurrence.zone.record.fetch("ground_depth_mm") ? "Ground" : "Outdoors"
           { "face_type" => face_type, "boundary_condition" => boundary }
         end
-
       end
     end
   end

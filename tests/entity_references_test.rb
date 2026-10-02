@@ -43,7 +43,7 @@ class EntityReferencesTest < PhComposerTestCase
     found.record["face_type"] = "Floor"
     assert_equal before, FACE::FACE_STORE.read(faces.first)
     assert_equal ZONES::ZONE_STORE.read(zone), @engine.resolve_reference(ZONES::REFERENCE_KIND,
-                                                                       zone_id(zone)).record
+                                                                         zone_id(zone)).record
     assert_equal "reference.invalid", refusal { @engine.resolve_reference(ZONES::REFERENCE_KIND, face_id(faces.first)) }
     assert_equal "reference.invalid", refusal { @engine.resolve_reference(FACE::REFERENCE_KIND, "fac_000000999999") }
   end
@@ -72,7 +72,7 @@ class EntityReferencesTest < PhComposerTestCase
     assert_equal [100, 101], plan.entries.first.key
     assert_equal record, plan.entries.first.record
     assert_equal record, @engine.resolve_reference(FACE::REFERENCE_KIND, record.fetch("id"),
-                                                 :reference_plan => plan).record
+                                                   :reference_plan => plan).record
   end
 
   def test_staged_catalog_reference_results_cannot_change_what_apply_persists
@@ -115,9 +115,9 @@ class EntityReferencesTest < PhComposerTestCase
     _group, faces = zone(100, [101, 102])
     removal = removal_for(faces.first, [100, 101])
     replacement = R::ReferenceEntry.new(:kind => FACE::REFERENCE_KIND, :key => [100, 102],
-                                      :record => FACE::FACE_STORE.read(faces.last).merge("face_type" => "Floor"))
+                                        :record => FACE::FACE_STORE.read(faces.last).merge("face_type" => "Floor"))
     addition = R::ReferenceEntry.new(:kind => FACE::REFERENCE_KIND, :key => [100, 103],
-                                   :record => replacement.record.merge("id" => "fac_000000000103"))
+                                     :record => replacement.record.merge("id" => "fac_000000000103"))
     plan = R::ReferencePlan.new(:entries => [replacement, addition], :removals => [removal])
 
     code = refusal do
@@ -127,7 +127,7 @@ class EntityReferencesTest < PhComposerTestCase
     assert_equal "Floor", @engine.resolve_reference(FACE::REFERENCE_KIND, face_id(faces.last),
                                                     :reference_plan => plan).record.fetch("face_type")
     assert_equal [100, 103], @engine.resolve_reference(FACE::REFERENCE_KIND, "fac_000000000103",
-                                                     :reference_plan => plan).key
+                                                       :reference_plan => plan).key
     assert_empty R::ReferencePlan.new(:entries => []).removals
   end
 
@@ -159,8 +159,10 @@ class EntityReferencesTest < PhComposerTestCase
       plan = R::ReferencePlan.new(:entries => [], :removals => [
         R::ReferenceRemoval.new(:kind => kind, :key => key, :before => expected)
       ])
-      assert_equal code, refusal { @engine.resolve_reference(FACE::REFERENCE_KIND, before.fetch("id"),
-                                                            :reference_plan => plan) }
+      assert_equal code, refusal {
+                           @engine.resolve_reference(FACE::REFERENCE_KIND, before.fetch("id"),
+                                                     :reference_plan => plan)
+                         }
     end
     assert_equal before, FACE::FACE_STORE.read(faces.first)
   end
@@ -168,10 +170,10 @@ class EntityReferencesTest < PhComposerTestCase
   def test_removal_of_another_kind_is_guarded_when_resolving_a_target
     group, faces = zone(100, [101])
     removal = R::ReferenceRemoval.new(:kind => ZONES::REFERENCE_KIND, :key => [100],
-                                     :before => ZONES::ZONE_STORE.read(group))
+                                      :before => ZONES::ZONE_STORE.read(group))
     plan = R::ReferencePlan.new(:entries => [], :removals => [removal])
     assert_equal [100, 101], @engine.resolve_reference(FACE::REFERENCE_KIND, face_id(faces.first),
-                                                     :reference_plan => plan).key
+                                                       :reference_plan => plan).key
     ZONES::ZONE_STORE.write(group, removal.before.merge("name" => "Changed"))
     code = refusal do
       @engine.resolve_reference(FACE::REFERENCE_KIND, face_id(faces.first), :reference_plan => plan)
@@ -183,7 +185,7 @@ class EntityReferencesTest < PhComposerTestCase
     id = "outside.removal.object"
     entry = R::ReferenceEntry.new(:kind => id, :key => [7], :record => { "id" => "obj_7" })
     target = R::ReferenceTarget.new(:id => id, :label => "Outside object",
-                                   :records => ->(_model) { [entry, entry] }, :validate => ->(_record) { [] })
+                                    :records => ->(_model) { [entry, entry] }, :validate => ->(_record) { [] })
     fixture = Module.new do
       define_singleton_method(:install) do |registry|
         registry.feature("outside.removal", :contract_version => 1).reference_target(target)
@@ -203,7 +205,7 @@ class EntityReferencesTest < PhComposerTestCase
     _group, faces = zone(100, [101, 102])
     faces.each do |face|
       FACE::FACE_STORE.write(face, FACE::FACE_STORE.read(face).merge("boundary_condition" => "AttachedZone",
-                                                                  "attached_zone_id" => record.fetch("id")))
+                                                                     "attached_zone_id" => record.fetch("id")))
     end
     orphan = make_face(201)
     @model.entities << orphan
@@ -212,8 +214,10 @@ class EntityReferencesTest < PhComposerTestCase
     [removals.first(1), removals].each do |partial|
       changes = R::ChangeSet.new
       plan = R::ReferencePlan.new(:entries => [], :removals => partial)
-      assert_equal "reference.in_use", refusal { @engine.propose_delete(ATTACHED.id, record.fetch("id"), changes,
-                                                                        :reference_plan => plan) }
+      assert_equal "reference.in_use", refusal {
+                                         @engine.propose_delete(ATTACHED.id, record.fetch("id"), changes,
+                                                                :reference_plan => plan)
+                                       }
       assert_equal "reference.in_use", changes.refusal.code
       assert_equal record, ATTACHED.store.read(@model, record.fetch("id"))
     end
@@ -238,10 +242,12 @@ class EntityReferencesTest < PhComposerTestCase
     engine = R::Engine.new(@model, PhComposer::Registry.current.catalog)
     plan = R::ReferencePlan.new(:entries => [], :removals => [removal_for(faces.first, [100, 101])])
 
-    assert_equal "reference.in_use", refusal { engine.check_identity_removal!(ATTACHED.id, record.fetch("id"),
-                                                                            :reference_plan => plan) }
+    assert_equal "reference.in_use", refusal {
+                                       engine.check_identity_removal!(ATTACHED.id, record.fetch("id"),
+                                                                      :reference_plan => plan)
+                                     }
     all = R::ReferencePlan.new(:entries => [], :removals => [removal_for(faces.first, [100, 101]),
-                                                          removal_for(faces.last, [100, 102])])
+                                                             removal_for(faces.last, [100, 102])])
     assert_nil engine.check_identity_removal!(ATTACHED.id, record.fetch("id"), :reference_plan => all)
   end
 
@@ -256,7 +262,7 @@ class EntityReferencesTest < PhComposerTestCase
       define_singleton_method(:install) do |registry|
         registry.feature("test.reference_read", :contract_version => 1).query(
           "test.reference_read.resolve", :description => "Resolve the fixture Face.",
-          :params => { "type" => "object" }, :result => { "type" => "object" }
+                                         :params => { "type" => "object" }, :result => { "type" => "object" }
         ) { |request| request.engine.resolve_reference(FACE::REFERENCE_KIND, id).record }
       end
     end
@@ -388,12 +394,12 @@ class EntityReferencesTest < PhComposerTestCase
     assert_equal incoming_before, FACE::FACE_STORE.read(outside.first)
     assert_equal original_before, first.map { |face| FACE::FACE_STORE.read(face) }
     assert_equal FACE::FACE_STORE.read(first.first), @engine.resolve_reference(FACE::REFERENCE_KIND,
-                                                                           face_id(first.first)).record
+                                                                               face_id(first.first)).record
   end
 
   def test_split_keeper_receives_incoming_while_new_pieces_remap_self_references
     group, pieces = zone(100, [101, 102], :record_ids => ["zon_000000000100", "fac_000000000101",
-                                                                       "fac_000000000101"])
+                                                          "fac_000000000101"])
     external, outside = zone(200, [201])
     old_id = face_id(pieces.first)
     pieces.each { |face| set_data(FACE::FACE_STORE, face, "self" => old_id, "owner" => zone_id(group)) }
@@ -407,14 +413,14 @@ class EntityReferencesTest < PhComposerTestCase
     ref = ZONES::Occurrences.zones(@model).find { |zone| zone.path == [100] }.reference
 
     result = invoke("ph_composer.zones.repair_split_face", "zone" => ref, "face_id" => old_id,
-                    "zones" => [ref], "retaining_entity_path" => [101])
+                                                           "zones" => [ref], "retaining_entity_path" => [101])
 
     assert_equal %w[completed committed], result.values_at("status", "effect")
     assert_equal old_id, face_id(pieces.first)
     refute_equal old_id, face_id(pieces.last)
     pieces.each do |face|
       assert_equal face_id(face), FACE::FACE_STORE.read(face).dig("extension_data", EXTENSION.namespace,
-                                                                "payload", "self")
+                                                                  "payload", "self")
     end
     assert_equal incoming, [ZONES::ZONE_STORE.read(external), FACE::FACE_STORE.read(outside.first),
                             ATTACHED.store.read(@model, catalog.fetch("id"))]
@@ -438,7 +444,7 @@ class EntityReferencesTest < PhComposerTestCase
     records = [R::ReferenceEntry.new(:kind => "outside.feature.object", :key => [777],
                                      :record => { "id" => "custom_source" })]
     target = R::ReferenceTarget.new(:id => "outside.feature.object", :label => "Outside object",
-                                   :records => ->(_model) { records }, :validate => ->(_record) { [] })
+                                    :records => ->(_model) { records }, :validate => ->(_record) { [] })
     feature = Module.new do
       define_singleton_method(:install) do |registry|
         registry.feature("outside.feature", :contract_version => 1).reference_target(target)
@@ -449,7 +455,7 @@ class EntityReferencesTest < PhComposerTestCase
 
     assert_equal "custom_source", engine.resolve_reference(target.id, "custom_source").record.fetch("id")
     plan = R::ReferencePlan.new(:entries => [R::ReferenceEntry.new(:kind => FACE::REFERENCE_KIND, :key => [101],
-                                                                 :record => { "id" => "custom_copy" })])
+                                                                   :record => { "id" => "custom_copy" })])
     code = refusal { engine.resolve_reference(target.id, "custom_copy", :reference_plan => plan) }
     assert_equal "validation.failed", code
   end
@@ -469,8 +475,10 @@ class EntityReferencesTest < PhComposerTestCase
     record = FACE::FACE_STORE.read(faces.first)
     target = R::ReferenceTarget.new(
       :id => "outside.feature.object", :label => "Outside object",
-      :records => ->(_model) { [R::ReferenceEntry.new(:kind => "outside.feature.object", :key => [9],
-                                                      :record => { "id" => source_id })] },
+      :records => ->(_model) {
+                    [R::ReferenceEntry.new(:kind => "outside.feature.object", :key => [9],
+                                           :record => { "id" => source_id })]
+                  },
       :validate => ->(_record) { [] }
     )
     extension = R::Extension.new(
@@ -489,11 +497,11 @@ class EntityReferencesTest < PhComposerTestCase
     engine = R::Engine.new(@model, catalog)
     new_id = "fac_000000000999"
     plan = R::ReferencePlan.new(:entries => [R::ReferenceEntry.new(:kind => FACE::REFERENCE_KIND, :key => [100, 999],
-                                                                 :record => record.merge("id" => new_id))])
+                                                                   :record => record.merge("id" => new_id))])
     data = { extension.namespace => extension.envelope("external" => source_id) }
 
     copied = R::Extension.copy_data(data, catalog, "Face", source_id, { source_id => new_id },
-                                   :engine => engine, :reference_plan => plan)
+                                    :engine => engine, :reference_plan => plan)
 
     assert_equal source_id, copied.dig(extension.namespace, "payload", "external")
     assert_equal source_id, engine.resolve_reference(target.id, source_id).record.fetch("id")
@@ -523,7 +531,7 @@ class EntityReferencesTest < PhComposerTestCase
 
   def make_face(pid)
     Sketchup::Face.new(pid, {}, :points => [Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(2, 0, 0),
-                                          Geom::Point3d.new(2, 2, 0)])
+                                            Geom::Point3d.new(2, 2, 0)])
   end
 
   def zone(pid, face_pids, record_ids: nil)
@@ -532,10 +540,10 @@ class EntityReferencesTest < PhComposerTestCase
     @model.entities << group
     ids = record_ids || ["zon_#{format('%012d', pid)}", *face_pids.map { |id| "fac_#{format('%012d', id)}" }]
     ZONES::ZONE_STORE.write(group, "id" => ids.first, "schema_version" => 1, "name" => "Zone #{pid}",
-                                 "building_segment" => "Test", "level" => nil, "ground_depth_mm" => 0.0)
+                                   "building_segment" => "Test", "level" => nil, "ground_depth_mm" => 0.0)
     members.each_with_index do |face, index|
       FACE::FACE_STORE.write(face, "id" => ids[index + 1], "schema_version" => 1,
-                                  "face_type" => "Wall", "boundary_condition" => "Ground")
+                                   "face_type" => "Wall", "boundary_condition" => "Ground")
     end
     [group, members]
   end
@@ -551,7 +559,7 @@ class EntityReferencesTest < PhComposerTestCase
   def set_data(store, entity, payload)
     data = { EXTENSION.namespace => EXTENSION.envelope(payload) }
     store.write(entity, store.read(entity).merge("extension_data" => data,
-                                               "user_data" => { "literal" => payload["literal"] }))
+                                                 "user_data" => { "literal" => payload["literal"] }))
   end
 
   def attached(id)
@@ -564,6 +572,6 @@ class EntityReferencesTest < PhComposerTestCase
   def invoke(name, params)
     @sequence = (@sequence || 0) + 1
     PhComposer::API.invoke(:context => @context, :name => name, :params => params,
-                          :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
+                           :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
   end
 end

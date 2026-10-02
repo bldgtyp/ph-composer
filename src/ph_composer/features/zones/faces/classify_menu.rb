@@ -22,19 +22,27 @@ module PhComposer
             spec.fetch("values").each { |value| declare(feature, field, value, spec) }
           end
           feature.menu_entries("#{PREFIX}.assembly_menu", :menu => MENU,
-                               :available => ->(read) { classifiable?(read.session) }) do |read|
+                                                          :available => ->(read) {
+                                                                          classifiable?(read.session)
+                                                                        }) do |read|
             Selection.client(read.session).assembly_entries
           end
           feature.menu_entries("#{PREFIX}.attached_choices", :menu => MENU,
-                               :available => ->(read) { classifiable?(read.session) }) do |read|
+                                                             :available => ->(read) {
+                                                                             classifiable?(read.session)
+                                                                           }) do |read|
             Selection.client(read.session).attached_entries
           end
           feature.menu_item("#{PREFIX}.new_attached_zone_menu", :label => "New attached zone…", :menu => MENU,
-                            :available => ->(read) { classifiable?(read.session) }) do |session|
+                                                                :available => ->(read) {
+                                                                                classifiable?(read.session)
+                                                                              }) do |session|
             Selection.client(session).open_assignment
           end
           feature.menu_entries("#{PREFIX}.classify_off", :menu => MENU,
-                               :available => ->(read) { Faces.classify_tool(read.session).active? }) do |_read|
+                                                         :available => ->(read) {
+                                                                         Faces.classify_tool(read.session).active?
+                                                                       }) do |_read|
             [Declarations::MenuEntry.new(:label => OFF, :handler => ->(session) { Faces.classify_tool(session).stop })]
           end
         end

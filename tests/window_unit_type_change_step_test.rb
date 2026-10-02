@@ -15,14 +15,14 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
     @before = window_record("columns_m" => [1.0], "rows_m" => [1.5])
     @after = PhComposer::DeepCopy.call(@before).merge("columns_m" => [2.0], "rows_m" => [2.5])
     @definition = U::DefinitionWriter.create(:model => @model, :type => @before,
-      :plan => U::DefinitionPlan.build(@before))
+                                             :plan => U::DefinitionPlan.build(@before))
     U::DefinitionIndex.write(@model, { @before.fetch("id") => @definition.persistent_id }, :expected => {})
   end
 
   def unit(anchor = "sill_center", matrix: Geom::Transformation.new, entities: @model.entities, definition: @definition)
     item = entities.add_instance(definition, matrix)
     U.write(item, "id" => window_allocator.call("wun"), "schema_version" => 1,
-      "window_type_id" => @before.fetch("id"), "anchor" => anchor, "user_data" => { "literal" => [1] })
+                  "window_type_id" => @before.fetch("id"), "anchor" => anchor, "user_data" => { "literal" => [1] })
     item
   end
 
@@ -34,7 +34,7 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
     group = @model.entities.add_group
     group.transformation = Geom::Transformation.translation([100, 200, 300])
     matrices = [Geom::Transformation.new,
-      Geom::Transformation.new([-2, 0, 0, 0, 0.4, 3, 0, 0, 0, 0, 1, 0, 400, 500, 600, 1])]
+                Geom::Transformation.new([-2, 0, 0, 0, 0.4, 3, 0, 0, 0, 0, 1, 0, 400, 500, 600, 1])]
     U::Anchors::ALL.each do |anchor|
       matrices.each { |matrix| unit(anchor, :matrix => matrix, :entities => group.entities) }
     end
@@ -58,7 +58,7 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
     assert @model.undo
     assert_equal before_native, scope.capture(@model)
     assert_equal old_plan.panes.first.element_id,
-      U::PANE_STORE.read(@model.definitions.first.entities.first).fetch("element_id")
+                 U::PANE_STORE.read(@model.definitions.first.entities.first).fetch("element_id")
     assert @model.redo
     assert_equal after, scope.capture(@model)
     assert_equal 1, @model.operation_starts.length
@@ -82,9 +82,14 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
     @after = PhComposer::DeepCopy.call(@before)
     @after.merge!("notes" => "New note", "install_depth_m" => 0.2)
     @after.fetch("elements").first.merge!("glazing_id" => "glz_other",
-      "frames" => W::Types::SIDES.to_h { |side| [side, "frm_other"] },
-      "installs" => W::Types::SIDES.to_h { |side| [side, "psi_other"] },
-      "operation" => { "type" => "swing", "directions" => ["left"] })
+                                          "frames" => W::Types::SIDES.to_h { |side|
+                                                        [side, "frm_other"]
+                                                      },
+                                          "installs" => W::Types::SIDES.to_h { |side|
+                                                          [side, "psi_other"]
+                                                        },
+                                          "operation" => { "type" => "swing",
+                                                           "directions" => ["left"] })
     old = scope.capture(@model)
     original = @definition.entities.first
     change = step
@@ -98,7 +103,7 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
   def test_detached_make_unique_definition_and_its_instance_are_untouched
     unit
     detached = U::DefinitionWriter.create(:model => @model, :type => @before,
-      :plan => U::DefinitionPlan.build(@before))
+                                          :plan => U::DefinitionPlan.build(@before))
     copy = unit("center", :definition => detached)
     matrix = copy.transformation.to_a
     face = detached.entities.first
@@ -111,8 +116,10 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
   def test_stale_matrix_glue_record_and_definition_geometry_refuse_before_any_write
     item = unit
     mutations = [-> { item.transformation = Geom::Transformation.translation([1, 0, 0]) },
-      -> { item.glued_to = host_face }, -> { U.write(item, U.read(item).merge("user_data" => { "new" => [2] })) },
-      -> { @definition.entities.first.reverse! }]
+                 -> { item.glued_to = host_face }, -> {
+                                                     U.write(item, U.read(item).merge("user_data" => { "new" => [2] }))
+                                                   },
+                 -> { @definition.entities.first.reverse! }]
     mutations.each do |mutate|
       change = step
       @model.start_operation("Drift")
@@ -237,20 +244,24 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
   def test_glued_resize_in_nonuniform_mirrored_parent_uses_actual_parent_basis
     group = @model.entities.add_group
     group.transformation = Geom::Transformation.new([0, -2, 0, 0, 3, 0, 0, 0, 0, 0, -0.5, 0, 100, 200, 300, 1])
-    item = unit("head_left", :entities => group.entities,
-      :matrix => Geom::Transformation.new([0.6, 0, 0, 0, 0.4, 0.7, 0, 0, 0, 0, 1, 0, 1.5 / 0.0254, 0, 0, 1]))
+    item = unit("head_left",
+                :entities => group.entities,
+                :matrix => Geom::Transformation.new([0.6, 0, 0, 0, 0.4, 0.7, 0, 0, 0, 0, 1, 0,
+                                                     1.5 / 0.0254, 0, 0, 1]))
     item.glued_to = host_face
     group.entities << item.glued_to
     host = W::Placement::Host.new(:entity => item.glued_to, :parent_path => [group.persistent_id],
-      :transform => group.transformation, :values => {}, :geometry => PhComposer::FaceGeometry.capture(
-        item.glued_to, group.transformation))
+                                  :transform => group.transformation, :values => {},
+                                  :geometry => PhComposer::FaceGeometry.capture(
+                                    item.glued_to, group.transformation
+                                  ))
     path = [group.persistent_id, item.persistent_id]
     change = step(:hosts => { path => host }, :other_polygons_m => { path => [] })
     point = U::WorldGeometry.anchor(U::DefinitionPlan.build(@before), "head_left",
-      (group.transformation * item.transformation).to_a)
+                                    (group.transformation * item.transformation).to_a)
     change.apply(@model, {})
     actual = U::WorldGeometry.anchor(U::DefinitionPlan.build(@after), "head_left",
-      (group.transformation * item.transformation).to_a)
+                                     (group.transformation * item.transformation).to_a)
     point.zip(actual).each { |expected, value| assert_in_delta expected, value, 1e-12 }
   end
 
@@ -269,15 +280,15 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
     loops << hole if hole
     points = loops.map { |loop| loop.map { |point| Geom::Point3d.new(*point.map { |value| value / 0.0254 }) } }
     face = Sketchup::Face.new(Sketchup::Entities.allocate_persistent_id, {}, :points => points.first,
-      :holes => points.drop(1))
+                                                                             :holes => points.drop(1))
     @model.entities << face
     face
   end
 
   def host_for(item)
     W::Placement::Host.new(:entity => item.glued_to, :parent_path => [], :transform => Geom::Transformation.new,
-      :reference => {}, :values => {}, :geometry => PhComposer::FaceGeometry.capture(item.glued_to,
-        Geom::Transformation.new))
+                           :reference => {}, :values => {},
+                           :geometry => PhComposer::FaceGeometry.capture(item.glued_to, Geom::Transformation.new))
   end
 
   def host_step(item, polygons = [])

@@ -49,8 +49,8 @@ class LibraryCatalogTest < PhComposerTestCase
     assert_equal 120.0, failed.fetch("age_seconds")
     assert_equal "library.provider_failed", failed.dig("failure", "code")
     refute_includes JSON.generate(failed), "/Users/private"
-    assert_equal first.fetch("rows"), 
-@catalog.fetch(@provider.id, "materials", :generation => first.fetch("generation")).fetch("rows")
+    assert_equal first.fetch("rows"),
+                 @catalog.fetch(@provider.id, "materials", :generation => first.fetch("generation")).fetch("rows")
   end
 
   def test_empty_success_differs_from_unloaded_and_failure_and_advances_generation

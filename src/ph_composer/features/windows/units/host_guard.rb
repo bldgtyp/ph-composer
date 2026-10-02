@@ -21,15 +21,16 @@ module PhComposer
         def capture(item, host)
           unless host
             raise CodedError.new("window.host_required",
-              "Supply the public host read for each glued Window. Nothing was written.")
+                                 "Supply the public host read for each glued Window. Nothing was written.")
           end
           if host.values["boundary_condition"] == "Surface"
             raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
           end
+
           glued_face_id = item.entity.glued_to&.persistent_id
           unless host.parent_path == item.path[0...-1] && host.entity.persistent_id == glued_face_id
             raise CodedError.new("target.changed",
-              "The supplied Window host does not match its occurrence. Nothing was written.")
+                                 "The supplied Window host does not match its occurrence. Nothing was written.")
           end
           geometry = DeepCopy.call(host.geometry.to_h)
           verify!(item, geometry)
@@ -52,7 +53,7 @@ module PhComposer
         def fit!(geometry, polygon_m, others_m)
           host = if geometry
                    FaceGeometry::Snapshot.new(:loops_m => geometry.fetch("loops_m"),
-                     :normal => geometry.fetch("normal"))
+                                              :normal => geometry.fetch("normal"))
                  else
                    origin, right, up = polygon_m.take(3)
                    normal = Vector3.cross(Vector3.subtract(right, origin), Vector3.subtract(up, origin))

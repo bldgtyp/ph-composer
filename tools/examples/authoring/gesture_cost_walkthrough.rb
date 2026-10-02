@@ -167,7 +167,7 @@ module GestureCostWalkthrough
 
   def zone_groups
     Sketchup.active_model.entities.grep(Sketchup::Group)
-      .select { |group| group.name.to_s.start_with?(PREFIX) }
+            .select { |group| group.name.to_s.start_with?(PREFIX) }
   end
 
   # Boxes 3 m wide, ten to a row, flush along the row and clear between rows.
