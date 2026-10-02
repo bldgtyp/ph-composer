@@ -148,8 +148,10 @@ scope and identity choices; `export_preview` returns the counts and omissions th
 A setup command or FileExport may declare an approval: a file to open, a folder or a save
 destination that only the user can choose. `describe` returns it as `approval` (`kind`, `title`).
 Dispatch runs such an operation only with the user's answer, which a native client obtains:
-`shell/native_approval.rb` opens the matching SketchUp dialog for the panel and the native menus,
-asks before replacing an existing file, and passes the chosen location to the handler outside params.
+`shell/native_approval.rb` first asks dispatch whether the call would be refused (grant, params, a
+busy session) and opens no dialog if so; otherwise it opens the matching SketchUp dialog for the panel
+and the native menus, asks before replacing an existing file, and passes the chosen location to the
+handler outside params. Dispatch repeats every check after the dialog closes.
 The path never appears in params, a result, an outcome or a log. Every other caller, including a
 script calling `PhComposer::API`, is refused at once with `access.user_required`, effect `none`, and
 no dialog opens, so an unattended call cannot block SketchUp. A dismissed dialog returns
