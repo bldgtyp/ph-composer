@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require_relative "support/construction_export_fixtures"
 
 class PhaseOneExportTest < PhComposerTestCase
+  include ConstructionExportFixtures
   include FixtureFiles
   FIXTURE = File.join(TESTS_ROOT, "fixtures", "phase_one", "two_zones_extraction.json")
 
@@ -17,7 +19,7 @@ class PhaseOneExportTest < PhComposerTestCase
   def test_two_zone_extraction_uses_one_snapshot_and_owns_the_golden
     zones = seed_two_boxes
     invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
-    names = [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+    names = contributor_names
     before = @model.entities.each_count
 
     extraction = PhComposer::Export::Collection.build(
@@ -39,7 +41,7 @@ class PhaseOneExportTest < PhComposerTestCase
     invoke("ph_composer.zones.solve_adjacency", "zones" => zones)
     right = @model.entities.to_a.find { |entity| entity.persistent_id == 2000 }
     right.transformation = Geom::Transformation.translation([1, 0, 0])
-    names = [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+    names = contributor_names
 
     extraction = PhComposer::Export::Collection.build(@model, :run_id => "stale", :contributors => names)
     faces = extraction.document.dig("sections", names.first, "records")
@@ -107,10 +109,12 @@ class PhaseOneExportTest < PhComposerTestCase
   private
 
   def contributor_names
-    [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
+    [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION,
+     PhComposer::Assemblies::ExportProjection::SECTION, PhComposer::Assemblies::SourceReport::SECTION]
   end
 
   def seed_two_boxes
+    @assembly_id = seed_export_construction
     left = box_group(1000, 0, 5, "A")
     right = box_group(2000, 5, 9, "B")
     @model.entities << left << right
@@ -127,7 +131,7 @@ class PhaseOneExportTest < PhComposerTestCase
       face = Sketchup::Face.new(base + index + 1, {}, :points => loop, :normal => Geom::Vector3d.new(*normal))
       record = {
         "id" => face_id, "schema_version" => 1, "face_type" => face_type,
-        "boundary_condition" => boundary, "user_data" => {}, "extension_data" => {}
+        "boundary_condition" => boundary, "assembly_id" => @assembly_id, "user_data" => {}, "extension_data" => {}
       }
       PhComposer::Zones::Faces::FACE_STORE.write(face, record)
       face

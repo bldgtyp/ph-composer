@@ -42,6 +42,7 @@ module PhComposer
         end,
         "queries" => registry.queries.values.map { |query| summary(query) },
         "view_commands" => registry.view_commands.values.map { |command| summary(command) },
+        "file_exports" => registry.file_exports.values.map { |command| summary(command) },
         "actions" => registry.actions.values.map do |action|
           summary(action).merge("side_effects" => action.side_effects)
         end,
@@ -64,7 +65,8 @@ module PhComposer
     # or of one export task method, or nil when none has the name. The schemas are copies; validation keeps its own.
     def describe(name:)
       registry = Registry.current
-      if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name])
+      if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name] ||
+                      registry.file_exports[name])
         return DeepCopy.call(operation_description(operation))
       end
 
@@ -102,6 +104,10 @@ module PhComposer
     # Changes what the host shows and never the Model, so it takes no request: see Declarations::ViewCommand.
     def view(context:, name:, params: {})
       Dispatch.new.view(context, name, params)
+    end
+
+    def export_file(context:, name:, params: {})
+      Dispatch.new.file_export(context, name, params)
     end
 
     def preview(context:, name:, params: {})
@@ -163,6 +169,7 @@ module PhComposer
     def operation_kind(operation)
       return "action" if operation.is_a?(Declarations::Action)
       return "view_command" if operation.is_a?(Declarations::ViewCommand)
+      return "file_export" if operation.is_a?(Declarations::FileExport)
 
       "query"
     end

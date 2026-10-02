@@ -19,19 +19,20 @@ module PhComposer
       attr_reader :id, :label, :schema_version, :id_prefix, :fields, :store
 
       # `validate`, when given, is `->(values) { [finding, ...] }` for rules a schema cannot express.
-      def initialize(id:, label:, schema_version:, id_prefix:, fields:, validate: nil, store: nil)
+      def initialize(id:, label:, schema_version:, id_prefix:, fields:, validate: nil, store: nil, references: [])
         @id = id
         @label = label
         @schema_version = schema_version
         @id_prefix = id_prefix
         @fields = fields.freeze
+        @nested_references = references.freeze
         @validate = validate
         @store = store || DictionaryStore.new(id)
         @id_pattern = Identity.pattern(id_prefix)
       end
 
       def references
-        fields.select(&:reference?)
+        fields.select(&:reference?) + @nested_references
       end
 
       def field(key)

@@ -7,7 +7,7 @@ ISSUE: none (local planning draft)
 
 ## Problem
 
-The [face-assignment PRD](../../phase-02-envelope/face-assignment/PRD.md) Q18 names four legend affordances: click to
+The [face-assignment PRD](../../../archive/face-assignment/PRD.md) Q18 names four legend affordances: click to
 select and zoom, counts, Show only this, and hover to highlight. Phase 1 shipped the first three.
 Ed chose on 2026-09-20 to measure hover before shipping it ([Phase 1 plan](../../../archive/phase-01-faces-and-zones/PLAN.md),
 "What D7 left open").

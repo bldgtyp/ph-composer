@@ -41,7 +41,7 @@ SHIPPED_SUFFIXES = frozenset(
 
 # Development material never ships, whatever its suffix: the host bridge and probes, synthetic
 # examples and fixtures, tests and the private corpus.
-DEVELOPMENT_PARTS = frozenset({"_private", "hostkit", "examples", "fixtures", "tests"})
+DEVELOPMENT_PARTS = frozenset({"_private", "hostkit", "examples", "fixtures", "tests", "starter-library"})
 
 # The retired designPH integration and the predecessor's namespace. Case-insensitive, so `Phn.`,
 # `Phn::`, `phn_message`, the `phn-` CSS prefix, `DesignPH_dict` and `PH-Navigator` all match, while

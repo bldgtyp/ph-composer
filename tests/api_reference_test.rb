@@ -22,6 +22,8 @@ class ApiReferenceTest < PhComposerTestCase
     assert_equal "mm", zone.dig("values", "properties", "ground_depth_mm", "x-unit")
     assert_equal %w[zone_id zone_path], zone.dig("occurrence_reference", "required")
     assert_equal [{ "key" => "attached_zone_id", "target_kind" => "ph_composer.zones.faces.attached_zone",
+                    "cardinality" => "one" },
+                  { "key" => "assembly_id", "target_kind" => "ph_composer.assemblies.assembly",
                     "cardinality" => "one" }], face.fetch("references")
     assert_includes face.dig("values", "properties", "boundary_condition", "enum"), "AttachedZone"
     assert_equal %w[zone_id zone_path entity_path entity_id], face.dig("occurrence_reference", "required")
@@ -57,6 +59,10 @@ class ApiReferenceTest < PhComposerTestCase
     text = PhComposerTools::ApiReference.markdown(PhComposer::Registry.current)
 
     refute_match(/[–—]/, text, "docs/ is client-facing: no em or en dashes")
+    PhComposer::Registry.current.file_exports.each_key do |name|
+      assert_includes text, "### `#{name}`", "Registered file export missing from public reference"
+      assert_equal "file_export", API.describe(:name => name).fetch("kind")
+    end
     if FixtureFiles::WRITING
       write_text(REFERENCE, text)
     else

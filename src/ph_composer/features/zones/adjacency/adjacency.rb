@@ -271,7 +271,8 @@ module PhComposer
       REPORTED_CODES = {
         :same_normal => "adjacency.overlapping_zones",
         :sliver => "adjacency.sliver_skipped",
-        :unsupported => "adjacency.unsupported_shape"
+        :unsupported => "adjacency.unsupported_shape",
+        :glued_instances => "adjacency.glued_instances"
       }.freeze
 
       def reported(result, left, right)

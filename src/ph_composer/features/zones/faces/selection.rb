@@ -6,7 +6,7 @@ module PhComposer
       module Selection
         module_function
 
-        def selected(model)
+        def selected(model, index: nil)
           entities = model.selection.to_a
           unless !entities.empty? && entities.all? { |entity| entity.is_a?(Sketchup::Face) }
             raise CodedError.new("selection.invalid", "Select Faces inside authored Zones. Nothing was written.")
@@ -15,7 +15,7 @@ module PhComposer
             raise CodedError.new("gesture.too_large", "Select at most #{Faces.gesture_face_limit} Faces. " \
                                                     "Nothing was written.")
           end
-          index = Zones::Index.new(model)
+          index ||= Zones::Index.new(model)
           parent = Array(model.active_path)
           entities.map do |entity|
             picked = Zones::Occurrences.occurrence_for_path(parent + [entity])
@@ -30,6 +30,18 @@ module PhComposer
             Zones::Selection.resolve(model, resolved.zone.reference, index)
             reference
           end
+        end
+
+        def read(request)
+          index = Zones::Index.new(request.model)
+          references = selected(request.model, :index => index)
+          targets = references.map do |reference|
+            face = Zones::Occurrences.resolve_face(request.model, reference, :index => index,
+                                                  :allow_unassigned => reference["entity_id"].nil?)
+            record = FACE_STORE.read(face.entity)
+            { "reference" => reference, "expected_values" => record ? Schema.values(record) : {} }
+          end
+          { "faces" => references, "targets" => targets }
         end
 
         def available?(session)
@@ -119,6 +131,39 @@ module PhComposer
             show(API.invoke(:context => @context, :name => "#{PREFIX}.classify",
                             :params => { "faces" => read.fetch("value").fetch("faces"), "intent" => intent },
                             :request => { "sequence" => @sequence, "expected_revision" => read.fetch("revision") }))
+          end
+
+          def assembly(id)
+            if @session.model.selection.to_a.empty?
+              return show(API.view(:context => @context, :name => "#{PREFIX}.choose",
+                                   :params => { "field" => "assembly_id", "value" => id }))
+            end
+            read = API.query(:context => @context, :name => "#{PREFIX}.selection")
+            return show(read) unless read["status"] == "completed"
+
+            @sequence += 1
+            show(API.invoke(:context => @context, :name => "#{PREFIX}.assign_assembly",
+                            :params => { "targets" => read.fetch("value").fetch("targets"), "assembly_id" => id },
+                            :request => { "sequence" => @sequence, "expected_revision" => read.fetch("revision") }))
+          end
+
+          def assembly_entries
+            read = API.query(:context => @context, :name => "#{PREFIX}.assembly_choices")
+            return [] unless read["status"] == "completed"
+
+            selection = API.query(:context => @context, :name => "#{PREFIX}.selection")
+            types = Array(selection.dig("value", "targets")).map { |target| target.dig("expected_values", "face_type") }
+            records = read.fetch("value").fetch("assemblies").sort_by do |row|
+              [types.include?(row["type"]) && row["type"] ? 0 : 1, row.fetch("name").downcase, row.fetch("id")]
+            end
+            entries = records.map do |row|
+              id = row.fetch("id")
+              Declarations::MenuEntry.new(:label => "Assembly: #{row.fetch('name')}",
+                                           :handler => ->(session) { Selection.client(session).assembly(id) })
+            end
+            entries << Declarations::MenuEntry.new(:label => "Clear assembly",
+                                                   :handler => ->(session) { Selection.client(session).assembly(nil) })
+            entries
           end
 
           def open_assignment

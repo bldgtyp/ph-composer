@@ -12,7 +12,7 @@ class PanelMessagesTest < PhComposerTestCase
     sent = sources.flat_map { |source| source.scan(/\b(?:send|transport)\("([a-z]+\.[a-z_.]+)"/).flatten }
     # A request channel sends whichever message it was made with, so the map of the ones it carries is
     # where those types are written down.
-    sent += File.read(File.join(HTML, "request.js"))[/var SLOTS = \{(.*?)\};/m, 1].scan(/"([a-z.]+)":/).flatten
+    sent += File.read(File.join(HTML, "request.js"))[/var SLOTS = \{(.*?)\};/m, 1].scan(/"([a-z_.]+)":/).flatten
     channels = File.read(File.join(HTML, "sections", "export.js"))[/var CHANNELS = \{(.*?)\};/m, 1]
     sent += channels.scan(/: "([a-z.]+)"/).flatten
     sent = sent.uniq
@@ -23,7 +23,7 @@ class PanelMessagesTest < PhComposerTestCase
   end
 
   def test_the_page_handles_exactly_the_messages_ruby_publishes
-    handlers = File.read(File.join(HTML, "panel.js"))[/var HANDLERS = \{(.*?)\};/m, 1].scan(/"([a-z.]+)":/).flatten
+    handlers = File.read(File.join(HTML, "panel.js"))[/var HANDLERS = \{(.*?)\};/m, 1].scan(/"([a-z_.]+)":/).flatten
 
     assert_equal Messages::OUTBOUND.keys.sort, handlers.sort
   end

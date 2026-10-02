@@ -1,0 +1,103 @@
+/* Browser gesture/draft evidence only. Ruby and fresh SketchUp establish thermal and native Undo behavior. */
+const { chromium } = require("playwright");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
+  fs.mkdtempSync(path.join(os.tmpdir(), "ph-composer-builder-"));
+const port = process.env.UI_PREVIEW_PORT || "8765";
+fs.mkdirSync(output, { recursive: true });
+(async () => {
+  const browser = await chromium.launch({ headless: true, channel: "chrome" });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const errors = [];
+    page.on("pageerror", error => errors.push(error.message));
+    await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=builder`);
+    await page.locator("[data-tab='assemblies']").click();
+    await page.getByRole("button", { name: "Open Wall", exact: true }).click();
+    const editor = page.locator(".assembly-editor");
+    await editor.getByRole("button", { name: "Back to Assemblies", exact: true }).waitFor();
+    assert.equal(await editor.locator(".assembly-hit-target").first().evaluate(node =>
+      getComputedStyle(node).backgroundColor), "rgba(0, 0, 0, 0)", "hit targets preserve material fills");
+    const writes = () => page.evaluate(() => window.previewHost.sent.filter(x => x.type === "action.invoke").length);
+    const baseline = await writes();
+    await editor.locator("[data-segment-id='seg_stud_0'].assembly-hit-target").click();
+    await editor.locator("[data-library-row='mat_a']").click();
+    const details = editor.getByRole("dialog", { name: "Mineral wool", exact: true });
+    await details.getByText("Conductivity", { exact: true }).waitFor();
+    assert.equal(await writes(), baseline);
+    await details.getByRole("button", { name: "Use on selected target", exact: true }).click();
+    await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].segments[1].material_id ===
+      "mat_a");
+    assert.equal(await writes(), baseline + 1);
+    await page.keyboard.press("Escape");
+    await editor.getByRole("button", { name: "Layer 2 thickness", exact: true }).click();
+    const thickness = editor.getByRole("dialog", { name: "Layer 2 properties", exact: true })
+      .getByRole("textbox", { name: "Layer 2 thickness", exact: true });
+    await thickness.fill("160");
+    await page.getByRole("button", { name: "Set display units to IP", exact: true }).click();
+    assert.equal(await thickness.inputValue(), "160");
+    assert.equal(await writes(), baseline + 1, "unit switch sends no authoring action");
+    await editor.getByRole("button", { name: "Back to Assemblies", exact: true }).click();
+    assert(await editor.isVisible());
+    await thickness.press("Enter");
+    await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].thickness_mm === 160);
+    assert.equal(await writes(), baseline + 2);
+    await page.getByRole("button", { name: "Set display units to SI", exact: true }).click();
+    await editor.getByRole("button", { name: "Layer 2 thickness", exact: true }).click();
+    await thickness.fill("170");
+    await page.evaluate(() => { window.previewHost.assemblies.records[0].values.layers[1].thickness_mm = 165; });
+    await thickness.press("Enter");
+    await page.waitForFunction(() => document.querySelector("[data-builder-dimension='thickness:lyr_studs_0']")
+      .getAttribute("aria-invalid") === "true");
+    assert.equal(await thickness.inputValue(), "170");
+    await thickness.press("Escape");
+    await page.keyboard.press("Escape");
+    const beforeDrop = await writes();
+    const row = editor.locator("[data-library-row='mat_b']"), target = editor.locator(
+      "[data-segment-id='seg_stud_0'].assembly-hit-target");
+    const from = await row.boundingBox(), to = await target.boundingBox();
+    await page.mouse.move(from.x + 25, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 12 });
+    await page.mouse.up();
+    await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].segments[1].material_id ===
+      "mat_b");
+    assert.equal(await writes(), beforeDrop + 1);
+    const beforeInvalid = await writes();
+    await row.hover();
+    await page.mouse.down();
+    await page.mouse.move(15, 15, { steps: 8 });
+    await page.mouse.up();
+    assert.equal(await writes(), beforeInvalid, "outside drop writes nothing");
+    await editor.locator("[data-builder-action='segments.add']").click();
+    await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].segments.length === 3);
+    await editor.locator("[data-builder-action='segments.remove']").click();
+    await editor.getByRole("dialog").getByRole("button", { name: "Delete segment", exact: true }).click();
+    await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].segments.length === 2);
+    await editor.locator("[data-builder-action='layers.flip_orientation']").click();
+    await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.orientation === "last_layer_outside");
+    await editor.getByRole("button", { name: "Advanced", exact: true }).click();
+    const props = editor.getByRole("dialog", { name: "Assembly properties", exact: true });
+    await props.getByRole("checkbox", { name: "Ventilated cladding", exact: true }).check();
+    await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.ventilated_cladding === true);
+    assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.rse), 0.13);
+    assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.u_construction), 0.21);
+    await page.keyboard.press("Escape");
+    for (const width of [1280, 900, 420, 280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await editor.getByRole("button", { name: "Material Library", exact: true }).last().click();
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+        `Builder at ${width}px must scroll the drawing internally`);
+      await page.screenshot({ path: path.join(output, `builder-${width}.png`) });
+    }
+    await editor.getByRole("button", { name: "Back to Assemblies", exact: true }).click();
+    await page.getByRole("button", { name: "Open Incomplete roof", exact: true }).click();
+    assert.equal(await page.locator(".assembly-editor [data-u-withheld]").count(), 2);
+    await page.screenshot({ path: path.join(output, "builder-incomplete.png") });
+    assert.deepEqual(errors, []);
+    console.log(`Builder browser checks passed; screenshots: ${output}`);
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });

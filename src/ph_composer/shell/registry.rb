@@ -17,9 +17,12 @@ module PhComposer
   class Registry
     ID_PATTERN = /\A[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\z/.freeze
 
-    attr_reader :features, :queries, :actions, :view_commands, :record_kinds, :reference_targets, :extensions,
+    attr_reader :features, :queries, :actions, :view_commands, :file_exports, :record_kinds, :reference_targets,
+                :extensions,
                 :snapshot_sections,
-                :export_contributors, :proposal_participants, :colour_modes, :menu_items, :subscriptions
+                :export_contributors, :reference_retargeters, :proposal_participants, :library_providers,
+                :library_kinds, :colour_modes, :menu_items,
+                :subscriptions
 
     class << self
       def current
@@ -51,12 +54,16 @@ module PhComposer
       @queries = {}
       @actions = {}
       @view_commands = {}
+      @file_exports = {}
       @record_kinds = {}
       @reference_targets = {}
       @extensions = {}
       @snapshot_sections = {}
       @export_contributors = {}
+      @reference_retargeters = {}
       @proposal_participants = {}
+      @library_providers = {}
+      @library_kinds = {}
       @colour_modes = {}
       @menu_items = {}
       @subscriptions = []
@@ -87,18 +94,25 @@ module PhComposer
 
     def publish(staging)
       staging.declared_features.each { |feature| @features[feature.id] = feature }
-      operations = staging.declared_queries + staging.declared_actions + staging.declared_view_commands
+      operations = staging.declared_queries + staging.declared_actions + staging.declared_view_commands +
+                   staging.declared_file_exports
       operations.each { |operation| freeze_operation(operation) }
       publish_each(staging.declared_queries, @queries, :name)
       publish_each(staging.declared_actions, @actions, :name)
       publish_each(staging.declared_view_commands, @view_commands, :name)
+      publish_each(staging.declared_file_exports, @file_exports, :name)
       publish_each(staging.declared_record_kinds, @record_kinds, :id)
       staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
       publish_each(staging.declared_reference_targets, @reference_targets, :id)
       publish_each(staging.declared_extensions, @extensions, :namespace)
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
+      publish_each(staging.declared_reference_retargeters, @reference_retargeters, :name)
       publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
+      staging.declared_library_providers.each { |item| freeze_library_provider(item) }
+      staging.declared_library_kinds.each { |item| freeze_library_kind(item) }
+      publish_each(staging.declared_library_providers, @library_providers, :name)
+      publish_each(staging.declared_library_kinds, @library_kinds, :name)
       publish_each(staging.declared_colour_modes, @colour_modes, :name)
       publish_each(staging.declared_menu_items, @menu_items, :name)
       staging.owners.each { |name, owner| @owners[name] = owner }
@@ -133,6 +147,33 @@ module PhComposer
       value.freeze
     end
 
+    def freeze_library_provider(item)
+      item.name = item.name.dup.freeze
+      item.owner = item.owner.dup.freeze
+      item.kinds = deep_freeze(DeepCopy.call(item.kinds))
+      item.freeze
+    end
+
+    def freeze_library_kind(item)
+      adapter = item.adapter.dup
+      adapter.wire_kind = adapter.wire_kind.dup.freeze
+      adapter.wire_schema = deep_freeze(DeepCopy.call(adapter.wire_schema))
+      adapter.mapped_schema = deep_freeze(DeepCopy.call(adapter.mapped_schema))
+      adapter.fingerprint_fields = deep_freeze(DeepCopy.call(adapter.fingerprint_fields))
+      %i[local_read create replace assign].each do |method|
+        callback = adapter[method]
+        next unless callback
+
+        callback = callback.dup
+        callback.params = deep_freeze(DeepCopy.call(callback.params))
+        callback.result = deep_freeze(DeepCopy.call(callback.result))
+        adapter[method] = callback.freeze
+      end
+      item.adapter = adapter.freeze
+      %i[name owner record_kind].each { |part| item[part] = item[part].dup.freeze }
+      item.freeze
+    end
+
     def publish_each(declarations, target, key)
       declarations.each { |declaration| target[declaration.public_send(key)] = declaration }
     end
@@ -140,9 +181,12 @@ module PhComposer
     # Collects one batch's declarations and checks them against each other and the live registry.
     class Staging
       attr_reader :declared_features, :declared_queries, :declared_actions, :declared_view_commands,
+                  :declared_file_exports,
                   :declared_record_kinds, :declared_reference_targets, :declared_extensions,
                   :declared_snapshot_sections,
-                  :declared_export_contributors, :declared_proposal_participants, :declared_colour_modes,
+                  :declared_export_contributors, :declared_reference_retargeters, :declared_proposal_participants,
+                  :declared_library_providers, :declared_library_kinds,
+                  :declared_colour_modes,
                   :declared_menu_items,
                   :declared_subscriptions, :owners, :named
 
@@ -152,18 +196,30 @@ module PhComposer
         @declared_queries = []
         @declared_actions = []
         @declared_view_commands = []
+        @declared_file_exports = []
         @declared_record_kinds = []
         @declared_reference_targets = []
         @declared_extensions = []
         @declared_snapshot_sections = []
         @declared_export_contributors = []
+        @declared_reference_retargeters = []
         @declared_proposal_participants = []
+        @declared_library_providers = []
+        @declared_library_kinds = []
         @declared_colour_modes = []
         @declared_menu_items = []
         @declared_subscriptions = []
         @owners = {}
         @named = []
         @failures = []
+      end
+
+      # Contribution schemas may reuse a dependency's published record shape during registration.
+      # Same-batch declarations take precedence; already installed dependencies remain visible.
+      def record_descriptor(kind_id)
+        declared = declared_record_kinds.find { |kind| kind.id == kind_id } ||
+                   declared_reference_targets.find { |target| target.id == kind_id }
+        declared ? declared.descriptor : @live.catalog.descriptor(kind_id)
       end
 
       # Declares a feature and returns the scope its other declarations are made through.
@@ -245,6 +301,14 @@ module PhComposer
         @staging.add(:declared_snapshot_sections, id, name, declaration)
       end
 
+      def file_export(name, description:, params:, result:, examples: [], &handler)
+        declaration = Declarations::FileExport.new(
+          :name => name, :owner => id, :description => description, :params => params, :result => result,
+          :examples => examples, :handler => handler
+        )
+        @staging.add(:declared_file_exports, id, name, declaration)
+      end
+
       # Adds a section to the export extraction and declares the result fields its translation adds.
       def export_contributor(name, section_version:, result: {}, report: nil, preflight: nil, user_data_keys: [],
                              &contract)
@@ -282,9 +346,27 @@ module PhComposer
         @staging.add(:declared_menu_items, id, name, declaration)
       end
 
+      def reference_retargeter(name, target_kind:, &handler)
+        declaration = Declarations::ReferenceRetargeter.new(:name => name, :owner => id,
+                                                            :target_kind => target_kind, :handler => handler)
+        @staging.add(:declared_reference_retargeters, id, name, declaration)
+      end
+
       def proposal_participant(name, &handler)
         declaration = Declarations::ProposalParticipant.new(:name => name, :owner => id, :handler => handler)
         @staging.add(:declared_proposal_participants, id, name, declaration)
+      end
+
+      def library_provider(name, contract_version:, kinds:, &factory)
+        declaration = Declarations::LibraryProvider.new(:name => name, :owner => id,
+          :contract_version => contract_version, :kinds => kinds, :factory => factory)
+        @staging.add(:declared_library_providers, id, name, declaration)
+      end
+
+      def library_kind(name, contract_version:, record_kind:, adapter:)
+        declaration = Declarations::LibraryKind.new(:name => name, :owner => id,
+          :contract_version => contract_version, :record_kind => record_kind, :adapter => adapter)
+        @staging.add(:declared_library_kinds, id, name, declaration)
       end
 
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).

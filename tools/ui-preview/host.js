@@ -15,24 +15,33 @@
   var ZONES = "ph_composer.zones.overview";
   var FACES = "ph_composer.zones.faces.faces";
   var SETTINGS = "ph_composer.zones.settings";
+  var MATERIALS = "ph_composer.assemblies.materials";
+  var ASSEMBLIES = "ph_composer.assemblies.assemblies";
   var NOTHING_WRITTEN = "Nothing was written.";
 
   function Host(window, options) {
     var settings = options || {};
     this.window = window;
     this.sent = [];
+    this.libraryProviders = JSON.parse(JSON.stringify(settings.libraryProviders || []));
+    this.libraryCatalogs = JSON.parse(JSON.stringify(settings.libraryCatalogs || {}));
+    this.libraryGenerations = {}; this.libraryFailures = {};
+    this.windows = JSON.parse(JSON.stringify(settings.windows || {}));
     this.session = "preview-session";
     this.revision = 1;
     this.sequence = 0;
     this.parts = (settings.parts || []).map(function (part) { return JSON.parse(JSON.stringify(part)); });
     this.zones = JSON.parse(JSON.stringify(settings.zones || []));
     this.faces = JSON.parse(JSON.stringify(settings.faces || []));
+    this.selectedFaces = JSON.parse(JSON.stringify(settings.selectedFaces || []));
     this.makeZone = settings.makeZone || null;
     this.zoneSettings = { suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130 };
     this.colourBy = { mode: null, isolated: null };
     this.palette = { active: false, palette: {},
       face_types: ["Wall", "RoofCeiling", "Floor"],
       boundary_conditions: ["Outdoors", "Ground", "Adiabatic", "AttachedZone", "Surface"] };
+    this.materials = JSON.parse(JSON.stringify(settings.materials || { records: [], unreadable: [], categories: [] }));
+    this.assemblies = JSON.parse(JSON.stringify(settings.assemblies || { records: [], unreadable: [] }));
     this.attachedZones = JSON.parse(JSON.stringify(settings.attachedZones || []));
     this.preferences = { unit_system: settings.unitSystem || "SI", dimension_formats: {},
       number_format: { decimal: settings.decimal || ".", locale: settings.locale || "en-US" } };
@@ -50,6 +59,7 @@
       product: "PH-Composer", version: "preview", session: this.session, revision: this.revision,
       file_name: "preview.skp", edit_path: [], preferences: JSON.parse(JSON.stringify(this.preferences)),
       sections: {
+        ["ph_composer.library.provider_catalogs"]: { status: "completed", value: this.libraryMetadata() },
         [SETTINGS]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.zoneSettings)) },
         [PARTS]: { status: "completed", code: "ok", revision: this.revision,
@@ -59,9 +69,42 @@
             units: { ground_depth_mm: "mm" } } },
         [FACES]: { status: "completed", code: "ok", revision: this.revision,
           value: { faces: JSON.parse(JSON.stringify(this.faces)), units: { area_m2: "m2" } } },
+        ["ph_composer.zones.faces.selected"]: { status: "completed", value: {
+          faces: this.selectedFaces, targets: this.faces.filter(function (face) {
+            return this.selectedFaces.some(function (reference) {
+              return JSON.stringify(reference) === JSON.stringify(face.reference);
+            });
+          }, this).map(function (face) { return { reference: face.reference, expected_values: face.values }; }) } },
+        ["ph_composer.zones.faces.assemblies"]: { status: "completed", value: {
+          assemblies: this.assemblies.records.map(function (record) { return { id: record.id,
+            name: record.values.name, type: record.values.type || null, color: record.values.color }; }) } },
+        ["ph_composer.zones.faces.usage"]: { status: "completed", value: {
+          faces: this.faces.map(function (face) {
+            var zone = this.zones.filter(function (candidate) { return candidate.id === face.reference.zone_id; })[0];
+            return Object.assign({ zone_name: zone ? zone.values.name : "Zone" }, face);
+          }, this), assembly_usage: this.usage() } },
         [LEGEND]: { status: "completed", code: "ok", revision: this.revision, value: this.legend() },
         [PALETTE]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.palette)) },
+        ["ph_composer.windows.types"]: { status: "completed", value: JSON.parse(JSON.stringify(this.windows.types ||
+          { records: [] })) },
+        ["ph_composer.windows.unit_areas"]: { status: "completed", value: JSON.parse(JSON.stringify(
+          this.windows.unit_areas || { faces: [], unhosted_units: [] })) },
+        ["ph_composer.windows.units"]: { status: "completed", value: JSON.parse(JSON.stringify(this.windows.units ||
+          { units: [] })) },
+        ["ph_composer.windows.place_tool"]: { status: "completed", value: JSON.parse(JSON.stringify(
+          this.windows.place_tool || { active: false, type_id: null, anchor: "sill_center", host: null })) },
+        ["ph_composer.windows.frames"]: { status: "completed",
+          value: JSON.parse(JSON.stringify(this.windows.frames || { records: [] })) },
+        ["ph_composer.windows.glazings"]: { status: "completed",
+          value: JSON.parse(JSON.stringify(this.windows.glazings || { records: [] })) },
+        ["ph_composer.windows.psi_install_types"]: { status: "completed",
+          value: JSON.parse(JSON.stringify(this.windows.psi_install_types || { records: [] })) },
+        ["ph_composer.windows.settings"]: { status: "completed",
+          value: JSON.parse(JSON.stringify(this.windows.settings || {
+          default_psi_install_id: null, default_install_depth_m: 0 })) },
+        [MATERIALS]: { status: "completed", value: JSON.parse(JSON.stringify(this.materials)) },
+        [ASSEMBLIES]: { status: "completed", value: JSON.parse(JSON.stringify(this.assemblies)) },
         [ATTACHED]: { status: "completed", code: "ok", revision: this.revision,
           value: { records: JSON.parse(JSON.stringify(this.attachedZones)), next_cursor: null,
             total: this.attachedZones.length } }
@@ -71,6 +114,17 @@
 
   /* The legend the shared service would build, counted from the preview's own Faces so the rows move
      when the panel classifies one. */
+  Host.prototype.usage = function () {
+    var rows = Object.create(null);
+    this.faces.forEach(function (face) {
+      var id = face.values.assembly_id;
+      if (!id) return;
+      var row = rows[id] || (rows[id] = { assembly_id: id, face_count: 0, gross_area_m2: 0, faces: [] });
+      row.face_count += 1; row.gross_area_m2 += face.area_m2; row.faces.push(face.reference);
+    });
+    return Object.keys(rows).map(function (id) { return rows[id]; });
+  };
+
   Host.prototype.legend = function () {
     var isolated = this.colourBy.isolated, rows = [];
     var counts = {};
@@ -99,6 +153,11 @@
     this.sent.push(message);
     if (message.type === "panel.ready") this.snapshot();
     if (message.type === "action.invoke") this.invoke(message.payload);
+    if (message.type === "query.invoke") this.libraryQuery(message.payload);
+    if (message.type === "file_export.invoke") this.publish("file_export.result", {
+      request_id: message.payload.request_id, session: message.payload.session,
+      outcome: refused("export.unavailable", "File writes are unavailable in this browser preview.", this.revision)
+    });
     if (message.type === "view.invoke") this.viewCommand(message.payload);
     if (message.type === "preferences.set") this.setPreference(message.payload);
     if (message.type === "export.start") this.exportStart(message.payload);
@@ -122,6 +181,7 @@
   /* A viewport-state command: nothing to write and no revision to guard, so the preview answers that it
      ran and leaves its Model alone. There is no viewport here to move. */
   Host.prototype.viewCommand = function (payload) {
+    if (payload.name.indexOf("ph_composer.library.") === 0) { this.libraryView(payload); return; }
     var outcome;
     if (payload.session !== this.session) {
       outcome = refused("session.inactive", "The panel now shows a different Model.", null);
@@ -132,10 +192,18 @@
       if (payload.name === "ph_composer.colour_by.isolate") this.colourBy.isolated = payload.params.row || null;
       if (payload.name === "ph_composer.zones.faces.choose") {
         this.palette.active = true;
+        if (payload.params.reset) this.palette.palette = {};
         if (payload.params.value === null) delete this.palette.palette[payload.params.field];
         else this.palette.palette[payload.params.field] = payload.params.value;
       }
+      if (payload.name === "ph_composer.zones.faces.locate") this.selectedFaces = payload.params.faces;
       if (payload.name === "ph_composer.zones.faces.stop_classifying") this.palette.active = false;
+      if (payload.name === "ph_composer.windows.place_tool.choose") {
+        this.windows.place_tool = { active: true, type_id: payload.params.type_id,
+          anchor: payload.params.anchor || "sill_center", host: payload.params.host || null };
+      }
+      if (payload.name === "ph_composer.windows.place_tool.stop") this.windows.place_tool.active = false;
+      if (payload.name === "ph_composer.windows.units.locate") this.selectedUnits = payload.params.units;
       outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
         value: {}, affected: [], findings: [], detail: null };
       this.snapshot();
@@ -143,10 +211,177 @@
     this.publish("view.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
   };
 
+  /* Synthetic Window outcomes exercise panel transport only; thermal values are fixture projections. */
+  Host.prototype.windowAction = function (payload) {
+    var host = this, params = payload.params, name = payload.name.replace("ph_composer.windows.", "");
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+    function completed(value) { host.revision++; return { status: "completed", effect: "committed",
+      revision: host.revision, value: value || {} }; }
+    function matches(record, expected) {
+      return record && Object.keys(expected || {}).every(function (key) {
+        return JSON.stringify(record.values[key] === undefined ? null : record.values[key]) ===
+          JSON.stringify(expected[key]);
+      });
+    }
+    function emptySides() { return { top: null, right: null, bottom: null, left: null }; }
+    function invalidate(record) {
+      record.display = Object.assign({}, record.display, { thermal: { u_w: null, u_effective: null,
+        findings: ["Preview changed definition: canonical thermal results require the Ruby host."], elements: [] } });
+    }
+    if (name === "settings.update") {
+      if (JSON.stringify(params.expected_values) !== JSON.stringify(this.windows.settings)) {
+        return refused("target.changed", "Defaults changed.", this.revision);
+      }
+      this.windows.settings = clone(params.values); return completed(params.values);
+    }
+    if (name === "types.installs.save") {
+      if (JSON.stringify(params.expected_settings) !== JSON.stringify(this.windows.settings) ||
+        params.types.some(function (target) {
+        return !matches(host.windows.types.records.filter(function (row) { return row.id === target.id; })[0],
+          target.expected_values);
+      })) return refused("target.changed", "The Installs baseline changed. Reopen the session.", this.revision);
+      var mapping = {};
+      for (var importIndex = 0; importIndex < (params.imports || []).length; importIndex++) {
+        var imported = params.imports[importIndex], copied = this.windowLibraryCopy(imported.copy, true);
+        if (copied.status !== "completed") return copied;
+        mapping[imported.client_id] = copied.value.local_id;
+      }
+      params.psi_install_types.create.forEach(function (row) {
+        var id = "psi_preview" + (++host.sequence); mapping[row.client_id] = id;
+        host.windows.psi_install_types.records.push({ id: id, values: clone(row.values), uses: [], use_count: 0 });
+      });
+      params.psi_install_types.update.forEach(function (patch) {
+        var row = host.windows.psi_install_types.records.filter(function (record) { return record.id === patch.id;
+          })[0];
+        if (row) Object.assign(row.values, patch.values);
+      });
+      params.types.forEach(function (patch) {
+        var row = host.windows.types.records.filter(function (record) { return record.id === patch.id; })[0];
+        patch.installs.forEach(function (edge) {
+          var cell = row.values.elements.filter(function (element) { return element.id === edge.element_id; })[0];
+          Object.keys(edge.sides).forEach(function (side) { cell.installs[side] = mapping[edge.sides[side]] ||
+            edge.sides[side]; });
+        }); invalidate(row);
+      }); return completed({ type_ids: params.types.map(function (row) { return row.id; }) });
+    }
+    var parts = name.split("."), kind = parts[0], operation = parts[parts.length - 1];
+    var records = (this.windows[kind] || {}).records || [];
+    var row = records.filter(function (record) { return record.id === params.id; })[0];
+    if (params.id && !matches(row, params.expected_values)) return refused("target.changed",
+      "The definition changed.", this.revision);
+    if (parts[1] === "grid") {
+      var values = row.values, cell = values.elements.filter(function (entry) {
+        return entry.id === params.element_id; })[0];
+      if (operation === "dimension") values[params.axis][params.index] = params.value;
+      else if (operation === "element") cell[params.field] = clone(params.value);
+      else if (operation === "kind") values.elements.forEach(function (element) {
+        if (params.ids.indexOf(element.id) < 0) return;
+        element.kind = params.kind;
+        if (params.kind === "empty") { element.frames = emptySides(); element.installs = emptySides();
+          element.glazing_id = null; element.operation = null; }
+      });
+      else if (operation === "paste") {
+        var source = values.elements.filter(function (entry) { return entry.id === params.source_id; })[0];
+        values.elements.forEach(function (entry) { if (params.ids.indexOf(entry.id) >= 0) {
+          ["frames", "installs", "operation", "glazing_id"].forEach(function (field) {
+            entry[field] = clone(source[field]); });
+        } });
+      } else if (operation === "flip") {
+        values.columns_m.reverse(); values.elements.forEach(function (entry) {
+          entry.column_span = [values.columns_m.length - entry.column_span[1] - 1,
+            values.columns_m.length - entry.column_span[0] - 1];
+          ["frames", "installs"].forEach(function (field) {
+            var left = entry[field].left; entry[field].left = entry[field].right; entry[field].right = left;
+          });
+        });
+      } else if (operation === "merge") {
+        var selected = values.elements.filter(function (entry) { return params.ids.indexOf(entry.id) >= 0; });
+        var merged = clone(selected[0]);
+        merged.row_span = [Math.min.apply(null, selected.map(function (entry) { return entry.row_span[0]; })),
+          Math.max.apply(null, selected.map(function (entry) { return entry.row_span[1]; }))];
+        merged.column_span = [Math.min.apply(null, selected.map(function (entry) { return entry.column_span[0]; })),
+          Math.max.apply(null, selected.map(function (entry) { return entry.column_span[1]; }))];
+        values.elements = values.elements.filter(function (entry) { return params.ids.indexOf(entry.id) < 0;
+          }).concat(merged);
+      } else if (operation === "split") {
+        values.elements = values.elements.filter(function (entry) { return entry.id !== cell.id; });
+        for (var r = cell.row_span[0]; r <= cell.row_span[1]; r++) for (var c = cell.column_span[0];
+          c <= cell.column_span[1]; c++) {
+          var part = clone(cell); part.id = "wel_preview" + (++host.sequence); part.row_span = [r, r];
+            part.column_span = [c, c];
+          values.elements.push(part);
+        }
+      } else if (operation === "insert") {
+        var axis = params.axis, span = axis === "rows_m" ? "row_span" : "column_span", other = axis === "rows_m" ?
+          "columns_m" : "rows_m";
+        values[axis].splice(params.index, 0, params.value);
+        values.elements.forEach(function (entry) { entry[span] = entry[span].map(function (at) {
+          return at >= params.index ? at + 1 : at; }); });
+        values[other].forEach(function (_value, index) {
+          var element = { id: "wel_preview" + (++host.sequence), name: "New element", kind: "glazed",
+            row_span: axis === "rows_m" ? [params.index, params.index] : [index, index],
+            column_span: axis === "columns_m" ? [params.index, params.index] : [index, index], glazing_id: null,
+            frames: emptySides(), installs: emptySides(), operation: null }; values.elements.push(element);
+        });
+      } else if (operation === "remove") {
+        var removedSpan = params.axis === "rows_m" ? "row_span" : "column_span";
+        values[params.axis].splice(params.index, 1);
+        values.elements = values.elements.filter(function (entry) {
+          return !(entry[removedSpan][0] === params.index && entry[removedSpan][1] === params.index);
+        });
+        values.elements.forEach(function (entry) { entry[removedSpan] = entry[removedSpan].map(function (at) {
+          return at > params.index ? at - 1 : at;
+        }); });
+      }
+      invalidate(row); return completed({ id: row.id });
+    }
+    if (operation === "update") {
+      Object.keys(params.values).forEach(function (key) {
+        if (params.values[key] === null) delete row.values[key]; else row.values[key] = clone(params.values[key]);
+      }); if (kind === "types") invalidate(row); return completed({ id: row.id });
+    }
+    if (operation === "create" || operation === "duplicate") {
+      var id = kind.slice(0, 3) + "_preview" + (++this.sequence);
+      var created = operation === "duplicate" ? clone(row) : { id: id, values: clone(params.values), uses: [],
+        use_count: 0 };
+      created.id = id;
+      if (operation === "duplicate") created.values.name = params.name || row.values.name + " (copy)";
+      if (kind === "types") {
+        if (operation === "create") { created.values.rows_m = [1.5]; created.values.columns_m = [1];
+          created.values.elements = [{ id: "wel_preview" + (++host.sequence), name: "Element 1", kind: "glazed",
+            row_span: [0, 0], column_span: [0, 0], frames: emptySides(), installs: emptySides(), glazing_id: null,
+              operation: null }]; }
+        else created.values.elements.forEach(function (entry) { entry.id = "wel_preview" + (++host.sequence); });
+        created.display = { install_depth_m: host.windows.settings.default_install_depth_m }; invalidate(created);
+      } records.push(created); return completed({ id: id });
+    }
+    if (operation === "delete") {
+      if (row.use_count && !params.replacement_id) return refused("reference.used", "Choose a replacement.",
+        this.revision);
+      var replacement = params.replacement_id;
+      if (replacement) this.windows.types.records.forEach(function (type) {
+        type.values.elements.forEach(function (entry) {
+        if (kind === "glazings" && entry.glazing_id === row.id) entry.glazing_id = replacement;
+        ["frames", "installs"].forEach(function (field) { Object.keys(entry[field]).forEach(function (side) {
+          if (entry[field][side] === row.id) entry[field][side] = replacement;
+        }); });
+      }); });
+      records.splice(records.indexOf(row), 1); return completed({ id: row.id });
+    }
+    return refused("request.unknown_operation", "Window fixture does not handle this action.", this.revision);
+  };
+
   Host.prototype.invoke = function (payload) {
-    var outcome = this.apply(payload);
-    this.snapshot();
-    this.publish("action.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
+    var host = this;
+    function apply() {
+      var outcome = host.apply(payload);
+      host.snapshot();
+      host.publish("action.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
+    }
+    if (payload.name.indexOf("ph_composer.windows.") === 0 ||
+        payload.name.indexOf("ph_composer.assemblies.") === 0 ||
+        payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) this.window.setTimeout(apply, 0);
+    else apply();
   };
 
   Host.prototype.apply = function (payload) {
@@ -157,8 +392,25 @@
     if (payload.expected_revision !== this.revision) {
       return refused("revision.stale", "The Model changed since it was read. " + NOTHING_WRITTEN, this.revision);
     }
+    if (payload.name.indexOf("ph_composer.windows.") === 0) return this.windowAction(payload);
+    if (payload.name === "ph_composer.library.copy") return this.libraryCopy(payload);
+    if (payload.name.indexOf("ph_composer.assemblies.") === 0 ||
+        payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) return this.inventoryAction(payload);
     var resultValue = {};
-    if (payload.name === "ph_composer.zones.settings.update") {
+    if (payload.name === "ph_composer.zones.faces.assign_assembly") {
+      var targets = payload.params.targets, affected = targets.map(function (target) {
+        return host.faces.filter(function (face) {
+          return JSON.stringify(face.reference) === JSON.stringify(target.reference);
+        })[0];
+      });
+      if (affected.some(function (face, index) {
+        return !face || JSON.stringify(face.values) !== JSON.stringify(targets[index].expected_values);
+      })) return refused("target.changed", "A selected Face changed. " + NOTHING_WRITTEN, this.revision);
+      affected.forEach(function (face) {
+        if (payload.params.assembly_id === null) delete face.values.assembly_id;
+        else face.values.assembly_id = payload.params.assembly_id;
+      });
+    } else if (payload.name === "ph_composer.zones.settings.update") {
       var values = payload.params.values, expected = payload.params.expected_values;
       var keys = Object.keys(this.zoneSettings);
       if (keys.some(function (key) { return expected[key] !== host.zoneSettings[key]; })) {
@@ -220,6 +472,320 @@
     this.revision += 1;
     return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
       value: resultValue, affected: [], findings: [], detail: null };
+  };
+
+  /* Definition fixture actions preserve transport and draft semantics; no PH calculation runs here. */
+  Host.prototype.inventoryAction = function (payload) {
+    var section = payload.name.slice(0, payload.name.lastIndexOf("."));
+    var operation = payload.name.slice(payload.name.lastIndexOf(".") + 1);
+    var material = section === MATERIALS, attached = section === ATTACHED.replace(/\.list$/, "");
+    var records = attached ? this.attachedZones : (material ? this.materials.records : this.assemblies.records);
+    var params = payload.params, target = records.filter(function (record) { return record.id === params.id; })[0];
+    function copy(value) { return JSON.parse(JSON.stringify(value)); }
+    if (params.id && !target) return refused("target.not_found", "That record is unavailable.", this.revision);
+    if (params.expected_values && Object.keys(params.expected_values).some(function (field) {
+      var current = target.values[field];
+      return JSON.stringify(current === undefined ? null : current) !== JSON.stringify(params.expected_values[field]);
+    })) return refused("target.changed", "The record changed. " + NOTHING_WRITTEN, this.revision);
+    if (section === ASSEMBLIES + ".layers" || section === ASSEMBLIES + ".segments") {
+      return this.builderAction(section, operation, target, params);
+    }
+    var prefix = material ? "mat" : (attached ? "atz" : "asm"), id = params.id;
+    if (operation === "create" || (operation === "save" && !target)) {
+      id = prefix + "_preview" + String(++this.sequence).padStart(5, "0");
+      target = { id: id, schema_version: 1, user_data: {}, extension_data: {}, findings: [],
+        values: copy(params.values) };
+      if (material) {
+        target.uses = [];
+        target.use_count = 0;
+        target.values.color = "#ffffff";
+      } else if (!attached) {
+        target.values.layers = [{ id: "lyr_preview" + this.sequence, thickness_mm: 100,
+          segments: [{ id: "seg_preview" + this.sequence, width_mm: 100, material_id: null }] }];
+        target.display = { color: "#bbdefb", total_thickness_mm: 100, thermal: { complete: false,
+          u_effective: null, warnings: ["Choose a Material for every Layer-Segment."] } };
+      }
+      records.push(target);
+    } else if (operation === "update" || operation === "save") {
+      Object.keys(params.values).forEach(function (field) {
+        var value = params.values[field];
+        if (value === null && (field === "type" || field === "exterior_condition")) delete target.values[field];
+        else target.values[field] = value;
+      });
+    } else if (operation === "duplicate") {
+      var duplicate = copy(target);
+      id = prefix + "_preview" + String(++this.sequence).padStart(5, "0");
+      duplicate.id = id;
+      duplicate.values.name = params.name || target.values.name + " (copy)";
+      if (material) {
+        duplicate.uses = [];
+        duplicate.use_count = 0;
+        if (!params.copy_datasheets) duplicate.values.datasheet_links = [];
+      }
+      records.push(duplicate);
+    } else if (operation === "delete") {
+      if (material && target.use_count) {
+        var replacement = records.filter(function (record) { return record.id === params.replacement_id; })[0];
+        if (!replacement || replacement === target) return refused("replacement.required",
+          "Choose a replacement Material. " + NOTHING_WRITTEN, this.revision);
+        replacement.uses = replacement.uses.concat(target.uses);
+        replacement.use_count = replacement.uses.length;
+      }
+      if (attached && !params.replacement) {
+        return refused("replacement.required", "Choose a destination.", this.revision);
+      }
+      if (!material && !attached) {
+        var uses = this.faces.filter(function (face) { return face.values.assembly_id === target.id; });
+        if (uses.length && !Object.prototype.hasOwnProperty.call(params, "replacement_id")) {
+          return refused("replacement.required", "Choose a replacement Assembly.", this.revision);
+        }
+        uses.forEach(function (face) {
+          if (params.replacement_id === null) delete face.values.assembly_id;
+          else face.values.assembly_id = params.replacement_id;
+        });
+      }
+      records.splice(records.indexOf(target), 1);
+    } else return refused("request.unknown_operation", "Unavailable fixture action.", this.revision);
+    if (!material && !attached && operation === "update" && params.values.ventilated_cladding !== undefined) {
+      // Synthetic canonical responses, not a thermal calculation in the preview host.
+      target.display.thermal.rse = params.values.ventilated_cladding ? 0.13 : 0.04;
+      target.display.thermal.u_effective = params.values.ventilated_cladding ? 0.195 : 0.2;
+    }
+    this.revision += 1;
+    return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
+      value: { id: id }, affected: [], findings: [], detail: null };
+  };
+
+  /* Synthetic topology responses exercise gestures and IDs; Ruby owns physical validation and calculations. */
+  Host.prototype.builderAction = function (section, operation, target, params) {
+    var values = target.values, layers = values.layers;
+    var layer = layers.filter(function (row) { return row.id === params.layer_id; })[0];
+    var segment = layer && layer.segments.filter(function (row) { return row.id === params.segment_id; })[0];
+    var isLayer = section === ASSEMBLIES + ".layers";
+    if (params.layer_id && !layer) return refused("target.not_found", "Layer unavailable.", this.revision);
+    if (params.segment_id && !segment) return refused("target.not_found", "Layer-Segment unavailable.", this.revision);
+    function freshSegment(id) {
+      return { id: "seg_builder" + id, width_mm: 600, material_id: null,
+        is_continuous_insulation: false, steel_stud_spacing_mm: null };
+    }
+    if (isLayer) {
+      if (operation === "add") {
+        var index = params.index === undefined ? layers.length : params.index;
+        if (params.anchor_layer_id) {
+          var anchor = layers.filter(function (row) { return row.id === params.anchor_layer_id; })[0];
+          if (!anchor) return refused("target.not_found", "Anchor unavailable.", this.revision);
+          var outside = values.orientation === "first_layer_outside" ? 0 : 1;
+          index = layers.indexOf(anchor) + (params.side === "outside" ? outside : 1 - outside);
+        }
+        layers.splice(index, 0, { id: "lyr_builder" + (++this.sequence),
+          thickness_mm: params.thickness_mm || 100, segments: [freshSegment(this.sequence)] });
+      } else if (operation === "update") layer.thickness_mm = params.thickness_mm;
+      else if (operation === "remove") {
+        if (layers.length === 1) return refused("validation.failed", "An Assembly needs a Layer.", this.revision);
+        layers.splice(layers.indexOf(layer), 1);
+      } else if (operation === "move") {
+        var position = layers.indexOf(layer), outward = values.orientation === "first_layer_outside" ? -1 : 1;
+        var destination = position + (params.direction === "outward" ? outward : -outward);
+        if (destination >= 0 && destination < layers.length) {
+          layers[position] = layers[destination]; layers[destination] = layer;
+        }
+      } else if (operation === "flip") layers.reverse();
+      else if (operation === "flip_orientation") values.orientation = values.orientation === "first_layer_outside" ?
+        "last_layer_outside" : "first_layer_outside";
+      else if (operation === "set_air_barrier") values.air_barrier = params.layer_id ?
+        { layer_id: params.layer_id, face: params.face } : null;
+      else return refused("request.unknown_operation", "Unknown Layer action.", this.revision);
+    } else if (operation === "add") {
+      layer.segments.splice(params.index === undefined ? layer.segments.length : params.index, 0,
+        Object.assign(freshSegment(++this.sequence), { width_mm: params.width_mm || 600 }));
+    } else if (operation === "remove") {
+      if (layer.segments.length === 1) return refused("validation.failed", "A Layer needs a segment.", this.revision);
+      layer.segments.splice(layer.segments.indexOf(segment), 1);
+    } else if (operation === "update") Object.assign(segment, params.values);
+    else if (operation === "set_material") segment.material_id = params.material_id;
+    else if (operation === "mirror") layers.forEach(function (row) { row.segments.reverse(); });
+    else return refused("request.unknown_operation", "Unknown Layer-Segment action.", this.revision);
+    this.revision += 1;
+    return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
+      value: { id: target.id }, affected: [], findings: [], detail: null };
+  };
+
+  Host.prototype.libraryMetadata = function () {
+    return this.libraryProviders.map(function (provider) {
+      var generation = this.libraryGenerations[provider.id] || null;
+      return Object.assign({}, provider, { catalogs: provider.kinds.map(function (kind) {
+        return { kind: kind, generation: generation, state: this.libraryFailures[provider.id] ? "failed" :
+          (!generation ? "unloaded" : ((this.libraryCatalogs[provider.id] || []).length ? "loaded" : "empty")),
+        failure: this.libraryFailures[provider.id] || null, age_seconds: generation ? 65 : null, freshness: {} };
+      }, this) });
+    }, this);
+  };
+  Host.prototype.libraryResolution = function (row, kind) {
+    var source = function (record) { var s = record.values.source;
+      return s && s.kind === "library" && s.library_id === row.library_id && s.record_id === row.record_id; };
+    var records = kind && kind !== "materials" ? this.windows[kind].records : this.materials.records;
+    var exact = records.filter(source);
+    var candidates = exact.length ? exact : records.filter(function (record) {
+      return record.values.name === row.snapshot.name;
+    });
+    var result = { outcome: exact.length > 1 ? "ambiguous_source" : exact.length ? "reuse" :
+      candidates.length > 1 ? "ambiguous_name" : candidates.length ? "review_required" : "create", candidates: [] };
+    candidates.forEach(function (record) {
+      var differences = Object.keys(row.snapshot).filter(function (key) { return key !== "id" &&
+        JSON.stringify(record.values[key]) !== JSON.stringify(row.snapshot[key]); }).map(function (key) {
+        return { field: key, local: record.values[key], incoming: row.snapshot[key],
+          local_present: Object.prototype.hasOwnProperty.call(record.values, key), incoming_present: true };
+      });
+      result.candidates.push({ id: record.id, name: record.values.name, differences: differences,
+        expected_values: JSON.parse(JSON.stringify(record.values)), comparison_available: source(record),
+        source_changed: source(record) ? record.values.source.snapshot.notes !== row.snapshot.notes : null });
+    });
+    return result;
+  };
+  Host.prototype.libraryQuery = function (payload) {
+    if (payload.name === "ph_composer.library.export_preview") { this.libraryExportPreview(payload); return; }
+    var params = payload.params, rows = this.libraryCatalogs[params.provider_id] || [];
+    rows = rows.filter(function (row) { return (row.kind || "materials") === params.kind; });
+    var generation = this.libraryGenerations[params.provider_id], outcome;
+    if (payload.session !== this.session) outcome = refused("session.inactive", "The Model changed.", null);
+    else if (params.generation !== generation) outcome = refused("library.generation_stale", "Refresh this library.",
+      this.revision);
+    else {
+      var metadata = this.libraryMetadata().filter(function (row) { return row.id === params.provider_id; })[0];
+      var offset = params.offset || 0, end = Math.min(rows.length, offset + (params.limit || 100));
+      var catalog = metadata.catalogs.filter(function (row) { return row.kind === params.kind; })[0];
+      var page = Object.assign({}, catalog, { rows: rows.slice(offset, end).map(function (row) {
+        return Object.assign({}, row, { resolution: this.libraryResolution(row, params.kind) });
+      }, this), total: rows.length, offset: offset, next_offset: end < rows.length ? end : null,
+      warnings: [], unavailable: [] });
+      outcome = { status: "completed", value: page, revision: this.revision };
+    }
+    var self = this;
+    this.window.setTimeout(function () {
+      self.publish("query.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
+    }, 0);
+  };
+  Host.prototype.libraryExportPreview = function (payload) {
+    var params = payload.params, selected = params.records || [], sources = [
+      ["materials", "ph_composer.assemblies.material", this.materials],
+      ["frames", "ph_composer.windows.frame", this.windows.frames],
+      ["glazings", "ph_composer.windows.glazing", this.windows.glazings],
+      ["psi_install_types", "ph_composer.windows.psi_install_type", this.windows.psi_install_types]
+    ];
+    var kinds = sources.filter(function (entry) { return entry[2]; }).map(function (entry) {
+      return { kind: entry[0], count: (entry[2].records || []).filter(function (record) {
+        return params.scope !== "selected" || selected.some(function (row) {
+          return row.record_kind === entry[1] && row.id === record.id;
+        });
+      }).length };
+    });
+    this.publish("query.result", { request_id: payload.request_id, session: payload.session,
+      outcome: payload.session !== this.session ? refused("session.inactive", "The Model changed.", null) : {
+        status: "completed", revision: this.revision,
+        value: { kinds: kinds, omissions: [], projection_digest: "preview", revision: this.revision }
+      } });
+  };
+  Host.prototype.libraryView = function (payload) {
+    var params = payload.params, verb = payload.name.split(".").pop();
+    if (verb === "remove") this.libraryProviders = this.libraryProviders.filter(function (row) {
+      return row.id !== params.provider_id;
+    });
+    if (verb === "load" || verb === "refresh") {
+      if (this.failLibraryRefresh) this.libraryFailures[params.provider_id] =
+        { code: "library.file_unreadable", message: "The configured library could not be read." };
+      else { this.libraryGenerations[params.provider_id] = (this.libraryGenerations[params.provider_id] || 0) + 1;
+        delete this.libraryFailures[params.provider_id]; }
+    }
+    var provider = this.libraryMetadata().filter(function (row) { return row.id === params.provider_id; })[0];
+    var value = provider ? provider.catalogs.filter(function (row) { return row.kind === params.kind; })[0] :
+      this.libraryMetadata();
+    this.snapshot();
+    this.publish("view.result", { request_id: payload.request_id, session: payload.session,
+      outcome: { status: "completed", effect: "none", revision: this.revision, value: value } });
+  };
+  // A synthetic preview of Window copy targets. Ruby owns real transactions, provenance and thermal results.
+  Host.prototype.windowLibraryCopy = function (params, staged) {
+    var incoming = (this.libraryCatalogs[params.provider_id] || []).filter(function (row) {
+      return row.kind === params.kind && row.library_id === params.library_id && row.record_id === params.record_id;
+    })[0];
+    if (!incoming || params.generation !== this.libraryGenerations[params.provider_id]) {
+      return refused("library.generation_stale", "Refresh and choose again.", this.revision);
+    }
+    var target = params.assignment, type, cell;
+    if (target && target.mode === "model_default") {
+      if (JSON.stringify(target.expected_settings) !== JSON.stringify(this.windows.settings)) {
+        return refused("record.stale", "The defaults changed.", this.revision);
+      }
+    } else if (target) {
+      type = this.windows.types.records.filter(function (row) { return row.id === target.id; })[0];
+      cell = type && type.values.elements.filter(function (row) { return row.id === target.element_id; })[0];
+      if (!cell || cell.kind === "empty" || JSON.stringify(type.values) !== JSON.stringify(target.expected_values)) {
+        return refused("record.stale", "The target changed.", this.revision);
+      }
+    }
+    var records = this.windows[params.kind].records, local = records.filter(function (row) {
+      return row.id === params.local_id;
+    })[0];
+    if (params.choice === "use_library" && (!local ||
+      JSON.stringify(local.values) !== JSON.stringify(params.expected_values))) {
+      return refused("record.stale", "The local product changed.", this.revision);
+    }
+    if (params.choice === "create") {
+      local = { id: params.kind + "_preview_" + (++this.sequence), values: {}, uses: [], use_count: 0 };
+      records.push(local);
+    }
+    if (!local) return refused("library.choice_invalid", "Choose a local product.", this.revision);
+    if (params.choice !== "keep_local") local.values = JSON.parse(JSON.stringify(incoming.snapshot));
+    if (target && target.mode === "model_default") this.windows.settings.default_psi_install_id = local.id;
+    else if (cell) {
+      if (params.kind === "frames") cell.frames[target.side] = local.id;
+      else cell.glazing_id = local.id;
+      type.display.thermal = { u_w: null, u_effective: null, elements: [],
+        findings: ["Preview changed definition: canonical thermal results require the Ruby host."] };
+    }
+    if (!staged) this.revision++;
+    return { status: "completed", effect: "committed", revision: this.revision,
+      value: { local_id: local.id, assigned: Boolean(target) } };
+  };
+  Host.prototype.libraryCopy = function (payload) {
+    if (payload.params.kind !== "materials") return this.windowLibraryCopy(payload.params, false);
+    var params = payload.params, rows = this.libraryCatalogs[params.provider_id] || [];
+    var incoming = rows.filter(function (row) {
+      return row.library_id === params.library_id && row.record_id === params.record_id;
+    })[0];
+    if (!incoming || params.generation !== this.libraryGenerations[params.provider_id]) {
+      return refused("library.generation_stale", "The catalog changed. Refresh and choose again.", this.revision);
+    }
+    var assignment = params.assignment, assembly, layer, segment;
+    if (assignment) {
+      assembly = this.assemblies.records.filter(function (row) { return row.id === assignment.id; })[0];
+      layer = assembly && assembly.values.layers.filter(function (row) { return row.id === assignment.layer_id; })[0];
+      segment = layer && layer.segments.filter(function (row) { return row.id === assignment.segment_id; })[0];
+      if (!segment || JSON.stringify(assignment.expected_values) !== JSON.stringify(assembly.values)) {
+        return refused("record.stale", "The assignment target changed. Nothing was written.", this.revision);
+      }
+    }
+    var local = this.materials.records.filter(function (record) { return record.id === params.local_id; })[0];
+    if (params.choice === "use_library" && (!local ||
+      JSON.stringify(local.values) !== JSON.stringify(params.expected_values))) {
+      return refused("record.stale", "The local values changed. Nothing was written.", this.revision);
+    }
+    if (params.choice === "create") {
+      local = { id: "mat_library_" + (++this.sequence), values: {}, user_data: {}, uses: [], use_count: 0 };
+      this.materials.records.push(local);
+    }
+    if (params.choice === "create" || params.choice === "use_library") {
+      Object.assign(local.values, JSON.parse(JSON.stringify(incoming.snapshot))); delete local.values.id;
+      local.values.source = { kind: "library", provider_kind: "ph_composer.library.file",
+        record_kind: "materials", library_id: incoming.library_id, record_id: incoming.record_id,
+        fingerprint_version: 1, fingerprint: "0".repeat(64), copied_at: "2026-10-01T12:00:00Z",
+        snapshot: JSON.parse(JSON.stringify(incoming.snapshot)) };
+    }
+    if (!local) return refused("library.choice_invalid", "Choose a local copy.", this.revision);
+    if (segment) segment.material_id = local.id;
+    this.revision += 1;
+    return { status: "completed", effect: "committed", revision: this.revision, value: {
+      local_id: local.id, assigned: Boolean(segment) }, message: "Library copy applied." };
   };
 
   Host.prototype.find = function (id) {

@@ -7,7 +7,10 @@ module PhComposer
     INCH_TO_M = 0.0254
     QUANTUM_M = 0.000001 # 0.001 mm, the geometry-stamp normalization.
 
-    Snapshot = Struct.new(:loops_m, :normal, :plane_offset_m, :area_m2, :digest, keyword_init: true) do
+    # Glue is detached host state used to decide whether adjacency may cut, not geometric identity.
+    # It stays out of the geometry digest and exported geometry payload.
+    Snapshot = Struct.new(:loops_m, :normal, :plane_offset_m, :area_m2, :digest, :has_glued_instances,
+                          keyword_init: true) do
       def outer_loop
         loops_m.first
       end
@@ -35,14 +38,31 @@ module PhComposer
       end
       normal = world_normal(face.normal, transform)
       plane = dot(normal, loops.fetch(0).fetch(0))
-      area = face.area(transform).to_f * INCH_TO_M * INCH_TO_M
+      area = loop_area_m2(loops.fetch(0)) - loops.drop(1).sum { |loop| loop_area_m2(loop) }
       canonical = {
         "plane" => quantize(plane), "normal" => normal.map { |value| quantize(value) },
         "outer" => canonical_loop(loops.fetch(0)),
         "holes" => loops.drop(1).map { |loop| canonical_loop(loop) }.sort
       }
       Snapshot.new(:loops_m => loops, :normal => normal, :plane_offset_m => plane, :area_m2 => area,
-                   :digest => "sha256:#{CanonicalJson.digest(canonical)}")
+                   :digest => "sha256:#{CanonicalJson.digest(canonical)}",
+                   :has_glued_instances => face.get_glued_instances.any?)
+    end
+
+    # SDK Face.area includes visual openings cut by glued components, even when those openings
+    # create no Face inner loop. Gross geometry follows the actual world-space boundary loops.
+    # Shift to the first vertex before summing cross products to avoid large-coordinate cancellation.
+    def loop_area_m2(loop)
+      origin = loop.fetch(0)
+      points = loop.map { |point| point.zip(origin).map { |coordinate, offset| coordinate - offset } }
+      vector = [0.0, 0.0, 0.0]
+      points.each_with_index do |point, index|
+        following = points[(index + 1) % points.length]
+        vector[0] += point[1] * following[2] - point[2] * following[1]
+        vector[1] += point[2] * following[0] - point[0] * following[2]
+        vector[2] += point[0] * following[1] - point[1] * following[0]
+      end
+      Math.sqrt(vector.sum { |coordinate| coordinate**2 }) / 2.0
     end
 
     def equivalent_full_face?(left, right, plane_tolerance_m:, angle_tolerance_degrees:, point_tolerance_m:)
@@ -150,6 +170,7 @@ module PhComposer
     end
 
     private_class_method :opposite_normals?, :same_loops?, :match_unordered,
-                         :point_close?, :minimum_edge, :distance, :world_normal, :canonical_loop, :quantize, :dot
+                         :point_close?, :minimum_edge, :distance, :world_normal, :canonical_loop, :quantize, :dot,
+                         :loop_area_m2
   end
 end

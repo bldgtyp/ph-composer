@@ -1,0 +1,40 @@
+# A separate library provider extension
+
+The development example at `tools/examples/library_provider/` registers two synthetic Materials
+from a separate SketchUp extension. It changes no PH-Composer source file. The values illustrate
+the contract and are not product specifications.
+
+Copy `bldgtyp_example_library.rb` and the sibling `bldgtyp_example_library/` directory into the
+SketchUp Plugins directory. Enable PH-Composer first, then enable BLDGTYP Example Library. If the
+example loads before PH-Composer has composed, it prints a diagnostic and registers nothing.
+Enable it again after PH-Composer finishes, or call `BldgtypExampleLibrary.activate` in the Ruby
+Console. A duplicate registration is refused.
+
+The loader registers a `SketchupExtension`. Its install file declares a feature requiring the
+library foundation and the Materials owner. The feature registers a zero-argument provider
+factory through `feature.library_provider`. The provider exposes `id`, `provider_kind`, `label`,
+`kinds`, `list(kind)` and `freshness`; it never receives a Model or writes a record. `list` returns
+an immutable `PhComposer::Library::Provider::Batch` with complete wire rows. Each row carries
+library identity, record identity, the wire schema version and a detached snapshot.
+
+Wire fields are defined in [the file format](LIBRARY_FILE_FORMAT.md). The shared contract test in
+`tests/support/library_provider_fixtures.rb` checks batch shape and immutability. The example's
+tests also prove early-load diagnostics, atomic registration refusal, unsupported kinds and a
+panel-closed copy followed by read-back on Ruby 2.7.2 and 3.2.2.
+
+For the public API walkthrough, open a synthetic Model and close the panel. Load
+`tools/examples/library_provider/walkthrough.rb`, then run:
+
+```ruby
+proof = BldgtypExampleLibraryWalkthrough.run
+raise "Example failed" unless proof.fetch("passed")
+```
+
+The script connects to the active discovered session with explicit grants, loads and lists the
+provider, previews a copy, applies that proposal with its revision and digest, then reads the
+local Material through the public API. It reuses an unchanged prior copy. A conflicting local
+record requires review before the script proceeds. No file path is part of the provider's
+identity or the returned proof.
+
+Native installation and copying are separate acceptance checks. The example is currently kept
+under development tools; its standalone repository and publication are pending.

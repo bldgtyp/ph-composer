@@ -1,16 +1,19 @@
 /* A native selection handoff owns a frozen set of Faces and revision until its modal closes. */
 PhComposerUI.define("sections/selection_assignment",
-  ["panel", "snapshot", "request", "sections/attached_zone_assignment"],
-function (panel, snapshot, requests, assignment) {
+  ["panel", "snapshot", "request", "sections/attached_zone_assignment", "sections/assembly_assignment"],
+function (panel, snapshot, requests, assignment, assemblies) {
   "use strict";
   var SECTION = "ph_composer.zones.faces.selection_assignment";
   var CLOSE = "ph_composer.zones.faces.close_attached_assignment";
 
-  function SelectionAssignment(session, send, guard) {
+  function SelectionAssignment(session, send, guard, refused) {
     this.session = session;
     this.send = send;
     this.guard = guard;
+    this.refused = refused || function (reason) { panel.notify(reason, "warning"); };
     this.closeRequest = requests.channel(session, send, "selection_assignment_close", "view.invoke");
+    this.assembly = new assemblies.Picker(session, send, guard, this.refused);
+    this.root = this.assembly.root;
     this.form = null;
     this.token = null;
     this.waiting = null;
@@ -18,6 +21,7 @@ function (panel, snapshot, requests, assignment) {
   }
 
   SelectionAssignment.prototype.consume = function (state, records) {
+    this.assembly.refresh(state);
     this.closeRequest.consume(state);
     if (this.form) { this.form.consume(state); return; }
     var pending = snapshot.value(state, SECTION);
@@ -26,7 +30,7 @@ function (panel, snapshot, requests, assignment) {
     if (reason) {
       var fresh = this.waiting !== pending.token;
       this.waiting = pending.token;
-      if (fresh) panel.notify(reason, "warning");
+      if (fresh) this.refused(reason);
       return;
     }
     if (state.ui && state.ui.activeTab !== "overview") {
@@ -47,8 +51,9 @@ function (panel, snapshot, requests, assignment) {
     });
   };
 
-  SelectionAssignment.prototype.active = function () { return Boolean(this.form); };
+  SelectionAssignment.prototype.active = function () { return Boolean(this.form) || this.assembly.active(); };
   SelectionAssignment.prototype.dispose = function () {
+    this.assembly.dispose();
     if (this.form) this.form.dispose();
     this.form = null;
     this.closeRequest.reset();

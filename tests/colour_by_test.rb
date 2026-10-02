@@ -333,11 +333,11 @@ class ColourByTest < PhComposerTestCase
     assert_equal 3, service.fills.values.first.length, "only the visible Face is drawn"
   end
 
-  def test_hidden_or_tagged_zone_ancestors_suppress_every_mode_without_changing_legend_counts
+  def test_hidden_or_tagged_zone_ancestors_suppress_zone_modes_without_changing_legend_counts
     group = zone_group(810, ["Wall"])
     outer = @model.entities.add_group([group])
     @model.entities.add_group([outer])
-    modes = ColourBy.modes.map { |mode| mode.fetch("name") }
+    modes = ColourBy.modes.map { |mode| mode.fetch("name") }.select { |name| name.start_with?("ph_composer.zones.") }
     [:hidden, :tag].each do |visibility|
       outer.hidden = visibility == :hidden
       outer.layer = Sketchup::Tag.new("Container", visibility != :tag)

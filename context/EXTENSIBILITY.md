@@ -64,6 +64,27 @@ hook needed by a built-in feature exposes a missing public capability. Fix that 
 presenting it as a supported extension point. Cross-feature access uses declared public contracts;
 neither a global service locator nor an event bus should conceal business dependencies.
 
+The handler-side dependency read and reference retargeter contracts are now implemented in the
+foundation. Use `request.query` for a registered read of an explicitly required feature. A
+reference owner registers `feature.reference_retargeter(name, target_kind:)`; a definition delete
+calls `request.retarget_references` and gives its returned plan to `propose_delete`. The deletion
+and all rewrites share one proposal and Undo entry. See [CONTRACTS.md](CONTRACTS.md), "Handler-side
+dependency reads" and "Compound proposals", for schemas, refusals and final-state checks. The
+Assemblies is implemented as a definition feature requiring no geometry feature. Zones requires
+Assemblies, declares the Face's Assembly reference and owns assignment, usage and retargeting.
+Windows remains future work. The shared named-table contribution primitive is implemented;
+its first inventory integration is in progress in P2-05.
+
+`ui.contributeTable(tableId, contribution)` registers columns and row actions without retaining a
+snapshot. The owner calls `ui.composeTable(tableId, options, state, send)` for each paint.
+Callbacks receive the current row and snapshot; contributed actions invoke their own registered
+operation. Duplicate column or action ids refuse composition. The returned registration disposer
+removes the contribution. An absent contributor leaves the owner's table intact.
+
+Snapshot sections using the same query and equal parameters share one read within one build.
+Each receives a detached outcome; no Index or result survives into the next build. This lets the
+Face table and Assembly usage share one walk while keeping the shell independent of feature names.
+
 ## Contribution contracts
 
 Use several small contracts. A contributor implements only the capabilities their contribution
@@ -101,6 +122,72 @@ A composition-root registration or generated build inventory is permitted. Requi
 feature branch inside shell, session, export orchestration or UI-kit internals is a contract
 defect. Explicit registration does not promise dynamic plugin loading, a marketplace or separate
 installation in the MVP.
+
+### Library providers and kind adapters
+
+`feature.library_provider(name, contract_version: 1, kinds: [...], &factory)` registers a
+zero-argument factory returning configured provider instances. Named wire kinds must already
+have adapters in the registration batch. `kinds: ["*"]` explicitly serves all registered wire
+kinds; the wildcard is exclusive and cannot mix with named ids. The file provider uses this
+capability, so adding an adapter requires no edit to its declaration. Factories receive no Model
+or request; private configuration belongs to the provider and its setup store.
+
+`feature.library_kind(name, contract_version: 1, record_kind:, adapter:)` registers the owner's
+adapter for a catalog record kind it owns. Entity reference targets cannot be imported as catalog
+kinds. A wire kind has one adapter. `Declarations::LibraryAdapter` declares `wire_kind`,
+`wire_version`, `fingerprint_version`, `wire_schema`, `mapped_schema`, ordered `fingerprint_fields`,
+`map`, `reverse`, `fingerprint`, `local_read`, `create`, `replace` and optional `assign`. Supported
+contract, wire and fingerprint versions are 1. Fingerprint fields are unique mapped-schema
+property names in canonical order. Pure mapping and reverse mapping use detached values; the
+fingerprint returns a lowercase SHA-256 hex string and excludes provenance and local identities.
+
+Local operations are `Declarations::LibraryCallback` values with `params`, `result` schemas and
+`handler(request, proposal)`. Local reads receive no mutable proposal and cannot stage writes;
+their projected engine still reads the current caller's staged records. They return detached
+projections with `id`, semantic `mapped` values, raw authored `expected_values` and optional
+`source`. Create and replacement run under the adapter's owner and share the coordinator's
+proposal. Their schemas describe the owner's normal values and guards. Replacement preserves
+identity, references and metadata. Optional assignment accepts the generic wrapper
+`{ "target" => owner_target, "local_id" => copied_id }`; only the kind owner translates the
+wrapper into its assignment action's vocabulary. Copy and assignment refuse together.
+
+A feature requiring `ph_composer.library` may join a library copy to its own proposal through
+`request.participant("ph_composer.library.copy_into_proposal").call(request, proposal, copy_params)`.
+It uses the public copy operation's closed parameter and result schemas and the same trusted
+catalog resolution and owner callbacks. The supplied proposal must be the caller's active
+proposal. Preview remains detached; the enclosing action provides the only native transaction.
+Any participant refusal poisons the caller's active proposal, even when the caller catches it.
+This supports staged imports without exposing a nested action dispatcher.
+
+Registration validates ownership, unique ids and supported versions, plus schema and callable
+contracts. Any diagnostic refuses the whole batch. Published declaration metadata and schemas are
+defensively frozen. Invocation validates detached inputs and results and enforces catalog write
+ownership, with refusal retained on the shared proposal. These checks supplement the trusted Ruby
+contributor contract; callbacks never write raw dictionaries or open their own Model operation.
+
+Provider row admission and coordination live under `library/`. A record kind's adapter lives in
+its owning feature; adding one requires no case in the neutral coordinator. Materials is the
+implemented example at `features/assemblies/library_kind.rb`. Providers use the
+[published file envelope](../docs/LIBRARY_FILE_FORMAT.md). The
+[panel-closed walkthrough](../tools/examples/library/materials_walkthrough.rb) uses public reads
+and actions after private per-machine setup. The separate synthetic provider extension at
+`tools/examples/library_provider/` passes the shared provider contract, load-order diagnostics,
+registration refusal and panel-closed public API copy/read-back on both Rubies. Its native
+installation and standalone repository remain open. A connection provider is still proposed.
+
+### Registered file exports
+
+`feature.file_export(name, description:, params:, result:, examples:, &handler)` declares a
+synchronous file write under the owner's namespace and the explicit `export` grant. It runs
+without a Model proposal, sequence or Undo operation. The handler receives the validated request;
+the result is detached and validated against its declared schema. Raising `FileExportCancelled`
+returns a neutral cancellation outcome. Ruby contributors remain trusted code and own native
+destination review and safe writes.
+
+The library exporter uses reverse mappings from each registered kind and checks semantic equality
+after mapping the wire row back. Invalid or lossy reverse mappings refuse before the save dialog.
+Local record ids remain the wire ids; attribution is informational and excluded from semantic
+comparison. Only declared wire fields and sanitized origins reach the file.
 
 ### Colour-by modes
 
@@ -209,13 +296,14 @@ the SKP. The panel sends `view.invoke` and settles the answer in its own result 
 
 ### Viewport tools
 
-Implemented in P1-D. A feature that authors by pointing writes a `Sketchup::Tool` and starts it
-from a menu item. Spaces' Mark floor, window placement and the thermal-bridge edge tool are all
-this shape, so the rules below are the shared ones, learned from the Classify tool's host gate
+Classify and Window Place use this contract. A feature that authors by pointing writes a
+`Sketchup::Tool` and starts it from a menu item or a registered view command. Spaces' Mark floor
+and the thermal-bridge edge tool share this shape. The rules below come from Classify's host gate
 ([evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-classify-tool.md)).
 
 - **Pick, never walk.** `Pick.face_path(view, x, y)` answers what is under the pointer as a
-  root-to-leaf instance path, and a feature turns that path into an occurrence without touching the
+  root-to-leaf instance path. `Pick.face_point` adds the world-space camera-ray intersection
+  with that same Face from one pick. A feature turns the path into an occurrence without touching the
   Model. A pointer move happens tens of times a second; a Model walk per move costs what P1-D
   measured a walk to cost. `core/pick.rb` and `core/drag_set.rb` name no feature.
 - **The tool owns the gesture, not the change.** It calls a registered action through `API.invoke`
@@ -366,6 +454,8 @@ Prove implemented contracts with small synthetic examples and reusable contract 
 - Register a record kind and a simple editor.
 - Register an importer that proposes changes and applies them through model operations.
 - Register an exporter that consumes only HBJSON.
+- Register a provider from a separate extension. The [provider example](../docs/LIBRARY_PROVIDER_EXAMPLE.md)
+  proves the shared contract and public copy/read-back without editing core composition.
 - Register a Colour-by mode through the shared overlay interface. Phase 1's Face and Zone modes
   register through the public `colour_mode` call
   ([walkthrough](../tools/examples/authoring/colour_by_walkthrough.rb)).

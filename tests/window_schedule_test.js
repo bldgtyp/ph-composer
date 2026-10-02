@@ -1,0 +1,219 @@
+"use strict";
+var assert = require("assert"), test = require("node:test"), dom = require("./support/dom_stub"),
+  source = require("./support/panel_source"), fixtures = require("./support/window_fixtures");
+function setup() {
+  var document = dom.buildDocument(""), context = { document: document, Intl: Intl, innerWidth: 1280,
+    setTimeout: setTimeout, clearTimeout: clearTimeout }; context.window = context; dom.attachEvents(context);
+  var modules = source.start(context, ["window_editor"]), state = fixtures.state(), sent = [];
+  var host = { zone_id: "zon_a", zone_path: [10], entity_path: [20], entity_id: null };
+  state.sections["ph_composer.windows.place_tool"] = { status: "completed", value: {
+    active: false, type_id: null, anchor: "sill_center", host: null } };
+  state.sections["ph_composer.windows.units"] = { status: "completed", value: { units: [
+    { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [10, 30] },
+      values: { window_type_id: "wnt_a", anchor: "sill_center" }, host: host,
+      findings: [{ code: "detached_definition", repair: "reset_to_type" }] },
+    { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [10, 31] },
+      values: { window_type_id: "wnt_a", anchor: "head_left" }, host: null,
+      findings: [{ code: "copy_id_pending", repair: "next_mutation" }, { code: "unhosted", repair: "rehost" }] }
+  ] } };
+  state.sections["ph_composer.zones.overview"] = { status: "completed", value: { zones: [
+    { reference: { zone_id: "zon_a", zone_path: [10] }, values: { name: "Room A", level: "Ground" } }
+  ] } };
+  state.sections["ph_composer.zones.faces.faces"] = { status: "completed", value: { faces: [
+    { reference: host, values: { face_type: "Wall", boundary_condition: "Outdoors" } }
+  ] } };
+  var editor = new modules.window_editor.View(document.body, state.session, function (type, payload) {
+    sent.push({ type: type, payload: payload }); }); editor.render(state);
+  return { editor: editor, state: state, sent: sent, document: document };
+}
+function click(node) { node.listeners.click({ preventDefault: function () {}, stopPropagation: function () {} }); }
+function text(node) { return node.textContent + node.children.map(text).join(" "); }
+function viewOutcome(o, status) {
+  var call = o.sent[o.sent.length - 1].payload;
+  o.state.ui.viewResults = {}; o.state.ui.viewResults[call.request_id] = { session: o.state.session,
+    request_id: call.request_id, outcome: { status: status, message: "Placement refused." } };
+  o.editor.render(o.state);
+}
+test("Place uses the view channel; active tool keeps Stop and measurement guidance", function () {
+  var o = setup(); click(o.editor.placeButton);
+  assert.strictEqual(o.sent[0].type, "view.invoke");
+  assert.strictEqual(o.sent[0].payload.name, "ph_composer.windows.place_tool.choose");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params)),
+    { type_id: "wnt_a", anchor: "sill_center" });
+  click(o.editor.placeButton); assert.strictEqual(o.sent.length, 1);
+  viewOutcome(o, "completed");
+  o.state.sections["ph_composer.windows.place_tool"].value = {
+    active: true, type_id: "wnt_a", anchor: "head_right", host: null }; o.editor.render(o.state);
+  assert.strictEqual(o.editor.placement.anchor.value, "head_right");
+  assert.strictEqual(o.editor.placement.stop.hidden, false);
+  assert.ok(text(o.editor.placement.root).includes("sill="));
+  o.editor.placement.anchor.value = "center"; o.editor.placement.anchor.listeners.change({});
+  assert.strictEqual(o.sent[1].payload.params.anchor, "center"); viewOutcome(o, "completed");
+  click(o.editor.placement.stop); assert.strictEqual(o.sent[2].payload.name, "ph_composer.windows.place_tool.stop");
+  assert.strictEqual(o.sent.filter(function (call) { return call.type === "action.invoke"; }).length, 0);
+});
+test("Schedule counts occurrences independently of copied ids and shows host context and native state", function () {
+  var o = setup(); assert.strictEqual(o.editor.tabs.select("schedule"), true);
+  var rows = o.editor.schedule.mount._table.rows;
+  assert.strictEqual(rows["type:wnt_a"].cells.count.textContent, "2");
+  assert.ok(text(o.editor.schedule.root).includes("Room A"));
+  assert.ok(text(o.editor.schedule.root).includes("Ground"));
+  assert.ok(text(o.editor.schedule.root).includes("Wall 1"));
+  assert.ok(text(o.editor.schedule.root).includes("Detached definition"));
+  assert.ok(text(o.editor.schedule.root).includes("Copy, id pending"));
+  var locate = o.editor.schedule.root.querySelector("[data-row-action='locate']"); click(locate);
+  assert.strictEqual(o.sent[0].type, "view.invoke");
+  assert.strictEqual(o.sent[0].payload.name, "ph_composer.windows.units.locate");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params.units[0].entity_path)), [10, 30]);
+});
+test("Schedule repairs freeze occurrence targets and confirm consequences before the one mutation", function () {
+  var o = setup(); o.editor.tabs.select("schedule");
+  click(o.editor.schedule.root.querySelector("[data-row-action='reset_to_type']"));
+  assert.strictEqual(o.sent.length, 0); assert.ok(o.editor.guard());
+  assert.strictEqual(o.editor.tabs.select("builder"), false);
+  var form = o.editor.schedule.dialog; assert.ok(text(form).includes("primary definition"));
+  assert.strictEqual(o.editor.schedule.cancel.getAttribute("aria-label"), "Cancel");
+  click(form.querySelector("[data-schedule-apply]"));
+  assert.strictEqual(o.sent.length, 1); assert.strictEqual(o.sent[0].payload.name,
+    "ph_composer.windows.units.reset_to_type");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params.units)), [
+    { unit_id: "wun_a", entity_path: [10, 30] } ]);
+});
+test("drafts guard Schedule and Place; withdrawn/disposed controls cannot send", function () {
+  var o = setup(); o.editor.dimension("columns_m", 0, o.editor.title);
+  o.editor.dimensionField.input.value = "600 mm"; o.editor.dimensionField.input.listeners.input({});
+  assert.strictEqual(o.editor.tabs.select("schedule"), false); click(o.editor.placeButton);
+  assert.strictEqual(o.sent.length, 0); o.editor.dimensionField.cancel(); o.editor.tabs.select("schedule");
+  click(o.editor.schedule.root.querySelector("[data-row-action='reset_to_type']"));
+  var held = o.editor.schedule.dialog.querySelector("[data-schedule-apply]");
+  delete o.state.sections["ph_composer.windows.units"]; o.editor.render(o.state); click(held);
+  assert.strictEqual(o.sent.length, 0); assert.strictEqual(o.editor.guard(), null);
+  o.editor.dispose(); click(o.editor.placeButton); assert.strictEqual(o.sent.length, 0);
+});
+test("finite geometry permits Place without complete products; each route chooses an explicit Type", function () {
+  var o = setup(), record = o.editor.rawRecord(); record.display.thermal.complete = false;
+  record.values.elements[0].glazing_id = null; o.editor.render(o.state);
+  assert.strictEqual(o.editor.placeButton.disabled, false);
+  assert.strictEqual(o.editor.placement.anchor.children.length, 9);
+  assert.strictEqual(o.editor.placement.stop.hidden, true);
+  click(o.editor.list.querySelector("[aria-label='Place Three elements']"));
+  assert.strictEqual(o.sent[0].payload.params.type_id, "wnt_a"); viewOutcome(o, "completed");
+  o.editor.tabs.select("schedule"); click(o.editor.schedule.root.querySelector("[data-row-action='place']"));
+  assert.strictEqual(o.sent[1].payload.params.type_id, "wnt_a"); viewOutcome(o, "completed");
+  record.values.columns_m[0] = null; o.editor.render(o.state);
+  assert.strictEqual(o.editor.placeButton.disabled, true);
+  assert.strictEqual(o.editor.list.querySelector("[aria-label='Place Three elements']").disabled, true);
+  o.editor.placement.choose("wnt_a"); assert.strictEqual(o.sent.length, 2);
+});
+test("view refusal settles only its channel and permits retry; Escape stops the active tool", function () {
+  var o = setup(); click(o.editor.placeButton); viewOutcome(o, "refused");
+  assert.strictEqual(o.editor.guard(), null); click(o.editor.placeButton); assert.strictEqual(o.sent.length, 2);
+  viewOutcome(o, "completed"); o.state.sections["ph_composer.windows.place_tool"].value.active = true;
+  o.state.sections["ph_composer.windows.place_tool"].value.type_id = "wnt_a"; o.editor.render(o.state);
+  o.editor.onKeydown({ key: "Escape", target: o.editor.root, preventDefault: function () {} });
+  assert.strictEqual(o.sent[2].payload.name, "ph_composer.windows.place_tool.stop");
+});
+test("Swap and Re-host pick explicit targets; a refused mutation retains Apply and Cancel", function () {
+  var o = setup(); o.editor.tabs.select("schedule");
+  click(o.editor.schedule.root.querySelector("[data-row-action='swap_type']"));
+  var dialog = o.editor.schedule.dialog, select = dialog.querySelector("select");
+  click(dialog.querySelector("[data-schedule-apply]")); assert.strictEqual(o.sent.length, 0);
+  select.value = "wnt_a"; click(dialog.querySelector("[data-schedule-apply]"));
+  assert.strictEqual(o.sent[0].payload.params.type_id, "wnt_a");
+  o.state.ui.actionResult = { session: o.state.session, request_id: o.sent[0].payload.request_id,
+    outcome: { status: "refused", message: "Overlapping Window." } }; o.editor.render(o.state);
+  assert.strictEqual(dialog.open, true); assert.strictEqual(o.editor.schedule.apply.disabled, false);
+  assert.ok(text(dialog).includes("Overlapping Window.")); click(o.editor.schedule.cancel);
+  click(o.editor.schedule.root.querySelector("[data-row-action='rehost']"));
+  dialog = o.editor.schedule.dialog; select = dialog.querySelector("select"); select.value = select.children[1].value;
+  click(dialog.querySelector("[data-schedule-apply]"));
+  assert.strictEqual(o.sent[1].payload.name, "ph_composer.windows.units.rehost");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[1].payload.params.unit.entity_path)), [10, 31]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[1].payload.params.host.zone_path)), [10]);
+});
+test("a changed unit blocks held repair Apply until Cancel; missing Types cancel repairs", function () {
+  var o = setup(); o.editor.tabs.select("schedule");
+  click(o.editor.schedule.root.querySelector("[data-row-action='reset_to_type']"));
+  var held = o.editor.schedule.apply;
+  o.state.sections["ph_composer.windows.units"].value.units[0].values.anchor = "head_left"; o.editor.render(o.state);
+  assert.strictEqual(held.disabled, true); click(held); assert.strictEqual(o.sent.length, 0);
+  assert.ok(text(o.editor.schedule.dialog).includes("changed")); click(o.editor.schedule.cancel);
+  click(o.editor.schedule.root.querySelector("[data-row-action='remove']")); held = o.editor.schedule.apply;
+  delete o.state.sections["ph_composer.windows.types"]; o.editor.render(o.state); click(held);
+  assert.strictEqual(o.sent.length, 0); assert.strictEqual(o.editor.guard(), null);
+});
+test("unknown Type occurrences remain counted; mirrored repair uses its singular public parameter", function () {
+  var o = setup(), rows = o.state.sections["ph_composer.windows.units"].value.units;
+  rows[0].values.window_type_id = "wnt_missing"; rows[0].findings = [{ code: "unknown_type", repair: "swap_type" }];
+  rows[1].findings = [{ code: "mirrored", repair: "new_flipped_type" }]; o.editor.render(o.state);
+  o.editor.tabs.select("schedule");
+  assert.strictEqual(o.editor.schedule.mount._table.rows["type:wnt_missing"].cells.count.textContent, "1");
+  click(o.editor.schedule.root.querySelector("[data-row-action='new_flipped_type']"));
+  click(o.editor.schedule.apply); assert.strictEqual(o.sent[0].payload.name,
+    "ph_composer.windows.units.new_flipped_type");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params.unit.entity_path)), [10, 31]);
+  assert.strictEqual(o.sent[0].payload.params.units, undefined);
+});
+test("a changed replacement Type or native revision invalidates the opened repair and keeps Cancel", function () {
+  [true, false].forEach(function (typeChanged) {
+    var o = setup(); o.editor.tabs.select("schedule");
+    click(o.editor.schedule.root.querySelector("[data-row-action='swap_type']"));
+    var dialog = o.editor.schedule.dialog, held = o.editor.schedule.apply;
+    dialog.querySelector("select").value = "wnt_a";
+    if (typeChanged) o.editor.rawRecord().values.columns_m[0] = 4;
+    o.state.revision += 1; o.editor.render(o.state);
+    assert.strictEqual(held.disabled, true); assert.strictEqual(o.editor.schedule.cancel.disabled, false);
+    click(held); assert.strictEqual(o.sent.length, 0);
+    assert.ok(text(dialog).includes("Model changed"));
+    click(o.editor.schedule.cancel); assert.strictEqual(o.editor.guard(), null);
+  });
+});
+test("a stale refusal cannot retry from the held review; reopening captures the new revision", function () {
+  var o = setup(); o.editor.tabs.select("schedule");
+  click(o.editor.schedule.root.querySelector("[data-row-action='reset_to_type']"));
+  click(o.editor.schedule.apply); assert.strictEqual(o.sent.length, 1);
+  o.state.revision += 1;
+  o.state.ui.actionResult = { session: o.state.session, request_id: o.sent[0].payload.request_id,
+    outcome: { status: "refused", message: "Native geometry changed." } };
+  o.editor.render(o.state); var held = o.editor.schedule.apply;
+  assert.strictEqual(held.disabled, true); click(held); assert.strictEqual(o.sent.length, 1);
+  assert.strictEqual(o.editor.schedule.cancel.disabled, false);
+  assert.ok(text(o.editor.schedule.dialog).includes("Cancel and reopen")); click(o.editor.schedule.cancel);
+  click(o.editor.schedule.root.querySelector("[data-row-action='reset_to_type']"));
+  click(o.editor.schedule.apply); assert.strictEqual(o.sent.length, 2);
+});
+test("Schedule shows distinct occurrence words, friendly Face labels and identity only in tooltips", function () {
+  var o = setup(); o.state.sections["ph_composer.zones.faces.faces"].value.faces[0].values.face_type = "RoofCeiling";
+  o.editor.render(o.state); o.editor.tabs.select("schedule");
+  var rows = o.editor.schedule.mount._table.rows, first = rows["[10,30]"], second = rows["[10,31]"];
+  assert.strictEqual(first.cells.name.textContent, "Window 1");
+  assert.strictEqual(second.cells.name.textContent, "Window 2");
+  assert.strictEqual(first.cells.host.textContent, "Roof or ceiling 1");
+  assert.ok(first.cells.name.title.includes("wun_a")); assert.ok(first.cells.name.title.includes("10 / 30"));
+  assert.ok(second.cells.name.title.includes("10 / 31"));
+  assert.ok(!text(o.editor.schedule.root).includes("wun_a"));
+  assert.ok(!text(o.editor.schedule.root).includes("RoofCeiling"));
+  o.state.sections["ph_composer.windows.units"].value.units[0].values.window_type_id = "wnt_missing";
+  o.editor.render(o.state);
+  var missing = o.editor.schedule.mount._table.rows["type:wnt_missing"];
+  assert.strictEqual(missing.cells.name.textContent, "Unknown Type");
+  assert.ok(missing.cells.name.title.includes("wnt_missing"));
+  assert.ok(!text(o.editor.schedule.root).includes("wnt_missing"));
+  click(first.controls.locate.node);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params.units[0])),
+    { unit_id: "wun_a", entity_path: [10, 30] });
+});
+
+test("Schedule shows net opaque area of the host occurrence and withholds uncertain area", function () {
+  var o = setup(), host = o.state.sections["ph_composer.windows.units"].value.units[0].host;
+  o.state.sections["ph_composer.windows.unit_areas"] = { status: "completed", value: {
+    faces: [{ reference: { entity_id: host.entity_id, entity_path: host.entity_path,
+      zone_path: host.zone_path, zone_id: host.zone_id }, net_opaque_area_m2: 10.01 }] } };
+  o.editor.render(o.state); o.editor.tabs.select("schedule");
+  var rows = o.editor.schedule.mount._table.rows;
+  assert.strictEqual(rows["[10,30]"].cells.net_area.textContent, "10.01");
+  assert.strictEqual(rows["[10,31]"].cells.net_area.textContent, "—");
+  o.state.sections["ph_composer.windows.unit_areas"].value.faces[0].net_opaque_area_m2 = null;
+  o.editor.render(o.state);
+  assert.strictEqual(o.editor.schedule.mount._table.rows["[10,30]"].cells.net_area.textContent, "—");
+});

@@ -202,6 +202,58 @@ class RecordsEngineTest < PhComposerTestCase
     refute_same @engine.find("test.fixture.part", first).fetch("user_data"), first_copy.fetch("user_data")
   end
 
+  def test_duplicate_can_transform_authored_values_without_changing_metadata
+    original = seed_part("user_data" => { "note" => "keep" })
+    changes = PhComposer::Records::ChangeSet.new
+    mapping = @engine.propose_duplicate("test.fixture.part", [original], changes) do |values|
+      values.merge("label" => "Copy")
+    end
+    @engine.apply(changes)
+
+    copy = @engine.find("test.fixture.part", mapping.fetch(original))
+    assert_equal "Copy", copy.fetch("label")
+    assert_equal({ "note" => "keep" }, copy.fetch("user_data"))
+    refute_equal "Copy", @engine.find("test.fixture.part", original).fetch("label")
+  end
+
+  def test_duplicate_transform_cannot_write_identity_or_metadata
+    original = seed_part
+    changes = PhComposer::Records::ChangeSet.new
+    error = assert_raises(PhComposer::CodedError) do
+      @engine.propose_duplicate("test.fixture.part", [original], changes) do |values|
+        values.merge("id" => original)
+      end
+    end
+    assert_equal "params.invalid", error.code
+    assert changes.empty?
+  end
+
+  def test_duplicate_transformed_values_are_validated_before_writing
+    original = seed_part
+    changes = PhComposer::Records::ChangeSet.new
+    error = assert_raises(PhComposer::CodedError) do
+      @engine.propose_duplicate("test.fixture.part", [original], changes) do |values|
+        values.merge("label" => 42)
+      end
+    end
+    assert_equal "validation.failed", error.code
+    assert changes.empty?
+  end
+
+  def test_duplicate_transformed_references_are_checked_and_refuse_the_whole_collection
+    first = seed_part
+    second = seed_part
+    changes = PhComposer::Records::ChangeSet.new
+    error = assert_raises(PhComposer::CodedError) do
+      @engine.propose_duplicate("test.fixture.part", [first, second], changes) do |values|
+        values.merge("definition_id" => "tdf_MISSING00001")
+      end
+    end
+    assert_equal "reference.invalid", error.code
+    assert_equal error, changes.refusal
+    assert_equal [first, second].sort, @engine.ids("test.fixture.part").sort
+  end
+
   # The first copy names a counterpart that is staged after it.
   def test_a_duplicated_collection_accepts_a_reference_to_a_later_copy
     later = seed_part

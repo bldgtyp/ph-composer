@@ -1,0 +1,496 @@
+{
+  "schema_version": 1,
+  "run_id": "synthetic-window-export",
+  "sections": {
+    "ph_composer.windows.export.window_constructions": {
+      "version": 1,
+      "records": [
+        {
+          "id": "con_small",
+          "name": "Synthetic window",
+          "u_w": 0.9796000000000001,
+          "glazing": {
+            "id": "glz_A",
+            "name": "Synthetic glazing",
+            "ug_w_m2k": 0.6,
+            "g_value": 0.5
+          },
+          "sides": {
+            "top": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "right": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "bottom": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "left": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            }
+          }
+        },
+        {
+          "id": "con_large",
+          "name": "Synthetic window",
+          "u_w": 0.8687111111111112,
+          "glazing": {
+            "id": "glz_A",
+            "name": "Synthetic glazing",
+            "ug_w_m2k": 0.6,
+            "g_value": 0.5
+          },
+          "sides": {
+            "top": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "right": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "bottom": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "left": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            }
+          }
+        },
+        {
+          "id": "con_equal",
+          "name": "Synthetic window",
+          "u_w": 0.9796000000000001,
+          "glazing": {
+            "id": "glz_A",
+            "name": "Synthetic glazing",
+            "ug_w_m2k": 0.6,
+            "g_value": 0.5
+          },
+          "sides": {
+            "top": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "right": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "bottom": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "left": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            }
+          }
+        },
+        {
+          "id": "con_zero",
+          "name": "Synthetic window",
+          "u_w": 0.9796000000000001,
+          "glazing": {
+            "id": "glz_zero",
+            "name": "Synthetic glazing",
+            "ug_w_m2k": 0.6,
+            "g_value": 0
+          },
+          "sides": {
+            "top": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "right": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "bottom": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "left": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            }
+          }
+        },
+        {
+          "id": "con_one",
+          "name": "Synthetic window",
+          "u_w": 0.9796000000000001,
+          "glazing": {
+            "id": "glz_one",
+            "name": "Synthetic glazing",
+            "ug_w_m2k": 0.6,
+            "g_value": 1
+          },
+          "sides": {
+            "top": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "right": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "bottom": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            },
+            "left": {
+              "frame": {
+                "id": "frm_A",
+                "name": "Synthetic frame",
+                "width_m": 0.08,
+                "uf_w_m2k": 1.1,
+                "psi_g_w_mk": 0.035
+              },
+              "install_id": "psi_A",
+              "psi_install_w_mk": 0.04,
+              "install_name": "Synthetic install"
+            }
+          }
+        }
+      ]
+    },
+    "ph_composer.windows.export.apertures": {
+      "version": 1,
+      "records": [
+        {
+          "id": "ap_0",
+          "unit_id": "unit_0",
+          "type_id": "type_small",
+          "element_id": "element_A",
+          "name": "Synthetic opening 0",
+          "host_face_id": "face_wall",
+          "zone_id": "zone_A",
+          "construction_id": "con_small",
+          "polygon_m": [
+            [
+              0.125,
+              0,
+              0.5
+            ],
+            [
+              0.625,
+              0,
+              0.5
+            ],
+            [
+              0.625,
+              0,
+              1.5
+            ],
+            [
+              0.125,
+              0,
+              1.5
+            ]
+          ],
+          "variant_type": "Synthetic small",
+          "install_depth_m": 0.1,
+          "is_operable": false
+        },
+        {
+          "id": "ap_1",
+          "unit_id": "unit_1",
+          "type_id": "type_large",
+          "element_id": "element_A",
+          "name": "Synthetic opening 1",
+          "host_face_id": "face_wall",
+          "zone_id": "zone_A",
+          "construction_id": "con_large",
+          "polygon_m": [
+            [
+              0.875,
+              0,
+              0.5
+            ],
+            [
+              1.625,
+              0,
+              0.5
+            ],
+            [
+              1.625,
+              0,
+              2.0
+            ],
+            [
+              0.875,
+              0,
+              2.0
+            ]
+          ],
+          "variant_type": "Synthetic large",
+          "install_depth_m": 0.1,
+          "is_operable": false
+        },
+        {
+          "id": "ap_2",
+          "unit_id": "unit_2",
+          "type_id": "type_small",
+          "element_id": "element_A",
+          "name": "Synthetic opening 2",
+          "host_face_id": "face_wall",
+          "zone_id": "zone_A",
+          "construction_id": "con_equal",
+          "polygon_m": [
+            [
+              1.875,
+              0,
+              0.5
+            ],
+            [
+              2.375,
+              0,
+              0.5
+            ],
+            [
+              2.375,
+              0,
+              1.5
+            ],
+            [
+              1.875,
+              0,
+              1.5
+            ]
+          ],
+          "variant_type": "Synthetic small",
+          "install_depth_m": 0.1,
+          "is_operable": false
+        },
+        {
+          "id": "ap_3",
+          "unit_id": "unit_3",
+          "type_id": "type_zero",
+          "element_id": "element_A",
+          "name": "Synthetic opening 3",
+          "host_face_id": "face_wall",
+          "zone_id": "zone_A",
+          "construction_id": "con_zero",
+          "polygon_m": [
+            [
+              2.625,
+              0,
+              0.5
+            ],
+            [
+              3.125,
+              0,
+              0.5
+            ],
+            [
+              3.125,
+              0,
+              1.5
+            ],
+            [
+              2.625,
+              0,
+              1.5
+            ]
+          ],
+          "variant_type": "Synthetic zero",
+          "install_depth_m": 0.1,
+          "is_operable": false
+        },
+        {
+          "id": "ap_4",
+          "unit_id": "unit_4",
+          "type_id": "type_one",
+          "element_id": "element_A",
+          "name": "Synthetic opening 4",
+          "host_face_id": "face_wall",
+          "zone_id": "zone_A",
+          "construction_id": "con_one",
+          "polygon_m": [
+            [
+              3.375,
+              0,
+              0.5
+            ],
+            [
+              3.875,
+              0,
+              0.5
+            ],
+            [
+              3.875,
+              0,
+              1.5
+            ],
+            [
+              3.375,
+              0,
+              1.5
+            ]
+          ],
+          "variant_type": "Synthetic one",
+          "install_depth_m": 0.1,
+          "is_operable": false
+        }
+      ]
+    }
+  }
+}

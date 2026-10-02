@@ -52,7 +52,9 @@ module PhComposer
 
         def reader
           records = RecordReader.new(Records::Engine.new(@model, @registry.catalog), @registry.catalog)
-          SnapshotReader.new(records, GeometrySnapshot.new(@cursor.entries, Sessions.for(@model).revision))
+          snapshot = GeometrySnapshot.new(@cursor.entries, Sessions.for(@model).revision,
+            :model_dictionaries => @cursor.model_dictionaries)
+          SnapshotReader.new(records, snapshot)
         end
       end
 

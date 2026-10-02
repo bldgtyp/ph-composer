@@ -104,7 +104,8 @@ module PhComposer
       # Duplicates records as one collection: every new id is allocated first, then each reference
       # between copied records points to the new counterpart while references outside the copy stay
       # shared. `user_data` is copied unchanged. A copy that needs copy rules the installed extensions
-      # do not provide is refused whole. Returns the old-to-new id mapping.
+      # do not provide is refused whole. An optional block transforms detached authored values only;
+      # identity and metadata remain engine-owned. Returns the old-to-new id mapping.
       def propose_duplicate(kind_id, ids, change_set)
         staging(change_set) do
           kind = @catalog.kind(kind_id)
@@ -124,6 +125,14 @@ module PhComposer
                                                             kind.label, record.fetch("id"), mapping,
                                                             :mapping_kind => kind_id)
             end
+            if block_given?
+              values = yield DeepCopy.call(kind.values(copy))
+              unless values.is_a?(Hash)
+                raise CodedError.new("params.invalid", "#{kind.label} duplicate values must be a JSON object.")
+              end
+              check_value_keys!(kind, values)
+              copy = copy.select { |key, _value| RecordKind::RESERVED_KEYS.include?(key) }.merge(DeepCopy.call(values))
+            end
             propose(kind, change_set, nil, copy, :check_references => false)
             copy
           end
@@ -131,6 +140,9 @@ module PhComposer
           copies.each { |copy| check_references!(kind, copy, change_set) }
           mapping
         end
+      rescue StandardError => error
+        change_set.refuse(error)
+        raise
       end
 
       # Raises one namespace's payload to the installed version on each record, through the declared

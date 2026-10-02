@@ -8,6 +8,20 @@ module PhComposer
 
         module_function
 
+        # Detached native occurrences for contributors needing host context, including unclassified
+        # Faces. Classification validity remains the consuming feature's export policy.
+        def contexts(reader)
+          reader.snapshot.entries.select { |entry| entry.kind == "face" }.map do |entry|
+            stored = entry.record(FACE_DICTIONARY)
+            owner = Zones::ExportProjection.zone_owner(reader.snapshot, entry)
+            valid = stored && Schema.problems(stored).empty?
+            record = valid && reader.entity_record(stored,
+              :fields => %w[face_type boundary_condition assembly_id adjacency])
+            { "path" => entry.path, "record" => record || nil, "zone_id" => owner && owner[1]["id"],
+              "geometry" => entry.geometry }
+          end
+        end
+
         def install(feature)
           feature.query("#{PREFIX}.export_preflight", :description => "Face classification and Assembly checks.",
                         :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
@@ -35,7 +49,7 @@ module PhComposer
         def preflight(request)
           index = Zones::Index.new(request.model)
           findings = Zones::Occurrences.zones(request.model, :index => index).flat_map do |zone|
-            Zones::Occurrences.faces(zone).flat_map do |occurrence|
+            Zones::Occurrences.faces(zone, :index => index).flat_map do |occurrence|
               face_findings(request, zone, occurrence, index)
             end
           end
@@ -54,7 +68,9 @@ module PhComposer
           issues.map do |code, message, blocking|
             { "code" => code, "section" => SECTION, "object_id" => record && record["id"],
               "message" => message, "blocks_export" => blocking, "locate" => {
-                "name" => "#{PREFIX}.locate", "params" => { "faces" => [occurrence.reference] }
+                "name" => "#{PREFIX}.locate", "params" => {
+                  "faces" => [occurrence.reference.merge("entity_id" => record && record["id"])]
+                }
               } }
           end
         end
@@ -72,10 +88,38 @@ module PhComposer
           issues.concat(attached_zone_issues(request, record)) if record["boundary_condition"] == "AttachedZone"
           return issues unless record["boundary_condition"] && (!state || state == "current")
 
-          issues << [record["assembly_id"] ? "construction.unavailable" : "construction.missing",
-                     "Face #{record.fetch('id')} needs an available authored Assembly. " \
-                     "Assembly authoring is scheduled for the next phase.", true]
+          issues.concat(construction_issues(request, record))
+          issues.concat(AssemblyAssignment.findings(request, occurrence, record, index).map do |finding|
+            [finding.fetch("code"), finding.fetch("message"), false]
+          end)
           issues
+        end
+
+        def construction_issues(request, record)
+          id = record["assembly_id"]
+          return [["construction.missing", "Face #{record.fetch('id')} needs an authored Assembly.", true]] unless id
+
+          state = AssemblyAssignment.state(request, record)
+          if state != "resolved"
+            return [["construction.#{state}", "Face #{record.fetch('id')} names #{state} Assembly #{id}.", true]]
+          end
+          assembly = AssemblyAssignment.catalog(request).fetch(:records).fetch(id)
+          conditions = request.instance_variable_get(:@face_construction_conditions) || begin
+            rows = request.query("ph_composer.assemblies.export_preflight").fetch("findings")
+            request.instance_variable_set(:@face_construction_conditions, rows)
+          end
+          material_ids = assembly.fetch("values").fetch("layers").flat_map do |layer|
+            layer.fetch("segments").map { |segment| segment["material_id"] }
+          end
+          conversion = conditions.find do |finding|
+            (finding.fetch("code") == "material_specific_heat_unavailable" &&
+              material_ids.include?(finding["object_id"])) ||
+              (finding.fetch("code") == "construction_thermal_layer_limit" && finding["object_id"] == id)
+          end
+          return [] if assembly.dig("display", "complete") && !conversion
+
+          reason = conversion ? conversion.fetch("message") : assembly.fetch("findings").first.fetch("message")
+          [["construction.incomplete", "Face #{record.fetch('id')} names incomplete Assembly #{id}: #{reason}", true]]
         end
 
         def attached_zone_issues(request, record)
@@ -151,7 +195,7 @@ module PhComposer
           ["adjacency.stale", "Face has no current reciprocal Surface endpoint."]
         end
         private_class_method :face_findings, :assignment_issues, :attached_zone_issues, :attached_record_state,
-                             :omission_reason
+                             :omission_reason, :construction_issues
       end
     end
   end

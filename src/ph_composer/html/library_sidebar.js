@@ -1,0 +1,172 @@
+/* One persistent kind browser beside a work surface. The selected source is local or one provider. */
+PhComposerUI.define("library_sidebar", ["library_adapters", "library_drag", "library_rows",
+  "library_store", "library_copy", "library_setup", "workspace"],
+  function (adapters, Drag, rows, Store, Copy, Setup, ui) {
+    "use strict";
+    var el = ui.element;
+    function Sidebar(options) {
+      var self = this;
+      this.adapter = adapters.adapter(options.adapter);
+      this.onUse = options.onUse;
+      this.ownerBusy = options.busy || function () { return false; };
+      this.changed = options.changed || function () {};
+      this.entries = Object.create(null);
+      this.expanded = Object.create(null);
+      this.context = {};
+      this.records = [];
+      this.enabled = false;
+      this.collapsed = window.innerWidth < 900;
+      this.root = el("aside", "library-sidebar-root");
+      this.root.setAttribute("aria-label", this.adapter.title);
+      this.toggleButton = ui.button(this.adapter.title, function () { self.toggle(); });
+      this.toggleButton.className = "library-sidebar-toggle";
+      this.toggleButton.setAttribute("data-editor-local", "");
+      this.content = el("div", "library-sidebar-content");
+      this.source = el("select", "library-sidebar-source");
+      this.source.setAttribute("aria-label", "Library source");
+      this.source.addEventListener("change", function () {
+        if (!self.store || self.ownerBusy() || (self.copy && (!self.copy.root.hidden || self.copy.busy()))) {
+          self.source.value = self.store ? self.store.selected : ""; return;
+        }
+        self.closeDetails(); self.drag.end(); self.store.select(self.source.value); self.updateRows();
+      });
+      this.content.appendChild(this.source);
+      this.sourceStatus = el("small", "muted"); this.sourceStatus.setAttribute("role", "status");
+      this.content.appendChild(this.sourceStatus);
+      this.refreshButton = ui.button("Refresh", function () { if (!self.busy()) self.store.refresh(); });
+      this.setupButton = ui.button("Library setup…", function () { if (!self.busy()) self.setup.open(); });
+      var controls = el("div", "library-source-controls"); controls.appendChild(this.refreshButton);
+      controls.appendChild(this.setupButton); this.content.appendChild(controls);
+      if (options.localOnly) { this.source.hidden = true; controls.hidden = true; }
+      this.search = el("input");
+      this.search.type = "search";
+      this.search.placeholder = "Search name, category or notes";
+      this.search.setAttribute("aria-label", "Search " + this.adapter.title.toLowerCase());
+      this.search.addEventListener("input", function () { self.renderList(); });
+      this.count = el("small", "muted");
+      this.list = el("div", "library-sidebar-list");
+      this.content.appendChild(this.search);
+      this.content.appendChild(this.count);
+      this.content.appendChild(this.list);
+      this.root.appendChild(this.toggleButton);
+      this.root.appendChild(this.content);
+      if (!options.localOnly && options.session && options.send && this.adapter.wireKind) {
+        this.store = new Store(options.session, options.send, this.adapter.wireKind, this.changed);
+        this.copy = new Copy(options.session, options.send, this.adapter, function (outcome) {
+          if (outcome && outcome.status === "completed" && self.store.page) {
+            self.store.read(0, self.store.page.generation);
+          }
+          self.changed();
+        });
+        this.setup = new Setup(options.session, options.send, this.changed);
+        this.root.appendChild(this.copy.root); this.root.appendChild(this.setup.root);
+      }
+      this.more = ui.button("Load more", function () { self.store.more(); });
+      this.content.appendChild(this.more);
+      this.drag = new Drag(this);
+      this.paint();
+    }
+    Sidebar.prototype.paint = function () {
+      this.content.hidden = this.collapsed;
+      this.root.classList.toggle("is-collapsed", this.collapsed);
+      this.toggleButton.setAttribute("aria-expanded", String(!this.collapsed));
+    };
+    Sidebar.prototype.toggle = function () {
+      if (this.disposed) return;
+      this.closeDetails();
+      this.collapsed = !this.collapsed;
+      this.paint();
+    };
+    Sidebar.prototype.refresh = function (state, context, enabled) {
+      if (this.disposed) return;
+      this.state = state;
+      this.context = context;
+      this.enabled = Boolean(enabled);
+      if (this.store) {
+        this.store.update(state);
+        var held = this.copy.held;
+        this.copy.refresh(state, this.enabled && this.store.available &&
+          (!held || this.store.valid(held.row.library)));
+        this.setup.refresh(state);
+      }
+      this.updateRows();
+      var live = this.records.map(function (row) { return row.id; }), self = this;
+      Object.keys(this.entries).forEach(function (id) {
+        if (live.indexOf(id) !== -1) return;
+        if (self.detail === self.entries[id]) self.closeDetails();
+        delete self.entries[id];
+      });
+      this.renderList();
+      if (this.detail) this.renderDetails();
+      this.paintActions();
+      if (!this.enabled) this.drag.end();
+    };
+    Sidebar.prototype.use = function (row, selection) {
+      if (this.disposed || !this.enabled || this.busy() || !this.records.some(function (live) {
+        return live.id === row.id;
+      })) return false;
+      var target = this.adapter.target(Object.assign({}, this.context, selection ? { selection: selection } : {}));
+      if (target.hint) return false;
+      if (row.library) return this.copy.use(row, this.adapter.assignment ? this.adapter.assignment(this.context,
+        target.params) : target.params);
+      return this.onUse ? this.onUse(row, target.params) : false;
+    };
+    Sidebar.prototype.reveal = function (id) {
+      if (this.disposed) return;
+      this.collapsed = false;
+      this.paint();
+      if (!id) { this.search.focus(); return; }
+      this.search.value = "";
+      this.expanded = Object.create(null);
+      this.renderList();
+      this.openDetails(this.entries[id]);
+    };
+    Sidebar.prototype.dispose = function () {
+      this.disposed = true;
+      this.enabled = false;
+      this.drag.end();
+      this.closeDetails();
+      if (this.store) { this.store.dispose(); this.copy.dispose(); this.setup.dispose(); }
+    };
+    Sidebar.prototype.busy = function () {
+      return this.ownerBusy() || Boolean(this.copy && this.copy.busy()) || Boolean(this.store && this.store.busy());
+    };
+    Sidebar.prototype.guard = function () {
+      if (this.copy && (this.copy.busy() || !this.copy.root.hidden)) return "Finish or cancel the library review.";
+      if (this.setup && !this.setup.root.hidden) return "Close library setup before leaving.";
+      return null;
+    };
+    Sidebar.prototype.updateRows = function () {
+      this.records = this.store && this.store.selected ? this.store.rows : this.adapter.read(this.state);
+      this.source.replaceChildren(el("option", "", "In this file")); this.source.children[0].value = "";
+      if (this.store) this.store.providers.forEach(function (provider) {
+        var option = el("option", "", provider.label); option.value = provider.id; this.source.appendChild(option);
+      }, this);
+      this.source.value = this.store ? this.store.selected : "";
+      this.source.disabled = !this.store || !this.store.available || this.busy() || Boolean(this.guard());
+      this.refreshButton.hidden = !this.store || !this.store.selected;
+      this.refreshButton.disabled = this.busy() || Boolean(this.store && this.store.busy());
+      this.setupButton.disabled = !this.setup || !this.setup.enabled || this.busy();
+      this.more.hidden = !this.store || !this.store.page || this.store.page.next_offset == null;
+      this.more.disabled = this.busy() || Boolean(this.store && this.store.busy());
+      var page = this.store && this.store.selected && this.store.page;
+      var status = this.store && this.store.selected && this.store.busy() ? "Loading library…" : "";
+      if (this.store && this.store.error) status = this.store.error;
+      if (page && page.state === "failed") status = (page.failure && page.failure.message ||
+       "Library refresh failed.") +
+        (page.generation ? " Showing the last successful catalog, loaded " + Math.floor(page.age_seconds || 0) +
+          " seconds ago." : " No catalog is available.");
+      if (page && (page.unavailable || []).length) status += " Some record kinds or libraries are unavailable.";
+      if (page && (page.warnings || []).length) status += " Some library records were skipped or normalized.";
+      this.sourceStatus.textContent = status;
+      this.renderList();
+    };
+    Sidebar.prototype.add = function (row) {
+      if (this.disposed || !this.enabled || this.busy() || !this.copy || !this.records.some(function (live) {
+        return live.id === row.id;
+      })) return false;
+      return this.copy.use(row);
+    };
+    Object.assign(Sidebar.prototype, rows);
+    return Sidebar;
+  });

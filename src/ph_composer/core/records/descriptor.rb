@@ -13,7 +13,7 @@ module PhComposer
 
       attr_reader :kind, :label, :schema_version, :values_schema, :occurrence_schema, :references
 
-      # `references` are Records::Reference fields at the top level of a record. `occurrence_schema`
+      # `references` are Records::Reference declarations over top-level or nested record fields. `occurrence_schema`
       # is nil for a catalog kind, whose records are named by id alone.
       def initialize(kind:, label:, schema_version: nil, values_schema: ANY_OBJECT, occurrence_schema: nil,
                      references: [])

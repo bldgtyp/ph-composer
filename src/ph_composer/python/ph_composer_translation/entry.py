@@ -35,5 +35,5 @@ def export_json(text: str, sections: Sequence[Section[Any, Any]] = SECTIONS) -> 
         return json.dumps(result)
     from .conformance import check
 
-    check(canonical)
+    check(canonical, result.get("window_schema_exceptions", ()))
     return json.dumps(result)

@@ -2,6 +2,58 @@
   "run_id": "run-phase-one-two-zones",
   "schema_version": 1,
   "sections": {
+    "ph_composer.assemblies.export.constructions": {
+      "records": [
+        {
+          "id": "asm_Single000001",
+          "layers": [
+            {
+              "id": "lyr_000000000001",
+              "segments": [
+                {
+                  "id": "seg_000000000010",
+                  "material_id": "mat_Wool00000001",
+                  "steel_stud_spacing_mm": null,
+                  "width_mm": 1000
+                }
+              ],
+              "thickness_mm": 100
+            },
+            {
+              "id": "lyr_000000000002",
+              "segments": [
+                {
+                  "id": "seg_000000000020",
+                  "material_id": "mat_Wool00000001",
+                  "steel_stud_spacing_mm": null,
+                  "width_mm": 1000
+                }
+              ],
+              "thickness_mm": 50
+            }
+          ],
+          "materials": [
+            {
+              "category": "insulation",
+              "color": "#88aa44",
+              "conductivity_w_mk": 0.04,
+              "density_kg_m3": 40,
+              "emissivity": 0.9,
+              "id": "mat_Wool00000001",
+              "name": "Synthetic wool",
+              "specific_heat_j_kgk": 1400
+            }
+          ],
+          "name": "Two wool thicknesses",
+          "orientation": "first_layer_outside"
+        }
+      ],
+      "version": 1
+    },
+    "ph_composer.assemblies.export.material_sources": {
+      "records": [],
+      "version": 1
+    },
     "ph_composer.zones.export.zones": {
       "records": [
         {
@@ -38,6 +90,7 @@
     "ph_composer.zones.faces.export.faces": {
       "records": [
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Ground",
           "face_type": "Floor",
           "geometry": {
@@ -78,6 +131,7 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "RoofCeiling",
           "geometry": {
@@ -118,10 +172,11 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
-            "area_m2": 12.000000000000002,
+            "area_m2": 12.0,
             "digest": "sha256:b50a8e75059a7bdca15dc293eade2da6e66acea50807bfd65772389d53d6e77c",
             "loops_m": [
               [
@@ -170,7 +225,7 @@
               ]
             },
             "counterpart_geometry": {
-              "area_m2": 12.000000000000002,
+              "area_m2": 12.0,
               "digest": "sha256:27a6780a7a255f332018a8ee92abe5365f6a053937d1cdd95ce32e7750decf22"
             },
             "pair_id": "adj_df142d4002f2",
@@ -186,14 +241,15 @@
               ]
             },
             "self_geometry": {
-              "area_m2": 12.000000000000002,
+              "area_m2": 12.0,
               "digest": "sha256:8b82bb2ae5a5277caa03e3f9b58417f5af27a4efe3b4e9e832d05f06ab00ff44"
             }
           },
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Surface",
           "face_type": "Wall",
           "geometry": {
-            "area_m2": 12.000000000000002,
+            "area_m2": 12.0,
             "digest": "sha256:8b82bb2ae5a5277caa03e3f9b58417f5af27a4efe3b4e9e832d05f06ab00ff44",
             "loops_m": [
               [
@@ -230,10 +286,11 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
-            "area_m2": 14.999999999999998,
+            "area_m2": 15.0,
             "digest": "sha256:05e7494817c073be6271865c11274c2eb18cdb5290f3548d0784c45a1a03681a",
             "loops_m": [
               [
@@ -270,10 +327,11 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
-            "area_m2": 14.999999999999998,
+            "area_m2": 15.0,
             "digest": "sha256:82e2fd0d84e8191ac271277959d3fc0b4473b7bb27b47ffa913ed64d8d164333",
             "loops_m": [
               [
@@ -310,10 +368,11 @@
           "zone_id": "zon_AAAAAAAAAAAA"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Ground",
           "face_type": "Floor",
           "geometry": {
-            "area_m2": 16.000000000000004,
+            "area_m2": 16.0,
             "digest": "sha256:157a4acb6be8b2e369a176c2356375742a9c582f331cfa44d575d9e1fe47a98a",
             "loops_m": [
               [
@@ -350,10 +409,11 @@
           "zone_id": "zon_BBBBBBBBBBBB"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "RoofCeiling",
           "geometry": {
-            "area_m2": 16.000000000000004,
+            "area_m2": 16.0,
             "digest": "sha256:7f8e1919925bddcd12ed36ca458e9c26baa43d98b01d84248144b2b496e58446",
             "loops_m": [
               [
@@ -402,7 +462,7 @@
               ]
             },
             "counterpart_geometry": {
-              "area_m2": 12.000000000000002,
+              "area_m2": 12.0,
               "digest": "sha256:8b82bb2ae5a5277caa03e3f9b58417f5af27a4efe3b4e9e832d05f06ab00ff44"
             },
             "pair_id": "adj_df142d4002f2",
@@ -418,14 +478,15 @@
               ]
             },
             "self_geometry": {
-              "area_m2": 12.000000000000002,
+              "area_m2": 12.0,
               "digest": "sha256:27a6780a7a255f332018a8ee92abe5365f6a053937d1cdd95ce32e7750decf22"
             }
           },
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Surface",
           "face_type": "Wall",
           "geometry": {
-            "area_m2": 12.000000000000002,
+            "area_m2": 12.0,
             "digest": "sha256:27a6780a7a255f332018a8ee92abe5365f6a053937d1cdd95ce32e7750decf22",
             "loops_m": [
               [
@@ -462,10 +523,11 @@
           "zone_id": "zon_BBBBBBBBBBBB"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
-            "area_m2": 12.000000000000002,
+            "area_m2": 12.0,
             "digest": "sha256:3c2def924c4f5d36a9d7baa9e02e3a53716e813befa9d364c1273136af2677da",
             "loops_m": [
               [
@@ -502,10 +564,11 @@
           "zone_id": "zon_BBBBBBBBBBBB"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
-            "area_m2": 12.000000000000004,
+            "area_m2": 12.0,
             "digest": "sha256:dbf455a7a4d59365f053ea9066547d3efec09f7a1c0600a121485f564237380e",
             "loops_m": [
               [
@@ -542,10 +605,11 @@
           "zone_id": "zon_BBBBBBBBBBBB"
         },
         {
+          "assembly_id": "asm_Single000001",
           "boundary_condition": "Outdoors",
           "face_type": "Wall",
           "geometry": {
-            "area_m2": 12.000000000000004,
+            "area_m2": 12.0,
             "digest": "sha256:305dcf5a839ee2b844c6ea6ab8394d55104cc50810c448b2c9d7462065f94a5a",
             "loops_m": [
               [

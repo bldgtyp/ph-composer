@@ -28,7 +28,7 @@ current-host checks, with native Undo/Redo and final reciprocal-reference reopen
 
 The feature PRDs remain the behavior authorities. Their plans allocate work within this sequence:
 [Zones](../phase-01-zones-and-adjacency/PLAN.md),
-[faces](../../features/phase-02-envelope/face-assignment/PLAN.md), and
+[faces](../face-assignment/PLAN.md), and
 [export](../../features/cross-phase/validation-and-export/PLAN.md).
 
 This packet coordinates those owners. Each stage still requires its own implementation scope; the

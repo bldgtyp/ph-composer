@@ -1,0 +1,160 @@
+{
+  "format": "ph-composer.library",
+  "schema_version": 1,
+  "kind_schema_versions": {
+    "materials": 1
+  },
+  "library": {
+    "id": "dbeab6dc-b8cc-47ae-9e24-f3f48f273694",
+    "name": "PH-Composer generic starter Materials"
+  },
+  "exported_at": "2026-10-01T12:00:00Z",
+  "kinds": {
+    "materials": [
+      {
+        "id": "starter.fiberglass-batt-standard",
+        "name": "Fiberglass batt, standard density",
+        "category": "insulation",
+        "conductivity_w_mk": 0.045,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal R/in guidance (2011), printed p. 7.5. Temperature and aging conditions unspecified. Unknown properties remain blank. Source: https://www.energy.gov/sites/prod/files/2013/11/f5/40percent_mixed_humid.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.fiberglass-batt-high",
+        "name": "Fiberglass batt, high density",
+        "category": "insulation",
+        "conductivity_w_mk": 0.035,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal R/in guidance (2011), printed p. 7.5. Temperature and aging conditions unspecified. Unknown properties remain blank. Source: https://www.energy.gov/sites/prod/files/2013/11/f5/40percent_mixed_humid.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.fiberglass-loose-fill",
+        "name": "Fiberglass, loose fill",
+        "category": "insulation",
+        "conductivity_w_mk": 0.06,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal R/in guidance (2011), printed p. 7.5. Temperature and aging conditions unspecified. Unknown properties remain blank. Source: https://www.energy.gov/sites/prod/files/2013/11/f5/40percent_mixed_humid.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.cellulose-fiber",
+        "name": "Cellulose fiber",
+        "category": "insulation",
+        "conductivity_w_mk": 0.04,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal R/in guidance (2011), printed p. 7.5. Temperature and aging conditions unspecified. Unknown properties remain blank. Source: https://www.energy.gov/sites/prod/files/2013/11/f5/40percent_mixed_humid.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.mineral-wool",
+        "name": "Mineral wool",
+        "category": "insulation",
+        "conductivity_w_mk": 0.04,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal R/in guidance (2011), printed p. 7.5. Temperature and aging conditions unspecified. Unknown properties remain blank. Source: https://www.energy.gov/sites/prod/files/2013/11/f5/40percent_mixed_humid.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.cotton-fiber-batt",
+        "name": "Cotton-fiber batt",
+        "category": "insulation",
+        "conductivity_w_mk": 0.042,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal R/in guidance (2011), printed p. 7.5. Temperature and aging conditions unspecified. Unknown properties remain blank. Source: https://www.energy.gov/sites/prod/files/2013/11/f5/40percent_mixed_humid.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.eps-board",
+        "name": "EPS board",
+        "category": "insulation",
+        "conductivity_w_mk": 0.035,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal thickness and R-value guidance (2010), p. 1. Temperature, aging and blowing-agent conditions unspecified. Source: https://www.energy.gov/sites/prod/files/guide_to_home_insulation.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.xps-board",
+        "name": "XPS board",
+        "category": "insulation",
+        "conductivity_w_mk": 0.03,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal thickness and R-value guidance (2010), p. 1. Temperature, aging and blowing-agent conditions unspecified. Source: https://www.energy.gov/sites/prod/files/guide_to_home_insulation.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.polyiso-board",
+        "name": "Polyisocyanurate board",
+        "category": "insulation",
+        "conductivity_w_mk": 0.022,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal thickness and R-value guidance (2010), p. 1. Temperature, aging and blowing-agent conditions unspecified. Source: https://www.energy.gov/sites/prod/files/guide_to_home_insulation.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.polyurethane-open",
+        "name": "Open-cell polyurethane",
+        "category": "insulation",
+        "conductivity_w_mk": 0.04,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal thickness and R-value guidance (2010), p. 1. Temperature, aging and blowing-agent conditions unspecified. Source: https://www.energy.gov/sites/prod/files/guide_to_home_insulation.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.polyurethane-closed",
+        "name": "Closed-cell polyurethane",
+        "category": "insulation",
+        "conductivity_w_mk": 0.022,
+        "density_kg_m3": null,
+        "specific_heat_j_kgk": null,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Representative rounded SI value derived from DOE nominal thickness and R-value guidance (2010), p. 1. Temperature, aging and blowing-agent conditions unspecified. Source: https://www.energy.gov/sites/prod/files/guide_to_home_insulation.pdf",
+        "datasheet_links": []
+      },
+      {
+        "id": "starter.gypsum-board",
+        "name": "Paper-faced gypsum board",
+        "category": "finishes",
+        "conductivity_w_mk": 0.28,
+        "density_kg_m3": 750,
+        "specific_heat_j_kgk": 1000,
+        "emissivity": null,
+        "color": "#ffffff",
+        "notes": "Rounded mean of four NIST virgin paper-faced gypsum samples at room temperature (2008), Table 1 and density paragraph, printed p. 660. Specific heat uses the table rather than the conflicting prose range. Source: https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=900117",
+        "datasheet_links": []
+      }
+    ]
+  }
+}

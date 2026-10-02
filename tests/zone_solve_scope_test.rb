@@ -24,6 +24,111 @@ class ZoneSolveScopeTest < PhComposerTestCase
     @next_id = 1_000
   end
 
+  def test_partial_cut_reports_glued_instances_on_either_side_without_changing_geometry
+    [:first, :last].each do |side|
+      wall(101, 0, 0, 4, 0, 3, :east)
+      wall(102, 0, 2, 6, 0, 3, :west)
+      author
+      group = @model.entities.to_a.public_send(side)
+      face = group.entities.to_a.grep(Sketchup::Face).first
+      instance = group.entities.add_instance(Sketchup::ComponentDefinition.new, Geom::Transformation.new)
+      instance.glued_to = face
+      before = faces
+      revision = @session.revision
+      result = solve(all_references)
+      assert_equal "none", result["effect"], result.inspect
+      assert_equal ["adjacency.glued_instances"], finding_codes(result)
+      assert_empty result.dig("value", "pair_ids")
+      assert_equal before, faces
+      assert_equal revision, @session.revision
+      assert_same face, instance.glued_to
+      @model.entities.erase_entities(@model.entities.to_a)
+    end
+  end
+
+  def test_full_match_with_glued_instances_pairs_without_cutting
+    wall(103, 0, 0, 4, 0, 3, :east)
+    wall(104, 0, 0, 4, 0, 3, :west)
+    author
+    originals = @model.entities.to_a.map { |group| group.entities.to_a.grep(Sketchup::Face).first }
+    @model.entities.to_a.each_with_index do |group, index|
+      instance = group.entities.add_instance(Sketchup::ComponentDefinition.new, Geom::Transformation.new)
+      instance.glued_to = originals[index]
+    end
+    result = solve(all_references)
+    assert_equal "committed", result["effect"], result.inspect
+    assert_equal 1, result.dig("value", "pair_ids").length
+    assert_empty finding_codes(result)
+    assert_equal 2, faces.length
+    assert_equal %w[Surface Surface], boundary_conditions
+    assert_equal originals, @model.entities.to_a.map { |group| group.entities.to_a.grep(Sketchup::Face).first }
+  end
+
+  def test_wholly_covered_glued_face_is_not_cut_while_its_larger_counterpart_splits
+    wall(105, 0, 0, 4, 0, 3, :east)
+    wall(106, 0, 1, 3, 0, 3, :west)
+    author
+    group = @model.entities.to_a.last
+    face = group.entities.to_a.grep(Sketchup::Face).first
+    instance = group.entities.add_instance(Sketchup::ComponentDefinition.new, Geom::Transformation.new)
+    instance.glued_to = face
+    result = solve(all_references)
+    assert_equal "committed", result["effect"], result.inspect
+    assert_equal 1, result.dig("value", "pair_ids").length
+    assert_empty finding_codes(result)
+    assert_same face, group.entities.to_a.grep(Sketchup::Face).first
+    assert_same face, instance.glued_to
+    assert_equal "Surface", PhComposer::Zones::Faces::FACE_STORE.read(face)["boundary_condition"]
+    assert_operator faces.length, :>, 2
+  end
+
+  def test_glue_change_without_revision_or_geometry_change_invalidates_public_preview
+    wall(107, 0, 0, 4, 0, 3, :east)
+    wall(108, 0, 2, 6, 0, 3, :west)
+    author
+    params = { "zones" => all_references }
+    preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params)
+    group = @model.entities.to_a.last
+    face = group.entities.to_a.grep(Sketchup::Face).first
+    before_geometry = PhComposer::FaceGeometry.capture(face, Geom::Transformation.new)
+    revision = @session.revision
+    instance = group.entities.add_instance(Sketchup::ComponentDefinition.new, Geom::Transformation.new)
+    instance.glued_to = face
+    assert_equal before_geometry.to_h, PhComposer::FaceGeometry.capture(face, Geom::Transformation.new).to_h
+    assert_equal revision, @session.revision
+    @sequence += 1
+    result = API.invoke(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params,
+      :request => { "sequence" => @sequence, "expected_revision" => revision,
+                    "proposal_digest" => preview.fetch("proposal_digest") })
+    assert_equal %w[refused proposal.changed none], result.values_at("status", "code", "effect")
+    assert_equal 2, faces.length
+  end
+
+  def test_live_cut_guard_checks_both_sides_before_first_native_cut
+    wall(109, 0, 0, 4, 0, 3, :east)
+    wall(110, 0, 2, 6, 0, 3, :west)
+    author
+    request = PhComposer::HandlerRequest.new(:session => @session, :model => @model,
+      :params => { "zones" => all_references }, :revision => @session.revision,
+      :registry => PhComposer::Registry.current,
+      :engine => PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog))
+    proposal = PhComposer::Operations::Proposal.new
+    action = PhComposer::Registry.current.actions.fetch("ph_composer.zones.solve_adjacency")
+    action.handler.call(request, proposal)
+    step = proposal.steps.first
+    assert_equal [false, false], %w[left right].map { |side| step.descriptor.fetch(side).fetch("has_glued_instances") }
+    group = @model.entities.to_a.last
+    face = group.entities.to_a.grep(Sketchup::Face).first
+    instance = group.entities.add_instance(Sketchup::ComponentDefinition.new, Geom::Transformation.new)
+    instance.glued_to = face
+    before = faces
+    PhComposer::Zones::FaceSplit.stub(:apply, ->(*) { flunk "No Face may be cut before checking both glue guards." }) do
+      error = assert_raises(PhComposer::CodedError) { step.apply(@model, {}) }
+      assert_equal "target.changed", error.code
+    end
+    assert_equal before, faces
+  end
+
   def test_solving_every_zone_pairs_each_full_wall_once
     wall(100, 0, 0, 4, 0, 3, :east)
     wall(110, 0, 0, 4, 0, 3, :west)

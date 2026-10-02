@@ -14,6 +14,9 @@ module PhComposer
           # What the Zone translation writes on each Room (python/ph_composer_translation/model_sections.py).
           :user_data_keys => %w[ph_composer.level ph_composer.building_segment],
           :result => {
+            "construction_usage" => [Export::Privacy.fields(%w[assembly_id face_count gross_area_m2])],
+            "window_face_areas" => [Export::Privacy.fields(%w[face_id zone_id gross_area_m2
+              glazed_area_m2 net_area_m2])],
             "canonical_model" => Export::Privacy::Optional.new(
               Export::Privacy.fields(%w[hbjson rooms faces surface_pairs omitted])
             )

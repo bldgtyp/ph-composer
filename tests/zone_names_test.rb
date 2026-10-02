@@ -180,6 +180,36 @@ class ZoneNamesTest < PhComposerTestCase
     refute @state.pending?
   end
 
+  def test_deleted_native_container_does_not_interrupt_session_cleanup
+    @model.entities.define_singleton_method(:remove_observer) do |_observer|
+      raise TypeError, "reference to deleted Entities"
+    end
+    @model.close
+
+    assert_nil PhComposer::Sessions.find(@session.id)
+    assert_empty @state.instance_variable_get(:@containers)
+    assert_empty @state.instance_variable_get(:@groups)
+    refute @state.pending?
+  end
+
+  def test_deleted_definition_container_is_pruned_without_interrupting_live_names
+    @group.entities.define_singleton_method(:remove_observer) do |_observer|
+      raise TypeError, "reference to deleted Entities"
+    end
+    @model.entities.delete(@group)
+    @state.settle
+
+    assert_equal [@model.entities], @state.instance_variable_get(:@containers)
+    assert_empty @state.instance_variable_get(:@groups)
+  end
+
+  def test_observer_type_errors_other_than_deleted_entities_are_not_suppressed
+    error = TypeError.new("wrong observer argument")
+    @model.entities.stub(:remove_observer, ->(_observer) { raise error }) do
+      assert_same error, assert_raises(TypeError) { @state.detach }
+    end
+  end
+
   def test_restoration_failure_closes_transparent_operation_without_aborting_the_source
     failing = FailingNameGroup.new(200, Sketchup::Entities.new, {}, :name => "Original")
     ZONES::ZONE_STORE.write(failing, ZONES::ZONE_STORE.read(@group).merge("id" => "zon_000000000200"))

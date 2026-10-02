@@ -1,0 +1,104 @@
+# frozen_string_literal: true
+
+require_relative "export_assessment"
+
+module PhComposer
+  module Windows
+    # Both sections consume one cached detached assessment. The preflight captures once and uses
+    # that same projection; export never performs another native walk or repairs authored records.
+    module ExportProjection
+      CONSTRUCTIONS = "#{FEATURE_ID}.export.window_constructions"
+      APERTURES = "#{FEATURE_ID}.export.apertures"
+      PREFLIGHT = "#{FEATURE_ID}.export_preflight"
+      Assessment = ExportAssessment
+
+      module_function
+
+      def install(feature)
+        feature.query(PREFLIGHT, :description => "Placed Window geometry, hosts and thermal readiness for export.",
+          :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
+          :examples => [{}]) { |request| preflight(request) }
+        feature.export_contributor(CONSTRUCTIONS, :section_version => 1,
+          :result => { "window_schema_exceptions" => [
+            Export::Privacy.fields(%w[construction_id g_value])
+          ] }) do |reader|
+          ready(reader).constructions
+        end
+        feature.export_contributor(APERTURES, :section_version => 1, :preflight => PREFLIGHT,
+          :result => { "window_usage" => [Export::Privacy.fields(%w[type_id type_name zone_id unit_count
+            aperture_count install_names])] }, :report => method(:report)) { |reader| ready(reader).apertures }
+      end
+
+      def assess(**values)
+        Assessment.new(**values)
+      end
+
+      def projection(reader)
+        reader.projection(APERTURES) do
+          types = reader.records(TYPE_KIND).to_h { |row| [row.fetch("id"), row] }
+          products = Products::KINDS.to_h do |collection, kind|
+            key = collection == "psi_install_types" ? "installs" : collection
+            [key, reader.records(kind.id).to_h { |row| [row.fetch("id"), row] }]
+          end
+          settings = ExportGeometry.record(reader.snapshot.model_dictionaries, Settings::SERVICE.store) ||
+            DeepCopy.call(Settings::DEFAULTS)
+          Settings::SERVICE.validate!(settings)
+          reader.snapshot.records(Units::STORE.dictionary).each do |_entry, record|
+            Units.validate!(record)
+            reader.entity_record(record, :fields => %w[window_type_id anchor])
+          end
+          assess(:snapshot => reader.snapshot, :types => types, :products => products, :settings => settings,
+            :faces => Zones::Faces::ExportProjection.contexts(reader))
+        end
+      end
+
+      def ready(reader)
+        result = projection(reader)
+        blocking = result.findings.find { |row| row.fetch("blocks_export") }
+        if blocking
+          raise Export::Blocked.new(blocking.fetch("code"), blocking.fetch("message"), "section" => APERTURES)
+        end
+        result
+      end
+
+      def preflight(request)
+        snapshot = Export::GeometrySnapshot.capture(request.model, :revision => request.session.revision)
+        records = Export::RecordReader.new(request.engine, request.registry.catalog)
+        reader = Export::SnapshotReader.new(records, snapshot)
+        result = reader.within(APERTURES) { projection(reader) }
+        { "findings" => result.findings, "repairs" => result.repairs.uniq { |row| row.fetch("id") } }
+      rescue CodedError => error
+        { "findings" => [{ "code" => error.code, "section" => APERTURES, "object_id" => nil,
+          "message" => error.message, "blocks_export" => true }], "repairs" => [] }
+      end
+
+      def report(result, display_units)
+        usage = result.fetch("window_usage", [])
+        return [] if usage.empty?
+
+        rows = usage.map do |row|
+          [row.fetch("type_name"), row.fetch("zone_id"), row.fetch("unit_count"), row.fetch("aperture_count"),
+            row.fetch("install_names").join(", ")]
+        end
+        html = Export::ReportHtml.table(["Window Type", "Zone", "Units", "Apertures", "Psi-Install Types"], rows)
+        areas = result.fetch("window_face_areas", []).map do |row|
+          values = %w[gross_area_m2 glazed_area_m2 net_area_m2].map do |key|
+            format("%.2f", PhComposer::Units.to_display(row.fetch(key), :quantity => "area", :system => display_units))
+          end
+          [row.fetch("face_id"), *values]
+        end
+        unit = PhComposer::Units.label(:quantity => "area", :system => display_units)
+        html += Export::ReportHtml.table(["Host Face", "Gross area (#{unit})", "Glazed area (#{unit})",
+          "Net opaque area (#{unit})"], areas)
+        html += "<p>PH-Composer authors no Window shading factors. Honeybee serializes its own shading defaults. " \
+                "Psi-install values are carried on the construction Frames; Aperture install types remain empty.</p>"
+        result.fetch("window_schema_exceptions", []).each do |row|
+          html += "<p>#{Export::ReportHtml.h(row.fetch('construction_id'))}: authored g-value " \
+                  "#{row.fetch('g_value')} is retained exactly; Honeybee's simple glazing schema normally " \
+                  "requires a value strictly between 0 and 1.</p>"
+        end
+        [Export::ReportHtml.section("Windows", html)]
+      end
+    end
+  end
+end

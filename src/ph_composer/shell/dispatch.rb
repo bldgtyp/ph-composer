@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "handler_request"
+
 module PhComposer
   # Runs public queries and operations for every client: the panel, Ruby scripts and, later, external
   # adapters (context/CONTRACTS.md, "Public interface" to "Retries"). It owns the host execution
@@ -9,16 +11,7 @@ module PhComposer
   class Dispatch
     REQUEST_KEYS = %w[sequence expected_revision proposal_digest].freeze
 
-    # What a query or action handler receives.
-    Request = Struct.new(:session, :model, :params, :engine, :revision, :registry, keyword_init: true) do
-      def participant(name)
-        declaration = registry.proposal_participants[name]
-        raise CodedError.new("operation.participant_missing", "No proposal participant named #{name} is installed.") \
-          unless declaration
-
-        declaration.handler
-      end
-    end
+    Request = HandlerRequest
 
     def initialize(registry = Registry.current)
       @registry = registry
@@ -84,6 +77,12 @@ module PhComposer
       answer(context, "view", name, @registry.view_commands, params)
     end
 
+    # Registered local-file commands share validation and session targeting with reads. Their
+    # separate grant permits file writes, never a Model transaction or an action retry sequence.
+    def file_export(context, name, params)
+      answer(context, "export", name, @registry.file_exports, params)
+    end
+
     # What an operation would change, without changing anything. The result is bound to the revision
     # it reports; applying it later still revalidates everything.
     def preview(context, name, params)
@@ -91,7 +90,7 @@ module PhComposer
       check_params!(action, params, session)
       refuse_if_busy!(session)
       proposal = Operations::Proposal.new
-      value = action.handler.call(request_for(session, params), proposal)
+      value = action.handler.call(request_for(session, params, action, proposal), proposal)
       raise proposal.refusal if proposal.refusal
       check_result!(action, value)
       Outcome.completed(:revision => session.revision, :value => value, :affected => proposal.affected,
@@ -119,8 +118,14 @@ module PhComposer
       digest = request_digest(name, params, expected_revision, proposal_digest)
       caller.highest_sequence = sequence
       session.outcomes.begin(caller.handle, sequence, digest)
-      outcome = session.exclusive { run(session, action, params, expected_revision, proposal_digest) }
-      session.outcomes.finish(caller.handle, sequence, outcome)
+      outcome = session.exclusive do
+        result = run(session, action, params, expected_revision, proposal_digest)
+        session.outcomes.finish(caller.handle, sequence, result)
+      end
+      # Subscribers may use public queries. Publish only after the request is retained and the
+      # mutation lock is released, so those reads see the committed Model rather than session.busy.
+      session.changed(:action, action.name) if outcome["effect"] == "committed"
+      outcome
     rescue CodedError => error
       coded_outcome(error, session, :mutation => true)
     rescue StandardError => error
@@ -154,9 +159,14 @@ module PhComposer
       session, _caller, declaration = resolve(context, capability, name, declarations)
       check_params!(declaration, params, session)
       refuse_if_busy!(session)
-      value = declaration.handler.call(request_for(session, params))
+      value = declaration.handler.call(request_for(session, params, declaration))
       check_result!(declaration, value)
       Outcome.completed(:revision => session.revision, :value => value)
+    rescue Declarations::FileExportCancelled => error
+      return unexpected_outcome(error, session, name) unless capability == "export"
+
+      Outcome.build("cancelled", "export.cancelled", "Export cancelled. Nothing was written.", "none",
+                    session&.revision)
     rescue CodedError => error
       coded_outcome(error, session)
     rescue UserError => error
@@ -266,10 +276,11 @@ module PhComposer
       raise InternalError, "#{declaration.name} returned a result outside its schema: #{findings.first}"
     end
 
-    def request_for(session, params)
+    def request_for(session, params, declaration, proposal = nil)
       Request.new(:session => session, :model => session.model, :params => DeepCopy.call(params),
                   :engine => Records::Engine.new(session.model, @registry.catalog), :revision => session.revision,
-                  :registry => @registry)
+                  :registry => @registry, :owner => declaration.owner, :proposal => proposal,
+                  :query_stack => [declaration.name])
     end
 
     # ---------------------------------------------------------------- the mutation
@@ -281,8 +292,8 @@ module PhComposer
                                                "now #{session.revision}.", "revision" => session.revision)
       end
 
-      request = request_for(session, params)
       proposal = Operations::Proposal.new
+      request = request_for(session, params, action, proposal)
       value = action.handler.call(request, proposal)
       # A handler that rescued a refusal still proposed an incomplete change; it is refused whole.
       raise proposal.refusal if proposal.refusal
@@ -318,7 +329,6 @@ module PhComposer
         ModelOperation.perform(session.model, action.undo_name) { proposal.apply(session.model, engine) }
         true
       end
-      session.changed(:action, action.name)
       Outcome.completed(:revision => session.revision, :value => value, :effect => "committed",
                         :affected => proposal.affected, :findings => proposal.findings,
                         :proposal_digest => proposal.digest)

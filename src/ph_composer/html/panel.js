@@ -25,6 +25,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     "panel.snapshot": reduceSnapshot,
     "action.result": reduceActionResult,
     "view.result": reduceViewResult,
+    "query.result": reduceQueryResult,
+    "file_export.result": reduceFileExportResult,
     "preferences.result": reducePreferenceResult,
     "panel.notice": reduceNotice,
     "panel.failure": reduceFailure,
@@ -33,7 +35,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   function initialState() {
     return { session: null, revision: null, sections: {},
-      ui: { activeTab: "overview", actionResult: null, viewResults: {}, exportResult: null, notice: null,
+      ui: { activeTab: "overview", actionResult: null, viewResults: {}, queryResults: {}, fileExportResults: {},
+        exportResult: null, notice: null,
         preferencePending: {} } };
   }
 
@@ -57,6 +60,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     if (previous.session !== next.session) {
       next.ui.actionResult = null;
       next.ui.viewResults = {};
+      next.ui.queryResults = {};
+      next.ui.fileExportResults = {};
       next.ui.exportResult = null;
       next.ui.notice = null;
     }
@@ -90,6 +95,17 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
         tone: outcome.status === "failed" ? "error" : "warning" };
     }
     return withUI(previous, changes);
+  }
+
+  /* Reads answer their owner without republishing a snapshot or changing the Model. */
+  function reduceQueryResult(previous, payload) {
+    if (payload.session !== previous.session) return previous;
+    return withUI(previous, { queryResults: recentResults(previous.ui.queryResults, payload) });
+  }
+
+  function reduceFileExportResult(previous, payload) {
+    if (payload.session !== previous.session) return previous;
+    return withUI(previous, { fileExportResults: recentResults(previous.ui.fileExportResults, payload) });
   }
 
   /* The Export pane reads it; Export writes nothing to the Model, so no notice is raised. */

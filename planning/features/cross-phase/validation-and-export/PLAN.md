@@ -10,14 +10,14 @@ the accepted METr deferral are in [Phase 1 decisions](../../../archive/phase-01-
 
 ## Phase 2 allocation
 
-Added 2026-09-30. The [Phase 2 packet](../../phase-02-envelope/README.md) changes this feature's
+Added 2026-09-30. The [Phase 2 packet](../../../archive/phase-02-envelope/README.md) changes this feature's
 contracts in two stages and adds nothing to `export/` orchestration:
 
 | Change | Stage |
 | --- | --- |
-| The assemblies contributor and constructions section; `ZoneSection` takes a declared requirement instead of a construction provider; the Face preflight's unconditional construction rows are replaced; the tools-only synthetic provider and its fixtures are retired | [P2-06](../../phase-02-envelope/phases/p2-06-construction-export.md) |
-| The windows contributor, the window constructions and apertures sections, the windows preflight rows, the documented g-value schema exception in local conformance | [P2-14](../../phase-02-envelope/phases/p2-14-aperture-export.md) |
-| One Export report line per record copied from a library | [P2-07](../../phase-02-envelope/phases/p2-07-library-seam-and-file-provider.md) |
+| The assemblies contributor and constructions section; `ZoneSection` takes a declared requirement instead of a construction provider; the Face preflight's unconditional construction rows are replaced; the tools-only synthetic provider and its fixtures are retired | [P2-06](../../../archive/phase-02-envelope/phases/p2-06-construction-export.md) |
+| The windows contributor, the window constructions and apertures sections, the windows preflight rows, the documented g-value schema exception in local conformance | [P2-14](../../../archive/phase-02-envelope/phases/p2-14-aperture-export.md) |
+| One Export report line per record copied from a library | [P2-07](../../../archive/phase-02-envelope/phases/p2-07-library-seam-and-file-provider.md) |
 
 After P2-06 the normal build exports, which supersedes the "safely refuses without authored
 Assemblies" state recorded below. No wheel is expected to be added: honeybee-energy and

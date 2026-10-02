@@ -34,8 +34,10 @@ module PhComposer
         prefix = Faces::PREFIX
         feature.query("#{prefix}.selection", :description => "Validated selected Face occurrence references.",
                       :params => Shapes::NONE,
-                      :result => Shapes.object({ "faces" => Shapes.list(Faces::FACE_REFERENCE) }),
-                      :examples => [{}]) { |request| { "faces" => Faces::Selection.selected(request.model) } }
+                      :result => Shapes.object({ "faces" => Shapes.list(Faces::FACE_REFERENCE),
+                                                  "targets" => Shapes.list(Faces::AssemblyRegistration::TARGET) }),
+                      :examples => [{}]) { |request| Faces::Selection.read(request) }
+        feature.snapshot_section("#{prefix}.selected", :query => "#{prefix}.selection")
         feature.query("#{prefix}.attached_assignment", :description => "The pending native Face assignment handoff.",
                       :params => Shapes::NONE, :result => ASSIGNMENT,
                       :examples => [{}]) { |request| Faces::Selection.handoff(request.session).snapshot }

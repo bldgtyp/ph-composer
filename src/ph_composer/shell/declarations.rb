@@ -35,6 +35,12 @@ module PhComposer
     # (context/EXTENSIBILITY.md, "View commands").
     ViewCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
 
+    # A local file write under the explicit export grant. Its handler validates and writes the file;
+    # dispatch opens no Model transaction and consumes no action sequence. Native cancellation uses
+    # FileExportCancelled; destinations stay private to the handler, outside its JSON result.
+    FileExport = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
+    class FileExportCancelled < UserError; end
+
     # A panel snapshot section: the result of one registered query, under the section's name.
     SnapshotSection = Struct.new(:name, :owner, :query, :params, keyword_init: true)
 
@@ -76,7 +82,25 @@ module PhComposer
     MenuItem = Struct.new(:name, :owner, :label, :menu, :separator_after, :handler, :state, :available, :entries,
                           keyword_init: true)
 
+    # Referring features add their rewrite steps to a definition owner's proposal and
+    # return the final entity occurrences as Records::ReferencePlan.
+    ReferenceRetargeter = Struct.new(:name, :owner, :target_kind, :handler, keyword_init: true)
+
     ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)
+
+    # Zero-argument factories return configured provider instances, never a Model or request.
+    # `kinds: ["*"]` exclusively declares every registered wire kind; it cannot mix with named kinds.
+    # The coordinator resolves that capability against current adapters before constructing a provider.
+    LibraryProvider = Struct.new(:name, :owner, :contract_version, :kinds, :factory, keyword_init: true)
+
+    # Pure wire methods use detached values. Local callbacks will run under this declaration's
+    # owner, validating these schemas and sharing the caller's proposal; registration never runs them.
+    LibraryCallback = Struct.new(:params, :result, :handler, keyword_init: true)
+    LibraryAdapter = Struct.new(:wire_kind, :wire_version, :fingerprint_version, :wire_schema,
+                                :mapped_schema, :fingerprint_fields,
+                                :map, :reverse, :fingerprint, :local_read, :create, :replace, :assign,
+                                keyword_init: true)
+    LibraryKind = Struct.new(:name, :owner, :contract_version, :record_kind, :adapter, keyword_init: true)
 
     # One registration problem. `subject` is the declaration it concerns; `dependency` names what it
     # needed, when that is the problem.

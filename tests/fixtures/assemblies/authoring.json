@@ -1,0 +1,471 @@
+{
+  "materials": [
+    {
+      "id": "mat_Wool00000001",
+      "schema_version": 1,
+      "name": "Synthetic wool",
+      "category": "insulation",
+      "conductivity_w_mk": 0.04,
+      "density_kg_m3": 40,
+      "specific_heat_j_kgk": 1400,
+      "emissivity": 0.9,
+      "color": "#88aa44",
+      "notes": "local-only note",
+      "user_data": {
+        "firm.note": "local metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "mat_Wood00000001",
+      "schema_version": 1,
+      "name": "Synthetic wood",
+      "category": "woods",
+      "conductivity_w_mk": 0.13,
+      "density_kg_m3": 650,
+      "specific_heat_j_kgk": 1500,
+      "emissivity": 0.9,
+      "color": "#aa7744",
+      "notes": "local-only note",
+      "user_data": {
+        "firm.note": "local metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "mat_Steel0000001",
+      "schema_version": 1,
+      "name": "Synthetic steel",
+      "category": "metals",
+      "conductivity_w_mk": 50,
+      "density_kg_m3": 7850,
+      "specific_heat_j_kgk": 500,
+      "emissivity": 0.9,
+      "color": "#777777",
+      "notes": "local-only note",
+      "user_data": {
+        "firm.note": "local metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "mat_Film00000001",
+      "schema_version": 1,
+      "name": "Synthetic membrane",
+      "category": "membrane",
+      "conductivity_w_mk": null,
+      "density_kg_m3": null,
+      "specific_heat_j_kgk": null,
+      "emissivity": 0.9,
+      "color": "#8855aa",
+      "notes": "local-only note",
+      "user_data": {
+        "firm.note": "local metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "mat_Default00001",
+      "schema_version": 1,
+      "name": "Synthetic defaults",
+      "category": "",
+      "conductivity_w_mk": 0.08,
+      "density_kg_m3": null,
+      "specific_heat_j_kgk": null,
+      "emissivity": 0.9,
+      "color": "#dddddd",
+      "notes": "local-only note",
+      "user_data": {
+        "firm.note": "local metadata"
+      },
+      "extension_data": {}
+    }
+  ],
+  "assemblies": [
+    {
+      "id": "asm_Single000001",
+      "schema_version": 1,
+      "name": "Two wool thicknesses",
+      "orientation": "first_layer_outside",
+      "layers": [
+        {
+          "id": "lyr_000000000001",
+          "thickness_mm": 100,
+          "segments": [
+            {
+              "id": "seg_000000000010",
+              "width_mm": 1000,
+              "material_id": "mat_Wool00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        },
+        {
+          "id": "lyr_000000000002",
+          "thickness_mm": 50,
+          "segments": [
+            {
+              "id": "seg_000000000020",
+              "width_mm": 1000,
+              "material_id": "mat_Wool00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        }
+      ],
+      "type": "Wall",
+      "exterior_condition": "Outdoors",
+      "ventilated_cladding": true,
+      "air_barrier": {
+        "layer_id": "lyr_000000000001",
+        "face": "exterior"
+      },
+      "photo_collections": {
+        "site": [
+          "local photo"
+        ]
+      },
+      "notes": "local note",
+      "user_data": {
+        "firm.note": "local assembly metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "asm_Mixed0000001",
+      "schema_version": 1,
+      "name": "Mixed timber",
+      "orientation": "first_layer_outside",
+      "layers": [
+        {
+          "id": "lyr_000000000003",
+          "thickness_mm": 200,
+          "segments": [
+            {
+              "id": "seg_000000000030",
+              "width_mm": 150,
+              "material_id": "mat_Wood00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            },
+            {
+              "id": "seg_000000000031",
+              "width_mm": 850,
+              "material_id": "mat_Wool00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        }
+      ],
+      "type": "Wall",
+      "exterior_condition": "Outdoors",
+      "ventilated_cladding": true,
+      "air_barrier": {
+        "layer_id": "lyr_000000000003",
+        "face": "exterior"
+      },
+      "photo_collections": {
+        "site": [
+          "local photo"
+        ]
+      },
+      "notes": "local note",
+      "user_data": {
+        "firm.note": "local assembly metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "asm_Steel0000001",
+      "schema_version": 1,
+      "name": "Steel cavity",
+      "orientation": "first_layer_outside",
+      "layers": [
+        {
+          "id": "lyr_000000000004",
+          "thickness_mm": 140,
+          "segments": [
+            {
+              "id": "seg_000000000040",
+              "width_mm": 3.5,
+              "material_id": "mat_Steel0000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": 600
+            },
+            {
+              "id": "seg_000000000041",
+              "width_mm": 596.5,
+              "material_id": "mat_Wool00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        }
+      ],
+      "type": "Wall",
+      "exterior_condition": "Outdoors",
+      "ventilated_cladding": true,
+      "air_barrier": {
+        "layer_id": "lyr_000000000004",
+        "face": "exterior"
+      },
+      "photo_collections": {
+        "site": [
+          "local photo"
+        ]
+      },
+      "notes": "local note",
+      "user_data": {
+        "firm.note": "local assembly metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "asm_Repeat000001",
+      "schema_version": 1,
+      "name": "Repeated columns",
+      "orientation": "first_layer_outside",
+      "layers": [
+        {
+          "id": "lyr_000000000005",
+          "thickness_mm": 150,
+          "segments": [
+            {
+              "id": "seg_000000000050",
+              "width_mm": 100,
+              "material_id": "mat_Wood00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            },
+            {
+              "id": "seg_000000000051",
+              "width_mm": 400,
+              "material_id": "mat_Wool00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            },
+            {
+              "id": "seg_000000000052",
+              "width_mm": 100,
+              "material_id": "mat_Wood00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            },
+            {
+              "id": "seg_000000000053",
+              "width_mm": 400,
+              "material_id": "mat_Wool00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        }
+      ],
+      "type": "Wall",
+      "exterior_condition": "Outdoors",
+      "ventilated_cladding": true,
+      "air_barrier": {
+        "layer_id": "lyr_000000000005",
+        "face": "exterior"
+      },
+      "photo_collections": {
+        "site": [
+          "local photo"
+        ]
+      },
+      "notes": "local note",
+      "user_data": {
+        "firm.note": "local assembly metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "asm_Membrane0001",
+      "schema_version": 1,
+      "name": "Membrane reversed",
+      "orientation": "last_layer_outside",
+      "layers": [
+        {
+          "id": "lyr_000000000006",
+          "thickness_mm": 10,
+          "segments": [
+            {
+              "id": "seg_000000000060",
+              "width_mm": 1000,
+              "material_id": "mat_Wood00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        },
+        {
+          "id": "lyr_000000000007",
+          "thickness_mm": 1,
+          "segments": [
+            {
+              "id": "seg_000000000070",
+              "width_mm": 1000,
+              "material_id": "mat_Film00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        },
+        {
+          "id": "lyr_000000000008",
+          "thickness_mm": 100,
+          "segments": [
+            {
+              "id": "seg_000000000080",
+              "width_mm": 1000,
+              "material_id": "mat_Wool00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        }
+      ],
+      "type": "Wall",
+      "exterior_condition": "Outdoors",
+      "ventilated_cladding": true,
+      "air_barrier": {
+        "layer_id": "lyr_000000000006",
+        "face": "exterior"
+      },
+      "photo_collections": {
+        "site": [
+          "local photo"
+        ]
+      },
+      "notes": "local note",
+      "user_data": {
+        "firm.note": "local assembly metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "asm_OnlyFilm0001",
+      "schema_version": 1,
+      "name": "Only membrane",
+      "orientation": "first_layer_outside",
+      "layers": [
+        {
+          "id": "lyr_000000000009",
+          "thickness_mm": 1,
+          "segments": [
+            {
+              "id": "seg_000000000090",
+              "width_mm": 1000,
+              "material_id": "mat_Film00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        }
+      ],
+      "type": "Wall",
+      "exterior_condition": "Outdoors",
+      "ventilated_cladding": true,
+      "air_barrier": {
+        "layer_id": "lyr_000000000009",
+        "face": "exterior"
+      },
+      "photo_collections": {
+        "site": [
+          "local photo"
+        ]
+      },
+      "notes": "local note",
+      "user_data": {
+        "firm.note": "local assembly metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "asm_Default00001",
+      "schema_version": 1,
+      "name": "Default mass",
+      "orientation": "first_layer_outside",
+      "layers": [
+        {
+          "id": "lyr_000000000010",
+          "thickness_mm": 100,
+          "segments": [
+            {
+              "id": "seg_000000000100",
+              "width_mm": 1000,
+              "material_id": "mat_Default00001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        }
+      ],
+      "type": "Wall",
+      "exterior_condition": "Outdoors",
+      "ventilated_cladding": true,
+      "air_barrier": {
+        "layer_id": "lyr_000000000010",
+        "face": "exterior"
+      },
+      "photo_collections": {
+        "site": [
+          "local photo"
+        ]
+      },
+      "notes": "local note",
+      "user_data": {
+        "firm.note": "local assembly metadata"
+      },
+      "extension_data": {}
+    },
+    {
+      "id": "asm_BadMixed0001",
+      "schema_version": 1,
+      "name": "Mixed membrane",
+      "orientation": "first_layer_outside",
+      "layers": [
+        {
+          "id": "lyr_000000000011",
+          "thickness_mm": 1,
+          "segments": [
+            {
+              "id": "seg_000000000110",
+              "width_mm": 900,
+              "material_id": "mat_Wool00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            },
+            {
+              "id": "seg_000000000111",
+              "width_mm": 100,
+              "material_id": "mat_Film00000001",
+              "is_continuous_insulation": false,
+              "steel_stud_spacing_mm": null
+            }
+          ]
+        }
+      ],
+      "type": "Wall",
+      "exterior_condition": "Outdoors",
+      "ventilated_cladding": true,
+      "air_barrier": {
+        "layer_id": "lyr_000000000011",
+        "face": "exterior"
+      },
+      "photo_collections": {
+        "site": [
+          "local photo"
+        ]
+      },
+      "notes": "local note",
+      "user_data": {
+        "firm.note": "local assembly metadata"
+      },
+      "extension_data": {}
+    }
+  ]
+}

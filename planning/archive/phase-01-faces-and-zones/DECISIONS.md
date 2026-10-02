@@ -18,7 +18,7 @@ ISSUE: https://github.com/bldgtyp/ph-composer/issues/2
 Export Q1 is already D2: keep the canonical pair on optional-exporter failure. Q3's checked
 stale-adjacency preflight is already accepted by the Zones interview. Do not reopen either.
 The face interview's request for confirmation of its recorded answers was not settled in Phase 1.
-It stays open in [the face-assignment status](../../features/phase-02-envelope/face-assignment/STATUS.md); confirm that
+It stays open in [the face-assignment status](../face-assignment/STATUS.md); confirm that
 record rather than repeat its 22-question interview.
 
 ## Engineering decisions to settle in the owning stage

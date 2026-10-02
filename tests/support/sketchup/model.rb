@@ -2,10 +2,12 @@
 
 # Sketchup::Model, its transaction and observer behaviour, and the Sketchup module functions.
 
+require_relative "catalogs"
+
 module Sketchup
   class Model
     attr_reader :entities, :operations, :operation_starts, :path, :selection, :observers, :overlays,
-      :active_view, :active_tool, :layers, :pages, :guid
+      :active_view, :active_tool, :layers, :pages, :guid, :definitions, :materials
     attr_accessor :title, :shadow_info
 
     def initialize(dictionaries = {}, entities: Entities.new)
@@ -14,6 +16,8 @@ module Sketchup
       end
       @entities = entities
       @entities.root = true
+      @definitions = DefinitionList.new
+      @materials = Materials.new
       @selection = Selection.new(self)
       @overlays = OverlaysManager.new
       @active_view = View.new(self)
@@ -56,7 +60,15 @@ module Sketchup
     end
 
     def delete_attribute(dictionary_name, key = nil)
-      nil
+      if key.nil?
+        removed = @dictionaries.delete(dictionary_name)
+      else
+        dictionary = @dictionaries[dictionary_name]
+        removed = dictionary&.delete_key(key)
+        @dictionaries.delete(dictionary_name) if dictionary&.empty?
+      end
+      @modified = true unless removed.nil?
+      removed
     end
 
     def active_path
@@ -74,7 +86,7 @@ module Sketchup
     def start_operation(name, disable_ui = false, next_transparent = false, transparent = false)
       return false if @current_operation
       @operation_starts << [name, disable_ui, next_transparent, transparent]
-      @current_operation = [name, disable_ui, next_transparent, transparent, Marshal.dump([@dictionaries, @entities])]
+      @current_operation = [name, disable_ui, next_transparent, transparent, transaction_snapshot]
       true
     end
 
@@ -96,7 +108,7 @@ module Sketchup
     def abort_operation
       return false unless @current_operation
       name, disable_ui, _next_transparent, _transparent, snapshot = @current_operation
-      @dictionaries, @entities = Marshal.load(snapshot)
+      restore_transaction_snapshot(snapshot)
       @operations << [name, disable_ui, :aborted]
       @current_operation = nil
       @observers.each do |observer|
@@ -108,8 +120,8 @@ module Sketchup
     def undo
       snapshot = @undo_stack.pop
       return false unless snapshot
-      @redo_stack << Marshal.dump([@dictionaries, @entities])
-      @dictionaries, @entities = Marshal.load(snapshot)
+      @redo_stack << transaction_snapshot
+      restore_transaction_snapshot(snapshot)
       @active_path = nil
       @selection.clear
       @observers.each do |observer|
@@ -121,8 +133,8 @@ module Sketchup
     def redo
       snapshot = @redo_stack.pop
       return false unless snapshot
-      @undo_stack << Marshal.dump([@dictionaries, @entities])
-      @dictionaries, @entities = Marshal.load(snapshot)
+      @undo_stack << transaction_snapshot
+      restore_transaction_snapshot(snapshot)
       @active_path = nil
       @selection.clear
       @observers.each do |observer|
@@ -228,6 +240,15 @@ module Sketchup
       end
       self
     end
+
+    def transaction_snapshot
+      Marshal.dump([@dictionaries, @entities, @definitions, @materials])
+    end
+
+    def restore_transaction_snapshot(snapshot)
+      @dictionaries, @entities, @definitions, @materials = Marshal.load(snapshot)
+    end
+    private :transaction_snapshot, :restore_transaction_snapshot
   end
 
   class << self

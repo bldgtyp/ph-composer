@@ -9,6 +9,8 @@ module PhComposer
         entries = reference_entries(kind_id, :change_set => change_set)
         if reference_plan
           validate_reference_plan!(reference_plan)
+          other_kinds = reference_plan.removals.map(&:kind).uniq - [kind_id]
+          entries += other_kinds.flat_map { |kind| reference_entries(kind, :change_set => change_set) }
           entries = reference_plan.project(entries).select { |entry| entry.kind == kind_id }
         end
         matches = entries.select { |entry| reference_identity(entry) == id }
@@ -110,7 +112,10 @@ module PhComposer
       end
 
       def validate_reference_plan!(plan)
-        plan.entries.each do |entry|
+        removed = plan.removals.map do |removal|
+          ReferenceEntry.new(:kind => removal.kind, :key => removal.key, :record => removal.before)
+        end
+        (plan.entries + removed).each do |entry|
           unless @catalog.reference_target(entry.kind)
             raise CodedError.new("reference.invalid", "Planned entity target #{entry.kind} is not registered.")
           end

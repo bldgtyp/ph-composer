@@ -6,7 +6,7 @@ ISSUE: none (local tooling work)
 
 [`cases.json`](cases.json) holds case identities, owning authorities, deferred scope and conservative
 source dependency patterns. [`results.jsonl`](results.jsonl) is an append-only result index with
-15 historical evidence pointers and 34 observed results. Historical pointers are not reconstructed host runs. Detailed case requirements
+15 historical evidence pointers and 36 observed results. Historical pointers are not reconstructed host runs. Detailed case requirements
 and closure remain in [the owning acceptance register](../archive/phase-01-faces-and-zones/ACCEPTANCE.md). Add finer case IDs
 when a gate needs independent reruns; a partial subcase does not close its parent.
 

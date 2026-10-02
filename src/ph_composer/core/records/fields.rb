@@ -25,16 +25,70 @@ module PhComposer
 
       # The ids this field holds in `values`, as a list whatever the cardinality.
       def ids(values)
-        Array(values[key]).compact
+        parents(values).flat_map { |parent| Array(parent[key.split(".").last]).compact }
       end
 
       # `values` with every id in `mapping` replaced by its counterpart; ids outside it are kept.
       def remap(values, mapping)
-        return values unless values.key?(key)
+        copy = DeepCopy.call(values)
+        leaf = key.split(".").last
+        parents(copy).each do |parent|
+          next unless parent.key?(leaf)
 
-        current = values[key]
-        remapped = current.is_a?(Array) ? current.map { |id| mapping.fetch(id, id) } : mapping.fetch(current, current)
-        values.merge(key => remapped)
+          current = parent[leaf]
+          parent[leaf] = current.is_a?(Array) ? current.map { |id|
+ mapping.fetch(id, id) } : mapping.fetch(current, current)
+        end
+        copy
+      end
+
+      # Registration checks the declaration against the shape, so a typo cannot make
+      # an incoming reference invisible. Entity targets with an open schema retain
+      # their existing validator-owned contract.
+      def declaration_problems(values_schema)
+        unless key.is_a?(String) && /\A[a-z][a-z0-9_]*(\[\])?(\.[a-z][a-z0-9_]*(\[\])?)*\z/.match?(key)
+          return ["reference key must be a dotted field path with optional [] array steps"]
+        end
+        return ["reference leaf must be a field; cardinality describes its ids"] if key.end_with?("[]")
+        return ["reference cardinality must be one or many"] unless %w[one many].include?(cardinality)
+        return [] unless values_schema.key?("properties")
+
+        shape = values_schema
+        key.split(".").each do |part|
+          array = part.end_with?("[]")
+          name = array ? part[0...-2] : part
+          shape = shape.fetch("properties", {})[name]
+          return ["reference #{key} is absent from the values schema"] unless shape
+          next unless array
+
+          return ["reference #{key} traverses a non-array field"] unless Array(shape["type"]).include?("array")
+
+          shape = shape.fetch("items", {})
+        end
+        types = Array(shape["type"]) - ["null"]
+        expected = cardinality == "many" ? "array" : "string"
+        return ["reference #{key} must name a #{expected} field"] unless types == [expected]
+        return [] unless cardinality == "many"
+        return [] if Array(shape.fetch("items", {})["type"]) == ["string"]
+
+        ["reference #{key} must contain string ids"]
+      end
+
+      private
+
+      # Dotted keys traverse objects; [] traverses every member of an array. Only the
+      # declared leaf is a reference, never another string with the same value.
+      def parents(values)
+        key.split(".")[0...-1].reduce([values]) do |nodes, part|
+          array = part.end_with?("[]")
+          name = array ? part[0...-2] : part
+          nodes.flat_map do |node|
+            next [] unless node.is_a?(Hash)
+
+            child = node[name]
+            array ? (child.is_a?(Array) ? child : []) : [child]
+          end
+        end.select { |node| node.is_a?(Hash) }
       end
     end
   end

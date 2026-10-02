@@ -19,8 +19,8 @@ and cell drafts. Keep F3 with Assemblies, F4 with Window Types and F1 with Space
 justify it. Resolve new quantity rows through their owning feature interviews.
 
 Phase 2 planning (2026-09-30) places U1-F3 in
-[P2-04](../../phase-02-envelope/phases/p2-04-assembly-builder.md) and U1-F4 in
-[P2-11](../../phase-02-envelope/phases/p2-11-window-type-builder.md). The table-layout
+[P2-04](../../../archive/phase-02-envelope/phases/p2-04-assembly-builder.md) and U1-F4 in
+[P2-11](../../../archive/phase-02-envelope/phases/p2-11-window-type-builder.md). The table-layout
 preferences deferred from Phase 1 stay deferred; no Phase 2 screen needs a saved layout.
 
 ## Blockers

@@ -179,5 +179,5 @@ Undo per assign. Save and reopen.
 - honeybee-ph `honeybee_energy_ph/construction/thermal_bridge.py`, `honeybee_ph/bldg_segment.py`.
 - PHX `to_METr_JSON/metr_schemas.py`, `_PhxComponentThermalBridge`.
 - honeybee-grasshopper-ph "HBPH - Create Thermal Bridges": polylines in, thermal bridges out.
-- [face-assignment](../../phase-02-envelope/face-assignment/PRD.md): Classify tools and the Colour-by component.
-- [assemblies](../../phase-02-envelope/assemblies/PRD.md): the inventory pattern and the usage scan rule.
+- [face-assignment](../../../archive/face-assignment/PRD.md): Classify tools and the Colour-by component.
+- [assemblies](../../../archive/assemblies/PRD.md): the inventory pattern and the usage scan rule.

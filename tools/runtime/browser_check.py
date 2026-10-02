@@ -216,8 +216,12 @@ def run_browser(binary: Path, translation: bool = False) -> dict[str, Any]:
 
 
 def check_translation(client: CDP) -> dict[str, Any]:
-    """Exercise shipped translation first, then the explicit tools-only synthetic provider."""
+    """Exercise the shipped authored-construction composition and compare pinned native wheel output."""
     document = json.loads((ROOT / "tests/fixtures/phase_one/two_zones_extraction.json").read_text())
+    # The retained Phase 1 fixture predates Window contributors. The current composition declares
+    # their empty sections even when a Model has no Units; retain the historical authored records.
+    for name in ("window_constructions", "apertures"):
+        document["sections"][f"ph_composer.windows.export.{name}"] = {"version": 1, "records": []}
     request = {"request_id": "browser-export", "deadline_ms": 15000, "document": document}
     response = client.evaluate(
         """
@@ -238,27 +242,13 @@ new Promise(function (resolve, reject) {
         diagnostic = json.dumps("from ph_composer_translation.entry import export_json\nexport_json(_phc_document)")
         client.evaluate(f"window.__phc.runtime.runPythonAsync({diagnostic})")
         raise RuntimeError(f"shipped export runtime failed: {response['error']}")
-    blocked = response["result"]
-    assert blocked["summary"]["publishable"] is False and "canonical_model" not in blocked, blocked
-    # This separately composed provider never enters src/ or the packaged extension.
-    example = (ROOT / "tools/examples/phase_one/translate_two_zones.py").read_text()
-    provider = example[example.index("class DevelopmentConstructionProvider:") : example.index("\ndef main()")]
+    result = response["result"]
     source = "\n".join(
         [
-            "import json",
-            "import honeybee_energy._extend_honeybee",
-            "import honeybee_ph",
-            "from honeybee_energy.construction.opaque import OpaqueConstruction",
-            "from honeybee_energy.material.opaque import EnergyMaterial",
-            "from ph_composer_translation.contract import RecordError",
-            "from ph_composer_translation.model_sections import FaceSection, ZoneSection",
             "from ph_composer_translation.entry import export_json",
-            provider,
-            f"export_json({json.dumps(json.dumps(document))}, "
-            "(FaceSection(), ZoneSection(DevelopmentConstructionProvider())))",
+            f"export_json({json.dumps(json.dumps(document))})",
         ]
     )
-    result = json.loads(client.evaluate(f"window.__phc.runtime.runPythonAsync({json.dumps(source)})"))
     assert result["summary"]["publishable"] is True, result
     canonical = result["canonical_model"]
     assert {key: canonical[key] for key in ("rooms", "faces", "surface_pairs", "omitted")} == {
@@ -267,6 +257,14 @@ new Promise(function (resolve, reject) {
         "surface_pairs": 1,
         "omitted": 0,
     }, canonical
+    model = json.loads(canonical["hbjson"])
+    constructions = {row["identifier"]: row for row in model["properties"]["energy"]["constructions"]}
+    assert set(constructions) == {"ph_composer_asm_Single000001"}
+    for room in model["rooms"]:
+        for face in room["faces"]:
+            identifier = face["properties"]["energy"]["construction"]
+            assert identifier in constructions
+            assert constructions[identifier]["user_data"]["ph_composer"]["assembly_id"] == "asm_Single000001"
     with tempfile.TemporaryDirectory(prefix="phc-native-wheels-") as temporary:
         wheel_path = Path(temporary) / "wheels"
         for filename in MANIFEST["wheel_order"]:
@@ -286,7 +284,7 @@ new Promise(function (resolve, reject) {
         native_result = json.loads(native.stdout)
         assert comparable_result(native_result) == comparable_result(result), "native/Pyodide model content differs"
     return {
-        "shipped_missing_construction_refused": True,
+        "shipped_authored_construction_translation": True,
         "native_pyodide_model_parity": True,
         "comparison": "Normalize upstream PH default UUIDs and unordered global construction definitions only.",
         "synthetic_result": result,
@@ -371,7 +369,7 @@ def verdict(major: int, observed: dict[str, Any], console: list[str]) -> dict[st
         and all(result.get("warm_round_trip_ms", 10**9) <= gates["warm_round_trip_ceiling_ms"] for result in results),
     }
     if "export_translation" in observed:
-        checks["export_translation"] = observed["export_translation"]["shipped_missing_construction_refused"]
+        checks["export_translation"] = observed["export_translation"]["shipped_authored_construction_translation"]
     return {
         "verdict": "PASS" if all(checks.values()) else "FAIL",
         "checks": checks,
@@ -387,7 +385,7 @@ def main() -> int:
     parser.add_argument("--chrome", type=Path, default=DEFAULT_CHROME)
     parser.add_argument("--out", type=Path)
     parser.add_argument(
-        "--translation", action="store_true", help="check shipped refusal and tools-only HBJSON translation"
+        "--translation", action="store_true", help="check authored HBJSON translation against the pinned native wheels"
     )
     args = parser.parse_args()
     subprocess.run([sys.executable, str(ROOT / "tools" / "runtime" / "vendor.py"), "--check"], check=True)

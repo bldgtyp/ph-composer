@@ -143,7 +143,7 @@ module PhComposer
         def detach
           @timer.cancel
           @groups.each_value { |group| unobserve(group) }
-          @containers.each { |entities| entities.remove_observer(@containers_observer) }
+          @containers.each { |entities| unobserve_container(entities) }
           @containers.clear
           @groups.clear
           @last_valid.clear
@@ -157,7 +157,7 @@ module PhComposer
           found = []
           containers = []
           scan(@session.model.entities, found, containers)
-          (@containers - containers).each { |entities| entities.remove_observer(@containers_observer) }
+          (@containers - containers).each { |entities| unobserve_container(entities) }
           (containers - @containers).each { |entities| entities.add_observer(@containers_observer) }
           @containers = containers
           live = found.map(&:persistent_id)
@@ -197,6 +197,14 @@ module PhComposer
 
         def unobserve(group)
           group.remove_observer(@observer) unless group.respond_to?(:valid?) && !group.valid?
+        end
+
+        def unobserve_container(entities)
+          entities.remove_observer(@containers_observer)
+        rescue TypeError => error
+          # Entities has no valid? predicate. The host deletes its observer with the collection
+          # when a Model closes or a definition is removed; only that native refusal is harmless.
+          raise unless error.message == "reference to deleted Entities"
         end
 
         def restore

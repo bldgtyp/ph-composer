@@ -1,6 +1,6 @@
 # Product shape
 
-**DATE:** 2026-09-30
+**DATE:** 2026-10-01
 
 PH-Composer is a free, open-source authoring tool for Phius passive building models. The SKP
 file holds the working building data. A consultant can enter every supported definition by hand,
@@ -10,7 +10,11 @@ Everything below describes agreed product behavior. The predecessor, PH-Navigato
 settled most of it through recorded interviews between 2026-09-06 and 2026-09-17, and the rules
 that did not depend on designPH carry over unchanged. Phase 1 implemented Zones, face
 classification and the HBJSON/report export described under Zones, Envelope and Handoff; assembly
-assignment, Window Types, Spaces, thermal bridges and libraries are not implemented yet.
+assignment, local libraries, Window Type records, the Builder and Unit operations are implemented
+and accepted on the Phase 2 feature branch for SketchUp 26.1.188 on macOS. Normal export
+includes authored opaque constructions and Apertures. File libraries, Place, Schedule and
+Window Type Colour-by pass their named current-host requirements. Connection libraries are Phase 5. Spaces and
+thermal bridges remain proposed.
 
 ## The working environment
 
@@ -98,7 +102,7 @@ undone independently.
 An Attached zone, such as a garage or attic, is a named boundary condition with its temperature
 reduction factor. Colour by shows face type, boundary condition, Zone, Building-Segment or Level on
 the model without changing its materials, and the Zones / Faces screen lists each Zone with its classified faces.
-Assembly assignment arrives with Assemblies in Phase 2. A face inside a repeated component is shared by every occurrence, and independent
+Assembly assignment is implemented with Assemblies on the Phase 2 branch. A face inside a repeated component is shared by every occurrence, and independent
 classification requires the user to make the parent unique first. PH-Composer never does that
 automatically. Unclassified faces are visible in validation and never silently exported.
 
@@ -126,6 +130,32 @@ shading; METr handles it after export.
 Incomplete types can be saved and, with sufficient size and layout, assigned. Missing required
 thermal inputs on assigned types block ordinary export. Unused incomplete types do not. Export
 does not silently substitute values or omit windows.
+
+Place starts with the chosen Window Type from the Builder, Type browser or Schedule. It previews
+an outline on a host Face and stays active for repeated placements. Nine anchors are available.
+In SketchUp's measurement box, `sill=<length>` sets the opening bottom above the host's minimum
+up extent; `offset=<length>` sets the chosen anchor's inward distance from the nearest outer
+host edge. Stop or Escape ends the tool.
+
+The Schedule counts Unit occurrences by Type, including detached definitions, and shows Zone,
+host Face, Level and Locate. Differing or unhosted Units retain their state and offer explicit
+repair routes. Window Type Colour-by paints the generated panes through the shared drawing
+service and respects hidden geometry and tags.
+
+The Schedule shows net opaque host area: the gross host polygon minus the openings of glazed
+elements. Empty panels leave opaque area intact. Uncertain native Window geometry withholds
+the net value until repaired. Zones / Faces and assembly usage retain gross area.
+
+Export maps each glazed element to an Aperture on its gross parent Face. Construction identity
+includes product references and translated thermal values, including the element's size-dependent
+U-w and resolved Psi-Install values. Shared internal edges carry Psi-Install 0; perimeter edges
+use the assigned or model-default Psi-Install Type. The report lists installs by name and
+gross, glazed and net host areas.
+
+Exact g-values of 0 and 1 are preserved. The pinned honeybee-energy runtime accepts these
+endpoints; honeybee-schema's simple glazing range excludes them. Local conformance permits
+only this documented endpoint exception, and the Export report names each affected construction.
+PH-Composer does not substitute a nearby value.
 
 Optional external evidence follows its owner: product photos on Window Types, datasheets on frame
 and glazing records, installation photos and calculation reports on Psi-Install Types.

@@ -60,6 +60,7 @@ PhComposerUI.define("record_form", ["request", "workspace"], function (request, 
   /* The feature went away: forget the request and close. */
   RecordForm.prototype.withdraw = function (message) {
     this.requests.reset(); this.close();
+    this.cancel.disabled = false;
     if (message !== undefined) this.error.textContent = message;
   };
   RecordForm.prototype.busy = function () { return this.requests.busy(); };

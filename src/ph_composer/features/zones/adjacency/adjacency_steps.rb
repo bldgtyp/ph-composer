@@ -63,6 +63,11 @@ module PhComposer
       end
 
       def apply(model, _slots)
+        # Check both original cut permissions before drawing on either Face.
+        [@left, @right].each do |side|
+          occurrence = Occurrences.resolve_face(model, side.fetch("reference"), :mutable => true)
+          verify_cut_guard!(occurrence, side, !side.fetch("remainder_count").zero?)
+        end
         sides = [@left, @right].map { |side| cut(model, side) }
         pair(sides.fetch(0), sides.fetch(1))
         sides.each { |side| write(side) }
@@ -71,6 +76,13 @@ module PhComposer
       end
 
       private
+
+      def verify_cut_guard!(occurrence, side, needs_cut)
+        return unless needs_cut
+        return if occurrence.entity.get_glued_instances.any? == side.fetch("has_glued_instances")
+
+        raise CodedError.new("target.changed", "A Face's glued instances changed after the adjacency preview.")
+      end
 
       def check_removed_identities!(model, sides)
         engine = Records::Engine.new(model, @catalog)
@@ -210,6 +222,7 @@ module PhComposer
         # Resolve and verify every original Face before the first native cut.
         originals = @faces.map do |face|
           occurrence = Occurrences.resolve_face(model, face.fetch("reference"), :mutable => true)
+          verify_cut_guard!(occurrence, face, !face.fetch("fresh_ids").empty?)
           before = Faces::FACE_STORE.read(occurrence.entity)
           unless before == face.fetch("before")
             raise CodedError.new("target.changed", "A Face changed after the partition preview.")

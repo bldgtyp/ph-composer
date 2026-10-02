@@ -21,16 +21,17 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | --- | --- |
 | Feature | Stable namespaced id, contract version, declared feature dependencies, install entrypoint |
 | Record kind | Kind id, schema version, validator, SI field descriptors, declared references, persistence adapter |
-| Query, action, view command | Namespaced id, description, input and result schemas, examples, handler |
+| Query, action, view command, FileExport | Namespaced id, description, input and result schemas, examples, handler |
 | Action additions | Side effects, confirmation policy (only `none` today), Undo name |
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
 | Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys` |
 | Proposal participant | Name and handler another feature calls inside its own action |
+| Reference retargeter | Name, target kind and handler; the owner requires the target owner or owns the target itself |
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
 
 The capability an operation needs follows from its kind: a query and a preview need `read`, a view
-command `view`, an action and an outcome lookup `model_write`, and the export task `export`.
+command `view`, an action and an outcome lookup `model_write`, and a FileExport or export task `export`.
 
 Every declared name starts with its feature's id. Registrations are staged and validated together:
 duplicate ids, missing dependencies, cycles, incompatible contract majors, invalid schemas and
@@ -38,6 +39,12 @@ invalid examples each produce a `registration.*` diagnostic naming the owner and
 missing, the dependency. Any diagnostic refuses the whole batch and publishes nothing; the last
 registration never silently wins. Published operations are deep-frozen. Repeated install adds no
 duplicate observers.
+
+During installation, `registry.record_descriptor(kind_id)` resolves a same-batch catalog kind or
+entity target, then an already installed kind or target, returning its descriptor or nil. A feature
+may copy a dependency's public occurrence schema into its declarations without reaching through
+the dependency's implementation constants. This grants no storage access and does not replace the
+declared dependency requirement or batch validation.
 
 Contract versions use exact major compatibility. Unknown fields in operation envelopes are
 rejected; record `user_data` remains intentionally extensible. Declarative schemas drive Ruby
@@ -64,6 +71,9 @@ are clients of it.
   nothing to the Model, so it takes no request and leaves no Undo entry.
 - `invoke(context:, name:, params:, request:)`: a validated synchronous mutation.
 - `outcome(context:, request:)`: a retained mutation outcome, without rerunning it.
+- `export_file(context:, name:, params:)`: a registered synchronous FileExport, with an explicit
+  `export` grant. It has no mutation sequence and opens no Model operation. Its owner obtains and
+  reviews the native destination and performs the guarded file write.
 - The export task methods (`export_preflight`, `start_export`, `export_status`, `cancel_export`,
   `latest_export`) are specified in AGENT_INTERFACE.md, "Implemented export task contract".
 
@@ -193,6 +203,12 @@ legacy mapping reads as empty without repairing the stored record.
 | Migrate | Explicit version path; validate the result before writing | One atomic operation; failure keeps the original |
 | Export | Only declared supported fields and references | No arbitrary metadata; unknown correctness-relevant payload blocks |
 
+`propose_duplicate` may receive a block that transforms a detached copy of the authored values
+after identity and extension-reference remapping. The returned object replaces authored values
+only; reserved identity and metadata keys refuse. The engine validates the transformed schema and
+references before the proposal can write. This supports regenerated nested value identities without
+letting a feature replace the engine-owned record identity or metadata. Callback exceptions poison the whole proposal, including when the handler rescues them.
+
 `extension_data` is keyed by namespace. Each value carries `schema_version`, `payload`,
 `references` (JSON path, target kind, cardinality) and `export_relevance` (`required`,
 `local_only` or `unknown`; absent means unknown). A current-version envelope whose payload fails
@@ -201,6 +217,19 @@ the installed validator, or whose references differ from the installed declarati
 export as `extension.invalid`. A payload without a usable declaration blocks operations that could
 invalidate its references and blocks export when its relevance is unknown. Never guess from a
 payload's text. Native SketchUp copy semantics are feature-owned.
+
+## Model settings
+
+`PhComposer::ModelSettings` provides one feature-owned dictionary, schema, effective defaults and a
+proposal step for settings stored on the Model. Reads do not persist defaults. A proposal guards
+the complete authored preimage, including absence, and writes the validated merged values in the
+same Model operation as its other changes. Undo restores the original dictionary state. Validation
+receives effective values; the authored baseline remains distinct from inherited defaults.
+
+A feature declares its settings fields and validation, labels, affected references and step name.
+Reference targets and retarget operations remain with the feature. Zones retains its existing
+`ph_composer.zones_settings` dictionary and public settings declarations; Windows uses its own
+dictionary and target, so introducing the primitive does not migrate saved Zone settings.
 
 ## Geometry records and occurrence references
 
@@ -216,6 +245,14 @@ access and never fall back to selection, display name, proximity or the active M
 | Face assignment | `ph_composer.face_assignment` | Face | `fac_` id |
 | Attached zone | `ph_composer.records.ph_composer.face_assignment.attached_zone` (a legacy name, kept so saved Models still read) | Model | `atz_` id through the record engine |
 
+The Face values include an optional `assembly_id` reference to
+`ph_composer.assemblies.assembly`. An absent assignment and a dangling reference are distinct read
+states. Assembly-only assignment preserves Face type, boundary condition and reciprocal Surface
+pair data. Explicit targets carry their complete `expected_values`; the compound gesture refuses
+all writes if any target is stale or unreachable. Assembly delete may omit replacement (ordinary
+in-use refusal), name a replacement, or explicitly pass null to clear all references through the
+registered referrer handlers. Definitions never name Zones or Faces.
+
 A Face target uses this reference shape; a Zone target carries only `zone_id` and `zone_path`:
 
 ```json
@@ -229,6 +266,20 @@ name or geometry to repair a stale path. Mutation accepts only a unique, writabl
 through shared component storage, a locked Group or another Zone refuses with its `target.*` code.
 
 ## Zones geometry rules
+
+**Cutting components.** A ComponentInstance whose definition cuts an opening owns its contents.
+Those Faces are excluded from Zone discovery, Face inventories, classification, viewport picks
+and explicit Face resolution. The shared export snapshot retains instance and record facts,
+including nested instances, but excludes all descendant Faces from Zone geometry. This allows
+Window export to account for Units inside foreign cutting components and refuse invalid hosts
+instead of silently omitting them. Definition facts are detached once per definition and captured
+in resumable work units; a contributor never walks the live Model again.
+
+Solve reports `adjacency.glued_instances` when a proposed partial match would cut a Face with
+glued instances. A full match still pairs. A wholly covered glued side may pair while its larger
+counterpart is split, because that glued side is not cut. Detached cut permissions enter the
+proposal digest separately from the unchanged geometry digest; the apply step checks live glue
+on every cut side before the first split. Native split primitives check it again.
 
 **Adjacency pair.** Each side of a Surface pair stores the same `pair_id` and both directed
 endpoints:
@@ -245,6 +296,9 @@ The geometry digest covers the world plane, oriented normal and every outer and 
 in SI, with negative zero normalized and coordinates quantized to 0.001 mm. Each loop is rotated to
 its lexicographically smallest vertex with its direction kept, and holes are sorted by their
 canonical vertex sequence. A digest detects change; it never locates or substitutes a target.
+Face area is the world-space outer-loop area minus actual inner-loop areas. Glued component
+cutouts that do not create inner loops do not reduce this gross area. SDK `Face#area` is not
+the source for this value.
 
 **Solve recovery.** Explicit Solve may recover a changed stored endpoint path only when its Zone id
 names exactly one live Zone and its Face id exactly one live Face occurrence, both old envelopes
@@ -274,6 +328,18 @@ dirty and queue a deferred pass, which reports missing or duplicate ids, changed
 and stale pairs. It emits findings and cache invalidations and never solves, rebinds identity or
 edits classification.
 
+## Handler-side dependency reads
+
+`request.query(name, params = {})` returns a detached registered query result in the caller's
+current read or proposal phase. It keeps the same Model session, engine and revision; it does not
+re-enter the public dispatcher or open an operation. The target must belong to the caller or to
+one of its explicitly required features. Each nested read uses its own owner's dependencies.
+Input and result schemas and plain JSON checks still apply. Unknown query names, undeclared
+reads and recursive query chains refuse with `operation.query_missing`,
+`operation.dependency_missing` and `operation.query_cycle`, respectively. A nested query has no
+action proposal and cannot call reference retargeting. View/session state changes remain view
+commands; queries never change that state.
+
 ## Compound proposals
 
 Feature handlers do not write the Model; they add steps to an `Operations::Proposal` of detached
@@ -297,6 +363,38 @@ in SketchUp's internal unit and transformations are compared exactly. An error b
 operation is `effect: none`. After an abort, a matching fingerprint is `rolled_back`; any mismatch
 or unreadable target is `unknown` with `operation.rollback_unverified`. Dispatch never attempts a
 best-effort repair after an abort.
+
+A definition delete handler calls `request.retarget_references(kind, from: old_id, to: replacement_id)`
+inside an action or preview. `to: nil` requests explicit clearing. Both non-null identities must
+resolve before any retargeter runs. Every matching `FeatureScope#reference_retargeter` handler
+runs in declaration-name order with its own owner on the request, the caller's proposal, and
+`from:`/`to:` keywords. It adds validated rewrite steps and returns a `Records::ReferencePlan`.
+The foundation combines final entity occurrences belonging to each retargeter's owner, refusing
+foreign target kinds or duplicate occurrence rows. The
+caller passes that plan to `engine.propose_delete(..., reference_plan: plan)`. Catalog rewrites
+already in the proposal are read through its change set. The engine still refuses any incoming
+reference left in the final projected state. A retargeter failure marks the proposal refused;
+rescuing it does not permit a partial write. The definition feature names no referrer.
+
+`Records::ReferencePlan.new(entries:, removals: [])` preserves replacement and addition entries
+as typed `ReferenceEntry(kind:, key:, record:)` values. A removal is a separate typed
+`ReferenceRemoval(kind:, key:, before:)`, with the complete expected record, including metadata.
+It never supplies a nil record or hides every occurrence of a UUID. All entry and removal
+kind/key pairs must be distinct. The engine admits only registered entity reference targets and
+validates both final entries and removal pre-images through their target validators. Projection
+requires exactly one current occurrence at each removed kind/key and an exact full-record match;
+missing, ambiguous or changed occurrences refuse. Other occurrences sharing the removed UUID
+remain in the projected inventory and still participate in resolution and incoming-reference
+checks. The owning feature adds the actual removal steps to the same proposal; the plan alone
+does not remove entities or write dictionaries.
+
+Nested catalog references use the same `Records::Reference` declaration, supplied separately
+from fields through `RecordKind.new(..., references: [...])`. For example, key
+`layers[].segments[].material_id` visits the id in each segment; cardinality describes each leaf
+(`one` for a string, `many` for an array of string ids). The JSON Schema remains on the containing
+`layers` field. Registration refuses unreachable paths or incompatible cardinality. Validation,
+incoming scans and collection duplication follow only declared leaves. Metadata strings that
+happen to equal an id are preserved. Existing top-level field references retain their shape.
 
 ## Translation sections and artifacts
 

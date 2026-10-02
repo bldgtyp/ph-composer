@@ -33,15 +33,16 @@ PhComposerUI.define("units", ["length_expression", "unit_numbers", "unit_tables"
     var max = field.max;
     var signed = field.allowNegative !== undefined ? Boolean(field.allowNegative) : Boolean(definition.signed);
     var units = unitLabel(definition, settings.defaultUnit || definition.si.id);
+    var suffix = units ? " " + units : "";
     if (!isFinite(value)) return errorResult("nonfinite", MESSAGES.nonfinite);
     if (value < 0 && !signed) return errorResult("negative", label + " cannot be negative.");
     if (field.allowZero === false && value === 0) return errorResult("zero", label + " must be greater than zero.");
     if (min !== undefined && max !== undefined && (value < min || value > max)) return errorResult("out_of_range",
-      label + " must be between " + min + " and " + max + " " + units + ".");
+      label + " must be between " + min + " and " + max + suffix + ".");
     if (min !== undefined && value < min) return errorResult("out_of_range",
-      label + " must be at least " + min + " " + units + ".");
+      label + " must be at least " + min + suffix + ".");
     if (max !== undefined && value > max) return errorResult("out_of_range",
-      label + " must be at most " + max + " " + units + ".");
+      label + " must be at most " + max + suffix + ".");
     // Rounding in the canonical unit removes floating-point noise before a value reaches a command.
     return { ok: true, value: Math.round(value * 1000000000) / 1000000000 };
   }
@@ -165,8 +166,8 @@ PhComposerUI.define("units", ["length_expression", "unit_numbers", "unit_tables"
     text = converted === Infinity ? "∞" :
       roundedText(converted, opts.precision === undefined ? definition.precision[system] : opts.precision, format,
       !edit && opts.useGrouping !== false);
-    return edit || opts.showUnit === false ?
-      text : text + " " + (system === "IP" ? definition.ip : definition.si).label;
+    var label = (system === "IP" ? definition.ip : definition.si).label;
+    return edit || opts.showUnit === false || !label ? text : text + " " + label;
   }
 
   function format(value, field, profile, options) { return render(value, field, profile, options, false); }

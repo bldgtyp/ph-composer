@@ -32,6 +32,8 @@ PhComposerUI.define("unit_tables", [], function () {
      its canonical unit, and IP = SI * factor + offset, or reciprocal / SI for the vapour pairs.
      Aliases list only extra spellings: each unit's id and label are registered too. */
   var QUANTITIES = {
+    fraction: { label: "fraction", factor: 1, min: 0, precision: { SI: 3, IP: 3 },
+    si: unit("1", ""), ip: unit("1", "") },
     length: { label: "length", length: true, si: unit("m", "m"), ip: unit("ft", "ft"), precision: { SI: 2, IP: 2 } },
     length_mm: { label: "length", length: true, si: unit("mm", "mm"), ip: unit("in", "in"),
     precision: { SI: 1, IP: 2 } },

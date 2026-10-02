@@ -30,8 +30,9 @@ class LoaderTest < PhComposerTestCase
     end
   end
 
-  def test_the_shipping_composition_root_lists_the_phase_one_authoring_features
-    assert_equal [PhComposer::Zones], PhComposer::FEATURES
+  def test_the_shipping_composition_root_lists_the_authoring_features
+    assert_equal [PhComposer::Assemblies, PhComposer::Zones, PhComposer::Windows], PhComposer::FEATURES
+    assert PhComposer::Registry.installed?("ph_composer.assemblies")
     assert PhComposer::Registry.installed?("ph_composer.zones")
     refute PhComposer::Registry.installed?("ph_composer.face_assignment")
   end
@@ -44,7 +45,7 @@ class LoaderTest < PhComposerTestCase
              registry.reference_targets, registry.snapshot_sections, registry.export_contributors,
              registry.proposal_participants, registry.colour_modes, registry.menu_items].flat_map(&:keys)
 
-    assert_empty registry.features.fetch("ph_composer.zones").requires
+    assert_equal ["ph_composer.assemblies"], registry.features.fetch("ph_composer.zones").requires
     assert_empty names.grep(/face_assignment/)
     assert_includes names, "ph_composer.zones.faces.classify"
     names.grep(/\Aph_composer\.zones\./).each do |name|

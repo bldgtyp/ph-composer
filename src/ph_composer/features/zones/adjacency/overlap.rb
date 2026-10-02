@@ -57,6 +57,13 @@ module PhComposer
         return Result.new(:kind => :same_normal, :area_m2 => shared.area_m2) if aligned == :same &&
                                                                                %i[partial sliver].include?(shared.kind)
 
+        if shared.kind == :partial &&
+           ((left.has_glued_instances && !shared.left_remainders_m.empty?) ||
+            (right.has_glued_instances && !shared.right_remainders_m.empty?))
+          return Result.new(:kind => :glued_instances, :area_m2 => shared.area_m2,
+                            :reason => "a Face with glued instances is not cut by this solver")
+        end
+
         shared
       end
 

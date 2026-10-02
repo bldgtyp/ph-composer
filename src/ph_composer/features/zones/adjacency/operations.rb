@@ -88,6 +88,7 @@ module PhComposer
       end
       { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
         "persistent_id" => occurrence.entity.persistent_id, "fresh_ids" => fresh,
+        "has_glued_instances" => side.fetch(:geometry).has_glued_instances,
         "extension_copies" => copies, "regions" => regions,
         "complete" => complete, "area_m2" => side.fetch(:geometry).area_m2,
         "remainder_area_m2" => partition.fetch(:remainder_area_m2) }
@@ -155,6 +156,7 @@ module PhComposer
       end
       { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
         "persistent_id" => occurrence.entity.persistent_id, "fresh_ids" => fresh,
+        "has_glued_instances" => side.fetch(:geometry).has_glued_instances,
         "remainder_count" => remainders.length, "extension_copies" => copies }
     end
 

@@ -138,11 +138,11 @@ test("area headers and Zone and Face values follow the display profile together"
     return section.querySelectorAll(".col-area_m2").filter(function (node) { return node.tagName === "th"; })[0];
   }
 
-  assert.ok(header().textContent.includes("Area ft²"));
+  assert.ok(header().textContent.includes("Gross area ft²"));
   assert.deepStrictEqual(areas(), ["43.06", "10.76", "32.29"]);
   p.modules.unit_preferences.set("unit_system", "SI");
   p.panel.repaint();
-  assert.ok(header().textContent.includes("Area m²"));
+  assert.ok(header().textContent.includes("Gross area m²"));
   assert.deepStrictEqual(areas(), ["4", "1", "3"]);
   assert.strictEqual(faces[0].area_m2, 1, "display changes leave the canonical snapshot alone");
 });

@@ -8,31 +8,38 @@ from typing import Any, cast
 import pytest
 
 from ph_composer_translation.composition import SECTIONS
+from ph_composer_translation.constructions import ConstructionSection, TranslatedConstruction
 from ph_composer_translation.contract import RecordError
 from ph_composer_translation.coordinator import translate
+from ph_composer_translation.material_sources import MaterialSourcesSection
 from ph_composer_translation.model_sections import FaceSection, ZoneSection
+from ph_composer_translation.sections import Inputs
+from ph_composer_translation.window_sections import ApertureSection, WindowConstructionSection
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "tests" / "fixtures" / "phase_one" / "two_zones_extraction.json"
 
 
-def test_normal_composition_cannot_activate_the_development_construction() -> None:
-    result = translate(json.loads(FIXTURE.read_text()), SECTIONS).to_document()
+def load_fixture() -> dict[str, Any]:
+    value = json.loads(FIXTURE.read_text())
+    value["sections"].update(
+        {section.id: {"version": 1, "records": []} for section in (WindowConstructionSection(), ApertureSection())}
+    )
+    return cast(dict[str, Any], value)
 
-    assert result["state"] == "complete_with_findings"
-    assert result["summary"] == {"objects": 12, "unavailable": 2, "findings": 2, "publishable": False}
-    assert "canonical_model" not in result
-    findings = result["findings"]
-    assert isinstance(findings, list)
-    assert {finding["message"] for finding in findings if isinstance(finding, dict)} == {
-        "no authored construction provider is installed"
-    }
+
+def test_normal_composition_uses_only_authored_constructions() -> None:
+    result = translate(load_fixture(), SECTIONS).to_document()
+    assert result["state"] == "complete"
+    assert result["summary"] == {"objects": 15, "unavailable": 0, "findings": 0, "publishable": True}
+    assert "canonical_model" in result
 
 
 class FakeFace:
     def __init__(self, identifier: str, geometry: object, face_type: object, boundary: object) -> None:
         self.identifier = identifier
         self.geometry = geometry
+        self.apertures: list[Any] = []
         self.type = face_type
         self.boundary_condition = boundary
         self.properties = SimpleNamespace(energy=SimpleNamespace(construction=None))
@@ -67,9 +74,12 @@ class FakeModel:
         }
 
 
-class FakeConstructionProvider:
-    def resolve(self, assembly_id: str | None) -> object:
-        return {"assembly_id": assembly_id}
+class FakeConstructionSection(ConstructionSection):
+    def translate(self, record: Any, inputs: Inputs) -> TranslatedConstruction:
+        return TranslatedConstruction(record, {"assembly_id": record.id}, (), ())
+
+    def result_fields(self, objects: Any) -> dict[str, Any]:
+        return {}
 
 
 def fake_stack(name: str) -> object:
@@ -94,8 +104,15 @@ def fake_stack(name: str) -> object:
 def test_model_sections_build_rooms_then_resolve_surface_pairs(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
     result = translate(
-        json.loads(FIXTURE.read_text()),
-        (FaceSection(), ZoneSection(FakeConstructionProvider())),
+        load_fixture(),
+        (
+            FakeConstructionSection(),
+            MaterialSourcesSection(),
+            FaceSection(),
+            WindowConstructionSection(),
+            ApertureSection(),
+            ZoneSection(),
+        ),
     ).to_document()
 
     assert result["state"] == "complete"
@@ -111,9 +128,19 @@ def test_model_sections_build_rooms_then_resolve_surface_pairs(monkeypatch: pyte
 
 def test_invalid_face_vocabulary_becomes_a_record_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
-    document = json.loads(FIXTURE.read_text())
+    document = load_fixture()
     document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0]["face_type"] = "Ceiling"
-    result = translate(document, (FaceSection(), ZoneSection(FakeConstructionProvider()))).to_document()
+    result = translate(
+        document,
+        (
+            FakeConstructionSection(),
+            MaterialSourcesSection(),
+            FaceSection(),
+            WindowConstructionSection(),
+            ApertureSection(),
+            ZoneSection(),
+        ),
+    ).to_document()
 
     assert result["state"] == "complete_with_findings"
     summary = result["summary"]
@@ -127,7 +154,7 @@ def test_invalid_face_vocabulary_becomes_a_record_error(monkeypatch: pytest.Monk
 @pytest.mark.parametrize("failure", ["missing", "nonreciprocal"])
 def test_surface_requires_an_available_reciprocal_counterpart(monkeypatch: pytest.MonkeyPatch, failure: str) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
-    document = json.loads(FIXTURE.read_text())
+    document = load_fixture()
     faces = document["sections"]["ph_composer.zones.faces.export.faces"]["records"]
     surfaces = [face for face in faces if face["boundary_condition"] == "Surface"]
     if failure == "missing":
@@ -135,7 +162,17 @@ def test_surface_requires_an_available_reciprocal_counterpart(monkeypatch: pytes
     else:
         surfaces[1]["adjacency"]["counterpart"]["entity_id"] = surfaces[1]["id"]
 
-    result = translate(document, (FaceSection(), ZoneSection(FakeConstructionProvider()))).to_document()
+    result = translate(
+        document,
+        (
+            FakeConstructionSection(),
+            MaterialSourcesSection(),
+            FaceSection(),
+            WindowConstructionSection(),
+            ApertureSection(),
+            ZoneSection(),
+        ),
+    ).to_document()
 
     assert result["state"] == "complete_with_findings"
     summary = result["summary"]
@@ -179,17 +216,27 @@ def test_explicit_and_reciprocal_omissions_preserve_inputs_and_publish_remaining
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
-    document = json.loads(FIXTURE.read_text())
+    document = load_fixture()
     raw_faces = document["sections"]["ph_composer.zones.faces.export.faces"]["records"]
     surfaces = [face for face in raw_faces if face["boundary_condition"] == "Surface"]
     omit(surfaces[0])
     before = json.dumps(document, sort_keys=True)
 
-    translation = translate(document, (FaceSection(), ZoneSection(FakeConstructionProvider())))
+    translation = translate(
+        document,
+        (
+            FakeConstructionSection(),
+            MaterialSourcesSection(),
+            FaceSection(),
+            WindowConstructionSection(),
+            ApertureSection(),
+            ZoneSection(),
+        ),
+    )
     result = cast(dict[str, Any], translation.to_document())
 
     assert result["state"] == "complete_with_findings"
-    assert result["summary"] == {"objects": 14, "unavailable": 0, "findings": 2, "publishable": True}
+    assert result["summary"] == {"objects": 15, "unavailable": 0, "findings": 2, "publishable": True}
     assert result["canonical_model"]["faces"] == 10
     assert result["canonical_model"]["surface_pairs"] == 0
     assert result["canonical_model"]["omitted"] == 2
@@ -206,13 +253,24 @@ def test_explicit_and_reciprocal_omissions_preserve_inputs_and_publish_remaining
 
 def test_retired_face_with_no_boundary_is_a_nonblocking_reported_omission(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
-    document = json.loads(FIXTURE.read_text())
+    document = load_fixture()
     face = document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0]
     omit(face, "face.boundary_unclassified")
     face.pop("boundary_condition")
 
     result = cast(
-        dict[str, Any], translate(document, (FaceSection(), ZoneSection(FakeConstructionProvider()))).to_document()
+        dict[str, Any],
+        translate(
+            document,
+            (
+                FakeConstructionSection(),
+                MaterialSourcesSection(),
+                FaceSection(),
+                WindowConstructionSection(),
+                ApertureSection(),
+                ZoneSection(),
+            ),
+        ).to_document(),
     )
 
     assert result["summary"]["publishable"] is True
@@ -224,11 +282,12 @@ def test_retired_face_with_no_boundary_is_a_nonblocking_reported_omission(monkey
     assert face["zone_id"] in result["findings"][0]["message"]
 
 
-def test_omissions_do_not_install_a_construction_provider_or_hide_independent_blockers() -> None:
-    document = json.loads(FIXTURE.read_text())
+def test_omissions_do_not_hide_an_unavailable_assigned_construction() -> None:
+    document = load_fixture()
     omit(document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0])
+    document["sections"][ConstructionSection.id]["records"] = []
 
-    result = cast(dict[str, Any], translate(document, (FaceSection(), ZoneSection())).to_document())
+    result = cast(dict[str, Any], translate(document, SECTIONS).to_document())
 
     assert result["summary"]["publishable"] is False
     assert "canonical_model" not in result
@@ -244,13 +303,24 @@ def test_malformed_omission_metadata_remains_a_blocker(
     change: dict[str, object], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
-    document = json.loads(FIXTURE.read_text())
+    document = load_fixture()
     face = document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0]
     omit(face)
     face["omission"].update(change)
 
     result = cast(
-        dict[str, Any], translate(document, (FaceSection(), ZoneSection(FakeConstructionProvider()))).to_document()
+        dict[str, Any],
+        translate(
+            document,
+            (
+                FakeConstructionSection(),
+                MaterialSourcesSection(),
+                FaceSection(),
+                WindowConstructionSection(),
+                ApertureSection(),
+                ZoneSection(),
+            ),
+        ).to_document(),
     )
 
     assert result["summary"]["publishable"] is False
@@ -259,11 +329,22 @@ def test_malformed_omission_metadata_remains_a_blocker(
 
 def test_missing_boundary_without_explicit_omission_remains_a_blocker(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
-    document = json.loads(FIXTURE.read_text())
+    document = load_fixture()
     document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0].pop("boundary_condition")
 
     result = cast(
-        dict[str, Any], translate(document, (FaceSection(), ZoneSection(FakeConstructionProvider()))).to_document()
+        dict[str, Any],
+        translate(
+            document,
+            (
+                FakeConstructionSection(),
+                MaterialSourcesSection(),
+                FaceSection(),
+                WindowConstructionSection(),
+                ApertureSection(),
+                ZoneSection(),
+            ),
+        ).to_document(),
     )
 
     assert result["summary"]["publishable"] is False
@@ -272,36 +353,38 @@ def test_missing_boundary_without_explicit_omission_remains_a_blocker(monkeypatc
 
 def test_omitted_face_invalid_classification_still_blocks(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("ph_composer_translation.model_sections.stack.load", fake_stack)
-    document = json.loads(FIXTURE.read_text())
+    document = load_fixture()
     face = document["sections"]["ph_composer.zones.faces.export.faces"]["records"][0]
     omit(face)
     face["face_type"] = "Ceiling"
 
     result = cast(
-        dict[str, Any], translate(document, (FaceSection(), ZoneSection(FakeConstructionProvider()))).to_document()
+        dict[str, Any],
+        translate(
+            document,
+            (
+                FakeConstructionSection(),
+                MaterialSourcesSection(),
+                FaceSection(),
+                WindowConstructionSection(),
+                ApertureSection(),
+                ZoneSection(),
+            ),
+        ).to_document(),
     )
 
     assert result["summary"]["publishable"] is False
     assert any("independently" in finding["message"] for finding in result["findings"])
 
 
-class RealConstructionProvider:
-    def resolve(self, assembly_id: str | None) -> object:
-        from ph_composer_translation import stack
-
-        return stack.load("honeybee_energy.lib.constructions").generic_exterior_wall
-
-
 def test_real_hbjson_reloads_with_omitted_surface_pair_and_positive_omission_count() -> None:
     from ph_composer_translation.conformance import check
 
-    document = json.loads(FIXTURE.read_text())
+    document = load_fixture()
     faces = document["sections"]["ph_composer.zones.faces.export.faces"]["records"]
     surface = next(face for face in faces if face["boundary_condition"] == "Surface")
     omit(surface)
-    result = cast(
-        dict[str, Any], translate(document, (FaceSection(), ZoneSection(RealConstructionProvider()))).to_document()
-    )
+    result = cast(dict[str, Any], translate(document, SECTIONS).to_document())
 
     assert result["summary"]["publishable"] is True
     canonical = result["canonical_model"]

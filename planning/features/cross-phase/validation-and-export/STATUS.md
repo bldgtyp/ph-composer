@@ -16,6 +16,13 @@ exact implementation, package, native cases and independent-review corrections.
 
 ## Remaining scope and delivery boundaries
 
+Phase 2 P2-06 real Assembly export is implemented with native reference evidence. P2-14 Window
+construction/Aperture export passes current-host E14 on the normal RBZ: canonical two-Zone
+reference, gross parents, per-side installs, exact g endpoints, blocking findings, net opaque areas,
+pinned native comparison and clean native close/reopen. See
+[E14 evidence](../../phase-02-envelope/evidence/p2-14-aperture-export.md). Structured E06
+consolidation and Phase 2 integrated acceptance remain open.
+
 The normal build requires authored Assemblies; it safely refuses when none are available.
 Successful Phase 1 translation acceptance uses an explicit tools-only synthetic provider, excluded
 from shipping composition. Assemblies/materials authoring and later building validation belong to
@@ -24,8 +31,8 @@ unscheduled. SketchUp 2023/Windows host proof, public-distribution license revie
 release are separate gates. No implementation issue was requested or created.
 
 Phase 2 planning (2026-09-30) allocates the next changes to this feature: real constructions in
-[P2-06](../../phase-02-envelope/phases/p2-06-construction-export.md) and apertures in
-[P2-14](../../phase-02-envelope/phases/p2-14-aperture-export.md). See [PLAN.md](PLAN.md). Neither
+[P2-06](../../../archive/phase-02-envelope/phases/p2-06-construction-export.md) and apertures in
+[P2-14](../../../archive/phase-02-envelope/phases/p2-14-aperture-export.md). See [PLAN.md](PLAN.md). Neither
 is authorized.
 
 ## Verification

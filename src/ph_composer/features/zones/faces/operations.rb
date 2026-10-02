@@ -68,7 +68,7 @@ module PhComposer
           Zones::Occurrences.faces(zone, :index => index)
                             .map { |face| face_view(request, face, :index => index) }
         end
-        { "faces" => rows, "units" => { "area_m2" => "m2" } }
+        { "faces" => rows, "units" => { "area_m2" => "m2" }, "assembly_usage" => AssemblyAssignment.usage(rows) }
       end
 
       def projected_view(occurrence, fields)
@@ -327,7 +327,9 @@ module PhComposer
           "extension_data" => record ? DeepCopy.call(record.fetch("extension_data", {})) : {},
           "suggested" => Geometry.suggested_values(occurrence, :settings => Settings.read(request.model)),
           "attached_zone_state" => AttachedZone.reference_state(request.engine, record),
-          "adjacency_state" => Zones::Adjacency.state(request.model, occurrence, record, :index => index)
+          "adjacency_state" => Zones::Adjacency.state(request.model, occurrence, record, :index => index),
+          "assembly_state" => AssemblyAssignment.state(request, record),
+          "findings" => AssemblyAssignment.findings(request, occurrence, record, index)
         }
         view.merge("state" => row_state(view))
       end
@@ -352,7 +354,8 @@ module PhComposer
 
         incomplete = values["face_type"].nil? || values["boundary_condition"].nil? ||
                      (view["attached_zone_state"] && view["attached_zone_state"] != "resolved") ||
-                     (view["adjacency_state"] && view["adjacency_state"] != "current")
+                     (view["adjacency_state"] && view["adjacency_state"] != "current") ||
+                     %w[dangling invalid].include?(view["assembly_state"])
         incomplete ? "incomplete" : "classified"
       end
 
@@ -428,6 +431,7 @@ module PhComposer
           when "set" then record[field] = operation.fetch("value")
           end
         end
+        AssemblyAssignment.fill_hints(request, record, intent)
         # The reference belongs to the condition. Moving off AttachedZone drops it, so no Face keeps a
         # reference its own condition no longer explains; but a caller asking for the reference
         # without the condition is refused rather than having the value quietly discarded.
