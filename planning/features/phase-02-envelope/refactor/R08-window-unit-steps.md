@@ -1,7 +1,7 @@
 # R08: the Window Unit steps repeat one set of mechanics seven times
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r08-window-unit-steps`; dual-Ruby `make ci` passes; E12 host gate passed with two pre-existing refusals recorded
+STATUS: Merged to main 2026-10-02 (PR #25); dual-Ruby `make ci` passes; E12 host gate passed with two pre-existing refusals recorded
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement with correctness exposure. One evidenced silent-failure pattern.
@@ -145,8 +145,8 @@ Extract only what is identical in meaning. Do not build a step base class with h
 
 ## Outcome
 
-Implemented 2026-10-02 on `refactor/r08-window-unit-steps`, which stacks on the docs branch of
-PR #24.
+Implemented 2026-10-02 on `refactor/r08-window-unit-steps`, cut from the docs branch of PR #24,
+which merged first. Merged as PR #25.
 
 1. **Shared guards (items 1 to 4).** `units/native_unit.rb` holds `resolve!` (two semantics kept:
    Remove and Re-host accept the identity a pending repair gives, Swap and Reset require the live
