@@ -9,13 +9,14 @@ class FileExportTest < PhComposerTestCase
             "properties" => { "written" => { "type" => "boolean" } } }.freeze
 
   def feature(handler = ->(_request) { { "written" => true } },
-              params: { "type" => "object", "properties" => {}, "additionalProperties" => false }, result: SHAPE)
+              params: { "type" => "object", "properties" => {}, "additionalProperties" => false }, result: SHAPE,
+              approval: nil)
     Object.new.tap do |item|
       item.define_singleton_method(:name) { "TestFiles" }
       item.define_singleton_method(:install) do |registry|
         registry.feature("test.files", :contract_version => 1).file_export(NAME,
           :description => "Write a synthetic file without changing the Model.", :params => params,
-          :result => result, :examples => [{}], &handler)
+          :result => result, :examples => [{}], :approval => approval, &handler)
       end
     end
   end
@@ -50,13 +51,37 @@ class FileExportTest < PhComposerTestCase
     assert_equal "request.unknown_operation", API.query(:context => context, :name => NAME)["code"]
   end
 
-  def test_cancel_and_invalid_result_are_safe_and_never_open_undo
-    handler = ->(_request) { raise PhComposer::Declarations::FileExportCancelled }
-    PhComposer::Registry.install([feature(handler)])
-    result = API.export_file(:context => context, :name => NAME)
-    assert_equal %w[cancelled export.cancelled none], result.values_at("status", "code", "effect")
-    assert_nil result["value"]
+  # A declared approval is the shell's to obtain: the public API never carries one, so a scripted call
+  # is refused before the handler runs, and the native path hands the handler the user's answer.
+  def test_a_declared_approval_reaches_the_handler_only_from_the_native_path
+    seen = []
+    handler = lambda do |request|
+      seen << request.approval.path
+      { "written" => true }
+    end
+    approval = PhComposer::Declarations::Approval.new(:kind => "save_file", :title => "Save synthetic",
+                                                      :default_name => "synthetic.json")
+    PhComposer::Registry.install([feature(handler, :approval => approval)])
+    assert_equal "access.user_required", API.export_file(:context => context, :name => NAME)["code"]
+    assert_empty seen
+    UI.stub(:savepanel, "/chosen/synthetic.json") do
+      result = PhComposer::NativeApproval.file_export(context, NAME, {})
+      assert_equal %w[completed ok none], result.values_at("status", "code", "effect")
+    end
+    assert_equal ["/chosen/synthetic.json"], seen
+    UI.stub(:savepanel, nil) do
+      assert_equal "cancelled", PhComposer::NativeApproval.file_export(context, NAME, {})["status"]
+    end
+    assert_equal 1, seen.length
     assert_empty Sketchup.active_model.operations
+  end
+
+  def test_an_approval_of_an_unknown_kind_is_refused_at_registration
+    approval = PhComposer::Declarations::Approval.new(:kind => "print", :title => "Print")
+    error = assert_raises(PhComposer::RegistrationError) do
+      PhComposer::Registry.install([feature(:approval => approval)])
+    end
+    assert_includes error.message, "approval must be"
   end
 
   def test_invalid_params_results_busy_and_closed_session_refuse_without_calling_handler

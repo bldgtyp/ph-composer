@@ -33769,7 +33769,9 @@ Example params:
 
 ### `ph_composer.library.providers.add_file`
 
-Configure a library through a native picker. Owner: `ph_composer.library`.
+Add a library file the user chooses in a native picker to this machine's libraries. Owner: `ph_composer.library`.
+
+Needs the user: the panel or menu asks for a file first; any other caller is refused with `access.user_required`.
 
 Params:
 
@@ -33818,7 +33820,9 @@ Example params:
 
 ### `ph_composer.library.providers.add_folder`
 
-Configure a library through a native picker. Owner: `ph_composer.library`.
+Add a folder of library files the user chooses in a native picker to this machine's libraries. Owner: `ph_composer.library`.
+
+Needs the user: the panel or menu asks for a folder first; any other caller is refused with `access.user_required`.
 
 Params:
 
@@ -33929,7 +33933,9 @@ Called with a context granted `export`.
 
 ### `ph_composer.library.export_file`
 
-Export local definitions to a reviewed library file. Owner: `ph_composer.library`.
+Write local definitions to a library file the user chooses in the native save dialog; export_preview shows what it will hold. Owner: `ph_composer.library`.
+
+Needs the user: the panel or menu asks for a destination file first; any other caller is refused with `access.user_required`.
 
 Params:
 

@@ -199,9 +199,14 @@ installation and standalone repository remain open. A connection provider is sti
 `feature.file_export(name, description:, params:, result:, examples:, &handler)` declares a
 synchronous file write under the owner's namespace and the explicit `export` grant. It runs
 without a Model proposal, sequence or Undo operation. The handler receives the validated request;
-the result is detached and validated against its declared schema. Raising `FileExportCancelled`
-returns a neutral cancellation outcome. Ruby contributors remain trusted code and own native
-destination review and safe writes.
+the result is detached and validated against its declared schema. A destination only the user can
+choose is declared, not asked for: `approval: Declarations::Approval.new(kind: "save_file", title:,
+default_name:)`. The handler then reads `request.approval.path` and `.replace`, opens no dialog, and
+refuses an existing destination the user did not agree to replace. A setup command takes the same
+`approval:` with kind `open_file` or `open_folder`. The panel and native menus obtain the answer
+through `NativeApproval`; any other caller is refused with `access.user_required`
+([AGENT_INTERFACE.md](AGENT_INTERFACE.md), "Locations only the user can choose"). Ruby contributors
+remain trusted code and own safe writes.
 
 The library exporter uses reverse mappings from each registered kind and checks semantic equality
 after mapping the wire row back. Invalid or lossy reverse mappings refuse before the save dialog.

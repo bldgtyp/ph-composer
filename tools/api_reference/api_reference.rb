@@ -102,6 +102,12 @@ module PhComposerTools
         lines << "Undo step: #{declaration.undo_name}. #{declaration.side_effects}"
         lines << ""
       end
+      if declaration.respond_to?(:approval) && declaration.approval
+        noun = PhComposer::NativeApproval.noun(declaration.approval)
+        lines << "Needs the user: the panel or menu asks for a #{noun} first; any other caller is refused " \
+                 "with `access.user_required`."
+        lines << ""
+      end
       lines.concat(json_block("Params", declaration.params))
       lines.concat(json_block("Result", declaration.result))
       Array(declaration.examples).each { |example| lines.concat(json_block("Example params", example)) }

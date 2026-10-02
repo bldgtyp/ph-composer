@@ -31,8 +31,10 @@ module PhComposer
         shape = Library.object(summary_fields.merge("library_id" => Library::TEXT, "library_name" => Library::TEXT,
           "identity" => { "type" => "string", "enum" => %w[new update] }, "written" => { "type" => "boolean" }))
         feature.file_export("#{FEATURE_ID}.export_file",
-          :description => "Export local definitions to a reviewed library file.",
-          :params => params, :result => shape, :examples => [{}, { "scope" => "selected", "records" => [
+          :description => "Write local definitions to a library file the user chooses in the native save " \
+                          "dialog; export_preview shows what it will hold.",
+          :params => params, :result => shape, :approval => ExportWorkflow::APPROVAL,
+          :examples => [{}, { "scope" => "selected", "records" => [
             { "record_kind" => "ph_composer.assemblies.material", "id" => "mat_AAAAAAAAAAAA" }],
             "identity" => "new" }]) do |request|
           ExportWorkflow.run(request)

@@ -30,10 +30,11 @@ class LibraryExportTest < PhComposerTestCase
     API.query(:context => @context, :name => "ph_composer.library.export_preview", :params => params)
   end
 
-  def export(params = {}, &dialog)
-    UI.stub(:savepanel, dialog || ->(*) { @path }) do
-      UI.stub(:messagebox, IDYES) { API.export_file(:context => @context, :name => NAME, :params => params) }
-    end
+  # The export as a native client runs it, once the user has chosen @path and, unless `replace` is
+  # false, agreed to replace it. Positional, because the params' string keys would read as keywords.
+  def export(params = {}, replace = true)
+    approval = PhComposer::NativeApproval::Granted.new(:path => @path, :replace => replace)
+    PhComposer::Dispatch.new.file_export(@context, NAME, params, :approval => approval)
   end
 
   def test_allowlist_projection_metadata_omissions_and_origin_privacy
@@ -82,19 +83,11 @@ class LibraryExportTest < PhComposerTestCase
     assert_equal "params.invalid", export(selected.merge("scope" => "all"))["code"]
   end
 
-  def test_cancel_stale_revision_and_direct_projection_change_preserve_destination
+  def test_unapproved_replacement_and_stale_revision_preserve_destination
     File.write(@path, "original bytes")
-    cancelled = export { |*| nil }
-    assert_equal "cancelled", cancelled["status"]
-    assert_equal "original bytes", File.read(@path)
+    assert_equal "export.replace_required", export({}, false)["code"]
     stale = export("expected_revision" => @session.revision + 1)
     assert_equal "request.stale_revision", stale["code"]
-    changed = export do |*|
-      altered = @records.first.merge("conductivity_w_mk" => 0.09)
-      Assemblies::Materials::Schema::KIND.store.write(Sketchup.active_model, altered)
-      @path
-    end
-    assert_equal "export.model_changed", changed["code"]
     assert_equal "original bytes", File.read(@path)
     assert_empty Dir.children(@directory) - ["synthetic.json"]
   end
@@ -152,27 +145,17 @@ class LibraryExportTest < PhComposerTestCase
     refute JSON.parse(File.read(@path)).key?("record_origins")
   end
 
-  def test_native_omission_review_names_unsupported_kind_and_omitted_fields_without_values
+  def test_preview_names_unsupported_kind_and_omitted_fields_without_values
     assembly = fixture_assembly(reference_layers)
     Assemblies::Assembly::Schema::KIND.store.write(Sketchup.active_model, assembly)
     material = @records.first.merge("user_data" => { "firm.private" => "PRIVATE PAYLOAD" })
     Assemblies::Materials::Schema::KIND.store.write(Sketchup.active_model, material)
-    review = nil
-    UI.stub(:savepanel, @path) do
-      consent = lambda do |text, *_arguments|
-        review = text
-        IDNO
-      end
-      UI.stub(:messagebox, consent) do
-        result = API.export_file(:context => @context, :name => NAME)
-        assert_equal "cancelled", result["status"], result.inspect
-      end
-    end
-    assert_includes review, "ph_composer.assemblies.assembly: unsupported kind"
-    assert_includes review, "ph_composer.assemblies.material: fields not in wire schema (source, user_data)"
-    refute_includes review, "PRIVATE PAYLOAD"
-    refute_includes review, "unsupported_kind: "
-    refute File.exist?(@path)
+    omissions = preview.dig("value", "omissions")
+    assert_includes omissions.map { |row| row.values_at("record_kind", "reason") },
+                    ["ph_composer.assemblies.assembly", "unsupported_kind"]
+    assert_includes omissions.map { |row| row.values_at("record_kind", "fields") },
+                    [MATERIAL_KIND, %w[source user_data]]
+    refute_includes JSON.generate(omissions), "PRIVATE PAYLOAD"
   end
 
   def test_update_admits_missing_optional_fields_but_refuses_invalid_rows_and_versions
@@ -204,7 +187,7 @@ class LibraryExportTest < PhComposerTestCase
     assert_equal bytes, File.read(@path)
   end
 
-  def test_reverse_adapter_identity_or_extra_payload_refuses_before_destination_dialog
+  def test_reverse_adapter_identity_or_extra_payload_refuses_without_writing
     adapter = PhComposer::Registry.current.library_kinds.values.first.adapter
     original = adapter.reverse
     detached_callback = Assemblies::MaterialsLibrary.method(:reverse)
@@ -212,11 +195,9 @@ class LibraryExportTest < PhComposerTestCase
       detached_callback.call(input).merge("id" => "foreign", "transport" => "/PRIVATE SECRET/path")
     end
     original.stub(:call, replacement) do
-      UI.stub(:savepanel, ->(*) { flunk "Invalid adapter output must refuse before a dialog." }) do
-        result = API.export_file(:context => @context, :name => NAME)
-        assert_equal "library.adapter_invalid", result["code"]
-        refute_includes JSON.generate(result), "PRIVATE"
-      end
+      result = export
+      assert_equal "library.adapter_invalid", result["code"]
+      refute_includes JSON.generate(result), "PRIVATE"
     end
     refute File.exist?(@path)
   end
@@ -243,11 +224,9 @@ class LibraryExportTest < PhComposerTestCase
     params = { "scope" => "selected", "kinds" => ["probe_materials"],
                "records" => [{ "record_kind" => kind.id, "id" => row.fetch("id") }] }
     revision = @session.revision
-    UI.stub(:savepanel, ->(*) { flunk "Semantic drift must refuse before choosing a destination." }) do
-      result = API.export_file(:context => @context, :name => NAME, :params => params)
-      assert_equal "library.adapter_invalid", result["code"], result.inspect
-      assert_equal "none", result["effect"]
-    end
+    result = export(params)
+    assert_equal "library.adapter_invalid", result["code"], result.inspect
+    assert_equal "none", result["effect"]
     assert_equal row, kind.store.read(Sketchup.active_model, row.fetch("id"))
     assert_equal revision, @session.revision
     refute File.exist?(@path)
@@ -269,25 +248,31 @@ class LibraryExportTest < PhComposerTestCase
     refute File.exist?(@path)
   end
 
-  def test_native_review_cancel_model_switch_and_edit_context_guards
+  # A scripted caller cannot answer a save dialog, so it is refused before anything runs and no dialog
+  # opens; the panel's native path asks first, and a dismissed dialog writes nothing.
+  def test_a_scripted_export_is_refused_without_a_dialog_and_a_native_cancel_writes_nothing
     File.write(@path, "original")
-    UI.stub(:savepanel, @path) do
-      UI.stub(:messagebox, IDNO) do
-        assert_equal "cancelled", API.export_file(:context => @context, :name => NAME)["status"]
+    UI.stub(:savepanel, ->(*) { flunk "A scripted export must not open a dialog." }) do
+      UI.stub(:messagebox, ->(*) { flunk "A scripted export must not ask for consent." }) do
+        refused = API.export_file(:context => @context, :name => NAME)
+        assert_equal %w[refused access.user_required none], refused.values_at("status", "code", "effect")
       end
     end
-    changed = export do |*|
-      Sketchup.active_model = Sketchup::Model.new
-      @path
+    assert_equal({ "kind" => "save_file", "title" => "Export Library File", "default_name" => "model-library.json" },
+                 API.describe(:name => NAME).fetch("approval"))
+    UI.stub(:savepanel, @path) do
+      UI.stub(:messagebox, IDNO) do
+        cancelled = PhComposer::NativeApproval.file_export(@context, NAME, {})
+        assert_equal %w[cancelled request.cancelled none], cancelled.values_at("status", "code", "effect")
+      end
     end
-    assert_equal "export.model_changed", changed["code"]
-    Sketchup.active_model = @session.model
-    changed = export do |*|
-      @session.model.active_path = [@session.model.entities.add_group]
-      @path
-    end
-    assert_equal "export.model_changed", changed["code"]
     assert_equal "original", File.read(@path)
+    UI.stub(:savepanel, @path) do
+      UI.stub(:messagebox, IDYES) do
+        assert_equal "completed", PhComposer::NativeApproval.file_export(@context, NAME, {})["status"]
+      end
+    end
+    refute_equal "original", File.read(@path)
   end
 
   def test_export_file_provider_and_copy_into_fresh_model_round_trip

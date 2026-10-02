@@ -79,14 +79,18 @@ module PhComposer
 
     # A change to session or machine state (Declarations::SetupCommand). It runs as a view command
     # does, under its own grant: it carries no sequence number and returns no proposal.
-    def setup(context, name, params)
-      answer(context, "setup", name, @registry.setup_commands, params)
+    #
+    # `approval` is what a native client obtained from the user for a declaration that needs a
+    # location (NativeApproval). The public API never passes one, so a scripted caller of such a
+    # declaration is refused before anything runs.
+    def setup(context, name, params, approval: nil)
+      answer(context, "setup", name, @registry.setup_commands, params, :approval => approval)
     end
 
     # Registered local-file commands share validation and session targeting with reads. Their
     # separate grant permits file writes, never a Model transaction or an action retry sequence.
-    def file_export(context, name, params)
-      answer(context, "export", name, @registry.file_exports, params)
+    def file_export(context, name, params, approval: nil)
+      answer(context, "export", name, @registry.file_exports, params, :approval => approval)
     end
 
     # What an operation would change, without changing anything. The result is bound to the revision
@@ -161,18 +165,14 @@ module PhComposer
     # A read, a view command and a setup command run the same way: validate, refuse while busy, call the
     # handler, check the result against its declared schema. They differ in the capability they need and in what the
     # handler is allowed to touch, which is the declaration's business rather than this method's.
-    def answer(context, capability, name, declarations, params)
+    def answer(context, capability, name, declarations, params, approval: nil)
       session, _caller, declaration = resolve(context, capability, name, declarations)
       check_params!(declaration, params, session)
+      check_approval!(declaration, approval)
       refuse_if_busy!(session)
-      value = declaration.handler.call(request_for(session, params, declaration))
+      value = declaration.handler.call(request_for(session, params, declaration, :approval => approval))
       check_result!(declaration, value)
       Outcome.completed(:revision => session.revision, :value => value)
-    rescue Declarations::FileExportCancelled => error
-      return unexpected_outcome(error, session, name) unless capability == "export"
-
-      Outcome.build("cancelled", "export.cancelled", "Export cancelled. Nothing was written.", "none",
-                    session&.revision)
     rescue CodedError => error
       coded_outcome(error, session)
     rescue UserError => error
@@ -261,6 +261,16 @@ module PhComposer
       raise CodedError.new("session.busy", reason, "reason" => reason) if reason
     end
 
+    # A location only the user can choose arrives from a native client or not at all.
+    def check_approval!(declaration, approval)
+      needed = declaration.respond_to?(:approval) && declaration.approval
+      return unless needed && approval.nil?
+
+      raise CodedError.new("access.user_required", "#{declaration.name} needs the user to choose a " \
+                                                   "#{NativeApproval.noun(needed)} in SketchUp, from the " \
+                                                   "PH-Composer panel or menu. No dialog was opened.")
+    end
+
     def check_params!(declaration, params, session)
       check_json!(params, session)
       findings = JsonSchema.validate(params, declaration.params)
@@ -282,9 +292,9 @@ module PhComposer
       raise InternalError, "#{declaration.name} returned a result outside its schema: #{findings.first}"
     end
 
-    def request_for(session, params, declaration, proposal = nil)
+    def request_for(session, params, declaration, proposal = nil, approval: nil)
       Request.for(session, :owner => declaration.owner, :name => declaration.name, :registry => @registry,
-                           :params => params, :proposal => proposal)
+                           :params => params, :proposal => proposal, :approval => approval)
     end
 
     # ---------------------------------------------------------------- the mutation

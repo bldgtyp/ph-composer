@@ -243,8 +243,7 @@ module PhComposer
           return publish_setup(payload, Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil))
         end
 
-        outcome = API.setup(:context => context_for(session), :name => payload["name"].to_s,
-                            :params => payload.fetch("params", {}))
+        outcome = NativeApproval.setup(context_for(session), payload["name"].to_s, payload.fetch("params", {}))
         if outcome.fetch("status") == "completed"
           session.refresh.cancel
           publish_snapshot(session)
@@ -275,11 +274,12 @@ module PhComposer
       end
 
       # Registered local file commands use their export grant without a mutation sequence or snapshot refresh.
+      # The panel is a native client: it asks the user for a declared destination first (NativeApproval).
       def file_export(payload)
         session = Sessions.current
         outcome = if session && payload["session"] == session.id
-                    API.export_file(:context => context_for(session), :name => payload["name"].to_s,
-                                    :params => payload.fetch("params", {}))
+                    NativeApproval.file_export(context_for(session), payload["name"].to_s,
+                                               payload.fetch("params", {}))
                   else
                     Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
                   end

@@ -24,7 +24,7 @@ PhComposerUI.define("library_setup", ["request", "snapshot", "workspace"], funct
     this.enabled = Boolean(providers); this.providers = providers || [];
     if (!this.enabled) { this.requests.reset(); this.root.closeModal(); }
     var outcome = this.requests.consume(state);
-    if (outcome) this.error.textContent = outcome.status === "completed" ? "" : outcome.message;
+    if (outcome) this.error.textContent = ["completed", "cancelled"].includes(outcome.status) ? "" : outcome.message;
     this.paint();
   };
   Setup.prototype.paint = function () {

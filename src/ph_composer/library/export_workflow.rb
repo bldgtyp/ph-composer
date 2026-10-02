@@ -6,9 +6,13 @@ require_relative "file_writer"
 
 module PhComposer
   module Library
-    # Native dialogs never return a transport address through the public API. Reads and post-dialog
-    # guards use the caller's Model; writing is not a Model operation and creates no Undo entry.
+    # The destination is the one the user chose in the native save dialog (Declarations::Approval),
+    # with their consent to replace an existing file; it never enters params or the result. Writing is
+    # not a Model operation and creates no Undo entry.
     module ExportWorkflow
+      APPROVAL = Declarations::Approval.new(:kind => "save_file", :title => "Export Library File",
+                                            :default_name => "model-library.json").freeze
+
       module_function
 
       def run(request)
@@ -19,12 +23,10 @@ module PhComposer
           raise Error.new("params.invalid", "The library name must not be blank.")
         end
         before = ExportProjection.build(request)
-        revision = request.session.revision
-        path = Array(request.model.active_path).dup
-        destination = UI.savepanel("Export Library File", nil, "model-library.json")
-        raise Declarations::FileExportCancelled if destination.nil?
-
-        writer = FileWriter.new(destination)
+        writer = FileWriter.new(request.approval.path)
+        if writer.replaces? && !request.approval.replace
+          raise Error.new("export.replace_required", "The destination exists and was not approved for replacement.")
+        end
         identity = request.params.fetch("identity", "new")
         library = if identity == "update"
                     existing(writer, request)
@@ -32,10 +34,6 @@ module PhComposer
                     { "id" => SecureRandom.uuid, "name" => "Model library" }
                   end
         library["name"] = request.params["library_name"] if request.params.key?("library_name")
-        consent = UI.messagebox(review(before, library, identity, destination), MB_YESNO)
-        raise Declarations::FileExportCancelled unless consent == IDYES
-
-        guard!(request, revision, path, before)
         document = { "format" => LibraryFile::FORMAT, "schema_version" => 1, "library" => library,
                      "exported_at" => Time.now.utc.iso8601(6) }.merge(before.slice("kind_schema_versions", "kinds"))
         document["record_origins"] = before.fetch("record_origins") unless before.fetch("record_origins").empty?
@@ -43,28 +41,12 @@ module PhComposer
         if bytes.bytesize > LibraryFile::MAX_BYTES
           raise Error.new("library.file_too_large", "The library export exceeds the 32 MiB file limit.")
         end
-        writer.write(bytes) { guard!(request, revision, path, before) }
+        writer.write(bytes)
         ExportProjection.summary(before).merge("library_id" => library.fetch("id"),
                                                "library_name" => library.fetch("name"),
                                                "identity" => identity, "written" => true)
       rescue SystemCallError, IOError, EncodingError
         raise Error.new("library.export_write_failed", "The library file could not be written."), :cause => nil
-      end
-
-      def review(projection, library, identity, destination)
-        lines = ["Destination: #{destination}", "Library: #{library.fetch('name')}", "Identity: #{identity}"]
-        projection.fetch("kinds").each { |kind, rows| lines << "#{kind}: #{rows.length}" }
-        omissions = projection.fetch("omissions")
-        unless omissions.empty?
-          lines << "Omissions:"
-          lines.concat(omissions.map do |row|
-            text = "#{row.fetch('record_kind')}: #{row.fetch('reason').tr('_', ' ')}"
-            fields = row.fetch("fields")
-            fields.empty? ? text : "#{text} (#{fields.join(', ')})"
-          end.uniq)
-        end
-        lines << "Write this library file? Existing destination bytes will be replaced."
-        lines.join("\n")
       end
 
       def existing(writer, request)
@@ -96,15 +78,7 @@ module PhComposer
         false
       end
 
-      def guard!(request, revision, path, before)
-        valid = Sketchup.active_model.equal?(request.model) && request.session.valid? && !request.session.busy_reason &&
-                request.session.revision == revision && Array(request.model.active_path) == path &&
-                ExportProjection.build(request).fetch("projection_digest") == before.fetch("projection_digest")
-        return if valid
-
-        raise Error.new("export.model_changed", "The Model changed while reviewing the library export. Try again.")
-      end
-      private_class_method :review, :existing, :valid_rows?, :guard!
+      private_class_method :existing, :valid_rows?
     end
   end
 end

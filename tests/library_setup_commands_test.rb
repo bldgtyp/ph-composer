@@ -10,16 +10,27 @@ class LibrarySetupCommandsTest < PhComposerTestCase
   Commands = PhComposer::Library::SetupCommands
   Setup = PhComposer::Library::Setup
 
-  def test_public_native_picker_cancel_is_readonly_and_setup_menus_are_extensions_only
+  # Adding a library needs the user to pick it, so a scripted caller is refused at once and no picker
+  # opens; through the native path a dismissed picker changes nothing.
+  def test_scripted_add_is_refused_native_cancel_is_readonly_and_setup_menus_are_extensions_only
     session = PhComposer::Sessions.for(Sketchup.active_model)
     context = PhComposer::API.connect(:session_id => session.id, :capabilities => %w[read setup])
     revision = session.revision
-    UI.stub(:openpanel, nil) do
-      outcome = PhComposer::API.setup(:context => context,
-                                    :name => "ph_composer.library.providers.add_file", :params => {})
-      assert_equal "completed", outcome.fetch("status")
-      assert_empty outcome.fetch("value")
+    %w[add_file add_folder].each do |verb|
+      name = "#{Commands::PREFIX}.#{verb}"
+      UI.stub(:openpanel, ->(*) { flunk "A scripted add must not open a picker." }) do
+        UI.stub(:select_directory, ->(*) { flunk "A scripted add must not open a picker." }) do
+          outcome = PhComposer::API.setup(:context => context, :name => name, :params => {})
+          assert_equal %w[refused access.user_required none], outcome.values_at("status", "code", "effect")
+        end
+      end
+      UI.stub(:openpanel, nil) do
+        UI.stub(:select_directory, nil) do
+          assert_equal "cancelled", PhComposer::NativeApproval.setup(context, name, {}).fetch("status")
+        end
+      end
     end
+    assert_empty Setup.load
     assert_equal revision, session.revision
     assert_empty Sketchup.active_model.operations
     menus = PhComposer::Registry.current.menu_items.values.select { |item| item.name.start_with?(Commands::PREFIX) }
@@ -72,8 +83,7 @@ class LibrarySetupCommandsTest < PhComposerTestCase
     end
   end
 
-  def test_cancel_and_invalid_file_leave_configuration_unchanged_without_private_error
-    assert_empty Commands.add_path(nil, :adapters => adapters.method(:[]), :kinds => adapters.keys)
+  def test_invalid_file_leaves_configuration_unchanged_without_private_error
     Dir.mktmpdir do |folder|
       path = File.join(folder, "private-name.json")
       File.write(path, "not a library")

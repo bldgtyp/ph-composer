@@ -172,7 +172,7 @@ module PhComposer
       }.merge(
         operation.is_a?(Declarations::Action) ? { "side_effects" => operation.side_effects,
                                                    "confirmation" => operation.confirmation } : {}
-      )
+      ).merge(operation.respond_to?(:approval) && operation.approval ? { "approval" => operation.approval.to_h } : {})
     end
 
     def operation_kind(operation)

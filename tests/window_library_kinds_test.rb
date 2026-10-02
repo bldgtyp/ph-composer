@@ -266,13 +266,10 @@ copy_params("psi_install_types", "keep_local").merge("assignment" => input["assi
     end
     export_path = File.join(@directory, "export.json")
     export_context = API.connect(:session_id => @session.id, :capabilities => %w[read export model_write view])
-    UI.stub(:savepanel, export_path) do
-      UI.stub(:messagebox, IDYES) do
-        result = API.export_file(:context => export_context, :name => "#{L}.export_file",
-                                :params => { "kinds" => @rows.keys })
-        assert_equal "completed", result["status"], result.inspect
-      end
-    end
+    approval = PhComposer::NativeApproval::Granted.new(:path => export_path, :replace => false)
+    result = PhComposer::Dispatch.new.file_export(export_context, "#{L}.export_file", { "kinds" => @rows.keys },
+                                                  :approval => approval)
+    assert_equal "completed", result["status"], result.inspect
     exported = JSON.parse(File.read(export_path))
     assert_equal @rows.keys.sort, exported.fetch("kinds").keys.sort
     @model = Sketchup::Model.new
