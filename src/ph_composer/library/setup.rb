@@ -8,43 +8,37 @@ module PhComposer
     # Per-machine native setup. Configuration paths cross only this store and the private provider
     # constructor. Every projection for a public client omits them.
     module Setup
+      UNREADABLE = "This machine's library setup cannot be read. Reset it in the Libraries dialog before " \
+                   "changing libraries; its libraries must be added again."
       SECTION = "ph_composer.library"
       KEY = "file_providers"
       MAX_STORED_BYTES = 256 * 1024
       module_function
 
+      # The configured libraries. An unreadable stored setup reads as none, so every library read
+      # keeps working; `state` tells the two apart and `save` refuses to overwrite it.
       def load
-        raw = Sketchup.read_default(SECTION, KEY, nil)
-        return [] unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
+        stored.first
+      end
 
-        rows = JSON.parse(raw.unpack1("m0"))
-        valid_configurations!(rows)
-        Provider.immutable(rows)
-      rescue Error, JSON::ParserError, ArgumentError, EncodingError
-        []
-      rescue SystemCallError, IOError
-        raise Error.new("library.setup_unavailable", "Provider setup could not be read."), :cause => nil
+      # "readable" (including nothing stored yet) or "unreadable".
+      def state
+        stored.last
       end
 
       def save(rows)
         valid_configurations!(rows)
-        previous = load
-        text = JSON.generate(rows.map { |row| row.slice("id", "label", "path") })
-        if text.bytesize > MAX_STORED_BYTES
-          raise Error.new("library.setup_too_large", "The provider setup exceeds its storage limit.")
+        previous, previous_state = stored
+        if previous_state == "unreadable"
+          raise Error.new("library.setup_unreadable", UNREADABLE)
         end
-        unless Sketchup.write_default(SECTION, KEY, [text].pack("m0"))
-          raise Error.new("library.setup_unavailable", "Provider setup could not be saved.")
-        end
-        changed_ids = (previous + rows).map { |row| row.fetch("id") }.uniq.select do |id|
-          previous.find { |row| row.fetch("id") == id } != rows.find { |row| row.fetch("id") == id }
-        end
-        Sessions.all.each do |session|
-          changed_ids.each { |id| State.for(session).remove(id) }
-        end
-        providers
-      rescue SystemCallError, IOError
-        raise Error.new("library.setup_unavailable", "Provider setup could not be saved."), :cause => nil
+        replace(previous, rows)
+      end
+
+      # Replaces an unreadable stored setup with an empty one. A readable setup is left as it is: its
+      # libraries are removed one at a time.
+      def reset
+        state == "unreadable" ? replace([], []) : providers
       end
 
       def add_file(id:, label:, path:)
@@ -76,6 +70,41 @@ module PhComposer
         FileProvider.new(:id => configuration.fetch("id"), :label => configuration.fetch("label"),
                          :path => configuration.fetch("path"), :kinds => kinds, :adapters => adapters)
       end
+
+      def stored
+        raw = Sketchup.read_default(SECTION, KEY, nil)
+        return [[], "readable"] if raw.nil?
+        return [[], "unreadable"] unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
+
+        rows = JSON.parse(raw.unpack1("m0"))
+        valid_configurations!(rows)
+        [Provider.immutable(rows), "readable"]
+      rescue Error, JSON::ParserError, ArgumentError, EncodingError
+        [[], "unreadable"]
+      rescue SystemCallError, IOError
+        raise Error.new("library.setup_unavailable", "Provider setup could not be read."), :cause => nil
+      end
+      private_class_method :stored
+
+      def replace(previous, rows)
+        text = JSON.generate(rows.map { |row| row.slice("id", "label", "path") })
+        if text.bytesize > MAX_STORED_BYTES
+          raise Error.new("library.setup_too_large", "The provider setup exceeds its storage limit.")
+        end
+        unless Sketchup.write_default(SECTION, KEY, [text].pack("m0"))
+          raise Error.new("library.setup_unavailable", "Provider setup could not be saved.")
+        end
+        changed_ids = (previous + rows).map { |row| row.fetch("id") }.uniq.select do |id|
+          previous.find { |row| row.fetch("id") == id } != rows.find { |row| row.fetch("id") == id }
+        end
+        Sessions.all.each do |session|
+          changed_ids.each { |id| State.for(session).remove(id) }
+        end
+        providers
+      rescue SystemCallError, IOError
+        raise Error.new("library.setup_unavailable", "Provider setup could not be saved."), :cause => nil
+      end
+      private_class_method :replace
 
       def valid_configurations!(rows)
         valid = rows.is_a?(Array) && rows.all? do |row|

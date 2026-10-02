@@ -24,7 +24,7 @@ module PhComposer
         raise CodedError.new("session.unknown", "That Model session is closed.") unless @session.valid?
         @context ||= API.connect(:session_id => @session.id)
         @target ||= Placement::ToolTarget.new(@session, @context)
-        Units::Anchors.point(anchor, :width_m => 1, :height_m => 1)
+        Units::Anchors.validate!(anchor)
         plan = @target.refresh(type_id)
         @target.check!(host) if host
         @type_id, @anchor, @host = type_id.dup, anchor.dup, DeepCopy.call(host)

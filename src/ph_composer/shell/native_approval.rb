@@ -27,14 +27,18 @@ module PhComposer
     module_function
 
     def setup(context, name, params)
-      call(context, Registry.current.setup_commands[name]) do |approval|
-        Dispatch.new.setup(context, name, params, :approval => approval)
+      dispatch = Dispatch.new
+      refusal = -> { dispatch.setup_refusal(context, name, params) }
+      call(context, Registry.current.setup_commands[name], refusal) do |approval|
+        dispatch.setup(context, name, params, :approval => approval)
       end
     end
 
     def file_export(context, name, params)
-      call(context, Registry.current.file_exports[name]) do |approval|
-        Dispatch.new.file_export(context, name, params, :approval => approval)
+      dispatch = Dispatch.new
+      refusal = -> { dispatch.file_export_refusal(context, name, params) }
+      call(context, Registry.current.file_exports[name], refusal) do |approval|
+        dispatch.file_export(context, name, params, :approval => approval)
       end
     end
 
@@ -43,12 +47,16 @@ module PhComposer
     end
 
     # The dispatch outcome, or a cancellation when the user dismissed a dialog. An unknown name or a
-    # closed session opens no dialog and is dispatch's to refuse; grants and a busy session are
-    # checked by dispatch after the dialog, which is why only a client holding the grant calls this.
-    def call(context, declaration)
+    # closed session opens no dialog and is dispatch's to refuse. The grant, params and busy state are
+    # checked through `refusal` before the dialog opens, and again by dispatch after it, since the
+    # session can change while the dialog is open.
+    def call(context, declaration, refusal)
       approval = declaration&.approval
       session = context.is_a?(OperationContext) && Sessions.find(context.session_id)
       return yield(nil) unless approval && session
+
+      refused = refusal.call
+      return refused if refused
 
       granted = ask(approval, session.model)
       return cancelled(session) unless granted

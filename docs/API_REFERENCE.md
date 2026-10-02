@@ -4939,6 +4939,49 @@ Example params:
 {}
 ```
 
+### `ph_composer.library.providers.setup_state`
+
+Whether this machine's stored library setup can be read. When it is unreadable, adding or removing a library is refused until reset clears it. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "state"
+  ],
+  "properties": {
+    "state": {
+      "type": "string",
+      "enum": [
+        "readable",
+        "unreadable"
+      ],
+      "description": "unreadable when the stored setup fails to parse or validate; nothing stored yet is readable."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.records.list`
 
 Stored records of one kind, in id order, a page at a time. Owner: `ph_composer.records`.
@@ -36516,6 +36559,55 @@ Example params:
 }
 ```
 
+### `ph_composer.library.providers.reset`
+
+Clear this machine's library setup when setup_state reports it unreadable. A readable setup is left unchanged. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "provider_kind": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ## File exports
 
 Called with a context granted `export`.
@@ -36700,8 +36792,8 @@ Example params:
   "scope": "selected",
   "records": [
     {
-      "record_kind": "ph_composer.assemblies.material",
-      "id": "mat_AAAAAAAAAAAA"
+      "record_kind": "example_parts",
+      "id": "part_AAAAAAAAAAAA"
     }
   ],
   "identity": "new"

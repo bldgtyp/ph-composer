@@ -239,14 +239,27 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     render();
   }
 
+  /* Shows `name`'s tab through the same guards as a tab click, then hands `intent` to each of that tab's
+     sections that registered `onNavigate(root, intent)`, so a control elsewhere can open a tab at the
+     right place. Returns whether the tab is shown; a refusing guard has already said why. */
+  function navigate(name, intent) {
+    showTab(name);
+    if (state.ui.activeTab !== name) return false;
+    sections.forEach(function (entry) {
+      if (entry.pane === name && entry.onNavigate) entry.onNavigate(mount(entry), intent || {});
+    });
+    return true;
+  }
+
   /* `options.pane` names the tab the section belongs to (default "overview"). `options.order` places
      it within that pane, low first; sections that do not ask are placed after those that do, in the
      order they registered. A pane holds the screen's work surface first and its secondary controls
-     after it, and load order is decided by the module graph, so a section that cares says so. */
+     after it, and load order is decided by the module graph, so a section that cares says so.
+     `options.onNavigate(root, intent)` receives the intent of a `navigate` to its pane. */
   function section(name, renderFunction, options) {
     var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview",
       order: (options && options.order) !== undefined ? options.order : DEFAULT_ORDER,
-      registered: sections.length };
+      onNavigate: options && options.onNavigate, registered: sections.length };
     if (!document.querySelector("[data-section='" + name + "']") &&
         !document.querySelector("[data-pane='" + entry.pane + "']")) {
       throw new Error("panel section \"" + name + "\" names no pane \"" + entry.pane + "\"");
@@ -318,7 +331,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
      row) repaints every section from the state already in hand. It never reaches the host. */
   function repaint() { render(); }
 
-  api = { receive: receive, section: section, ready: ready, state: state, showTab: showTab, send: send,
+  api = { receive: receive, section: section, ready: ready, state: state, showTab: showTab, navigate: navigate,
+    send: send,
     setPreference: setPreference, repaint: repaint, notify: notify,
     // `guard(tab)` answers why the tab may not change, or null; `refused`, when given, runs after a
     // refusal is shown, so a section can point the user at the work that holds the tab.

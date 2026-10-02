@@ -65,15 +65,13 @@ module PhComposer
           return if current == @index
 
           id = @target && @target.fetch("id")
-          unless id && !@index.key?(id) && current.keys.sort == (@index.keys + [id]).sort &&
-                 current.reject { |key, _| key == id } == @index
-            NativeUnit.changed!("The Window definition index changed after preview.")
-          end
+          only_added = id && !@index.key?(id) && current.reject { |key, _| key == id } == @index && current.key?(id)
+          NativeUnit.changed!("The Window definition index changed after preview.") unless only_added
           definition = DefinitionIndex.resolve(model, id)
-          unless definition && DefinitionWriter.configured?(definition.behavior) &&
-                 DefinitionGeometry.matches?(definition, :type_id => id, :plan => DefinitionPlan.build(@target))
-            NativeUnit.changed!("The planned replacement definition changed before cleanup.")
-          end
+          configured = definition && DefinitionWriter.configured?(definition.behavior)
+          planned = configured && DefinitionGeometry.matches?(definition, :type_id => id,
+                                                                          :plan => DefinitionPlan.build(@target))
+          NativeUnit.changed!("The planned replacement definition changed before cleanup.") unless planned
         end
 
         def check_edit_context!(model)

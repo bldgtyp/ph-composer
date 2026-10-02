@@ -12,7 +12,7 @@ module PhComposer
         def create(request, proposal, values:, user_data: nil)
           Units::Mutation.prepare(request, proposal)
           Definitions.unique_name!(values.fetch("name"), Definitions.records(request, KIND))
-          values = Types.defaults(values, :identity => Definitions.allocator(request, "values" => values))
+          values = Types.defaults(values, :identity => Records::Identity.allocator(request, "values" => values))
           id = request.engine.propose_create(TYPE_KIND, proposal, :values => values, :user_data => user_data)
           { "id" => id }
         end
@@ -33,7 +33,7 @@ module PhComposer
         def duplicate(request, proposal, id:, name: nil, copy_datasheets: false)
           Units::Mutation.prepare(request, proposal)
           rows = Definitions.records(request, KIND)
-          identity = Definitions.allocator(request, "id" => id)
+          identity = Records::Identity.allocator(request, "id" => id)
           mapping = request.engine.propose_duplicate(TYPE_KIND, [id], proposal) do |values|
             values["name"] = (name || Definitions.duplicate_name(values.fetch("name"), rows)).strip
             Definitions.unique_name!(values["name"], rows)
@@ -70,7 +70,7 @@ module PhComposer
         def grid(request, proposal, gesture:, id:, values:, expected_values:)
           Units::Mutation.prepare(request, proposal)
           before = request.engine.find(TYPE_KIND, id)
-          after = yield before, Definitions.allocator(request, values.merge("command" => gesture, "id" => id))
+          after = yield before, Records::Identity.allocator(request, values.merge("command" => gesture, "id" => id))
           changed = KIND.values(after).select { |key, value| before[key] != value }
           request.engine.propose_update(TYPE_KIND, id, proposal, :values => changed,
                                                                  :expected_values => expected_values)

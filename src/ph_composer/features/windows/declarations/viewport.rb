@@ -72,7 +72,7 @@ module PhComposer
       end
 
       def type_rows(engine)
-        engine.ids(TYPE_KIND).map { |id| engine.find(TYPE_KIND, id).slice("id", "name") }
+        Snapshot.readable(engine, Types::KIND).map { |type| type.slice("id", "name") }
       end
 
       # The Zones selection read, for a menu test or entry provider. Anything but one Face is nil.
@@ -87,14 +87,8 @@ module PhComposer
 
       # A menu handler is a client: it reads and chooses through one long-lived context per session.
       def choose_from_menu(session)
-        types = query(session, "ph_composer.records.list", "kind" => TYPE_KIND, "fields" => ["name"],
-                                                            "limit" => Pages::MAXIMUM_LIMIT)
-        return unless types
-
-        rows = types.fetch("records").map do |row|
-          { "id" => row.fetch("id"), "name" => row.dig("values", "name") }
-        end
-        return if rows.empty?
+        rows = type_choices(session)
+        return if rows.nil? || rows.empty?
         choices = [rows.map { |row| row.fetch("name") }.join("|")]
         choice = UI.inputbox(["Window Type"], [rows.first.fetch("name")], choices,
           "Place Window")
@@ -105,6 +99,21 @@ module PhComposer
         host = selected_host(session)
         params["host"] = host if host
         invoke_choice(session, params)
+      end
+
+      # Every readable Type, page by page; nil when a page is refused.
+      def type_choices(session)
+        rows = []
+        params = { "kind" => TYPE_KIND, "fields" => ["name"], "limit" => Pages::MAXIMUM_LIMIT }
+        loop do
+          page = query(session, "ph_composer.records.list", params)
+          return unless page
+
+          page.fetch("records").each { |row| rows << { "id" => row.fetch("id"), "name" => row.dig("values", "name") } }
+          return rows unless page.fetch("next_cursor")
+
+          params = params.merge("cursor" => page.fetch("next_cursor"))
+        end
       end
 
       def selected_host(session)

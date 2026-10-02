@@ -40,6 +40,17 @@ module PhComposer
         SchemaShapes.object(properties, :optional => properties.keys)
       end
 
+      # `fields` with the source field's snapshot declared, by default as the authored ceiling above.
+      # The list passed in is not changed.
+      def with_source_snapshot(fields, snapshot_schema = source_snapshot_schema(fields))
+        fields.map do |item|
+          next item unless item.key == "source"
+
+          properties = item.schema.fetch("properties").merge("snapshot" => snapshot_schema)
+          field("source", item.schema.merge("properties" => properties), :required => item.required)
+        end
+      end
+
       def source_problems(source, snapshot_schema)
         return [] unless source && source.fetch("kind") == "library"
 

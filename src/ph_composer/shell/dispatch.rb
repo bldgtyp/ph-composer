@@ -93,6 +93,18 @@ module PhComposer
       answer(context, "export", name, @registry.file_exports, params, :approval => approval)
     end
 
+    # The refusal `setup` or `file_export` would give before its handler runs (session, grant, params,
+    # busy), or nil when none applies. A native client asks before it opens a dialog, so the user never
+    # chooses a location for a call that was going to be refused anyway. Dispatch repeats every check
+    # after the dialog.
+    def setup_refusal(context, name, params)
+      admission_refusal(context, "setup", name, @registry.setup_commands, params)
+    end
+
+    def file_export_refusal(context, name, params)
+      admission_refusal(context, "export", name, @registry.file_exports, params)
+    end
+
     # What an operation would change, without changing anything. The result is bound to the revision
     # it reports; applying it later still revalidates everything.
     def preview(context, name, params)
@@ -179,6 +191,17 @@ module PhComposer
       # A handler that refuses what it was asked for says why, as an operation does: "There is no
       # Colour-by mode named ..." is the answer, not a generic failure.
       Outcome.refused("validation.failed", error.message, :revision => session&.revision)
+    rescue StandardError => error
+      unexpected_outcome(error, session, name)
+    end
+
+    def admission_refusal(context, capability, name, declarations, params)
+      session, _caller, declaration = resolve(context, capability, name, declarations)
+      check_params!(declaration, params, session)
+      refuse_if_busy!(session)
+      nil
+    rescue CodedError => error
+      coded_outcome(error, session)
     rescue StandardError => error
       unexpected_outcome(error, session, name)
     end

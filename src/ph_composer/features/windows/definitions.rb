@@ -7,17 +7,6 @@ module PhComposer
     module Definitions
       module_function
 
-      # A deterministic id allocator for the records one operation creates. `inputs` are the
-      # operation's arguments, so two edits at one revision derive different ids.
-      def allocator(request, inputs)
-        position = 0
-        lambda do |prefix|
-          position += 1
-          Records::Identity.derived(prefix, "session" => request.session.id, "revision" => request.revision,
-            "params" => inputs, "position" => position)
-        end
-      end
-
       def records(request, kind)
         request.engine.ids(kind.id).map { |id| request.engine.find(kind.id, id) }
       end

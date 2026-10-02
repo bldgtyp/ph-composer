@@ -73,9 +73,10 @@ module PhComposer
         end.to_h
       end
 
+      # Only the context menu carries entry providers, and it has already tested each one's `available`.
       def menu_entries(item, session)
         return [item] unless item.entries
-        return [] unless session && available?(item, session)
+        return [] unless session
 
         entries = contributed(item, []) { item.entries.call(read_request(item, session)) }
         unless entries.is_a?(Array) && entries.all? do |entry|

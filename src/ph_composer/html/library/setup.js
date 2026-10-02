@@ -1,15 +1,21 @@
 /* Machine-level library setup. Native pickers own addresses; this dialog only sees provider ids and labels. */
 PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], function (request, snapshot, ui) {
   "use strict";
-  var PREFIX = "ph_composer.library.providers", SECTION = "ph_composer.library.provider_catalogs", el = ui.element;
+  var PREFIX = "ph_composer.library.providers", SECTION = "ph_composer.library.provider_catalogs",
+    SETUP_SECTION = "ph_composer.library.provider_setup", el = ui.element;
   function Setup(session, send, changed) {
     var self = this;
-    this.changed = changed; this.providers = []; this.enabled = false;
+    this.changed = changed; this.providers = []; this.enabled = false; this.unreadable = false;
     this.requests = request.channel(session, send, "library-setup", "setup.invoke");
     this.root = ui.formDialog("library-setup", function () { self.close(); });
     this.root.appendChild(el("h2", "", "Libraries"));
     this.root.appendChild(el("p", "muted", "Configure library files or folders on this machine."));
     this.list = el("div", "library-setup-list"); this.root.appendChild(this.list);
+    this.unreadableNotice = el("div", "library-setup-unreadable");
+    this.unreadableNotice.appendChild(el("p", "", "The library setup stored on this machine cannot be read. " +
+      "Reset it to add libraries again; the libraries it held must be added again."));
+    this.reset = ui.button("Reset library setup", function () { self.run("reset", {}); });
+    this.unreadableNotice.appendChild(this.reset); this.root.appendChild(this.unreadableNotice);
     this.error = el("p", "cell-error"); this.error.setAttribute("role", "status"); this.root.appendChild(this.error);
     this.file = ui.button("Add library file…", function () { self.run("add_file", {}); });
     this.folder = ui.button("Add library folder…", function () { self.run("add_folder", {}); });
@@ -22,6 +28,8 @@ PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], funct
     if (this.disposed) return;
     var providers = state.session === this.requests.session && snapshot.value(state, SECTION);
     this.enabled = Boolean(providers); this.providers = providers || [];
+    var setupState = this.enabled && snapshot.value(state, SETUP_SECTION);
+    this.unreadable = Boolean(setupState) && setupState.state === "unreadable";
     if (!this.enabled) { this.requests.reset(); this.root.closeModal(); }
     var outcome = this.requests.consume(state);
     if (outcome) this.error.textContent = ["completed", "cancelled"].includes(outcome.status) ? "" : outcome.message;
@@ -39,8 +47,10 @@ PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], funct
       }
       self.list.appendChild(row);
     });
-    if (!this.providers.length) this.list.appendChild(el("p", "muted", "No libraries configured."));
-    this.file.disabled = busy || !this.enabled; this.folder.disabled = this.file.disabled; this.cancel.disabled = busy;
+    if (!this.providers.length && !this.unreadable) this.list.appendChild(el("p", "muted", "No libraries configured."));
+    this.unreadableNotice.hidden = !this.unreadable; this.reset.disabled = busy || !this.enabled;
+    this.file.disabled = busy || !this.enabled || this.unreadable; this.folder.disabled = this.file.disabled;
+    this.cancel.disabled = busy;
   };
   Setup.prototype.open = function () {
     if (this.disposed || !this.enabled || this.requests.busy()) return;

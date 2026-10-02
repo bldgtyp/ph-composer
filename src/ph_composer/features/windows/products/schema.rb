@@ -33,9 +33,8 @@ module PhComposer
 
       # One product kind: the shared authoring fields, then `own_fields`.
       def kind(id:, label:, prefix:, own_fields:)
-        authored = Fields.common + own_fields
+        authored = Fields.with_source_snapshot(Fields.common + own_fields)
         snapshot_schema = Fields.source_snapshot_schema(authored)
-        authored.find { |field| field.key == "source" }.schema.fetch("properties")["snapshot"] = snapshot_schema
         Records::RecordKind.new(
           :id => id, :label => label, :schema_version => 1, :id_prefix => prefix, :fields => authored,
           :validate => lambda do |values|

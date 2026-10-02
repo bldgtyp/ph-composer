@@ -424,6 +424,9 @@ The page:
    rather than re-parenting them: moving a focused input takes the user's focus. A unit field
    commits on blur only while its input is still in the page, and a disposed field never commits,
    so a repaint or a Model switch cannot send a half-typed draft.
+   `panel.navigate(tab, intent)` opens another tab from a control: it goes through the same
+   navigation guards as a tab click, then calls `onNavigate(root, intent)` on each section of that
+   pane that passed one to `panel.section`, such as the Library opening at one kind.
 5. A refusal or failure stays on screen as a warning or error notice until dismissed; information
    fades on the next interaction. Notices float over the panes and never reflow them.
 

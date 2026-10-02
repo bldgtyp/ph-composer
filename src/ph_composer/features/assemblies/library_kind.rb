@@ -17,7 +17,7 @@ module PhComposer
         values["category"] = Materials::Schema::CATEGORIES.key?(category) ? category : ""
         values["color"] = values.fetch("color").downcase
         NUMBERS.each { |key| values[key] = values[key].nil? ? nil : values[key].to_f }
-        unless SchemaFields.problems(values).empty?
+        unless Fields.problems(values).empty?
           raise CodedError.new("library.row_semantic_invalid", "The library row violates the Material value contract.")
         end
         values

@@ -17,18 +17,20 @@ module PhComposer
       validate!(@defaults)
     end
 
+    # Stored settings that fail validation are unreadable: a read refuses rather than repairs them.
     def read(model)
-      validate!(store.read(model) || DeepCopy.call(defaults))
+      values = store.read(model) || DeepCopy.call(defaults)
+      problem = problems(values).first
+      raise CodedError.new("record.unreadable", "#{label} settings cannot be used: #{problem}.") if problem
+
+      values
     end
 
     def validate!(values)
-      problems = JsonSchema.validate(values, schema)
-      problems.concat(Array(@problems&.call(values))) if problems.empty?
-      unless problems.empty?
-        raise CodedError.new("validation.failed",
-                             "#{label} settings are invalid: #{problems.first}. Nothing was written.")
-      end
-      values
+      problem = problems(values).first
+      return values unless problem
+
+      raise CodedError.new("validation.failed", "#{label} settings are invalid: #{problem}. Nothing was written.")
     end
 
     def propose(model, proposal, values:, expected_values:)
@@ -53,6 +55,11 @@ module PhComposer
     end
 
     private
+
+    def problems(values)
+      found = JsonSchema.validate(values, schema)
+      found.empty? ? Array(@problems&.call(values)) : found
+    end
 
     def deep_freeze(value)
       case value

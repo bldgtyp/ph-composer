@@ -10,7 +10,7 @@
  * classification action that gives those Faces a record.
  */
 PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request", "snapshot", "units",
-  "unit_preferences", "unit_field", "table", "view_controls", "fields", "features/zones/face_words",
+  "unit_preferences", "unit_field", "table", "view_controls", "fields", "face_words",
   "features/zones/attached_zone_assignment", "features/zones/zone_settings", "features/zones/selection_assignment",
   "features/zones/assembly_assignment"],
 function (panel, ui, requests, snapshot, units, preferences, unitFields, tables, viewControls, fields, words,

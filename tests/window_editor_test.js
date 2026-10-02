@@ -356,3 +356,21 @@ test("a new Type asks for the round imperial size only while the display system 
   assert.deepStrictEqual([values.columns_m[0], values.rows_m[0]], [1.016, 1.524]);
   preferences.replace({ unit_system: "SI", dimension_formats: {} });
 });
+test("Manage in Library on a product picker opens the Library tab at that kind", function () {
+  var document = dom.buildDocument(source.markup("index.html")), context = { document: document, Intl: Intl,
+    innerWidth: 1280, setTimeout: setTimeout, clearTimeout: clearTimeout }; context.window = context;
+  dom.attachEvents(context);
+  var modules = source.start(context, ["features/windows/editor"]), state = fixtures.state(), intents = [];
+  var editor = new modules["features/windows/editor"].View(document.querySelector("[data-pane='windows']"),
+    state.session, function () {});
+  editor.render(state);
+  modules.panel.section("library-probe", function () {}, { pane: "library", onNavigate: function (root, intent) {
+    intents.push(intent);
+  } });
+  editor.picker("wel_a", "frames", "top", editor.cards.wel_a.rows.top.button);
+  click(editor.bubble.heading.querySelectorAll("button").filter(function (button) {
+    return text(button).includes("in Library");
+  })[0]);
+  assert.strictEqual(modules.panel.state.ui.activeTab, "library");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(intents)), [{ kind: "frames" }]);
+});

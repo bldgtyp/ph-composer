@@ -76,6 +76,19 @@ class FileExportTest < PhComposerTestCase
     assert_empty Sketchup.active_model.operations
   end
 
+  def test_a_busy_session_or_invalid_params_refuse_before_the_native_dialog_opens
+    approval = PhComposer::Declarations::Approval.new(:kind => "save_file", :title => "Save synthetic",
+                                                      :default_name => "synthetic.json")
+    PhComposer::Registry.install([feature(->(_request) { flunk "The handler must not run." }, :approval => approval)])
+    UI.stub(:savepanel, ->(*) { flunk "A refused export must not open the save dialog." }) do
+      assert_equal "params.invalid", PhComposer::NativeApproval.file_export(context, NAME, { "extra" => 1 })["code"]
+      PhComposer::Sessions.for(Sketchup.active_model).exclusive do
+        result = PhComposer::NativeApproval.file_export(context, NAME, {})
+        assert_equal %w[busy session.busy], result.values_at("status", "code")
+      end
+    end
+  end
+
   def test_an_approval_of_an_unknown_kind_is_refused_at_registration
     approval = PhComposer::Declarations::Approval.new(:kind => "print", :title => "Print")
     error = assert_raises(PhComposer::RegistrationError) do

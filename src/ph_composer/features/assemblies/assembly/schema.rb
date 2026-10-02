@@ -10,13 +10,13 @@ module PhComposer
         CONDITIONS = %w[Outdoors Ground AttachedZone Adiabatic].freeze
         ORIENTATIONS = %w[first_layer_outside last_layer_outside].freeze
         SEGMENT = SchemaShapes.object({
-          "id" => { "type" => "string" }, "width_mm" => SchemaFields.number("mm"),
+          "id" => { "type" => "string" }, "width_mm" => Fields.number("mm"),
           "material_id" => { "type" => %w[string null] },
           "is_continuous_insulation" => { "type" => "boolean" },
-          "steel_stud_spacing_mm" => SchemaFields.number("mm", :nullable => true)
+          "steel_stud_spacing_mm" => Fields.number("mm", :nullable => true)
         })
         LAYER = SchemaShapes.object({
-          "id" => { "type" => "string" }, "thickness_mm" => SchemaFields.number("mm"),
+          "id" => { "type" => "string" }, "thickness_mm" => Fields.number("mm"),
           "segments" => { "type" => "array", "minItems" => 1, "items" => SEGMENT }
         })
         LAYERS = { "type" => "array", "minItems" => 1, "items" => LAYER }.freeze
@@ -41,7 +41,7 @@ module PhComposer
         def defaults(values, identity: Records::Identity.method(:mint))
           { "orientation" => "first_layer_outside", "ventilated_cladding" => false,
             "layers" => [layer(100.0, :identity => identity)], "air_barrier" => nil, "photo_collections" => {} }
-            .merge(SchemaFields.defaults(values))
+            .merge(Fields.defaults(values))
         end
 
         def color(id)
@@ -49,7 +49,7 @@ module PhComposer
         end
 
         def problems(values)
-          found = SchemaFields.problems(values) + SchemaFields.source_problems(values["source"], SNAPSHOT_SCHEMA)
+          found = Fields.problems(values) + Fields.source_problems(values["source"], SNAPSHOT_SCHEMA)
           layers = values.fetch("layers")
           layer_ids = layers.map { |entry| entry.fetch("id") }
           found << "Layer ids must be unique." unless layer_ids.uniq.length == layers.length
@@ -81,18 +81,17 @@ module PhComposer
           found
         end
 
-        FIELDS = SchemaFields.common + [
-          SchemaFields.field("type", { "type" => "string", "enum" => TYPES }),
-          SchemaFields.field("orientation", { "type" => "string", "enum" => ORIENTATIONS }, :required => true),
-          SchemaFields.field("exterior_condition", { "type" => "string", "enum" => CONDITIONS }),
-          SchemaFields.field("ventilated_cladding", { "type" => "boolean" }),
-          SchemaFields.field("color", { "type" => "string" }),
-          SchemaFields.field("layers", LAYERS, :required => true),
-          SchemaFields.field("air_barrier", AIR_BARRIER),
-          SchemaFields.field("photo_collections", { "type" => "object" })
-        ]
-        SNAPSHOT_SCHEMA = SchemaFields.source_snapshot_schema(FIELDS)
-        FIELDS.find { |field| field.key == "source" }.schema.fetch("properties")["snapshot"] = SNAPSHOT_SCHEMA
+        FIELDS = Fields.with_source_snapshot(Fields.common + [
+          Fields.field("type", { "type" => "string", "enum" => TYPES }),
+          Fields.field("orientation", { "type" => "string", "enum" => ORIENTATIONS }, :required => true),
+          Fields.field("exterior_condition", { "type" => "string", "enum" => CONDITIONS }),
+          Fields.field("ventilated_cladding", { "type" => "boolean" }),
+          Fields.field("color", { "type" => "string" }),
+          Fields.field("layers", LAYERS, :required => true),
+          Fields.field("air_barrier", AIR_BARRIER),
+          Fields.field("photo_collections", { "type" => "object" })
+        ])
+        SNAPSHOT_SCHEMA = Fields.source_snapshot_schema(FIELDS)
 
         # Every Layer-Segment's Material.
         MATERIAL_REFERENCE = Records::Reference.new(:key => "layers[].segments[].material_id",

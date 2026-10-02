@@ -84,14 +84,13 @@ module PhComposer
         found.uniq
       end
 
-      FIELDS = Fields.common + [
+      FIELDS = Fields.with_source_snapshot(Fields.common + [
         Fields.field("rows_m", BANDS, :required => true), Fields.field("columns_m", BANDS, :required => true),
         Fields.field("elements", { "type" => "array", "minItems" => 1, "items" => ELEMENT }, :required => true),
         Fields.field("install_depth_m", { "type" => "number", "minimum" => 0, "x-unit" => "m" }),
         Fields.field("product_photos", { "type" => "array", "items" => { "type" => "string" } })
-      ]
+      ])
       SNAPSHOT_SCHEMA = Fields.source_snapshot_schema(FIELDS)
-      FIELDS.find { |field| field.key == "source" }.schema.fetch("properties")["snapshot"] = SNAPSHOT_SCHEMA
       REFERENCES = [Records::Reference.new(:key => "elements[].glazing_id", :target_kind => GLAZING_KIND,
         :cardinality => "one")] +
                 { "frames" => FRAME_KIND, "installs" => PSI_INSTALL_KIND }.flat_map do |field, target|

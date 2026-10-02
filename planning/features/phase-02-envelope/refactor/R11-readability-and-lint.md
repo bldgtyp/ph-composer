@@ -1,7 +1,7 @@
 # R11: formatting and small readability items the gates do not catch
 
 DATE: 2026-10-01
-STATUS: Requested. Items 17 to 20 and the carried host gate added 2026-10-02 from R10
+STATUS: Merged to main 2026-10-02 (PR #30), items 3 to 20; dual-Ruby `make ci` and `make ui-checks` pass; carried host gate not run (needs Ed at the host)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement. Gate decision made 2026-10-01; see Decision.
@@ -174,3 +174,79 @@ dialog opens:
 
 Record the results in the native-acceptance case ledger. These need native modal dialogs, so plan a
 short session with Ed at the host.
+
+## Outcome
+
+Implemented 2026-10-02 on `refactor/r11-readability`; merged as PR #30. Items 1 and 2 stay with the formatting pull
+request. Paths are relative to `src/ph_composer/`.
+
+- **3.** Named predicates in `features/windows/units/restore_panes.rb` (`faces_valid`, `stamps_valid`,
+  `ids_match`, with `pane_face?` and `pane_stamp?`) and `type_cleanup_step.rb` (`only_added`,
+  `configured`, `planned`); the split block parameter list in
+  `features/zones/declarations/assembly_assignment.rb` is whole. The seven-line `unless` the finding
+  cites had moved from `restore_step.rb` to `restore_panes.rb` under R08.
+- **4.** `Records::AuthoringFields.with_source_snapshot(fields, snapshot_schema = ...)` returns the
+  completed list; Materials passes its own snapshot schema (category as plain text) instead of
+  mutating one.
+- **5.** `Units::Anchors.validate!`. **6.** `ModelSettings#read` refuses invalid stored settings with
+  `record.unreadable` and no mutation sentence; `validate!` keeps `validation.failed` for writes.
+  **7.** The export example names `example_parts`. **8.** A `_ConstructionUsage` dataclass replaces
+  the two `type: ignore` comments.
+- **9.** `Library::Setup.state` reports `readable` or `unreadable`; reads still see no libraries, but
+  `save` (so `add_file` and `remove`) refuses with the new `library.setup_unreadable`. New query
+  `ph_composer.library.providers.setup_state` with snapshot section
+  `ph_composer.library.provider_setup`; new setup command `ph_composer.library.providers.reset`,
+  which clears only an unreadable setup and leaves a readable one unchanged. The setup dialog
+  (`html/library/setup.js`) shows the state with a Reset button and disables Add; the Libraries menu
+  says so before any picker opens.
+- **10.** `HandlerRequest` holds a deep-frozen copy of its params (`DeepCopy.frozen`); the full suite
+  found no operation that edits its params in place.
+- **11.** `menu_entries` no longer re-tests `available?`; only the context menu carries entry
+  providers and it has already tested them.
+- **12.** `Windows::Snapshot.readable(engine, kind)` is the one Type read for Place Window...'s test,
+  the per-Face entries and the Window Type Colour-by mode; it skips an unreadable Type. The chooser
+  pages through `records.list` until `next_cursor` is null.
+- **13.** `Dispatch#setup_refusal` and `#file_export_refusal` give the refusal dispatch would give
+  (session, grant, params, busy) without running the handler; `NativeApproval` asks before opening a
+  dialog, and dispatch repeats every check after it. `expected_revision` is not among them: it is a
+  `library.export_file` param its handler checks, not a dispatch check, so it still refuses after the
+  dialog. Moving it would need a dispatch-level contract for that param.
+- **14.** The provider walkthrough pages `catalog` and `in_file` at one row per page.
+- **15.** `Records::Identity.allocator(request, inputs)` replaces both feature copies with the same
+  seed keys; derived ids are unchanged.
+- **16.** `features/assemblies/schema_fields.rb` is gone; its kind constants and a `Fields` alias,
+  the name Windows already uses, open `features/assemblies/install.rb`.
+- **17.** `panel.navigate(tab, intent)` in `html/panel.js`, documented in `context/TECH_STACK.md`,
+  "Panel", and the UI polish reference.
+- **18.** `html/face_words.js` is a kit module; Zones and Windows depend on it.
+- **19.** `html/features/zones/attached_zone_fields.js` builds the one field set (name, kind, factor
+  on `UnitField`, kinds and factor descriptor declared once) used by the Library form, the Classify
+  palette and inline create-and-assign. Enter in the name or factor takes the submit path. The
+  Library's New Attached zone form now starts at a free name ("Attached zone N") rather than blank,
+  as the other two forms did.
+- **20.** The UI polish reference lists the Assembly Builder, Library and Window Types at their local
+  paths.
+
+**Review.** One Sonnet pass with the architecture rubric. Fixed: the Libraries menu opened the file
+picker for an unreadable setup (now a notice first); `ids_match` lost its short-circuit and raised
+`NoMethodError` on an unstamped pane (reproduced, now a test); the invalid-factor message showed twice
+after Enter; `reset` could wipe a readable setup (now unchanged); `admission_refusal` did not turn an
+unexpected error into an outcome; the chooser's second page and reset through the API were untested.
+
+**Verification.** `make ci` passes on Ruby 3.2.2 and 2.7.2. `make ui-checks` passes with Playwright
+resolved from a scratch install. New focused tests: `model_settings_test.rb` (6),
+`library_setup_test.rb` and `library_setup_commands_test.rb` and `library_setup_test.js` (9),
+`handler_request_test.rb` (10), `registry_test.rb` (11), `window_place_tool_test.rb` (12),
+`file_export_test.rb` (13), `window_editor_test.js` (17), `overview_panel_test.js` (19),
+`window_unit_restore_step_test.rb` (the review's unstamped pane).
+
+**Host gate: not run.** It needs native modal dialogs and Ed at the host, and is carried as written
+above. Item 13 has landed, so it can run now. Add to it: the setup dialog's unreadable state and
+Reset (write a corrupt `file_providers` default first).
+
+**Follow-ups, not in this change.**
+
+- `DeepCopy.frozen` is a third deep-freeze beside `ModelSettings#deep_freeze` and
+  `Registry#deep_freeze`; one shared helper would serve all three.
+- The UI polish reference still lists Window placement under "Patterns still to be established"
+  although `html/features/windows/placement.js` exists.

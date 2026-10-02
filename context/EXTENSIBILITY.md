@@ -392,8 +392,9 @@ the SKP. The panel sends `view.invoke` and settles the answer in its own result 
 
 A setup command changes session or machine state and never the Model or the viewport: reading a
 configured library into session memory (`ph_composer.library.load`), adding a library file or folder
-on this machine (`.providers.add_file`, `.providers.add_folder`) and removing one
-(`.providers.remove`). It is a fourth verb because none of the other three fits: a read never
+on this machine (`.providers.add_file`, `.providers.add_folder`), removing one
+(`.providers.remove`) and clearing a stored setup that can no longer be read (`.providers.reset`).
+It is a fourth verb because none of the other three fits: a read never
 changes state, an action is an undoable Model operation, and a view command changes only what the
 host shows.
 

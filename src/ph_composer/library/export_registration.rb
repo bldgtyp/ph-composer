@@ -46,7 +46,7 @@ module PhComposer
                           "dialog; export_preview shows what it will hold.",
           :params => params, :result => shape, :approval => ExportWorkflow::APPROVAL,
           :examples => [{}, { "scope" => "selected", "records" => [
-            { "record_kind" => "ph_composer.assemblies.material", "id" => "mat_AAAAAAAAAAAA" }],
+            { "record_kind" => "example_parts", "id" => "part_AAAAAAAAAAAA" }],
             "identity" => "new" }]) do |request|
           ExportWorkflow.run(request)
         end

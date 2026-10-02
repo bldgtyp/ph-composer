@@ -9,7 +9,7 @@
  * let a user break a pair by painting over one of its ends.
  */
 PhComposerUI.define("features/zones/classify", ["panel", "workspace", "request", "snapshot",
-  "features/zones/face_words", "features/zones/attached_zone_fields", "features/zones/assembly_assignment"],
+  "face_words", "features/zones/attached_zone_fields", "features/zones/assembly_assignment"],
 function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   "use strict";
   var KEEP = "";
@@ -106,7 +106,7 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     if (state.draft) return;
     var dialog = ui.formDialog("", cancel);
     var form = ui.element("form");
-    var inputs = attachedFields.build(form, records);
+    var inputs = attachedFields.build(form, records, submit);
     var name = inputs.name;
     var error = ui.element("div", "cell-error");
     error.setAttribute("role", "status");
@@ -116,15 +116,18 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     form.appendChild(ui.actionRow(cancelButton, save, false));
     form.addEventListener("submit", function (event) {
       event.preventDefault();
+      submit();
+    });
+    function submit() {
       if (state !== screen || state.disposed || !state.available || state.edits.busy()) return;
       var values = inputs.values();
       if (!values) {
-        error.textContent = "Enter a name and a factor between 0 and 1.";
+        error.textContent = inputs.message();
         return;
       }
       save.disabled = true;
       cancelButton.disabled = true;
-      inputs.controls.forEach(function (control) { control.disabled = true; });
+      inputs.setDisabled(true);
       state.edits.run("ph_composer.zones.faces.attached_zone.save", { values: values }, {
         onDone: function (outcome) {
           if (outcome.value && outcome.value.id) state.chooseWhenFree = outcome.value.id;
@@ -133,11 +136,11 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
         onFail: function (outcome) {
           save.disabled = false;
           cancelButton.disabled = false;
-          inputs.controls.forEach(function (control) { control.disabled = false; });
+          inputs.setDisabled(false);
           error.textContent = outcome.message || "The Attached zone could not be created. Nothing was written.";
         }
       });
-    });
+    }
     dialog.appendChild(ui.element("h2", "", "New attached zone"));
     dialog.appendChild(form);
     dialog.appendChild(error);
@@ -154,6 +157,7 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
       state.returnFocus = afterRender === true;
       dialog.closeModal();
       if (dialog.parentNode) dialog.parentNode.removeChild(dialog);
+      inputs.dispose();
       state.draft = null;
       if (state.createButton && state.createButton.isConnected) state.createButton.focus();
     }

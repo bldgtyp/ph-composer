@@ -31,7 +31,7 @@ module PhComposer
           unless items.all? { |item| counts.fetch(item.record.fetch("id")) > 1 }
             raise CodedError.new("params.invalid", "Choose Windows whose identity is shared with a copy.")
           end
-          updates = IdentityPlan.build(occurrences, :identity => Definitions.allocator(request, "units" => units),
+          updates = IdentityPlan.build(occurrences, :identity => Records::Identity.allocator(request, "units" => units),
             :catalog => request.registry.catalog, :engine => request.engine,
             :only => items.map { |item| item.record.fetch("id") })
           proposal.add_step(IdentityStep.new(updates), :scopes => [MutationScope.new])
@@ -47,7 +47,8 @@ module PhComposer
 
         # `pane_paths` are the orphaned panes the new Unit adopts on `host`.
         def restore(request, proposal, host:, type_id:, pane_paths:)
-          identity = Definitions.allocator(request, "host" => host, "type_id" => type_id, "pane_paths" => pane_paths)
+          seed = { "host" => host, "type_id" => type_id, "pane_paths" => pane_paths }
+          identity = Records::Identity.allocator(request, seed)
           Mutation.prepare(request, proposal, :identity => identity)
           reads = ReadContext.new(request)
           host = reads.host_reference(host)
@@ -77,7 +78,7 @@ module PhComposer
         end
 
         def flipped_type(request, proposal, source, name:, seed:)
-          identity = Definitions.allocator(request, seed)
+          identity = Records::Identity.allocator(request, seed)
           rows = Definitions.records(request, Types::KIND)
           name ||= Definitions.duplicate_name("#{source.fetch('name')} (flipped)", rows)
           Definitions.unique_name!(name, rows)

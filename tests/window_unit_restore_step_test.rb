@@ -171,6 +171,12 @@ class WindowUnitRestoreStepTest < PhComposerTestCase
     assert_empty @model.definitions.to_a
   end
 
+  def test_an_unstamped_pane_refuses_as_unrestorable
+    U::PANE_STORE.delete(@panes.first)
+    assert_raises(PhComposer::CodedError) { step }
+    assert_empty @model.definitions.to_a
+  end
+
   def test_foreign_face_edge_attributes_material_and_wall_shared_edges_refuse
     face = @panes.first
     face.set_attribute("outside.example", "literal", [1])

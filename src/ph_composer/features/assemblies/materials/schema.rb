@@ -32,7 +32,7 @@ module PhComposer
         end
 
         def defaults(values)
-          result = SchemaFields.defaults(values).merge("color" => values.fetch("color", "#ffffff"))
+          result = Fields.defaults(values).merge("color" => values.fetch("color", "#ffffff"))
           result["category"] = category(values.fetch("category", ""))
           result
         end
@@ -48,24 +48,25 @@ module PhComposer
           end
         end
 
-        FIELDS = SchemaFields.common + [
-          SchemaFields.field("category", { "type" => "string", "enum" => [""] + CATEGORIES.keys }),
-          SchemaFields.field("conductivity_w_mk", SchemaFields.number("W/mK", :nullable => true)),
-          SchemaFields.field("density_kg_m3", SchemaFields.number("kg/m3", :nullable => true)),
-          SchemaFields.field("specific_heat_j_kgk", SchemaFields.number("J/kgK", :nullable => true)),
-          SchemaFields.field("emissivity", { "type" => %w[number null], "minimum" => 0, "maximum" => 1 }),
-          SchemaFields.field("color", { "type" => "string" })
+        AUTHORED_FIELDS = Fields.common + [
+          Fields.field("category", { "type" => "string", "enum" => [""] + CATEGORIES.keys }),
+          Fields.field("conductivity_w_mk", Fields.number("W/mK", :nullable => true)),
+          Fields.field("density_kg_m3", Fields.number("kg/m3", :nullable => true)),
+          Fields.field("specific_heat_j_kgk", Fields.number("J/kgK", :nullable => true)),
+          Fields.field("emissivity", { "type" => %w[number null], "minimum" => 0, "maximum" => 1 }),
+          Fields.field("color", { "type" => "string" })
         ]
-        SNAPSHOT_SCHEMA = SchemaFields.source_snapshot_schema(FIELDS)
         # The original provider category remains attribution even when its authored local category
         # falls back to Uncategorized. This does not widen the authored category vocabulary.
-        SNAPSHOT_SCHEMA.fetch("properties")["category"] = { "type" => "string" }
-        FIELDS.find { |field| field.key == "source" }.schema.fetch("properties")["snapshot"] = SNAPSHOT_SCHEMA
+        SNAPSHOT_SCHEMA = Fields.source_snapshot_schema(AUTHORED_FIELDS.map do |field|
+          field.key == "category" ? Fields.field("category", { "type" => "string" }) : field
+        end)
+        FIELDS = Fields.with_source_snapshot(AUTHORED_FIELDS, SNAPSHOT_SCHEMA)
 
         KIND = Records::RecordKind.new(
           :id => MATERIAL_KIND, :label => "Material", :schema_version => 1, :id_prefix => "mat",
-          :fields => FIELDS, :validate => ->(values) { SchemaFields.problems(values) +
-            SchemaFields.source_problems(values["source"], SNAPSHOT_SCHEMA) }
+          :fields => FIELDS, :validate => ->(values) { Fields.problems(values) +
+            Fields.source_problems(values["source"], SNAPSHOT_SCHEMA) }
         )
       end
     end

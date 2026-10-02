@@ -43,9 +43,23 @@ class LibrarySetupTest < PhComposerTestCase
     end
   end
 
-  def test_malformed_defaults_are_empty_and_invalid_or_duplicate_configurations_are_refused
-    Sketchup.write_default(Setup::SECTION, Setup::KEY, "not base64 json")
-    assert_empty Setup.load
+  def test_an_unreadable_setup_reads_as_empty_refuses_changes_until_reset_and_is_kept
+    stored = "not base64 json"
+    Sketchup.write_default(Setup::SECTION, Setup::KEY, stored)
+    assert_equal [[], "unreadable"], [Setup.load, Setup.state]
+    [-> { Setup.add_file(:id => "provider.one", :label => "Synthetic", :path => "/private/file.json") },
+     -> { Setup.remove("provider.one") }].each do |change|
+      error = assert_raises(PhComposer::Library::Error) { change.call }
+      assert_equal "library.setup_unreadable", error.code
+      assert_equal stored, Sketchup.read_default(Setup::SECTION, Setup::KEY)
+    end
+    assert_empty Setup.reset
+    assert_equal "readable", Setup.state
+    Setup.add_file(:id => "provider.one", :label => "Synthetic", :path => "/private/file.json")
+    assert_equal ["provider.one"], Setup.load.map { |row| row.fetch("id") }
+  end
+
+  def test_invalid_or_duplicate_configurations_are_refused
     row = { "id" => "provider.one", "label" => "Synthetic", "path" => "/private/file.json" }
     [nil, [row, row], [row.merge("token" => "must not persist")]].each do |value|
       error = assert_raises(PhComposer::Library::Error) { Setup.save(value) }

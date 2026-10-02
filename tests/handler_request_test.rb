@@ -37,4 +37,13 @@ class HandlerRequestTest < PhComposerTestCase
     assert_equal [{ "id" => "x" }, "ph_composer.windows"], [nested.params, nested.owner]
     assert_equal [{}, "ph_composer.zones"], [@request.params, @request.owner]
   end
+
+  def test_params_are_a_frozen_copy_so_an_in_place_edit_raises
+    params = { "targets" => [{ "id" => "x" }] }
+    request = @request.with(:params => params)
+
+    assert_raises(FrozenError) { request.params.fetch("targets").first["id"] = "y" }
+    assert_raises(FrozenError) { request.params.fetch("targets").first.fetch("id") << "y" }
+    refute params.frozen?
+  end
 end

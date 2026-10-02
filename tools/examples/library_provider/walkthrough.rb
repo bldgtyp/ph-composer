@@ -8,6 +8,21 @@ module BldgtypExampleLibraryWalkthrough
     outcome.fetch("value")
   end
 
+  # Every row of a paged library query: a page holds at most `limit` rows, so follow `next_cursor`
+  # until it is null. Warnings and unavailable kinds are reported per page.
+  def all_rows(api, context, name, params)
+    rows = []
+    cursor = nil
+    loop do
+      page = checked(api.query(:context => context, :name => name,
+                               :params => cursor ? params.merge("cursor" => cursor) : params))
+      raise "The example catalog has warnings or unavailable kinds." unless page.fetch("warnings").empty? &&
+                                                                          page.fetch("unavailable").empty?
+      rows.concat(page.fetch("rows"))
+      return rows unless (cursor = page.fetch("next_cursor"))
+    end
+  end
+
   def run
     api = PhComposer::API
     session = api.discover.fetch("sessions").find { |row| row.fetch("active") }
@@ -17,14 +32,13 @@ module BldgtypExampleLibraryWalkthrough
     loaded = checked(api.setup(:context => context, :name => "ph_composer.library.load",
                               :params => { "provider_id" => provider_id, "kind" => "materials" }))
     selected = { "provider_id" => provider_id, "kind" => "materials", "generation" => loaded.fetch("generation") }
-    catalog = checked(api.query(:context => context, :name => "ph_composer.library.catalog", :params => selected))
-    raise "The example catalog has warnings or unavailable kinds." unless catalog.fetch("warnings").empty? &&
-                                                                        catalog.fetch("unavailable").empty?
-    row = catalog.fetch("rows").find { |entry| entry.fetch("record_id") == "insulation" }
+    # A one-row page, so the example shows paging on its short synthetic catalog.
+    paged = selected.merge("limit" => 1)
+    row = all_rows(api, context, "ph_composer.library.catalog", paged)
+          .find { |entry| entry.fetch("record_id") == "insulation" }
     raise "The example catalog is unavailable." unless row
-    resolved = checked(api.query(:context => context, :name => "ph_composer.library.in_file", :params => selected))
-    resolution = resolved.fetch("rows").find { |entry| entry.fetch("record_id") == "insulation" }
-                         .fetch("resolution").fetch("outcome")
+    resolution = all_rows(api, context, "ph_composer.library.in_file", paged)
+                 .find { |entry| entry.fetch("record_id") == "insulation" }.fetch("resolution").fetch("outcome")
     raise "Resolve the existing local record before running the example." unless %w[create reuse].include?(resolution)
     params = selected.merge("library_id" => row.fetch("library_id"), "record_id" => row.fetch("record_id"),
                             "choice" => resolution == "create" ? "create" : "keep_local")
