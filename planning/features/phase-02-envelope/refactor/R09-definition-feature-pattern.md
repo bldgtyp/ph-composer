@@ -1,7 +1,7 @@
 # R09: the definition-feature pattern is copied, forked by kind and driven by positional tables
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r09-definition-feature-pattern`; dual-Ruby `make ci` passes; no host gate named
+STATUS: Merged to main 2026-10-02 (PR #26); dual-Ruby `make ci` passes; no host gate named
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement, readability and contributor cost. No correctness defect found.
@@ -133,6 +133,7 @@ Two steps, the second only if Ed wants the abstraction.
 ## Outcome
 
 Implemented 2026-10-02 on `refactor/r09-definition-feature-pattern`, cut from `main` at `4f69240`.
+Merged as PR #26.
 Correction steps 1, 2, 3 and 5 were taken (observed items 1 to 4, 6 and 7). Step 4
 (`CatalogInventory`) waits for Phase 3's first definition kind, as planned. Step 6 (item 8,
 `refuses:` on operations) stays optional: it is a shell, registry and `API.describe` contract change
