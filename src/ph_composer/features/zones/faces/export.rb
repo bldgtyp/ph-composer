@@ -104,20 +104,9 @@ module PhComposer
             return [["construction.#{state}", "Face #{record.fetch('id')} names #{state} Assembly #{id}.", true]]
           end
           assembly = AssemblyAssignment.catalog(request).fetch(:records).fetch(id)
-          conditions = request.memo(:construction_conditions) do
-            request.query("ph_composer.assemblies.export_preflight").fetch("findings")
-          end
-          material_ids = assembly.fetch("values").fetch("layers").flat_map do |layer|
-            layer.fetch("segments").map { |segment| segment["material_id"] }
-          end
-          conversion = conditions.find do |finding|
-            (finding.fetch("code") == "material_specific_heat_unavailable" &&
-              material_ids.include?(finding["object_id"])) ||
-              (finding.fetch("code") == "construction_thermal_layer_limit" && finding["object_id"] == id)
-          end
-          return [] if assembly.dig("display", "complete") && !conversion
+          return [] if assembly.fetch("export_ready")
 
-          reason = conversion ? conversion.fetch("message") : assembly.fetch("findings").first.fetch("message")
+          reason = assembly.fetch("export_blockers").first.fetch("message")
           [["construction.incomplete", "Face #{record.fetch('id')} names incomplete Assembly #{id}: #{reason}", true]]
         end
 

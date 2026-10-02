@@ -43,7 +43,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     row = result["records"].first
     refute row["values"].key?("color")
     assert_match(/\A#[0-9a-f]{6}\z/, row["display"]["color"])
-    assert_equal ["missing_material"], row["display"]["thermal"]["flags"]
+    assert_equal ["assembly.segment_unassigned"], row["display"]["thermal"]["flags"]
     assert_nil row["display"]["thermal"]["u_effective"]
     assert_equal 100, row["display"]["total_thickness_mm"]
   end
@@ -142,7 +142,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     assert_equal ids.sort, material["uses"].map { |row| row["assembly_id"] }.sort
     assembly = query("assemblies", "ids" => [ids.first])["records"].first
     assert_equal true, assembly["display"]["complete"]
-    assert_equal ["material_thermal_mass_default"], assembly["findings"].map { |row| row["code"] }.uniq
+    assert_equal ["material.thermal_mass_defaulted"], assembly["findings"].map { |row| row["code"] }.uniq
     refute assembly["findings"].any? { |row| row.key?("severity") }
   end
 
@@ -279,8 +279,8 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     id = create("assemblies", Assemblies::Assembly::Schema::KIND.values(values))
     row = query("assemblies", "ids" => [id])["records"].first
     assert_equal false, row["display"]["complete"]
-    assert_equal ["calculation_limit"], row["display"]["thermal"]["flags"]
-    assert_includes row["findings"].map { |finding| finding["code"] }, "calculation_limit"
+    assert_equal ["assembly.calculation_limit"], row["display"]["thermal"]["flags"]
+    assert_includes row["findings"].map { |finding| finding["code"] }, "assembly.calculation_limit"
     assert_equal 30, record(Assemblies::ASSEMBLY_KIND, id)["layers"].length
     edit = invoke("assemblies.update", "id" => id, "values" => { "notes" => "Still editable" },
                                        "expected_values" => { "notes" => "" })

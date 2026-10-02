@@ -6,19 +6,20 @@ module PhComposer
       RSI = { "RoofCeiling" => 0.10, "Wall" => 0.13, "Floor" => 0.17 }.freeze
       # Bound exact Cartesian evaluation, not authoring: 30 binary mixed Layers would require
       # over a billion paths on the host thread. Above this budget the record stays editable and
-      # the display reports calculation_limit rather than an approximation.
+      # the display reports assembly.calculation_limit rather than an approximation.
       PATH_BUDGET = 16_384
       HEAT_FLOW = { "RoofCeiling" => "upward", "Floor" => "downward" }.freeze
-      # Named reasons for withholding thermal display values.
+      # Why a thermal display value is withheld, by the same code Validation reports for the condition.
       PREVIEW_MESSAGES = {
-        "membrane_in_mixed_layer" => "A membrane Layer must hold only one Layer-Segment.",
-        "missing_material" => "One or more segments do not have a material assignment.",
-        "missing_conductivity" => "One or more assigned materials need conductivity before export.",
-        "invalid_geometry" => "Layer thickness, segment width, or steel-stud spacing is invalid.",
-        "broken_material_reference" => "One or more segments reference a missing project material.",
-        "no_thermal_layers" => "Every Layer is a membrane with no thermal resistance, so no U-value is available.",
-        "unreadable_material" => "One or more referenced Materials cannot be read.",
-        "calculation_limit" => "The exact thermal calculation exceeds its path budget; no value is available."
+        "assembly.membrane_in_mixed_layer" => "A membrane Layer must hold only one Layer-Segment.",
+        "assembly.segment_unassigned" => "One or more segments do not have a material assignment.",
+        "material.conductivity_missing" => "One or more assigned materials need conductivity before export.",
+        "assembly.geometry_invalid" => "Layer thickness, segment width, or steel-stud spacing is invalid.",
+        "assembly.material_dangling" => "One or more segments reference a missing project material.",
+        "assembly.no_thermal_layers" => "Every Layer is a membrane with no thermal resistance, so no U-value is " \
+                                        "available.",
+        "material.invalid" => "One or more referenced Materials cannot be read.",
+        "assembly.calculation_limit" => "The exact thermal calculation exceeds its path budget; no value is available."
       }.freeze
       UNCALCULABLE = "Thermal resistance could not be calculated from the assigned segments."
 
@@ -41,7 +42,7 @@ module PhComposer
         values = effective(assembly, materials)
         return block.merge(values) if values
 
-        flags = (flags + ["invalid_geometry"]).uniq.sort
+        flags = (flags + ["assembly.geometry_invalid"]).uniq.sort
         block.merge("complete" => false, "flags" => flags,
                     "warnings" => flags.map { |flag| PREVIEW_MESSAGES.fetch(flag) } + [UNCALCULABLE])
       end
@@ -50,16 +51,16 @@ module PhComposer
         layers = Array(assembly["layers"])
         flags = layers.each_with_object([]) do |layer, result|
           segments = Array(layer["segments"])
-          result << "invalid_geometry" unless layer["thickness_mm"].to_f.positive?
+          result << "assembly.geometry_invalid" unless layer["thickness_mm"].to_f.positive?
           if segments.length > 1 && segments.any? { |entry| materials[entry["material_id"]] &&
               Materials::Schema.membrane?(materials.fetch(entry["material_id"])) }
-            result << "membrane_in_mixed_layer"
+            result << "assembly.membrane_in_mixed_layer"
           end
           segments.each { |segment| result.concat(segment_flags(segment, materials)) }
         end
-        flags << "invalid_geometry" if layers.empty?
-        flags << "no_thermal_layers" if !layers.empty? && layers.all? { |layer| membrane?(layer, materials) }
-        flags << "calculation_limit" if flags.empty? && calculation_limited?(layers, materials)
+        flags << "assembly.geometry_invalid" if layers.empty?
+        flags << "assembly.no_thermal_layers" if !layers.empty? && layers.all? { |layer| membrane?(layer, materials) }
+        flags << "assembly.calculation_limit" if flags.empty? && calculation_limited?(layers, materials)
         flags.uniq.sort
       end
       private_class_method :preview_flags
@@ -67,16 +68,18 @@ module PhComposer
       def segment_flags(segment, materials)
         spacing = segment["steel_stud_spacing_mm"]
         flags = []
-        flags << "invalid_geometry" if !segment["width_mm"].to_f.positive? || (!spacing.nil? && !spacing.to_f.positive?)
-        return flags << "missing_material" if segment["material_id"].nil?
+        if !segment["width_mm"].to_f.positive? || (!spacing.nil? && !spacing.to_f.positive?)
+          flags << "assembly.geometry_invalid"
+        end
+        return flags << "assembly.segment_unassigned" if segment["material_id"].nil?
 
         material = materials[segment["material_id"]]
         if material.nil?
-          flags << "broken_material_reference"
+          flags << "assembly.material_dangling"
         elsif !Materials::Schema::KIND.problems(material).empty?
-          flags << "unreadable_material"
+          flags << "material.invalid"
         elsif !Materials::Schema.membrane?(material) && !material["conductivity_w_mk"].to_f.positive?
-          flags << "missing_conductivity"
+          flags << "material.conductivity_missing"
         end
         flags
       end

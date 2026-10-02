@@ -106,7 +106,7 @@ def test_mass_defaults_are_actual_written_values_with_nonblocking_disclosure() -
         cast(TranslatedConstruction, result.objects(ConstructionSection.id)["asm_Default00001"]).construction
     ).materials[0]
     assert (host.density, host.specific_heat) == (600, 1000)
-    finding = next(f for f in result.findings if f.code == "material_thermal_mass_default")
+    finding = next(f for f in result.findings if f.code == "material.thermal_mass_defaulted")
     assert not finding.blocks_export
     assert "600" in finding.message and "1000" in finding.message
 

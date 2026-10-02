@@ -36,15 +36,15 @@ class AssembliesExportTest < PhComposerTestCase
     assert_equal "completed", result.fetch("status"), result.inspect
     findings = result.fetch("value").fetch("findings")
     assert findings.none? { |finding| finding.fetch("blocks_export") }
-    assert_includes findings.map { |finding| finding.fetch("code") }, "assembly_no_thermal_layers"
-    assert_includes findings.map { |finding| finding.fetch("code") }, "membrane_in_mixed_layer"
-    defaults = findings.find { |finding| finding.fetch("code") == "material_thermal_mass_default" }
+    assert_includes findings.map { |finding| finding.fetch("code") }, "assembly.no_thermal_layers"
+    assert_includes findings.map { |finding| finding.fetch("code") }, "assembly.membrane_in_mixed_layer"
+    defaults = findings.find { |finding| finding.fetch("code") == "material.thermal_mass_defaulted" }
     assert_includes defaults.fetch("message"), "600"
     assert_includes defaults.fetch("message"), "1000"
     assert_empty result.fetch("value").fetch("repairs")
     expected = JSON.parse(File.read(File.join(ROOT, "expected.json")))
     unavailable = findings.select do |finding|
-      %w[assembly_no_thermal_layers membrane_in_mixed_layer].include?(finding.fetch("code"))
+      %w[assembly.no_thermal_layers assembly.membrane_in_mixed_layer].include?(finding.fetch("code"))
     end.map { |finding| finding.fetch("object_id") }
     assert_equal expected.fetch("unavailable").sort, unavailable.sort
   end
