@@ -6,15 +6,16 @@ module PhComposer
   # reads"). `approval` is the location the user chose for a declaration that needs one
   # (Declarations::Approval), as a NativeApproval::Granted; it is nil everywhere else.
   #
-  # A request is frozen (the struct, not its params Hash). The foundation derives a nested one with
-  # `with`; feature code passes the values it needs to its operations as arguments and never derives
-  # or alters a request.
+  # A request is frozen, its params included: each request holds its own frozen copy, so an operation
+  # cannot alter what a nested read or the dispatcher's digest sees. The foundation derives a nested
+  # one with `with`; feature code passes the values it needs to its operations as arguments and never
+  # derives or alters a request.
   HandlerRequest = Struct.new(:session, :model, :params, :engine, :revision, :registry, :owner, :proposal, :query_stack,
                               :memos, :approval, keyword_init: true) do
     # The one place a request is built from a session. `name` is the declaration the request runs
     # for, so a nested read of the same name is refused as recursive.
     def self.for(session, owner:, name:, registry: Registry.current, params: {}, proposal: nil, approval: nil)
-      new(:session => session, :model => session.model, :params => DeepCopy.call(params),
+      new(:session => session, :model => session.model, :params => params,
           :engine => Records::Engine.new(session.model, registry.catalog), :revision => session.revision,
           :registry => registry, :owner => owner, :proposal => proposal, :query_stack => [name],
           :approval => approval)
@@ -22,7 +23,7 @@ module PhComposer
 
     def initialize(**fields)
       super
-      self.params ||= {}
+      self.params = DeepCopy.frozen(params || {})
       self.query_stack ||= []
       self.memos ||= {}.compare_by_identity
       freeze
@@ -32,8 +33,8 @@ module PhComposer
     # library callback or participant. Memos stay shared, so nested reads reuse what the caller computed.
     def with(params: self.params, owner: self.owner, proposal: self.proposal, engine: self.engine,
              query_stack: self.query_stack)
-      HandlerRequest.new(**to_h, :params => DeepCopy.call(params), :owner => owner, :proposal => proposal,
-                                 :engine => engine, :query_stack => query_stack)
+      HandlerRequest.new(**to_h, :params => params, :owner => owner, :proposal => proposal, :engine => engine,
+                                 :query_stack => query_stack)
     end
 
     # A value computed once per request, shared with the nested reads and callbacks it makes. Keys

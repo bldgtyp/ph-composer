@@ -36700,8 +36700,8 @@ Example params:
   "scope": "selected",
   "records": [
     {
-      "record_kind": "ph_composer.assemblies.material",
-      "id": "mat_AAAAAAAAAAAA"
+      "record_kind": "example_parts",
+      "id": "part_AAAAAAAAAAAA"
     }
   ],
   "identity": "new"
