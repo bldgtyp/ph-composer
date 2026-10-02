@@ -408,3 +408,22 @@ test("Library surfaces come from registrations in order, and the active one owns
   assert.strictEqual(built[1], "created");
   assert.strictEqual(view.selection(), null, "a surface without a record kind exports nothing");
 });
+
+test("a surface missing what its spec declares is refused when the pane builds it", function () {
+  assert.throws(function () {
+    setup(function (modules) {
+      modules["library/section"].registerSurface({ id: "broken", label: "Broken", createLabel: "+ New",
+        build: function () {
+          return { records: [], guard: function () { return null; }, render: function () {}, dispose: function () {} };
+        } });
+    });
+  }, /Library surface broken is missing create, canCreate/);
+});
+
+test("an open library export form blocks a Library tab change", function () {
+  var o = setup(), view = o.roots.library._view;
+  view.exportLibrary.listeners.click({});
+  assert.strictEqual(view.tabs.select("attached_zones"), false);
+  assert.strictEqual(view.tabs.active, "materials");
+  assert.ok(o.guards.library("assemblies"));
+});

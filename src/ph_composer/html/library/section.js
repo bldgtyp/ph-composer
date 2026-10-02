@@ -5,13 +5,20 @@
  *   registerSurface({ id, label, order, recordKind, createLabel, build(root, state, send) })
  *
  * `build` returns the surface's view: `records`, `guard()`, `render(state)` and `dispose()`, plus
- * `inventory` when `recordKind` makes its rows exportable, and `create()` and `canCreate()` when
- * `createLabel` asks the pane for a "+ New" button. Surfaces appear in `order`, then by id. */
+ * `inventory` (an html/inventory.js Inventory) when `recordKind` makes its rows exportable, and
+ * `create()` and `canCreate()` when `createLabel` asks the pane for a "+ New" button. A view missing
+ * one of these throws when the pane builds it. Surfaces appear in `order` (built-ins use 10 to 32;
+ * omitted is 0), then by id; `id` is also the sub-tab `panel.navigate("library", { kind })` selects.
+ * Register when the module loads: the pane builds its surfaces once per Model session. */
 PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "library/export"],
   function (panel, ui, Subtabs, ExportForm) {
   "use strict";
   var pages = Object.create(null), current, registered = [];
+  var VIEW = ["guard", "render", "dispose"];
   function registerSurface(spec) {
+    if (!spec.id || !spec.label || typeof spec.build !== "function") {
+      throw new Error("A Library surface needs an id, a label and build");
+    }
     if (registered.some(function (entry) { return entry.id === spec.id;
       })) throw new Error("Duplicate Library surface");
     registered.push(spec);
@@ -21,6 +28,14 @@ PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "librar
     if (!view) return null;
     if (!view.exportForm.root.hidden) return "Finish or cancel the open form.";
     return view.surfaces.map(function (entry) { return entry.view.guard(); }).filter(Boolean)[0] || null;
+  }
+  function checked(spec, view) {
+    var needs = VIEW.concat(spec.createLabel ? ["create", "canCreate"] : []).filter(function (name) {
+      return typeof view[name] !== "function";
+    });
+    if (spec.recordKind && !(view.inventory && view.inventory.grid)) needs.push("inventory");
+    if (needs.length) throw new Error("Library surface " + spec.id + " is missing " + needs.join(", "));
+    return view;
   }
   function active(view) {
     return view.surfaces.filter(function (entry) { return entry.spec.id === view.tabs.active; })[0];
@@ -40,7 +55,7 @@ PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "librar
     root.appendChild(ui.element("p", "muted", "Definitions stored in this model."));
     view.surfaces = registered.map(function (spec) {
       var surface = ui.element("section", "phc-inventory-surface");
-      return { spec: spec, root: surface, view: spec.build(surface, state, send) };
+      return { spec: spec, root: surface, view: checked(spec, spec.build(surface, state, send)) };
     });
     view.surface = function (id) {
       var entry = view.surfaces.filter(function (item) { return item.spec.id === id; })[0];

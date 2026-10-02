@@ -124,8 +124,13 @@ existing pane needs no markup. The other two seams add to a screen another modul
   to the Library pane. The spec is `{ id, label, order, recordKind, createLabel, build }`;
   `build(root, state, send)` returns the surface's view with `records`, `guard()`,
   `render(state)` and `dispose()`. A `recordKind` makes the surface's selected rows exportable
-  through the view's `inventory`; a `createLabel` puts a "+ New" button in the pane heading that
-  calls the view's `create()` and is enabled by its `canCreate()`. Every built-in inventory uses
+  through the view's `inventory`, which is an `html/inventory.js` `Inventory`; a `createLabel` puts
+  a "+ New" button in the pane heading that calls the view's `create()` and is enabled by its
+  `canCreate()`. The pane throws when a view lacks a member its spec needs. Surfaces appear by
+  `order` (the built-ins use 10 to 32; an omitted order is 0), then by id. The `id` is also the
+  sub-tab that `panel.navigate("library", { kind: id })` selects. Register when the module loads:
+  the pane builds its surfaces once per Model session. A surface may instead keep its "+ New"
+  inside its own tab body, as the Windows products still do. Every built-in inventory uses
   this seam: Materials (`html/features/assemblies/materials.js`), Attached zones
   (`html/features/zones/attached_zones.js`) and the Windows products, whose
   `html/features/windows/section.js` registers Frames, Glazings and Psi-Install Types from one
