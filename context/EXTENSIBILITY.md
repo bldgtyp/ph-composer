@@ -135,7 +135,8 @@ an anchored `pattern` that compiles, non-empty enums whose values fit their type
 handler and examples for every query, action, view command, setup command and file export, where an operation whose params
 accept `{}` may omit examples and every example must validate; callable participants, menu items,
 subscriptions and Colour-by projections; and a described `noun.condition` form for each
-`feature.code`, declared once, under a noun no other feature declares. A test over the built-in registry
+`feature.code`, declared once, under a noun no other feature declares and outside the foundation's
+nouns. A test over the built-in registry
 (`tests/api_reference_test.rb`) also requires a description on every top-level param, and an id
 param carries the `pattern` of its prefix, such as `^asm_[A-Za-z0-9]{12}$`. Write each operation's
 description, Undo name and side effects by hand at its declaration, not by interpolating its name. Published operations are frozen with deep-frozen schemas

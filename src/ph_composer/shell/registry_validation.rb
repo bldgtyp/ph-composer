@@ -372,15 +372,19 @@ module PhComposer
 
       private
 
-      # A code is `noun.condition`, declared once, with a description; one feature owns each noun.
+      # A code is `noun.condition`, declared once, with a description; one feature owns each noun, and
+      # the foundation's nouns are listed in context/CONTRACTS.md rather than declared.
       def check_codes
         nouns = @live.codes.values.to_h { |code| [code.code.split(".").first, code.owner] }
         seen = @live.codes.keys
         @staging.declared_codes.each do |code|
           noun = code.code.to_s.split(".").first
-          if !CODE_PATTERN.match?(code.code.to_s) || !text?(code.description)
+          if !code.code.is_a?(String) || !CODE_PATTERN.match?(code.code) || !text?(code.description)
             add("registration.schema_invalid", code.owner, code.code.to_s,
-                "#{code.code} must be a lowercase noun.condition code with a description.")
+                "#{code.code} must be a lowercase noun.condition string with a description.")
+          elsif Declarations::FOUNDATION_CODE_NOUNS.include?(noun)
+            add("registration.schema_invalid", code.owner, code.code,
+                "#{code.code} uses a foundation noun; foundation codes are listed in context/CONTRACTS.md.")
           elsif seen.include?(code.code)
             add("registration.duplicate_id", code.owner, code.code, "#{code.code} is declared more than once.")
           elsif nouns.fetch(noun, code.owner) != code.owner

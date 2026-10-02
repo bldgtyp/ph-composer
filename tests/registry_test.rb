@@ -146,10 +146,11 @@ class RegistryTest < PhComposerTestCase
       one.code("probe.taken", :description => "First.")
       one.code("Probe", :description => "Not a code.")
       one.code("probe.taken", :description => "Again.")
+      one.code("target.mine", :description => "A foundation noun.")
       registry.feature("probe.two", :contract_version => 1).code("probe.other", :description => "Same noun.")
     end)
-    assert_equal %w[registration.schema_invalid registration.duplicate_id registration.duplicate_id],
-                 diagnostics.map(&:code)
+    assert_equal %w[registration.schema_invalid registration.duplicate_id registration.schema_invalid
+                    registration.duplicate_id], diagnostics.map(&:code)
     assert_equal "probe.one", diagnostics.last.dependency
   end
 

@@ -157,8 +157,8 @@ thing wherever they appear; a feature uses them for those conditions. A conditio
 can have takes that feature's noun (for example `zone.*`, `face.*`, `adjacency.*`, `gesture.*`,
 `window.*`). This table lists foundation codes, the codes of the `ph_composer.library`
 foundation feature, and shared-noun codes a feature raises. A feature declares each code under its
-own nouns with `feature.code(code, description:)`; registration refuses a malformed code, a repeat
-and a noun another feature owns, and `docs/API_REFERENCE.md` lists them by feature under "Feature
+own nouns with `feature.code(code, description:)`; registration refuses a malformed code, a repeat,
+a noun another feature owns and a noun this table uses (`Declarations::FOUNDATION_CODE_NOUNS`), and `docs/API_REFERENCE.md` lists them by feature under "Feature
 codes". One condition has one code from every read, refusal and preflight that reports it. Add a
 foundation code here before a caller relies on it; `tests/outcome_codes_test.rb` fails when feature,
 library or translation source names a code that is neither listed here nor declared.

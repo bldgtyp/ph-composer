@@ -78,6 +78,26 @@ module PhComposer
         emit(entry, record, type, face, thermal)
       rescue CodedError => error
         issue(error.code, error.message, record, reference)
+      ensure
+        add_repairs(@findings.drop(start), reference)
+      end
+
+      # The batch repairs the preflight offers for one Unit, under the same rules as its read.
+      def add_repairs(findings, reference)
+        return unless reference["unit_id"].is_a?(String)
+
+        codes = findings.map { |finding| finding.fetch("code") }
+        codes.uniq.each do |code|
+          action = Units::State::REPAIRS[code]
+          next unless %w[reset_to_type new_flipped_type].include?(action)
+
+          repair = Units::State.repair(code, reference, codes)
+          next unless repair
+
+          @repairs << { "id" => "#{code}:#{reference['entity_path'].join('.')}",
+            "label" => action == "reset_to_type" ? "Reset to Type" : "New flipped Type", "checked" => false,
+            "action" => repair.fetch("name"), "params" => repair.fetch("params") }
+        end
       end
 
       def validate_record(entry, record, reference)
@@ -248,13 +268,6 @@ module PhComposer
           finding["locate"] = { "name" => "#{FEATURE_ID}.units.locate", "params" => { "units" => [reference] } }
         end
         @findings << finding
-        action = Units::State::REPAIRS[code]
-        return unless %w[reset_to_type new_flipped_type].include?(action)
-
-        repair = Units::State.repair(code, reference, [])
-        @repairs << { "id" => "#{code}:#{reference['entity_path'].join('.')}",
-          "label" => action == "reset_to_type" ? "Reset to Type" : "New flipped Type", "checked" => false,
-          "action" => repair.fetch("name"), "params" => repair.fetch("params") }
       end
     end
   end

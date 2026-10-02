@@ -10,16 +10,19 @@ module PhComposer
       # Findings are computed from the current occurrence and explicit public host geometry.
       # A read never re-glues, rewrites geometry or normalizes copied identities.
       module State
-        # The action that repairs each condition. A Window that is mirrored or has no known Type cannot be
-        # reset (Reset to Type refuses both), so its reset repairs are withheld.
+        # The action that repairs each condition. A host Zone that is not unique has no Windows repair: the
+        # Zone's identity is repaired first, and rehost refuses such a Face.
         REPAIRS = { "window.unhosted" => "rehost", "window.off_host" => "rehost", "window.overhang" => "rehost",
-          "window.overlap" => "rehost", "window.surface_host" => "rehost", "window.host_zone_unresolved" => "rehost",
+          "window.overlap" => "rehost", "window.surface_host" => "rehost",
           "window.scaled" => "reset_to_type", "window.sheared" => "reset_to_type",
           "window.geometry_differs" => "reset_to_type", "window.definition_detached" => "reset_to_type",
           "window.mirrored" => "new_flipped_type", "window.unknown_type" => "swap_type",
           "window.copy_id_pending" => "repair_copied_identities" }.freeze
         # These actions name one occurrence; the others take a list.
         SINGLE_UNIT_REPAIRS = %w[rehost new_flipped_type].freeze
+        # Reset to Type refuses a mirrored Window and one glued to a Surface Face or a Face outside one
+        # unique Zone, so it is not offered beside those conditions.
+        RESET_REFUSED = %w[window.mirrored window.surface_host window.host_zone_unresolved].freeze
         module_function
 
         def findings(occurrence, type:, canonical_definition:, host_geometry: nil,
@@ -53,7 +56,9 @@ module PhComposer
         def repair(code, reference, codes)
           action = REPAIRS[code]
           return nil unless action
-          return nil if action == "reset_to_type" && (codes & %w[window.mirrored window.unknown_type]).any?
+          # Every action but swap needs the Window's Type.
+          return nil if codes.include?("window.unknown_type") && action != "swap_type"
+          return nil if action == "reset_to_type" && (codes & RESET_REFUSED).any?
 
           unit = DeepCopy.call(reference)
           { "name" => "#{FEATURE_ID}.units.#{action}",

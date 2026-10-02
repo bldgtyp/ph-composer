@@ -392,7 +392,8 @@ module PhComposer
       # Declares one code this feature raises under its own noun, such as `window.unhosted`. Codes are not
       # names under the feature id; one feature owns each noun.
       def code(code, description:)
-        @staging.declared_codes << Declarations::Code.new(:code => code, :owner => id, :description => description)
+        @staging.declared_codes << Declarations::Code.new(:code => code, :owner => id,
+                                                          :description => description).freeze
       end
 
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).

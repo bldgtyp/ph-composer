@@ -452,6 +452,8 @@ class WindowExportTest < PhComposerTestCase
     assert_includes codes, "window.scaled"
     @unit.transformation = @unit.transformation * Geom::Transformation.scaling(-1, 1, 1)
     assert_includes codes, "window.mirrored"
+    actions = assess.repairs.map { |row| row.fetch("action") }
+    assert_equal ["ph_composer.windows.units.new_flipped_type"], actions, "Reset to Type refuses a mirrored Window"
   end
 
   def test_missing_product_and_thermal_values_block_without_zero_placeholders

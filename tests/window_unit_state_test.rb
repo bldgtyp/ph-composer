@@ -72,6 +72,9 @@ class WindowUnitStateTest < PhComposerTestCase
     assert_equal %w[window.scaled window.mirrored], result.keys
     assert_nil result.fetch("window.scaled"), "Reset to Type refuses a mirrored Window, so it is not offered"
     assert_equal "ph_composer.windows.units.new_flipped_type", result.fetch("window.mirrored").fetch("name")
+    unknown = findings(:type => nil).to_h { |finding| [finding.fetch("code"), finding.fetch("repair")] }
+    assert_nil unknown.fetch("window.mirrored"), "Every repair but swap needs the Window's Type"
+    assert_equal "ph_composer.windows.units.swap_type", unknown.fetch("window.unknown_type").fetch("name")
     assert_equal matrix, @unit.transformation.to_a
   end
 
