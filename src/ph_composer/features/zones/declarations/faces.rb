@@ -230,7 +230,7 @@ module PhComposer
                          :examples => [{ "zone" => EXAMPLE_FACE.slice("zone_id", "zone_path") }],
                          :side_effects => "Writes suggested values to Faces that have no record yet.") do |
                            request, proposal|
-            Faces.auto_classify(request, proposal)
+            Faces.auto_classify(request, proposal, :zone => request.params.fetch("zone"))
           end
           feature.action("#{PREFIX}.reverse",
                          :description => "Reverse one Face and keep its assignment record.",

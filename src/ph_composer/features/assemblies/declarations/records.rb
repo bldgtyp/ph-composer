@@ -18,14 +18,17 @@ module PhComposer
                        :params => Shapes.create(kind), :result => Shapes::RESULT,
                        :undo_name => "Create #{kind.label}", :side_effects => "Creates one catalog record.",
                        :examples => [{ "values" => { "name" => "Example #{kind.label}" } }]) do |request, proposal|
-          Operations.create(request, proposal, kind.id)
+          Operations.create(request, proposal, kind.id, :values => request.params.fetch("values"),
+                                                        :user_data => request.params["user_data"])
         end
         feature.action("#{prefix}.update", :description => "Edit one #{kind.label}; changed expected values refuse.",
                        :params => Shapes.update(kind, editable), :result => Shapes::RESULT,
                        :undo_name => "Edit #{kind.label}", :side_effects => "Updates values and optional metadata.",
                        :examples => [{ "id" => example_id, "values" => { "name" => "Edited" },
                                        "expected_values" => { "name" => "Original" } }]) do |request, proposal|
-          Operations.update(request, proposal, kind.id)
+          params = request.params
+          Operations.update(request, proposal, kind.id, :id => params.fetch("id"), :values => params.fetch("values"),
+            :expected_values => params.fetch("expected_values"), :user_data => params["user_data"])
         end
         declare_duplicate(feature, prefix, kind, example_id)
         declare_delete(feature, prefix, kind, example_id)
@@ -46,7 +49,8 @@ module PhComposer
                        :result => Shapes::RESULT, :undo_name => "Duplicate #{kind.label}",
                        :side_effects => "Creates one catalog record, preserving shared definition references.",
                        :examples => [{ "id" => example_id }]) do |request, proposal|
-          Operations.duplicate(request, proposal, kind.id)
+          Operations.duplicate(request, proposal, kind.id, :id => request.params.fetch("id"),
+            :name => request.params["name"], :copy_datasheets => request.params.fetch("copy_datasheets", false))
         end
       end
 
@@ -66,10 +70,13 @@ module PhComposer
                        :result => Shapes::RESULT, :undo_name => "Delete #{kind.label}",
                        :side_effects => "Replacement or explicit clearing rewrites uses and deletes atomically.",
                        :examples => [{ "id" => example_id }]) do |request, proposal|
+          params = request.params
+          target = { :id => params.fetch("id"), :expected_values => params.fetch("expected_values", {}),
+                     :replacement_id => params["replacement_id"] }
           if kind.id == MATERIAL_KIND
-            Operations.delete_material(request, proposal)
+            Operations.delete_material(request, proposal, **target)
           else
-            Operations.delete_assembly(request, proposal)
+            Operations.delete_assembly(request, proposal, **target, :retarget => params.key?("replacement_id"))
           end
         end
       end

@@ -10,11 +10,11 @@ module PhComposer
     module LibraryKinds
       module_function
 
-      def install(feature, registry)
+      def install(feature)
         Products::KINDS.each_key do |collection|
           adapter = ProductAdapter.new(collection)
           feature.library_kind("#{FEATURE_ID}.library_#{collection}", :contract_version => 1,
-            :record_kind => adapter.kind.id, :adapter => adapter.declaration(registry))
+            :record_kind => adapter.kind.id, :adapter => adapter.declaration)
         end
       end
 
@@ -87,18 +87,20 @@ module PhComposer
           params.fetch("properties").fetch("values").fetch("properties")["source"] =
             kind.values_schema.fetch("properties").fetch("source")
           callback(params, Shapes::RESULT) do |request, proposal|
-            Operations.update(request, proposal, @collection)
+            Operations.update(request, proposal, @collection, :id => request.params.fetch("id"),
+              :values => request.params.fetch("values"), :expected_values => request.params.fetch("expected_values"))
           end
         end
 
-        def declaration(registry)
+        def declaration
           Declarations::LibraryAdapter.new(:wire_kind => @collection, :wire_version => 1,
             :fingerprint_version => 1, :wire_schema => wire_schema, :mapped_schema => schema,
             :fingerprint_fields => fields, :map => method(:map), :reverse => method(:reverse),
             :fingerprint => method(:fingerprint), :local_read => local_read,
             :create => callback(Shapes.create(kind), Shapes::RESULT) do |request, proposal|
-              Operations.create(request, proposal, @collection)
-            end, :replace => replace, :assign => LibraryAssignment.callback(@collection, registry))
+              Operations.create(request, proposal, @collection, :values => request.params.fetch("values"),
+                                                                :user_data => request.params["user_data"])
+            end, :replace => replace, :assign => LibraryAssignment.callback(@collection))
         end
       end
     end

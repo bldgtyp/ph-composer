@@ -41,6 +41,21 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
     assert_nil @proposal.refusal
   end
 
+  def test_every_engine_read_answers_through_the_callers_proposal
+    invoke do |request, changes|
+      id = create(request, changes)
+      engine = request.engine
+      assert_equal KIND, engine.kind(KIND).id
+      assert_equal "Copied material", engine.view(KIND, engine.find(KIND, id)).dig("values", "name")
+      assert_equal id, engine.resolve_reference(KIND, id).record.fetch("id")
+      assert_empty engine.incoming_references(KIND, id)
+      engine.check_identity_removal!(KIND, id)
+      assert_equal [id], engine.ids(KIND)
+      {}
+    end
+    assert_nil @proposal.refusal
+  end
+
   def test_invalid_result_poison_is_retained_after_callback_stages_a_copy
     assert_raises(PhComposer::CodedError) do
       invoke { |request, changes| create(request, changes)

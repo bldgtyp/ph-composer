@@ -5,6 +5,9 @@ module PhComposer
   # same shape as a read: no params and no proposal (context/CONTRACTS.md, "Handler-side dependency
   # reads"). `approval` is the location the user chose for a declaration that needs one
   # (Declarations::Approval), as a NativeApproval::Granted; it is nil everywhere else.
+  #
+  # A request is frozen. The foundation derives a nested one with `with`; feature code passes the
+  # values it needs to its operations as arguments and never derives or alters a request.
   HandlerRequest = Struct.new(:session, :model, :params, :engine, :revision, :registry, :owner, :proposal, :query_stack,
                               :memos, :approval, keyword_init: true) do
     # The one place a request is built from a session. `name` is the declaration the request runs
@@ -13,14 +16,29 @@ module PhComposer
       new(:session => session, :model => session.model, :params => DeepCopy.call(params),
           :engine => Records::Engine.new(session.model, registry.catalog), :revision => session.revision,
           :registry => registry, :owner => owner, :proposal => proposal, :query_stack => [name],
-          :memos => {}.compare_by_identity, :approval => approval)
+          :approval => approval)
+    end
+
+    def initialize(**fields)
+      super
+      self.params ||= {}
+      self.query_stack ||= []
+      self.memos ||= {}.compare_by_identity
+      freeze
+    end
+
+    # The same request for a nested call the foundation makes: a dependency read, a retargeter, a
+    # library callback or participant. Memos stay shared, so nested reads reuse what the caller computed.
+    def with(params: self.params, owner: self.owner, proposal: self.proposal, engine: self.engine,
+             query_stack: self.query_stack)
+      HandlerRequest.new(**to_h, :params => DeepCopy.call(params), :owner => owner, :proposal => proposal,
+                                 :engine => engine, :query_stack => query_stack)
     end
 
     # A value computed once per request, shared with the nested reads and callbacks it makes. Keys
     # are scoped to the current owner, so two features cannot collide, and to the current engine, so
     # a value read through one engine is never reused under a projected one.
     def memo(key)
-      self.memos ||= {}.compare_by_identity
       slot = (memos[engine] ||= {})
       return slot[[owner, key]] if slot.key?([owner, key])
 
@@ -43,11 +61,8 @@ module PhComposer
         raise CodedError.new("params.invalid", "#{name} params do not match its schema.")
       end
 
-      nested = dup
-      nested.owner = declaration.owner
-      nested.proposal = nil
-      nested.params = DeepCopy.call(params)
-      nested.query_stack = query_stack + [name]
+      nested = with(:params => params, :owner => declaration.owner, :proposal => nil,
+                    :query_stack => query_stack + [name])
       value = declaration.handler.call(nested)
       unless JsonValue.problems(value).empty? && JsonSchema.validate(value, declaration.result).empty?
         raise InternalError, "#{name} returned a result outside its schema."
@@ -88,9 +103,7 @@ module PhComposer
       engine.resolve_reference(kind, to) unless to.nil?
       rows = registry.reference_retargeters.values.select { |item| item.target_kind == kind }.sort_by(&:name)
       plans = rows.map do |declaration|
-        nested = dup
-        nested.owner = declaration.owner
-        plan = declaration.handler.call(nested, proposal, :from => from, :to => to)
+        plan = declaration.handler.call(with(:owner => declaration.owner), proposal, :from => from, :to => to)
         unless plan.is_a?(Records::ReferencePlan)
           raise InternalError, "#{declaration.name} must return a ReferencePlan."
         end

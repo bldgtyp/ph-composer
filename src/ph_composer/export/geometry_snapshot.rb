@@ -38,7 +38,7 @@ module PhComposer
         attr_reader :entries, :count, :model_dictionaries
 
         def initialize(model)
-          @model_dictionaries = GeometrySnapshot.send(:read_dictionaries, model)
+          @model_dictionaries = GeometrySnapshot.read_dictionaries(model)
           @walk = GeometrySnapshot.enum_for(:walk, model.entities, [], Geom::Transformation.new, {})
           @entries = []
           @count = 0
@@ -135,6 +135,8 @@ module PhComposer
       end
       private_class_method :native_facts, :definition_entity
 
+      # Every PH-Composer dictionary on one entity or Model, detached. Public for Cursor, which reads
+      # the Model's own dictionaries before it walks.
       def self.read_dictionaries(entity)
         Array(entity.attribute_dictionaries).each_with_object({}) do |dictionary, result|
           next unless dictionary.name.start_with?("#{DICTIONARY_PREFIX}.")
@@ -144,7 +146,6 @@ module PhComposer
           result[dictionary.name] = values.freeze
         end.freeze
       end
-      private_class_method :read_dictionaries
 
       def initialize(entries, revision, model_dictionaries: {})
         @entries = entries.freeze

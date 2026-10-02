@@ -32,7 +32,7 @@ module PhComposer
           unless items.all? { |item| counts.fetch(item.record.fetch("id")) > 1 }
             raise CodedError.new("params.invalid", "Choose Windows whose identity is shared with a copy.")
           end
-          updates = IdentityPlan.build(occurrences, :identity => Operations.allocator(request),
+          updates = IdentityPlan.build(occurrences, :identity => Operations.allocator(request, request.params),
             :catalog => request.registry.catalog, :engine => request.engine,
             :only => items.map { |item| item.record.fetch("id") })
           proposal.add_step(IdentityStep.new(updates), :scopes => [MutationScope.new])
@@ -47,7 +47,7 @@ module PhComposer
         end
 
         def restore(request, proposal)
-          identity = Operations.allocator(request)
+          identity = Operations.allocator(request, request.params)
           Mutation.prepare(request, proposal, :identity => identity)
           reads = ReadContext.new(request)
           host = reads.host_reference(request.params.fetch("host"))
@@ -76,7 +76,7 @@ module PhComposer
         end
 
         def flipped_type(request, proposal, source)
-          identity = Operations.allocator(request)
+          identity = Operations.allocator(request, request.params)
           rows = Operations.records(request, Types::KIND)
           name = request.params["name"] || Operations.duplicate_name("#{source.fetch('name')} (flipped)", rows)
           Operations.unique_name!(name, rows)

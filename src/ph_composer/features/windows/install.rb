@@ -45,7 +45,7 @@ module PhComposer
       UnitRegistration.install(feature, registry)
       ViewportRegistration.install(feature, registry)
       ColourModes.install(feature)
-      LibraryKinds.install(feature, registry)
+      LibraryKinds.install(feature)
       ExportProjection.install(feature)
       Units::Areas.install(feature, registry)
       Codes.install(feature)

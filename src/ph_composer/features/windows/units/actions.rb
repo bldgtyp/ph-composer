@@ -11,7 +11,7 @@ module PhComposer
         module_function
 
         def place(request, proposal)
-          identity = Windows::Operations.allocator(request)
+          identity = Windows::Operations.allocator(request, request.params)
           Mutation.prepare(request, proposal, :identity => identity)
           reads = ReadContext.new(request)
           host = reads.host_reference(request.params.fetch("host"))

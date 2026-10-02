@@ -20,9 +20,7 @@ module PhComposer
           raise CodedError.new("params.invalid", "Library copy params do not match their schema.")
         end
 
-        nested = request.dup
-        nested.params = DeepCopy.call(params)
-        value = Coordinator.copy(nested, proposal)
+        value = Coordinator.copy(request.with(:params => params), proposal)
         unless JsonValue.problems(value).empty? && JsonSchema.validate(value, Schemas.copy_result).empty?
           raise InternalError, "Library copy returned a result outside its schema."
         end

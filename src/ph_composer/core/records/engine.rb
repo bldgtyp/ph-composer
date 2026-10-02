@@ -56,6 +56,12 @@ module PhComposer
         }
       end
 
+      # The same reads through `change_set`, accepting writes only of `writable_kinds` into it
+      # (ProjectedEngine). An empty list gives a read-only projection.
+      def projected(change_set, writable_kinds:, refusal_code:)
+        ProjectedEngine.new(self, change_set, :writable_kinds => writable_kinds, :refusal_code => refusal_code)
+      end
+
       # ---------------------------------------------------------------- proposals
 
       def propose_create(kind_id, change_set, values:, user_data: nil)

@@ -138,12 +138,11 @@ module PhComposer
 
       # `skip_unwritable` is Make Zone's suggestion: a Face in a shared or locked child Group stays
       # unclassified, visible in validation, rather than refusing the Zone it is being made in.
-      def auto_classify(request, proposal, skip_unwritable: false)
+      def auto_classify(request, proposal, zone:, skip_unwritable: false)
         # One walk for the whole batch, so the Zone it resolves is the Zone the index walked and the
         # Faces come back from that same walk.
         index = Zones::Index.new(request.model)
-        zone = Zones::Occurrences.resolve_zone(request.model, request.params.fetch("zone"),
-                                               :mutable => true, :index => index)
+        zone = Zones::Occurrences.resolve_zone(request.model, zone, :mutable => true, :index => index)
         stamp = Zones::Schema.stamp(zone.record)
         # No gesture ceiling here: Auto-classify is a separate named batch over one Zone the user
         # already owns, not a pointer gesture whose target set the user cannot see.
@@ -381,6 +380,8 @@ module PhComposer
         references.uniq { |reference| Zones::Occurrences.key(reference) }
       end
 
+      # The gesture ceiling. Public with check_expected! and new_record because Assembly assignment
+      # (assembly_assignment.rb) applies the same rules to its own Face gesture.
       def check_limit!(count)
         limit = gesture_face_limit
         return if count <= limit
@@ -491,9 +492,9 @@ module PhComposer
         raise CodedError.new("target.changed", "The Face changed since it was read (#{changed.join(', ')}).")
       end
       private_class_method :projected_view
-      private_class_method :face_view, :patched_record, :validate_intent!, :check_expected!, :deduplicate,
-                           :check_limit!, :retiring?, :plan_retirements, :classify_updates,
-                           :retirement_only_updates, :new_record, :plan_classification
+      private_class_method :face_view, :patched_record, :validate_intent!, :deduplicate,
+                           :retiring?, :plan_retirements, :classify_updates,
+                           :retirement_only_updates, :plan_classification
     end
   end
 end

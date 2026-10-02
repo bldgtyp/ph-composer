@@ -21,14 +21,23 @@ module PhComposer
         end
       end
 
+      # Every gesture's params: the guarded Assembly, then the gesture's own properties.
+      def params(properties, optional: [])
+        Shapes.object({ "id" => Shapes.id("asm", "The Assembly to edit."),
+                        "expected_values" => Shapes.expected(Assembly::Schema::KIND) }.merge(properties),
+                      :optional => optional)
+      end
+
       def action(feature, name, properties, example, description:, undo_name:, side_effects:, optional: [], &command)
-        properties = { "id" => Shapes.id("asm", "The Assembly to edit."),
-                       "expected_values" => Shapes.expected(Assembly::Schema::KIND) }.merge(properties)
         feature.action("#{FEATURE_ID}.assemblies.segments.#{name}", :description => description,
-          :params => Shapes.object(properties, :optional => optional), :result => Shapes::RESULT,
+          :params => params(properties, :optional => optional), :result => Shapes::RESULT,
           :undo_name => undo_name, :side_effects => side_effects,
           :examples => [example.merge("id" => Shapes::EXAMPLE_ID, "expected_values" => {})]) do |request, proposal|
-          Operations.gesture(request, proposal) { |record| command.call(record, request.params, request) }
+          params = request.params
+          Operations.gesture(request, proposal, :id => params.fetch("id"),
+                                                :expected_values => params.fetch("expected_values")) do |record|
+            command.call(record, params, request)
+          end
         end
       end
 
@@ -49,7 +58,7 @@ module PhComposer
           Commands.add_segment(record, :layer_id => params.fetch("layer_id"),
                                 :materials => Operations.materials(request),
                                 :width_mm => params.fetch("width_mm", 1000.0), :index => params["index"],
-                                :identity => Operations.identity_allocator(request))
+                                :identity => Operations.identity_allocator(request, params))
         end
         action(feature, "remove", { "layer_id" => Shapes.id("lyr", LAYER_ID),
                                     "segment_id" => Shapes.id("seg", SEGMENT_ID) },
@@ -80,11 +89,20 @@ module PhComposer
         end
       end
 
+      def material_properties
+        { "layer_id" => Shapes.id("lyr", LAYER_ID), "segment_id" => Shapes.id("seg", SEGMENT_ID),
+          "material_id" => Shapes.id("mat", "The Material, or null to clear it.", :nullable => true) }
+      end
+
+      # The set_material gesture, shared by its action and the Materials library kind's assignment.
+      def set_material(record, params, request)
+        Commands.set_segment_material(record, :layer_id => params.fetch("layer_id"),
+          :segment_id => params.fetch("segment_id"), :material_id => params.fetch("material_id"),
+          :materials => Operations.materials(request))
+      end
+
       def declare_material(feature)
-        action(feature, "set_material", { "layer_id" => Shapes.id("lyr", LAYER_ID),
-                                          "segment_id" => Shapes.id("seg", SEGMENT_ID),
-                                          "material_id" => Shapes.id("mat", "The Material, or null to clear it.",
-                                                                     :nullable => true) },
+        action(feature, "set_material", material_properties,
                { "layer_id" => Shapes::EXAMPLE_LAYER, "segment_id" => Shapes::EXAMPLE_SEGMENT,
                  "material_id" => "mat_Ab12Cd34Ef56" },
                :description => "Set or clear one Layer-Segment's Material. A membrane Material needs a Layer of one " \
@@ -92,9 +110,7 @@ module PhComposer
                :undo_name => "Set Layer-Segment Material",
                :side_effects => "Changes one Layer-Segment's Material and may reset a membrane Layer's " \
                                 "thickness.") do |record, params, request|
-          Commands.set_segment_material(record, :layer_id => params.fetch("layer_id"),
-            :segment_id => params.fetch("segment_id"), :material_id => params.fetch("material_id"),
-            :materials => Operations.materials(request))
+          set_material(record, params, request)
         end
       end
     end
