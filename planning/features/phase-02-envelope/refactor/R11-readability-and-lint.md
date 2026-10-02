@@ -1,11 +1,11 @@
-# R10: formatting and small readability items the gates do not catch
+# R11: formatting and small readability items the gates do not catch
 
 DATE: 2026-10-01
 STATUS: Requested
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement. Gate decision made 2026-10-01; see Decision.
-PRIORITY: 6.
+ORDER: 11 of 11. See the packet README, Sequencing.
 
 Paths are relative to `src/ph_composer/`.
 

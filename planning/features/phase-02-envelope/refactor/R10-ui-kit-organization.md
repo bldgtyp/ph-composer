@@ -1,11 +1,11 @@
-# R09: feature screens live inside the UI kit, and two built-ins bypass the Library surface seam
+# R10: feature screens live inside the UI kit, and two built-ins bypass the Library surface seam
 
 DATE: 2026-10-01
 STATUS: Requested
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation (item 1), otherwise optional improvement.
-PRIORITY: 5.
+ORDER: 10 of 11. See the packet README, Sequencing.
 
 Paths are relative to `src/ph_composer/html/`. This file covers code boundaries only. Visual and
 interaction review belongs to `.agents/skills/ph-composer-ui-polish/SKILL.md` and was not done here.
@@ -47,7 +47,7 @@ name no feature.
    (recorded decision F14 and U1). An outside feature with its own pane must edit `index.html`.
 5. **Repair availability is decided twice.** `window_schedule.js:77-85` derives Reset, New flipped
    Type and Re-host from finding codes; Ruby already attaches a repair to each finding
-   (`features/windows/units/state.rb`). See R06 item 5. `window_schedule.js:7-10` also maps codes to
+   (`features/windows/units/state.rb`). See R04 item 5. `window_schedule.js:7-10` also maps codes to
    labels, which is the panel's job and is fine.
 6. **`sections/windows.js:7`** maps collection names to record kind ids by hand
    (`{ frames: "frame", ... }`). The snapshot rows already carry `kind`.

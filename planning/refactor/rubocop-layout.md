@@ -8,14 +8,14 @@ ISSUE: none (local planning draft)
 
 ## Decision
 
-The Phase 2 review ([R10](../features/phase-02-envelope/refactor/R10-readability-and-lint.md)) found
+The Phase 2 review ([R11](../features/phase-02-envelope/refactor/R11-readability-and-lint.md)) found
 mechanically wrapped lines and two continuation styles in Ruby, all passing lint because
 `.rubocop.yml` enables five cops and no `Layout` cop. Offered a minimal layout set, Ed chose the full
 `Layout` department on 2026-10-01, with two conditions:
 
 1. It runs **after** PR #15 merges, so formatting never mixes with feature changes in one diff.
-2. It is **its own pull request**, executed once the other refactor work from the review (R01 to R09,
-   R11 and the behavioural items of R10) is finished, so it does not create merge conflicts for them.
+2. It is **its own pull request**, executed once the other refactor work from the review (R01 to R10
+   and the behavioural items of R11) is finished, so it does not create merge conflicts for them.
 
 This widens the rule set that `.rubocop.yml`'s header calls "a deliberately small rule set" where
 "widening the list is a separate decision". This is that decision. Update the header comment to say
@@ -33,14 +33,14 @@ so.
   the Phase 0 and Phase 1 code so the transplanted files move least.
 - Run `rubocop -a` (safe auto-correct only) over `src/`, `tests/` and `tools/`, then fix what remains
   by hand. This includes the Phase 0 and Phase 1 files carried from the predecessor.
-- Hand-repair the lines R10 item 1 lists if auto-correct leaves them awkward: break at an argument
+- Hand-repair the lines R11 item 1 lists if auto-correct leaves them awkward: break at an argument
   boundary, never mid-expression.
 - Update `context/CODING_STANDARDS.md`: the paragraph that describes the lint rule sets, and "Line and
   size limits".
 
 ## Out of scope
 
-No behaviour change, no renames, no method extraction. R10's behavioural items (5 to 9) and its
+No behaviour change, no renames, no method extraction. R11's behavioural items (5 to 9) and its
 readability items that need judgment (3 and 4) belong to the review refactor, not to this pass.
 
 ## Rules for the pull request

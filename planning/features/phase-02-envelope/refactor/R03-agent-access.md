@@ -1,11 +1,11 @@
-# R05: agent access gaps in the Phase 2 surface
+# R03: agent access gaps in the Phase 2 surface
 
 DATE: 2026-10-01
 STATUS: Requested
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Mixed. Each item states its class.
-PRIORITY: 2 for items A to C, 5 for the rest.
+ORDER: 3 of 11. See the packet README, Sequencing.
 
 Paths are relative to `src/ph_composer/`. "Reproduced" means a scratch test run against this branch
 on Ruby 3.2.2 on 2026-10-01; the scratch file is not committed.
@@ -23,7 +23,7 @@ library Materials and the outside provider (`tools/examples/`).
 | Assembly on a Face, usage, Colour-by | yes | yes | yes | yes | none |
 | Frames, Glazings, Psi-Install Types, Window Types, grid gestures | yes | yes | yes | yes | Item F, item G |
 | Installs per edge | yes | yes | only through `types.installs.save` | yes | Panel-shaped batch (item H) |
-| Place, remove, re-host, swap, reset, flip, restore Unit | yes | yes | yes | yes | Finding codes (R06) |
+| Place, remove, re-host, swap, reset, flip, restore Unit | yes | yes | yes | yes | Finding codes (R04) |
 | Copied Unit identity repair | no named operation | finding only | implicit | yes | Item C |
 | Library catalog, in-file resolution, copy, copy and assign | yes | yes | yes | yes | Items D, E |
 | Library setup (add file, add folder) | yes | yes | native picker only | yes | Item A |

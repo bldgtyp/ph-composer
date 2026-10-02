@@ -1,11 +1,11 @@
-# R03: no public way to turn a Face reference into a live Face at apply time
+# R06: no public way to turn a Face reference into a live Face at apply time
 
 DATE: 2026-10-01
 STATUS: Requested
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract gap. Architecture change. One unverified performance risk.
-PRIORITY: 3. Phase 3 (Spaces on floors, thermal bridges on edges) needs the same thing.
+ORDER: 6 of 11. See the packet README, Sequencing.
 
 Paths are relative to `src/ph_composer/`.
 

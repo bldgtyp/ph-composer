@@ -1,11 +1,11 @@
-# R01: export and translation layering runs upward
+# R05: export and translation layering runs upward
 
 DATE: 2026-10-01
 STATUS: Requested
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation. Architecture change.
-PRIORITY: 1. Fix before Phase 3 adds Spaces and thermal bridges.
+ORDER: 5 of 11. See the packet README, Sequencing.
 
 Paths are relative to `src/ph_composer/` unless stated.
 

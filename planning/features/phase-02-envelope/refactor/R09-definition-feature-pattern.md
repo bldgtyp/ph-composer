@@ -1,11 +1,11 @@
-# R08: the definition-feature pattern is copied, forked by kind and driven by positional tables
+# R09: the definition-feature pattern is copied, forked by kind and driven by positional tables
 
 DATE: 2026-10-01
 STATUS: Requested
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement, readability and contributor cost. No correctness defect found.
-PRIORITY: 5.
+ORDER: 9 of 11. See the packet README, Sequencing.
 
 Paths are relative to `src/ph_composer/`.
 
@@ -75,12 +75,12 @@ Two steps, the second only if Ed wants the abstraction.
      `Products::Operations`, `Types::Operations`. Shared lines stay duplicated where they are short.
    - Replace the positional tables with explicit declarations: one `Fields.field(...)` line per
      product field with named `unit:`, `minimum:`, `maximum:`; one explicit `feature.action` per grid
-     gesture with its own description (this also serves R05 item F).
+     gesture with its own description (this also serves R03 item F).
    - Name `MATERIAL_REFERENCE`. Spell out the abbreviated locals. Keep one name for the Psi-Install
      collection.
    - Add unit suffixes to thermal display fields (`u_effective_w_m2k`, `rsi_m2k_w`) and to the Python
      dataclass fields. This changes result schemas and the panel. **Decided 2026-10-01 by Ed:** do it
-     now, in one pass with R06's code rename, before any release.
+     now, in one pass with R04's code rename, before any release.
 2. **One schema builder in the foundation.** Move `object`, `list`, `with`, nullable and id-pattern
    helpers to a single `core/` module that Zones, Assemblies, Windows and Library all use. This is
    justified on its own: six copies of one four-line function, already drifting in keyword names

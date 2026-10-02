@@ -12,11 +12,11 @@ Three library operations need a file location that the user approves: exporting 
 (`ph_composer.library.export_file`), adding a library file (`providers.add_file`) and adding a library
 folder (`providers.add_folder`). Phase 2 shipped them with the native dialogs inside the operation,
 so a scripted or agent caller blocks SketchUp on a dialog nobody answers. See
-[R05 item A](../../phase-02-envelope/refactor/R05-agent-access.md).
+[R03 item A](../../phase-02-envelope/refactor/R03-agent-access.md).
 
 Ed decided on 2026-10-01 to do this in two parts:
 
-1. **Now, in the Phase 2 refactor (R05 item A):** move the dialogs to the panel and native menu, and
+1. **Now, in the Phase 2 refactor (R03 item A):** move the dialogs to the panel and native menu, and
    refuse any other caller at once with a structured outcome that says the step needs the user.
 2. **Later, this packet:** let a user approve a file or folder once so an agent can then export to it
    or configure it, without any path travelling through the API.
@@ -54,7 +54,7 @@ is owed.
 
 An agent, with the panel closed and a user-approved handle, exports a model library and adds a
 library folder; a second agent without the handle is refused; no path appears in any result or log.
-The limitation paragraph added to `context/AGENT_INTERFACE.md` by R05 item A is removed in the same
+The limitation paragraph added to `context/AGENT_INTERFACE.md` by R03 item A is removed in the same
 change.
 
 Next step: schedule with the agent connection packet when Ed opens it.

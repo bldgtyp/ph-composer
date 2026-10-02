@@ -1,11 +1,11 @@
-# R04: domain operations read the request envelope, so reuse means replaying handlers
+# R07: domain operations read the request envelope, so reuse means replaying handlers
 
 DATE: 2026-10-01
 STATUS: Requested
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation (readability and dependency rules). Structural.
-PRIORITY: 4.
+ORDER: 7 of 11. See the packet README, Sequencing.
 
 Paths are relative to `src/ph_composer/`.
 

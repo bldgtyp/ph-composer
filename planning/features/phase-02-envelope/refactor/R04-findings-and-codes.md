@@ -1,11 +1,11 @@
-# R06: finding and outcome codes are inconsistent across the Phase 2 features
+# R04: finding and outcome codes are inconsistent across the Phase 2 features
 
 DATE: 2026-10-01
 STATUS: Requested
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation, with one reproduced item.
-PRIORITY: 3. Codes become a compatibility surface the moment a client keys on them.
+ORDER: 4 of 11. See the packet README, Sequencing.
 
 Paths are relative to `src/ph_composer/`.
 
@@ -92,7 +92,7 @@ Paths are relative to `src/ph_composer/`.
 
 **Decided 2026-10-01 by Ed: rename now.** Finding codes move to `noun.condition` under the owning
 feature's nouns, one code per condition from every read, in the same pass as the unit-bearing field
-renames in [R08](R08-definition-feature-pattern.md). Do it once and completely. The app has no users and is not deployed, so no
+renames in [R09](R09-definition-feature-pattern.md). Do it once and completely. The app has no users and is not deployed, so no
 deprecation path, alias or migration is needed. The pass covers the emitting Ruby and Python, panel label maps, the
 report, tests, fixtures and the generated reference. Closed alternatives: codes only; fixing only the
 duplicated codes; leaving the names.

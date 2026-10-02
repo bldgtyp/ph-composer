@@ -1,11 +1,11 @@
-# R07: the Window Unit steps repeat one set of mechanics seven times
+# R08: the Window Unit steps repeat one set of mechanics seven times
 
 DATE: 2026-10-01
 STATUS: Requested
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement with correctness exposure. One evidenced silent-failure pattern.
-PRIORITY: 4.
+ORDER: 8 of 11. See the packet README, Sequencing.
 
 Paths are relative to `src/ph_composer/features/windows/`.
 
