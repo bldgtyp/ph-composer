@@ -17,8 +17,10 @@ module PhComposer
       class PlaceStep
         attr_reader :affected, :definition_ids
 
+        # `point_m` is where the record's anchor lands on the host. A caller that already knows the whole
+        # world placement, as Restore does from the panes it adopts, passes `world_matrix` as well.
         def initialize(model:, host:, type:, record:, point_m:, existing_polygons_m: [],
-                       expected_scope: nil, expected_state: nil)
+                       expected_scope: nil, expected_state: nil, world_matrix: nil)
           @type = DeepCopy.call(type)
           @record = DeepCopy.call(Units.validate!(record))
           unless @record.fetch("window_type_id") == @type.fetch("id") && Types::KIND.problems(@type).empty?
@@ -44,7 +46,7 @@ module PhComposer
           check_definition!(definition)
           @definition_before = definition && DefinitionGeometry.capture(definition)
           @definition_ids = definition ? [definition.persistent_id].freeze : [].freeze
-          @world_matrix = placement_matrix(host.geometry)
+          @world_matrix = world_matrix ? fitted(world_matrix, host.geometry) : placement_matrix(host.geometry)
           verify_type_and_identity!(model)
           @affected = [{ "kind" => REFERENCE_KIND, "id" => @record.fetch("id"), "change" => "placed" }]
         end
@@ -113,6 +115,12 @@ module PhComposer
           matrix = plane.x_axis + [0] + plane.y_axis + [0] + plane.normal + [0] + origin + [1]
           WorldGeometry.transform_state(matrix)
           matrix.freeze
+        end
+
+        def fitted(world_matrix, geometry)
+          Placement::Fit.check!(geometry, WorldGeometry.map(@plan, world_matrix).outer_polygon_m,
+            :existing_polygons_m => @existing_polygons)
+          world_matrix
         end
 
         def verify_type_and_identity!(model)

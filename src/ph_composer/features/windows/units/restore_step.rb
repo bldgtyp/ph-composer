@@ -30,7 +30,7 @@ module PhComposer
           @restore_matrix = RestoreGeometry.infer(DefinitionPlan.build(type), panes.polygons, host.geometry)
           point = WorldGeometry.anchor(DefinitionPlan.build(type), Anchors::DEFAULT, @restore_matrix)
           super(:model => model, :host => host, :type => type, :record => record, :point_m => point,
-            :existing_polygons_m => existing_polygons_m)
+            :existing_polygons_m => existing_polygons_m, :world_matrix => @restore_matrix)
           @affected.first["change"] = "restored"
           @scopes = [PhComposer::Operations::EntityScope.new(host.parent_path),
             MutationScope.new(:definition_ids => definition_ids),
@@ -55,12 +55,6 @@ module PhComposer
         end
 
         private
-
-        def placement_matrix(geometry)
-          Placement::Fit.check!(geometry, WorldGeometry.map(@plan, @restore_matrix).outer_polygon_m,
-            :existing_polygons_m => @existing_polygons)
-          @restore_matrix
-        end
 
         def validate_paths!(parent_path)
           valid = @pane_paths.is_a?(Array) && !@pane_paths.empty? && @pane_paths.uniq.length == @pane_paths.length &&

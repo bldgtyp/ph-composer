@@ -30,17 +30,19 @@ module PhComposer
           stamp = definition && DEFINITION_STORE.read(definition)
           @rebuild = !definition || !stamp.is_a?(Hash) || stamp["window_type_id"] != @type.fetch("id")
           @rewrite = !@rebuild && !clean?(definition)
-          @projected = DeepCopy.call(expected_records)
           occurrences = Occurrences.all(model)
-          selected = select_items(occurrences, items)
+          selected = selected_items(occurrences, items, expected_records)
+          @projected = DeepCopy.call(expected_records).merge(selected.to_h { |item, record| [item.path, record] })
+          selected_paths = selected.map { |item, _record| item.path }
           canonical = @rewrite ? canonical_items(model, occurrences) : []
-          @selected_paths = selected.map(&:path)
-          @rows = (selected + canonical).uniq(&:path).map do |item|
-            prepare_row(model, item, hosts)
+          @rows = (selected.map(&:first) + canonical).uniq(&:path).map do |item|
+            plan_row(item, :record => @projected.fetch(item.path, item.record),
+              :selected => selected_paths.include?(item.path), :host => hosts[item.path])
           end
           check_edit_context!(model)
           if needed?
-            prepare_outlines!(occurrences, outline_inventory_m)
+            outsiders = outsider_outlines(occurrences, outline_inventory_m)
+            @rows.each { |row| row["other_polygons_m"] = DeepCopy.call(outsiders) if changed_row?(row) }
             check_fit!
           end
           ids = occurrences.map { |item| item.entity.definition.persistent_id }
@@ -115,18 +117,18 @@ module PhComposer
           end
         end
 
-        def select_items(occurrences, items)
+        # Each selected occurrence with its validated projected record, in the order given.
+        def selected_items(occurrences, items, expected_records)
           paths = items.map { |input| input.fetch(:reference).fetch("entity_path") }
           raise CodedError.new("params.invalid", "A Window reset repeats an occurrence.") unless paths.uniq == paths
 
           items.map do |input|
             item = NativeUnit.resolve!(occurrences, input.fetch(:reference))
             record = DeepCopy.call(Units.validate!(input.fetch(:expected_record)))
-            if @projected.key?(item.path) && @projected.fetch(item.path) != record
+            if expected_records.key?(item.path) && expected_records.fetch(item.path) != record
               raise CodedError.new("params.invalid", "The reset supplies conflicting projected Unit records.")
             end
-            @projected[item.path] = record
-            item
+            [item, record]
           end
         end
 
@@ -143,13 +145,14 @@ module PhComposer
           canonical
         end
 
-        def prepare_row(model, item, hosts)
+        # One occurrence's detached reset: its current and repaired transforms and, when it moves or
+        # changes definition while glued, its host. Only a selected Unit has its in-plane basis repaired.
+        def plan_row(item, record:, selected:, host:)
           Occurrences.mutable!(item)
-          record = DeepCopy.call(Units.validate!(@projected.fetch(item.path, item.record)))
+          record = DeepCopy.call(Units.validate!(record))
           unless record.fetch("window_type_id") == @type.fetch("id")
             raise CodedError.new("reference.invalid", "Reset only units of the supplied authored Window Type.")
           end
-          selected = @selected_paths.include?(item.path)
           if selected && WorldGeometry.transform_state(item.transform.to_a).mirrored
             raise CodedError.new("window.mirrored", "Create a new flipped Type to repair a mirrored Window.")
           end
@@ -164,22 +167,22 @@ module PhComposer
             "definition_id" => item.entity.definition.persistent_id,
             "glued_face_id" => item.entity.glued_to&.persistent_id }
           Occurrences.assert_leaf!(item) if changing_definition?(row)
-          capture_host!(row, item, hosts[item.path]) if item.entity.glued_to && changed_row?(row)
+          capture_host!(row, item, host) if item.entity.glued_to && changed_row?(row)
           row
         end
 
-        def prepare_outlines!(occurrences, inventory)
+        # The outlines of every Unit this reset leaves alone, from the caller's complete inventory.
+        def outsider_outlines(occurrences, inventory)
           unless inventory.is_a?(Hash) && inventory.keys.sort == occurrences.map(&:path).sort
             raise CodedError.new("window.outlines_required",
               "Supply the complete Window outline inventory keyed by occurrence path.")
           end
           planned_paths = @rows.map { |row| row.fetch("reference").fetch("entity_path") }
           outsiders = inventory.reject { |path, _polygon| planned_paths.include?(path) }.values
-          if outsiders.any?(&:nil?)
-            raise CodedError.new("window.type_geometry_unknown",
-              "Recover the untouched Window geometry before resetting a neighboring Unit.")
-          end
-          @rows.each { |row| row["other_polygons_m"] = DeepCopy.call(outsiders) if changed_row?(row) }
+          return outsiders unless outsiders.any?(&:nil?)
+
+          raise CodedError.new("window.type_geometry_unknown",
+            "Recover the untouched Window geometry before resetting a neighboring Unit.")
         end
 
         def changed_row?(row)

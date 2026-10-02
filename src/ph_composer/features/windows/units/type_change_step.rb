@@ -26,13 +26,19 @@ module PhComposer
           end
           definition = DefinitionIndex.resolve(model, @before.fetch("id"))
           @definition_id = definition&.persistent_id
+          occurrences = Occurrences.all(model)
+          @unit_count = occurrences.count { |item| item.entity.definition.persistent_id == @definition_id }
+          # A Type with no primary definition has no placed Units, so nothing native changes.
+          if definition
+            @before_plan = DefinitionPlan.build(@before)
+            @after_plan = DefinitionPlan.build(@after)
+            check_stamp!(definition)
+          end
+          @geometry_changed = !definition.nil? && @before_plan.signature != @after_plan.signature
+          @name_changed = !definition.nil? && @before.fetch("name") != @after.fetch("name")
           @rows = []
           @affected = []
           @findings = []
-          @geometry_changed = @name_changed = false
-          occurrences = Occurrences.all(model)
-          @unit_count = occurrences.count { |item| item.entity.definition.persistent_id == @definition_id }
-          prepare_plans(definition) if definition
           definition_ids = @definition_id ? [@definition_id] : []
           definition_ids += occurrences.map { |item| item.entity.definition.persistent_id } if @geometry_changed
           @scope = MutationScope.new(:definition_ids => definition_ids)
@@ -90,11 +96,7 @@ module PhComposer
 
         private
 
-        def prepare_plans(definition)
-          @before_plan = DefinitionPlan.build(@before)
-          @after_plan = DefinitionPlan.build(@after)
-          @geometry_changed = @before_plan.signature != @after_plan.signature
-          @name_changed = @before.fetch("name") != @after.fetch("name")
+        def check_stamp!(definition)
           unless DEFINITION_STORE.read(definition)&.fetch("window_type_id", nil) == @before.fetch("id")
             raise CodedError.new("target.changed", "The indexed Window definition no longer matches its Type.")
           end
