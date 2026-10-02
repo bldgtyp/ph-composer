@@ -1,7 +1,7 @@
 # R04: finding and outcome codes are inconsistent across the Phase 2 features
 
 DATE: 2026-10-01
-STATUS: Requested
+STATUS: Implemented on branch `refactor/r04-finding-codes` 2026-10-02. Host acceptance of the changed screens not run (none named below)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation, with one reproduced item.
@@ -103,3 +103,68 @@ duplicated codes; leaving the names.
 - `units.list` and `export_preflight` return the same code for the same seeded Unit condition.
 - `grep -rn "include?(\"differs\|grep(/frame" src` is empty.
 - `make fixtures` and the JS suite pass; update panel label maps by code, not by golden rewrite.
+
+## Outcome
+
+Implemented 2026-10-01 to 2026-10-02 on `refactor/r04-finding-codes`, with R09 item 5.
+
+- **Vocabulary (1).** Window Type conditions take `window_type.*`; Unit conditions take `window.*`,
+  the noun the Unit refusals already used, so `State` passes Fit's `window.overhang` and
+  `window.overlap` through instead of remapping them (`overhang` is no longer folded into
+  `off_host`). Materials and Assemblies take `material.*` and `assembly.*`. The Assemblies thermal
+  preview's `flags`, which the finding file did not name, were a third vocabulary for the same
+  conditions; they now use the same codes. Zones' `assembly.*_mismatch` findings borrowed Assemblies'
+  noun and became `face.assembly_type_mismatch`, `face.assembly_exterior_condition_mismatch` and
+  `face.assembly_pair_mismatch`; its interpolated `adjacency.`, `construction.` and `attached_zone.`
+  codes became explicit maps. The `window.` prefixing in `export_assessment.rb` is gone.
+- **Coded at detection (2).** `Windows::Thermal.finding` builds `{ code, message, side? }` where the
+  condition is found; the thermal block's `findings` are those objects, not strings. The export
+  reports each Type condition by its own code (one row per distinct condition per Unit, not one
+  aggregate `incomplete_type`); `window_type.frame_operation_mismatch` stays non-blocking. Both
+  message matches are deleted. A hash builder, not a Struct, because the findings are published JSON.
+- **Repairs (3).** A Unit finding's `repair` is `{ name, params }` or null. Rehost adds `host` and
+  swap adds `type_id`. With no known Type only Swap is offered; Reset is withheld beside
+  `window.mirrored`, `window.surface_host` and `window.host_zone_unresolved`, all of which it refuses;
+  an ambiguous host Zone has no Windows repair. The export preflight builds its repair rows from each
+  Unit's full condition list under the same rule. The schedule reads the repairs; its derivation is
+  gone, and it gains a Repair copied identities row action (it used to offer Reset for a copy).
+- **Export readiness (4).** `assemblies.all` rows carry `export_ready` and `export_blockers`
+  (conversion limits first, then every finding but the disclosed thermal mass default). Zones reads
+  them and no longer queries the Assemblies preflight, matches its codes or walks Layers.
+- **(5)** `revision.stale` replaces `request.stale_revision`.
+- **Code list (6).** A new registration, `feature.code(code, description:)`, refuses a malformed or
+  non-string code, a repeat, a noun another feature owns and a foundation noun. Each feature's
+  `codes.rb` declares its codes; `docs/API_REFERENCE.md` lists them under "Feature codes".
+  `tests/outcome_codes_test.rb` fails on a code literal in feature, library or translation source that
+  is neither in `context/CONTRACTS.md` nor declared, including a bare code in a raising position, and
+  on a schedule label for an undeclared code.
+- **R09 item 5.** Thermal display fields carry units: `u_effective_w_m2k`, `u_construction_w_m2k`,
+  `r_construction_m2k_w`, `rsi_m2k_w`, `rse_m2k_w`, `uw_w_m2k`, edge `psi_w_mk`; the Window construction
+  row carries `uw_w_m2k`. The Python window records name `ug_w_m2k`, `g_value`, `width_m`, `uf_w_m2k`,
+  `psi_g_w_mk` and `psi_install_w_mk`.
+- **(7)** `refuses:` on operations was not done (optional).
+
+Tests: `units.list` and `export_preflight` both report `window.copy_id_pending` for a seeded copy;
+State repair rules for mirrored plus scaled and for an unknown Type; export repairs for mirrored plus
+scaled; `export_blockers`; registration of codes; the schedule's offered repairs. `docs/API_REFERENCE.md`
+was regenerated: its diff is the renamed fields, the new finding and repair shapes, the readiness
+fields and the code list, not a golden rewritten to pass.
+
+Gates: `make ci` passed on Ruby 3.2.2 and 2.7.2.
+
+Review: one independent Opus pass with the architecture rubric found no blocking defect. Fixed: New
+flipped Type and Rehost were offered for a Window with no known Type (a regression from removing the
+panel's rule); the preflight built repairs without the Unit's other conditions; registration accepted
+foundation nouns and Symbol codes; the scan test missed bare codes and stale schedule labels.
+
+Follow-ups, not done here:
+
+- The Unit read checks fewer host conditions than the preflight: a Ground or unclassified host shows
+  nothing in `units.list` but `window.host_boundary_unsupported` or `window.host_unclassified` in the
+  preflight. The codes agree where both report; the read could report the rest.
+- Per-element Type findings without a side (`window_type.g_value_missing` on two elements) collapse
+  into one preflight row per Unit and do not name the element.
+- Feature codes appear in the generated reference only, not in `API.describe`; item 7 is the place.
+- R09 item 4's single name for the Psi-Install collection (`psi_install_types` and `installs`) is
+  still open.
+
