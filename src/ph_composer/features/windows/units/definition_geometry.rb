@@ -22,10 +22,12 @@ module PhComposer
         end
 
         # Whether a live definition holds exactly the panes `plan` places for `type_id`. It captures
-        # the definition as the export snapshot does and runs the one comparison both use.
+        # the definition as the export snapshot does and runs the one comparison both use. A stamp that
+        # is not JSON or a degenerate pane Face is a coded data condition, so the geometry differs; any
+        # other error is a defect and propagates to the dispatcher's `operation.failed` and the log.
         def matches?(definition, type_id:, plan:)
           facts_match?(Export::GeometrySnapshot.definition_facts(definition), :type_id => type_id, :plan => plan)
-        rescue StandardError
+        rescue CodedError
           false
         end
 
