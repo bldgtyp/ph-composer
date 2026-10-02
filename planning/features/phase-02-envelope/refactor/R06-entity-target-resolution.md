@@ -202,7 +202,7 @@ Zone no longer refused; `Hosts.writable` re-read a row its caller held; "walks n
 (the read scans each collection on the path); the hover-busy comment; no test pinned the
 deferred refusal. Accepted as is: the deferred Place-tool refusal and the apply-time codes.
 
-Follow-ups, not done here:
+Follow-ups, not done here. All four are recorded in [R08](R08-window-unit-steps.md), item 8:
 
 - Locating many distinct hosts in one batch pays a Zones walk and a Face-id scan each. A read-phase
   index the resolver can share would remove it; it needs the `locate:` signature to carry one.

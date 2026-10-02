@@ -58,6 +58,13 @@ name uniqueness, a library kind adapter.
    The schema carries `x-unit`, the name does not. Python dataclasses drop units the Ruby record
    carries: `Side.width`, `uf`, `psi_g`, `Glazing.ug`, `g`
    (`python/ph_composer_translation/contract/window_records.py`).
+6. **A library callback reads a missing record with a different code.** Added 2026-10-02 from R07's
+   review. Inside a library callback, `request.engine` is `Records::ProjectedEngine`, whose `find`
+   resolves through the change set with `resolve_reference`. A missing or staged-deleted record
+   refuses `reference.invalid`; the plain `Engine#find` refuses `target.not_found`. So a library
+   `use_library` replace of a record deleted since review answers a different code from the same
+   edit through the `update` action. Pre-existing (the old wrapper behaved the same).
+   `context/CONTRACTS.md`, "Callback write ownership", promises the full read surface.
 
 ## Consequence
 
@@ -86,7 +93,12 @@ Two steps, the second only if Ed wants the abstraction.
    helpers to a single `core/` module that Zones, Assemblies, Windows and Library all use. This is
    justified on its own: six copies of one four-line function, already drifting in keyword names
    (`required:` and `optional:`).
-3. **Optional, decide after Phase 3's first definition kind:** a small `CatalogInventory` helper
+3. **Item 6: one `find` refusal.** `ProjectedEngine#find` answers as `Engine#find` does:
+   `target.not_found` for a record absent from the projected state (including a staged delete),
+   `record.unreadable` for one that fails its kind. One focused test in
+   `library_callback_invoker_test.rb`. Do it with the per-kind split, since the replace callbacks
+   are the callers.
+4. **Optional, decide after Phase 3's first definition kind:** a small `CatalogInventory` helper
    offering the standard list, all, create, update, duplicate, delete registrations for one
    `RecordKind`, with hooks only for defaults and row display. Trace the contributor task before and
    after; adopt it only if the after is shorter to read, not just shorter to write.
@@ -98,3 +110,4 @@ Two steps, the second only if Ed wants the abstraction.
 - `make fixtures-check`: `docs/API_REFERENCE.md` changes only in descriptions and, if the unit
   renames are taken, in the named fields.
 - Existing operation and schema tests pass with no assertion changes other than renamed fields.
+- A library callback's `find` of a missing record refuses `target.not_found`.
