@@ -8,9 +8,6 @@ module PhComposer
     # change set and only for `writable_kinds`; any other write refuses the whole change set with
     # `refusal_code`. It never applies a change set; the dispatcher's engine does. It does not migrate
     # extension payloads and cannot be projected again: a callback does not start a nested copy.
-    #
-    # `find` resolves through the change set, so a missing record refuses `reference.invalid` rather
-    # than the plain engine's `target.not_found`.
     class ProjectedEngine
       def initialize(engine, change_set, writable_kinds:, refusal_code:)
         @engine = engine
@@ -22,9 +19,7 @@ module PhComposer
       # ---------------------------------------------------------------- reads
 
       def find(kind_id, id)
-        return @engine.find(kind_id, id) unless @change_set
-
-        @engine.resolve_reference(kind_id, id, :change_set => @change_set).record
+        @engine.find(kind_id, id, :change_set => @change_set)
       end
 
       def ids(kind_id)

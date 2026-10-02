@@ -19,9 +19,12 @@ module PhComposer
       # ---------------------------------------------------------------- reads
 
       # The stored record, or a refusal naming why it cannot be used.
-      def find(kind_id, id)
+      # With a `change_set`, a record it stages is read as it will stand: a staged create is found and a
+      # staged delete is not.
+      def find(kind_id, id, change_set: nil)
         kind = @catalog.kind(kind_id)
-        record = read(kind, id)
+        staged = change_set&.find(kind_id, id)
+        record = staged ? DeepCopy.call(staged.after) : read(kind, id)
         raise CodedError.new("target.not_found", "There is no #{kind.label} with id #{id}.") unless record
 
         problems = kind.problems(record)
