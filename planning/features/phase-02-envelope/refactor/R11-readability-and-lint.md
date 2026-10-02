@@ -244,9 +244,16 @@ resolved from a scratch install. New focused tests: `model_settings_test.rb` (6)
 above. Item 13 has landed, so it can run now. Add to it: the setup dialog's unreadable state and
 Reset (write a corrupt `file_providers` default first).
 
-**Follow-ups, not in this change.**
+**Follow-ups, not in this change.** Each is recorded where it will be done:
 
-- `DeepCopy.frozen` is a third deep-freeze beside `ModelSettings#deep_freeze` and
-  `Registry#deep_freeze`; one shared helper would serve all three.
-- The UI polish reference still lists Window placement under "Patterns still to be established"
-  although `html/features/windows/placement.js` exists.
+- The third deep-freeze (`DeepCopy.frozen` beside `ModelSettings` and `Registry`):
+  [planning/refactor/shared-deep-freeze.md](../../../refactor/shared-deep-freeze.md).
+- The UI polish reference's stale Window placement entry: folded into
+  [library-product-tab-headers](../../unscheduled/library-product-tab-headers/README.md), the next
+  change that opens that reference.
+- `export_file`'s `expected_revision` checked only after the save dialog: folded into
+  [agent-authorized-file-access](../../unscheduled/agent-authorized-file-access/README.md), which
+  redesigns the export params.
+- The `runtime_page_test.js` flake seen in this branch's `make ci`:
+  [planning/bugs/runtime-probe-test-flake.md](../../../bugs/runtime-probe-test-flake.md).
+- The carried host gate: step 3 of the packet README's Sequencing.
