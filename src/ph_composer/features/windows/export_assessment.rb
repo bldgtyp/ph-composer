@@ -112,20 +112,11 @@ module PhComposer
       def index
         @index ||= begin
           stored = ExportGeometry.record(@snapshot.model_dictionaries, Units::DefinitionIndex::STORE)
-          if stored && !valid_index?(stored)
+          if stored && !Units::DefinitionIndex.valid?(stored)
             raise Export::Blocked.new("record.unreadable", "The Window definition index is invalid.")
           end
           stored ? stored.fetch("definitions") : {}
         end
-      end
-
-      def valid_index?(stored)
-        return false unless stored.is_a?(Hash) && stored.keys.sort == %w[definitions schema_version] &&
-          stored["schema_version"] == 1 && stored["definitions"].is_a?(Hash)
-
-        values = stored.fetch("definitions")
-        values.all? { |id, pid| Records::Identity.pattern("wnt").match?(id.to_s) &&
-          pid.is_a?(Integer) && pid.positive? } && values.values.uniq.length == values.length
       end
 
       def validate_definition(definition, type, plan, record, reference)
@@ -133,7 +124,8 @@ module PhComposer
           issue("window.definition_detached", "The Unit does not use its Type's primary definition. Reset to Type.",
             record, reference)
         end
-        unless ExportGeometry.matches?(definition, :type_id => type["id"], :plan => plan)
+        unless definition["cuts_opening"] && definition["is2d"] &&
+               Units::DefinitionGeometry.facts_match?(definition, :type_id => type["id"], :plan => plan)
           issue("window.geometry_differs", "The Unit's generated geometry or cutting behavior differs from its Type.",
             record, reference)
         end

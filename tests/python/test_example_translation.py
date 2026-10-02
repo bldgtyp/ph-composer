@@ -45,4 +45,5 @@ def test_a_part_with_an_unknown_review_status_costs_that_part() -> None:
             "blocks_export": True,
         }
     ]
-    assert result["example_parts"] == {"count": 1, "total_length_mm": 1231.9}
+    parts = result["example.foundation.export.parts"]
+    assert isinstance(parts, dict) and parts["example_parts"] == {"count": 1, "total_length_mm": 1231.9}

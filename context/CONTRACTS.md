@@ -27,7 +27,7 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Action additions | Side effects, confirmation policy (only `none` today), Undo name |
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
-| Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys` |
+| Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys`, `requires` (sections it reads), optional `projection` |
 | Proposal participant | Name and handler another feature calls inside its own action |
 | Reference retargeter | Name, target kind and handler; the owner requires the target owner or owns the target itself |
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
@@ -554,10 +554,29 @@ record-level failure emits an object finding; a consumer whose required object i
 emits its own finding and produces no substitute. Continuing for diagnostics never permits
 publishing an invalid canonical artifact.
 
+The Honeybee Model is built by the foundation's model assembly (`assembly.py`), which also names
+no feature. A section whose objects belong inside another declares `attaches = Attachment(host,
+key)`, with `host` one of `MODEL`, `ROOM` or `FACE`, and implements `attach(host, objects)`. After
+every section has run, the assembly attaches the host levels outermost first and calls `attach` once
+per host with that host's objects, in id order. A section checks what one object's own record
+shows in `translate`, so `attach` judges only what needs the host. A missing host, or a
+`RecordError` from `attach`, is an `object.unavailable` finding on each of those objects;
+`AttachmentRefused` names only the objects it refused. The canonical model, `{hbjson, rooms, faces,
+surface_pairs}` counted from the assembled Model, is a shell field of the result document; it is
+written when the Model holds a Room and no attachment was refused. Each section's
+`result_fields` are collected after assembly and sit under its id, `result[section_id][field]`; a
+section with none has no key. After the export reloads the canonical HBJSON, each section's
+`conformance(model, fields)` checks it against that section's own fields.
+
 Export reads one revision-bound `GeometrySnapshot`: one traversal recording each occurrence path
 and accumulated transform, with no live SketchUp objects. Contributors project from it and never
 rescan the Model. A changed export-relevant revision discards the snapshot; selection and camera
-neither enter it nor invalidate it. Export contributors extend a composed privacy allowlist; the
-report embeds their results unchanged. Exporters consume only the HBJSON artifact plus explicit
+neither enter it nor invalidate it. A contributor that reads another contributor's section names it
+in `requires:`; registration refuses a section that is not registered, or whose owner is neither
+the contributor's feature nor one that feature requires, with `registration.missing_dependency`.
+It reads that section's registered `projection` with `reader.section(id)` while collecting, and its
+result fields with `result.section(id)` in its report, which receives an `Export::ResultView`; an
+undeclared read is an internal error. Export contributors extend a composed privacy allowlist, one
+optional entry per section; the report embeds their results unchanged. Exporters consume only the HBJSON artifact plus explicit
 options. The HBJSON and report pair is replaced together: an injected failure leaves the previous
 pair intact.

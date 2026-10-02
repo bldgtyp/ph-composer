@@ -72,16 +72,13 @@ module PhComposer
           "message" => message, "blocks_export" => blocking }
       end
 
-      def report(result, display_units)
+      # Each translated definition and what its conversion discloses. How much Face area uses each one is
+      # the Zones report's: a definition knows nothing of what uses it.
+      def report(result, _display_units)
         definitions = result.fetch("construction_definitions", [])
         return [] if definitions.empty?
 
-        usage = result.fetch("construction_usage", []).to_h { |row| [row.fetch("assembly_id"), row] }
-        rows = definitions.filter_map do |definition|
-          used = usage[definition.fetch("assembly_id")]
-          next unless used
-
-          area = Units.to_display(used.fetch("gross_area_m2"), :quantity => "area", :system => display_units)
+        rows = definitions.map do |definition|
           disclosures = []
           unless definition.fetch("membrane_names").empty?
             disclosures << "Membranes: #{definition.fetch('membrane_names').join(', ')}."
@@ -89,13 +86,15 @@ module PhComposer
           unless definition.fetch("defaulted_material_ids").empty?
             disclosures << "Missing thermal mass properties use 600 kg/m3 and 1000 J/kgK."
           end
-          [definition.fetch("name"), used.fetch("face_count"), format("%.2f", area), disclosures.join(" ")]
+          [definition.fetch("name"), disclosures.join(" ")]
         end
-        heading = "Gross area (#{Units.label(:quantity => 'area', :system => display_units)})"
-        body = Export::ReportHtml.table(["Assembly", "Faces", heading, "Disclosures"], rows)
-        if definitions.any? { |row| usage.key?(row.fetch("assembly_id")) && !row.fetch("membrane_names").empty? }
+        body = Export::ReportHtml.table(%w[Assembly Disclosures], rows)
+        body += Export::ReportHtml.paragraph(
+          "Only Assemblies that a Face uses are written to the HBJSON; the Construction usage section lists them."
+        )
+        if definitions.any? { |row| !row.fetch("membrane_names").empty? }
           body += Export::ReportHtml.paragraph(
-            "Membranes carried in HBJSON; ignored by the current PHX/METr conversion."
+            "Membranes of a used Assembly are carried in HBJSON; the current PHX/METr conversion ignores them."
           )
         end
         body += Export::ReportHtml.paragraph(

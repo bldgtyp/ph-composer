@@ -11,7 +11,8 @@ Three kinds of failure, kept apart:
   record emits a finding and produces no object; independent records continue.
 
 The coordinator names no section. Sections with no requirement between them run in id order, so a run
-is reproducible.
+is reproducible. Once every section has run, the model assembly attaches what the sections declared
+(assembly.py), and then each section reports its own result fields.
 """
 
 from __future__ import annotations
@@ -20,12 +21,15 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from . import DOCUMENT_SCHEMA_VERSION
+from .assembly import assemble
 from .contract import ContractError, RecordError
 from .result import DEPENDENCY_UNAVAILABLE, OBJECT_UNAVAILABLE, Failure, Finding, SectionResult, Translation
 from .sections import DependencyUnavailable, Inputs, Section
 
-# Every document names these; a section's result fields may not reuse them.
-SHELL_FIELDS = frozenset({"schema_version", "run_id", "state", "summary", "sections", "findings", "failure"})
+# Every document names these; a section id may not reuse them, since a section's fields sit under its id.
+SHELL_FIELDS = frozenset(
+    {"schema_version", "run_id", "state", "summary", "sections", "findings", "failure", "canonical_model"}
+)
 
 
 def order(sections: Sequence[Section[Any, Any]]) -> list[Section[Any, Any]]:
@@ -83,7 +87,9 @@ def translate(document: object, sections: Sequence[Section[Any, Any]]) -> Transl
         translation.results[section.id] = result
         objects[section.id] = result.objects
         translation.findings.extend(section.findings(result.objects))
-        add_fields(translation, section, result)
+    assemble(translation, ordered)
+    for section in ordered:
+        add_fields(translation, section, translation.results[section.id])
     return translation
 
 
@@ -164,7 +170,7 @@ def run_section(
 
 
 def add_fields(translation: Translation, section: Section[Any, Any], result: SectionResult) -> None:
-    for name, value in section.result_fields(result.objects).items():
-        if name in SHELL_FIELDS or name in translation.fields:
-            raise ValueError(f"{section.id} result field {name} is already owned")
-        translation.fields[name] = value
+    if fields := dict(section.result_fields(result.objects)):
+        if section.id in SHELL_FIELDS:
+            raise ValueError(f"section id {section.id} is a result document field")
+        translation.fields[section.id] = fields

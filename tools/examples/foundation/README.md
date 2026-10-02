@@ -10,6 +10,7 @@ any `examples` path.
 | --- | --- |
 | `example_foundation.rb` | The feature: two record kinds, one structured extension, one query, four actions, one snapshot section and two export contributors, all declared in `install(registry)` |
 | `example_translation.py` | The feature's translation sections: definitions, and parts that require definitions by durable id |
+| `example_doors.py` | An attaching translation section: Doors that join the Faces another feature translates, with no edit to that feature (`tests/python/test_example_doors.py`) |
 | `load.rb` | The development composition entry: registers the feature and hands the editor to the panel |
 | `walkthrough.rb` | Two clients driving the feature through `PhComposer::API` with the panel closed |
 | `editor.js` | The synthetic editor: a panel section for the parts, built from the shared unit field, record form and request channel |

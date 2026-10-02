@@ -46,12 +46,12 @@ part registers. Zone actions are `ph_composer.zones.*`; Face actions are `ph_com
 A feature that needs authored Face identity, such as window placement, depends on `zones` through
 its queries, actions, reference targets and descriptors, never through its stores.
 
-Features sit in three layers and depend only downward. Ed set this on 2026-10-01, and the Ruby
-feature dependencies follow it. The export and translation side does not yet: Windows' export
-contributor calls a Zones export module directly, Zones' translation section
-requires the Apertures section, Zones declares Window result fields, and the shared conformance
-code names Windows. The review of PR #15 records these as finding R05, to be corrected before
-Phase 3:
+Features sit in three layers and depend only downward. Ed set this on 2026-10-01. The Ruby
+feature dependencies, export contributors and translation sections all follow it: a contributor
+reads another section only through `requires:`, which registration checks against the feature
+dependencies, and a translation section joins an object another section built through a declared
+attachment, so the section that builds Rooms names nothing attached to them (`context/CONTRACTS.md`,
+"Translation sections and artifacts"):
 
 1. **Definitions.** Materials, Assemblies, Frames, Glazings, Psi-Install Types, Window Types,
    Attached zones. A definition knows nothing about geometry or about what uses it.

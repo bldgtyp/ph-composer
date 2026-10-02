@@ -15,8 +15,9 @@ module PhComposer
 
         module_function
 
-        # Detached native occurrences for contributors needing host context, including unclassified
-        # Faces. Classification validity remains the consuming feature's export policy.
+        # The Faces section's registered projection: detached native occurrences for contributors
+        # needing host context, including unclassified Faces. Classification validity remains the
+        # consuming feature's export policy. A contributor reads it as `reader.section(SECTION)`.
         def contexts(reader)
           reader.snapshot.entries.select { |entry| entry.kind == "face" }.map do |entry|
             stored = entry.record(FACE_DICTIONARY)
@@ -34,7 +35,7 @@ module PhComposer
                         :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
                         :examples => [{}]) { |request| preflight(request) }
           feature.export_contributor(SECTION, :section_version => 1,
-                                     :preflight => "#{PREFIX}.export_preflight",
+                                     :preflight => "#{PREFIX}.export_preflight", :projection => method(:contexts),
                                      :result => { "surface_omissions" => [
                                        Export::Privacy.fields(%w[face_id zone_id code reason area_m2])
                                      ] }, :report => method(:omission_report)) { |reader| records(reader) }

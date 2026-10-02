@@ -20,7 +20,7 @@ module PhComposer
         check_reference_targets
         check_extensions
         check_snapshot_sections
-        check_export_contributors
+        @diagnostics.concat(ExportValidation.new(@live, @staging).diagnostics)
         check_reference_retargeters
         check_proposal_participants
         @diagnostics.concat(LibraryValidation.new(@live, @staging).diagnostics)
@@ -235,54 +235,6 @@ module PhComposer
         end
       end
 
-      # A contributor needs its own preflight query, a contract and a positive section version, a valid
-      # user_data key declaration, and result fields that form a privacy schema no one else owns.
-      def check_export_contributors
-        owned = @live.export_contributors.values.flat_map { |contributor| Array(contributor.result&.keys) }
-        @staging.declared_export_contributors.each do |contributor|
-          check_preflight_owner(contributor)
-          check_contract(contributor)
-          check_user_data_keys(contributor)
-          check_result_fields(contributor, owned)
-        end
-      end
-
-      def check_preflight_owner(contributor)
-        return unless contributor.preflight
-
-        query = @staging.declared_queries.find { |item| item.name == contributor.preflight } ||
-                @live.queries[contributor.preflight]
-        return if query && query.owner == contributor.owner
-
-        add("registration.missing_dependency", contributor.owner, contributor.name,
-            "#{contributor.name} needs its own registered preflight query.", contributor.preflight)
-      end
-
-      def check_contract(contributor)
-        version = contributor.section_version
-        return if contributor.contract && version.is_a?(Integer) && version.positive?
-
-        add("registration.schema_invalid", contributor.owner, contributor.name,
-            "#{contributor.name} needs a contract block and a positive section version.")
-      end
-
-      # `owned` accumulates across the batch, so two staged contributors cannot claim one field either.
-      def check_result_fields(contributor, owned)
-        Export::Privacy.schema_problems(contributor.result).each do |problem|
-          add("registration.schema_invalid", contributor.owner, contributor.name,
-              "#{contributor.name} result: #{problem}.")
-        end
-        return unless contributor.result.is_a?(Hash)
-
-        contributor.result.each_key do |field|
-          next unless Export::Privacy::SHELL.key?(field) || owned.include?(field)
-
-          add("registration.duplicate_id", contributor.owner, contributor.name,
-              "#{contributor.name} declares result field #{field}, which is already owned.")
-        end
-        owned.concat(contributor.result.keys)
-      end
-
       def check_subscriptions
         @staging.declared_subscriptions.each do |subscription|
           next if Sessions::HOST_EVENTS.include?(subscription.kind) && subscription.handler.respond_to?(:call)
@@ -291,15 +243,6 @@ module PhComposer
               "#{subscription.owner} subscribes to #{subscription.kind.inspect}, which needs a known host event " \
               "and a callable handler.")
         end
-      end
-
-      # Each declared HBJSON user_data key is dotted and lowercase, like a registered name.
-      def check_user_data_keys(contributor)
-        keys = contributor.user_data_keys
-        return if keys.is_a?(Array) && keys.all? { |key| key.is_a?(String) && ID_PATTERN.match?(key) }
-
-        add("registration.schema_invalid", contributor.owner, contributor.name,
-            "#{contributor.name} user_data_keys must be dotted lowercase keys such as ph_composer.level.")
       end
 
       def check_proposal_participants
@@ -358,6 +301,85 @@ module PhComposer
       def add(code, owner, subject, message, dependency = nil)
         @diagnostics << Declarations::Diagnostic.new(:code => code, :owner => owner, :subject => subject,
                                                      :message => message, :dependency => dependency)
+      end
+    end
+
+    # A contributor needs its own preflight query, a contract and a positive section version, a valid
+    # user_data key declaration, result fields that form a privacy schema, and a dependency on the
+    # feature of every section it reads.
+    class ExportValidation < Validation
+      def diagnostics
+        @staging.declared_export_contributors.each do |contributor|
+          check_preflight_owner(contributor)
+          check_contract(contributor)
+          check_user_data_keys(contributor)
+          check_result_fields(contributor)
+          check_section_reads(contributor)
+        end
+        @diagnostics
+      end
+
+      private
+
+      # A section read follows `request.query`'s rule: the section is registered, and belongs to the
+      # reading contributor's own feature or one that feature requires.
+      def check_section_reads(contributor)
+        unless contributor.requires.is_a?(Array) && contributor.requires.all?(String)
+          return add("registration.schema_invalid", contributor.owner, contributor.name,
+                     "#{contributor.name} requires a list of section ids.")
+        end
+        unless contributor.projection.nil? || contributor.projection.respond_to?(:call)
+          add("registration.schema_invalid", contributor.owner, contributor.name,
+              "#{contributor.name} projection must be callable.")
+        end
+        feature = @staging.declared_features.find { |item| item.id == contributor.owner }
+        contributor.requires.each do |section|
+          provider = @staging.declared_export_contributors.find { |item| item.name == section } ||
+                     @live.export_contributors[section]
+          next if provider && (provider.owner == contributor.owner || feature&.requires&.include?(provider.owner))
+
+          message = if provider
+                      "#{contributor.name} reads #{section}, so #{contributor.owner} must require #{provider.owner}."
+                    else
+                      "#{contributor.name} reads #{section}, which is not a registered export contributor."
+                    end
+          add("registration.missing_dependency", contributor.owner, contributor.name, message, section)
+        end
+      end
+
+      def check_preflight_owner(contributor)
+        return unless contributor.preflight
+
+        query = @staging.declared_queries.find { |item| item.name == contributor.preflight } ||
+                @live.queries[contributor.preflight]
+        return if query && query.owner == contributor.owner
+
+        add("registration.missing_dependency", contributor.owner, contributor.name,
+            "#{contributor.name} needs its own registered preflight query.", contributor.preflight)
+      end
+
+      def check_contract(contributor)
+        version = contributor.section_version
+        return if contributor.contract && version.is_a?(Integer) && version.positive?
+
+        add("registration.schema_invalid", contributor.owner, contributor.name,
+            "#{contributor.name} needs a contract block and a positive section version.")
+      end
+
+      def check_result_fields(contributor)
+        Export::Privacy.schema_problems(contributor.result).each do |problem|
+          add("registration.schema_invalid", contributor.owner, contributor.name,
+              "#{contributor.name} result: #{problem}.")
+        end
+      end
+
+      # Each declared HBJSON user_data key is dotted and lowercase, like a registered name.
+      def check_user_data_keys(contributor)
+        keys = contributor.user_data_keys
+        return if keys.is_a?(Array) && keys.all? { |key| key.is_a?(String) && ID_PATTERN.match?(key) }
+
+        add("registration.schema_invalid", contributor.owner, contributor.name,
+            "#{contributor.name} user_data_keys must be dotted lowercase keys such as ph_composer.level.")
       end
     end
 

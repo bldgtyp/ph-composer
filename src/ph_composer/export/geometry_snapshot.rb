@@ -101,19 +101,23 @@ module PhComposer
         return nil unless entity.is_a?(Sketchup::ComponentInstance)
 
         definition = entity.definition
-        facts = definitions[definition.persistent_id]
-        unless facts
-          children = []
-          definition.entities.each do |child|
-            children << definition_entity(child)
-            block.call(nil) # A detached Face capture remains the smallest resumable native work unit.
-          end
-          facts = { "id" => definition.persistent_id, "dictionaries" => read_dictionaries(definition),
-            "cuts_opening" => definition.behavior.cuts_opening?, "is2d" => definition.behavior.is2d?,
-            "entities" => children.freeze }.freeze
-          definitions[definition.persistent_id] = facts
-        end
+        # A detached Face capture remains the smallest resumable native work unit.
+        facts = definitions[definition.persistent_id] ||= definition_facts(definition) { block.call(nil) }
         { "definition" => facts, "glued_to_id" => entity.glued_to&.persistent_id }.freeze
+      end
+
+      # One component definition as detached facts: its dictionaries, behaviour and each direct child
+      # Face or Edge in definition coordinates. Authoring captures a live definition the same way, so
+      # authoring and export compare one shape. The block, if given, runs after each child.
+      def self.definition_facts(definition)
+        children = definition.entities.map do |child|
+          captured = definition_entity(child)
+          yield if block_given?
+          captured
+        end
+        { "id" => definition.persistent_id, "dictionaries" => read_dictionaries(definition),
+          "cuts_opening" => definition.behavior.cuts_opening?, "is2d" => definition.behavior.is2d?,
+          "entities" => children.freeze }.freeze
       end
 
       def self.definition_entity(entity)
@@ -178,10 +182,12 @@ module PhComposer
     class SnapshotReader
       attr_reader :snapshot
 
-      def initialize(records, snapshot)
+      def initialize(records, snapshot, registry: Registry.current)
         @records = records
         @snapshot = snapshot
+        @registry = registry
         @projections = {}
+        @reading = nil
       end
 
       # Contributors share detached projections without repeating assessment or native reads.
@@ -189,8 +195,28 @@ module PhComposer
         @projections.fetch(key) { @projections[key] = yield }
       end
 
+      # Runs the block as the contributor for `section`: findings name it, and `section` reads only what
+      # it declared.
       def within(section, &block)
+        previous = @reading
+        @reading = section
         @records.within(section, &block)
+      ensure
+        @reading = previous
+      end
+
+      # The detached projection another contributor registered, computed once per export. The reading
+      # contributor must declare `name` in its `requires:`; registration has checked the layer.
+      def section(name)
+        reading = @registry.export_contributors[@reading]
+        unless reading && reading.requires.include?(name)
+          raise InternalError, "#{@reading.inspect} reads #{name} without declaring it in requires."
+        end
+
+        provider = @registry.export_contributors.fetch(name)
+        raise InternalError, "#{name} registers no projection." unless provider.projection
+
+        projection([:section, name]) { within(name) { provider.projection.call(self) } }
       end
 
       def records(*arguments, **keywords)

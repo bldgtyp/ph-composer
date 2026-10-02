@@ -5,8 +5,8 @@ require "json"
 module PhComposer
   module Export
     # The report that travels beside the HBJSON. It checks the translator's result document against the
-    # composed privacy allowlist, renders the shell's sections and each contributor's own, and embeds
-    # the result document unchanged for any later reader.
+    # composed privacy allowlist, renders the shell's sections and each contributor's own from a
+    # ResultView of its fields, and embeds the result document unchanged for any later reader.
     module Report
       STYLESHEET = File.join(__dir__, "report.css")
       RESULT_ELEMENT_ID = "phc-export-result"
@@ -26,7 +26,7 @@ module PhComposer
         sections = [
           summary(result.fetch("summary")),
           *registry.export_contributors.values.flat_map do |contributor|
-            contributor.report ? Array(contributor.report.call(result, display_units)) : []
+            contributor.report ? Array(contributor.report.call(ResultView.new(result, contributor), display_units)) : []
           end,
           findings("Findings", result.fetch("findings"), "No findings."),
           findings("Left out of the export", notes, "Nothing was left out.")

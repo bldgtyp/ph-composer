@@ -6,9 +6,10 @@ module PhComposer
     # key to `nil` (a scalar or a list of scalars, never an object), a Hash (a required object), an
     # `Optional` (an object that may be absent or null) or a one-element Array (a list whose rows match
     # the element). A key no schema names refuses the export. The shell owns the fields below, which the
-    # translation package's result document always carries (python/ph_composer_translation/result.py);
-    # each export contributor declares its own top-level fields at registration, and the allowlist is
-    # composed on each check.
+    # translation package's result document carries (python/ph_composer_translation/result.py), and the
+    # canonical model the foundation's model assembly writes; each export contributor declares the fields
+    # its translation adds under its own section id at registration, and the allowlist is composed on
+    # each check.
     module Privacy
       Optional = Struct.new(:schema)
 
@@ -22,11 +23,15 @@ module PhComposer
         "summary" => fields(%w[objects unavailable findings publishable]),
         "sections" => [fields(%w[id objects unavailable])],
         "findings" => [fields(%w[code section object_id message blocks_export])],
-        "failure" => Optional.new(fields(%w[stage code detail]))
+        "failure" => Optional.new(fields(%w[stage code detail])),
+        "canonical_model" => Optional.new(fields(%w[hbjson rooms faces surface_pairs]))
       ).freeze
 
+      # A section that adds no field this run has no key, so each contributor's fields are optional.
       def schema(registry = Registry.current)
-        registry.export_contributors.values.reduce(SHELL) { |composed, contributor| composed.merge(contributor.result) }
+        registry.export_contributors.values.reduce(SHELL) do |composed, contributor|
+          contributor.result.empty? ? composed : composed.merge(contributor.name => Optional.new(contributor.result))
+        end
       end
 
       # Raises CodedError `export.privacy_undeclared` for a field no declaration names, when the

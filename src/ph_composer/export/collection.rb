@@ -54,7 +54,7 @@ module PhComposer
           records = RecordReader.new(Records::Engine.new(@model, @registry.catalog), @registry.catalog)
           snapshot = GeometrySnapshot.new(@cursor.entries, Sessions.for(@model).revision,
             :model_dictionaries => @cursor.model_dictionaries)
-          SnapshotReader.new(records, snapshot)
+          SnapshotReader.new(records, snapshot, :registry => @registry)
         end
       end
 
@@ -67,7 +67,8 @@ module PhComposer
         session = Sessions.for(model)
         revision = session.revision
         records = RecordReader.new(Records::Engine.new(model, catalog), catalog)
-        reader = SnapshotReader.new(records, GeometrySnapshot.capture(model, :revision => revision))
+        reader = SnapshotReader.new(records, GeometrySnapshot.capture(model, :revision => revision),
+                                    :registry => registry)
         declared = registry.export_contributors.values
         declared = declared.select { |contributor| Array(contributors).include?(contributor.name) } if contributors
         sections = declared.sort_by(&:name).to_h do |contributor|

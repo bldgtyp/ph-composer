@@ -69,6 +69,19 @@ def model(output: dict[str, Any]) -> Any:
     return stack.load("honeybee.model").Model.from_dict(json.loads(output["canonical_model"]["hbjson"]))
 
 
+def withheld(output: dict[str, Any], *aperture_ids: str) -> bool:
+    """Whether the run cannot publish and any diagnostic canonical model leaves the refused Apertures out."""
+    if output["summary"]["publishable"]:
+        return False
+    if "canonical_model" not in output:
+        return True
+    hbjson = json.loads(output["canonical_model"]["hbjson"])
+    emitted = {
+        ap["identifier"] for room in hbjson["rooms"] for face in room["faces"] for ap in face.get("apertures", [])
+    }
+    return emitted.isdisjoint(aperture_ids)
+
+
 def test_full_property_and_reference_roundtrip_with_exact_endpoints() -> None:
     value = document()
     output = result(value)
@@ -104,7 +117,7 @@ def test_full_property_and_reference_roundtrip_with_exact_endpoints() -> None:
         assert aperture.properties.ph.variant_type == source["variant_type"]
         assert aperture.properties.ph.install_depth == source["install_depth_m"]
         assert aperture.properties.ph.shading_dimensions is None
-    assert output["window_face_areas"] == [
+    assert output[APERTURE_SECTION_ID]["window_face_areas"] == [
         {
             "face_id": "face_wall",
             "zone_id": "zone_A",
@@ -113,7 +126,7 @@ def test_full_property_and_reference_roundtrip_with_exact_endpoints() -> None:
             "net_area_m2": 8.875,
         }
     ]
-    assert sorted(row["g_value"] for row in output["window_schema_exceptions"]) == [0, 1]
+    assert sorted(row["g_value"] for row in output[APERTURE_SECTION_ID]["window_schema_exceptions"]) == [0, 1]
 
 
 def test_signature_includes_size_dependent_uw_and_ignores_presentation() -> None:
@@ -124,7 +137,8 @@ def test_signature_includes_size_dependent_uw_and_ignores_presentation() -> None
     for side in rows[2]["sides"].values():
         side["frame"]["name"] = "Renamed frame"
         side["install_name"] = "Renamed install"
-    translated = translate(value, (WindowConstructionSection(), ApertureSection()))
+    value["sections"][FaceSection.id] = {"version": 1, "records": []}
+    translated = translate(value, (FaceSection(), WindowConstructionSection(), ApertureSection()))
     objects = translated.objects(WINDOW_CONSTRUCTION_SECTION_ID)
     first, large, equal = [objects[row["id"]].construction for row in rows[:3]]  # type: ignore[attr-defined]
     assert first.identifier == equal.identifier
@@ -143,7 +157,7 @@ def test_shared_edge_zero_and_mulled_unit_count_without_empty_aperture() -> None
     apertures[2]["element_id"] = "second_glazed_cell"
     output = result(value)
     assert len(model(output).rooms[0].faces[0].apertures) == 5
-    usage = next(row for row in output["window_usage"] if row["type_id"] == "type_small")
+    usage = next(row for row in output[APERTURE_SECTION_ID]["window_usage"] if row["type_id"] == "type_small")
     assert usage["unit_count"] == 1
     assert usage["aperture_count"] == 2
     first = model(output).rooms[0].faces[0].apertures[0]
@@ -169,9 +183,8 @@ def test_orphan_or_wrong_parent_is_blocked_with_valid_zone(field: str, value: st
     payload = document()
     payload["sections"][APERTURE_SECTION_ID]["records"][0][field] = value
     output = result(payload)
-    assert not output["summary"]["publishable"]
-    assert "canonical_model" not in output
-    assert any("aperture" in row["message"] and row["blocks_export"] for row in output["findings"])
+    assert withheld(output, "ap_0")
+    assert [row["object_id"] for row in output["findings"] if row["blocks_export"]] == ["ap_0"]
 
 
 def test_wrong_face_zone_membership_with_another_valid_zone_diagnoses_aperture() -> None:
@@ -181,9 +194,11 @@ def test_wrong_face_zone_membership_with_another_valid_zone_diagnoses_aperture()
     zone.update(id="zone_B", face_ids=["face_missing"])
     payload["sections"][ZoneSection.id]["records"].append(zone)
     output = result(payload)
-    assert not output["summary"]["publishable"]
-    assert "canonical_model" not in output
-    assert any(row["object_id"] == "ap_0" and "no emitted" in row["message"] for row in output["findings"])
+    assert withheld(output, "ap_0")
+    assert any(
+        row["object_id"] == "ap_0" and "not a Face of Zone zone_B" in row["message"] for row in output["findings"]
+    )
+    assert not any(row["object_id"] in {"ap_1", "ap_2"} for row in output["findings"]), "one defect costs one Aperture"
 
 
 def test_no_valid_zone_never_produces_usable_artifact() -> None:
@@ -216,8 +231,7 @@ def test_invalid_host_geometry_or_classification_is_refused(failure: str) -> Non
     else:
         face["omission"] = {"code": "adjacency.stale", "reason": "Synthetic stale", "area_m2": 12, "zone_id": "zone_A"}
     output = result(payload)
-    assert not output["summary"]["publishable"]
-    assert "canonical_model" not in output
+    assert withheld(output, *(row["id"] for row in apertures))
 
 
 @pytest.mark.parametrize("g", [-0.01, 1.01, True, "0.5", float("inf")])
@@ -231,16 +245,21 @@ def test_invalid_g_is_not_clamped(g: object) -> None:
 @pytest.mark.parametrize("g", [0, 1])
 def test_endpoint_exception_is_explicit_exact_and_narrow(g: int) -> None:
     output = result(document())
-    exceptions = output["window_schema_exceptions"]
+    exceptions = output[APERTURE_SECTION_ID]["window_schema_exceptions"]
+
+    def declared(rows: list[dict[str, Any]]) -> dict[str, Any]:
+        return {APERTURE_SECTION_ID: {"window_schema_exceptions": rows}}
+
+    sections = (ApertureSection(),)
     with pytest.raises(ValueError, match="exceptions"):
-        check(output["canonical_model"])
+        check(output["canonical_model"], {}, sections)
     with pytest.raises(ValueError, match="exceptions"):
-        check(output["canonical_model"], [row for row in exceptions if row["g_value"] != g])
+        check(output["canonical_model"], declared([row for row in exceptions if row["g_value"] != g]), sections)
     bad = copy.deepcopy(exceptions)
     bad[0]["extra"] = "not-an-allowed-exception"
     with pytest.raises(ValueError, match="unsupported"):
-        check(output["canonical_model"], bad)
-    check(output["canonical_model"], exceptions)
+        check(output["canonical_model"], declared(bad), sections)
+    check(output["canonical_model"], declared(exceptions), sections)
 
 
 def test_inputs_all_requires_declared_typed_requirement_and_sorts_ids() -> None:
@@ -276,7 +295,7 @@ def test_empty_registered_window_sections_preserve_exact_legacy_hbjson() -> None
     assert normalized(json.loads(current["canonical_model"]["hbjson"])) == normalized(baseline)
     assert current["canonical_model"]["rooms"] == 2 and current["canonical_model"]["faces"] == 12
     assert "apertures" not in current["canonical_model"]
-    assert current["window_usage"] == [] and current["window_schema_exceptions"] == []
+    assert current[APERTURE_SECTION_ID] == {"window_usage": [], "window_schema_exceptions": [], "window_face_areas": []}
 
 
 def test_authoring_provider_and_shading_metadata_never_reaches_hbjson() -> None:

@@ -108,7 +108,7 @@ class HbjsonMetadataTest < PhComposerTestCase
       "schema_version" => 1, "run_id" => "run", "state" => "complete",
       "summary" => { "objects" => 1, "unavailable" => 0, "findings" => 0, "publishable" => true },
       "sections" => [], "findings" => [], "failure" => nil,
-      "canonical_model" => { "hbjson" => hbjson, "rooms" => 1, "faces" => 0, "surface_pairs" => 0, "omitted" => 0 }
+      "canonical_model" => { "hbjson" => hbjson, "rooms" => 1, "faces" => 0, "surface_pairs" => 0 }
     }
   end
 

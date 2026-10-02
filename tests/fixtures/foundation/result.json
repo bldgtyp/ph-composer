@@ -1,7 +1,9 @@
 {
-  "example_parts": {
-    "count": 2,
-    "total_length_mm": 2431.9
+  "example.foundation.export.parts": {
+    "example_parts": {
+      "count": 2,
+      "total_length_mm": 2431.9
+    }
   },
   "failure": null,
   "findings": [],
