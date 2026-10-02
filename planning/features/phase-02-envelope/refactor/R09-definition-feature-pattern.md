@@ -80,7 +80,7 @@ Two steps, the second only if Ed wants the abstraction.
      collection.
    - Add unit suffixes to thermal display fields (`u_effective_w_m2k`, `rsi_m2k_w`) and to the Python
      dataclass fields. This changes result schemas and the panel. **Decided 2026-10-01 by Ed:** do it
-     now, in one pass with R04's code rename, before any release. **Done with R04** (see its
+     now, in one pass with R04's code rename, before any release. **Done with R04, PR #19** (see its
      Outcome): the thermal display fields and the Python window record fields carry their units.
 2. **One schema builder in the foundation.** Move `object`, `list`, `with`, nullable and id-pattern
    helpers to a single `core/` module that Zones, Assemblies, Windows and Library all use. This is
