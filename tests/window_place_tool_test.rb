@@ -411,6 +411,20 @@ class WindowPlaceToolTest < PhComposerTestCase
     assert_equal [readable], W::ViewportRegistration.type_rows(read.engine).map { |row| row.fetch("id") }
   end
 
+  def test_the_place_window_chooser_reads_every_page_of_types
+    pages = { nil => [{ "id" => "wnt_first", "name" => "First" }, "next"],
+              "next" => [{ "id" => "wnt_second", "name" => "Second" }, nil] }
+    cursors = []
+    page = lambda do |_session, _name, params|
+      cursors << params["cursor"]
+      row, cursor = pages.fetch(params["cursor"])
+      record = { "id" => row.fetch("id"), "values" => { "name" => row.fetch("name") } }
+      { "records" => [record], "next_cursor" => cursor }
+    end
+    choices = W::ViewportRegistration.stub(:query, page) { W::ViewportRegistration.type_choices(@session) }
+    assert_equal [[nil, "next"], %w[wnt_first wnt_second]], [cursors, choices.map { |row| row.fetch("id") }]
+  end
+
   def test_native_menu_read_refusal_is_visible_instead_of_doing_nothing
     refused = PhComposer::Outcome.refused("session.busy", "PH-Composer is busy.", :revision => @session.revision)
     API.stub(:query, refused) { W::ViewportRegistration.choose_from_menu(@session) }

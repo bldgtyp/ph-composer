@@ -8,6 +8,8 @@ module PhComposer
     # Per-machine native setup. Configuration paths cross only this store and the private provider
     # constructor. Every projection for a public client omits them.
     module Setup
+      UNREADABLE = "This machine's library setup cannot be read. Reset it in the Libraries dialog before " \
+                   "changing libraries; its libraries must be added again."
       SECTION = "ph_composer.library"
       KEY = "file_providers"
       MAX_STORED_BYTES = 256 * 1024
@@ -28,15 +30,15 @@ module PhComposer
         valid_configurations!(rows)
         previous, previous_state = stored
         if previous_state == "unreadable"
-          raise Error.new("library.setup_unreadable", "This machine's library setup cannot be read. Reset it " \
-                                                      "before changing libraries; its libraries must be added again.")
+          raise Error.new("library.setup_unreadable", UNREADABLE)
         end
         replace(previous, rows)
       end
 
-      # Replaces the stored setup, readable or not, with an empty one.
+      # Replaces an unreadable stored setup with an empty one. A readable setup is left as it is: its
+      # libraries are removed one at a time.
       def reset
-        replace(load, [])
+        state == "unreadable" ? replace([], []) : providers
       end
 
       def add_file(id:, label:, path:)

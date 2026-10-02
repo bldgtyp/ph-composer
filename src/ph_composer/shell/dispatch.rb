@@ -202,6 +202,8 @@ module PhComposer
       nil
     rescue CodedError => error
       coded_outcome(error, session)
+    rescue StandardError => error
+      unexpected_outcome(error, session, name)
     end
 
     def resolve(context, capability, name, declarations)

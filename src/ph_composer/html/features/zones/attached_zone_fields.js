@@ -41,9 +41,11 @@ function (ui, fields, unitFields, forms) {
       values: function () {
         var parsed = factor.parse();
         problem = !name.value.trim() ? "Enter a name." : parsed.ok ? "" : parsed.message;
-        return problem ? null : { name: name.value.trim(), kind: kind.value, temperature_reduction_factor: parsed.value };
+        if (problem) return null;
+        return { name: name.value.trim(), kind: kind.value, temperature_reduction_factor: parsed.value };
       },
-      message: function () { return problem; },
+      // An invalid factor the field already shows (after Enter) is not repeated in the form's status line.
+      message: function () { return factor.error.hidden === false ? "" : problem; },
       setDisabled: function (disabled) {
         name.disabled = kind.disabled = Boolean(disabled); factor.setDisabled(disabled);
       },

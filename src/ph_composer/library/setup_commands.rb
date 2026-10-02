@@ -36,6 +36,9 @@ module PhComposer
           feature.menu_item("#{PREFIX}.#{verb}_menu", :label => verb == "add_file" ? "Add Library File…" :
                             "Add Library Folder…", :menu => "Libraries",
                             :available => ->(_read) { false }) do |session|
+            # The picker would only lead to the same refusal; say so before it opens.
+            next session.notice(Setup::UNREADABLE, :tone => :warning) if Setup.state == "unreadable"
+
             outcome = NativeApproval.setup(menu_context(session), "#{PREFIX}.#{verb}", {})
             next if outcome["status"] == "cancelled"
 
@@ -64,8 +67,8 @@ module PhComposer
         end
         feature.snapshot_section("ph_composer.library.provider_setup", :query => "#{PREFIX}.setup_state")
         feature.setup_command("#{PREFIX}.reset",
-                              :description => "Clear this machine's library setup, removing every configured " \
-                                              "library. Use it when setup_state reports the setup unreadable.",
+                              :description => "Clear this machine's library setup when setup_state reports it " \
+                                              "unreadable. A readable setup is left unchanged.",
                               :params => Library.object({}), :result => result, :examples => [{}]) do |_request|
           value = Setup.reset
           refresh_sessions

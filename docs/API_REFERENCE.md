@@ -36561,7 +36561,7 @@ Example params:
 
 ### `ph_composer.library.providers.reset`
 
-Clear this machine's library setup, removing every configured library. Use it when setup_state reports the setup unreadable. Owner: `ph_composer.library`.
+Clear this machine's library setup when setup_state reports it unreadable. A readable setup is left unchanged. Owner: `ph_composer.library`.
 
 Params:
 

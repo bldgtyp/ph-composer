@@ -94,4 +94,25 @@ class LibrarySetupCommandsTest < PhComposerTestCase
       assert_empty Setup.load
     end
   end
+
+  # An unreadable stored setup is reported, never silently replaced: the menu says so before any picker
+  # opens, reset clears it, and reset leaves a readable setup alone.
+  def test_an_unreadable_setup_is_reported_refused_before_the_picker_and_reset_through_the_api
+    session = PhComposer::Sessions.for(Sketchup.active_model)
+    context = PhComposer::API.connect(:session_id => session.id, :capabilities => %w[read setup])
+    state = -> { PhComposer::API.query(:context => context, :name => "#{Commands::PREFIX}.setup_state").fetch("value") }
+    reset = -> { PhComposer::API.setup(:context => context, :name => "#{Commands::PREFIX}.reset", :params => {}) }
+    Setup.add_file(:id => "synthetic", :label => "Synthetic library", :path => "/nowhere/library.json")
+    assert_equal "completed", reset.call.fetch("status")
+    assert_equal [{ "state" => "readable" }, ["synthetic"]], [state.call, Setup.load.map { |row| row.fetch("id") }]
+    Sketchup.write_default(Setup::SECTION, Setup::KEY, "not base64 json")
+    assert_equal({ "state" => "unreadable" }, state.call)
+    notices = []
+    menu = PhComposer::Registry.current.menu_items.fetch("#{Commands::PREFIX}.add_file_menu")
+    session.stub(:notice, ->(message, tone:) { notices << [message, tone] }) do
+      UI.stub(:openpanel, ->(*) { flunk "An unreadable setup must not open a picker." }) { menu.handler.call(session) }
+    end
+    assert_equal [[Setup::UNREADABLE, :warning]], notices
+    assert_equal [[], { "state" => "readable" }], [reset.call.fetch("value"), state.call]
+  end
 end

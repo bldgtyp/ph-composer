@@ -156,9 +156,9 @@
       "sha256": "a35d73129aabab021f4d7ed1e7d28141d1075470b386c5adc6fc2dfd5188bb02"
     },
     "html/features/zones/attached_zone_fields.js": {
-      "bytes": 2795,
+      "bytes": 2957,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "4954dcfc880c201ed2b142ff37341253274cb6d1248d782fc3aa5b212ee17ad8"
+      "sha256": "784fe3a5920fa2a7b86456665c889e73d7b12893a73393fc2a37694154065a60"
     },
     "html/features/zones/attached_zones.js": {
       "bytes": 6981,

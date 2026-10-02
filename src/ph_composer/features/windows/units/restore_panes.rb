@@ -43,7 +43,7 @@ module PhComposer
           expected = plan.panes.map(&:element_id).sort
           faces_valid = @faces.all? { |face| pane_face?(face) }
           stamps_valid = stamps.all? { |stamp| pane_stamp?(stamp, type_id) }
-          ids_match = stamps.map { |stamp| stamp["element_id"] }.sort == expected
+          ids_match = stamps_valid && stamps.map { |stamp| stamp["element_id"] }.sort == expected
           RestoreGeometry.refuse! unless faces_valid && stamps_valid && ids_match
           @faces.each do |face|
             only_stamped = dictionaries(face).transform_values(&:keys) == { PANE_STORE.dictionary => [PANE_STORE.key] }
