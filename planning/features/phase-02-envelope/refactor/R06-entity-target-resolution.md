@@ -1,7 +1,7 @@
 # R06: no public way to turn a Face reference into a live Face at apply time
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r06-entity-target-resolution`; dual-Ruby `make ci` and the E12 placement refusals pass on the host
+STATUS: Merged to main 2026-10-02 (PR #21); dual-Ruby `make ci` and the E12 placement refusals pass on the host
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract gap. Architecture change. One unverified performance risk.
