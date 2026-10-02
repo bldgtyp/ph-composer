@@ -21350,7 +21350,7 @@ Example params:
 
 ### `ph_composer.windows.types.create`
 
-Create one Window Type with local defaults. Owner: `ph_composer.windows`.
+Create one Window Type with one glazed element, 1.0 m wide by 1.5 m high unless values give columns_m and rows_m. The size does not follow the display unit system. Owner: `ph_composer.windows`.
 
 Undo step: Create Window Type. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
@@ -29536,7 +29536,7 @@ Example params:
 
 ### `ph_composer.windows.types.installs.save`
 
-Save the complete staged Installs session. Owner: `ph_composer.windows`.
+Assign Psi-Install Types to the edges of Window Type elements, in one Undo step, with any Psi-Install Types they need created, edited or copied from a library. Each listed element's four sides are replaced as given; null clears a side. A side may name a temporary client_id from psi_install_types.create or imports instead of a saved id. The panel's Installs session and the library assignment both use it; for one edge, list one Type with one element. Owner: `ph_composer.windows`.
 
 Undo step: Edit Window Installations. Creates or edits installation products and updates type edges atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 

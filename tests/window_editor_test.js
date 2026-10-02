@@ -341,3 +341,13 @@ test("Installs bulk paint and compatible copies stay local; missing defaults rem
   assert.strictEqual(installs.root.hidden, true); assert.strictEqual(installs.productField, null);
   assert.strictEqual(o.editor.guard(), null); installs.saveAction(); assert.strictEqual(o.sent.length, 0);
 });
+test("a new Type asks for the round imperial size only while the display system is IP", function () {
+  var o = setup(), preferences = o.modules.unit_preferences;
+  o.editor.createType();
+  assert.deepStrictEqual(Object.keys(o.sent[0].payload.params.values), ["name"]);
+  outcome(o, "completed"); preferences.replace({ unit_system: "IP", dimension_formats: {} });
+  o.editor.createType();
+  var values = o.sent[1].payload.params.values;
+  assert.deepStrictEqual([values.columns_m[0], values.rows_m[0]], [1.016, 1.524]);
+  preferences.replace({ unit_system: "SI", dimension_formats: {} });
+});

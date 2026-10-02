@@ -12,11 +12,19 @@ module PhComposer
         Units::TypeRetargeter.install(feature)
       end
 
+      def created(collection, kind)
+        return "Create one #{kind.label} with local defaults." unless collection == "types"
+
+        width, height = Types::DEFAULT_SIZE_M
+        "Create one Window Type with one glazed element, #{width} m wide by #{height} m high unless values give " \
+          "columns_m and rows_m. The size does not follow the display unit system."
+      end
+
       def declare(feature, collection)
         kind = Operations.kind(collection)
         prefix = "#{FEATURE_ID}.#{collection}"
         example_id = "#{kind.id_prefix}_Ab12Cd34Ef56"
-        feature.action("#{prefix}.create", :description => "Create one #{kind.label} with local defaults.",
+        feature.action("#{prefix}.create", :description => created(collection, kind),
           :params => Shapes.create(kind), :result => Shapes::RESULT, :undo_name => "Create #{kind.label}",
           :side_effects => Shapes.side_effects("Creates one Model-owned definition."),
           :examples => [{ "values" => { "name" => "Example #{kind.label}" } }]) do |request, proposal|

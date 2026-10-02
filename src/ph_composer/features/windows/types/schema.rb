@@ -6,7 +6,9 @@ module PhComposer
     # an incomplete saved type. Geometry and placement depend on these definitions, never vice versa.
     module Types
       SIDES = %w[top right bottom left].freeze
-      DEFAULT_SIZE_M = { "SI" => [1.0, 1.5], "IP" => [1.016, 1.524] }.freeze
+      # A new Type's width and height when the caller supplies none. A client that wants another start,
+      # such as the panel's round imperial size, passes `columns_m` and `rows_m`.
+      DEFAULT_SIZE_M = [1.0, 1.5].freeze
       ID = { "type" => %w[string null] }.freeze
       SPAN = { "type" => "array", "minItems" => 2, "maxItems" => 2,
                "items" => { "type" => "integer", "minimum" => 0 } }.freeze
@@ -34,8 +36,8 @@ module PhComposer
           "operation" => nil }
       end
 
-      def defaults(values, identity: ->(prefix) { Records::Identity.mint(prefix) }, unit_system: "SI")
-        width, height = DEFAULT_SIZE_M.fetch(unit_system)
+      def defaults(values, identity: ->(prefix) { Records::Identity.mint(prefix) })
+        width, height = DEFAULT_SIZE_M
         { "rows_m" => [height], "columns_m" => [width], "elements" => [blank(:identity => identity)],
           "product_photos" => [] }.merge(Fields.defaults(values))
       end

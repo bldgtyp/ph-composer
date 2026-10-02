@@ -21,7 +21,12 @@ module PhComposer
 
       def install(feature)
         feature.action("#{FEATURE_ID}.types.installs.save",
-          :description => "Save the complete staged Installs session.",
+          :description => "Assign Psi-Install Types to the edges of Window Type elements, in one Undo step, " \
+                          "with any Psi-Install Types they need created, edited or copied from a library. Each " \
+                          "listed element's four sides are replaced as given; null clears a side. A side may name " \
+                          "a temporary client_id from psi_install_types.create or imports instead of a saved id. " \
+                          "The panel's Installs session and the library assignment both use it; for one edge, list " \
+                          "one Type with one element.",
           :params => PARAMS, :result => RESULT, :undo_name => "Edit Window Installations",
           :side_effects => Shapes.side_effects(
             "Creates or edits installation products and updates type edges atomically."),

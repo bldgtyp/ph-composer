@@ -38,11 +38,14 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     assert_equal [1.0], values["columns_m"]
     assert_nil row("types", id).dig("display", "thermal", "u_w")
     refute values.key?("install_depth_m")
+    # The same call authors the same values whatever the display system; a client that wants the round
+    # imperial start passes it.
     PhComposer::Preferences.stub(:unit_system, "IP") do
       ip = create("types", "name" => "IP")
-      assert_equal [1.524], row("types", ip).dig("values", "rows_m")
-      assert_equal [1.016], row("types", ip).dig("values", "columns_m")
+      assert_equal [[1.5], [1.0]], row("types", ip).fetch("values").values_at("rows_m", "columns_m")
     end
+    sized = create("types", "name" => "Sized", "rows_m" => [1.524], "columns_m" => [1.016])
+    assert_equal [[1.524], [1.016]], row("types", sized).fetch("values").values_at("rows_m", "columns_m")
     assert_equal({ "default_psi_install_id" => nil, "default_install_depth_m" => 0.0 }, settings)
   end
 
