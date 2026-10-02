@@ -334,3 +334,25 @@ New before-action snapshot: `p217-held-repeat-a09-baseline.json`; full authoring
 `p217-held-repeat-authoring-before.json`. Ask Ed to activate SketchUp by clicking its title bar
 first, then hold on the tan Wall, Cmd-N and release after the new Model opens. The trace must
 observe down on the original Model and up after the switch before this assertion can pass.
+
+
+## Held Model switch verified; edit-path half armed
+
+The repeat passes on PID 45208, normal installed shipping `f4f6576` with tools-only callback
+tracing. Original session `49781f8a-a2ae-478b-a4f9-f0de2a00e55e`: genuine mouse-down collected
+one Face at root with revision 3; mouse-up ran after new session
+`389d3286-0224-44ec-962f-4c8ac860dd7e` became active. Revision stayed 3, collecting false,
+collected zero; full authoring fingerprint equals `p217-held-repeat-authoring-before.json` and
+modified is false. Native AX shows Select in the new Model. Private direct readback:
+`p217-held-model-observed.json`; genuine events are retained separately from the first unobserved
+attempt and ordinary diagnostic click.
+
+The private summary writer used an unavailable `Sketchup.status_text` getter, after writing the
+genuine event trace. Direct bridge readback supplies the result without invoking any synthetic
+callback. That getter is removed from the tools-only helper; native UI supplies status evidence.
+No shipping code changed. The empty test Model is closed. Original fixture is active at root,
+Classify Floor enabled and `edit_path` mode armed. The timer starts only on genuine mouse-down,
+then enters the west Zone after two seconds. Snapshot `p217-held-edit-a09-baseline.json` and
+fingerprint `p217-held-edit-authoring-before.json` precede this next gesture. Ask Ed to activate
+via title bar, hold on the tan Wall until the edit context changes, release, then stop. No Cmd-N
+for this half. Afterwards collect readback and restore a fresh normal host without tracing.
