@@ -2,7 +2,7 @@
 
 DATE: 2026-10-01
 STATUS: In progress. Review complete and Ed's eight decisions recorded on 2026-10-01. R01 is
-merged (PR #16); R02 is implemented with its host gate passed; R03 to R11 are requested.
+merged (PR #16); R02 is merged (PR #17) with its host gate passed; R03 to R11 are requested.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft). Reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15), merged 2026-10-01 as `c687a73`, which closed [#14](https://github.com/bldgtyp/ph-composer/issues/14).
 
@@ -71,7 +71,7 @@ reproduced defect, evidenced contract violation, unverified risk, optional impro
 | ID | Finding | Class | Size |
 | --- | --- | --- | --- |
 | [R01](R01-context-doc-drift.md) | `context/` not updated: stale Extensibility paragraphs, no Window Unit storage or library mechanics in Contracts, glossary gaps. **Merged 2026-10-01, PR #16** | Evidenced, docs only | Small |
-| [R02](R02-handler-read-context.md) | Colour-by projections and menus get no read context; features use `API.connect` per call (caller registry grows, reproduced), `Registry.current`, and instance variables smuggled onto the request | Reproduced defect inside a contract gap. **Implemented; host gate passed** | Medium |
+| [R02](R02-handler-read-context.md) | Colour-by projections and menus get no read context; features use `API.connect` per call (caller registry grows, reproduced), `Registry.current`, and instance variables smuggled onto the request | Reproduced defect inside a contract gap. **Merged 2026-10-01, PR #17; host gate passed** | Medium |
 | [R03](R03-agent-access.md) | Agent access: native dialogs inside public operations; `view` grant removes machine configuration (reproduced); implicit Unit identity repair; offset paging; 218 of 233 params undescribed; untyped `grid.element`; defaults depend on display preference (reproduced, a recorded port); agent docs not extended | Mixed, two reproduced | Medium, several small |
 | [R04](R04-findings-and-codes.md) | Finding codes: no `noun.condition` form, two codes for one condition, codes derived from message text, Zones matching Assemblies' codes, `request.stale_revision` (reproduced), 48 codes missing from the table | Evidenced contract violation | Medium, touches panel and report |
 | [R05](R05-export-layering.md) | Export and translation layering runs upward: `ZoneSection` requires Apertures, Zones declares Window result fields, Windows calls a Zones module directly, shared conformance names Windows | Evidenced contract violation | Large, architecture |

@@ -1,7 +1,7 @@
 # R02: projections and menus have no read context, so features improvise one
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r02-handler-read-context`, 2026-10-01. `make ci` passes on Ruby 3.2.2 and the offline suite on 2.7.2. Host gate passed 2026-10-01.
+STATUS: Merged to main through [PR #17](https://github.com/bldgtyp/ph-composer/pull/17), 2026-10-01. `make ci` passes on Ruby 3.2.2 and the offline suite on 2.7.2. Host gate passed 2026-10-01.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Reproduced defect (caller-handle growth) inside an evidenced contract gap.
