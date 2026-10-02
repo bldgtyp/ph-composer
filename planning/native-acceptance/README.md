@@ -94,11 +94,3 @@ The ledger reports observations, not merge/release readiness. Normal-build resto
 private providers, faults or runtime delays is an additional observed case, with its own readback.
 Use the [project skill](../../.agents/skills/ph-composer-native-acceptance/SKILL.md) and
 [control reference](../../context/NATIVE_CONTROL_CAPABILITIES.md) for the native procedure.
-
-## Immutable run and verification receipts
-
-Use the [run harness and current execution receipt](../../tools/hostkit/ACCEPTANCE_RUN.md) for
-preflight, assertion-specific dependencies, private observed evidence and repeatable package/link
-checks. Baselines refuse overwrite, including the ledger snapshot command. The harness supplements
-the case ledger without rewriting history, narrowing catalog dependencies automatically or granting
-acceptance. Keep current state compact and link historical observations.
