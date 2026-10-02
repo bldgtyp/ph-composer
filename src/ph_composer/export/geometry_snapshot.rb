@@ -101,19 +101,23 @@ module PhComposer
         return nil unless entity.is_a?(Sketchup::ComponentInstance)
 
         definition = entity.definition
-        facts = definitions[definition.persistent_id]
-        unless facts
-          children = []
-          definition.entities.each do |child|
-            children << definition_entity(child)
-            block.call(nil) # A detached Face capture remains the smallest resumable native work unit.
-          end
-          facts = { "id" => definition.persistent_id, "dictionaries" => read_dictionaries(definition),
-            "cuts_opening" => definition.behavior.cuts_opening?, "is2d" => definition.behavior.is2d?,
-            "entities" => children.freeze }.freeze
-          definitions[definition.persistent_id] = facts
-        end
+        # A detached Face capture remains the smallest resumable native work unit.
+        facts = definitions[definition.persistent_id] ||= definition_facts(definition) { block.call(nil) }
         { "definition" => facts, "glued_to_id" => entity.glued_to&.persistent_id }.freeze
+      end
+
+      # One component definition as detached facts: its dictionaries, behaviour and each direct child
+      # Face or Edge in definition coordinates. Authoring captures a live definition the same way, so
+      # authoring and export compare one shape. The block, if given, runs after each child.
+      def self.definition_facts(definition)
+        children = definition.entities.map do |child|
+          captured = definition_entity(child)
+          yield if block_given?
+          captured
+        end
+        { "id" => definition.persistent_id, "dictionaries" => read_dictionaries(definition),
+          "cuts_opening" => definition.behavior.cuts_opening?, "is2d" => definition.behavior.is2d?,
+          "entities" => children.freeze }.freeze
       end
 
       def self.definition_entity(entity)

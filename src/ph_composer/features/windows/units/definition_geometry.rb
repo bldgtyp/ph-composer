@@ -21,38 +21,43 @@ module PhComposer
           normalized(points).map(&:dup)
         end
 
+        # Whether a live definition holds exactly the panes `plan` places for `type_id`. It captures
+        # the definition as the export snapshot does and runs the one comparison both use.
         def matches?(definition, type_id:, plan:)
-          stamp = DEFINITION_STORE.read(definition)
+          facts_match?(Export::GeometrySnapshot.definition_facts(definition), :type_id => type_id, :plan => plan)
+        rescue StandardError
+          false
+        end
+
+        # Whether detached definition facts (Export::GeometrySnapshot.definition_facts) hold exactly
+        # the panes `plan` places for `type_id`: one stamped, upward, single-loop Face per pane on the
+        # pane's contour, and only Edges lying on pane edges. Behaviour flags are the caller's policy.
+        def facts_match?(definition, type_id:, plan:)
+          stamp = ExportGeometry.record(definition.fetch("dictionaries"), DEFINITION_STORE)
           return false unless stamp.is_a?(Hash) && stamp["window_type_id"] == type_id
 
-          entities = definition.entities.to_a
-          return false unless entities.all? { |entity| entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge) }
+          children = definition.fetch("entities")
+          return false unless children.all? { |child| %w[face edge].include?(child["kind"]) }
 
-          faces = entities.grep(Sketchup::Face)
+          faces = children.select { |child| child["kind"] == "face" }
           return false unless faces.length == plan.panes.length
 
           remaining = plan.panes.dup
           faces.each do |face|
-            pane_stamp = PANE_STORE.read(face)
+            pane_stamp = ExportGeometry.record(face.fetch("dictionaries"), PANE_STORE)
             return false unless pane_stamp.is_a?(Hash) && pane_stamp["window_type_id"] == type_id
 
             pane = remaining.find { |item| item.element_id == pane_stamp["element_id"] }
-            return false unless pane && face.loops.length == 1 && face.normal.z.positive?
-
-            actual = face.outer_loop.vertices.map { |vertex| metres(vertex.position) }
-            return false unless cyclic_match?(actual, pane.polygon_m)
+            geometry = face.fetch("geometry")
+            return false unless pane && geometry.fetch("loops_m").length == 1 && geometry.fetch("normal")[2].positive?
+            return false unless cyclic_match?(geometry.fetch("loops_m").first, pane.polygon_m)
 
             remaining.delete(pane)
           end
           planned_edges = plan.panes.flat_map { |pane| segments(pane.polygon_m) }
-          actual_edges = entities.grep(Sketchup::Edge).map do |edge|
-            [metres(edge.start.position), metres(edge.end.position)]
+          children.select { |child| child["kind"] == "edge" }.all? do |child|
+            planned_edges.any? { |planned| child.fetch("points_m").all? { |point| on_segment?(point, planned) } }
           end
-          actual_edges.all? do |edge|
-            planned_edges.any? { |planned| edge.all? { |point| on_segment?(point, planned) } }
-          end
-        rescue StandardError
-          false
         end
 
         def cyclic_match?(actual, expected)
@@ -65,10 +70,6 @@ module PhComposer
 
         def close?(left, right)
           left.zip(right).all? { |a, b| a.finite? && (a - b).abs <= FaceGeometry::QUANTUM_M }
-        end
-
-        def metres(point)
-          [point.x, point.y, point.z].map { |value| value.to_f * FaceGeometry::INCH_TO_M }
         end
 
         def segments(points)
@@ -102,7 +103,7 @@ module PhComposer
           close?(point, projected)
         end
 
-        private_class_method :cyclic_match?, :close?, :metres, :segments, :normalized, :on_segment?
+        private_class_method :cyclic_match?, :close?, :segments, :normalized, :on_segment?
       end
     end
   end

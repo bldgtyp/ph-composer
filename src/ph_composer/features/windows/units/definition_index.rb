@@ -13,11 +13,16 @@ module PhComposer
           record = STORE.read(model)
           return {} if record.nil? && model.get_attribute(STORE.dictionary, STORE.key).nil?
 
-          unless record.is_a?(Hash) && record.keys.sort == %w[definitions schema_version] &&
-                 record["schema_version"] == 1 && valid_mapping?(record["definitions"])
-            raise CodedError.new("record.unreadable", "The Window definition index is invalid.")
-          end
+          raise CodedError.new("record.unreadable", "The Window definition index is invalid.") unless valid?(record)
+
           record.fetch("definitions")
+        end
+
+        # Whether a stored index record has the one readable shape. Export checks its detached copy
+        # with the same rule.
+        def valid?(record)
+          record.is_a?(Hash) && record.keys.sort == %w[definitions schema_version] &&
+            record["schema_version"] == 1 && valid_mapping?(record["definitions"])
         end
 
         def resolve(model, type_id)
