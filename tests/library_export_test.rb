@@ -87,7 +87,7 @@ class LibraryExportTest < PhComposerTestCase
     File.write(@path, "original bytes")
     assert_equal "export.replace_required", export({}, false)["code"]
     stale = export("expected_revision" => @session.revision + 1)
-    assert_equal "request.stale_revision", stale["code"]
+    assert_equal "revision.stale", stale["code"]
     assert_equal "original bytes", File.read(@path)
     assert_empty Dir.children(@directory) - ["synthetic.json"]
   end
