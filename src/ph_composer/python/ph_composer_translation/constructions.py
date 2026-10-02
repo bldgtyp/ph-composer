@@ -83,7 +83,7 @@ class ConstructionSection(Section[AssemblyRecord, TranslatedConstruction]):
     def findings(self, objects: Mapping[str, TranslatedConstruction]) -> Sequence[Finding]:
         return [
             Finding(
-                "material_thermal_mass_default",
+                "material.thermal_mass_defaulted",
                 self.id,
                 identifier,
                 "Missing thermal mass properties use 600 kg/m3 density and 1000 J/kgK specific heat "

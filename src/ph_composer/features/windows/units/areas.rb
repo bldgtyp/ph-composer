@@ -38,16 +38,16 @@ module PhComposer
             findings = items.flat_map { |unit| unit.fetch("findings").map { |row| row.fetch("code") } }
             values = items.map do |unit|
               id = unit.fetch("values").fetch("window_type_id")
-              findings << "unknown_type" unless types[id]
+              findings << "window.unknown_type" unless types[id]
               areas[id] = opening_area(types[id]) unless areas.key?(id)
-              findings << "type_geometry_unavailable" if types[id] && areas[id].nil?
+              findings << "window_type.geometry_unavailable" if types[id] && areas[id].nil?
               areas[id]
             end
             gross = face.fetch("area_m2")
             glazed = findings.empty? ? values.sum : nil
             net = glazed && gross - glazed
             if net && net < -FaceGeometry::QUANTUM_M**2
-              findings << "opening_area_exceeds_host"
+              findings << "window.opening_area_exceeds_host"
               net = nil
             end
             { "reference" => DeepCopy.call(face.fetch("reference")), "gross_area_m2" => gross,

@@ -302,8 +302,8 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
       self.viewSide.appendChild(ui.option(side.id, side.label)); });
     this.viewSide.value = this.interior ? "interior" : "exterior";
     var entry = this.entries.filter(function (row) { return row.record.id === self.active; })[0];
-    this.paintMetric(this.uwMetric, entry.calculation.u_w, "Complete dimensions and products to calculate Uw.");
-    this.paintMetric(this.installedMetric, entry.calculation.u_effective,
+    this.paintMetric(this.uwMetric, entry.calculation.uw_w_m2k, "Complete dimensions and products to calculate Uw.");
+    this.paintMetric(this.installedMetric, entry.calculation.u_effective_w_m2k,
       "Complete perimeter installations to calculate installed Uw.");
     var ids = record.elements.map(function (cell) { return cell.id; });
     this.selected = this.selected.filter(function (id) { return ids.indexOf(id) >= 0; });

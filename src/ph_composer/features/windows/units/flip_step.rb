@@ -219,9 +219,11 @@ module PhComposer
 
         def remaining_findings
           state = WorldGeometry.transform_state(@after_world)
-          [state.scaled && "scaled", state.sheared && "sheared"].select { |code| code }.map do |code|
+          conditions = { "window.scaled" => state.scaled, "window.sheared" => state.sheared }
+          conditions.select { |_code, present| present }.keys.map do |code|
             { "code" => code,
-              "message" => "The flipped Window retains #{code} geometry; Reset to Type remains available.",
+              "message" => "The flipped Window retains #{code.delete_prefix('window.')} geometry; Reset to Type " \
+                           "remains available.",
               "reference" => DeepCopy.call(@reference) }
           end
         end

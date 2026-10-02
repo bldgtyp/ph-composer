@@ -17,7 +17,7 @@ module PhComposer
 
       def run(request)
         if request.params.key?("expected_revision") && request.params["expected_revision"] != request.session.revision
-          raise Error.new("request.stale_revision", "The Model changed since the library export was requested.")
+          raise Error.new("revision.stale", "The Model changed since the library export was requested.")
         end
         if request.params.key?("library_name") && request.params.fetch("library_name").strip.empty?
           raise Error.new("params.invalid", "The library name must not be blank.")

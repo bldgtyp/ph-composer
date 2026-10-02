@@ -65,7 +65,9 @@ module PhComposer
         layers = record.fetch("layers")
         total = layers.reject { |layer| Materials::Schema.membrane_layer?(layer, materials) }
                       .sum { |layer| layer.fetch("thickness_mm") }
-        view.merge("findings" => findings, "display" => {
+        blockers = Validation.export_blockers(record, materials, findings)
+        view.merge("findings" => findings, "export_ready" => blockers.empty?, "export_blockers" => blockers,
+                   "display" => {
           "color" => record.fetch("color", Assembly::Schema.color(record.fetch("id"))),
           "layer_count" => layers.length, "total_thickness_mm" => total,
           "thermal" => thermal, "complete" => Validation.complete?(findings)

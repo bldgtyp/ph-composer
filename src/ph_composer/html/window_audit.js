@@ -20,12 +20,12 @@ PhComposerUI.define("window_audit", ["units", "window_editor_shared", "workspace
         "; no intermediate rounding. Missing terms withhold dependent totals."));
     this.entries.forEach(function (entry) {
       var calc = entry.calculation, group = el("details"); group.appendChild(el("summary", "", entry.record.name +
-        " · Uw " + format(calc.u_w, U_VALUE) + " · Installed U " + format(calc.u_effective, U_VALUE)));
+        " · Uw " + format(calc.uw_w_m2k, U_VALUE) + " · Installed U " + format(calc.u_effective_w_m2k, U_VALUE)));
       group.appendChild(el("p", "", "Glazed gross area " + format(calc.area_m2, AREA) + " · Empty wall area " +
         format(calc.empty_area_m2, AREA)));
       (calc.elements || []).forEach(function (detail) {
         var cell = entry.record.elements.filter(function (c) { return c.id === detail.id; })[0];
-          var child = el("details"); child.appendChild(el("summary", "", cell.name + " · Uw " + format(detail.u_w,
+          var child = el("details"); child.appendChild(el("summary", "", cell.name + " · Uw " + format(detail.uw_w_m2k,
           U_VALUE)));
         child.appendChild(el("p", "", "Ag " + format(detail.glazing_area_m2, AREA, AUDIT_DETAIL) + " · Af " +
           format(detail.frame_area_m2, AREA, AUDIT_DETAIL) + " · Hg " + format(detail.h_glazing_w_k, HEAT_LOSS,
@@ -34,7 +34,7 @@ PhComposerUI.define("window_audit", ["units", "window_editor_shared", "workspace
           format(edge.frame_area_m2, AREA, AUDIT_DETAIL) + " · Lg " + format(edge.glass_edge_m, LENGTH,
           AUDIT_DETAIL) + " · Hf " + format(edge.h_frame_w_k, HEAT_LOSS, AUDIT_DETAIL) + " · Hψg " +
           format(edge.h_spacer_w_k, HEAT_LOSS, AUDIT_DETAIL) + " · installation " + edge.install.source + " · ψ " +
-          format(edge.install.psi, LINEAR_PSI, AUDIT_DETAIL) + " · L " + format(edge.length_m, LENGTH,
+          format(edge.install.psi_w_mk, LINEAR_PSI, AUDIT_DETAIL) + " · L " + format(edge.length_m, LENGTH,
           AUDIT_DETAIL))); });
         var reasons = this.elementFindings(cell, detail);
         child.appendChild(el("p", "", Object.keys(reasons).map(function (key) {
@@ -44,7 +44,7 @@ PhComposerUI.define("window_audit", ["units", "window_editor_shared", "workspace
       entry.record.elements.filter(function (cell) { return cell.kind === "empty"; }).forEach(function (cell) {
         group.appendChild(el("p", "", cell.name + " · Empty, excluded wall area; no window thermal contribution."));
       });
-      (calc.findings || []).forEach(function (reason) { group.appendChild(el("p", "", reason)); });
+      (calc.findings || []).forEach(function (finding) { group.appendChild(el("p", "", finding.message)); });
       this.audit.appendChild(group);
     }, this);
     Array.prototype.forEach.call(this.audit.querySelectorAll("details"), function (node, index) {

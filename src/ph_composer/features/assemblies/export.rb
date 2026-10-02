@@ -50,26 +50,16 @@ module PhComposer
         end)
         findings = findings.map do |finding|
           message = finding.fetch("message")
-          if finding.fetch("code") == "material_thermal_mass_default"
+          if finding.fetch("code") == "material.thermal_mass_defaulted"
             message = "Missing thermal mass properties use 600 kg/m3 density and 1000 J/kgK specific heat."
           end
           preflight_row(finding.fetch("code"), finding["assembly_id"] || finding["material_id"], message, false)
         end
-        materials.each do |row|
-          heat = row["specific_heat_j_kgk"]
-          next if Materials::Schema.membrane?(row) || heat.nil? || heat >= 100
-
-          findings << preflight_row("material_specific_heat_unavailable", row.fetch("id"),
-                                    "Honeybee needs specific heat of at least 100 J/kgK; " \
-                                    "authored value was retained.", false)
-        end
-        assemblies.each do |row|
-          count = row.fetch("layers").count { |layer| !Materials::Schema.membrane_layer?(layer, by_id) }
-          next if count <= 10
-
-          findings << preflight_row("construction_thermal_layer_limit", row.fetch("id"),
-                                    "Honeybee OpaqueConstruction supports at most 10 thermal Layers; " \
-                                    "authored Layers were retained.", false)
+        conversions = materials.flat_map { |row| Validation.material_conversion(row) } +
+                      assemblies.flat_map { |row| Validation.assembly_conversion(row, by_id) }
+        conversions.each do |finding|
+          findings << preflight_row(finding.fetch("code"), finding["assembly_id"] || finding["material_id"],
+                                    finding.fetch("message"), false)
         end
         findings.concat((bad_materials + bad_assemblies).map do |row|
           preflight_row(row.fetch("code"), row.fetch("id"), row.fetch("message"), true)

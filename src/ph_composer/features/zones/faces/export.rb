@@ -5,6 +5,13 @@ module PhComposer
     module Faces
       module ExportProjection
         SECTION = "ph_composer.zones.faces.export.faces"
+        # The preflight code for each state a Face's reference can be in other than resolved or current.
+        ADJACENCY_CODES = { "stale" => "adjacency.stale", "unresolved" => "adjacency.unresolved",
+                            "invalid" => "adjacency.invalid" }.freeze
+        CONSTRUCTION_CODES = { "dangling" => "construction.dangling", "invalid" => "construction.invalid" }.freeze
+        ATTACHED_ZONE_CODES = { "absent" => "attached_zone.absent", "dangling" => "attached_zone.dangling",
+                                "invalid" => "attached_zone.invalid", "unavailable" => "attached_zone.unavailable" }
+                              .freeze
 
         module_function
 
@@ -83,7 +90,8 @@ module PhComposer
           end
           state = Zones::Adjacency.state(request.model, occurrence, record, :index => index)
           if state && state != "current"
-            issues << ["adjacency.#{state}", "Surface adjacency is #{state}; this Face will be omitted.", false]
+            issues << [ADJACENCY_CODES.fetch(state), "Surface adjacency is #{state}; this Face will be omitted.",
+                       false]
           end
           issues.concat(attached_zone_issues(request, record)) if record["boundary_condition"] == "AttachedZone"
           return issues unless record["boundary_condition"] && (!state || state == "current")
@@ -101,23 +109,13 @@ module PhComposer
 
           state = AssemblyAssignment.state(request, record)
           if state != "resolved"
-            return [["construction.#{state}", "Face #{record.fetch('id')} names #{state} Assembly #{id}.", true]]
+            message = "Face #{record.fetch('id')} names #{state} Assembly #{id}."
+            return [[CONSTRUCTION_CODES.fetch(state), message, true]]
           end
           assembly = AssemblyAssignment.catalog(request).fetch(:records).fetch(id)
-          conditions = request.memo(:construction_conditions) do
-            request.query("ph_composer.assemblies.export_preflight").fetch("findings")
-          end
-          material_ids = assembly.fetch("values").fetch("layers").flat_map do |layer|
-            layer.fetch("segments").map { |segment| segment["material_id"] }
-          end
-          conversion = conditions.find do |finding|
-            (finding.fetch("code") == "material_specific_heat_unavailable" &&
-              material_ids.include?(finding["object_id"])) ||
-              (finding.fetch("code") == "construction_thermal_layer_limit" && finding["object_id"] == id)
-          end
-          return [] if assembly.dig("display", "complete") && !conversion
+          return [] if assembly.fetch("export_ready")
 
-          reason = conversion ? conversion.fetch("message") : assembly.fetch("findings").first.fetch("message")
+          reason = assembly.fetch("export_blockers").first.fetch("message")
           [["construction.incomplete", "Face #{record.fetch('id')} names incomplete Assembly #{id}: #{reason}", true]]
         end
 
@@ -130,7 +128,7 @@ module PhComposer
                   end
           return [] if state == "resolved"
 
-          [["attached_zone.#{state}", "The Face's Attached zone reference is #{state}.", true]]
+          [[ATTACHED_ZONE_CODES.fetch(state), "The Face's Attached zone reference is #{state}.", true]]
         end
 
         def attached_record_state(request, id)

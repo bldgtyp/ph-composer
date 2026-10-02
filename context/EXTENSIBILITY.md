@@ -134,11 +134,21 @@ Implemented registration checks: the JSON Schema subset's keyword values (counts
 an anchored `pattern` that compiles, non-empty enums whose values fit their type, no lower bound above its upper, a closed object requiring only what it declares); a description, a callable
 handler and examples for every query, action, view command, setup command and file export, where an operation whose params
 accept `{}` may omit examples and every example must validate; callable participants, menu items,
-subscriptions and Colour-by projections. A test over the built-in registry
+subscriptions and Colour-by projections; and a described `noun.condition` form for each
+`feature.code`, declared once, under a noun no other feature declares and outside the foundation's
+nouns. A test over the built-in registry
 (`tests/api_reference_test.rb`) also requires a description on every top-level param, and an id
 param carries the `pattern` of its prefix, such as `^asm_[A-Za-z0-9]{12}$`. Write each operation's
 description, Undo name and side effects by hand at its declaration, not by interpolating its name. Published operations are frozen with deep-frozen schemas
 and examples, so a test or a contributor registers a new declaration rather than editing one.
+
+A feature names each condition it reports by one code under its own noun, built where the condition
+is detected and never derived from message text, and declares it once with `feature.code`
+(`features/windows/codes.rb` is the example). The same code reaches every read, refusal and export
+preflight row; a finding that a single action repairs names that action and its params rather than
+leaving the panel to derive it (`ph_composer.windows.units.list`). A feature that depends on another's
+readiness reads a published field, such as `export_ready` and `export_blockers` on
+`ph_composer.assemblies.assemblies.all` rows, rather than matching that feature's codes.
 
 A composition-root registration or generated build inventory is permitted. Requiring a new
 feature branch inside shell, session, export orchestration or UI-kit internals is a contract

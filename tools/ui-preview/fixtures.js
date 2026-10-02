@@ -122,7 +122,7 @@
               "total_thickness_mm": 200,
               "thermal": {
                 "complete": true,
-                "u_effective": 0.2,
+                "u_effective_w_m2k": 0.2,
                 "warnings": []
               }
             }
@@ -145,7 +145,7 @@
               "total_thickness_mm": 100,
               "thermal": {
                 "complete": false,
-                "u_effective": null,
+                "u_effective_w_m2k": null,
                 "warnings": [
                   "Choose a Material for every Layer-Segment."
                 ]
@@ -195,9 +195,9 @@
         segments: [{ id: "seg_lining_" + index, width_mm: 600, material_id: "mat_b",
           is_continuous_insulation: false, steel_stud_spacing_mm: null }] }];
       record.display.total_thickness_mm = 165;
-      record.display.thermal.u_construction = index ? null : 0.21;
-      record.display.thermal.rsi = 0.13;
-      record.display.thermal.rse = 0.04;
+      record.display.thermal.u_construction_w_m2k = index ? null : 0.21;
+      record.display.thermal.rsi_m2k_w = 0.13;
+      record.display.thermal.rse_m2k_w = 0.04;
       record.display.thermal.direction = "horizontal";
     });
   });
@@ -342,8 +342,8 @@
           "height_m": 1.5,
           "install_depth_m": 0.1,
           "thermal": {
-            "u_w": 0.8,
-            "u_effective": 0.9,
+            "uw_w_m2k": 0.8,
+            "u_effective_w_m2k": 0.9,
             "complete": true,
             "area_m2": 1.5,
             "empty_area_m2": 0.75,
@@ -351,7 +351,7 @@
             "elements": [
               {
                 "id": "wel_a",
-                "u_w": 0.8,
+                "uw_w_m2k": 0.8,
                 "findings": [],
                 "edges": [
                   {
@@ -360,7 +360,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -369,7 +369,7 @@
                     "install": {
                       "source": "shared",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -378,7 +378,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -387,14 +387,14 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   }
                 ]
               },
               {
                 "id": "wel_b",
-                "u_w": 0.8,
+                "uw_w_m2k": 0.8,
                 "findings": [],
                 "edges": [
                   {
@@ -403,7 +403,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -412,7 +412,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -421,7 +421,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -430,14 +430,14 @@
                     "install": {
                       "source": "shared",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   }
                 ]
               },
               {
                 "id": "wel_c",
-                "u_w": null,
+                "uw_w_m2k": null,
                 "findings": [],
                 "edges": [
                   {
@@ -446,7 +446,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -455,7 +455,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -464,7 +464,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -473,7 +473,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   }
                 ]
@@ -534,8 +534,8 @@
           "height_m": 1.5,
           "install_depth_m": 0.1,
           "thermal": {
-            "u_w": 0.8,
-            "u_effective": 0.9,
+            "uw_w_m2k": 0.8,
+            "u_effective_w_m2k": 0.9,
             "complete": true,
             "area_m2": 1.5,
             "empty_area_m2": 0.75,
@@ -543,7 +543,7 @@
             "elements": [
               {
                 "id": "wel_single",
-                "u_w": 0.8,
+                "uw_w_m2k": 0.8,
                 "findings": [],
                 "edges": [
                   {
@@ -552,7 +552,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -561,7 +561,7 @@
                     "install": {
                       "source": "shared",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -570,7 +570,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   },
                   {
@@ -579,7 +579,7 @@
                     "install": {
                       "source": "default",
                       "id": null,
-                      "psi": 0.04
+                      "psi_w_mk": 0.04
                     }
                   }
                 ]
@@ -671,11 +671,11 @@
           "height_m": 1.5,
           "install_depth_m": 0.1,
           "thermal": {
-            "u_w": null,
-            "u_effective": null,
+            "uw_w_m2k": null,
+            "u_effective_w_m2k": null,
             "elements": [],
             "findings": [
-              "Enter all grid dimensions."
+              { "code": "window_type.dimensions_incomplete", "message": "Enter all grid dimensions." }
             ]
           }
         }
@@ -747,15 +747,19 @@
     { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [100, 300] },
       values: { window_type_id: "wnt_a", anchor: "sill_center" },
       host: JSON.parse(JSON.stringify(AUTHORING.faces[0].reference)),
-      findings: [{ code: "detached_definition", repair: "reset_to_type" }] },
+      findings: [{ code: "window.definition_detached", repair: { name: "ph_composer.windows.units.reset_to_type",
+        params: { units: [{ unit_id: "wun_a", entity_path: [100, 300] }] } } }] },
     { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [100, 301] },
       values: { window_type_id: "wnt_a", anchor: "head_right" }, host: null,
-      findings: [{ code: "copy_id_pending", repair: "repair_copied_identities" },
-        { code: "unhosted", repair: "rehost" }] },
+      findings: [{ code: "window.copy_id_pending", repair: { name: "ph_composer.windows.units.repair_copied_identities",
+        params: { units: [{ unit_id: "wun_a", entity_path: [100, 301] }] } } },
+        { code: "window.unhosted", repair: { name: "ph_composer.windows.units.rehost",
+        params: { unit: { unit_id: "wun_a", entity_path: [100, 301] } } } }] },
     { id: "wun_c", reference: { unit_id: "wun_c", entity_path: [200, 302] },
       values: { window_type_id: "wnt_a", anchor: "sill_left" },
       host: JSON.parse(JSON.stringify(AUTHORING.faces[4].reference)),
-      findings: [{ code: "mirrored", repair: "new_flipped_type" }] }
+      findings: [{ code: "window.mirrored", repair: { name: "ph_composer.windows.units.new_flipped_type",
+        params: { unit: { unit_id: "wun_c", entity_path: [200, 302] } } } }] }
   ] };
 
   FIXTURES.windows.windows.unit_areas = { faces: AUTHORING.faces.map(function (face) {
@@ -764,7 +768,7 @@
     }), uncertain = hosted.some(function (unit) { return unit.findings.length > 0; });
     return { reference: JSON.parse(JSON.stringify(face.reference)), gross_area_m2: face.area_m2,
       glazed_area_m2: uncertain ? null : 0, net_opaque_area_m2: uncertain ? null : face.area_m2,
-      unit_count: hosted.length, findings: uncertain ? ["geometry_differs"] : [] };
+      unit_count: hosted.length, findings: uncertain ? ["window.geometry_differs"] : [] };
   }), unhosted_units: [FIXTURES.windows.windows.units.units[1].reference] };
 
   FIXTURES.windows.libraryProviders = [{ id: "window_products", provider_kind: "ph_composer.library.file",

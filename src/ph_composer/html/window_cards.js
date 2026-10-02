@@ -328,8 +328,8 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
     var readOnly = !this.enabled || this.requests.busy() || Boolean(this.dimensionField && this.dimensionField.editing);
     card.name.disabled = readOnly; card.operation.disabled = readOnly;
     Object.keys(card.directions).forEach(function (direction) { card.directions[direction].disabled = readOnly; });
-    card.uw.textContent = bare(detail.u_w, U_VALUE); card.value.title = detail.u_w == null ? "" : format(detail.u_w,
-      U_VALUE);
+    card.uw.textContent = bare(detail.uw_w_m2k, U_VALUE);
+    card.value.title = detail.uw_w_m2k == null ? "" : format(detail.uw_w_m2k, U_VALUE);
     card.units.forEach(function (unit, index) { var field = CARD_COLUMNS[index][1]; unit.textContent = field ? "[" +
       units.displayUnit(field, units.profile(field)) + "]" : ""; });
     var needs = cell.kind === "empty" ? {} : this.elementFindings(cell, detail);
@@ -355,7 +355,7 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
         INSTALL_SOURCES[edge.install.source];
       var values = glazing ? [bare(product && product.ug_w_m2k, U_VALUE), "—", bare(product && product.g_value),
         "—"] : [bare(product && product.uf_w_m2k, U_VALUE), bare(product && product.width_m, WINDOW_DIMENSION), "—",
-        bare(edge && edge.install.psi, LINEAR_PSI)];
+        bare(edge && edge.install.psi_w_mk, LINEAR_PSI)];
       row.cells.forEach(function (node, index) { node.textContent = values[index]; });
       row.cells[3].classList.toggle("is-muted", Boolean(source)); row.cells[3].title = source || "";
       flag(row.row, row.flag, needs[key]);
@@ -375,17 +375,22 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
   };
 
   /* Translates calculation finding codes into what each card row still needs; the codes stay the calculation's
-    // contract. */
+    contract. */
   methods.elementFindings = function (cell, detail) {
-    var self = this, codes = detail.findings || [], rows = { glazing: [], operation: [], other: [] }, handled = [];
+    var self = this, findings = detail.findings || [], rows = { glazing: [], operation: [], other: [] }, handled = [];
     var glazing = this.product("glazings", cell.glazing_id);
     sides.forEach(function (side) { rows[side] = []; });
-    function has(code) { if (codes.indexOf(code) < 0) return false; handled.push(code); return true; }
+    function has(code, side) {
+      var found = findings.filter(function (finding) { return finding.code === code && (!side || finding.side === side);
+      });
+      handled = handled.concat(found); return found.length > 0;
+    }
     function add(key, text) { if (rows[key].indexOf(text) < 0) rows[key].push(text); }
-    var widthMissing = has("unresolved_frame_width"), constructionMissing = has("unresolved_construction");
+    var widthMissing = has("window_type.frame_width_unresolved");
+    var constructionMissing = has("window_type.construction_unresolved");
     if (!glazing) add("glazing", cell.glazing_id ? "Product not found" : "Product");
     else { if (glazing.ug_w_m2k == null) add("glazing", "Ug"); if (glazing.g_value == null) add("glazing", "g-value"); }
-    if (has("Missing g-value.")) add("glazing",
+    if (has("window_type.g_value_missing")) add("glazing",
       !cell.glazing_id ? "Product" : glazing ? "g-Value" : "Product not found");
     if (constructionMissing && !cell.glazing_id) add("glazing", "Product");
     if (constructionMissing && glazing && glazing.ug_w_m2k == null) add("glazing", "Ug");
@@ -398,11 +403,13 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
         else if (frame.width_m == null) add(side, "Width"); }
       if (constructionMissing && frame && frame.uf_w_m2k == null) add(side, "Uf");
       if (constructionMissing && frame && frame.psi_g_w_mk == null) add(side, "ψ-g");
-      if (has(side + ":unresolved_install")) add(side, "Psi-Install Type");
+      if (has("window_type.install_unresolved", side)) add(side, "Psi-Install Type");
     });
-    if (has("nonpositive_glazing_geometry")) add("other", "Frame widths leave no glazing area");
-    if (has("Choose operation and handedness.")) add("operation", "Operation and direction");
-    codes.forEach(function (code) { if (handled.indexOf(code) < 0) add("other", code.replace(/\.$/, "")); });
+    if (has("window_type.glazing_area_nonpositive")) add("other", "Frame widths leave no glazing area");
+    if (has("window_type.operation_incomplete")) add("operation", "Operation and direction");
+    findings.forEach(function (finding) {
+      if (handled.indexOf(finding) < 0) add("other", finding.message.replace(/\.$/, ""));
+    });
     return rows;
   };
 

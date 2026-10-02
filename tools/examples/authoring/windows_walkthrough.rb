@@ -46,7 +46,7 @@ module WindowAuthoringWalkthrough
     result = read_type(client, id)
     thermal = result.fetch("display").fetch("thermal")
     client.steps << { "step" => "thermal read", "passed" => thermal.fetch("complete") &&
-      thermal.fetch("u_w").is_a?(Numeric) && thermal.fetch("u_effective") > thermal.fetch("u_w") &&
+      thermal.fetch("uw_w_m2k").is_a?(Numeric) && thermal.fetch("u_effective_w_m2k") > thermal.fetch("uw_w_m2k") &&
       thermal.fetch("elements").length == 2 }
     { "session" => session_id, "type_id" => id, "product_ids" => [glazing, frame, install],
       "thermal" => thermal, "passed" => client.steps.all? { |row| row.fetch("passed") }, "steps" => client.steps }

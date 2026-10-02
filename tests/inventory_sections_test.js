@@ -367,7 +367,7 @@ test("Assembly numeric inventory cells follow the displayed SI and IP units", fu
   var o = setup(), units = o.modules.units, fields = o.modules.fields;
   var rows = o.state.sections["ph_composer.assemblies.assemblies"].value.records;
   rows[0].display.total_thickness_mm = 165;
-  rows[0].display.thermal.u_effective = 0.2;
+  rows[0].display.thermal.u_effective_w_m2k = 0.2;
   o.paint();
   assert.ok(text(o.roots.assemblies).includes(units.format(165, fields.LENGTH_MM,
     units.profile(fields.LENGTH_MM, { unit_system: "SI" }))));

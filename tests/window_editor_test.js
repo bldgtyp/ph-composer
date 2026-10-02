@@ -15,7 +15,7 @@ test("drawing renders explicit three elements including Empty and canonical U he
   var o = setup(); assert.strictEqual(o.editor.canvas.root.querySelectorAll("[data-window-element]").length, 3);
   assert.ok(text(o.editor.uwMetric).includes("0.8")); assert.ok(text(o.editor.installedMetric).includes("0.9"));
   assert.strictEqual(o.sent.length, 0);
-  o.state.sections["ph_composer.windows.types"].value.records[0].display.thermal.u_w = null;
+  o.state.sections["ph_composer.windows.types"].value.records[0].display.thermal.uw_w_m2k = null;
   o.editor.render(o.state); assert.strictEqual(o.editor.uwMetric.textContent, "—");
 });
 test("toolbar sends one named grid action with explicit IDs and raw expected values", function () {
@@ -58,7 +58,8 @@ function outcome(o, status) {
 test("one and two-element drawings are independent of missing thermal data", function () {
   var o = setup(), record = o.state.sections["ph_composer.windows.types"].value.records[0];
   record.values.elements = record.values.elements.slice(0, 2); record.values.columns_m = [0.5, null];
-  record.display.thermal = { elements: [], u_w: null, u_effective: null, findings: ["Enter all grid dimensions."] };
+  record.display.thermal = { elements: [], uw_w_m2k: null, u_effective_w_m2k: null,
+    findings: [{ code: "window_type.dimensions_incomplete", message: "Enter all grid dimensions." }] };
   o.editor.render(o.state);
     assert.strictEqual(o.editor.canvas.root.querySelectorAll("[data-window-element]").length, 2);
   assert.ok(o.editor.canvas.root.querySelector("[aria-label='Set column 2 width']"));
@@ -271,9 +272,13 @@ test("Empty cards hide products and missing construction findings identify the a
   frame.width_m = null; frame.uf_w_m2k = null; frame.psi_g_w_mk = null;
   var glazing = o.state.sections["ph_composer.windows.glazings"].value.records[0].values;
   glazing.ug_w_m2k = null; glazing.g_value = null;
-  detail.findings = ["unresolved_frame_width", "unresolved_construction", "Missing g-value.",
-    "top:unresolved_install", "nonpositive_glazing_geometry", "Choose operation and handedness.",
-    "Canonical warning."];
+  detail.findings = [{ code: "window_type.frame_width_unresolved", message: "A Frame width is missing." },
+    { code: "window_type.construction_unresolved", message: "A value is missing." },
+    { code: "window_type.g_value_missing", message: "Missing g-value." },
+    { code: "window_type.install_unresolved", message: "top: no Psi-Install Type resolves.", side: "top" },
+    { code: "window_type.glazing_area_nonpositive", message: "Frame widths leave no glazing area." },
+    { code: "window_type.operation_incomplete", message: "Choose operation and handedness." },
+    { code: "window_type.partial_shared_edge", message: "Canonical warning." }];
   o.editor.render(o.state); var card = o.editor.cards.wel_a;
   assert.ok(card.rows.glazing.flag.title.includes("Ug")); assert.ok(card.rows.glazing.flag.title.includes("g-value"));
   assert.ok(card.rows.left.flag.title.includes("Product"));

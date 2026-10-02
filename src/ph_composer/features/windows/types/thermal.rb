@@ -14,10 +14,18 @@ module PhComposer
         value.to_f
       end
 
+      # Each finding is coded where its condition is detected; a reworded message never changes its code.
+      def finding(code, message, side: nil)
+        row = { "code" => code, "message" => message }
+        side ? row.merge("side" => side) : row
+      end
+
       def calculate(record, products, default_id)
         unless (record.fetch("rows_m") + record.fetch("columns_m")).all? { |n| number(n, :positive => true) }
-          return { "elements" => [], "findings" => ["Enter all grid dimensions."], "u_w" => nil,
-                "u_effective" => nil, "complete" => false }
+          return { "elements" => [],
+                   "findings" => [finding("window_type.dimensions_incomplete", "Enter all grid dimensions.")],
+                   "uw_w_m2k" => nil,
+                "u_effective_w_m2k" => nil, "complete" => false }
         end
         layout = Grid.new(record)
         input = products.merge("default_install_id" => default_id)
@@ -31,11 +39,12 @@ module PhComposer
         area = details.sum { |detail| detail.fetch("area_m2") }
         construction = total(details, "h_construction_w_k")
         installation = total(details, "h_install_w_k")
-        { "elements" => details, "findings" => details.empty? ? ["No glazed elements."] : [], "area_m2" => area,
+        findings = details.empty? ? [finding("window_type.no_glazed_elements", "No glazed elements.")] : []
+        { "elements" => details, "findings" => findings, "area_m2" => area,
           "empty_area_m2" => record.fetch("rows_m").sum * record.fetch("columns_m").sum - area,
           "h_construction_w_k" => construction, "h_install_w_k" => installation,
-          "u_w" => construction && construction / area,
-          "u_effective" => construction && installation && (construction + installation) / area,
+          "uw_w_m2k" => construction && construction / area,
+          "u_effective_w_m2k" => construction && installation && (construction + installation) / area,
           "complete" => !details.empty? && details.all? { |detail| detail.fetch("complete") } }
       end
 
@@ -48,21 +57,25 @@ module PhComposer
         if classifications.include?(:partial)
           classifications.each_with_index do |classification, i|
             next unless classification == :partial
-            detail.fetch("edges")[i]["install"] = { "source" => "unsupported_partial", "id" => nil, "psi" => nil }
+            detail.fetch("edges")[i]["install"] = { "source" => "unsupported_partial", "id" => nil, "psi_w_mk" => nil }
           end
           detail["h_install_w_k"] = nil
-          detail.fetch("findings") << "Partially shared edges need a proved installation mapping."
+          detail.fetch("findings") << finding("window_type.partial_shared_edge",
+                                              "Partially shared edges need a proved installation mapping.")
         end
         glazing = products.fetch("glazings")[cell["glazing_id"]]
         detail["g_value"] = glazing && glazing["g_value"]
-        detail.fetch("findings") << "Missing g-value." if detail["g_value"].nil?
-        detail.fetch("findings") << "Choose operation and handedness." unless operation_complete?(cell)
+        detail.fetch("findings") << finding("window_type.g_value_missing", "Missing g-value.") if detail["g_value"].nil?
+        unless operation_complete?(cell)
+          detail.fetch("findings") << finding("window_type.operation_incomplete", "Choose operation and handedness.")
+        end
         frame_mismatches(detail, cell, products.fetch("frames"))
         construction, installation = detail.values_at("h_construction_w_k", "h_install_w_k")
         detail["complete"] = !construction.nil? && !installation.nil? && !detail["g_value"].nil? &&
                 !!operation_complete?(cell)
-        detail["u_w"] = construction && construction / detail.fetch("area_m2")
-        detail["u_effective"] = construction && installation && (construction + installation) / detail.fetch("area_m2")
+        detail["uw_w_m2k"] = construction && construction / detail.fetch("area_m2")
+        detail["u_effective_w_m2k"] = construction && installation &&
+                                      (construction + installation) / detail.fetch("area_m2")
         detail
       end
 
@@ -73,7 +86,9 @@ module PhComposer
           next unless frame
           operation = frame["operation"].to_s.downcase
           next unless %w[fixed swing slide].include?(operation) && operation != cell["operation"]["type"]
-          detail.fetch("findings") << "#{side}: frame operation #{operation} differs from element operation."
+          detail.fetch("findings") << finding("window_type.frame_operation_mismatch",
+                                              "#{side}: frame operation #{operation} differs from element operation.",
+                                              :side => side)
         end
       end
 
@@ -83,36 +98,41 @@ module PhComposer
       end
 
       def install(input, cell, side, shared)
-        return { "source" => "shared", "id" => nil, "psi" => 0.0 } if shared
+        return { "source" => "shared", "id" => nil, "psi_w_mk" => 0.0 } if shared
         resolution = EdgeResolution.resolve(cell, side, :perimeter, input["default_install_id"])
         id = resolution.effective_id
         record = input.fetch("installs")[id]
         { "source" => resolution.source.to_s, "id" => id,
-          "psi" => record && number(record["psi_w_mk"], :signed => true) }
+          "psi_w_mk" => record && number(record["psi_w_mk"], :signed => true) }
       end
 
       def element(input, cell, width, height, shared)
         findings = []
         edges = SIDES.each_with_index.map do |side, i|
           resolved = install(input, cell, side, shared[i])
-          findings << "#{side}:unresolved_install" if resolved["psi"].nil?
+          if resolved["psi_w_mk"].nil?
+            findings << finding("window_type.install_unresolved", "#{side}: no Psi-Install Type resolves.",
+                                :side => side)
+          end
           { "side" => side, "length_m" => i.even? ? width : height, "install" => resolved }
         end
         result = { "id" => cell.fetch("id"), "area_m2" => width * height, "edges" => edges, "findings" => findings,
                 "h_construction_w_k" => nil, "h_install_w_k" => nil }
-        if edges.all? { |edge| !edge.fetch("install")["psi"].nil? }
-          result["h_install_w_k"] = edges.sum { |edge| edge.fetch("length_m") * edge.fetch("install").fetch("psi") }
+        if edges.all? { |edge| !edge.fetch("install")["psi_w_mk"].nil? }
+          result["h_install_w_k"] = edges.sum do |edge|
+            edge.fetch("length_m") * edge.fetch("install").fetch("psi_w_mk")
+          end
         end
         frames = SIDES.map { |side| input.fetch("frames")[cell.fetch("frames").fetch(side)] }
         widths = frames.map { |frame| frame && number(frame["width_m"]) }
         if widths.any?(&:nil?)
-          findings << "unresolved_frame_width"
+          findings << finding("window_type.frame_width_unresolved", "A Frame width is missing.")
           return result
         end
         top, right, bottom, left = widths
         gw, gh = width - left - right, height - top - bottom
         if gw <= 0 || gh <= 0
-          findings << "nonpositive_glazing_geometry"
+          findings << finding("window_type.glazing_area_nonpositive", "Frame widths leave no glazing area.")
           return result
         end
         result["glazing_area_m2"] = gw * gh
@@ -135,7 +155,8 @@ module PhComposer
         end
         result["h_glazing_w_k"] = ug && ug * gw * gh
         if ug.nil? || uf.any?(&:nil?) || psi.any?(&:nil?)
-          result.fetch("findings") << "unresolved_construction"
+          result.fetch("findings") << finding("window_type.construction_unresolved",
+                                              "A Glazing Ug, Frame Uf or Frame psi-g value is missing.")
         else
           result["h_construction_w_k"] = result.fetch("h_glazing_w_k") +
             result.fetch("edges").sum { |edge| edge.fetch("h_frame_w_k") + edge.fetch("h_spacer_w_k") }

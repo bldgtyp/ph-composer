@@ -85,7 +85,7 @@ class WindowUnitReadContextTest < PhComposerTestCase
     assert_equal "window.type_geometry_unknown", assert_raises(PhComposer::CodedError) { context.polygon(item) }.code
     assert_nil context.read_polygon(item)
     findings = U::State.findings(item, :type => @type, :canonical_definition => @canonical)
-    assert_includes findings.map { |finding| finding.fetch("code") }, "geometry_differs"
+    assert_includes findings.map { |finding| finding.fetch("code") }, "window.geometry_differs"
     assert_includes context.occurrences, item
   end
 

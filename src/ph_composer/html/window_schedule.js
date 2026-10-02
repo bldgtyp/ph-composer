@@ -4,10 +4,15 @@ PhComposerUI.define("window_schedule",
 function (request, snapshot, tables, faceWords, ui, units, fields) {
   "use strict";
   var PREFIX = "ph_composer.windows.", clone = function (value) { return JSON.parse(JSON.stringify(value)); };
-  var STATES = { detached_definition: "Detached definition", geometry_differs: "Geometry differs",
-    unknown_type: "Unknown Type", copy_id_pending: "Copy, id pending", unhosted: "Unhosted", off_host: "Off host",
-    overlapping: "Overlapping", invalid_host: "Invalid host", scaled: "Scaled", sheared: "Sheared",
-    mirrored: "Mirrored" };
+  var STATES = { "window.definition_detached": "Detached definition", "window.geometry_differs": "Geometry differs",
+    "window.unknown_type": "Unknown Type", "window.copy_id_pending": "Copy, id pending",
+    "window.unhosted": "Unhosted", "window.off_host": "Off host", "window.overhang": "Overhangs host",
+    "window.overlap": "Overlapping", "window.surface_host": "Surface host",
+    "window.host_zone_unresolved": "Host Zone unresolved",
+    "window.scaled": "Scaled", "window.sheared": "Sheared", "window.mirrored": "Mirrored" };
+  /* Each repair the Ruby findings name, in the order the row menu offers them. */
+  var REPAIRS = [["reset_to_type", "Reset to Type", "undo"], ["new_flipped_type", "New flipped Type", "mirror"],
+    ["rehost", "Re-host Window", "anchor"], ["repair_copied_identities", "Repair copied identities", "repair"]];
   function Schedule(owner) {
     this.owner = owner; this.expanded = owner.page.scheduleExpanded || {};
     owner.page.scheduleExpanded = this.expanded;
@@ -66,23 +71,26 @@ function (request, snapshot, tables, faceWords, ui, units, fields) {
             level: zone && zone.values.level !== null && zone.values.level !== undefined ? zone.values.level : "—",
             host: unit.host ? self.faceName(unit.host) : "Unhosted", net_area: self.netArea(unit),
             state: (unit.findings || []).map(function (finding) {
-              return STATES[finding.code] || ui.titleCase(finding.code);
+              return STATES[finding.code] || "Needs review";
             }).join("; ") || "Matches Type" } });
       });
     }); return rows;
   };
+  /* The repair operations a Unit's findings name, keyed by action: `{ name, params }`. */
+  function repairs(unit) {
+    var named = {};
+    (unit.findings || []).forEach(function (finding) {
+      if (finding.repair) named[finding.repair.name.slice((PREFIX + "units.").length)] = finding.repair;
+    });
+    return named;
+  }
   Schedule.prototype.actions = function (row) {
     if (row.record.type) return [{ id: "place", label: "Place " + row.record.name, icon: "add",
       disabled: !this.owner.placement.enabled || !this.owner.placement.available(row.record.type.id) }];
-    var codes = (row.record.unit.findings || []).map(function (finding) { return finding.code; }), actions = [
-      { id: "locate", label: "Locate Window", icon: "locate" } ];
-    if (codes.some(function (code) { return ["detached_definition", "geometry_differs", "scaled", "sheared",
-      "copy_id_pending"].indexOf(code) >= 0; }) && codes.indexOf("unknown_type") < 0 && codes.indexOf("mirrored") < 0) {
-      actions.push({ id: "reset_to_type", label: "Reset to Type", icon: "undo" }); }
-    if (codes.indexOf("mirrored") >= 0 && codes.indexOf("unknown_type") < 0) actions.push({ id: "new_flipped_type",
-      label: "New flipped Type", icon: "mirror" });
-    if (codes.some(function (code) { return ["unhosted", "off_host", "overlapping", "invalid_host"].indexOf(code) >= 0;
-      })) actions.push({ id: "rehost", label: "Re-host Window", icon: "anchor" });
+    var named = repairs(row.record.unit), actions = [{ id: "locate", label: "Locate Window", icon: "locate" }];
+    REPAIRS.forEach(function (repair) {
+      if (named[repair[0]]) actions.push({ id: repair[0], label: repair[1], icon: repair[2] });
+    });
     actions.push({ id: "swap_type", label: "Swap Window Type", icon: "variant" });
     actions.push({ id: "remove", label: "Remove Window", icon: "delete" });
     actions.forEach(function (action) { if (action.id !== "locate") action.disabled = !this.owner.enabled; }, this);
@@ -117,13 +125,15 @@ function (request, snapshot, tables, faceWords, ui, units, fields) {
     this.dialog = dialog; this.target = unit; this.trigger = trigger;
     this.revision = this.owner.state.revision;
     var labels = { reset_to_type: "Reset to Type", new_flipped_type: "New flipped Type", swap_type: "Swap Type",
-      rehost: "Re-host Window", remove: "Remove Window" };
+      rehost: "Re-host Window", repair_copied_identities: "Repair copied identities", remove: "Remove Window" };
     dialog.appendChild(ui.element("h2", "", labels[action]));
     var text = action === "reset_to_type" ? "Reset this Window to its Type. If the primary definition was edited, " +
       "all Windows using that primary definition are reset together." : action === "remove" ?
       "Remove this Window and its native opening. Use SketchUp Undo to restore it." : action === "new_flipped_type" ?
       "Create an independent horizontally flipped Type while keeping the Window panes and anchor in place." :
       action === "rehost" ? "Choose a Face in the same parent storage. Re-host keeps the Window in place." :
+      action === "repair_copied_identities" ? "Give the copies sharing this Window's identity new identities. " +
+      "Geometry, glue and metadata stay." :
       "Choose a Type. Swap preserves the Window anchor and checks its full outline.";
     dialog.appendChild(ui.element("p", "", text));
     var choices = action === "swap_type" ? this.owner.entries.map(function (entry) {
@@ -146,8 +156,8 @@ function (request, snapshot, tables, faceWords, ui, units, fields) {
       if (self.dialog !== dialog || self.disposed || !self.enabled || !self.owner.enabled || apply.disabled) return;
       if (picker && !picker.value) { self.error.textContent = "Choose a replacement first.";
         self.error.hidden = false; return; }
-      var params = action === "rehost" || action === "new_flipped_type" ? { unit: clone(unit.reference) } :
-        { units: [clone(unit.reference)] };
+      var repair = repairs(unit)[action];
+      var params = repair ? clone(repair.params) : { units: [clone(unit.reference)] };
       if (action === "swap_type") params.type_id = picker.value;
       if (action === "rehost") params.host = JSON.parse(picker.value);
       self.edits.run(PREFIX + "units." + action, params, { onDone: function () { self.close(); },

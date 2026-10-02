@@ -41,7 +41,7 @@ module AssemblyAuthoringWalkthrough
     assign(client, assembly_id, inner, wool)
     read = assembly(client, assembly_id)
     client.steps << { "step" => "read back", "passed" => read.dig("display", "complete") &&
-      read.dig("display", "thermal", "u_effective").is_a?(Numeric) && read.dig("values", "layers").length == 3 }
+      read.dig("display", "thermal", "u_effective_w_m2k").is_a?(Numeric) && read.dig("values", "layers").length == 3 }
     stale_revision = revision(client)
     edit_name(client, assembly_id, read.dig("values", "name"), "Walkthrough edited")
     stale = invoke(second, "assemblies.update", { "id" => assembly_id, "values" => { "name" => "Stale client" },

@@ -63,7 +63,7 @@ class WindowExportTest < PhComposerTestCase
     construction = result.constructions.fetch(0)
     assert_equal 0.04, construction.dig("sides", "top", "psi_install_w_mk")
     assert_in_delta W::Thermal.calculate(@type, @products, @settings["default_psi_install_id"])
-      .fetch("elements").first.fetch("u_w"), construction["u_w"], 1e-12
+      .fetch("elements").first.fetch("uw_w_m2k"), construction["uw_w_m2k"], 1e-12
     refute row["is_operable"]
     assert_empty @model.operation_starts
   end
@@ -84,12 +84,14 @@ class WindowExportTest < PhComposerTestCase
 
   def test_host_holes_moves_overlap_and_non_outdoors_have_distinct_blocking_rows
     assert_includes assess(:face_values => { "boundary_condition" => "Surface" }).findings.map { |f| f["code"] },
-      "window.host_boundary"
+      "window.surface_host"
+    assert_includes assess(:face_values => { "boundary_condition" => "Ground" }).findings.map { |f| f["code"] },
+      "window.host_boundary_unsupported"
     assert_includes assess(:face_values => { "face_type" => nil }).findings.map { |f| f["code"] },
       "window.host_unclassified"
     assert_includes assess(:types => {}).findings.map { |f| f["code"] }, "window.unknown_type"
     assert_includes assess(:face_values => { "face_type" => "Floor" }).findings.map { |f| f["code"] },
-      "window.host_type"
+      "window.host_type_unsupported"
     @face.add_hole!([[1.8, 0, 1.2], [2.2, 0, 1.2], [2.2, 0, 1.4], [1.8, 0, 1.4]].map { |p|
       Geom::Point3d.new(*p.map { |v| v / 0.0254 })
     })
@@ -109,7 +111,7 @@ class WindowExportTest < PhComposerTestCase
   def test_detached_definition_geometry_and_extra_edges_refuse_before_emission
     detached = U::DefinitionWriter.create(:model => @model, :type => @type, :plan => @plan)
     @unit.definition = detached
-    assert_includes codes, "window.detached_definition"
+    assert_includes codes, "window.definition_detached"
     @unit.definition = @definition
     @definition.entities.first.replace_outline!([[0, 0, 0], [100, 0, 0], [100, -100, 0], [0, -100, 0]]
       .map { |p| Geom::Point3d.new(*p) })
@@ -423,7 +425,7 @@ class WindowExportTest < PhComposerTestCase
     input.fetch("polygon_m").zip(actual.fetch("polygon_m")).each do |left, right|
       left.zip(right).each { |a, b| assert_in_delta a, b, 1e-12 }
     end
-    assert_in_delta source.fetch("u_w"), construction.fetch("u_w"), 1e-12
+    assert_in_delta source.fetch("uw_w_m2k"), construction.fetch("uw_w_m2k"), 1e-12
     assert_equal source.fetch("glazing").merge("id" => fixture_identity("glz", source.dig("glazing", "id"))),
       construction.fetch("glazing")
     source.fetch("sides").each do |side, values|
@@ -450,14 +452,17 @@ class WindowExportTest < PhComposerTestCase
     assert_includes codes, "window.scaled"
     @unit.transformation = @unit.transformation * Geom::Transformation.scaling(-1, 1, 1)
     assert_includes codes, "window.mirrored"
+    actions = assess.repairs.map { |row| row.fetch("action") }
+    assert_equal ["ph_composer.windows.units.new_flipped_type"], actions, "Reset to Type refuses a mirrored Window"
   end
 
   def test_missing_product_and_thermal_values_block_without_zero_placeholders
     @products["glazings"].clear
-    assert_includes codes, "window.dangling_product"
+    assert_includes codes, "window_type.product_dangling"
     assert_empty assess.apertures
     @products["glazings"]["glz_AAAAAAAAAAAA"] = { "id" => "glz_AAAAAAAAAAAA", "name" => "Incomplete" }
-    assert_includes codes, "window.incomplete_type"
+    assert_includes codes, "window_type.g_value_missing"
+    assert_includes codes, "window_type.construction_unresolved"
     assert_empty assess.constructions
   end
 
@@ -474,7 +479,7 @@ class WindowExportTest < PhComposerTestCase
       :type => @type, :plan => U::DefinitionPlan.build(@type))
     resized = assess.constructions.first
     refute_equal one["id"], resized["id"]
-    refute_equal one["u_w"], resized["u_w"]
+    refute_equal one["uw_w_m2k"], resized["uw_w_m2k"]
   end
 
   def test_roof_opening_operability_and_frame_operation_mismatch_are_not_blocking
@@ -488,20 +493,21 @@ class WindowExportTest < PhComposerTestCase
     @products["frames"].values.first["operation"] = "fixed"
     result = assess(:face_values => { "face_type" => "RoofCeiling" })
     assert result.findings.all? { |row| !row["blocks_export"] }
-    assert_equal ["window.frame_operation_mismatch"], result.findings.map { |row| row["code"] }.uniq
+    assert_equal ["window_type.frame_operation_mismatch"], result.findings.map { |row| row["code"] }.uniq
     assert result.apertures.first["is_operable"]
     assert result.apertures.first["polygon_m"].all? { |point| point[2].zero? }
   end
 
   def test_dimension_drafts_missing_perimeter_install_and_shear_never_emit_partial_values
     @type["rows_m"] = [nil]
-    assert_includes codes, "window.incomplete_type"
+    assert_includes codes, "window_type.dimensions_incomplete"
     assert_empty assess.apertures
     @type["rows_m"] = [1.5]
     @settings["default_psi_install_id"] = nil
     result = assess
-    assert_includes result.findings.map { |row| row["code"] }, "window.incomplete_type"
-    assert_includes result.findings.first["message"], "unresolved_install"
+    install = result.findings.find { |row| row["code"] == "window_type.install_unresolved" }
+    assert_includes install["message"], "Psi-Install Type"
+    assert install["blocks_export"]
     @settings["default_psi_install_id"] = "psi_AAAAAAAAAAAA"
     matrix = [1, 0, 0, 0, 0.2, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
     @unit.transformation *= Geom::Transformation.new(matrix)
@@ -513,11 +519,11 @@ class WindowExportTest < PhComposerTestCase
     @products["glazings"].values.first["ug_w_m2k"] = 0
     @products["frames"].values.first.merge!("uf_w_m2k" => 0, "psi_g_w_mk" => 0)
     result = assess
-    assert_includes result.findings.map { |row| row["code"] }, "window.construction_unavailable"
+    assert_includes result.findings.map { |row| row["code"] }, "window_type.construction_unavailable"
     assert_empty result.apertures
     assert_equal 0, @products["glazings"].values.first["ug_w_m2k"]
     @products["glazings"].values.first["ug_w_m2k"] = 100
-    assert_includes codes, "window.construction_unavailable"
+    assert_includes codes, "window_type.construction_unavailable"
     assert_empty assess.constructions
   end
 

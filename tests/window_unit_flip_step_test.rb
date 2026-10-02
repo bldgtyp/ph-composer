@@ -123,7 +123,7 @@ class WindowUnitFlipStepTest < PhComposerTestCase
     @unit.transformation = Geom::Transformation.new([-2, 0, 0, 0, 0.5, 3, 0, 0, 0, 0, 1, 0, 100, 200, 0, 1])
     old = panes(U::DefinitionPlan.build(@source), occurrence.transform.to_a)
     flip = step
-    assert_equal %w[scaled sheared], flip.findings.map { |finding| finding.fetch("code") }.sort
+    assert_equal %w[window.scaled window.sheared], flip.findings.map { |finding| finding.fetch("code") }.sort
     flip.apply(@model, {})
     assert_equal old, panes(U::DefinitionPlan.build(@target), occurrence.transform.to_a)
     state = U::WorldGeometry.transform_state(occurrence.transform.to_a)

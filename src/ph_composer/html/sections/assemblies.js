@@ -5,9 +5,9 @@ PhComposerUI.define("sections/assemblies", ["panel", "snapshot", "workspace", "a
   "use strict";
   var SECTION = "ph_composer.assemblies.assemblies";
   var current;
-  var quantities = { total_thickness_mm: fields.LENGTH_MM, u_effective: fields.U_VALUE };
+  var quantities = { total_thickness_mm: fields.LENGTH_MM, u_effective_w_m2k: fields.U_VALUE };
   var columns = [["name", "Name"], ["color", "Color"], ["type", "Type"], ["exterior_condition", "Exterior"],
-    ["total_thickness_mm", "Thickness"], ["u_effective", "U-value with films"], ["notes", "Notes"]];
+    ["total_thickness_mm", "Thickness"], ["u_effective_w_m2k", "U-value with films"], ["notes", "Notes"]];
   function choiceLabel(choices, value) {
     var choice = choices.filter(function (entry) { return entry.value === (value || ""); })[0];
     return choice ? choice.label : String(value);
@@ -75,7 +75,7 @@ PhComposerUI.define("sections/assemblies", ["panel", "snapshot", "workspace", "a
       },
       value: function (record, field) {
         if (field === "total_thickness_mm") return (record.display || {})[field];
-        if (field === "u_effective") return ((record.display || {}).thermal || {})[field];
+        if (field === "u_effective_w_m2k") return ((record.display || {}).thermal || {})[field];
         return record.values[field];
       }, group: function (record, field) {
         return { label: choiceLabel(field === "type" ? AssemblyForm.types : AssemblyForm.exteriors,
@@ -95,7 +95,7 @@ PhComposerUI.define("sections/assemblies", ["panel", "snapshot", "workspace", "a
         return true; }
         if (!quantities[field]) return false;
         var thermal = (row.record.display || {}).thermal || {};
-        if (field === "u_effective" && (thermal.complete !== true || ui.blank(value))) {
+        if (field === "u_effective_w_m2k" && (thermal.complete !== true || ui.blank(value))) {
           var reason = withheldReason(row.record);
           var marker = ui.element("span", "phc-withheld", "—");
           marker.setAttribute("data-u-withheld", "");

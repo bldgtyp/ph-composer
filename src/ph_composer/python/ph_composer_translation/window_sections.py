@@ -54,22 +54,22 @@ class WindowConstructionSection(Section[WindowConstructionRecord, TranslatedWind
         digest = hashlib.sha256(json.dumps(record.signature(), separators=(",", ":")).encode()).hexdigest()[:32]
         try:
             material = energy_material.EnergyWindowMaterialSimpleGlazSys(
-                "wmat_" + digest, record.u_w, record.glazing.g, 0.6
+                "wmat_" + digest, record.uw_w_m2k, record.glazing.g_value, 0.6
             )
             material.display_name = record.glazing.name
             construction = energy_window.WindowConstruction("wcon_" + digest, [material])
             construction.display_name = record.name
             glazing = ph_window.PhWindowGlazing("wglz_" + digest)
             glazing.display_name = record.glazing.name
-            glazing.u_factor, glazing.g_value = record.glazing.ug, record.glazing.g
+            glazing.u_factor, glazing.g_value = record.glazing.ug_w_m2k, record.glazing.g_value
             frame = ph_window.PhWindowFrame("wfrm_" + digest)
             frame.display_name = record.name
             for name, source in zip(SIDES, record.sides, strict=True):
                 side = getattr(frame, name)
                 side.identifier = "wfside_" + digest + "_" + name
                 side.display_name = source.name
-                side.width, side.u_factor = source.width, source.uf
-                side.psi_glazing, side.psi_install = source.psi_g, source.psi_install
+                side.width, side.u_factor = source.width_m, source.uf_w_m2k
+                side.psi_glazing, side.psi_install = source.psi_g_w_mk, source.psi_install_w_mk
             construction.properties.ph.ph_glazing = glazing
             construction.properties.ph.ph_frame = frame
         except (AssertionError, ValueError) as error:
@@ -112,8 +112,8 @@ class ApertureSection(Section[ApertureRecord, TranslatedAperture]):
         for item in objects.values():
             groups.setdefault((item.source.type_id, item.source.zone_id), []).append(item)
             glazing = item.construction.source.glazing
-            if glazing.g in (0, 1):
-                endpoints[item.construction.construction.identifier] = glazing.g
+            if glazing.g_value in (0, 1):
+                endpoints[item.construction.construction.identifier] = glazing.g_value
         usage: list[JSONValue] = []
         for (type_id, zone_id), items in sorted(groups.items()):
             usage.append(

@@ -27,6 +27,7 @@ module PhComposer
         check_colour_modes
         check_menu_items
         check_subscriptions
+        @diagnostics.concat(CodeValidation.new(@live, @staging).diagnostics)
         @diagnostics
       end
 
@@ -357,6 +358,42 @@ module PhComposer
       def add(code, owner, subject, message, dependency = nil)
         @diagnostics << Declarations::Diagnostic.new(:code => code, :owner => owner, :subject => subject,
                                                      :message => message, :dependency => dependency)
+      end
+    end
+
+    # Feature codes are not names under a feature id, so they take their own checks.
+    class CodeValidation < Validation
+      CODE_PATTERN = /\A[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\z/.freeze
+
+      def diagnostics
+        check_codes
+        @diagnostics
+      end
+
+      private
+
+      # A code is `noun.condition`, declared once, with a description; one feature owns each noun, and
+      # the foundation's nouns are listed in context/CONTRACTS.md rather than declared.
+      def check_codes
+        nouns = @live.codes.values.to_h { |code| [code.code.split(".").first, code.owner] }
+        seen = @live.codes.keys
+        @staging.declared_codes.each do |code|
+          noun = code.code.to_s.split(".").first
+          if !code.code.is_a?(String) || !CODE_PATTERN.match?(code.code) || !text?(code.description)
+            add("registration.schema_invalid", code.owner, code.code.to_s,
+                "#{code.code} must be a lowercase noun.condition string with a description.")
+          elsif Declarations::FOUNDATION_CODE_NOUNS.include?(noun)
+            add("registration.schema_invalid", code.owner, code.code,
+                "#{code.code} uses a foundation noun; foundation codes are listed in context/CONTRACTS.md.")
+          elsif seen.include?(code.code)
+            add("registration.duplicate_id", code.owner, code.code, "#{code.code} is declared more than once.")
+          elsif nouns.fetch(noun, code.owner) != code.owner
+            add("registration.duplicate_id", code.owner, code.code,
+                "The #{noun} noun belongs to #{nouns.fetch(noun)}.", nouns.fetch(noun))
+          end
+          seen << code.code
+          nouns[noun] ||= code.owner
+        end
       end
     end
 

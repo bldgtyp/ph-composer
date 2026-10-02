@@ -83,8 +83,8 @@ fs.mkdirSync(output, { recursive: true });
     const props = editor.getByRole("dialog", { name: "Assembly properties", exact: true });
     await props.getByRole("checkbox", { name: "Ventilated cladding", exact: true }).check();
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.ventilated_cladding === true);
-    assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.rse), 0.13);
-    assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.u_construction), 0.21);
+    assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.rse_m2k_w), 0.13);
+    assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.u_construction_w_m2k), 0.21);
     await page.keyboard.press("Escape");
     for (const width of [1280, 900, 420, 280]) {
       await page.setViewportSize({ width, height: 900 });

@@ -21,7 +21,7 @@ module PhComposer
                 :reference_targets, :extensions,
                 :snapshot_sections,
                 :export_contributors, :reference_retargeters, :proposal_participants, :library_providers,
-                :library_kinds, :colour_modes, :menu_items,
+                :library_kinds, :colour_modes, :menu_items, :codes,
                 :subscriptions
 
     class << self
@@ -67,6 +67,7 @@ module PhComposer
       @library_kinds = {}
       @colour_modes = {}
       @menu_items = {}
+      @codes = {}
       @subscriptions = []
       @unsubscribers = []
       @owners = {}
@@ -115,6 +116,7 @@ module PhComposer
       publish_each(staging.declared_library_kinds, @library_kinds, :name)
       publish_each(staging.declared_colour_modes, @colour_modes, :name)
       publish_each(staging.declared_menu_items, @menu_items, :name)
+      publish_each(staging.declared_codes, @codes, :code)
       staging.owners.each { |name, owner| @owners[name] = owner }
       staging.declared_subscriptions.each do |subscription|
         @subscriptions << subscription
@@ -187,7 +189,7 @@ module PhComposer
                   :declared_export_contributors, :declared_reference_retargeters, :declared_proposal_participants,
                   :declared_library_providers, :declared_library_kinds,
                   :declared_colour_modes,
-                  :declared_menu_items,
+                  :declared_menu_items, :declared_codes,
                   :declared_subscriptions, :owners, :named
 
       def initialize(live)
@@ -209,6 +211,7 @@ module PhComposer
         @declared_library_kinds = []
         @declared_colour_modes = []
         @declared_menu_items = []
+        @declared_codes = []
         @declared_subscriptions = []
         @owners = {}
         @named = []
@@ -384,6 +387,13 @@ module PhComposer
         declaration = Declarations::LibraryKind.new(:name => name, :owner => id,
           :contract_version => contract_version, :record_kind => record_kind, :adapter => adapter)
         @staging.add(:declared_library_kinds, id, name, declaration)
+      end
+
+      # Declares one code this feature raises under its own noun, such as `window.unhosted`. Codes are not
+      # names under the feature id; one feature owns each noun.
+      def code(code, description:)
+        @staging.declared_codes << Declarations::Code.new(:code => code, :owner => id,
+                                                          :description => description).freeze
       end
 
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).

@@ -24,7 +24,7 @@ function setup() {
       { id: "seg_steel", width_mm: 40, material_id: null, steel_stud_spacing_mm: 600 }] }
   ];
   record.display = { total_thickness_mm: 152, color: "#c5e1a5", thermal: { complete: true,
-    u_effective: 0.21, u_construction: 0.22, rsi: 0.13, rse: 0.04, direction: "horizontal",
+    u_effective_w_m2k: 0.21, u_construction_w_m2k: 0.22, rsi_m2k_w: 0.13, rse_m2k_w: 0.04, direction: "horizontal",
     warnings: [], message_parts: [] } };
   var editor = new modules.assembly_editor.Editor("session", function (type, payload) {
     sent.push({ type: type, payload: payload });
@@ -77,8 +77,8 @@ test("both canonical U-values and films are shown, withheld values show reasons 
   assert.ok(text(o.editor.root).includes("U-value construction only"));
   assert.ok(text(o.editor.root).includes("0.21"));
   assert.ok(text(o.editor.root).includes("0.22"));
-  o.record.display.thermal = { complete: false, u_effective: null, u_construction: null,
-    rsi: 0.13, rse: null, warnings: ["Choose a Material for Layer 2 · Layer-Segment 2."] };
+  o.record.display.thermal = { complete: false, u_effective_w_m2k: null, u_construction_w_m2k: null,
+    rsi_m2k_w: 0.13, rse_m2k_w: null, warnings: ["Choose a Material for Layer 2 · Layer-Segment 2."] };
   o.editor.refresh(o.state, o.record.id);
   assert.strictEqual(o.editor.root.querySelectorAll("[data-u-withheld]").length, 2);
   assert.ok(text(o.editor.root).includes("Choose a Material for Layer 2"));

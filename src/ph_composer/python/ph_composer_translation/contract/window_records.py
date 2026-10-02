@@ -27,8 +27,8 @@ def mapping(value: object, label: str) -> Mapping[str, object]:
 class Glazing:
     id: str
     name: str
-    ug: float
-    g: float
+    ug_w_m2k: float
+    g_value: float
 
     @classmethod
     def read(cls, value: object) -> Glazing:
@@ -45,11 +45,11 @@ class Glazing:
 class Side:
     id: str
     name: str
-    width: float
-    uf: float
-    psi_g: float
+    width_m: float
+    uf_w_m2k: float
+    psi_g_w_mk: float
     install_id: str | None
-    psi_install: float
+    psi_install_w_mk: float
     install_name: str | None
 
     @classmethod
@@ -84,7 +84,7 @@ class Side:
 class WindowConstructionRecord:
     id: str
     name: str
-    u_w: float
+    uw_w_m2k: float
     glazing: Glazing
     sides: tuple[Side, ...]
 
@@ -93,13 +93,13 @@ class WindowConstructionRecord:
         sides = mapping(raw.get("sides"), "sides")
         if set(sides) != set(SIDES):
             raise RecordError("sides must name exactly top, right, bottom and left")
-        u_w = number(raw, "u_w")
-        if not 0 < u_w <= 12:
-            raise RecordError("u_w must be positive and no greater than the pinned Energy material limit of 12")
+        uw_w_m2k = number(raw, "uw_w_m2k")
+        if not 0 < uw_w_m2k <= 12:
+            raise RecordError("uw_w_m2k must be positive and no greater than the pinned Energy material limit of 12")
         return cls(
             as_text(raw.get("id"), "construction id"),
             as_text(raw.get("name"), "construction name"),
-            u_w,
+            uw_w_m2k,
             Glazing.read(raw.get("glazing")),
             tuple(Side.read(sides[side]) for side in SIDES),
         )
@@ -107,12 +107,15 @@ class WindowConstructionRecord:
     def signature(self) -> tuple[object, ...]:
         """Every translated thermal property and product id; labels are presentation only."""
         return (
-            self.u_w,
+            self.uw_w_m2k,
             0.6,
             self.glazing.id,
-            self.glazing.ug,
-            self.glazing.g,
-            tuple((side.id, side.width, side.uf, side.psi_g, side.install_id, side.psi_install) for side in self.sides),
+            self.glazing.ug_w_m2k,
+            self.glazing.g_value,
+            tuple(
+                (side.id, side.width_m, side.uf_w_m2k, side.psi_g_w_mk, side.install_id, side.psi_install_w_mk)
+                for side in self.sides
+            ),
         )
 
 

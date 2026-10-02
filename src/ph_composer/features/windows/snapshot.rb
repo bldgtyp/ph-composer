@@ -49,17 +49,14 @@ module PhComposer
       def type(view, record, products, settings)
         thermal = Thermal.calculate(record, products, settings.fetch("default_psi_install_id"))
         findings = product_findings(record, products)
-        thermal.fetch("findings").each { |message| findings << { "code" => "type_incomplete", "message" => message } }
+        findings.concat(thermal.fetch("findings"))
         thermal.fetch("elements").each do |element|
-          element.fetch("findings").each do |message|
-            code = message.include?("differs from element operation") ?
-              "frame_operation_mismatch" : "element_incomplete"
-            findings << { "code" => code, "message" => message, "element_id" => element.fetch("id") }
-          end
+          element_id = element.fetch("id")
+          findings.concat(element.fetch("findings").map { |finding| finding.merge("element_id" => element_id) })
         end
         default_id = settings.fetch("default_psi_install_id")
         if default_id && !products.fetch("installs").key?(default_id)
-          findings << { "code" => "dangling_default_install",
+          findings << { "code" => "window_type.default_install_dangling",
                 "message" => "The Model default Psi-Install Type is missing." }
         end
         view.merge("findings" => findings, "display" => {
@@ -80,7 +77,7 @@ module PhComposer
             %w[frames installs].flat_map { |kind| element.fetch(kind).map { |side, id| [kind, side, id] } }
           slots.filter_map do |kind, side, id|
             next unless id && !products.fetch(kind).key?(id)
-            { "code" => "dangling_product_reference", "message" => "#{side}: the assigned product is missing.",
+            { "code" => "window_type.product_dangling", "message" => "#{side}: the assigned product is missing.",
               "element_id" => element.fetch("id"), "side" => side, "product_id" => id }
           end
         end
