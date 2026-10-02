@@ -59,6 +59,10 @@ module PhComposer
                                       :expected_values => params.fetch("expected_values"),
                                       :user_data => params["user_data"])
         end
+        declare_product_copy_and_delete(feature, prefix, collection, kind)
+      end
+
+      def declare_product_copy_and_delete(feature, prefix, collection, kind)
         feature.action("#{prefix}.duplicate",
                        :description => "Duplicate a #{kind.label} with independent identity.",
                        :params => duplicate_params(kind), :result => Shapes::RESULT,
@@ -115,6 +119,10 @@ module PhComposer
                                    :expected_values => params.fetch("expected_values"),
                                    :user_data => params["user_data"])
         end
+        declare_type_copy_and_delete(feature, prefix, kind)
+      end
+
+      def declare_type_copy_and_delete(feature, prefix, kind)
         feature.action("#{prefix}.duplicate",
                        :description => "Duplicate a #{kind.label} with independent identity.",
                        :params => duplicate_params(kind), :result => Shapes::RESULT,

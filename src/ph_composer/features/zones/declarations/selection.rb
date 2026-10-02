@@ -50,6 +50,11 @@ module PhComposer
                                                  "targets" => Shapes.list(Faces::AssemblyRegistration::TARGET) }),
                       :examples => [{}]) { |request| Faces::Selection.read(request) }
         feature.snapshot_section("#{prefix}.selected", :query => "#{prefix}.selection")
+        install_attached_assignment(feature, prefix)
+      end
+
+      # The native handoff that reviews a new Attached zone for the Faces chosen in the viewport.
+      def install_attached_assignment(feature, prefix)
         feature.query("#{prefix}.attached_assignment",
                       :description => "The pending native Face assignment handoff.",
                       :params => Shapes::NONE, :result => ASSIGNMENT,

@@ -186,9 +186,10 @@ class FeatureCompositionTest < PhComposerTestCase
     R::ReferencePlan.new(:entries => [], :removals => removals)
   end
 
-  def install_entity_retargeter(refuse: false, foreign: false, remove: false)
+  # Entities in the active Model that name a definition in a test attribute.
+  def entity_target
     reference = R::Reference.new(:key => "definition_id", :target_kind => KIND, :cardinality => "one")
-    target = R::ReferenceTarget.new(
+    R::ReferenceTarget.new(
       :id => "test.consumer.entity", :label => "Entity", :validate => ->(_record) { [] },
       :references => [reference], :records => lambda do |model|
         model.entities.to_a.filter_map do |entity|
@@ -198,6 +199,10 @@ class FeatureCompositionTest < PhComposerTestCase
         end
       end
     )
+  end
+
+  def install_entity_retargeter(refuse: false, foreign: false, remove: false)
+    target = entity_target
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID])
       scope.reference_target(target)

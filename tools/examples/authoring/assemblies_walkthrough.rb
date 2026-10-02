@@ -13,6 +13,20 @@ module AssemblyAuthoringWalkthrough
 
   module_function
 
+  # A second client edits with the revision it read before the first client's edit: the edit refuses as
+  # stale and writes nothing, and the second client recovers by reading again.
+  def stale_edit(client, second, assembly_id, read)
+    stale_revision = revision(client)
+    edit_name(client, assembly_id, read.dig("values", "name"), "Walkthrough edited")
+    stale = invoke(second, "assemblies.update", { "id" => assembly_id, "values" => { "name" => "Stale client" },
+                                                  "expected_values" => { "name" => read.dig("values", "name") } },
+                   :expected_revision => stale_revision)
+    client.steps << { "step" => "stale edit",
+                      "passed" => stale["code"] == "revision.stale" && stale["effect"] == "none" }
+    current = assembly(second, assembly_id)
+    edit_name(second, assembly_id, current.dig("values", "name"), "Walkthrough recovered")
+  end
+
   def run(session_id: nil)
     found = API.discover
     session_id ||= found.fetch("sessions").find { |row| row.fetch("active") }&.fetch("id")
@@ -45,15 +59,7 @@ module AssemblyAuthoringWalkthrough
                       "passed" => read.dig("display", "complete") &&
                                   read.dig("display", "thermal", "u_effective_w_m2k").is_a?(Numeric) &&
                                   read.dig("values", "layers").length == 3 }
-    stale_revision = revision(client)
-    edit_name(client, assembly_id, read.dig("values", "name"), "Walkthrough edited")
-    stale = invoke(second, "assemblies.update", { "id" => assembly_id, "values" => { "name" => "Stale client" },
-                                                  "expected_values" => { "name" => read.dig("values", "name") } },
-                   :expected_revision => stale_revision)
-    client.steps << { "step" => "stale edit",
-                      "passed" => stale["code"] == "revision.stale" && stale["effect"] == "none" }
-    current = assembly(second, assembly_id)
-    edit_name(second, assembly_id, current.dig("values", "name"), "Walkthrough recovered")
+    stale_edit(client, second, assembly_id, read)
     { "session" => session_id, "assembly_id" => assembly_id, "material_ids" => [wool, wood],
       "passed" => client.steps.all? { |row| row["passed"] }, "steps" => client.steps }
   end
