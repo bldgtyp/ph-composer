@@ -8,7 +8,7 @@
  * `inventory` (an html/inventory.js Inventory) when `recordKind` makes its rows exportable, and
  * `create()` and `canCreate()` when `createLabel` asks the pane for a "+ New" button. A view missing
  * one of these throws when the pane builds it. Surfaces appear in `order` (built-ins use 10 to 32;
- * omitted is 0), then by id; `id` is also the sub-tab `panel.navigate("library", { kind })` selects.
+ * omitted is 0), then by id; `id` is also the sub-tab key the pane remembers per Model session.
  * Register when the module loads: the pane builds its surfaces once per Model session. */
 PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "library/export"],
   function (panel, ui, Subtabs, ExportForm) {

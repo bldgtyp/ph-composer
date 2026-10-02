@@ -128,7 +128,7 @@ existing pane needs no markup. The other two seams add to a screen another modul
   a "+ New" button in the pane heading that calls the view's `create()` and is enabled by its
   `canCreate()`. The pane throws when a view lacks a member its spec needs. Surfaces appear by
   `order` (the built-ins use 10 to 32; an omitted order is 0), then by id. The `id` is also the
-  sub-tab that `panel.navigate("library", { kind: id })` selects. Register when the module loads:
+  sub-tab key the pane remembers for each Model session. Register when the module loads:
   the pane builds its surfaces once per Model session. A surface may instead keep its "+ New"
   inside its own tab body, as the Windows products still do. Every built-in inventory uses
   this seam: Materials (`html/features/assemblies/materials.js`), Attached zones
