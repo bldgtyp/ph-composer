@@ -90,7 +90,8 @@ module PhComposer
           end
           state = Zones::Adjacency.state(request.model, occurrence, record, :index => index)
           if state && state != "current"
-            issues << [ADJACENCY_CODES.fetch(state), "Surface adjacency is #{state}; this Face will be omitted.", false]
+            issues << [ADJACENCY_CODES.fetch(state), "Surface adjacency is #{state}; this Face will be omitted.",
+                       false]
           end
           issues.concat(attached_zone_issues(request, record)) if record["boundary_condition"] == "AttachedZone"
           return issues unless record["boundary_condition"] && (!state || state == "current")
@@ -108,7 +109,8 @@ module PhComposer
 
           state = AssemblyAssignment.state(request, record)
           if state != "resolved"
-            return [[CONSTRUCTION_CODES.fetch(state), "Face #{record.fetch('id')} names #{state} Assembly #{id}.", true]]
+            message = "Face #{record.fetch('id')} names #{state} Assembly #{id}."
+            return [[CONSTRUCTION_CODES.fetch(state), message, true]]
           end
           assembly = AssemblyAssignment.catalog(request).fetch(:records).fetch(id)
           return [] if assembly.fetch("export_ready")
