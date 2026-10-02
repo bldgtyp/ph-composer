@@ -90,7 +90,7 @@ PhComposerUI.define("window_type_list", ["window_editor_shared", "workspace"], f
 
   methods.editName = function (cell, trigger) {
     var self = this, record = clone(this.record()); this.form(trigger, "Element name", cell.name, function (name,
-      done) { return self.change("element", { id: cell.id, field: "name", value: name }, record, done); },
+      done) { return self.change("set_element_name", { id: cell.id, name: name }, record, done); },
       null, null, { type_id: record.id, element_id: cell.id });
   };
   /* Eyedropper, then paint bucket: pick one source, paste onto as many elements as needed; the button or Escape ends

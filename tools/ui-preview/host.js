@@ -273,7 +273,10 @@
       var values = row.values, cell = values.elements.filter(function (entry) {
         return entry.id === params.element_id; })[0];
       if (operation === "dimension") values[params.axis][params.index] = params.value;
-      else if (operation === "element") cell[params.field] = clone(params.value);
+      else if (operation === "set_element_name") cell.name = params.name;
+      else if (operation === "set_element_glazing") cell.glazing_id = params.glazing_id;
+      else if (operation === "set_element_frame") cell.frames[params.side] = params.frame_id;
+      else if (operation === "set_element_operation") cell.operation = clone(params.operation);
       else if (operation === "kind") values.elements.forEach(function (element) {
         if (params.ids.indexOf(element.id) < 0) return;
         element.kind = params.kind;

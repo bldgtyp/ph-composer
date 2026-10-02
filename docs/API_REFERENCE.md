@@ -23102,599 +23102,6 @@ Example params:
 }
 ```
 
-### `ph_composer.windows.types.grid.element`
-
-Apply the element grid gesture. Owner: `ph_composer.windows`.
-
-Undo step: Edit Window Type: element. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "element_id",
-    "field",
-    "value",
-    "id",
-    "expected_values"
-  ],
-  "properties": {
-    "element_id": {
-      "type": "string"
-    },
-    "field": {
-      "type": "string",
-      "enum": [
-        "name",
-        "glazing_id",
-        "frames",
-        "operation"
-      ]
-    },
-    "value": {
-      "type": [
-        "string",
-        "null",
-        "object"
-      ]
-    },
-    "id": {
-      "type": "string"
-    },
-    "expected_values": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "minLength": 1
-        },
-        "notes": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "datasheet_links": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "source": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": false,
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "provider_kind": {
-              "type": "string",
-              "minLength": 1
-            },
-            "library_id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "record_kind": {
-              "type": "string",
-              "minLength": 1
-            },
-            "record_id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "fingerprint": {
-              "type": "string",
-              "minLength": 1
-            },
-            "copied_at": {
-              "type": "string",
-              "minLength": 1
-            },
-            "kind": {
-              "type": "string",
-              "enum": [
-                "manual",
-                "derived",
-                "library"
-              ]
-            },
-            "fingerprint_version": {
-              "type": "integer",
-              "enum": [
-                1
-              ]
-            },
-            "snapshot": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [],
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "notes": {
-                  "type": "string"
-                },
-                "datasheet_links": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "rows_m": {
-                  "type": "array",
-                  "minItems": 1,
-                  "maxItems": 40,
-                  "items": {
-                    "type": [
-                      "number",
-                      "null"
-                    ],
-                    "exclusiveMinimum": 0,
-                    "x-unit": "m"
-                  }
-                },
-                "columns_m": {
-                  "type": "array",
-                  "minItems": 1,
-                  "maxItems": 40,
-                  "items": {
-                    "type": [
-                      "number",
-                      "null"
-                    ],
-                    "exclusiveMinimum": 0,
-                    "x-unit": "m"
-                  }
-                },
-                "elements": {
-                  "type": "array",
-                  "minItems": 1,
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "id",
-                      "name",
-                      "kind",
-                      "row_span",
-                      "column_span",
-                      "glazing_id",
-                      "frames",
-                      "installs",
-                      "operation"
-                    ],
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "kind": {
-                        "type": "string",
-                        "enum": [
-                          "glazed",
-                          "empty"
-                        ]
-                      },
-                      "row_span": {
-                        "type": "array",
-                        "minItems": 2,
-                        "maxItems": 2,
-                        "items": {
-                          "type": "integer",
-                          "minimum": 0
-                        }
-                      },
-                      "column_span": {
-                        "type": "array",
-                        "minItems": 2,
-                        "maxItems": 2,
-                        "items": {
-                          "type": "integer",
-                          "minimum": 0
-                        }
-                      },
-                      "glazing_id": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "frames": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "top",
-                          "right",
-                          "bottom",
-                          "left"
-                        ],
-                        "properties": {
-                          "top": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "right": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "bottom": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "left": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          }
-                        }
-                      },
-                      "installs": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "top",
-                          "right",
-                          "bottom",
-                          "left"
-                        ],
-                        "properties": {
-                          "top": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "right": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "bottom": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "left": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          }
-                        }
-                      },
-                      "operation": {
-                        "type": [
-                          "object",
-                          "null"
-                        ],
-                        "additionalProperties": false,
-                        "required": [
-                          "type",
-                          "directions"
-                        ],
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "enum": [
-                              "fixed",
-                              "swing",
-                              "slide"
-                            ]
-                          },
-                          "directions": {
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "enum": [
-                                "left",
-                                "right",
-                                "up",
-                                "down"
-                              ]
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "install_depth_m": {
-                  "type": "number",
-                  "minimum": 0,
-                  "x-unit": "m"
-                },
-                "product_photos": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "rows_m": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "minItems": 1,
-          "maxItems": 40,
-          "items": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "exclusiveMinimum": 0,
-            "x-unit": "m"
-          }
-        },
-        "columns_m": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "minItems": 1,
-          "maxItems": 40,
-          "items": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "exclusiveMinimum": 0,
-            "x-unit": "m"
-          }
-        },
-        "elements": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "name",
-              "kind",
-              "row_span",
-              "column_span",
-              "glazing_id",
-              "frames",
-              "installs",
-              "operation"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "glazed",
-                  "empty"
-                ]
-              },
-              "row_span": {
-                "type": "array",
-                "minItems": 2,
-                "maxItems": 2,
-                "items": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "column_span": {
-                "type": "array",
-                "minItems": 2,
-                "maxItems": 2,
-                "items": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "glazing_id": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "frames": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "top",
-                  "right",
-                  "bottom",
-                  "left"
-                ],
-                "properties": {
-                  "top": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "right": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "bottom": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "left": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
-                }
-              },
-              "installs": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "top",
-                  "right",
-                  "bottom",
-                  "left"
-                ],
-                "properties": {
-                  "top": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "right": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "bottom": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "left": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
-                }
-              },
-              "operation": {
-                "type": [
-                  "object",
-                  "null"
-                ],
-                "additionalProperties": false,
-                "required": [
-                  "type",
-                  "directions"
-                ],
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "fixed",
-                      "swing",
-                      "slide"
-                    ]
-                  },
-                  "directions": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "left",
-                        "right",
-                        "up",
-                        "down"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "install_depth_m": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "minimum": 0,
-          "x-unit": "m"
-        },
-        "product_photos": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "id",
-    "unit_count"
-  ],
-  "properties": {
-    "id": {
-      "type": "string"
-    },
-    "unit_count": {
-      "type": "integer",
-      "minimum": 0
-    }
-  }
-}
-```
-
-Example params:
-
-```json
-{
-  "element_id": "wel_Ab12Cd34Ef56",
-  "field": "name",
-  "value": "Fixed",
-  "id": "wnt_Ab12Cd34Ef56",
-  "expected_values": {}
-}
-```
-
 ### `ph_composer.windows.types.grid.flip`
 
 Apply the flip grid gesture. Owner: `ph_composer.windows`.
@@ -27185,6 +26592,2370 @@ Example params:
 {
   "axis": "rows_m",
   "index": 0,
+  "id": "wnt_Ab12Cd34Ef56",
+  "expected_values": {}
+}
+```
+
+### `ph_composer.windows.types.grid.set_element_frame`
+
+Apply the set_element_frame grid gesture. Owner: `ph_composer.windows`.
+
+Undo step: Edit Window Type: set_element_frame. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "element_id",
+    "side",
+    "frame_id",
+    "id",
+    "expected_values"
+  ],
+  "properties": {
+    "element_id": {
+      "type": "string"
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ]
+    },
+    "frame_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id": {
+      "type": "string"
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datasheet_links": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "provider_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "library_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "copied_at": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "manual",
+                "derived",
+                "library"
+              ]
+            },
+            "fingerprint_version": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            },
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "datasheet_links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rows_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "columns_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "elements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "row_span",
+                      "column_span",
+                      "glazing_id",
+                      "frames",
+                      "installs",
+                      "operation"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "glazed",
+                          "empty"
+                        ]
+                      },
+                      "row_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "column_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "glazing_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "frames": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "installs": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "operation": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "directions"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "fixed",
+                              "swing",
+                              "slide"
+                            ]
+                          },
+                          "directions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "right",
+                                "up",
+                                "down"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "install_depth_m": {
+                  "type": "number",
+                  "minimum": 0,
+                  "x-unit": "m"
+                },
+                "product_photos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rows_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "columns_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "elements": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "row_span",
+              "column_span",
+              "glazing_id",
+              "frames",
+              "installs",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "glazed",
+                  "empty"
+                ]
+              },
+              "row_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "column_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "glazing_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "frames": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "installs": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "operation": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "directions"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "fixed",
+                      "swing",
+                      "slide"
+                    ]
+                  },
+                  "directions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right",
+                        "up",
+                        "down"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "install_depth_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m"
+        },
+        "product_photos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "unit_count"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "element_id": "wel_Ab12Cd34Ef56",
+  "side": "left",
+  "frame_id": "wfr_Ab12Cd34Ef56",
+  "id": "wnt_Ab12Cd34Ef56",
+  "expected_values": {}
+}
+```
+
+### `ph_composer.windows.types.grid.set_element_glazing`
+
+Apply the set_element_glazing grid gesture. Owner: `ph_composer.windows`.
+
+Undo step: Edit Window Type: set_element_glazing. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "element_id",
+    "glazing_id",
+    "id",
+    "expected_values"
+  ],
+  "properties": {
+    "element_id": {
+      "type": "string"
+    },
+    "glazing_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id": {
+      "type": "string"
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datasheet_links": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "provider_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "library_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "copied_at": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "manual",
+                "derived",
+                "library"
+              ]
+            },
+            "fingerprint_version": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            },
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "datasheet_links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rows_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "columns_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "elements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "row_span",
+                      "column_span",
+                      "glazing_id",
+                      "frames",
+                      "installs",
+                      "operation"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "glazed",
+                          "empty"
+                        ]
+                      },
+                      "row_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "column_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "glazing_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "frames": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "installs": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "operation": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "directions"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "fixed",
+                              "swing",
+                              "slide"
+                            ]
+                          },
+                          "directions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "right",
+                                "up",
+                                "down"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "install_depth_m": {
+                  "type": "number",
+                  "minimum": 0,
+                  "x-unit": "m"
+                },
+                "product_photos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rows_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "columns_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "elements": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "row_span",
+              "column_span",
+              "glazing_id",
+              "frames",
+              "installs",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "glazed",
+                  "empty"
+                ]
+              },
+              "row_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "column_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "glazing_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "frames": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "installs": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "operation": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "directions"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "fixed",
+                      "swing",
+                      "slide"
+                    ]
+                  },
+                  "directions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right",
+                        "up",
+                        "down"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "install_depth_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m"
+        },
+        "product_photos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "unit_count"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "element_id": "wel_Ab12Cd34Ef56",
+  "glazing_id": "wgl_Ab12Cd34Ef56",
+  "id": "wnt_Ab12Cd34Ef56",
+  "expected_values": {}
+}
+```
+
+### `ph_composer.windows.types.grid.set_element_name`
+
+Apply the set_element_name grid gesture. Owner: `ph_composer.windows`.
+
+Undo step: Edit Window Type: set_element_name. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "element_id",
+    "name",
+    "id",
+    "expected_values"
+  ],
+  "properties": {
+    "element_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datasheet_links": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "provider_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "library_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "copied_at": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "manual",
+                "derived",
+                "library"
+              ]
+            },
+            "fingerprint_version": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            },
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "datasheet_links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rows_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "columns_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "elements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "row_span",
+                      "column_span",
+                      "glazing_id",
+                      "frames",
+                      "installs",
+                      "operation"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "glazed",
+                          "empty"
+                        ]
+                      },
+                      "row_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "column_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "glazing_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "frames": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "installs": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "operation": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "directions"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "fixed",
+                              "swing",
+                              "slide"
+                            ]
+                          },
+                          "directions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "right",
+                                "up",
+                                "down"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "install_depth_m": {
+                  "type": "number",
+                  "minimum": 0,
+                  "x-unit": "m"
+                },
+                "product_photos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rows_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "columns_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "elements": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "row_span",
+              "column_span",
+              "glazing_id",
+              "frames",
+              "installs",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "glazed",
+                  "empty"
+                ]
+              },
+              "row_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "column_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "glazing_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "frames": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "installs": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "operation": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "directions"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "fixed",
+                      "swing",
+                      "slide"
+                    ]
+                  },
+                  "directions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right",
+                        "up",
+                        "down"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "install_depth_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m"
+        },
+        "product_photos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "unit_count"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "element_id": "wel_Ab12Cd34Ef56",
+  "name": "Fixed",
+  "id": "wnt_Ab12Cd34Ef56",
+  "expected_values": {}
+}
+```
+
+### `ph_composer.windows.types.grid.set_element_operation`
+
+Apply the set_element_operation grid gesture. Owner: `ph_composer.windows`.
+
+Undo step: Edit Window Type: set_element_operation. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "element_id",
+    "operation",
+    "id",
+    "expected_values"
+  ],
+  "properties": {
+    "element_id": {
+      "type": "string"
+    },
+    "operation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "directions"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "swing",
+            "slide"
+          ]
+        },
+        "directions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right",
+              "up",
+              "down"
+            ]
+          }
+        }
+      }
+    },
+    "id": {
+      "type": "string"
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datasheet_links": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "provider_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "library_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "copied_at": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "manual",
+                "derived",
+                "library"
+              ]
+            },
+            "fingerprint_version": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            },
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "datasheet_links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rows_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "columns_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "elements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "row_span",
+                      "column_span",
+                      "glazing_id",
+                      "frames",
+                      "installs",
+                      "operation"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "glazed",
+                          "empty"
+                        ]
+                      },
+                      "row_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "column_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "glazing_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "frames": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "installs": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "operation": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "directions"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "fixed",
+                              "swing",
+                              "slide"
+                            ]
+                          },
+                          "directions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "right",
+                                "up",
+                                "down"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "install_depth_m": {
+                  "type": "number",
+                  "minimum": 0,
+                  "x-unit": "m"
+                },
+                "product_photos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rows_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "columns_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "elements": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "row_span",
+              "column_span",
+              "glazing_id",
+              "frames",
+              "installs",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "glazed",
+                  "empty"
+                ]
+              },
+              "row_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "column_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "glazing_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "frames": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "installs": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "operation": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "directions"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "fixed",
+                      "swing",
+                      "slide"
+                    ]
+                  },
+                  "directions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right",
+                        "up",
+                        "down"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "install_depth_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m"
+        },
+        "product_photos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "unit_count"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "element_id": "wel_Ab12Cd34Ef56",
+  "operation": {
+    "type": "swing",
+    "directions": [
+      "left"
+    ]
+  },
   "id": "wnt_Ab12Cd34Ef56",
   "expected_values": {}
 }

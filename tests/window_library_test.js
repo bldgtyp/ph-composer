@@ -71,8 +71,8 @@ test("Glazing drops reject Empty, draft and outside targets while keyboard Use k
   assert.strictEqual(sidebar.use(row), false); o.view.dimensionField.cancel();
   sidebar.store.select(""); o.view.render(o.state); sidebar.openDetails(sidebar.entries.glz_a);
   click(sidebar.detail.use); var request = o.sent[o.sent.length - 1];
-  assert.strictEqual(request.payload.name, "ph_composer.windows.types.grid.element");
-  assert.strictEqual(request.payload.params.value, "glz_a"); assert.strictEqual(request.payload.params.element_id,
+  assert.strictEqual(request.payload.name, "ph_composer.windows.types.grid.set_element_glazing");
+  assert.strictEqual(request.payload.params.glazing_id, "glz_a"); assert.strictEqual(request.payload.params.element_id,
     "wel_a");
 });
 test("each Window Library subtab exposes provider Add without an implicit assignment", function () {

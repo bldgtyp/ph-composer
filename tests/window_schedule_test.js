@@ -14,7 +14,8 @@ function setup() {
       findings: [{ code: "detached_definition", repair: "reset_to_type" }] },
     { id: "wun_a", reference: { unit_id: "wun_a", entity_path: [10, 31] },
       values: { window_type_id: "wnt_a", anchor: "head_left" }, host: null,
-      findings: [{ code: "copy_id_pending", repair: "repair_copied_identities" }, { code: "unhosted", repair: "rehost" }] }
+      findings: [{ code: "copy_id_pending", repair: "repair_copied_identities" },
+        { code: "unhosted", repair: "rehost" }] }
   ] } };
   state.sections["ph_composer.zones.overview"] = { status: "completed", value: { zones: [
     { reference: { zone_id: "zon_a", zone_path: [10] }, values: { name: "Room A", level: "Ground" } }

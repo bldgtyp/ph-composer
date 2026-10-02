@@ -21,7 +21,7 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     assert_equal ["ph_composer.zones", "ph_composer.library"], registry.features.fetch(W::FEATURE_ID).requires
     declarations = (registry.queries.values + registry.actions.values + registry.view_commands.values)
       .select { |entry| entry.owner == W::FEATURE_ID }
-    assert_equal 52, declarations.length
+    assert_equal 55, declarations.length
     declarations.each do |entry|
       assert_empty PhComposer::JsonSchema.schema_problems(entry.params), entry.name
       assert_empty PhComposer::JsonSchema.schema_problems(entry.result), entry.name
@@ -124,6 +124,32 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     failure = invoke("types.grid.merge", "id" => id, "ids" => ["wel_MISSING00000"], "expected_values" => split)
     assert_equal "target.not_found", failure["code"]
     assert_equal split, row("types", id)["values"]
+  end
+
+  # Each element field has its own action with a typed value, so describe teaches the shape; a Frame
+  # is set on one side, and an Empty element takes a name but no product.
+  def test_element_actions_take_typed_values_and_set_one_frame_side
+    frame = API.describe(:name => "#{W::FEATURE_ID}.types.grid.set_element_frame").fetch("params")
+    assert_equal %w[top right bottom left], frame.dig("properties", "side", "enum")
+    operation = API.describe(:name => "#{W::FEATURE_ID}.types.grid.set_element_operation").fetch("params")
+    assert_equal %w[fixed swing slide], operation.dig("properties", "operation", "properties", "type", "enum")
+    frame_id = create("frames", "name" => "Typed frame")
+    id = create("types", "name" => "Typed elements")
+    values = row("types", id)["values"]
+    element = values["elements"][0]["id"]
+    preview_invoke("types.grid.set_element_frame", "id" => id, "element_id" => element, "side" => "left",
+      "frame_id" => frame_id, "expected_values" => values)
+    frames = row("types", id).dig("values", "elements", 0, "frames")
+    assert_equal({ "top" => nil, "right" => nil, "bottom" => nil, "left" => frame_id }, frames)
+    values = row("types", id)["values"]
+    preview_invoke("types.grid.kind", "id" => id, "ids" => [element], "kind" => "empty", "expected_values" => values)
+    values = row("types", id)["values"]
+    refused = invoke("types.grid.set_element_glazing", "id" => id, "element_id" => element, "glazing_id" => nil,
+      "expected_values" => values)
+    assert_equal "validation.failed", refused["code"]
+    preview_invoke("types.grid.set_element_name", "id" => id, "element_id" => element, "name" => "Spandrel",
+      "expected_values" => values)
+    assert_equal "Spandrel", row("types", id).dig("values", "elements", 0, "name")
   end
 
   def test_dangling_each_product_slot_is_readable_without_repair_and_writes_refuse

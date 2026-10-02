@@ -31,17 +31,14 @@ module PhComposer
             if collection == "psi_install_types"
               assign_psi(request, proposal, target, id, actions)
             else
-              record = request.engine.find(TYPE_KIND, target.fetch("id"))
-              element = record.fetch("elements").find { |cell| cell.fetch("id") == target.fetch("element_id") }
-              raise CodedError.new("target.not_found", "The element no longer exists.") unless element
-              field = collection == "frames" ? "frames" : "glazing_id"
-              value = if collection == "frames"
-                DeepCopy.call(element.fetch("frames")).merge(target.fetch("side") => id)
+              element = target.slice("id", "element_id", "expected_values")
+              if collection == "frames"
+                run(actions.fetch("types.grid.set_element_frame"), request, proposal,
+                  element.merge("side" => target.fetch("side"), "frame_id" => id))
               else
-                id
+                run(actions.fetch("types.grid.set_element_glazing"), request, proposal,
+                  element.merge("glazing_id" => id))
               end
-              run(actions.fetch("types.grid.element"), request, proposal,
-                target.slice("id", "element_id", "expected_values").merge("field" => field, "value" => value))
             end
             { "assigned" => true }
           end

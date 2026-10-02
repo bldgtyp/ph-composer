@@ -22,10 +22,15 @@ module PhComposer
 { "axis" => "columns_m", "index" => 0, "value" => 1.2 }],
         "paste" => [{ "source_id" => Shapes::ID, "ids" => Shapes.list(Shapes::ID).merge("minItems" => 1) },
                 { "source_id" => EXAMPLE_ELEMENT, "ids" => ["wel_Zy98Xw76Vu54"] }],
-        "element" => [{ "element_id" => Shapes::ID,
-                "field" => { "type" => "string", "enum" => %w[name glazing_id frames operation] },
-                "value" => { "type" => %w[string null object] } },
-                { "element_id" => EXAMPLE_ELEMENT, "field" => "name", "value" => "Fixed" }]
+        "set_element_name" => [{ "element_id" => Shapes::ID, "name" => { "type" => "string" } },
+                { "element_id" => EXAMPLE_ELEMENT, "name" => "Fixed" }],
+        "set_element_glazing" => [{ "element_id" => Shapes::ID, "glazing_id" => Types::ID },
+                { "element_id" => EXAMPLE_ELEMENT, "glazing_id" => "wgl_Ab12Cd34Ef56" }],
+        "set_element_frame" => [{ "element_id" => Shapes::ID,
+                "side" => { "type" => "string", "enum" => Types::SIDES }, "frame_id" => Types::ID },
+                { "element_id" => EXAMPLE_ELEMENT, "side" => "left", "frame_id" => "wfr_Ab12Cd34Ef56" }],
+        "set_element_operation" => [{ "element_id" => Shapes::ID, "operation" => Types::OPERATION },
+                { "element_id" => EXAMPLE_ELEMENT, "operation" => { "type" => "swing", "directions" => ["left"] } }]
       }.freeze
 
       module_function
