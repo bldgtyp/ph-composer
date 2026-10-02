@@ -24,7 +24,9 @@ class LibrarySetupCommandsTest < PhComposerTestCase
     assert_empty Sketchup.active_model.operations
     menus = PhComposer::Registry.current.menu_items.values.select { |item| item.name.start_with?(Commands::PREFIX) }
     assert_equal 2, menus.length
-    assert menus.all? { |item| !item.available.call(session) }
+    assert(menus.none? do |item|
+      item.available.call(PhComposer::HandlerRequest.for(session, :owner => item.owner, :name => item.name))
+    end)
     refute_empty PhComposer::Commands.install_feature_menus(UI.menu("Extensions"))
     refute PhComposer::Commands.install_feature_menus(UI.menu("Context"), :contextual => true).key?("Libraries")
   end

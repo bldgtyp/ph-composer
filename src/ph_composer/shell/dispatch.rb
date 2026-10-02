@@ -277,10 +277,8 @@ module PhComposer
     end
 
     def request_for(session, params, declaration, proposal = nil)
-      Request.new(:session => session, :model => session.model, :params => DeepCopy.call(params),
-                  :engine => Records::Engine.new(session.model, @registry.catalog), :revision => session.revision,
-                  :registry => @registry, :owner => declaration.owner, :proposal => proposal,
-                  :query_stack => [declaration.name])
+      Request.for(session, :owner => declaration.owner, :name => declaration.name, :registry => @registry,
+                           :params => params, :proposal => proposal)
     end
 
     # ---------------------------------------------------------------- the mutation

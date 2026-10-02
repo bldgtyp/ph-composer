@@ -108,10 +108,10 @@ class RegistryTest < PhComposerTestCase
     called = []
     Registry.install([feature do |registry|
       registry.feature("probe.menu", :contract_version => 1)
-              .menu_entries("probe.menu.current", :menu => "Probe") do |session|
+              .menu_entries("probe.menu.current", :menu => "Probe") do |read|
         labels.map do |label|
           PhComposer::Declarations::MenuEntry.new(:label => label, :handler => ->(current) { called << current })
-        end.tap { assert_same PhComposer::Sessions.current, session }
+        end.tap { assert_same PhComposer::Sessions.current, read.session }
       end
     end])
     refute PhComposer::Commands.install_feature_menus(UI::Menu.new("Global")).key?("Probe")
@@ -135,7 +135,7 @@ class RegistryTest < PhComposerTestCase
     assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
     Registry.install([feature do |registry|
       registry.feature("probe.menu", :contract_version => 1)
-              .menu_entries("probe.menu.invalid", :menu => "Probe") { |_session| ["invalid entry"] }
+              .menu_entries("probe.menu.invalid", :menu => "Probe") { |_read| ["invalid entry"] }
     end])
     assert_raises(PhComposer::InternalError) do
       PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)

@@ -5,8 +5,8 @@ module PhComposer
   # (context/EXTENSIBILITY.md, "Colour-by modes"). A feature declares a mode in its own `install`:
   #
   #   feature.colour_mode("ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone",
-  #                       colours: ColourBy::Palette.ramp) do |model|
-  #     Zones::Occurrences.zones(model).map do |zone|
+  #                       colours: ColourBy::Palette.ramp) do |read|
+  #     Zones::Occurrences.zones(read.model).map do |zone|
   #       ColourBy::Entry.new(entity: zone.entity, transform: zone.transform,
   #                           value: zone.record.fetch("id"), label: zone.record.fetch("name"))
   #     end
@@ -138,7 +138,11 @@ module PhComposer
     # Colour-by itself is off at rest.
     def remembered_mode
       name = Preferences.colour_by_mode
-      name && Registry.current.colour_modes.key?(name) ? name : nil
+      registered?(name) ? name : nil
+    end
+
+    def registered?(name)
+      !name.nil? && Registry.current.colour_modes.key?(name)
     end
   end
 end

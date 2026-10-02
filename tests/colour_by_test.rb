@@ -756,8 +756,8 @@ class ColourByTest < PhComposerTestCase
         colours = PhComposer::ColourBy::Palette.fixed("outside" => [10, 20, 30], "inside" => [40, 50, 60])
         registry.feature("outside.probe", :contract_version => 1)
                 .colour_mode("outside.probe.by_side", :label => "Side", :entity_kind => "side",
-                                                      :colours => colours) do |model|
-          model.entities.to_a.select { |entity| entity.is_a?(Sketchup::Face) }.each_with_index.map do |face, index|
+                                                      :colours => colours) do |read|
+          read.model.entities.to_a.select { |entity| entity.is_a?(Sketchup::Face) }.each_with_index.map do |face, index|
             PhComposer::ColourBy::Entry.new(:entity => face, :transform => Geom::Transformation.new,
                                             :value => index.zero? ? "outside" : "inside",
                                             :label => index.zero? ? "Outside" : "Inside")

@@ -104,9 +104,8 @@ module PhComposer
             return [["construction.#{state}", "Face #{record.fetch('id')} names #{state} Assembly #{id}.", true]]
           end
           assembly = AssemblyAssignment.catalog(request).fetch(:records).fetch(id)
-          conditions = request.instance_variable_get(:@face_construction_conditions) || begin
-            rows = request.query("ph_composer.assemblies.export_preflight").fetch("findings")
-            request.instance_variable_set(:@face_construction_conditions, rows)
+          conditions = request.memo(:construction_conditions) do
+            request.query("ph_composer.assemblies.export_preflight").fetch("findings")
           end
           material_ids = assembly.fetch("values").fetch("layers").flat_map do |layer|
             layer.fetch("segments").map { |segment| segment["material_id"] }

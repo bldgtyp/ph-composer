@@ -15,16 +15,16 @@ module PhComposer
 
       def install(feature)
         feature.colour_mode(BY_ZONE, :label => "Zone", :entity_kind => "zone",
-                                     :colours => ColourBy::Palette.ramp) do |model|
-          entries(model) { |record| [record.fetch("id"), record.fetch("name")] }
+                                     :colours => ColourBy::Palette.ramp) do |read|
+          entries(read.model) { |record| [record.fetch("id"), record.fetch("name")] }
         end
         feature.colour_mode(BY_BUILDING_SEGMENT, :label => "Building-Segment", :entity_kind => "zone",
-                                                 :colours => ColourBy::Palette.ramp) do |model|
-          entries(model) { |record| [record.fetch("building_segment"), record.fetch("building_segment")] }
+                                                 :colours => ColourBy::Palette.ramp) do |read|
+          entries(read.model) { |record| [record.fetch("building_segment"), record.fetch("building_segment")] }
         end
         feature.colour_mode(BY_LEVEL, :label => "Level", :entity_kind => "zone",
-                                      :colours => ColourBy::Palette.ramp) do |model|
-          entries(model) { |record| [record["level"], record["level"]] }
+                                      :colours => ColourBy::Palette.ramp) do |read|
+          entries(read.model) { |record| [record["level"], record["level"]] }
         end
       end
 

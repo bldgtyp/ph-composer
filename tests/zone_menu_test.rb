@@ -21,7 +21,7 @@ class ZoneMenuTest < PhComposerTestCase
     menu = UI::Menu.new("Context")
     menus = PhComposer::Commands.install_feature_menus(menu, :contextual => true)
 
-    assert @declaration.available.call(@session)
+    assert @declaration.available.call(read)
     assert_equal "Make Zone", menus.fetch(PhComposer::EXTENSION_NAME).entries.first.first
     assert_equal({ "parent_path" => [], "entity_ids" => [100] }, ZONES.make_target(@model))
     assert_empty @model.operations
@@ -47,7 +47,7 @@ class ZoneMenuTest < PhComposerTestCase
     @model.entities << face << edge
     select(face, edge)
 
-    assert @declaration.available.call(@session)
+    assert @declaration.available.call(read)
     result = @client.make
 
     assert_equal "completed", result.fetch("status")
@@ -62,7 +62,7 @@ class ZoneMenuTest < PhComposerTestCase
     [[], [@group, face], [Sketchup::Face.new(302)]].each do |selection|
       select(*selection)
 
-      refute @declaration.available.call(@session)
+      refute @declaration.available.call(read)
       menus = PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)
       refute menus.key?(PhComposer::EXTENSION_NAME)
     end
@@ -72,7 +72,7 @@ class ZoneMenuTest < PhComposerTestCase
   def test_locked_group_is_not_offered
     @group.locked = true
 
-    refute @declaration.available.call(@session)
+    refute @declaration.available.call(read)
     assert_empty @model.operations
   end
 
@@ -82,14 +82,14 @@ class ZoneMenuTest < PhComposerTestCase
     @model.entities << component
     select(component)
 
-    refute @declaration.available.call(@session)
+    refute @declaration.available.call(read)
     assert_empty @model.operations
   end
 
   def test_existing_zone_is_not_offered
     assert_equal "completed", @client.make.fetch("status")
 
-    refute @declaration.available.call(@session)
+    refute @declaration.available.call(read)
     assert_equal 1, @model.operations.length
   end
 
@@ -100,7 +100,7 @@ class ZoneMenuTest < PhComposerTestCase
     parent.entities << @group
     select(parent)
 
-    refute @declaration.available.call(@session)
+    refute @declaration.available.call(read)
     assert_equal 1, @model.operations.length
   end
 
@@ -109,12 +109,12 @@ class ZoneMenuTest < PhComposerTestCase
     @model.active_path = [@group]
     select(@group.entities.to_a.first)
 
-    refute @declaration.available.call(@session)
+    refute @declaration.available.call(read)
     assert_equal 1, @model.operations.length
   end
 
   def test_losing_selection_after_menu_build_does_not_write
-    assert @declaration.available.call(@session)
+    assert @declaration.available.call(read)
     select
     notices = []
     @session.stub(:notice, ->(message, **_options) { notices << message }) do
@@ -171,5 +171,9 @@ class ZoneMenuTest < PhComposerTestCase
   def select(*entities)
     @model.selection.clear
     entities.each { |entity| @model.selection.add(entity) }
+  end
+
+  def read
+    PhComposer::HandlerRequest.for(@session, :owner => @declaration.owner, :name => @declaration.name)
   end
 end

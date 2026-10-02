@@ -264,9 +264,11 @@ class WindowPlaceToolTest < PhComposerTestCase
   def test_selected_face_context_menu_routes_through_public_choose
     @model.active_path = [@group]
     @model.selection.add(@face)
-    entries = W::ViewportRegistration.type_rows(@session)
+    read = PhComposer::HandlerRequest.for(@session, :owner => W::FEATURE_ID,
+                                                    :name => "#{W::FEATURE_ID}.place_tool.face_menu")
+    entries = W::ViewportRegistration.type_rows(read.engine)
     assert_equal [@type_id], entries.map { |row| row.fetch("id") }
-    assert_equal @host, W::ViewportRegistration.selected_face(@session)
+    assert_equal @host, W::ViewportRegistration.selected_face(read)
     UI.stub(:inputbox, ->(*_args) { ["Place test"] }) { W::ViewportRegistration.choose_from_menu(@session) }
     assert_equal @host, @tool.state.fetch("host")
     assert @tool.active?

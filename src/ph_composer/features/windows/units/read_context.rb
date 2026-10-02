@@ -71,12 +71,12 @@ module PhComposer
           return nil unless row
 
           reference = row.fetch("reference")
-          @hosts[[native_path, writable]] ||= Placement::Hosts.resolve(@request, reference, :writable => writable,
+          @hosts[[native_path, writable]] ||= Placement::Hosts.resolve(@request.model, reference, :writable => writable,
             :zone_rows => @zones, :face_rows => @faces)
         end
 
         def host_reference(reference)
-          Placement::Hosts.resolve(@request, reference, :zone_rows => @zones, :face_rows => @faces)
+          Placement::Hosts.resolve(@request.model, reference, :zone_rows => @zones, :face_rows => @faces)
         end
       end
     end

@@ -365,7 +365,7 @@ module PhComposer
           return if service.active?
 
           mode = ColourBy.remembered_mode || ColourModes::BY_FACE_TYPE
-          return unless Registry.current.colour_modes.key?(mode)
+          return unless ColourBy.registered?(mode)
 
           service.activate(mode, :remember => false)
           @forced_colour_by = mode

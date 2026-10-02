@@ -11,20 +11,18 @@ module PhComposer
         module_function
 
         def catalog(request)
-          request.instance_variable_get(:@face_assembly_catalog) || begin
+          request.memo(:assembly_catalog) do
             result = request.query(READ)
-            value = { :records => result.fetch("records").to_h { |row| [row.fetch("id"), row] },
-                      :unreadable => result.fetch("unreadable").map { |row| row.fetch("id") } }
-            request.instance_variable_set(:@face_assembly_catalog, value)
+            { :records => result.fetch("records").to_h { |row| [row.fetch("id"), row] },
+              :unreadable => result.fetch("unreadable").map { |row| row.fetch("id") } }
           end
         end
 
         def resolve(request, id)
-          valid = request.instance_variable_get(:@face_assembly_validated) || {}
+          valid = request.memo(:assembly_validated) { {} }
           unless valid[id]
             request.engine.resolve_reference(KIND, id)
             valid[id] = true
-            request.instance_variable_set(:@face_assembly_validated, valid)
           end
           catalog(request).fetch(:records).fetch(id)
         end

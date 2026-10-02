@@ -382,6 +382,16 @@ reads and recursive query chains refuse with `operation.query_missing`,
 action proposal and cannot call reference retargeting. View/session state changes remain view
 commands; queries never change that state.
 
+Colour-by projections, native menu `available:` tests and `menu_entries` providers receive the
+same request with no params and no proposal, built by the shell under the declaring feature's owner
+(`HandlerRequest.for`). Features never build one, and none of these callbacks connects to the
+public API, so drawing the overlay or opening a context menu issues no caller handle.
+
+`request.memo(key) { ... }` computes a value once per request and shares it with the nested reads
+and callbacks the request makes. A memo is keyed by the current owner, so two features cannot
+collide, and by the current engine, so a value read through one engine is never reused under a
+projected one (a library callback's). Memos end with the request.
+
 ## Compound proposals
 
 Feature handlers do not write the Model; they add steps to an `Operations::Proposal` of detached

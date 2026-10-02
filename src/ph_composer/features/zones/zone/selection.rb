@@ -80,10 +80,12 @@ module PhComposer
       def install(feature)
         FIELDS.each do |field, label|
           feature.menu_item("#{FEATURE_ID}.edit_#{field}_menu", :label => "Set #{label}…", :menu => EXTENSION_NAME,
-                            :available => method(:available?)) { |session| client(session).edit(field) }
+                            :available => ->(read) { available?(read.session) }) do |session|
+            client(session).edit(field)
+          end
         end
         feature.menu_item("#{FEATURE_ID}.solve_selected_menu", :label => "Solve adjacencies for selected Zones",
-                          :menu => EXTENSION_NAME, :available => method(:available?)) do |session|
+                          :menu => EXTENSION_NAME, :available => ->(read) { available?(read.session) }) do |session|
           client(session).solve
         end
       end

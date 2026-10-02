@@ -13,7 +13,7 @@ module PhComposer
 
       def install(feature)
         feature.menu_item("#{FEATURE_ID}.repair_split_face_menu", :label => LABEL, :menu => "Repair",
-                          :available => method(:available?)) do |session|
+                          :available => ->(read) { available?(read.session) }) do |session|
           session.feature_state(:zones_split_identity_menu) { Client.new(session) }.run
         end
       end

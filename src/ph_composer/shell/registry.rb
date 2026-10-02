@@ -320,7 +320,8 @@ module PhComposer
         @staging.add(:declared_export_contributors, id, name, declaration)
       end
 
-      # One Colour-by mode. The projection reads this feature's own entities and never another's.
+      # One Colour-by mode. The projection receives a read request: it reads this feature's entities,
+      # and another feature's values only through `read.query` of a declared dependency.
       def colour_mode(name, label:, entity_kind:, colours:, sort: nil, &projection)
         declaration = Declarations::ColourMode.new(
           :name => name, :owner => id, :label => label, :entity_kind => entity_kind, :colours => colours,
