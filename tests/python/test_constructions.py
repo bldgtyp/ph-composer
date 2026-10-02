@@ -181,7 +181,7 @@ def test_actual_model_references_share_authored_construction_and_exclude_unused_
     identifiers = {construction.identifier for construction in model.properties.energy.constructions}
     assert "ph_composer_asm_Default00001" not in identifiers
     assert "ph_composer_asm_OnlyFilm0001" not in identifiers
-    usage = {row["assembly_id"]: row for row in result["construction_usage"]}
+    usage = {row["assembly_id"]: row for row in result["ph_composer.zones.export.zones"]["construction_usage"]}
     for identifier in assigned:
         used = [emitted[face["id"]] for face in faces if face["assembly_id"] == identifier]
         assert usage[identifier]["face_count"] == len(used)
@@ -213,7 +213,7 @@ def test_unavailable_face_construction_costs_zone_and_keeps_independent_zone(
     assert finding["object_id"] == "zon_AAAAAAAAAAAA"
     assert face["id"] in finding["message"]
     assert (unavailable or "(unassigned)") in finding["message"]
-    assert sum(row["face_count"] for row in result["construction_usage"]) == 6
+    assert sum(row["face_count"] for row in result["ph_composer.zones.export.zones"]["construction_usage"]) == 6
 
 
 def test_omitted_face_requires_no_construction_and_does_not_inflate_report_usage() -> None:
@@ -232,8 +232,10 @@ def test_omitted_face_requires_no_construction_and_does_not_inflate_report_usage
     result = cast(dict[str, Any], translate(payload, SECTIONS).to_document())
     assert result["summary"]["publishable"] is True
     assert result["canonical_model"]["faces"] == 11
-    assert sum(row["face_count"] for row in result["construction_usage"]) == 11
-    assert "asm_Absent000001" not in {row["assembly_id"] for row in result["construction_usage"]}
+    assert sum(row["face_count"] for row in result["ph_composer.zones.export.zones"]["construction_usage"]) == 11
+    assert "asm_Absent000001" not in {
+        row["assembly_id"] for row in result["ph_composer.zones.export.zones"]["construction_usage"]
+    }
 
 
 @pytest.mark.parametrize("thermal_count", [10, 11])

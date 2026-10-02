@@ -152,17 +152,21 @@ def test_the_result_document_names_every_object_and_the_sections_own_fields() ->
     assert doc["state"] == "complete_with_findings" and doc["run_id"] == "run-1"
     assert doc["summary"] == {"objects": 3, "unavailable": 2, "findings": 2, "publishable": False}
     assert doc["sections"][0] == {"id": "synthetic.a", "objects": ["a2"], "unavailable": ["a1"]}  # type: ignore[index]
-    assert doc["synthetic_panels"] == {"count": 1, "area_m2": 3.0}
+    assert doc["synthetic.b"] == {"synthetic_panels": {"count": 1, "area_m2": 3.0}}
+    assert "synthetic.a" not in doc, "a section with no fields has no key"
     assert doc["failure"] is None
 
 
-def test_a_section_field_may_not_take_a_shell_field() -> None:
+def test_a_section_with_fields_may_not_take_a_shell_field_as_its_id() -> None:
     class Greedy(SectionC):
-        def result_fields(self, objects: Mapping[str, Tag]) -> Mapping[str, Any]:
-            return {"state": "complete"}
+        id = "state"
 
-    with pytest.raises(ValueError, match="result field state is already owned"):
-        translate(document(synthetic_a=None, synthetic_b=None), (Greedy(),))
+        def result_fields(self, objects: Mapping[str, Tag]) -> Mapping[str, Any]:
+            return {"value": "complete"}
+
+    raw = {"schema_version": 1, "run_id": "run-1", "sections": {"state": {"version": 1, "records": []}}}
+    with pytest.raises(ValueError, match="section id state is a result document field"):
+        translate(raw, (Greedy(),))
 
 
 def test_record_errors_raised_while_translating_are_object_failures() -> None:

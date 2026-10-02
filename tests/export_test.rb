@@ -29,13 +29,12 @@ class ExportTest < PhComposerTestCase
     names = registry.export_contributors.values.select { |item| item.owner == "example.foundation" }.map(&:name)
     assert_equal %w[example.foundation.export.definitions example.foundation.export.parts], names.sort
     assert_equal "example.foundation", registry.owner_of("example.foundation.export.parts")
-    assert_includes Export::Privacy.schema(registry).keys, "example_parts"
+    assert_includes Export::Privacy.schema(registry).keys, "example.foundation.export.parts"
   end
 
   def test_a_contributor_with_a_bad_declaration_is_refused_with_every_problem
     feature = feature_declaring do |scope|
       scope.export_contributor("test.export.bad", :section_version => 0, :result => { "state" => nil, "x" => 3 })
-      scope.export_contributor("test.export.twin", :section_version => 1, :result => { "example_parts" => nil }) { [] }
       scope.export_contributor("test.export.odd", :section_version => 1, :result => nil) { [] }
     end
 
@@ -44,10 +43,36 @@ class ExportTest < PhComposerTestCase
     messages = error.diagnostics.map(&:message)
     assert_includes messages, "test.export.bad needs a contract block and a positive section version."
     assert_includes messages, "test.export.bad result: result.x: Integer is not a schema."
-    assert_includes messages, "test.export.bad declares result field state, which is already owned."
-    assert_includes messages, "test.export.twin declares result field example_parts, which is already owned."
     assert_includes messages, "test.export.odd result: result must be an object schema."
-    refute PhComposer::Registry.current.export_contributors.key?("test.export.twin"), "nothing in the batch publishes"
+    refute PhComposer::Registry.current.export_contributors.key?("test.export.odd"), "nothing in the batch publishes"
+  end
+
+  # The `request.query` rule: a contributor reads only sections of its own feature or one it requires.
+  def test_a_section_read_from_a_feature_not_required_is_refused
+    feature = feature_declaring do |scope|
+      scope.export_contributor("test.export.reader", :section_version => 1,
+                               :requires => ["example.foundation.export.parts", "test.export.nowhere"]) { [] }
+    end
+
+    error = assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([feature]) }
+
+    assert_equal [["registration.missing_dependency", "example.foundation.export.parts",
+                   "test.export.reader reads example.foundation.export.parts, so test.export must require " \
+                   "example.foundation."],
+                  ["registration.missing_dependency", "test.export.nowhere",
+                   "test.export.reader reads test.export.nowhere, which is not a registered export contributor."]],
+                 error.diagnostics.map { |item| [item.code, item.dependency, item.message] }
+  end
+
+  def test_a_report_reads_only_its_own_fields_and_declared_sections
+    contributor = PhComposer::Declarations::ExportContributor.new(:name => "a.export.own",
+                                                                  :requires => %w[b.export.x d.export.z])
+    view = Export::ResultView.new({ "a.export.own" => { "n" => 1 }, "b.export.x" => { "m" => 2 }, "c.export.y" => {} },
+                                  contributor)
+
+    assert_equal [1, 2, {}], [view.fetch("n"), view.section("b.export.x").fetch("m"), view.section("d.export.z")]
+    assert_raises(KeyError) { view.fetch("m") }
+    assert_raises(PhComposer::InternalError) { view.section("c.export.y") }
   end
 
   # ------------------------------------------------------------------ collection
@@ -135,20 +160,21 @@ class ExportTest < PhComposerTestCase
     error = assert_raises(PhComposer::CodedError) { Export::Report.render(shared_result) }
 
     assert_equal "export.privacy_undeclared", error.code
-    assert_equal "result contains undeclared fields: example_parts.", error.message
+    assert_equal "result contains undeclared fields: example.foundation.export.parts.", error.message
   end
 
   def test_undeclared_nested_fields_local_paths_and_metadata_cannot_pass
-    nested = shared_result.tap { |result| result["example_parts"]["label"] = "Sill" }
+    parts = "example.foundation.export.parts"
+    nested = shared_result.tap { |result| result[parts]["example_parts"]["label"] = "Sill" }
     path = shared_result.tap { |result| result["findings"] = [finding("/Users/someone/model.skp")] }
-    metadata = shared_result.tap { |result| result["example_parts"]["user_data"] = {} }
+    metadata = shared_result.tap { |result| result[parts]["example_parts"]["user_data"] = {} }
     hidden = shared_result.tap { |result| result["run_id"] = { "designer_note" => "client pricing" } }
     listed = shared_result.tap { |result| result["summary"]["objects"] = [{ "anything" => "goes" }] }
 
     {
-      nested => "result.example_parts contains undeclared fields: label.",
+      nested => "result.#{parts}.example_parts contains undeclared fields: label.",
       path => "The artifact contains a local file path.",
-      metadata => "result.example_parts contains undeclared fields: user_data.",
+      metadata => "result.#{parts}.example_parts contains undeclared fields: user_data.",
       hidden => "result.run_id must be a value, not an object.",
       listed => "result.summary.objects must be a value, not an object."
     }.each do |result, message|

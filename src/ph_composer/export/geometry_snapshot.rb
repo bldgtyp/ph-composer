@@ -178,10 +178,12 @@ module PhComposer
     class SnapshotReader
       attr_reader :snapshot
 
-      def initialize(records, snapshot)
+      def initialize(records, snapshot, registry: Registry.current)
         @records = records
         @snapshot = snapshot
+        @registry = registry
         @projections = {}
+        @reading = nil
       end
 
       # Contributors share detached projections without repeating assessment or native reads.
@@ -189,8 +191,28 @@ module PhComposer
         @projections.fetch(key) { @projections[key] = yield }
       end
 
+      # Runs the block as the contributor for `section`: findings name it, and `section` reads only what
+      # it declared.
       def within(section, &block)
+        previous = @reading
+        @reading = section
         @records.within(section, &block)
+      ensure
+        @reading = previous
+      end
+
+      # The detached projection another contributor registered, computed once per export. The reading
+      # contributor must declare `name` in its `requires:`; registration has checked the layer.
+      def section(name)
+        reading = @registry.export_contributors[@reading]
+        unless reading && reading.requires.include?(name)
+          raise InternalError, "#{@reading.inspect} reads #{name} without declaring it in requires."
+        end
+
+        provider = @registry.export_contributors.fetch(name)
+        raise InternalError, "#{name} registers no projection." unless provider.projection
+
+        projection([:section, name]) { within(name) { provider.projection.call(self) } }
       end
 
       def records(*arguments, **keywords)

@@ -32,10 +32,11 @@ module PhComposer
 
       # Runs the block as the reader for `section`, so findings name the section they arose in.
       def within(section)
+        previous = @section
         @section = section
         yield
       ensure
-        @section = nil
+        @section = previous
       end
 
       # Every record of `kind_id`, in id order, as `{"id" => id, <values>..., "extensions" => {...}}`.

@@ -116,6 +116,45 @@ Zones.
   report and the Export pane, so both change once. The alternatives (keep the flat hash with declared
   field names; leave it) are closed.
 
+## Design
+
+Written 2026-10-02 against the two decisions above, before code.
+
+- **Python model assembly.** `assembly.py`, foundation, names no section. After every section has
+  run, it builds the Honeybee `Model` from attachments, in honeybee's nesting order: `MODEL`, then
+  `ROOM`, then `FACE`. A section declares `attaches = Attachment(host, key)` and implements
+  `attach(host, items)`, called once per host with that host's objects in id order, so a host can
+  validate all its children together. A missing host, or a `RecordError` from `attach`, becomes an
+  `object.unavailable` finding on each attached object, blocking as `required_for_export` says.
+  Zones attaches its Rooms to the Model; its `attach` sets building segments and pairs Surfaces,
+  which `result_fields` used to do. Windows attaches Apertures to Faces; host eligibility and the
+  owning-Zone check move into `ApertureSection.attach`. The canonical model is serialized only when
+  the run is still publishable and holds at least one Room.
+- **Canonical accounting is the foundation's.** `canonical_model` is a shell field:
+  `{hbjson, rooms, faces, surface_pairs}`, counted from the assembled Model. `omitted` leaves it;
+  the Faces section's `surface_omissions` already lists every omission.
+- **Result fields after assembly, namespaced.** The coordinator collects every section's
+  `result_fields` after assembly, so a section can read where its objects were attached. The
+  document carries them as `result[section_id][field]`; a section with no fields has no key.
+  `window_face_areas` becomes the Apertures section's, read from each Aperture's parent Face.
+  `construction_usage` stays with Zones, which knows Faces and the Assemblies they name.
+- **Conformance per section.** `Section.conformance(model, fields)` runs after the foundation's
+  reload check. The Aperture checks, including the schema exceptions, move to `ApertureSection`.
+- **Ruby `requires:`.** `export_contributor(..., requires: [section_id], projection: ...)`.
+  Registration refuses a required section that is not registered, or whose owner is neither the
+  contributor's feature nor one its feature requires (`registration.missing_dependency`), the
+  `request.query` rule. A contributor reads another section's extraction-time projection through
+  `reader.section(id)` and another section's results through the `ResultView` its report receives;
+  both refuse an undeclared section. Faces registers its host contexts as its projection; Windows
+  names the Faces section id as a string.
+- **Reports by layer.** Assemblies sits below Zones and cannot require a Zones section, so Zones'
+  report renders construction usage, naming each Assembly from Assemblies' `construction_definitions`.
+  Assemblies' report lists its translated definitions with their disclosures.
+- **One matcher.** `GeometrySnapshot.definition_facts(definition)` becomes public. The live and
+  export checks both run `DefinitionMatch.matches?` over those facts. The export's extra
+  `cuts_opening` and `is2d` requirement stays in the export assessment, so authoring behaviour does
+  not change. The assessment reuses `DefinitionIndex.valid_mapping?`.
+
 ## Verification
 
 - `grep -n "window" python/ph_composer_translation/model_sections.py entry.py conformance.py` and

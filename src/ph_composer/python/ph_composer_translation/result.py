@@ -54,7 +54,10 @@ class Translation:
     run_id: str
     results: dict[str, SectionResult] = field(default_factory=dict)
     findings: list[Finding] = field(default_factory=list)
-    fields: dict[str, JSONValue] = field(default_factory=dict)
+    #: Each section's own result fields, by section id.
+    fields: dict[str, dict[str, JSONValue]] = field(default_factory=dict)
+    #: The assembled model's HBJSON and accounting, when it may be published (assembly.py).
+    canonical: JSONObject | None = None
     failure: Failure | None = None
 
     @property
@@ -72,7 +75,8 @@ class Translation:
         return self.results[section].objects
 
     def to_document(self) -> JSONObject:
-        """The result document. The report embeds it unchanged, after the privacy check."""
+        """The result document. The report embeds it unchanged, after the privacy check. A section's fields
+        sit under its id, `document[section_id][field]`; a section with no fields has no key."""
         document: JSONObject = {
             "schema_version": RESULT_SCHEMA_VERSION,
             "run_id": self.run_id,
@@ -92,4 +96,6 @@ class Translation:
             if self.failure is None
             else {"stage": self.failure.stage, "code": self.failure.code, "detail": self.failure.detail},
         }
+        if self.canonical is not None:
+            document["canonical_model"] = self.canonical
         return {**document, **self.fields}

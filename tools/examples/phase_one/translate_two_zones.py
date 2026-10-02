@@ -56,7 +56,7 @@ def main() -> int:
         "publishable": True,
     }
     canonical = result["canonical_model"]
-    assert canonical == {**canonical, "rooms": 2, "faces": 12, "surface_pairs": 1, "omitted": 0}
+    assert canonical == {**canonical, "rooms": 2, "faces": 12, "surface_pairs": 1}
 
     hbjson = json.loads(canonical["hbjson"])
     model = stack.load("honeybee.model").Model.from_dict(hbjson)

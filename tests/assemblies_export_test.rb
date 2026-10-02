@@ -70,19 +70,16 @@ class AssembliesExportTest < PhComposerTestCase
       PhComposer::Export::Privacy.validate!(translation_result(JSON.generate(foreign)))
     end
   end
-  def test_report_joins_only_emitted_usage_and_discloses_defaults_membranes_and_local_fields_once
+  def test_report_lists_each_definition_and_discloses_defaults_membranes_and_local_fields_once
     row = { "assembly_id" => "asm_Single000001", "name" => "<Synthetic>", "thermal_layer_count" => 2,
             "membrane_names" => ["Film"], "defaulted_material_ids" => ["mat_Wool00000001"] }
-    unused = row.merge("assembly_id" => "asm_Unused000001", "name" => "Unused")
+    plain = row.merge("assembly_id" => "asm_Plain0000001", "name" => "Plain", "membrane_names" => [],
+                      "defaulted_material_ids" => [])
     second = row.merge("assembly_id" => "asm_Second000001", "name" => "Second membrane")
-    result = { "construction_definitions" => [row, second, unused], "construction_usage" => [
-      { "assembly_id" => row.fetch("assembly_id"), "face_count" => 2, "gross_area_m2" => 10.0 },
-      { "assembly_id" => second.fetch("assembly_id"), "face_count" => 1, "gross_area_m2" => 1.0 }
-    ] }
-    html = Assemblies::ExportProjection.report(result, "si").join
+    html = Assemblies::ExportProjection.report(view("construction_definitions" => [row, second, plain]), "si").join
     assert_includes html, "&lt;Synthetic&gt;"
-    refute_includes html, "Unused"
-    assert_includes html, "10.00"
+    assert_includes html, "<td>Plain</td><td></td>"
+    assert_includes html, "Membranes: Film."
     assert_includes html, "600 kg/m3"
     assert_includes html, "1000 J/kgK"
     assert_equal 1, html.scan("Membranes carried in HBJSON").length
@@ -92,17 +89,20 @@ class AssembliesExportTest < PhComposerTestCase
     assert_includes html, "thermal absorptance 0.9 when emissivity is absent"
     assert_includes html, "solar and visible absorptance 0.7"
     assert_includes html, "Authored emissivity supplies thermal absorptance when present"
-    imperial = Assemblies::ExportProjection.report(result, "ip").join
-    assert_includes imperial, "107.64"
-    assert_empty Assemblies::ExportProjection.report({}, "si")
+    assert_empty Assemblies::ExportProjection.report(view({}), "si")
   end
 
   private
+
+  def view(fields)
+    contributor = PhComposer::Registry.current.export_contributors.fetch(SECTION)
+    PhComposer::Export::ResultView.new({ SECTION => fields }, contributor)
+  end
 
   def translation_result(hbjson)
     { "schema_version" => 1, "run_id" => "run", "state" => "complete",
       "summary" => { "objects" => 1, "unavailable" => 0, "findings" => 0, "publishable" => true },
       "sections" => [], "findings" => [], "failure" => nil,
-      "canonical_model" => { "hbjson" => hbjson, "rooms" => 0, "faces" => 0, "surface_pairs" => 0, "omitted" => 0 } }
+      "canonical_model" => { "hbjson" => hbjson, "rooms" => 0, "faces" => 0, "surface_pairs" => 0 } }
   end
 end

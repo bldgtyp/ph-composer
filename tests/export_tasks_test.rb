@@ -45,7 +45,7 @@ class ExportTasksTest < PhComposerTestCase
                        "summary" => { "objects" => 0, "unavailable" => 0, "findings" => 0, "publishable" => true },
                        "sections" => [], "failure" => nil, "findings" => [],
                        "canonical_model" => { "hbjson" => JSON.generate("type" => "Model", "rooms" => []),
-                                              "rooms" => 0, "faces" => 0, "surface_pairs" => 0, "omitted" => 0 }
+                                              "rooms" => 0, "faces" => 0, "surface_pairs" => 0 }
                      })
     end
   end
@@ -124,7 +124,7 @@ class ExportTasksTest < PhComposerTestCase
     task = start
     drain
     @runtime.blocked(:canonical => { "hbjson" => JSON.generate("type" => "Model", "rooms" => []),
-                                    "rooms" => 1, "faces" => 6, "surface_pairs" => 0, "omitted" => 0 })
+                                    "rooms" => 1, "faces" => 6, "surface_pairs" => 0 })
     outcome = @tasks.status(task.fetch("task_id")).fetch("outcome")
     refute outcome.dig("value", "result", "canonical_model").key?("hbjson")
     assert_equal 1, outcome.dig("value", "result", "canonical_model", "rooms")

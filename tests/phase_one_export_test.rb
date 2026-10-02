@@ -16,6 +16,24 @@ class PhaseOneExportTest < PhComposerTestCase
     @sequence = 0
   end
 
+  # Face area per Assembly is the Zones report's; it names each Assembly from the Assemblies section it
+  # declares, and the Assemblies report never sees Face usage.
+  def test_construction_usage_report_names_assemblies_through_the_declared_section
+    zones = "ph_composer.zones.export.zones"
+    definitions = [{ "assembly_id" => "asm_Single000001", "name" => "<Synthetic>", "thermal_layer_count" => 2,
+                     "membrane_names" => [], "defaulted_material_ids" => [] }]
+    result = { "ph_composer.assemblies.export.constructions" => { "construction_definitions" => definitions },
+               zones => { "construction_usage" => [
+                 { "assembly_id" => "asm_Single000001", "face_count" => 2, "gross_area_m2" => 10.0 }
+               ] } }
+    contributor = PhComposer::Registry.current.export_contributors.fetch(zones)
+    view = PhComposer::Export::ResultView.new(result, contributor)
+
+    assert_includes PhComposer::Zones::ExportProjection.report(view, "si").join, "<td>&lt;Synthetic&gt;</td><td>2</td><td>10.00</td>"
+    assert_includes PhComposer::Zones::ExportProjection.report(view, "ip").join, "107.64"
+    assert_empty PhComposer::Zones::ExportProjection.report(PhComposer::Export::ResultView.new({}, contributor), "si")
+  end
+
   def test_two_zone_extraction_uses_one_snapshot_and_owns_the_golden
     zones = seed_two_boxes
     invoke("ph_composer.zones.solve_adjacency", "zones" => zones)

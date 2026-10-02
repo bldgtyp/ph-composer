@@ -1,20 +1,24 @@
-"""Window products and glazed cells, translated through the pinned Honeybee/PH stack."""
+"""Window products and glazed cells, translated through the pinned Honeybee/PH stack.
+
+Apertures attach to their host Faces in the model assembly; this module names no other section."""
 
 from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
 from . import stack
 from .contract import JSONValue, RecordError
 from .contract.window_records import SIDES, ApertureRecord, WindowConstructionRecord
-from .sections import Inputs, Requirement, Section
+from .sections import FACE, Attachment, Inputs, Requirement, Section
 
 WINDOW_CONSTRUCTION_SECTION_ID = "ph_composer.windows.export.window_constructions"
 APERTURE_SECTION_ID = "ph_composer.windows.export.apertures"
+#: The Face types an Aperture may sit in.
+HOST_FACE_TYPES = ("Wall", "RoofCeiling")
 
 
 @dataclass(frozen=True)
@@ -82,6 +86,7 @@ class ApertureSection(Section[ApertureRecord, TranslatedAperture]):
     versions = frozenset({1})
     object_type = TranslatedAperture
     requires = (WINDOW_CONSTRUCTIONS,)
+    attaches = Attachment(FACE, lambda item: item.source.host_face_id)
 
     def read(self, raw: Mapping[str, object]) -> ApertureRecord:
         return ApertureRecord.read(raw)
@@ -106,14 +111,33 @@ class ApertureSection(Section[ApertureRecord, TranslatedAperture]):
             raise RecordError(f"aperture {record.id} could not be built: {error}") from error
         return TranslatedAperture(record, aperture, translated)
 
+    def attach(self, host: Any, objects: Sequence[TranslatedAperture]) -> None:
+        """Adds a host Face's Apertures together, then checks they fit it and do not overlap."""
+        room = host.parent
+        for item in objects:
+            if room is None or room.identifier != item.source.zone_id:
+                raise RecordError(f"aperture host {host.identifier} is not a Face of Zone {item.source.zone_id}")
+        if host.boundary_condition.name != "Outdoors" or host.type.name not in HOST_FACE_TYPES:
+            raise RecordError(f"aperture host {host.identifier} must be an Outdoors Wall or RoofCeiling")
+        try:
+            for item in objects:
+                host.add_aperture(item.aperture)
+            host.check_apertures_valid(tolerance=1e-6, angle_tolerance=0.001)
+            host.check_sub_faces_overlapping(tolerance=1e-6)
+        except (AssertionError, ValueError) as error:
+            raise RecordError(f"aperture host {host.identifier} could not be built: {error}") from error
+
     def result_fields(self, objects: Mapping[str, TranslatedAperture]) -> Mapping[str, JSONValue]:
         groups: dict[tuple[str, str], list[TranslatedAperture]] = {}
         endpoints: dict[str, float] = {}
+        hosts: dict[str, tuple[Any, str]] = {}
         for item in objects.values():
             groups.setdefault((item.source.type_id, item.source.zone_id), []).append(item)
             glazing = item.construction.source.glazing
             if glazing.g_value in (0, 1):
                 endpoints[item.construction.construction.identifier] = glazing.g_value
+            if (face := item.aperture.parent) is not None:
+                hosts[face.identifier] = (face, item.source.zone_id)
         usage: list[JSONValue] = []
         for (type_id, zone_id), items in sorted(groups.items()):
             usage.append(
@@ -140,4 +164,56 @@ class ApertureSection(Section[ApertureRecord, TranslatedAperture]):
             "window_schema_exceptions": [
                 {"construction_id": identifier, "g_value": value} for identifier, value in sorted(endpoints.items())
             ],
+            # Net opaque area is a fact about a Face and its Apertures, so the Apertures report it.
+            "window_face_areas": [
+                {
+                    "face_id": identifier,
+                    "zone_id": zone_id,
+                    "gross_area_m2": face.area,
+                    "glazed_area_m2": sum(aperture.area for aperture in face.apertures),
+                    "net_area_m2": face.area - sum(aperture.area for aperture in face.apertures),
+                }
+                for identifier, (face, zone_id) in sorted(hosts.items())
+            ],
         }
+
+    def conformance(self, model: Any, fields: Mapping[str, JSONValue]) -> None:
+        faces = [face for room in model.rooms for face in room.faces]
+        apertures = [aperture for face in faces for aperture in face.apertures]
+        if len({aperture.identifier for aperture in apertures}) != len(apertures):
+            raise ValueError("canonical Aperture identifiers repeat")
+        expected_endpoints: dict[str, float] = {}
+        for face in faces:
+            if face.apertures:
+                if face.boundary_condition.name != "Outdoors" or face.type.name not in HOST_FACE_TYPES:
+                    raise ValueError("canonical aperture has an ineligible parent")
+                face.check_apertures_valid(tolerance=1e-6, angle_tolerance=0.001)
+                face.check_sub_faces_overlapping(tolerance=1e-6)
+            for aperture in face.apertures:
+                aperture.check_planar(tolerance=1e-6)
+                construction = aperture.properties.energy.construction
+                g = construction.properties.ph.ph_glazing.g_value
+                if construction.materials[0].shgc != g:
+                    raise ValueError("canonical PH glazing and Energy SHGC disagree")
+                if g in (0, 1):
+                    expected_endpoints[construction.identifier] = g
+                installs = aperture.properties.ph.install_types
+                if any(getattr(installs, side) is not None for side in ("top", "right", "bottom", "left")):
+                    raise ValueError("canonical aperture must not carry install overrides")
+        declared: dict[str, float] = {}
+        exceptions = fields.get("window_schema_exceptions", [])
+        for row in exceptions if isinstance(exceptions, list) else ():
+            if not isinstance(row, Mapping) or set(row) != {"construction_id", "g_value"}:
+                raise ValueError("unsupported Window schema exception")
+            identifier, g = row["construction_id"], row["g_value"]
+            if (
+                not isinstance(identifier, str)
+                or isinstance(g, bool)
+                or not isinstance(g, (int, float))
+                or g not in (0, 1)
+                or identifier in declared
+            ):
+                raise ValueError("invalid Window schema exception")
+            declared[identifier] = g
+        if declared != expected_endpoints:
+            raise ValueError("Window schema exceptions do not match exact canonical endpoint values")

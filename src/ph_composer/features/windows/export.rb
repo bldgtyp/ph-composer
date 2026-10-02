@@ -10,6 +10,8 @@ module PhComposer
       CONSTRUCTIONS = "#{FEATURE_ID}.export.window_constructions"
       APERTURES = "#{FEATURE_ID}.export.apertures"
       PREFLIGHT = "#{FEATURE_ID}.export_preflight"
+      # The Zones Faces section, whose registered projection gives each Face's host context.
+      FACES = "ph_composer.zones.faces.export.faces"
       Assessment = ExportAssessment
 
       module_function
@@ -18,15 +20,18 @@ module PhComposer
         feature.query(PREFLIGHT, :description => "Placed Window geometry, hosts and thermal readiness for export.",
           :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
           :examples => [{}]) { |request| preflight(request) }
-        feature.export_contributor(CONSTRUCTIONS, :section_version => 1,
-          :result => { "window_schema_exceptions" => [
-            Export::Privacy.fields(%w[construction_id g_value])
-          ] }) do |reader|
+        # Both sections read one assessment, which places each Unit on its host Face.
+        feature.export_contributor(CONSTRUCTIONS, :section_version => 1, :requires => [FACES]) do |reader|
           ready(reader).constructions
         end
-        feature.export_contributor(APERTURES, :section_version => 1, :preflight => PREFLIGHT,
-          :result => { "window_usage" => [Export::Privacy.fields(%w[type_id type_name zone_id unit_count
-            aperture_count install_names])] }, :report => method(:report)) { |reader| ready(reader).apertures }
+        feature.export_contributor(APERTURES, :section_version => 1, :preflight => PREFLIGHT, :requires => [FACES],
+          :result => {
+            "window_usage" => [Export::Privacy.fields(%w[type_id type_name zone_id unit_count aperture_count
+              install_names])],
+            "window_schema_exceptions" => [Export::Privacy.fields(%w[construction_id g_value])],
+            "window_face_areas" => [Export::Privacy.fields(%w[face_id zone_id gross_area_m2 glazed_area_m2
+              net_area_m2])]
+          }, :report => method(:report)) { |reader| ready(reader).apertures }
       end
 
       def assess(**values)
@@ -48,7 +53,7 @@ module PhComposer
             reader.entity_record(record, :fields => %w[window_type_id anchor])
           end
           assess(:snapshot => reader.snapshot, :types => types, :products => products, :settings => settings,
-            :faces => Zones::Faces::ExportProjection.contexts(reader))
+            :faces => reader.section(FACES))
         end
       end
 
@@ -64,7 +69,7 @@ module PhComposer
       def preflight(request)
         snapshot = Export::GeometrySnapshot.capture(request.model, :revision => request.session.revision)
         records = Export::RecordReader.new(request.engine, request.registry.catalog)
-        reader = Export::SnapshotReader.new(records, snapshot)
+        reader = Export::SnapshotReader.new(records, snapshot, :registry => request.registry)
         result = reader.within(APERTURES) { projection(reader) }
         { "findings" => result.findings, "repairs" => result.repairs.uniq { |row| row.fetch("id") } }
       rescue CodedError => error

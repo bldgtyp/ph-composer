@@ -330,11 +330,12 @@ module PhComposer
 
       # Adds a section to the export extraction and declares the result fields its translation adds.
       def export_contributor(name, section_version:, result: {}, report: nil, preflight: nil, user_data_keys: [],
-                             &contract)
+                             requires: [], projection: nil, &contract)
         declaration = Declarations::ExportContributor.new(
           :name => name, :owner => id, :section_version => section_version, :contract => contract,
           :result => DeepCopy.call(result).freeze, :report => report, :preflight => preflight,
-          :user_data_keys => DeepCopy.call(user_data_keys).freeze
+          :user_data_keys => DeepCopy.call(user_data_keys).freeze, :requires => DeepCopy.call(requires).freeze,
+          :projection => projection
         )
         @staging.add(:declared_export_contributors, id, name, declaration)
       end

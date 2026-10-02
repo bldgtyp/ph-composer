@@ -206,9 +206,9 @@
       "sha256": "1ee0e1484862da2695af4a84642e97679a6da391842faa5f96fd9459231f21c2"
     },
     "html/sections/export.js": {
-      "bytes": 7479,
+      "bytes": 7388,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "347da1a20c7063cbc10cb09f961d944788ec103f5a51bfd9a299820afa829fa1"
+      "sha256": "b3dd8c0e68cca5e4b211eab87346fdcce7b6d0c78ed8cff5776e65815f5f84d2"
     },
     "html/sections/face_words.js": {
       "bytes": 1391,
@@ -390,15 +390,20 @@
       "mime": "text/plain; charset=utf-8",
       "sha256": "884e2725e72e1d8e08c345067699790718ca70c6a0a3c83ae241abb9dce64dbd"
     },
+    "python/ph_composer_translation/assembly.py": {
+      "bytes": 3935,
+      "mime": "text/plain; charset=utf-8",
+      "sha256": "db2107cc95858cc962b20ca99fabca8d56e17b6761473dd7d05e4b60df571d1e"
+    },
     "python/ph_composer_translation/composition.py": {
       "bytes": 841,
       "mime": "text/plain; charset=utf-8",
       "sha256": "ea5efc1b11a3c701cddbf9a7fed4acb841b53dbeb11a78d5949ee1cf58d2408c"
     },
     "python/ph_composer_translation/conformance.py": {
-      "bytes": 4337,
+      "bytes": 2432,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "04fdc9a69ba1f609ddc4275d7738862b82749e54dec0f2b8f74253cfa0e47191"
+      "sha256": "aba52de9721b43927f7df6083ab69b255f89b1213806a95b655556f20e72edab"
     },
     "python/ph_composer_translation/constructions.py": {
       "bytes": 7039,
@@ -421,14 +426,14 @@
       "sha256": "8c24c31c6ca8273079778b0ac2d6d9de06882a813609c126d3384a932cd2a00d"
     },
     "python/ph_composer_translation/coordinator.py": {
-      "bytes": 8636,
+      "bytes": 8937,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "252ab1075c97c65d443b6486bf50f81686ee7635c6dbb7e417c24a33857b771d"
+      "sha256": "bdaaa2fa178b5a81ee8e17a51b3f1547917b045da94b977a152062fdad2f66e3"
     },
     "python/ph_composer_translation/entry.py": {
-      "bytes": 1522,
+      "bytes": 1496,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "2a34c3e1ad025ce06594823d0a3657c2ed77a51963c1c8d8fc197dc8deda0f66"
+      "sha256": "59a75b7ddfffc634f94ca721818270683893e29228b00c42398021107f4c3416"
     },
     "python/ph_composer_translation/exporters.py": {
       "bytes": 1952,
@@ -441,19 +446,19 @@
       "sha256": "81afd69d32d75db8e3e2b9f305fd568c4c000be8a8d0d37128bbf637ccfd734f"
     },
     "python/ph_composer_translation/model_sections.py": {
-      "bytes": 19327,
+      "bytes": 16030,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "dde71d15a025792628deeb551ebf8a999eb91f60ba811b5f1f5e91da93bf5bfd"
+      "sha256": "57eecba93e6527dee0c89160ced2d5fbc589283aa802ddd89c7c5327708b48e3"
     },
     "python/ph_composer_translation/result.py": {
-      "bytes": 3162,
+      "bytes": 3570,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "1ba3b6a6ee723d7c79dbb3db223aefb42ba7f27155a09b54ccdf396ce9ec501d"
+      "sha256": "c5ce3e684288159b36def0d454e0ebc6cff3839382f63f42ea58ee6be7afd1f7"
     },
     "python/ph_composer_translation/sections.py": {
-      "bytes": 4633,
+      "bytes": 6357,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "47d133c8c277ef0fc72d62329b0af648dfaa537da8303d88d9c4e7f07cc3f3b9"
+      "sha256": "759c17f2e29900dda9ff9740da98111af1d6fc2299ca378f7abb30a2a3ae57af"
     },
     "python/ph_composer_translation/stack.py": {
       "bytes": 1361,
@@ -461,9 +466,9 @@
       "sha256": "1b73dab83dd4ee7d5b381d71d70e2a30a753b691f248b035903596f59ca6a740"
     },
     "python/ph_composer_translation/window_sections.py": {
-      "bytes": 6618,
+      "bytes": 11134,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "e5ad487f83edbd3bab898715b862e41f73c3881697b684037b1d8eaad664d946"
+      "sha256": "d9a0cb4f58ef0e1809469fc8bb6b945e1f886dc7155334d28b9402673a21456d"
     },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,
@@ -662,6 +667,7 @@
   "schema_version": 1,
   "translation_assets": [
     "python/ph_composer_translation/__init__.py",
+    "python/ph_composer_translation/assembly.py",
     "python/ph_composer_translation/composition.py",
     "python/ph_composer_translation/conformance.py",
     "python/ph_composer_translation/constructions.py",

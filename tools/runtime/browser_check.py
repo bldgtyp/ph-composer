@@ -251,11 +251,10 @@ new Promise(function (resolve, reject) {
     )
     assert result["summary"]["publishable"] is True, result
     canonical = result["canonical_model"]
-    assert {key: canonical[key] for key in ("rooms", "faces", "surface_pairs", "omitted")} == {
+    assert {key: canonical[key] for key in ("rooms", "faces", "surface_pairs")} == {
         "rooms": 2,
         "faces": 12,
         "surface_pairs": 1,
-        "omitted": 0,
     }, canonical
     model = json.loads(canonical["hbjson"])
     constructions = {row["identifier"]: row for row in model["properties"]["energy"]["constructions"]}

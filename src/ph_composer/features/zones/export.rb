@@ -4,6 +4,8 @@ module PhComposer
   module Zones
     module ExportProjection
       SECTION = "ph_composer.zones.export.zones"
+      # The Assemblies section whose definitions name the constructions this report counts.
+      CONSTRUCTIONS = "ph_composer.assemblies.export.constructions"
 
       module_function
 
@@ -13,14 +15,8 @@ module PhComposer
           :preflight => "#{FEATURE_ID}.export_preflight",
           # What the Zone translation writes on each Room (python/ph_composer_translation/model_sections.py).
           :user_data_keys => %w[ph_composer.level ph_composer.building_segment],
-          :result => {
-            "construction_usage" => [Export::Privacy.fields(%w[assembly_id face_count gross_area_m2])],
-            "window_face_areas" => [Export::Privacy.fields(%w[face_id zone_id gross_area_m2
-              glazed_area_m2 net_area_m2])],
-            "canonical_model" => Export::Privacy::Optional.new(
-              Export::Privacy.fields(%w[hbjson rooms faces surface_pairs omitted])
-            )
-          }
+          :result => { "construction_usage" => [Export::Privacy.fields(%w[assembly_id face_count gross_area_m2])] },
+          :requires => [CONSTRUCTIONS], :report => method(:report)
         ) { |reader| records(reader) }
         feature.query("#{FEATURE_ID}.export_preflight", :description => "All-Zone export checks and adjacency repair.",
                       :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
@@ -48,6 +44,23 @@ module PhComposer
                    "checked" => true, "action" => "#{FEATURE_ID}.solve_adjacency",
                    "params" => { "zones" => zones.map(&:reference) } }
         { "findings" => findings, "repairs" => zones.empty? ? [] : [repair] }
+      end
+
+      # Gross area per Assembly over the emitted Faces. Window net areas are the Windows report's.
+      def report(result, display_units)
+        usage = result.fetch("construction_usage", [])
+        return [] if usage.empty?
+
+        names = result.section(CONSTRUCTIONS).fetch("construction_definitions", []).to_h do |row|
+          [row.fetch("assembly_id"), row.fetch("name")]
+        end
+        rows = usage.map do |row|
+          area = Units.to_display(row.fetch("gross_area_m2"), :quantity => "area", :system => display_units)
+          [names.fetch(row.fetch("assembly_id"), row.fetch("assembly_id")), row.fetch("face_count"),
+           format("%.2f", area)]
+        end
+        heading = "Gross area (#{Units.label(:quantity => 'area', :system => display_units)})"
+        [Export::ReportHtml.section("Construction usage", Export::ReportHtml.table(["Assembly", "Faces", heading], rows))]
       end
 
       # The one Zone occurrence containing a snapshot entry, as [entry, record], or nil. Two means a

@@ -236,14 +236,41 @@ module PhComposer
       end
 
       # A contributor needs its own preflight query, a contract and a positive section version, a valid
-      # user_data key declaration, and result fields that form a privacy schema no one else owns.
+      # user_data key declaration, result fields that form a privacy schema, and a dependency on the
+      # feature of every section it reads.
       def check_export_contributors
-        owned = @live.export_contributors.values.flat_map { |contributor| Array(contributor.result&.keys) }
         @staging.declared_export_contributors.each do |contributor|
           check_preflight_owner(contributor)
           check_contract(contributor)
           check_user_data_keys(contributor)
-          check_result_fields(contributor, owned)
+          check_result_fields(contributor)
+          check_section_reads(contributor)
+        end
+      end
+
+      # A section read follows `request.query`'s rule: the section is registered, and belongs to the
+      # reading contributor's own feature or one that feature requires.
+      def check_section_reads(contributor)
+        unless contributor.requires.is_a?(Array) && contributor.requires.all?(String)
+          return add("registration.schema_invalid", contributor.owner, contributor.name,
+                     "#{contributor.name} requires a list of section ids.")
+        end
+        unless contributor.projection.nil? || contributor.projection.respond_to?(:call)
+          add("registration.schema_invalid", contributor.owner, contributor.name,
+              "#{contributor.name} projection must be callable.")
+        end
+        feature = @staging.declared_features.find { |item| item.id == contributor.owner }
+        contributor.requires.each do |section|
+          provider = @staging.declared_export_contributors.find { |item| item.name == section } ||
+                     @live.export_contributors[section]
+          next if provider && (provider.owner == contributor.owner || feature&.requires&.include?(provider.owner))
+
+          message = if provider
+                      "#{contributor.name} reads #{section}, so #{contributor.owner} must require #{provider.owner}."
+                    else
+                      "#{contributor.name} reads #{section}, which is not a registered export contributor."
+                    end
+          add("registration.missing_dependency", contributor.owner, contributor.name, message, section)
         end
       end
 
@@ -266,21 +293,11 @@ module PhComposer
             "#{contributor.name} needs a contract block and a positive section version.")
       end
 
-      # `owned` accumulates across the batch, so two staged contributors cannot claim one field either.
-      def check_result_fields(contributor, owned)
+      def check_result_fields(contributor)
         Export::Privacy.schema_problems(contributor.result).each do |problem|
           add("registration.schema_invalid", contributor.owner, contributor.name,
               "#{contributor.name} result: #{problem}.")
         end
-        return unless contributor.result.is_a?(Hash)
-
-        contributor.result.each_key do |field|
-          next unless Export::Privacy::SHELL.key?(field) || owned.include?(field)
-
-          add("registration.duplicate_id", contributor.owner, contributor.name,
-              "#{contributor.name} declares result field #{field}, which is already owned.")
-        end
-        owned.concat(contributor.result.keys)
       end
 
       def check_subscriptions

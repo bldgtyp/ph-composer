@@ -80,13 +80,18 @@ module PhComposer
     # artifacts"). `contract` is `->(reader) { [record, ...] }`: it reads through an
     # Export::RecordReader, which applies the metadata and extension-data rules, and never writes.
     # `name` is the section id the translation package reads, at `section_version`. `result` declares
-    # the top-level result fields the feature's translation adds, in Export::Privacy's schema form;
-    # `report` is `->(result, display_units) { [html_section, ...] }` over those fields. `preflight`
-    # optionally names a registered read query returning findings and explicit repair actions.
-    # `user_data_keys` are the dotted HBJSON user_data keys the contributor's translation writes, such
-    # as "ph_composer.level"; the artifact guard refuses any other (export/hbjson_metadata.rb).
+    # the fields the feature's translation adds under that section id (`result[name][field]`), in
+    # Export::Privacy's schema form; `report` is `->(result, display_units) { [html_section, ...] }`
+    # over an Export::ResultView of them. `preflight` optionally names a registered read query
+    # returning findings and explicit repair actions. `user_data_keys` are the dotted HBJSON user_data
+    # keys the contributor's translation writes, such as "ph_composer.level"; the artifact guard
+    # refuses any other (export/hbjson_metadata.rb). `requires` names the other contributors' sections
+    # this one reads: their `projection` while collecting, through `reader.section(id)`, and their
+    # result fields in its report, through `result.section(id)`. Each must belong to this feature or
+    # one it requires. `projection` is an optional `->(reader) { detached value }` other contributors
+    # may read.
     ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, :preflight,
-                                   :user_data_keys, keyword_init: true)
+                                   :user_data_keys, :requires, :projection, keyword_init: true)
 
     # One Colour-by mode. `projection` is `->(model) { [ColourBy::Entry, ...] }`: a pure read of the
     # feature's own entities, their world transforms and the value each one carries. `colours` is

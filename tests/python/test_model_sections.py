@@ -42,17 +42,20 @@ class FakeFace:
         self.apertures: list[Any] = []
         self.type = face_type
         self.boundary_condition = boundary
+        self.parent: FakeRoom | None = None
         self.properties = SimpleNamespace(energy=SimpleNamespace(construction=None))
 
     def set_adjacency(self, other: FakeFace) -> None:
-        self.boundary_condition = SimpleNamespace(target=other.identifier)
-        other.boundary_condition = SimpleNamespace(target=self.identifier)
+        self.boundary_condition = SimpleNamespace(name="Surface", target=other.identifier)
+        other.boundary_condition = SimpleNamespace(name="Surface", target=self.identifier)
 
 
 class FakeRoom:
     def __init__(self, identifier: str, faces: list[FakeFace]) -> None:
         self.identifier = identifier
         self.faces = faces
+        for face in faces:
+            face.parent = self
         self.display_name = identifier
         self.user_data: dict[str, object] = {}
         self.properties = SimpleNamespace(
@@ -61,10 +64,13 @@ class FakeRoom:
 
 
 class FakeModel:
-    def __init__(self, identifier: str, rooms: list[FakeRoom], units: str) -> None:
+    def __init__(self, identifier: str, units: str) -> None:
         self.identifier = identifier
-        self.rooms = rooms
+        self.rooms: list[FakeRoom] = []
         self.units = units
+
+    def add_rooms(self, rooms: list[FakeRoom]) -> None:
+        self.rooms.extend(rooms)
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -122,7 +128,6 @@ def test_model_sections_build_rooms_then_resolve_surface_pairs(monkeypatch: pyte
         "rooms": 2,
         "faces": 12,
         "surface_pairs": 1,
-        "omitted": 0,
     }
 
 
@@ -239,11 +244,16 @@ def test_explicit_and_reciprocal_omissions_preserve_inputs_and_publish_remaining
     assert result["summary"] == {"objects": 15, "unavailable": 0, "findings": 2, "publishable": True}
     assert result["canonical_model"]["faces"] == 10
     assert result["canonical_model"]["surface_pairs"] == 0
-    assert result["canonical_model"]["omitted"] == 2
-    assert {row["face_id"] for row in result["surface_omissions"]} == {face["id"] for face in surfaces}
-    assert {row["code"] for row in result["surface_omissions"]} == {"adjacency.stale", "adjacency.counterpart_omitted"}
+    assert len(result["ph_composer.zones.faces.export.faces"]["surface_omissions"]) == 2
+    assert {row["face_id"] for row in result["ph_composer.zones.faces.export.faces"]["surface_omissions"]} == {
+        face["id"] for face in surfaces
+    }
+    assert {row["code"] for row in result["ph_composer.zones.faces.export.faces"]["surface_omissions"]} == {
+        "adjacency.stale",
+        "adjacency.counterpart_omitted",
+    }
     assert all(not finding["blocks_export"] for finding in result["findings"])
-    for row in result["surface_omissions"]:
+    for row in result["ph_composer.zones.faces.export.faces"]["surface_omissions"]:
         assert row["zone_id"] in {face["zone_id"] for face in surfaces}
         assert row["area_m2"] == pytest.approx(12.0)
         assert row["reason"]
@@ -276,8 +286,8 @@ def test_retired_face_with_no_boundary_is_a_nonblocking_reported_omission(monkey
     assert result["summary"]["publishable"] is True
     assert result["canonical_model"]["faces"] == 11
     assert result["canonical_model"]["surface_pairs"] == 1
-    assert result["canonical_model"]["omitted"] == 1
-    assert result["surface_omissions"][0]["face_id"] == face["id"]
+    assert len(result["ph_composer.zones.faces.export.faces"]["surface_omissions"]) == 1
+    assert result["ph_composer.zones.faces.export.faces"]["surface_omissions"][0]["face_id"] == face["id"]
     assert result["findings"][0]["object_id"] == face["id"]
     assert face["zone_id"] in result["findings"][0]["message"]
 
@@ -291,7 +301,7 @@ def test_omissions_do_not_hide_an_unavailable_assigned_construction() -> None:
 
     assert result["summary"]["publishable"] is False
     assert "canonical_model" not in result
-    assert len(result["surface_omissions"]) == 1
+    assert len(result["ph_composer.zones.faces.export.faces"]["surface_omissions"]) == 1
     assert sum(finding["blocks_export"] for finding in result["findings"]) == 2
 
 
@@ -377,7 +387,7 @@ def test_omitted_face_invalid_classification_still_blocks(monkeypatch: pytest.Mo
     assert any("independently" in finding["message"] for finding in result["findings"])
 
 
-def test_real_hbjson_reloads_with_omitted_surface_pair_and_positive_omission_count() -> None:
+def test_real_hbjson_reloads_with_omitted_surface_pair_and_counts_what_it_holds() -> None:
     from ph_composer_translation.conformance import check
 
     document = load_fixture()
@@ -389,11 +399,13 @@ def test_real_hbjson_reloads_with_omitted_surface_pair_and_positive_omission_cou
     assert result["summary"]["publishable"] is True
     canonical = result["canonical_model"]
     assert canonical["faces"] == 10
-    assert canonical["omitted"] == 2
+    assert len(result["ph_composer.zones.faces.export.faces"]["surface_omissions"]) == 2
     check(canonical)
     hbjson = json.loads(canonical["hbjson"])
     actual_ids = {face["identifier"] for room in hbjson["rooms"] for face in room["faces"]}
-    assert actual_ids.isdisjoint(row["face_id"] for row in result["surface_omissions"])
+    assert actual_ids.isdisjoint(
+        row["face_id"] for row in result["ph_composer.zones.faces.export.faces"]["surface_omissions"]
+    )
     assert all(face["boundary_condition"]["type"] != "Surface" for room in hbjson["rooms"] for face in room["faces"])
-    with pytest.raises(ValueError, match="nonnegative integer"):
-        check({**canonical, "omitted": -1})
+    with pytest.raises(ValueError, match="Surface accounting"):
+        check({**canonical, "surface_pairs": 1})
