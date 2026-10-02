@@ -60,34 +60,34 @@ module PhComposer
       end
       feature.query("#{FEATURE_ID}.providers", :description => "Configured libraries without transport addresses.",
                     :params => object({}), :result => Schemas.providers,
-                    :examples => [{}]) do |r|
-        State.for(r.session).metadata(r.registry)
+                    :examples => [{}]) do |request|
+        State.for(request.session).metadata(request.registry)
       end
       install_commands(feature)
       feature.snapshot_section("#{FEATURE_ID}.provider_catalogs", :query => "#{FEATURE_ID}.providers")
       feature.query("#{FEATURE_ID}.catalog", :description => "A bounded page of one immutable library catalog.",
                     :params => page_params, :result => Schemas.page,
-                    :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |r|
-        catalog_page(r, "#{FEATURE_ID}.catalog")
+                    :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |request|
+        catalog_page(request, "#{FEATURE_ID}.catalog")
       end
       feature.query("#{FEATURE_ID}.in_file", :description => "Resolve catalog rows against local definitions.",
                     :params => page_params, :result => Schemas.page(:resolved => true),
-                    :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |r|
-        in_file(r)
+                    :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |request|
+        in_file(request)
       end
       feature.setup_command("#{FEATURE_ID}.load", :description => "Read a configured library into session memory.",
         :params => object(selected_params.fetch("properties").slice("provider_id", "kind")),
         :result => Schemas.summary,
-        :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |r|
-        State.for(r.session).refresh(r.params.fetch("provider_id"), r.params.fetch("kind"), r.registry)
+        :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |request|
+        State.for(request.session).refresh(request.params.fetch("provider_id"), request.params.fetch("kind"), request.registry)
              .reject { |key, _value| key == "rows" }
       end
       feature.action("#{FEATURE_ID}.copy", :description => "Copy or reuse one library record with optional assignment.",
         :params => copy_params, :result => Schemas.copy_result, :undo_name => "Copy Library Record",
         :side_effects => "Copies or replaces local definitions and optional assignments in one Undo step.",
         :examples => [{ "provider_id" => "example", "kind" => "example_parts", "generation" => 1,
-                       "library_id" => "synthetic", "record_id" => "one", "choice" => "create" }]) do |r, proposal|
-        Coordinator.copy(r, proposal)
+                       "library_id" => "synthetic", "record_id" => "one", "choice" => "create" }]) do |request, proposal|
+        Coordinator.copy(request, proposal)
       end
     end
 
@@ -102,9 +102,9 @@ module PhComposer
     # is bound to the generation, and, for `in_file`, whose resolution reads local definitions, to
     # the Model revision as well.
     def catalog_page(request, query, revision: nil)
-      p = request.params
-      entry = State.for(request.session).fetch(p.fetch("provider_id"), p.fetch("kind"), request.registry,
-                                                :generation => p["generation"])
+      params = request.params
+      entry = State.for(request.session).fetch(params.fetch("provider_id"), params.fetch("kind"), request.registry,
+                                                :generation => params["generation"])
       rows = entry.fetch("rows").each_with_index.to_a
       page, next_cursor = Pages.slice(request, query, rows, :key => ->((_row, index)) { [index] },
                                                             :revision => [entry.fetch("generation"), revision])

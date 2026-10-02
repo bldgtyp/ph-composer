@@ -77,7 +77,7 @@ module PhComposer
           catalog = materials(request)
           replacement = request.engine.find(MATERIAL_KIND, replacement_id)
           records(request, ASSEMBLY_KIND).each do |record|
-            next unless Assembly::Schema::KIND.references.first.ids(record).include?(id)
+            next unless Assembly::Schema::MATERIAL_REFERENCE.ids(record).include?(id)
 
             result = Commands.replace_material(record, :material_id => id, :replacement => replacement,
                                                 :materials => catalog)

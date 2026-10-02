@@ -53,7 +53,7 @@ module PhComposer
 
       def material(view, record, assemblies)
         uses = assemblies.select do |assembly|
-          Assembly::Schema::KIND.references.first.ids(assembly).include?(record.fetch("id"))
+          Assembly::Schema::MATERIAL_REFERENCE.ids(assembly).include?(record.fetch("id"))
         end.map { |assembly| { "assembly_id" => assembly.fetch("id"), "name" => assembly.fetch("name") } }
         view.merge("findings" => Validation.material(record), "uses" => uses, "use_count" => uses.length)
       end

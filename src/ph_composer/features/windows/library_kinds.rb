@@ -25,7 +25,7 @@ module PhComposer
           @collection = collection
           @kind = Products::KINDS.fetch(collection)
           @fields = kind.values_schema.fetch("properties").keys - ["source"]
-          @numbers = Products::SPECS.fetch(collection).fetch(:numbers).keys
+          @numbers = Products.number_keys(collection)
         end
 
         def map(row)
@@ -72,7 +72,7 @@ module PhComposer
           row = Shapes.object({ "id" => Shapes::TEXT, "mapped" => schema, "expected_values" => expected,
             "source" => kind.values_schema.fetch("properties").fetch("source") }, :optional => ["source"])
           callback(Shapes::NONE, Shapes.list(row)) do |request, _proposal|
-            Operations.records(request, kind).map do |record|
+            Catalog.records(request, kind).map do |record|
               projection = { "id" => record.fetch("id"), "mapped" => map(record),
                              "expected_values" => DeepCopy.call(record.slice(*fields)) }
               projection["source"] = DeepCopy.call(record["source"]) if record.key?("source")
@@ -87,7 +87,7 @@ module PhComposer
           params.fetch("properties").fetch("values").fetch("properties")["source"] =
             kind.values_schema.fetch("properties").fetch("source")
           callback(params, Shapes::RESULT) do |request, proposal|
-            Operations.update(request, proposal, @collection, :id => request.params.fetch("id"),
+            Products::Operations.update(request, proposal, @collection, :id => request.params.fetch("id"),
               :values => request.params.fetch("values"), :expected_values => request.params.fetch("expected_values"))
           end
         end
@@ -98,7 +98,7 @@ module PhComposer
             :fingerprint_fields => fields, :map => method(:map), :reverse => method(:reverse),
             :fingerprint => method(:fingerprint), :local_read => local_read,
             :create => callback(Shapes.create(kind), Shapes::RESULT) do |request, proposal|
-              Operations.create(request, proposal, @collection, :values => request.params.fetch("values"),
+              Products::Operations.create(request, proposal, @collection, :values => request.params.fetch("values"),
                                                                 :user_data => request.params["user_data"])
             end, :replace => replace, :assign => LibraryAssignment.callback(@collection))
         end

@@ -2,8 +2,9 @@
 
 module PhComposer
   module Windows
-    # One action per Window Type grid gesture (types/grid_operations.rb). Each carries its own
-    # description and Undo name, written for an agent reading describe.
+    # One action per Window Type grid gesture. Each carries its own description and Undo name,
+    # written for an agent reading describe, and `change`: the GridOperations function it makes,
+    # called with the stored record, the gesture's own params and an id allocator.
     module GridRegistration
       AXIS = { "type" => "string", "enum" => %w[rows_m columns_m],
                "description" => "rows_m for a horizontal band, columns_m for a vertical one." }.freeze
@@ -11,7 +12,7 @@ module PhComposer
       EXAMPLE_ID = "wnt_Ab12Cd34Ef56"
       EXAMPLE_ELEMENT = "wel_Ab12Cd34Ef56"
       ELEMENT_ID = "The element, by its id within this Window Type."
-      Gesture = Struct.new(:description, :undo_name, :properties, :example, keyword_init: true)
+      Gesture = Struct.new(:description, :undo_name, :properties, :example, :change, keyword_init: true)
 
       module_function
 
@@ -36,27 +37,31 @@ module PhComposer
           :properties => { "axis" => AXIS,
                            "index" => index("The boundary to insert at, 0 before the first band."),
                            "value" => Shapes.described(DIMENSION, "The new band's size, or null to leave it unset.") },
-          :example => { "axis" => "columns_m", "index" => 1, "value" => 1.0 }
+          :example => { "axis" => "columns_m", "index" => 1, "value" => 1.0 },
+          :change => ->(record, values, identity) { GridOperations.insert(record, values, identity) }
         ),
         "remove" => Gesture.new(
           :description => "Remove one row or column band and the elements only it held. Refused while the " \
                           "layout carries installation assignments, and for the last band.",
           :undo_name => "Remove Window Band",
           :properties => { "axis" => AXIS, "index" => index("The band to remove, 0 first.") },
-          :example => { "axis" => "rows_m", "index" => 0 }
+          :example => { "axis" => "rows_m", "index" => 0 },
+          :change => ->(record, values, _identity) { GridOperations.remove(record, values) }
         ),
         "merge" => Gesture.new(
           :description => "Merge two or more elements of one kind that cover one rectangle into a single " \
                           "element under a new id.",
           :undo_name => "Merge Window Elements",
           :properties => { "ids" => elements("The elements to merge.") },
-          :example => { "ids" => [EXAMPLE_ELEMENT] }
+          :example => { "ids" => [EXAMPLE_ELEMENT] },
+          :change => ->(record, values, identity) { GridOperations.merge(record, values, identity) }
         ),
         "split" => Gesture.new(
           :description => "Split one merged element back into one element per grid cell, each under a new id.",
           :undo_name => "Split Window Element",
           :properties => { "element_id" => element("The merged element to split.") },
-          :example => { "element_id" => EXAMPLE_ELEMENT }
+          :example => { "element_id" => EXAMPLE_ELEMENT },
+          :change => ->(record, values, identity) { GridOperations.split(record, values, identity) }
         ),
         "kind" => Gesture.new(
           :description => "Make elements glazed or Empty. Empty is wall area: it clears the elements' Glazing, " \
@@ -65,19 +70,22 @@ module PhComposer
           :properties => { "ids" => elements("The elements to change."),
                            "kind" => { "type" => "string", "enum" => %w[glazed empty],
                                        "description" => "glazed or empty." } },
-          :example => { "ids" => [EXAMPLE_ELEMENT], "kind" => "empty" }
+          :example => { "ids" => [EXAMPLE_ELEMENT], "kind" => "empty" },
+          :change => ->(record, values, _identity) { GridOperations.kind(record, values) }
         ),
         "flip" => Gesture.new(
           :description => "Mirror the layout left to right, swapping left and right Frames, installs and " \
                           "operation directions.",
-          :undo_name => "Flip Window Type", :properties => {}, :example => {}
+          :undo_name => "Flip Window Type", :properties => {}, :example => {},
+          :change => ->(record, _values, _identity) { GridOperations.flip(record) }
         ),
         "dimension" => Gesture.new(
           :description => "Set one row or column band's size.",
           :undo_name => "Resize Window Band",
           :properties => { "axis" => AXIS, "index" => index("The band to size, 0 first."),
                            "value" => Shapes.described(DIMENSION, "The band's size, or null to unset it.") },
-          :example => { "axis" => "columns_m", "index" => 0, "value" => 1.2 }
+          :example => { "axis" => "columns_m", "index" => 0, "value" => 1.2 },
+          :change => ->(record, values, _identity) { GridOperations.dimension(record, values) }
         ),
         "paste" => Gesture.new(
           :description => "Copy one glazed element's Glazing, Frames, operation and installs onto other glazed " \
@@ -85,19 +93,22 @@ module PhComposer
           :undo_name => "Paste Window Element",
           :properties => { "source_id" => element("The glazed element to copy from."),
                            "ids" => elements("The glazed elements to paste onto.") },
-          :example => { "source_id" => EXAMPLE_ELEMENT, "ids" => ["wel_Zy98Xw76Vu54"] }
+          :example => { "source_id" => EXAMPLE_ELEMENT, "ids" => ["wel_Zy98Xw76Vu54"] },
+          :change => ->(record, values, _identity) { GridOperations.paste(record, values) }
         ),
         "set_element_name" => Gesture.new(
           :description => "Name one element.", :undo_name => "Rename Window Element",
           :properties => { "element_id" => element,
                            "name" => { "type" => "string", "description" => "The element's name." } },
-          :example => { "element_id" => EXAMPLE_ELEMENT, "name" => "Fixed" }
+          :example => { "element_id" => EXAMPLE_ELEMENT, "name" => "Fixed" },
+          :change => ->(record, values, _identity) { GridOperations.set_element_name(record, values) }
         ),
         "set_element_glazing" => Gesture.new(
           :description => "Set or clear one glazed element's Glazing.", :undo_name => "Set Window Glazing",
           :properties => { "element_id" => element,
                            "glazing_id" => Shapes.id("glz", "The Glazing, or null to clear it.", :nullable => true) },
-          :example => { "element_id" => EXAMPLE_ELEMENT, "glazing_id" => "glz_Ab12Cd34Ef56" }
+          :example => { "element_id" => EXAMPLE_ELEMENT, "glazing_id" => "glz_Ab12Cd34Ef56" },
+          :change => ->(record, values, _identity) { GridOperations.set_element_glazing(record, values) }
         ),
         "set_element_frame" => Gesture.new(
           :description => "Set or clear the Frame on one side of one glazed element; the other sides stay.",
@@ -106,7 +117,8 @@ module PhComposer
                            "side" => { "type" => "string", "enum" => Types::SIDES,
                                        "description" => "The element side, as seen from outside." },
                            "frame_id" => Shapes.id("frm", "The Frame, or null to clear it.", :nullable => true) },
-          :example => { "element_id" => EXAMPLE_ELEMENT, "side" => "left", "frame_id" => "frm_Ab12Cd34Ef56" }
+          :example => { "element_id" => EXAMPLE_ELEMENT, "side" => "left", "frame_id" => "frm_Ab12Cd34Ef56" },
+          :change => ->(record, values, _identity) { GridOperations.set_element_frame(record, values) }
         ),
         "set_element_operation" => Gesture.new(
           :description => "Set or clear how one glazed element opens. A fixed element has no directions.",
@@ -116,22 +128,25 @@ module PhComposer
                                                                              "directions it opens toward, or " \
                                                                              "null when not specified.") },
           :example => { "element_id" => EXAMPLE_ELEMENT, "operation" => { "type" => "swing",
-                                                                          "directions" => ["left"] } }
+                                                                          "directions" => ["left"] } },
+          :change => ->(record, values, _identity) { GridOperations.set_element_operation(record, values) }
         )
       }.freeze
 
       def install(feature)
-        GESTURES.each do |command, gesture|
+        GESTURES.each do |name, gesture|
           properties = gesture.properties.merge("id" => Shapes.id("wnt", "The Window Type to edit."),
                                                 "expected_values" => Shapes.expected(Types::KIND))
-          feature.action("#{FEATURE_ID}.types.grid.#{command}", :description => gesture.description,
+          feature.action("#{FEATURE_ID}.types.grid.#{name}", :description => gesture.description,
             :params => Shapes.object(properties), :result => Shapes::TYPE_RESULT, :undo_name => gesture.undo_name,
             :side_effects => Shapes.side_effects("Changes this Window Type; its placed Windows follow."),
             :examples => [gesture.example.merge("id" => EXAMPLE_ID, "expected_values" => {})]) do |request, proposal|
             params = request.params
-            Operations.grid(request, proposal, :command => command, :id => params.fetch("id"),
-              :values => params.reject { |key, _| %w[id expected_values].include?(key) },
-              :expected_values => params.fetch("expected_values"))
+            values = params.reject { |key, _| %w[id expected_values].include?(key) }
+            Types::Operations.grid(request, proposal, :gesture => name, :id => params.fetch("id"), :values => values,
+              :expected_values => params.fetch("expected_values")) do |record, identity|
+              gesture.change.call(record, values, identity)
+            end
           end
         end
       end

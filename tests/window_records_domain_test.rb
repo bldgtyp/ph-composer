@@ -56,47 +56,46 @@ class WindowRecordsDomainTest < PhComposerTestCase
   def test_grid_insert_merge_split_remove_and_flip_are_detached
     record = window_values
     original = PhComposer::DeepCopy.call(record)
-    added = W::GridOperations.apply(record, "insert", { "axis" => "rows_m", "index" => 1, "value" => 1.5 },
-      :identity => window_allocator)
+    added = W::GridOperations.insert(record, { "axis" => "rows_m", "index" => 1, "value" => 1.5 },
+      window_allocator)
     assert_equal original, record
     assert_equal 2, added["elements"].length
-    merged = W::GridOperations.apply(added, "merge", { "ids" => added["elements"].map { |cell| cell["id"] } },
-      :identity => window_allocator)
+    merged = W::GridOperations.merge(added, { "ids" => added["elements"].map { |cell| cell["id"] } },
+      window_allocator)
     assert_equal [0, 1], merged["elements"].first["row_span"]
-    split = W::GridOperations.apply(merged, "split", { "element_id" => merged["elements"].first["id"] },
-      :identity => window_allocator)
+    split = W::GridOperations.split(merged, { "element_id" => merged["elements"].first["id"] },
+      window_allocator)
     assert_equal 2, split["elements"].length
-    removed = W::GridOperations.apply(split, "remove", { "axis" => "rows_m", "index" => 0 },
-      :identity => window_allocator)
+    removed = W::GridOperations.remove(split, { "axis" => "rows_m", "index" => 0 })
     assert_equal [0, 0], removed["elements"].first["row_span"]
     assert_raises(PhComposer::CodedError) do
-      W::GridOperations.apply(removed, "remove", { "axis" => "rows_m", "index" => 0 }, :identity => window_allocator)
+      W::GridOperations.remove(removed, { "axis" => "rows_m", "index" => 0 })
     end
     removed["elements"][0]["operation"] = { "type" => "swing", "directions" => %w[left up] }
-    flipped = W::GridOperations.apply(removed, "flip", {}, :identity => window_allocator)
+    flipped = W::GridOperations.flip(removed)
     assert_equal %w[right up], flipped["elements"][0]["operation"]["directions"]
-    assert_equal removed, W::GridOperations.apply(flipped, "flip", {}, :identity => window_allocator)
+    assert_equal removed, W::GridOperations.flip(flipped)
   end
 
   def test_insert_clear_only_new_shared_edges_and_merge_refuses_install_loss
     record = window_values
     cell = record["elements"].first
     cell["installs"].merge!("top" => "psi_top", "right" => "psi_right")
-    added = W::GridOperations.apply(record, "insert", { "axis" => "rows_m", "index" => 0, "value" => 0.5 },
-      :identity => window_allocator)
+    added = W::GridOperations.insert(record, { "axis" => "rows_m", "index" => 0, "value" => 0.5 },
+      window_allocator)
     original = added["elements"].find { |entry| entry["id"] == cell["id"] }
     assert_nil original["installs"]["top"]
     assert_equal "psi_right", original["installs"]["right"]
     assert_raises(PhComposer::CodedError) do
-      W::GridOperations.apply(added, "merge", { "ids" => added["elements"].map { |entry| entry["id"] } },
-        :identity => window_allocator)
+      W::GridOperations.merge(added, { "ids" => added["elements"].map { |entry| entry["id"] } },
+        window_allocator)
     end
   end
 
   def test_installs_paint_apply_copy_guard_topology_and_shared_slots
     source = window_values
-    added = W::GridOperations.apply(source, "insert", { "axis" => "columns_m", "index" => 1, "value" => 1 },
-      :identity => window_allocator)
+    added = W::GridOperations.insert(source, { "axis" => "columns_m", "index" => 1, "value" => 1 },
+      window_allocator)
     painted = W::Installs.apply_all(added, "psi_test")
     assert_nil painted["elements"][0]["installs"]["right"]
     assert_equal "psi_test", painted["elements"][0]["installs"]["left"]
@@ -109,20 +108,19 @@ class WindowRecordsDomainTest < PhComposerTestCase
   end
   def test_paste_installs_requires_matching_topology_and_empty_clears_all_assignments
     record = window_values
-    added = W::GridOperations.apply(record, "insert", { "axis" => "columns_m", "index" => 1, "value" => 1 },
-      :identity => window_allocator)
+    added = W::GridOperations.insert(record, { "axis" => "columns_m", "index" => 1, "value" => 1 },
+      window_allocator)
     added["elements"][0].merge!("glazing_id" => "glz_AAAAAAAAAAAA",
       "operation" => { "type" => "fixed", "directions" => [] })
-    copied = W::GridOperations.apply(added, "paste", { "source_id" => added["elements"][0]["id"],
-      "ids" => [added["elements"][1]["id"]] }, :identity => window_allocator)
+    copied = W::GridOperations.paste(added, { "source_id" => added["elements"][0]["id"],
+      "ids" => [added["elements"][1]["id"]] })
     assert_equal "glz_AAAAAAAAAAAA", copied["elements"][1]["glazing_id"]
     copied["elements"][0]["installs"]["left"] = "psi_AAAAAAAAAAAA"
     assert_raises(PhComposer::CodedError) do
-      W::GridOperations.apply(copied, "paste", { "source_id" => copied["elements"][0]["id"],
-        "ids" => [copied["elements"][1]["id"]] }, :identity => window_allocator)
+      W::GridOperations.paste(copied, { "source_id" => copied["elements"][0]["id"],
+        "ids" => [copied["elements"][1]["id"]] })
     end
-    empty = W::GridOperations.apply(copied, "kind", { "ids" => [copied["elements"][0]["id"]], "kind" => "empty" },
-      :identity => window_allocator)
+    empty = W::GridOperations.kind(copied, { "ids" => [copied["elements"][0]["id"]], "kind" => "empty" })
     cell = empty["elements"][0]
     assert_nil cell["glazing_id"]
     assert_nil cell["operation"]

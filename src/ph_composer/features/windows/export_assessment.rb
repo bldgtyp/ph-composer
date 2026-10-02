@@ -185,9 +185,11 @@ module PhComposer
         type.fetch("elements").reject { |cell| cell["kind"] == "empty" }.each do |cell|
           identifiers = [[cell["glazing_id"], "glazings"]] +
             cell.fetch("frames").values.map { |id| [id, "frames"] } +
-            cell.fetch("installs").values.map { |id| [id, "installs"] }
+            cell.fetch("installs").values.map { |id| [id, "psi_install_types"] }
           detail = thermal.fetch("elements").find { |row| row["id"] == cell["id"] }
-          identifiers += detail.fetch("edges").map { |edge| [edge.fetch("install")["id"], "installs"] } if detail
+          if detail
+            identifiers += detail.fetch("edges").map { |edge| [edge.fetch("install")["id"], "psi_install_types"] }
+          end
           if identifiers.any? { |id, collection| id && !@products.fetch(collection).key?(id) }
             issue("window_type.product_dangling",
               "A placed Type names an unavailable Frame, Glazing or Psi-Install Type.",
@@ -243,7 +245,7 @@ module PhComposer
           edge = detail.fetch("edges").find { |item| item["side"] == side }
           [side, { "frame" => frame.slice("id", "name", "width_m", "uf_w_m2k", "psi_g_w_mk"),
             "install_id" => edge.fetch("install")["id"],
-            "install_name" => @products.fetch("installs")[edge.fetch("install")["id"]]&.fetch("name"),
+            "install_name" => @products.fetch("psi_install_types")[edge.fetch("install")["id"]]&.fetch("name"),
             "psi_install_w_mk" => edge.fetch("install").fetch("psi_w_mk") }]
         end
         row = { "name" => glazing.fetch("name"), "uw_w_m2k" => detail.fetch("uw_w_m2k"),

@@ -49,7 +49,7 @@ module PhComposer
 
           # A constant seed: the repair depends on the Model, not on the action that triggers it. Ids
           # stay unique because a proposal holds one IdentityStep and each commit moves the revision.
-          allocator = identity || Operations.allocator(request, "repair" => "unit_identity")
+          allocator = identity || Catalog.allocator(request, "repair" => "unit_identity")
           changes = IdentityPlan.build(Occurrences.all(request.model), :identity => allocator,
             :catalog => request.registry.catalog, :engine => request.engine)
           return nil if changes.empty?

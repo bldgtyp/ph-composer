@@ -94,10 +94,13 @@ module PhComposer
         SNAPSHOT_SCHEMA = SchemaFields.source_snapshot_schema(FIELDS)
         FIELDS.find { |field| field.key == "source" }.schema.fetch("properties")["snapshot"] = SNAPSHOT_SCHEMA
 
+        # Every Layer-Segment's Material.
+        MATERIAL_REFERENCE = Records::Reference.new(:key => "layers[].segments[].material_id",
+                                                    :target_kind => MATERIAL_KIND, :cardinality => "one")
+
         KIND = Records::RecordKind.new(
           :id => ASSEMBLY_KIND, :label => "Assembly", :schema_version => 1, :id_prefix => "asm",
-          :fields => FIELDS, :references => [Records::Reference.new(:key => "layers[].segments[].material_id",
-                                                     :target_kind => MATERIAL_KIND, :cardinality => "one")],
+          :fields => FIELDS, :references => [MATERIAL_REFERENCE],
           :validate => method(:problems)
         )
       end

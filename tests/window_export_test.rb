@@ -20,7 +20,8 @@ class WindowExportTest < PhComposerTestCase
       "width_m" => 0.1, "uf_w_m2k" => 1.0, "psi_g_w_mk" => 0.03 } },
       "glazings" => { "glz_AAAAAAAAAAAA" => { "id" => "glz_AAAAAAAAAAAA", "name" => "Glazing",
         "ug_w_m2k" => 0.6, "g_value" => 0.5 } },
-      "installs" => { "psi_AAAAAAAAAAAA" => { "id" => "psi_AAAAAAAAAAAA", "name" => "Standard", "psi_w_mk" => 0.04 } } }
+      "psi_install_types" => { "psi_AAAAAAAAAAAA" => { "id" => "psi_AAAAAAAAAAAA", "name" => "Standard",
+                                                    "psi_w_mk" => 0.04 } } }
     @settings = W::Settings::DEFAULTS.merge("default_psi_install_id" => "psi_AAAAAAAAAAAA")
     @group = @model.entities.add_group
     @face = @group.entities.add_face([[0, 0, 0], [8, 0, 0], [8, 0, 6], [0, 0, 6]].map { |p|
@@ -156,8 +157,7 @@ class WindowExportTest < PhComposerTestCase
   def seed_export_records
     W::Types::KIND.store.write(@model, @type)
     @products.each do |collection, rows|
-      key = collection == "installs" ? "psi_install_types" : collection
-      kind = W::Products::KINDS.fetch(key)
+      kind = W::Products::KINDS.fetch(collection)
       rows.each_value { |row| kind.store.write(@model, row.merge("schema_version" => 1)) }
     end
     W::Settings::SERVICE.store.write(@model, @settings)
@@ -371,7 +371,7 @@ class WindowExportTest < PhComposerTestCase
   def build_fixture_apertures(inputs, constructions)
     @fixture_matrix = @unit.transformation.to_a
     @group.entities.erase_entities(@unit)
-    @products = { "frames" => {}, "glazings" => {}, "installs" => {} }
+    @products = { "frames" => {}, "glazings" => {}, "psi_install_types" => {} }
     @settings = W::Settings::DEFAULTS
     types, expected = {}, {}
     index = U::DefinitionIndex.read(@model)
@@ -404,7 +404,7 @@ class WindowExportTest < PhComposerTestCase
       @products["frames"][frame["id"]] = frame
       frames[side] = frame["id"]
       installs[side] = fixture_identity("psi", values.fetch("install_id"))
-      @products["installs"][installs[side]] = { "id" => installs[side], "name" => values.fetch("install_name"),
+      @products["psi_install_types"][installs[side]] = { "id" => installs[side], "name" => values.fetch("install_name"),
         "psi_w_mk" => values.fetch("psi_install_w_mk") }
     end
     cell = @type.fetch("elements").first.merge("id" => fixture_identity("wel", input.fetch("element_id")),
@@ -562,7 +562,7 @@ class WindowExportTest < PhComposerTestCase
     @type["elements"].first["name"] = "Renamed pane"
     @products["frames"].values.first["name"] = "Renamed Frame"
     @products["glazings"].values.first["name"] = "Renamed Glazing"
-    @products["installs"].values.first["name"] = "Renamed Install"
+    @products["psi_install_types"].values.first["name"] = "Renamed Install"
     after = assess
     assert_equal before.constructions.first["id"], after.constructions.first["id"]
     assert_equal before.apertures.first["id"], after.apertures.first["id"]

@@ -41,8 +41,7 @@ module PhComposer
         reader.projection(APERTURES) do
           types = reader.records(TYPE_KIND).to_h { |row| [row.fetch("id"), row] }
           products = Products::KINDS.to_h do |collection, kind|
-            key = collection == "psi_install_types" ? "installs" : collection
-            [key, reader.records(kind.id).to_h { |row| [row.fetch("id"), row] }]
+            [collection, reader.records(kind.id).to_h { |row| [row.fetch("id"), row] }]
           end
           settings = ExportGeometry.record(reader.snapshot.model_dictionaries, Settings::SERVICE.store) ||
             DeepCopy.call(Settings::DEFAULTS)

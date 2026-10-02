@@ -12,50 +12,70 @@ module PhComposer
     # Products are model-owned definitions. Signed junction values and zero U-values are authored
     # exactly; missing values remain absent or null until the user supplies them.
     module Products
-      SPECS = {
-        "frames" => { :id => FRAME_KIND, :prefix => "frm", :label => "Frame",
-                :text => %w[manufacturer product_code position operation],
-                :numbers => { "width_m" => ["m", 0], "uf_w_m2k" => ["W/m2K", 0],
-                "psi_g_w_mk" => ["W/mK", nil] } },
-        "glazings" => { :id => GLAZING_KIND, :prefix => "glz", :label => "Glazing",
-                :text => %w[manufacturer product_code description],
-                :numbers => { "ug_w_m2k" => ["W/m2K", 0], "g_value" => ["fraction", 0, 1] } },
-        "psi_install_types" => { :id => PSI_INSTALL_KIND, :prefix => "psi", :label => "Psi-Install Type",
-                :text => [], :numbers => { "psi_w_mk" => ["W/mK", nil] } }
-      }.freeze
-
       module_function
 
-      def numeric_schema(spec)
-        shape = { "type" => %w[number null], "x-unit" => spec.first }
-        shape["minimum"] = spec[1] unless spec[1].nil?
-        shape["maximum"] = spec[2] unless spec[2].nil?
-        shape
+      def text(key)
+        Fields.field(key, { "type" => "string" })
       end
 
-      def fields(spec)
-        result = Fields.common + spec.fetch(:text).map { |key| Fields.field(key, { "type" => "string" }) }
-        result += spec.fetch(:numbers).map { |key, shape| Fields.field(key, numeric_schema(shape)) }
-        result << Fields.field("color", { "type" => "string" }) unless spec.fetch(:id) == PSI_INSTALL_KIND
-        result
+      # A missing value stays null until the user supplies it; `minimum` is inclusive, so a zero
+      # U-value is authored exactly, and a signed value has none.
+      def number(key, unit, minimum: nil, maximum: nil)
+        schema = { "type" => %w[number null], "x-unit" => unit }
+        schema["minimum"] = minimum unless minimum.nil?
+        schema["maximum"] = maximum unless maximum.nil?
+        Fields.field(key, schema)
       end
 
-      KINDS = SPECS.to_h do |collection, spec|
-        authored = fields(spec)
+      def color
+        Fields.field("color", { "type" => "string" })
+      end
+
+      # One product kind: the shared authoring fields, then `own_fields`.
+      def kind(id:, label:, prefix:, own_fields:)
+        authored = Fields.common + own_fields
         snapshot_schema = Fields.source_snapshot_schema(authored)
         authored.find { |field| field.key == "source" }.schema.fetch("properties")["snapshot"] = snapshot_schema
-        kind = Records::RecordKind.new(
-          :id => spec.fetch(:id), :label => spec.fetch(:label), :schema_version => 1,
-          :id_prefix => spec.fetch(:prefix), :fields => authored,
-          :validate => ->(values) {
- Fields.problems(values) + Fields.source_problems(values["source"], snapshot_schema) }
+        Records::RecordKind.new(
+          :id => id, :label => label, :schema_version => 1, :id_prefix => prefix, :fields => authored,
+          :validate => lambda do |values|
+            Fields.problems(values) + Fields.source_problems(values["source"], snapshot_schema)
+          end
         )
-        [collection, kind]
-      end.freeze
+      end
 
+      # Each product kind's fields after the shared ones, by its collection name.
+      OWN_FIELDS = {
+        "frames" => [text("manufacturer"), text("product_code"), text("position"), text("operation"),
+                     number("width_m", "m", :minimum => 0), number("uf_w_m2k", "W/m2K", :minimum => 0),
+                     number("psi_g_w_mk", "W/mK"), color],
+        "glazings" => [text("manufacturer"), text("product_code"), text("description"),
+                       number("ug_w_m2k", "W/m2K", :minimum => 0),
+                       number("g_value", "fraction", :minimum => 0, :maximum => 1), color],
+        "psi_install_types" => [number("psi_w_mk", "W/mK")]
+      }.freeze
+
+      KINDS = {
+        "frames" => kind(:id => FRAME_KIND, :label => "Frame", :prefix => "frm",
+                         :own_fields => OWN_FIELDS.fetch("frames")),
+        "glazings" => kind(:id => GLAZING_KIND, :label => "Glazing", :prefix => "glz",
+                           :own_fields => OWN_FIELDS.fetch("glazings")),
+        "psi_install_types" => kind(:id => PSI_INSTALL_KIND, :label => "Psi-Install Type", :prefix => "psi",
+                                    :own_fields => OWN_FIELDS.fetch("psi_install_types"))
+      }.freeze
+
+      # The collection's numeric fields: thermal inputs a replacement must also carry.
+      def number_keys(collection)
+        OWN_FIELDS.fetch(collection).reject { |field| field.schema.fetch("type") == "string" }.map(&:key)
+      end
+
+      # Authored text starts empty and color white; numbers stay absent.
       def defaults(collection, values)
-        result = SPECS.fetch(collection).fetch(:text).to_h { |key| [key, ""] }
-        result["color"] = "#ffffff" unless collection == "psi_install_types"
+        result = OWN_FIELDS.fetch(collection).each_with_object({}) do |field, row|
+          next unless field.schema.fetch("type") == "string"
+
+          row[field.key] = field.key == "color" ? "#ffffff" : ""
+        end
         result.merge(Fields.defaults(values))
       end
     end

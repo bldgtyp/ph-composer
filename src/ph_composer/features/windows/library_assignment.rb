@@ -28,19 +28,26 @@ module PhComposer
             id = request.params.fetch("local_id")
             if collection == "psi_install_types"
               assign_psi(request, proposal, target, id)
+            elsif collection == "frames"
+              values = { "element_id" => target.fetch("element_id"), "side" => target.fetch("side"), "frame_id" => id }
+              assign_grid(request, proposal, target, "set_element_frame", values) do |record|
+                GridOperations.set_element_frame(record, values)
+              end
             else
-              command, values = if collection == "frames"
-                                  ["set_element_frame", { "side" => target.fetch("side"), "frame_id" => id }]
-                                else
-                                  ["set_element_glazing", { "glazing_id" => id }]
-                                end
-              Operations.grid(request, proposal, :command => command, :id => target.fetch("id"),
-                :values => values.merge("element_id" => target.fetch("element_id")),
-                :expected_values => target.fetch("expected_values"))
+              values = { "element_id" => target.fetch("element_id"), "glazing_id" => id }
+              assign_grid(request, proposal, target, "set_element_glazing", values) do |record|
+                GridOperations.set_element_glazing(record, values)
+              end
             end
             { "assigned" => true }
           end
         )
+      end
+
+      # The same grid gesture the action of that name makes, guarded by the target's expected values.
+      def assign_grid(request, proposal, target, gesture, values, &change)
+        Types::Operations.grid(request, proposal, :gesture => gesture, :id => target.fetch("id"), :values => values,
+          :expected_values => target.fetch("expected_values")) { |record, _identity| change.call(record) }
       end
 
       def assign_psi(request, proposal, target, id)

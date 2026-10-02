@@ -25,7 +25,7 @@ class WindowUnitFlipStepTest < PhComposerTestCase
   end
 
   def target_type
-    result = W::GridOperations.apply(@source, "flip", {}, :identity => window_allocator)
+    result = W::GridOperations.flip(@source)
     result["id"] = window_allocator.call("wnt")
     result["name"] = "Flipped Type"
     result.fetch("elements").each { |cell| cell["id"] = window_allocator.call("wel") }

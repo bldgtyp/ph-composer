@@ -20042,7 +20042,7 @@ Example params:
 
 Duplicate a Frame with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Frame. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Duplicate Frame. Copies definition metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20858,7 +20858,7 @@ Example params:
 
 Duplicate a Glazing with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Glazing. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Duplicate Glazing. Copies definition metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21541,7 +21541,7 @@ Example params:
 
 Duplicate a Psi-Install Type with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Psi-Install Type. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Duplicate Psi-Install Type. Copies definition metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
