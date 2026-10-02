@@ -1,7 +1,7 @@
 # Phase 2: envelope
 
 DATE: 2026-09-30
-STATUS: Complete on branch; current-host acceptance passes. Not merged or released.
+STATUS: Merged to main through PR #15 on 2026-10-01 (merge commit `c687a73`); current-host acceptance passes. Not released.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 

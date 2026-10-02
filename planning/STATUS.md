@@ -19,6 +19,7 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
+| 2 | Phase 2 envelope: PR #15 review findings | refactor | Requested; eleven findings recorded, Ed's eight decisions answered 2026-10-01. PR #15 merged as is on 2026-10-01; one new branch per finding | none (local planning draft); reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15) | [features/phase-02-envelope/refactor/](features/phase-02-envelope/refactor/README.md); no code authorized yet |
 | 3 | Spaces | feature | Scoped, interviewed | none (no remote) | [features/phase-03-rooms-and-junctions/spaces/](features/phase-03-rooms-and-junctions/spaces/README.md) |
 | 3 | Thermal bridges | feature | Requested, PRD drafted | none (no remote) | [features/phase-03-rooms-and-junctions/thermal-bridges/](features/phase-03-rooms-and-junctions/thermal-bridges/README.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
@@ -33,7 +34,9 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 | none | METr export | feature | Deferred; return milestone unscheduled | none (local planning draft) | [features/unscheduled/metr-export/](features/unscheduled/metr-export/README.md); Phase 1 row A15; Ed deferred until further feature development on 2026-09-20 |
 | none | SketchUp 2023 floor verification | feature, host gate | Requested | none (local planning draft) | [features/unscheduled/sketchup-2023-floor/](features/unscheduled/sketchup-2023-floor/README.md); no 2023 host run yet |
 | none | Windows support verification | feature, host gate | Requested | none (local planning draft) | [features/unscheduled/windows-support/](features/unscheduled/windows-support/README.md); first release candidate is macOS-only |
+| none | Agent-authorized file access (library export and setup) | feature | Requested; deferred from the Phase 2 review, owed before agents can manage libraries | none (local planning draft) | [features/unscheduled/agent-authorized-file-access/](features/unscheduled/agent-authorized-file-access/README.md); depends on the unscheduled agent connection and access-grant packet, which does not exist yet |
 | none | Legend hover-to-highlight | feature | Requested | none (local planning draft) | [features/unscheduled/legend-hover-highlight/](features/unscheduled/legend-hover-highlight/README.md); fourth Q18 legend affordance, deferred from Phase 1 D7 on cost |
+| n/a | RuboCop `Layout` department | refactor | Requested; Ed chose the full department on 2026-10-01. PR #15 merged 2026-10-01; blocked until the Phase 2 review refactors are done; own pull request, formatting only | none (local planning draft) | [refactor/rubocop-layout.md](refactor/rubocop-layout.md) |
 | n/a | Native acceptance tooling | workflow | Implemented; historical evidence indexed, observed-result validation and dependency screening | none (local tooling work) | [native-acceptance/](native-acceptance/README.md); tools and skills remain development-only |
 | n/a | UI baseline from the predecessor's six screens | reference | Scoped | none (no remote) | [ui-baseline/](ui-baseline/README.md) |
 | n/a | PHX dependency packaging | external follow-up | Deferred; Phase 0 runtime route proved | [PH-Tools/PHX#157](https://github.com/PH-Tools/PHX/issues/157) | [B1 disposition](archive/phase-00-foundation/evidence/spike-phx.md); METr integration deferred; retain pinned-wheel evidence for resumption |
@@ -44,10 +47,11 @@ States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·
 `Superseded`
 
 
-## Completed branch work awaiting delivery
+## Recently merged
 
-Phase 2 envelope is [accepted and archived](archive/phase-02-envelope/STATUS.md) on
-`codex/phase-02-envelope`, issue [#14](https://github.com/bldgtyp/ph-composer/issues/14).
-E01–E15/E17 pass with stated provenance; E16 is Phase 5. Branch published for independent
-review in [PR #15](https://github.com/bldgtyp/ph-composer/pull/15); no merge has occurred. The archive records acceptance, not release or platform support. Phase 3 remains
+Phase 2 envelope is [accepted and archived](archive/phase-02-envelope/STATUS.md), issue
+[#14](https://github.com/bldgtyp/ph-composer/issues/14) closed. [PR #15](https://github.com/bldgtyp/ph-composer/pull/15)
+merged to main on 2026-10-01 as merge commit `c687a73`. E01–E15/E17 pass with stated provenance; E16 is
+Phase 5. The archive records acceptance, not release or platform support. The independent review's
+eleven findings are the Phase 2 refactor row above; each lands on its own branch. Phase 3 remains
 the next planned feature scope and requires its own implementation authorization.

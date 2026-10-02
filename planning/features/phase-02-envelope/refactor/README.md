@@ -1,0 +1,145 @@
+# Phase 2 envelope: review findings and refactor packet
+
+DATE: 2026-10-01
+STATUS: Requested. Review complete and Ed's eight decisions recorded on 2026-10-01. No finding is
+scoped in detail, authorized for code or implemented.
+AUTHOR: Ed May, BLDGTYP, with Claude
+ISSUE: none (local planning draft). Reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15), merged 2026-10-01 as `c687a73`, which closed [#14](https://github.com/bldgtyp/ph-composer/issues/14).
+
+An independent whole-diff review of `codex/phase-02-envelope` at `7021eab` against `origin/main`
+(`26a87a2`), using `.agents/skills/ph-composer-architecture-review/SKILL.md` as the rubric and
+`context/CODING_STANDARDS.md`, `context/EXTENSIBILITY.md`, `context/AGENT_INTERFACE.md` and
+`context/CONTRACTS.md` as the authorities. This packet records findings for later agents to scope
+and implement. It changes no code and authorizes none.
+
+## Read order
+
+1. This file: scope, verdict, the ranked table, decisions Ed owes.
+2. The finding file being worked. Each is self-contained: locations, the governing rule, what was
+   observed, the consequence, the smallest adequate correction and its verification.
+3. `planning/archive/phase-02-envelope/DECISIONS.md` and `CONTRACTS.md` for what Phase 2 already
+   decided. Findings that revisit a recorded decision say so.
+
+## Scope and method
+
+Read in full: the diff to `core/`, `session/`, `shell/`, `export/`, `extension.rb` and
+`features/zones/`; all of `features/assemblies/`, `features/windows/`, `library/`; the Python
+translation package; the panel composition, shared kit modules and section entry files. About 19,000
+lines of shipping source out of 75,966 added (32,150 of the additions are the generated
+`docs/API_REFERENCE.md`).
+
+Checked by measurement: the registered operation inventory through `API.discover` and `API.describe`;
+cross-feature constant and registry reaches by grep; duplicated helpers by grep; five suspected
+behaviours by scratch tests on Ruby 3.2.2 (not committed).
+
+Not reviewed, or reviewed only by sampling:
+
+- Test quality and coverage. The suite was not audited; counts in the PR body were not re-run.
+- Visual and interaction quality of the screens (UI polish skill), CSS, and most of the larger panel
+  files (`window_cards.js`, `window_editor.js`, `assembly_editor.js`, `inventory_grid.js`,
+  `record_edits.js`) beyond grep checks for layering.
+- `tools/`, the hostkit, vendor manifest, `starter-library/`, fixtures and goldens.
+- Thermal formulas against the predecessor's reference cases.
+- Any host behaviour. No SketchUp run. `make ci` was not re-run locally; both PR jobs (Ruby 2.7.2
+  and 3.2.2) report pass on GitHub for `7021eab`.
+
+## Verdict
+
+The foundation held under three new features. `shell/`, `session/`, `core/`, `colour_by/` and the
+Ruby side of `export/` name no feature. Handlers add steps to one proposal and never write. The
+definition delete with retargeting, the library kind adapter seam, table contributions, nested
+reference declarations and `request.query` are real contracts that built-in features use. No
+thermal calculation leaked into JavaScript. Every one of the 90 new operations is discoverable and
+reachable through the API with the panel closed; three of them open native dialogs when called
+(R05 item A).
+
+The problems cluster where a feature needed something the foundation did not yet offer and worked
+around it locally. Four of those gaps (R01 to R04) will be hit again by Spaces and thermal bridges,
+so they are worth closing as contracts before Phase 3 rather than after. The agent surface is broad
+but uneven in three places that matter: operations that open native dialogs, a `view` grant that now
+reaches machine configuration, and finding codes that differ by read.
+
+No finding loses Model data. Two can lose per-machine library configuration (R05 item B, R10 item
+9). Nothing here blocks merging PR #15 on correctness grounds. Ed decided on 2026-10-01 to merge it
+as is and take every finding on its own branch (see Sequencing).
+
+## Findings
+
+Class follows the skill: reproduced defect, evidenced contract violation, unverified risk, optional
+improvement.
+
+| ID | Finding | Class | Size | Priority |
+| --- | --- | --- | --- | --- |
+| [R01](R01-export-layering.md) | Export and translation layering runs upward: `ZoneSection` requires Apertures, Zones declares Window result fields, Windows calls a Zones module directly, shared conformance names Windows | Evidenced contract violation | Large, architecture | 1 |
+| [R02](R02-handler-read-context.md) | Colour-by projections and menus get no read context; features use `API.connect` per call (caller registry grows, reproduced), `Registry.current`, and instance variables smuggled onto the request | Reproduced defect inside a contract gap | Medium | 2 |
+| [R05](R05-agent-access.md) | Agent access: native dialogs inside public operations; `view` grant removes machine configuration (reproduced); implicit Unit identity repair; offset paging; 218 of 233 params undescribed; untyped `grid.element`; defaults depend on display preference (reproduced, a recorded port); agent docs not extended | Mixed, two reproduced | Medium, several small | 2 |
+| [R03](R03-entity-target-resolution.md) | No public way to resolve a Face reference to a live Face; Windows re-implements Zones' path resolution in six places and loads the whole Face table per Unit operation | Evidenced contract gap, one unverified performance risk | Medium, architecture | 3 |
+| [R06](R06-findings-and-codes.md) | Finding codes: no `noun.condition` form, two codes for one condition, codes derived from message text, Zones matching Assemblies' codes, `request.stale_revision` (reproduced), 48 codes missing from the table | Evidenced contract violation | Medium, touches panel and report | 3 |
+| [R11](R11-context-doc-drift.md) | `context/` not updated: stale Extensibility paragraphs, no Window Unit storage or library mechanics in Contracts, glossary gaps | Evidenced, docs only | Small | 3 |
+| [R04](R04-operations-coupled-to-request.md) | Operations read `request.params`; reuse duplicates the request, pulls actions out of registration staging and replays handler blocks; partial engine stand-in built with `define_method` | Evidenced contract violation | Medium | 4 |
+| [R07](R07-window-unit-steps.md) | Seven Unit steps each carry their own copy of the same guards and vector maths; planning lives in long constructors; one matcher swallows every error | Optional improvement, one silent-failure pattern | Medium | 4 |
+| [R08](R08-definition-feature-pattern.md) | Definition features fork one generic path by kind, build kinds and actions from positional tables, and repeat schema builders six times | Optional improvement | Medium | 5 |
+| [R09](R09-ui-kit-organization.md) | Library pane hard-codes Materials and Attached zones beside a surface seam only Windows uses; feature screens share a flat directory with the kit | One evidenced, rest optional | Small to medium | 5 |
+| [R10](R10-readability-and-lint.md) | Mechanically wrapped lines, inconsistent continuation style, folded conditions; `Layout` cops are off. Formatting itself moves to a separate post-merge pull request | Optional improvement | Small | 6 |
+
+## Sequencing
+
+Decided by Ed on 2026-10-01.
+
+**Governing criterion.** PH-Composer has no users, is not deployed and is not in use. Nothing here is
+weighed against the state of a running product: there is no compatibility promise, no migration and
+no deprecation path to protect. The one criterion for ordering and for how far a change goes is how
+well later agents and contributors can read and extend the result. Renames, contract changes and
+moved files are free now and should be done completely rather than staged.
+
+**Order.**
+
+0. **Merge PR #15 as it stands.** Done 2026-10-01: merge commit `c687a73`, issue #14 closed. The
+   accepted Phase 2 build is what landed on main; no review fix was added to that branch.
+1. **One new branch and pull request per finding**, cut from main after the merge. Each finding file
+   is the brief for its branch. Suggested order, each rebased on the ones before it:
+   1. **R11**, documentation only. It gives the others current authorities to cite.
+   2. **R02** and the small **R05** items (D, E, H) and **R06** item 6. Independent, each with a
+      focused test. These remove the reproduced defects.
+   3. **R05 item B**, the `setup` verb and grant, and **R05 item A**, the clean refusal for scripted
+      callers. Then **R05 items C, F, G, I**.
+   4. **R06 with R08's naming items**: one rename pass over finding codes and unit-bearing field
+      names.
+   5. **R01**, then **R03**, then **R04**. Each starts with a short design note against its recorded
+      decision. R01 changes where Spaces attach, R03 how a placing feature finds its host, R04 how
+      handlers are written. All three land before Phase 3's first stage.
+   6. **R07**, **R08's remaining items**, **R09**, **R10 items 3 to 9**.
+2. **Last: the formatting-only pull request** in
+   [planning/refactor/rubocop-layout.md](../../../refactor/rubocop-layout.md).
+
+A branch that changes shipping Ruby, Python or panel assets ends with `make ci` on both Rubies and
+the host gates its finding file names. Refresh the vendor manifest after panel or Python changes.
+
+## Decisions before scoping
+
+Ed answered all eight on 2026-10-01. The owning finding file holds the full record of each.
+
+| # | Decision | Recommendation | Blocks | Ed's answer |
+| --- | --- | --- | --- | --- |
+| 1 | Model assembly: a foundation section with an attachment contract, or Zones stays the assembler? | Foundation section; Zones contributes Rooms and Faces | R01 | 2026-10-01: foundation section, as recommended. Principle: atomic independent entities, composed by higher-level entities |
+| 2 | Namespace export result fields by section id? | Yes; makes cross-feature reads declarable | R01 | 2026-10-01: yes, as recommended. Cross-section reads are declared and checked at registration |
+| 3 | May a live entity cross a feature boundary through a reference target's `locate`? | Yes, for read and glue only | R03 | 2026-10-01: yes, as recommended. `locate` on the reference target; read and glue only, record writes stay with the owner |
+| 4 | Session and machine state commands: new verb and grant, or widen the documented `view` contract? | New verb and grant | R05 B | 2026-10-01: new verb and grant (working name `setup`), as recommended. `view` returns to viewport only |
+| 5 | Library export and setup for scripted callers: design authorized paths now, or document as dialog-only and refuse scripted calls cleanly? | Refuse cleanly now; design with the access grant | R05 A | 2026-10-01: refuse cleanly now, as recommended, on condition the later agent work is recorded. Recorded in [agent-authorized-file-access](../../unscheduled/agent-authorized-file-access/README.md) |
+| 6 | Rename finding codes and unit-bearing display fields now? | Yes, before any release | R06, R08 | 2026-10-01: yes, both, in one pass before any release, as recommended |
+| 7 | Enable a minimal `Layout` cop set? | Yes | R10 | 2026-10-01: not as recommended. Ed chose the full `Layout` department, after PR #15 merges, on its own pull request once the other refactor work is done. Recorded in [planning/refactor/rubocop-layout.md](../../../refactor/rubocop-layout.md) |
+| 8 | Merge PR #15 before or after R01 to R06? | Merge after R11 and the small defects in step 2; do R01, R03, R04 on a follow-up branch before Phase 3 | all | 2026-10-01: merge PR #15 now, as is. Every finding then lands on its own new branch. No fixes are added to the Phase 2 branch first |
+
+## Evidence retained
+
+The scratch probes are not in the repository. Their results, on this branch at `7021eab`, Ruby 3.2.2:
+
+| Probe | Result |
+| --- | --- |
+| Five calls to `Zones::Faces::ColourModes.assembly_entries(model)` | `session.callers.count` 1 to 6 |
+| `ph_composer.library.providers.remove` from a context with `capabilities: ["view"]` | `completed`; stored providers 1 to 0 |
+| `ph_composer.windows.types.create`, same params, display system SI then IP | `columns_m, rows_m` `[[1.0],[1.5]]` then `[[1.016],[1.524]]` (recorded port; see R05 item H) |
+| `ph_composer.library.export_file` with a stale `expected_revision` | `refused`, code `request.stale_revision` |
+| `API.discover` and `API.describe` over the Phase 2 operations | 90 operations; 233 top-level params, 218 without a description; no Windows identity repair action |
+
+An implementing agent should turn each probe into the focused test named in its finding file.

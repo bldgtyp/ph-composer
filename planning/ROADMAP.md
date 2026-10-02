@@ -1,7 +1,7 @@
 # Roadmap
 
 DATE: 2026-10-01
-STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 planned in detail 2026-09-30 and not yet authorized.
+STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 merged to main through PR #15 on 2026-10-01 and archived; its review refactors are open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -98,7 +98,7 @@ Phase 1 changed in these packets and the ten choices Ed answered on 2026-09-30.
 
 | # | Item | State | Stages | Note |
 | --- | --- | --- | --- | --- |
-| 2.1 | [Assemblies and materials](archive/assemblies/README.md) | Accepted and archived on branch; not merged | P2-01 to P2-06 | The largest port. Completes face assignment's assembly column and closes the Phase 1 construction gate |
+| 2.1 | [Assemblies and materials](archive/assemblies/README.md) | Accepted, archived and merged to main (PR #15) | P2-01 to P2-06 | The largest port. Completes face assignment's assembly column and closes the Phase 1 construction gate |
 | 2.2 | [Libraries](archive/libraries/README.md): file provider, Materials kind | Implemented and accepted with stated provenance | P2-07 to P2-09 | The seam, the envelope format and the first kind. Starter library as a separate download |
 | 2.3 | [Window Types and placement](archive/window-types/README.md) | Implemented and accepted on current host | P2-10 to P2-14 | Type editor is a port. Placement is new and builds on spike 0.5 |
 | 2.4 | Libraries: Frames, Glazings, Psi-Install Types | Implemented and host-verified | P2-15 | Three more kind adapters on the seam from 2.2 |
