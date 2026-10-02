@@ -24,6 +24,8 @@ module PhComposer
             raise CodedError.new("target.changed", "Zone settings changed after preview. Nothing was written.")
           end
           # The dispatcher applies on the session's Model, which is the planning request's Model.
+          raise InternalError, "Suggest applies only to the Model it planned on." unless model.equal?(@request.model)
+
           suggestion = Operations::Proposal.new
           Faces.auto_classify(@request, suggestion, :zone => slots.fetch(@zone_id), :skip_unwritable => true)
           suggestion.apply(model, @request.engine)

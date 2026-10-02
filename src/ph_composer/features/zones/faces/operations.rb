@@ -376,8 +376,8 @@ module PhComposer
         references.uniq { |reference| Zones::Occurrences.key(reference) }
       end
 
-      # The gesture ceiling. Public with check_expected! and new_record because Assembly assignment
-      # (assembly_assignment.rb) applies the same rules to its own Face gesture.
+      # The gesture ceiling. Public with check_expected!, new_record and reassignment_plan because
+      # Assembly assignment (assembly_assignment.rb) applies the same rules to its own Face gesture.
       def check_limit!(count)
         limit = gesture_face_limit
         return if count <= limit

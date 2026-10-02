@@ -1,7 +1,7 @@
 # R07: domain operations read the request envelope, so reuse means replaying handlers
 
 DATE: 2026-10-01
-STATUS: Requested
+STATUS: Implemented on branch `refactor/r07-operations-and-request`, 2026-10-02
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation (readability and dependency rules). Structural.
@@ -78,3 +78,69 @@ Paths are relative to `src/ph_composer/`.
 - Library copy, copy-and-assign and Installs staged import tests pass unchanged in behaviour
   (`library_coordinator_test.rb`, `library_copy_participant_test.rb`, `window_library_kinds_test.rb`).
 - `make fixtures-check` shows no change to `docs/API_REFERENCE.md`: this is internal restructuring.
+
+## Design
+
+Written 2026-10-02 against the proposal above, before code. Two deviations.
+
+- **Operations keep a request argument.** The proposal's example passes `engine:`. Operations also
+  need the Model, the session and revision (identity allocators), `Units::Mutation.prepare`,
+  `request.retarget_references` and `request.participant`. So an operation takes
+  `(request, proposal, ...)` as context and its params as keyword arguments. The violation was
+  reading `request.params`; the request as context stays.
+- **`with` carries `engine:` and `query_stack:` too.** The library invoker swaps the engine and
+  `query` extends the stack. `with` shares the caller's memos, as `dup` did.
+- **The projected engine lives in `core/records/`.** `Engine#projected(change_set, writable_kinds:,
+  refusal_code:)`. The core cannot ask the registry who owns a kind, so the invoker passes the
+  owner's kinds; the refusal code is the caller's (`library.mutation_owner`), so the core names no
+  library.
+- **Scope of the sweep.** Every operation that reads its params converts, in two commits: first
+  the reused paths (Assemblies, Windows, Faces auto-classify), then Zones, Faces, adjacency and
+  Window Units. Paged list queries keep the request, because `shell/pages.rb` reads the cursor and
+  the filter digest from it. Library callbacks unpack their own params, as a declaration does.
+- **Identity seeds.** Allocators seeded from `request.params` now take the operation's inputs.
+  Preview and invoke still derive the same ids; the values differ from before, which nothing
+  stores across revisions. Unit identity repair seeds with a constant: the repair depends on the
+  Model, not on the action that triggers it.
+
+## Outcome
+
+Implemented 2026-10-02 on `refactor/r07-operations-and-request`.
+
+1. **Named arguments.** `Assemblies::Operations`, `Windows::Operations`, `Windows::InstallSave`,
+   the Zone, Face, adjacency, split-repair and selection handlers and the Window Unit actions and
+   repairs take their params by name. Each declaration block unpacks `request.params` once.
+2. **Frozen request.** `HandlerRequest` freezes on construction and defaults `params`,
+   `query_stack` and `memos`; `with` derives a nested one. `query`, `retarget_references`, the
+   library invoker and the copy participant use it. `SuggestMadeZoneStep` no longer copies the
+   request: it passes `zone:` and applies on the session Model, which is the request's.
+3. **No `declared_actions` reach.** The Materials adapter builds its assignment target from
+   `SegmentRegistration.params` and `material_properties` and calls `Operations.gesture` with
+   `SegmentRegistration.set_material`; its schema is unchanged (`material_library_kind_test.rb`
+   compares it with the action's). Windows' assignment calls `Operations.grid`,
+   `Settings.propose` and `InstallSave.call`. Both adapters' `install` no longer takes the registry.
+4. **Projected engine.** `Records::ProjectedEngine` answers every engine read through the change
+   set and gates every proposal method; `library/callback_invoker.rb` has no engine class.
+5. **No `send`.** `Faces.check_limit!`, `check_expected!` and `new_record` are public with a
+   comment naming Assembly assignment; `reassignment_plan` already was.
+   `GeometrySnapshot.read_dictionaries` is public for its `Cursor`.
+
+Verification: the grep is empty. New tests: every engine read through a library callback's
+projection (`library_callback_invoker_test.rb`), and the frozen request and `with`
+(`handler_request_test.rb`). Library copy, copy-and-assign and staged import tests pass unchanged.
+`make fixtures-check` shows `docs/API_REFERENCE.md` unchanged. No host gate is named.
+
+Review: one independent Opus pass with the architecture rubric found no correctness regression.
+Checked: absent-versus-nil keys (`replacement_id` keeps its `retarget` flag), library assignment
+parity, the projection's refusals, identity determinism. Fixed: `SuggestMadeZoneStep` refuses a
+Model other than the planning one; the constant Unit repair seed is explained; `propose_migration`
+left the projection, which the old class never offered; comments on the shallow freeze and the
+shared Faces helpers; tests for a write into another change set and for `retarget_references`
+inside a callback.
+
+Follow-ups, not done here:
+
+- The projection's `find` refuses a missing record with `reference.invalid`, the plain engine with
+  `target.not_found`. A library replace of a deleted record answers the first. Pre-existing.
+- A frozen request still holds a mutable `params` Hash; deep-freezing it would make the contract
+  enforced rather than stated.

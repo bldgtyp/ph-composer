@@ -422,6 +422,11 @@ with no resolver with `operation.locate_missing`. The owner's `target.*` refusal
 unchanged. A located entity is for reading geometry and gluing to; its records stay the owner's to
 write (context/EXTENSIBILITY.md, "Entity-owned reference targets").
 
+A handler request is frozen. The foundation derives a nested one with `request.with(params:,
+owner:, proposal:, engine:, query_stack:)`, which shares the caller's memos; feature code passes
+values to its operations as arguments and never derives a request (context/EXTENSIBILITY.md,
+"Organization and dependencies").
+
 `request.memo(key) { ... }` computes a value once per request and shares it with the nested reads
 and callbacks the request makes. A memo is keyed by the current owner, so two features cannot
 collide, and by the current engine, so a value read through one engine is never reused under a
@@ -554,11 +559,16 @@ proposals". Its own checks run in this order, each refusing the whole proposal:
    (`library.assignment_unavailable` when the adapter has none).
 
 **Callback write ownership.** A create, replace or assign callback shares the caller's proposal.
-After it returns, every write staged before it must be unchanged and every write it added must
-be to a record kind its owner registered; otherwise `library.mutation_owner`. Local reads get no
-proposal. Any refusal inside the coordinator or a callback poisons the proposal, so a rescued
-error still writes nothing. `ph_composer.library.copy_into_proposal` applies the same rules
-inside another feature's action and refuses without that action's active proposal
+Its request's engine is `engine.projected(proposal, writable_kinds:, refusal_code:)`
+(`Records::ProjectedEngine`): every read (`find`, `ids`, `kind`, `view`, `resolve_reference`,
+`incoming_references`, `check_identity_removal!`) answers as the proposal would leave the records,
+and a write into another change set or to a kind its owner did not register refuses at once with
+`library.mutation_owner`. A local read's projection accepts no write. After the callback returns,
+every write staged before it must be unchanged and every write it added must be to a record kind
+its owner registered; otherwise `library.mutation_owner`. Local reads get no proposal. Any
+refusal inside the coordinator or a callback poisons the proposal, so a rescued error still writes
+nothing. `ph_composer.library.copy_into_proposal` applies the same rules inside another feature's
+action and refuses without that action's active proposal
 (`operation.proposal_required`) or when its owner neither is nor requires the library
 (`operation.dependency_missing`).
 

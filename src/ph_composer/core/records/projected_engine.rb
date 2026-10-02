@@ -6,7 +6,11 @@ module PhComposer
     # joins another caller's proposal (a library kind owner's callback). Reads go through the change
     # set: a staged create is found, a staged delete is gone. Proposals are accepted only into that
     # change set and only for `writable_kinds`; any other write refuses the whole change set with
-    # `refusal_code`. It never applies a change set; the dispatcher's engine does.
+    # `refusal_code`. It never applies a change set; the dispatcher's engine does. It does not migrate
+    # extension payloads and cannot be projected again: a callback does not start a nested copy.
+    #
+    # `find` resolves through the change set, so a missing record refuses `reference.invalid` rather
+    # than the plain engine's `target.not_found`.
     class ProjectedEngine
       def initialize(engine, change_set, writable_kinds:, refusal_code:)
         @engine = engine
@@ -72,11 +76,6 @@ module PhComposer
       def propose_duplicate(kind_id, ids, change_set, &values)
         writable!(kind_id, change_set)
         @engine.propose_duplicate(kind_id, ids, change_set, &values)
-      end
-
-      def propose_migration(kind_id, ids, namespace, change_set)
-        writable!(kind_id, change_set)
-        @engine.propose_migration(kind_id, ids, namespace, change_set)
       end
 
       private

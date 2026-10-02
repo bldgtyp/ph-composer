@@ -56,6 +56,27 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
     assert_nil @proposal.refusal
   end
 
+  def test_a_write_into_another_change_set_refuses_the_callers
+    invoke do |request, _changes|
+      request.engine.propose_create(KIND, PhComposer::Records::ChangeSet.new,
+                                    :values => PhComposer::Assemblies::Materials::Schema.defaults("name" => "Stray"))
+      {}
+    rescue PhComposer::CodedError
+      {}
+    end
+    assert_equal "library.mutation_owner", @proposal.refusal.code
+  end
+
+  def test_a_callback_can_retarget_references_through_its_request
+    invoke do |request, changes|
+      id = create(request, changes)
+      plan = request.retarget_references(KIND, :from => id, :to => nil)
+      assert_kind_of PhComposer::Records::ReferencePlan, plan
+      {}
+    end
+    assert_nil @proposal.refusal
+  end
+
   def test_invalid_result_poison_is_retained_after_callback_stages_a_copy
     assert_raises(PhComposer::CodedError) do
       invoke { |request, changes| create(request, changes)

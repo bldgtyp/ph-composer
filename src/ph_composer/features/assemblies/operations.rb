@@ -5,7 +5,8 @@ module PhComposer
     # Feature handlers read the explicit record target and stage through the public record engine.
     # The dispatcher validates and applies the entire proposal in one native transaction. Each
     # operation takes its inputs as arguments: a declaration unpacks its params once, and a library
-    # callback calls the same operation with its own (context/EXTENSIBILITY.md, "Operations").
+    # callback calls the same operation with its own (context/EXTENSIBILITY.md,
+    # "Organization and dependencies").
     module Operations
       module_function
 

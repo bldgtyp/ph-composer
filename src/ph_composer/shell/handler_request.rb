@@ -6,8 +6,9 @@ module PhComposer
   # reads"). `approval` is the location the user chose for a declaration that needs one
   # (Declarations::Approval), as a NativeApproval::Granted; it is nil everywhere else.
   #
-  # A request is frozen. The foundation derives a nested one with `with`; feature code passes the
-  # values it needs to its operations as arguments and never derives or alters a request.
+  # A request is frozen (the struct, not its params Hash). The foundation derives a nested one with
+  # `with`; feature code passes the values it needs to its operations as arguments and never derives
+  # or alters a request.
   HandlerRequest = Struct.new(:session, :model, :params, :engine, :revision, :registry, :owner, :proposal, :query_stack,
                               :memos, :approval, keyword_init: true) do
     # The one place a request is built from a session. `name` is the declaration the request runs
