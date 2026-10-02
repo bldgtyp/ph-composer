@@ -23,8 +23,8 @@ frozen-string comment, `Style/Semicolon`, line length 120, method length 40, cla
    `features/windows/declarations/grid.rb:12-13, 21-22`, `library/file_provider.rb:44-45, 76-77`.
    Mid-expression breaks with one-space indent: `core/records/fields.rb` (`remap`),
    `library/setup.rb:60-61`, `library/file_provider.rb:38-39`, `library/library_file.rb:89-90`,
-   `features/windows/operations.rb:120-121, 127-128`, `features/windows/snapshot.rb:95-96`,
-   `features/windows/products/schema.rb:50-51`, `features/windows/types/installs.rb:14-15`,
+   `features/windows/snapshot.rb` (`product`), `features/windows/products/operations.rb`
+   (`replace_in_types`; R09 split `features/windows/operations.rb`), `features/windows/types/installs.rb:14-15`,
    `features/windows/units/changes.rb:27-28`, `features/windows/units/type_retargeter.rb:16-17, 64-65`.
    These read as the output of a mechanical wrap.
 2. **Windows uses a different continuation style from the rest of the tree.** Hash and argument
@@ -38,7 +38,8 @@ frozen-string comment, `Style/Semicolon`, line length 120, method length 40, cla
    lines).
 4. **Schema mutation after construction.** `features/assemblies/assembly/schema.rb:94-95`,
    `features/assemblies/materials/schema.rb:57-61`, `features/windows/types/schema.rb:92-93` and
-   `features/windows/products/schema.rb:45-46` build a field list, then reach back into the `source`
+   `Products.kind` in `features/windows/products/schema.rb` (one place for the three products since
+   R09) build a field list, then reach back into the `source`
    field's schema to insert the snapshot schema derived from that list.
 5. **A validation call used for its exception.** `features/windows/place_tool.rb:27` calls
    `Units::Anchors.point(anchor, :width_m => 1, :height_m => 1)` only to validate `anchor`.
@@ -73,6 +74,14 @@ frozen-string comment, `Style/Semicolon`, line length 120, method length 40, cla
 14. **The library provider walkthrough reads one page.** Added 2026-10-02 from R03's follow-ups.
     `tools/examples/library_provider/walkthrough.rb` reads only the first page of `in_file` (and of
     `catalog`), so the worked example does not show paging.
+15. **Two copies of the deterministic id allocator.** Added 2026-10-02 from R09's follow-ups.
+    `Windows::Definitions.allocator` and `Assemblies::Definitions.identity_allocator` have the same
+    body under two names (`features/windows/definitions.rb`, `features/assemblies/definitions.rb`).
+    R09 kept them per feature, as its brief allowed. Phase 3's definition kinds would add a third.
+16. **A leftover alias.** Added 2026-10-02 from R09's follow-ups. `Assemblies::SchemaFields`
+    (`features/assemblies/schema_fields.rb`) aliases `Records::AuthoringFields` "so existing callers
+    retain the same API". Windows calls the same module `Fields`. Since R09 moved the schema
+    builders to `core/schema_shapes.rb`, the alias only renames the authoring-field helpers.
 
 ## Decision
 
@@ -106,9 +115,14 @@ touches.
     `expected_revision`; an unknown name and a closed session already open no dialog) before the dialog, and keep the post-dialog checks. One focused test: a
     busy session refuses without opening the dialog.
 13. Item 14: page `catalog` and `in_file` with `cursor` until `next_cursor` is null.
+14. Item 15: one allocator in core, such as `Records::Identity.allocator(request, inputs)`, used by
+    both features and by the Window Unit repairs. Keep the seed keys each caller passes today, so
+    derived ids do not change; the existing preview-equals-invoke tests check that.
+15. Item 16: call `Records::AuthoringFields` (or one short alias shared by both features) directly
+    and delete `schema_fields.rb`, moving its kind-id constants to the Assemblies entry file.
 
 ## Verification
 
-For this packet's remaining items (3 to 14): `make lint` passes on both Rubies under the current
+For this packet's remaining items (3 to 16): `make lint` passes on both Rubies under the current
 configuration. No behaviour change except items 6, 9, 10, 12 and 13, each with one focused test. The widened cop
 list is verified in the formatting pull request.
