@@ -1,8 +1,8 @@
 # Enable RuboCop's Layout department
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/rubocop-layout` 2026-10-02; dual-Ruby `make ci` passes. No host
-gate (no behaviour change)
+STATUS: Merged to main 2026-10-02 (PR #32); dual-Ruby `make ci` passes. No host gate (no behaviour
+change)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -69,7 +69,7 @@ that phase merges, never in the middle of one.
 
 ## Outcome
 
-Implemented 2026-10-02 on `refactor/rubocop-layout`. `.rubocop.yml` enables the whole `Layout`
+Implemented 2026-10-02 on `refactor/rubocop-layout`; merged as PR #32. `.rubocop.yml` enables the whole `Layout`
 department, including the four cops RuboCop 1.50 still marks pending. `context/CODING_STANDARDS.md`
 describes the result for a reader.
 
