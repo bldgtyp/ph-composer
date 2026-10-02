@@ -153,22 +153,17 @@ checks are visual.
 
 **Not run:** R03's carried checks (library setup dialogs from the panel and the Libraries menu,
 library export to an existing destination, paging past one page, Window Type grid gestures). They need
-native modal dialogs and a person at the host.
+native modal dialogs and a person at the host; they move to R11's carried host gate.
 
-Follow-ups, left out:
+Follow-ups, each recorded where it will be done:
 
-- **Pre-existing defect:** `panel.navigate` does not exist in `panel.js`, and `panel.section` ignores
-  `onNavigate`. Windows' "Open library" on a card (`features/windows/cards.js`), "Open type" in a
-  product's uses bubble (`features/windows/inventory.js`) and leaving a dirty install editor
-  (`features/windows/section.js`) call it and would throw. Not exercised by any test. Needs a test
-  that clicks one of them, then the navigation API.
-- The Windows products put "+ New" and an `h2` title inside their tab body; the UI polish rule says a
-  tab body starts with its action bar. Moving them to `createLabel` is a UI change for the polish skill.
-- `features/windows/schedule.js` depends on `features/zones/face_words`; the honeybee display words
-  could move to the kit.
-- `features/zones/` has two New Attached zone forms (`attached_zone_fields.js` with a plain number
-  input, `attached_zones.js` with a UnitField) and the reduction-factor descriptor twice in
-  `attached_zones.js`.
-- The UI polish reference's "predecessor only" section and its "arrive with Phase 2" note predate
-  Phase 2's local screens.
-
+- `panel.navigate` does not exist, so three Windows navigation controls would throw (pre-existing):
+  [R11](R11-readability-and-lint.md) item 17.
+- Windows' panel depends on Zones' `face_words`: R11 item 18.
+- Two New Attached zone forms and a duplicated factor descriptor: R11 item 19.
+- The UI polish reference's stale "predecessor only" entries: R11 item 20.
+- R03's carried host checks (setup dialogs, export over an existing file, paging, grid gestures):
+  R11's carried host gate.
+- The Windows product tabs keep an `h2` title and "+ New" inside the tab body:
+  [library-product-tab-headers](../../unscheduled/library-product-tab-headers/README.md), a UI
+  change for the polish skill.
