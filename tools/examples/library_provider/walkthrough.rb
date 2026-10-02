@@ -12,9 +12,9 @@ module BldgtypExampleLibraryWalkthrough
     api = PhComposer::API
     session = api.discover.fetch("sessions").find { |row| row.fetch("active") }
     raise "Open a synthetic Model first." unless session
-    context = api.connect(:session_id => session.fetch("id"), :capabilities => %w[read view model_write])
+    context = api.connect(:session_id => session.fetch("id"), :capabilities => %w[read view model_write setup])
     provider_id = "bldgtyp.example_library.materials"
-    loaded = checked(api.view(:context => context, :name => "ph_composer.library.load",
+    loaded = checked(api.setup(:context => context, :name => "ph_composer.library.load",
                               :params => { "provider_id" => provider_id, "kind" => "materials" }))
     selected = { "provider_id" => provider_id, "kind" => "materials", "generation" => loaded.fetch("generation") }
     catalog = checked(api.query(:context => context, :name => "ph_composer.library.catalog", :params => selected))
@@ -22,12 +22,12 @@ module BldgtypExampleLibraryWalkthrough
                                                                         catalog.fetch("unavailable").empty?
     row = catalog.fetch("rows").find { |entry| entry.fetch("record_id") == "insulation" }
     raise "The example catalog is unavailable." unless row
-    params = selected.merge("library_id" => row.fetch("library_id"), "record_id" => row.fetch("record_id"),
-                            "choice" => "inspect")
-    preview = api.preview(:context => context, :name => "ph_composer.library.copy", :params => params)
-    resolution = checked(preview).fetch("resolution").fetch("outcome")
+    resolved = checked(api.query(:context => context, :name => "ph_composer.library.in_file", :params => selected))
+    resolution = resolved.fetch("rows").find { |entry| entry.fetch("record_id") == "insulation" }
+                         .fetch("resolution").fetch("outcome")
     raise "Resolve the existing local record before running the example." unless %w[create reuse].include?(resolution)
-    params["choice"] = resolution == "create" ? "create" : "keep_local"
+    params = selected.merge("library_id" => row.fetch("library_id"), "record_id" => row.fetch("record_id"),
+                            "choice" => resolution == "create" ? "create" : "keep_local")
     preview = api.preview(:context => context, :name => "ph_composer.library.copy", :params => params)
     checked(preview)
     result = api.invoke(:context => context, :name => "ph_composer.library.copy", :params => params,

@@ -17,7 +17,7 @@ module PhComposer
           area = { "type" => %w[number null], "minimum" => 0, "x-unit" => "m2" }
           row = Shapes.object({ "reference" => face, "gross_area_m2" => area,
             "glazed_area_m2" => area, "net_opaque_area_m2" => area,
-            "unit_count" => { "type" => "integer", "minimum" => 0 }, "findings" => Shapes.list(Shapes::ID) })
+            "unit_count" => { "type" => "integer", "minimum" => 0 }, "findings" => Shapes.list(Shapes::TEXT) })
           result = Shapes.object({ "faces" => Shapes.list(row),
             "unhosted_units" => Shapes.list(TARGET.descriptor.occurrence_schema) })
           feature.query(QUERY,

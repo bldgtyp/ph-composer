@@ -5,6 +5,8 @@ module PhComposer
   # rows by a stable key, and a cursor carries the last key it returned together with what it was
   # read against: the Model session, the query, a digest of the filter and the revision. A cursor
   # reused after any of those changed is refused rather than mixing two states or two questions.
+  # A read whose rows do not come from the Model binds what they do come from instead of the
+  # revision, such as a library catalog's generation, by passing `revision:`.
   module Pages
     DEFAULT_LIMIT = 100
     MAXIMUM_LIMIT = 500
@@ -21,12 +23,12 @@ module PhComposer
     module_function
 
     # [page, next_cursor] of `rows`, which are sorted by `key`.
-    def slice(request, query, rows, key:)
+    def slice(request, query, rows, key:, revision: request.revision)
       limit = limit(request.params)
-      after = position(request, query)
+      after = position(request, query, revision)
       remaining = after.nil? ? rows : rows.select { |row| after_position?(key.call(row), after) }
       page = remaining.first(limit)
-      [page, remaining.length > limit ? token(request, query, key.call(page.last)) : nil]
+      [page, remaining.length > limit ? token(request, query, key.call(page.last), revision) : nil]
     end
 
     def limit(params)
@@ -36,11 +38,11 @@ module PhComposer
       raise CodedError.new("query.limit_invalid", "The page limit must be a whole number from 1 to #{MAXIMUM_LIMIT}.")
     end
 
-    def token(request, query, after)
-      [JSON.generate(binding_of(request, query).merge("after" => after))].pack("m0")
+    def token(request, query, after, revision = request.revision)
+      [JSON.generate(binding_of(request, query, revision).merge("after" => after))].pack("m0")
     end
 
-    def position(request, query)
+    def position(request, query, revision = request.revision)
       cursor = request.params["cursor"]
       return nil if cursor.nil?
 
@@ -48,13 +50,13 @@ module PhComposer
       raise ArgumentError, "not a cursor" unless decoded.is_a?(Hash) && decoded.key?("after") &&
                                                  [String, Array].include?(decoded["after"].class)
 
-      expected = binding_of(request, query)
+      expected = binding_of(request, query, revision)
       asked = decoded.reject { |key, _value| %w[after revision].include?(key) }
       if asked != expected.reject { |key, _value| key == "revision" }
         raise CodedError.new("params.invalid", "That cursor belongs to another query, filter or Model.")
       end
       unless decoded["revision"] == expected["revision"]
-        raise CodedError.new("query.cursor_expired", "The Model changed since this page was read; start again " \
+        raise CodedError.new("query.cursor_expired", "What this page was read from has changed; start again " \
                                                      "from the first page.")
       end
 
@@ -72,8 +74,8 @@ module PhComposer
       order.positive?
     end
 
-    def binding_of(request, query)
-      { "session" => request.session.id, "query" => query, "revision" => request.revision,
+    def binding_of(request, query, revision)
+      { "session" => request.session.id, "query" => query, "revision" => revision,
         "filter" => CanonicalJson.digest(request.params.reject { |key, _value| PAGE_KEYS.include?(key) }) }
     end
     private_class_method :after_position?, :binding_of

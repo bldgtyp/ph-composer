@@ -7,9 +7,10 @@ module PhComposer
   # application hands to a trusted in-process caller; the caller's capabilities live here, so nothing
   # a request carries can grant one. Handles end with their session and never survive a restart.
   class CallerRegistry
-    # `view` sits between the other two: it changes what the host shows, the selection, the camera and
-    # the active Colour-by mode, and never reaches the SKP (Declarations::ViewCommand).
-    CAPABILITIES = %w[read view model_write export].freeze
+    # `view` sits between `read` and `model_write`: it changes what the host shows, the selection, the
+    # camera and the active Colour-by mode, and never reaches the SKP (Declarations::ViewCommand).
+    # `setup` changes session or machine state, never the SKP (Declarations::SetupCommand).
+    CAPABILITIES = %w[read view model_write setup export].freeze
 
     Caller = Struct.new(:handle, :capabilities, :highest_sequence, keyword_init: true)
 

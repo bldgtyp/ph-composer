@@ -19,6 +19,11 @@ module PhComposer
         "#<#{self.class.name}>"
       end
 
+      # Whether the destination held a file when this writer was made.
+      def replaces?
+        !@prior.nil?
+      end
+
       def prior_bytes
         return nil if @prior.nil?
         if File.size(@destination) > LibraryFile::MAX_BYTES

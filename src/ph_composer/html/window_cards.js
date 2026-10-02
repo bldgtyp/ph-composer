@@ -13,13 +13,14 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
   methods.change = function (command, values, baseline, done) {
     var record = baseline || this.record(); if (!record) return false;
     var params = Object.assign({ id: record.id, expected_values: this.authored(record) }, values);
-    if ((command === "split" || command === "element") && params.id && values.id) {
+    var element = command.indexOf("set_element_") === 0;
+    if ((command === "split" || element) && params.id && values.id) {
       params.element_id = values.id; params.id = record.id;
     }
     if (command === "rename") return this.request("ph_composer.windows.types.update",
       { id: record.id, expected_values: { name: record.name }, values: { name: values.name } }, done, true);
     return this.request("ph_composer.windows.types.grid." + command, params, done,
-      command === "dimension" || command === "element" && this.formApplying);
+      command === "dimension" || element && this.formApplying);
   };
   methods.openBubble = function (trigger, title) {
     if (this.bubble) { this.bubble.close(false);
@@ -189,9 +190,9 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
     var clearAssignment = menu.add("Clear assignment", function () { assign(null); }, { icon: "delete" });
     menu.add("Manage " + noun + " in Library", function () { bubble.close(false); self.openLibrary(kind); }, {
       icon: "enter" });
-    function assign(id) { var frames = clone(cell.frames); if (side) frames[side] = id;
-      self.change("element", { id: cellId, field: side ? "frames" : "glazing_id", value: side ? frames : id },
-        record, function () { bubble.close(true); }); }
+    function assign(id) {
+      self.change(side ? "set_element_frame" : "set_element_glazing", side ? { id: cellId, side: side,
+        frame_id: id } : { id: cellId, glazing_id: id }, record, function () { bubble.close(true); }); }
     function text(value) { return String(value == null ? "" : value).toLowerCase(); }
     function matches(r) {
       var query = text(search.value).trim();
@@ -290,7 +291,7 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
           dirs = current.operation ? current.operation.directions.slice() : [];
         if (direction) { var index = dirs.indexOf(direction); if (index < 0) dirs.push(direction);
           else dirs.splice(index, 1); }
-        self.change("element", { id: cell.id, field: "operation", value: type ? { type: type,
+        self.change("set_element_operation", { id: cell.id, operation: type ? { type: type,
           directions: type === "fixed" ? [] : dirs } : null });
       }
       card.operation.addEventListener("change", function () { setOperation(card.operation.value); });

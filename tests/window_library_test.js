@@ -25,7 +25,7 @@ function provider(o, sidebar, kind) {
   values.name = "Library " + values.name;
   o.state.ui.queryResults = {}; o.state.ui.queryResults[message.request_id] = { session: "session",
     request_id: message.request_id, outcome: { status: "completed", value: { generation: 1, state: "loaded",
-      total: 1, next_offset: null, rows: [{ library_id: "lib", library_name: "Synthetic", record_id: "incoming",
+      total: 1, next_cursor: null, rows: [{ library_id: "lib", library_name: "Synthetic", record_id: "incoming",
         snapshot: values, resolution: { outcome: "create", candidates: [] } }] } } };
   o.view.render(o.state); return sidebar.records[0];
 }
@@ -71,8 +71,8 @@ test("Glazing drops reject Empty, draft and outside targets while keyboard Use k
   assert.strictEqual(sidebar.use(row), false); o.view.dimensionField.cancel();
   sidebar.store.select(""); o.view.render(o.state); sidebar.openDetails(sidebar.entries.glz_a);
   click(sidebar.detail.use); var request = o.sent[o.sent.length - 1];
-  assert.strictEqual(request.payload.name, "ph_composer.windows.types.grid.element");
-  assert.strictEqual(request.payload.params.value, "glz_a"); assert.strictEqual(request.payload.params.element_id,
+  assert.strictEqual(request.payload.name, "ph_composer.windows.types.grid.set_element_glazing");
+  assert.strictEqual(request.payload.params.glazing_id, "glz_a"); assert.strictEqual(request.payload.params.element_id,
     "wel_a");
 });
 test("each Window Library subtab exposes provider Add without an implicit assignment", function () {

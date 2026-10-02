@@ -54,7 +54,7 @@ module PhComposer
       def local_read
         expected = Materials::Schema::KIND.descriptor.patch_schema
         expected["properties"] = expected.fetch("properties").slice(*FIELDS)
-        row = Shapes.object({ "id" => Shapes::ID, "mapped" => schema, "expected_values" => expected,
+        row = Shapes.object({ "id" => Shapes::TEXT, "mapped" => schema, "expected_values" => expected,
                               "source" => Materials::Schema::KIND.values_schema.fetch("properties").fetch("source") },
                             :optional => ["source"])
         callback(Shapes::NONE, Shapes.list(row)) do |request, _proposal|
@@ -109,7 +109,8 @@ module PhComposer
         target = DeepCopy.call(action.params)
         target.fetch("properties").delete("material_id")
         target.fetch("required").delete("material_id")
-        callback(Shapes.object({ "target" => target, "local_id" => Shapes::ID }), action.result) do |request, proposal|
+        params = Shapes.object({ "target" => target, "local_id" => Shapes::TEXT })
+        callback(params, action.result) do |request, proposal|
           nested = request.dup
           nested.params = DeepCopy.call(request.params.fetch("target")).merge(
             "material_id" => request.params.fetch("local_id")

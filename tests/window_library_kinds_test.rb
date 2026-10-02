@@ -14,7 +14,7 @@ class WindowLibraryKindsTest < PhComposerTestCase
     super
     @model = Sketchup.active_model
     @session = PhComposer::Sessions.for(@model)
-    @context = API.connect(:session_id => @session.id)
+    @context = API.connect(:session_id => @session.id, :capabilities => %w[read view model_write setup])
     @sequence = 0
     @directory = Dir.mktmpdir("window-libraries")
     @path = File.join(@directory, "synthetic.json")
@@ -28,7 +28,7 @@ class WindowLibraryKindsTest < PhComposerTestCase
       "kind_schema_versions" => @rows.to_h { |kind, _row| [kind, 1] }))
     PhComposer::Library::Setup.add_file(:id => "synthetic.windows", :label => "Synthetic", :path => @path)
     @generations = @rows.to_h do |collection, _row|
-      loaded = API.view(:context => @context, :name => "#{L}.load",
+      loaded = API.setup(:context => @context, :name => "#{L}.load",
         :params => { "provider_id" => "synthetic.windows", "kind" => collection })
       [collection, loaded.dig("value", "generation")]
     end
@@ -46,6 +46,14 @@ class WindowLibraryKindsTest < PhComposerTestCase
   def copy_params(collection, choice = "create")
     { "provider_id" => "synthetic.windows", "kind" => collection, "generation" => @generations[collection],
       "library_id" => "synthetic.one", "record_id" => @rows.fetch(collection).fetch("id"), "choice" => choice }
+  end
+
+  # What a copy of `collection`'s library row would resolve to, read without proposing anything.
+  def resolution(collection)
+    page = API.query(:context => @context, :name => "#{L}.in_file",
+                     :params => copy_params(collection).slice("provider_id", "kind", "generation"))
+    page.dig("value", "rows").find { |row| row.fetch("record_id") == @rows.fetch(collection).fetch("id") }
+        .fetch("resolution")
   end
 
   def invoke(name, params)
@@ -99,8 +107,7 @@ class WindowLibraryKindsTest < PhComposerTestCase
       reused = invoke("#{L}.copy", copy_params(collection, "keep_local"))
       assert_equal id, reused.dig("value", "local_id")
       assert_equal "none", reused["effect"]
-      inspection = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      candidate = inspection.dig("value", "resolution", "candidates", 0)
+      candidate = resolution(collection).dig("candidates", 0)
       assert_equal false, candidate["source_changed"]
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge(
         "expected_values" => candidate.fetch("expected_values")))
@@ -252,7 +259,7 @@ copy_params("psi_install_types", "keep_local").merge("assignment" => input["assi
     input["imports"][0]["copy"]["assignment"] = {}
     assert_equal "params.invalid", invoke("#{W::FEATURE_ID}.types.installs.save", input)["code"]
     input["imports"][0]["copy"].delete("assignment")
-    API.view(:context => @context, :name => "#{L}.refresh", :params => { "provider_id" => "synthetic.windows",
+    API.setup(:context => @context, :name => "#{L}.load", :params => { "provider_id" => "synthetic.windows",
                                                                                     "kind" => "psi_install_types" })
     assert_equal "library.catalog_stale", invoke("#{W::FEATURE_ID}.types.installs.save", input)["code"]
     assert_empty W::Products::KINDS.fetch("psi_install_types").store.ids(@model)
@@ -266,23 +273,20 @@ copy_params("psi_install_types", "keep_local").merge("assignment" => input["assi
     end
     export_path = File.join(@directory, "export.json")
     export_context = API.connect(:session_id => @session.id, :capabilities => %w[read export model_write view])
-    UI.stub(:savepanel, export_path) do
-      UI.stub(:messagebox, IDYES) do
-        result = API.export_file(:context => export_context, :name => "#{L}.export_file",
-                                :params => { "kinds" => @rows.keys })
-        assert_equal "completed", result["status"], result.inspect
-      end
-    end
+    approval = PhComposer::NativeApproval::Granted.new(:path => export_path, :replace => false)
+    result = PhComposer::Dispatch.new.file_export(export_context, "#{L}.export_file", { "kinds" => @rows.keys },
+                                                  :approval => approval)
+    assert_equal "completed", result["status"], result.inspect
     exported = JSON.parse(File.read(export_path))
     assert_equal @rows.keys.sort, exported.fetch("kinds").keys.sort
     @model = Sketchup::Model.new
     Sketchup.active_model = @model
     @session = PhComposer::Sessions.for(@model)
-    @context = API.connect(:session_id => @session.id)
+    @context = API.connect(:session_id => @session.id, :capabilities => %w[read view model_write setup])
     @sequence = 0
     PhComposer::Library::Setup.add_file(:id => "synthetic.windows", :label => "Roundtrip", :path => export_path)
     @rows.each_key do |collection|
-      loaded = API.view(:context => @context, :name => "#{L}.load", :params => { "provider_id" => "synthetic.windows",
+      loaded = API.setup(:context => @context, :name => "#{L}.load", :params => { "provider_id" => "synthetic.windows",
                                                                              "kind" => collection })
       assert_equal "loaded", loaded.dig("value", "state"), loaded.inspect
       assert_empty loaded.dig("value", "warnings")
@@ -302,32 +306,29 @@ adapter(collection).map.call(stored(collection, id))
       a = adapter(collection)
       manual = invoke("#{W::FEATURE_ID}.#{collection}.create", "values" => a.map.call(@rows[collection]))
       id = manual.dig("value", "id")
-      inspect = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      assert_equal "reuse", inspect.dig("value", "resolution", "outcome")
+      assert_equal "reuse", resolution(collection).fetch("outcome")
       before = stored(collection, id)
       edited = before.merge("notes" => "Differing manual content")
       W::Products::KINDS.fetch(collection).store.write(@model, edited)
-      inspect = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      assert_equal "review_required", inspect.dig("value", "resolution", "outcome")
-      expected = inspect.dig("value", "resolution", "candidates", 0, "expected_values")
+      inspected = resolution(collection)
+      assert_equal "review_required", inspected.fetch("outcome")
+      expected = inspected.dig("candidates", 0, "expected_values")
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge("expected_values" => expected))
       assert_equal "committed", replaced["effect"], replaced.inspect
       second = stored(collection, id).merge("id" => PhComposer::Records::Identity.mint(
         W::Products::SPECS.fetch(collection).fetch(:prefix)), "name" => "Second #{collection}")
       W::Products::KINDS.fetch(collection).store.write(@model, second)
-      inspect = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      assert_equal "ambiguous_source", inspect.dig("value", "resolution", "outcome")
+      assert_equal "ambiguous_source", resolution(collection).fetch("outcome")
       refused = invoke("#{L}.copy", copy_params(collection, "keep_local"))
       assert_equal "library.local_choice_required", refused["code"]
       W::Products::KINDS.fetch(collection).store.delete(@model, second.fetch("id"))
       @rows[collection]["notes"] = "Changed provider content"
       write_library(@path, envelope(:kinds => @rows.transform_values { |row| [row] }).merge(
         "kind_schema_versions" => @rows.to_h { |kind, _row| [kind, 1] }))
-      loaded = API.view(:context => @context, :name => "#{L}.refresh", :params => {
+      loaded = API.setup(:context => @context, :name => "#{L}.load", :params => {
         "provider_id" => "synthetic.windows", "kind" => collection })
       @generations[collection] = loaded.dig("value", "generation")
-      inspect = invoke("#{L}.copy", copy_params(collection, "inspect"))
-      candidate = inspect.dig("value", "resolution", "candidates", 0)
+      candidate = resolution(collection).dig("candidates", 0)
       assert_equal true, candidate["source_changed"]
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge(
         "expected_values" => candidate.fetch("expected_values")))

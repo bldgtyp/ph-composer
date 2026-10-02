@@ -25,6 +25,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     "panel.snapshot": reduceSnapshot,
     "action.result": reduceActionResult,
     "view.result": reduceViewResult,
+    "setup.result": reduceSetupResult,
     "query.result": reduceQueryResult,
     "file_export.result": reduceFileExportResult,
     "preferences.result": reducePreferenceResult,
@@ -35,8 +36,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   function initialState() {
     return { session: null, revision: null, sections: {},
-      ui: { activeTab: "overview", actionResult: null, viewResults: {}, queryResults: {}, fileExportResults: {},
-        exportResult: null, notice: null,
+      ui: { activeTab: "overview", actionResult: null, viewResults: {}, setupResults: {}, queryResults: {},
+        fileExportResults: {}, exportResult: null, notice: null,
         preferencePending: {} } };
   }
 
@@ -60,6 +61,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     if (previous.session !== next.session) {
       next.ui.actionResult = null;
       next.ui.viewResults = {};
+      next.ui.setupResults = {};
       next.ui.queryResults = {};
       next.ui.fileExportResults = {};
       next.ui.exportResult = null;
@@ -95,6 +97,12 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
         tone: outcome.status === "failed" ? "error" : "warning" };
     }
     return withUI(previous, changes);
+  }
+
+  /* Session and machine setup answers the view that asked, which shows its own refusal. */
+  function reduceSetupResult(previous, payload) {
+    if (payload.session !== previous.session) return previous;
+    return withUI(previous, { setupResults: recentResults(previous.ui.setupResults, payload) });
   }
 
   /* Reads answer their owner without republishing a snapshot or changing the Model. */

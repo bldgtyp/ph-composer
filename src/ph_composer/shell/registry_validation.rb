@@ -101,8 +101,7 @@ module PhComposer
       end
 
       def check_operations
-        (@staging.declared_queries + @staging.declared_actions + @staging.declared_view_commands +
-         @staging.declared_file_exports).each do |operation|
+        @staging.declared_operations.each do |operation|
           add_schema_problems(operation, "params", operation.params)
           add_schema_problems(operation, "result", operation.result)
           unless operation.params.is_a?(Hash) && operation.params["type"] == "object"
@@ -112,6 +111,7 @@ module PhComposer
           problem(operation, "needs a description") unless text?(operation.description)
           check_examples(operation)
           problem(operation, "needs a callable handler") unless operation.handler.respond_to?(:call)
+          check_approval(operation) if operation.respond_to?(:approval)
         end
         @staging.declared_file_exports.each do |operation|
           %i[params result].each do |part|
@@ -126,6 +126,15 @@ module PhComposer
           add("registration.schema_invalid", action.owner, action.name,
               "#{action.name} declares confirmation #{action.confirmation.inspect}; only \"none\" is supported yet.")
         end
+      end
+
+      def check_approval(operation)
+        approval = operation.approval
+        return if approval.nil?
+        return if approval.is_a?(Declarations::Approval) && Declarations::Approval::KINDS.include?(approval.kind) &&
+                  text?(approval.title)
+
+        problem(operation, "approval must be a Declarations::Approval of a known kind with a title")
       end
 
       # Every example is plain JSON that its params accept. An operation whose params accept `{}` may

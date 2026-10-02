@@ -62,7 +62,9 @@ module PhComposer
       }
     }.freeze
     SELECT_ROW_PARAMS = {
-      "type" => "object", "additionalProperties" => false, "required" => ["row"], "properties" => { "row" => ROW }
+      "type" => "object", "additionalProperties" => false, "required" => ["row"],
+      "properties" => { "row" => ROW.merge("description" => "The legend row whose entities to select, as the " \
+                                                            "active mode's legend lists it.") }
     }.freeze
     SELECT_ROW_RESULT = {
       "type" => "object", "additionalProperties" => false, "required" => ["selected"],
@@ -70,7 +72,9 @@ module PhComposer
     }.freeze
     # No row shows everything again, which is what leaving "Show only this" means.
     ISOLATE_PARAMS = {
-      "type" => "object", "additionalProperties" => false, "properties" => { "row" => ROW }
+      "type" => "object", "additionalProperties" => false,
+      "properties" => { "row" => ROW.merge("description" => "The legend row to show alone; omit it to show every " \
+                                                            "row again.") }
     }.freeze
 
     module_function

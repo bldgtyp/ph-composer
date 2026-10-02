@@ -6,13 +6,17 @@ module PhComposer
     # handlers are Zones module functions (zone/operations.rb).
     module RepairRegistration
       # The copy is named by path, not by id: its id is the ambiguous thing being repaired.
-      REPAIR_PARAMS = Shapes.object({ "zone_path" => PATH }).freeze
+      REPAIR_PARAMS = Shapes.object({
+        "zone_path" => PATH.merge("description" => "The root-to-Zone path of the copy to reidentify, as list " \
+                                                   "returns it.")
+      }).freeze
       REPAIR_RESULT = Shapes.object({
         "zone_id" => Shapes::ID.merge("description" => "The copy's new Zone id."),
         "retired_pairs" => Shapes::COUNT.merge("description" => "Surface pairs the copy's Faces left behind.")
       }).freeze
       SPLIT_REPAIR_PARAMS = Shapes.object({
-        "zone" => ZONE_REFERENCE, "face_id" => Shapes::ID,
+        "zone" => ZONE_REFERENCE.merge("description" => "The Zone occurrence holding the split pieces."),
+        "face_id" => Shapes::ID.merge("description" => "The Face id the split pieces share."),
         "zones" => { "type" => "array", "items" => ZONE_REFERENCE, "minItems" => 1,
                      "description" => "Every Zone the repair may write, the counterpart's included." },
         "retaining_entity_path" => PATH.merge("description" => "The piece that keeps face_id, when no stored " \
@@ -24,7 +28,11 @@ module PhComposer
         "pieces" => Shapes.list(Shapes.object({ "before" => Faces::FACE_REFERENCE, "after" => Faces::FACE_REFERENCE })),
         "retired" => Shapes.list(Faces::FACE_REFERENCE, :description => "Surface endpoints the repair retired.")
       }).freeze
-      RESTORE_PARAMS = Shapes.object({ "parent_path" => PATH, "zone_id" => Shapes::ID }).freeze
+      RESTORE_PARAMS = Shapes.object({
+        "parent_path" => PATH.merge("description" => "The edit context holding the stamped members, as the " \
+                                                     "restorable row in all gives it."),
+        "zone_id" => Shapes::ID.merge("description" => "The exploded Zone's id, from that restorable row.")
+      }).freeze
       RESTORE_RESULT = Shapes.object({
         "zone_id" => Shapes::ID, "member_count" => Shapes::COUNT,
         "unrecoverable" => Shapes.list({ "type" => "string" }, :description => "Zone fields Restore cannot recover.")

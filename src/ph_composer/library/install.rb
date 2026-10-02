@@ -21,25 +21,43 @@ module PhComposer
         "required" => properties.keys - optional }
     end
 
+    # `schema` with what it means to a caller, for discovery.
+    def described(schema, text)
+      schema.merge("description" => text)
+    end
+
     def selected_params
-      object({ "provider_id" => TEXT, "kind" => TEXT, "generation" => GENERATION }, :optional => ["generation"])
+      object({
+        "provider_id" => described(TEXT, "A configured library, by the id ph_composer.library.providers lists."),
+        "kind" => described(TEXT, "The library kind, such as materials or frames; providers lists the kinds each " \
+                                  "library serves."),
+        "generation" => described(GENERATION, "The catalog generation the caller read. Omit it to use the " \
+                                              "current one; a stale one is refused as library.catalog_stale.")
+      }, :optional => ["generation"])
     end
 
     def page_params
-      properties = selected_params.fetch("properties").merge(
-        "offset" => { "type" => "integer", "minimum" => 0 },
-        "limit" => { "type" => "integer", "minimum" => 1, "maximum" => 200 }
-      )
-      object(properties, :optional => %w[generation offset limit])
+      properties = selected_params.fetch("properties").merge("limit" => Pages::LIMIT, "cursor" => Pages::CURSOR)
+      object(properties, :optional => %w[generation limit cursor])
     end
 
     def copy_params
       properties = selected_params.fetch("properties").merge(
-        "library_id" => TEXT, "record_id" => TEXT,
-        "choice" => { "type" => "string", "enum" => %w[inspect create keep_local use_library cancel] },
-        "local_id" => TEXT, "expected_values" => OBJECT, "assignment" => OBJECT
+        "library_id" => described(TEXT, "The library holding the row, as the catalog row gives it."),
+        "record_id" => described(TEXT, "The row's record id within that library."),
+        "choice" => described({ "type" => "string", "enum" => %w[create keep_local use_library] },
+                              "create copies the row as a new local record; keep_local reuses a reviewed local " \
+                              "candidate unchanged; use_library replaces a reviewed candidate's values with the " \
+                              "library's. Read the resolution first with in_file or a preview."),
+        "local_id" => described(TEXT, "The reviewed local candidate for keep_local or use_library, from the " \
+                                      "resolution's candidates. May be omitted when there is exactly one."),
+        "expected_values" => described(OBJECT, "For use_library: the candidate's expected_values from the " \
+                                               "resolution. Refused when the local record changed since."),
+        "assignment" => described(OBJECT, "Optional: where the owning feature also assigns the copied record, " \
+                                          "in that kind's assignment target shape, such as one Window Type " \
+                                          "element side.")
       )
-      object(properties, :optional => %w[choice local_id expected_values assignment])
+      object(properties, :optional => %w[local_id expected_values assignment])
     end
 
     def install(registry)
@@ -60,27 +78,25 @@ module PhComposer
       feature.query("#{FEATURE_ID}.catalog", :description => "A bounded page of one immutable library catalog.",
                     :params => page_params, :result => Schemas.page,
                     :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |r|
-        catalog_page(r)
+        catalog_page(r, "#{FEATURE_ID}.catalog")
       end
       feature.query("#{FEATURE_ID}.in_file", :description => "Resolve catalog rows against local definitions.",
                     :params => page_params, :result => Schemas.page(:resolved => true),
                     :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |r|
         in_file(r)
       end
-      %w[load refresh].each do |verb|
-        feature.view_command("#{FEATURE_ID}.#{verb}", :description => "Read a configured library into session memory.",
-          :params => object(selected_params.fetch("properties").slice("provider_id", "kind")),
-          :result => Schemas.summary,
-          :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |r|
-          State.for(r.session).refresh(r.params.fetch("provider_id"), r.params.fetch("kind"), r.registry)
-               .reject { |key, _value| key == "rows" }
-        end
+      feature.setup_command("#{FEATURE_ID}.load", :description => "Read a configured library into session memory.",
+        :params => object(selected_params.fetch("properties").slice("provider_id", "kind")),
+        :result => Schemas.summary,
+        :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |r|
+        State.for(r.session).refresh(r.params.fetch("provider_id"), r.params.fetch("kind"), r.registry)
+             .reject { |key, _value| key == "rows" }
       end
       feature.action("#{FEATURE_ID}.copy", :description => "Copy or reuse one library record with optional assignment.",
         :params => copy_params, :result => Schemas.copy_result, :undo_name => "Copy Library Record",
         :side_effects => "Copies or replaces local definitions and optional assignments in one Undo step.",
         :examples => [{ "provider_id" => "example", "kind" => "example_parts", "generation" => 1,
-                       "library_id" => "synthetic", "record_id" => "one", "choice" => "inspect" }]) do |r, proposal|
+                       "library_id" => "synthetic", "record_id" => "one", "choice" => "create" }]) do |r, proposal|
         Coordinator.copy(r, proposal)
       end
     end
@@ -92,19 +108,21 @@ module PhComposer
     end
     private_class_method :install_commands
 
-    def catalog_page(request)
+    # A catalog generation is immutable, so a row's position in it is a stable page key. The cursor
+    # is bound to the generation, and, for `in_file`, whose resolution reads local definitions, to
+    # the Model revision as well.
+    def catalog_page(request, query, revision: nil)
       p = request.params
       entry = State.for(request.session).fetch(p.fetch("provider_id"), p.fetch("kind"), request.registry,
                                                 :generation => p["generation"])
-      offset = p.fetch("offset", 0)
-      rows = entry.fetch("rows").slice(offset, p.fetch("limit", 100)) || []
-      next_offset = offset + rows.length
-      entry.merge("rows" => rows, "total" => entry.fetch("rows").length, "offset" => offset,
-                  "next_offset" => next_offset < entry.fetch("rows").length ? next_offset : nil)
+      rows = entry.fetch("rows").each_with_index.to_a
+      page, next_cursor = Pages.slice(request, query, rows, :key => ->((_row, index)) { [index] },
+                                                            :revision => [entry.fetch("generation"), revision])
+      entry.merge("rows" => page.map(&:first), "total" => rows.length, "next_cursor" => next_cursor)
     end
 
     def in_file(request)
-      page = catalog_page(request)
+      page = catalog_page(request, "#{FEATURE_ID}.in_file", :revision => request.revision)
       declaration = State.kind(request.params.fetch("kind"), request.registry)
       locals = CallbackInvoker.call(request, declaration, declaration.adapter.local_read, {}, :readonly => true)
       provider = State.for(request.session).provider(request.params.fetch("provider_id"), request.registry)

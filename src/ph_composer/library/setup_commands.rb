@@ -4,36 +4,47 @@ require_relative "setup"
 
 module PhComposer
   module Library
-    # Native file pickers alone see transport addresses. Public views return configured labels.
+    # The user chooses a library's file or folder in a native picker, which the panel or menu opens
+    # before calling the command (Declarations::Approval); a scripted caller is refused. Only the
+    # handler sees the path. Public results return configured labels.
     module SetupCommands
       PREFIX = "ph_composer.library.providers"
+      ADDS = {
+        "add_file" => Declarations::Approval.new(:kind => "open_file", :title => "Add library file",
+                                                 :filter => "*.json").freeze,
+        "add_folder" => Declarations::Approval.new(:kind => "open_folder", :title => "Add library folder").freeze
+      }.freeze
+      DESCRIPTIONS = {
+        "add_file" => "Add a library file the user chooses in a native picker to this machine's libraries.",
+        "add_folder" => "Add a folder of library files the user chooses in a native picker to this machine's " \
+                        "libraries."
+      }.freeze
       module_function
 
       def install(feature)
         result = Schemas.list(Schemas.object({ "id" => Schemas::TEXT, "label" => Schemas::TEXT,
                                               "provider_kind" => Schemas::TEXT }))
-        %w[add_file add_folder].each do |verb|
-          feature.view_command("#{PREFIX}.#{verb}", :description => "Configure a library through a native picker.",
-                               :params => Library.object({}), :result => result, :examples => [{}]) do |request|
-            path = if verb == "add_file"
-                     UI.openpanel("Add library file", nil, "*.json")
-                   else
-                     UI.select_directory(:title => "Add library folder")
-                   end
+        ADDS.each do |verb, approval|
+          feature.setup_command("#{PREFIX}.#{verb}", :description => DESCRIPTIONS.fetch(verb),
+                                :params => Library.object({}), :result => result, :examples => [{}],
+                                :approval => approval) do |request|
             kinds, adapters = kind_adapters(request.registry)
-            value = add_path(path, :kinds => kinds, :adapters => adapters)
-            refresh_sessions if path
+            value = add_path(request.approval.path, :kinds => kinds, :adapters => adapters)
+            refresh_sessions
             value
           end
           feature.menu_item("#{PREFIX}.#{verb}_menu", :label => verb == "add_file" ? "Add Library File…" :
                             "Add Library Folder…", :menu => "Libraries",
                             :available => ->(_read) { false }) do |session|
-            outcome = API.view(:context => menu_context(session), :name => "#{PREFIX}.#{verb}", :params => {})
+            outcome = NativeApproval.setup(menu_context(session), "#{PREFIX}.#{verb}", {})
+            next if outcome["status"] == "cancelled"
+
             session.notice(outcome.fetch("message"), :tone => outcome["status"] == "completed" ? :info : :warning)
           end
         end
-        feature.view_command("#{PREFIX}.remove", :description => "Remove a configured library from this machine.",
-                             :params => Library.object({ "provider_id" => Library::TEXT }), :result => result,
+        feature.setup_command("#{PREFIX}.remove", :description => "Remove a configured library from this machine.",
+                             :params => Library.object({ "provider_id" => Library.described(Library::TEXT,
+                               "The configured library to remove from this machine.") }), :result => result,
                              :examples => [{ "provider_id" => "example" }]) do |request|
           id = request.params.fetch("provider_id")
           value = Setup.remove(id)
@@ -44,7 +55,9 @@ module PhComposer
 
       # The native menu is one client per session, as the panel is.
       def menu_context(session)
-        session.feature_state(:library_menu_context) { API.connect(:session_id => session.id) }
+        session.feature_state(:library_menu_context) do
+          API.connect(:session_id => session.id, :capabilities => %w[read setup])
+        end
       end
 
       def kind_adapters(registry)
@@ -53,8 +66,6 @@ module PhComposer
       end
 
       def add_path(path, kinds:, adapters:)
-        return Setup.providers if path.nil?
-
         label = public_label(path, :kinds => kinds, :adapters => adapters)
         Setup.add_file(:id => Records::Identity.mint("library"), :label => label, :path => path)
       rescue SystemCallError, IOError, EncodingError

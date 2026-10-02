@@ -69,8 +69,7 @@ module PhComposer
         row["properties"]["resolution"] = resolution if resolved
         row["required"] << "resolution" if resolved
         object(summary.fetch("properties").merge("rows" => list(row),
-          "total" => { "type" => "integer", "minimum" => 0 }, "offset" => { "type" => "integer", "minimum" => 0 },
-          "next_offset" => { "type" => %w[integer null], "minimum" => 0 }))
+          "total" => Pages::TOTAL, "next_cursor" => Pages::NEXT_CURSOR))
       end
 
       def copy_result

@@ -159,6 +159,7 @@
       outcome: refused("export.unavailable", "File writes are unavailable in this browser preview.", this.revision)
     });
     if (message.type === "view.invoke") this.viewCommand(message.payload);
+    if (message.type === "setup.invoke") this.librarySetup(message.payload);
     if (message.type === "preferences.set") this.setPreference(message.payload);
     if (message.type === "export.start") this.exportStart(message.payload);
     if (message.type === "export.preflight" || message.type === "export.latest") {
@@ -181,7 +182,6 @@
   /* A viewport-state command: nothing to write and no revision to guard, so the preview answers that it
      ran and leaves its Model alone. There is no viewport here to move. */
   Host.prototype.viewCommand = function (payload) {
-    if (payload.name.indexOf("ph_composer.library.") === 0) { this.libraryView(payload); return; }
     var outcome;
     if (payload.session !== this.session) {
       outcome = refused("session.inactive", "The panel now shows a different Model.", null);
@@ -273,7 +273,10 @@
       var values = row.values, cell = values.elements.filter(function (entry) {
         return entry.id === params.element_id; })[0];
       if (operation === "dimension") values[params.axis][params.index] = params.value;
-      else if (operation === "element") cell[params.field] = clone(params.value);
+      else if (operation === "set_element_name") cell.name = params.name;
+      else if (operation === "set_element_glazing") cell.glazing_id = params.glazing_id;
+      else if (operation === "set_element_frame") cell.frames[params.side] = params.frame_id;
+      else if (operation === "set_element_operation") cell.operation = clone(params.operation);
       else if (operation === "kind") values.elements.forEach(function (element) {
         if (params.ids.indexOf(element.id) < 0) return;
         element.kind = params.kind;
@@ -652,11 +655,11 @@
       this.revision);
     else {
       var metadata = this.libraryMetadata().filter(function (row) { return row.id === params.provider_id; })[0];
-      var offset = params.offset || 0, end = Math.min(rows.length, offset + (params.limit || 100));
+      var offset = Number(params.cursor || 0), end = Math.min(rows.length, offset + (params.limit || 100));
       var catalog = metadata.catalogs.filter(function (row) { return row.kind === params.kind; })[0];
       var page = Object.assign({}, catalog, { rows: rows.slice(offset, end).map(function (row) {
         return Object.assign({}, row, { resolution: this.libraryResolution(row, params.kind) });
-      }, this), total: rows.length, offset: offset, next_offset: end < rows.length ? end : null,
+      }, this), total: rows.length, next_cursor: end < rows.length ? String(end) : null,
       warnings: [], unavailable: [] });
       outcome = { status: "completed", value: page, revision: this.revision };
     }
@@ -685,12 +688,12 @@
         value: { kinds: kinds, omissions: [], projection_digest: "preview", revision: this.revision }
       } });
   };
-  Host.prototype.libraryView = function (payload) {
+  Host.prototype.librarySetup = function (payload) {
     var params = payload.params, verb = payload.name.split(".").pop();
     if (verb === "remove") this.libraryProviders = this.libraryProviders.filter(function (row) {
       return row.id !== params.provider_id;
     });
-    if (verb === "load" || verb === "refresh") {
+    if (verb === "load") {
       if (this.failLibraryRefresh) this.libraryFailures[params.provider_id] =
         { code: "library.file_unreadable", message: "The configured library could not be read." };
       else { this.libraryGenerations[params.provider_id] = (this.libraryGenerations[params.provider_id] || 0) + 1;
@@ -700,7 +703,7 @@
     var value = provider ? provider.catalogs.filter(function (row) { return row.kind === params.kind; })[0] :
       this.libraryMetadata();
     this.snapshot();
-    this.publish("view.result", { request_id: payload.request_id, session: payload.session,
+    this.publish("setup.result", { request_id: payload.request_id, session: payload.session,
       outcome: { status: "completed", effect: "none", revision: this.revision, value: value } });
   };
   // A synthetic preview of Window copy targets. Ruby owns real transactions, provenance and thermal results.

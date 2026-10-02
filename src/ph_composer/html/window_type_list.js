@@ -1,9 +1,14 @@
 /* The Window Type rail's list and the actions that add, duplicate, delete, rename and group types. */
-PhComposerUI.define("window_type_list", ["window_editor_shared", "workspace"], function (shared, ui) {
+PhComposerUI.define("window_type_list", ["window_editor_shared", "unit_preferences", "workspace"], function (shared,
+  preferences, ui) {
   "use strict";
   var el = ui.element;
   var clone = shared.clone;
   var methods = {};
+  /* A new Type's starting size in metres. The host's default is SI's round 1.0 by 1.5 m; the panel asks for the
+     round imperial 40 by 60 in instead when the display system is IP, so the operation never reads a display
+     preference. */
+  var IP_SIZE_M = { columns_m: [1.016], rows_m: [1.524] };
 
   methods.confirmChange = function (trigger, heading, text, label, apply) {
     var self = this, dialog = ui.formDialog("phc-confirm-dialog", close);
@@ -25,8 +30,12 @@ PhComposerUI.define("window_type_list", ["window_editor_shared", "workspace"], f
   };
   methods.opened = function (result) { if (result && result.id) { this.active = result.id;
     this.renameAfter = result.id; } };
-  methods.createType = function () { var self = this; this.request("ph_composer.windows.types.create", { values: {
-    name: this.uniqueName("Window Type", true) } }, function (result) { self.opened(result.value); }); };
+  methods.createType = function () {
+    var self = this, values = { name: this.uniqueName("Window Type", true) };
+    if (preferences.peek().unitSystem === "IP") Object.assign(values, clone(IP_SIZE_M));
+    this.request("ph_composer.windows.types.create", { values: values }, function (result) {
+      self.opened(result.value); });
+  };
   methods.duplicateType = function (record) {
     var self = this; if (!record || this.requests.pending) return;
     this.request("ph_composer.windows.types.duplicate", { id: record.id, name: this.uniqueName(record.name +
@@ -90,7 +99,7 @@ PhComposerUI.define("window_type_list", ["window_editor_shared", "workspace"], f
 
   methods.editName = function (cell, trigger) {
     var self = this, record = clone(this.record()); this.form(trigger, "Element name", cell.name, function (name,
-      done) { return self.change("element", { id: cell.id, field: "name", value: name }, record, done); },
+      done) { return self.change("set_element_name", { id: cell.id, name: name }, record, done); },
       null, null, { type_id: record.id, element_id: cell.id });
   };
   /* Eyedropper, then paint bucket: pick one source, paste onto as many elements as needed; the button or Escape ends

@@ -111,19 +111,19 @@
       "sha256": "687b2ad8aac50d319992346ee10dab8249b84224a0fb6d02f8c69228b9d4df35"
     },
     "html/library_setup.js": {
-      "bytes": 3691,
+      "bytes": 3713,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "03d7e77258b6fb66dafba5698221f8d8f94ddecea5888987e5b984d069d9c31e"
+      "sha256": "e304b9a13cd77a3641ab42ac8b436961429fd475599a98c739e0b6cafb80bf0f"
     },
     "html/library_sidebar.js": {
-      "bytes": 9052,
+      "bytes": 9045,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "7d484a417218baba6429f1a9510988008627657ffdc0e79ce84b68a24b8cbce1"
+      "sha256": "22955c22dd24212b1b6ce6a028e54ded7bf419c554a43a82825bcedc8a73ce2e"
     },
     "html/library_store.js": {
-      "bytes": 7006,
+      "bytes": 7485,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "e8ef3bb41a96e29ae2089e0a63580f651d493eb194f311a7a6105a739427ece1"
+      "sha256": "13692c13a07cf15a881325a3174f90259d011798ff6386e3dc98aff7b7d78add"
     },
     "html/material_form.js": {
       "bytes": 5028,
@@ -146,9 +146,9 @@
       "sha256": "8c9b14e5d2aada4e53f401f8313fe8601f2f33f7f028b0abd044e67664119478"
     },
     "html/panel.js": {
-      "bytes": 14329,
+      "bytes": 14726,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "8f28d64bb926a48fef8f2b0d5e164c39c4ae87f6b0ea6886e62296849823842d"
+      "sha256": "cdb42571fb3c8aedd56c64e675916abfe086e7f8c2687d704d9fa4978d58edbb"
     },
     "html/record_edits.js": {
       "bytes": 15190,
@@ -161,9 +161,9 @@
       "sha256": "74d5af8f9ceaee986517cc824aeb6367bcfd58f404f5cba36b2babe8e240b310"
     },
     "html/request.js": {
-      "bytes": 4725,
+      "bytes": 4967,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "047fcbf93f4fa2c9aa9ac657e149f1f536f5b4dc8529e7e95187f82d0c51e5c2"
+      "sha256": "9f22df4bdb35a80711488a9d60fc94f1b7eaf3fcd230742eb735665e9a904542"
     },
     "html/runtime/index.html": {
       "bytes": 580,
@@ -316,14 +316,14 @@
       "sha256": "133882a56dd387bc6a5b7309cf086fd0c8ded7f77ce81778c4fb0b4297fc0775"
     },
     "html/window_cards.js": {
-      "bytes": 28017,
+      "bytes": 28023,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "9d48a8f44074ccf44d90d72172aab8ebca6a700455b02421654b1c9113507f0b"
+      "sha256": "46bbfed0d13d046f15dbeedd69675928857753da5f20e09424be7525dca7d2dc"
     },
     "html/window_editor.js": {
-      "bytes": 26191,
+      "bytes": 26149,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "8f92790254959ccc8e1609b32b952644732306d9754779a6de309c46c4f21bac"
+      "sha256": "107908be8a6933a9380a52b67a33b48d3444bb5701463301d7df9426f2558a62"
     },
     "html/window_editor_shared.js": {
       "bytes": 2960,
@@ -366,9 +366,9 @@
       "sha256": "b1fe7e07678ca5833055374ee256c75008f53a0aeef060ccbb77fa210df19fd4"
     },
     "html/window_type_list.js": {
-      "bytes": 12658,
+      "bytes": 13106,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d17e7fd5f797ab1c5f7f1ff679a7f3af5922c665588f33e12b17ed7e903de6c6"
+      "sha256": "7d4d8102a1be93de584aa4431f05252d5a958aeb18fccb3d37edbd7c70628397"
     },
     "html/windows.css": {
       "bytes": 23783,

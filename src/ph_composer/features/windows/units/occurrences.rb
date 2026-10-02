@@ -88,7 +88,7 @@ module PhComposer
 
       TARGET = Records::ReferenceTarget.new(:id => REFERENCE_KIND, :label => "Window unit",
         :schema_version => 1, :values => RECORD_KIND.values_schema,
-        :occurrence => Shapes.object({ "unit_id" => Shapes::ID,
+        :occurrence => Shapes.object({ "unit_id" => Shapes::TEXT,
           "entity_path" => { "type" => "array", "minItems" => 1, "items" => { "type" => "integer" } } }),
         :records => ->(model) { Occurrences.all(model).map(&:entry) },
         :validate => ->(record) { RECORD_KIND.problems(record) }, :references => RECORD_KIND.references)

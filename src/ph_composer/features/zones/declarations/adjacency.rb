@@ -8,13 +8,17 @@ module PhComposer
       # The resolved mutation set, whatever produced it: the selected Zones, or every Zone when the
       # caller is the export preflight. One Zone is allowed; it simply pairs with nothing.
       SOLVE_PARAMS = Shapes.object({
-        "zones" => { "type" => "array", "items" => ZONE_REFERENCE, "minItems" => 1 }
+        "zones" => { "type" => "array", "items" => ZONE_REFERENCE, "minItems" => 1,
+                     "description" => "The Zone occurrences whose shared Faces to pair; Faces shared with a Zone " \
+                                      "outside the scope are left alone." }
       }).freeze
       SOLVE_RESULT = Shapes.object({
         "pair_ids" => Shapes.list(Shapes::ID, :description => "Every Surface pair current after the Solve."),
         "reported" => Shapes::COUNT.merge("description" => "Findings reported instead of paired, as outcome findings.")
       }).freeze
-      RETIRE_PARAMS = Shapes.object({ "face" => Faces::FACE_REFERENCE }).freeze
+      RETIRE_PARAMS = Shapes.object({
+        "face" => Faces::FACE_REFERENCE.merge("description" => "Either Face of the Surface pair to retire.")
+      }).freeze
       RETIRE_RESULT = Shapes.object({
         "pair_id" => { "type" => %w[string null], "description" => "The pair retired." }
       }).freeze

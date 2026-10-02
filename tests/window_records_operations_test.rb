@@ -21,7 +21,7 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     assert_equal ["ph_composer.zones", "ph_composer.library"], registry.features.fetch(W::FEATURE_ID).requires
     declarations = (registry.queries.values + registry.actions.values + registry.view_commands.values)
       .select { |entry| entry.owner == W::FEATURE_ID }
-    assert_equal 51, declarations.length
+    assert_equal 55, declarations.length
     declarations.each do |entry|
       assert_empty PhComposer::JsonSchema.schema_problems(entry.params), entry.name
       assert_empty PhComposer::JsonSchema.schema_problems(entry.result), entry.name
@@ -38,11 +38,14 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     assert_equal [1.0], values["columns_m"]
     assert_nil row("types", id).dig("display", "thermal", "u_w")
     refute values.key?("install_depth_m")
+    # The same call authors the same values whatever the display system; a client that wants the round
+    # imperial start passes it.
     PhComposer::Preferences.stub(:unit_system, "IP") do
       ip = create("types", "name" => "IP")
-      assert_equal [1.524], row("types", ip).dig("values", "rows_m")
-      assert_equal [1.016], row("types", ip).dig("values", "columns_m")
+      assert_equal [[1.5], [1.0]], row("types", ip).fetch("values").values_at("rows_m", "columns_m")
     end
+    sized = create("types", "name" => "Sized", "rows_m" => [1.524], "columns_m" => [1.016])
+    assert_equal [[1.524], [1.016]], row("types", sized).fetch("values").values_at("rows_m", "columns_m")
     assert_equal({ "default_psi_install_id" => nil, "default_install_depth_m" => 0.0 }, settings)
   end
 
@@ -124,6 +127,32 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     failure = invoke("types.grid.merge", "id" => id, "ids" => ["wel_MISSING00000"], "expected_values" => split)
     assert_equal "target.not_found", failure["code"]
     assert_equal split, row("types", id)["values"]
+  end
+
+  # Each element field has its own action with a typed value, so describe teaches the shape; a Frame
+  # is set on one side, and an Empty element takes a name but no product.
+  def test_element_actions_take_typed_values_and_set_one_frame_side
+    frame = API.describe(:name => "#{W::FEATURE_ID}.types.grid.set_element_frame").fetch("params")
+    assert_equal %w[top right bottom left], frame.dig("properties", "side", "enum")
+    operation = API.describe(:name => "#{W::FEATURE_ID}.types.grid.set_element_operation").fetch("params")
+    assert_equal %w[fixed swing slide], operation.dig("properties", "operation", "properties", "type", "enum")
+    frame_id = create("frames", "name" => "Typed frame")
+    id = create("types", "name" => "Typed elements")
+    values = row("types", id)["values"]
+    element = values["elements"][0]["id"]
+    preview_invoke("types.grid.set_element_frame", "id" => id, "element_id" => element, "side" => "left",
+      "frame_id" => frame_id, "expected_values" => values)
+    frames = row("types", id).dig("values", "elements", 0, "frames")
+    assert_equal({ "top" => nil, "right" => nil, "bottom" => nil, "left" => frame_id }, frames)
+    values = row("types", id)["values"]
+    preview_invoke("types.grid.kind", "id" => id, "ids" => [element], "kind" => "empty", "expected_values" => values)
+    values = row("types", id)["values"]
+    refused = invoke("types.grid.set_element_glazing", "id" => id, "element_id" => element, "glazing_id" => nil,
+      "expected_values" => values)
+    assert_equal "validation.failed", refused["code"]
+    preview_invoke("types.grid.set_element_name", "id" => id, "element_id" => element, "name" => "Spandrel",
+      "expected_values" => values)
+    assert_equal "Spandrel", row("types", id).dig("values", "elements", 0, "name")
   end
 
   def test_dangling_each_product_slot_is_readable_without_repair_and_writes_refuse

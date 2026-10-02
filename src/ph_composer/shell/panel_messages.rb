@@ -14,6 +14,9 @@ module PhComposer
       # A viewport-state command for the Model the panel showed. It changes no record, so it carries no
       # expected revision: there is nothing for a stale one to protect.
       "view.invoke" => %w[request_id session name params],
+      # A session- or machine-state command, such as adding a library on this machine. It changes no
+      # record, so it carries no expected revision either.
+      "setup.invoke" => %w[request_id session name params],
       "query.invoke" => %w[request_id session name params],
       "file_export.invoke" => %w[request_id session name params],
       "preferences.set" => %w[request_id key value scope system],
@@ -29,6 +32,7 @@ module PhComposer
       "panel.snapshot" => %w[product version session revision file_name edit_path preferences sections],
       "action.result" => %w[request_id session outcome],
       "view.result" => %w[request_id session outcome],
+      "setup.result" => %w[request_id session outcome],
       "query.result" => %w[request_id session outcome],
       "file_export.result" => %w[request_id session outcome],
       "preferences.result" => %w[request_id status message preferences],

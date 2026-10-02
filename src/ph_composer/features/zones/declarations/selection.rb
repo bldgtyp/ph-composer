@@ -5,9 +5,15 @@ module PhComposer
     module SelectionRegistration
       TARGET = Shapes.object({ "reference" => ZONE_REFERENCE, "expected_values" => ZONE_VALUES }).freeze
       ROW = Shapes.object({ "reference" => ZONE_REFERENCE, "values" => ZONE_VALUES }).freeze
-      UPDATE = Shapes.object({ "targets" => Shapes.list(TARGET).merge("minItems" => 1),
-                               "field" => { "type" => "string", "enum" => Selection::FIELDS.keys },
-                               "value" => { "type" => %w[string number null] } }).freeze
+      UPDATE = Shapes.object({
+        "targets" => Shapes.list(TARGET).merge("minItems" => 1, "description" => "Each Zone occurrence to change, " \
+                                                                                "with the values last read; a " \
+                                                                                "change refuses."),
+        "field" => { "type" => "string", "enum" => Selection::FIELDS.keys, "description" => "The Zone value to set." },
+        "value" => { "type" => %w[string number null],
+                     "description" => "The new value: text for name, building_segment and level (null clears " \
+                                      "level), a number in mm for ground_depth_mm." }
+      }).freeze
       ASSIGNMENT = Shapes.object({ "token" => { "type" => %w[string null] },
                                    "revision" => { "type" => %w[integer null] },
                                    "faces" => Shapes.list(Faces::FACE_REFERENCE) }).freeze
@@ -44,8 +50,13 @@ module PhComposer
         feature.snapshot_section("#{prefix}.selection_assignment", :query => "#{prefix}.attached_assignment")
         feature.view_command("#{prefix}.open_attached_assignment",
                              :description => "Review a new Attached zone assignment for explicit Faces.",
-                             :params => Shapes.object({ "faces" => Faces::Registration::FACES,
-                                                        "revision" => { "type" => "integer" } }),
+                             :params => Shapes.object({
+                               "faces" => Faces::Registration::FACES.merge("description" => "The Faces the new " \
+                                                                                         "Attached zone would be " \
+                                                                                         "assigned to."),
+                               "revision" => { "type" => "integer", "description" => "The revision the Faces were " \
+                                                                                     "read at; a later one refuses." }
+                             }),
                              :result => ASSIGNMENT,
                              :examples => [{ "faces" => [Faces::Registration::EXAMPLE_FACE], "revision" => 1 }]) do |
                                request|
@@ -53,7 +64,12 @@ module PhComposer
         end
         feature.view_command("#{prefix}.close_attached_assignment",
                              :description => "Close the native assignment handoff.",
-                             :params => Shapes.object({ "token" => { "type" => "string" } }), :result => ASSIGNMENT,
+                             :params => Shapes.object({
+                               "token" => { "type" => "string", "description" => "The token open_attached_" \
+                                                                                 "assignment returned; another one " \
+                                                                                 "leaves the handoff open." }
+                             }),
+                             :result => ASSIGNMENT,
                              :examples => [{ "token" => "example-review-token" }]) do |request|
           value = Faces::Selection.handoff(request.session).close(request.params.fetch("token"))
           request.session.changed(:zones, :attached_assignment)

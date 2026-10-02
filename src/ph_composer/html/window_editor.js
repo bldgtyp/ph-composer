@@ -231,10 +231,9 @@ PhComposerUI.define("window_editor", ["panel", "request", "snapshot", "subtabs",
       var sidebar = new Sidebar({ session: self.session, send: self.send, changed: function () { self.paint(); },
         busy: function () { return Boolean(self.guard()); }, adapter: adapter, onUse: function (row, target) {
             var cell = self.record().elements.filter(function (entry) { return entry.id === target.element_id; })[0];
-            var value = kind === "glazings" ? row.id : clone(cell.frames);
-            if (kind === "frames") value[target.side] = row.id;
-            return self.change("element", { element_id: cell.id,
-              field: kind === "glazings" ? "glazing_id" : "frames", value: value });
+            return kind === "glazings" ?
+              self.change("set_element_glazing", { element_id: cell.id, glazing_id: row.id }) :
+              self.change("set_element_frame", { element_id: cell.id, side: target.side, frame_id: row.id });
           } });
       self.sidebars[kind] = sidebar; self.layout.appendChild(sidebar.root);
       sidebar.dropHost = self.cardStack;

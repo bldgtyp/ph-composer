@@ -74,8 +74,10 @@ test("split, dimension, operation and repeated eyedropper paste carry their exac
   o.editor.change("split", { id: "wel_a" });
   assert.strictEqual(o.sent[0].payload.params.id, "wnt_a");
   assert.strictEqual(o.sent[0].payload.params.element_id, "wel_a"); outcome(o, "completed");
-  o.editor.change("element", { id: "wel_a", field: "operation", value: { type: "swing", directions: ["right"] } });
-  assert.strictEqual(o.sent[1].payload.name, "ph_composer.windows.types.grid.element");
+  o.editor.change("set_element_operation", { id: "wel_a", operation: { type: "swing", directions: ["right"] } });
+  assert.strictEqual(o.sent[1].payload.name, "ph_composer.windows.types.grid.set_element_operation");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[1].payload.params.operation)),
+    { type: "swing", directions: ["right"] });
   assert.strictEqual(o.sent[1].payload.params.element_id, "wel_a"); outcome(o, "completed");
   o.editor.togglePick(); o.editor.select("wel_c"); assert.ok(o.editor.picking, "Empty cannot be the source");
   o.editor.select("wel_a"); o.editor.select("wel_c"); assert.strictEqual(o.sent.length, 2, "Empty cannot be pasted");
@@ -130,8 +132,9 @@ test("local product sidebar remains available without providers and details send
   assert.strictEqual(sidebar.store.available, false); assert.strictEqual(sidebar.source.value, "");
   sidebar.openDetails(sidebar.entries.frm_a); assert.strictEqual(o.sent.length, 0);
   o.editor.select("wel_a"); sidebar.use(sidebar.entries.frm_a.row);
-  assert.strictEqual(o.sent[0].payload.params.field, "frames");
-  assert.strictEqual(o.sent[0].payload.params.value.top, "frm_a");
+  assert.strictEqual(o.sent[0].payload.name, "ph_composer.windows.types.grid.set_element_frame");
+  assert.strictEqual(o.sent[0].payload.params.side, "top");
+  assert.strictEqual(o.sent[0].payload.params.frame_id, "frm_a");
 });
 test("leaving a dirty Installs session asks, then discards locally and continues only after confirmation", function () {
   var o = setup(), installs = o.editor.installEditor, continued = false;
@@ -187,7 +190,7 @@ test("Element name draft guards type, subtab and section navigation and bubble d
   assert.strictEqual(bubble.close(false), false); assert.strictEqual(bubble.panel.hidden, false);
   assert.strictEqual(input.value, "Unsaved name"); assert.strictEqual(o.sent.length, 0);
   form.listeners.submit({ preventDefault: function () {} });
-  assert.strictEqual(o.sent.length, 1); assert.strictEqual(o.sent[0].payload.params.value, "Unsaved name");
+  assert.strictEqual(o.sent.length, 1); assert.strictEqual(o.sent[0].payload.params.name, "Unsaved name");
   outcome(o, "refused"); assert.strictEqual(bubble.panel.hidden, false); assert.ok(o.editor.guard());
   click(form.querySelectorAll("button")[0]); assert.strictEqual(o.editor.guard(), null);
   o.editor.choose("wnt_b"); assert.strictEqual(o.editor.active, "wnt_b");
@@ -237,8 +240,7 @@ test("product picker filters replacements but keeps the current assignment and f
   o.editor.rawRecord().values.elements[0].frames.bottom = "Changed later";
   click(bubble.content.querySelector("[data-record-id='frm_b']"));
   assert.strictEqual(o.sent.length, 1); var params = o.sent[0].payload.params;
-  assert.strictEqual(params.field, "frames"); assert.strictEqual(params.value.top, "frm_b");
-  assert.strictEqual(params.value.bottom, "frm_a");
+  assert.strictEqual(params.side, "top"); assert.strictEqual(params.frame_id, "frm_b");
   assert.strictEqual(params.expected_values.elements[0].frames.bottom, "frm_a");
   outcome(o, "refused"); assert.strictEqual(bubble.panel.hidden, false);
   click(bubble.content.querySelector("[data-record-id='frm_b']")); assert.strictEqual(o.sent.length, 2);
@@ -249,12 +251,12 @@ test("Glazing picker diagnoses a missing assignment and replacement or clear wri
   o.editor.picker("wel_a", "glazings", null, o.editor.cards.wel_a.rows.glazing.button);
   var bubble = o.editor.bubble; assert.ok(text(bubble.content).includes("no longer in this model"));
   click(bubble.content.querySelector("[data-record-id='glz_a']"));
-  assert.strictEqual(o.sent[0].payload.params.value, "glz_a");
+  assert.strictEqual(o.sent[0].payload.params.glazing_id, "glz_a");
   assert.strictEqual(o.sent[0].payload.params.expected_values.elements[0].glazing_id, "glz_missing");
   outcome(o, "completed"); o.editor.picker("wel_a", "glazings", null, o.editor.cards.wel_a.rows.glazing.button);
   var clear = o.editor.bubble.heading.querySelectorAll("button").filter(function (button) {
     return text(button).includes("Clear assignment");
-  })[0]; click(clear); assert.strictEqual(o.sent[1].payload.params.value, null);
+  })[0]; click(clear); assert.strictEqual(o.sent[1].payload.params.glazing_id, null);
   outcome(o, "completed"); o.state.sections["ph_composer.windows.glazings"].value.records = [];
   o.editor.render(o.state); o.editor.picker("wel_b", "glazings", null, o.editor.title);
   assert.ok(text(o.editor.bubble.content).includes("No glazings in this model yet"));
@@ -283,13 +285,13 @@ test("Empty cards hide products and missing construction findings identify the a
 });
 test("operation direction buttons map Interior presentation to canonical handedness", function () {
   var o = setup(), card = o.editor.cards.wel_a; card.operation.value = "swing";
-  card.operation.listeners.change({}); assert.strictEqual(o.sent[0].payload.params.value.type, "swing");
+  card.operation.listeners.change({}); assert.strictEqual(o.sent[0].payload.params.operation.type, "swing");
   outcome(o, "completed"); o.editor.rawRecord().values.elements[0].operation = { type: "swing", directions: [] };
   o.editor.interior = true; o.editor.render(o.state); click(card.directions.left);
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[1].payload.params.value.directions)), ["right"]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[1].payload.params.operation.directions)), ["right"]);
   outcome(o, "completed"); o.editor.rawRecord().values.elements[0].operation.directions = ["right"];
   o.editor.render(o.state); assert.strictEqual(card.directions.left.getAttribute("aria-pressed"), "true");
-  click(card.directions.left); assert.strictEqual(o.sent[2].payload.params.value.directions.length, 0);
+  click(card.directions.left); assert.strictEqual(o.sent[2].payload.params.operation.directions.length, 0);
 });
 test("Installs validates and stages Psi products, then saves their frozen updates atomically", function () {
   var o = setup(), installs = o.editor.installEditor; installs.open(o.editor.rawRecord());
@@ -338,4 +340,14 @@ test("Installs bulk paint and compatible copies stay local; missing defaults rem
   delete o.state.sections["ph_composer.windows.settings"]; o.editor.render(o.state);
   assert.strictEqual(installs.root.hidden, true); assert.strictEqual(installs.productField, null);
   assert.strictEqual(o.editor.guard(), null); installs.saveAction(); assert.strictEqual(o.sent.length, 0);
+});
+test("a new Type asks for the round imperial size only while the display system is IP", function () {
+  var o = setup(), preferences = o.modules.unit_preferences;
+  o.editor.createType();
+  assert.deepStrictEqual(Object.keys(o.sent[0].payload.params.values), ["name"]);
+  outcome(o, "completed"); preferences.replace({ unit_system: "IP", dimension_formats: {} });
+  o.editor.createType();
+  var values = o.sent[1].payload.params.values;
+  assert.deepStrictEqual([values.columns_m[0], values.rows_m[0]], [1.016, 1.524]);
+  preferences.replace({ unit_system: "SI", dimension_formats: {} });
 });

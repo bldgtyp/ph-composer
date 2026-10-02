@@ -2403,7 +2403,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -3510,7 +3511,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -3983,24 +3985,26 @@ Params:
   "properties": {
     "provider_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "A configured library, by the id ph_composer.library.providers lists."
     },
     "kind": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
     },
     "generation": {
       "type": "integer",
-      "minimum": 1
-    },
-    "offset": {
-      "type": "integer",
-      "minimum": 0
+      "minimum": 1,
+      "description": "The catalog generation the caller read. Omit it to use the current one; a stale one is refused as library.catalog_stale."
     },
     "limit": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 200
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
     }
   },
   "additionalProperties": false,
@@ -4174,18 +4178,15 @@ Result:
     },
     "total": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
     },
-    "offset": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "next_offset": {
+    "next_cursor": {
       "type": [
-        "integer",
+        "string",
         "null"
       ],
-      "minimum": 0
+      "description": "Pass back as cursor for the next page; null on the last page."
     }
   },
   "additionalProperties": false,
@@ -4202,8 +4203,7 @@ Result:
     "age_seconds",
     "rows",
     "total",
-    "offset",
-    "next_offset"
+    "next_cursor"
   ]
 }
 ```
@@ -4233,7 +4233,8 @@ Params:
       "enum": [
         "all",
         "selected"
-      ]
+      ],
+      "description": "all, the default, takes every supported local definition; selected takes only records."
     },
     "kinds": {
       "type": "array",
@@ -4241,7 +4242,8 @@ Params:
         "type": "string",
         "minLength": 1
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "Limit the export to these library kinds, such as materials."
     },
     "records": {
       "type": "array",
@@ -4263,7 +4265,8 @@ Params:
           "id"
         ]
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "With scope selected: the records to export, each by record kind and id."
     }
   },
   "additionalProperties": false,
@@ -4368,24 +4371,26 @@ Params:
   "properties": {
     "provider_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "A configured library, by the id ph_composer.library.providers lists."
     },
     "kind": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
     },
     "generation": {
       "type": "integer",
-      "minimum": 1
-    },
-    "offset": {
-      "type": "integer",
-      "minimum": 0
+      "minimum": 1,
+      "description": "The catalog generation the caller read. Omit it to use the current one; a stale one is refused as library.catalog_stale."
     },
     "limit": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 200
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
     }
   },
   "additionalProperties": false,
@@ -4660,18 +4665,15 @@ Result:
     },
     "total": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
     },
-    "offset": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "next_offset": {
+    "next_cursor": {
       "type": [
-        "integer",
+        "string",
         "null"
       ],
-      "minimum": 0
+      "description": "Pass back as cursor for the next page; null on the last page."
     }
   },
   "additionalProperties": false,
@@ -4688,8 +4690,7 @@ Result:
     "age_seconds",
     "rows",
     "total",
-    "offset",
-    "next_offset"
+    "next_cursor"
   ]
 }
 ```
@@ -5402,7 +5403,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -6082,7 +6084,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -6797,7 +6800,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -8043,7 +8047,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -9287,7 +9292,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -11885,10 +11891,12 @@ Params:
         "photo_collections": {
           "type": "object"
         }
-      }
+      },
+      "description": "The new Assembly's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -11938,7 +11946,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to delete."
     },
     "expected_values": {
       "type": "object",
@@ -12302,14 +12312,16 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
       "type": [
         "string",
         "null"
       ],
-      "description": "Replacement identity, or explicit null to clear uses."
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly every Face using the deleted one takes instead, or null to clear those Faces' Assembly. Needed while any Face uses it."
     }
   }
 }
@@ -12357,7 +12369,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to copy."
     }
   }
 }
@@ -12390,9 +12404,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.add`
 
-Add Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Add a Layer with one Layer-Segment of no Material. With no position it goes after the last Layer in the stored order; give index, or anchor_layer_id and side. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Add Assembly Layer. Adds one Layer to this Assembly.
 
 Params:
 
@@ -12406,7 +12420,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -12770,26 +12786,32 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Where to insert the Layer in the stored order, 0 first. Not with anchor_layer_id."
     },
     "thickness_mm": {
       "type": "number",
       "exclusiveMinimum": 0,
-      "x-unit": "mm"
+      "x-unit": "mm",
+      "description": "The new Layer's thickness; 100 mm when absent."
     },
     "anchor_layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "An existing Layer to place the new one beside, with side."
     },
     "side": {
       "type": "string",
       "enum": [
         "outside",
         "inside"
-      ]
+      ],
+      "description": "Which side of anchor_layer_id, by the Assembly's orientation."
     }
   }
 }
@@ -12824,9 +12846,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.flip`
 
-Flip Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Reverse the stored order of the Layers and keep the orientation, so the outside Layer becomes the inside one. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Flip Assembly Layers. Reverses the Layer order.
 
 Params:
 
@@ -12840,7 +12862,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -13204,7 +13228,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -13238,9 +13263,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.flip_orientation`
 
-Flip orientation Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Switch which end of the stored Layer order is the outside (first_layer_outside or last_layer_outside) and keep the order. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Flip Assembly Orientation. Changes only the orientation.
 
 Params:
 
@@ -13254,7 +13279,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -13618,7 +13645,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -13652,9 +13680,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.move`
 
-Move Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Move one Layer one place outward or inward. A Layer already at that end stays. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Move Assembly Layer. Swaps two neighbouring Layers.
 
 Params:
 
@@ -13670,7 +13698,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -14034,17 +14064,21 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer, by its id within this Assembly."
     },
     "direction": {
       "type": "string",
       "enum": [
         "outward",
         "inward"
-      ]
+      ],
+      "description": "Toward the outside or the inside, as the Assembly's orientation defines them."
     }
   }
 }
@@ -14080,9 +14114,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.remove`
 
-Remove Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Remove one Layer. An Assembly keeps at least one Layer. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Remove Assembly Layer. Removes the Layer and its Layer-Segments; clears the air barrier if it was on that Layer.
 
 Params:
 
@@ -14097,7 +14131,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -14461,10 +14497,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer, by its id within this Assembly."
     }
   }
 }
@@ -14499,9 +14538,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.set_air_barrier`
 
-Set air barrier Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Mark one face of one Layer as the Assembly's air barrier, or clear it. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Set Air Barrier. Replaces the Assembly's one air barrier.
 
 Params:
 
@@ -14516,7 +14555,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -14880,20 +14921,24 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer carrying the air barrier, or null to clear it."
     },
     "face": {
       "type": "string",
       "enum": [
         "interior",
         "exterior"
-      ]
+      ],
+      "description": "Which face of the Layer is the air barrier."
     }
   }
 }
@@ -14929,9 +14974,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.update`
 
-Update Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Set one Layer's thickness. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Change Layer Thickness. Changes one Layer's thickness.
 
 Params:
 
@@ -14947,7 +14992,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -15311,15 +15358,19 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer, by its id within this Assembly."
     },
     "thickness_mm": {
       "type": "number",
       "exclusiveMinimum": 0,
-      "x-unit": "mm"
+      "x-unit": "mm",
+      "description": "The new thickness."
     }
   }
 }
@@ -15355,9 +15406,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.add`
 
-Add Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Add a Layer-Segment of no Material to one Layer. A membrane Layer holds one Layer-Segment. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Add Layer-Segment. Adds one Layer-Segment.
 
 Params:
 
@@ -15372,7 +15423,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -15736,19 +15789,24 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer to add a Layer-Segment to."
     },
     "width_mm": {
       "type": "number",
       "exclusiveMinimum": 0,
-      "x-unit": "mm"
+      "x-unit": "mm",
+      "description": "The new Layer-Segment's width; 1000 mm when absent."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Where to insert it among the Layer's Layer-Segments, 0 first; last when absent."
     }
   }
 }
@@ -15783,9 +15841,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.mirror`
 
-Mirror Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Reverse the order of the Layer-Segments in every Layer of one Assembly. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Mirror Layer-Segments. Reverses each Layer's Layer-Segment order.
 
 Params:
 
@@ -15799,7 +15857,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -16163,7 +16223,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -16197,9 +16258,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.remove`
 
-Remove Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Remove one Layer-Segment. A Layer keeps at least one. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Remove Layer-Segment. Removes one Layer-Segment.
 
 Params:
 
@@ -16215,7 +16276,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -16579,13 +16642,18 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer holding the Layer-Segment, by its id within this Assembly."
     },
     "segment_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^seg_[A-Za-z0-9]{12}$",
+      "description": "The Layer-Segment, by its id within that Layer."
     }
   }
 }
@@ -16621,9 +16689,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.set_material`
 
-Set material Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Set or clear one Layer-Segment's Material. A membrane Material needs a Layer of one Layer-Segment, and a membrane Layer thicker than 25 mm is reset to 1 mm. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Set Layer-Segment Material. Changes one Layer-Segment's Material and may reset a membrane Layer's thickness.
 
 Params:
 
@@ -16640,7 +16708,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -17004,19 +17074,26 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer holding the Layer-Segment, by its id within this Assembly."
     },
     "segment_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^seg_[A-Za-z0-9]{12}$",
+      "description": "The Layer-Segment, by its id within that Layer."
     },
     "material_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material, or null to clear it."
     }
   }
 }
@@ -17053,9 +17130,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.update`
 
-Update Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Set one Layer-Segment's width, continuous-insulation flag or steel stud spacing. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Edit Layer-Segment. Changes one Layer-Segment's values.
 
 Params:
 
@@ -17072,7 +17149,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -17436,13 +17515,18 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer holding the Layer-Segment, by its id within this Assembly."
     },
     "segment_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^seg_[A-Za-z0-9]{12}$",
+      "description": "The Layer-Segment, by its id within that Layer."
     },
     "values": {
       "type": "object",
@@ -17465,7 +17549,8 @@ Params:
           "exclusiveMinimum": 0,
           "x-unit": "mm"
         }
-      }
+      },
+      "description": "The Layer-Segment values to change; any not given stay. A Layer carries at most one steel stud spacing."
     }
   }
 }
@@ -17521,7 +17606,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "values": {
       "type": "object",
@@ -17620,7 +17707,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -17984,10 +18072,12 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -18203,10 +18293,12 @@ Params:
         "color": {
           "type": "string"
         }
-      }
+      },
+      "description": "The new Material's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -18256,7 +18348,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material to delete."
     },
     "expected_values": {
       "type": "object",
@@ -18453,10 +18547,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material every Layer-Segment using the deleted one takes instead. Needed while any Assembly uses it."
     }
   }
 }
@@ -18504,14 +18601,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -18561,7 +18662,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material to edit."
     },
     "values": {
       "type": "object",
@@ -18633,7 +18736,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -18830,10 +18934,12 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -18884,43 +18990,50 @@ Params:
   "properties": {
     "provider_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "A configured library, by the id ph_composer.library.providers lists."
     },
     "kind": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
     },
     "generation": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "The catalog generation the caller read. Omit it to use the current one; a stale one is refused as library.catalog_stale."
     },
     "library_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library holding the row, as the catalog row gives it."
     },
     "record_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The row's record id within that library."
     },
     "choice": {
       "type": "string",
       "enum": [
-        "inspect",
         "create",
         "keep_local",
-        "use_library",
-        "cancel"
-      ]
+        "use_library"
+      ],
+      "description": "create copies the row as a new local record; keep_local reuses a reviewed local candidate unchanged; use_library replaces a reviewed candidate's values with the library's. Read the resolution first with in_file or a preview."
     },
     "local_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The reviewed local candidate for keep_local or use_library, from the resolution's candidates. May be omitted when there is exactly one."
     },
     "expected_values": {
-      "type": "object"
+      "type": "object",
+      "description": "For use_library: the candidate's expected_values from the resolution. Refused when the local record changed since."
     },
     "assignment": {
-      "type": "object"
+      "type": "object",
+      "description": "Optional: where the owning feature also assigns the copied record, in that kind's assignment target shape, such as one Window Type element side."
     }
   },
   "additionalProperties": false,
@@ -18929,7 +19042,8 @@ Params:
     "kind",
     "generation",
     "library_id",
-    "record_id"
+    "record_id",
+    "choice"
   ]
 }
 ```
@@ -19068,7 +19182,7 @@ Example params:
   "generation": 1,
   "library_id": "synthetic",
   "record_id": "one",
-  "choice": "inspect"
+  "choice": "create"
 }
 ```
 
@@ -19076,7 +19190,7 @@ Example params:
 
 Create one Frame with local defaults. Owner: `ph_composer.windows`.
 
-Undo step: Create Frame. Creates one Model-owned definition.
+Undo step: Create Frame. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -19251,10 +19365,12 @@ Params:
         "color": {
           "type": "string"
         }
-      }
+      },
+      "description": "The new Frame's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -19291,7 +19407,7 @@ Example params:
 
 Delete Frame; live references require replacement. Owner: `ph_composer.windows`.
 
-Undo step: Delete Frame. Rewrites referring definitions and defaults, then deletes atomically.
+Undo step: Delete Frame. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -19304,7 +19420,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame to delete."
     },
     "expected_values": {
       "type": "object",
@@ -19493,10 +19611,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame that every Window Type and default using the deleted one takes. Needed while any uses it."
     }
   }
 }
@@ -19531,7 +19652,7 @@ Example params:
 
 Duplicate a Frame with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Frame. Copies definition metadata and retains shared products; new elements get fresh ids.
+Undo step: Duplicate Frame. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -19544,14 +19665,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -19586,7 +19711,7 @@ Example params:
 
 Edit guarded authored values of one Frame. Owner: `ph_composer.windows`.
 
-Undo step: Edit Frame. Updates one definition and preserves its metadata.
+Undo step: Edit Frame. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -19601,7 +19726,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame to edit."
     },
     "values": {
       "type": "object",
@@ -19682,7 +19809,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -19871,10 +19999,12 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -19915,7 +20045,7 @@ Example params:
 
 Create one Glazing with local defaults. Owner: `ph_composer.windows`.
 
-Undo step: Create Glazing. Creates one Model-owned definition.
+Undo step: Create Glazing. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20072,10 +20202,12 @@ Params:
         "color": {
           "type": "string"
         }
-      }
+      },
+      "description": "The new Glazing's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -20112,7 +20244,7 @@ Example params:
 
 Delete Glazing; live references require replacement. Owner: `ph_composer.windows`.
 
-Undo step: Delete Glazing. Rewrites referring definitions and defaults, then deletes atomically.
+Undo step: Delete Glazing. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20125,7 +20257,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing to delete."
     },
     "expected_values": {
       "type": "object",
@@ -20293,10 +20427,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing that every Window Type and default using the deleted one takes. Needed while any uses it."
     }
   }
 }
@@ -20331,7 +20468,7 @@ Example params:
 
 Duplicate a Glazing with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Glazing. Copies definition metadata and retains shared products; new elements get fresh ids.
+Undo step: Duplicate Glazing. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20344,14 +20481,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -20386,7 +20527,7 @@ Example params:
 
 Edit guarded authored values of one Glazing. Owner: `ph_composer.windows`.
 
-Undo step: Edit Glazing. Updates one definition and preserves its metadata.
+Undo step: Edit Glazing. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20401,7 +20542,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing to edit."
     },
     "values": {
       "type": "object",
@@ -20470,7 +20613,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -20638,10 +20782,12 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -20682,7 +20828,7 @@ Example params:
 
 Create one Psi-Install Type with local defaults. Owner: `ph_composer.windows`.
 
-Undo step: Create Psi-Install Type. Creates one Model-owned definition.
+Undo step: Create Psi-Install Type. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20795,10 +20941,12 @@ Params:
           ],
           "x-unit": "W/mK"
         }
-      }
+      },
+      "description": "The new Psi-Install Type's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -20835,7 +20983,7 @@ Example params:
 
 Delete Psi-Install Type; live references require replacement. Owner: `ph_composer.windows`.
 
-Undo step: Delete Psi-Install Type. Rewrites referring definitions and defaults, then deletes atomically.
+Undo step: Delete Psi-Install Type. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20848,7 +20996,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^psi_[A-Za-z0-9]{12}$",
+      "description": "The Psi-Install Type to delete."
     },
     "expected_values": {
       "type": "object",
@@ -20960,10 +21110,13 @@ Params:
           ],
           "x-unit": "W/mK"
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^psi_[A-Za-z0-9]{12}$",
+      "description": "The Psi-Install Type that every Window Type and default using the deleted one takes. Needed while any uses it."
     }
   }
 }
@@ -20998,7 +21151,7 @@ Example params:
 
 Duplicate a Psi-Install Type with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Psi-Install Type. Copies definition metadata and retains shared products; new elements get fresh ids.
+Undo step: Duplicate Psi-Install Type. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21011,14 +21164,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^psi_[A-Za-z0-9]{12}$",
+      "description": "The Psi-Install Type to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -21053,7 +21210,7 @@ Example params:
 
 Edit guarded authored values of one Psi-Install Type. Owner: `ph_composer.windows`.
 
-Undo step: Edit Psi-Install Type. Updates one definition and preserves its metadata.
+Undo step: Edit Psi-Install Type. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21068,7 +21225,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^psi_[A-Za-z0-9]{12}$",
+      "description": "The Psi-Install Type to edit."
     },
     "values": {
       "type": "object",
@@ -21103,7 +21262,8 @@ Params:
           ],
           "x-unit": "W/mK"
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -21215,10 +21375,12 @@ Params:
           ],
           "x-unit": "W/mK"
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -21259,7 +21421,7 @@ Example params:
 
 Set guarded installation defaults. Owner: `ph_composer.windows`.
 
-Undo step: Change Window Defaults. Stores installation defaults in this SKP.
+Undo step: Change Window Defaults. Stores installation defaults in this SKP. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21291,7 +21453,8 @@ Params:
           "minimum": 0,
           "x-unit": "m"
         }
-      }
+      },
+      "description": "The complete new defaults."
     },
     "expected_values": {
       "type": "object",
@@ -21312,7 +21475,8 @@ Params:
           "minimum": 0,
           "x-unit": "m"
         }
-      }
+      },
+      "description": "The defaults last read; a change refuses."
     }
   }
 }
@@ -21361,9 +21525,9 @@ Example params:
 
 ### `ph_composer.windows.types.create`
 
-Create one Window Type with local defaults. Owner: `ph_composer.windows`.
+Create one Window Type with one glazed element, 1.0 m wide by 1.5 m high unless values give columns_m and rows_m. The size does not follow the display unit system. Owner: `ph_composer.windows`.
 
-Undo step: Create Window Type. Creates one Model-owned definition.
+Undo step: Create Window Type. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21862,10 +22026,12 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "The new Window Type's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -21902,7 +22068,7 @@ Example params:
 
 Delete Window Type; live references require replacement. Owner: `ph_composer.windows`.
 
-Undo step: Delete Window Type. Rewrites referring definitions and defaults, then deletes atomically.
+Undo step: Delete Window Type. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21915,7 +22081,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to delete."
     },
     "expected_values": {
       "type": "object",
@@ -22428,13 +22596,16 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type every Window of the deleted one takes, or null to remove them. Needed while Windows use it."
     }
   }
 }
@@ -22469,7 +22640,7 @@ Example params:
 
 Duplicate a Window Type with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Window Type. Copies definition metadata and retains shared products; new elements get fresh ids.
+Undo step: Duplicate Window Type. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -22482,14 +22653,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -22522,9 +22697,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.dimension`
 
-Apply the dimension grid gesture. Owner: `ph_composer.windows`.
+Set one row or column band's size. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: dimension. Changes one definition in one Undo step.
+Undo step: Resize Window Band. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -22545,11 +22720,13 @@ Params:
       "enum": [
         "rows_m",
         "columns_m"
-      ]
+      ],
+      "description": "rows_m for a horizontal band, columns_m for a vertical one."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "The band to size, 0 first."
     },
     "value": {
       "type": [
@@ -22557,10 +22734,13 @@ Params:
         "null"
       ],
       "exclusiveMinimum": 0,
-      "x-unit": "m"
+      "x-unit": "m",
+      "description": "The band's size, or null to unset it."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -23073,7 +23253,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -23113,604 +23294,11 @@ Example params:
 }
 ```
 
-### `ph_composer.windows.types.grid.element`
-
-Apply the element grid gesture. Owner: `ph_composer.windows`.
-
-Undo step: Edit Window Type: element. Changes one definition in one Undo step.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "element_id",
-    "field",
-    "value",
-    "id",
-    "expected_values"
-  ],
-  "properties": {
-    "element_id": {
-      "type": "string"
-    },
-    "field": {
-      "type": "string",
-      "enum": [
-        "name",
-        "glazing_id",
-        "frames",
-        "operation"
-      ]
-    },
-    "value": {
-      "type": [
-        "string",
-        "null",
-        "object"
-      ]
-    },
-    "id": {
-      "type": "string"
-    },
-    "expected_values": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "minLength": 1
-        },
-        "notes": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "datasheet_links": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "source": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": false,
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "provider_kind": {
-              "type": "string",
-              "minLength": 1
-            },
-            "library_id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "record_kind": {
-              "type": "string",
-              "minLength": 1
-            },
-            "record_id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "fingerprint": {
-              "type": "string",
-              "minLength": 1
-            },
-            "copied_at": {
-              "type": "string",
-              "minLength": 1
-            },
-            "kind": {
-              "type": "string",
-              "enum": [
-                "manual",
-                "derived",
-                "library"
-              ]
-            },
-            "fingerprint_version": {
-              "type": "integer",
-              "enum": [
-                1
-              ]
-            },
-            "snapshot": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [],
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "notes": {
-                  "type": "string"
-                },
-                "datasheet_links": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "rows_m": {
-                  "type": "array",
-                  "minItems": 1,
-                  "maxItems": 40,
-                  "items": {
-                    "type": [
-                      "number",
-                      "null"
-                    ],
-                    "exclusiveMinimum": 0,
-                    "x-unit": "m"
-                  }
-                },
-                "columns_m": {
-                  "type": "array",
-                  "minItems": 1,
-                  "maxItems": 40,
-                  "items": {
-                    "type": [
-                      "number",
-                      "null"
-                    ],
-                    "exclusiveMinimum": 0,
-                    "x-unit": "m"
-                  }
-                },
-                "elements": {
-                  "type": "array",
-                  "minItems": 1,
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "id",
-                      "name",
-                      "kind",
-                      "row_span",
-                      "column_span",
-                      "glazing_id",
-                      "frames",
-                      "installs",
-                      "operation"
-                    ],
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "kind": {
-                        "type": "string",
-                        "enum": [
-                          "glazed",
-                          "empty"
-                        ]
-                      },
-                      "row_span": {
-                        "type": "array",
-                        "minItems": 2,
-                        "maxItems": 2,
-                        "items": {
-                          "type": "integer",
-                          "minimum": 0
-                        }
-                      },
-                      "column_span": {
-                        "type": "array",
-                        "minItems": 2,
-                        "maxItems": 2,
-                        "items": {
-                          "type": "integer",
-                          "minimum": 0
-                        }
-                      },
-                      "glazing_id": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "frames": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "top",
-                          "right",
-                          "bottom",
-                          "left"
-                        ],
-                        "properties": {
-                          "top": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "right": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "bottom": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "left": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          }
-                        }
-                      },
-                      "installs": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "top",
-                          "right",
-                          "bottom",
-                          "left"
-                        ],
-                        "properties": {
-                          "top": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "right": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "bottom": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "left": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          }
-                        }
-                      },
-                      "operation": {
-                        "type": [
-                          "object",
-                          "null"
-                        ],
-                        "additionalProperties": false,
-                        "required": [
-                          "type",
-                          "directions"
-                        ],
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "enum": [
-                              "fixed",
-                              "swing",
-                              "slide"
-                            ]
-                          },
-                          "directions": {
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "enum": [
-                                "left",
-                                "right",
-                                "up",
-                                "down"
-                              ]
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "install_depth_m": {
-                  "type": "number",
-                  "minimum": 0,
-                  "x-unit": "m"
-                },
-                "product_photos": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "rows_m": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "minItems": 1,
-          "maxItems": 40,
-          "items": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "exclusiveMinimum": 0,
-            "x-unit": "m"
-          }
-        },
-        "columns_m": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "minItems": 1,
-          "maxItems": 40,
-          "items": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "exclusiveMinimum": 0,
-            "x-unit": "m"
-          }
-        },
-        "elements": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "name",
-              "kind",
-              "row_span",
-              "column_span",
-              "glazing_id",
-              "frames",
-              "installs",
-              "operation"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "glazed",
-                  "empty"
-                ]
-              },
-              "row_span": {
-                "type": "array",
-                "minItems": 2,
-                "maxItems": 2,
-                "items": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "column_span": {
-                "type": "array",
-                "minItems": 2,
-                "maxItems": 2,
-                "items": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "glazing_id": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "frames": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "top",
-                  "right",
-                  "bottom",
-                  "left"
-                ],
-                "properties": {
-                  "top": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "right": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "bottom": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "left": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
-                }
-              },
-              "installs": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "top",
-                  "right",
-                  "bottom",
-                  "left"
-                ],
-                "properties": {
-                  "top": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "right": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "bottom": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "left": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
-                }
-              },
-              "operation": {
-                "type": [
-                  "object",
-                  "null"
-                ],
-                "additionalProperties": false,
-                "required": [
-                  "type",
-                  "directions"
-                ],
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "fixed",
-                      "swing",
-                      "slide"
-                    ]
-                  },
-                  "directions": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "left",
-                        "right",
-                        "up",
-                        "down"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "install_depth_m": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "minimum": 0,
-          "x-unit": "m"
-        },
-        "product_photos": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "id",
-    "unit_count"
-  ],
-  "properties": {
-    "id": {
-      "type": "string"
-    },
-    "unit_count": {
-      "type": "integer",
-      "minimum": 0
-    }
-  }
-}
-```
-
-Example params:
-
-```json
-{
-  "element_id": "wel_Ab12Cd34Ef56",
-  "field": "name",
-  "value": "Fixed",
-  "id": "wnt_Ab12Cd34Ef56",
-  "expected_values": {}
-}
-```
-
 ### `ph_composer.windows.types.grid.flip`
 
-Apply the flip grid gesture. Owner: `ph_composer.windows`.
+Mirror the layout left to right, swapping left and right Frames, installs and operation directions. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: flip. Changes one definition in one Undo step.
+Undo step: Flip Window Type. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -23724,7 +23312,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -24237,7 +23827,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -24276,9 +23867,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.insert`
 
-Apply the insert grid gesture. Owner: `ph_composer.windows`.
+Insert a row or column band at a grid boundary, filled with new glazed elements. Elements spanning that boundary must be split first. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: insert. Changes one definition in one Undo step.
+Undo step: Insert Window Band. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -24299,11 +23890,13 @@ Params:
       "enum": [
         "rows_m",
         "columns_m"
-      ]
+      ],
+      "description": "rows_m for a horizontal band, columns_m for a vertical one."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "The boundary to insert at, 0 before the first band."
     },
     "value": {
       "type": [
@@ -24311,10 +23904,13 @@ Params:
         "null"
       ],
       "exclusiveMinimum": 0,
-      "x-unit": "m"
+      "x-unit": "m",
+      "description": "The new band's size, or null to leave it unset."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -24827,7 +24423,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -24869,9 +24466,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.kind`
 
-Apply the kind grid gesture. Owner: `ph_composer.windows`.
+Make elements glazed or Empty. Empty is wall area: it clears the elements' Glazing, Frames, installs and operation. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: kind. Changes one definition in one Undo step.
+Undo step: Change Window Element Kind. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -24889,19 +24486,25 @@ Params:
     "ids": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^wel_[A-Za-z0-9]{12}$",
+        "description": "An element id within this Window Type."
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The elements to change."
     },
     "kind": {
       "type": "string",
       "enum": [
         "glazed",
         "empty"
-      ]
+      ],
+      "description": "glazed or empty."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -25414,7 +25017,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -25457,9 +25061,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.merge`
 
-Apply the merge grid gesture. Owner: `ph_composer.windows`.
+Merge two or more elements of one kind that cover one rectangle into a single element under a new id. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: merge. Changes one definition in one Undo step.
+Undo step: Merge Window Elements. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -25476,12 +25080,17 @@ Params:
     "ids": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^wel_[A-Za-z0-9]{12}$",
+        "description": "An element id within this Window Type."
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The elements to merge."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -25994,7 +25603,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -26036,9 +25646,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.paste`
 
-Apply the paste grid gesture. Owner: `ph_composer.windows`.
+Copy one glazed element's Glazing, Frames, operation and installs onto other glazed elements. Installs copy only where the edges match. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: paste. Changes one definition in one Undo step.
+Undo step: Paste Window Element. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -26054,17 +25664,24 @@ Params:
   ],
   "properties": {
     "source_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The glazed element to copy from."
     },
     "ids": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^wel_[A-Za-z0-9]{12}$",
+        "description": "An element id within this Window Type."
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The glazed elements to paste onto."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -26577,7 +26194,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -26620,9 +26238,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.remove`
 
-Apply the remove grid gesture. Owner: `ph_composer.windows`.
+Remove one row or column band and the elements only it held. Refused while the layout carries installation assignments, and for the last band. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: remove. Changes one definition in one Undo step.
+Undo step: Remove Window Band. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -26642,14 +26260,18 @@ Params:
       "enum": [
         "rows_m",
         "columns_m"
-      ]
+      ],
+      "description": "rows_m for a horizontal band, columns_m for a vertical one."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "The band to remove, 0 first."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -27162,7 +26784,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -27201,11 +26824,11 @@ Example params:
 }
 ```
 
-### `ph_composer.windows.types.grid.split`
+### `ph_composer.windows.types.grid.set_element_frame`
 
-Apply the split grid gesture. Owner: `ph_composer.windows`.
+Set or clear the Frame on one side of one glazed element; the other sides stay. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: split. Changes one definition in one Undo step.
+Undo step: Set Window Frame. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -27215,15 +26838,39 @@ Params:
   "additionalProperties": false,
   "required": [
     "element_id",
+    "side",
+    "frame_id",
     "id",
     "expected_values"
   ],
   "properties": {
     "element_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The element, by its id within this Window Type."
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ],
+      "description": "The element side, as seen from outside."
+    },
+    "frame_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame, or null to clear it."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -27736,7 +27383,2379 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "unit_count"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "element_id": "wel_Ab12Cd34Ef56",
+  "side": "left",
+  "frame_id": "frm_Ab12Cd34Ef56",
+  "id": "wnt_Ab12Cd34Ef56",
+  "expected_values": {}
+}
+```
+
+### `ph_composer.windows.types.grid.set_element_glazing`
+
+Set or clear one glazed element's Glazing. Owner: `ph_composer.windows`.
+
+Undo step: Set Window Glazing. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "element_id",
+    "glazing_id",
+    "id",
+    "expected_values"
+  ],
+  "properties": {
+    "element_id": {
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The element, by its id within this Window Type."
+    },
+    "glazing_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing, or null to clear it."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datasheet_links": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "provider_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "library_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "copied_at": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "manual",
+                "derived",
+                "library"
+              ]
+            },
+            "fingerprint_version": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            },
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "datasheet_links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rows_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "columns_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "elements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "row_span",
+                      "column_span",
+                      "glazing_id",
+                      "frames",
+                      "installs",
+                      "operation"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "glazed",
+                          "empty"
+                        ]
+                      },
+                      "row_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "column_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "glazing_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "frames": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "installs": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "operation": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "directions"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "fixed",
+                              "swing",
+                              "slide"
+                            ]
+                          },
+                          "directions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "right",
+                                "up",
+                                "down"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "install_depth_m": {
+                  "type": "number",
+                  "minimum": 0,
+                  "x-unit": "m"
+                },
+                "product_photos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rows_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "columns_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "elements": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "row_span",
+              "column_span",
+              "glazing_id",
+              "frames",
+              "installs",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "glazed",
+                  "empty"
+                ]
+              },
+              "row_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "column_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "glazing_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "frames": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "installs": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "operation": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "directions"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "fixed",
+                      "swing",
+                      "slide"
+                    ]
+                  },
+                  "directions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right",
+                        "up",
+                        "down"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "install_depth_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m"
+        },
+        "product_photos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "unit_count"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "element_id": "wel_Ab12Cd34Ef56",
+  "glazing_id": "glz_Ab12Cd34Ef56",
+  "id": "wnt_Ab12Cd34Ef56",
+  "expected_values": {}
+}
+```
+
+### `ph_composer.windows.types.grid.set_element_name`
+
+Name one element. Owner: `ph_composer.windows`.
+
+Undo step: Rename Window Element. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "element_id",
+    "name",
+    "id",
+    "expected_values"
+  ],
+  "properties": {
+    "element_id": {
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The element, by its id within this Window Type."
+    },
+    "name": {
+      "type": "string",
+      "description": "The element's name."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datasheet_links": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "provider_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "library_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "copied_at": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "manual",
+                "derived",
+                "library"
+              ]
+            },
+            "fingerprint_version": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            },
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "datasheet_links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rows_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "columns_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "elements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "row_span",
+                      "column_span",
+                      "glazing_id",
+                      "frames",
+                      "installs",
+                      "operation"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "glazed",
+                          "empty"
+                        ]
+                      },
+                      "row_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "column_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "glazing_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "frames": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "installs": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "operation": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "directions"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "fixed",
+                              "swing",
+                              "slide"
+                            ]
+                          },
+                          "directions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "right",
+                                "up",
+                                "down"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "install_depth_m": {
+                  "type": "number",
+                  "minimum": 0,
+                  "x-unit": "m"
+                },
+                "product_photos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rows_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "columns_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "elements": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "row_span",
+              "column_span",
+              "glazing_id",
+              "frames",
+              "installs",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "glazed",
+                  "empty"
+                ]
+              },
+              "row_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "column_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "glazing_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "frames": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "installs": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "operation": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "directions"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "fixed",
+                      "swing",
+                      "slide"
+                    ]
+                  },
+                  "directions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right",
+                        "up",
+                        "down"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "install_depth_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m"
+        },
+        "product_photos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "unit_count"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "element_id": "wel_Ab12Cd34Ef56",
+  "name": "Fixed",
+  "id": "wnt_Ab12Cd34Ef56",
+  "expected_values": {}
+}
+```
+
+### `ph_composer.windows.types.grid.set_element_operation`
+
+Set or clear how one glazed element opens. A fixed element has no directions. Owner: `ph_composer.windows`.
+
+Undo step: Set Window Operation. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "element_id",
+    "operation",
+    "id",
+    "expected_values"
+  ],
+  "properties": {
+    "element_id": {
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The element, by its id within this Window Type."
+    },
+    "operation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "directions"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "swing",
+            "slide"
+          ]
+        },
+        "directions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right",
+              "up",
+              "down"
+            ]
+          }
+        }
+      },
+      "description": "fixed, swing or slide with the directions it opens toward, or null when not specified."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datasheet_links": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "provider_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "library_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "copied_at": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "manual",
+                "derived",
+                "library"
+              ]
+            },
+            "fingerprint_version": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            },
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "datasheet_links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rows_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "columns_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "elements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "row_span",
+                      "column_span",
+                      "glazing_id",
+                      "frames",
+                      "installs",
+                      "operation"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "glazed",
+                          "empty"
+                        ]
+                      },
+                      "row_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "column_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "glazing_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "frames": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "installs": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "operation": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "directions"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "fixed",
+                              "swing",
+                              "slide"
+                            ]
+                          },
+                          "directions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "right",
+                                "up",
+                                "down"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "install_depth_m": {
+                  "type": "number",
+                  "minimum": 0,
+                  "x-unit": "m"
+                },
+                "product_photos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rows_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "columns_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "elements": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "row_span",
+              "column_span",
+              "glazing_id",
+              "frames",
+              "installs",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "glazed",
+                  "empty"
+                ]
+              },
+              "row_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "column_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "glazing_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "frames": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "installs": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "operation": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "directions"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "fixed",
+                      "swing",
+                      "slide"
+                    ]
+                  },
+                  "directions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right",
+                        "up",
+                        "down"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "install_depth_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m"
+        },
+        "product_photos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "unit_count"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "unit_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "element_id": "wel_Ab12Cd34Ef56",
+  "operation": {
+    "type": "swing",
+    "directions": [
+      "left"
+    ]
+  },
+  "id": "wnt_Ab12Cd34Ef56",
+  "expected_values": {}
+}
+```
+
+### `ph_composer.windows.types.grid.split`
+
+Split one merged element back into one element per grid cell, each under a new id. Owner: `ph_composer.windows`.
+
+Undo step: Split Window Element. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "element_id",
+    "id",
+    "expected_values"
+  ],
+  "properties": {
+    "element_id": {
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The merged element to split."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datasheet_links": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "provider_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "library_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "copied_at": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "manual",
+                "derived",
+                "library"
+              ]
+            },
+            "fingerprint_version": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            },
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "datasheet_links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rows_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "columns_m": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "exclusiveMinimum": 0,
+                    "x-unit": "m"
+                  }
+                },
+                "elements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "row_span",
+                      "column_span",
+                      "glazing_id",
+                      "frames",
+                      "installs",
+                      "operation"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "glazed",
+                          "empty"
+                        ]
+                      },
+                      "row_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "column_span": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "glazing_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "frames": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "installs": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "properties": {
+                          "top": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "right": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bottom": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "left": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      },
+                      "operation": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "directions"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "fixed",
+                              "swing",
+                              "slide"
+                            ]
+                          },
+                          "directions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "right",
+                                "up",
+                                "down"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "install_depth_m": {
+                  "type": "number",
+                  "minimum": 0,
+                  "x-unit": "m"
+                },
+                "product_photos": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rows_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "columns_m": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 40,
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "x-unit": "m"
+          }
+        },
+        "elements": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "row_span",
+              "column_span",
+              "glazing_id",
+              "frames",
+              "installs",
+              "operation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "glazed",
+                  "empty"
+                ]
+              },
+              "row_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "column_span": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "glazing_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "frames": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "installs": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "top",
+                  "right",
+                  "bottom",
+                  "left"
+                ],
+                "properties": {
+                  "top": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "right": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bottom": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "left": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "operation": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "directions"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "fixed",
+                      "swing",
+                      "slide"
+                    ]
+                  },
+                  "directions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right",
+                        "up",
+                        "down"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "install_depth_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m"
+        },
+        "product_photos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -27776,9 +29795,9 @@ Example params:
 
 ### `ph_composer.windows.types.installs.save`
 
-Save the complete staged Installs session. Owner: `ph_composer.windows`.
+Assign Psi-Install Types to the edges of Window Type elements, in one Undo step, with any Psi-Install Types they need created, edited or copied from a library. Each listed element's four sides are replaced as given; null clears a side. A side may name a temporary client_id from psi_install_types.create or imports instead of a saved id. The panel's Installs session and the library assignment both use it; for one edge, list one Type with one element. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Installations. Creates or edits installation products and updates type edges atomically.
+Undo step: Edit Window Installations. Creates or edits installation products and updates type edges atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -28372,7 +30391,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "Each Window Type to change, with its values last read and each element whose four install sides to replace."
     },
     "psi_install_types": {
       "type": "object",
@@ -28516,7 +30536,9 @@ Params:
             ],
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^psi_[A-Za-z0-9]{12}$",
+                "description": "The Psi-Install Type to edit."
               },
               "values": {
                 "type": "object",
@@ -28551,7 +30573,8 @@ Params:
                     ],
                     "x-unit": "W/mK"
                   }
-                }
+                },
+                "description": "The values to change; any not given stay."
               },
               "expected_values": {
                 "type": "object",
@@ -28663,15 +30686,18 @@ Params:
                     ],
                     "x-unit": "W/mK"
                   }
-                }
+                },
+                "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
               },
               "user_data": {
-                "type": "object"
+                "type": "object",
+                "description": "Free metadata kept with the record and exported verbatim."
               }
             }
           }
         }
-      }
+      },
+      "description": "Psi-Install Types to create, each under a temporary client_id a side may name, and to edit. Both lists may be empty."
     },
     "expected_settings": {
       "type": "object",
@@ -28692,7 +30718,8 @@ Params:
           "minimum": 0,
           "x-unit": "m"
         }
-      }
+      },
+      "description": "The Window defaults last read; a change refuses."
     },
     "imports": {
       "type": "array",
@@ -28759,7 +30786,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "Library rows to copy as Psi-Install Types, each under a temporary client_id a side may name."
     }
   }
 }
@@ -28812,7 +30840,7 @@ Example params:
 
 Edit guarded authored values of one Window Type. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type. Updates one definition and preserves its metadata.
+Undo step: Edit Window Type. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -28827,7 +30855,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "values": {
       "type": "object",
@@ -29070,7 +31100,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -29583,10 +31614,12 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -29632,7 +31665,7 @@ Example params:
 
 Create a horizontally flipped Type for one mirrored Window. Owner: `ph_composer.windows`.
 
-Undo step: New Flipped Window Type. Creates one independent Type; preserves physical panes, metadata and glue.
+Undo step: New Flipped Window Type. Creates one independent Type; preserves physical panes, metadata and glue. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -29662,11 +31695,13 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The mirrored Window occurrence."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The new Type's name; \"<Type> (flipped)\" when absent."
     }
   }
 }
@@ -29711,7 +31746,7 @@ Example params:
 
 Place an anchored Window on an explicit writable Zone Face. Owner: `ph_composer.windows`.
 
-Undo step: Place Window. Creates or reuses the Type definition, glues an instance and stores its Unit record.
+Undo step: Place Window. Creates or reuses the Type definition, glues an instance and stores its Unit record. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -29757,10 +31792,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The writable Zone Face to place on."
     },
     "type_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to place."
     },
     "anchor": {
       "type": "string",
@@ -29774,7 +31812,8 @@ Params:
         "head_left",
         "head_center",
         "head_right"
-      ]
+      ],
+      "description": "Which point of the opening sits at the placement point: sill, center or head, by left, center or right as seen from outside."
     },
     "offsets": {
       "type": "object",
@@ -29792,10 +31831,12 @@ Params:
           "type": "number",
           "x-unit": "m"
         }
-      }
+      },
+      "description": "Where the anchor goes on the Face, in metres right and up from the Face's lowest, leftmost extent as seen from outside."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -29845,7 +31886,7 @@ Example params:
 
 Glue an unmoved Window to an explicit same-storage Face. Owner: `ph_composer.windows`.
 
-Undo step: Re-host Window. Changes glue only, after containment and overlap checks.
+Undo step: Re-host Window. Changes glue only, after containment and overlap checks. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -29876,7 +31917,8 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The Window occurrence to glue."
     },
     "host": {
       "type": "object",
@@ -29909,7 +31951,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The Face to glue it to, in the same parent storage; the Window must lie on it."
     }
   }
 }
@@ -29960,7 +32003,7 @@ Example params:
 
 Remove explicit Window occurrences with reference guards. Owner: `ph_composer.windows`.
 
-Undo step: Remove Windows. Removes only the chosen instances; incoming references must remain valid.
+Undo step: Remove Windows. Removes only the chosen instances; incoming references must remain valid. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -29995,7 +32038,8 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "The Window occurrences to remove."
     }
   }
 }
@@ -30037,11 +32081,11 @@ Example params:
 }
 ```
 
-### `ph_composer.windows.units.reset_to_type`
+### `ph_composer.windows.units.repair_copied_identities`
 
-Reset explicit Windows of one Type to its authored geometry. Owner: `ph_composer.windows`.
+Give the copies sharing each chosen Window's identity new identities. The first occurrence by entity path keeps the identity; a preview lists each old and new id. Owner: `ph_composer.windows`.
 
-Undo step: Reset Windows to Type. Repairs selected instances; regenerating an edited primary affects all its Units.
+Undo step: Repair Copied Windows. Rewrites only the copied Unit records' identities; geometry, glue and metadata stay.
 
 Params:
 
@@ -30076,7 +32120,110 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Windows whose identity a copy shares; either the original or a copy names the group."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "repairs"
+  ],
+  "properties": {
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entity_path",
+          "old_unit_id",
+          "new_unit_id"
+        ],
+        "properties": {
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "old_unit_id": {
+            "type": "string"
+          },
+          "new_unit_id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "units": [
+    {
+      "unit_id": "wun_Ab12Cd34Ef56",
+      "entity_path": [
+        1201,
+        1203
+      ]
+    }
+  ]
+}
+```
+
+### `ph_composer.windows.units.reset_to_type`
+
+Reset explicit Windows of one Type to its authored geometry. Owner: `ph_composer.windows`.
+
+Undo step: Reset Windows to Type. Repairs selected instances; regenerating an edited primary affects all its Units. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "units"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "entity_path"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "entity_path": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "The Window occurrences to reset, all of one Window Type."
     }
   }
 }
@@ -30122,7 +32269,7 @@ Example params:
 
 Recover a Unit from exact stamped pane Faces. Owner: `ph_composer.windows`.
 
-Undo step: Restore Window. Creates a new default-anchor Unit and removes only its exact loose panes and edges.
+Undo step: Restore Window. Creates a new default-anchor Unit and removes only its exact loose panes and edges. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -30167,10 +32314,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The Face the loose panes lie on."
     },
     "type_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type the panes were stamped with."
     },
     "pane_paths": {
       "type": "array",
@@ -30183,7 +32333,8 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Each stamped pane Face's entity path from the Model root."
     }
   }
 }
@@ -30234,7 +32385,7 @@ Example params:
 
 Swap explicit Windows, preserving their anchors. Owner: `ph_composer.windows`.
 
-Undo step: Swap Window Type. Reuses one target definition and preserves each Unit's metadata and host.
+Undo step: Swap Window Type. Reuses one target definition and preserves each Unit's metadata and host. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -30270,10 +32421,13 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "The Window occurrences to swap."
     },
     "type_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type they take."
     }
   }
 }
@@ -30421,13 +32575,15 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "Each Face occurrence to change, with the values last read; a change refuses."
     },
     "assembly_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "description": "The Assembly to assign, or null to clear it."
     }
   }
 }
@@ -30529,7 +32685,8 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The Face occurrences to assign the new Attached zone to."
     },
     "values": {
       "type": "object",
@@ -30579,10 +32736,12 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "The new Attached zone's values."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     },
     "intent": {
       "type": "object",
@@ -30613,7 +32772,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "Optionally keep, set or clear the Faces' face_type in the same step."
     },
     "expected_values": {
       "type": "object",
@@ -30730,7 +32890,8 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "description": "The Attached zone to delete."
     },
     "replacement": {
       "type": "object",
@@ -30759,7 +32920,8 @@ Params:
           ],
           "description": "With mode boundary_condition."
         }
-      }
+      },
+      "description": "Where the Faces naming it go: to another Attached zone, or reclassified to a boundary condition."
     }
   }
 }
@@ -30820,7 +32982,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The Attached zones to copy, each under a new id and a numbered name."
     }
   }
 }
@@ -30925,10 +33088,12 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "The Attached zone values to write; only those given change."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     },
     "expected_values": {
       "type": "object",
@@ -31047,7 +33212,8 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The Zone occurrence whose unrecorded Faces get the suggested classification."
     }
   }
 }
@@ -31247,7 +33413,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "Per field: keep each Face's value, set one value on every Face, or clear it. An absent field is kept."
     },
     "expected_values": {
       "type": "object",
@@ -31420,7 +33587,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The Face occurrence whose orientation to reverse."
     }
   }
 }
@@ -31487,7 +33655,8 @@ Params:
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The new Zone's name; numbered when absent."
     }
   }
 }
@@ -31541,7 +33710,8 @@ Params:
       "type": "array",
       "items": {
         "type": "integer"
-      }
+      },
+      "description": "The root-to-Zone path of the copy to reidentify, as list returns it."
     }
   }
 }
@@ -31616,10 +33786,12 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The Zone occurrence holding the split pieces."
     },
     "face_id": {
-      "type": "string"
+      "type": "string",
+      "description": "The Face id the split pieces share."
     },
     "zones": {
       "type": "array",
@@ -31849,10 +34021,12 @@ Params:
       "type": "array",
       "items": {
         "type": "integer"
-      }
+      },
+      "description": "The edit context holding the stamped members, as the restorable row in all gives it."
     },
     "zone_id": {
-      "type": "string"
+      "type": "string",
+      "description": "The exploded Zone's id, from that restorable row."
     }
   }
 }
@@ -31944,7 +34118,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Either Face of the Surface pair to retire."
     }
   }
 }
@@ -32027,7 +34202,8 @@ Params:
           "minimum": 0,
           "maximum": 180
         }
-      }
+      },
+      "description": "The complete new settings."
     },
     "expected_values": {
       "type": "object",
@@ -32051,7 +34227,8 @@ Params:
           "minimum": 0,
           "maximum": 180
         }
-      }
+      },
+      "description": "The settings last read; a change refuses."
     }
   }
 }
@@ -32140,7 +34317,8 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The Zone occurrences whose shared Faces to pair; Faces shared with a Zone outside the scope are left alone."
     }
   }
 }
@@ -32229,7 +34407,8 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The Zone occurrence to edit, as list returns it."
     },
     "values": {
       "type": "object",
@@ -32259,7 +34438,8 @@ Params:
           "type": "number",
           "x-unit": "mm"
         }
-      }
+      },
+      "description": "The Zone's complete new values."
     },
     "expected_values": {
       "type": "object",
@@ -32417,7 +34597,8 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "Each Zone occurrence to change, with the values last read; a change refuses."
     },
     "field": {
       "type": "string",
@@ -32426,14 +34607,16 @@ Params:
         "building_segment",
         "level",
         "ground_depth_mm"
-      ]
+      ],
+      "description": "The Zone value to set."
     },
     "value": {
       "type": [
         "string",
         "number",
         "null"
-      ]
+      ],
+      "description": "The new value: text for name, building_segment and level (null clears level), a number in mm for ground_depth_mm."
     }
   }
 }
@@ -32603,7 +34786,8 @@ Params:
             "unclassified"
           ]
         }
-      }
+      },
+      "description": "The legend row to show alone; omit it to show every row again."
     }
   }
 }
@@ -32700,7 +34884,8 @@ Params:
             "unclassified"
           ]
         }
-      }
+      },
+      "description": "The legend row whose entities to select, as the active mode's legend lists it."
     }
   }
 }
@@ -32734,526 +34919,6 @@ Example params:
 }
 ```
 
-### `ph_composer.library.load`
-
-Read a configured library into session memory. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "kind": {
-      "type": "string",
-      "minLength": 1
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind"
-  ]
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string"
-    },
-    "kind": {
-      "type": "string"
-    },
-    "generation": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "minimum": 1
-    },
-    "state": {
-      "type": "string",
-      "enum": [
-        "unloaded",
-        "empty",
-        "loaded",
-        "failed"
-      ]
-    },
-    "warnings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "library_id": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "index": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
-      }
-    },
-    "unavailable": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "library_id": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "index": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
-      }
-    },
-    "freshness": {
-      "type": "object",
-      "properties": {
-        "loaded_at": {
-          "type": "string"
-        },
-        "exported_at": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": []
-    },
-    "published_at": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "failure": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "message"
-      ]
-    },
-    "age_seconds": {
-      "type": [
-        "number",
-        "null"
-      ],
-      "minimum": 0
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind",
-    "generation",
-    "state",
-    "warnings",
-    "unavailable",
-    "freshness",
-    "published_at",
-    "failure",
-    "age_seconds"
-  ]
-}
-```
-
-Example params:
-
-```json
-{
-  "provider_id": "example",
-  "kind": "example_parts"
-}
-```
-
-### `ph_composer.library.providers.add_file`
-
-Configure a library through a native picker. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false,
-  "required": []
-}
-```
-
-Result:
-
-```json
-{
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "string"
-      },
-      "label": {
-        "type": "string"
-      },
-      "provider_kind": {
-        "type": "string"
-      }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "label",
-      "provider_kind"
-    ]
-  }
-}
-```
-
-Example params:
-
-```json
-{}
-```
-
-### `ph_composer.library.providers.add_folder`
-
-Configure a library through a native picker. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false,
-  "required": []
-}
-```
-
-Result:
-
-```json
-{
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "string"
-      },
-      "label": {
-        "type": "string"
-      },
-      "provider_kind": {
-        "type": "string"
-      }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "label",
-      "provider_kind"
-    ]
-  }
-}
-```
-
-Example params:
-
-```json
-{}
-```
-
-### `ph_composer.library.providers.remove`
-
-Remove a configured library from this machine. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string",
-      "minLength": 1
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id"
-  ]
-}
-```
-
-Result:
-
-```json
-{
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "string"
-      },
-      "label": {
-        "type": "string"
-      },
-      "provider_kind": {
-        "type": "string"
-      }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "label",
-      "provider_kind"
-    ]
-  }
-}
-```
-
-Example params:
-
-```json
-{
-  "provider_id": "example"
-}
-```
-
-### `ph_composer.library.refresh`
-
-Read a configured library into session memory. Owner: `ph_composer.library`.
-
-Params:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "kind": {
-      "type": "string",
-      "minLength": 1
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind"
-  ]
-}
-```
-
-Result:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "provider_id": {
-      "type": "string"
-    },
-    "kind": {
-      "type": "string"
-    },
-    "generation": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "minimum": 1
-    },
-    "state": {
-      "type": "string",
-      "enum": [
-        "unloaded",
-        "empty",
-        "loaded",
-        "failed"
-      ]
-    },
-    "warnings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "library_id": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "index": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
-      }
-    },
-    "unavailable": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "library_id": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "index": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
-      }
-    },
-    "freshness": {
-      "type": "object",
-      "properties": {
-        "loaded_at": {
-          "type": "string"
-        },
-        "exported_at": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": []
-    },
-    "published_at": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "failure": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "message"
-      ]
-    },
-    "age_seconds": {
-      "type": [
-        "number",
-        "null"
-      ],
-      "minimum": 0
-    }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind",
-    "generation",
-    "state",
-    "warnings",
-    "unavailable",
-    "freshness",
-    "published_at",
-    "failure",
-    "age_seconds"
-  ]
-}
-```
-
-Example params:
-
-```json
-{
-  "provider_id": "example",
-  "kind": "example_parts"
-}
-```
-
 ### `ph_composer.windows.place_tool.choose`
 
 Choose a Type and anchor, then start Place. Owner: `ph_composer.windows`.
@@ -33269,7 +34934,9 @@ Params:
   ],
   "properties": {
     "type_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to place."
     },
     "anchor": {
       "type": "string",
@@ -33283,7 +34950,8 @@ Params:
         "head_left",
         "head_center",
         "head_right"
-      ]
+      ],
+      "description": "Which point of the opening sits at the placement point: sill, center or head, by left, center or right as seen from outside. sill_center when absent."
     },
     "host": {
       "type": [
@@ -33319,7 +34987,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "A Face to place on, or null to pick one in the viewport."
     }
   }
 }
@@ -33543,7 +35212,8 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "The Window occurrences to select, as units.list references them."
     }
   }
 }
@@ -33624,7 +35294,8 @@ Params:
         "boundary_condition",
         "attached_zone_id",
         "assembly_id"
-      ]
+      ],
+      "description": "The Classify palette field to choose a value for."
     },
     "value": {
       "type": [
@@ -33717,7 +35388,8 @@ Params:
   ],
   "properties": {
     "token": {
-      "type": "string"
+      "type": "string",
+      "description": "The token open_attached_assignment returned; another one leaves the handoff open."
     }
   }
 }
@@ -33945,10 +35617,12 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The Faces the new Attached zone would be assigned to."
     },
     "revision": {
-      "type": "integer"
+      "type": "integer",
+      "description": "The revision the Faces were read at; a later one refuses."
     }
   }
 }
@@ -34101,13 +35775,364 @@ Example params:
 {}
 ```
 
+## Setup commands
+
+Called with a context granted `setup`.
+
+### `ph_composer.library.load`
+
+Read a configured library into session memory. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "provider_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A configured library, by the id ph_composer.library.providers lists."
+    },
+    "kind": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind"
+  ]
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "provider_id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "generation": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "unloaded",
+        "empty",
+        "loaded",
+        "failed"
+      ]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "library_id": {
+            "type": "string"
+          },
+          "record_id": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ]
+      }
+    },
+    "unavailable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "library_id": {
+            "type": "string"
+          },
+          "record_id": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ]
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "properties": {
+        "loaded_at": {
+          "type": "string"
+        },
+        "exported_at": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "published_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "failure": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "age_seconds": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind",
+    "generation",
+    "state",
+    "warnings",
+    "unavailable",
+    "freshness",
+    "published_at",
+    "failure",
+    "age_seconds"
+  ]
+}
+```
+
+Example params:
+
+```json
+{
+  "provider_id": "example",
+  "kind": "example_parts"
+}
+```
+
+### `ph_composer.library.providers.add_file`
+
+Add a library file the user chooses in a native picker to this machine's libraries. Owner: `ph_composer.library`.
+
+Needs the user: the panel or menu asks for a file first; any other caller is refused with `access.user_required`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false,
+  "required": []
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "provider_kind": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ]
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.library.providers.add_folder`
+
+Add a folder of library files the user chooses in a native picker to this machine's libraries. Owner: `ph_composer.library`.
+
+Needs the user: the panel or menu asks for a folder first; any other caller is refused with `access.user_required`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false,
+  "required": []
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "provider_kind": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ]
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.library.providers.remove`
+
+Remove a configured library from this machine. Owner: `ph_composer.library`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "provider_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The configured library to remove from this machine."
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "provider_id"
+  ]
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "provider_kind": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ]
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "provider_id": "example"
+}
+```
+
 ## File exports
 
 Called with a context granted `export`.
 
 ### `ph_composer.library.export_file`
 
-Export local definitions to a reviewed library file. Owner: `ph_composer.library`.
+Write local definitions to a library file the user chooses in the native save dialog; export_preview shows what it will hold. Owner: `ph_composer.library`.
+
+Needs the user: the panel or menu asks for a destination file first; any other caller is refused with `access.user_required`.
 
 Params:
 
@@ -34120,14 +36145,16 @@ Params:
       "enum": [
         "all",
         "selected"
-      ]
+      ],
+      "description": "all, the default, takes every supported local definition; selected takes only records."
     },
     "identity": {
       "type": "string",
       "enum": [
         "new",
         "update"
-      ]
+      ],
+      "description": "new, the default, gives the file a new library id; update keeps the id of the library file being replaced."
     },
     "kinds": {
       "type": "array",
@@ -34135,7 +36162,8 @@ Params:
         "type": "string",
         "minLength": 1
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "Limit the export to these library kinds, such as materials."
     },
     "records": {
       "type": "array",
@@ -34157,15 +36185,18 @@ Params:
           "id"
         ]
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "With scope selected: the records to export, each by record kind and id."
     },
     "library_name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library name written into the file. Defaults to Model library, or to the replaced file's name for update."
     },
     "expected_revision": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "The Model revision export_preview reported; refused if the Model changed since."
     }
   },
   "additionalProperties": false,

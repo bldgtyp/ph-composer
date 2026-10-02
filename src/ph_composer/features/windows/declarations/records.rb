@@ -12,39 +12,61 @@ module PhComposer
         Units::TypeRetargeter.install(feature)
       end
 
+      def created(collection, kind)
+        return "Create one #{kind.label} with local defaults." unless collection == "types"
+
+        width, height = Types::DEFAULT_SIZE_M
+        "Create one Window Type with one glazed element, #{width} m wide by #{height} m high unless values give " \
+          "columns_m and rows_m. The size does not follow the display unit system."
+      end
+
+      def duplicate_params(kind)
+        Shapes.object({ "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to copy."),
+          "name" => { "type" => "string", "minLength" => 1,
+                      "description" => "The copy's name; \"<name> (copy)\" when absent. Names are unique." },
+          "copy_datasheets" => { "type" => "boolean", "description" => "Keep the datasheet links on the copy; " \
+                                                                     "false when absent." } },
+          :optional => %w[name copy_datasheets])
+      end
+
       def declare(feature, collection)
         kind = Operations.kind(collection)
         prefix = "#{FEATURE_ID}.#{collection}"
         example_id = "#{kind.id_prefix}_Ab12Cd34Ef56"
-        feature.action("#{prefix}.create", :description => "Create one #{kind.label} with local defaults.",
+        feature.action("#{prefix}.create", :description => created(collection, kind),
           :params => Shapes.create(kind), :result => Shapes::RESULT, :undo_name => "Create #{kind.label}",
-          :side_effects => "Creates one Model-owned definition.",
+          :side_effects => Shapes.side_effects("Creates one Model-owned definition."),
           :examples => [{ "values" => { "name" => "Example #{kind.label}" } }]) do |request, proposal|
           Operations.create(request, proposal, collection)
         end
         feature.action("#{prefix}.update", :description => "Edit guarded authored values of one #{kind.label}.",
           :params => Shapes.update(kind), :result => collection == "types" ? Shapes::TYPE_RESULT : Shapes::RESULT,
           :undo_name => "Edit #{kind.label}",
-          :side_effects => "Updates one definition and preserves its metadata.",
+          :side_effects => Shapes.side_effects("Updates one definition and preserves its metadata."),
           :examples => [{ "id" => example_id, "values" => { "name" => "Edited" },
           "expected_values" => { "name" => "Original" } }]) do |request, proposal|
           Operations.update(request, proposal, collection)
         end
         feature.action("#{prefix}.duplicate", :description => "Duplicate a #{kind.label} with independent identity.",
-          :params => Shapes.object({ "id" => Shapes::ID, "name" => { "type" => "string", "minLength" => 1 },
-          "copy_datasheets" => { "type" => "boolean" } },
-            :optional => %w[name copy_datasheets]),
+          :params => duplicate_params(kind),
           :result => Shapes::RESULT, :undo_name => "Duplicate #{kind.label}",
-          :side_effects => "Copies definition metadata and retains shared products; new elements get fresh ids.",
+          :side_effects => Shapes.side_effects(
+            "Copies definition metadata and retains shared products; new elements get fresh ids."),
           :examples => [{ "id" => example_id }]) { |request, proposal| Operations.duplicate(request, proposal,
             collection) }
-        replacement = collection == "types" ? { "type" => %w[string null] } : Shapes::ID
+        replacement = if collection == "types"
+                        Shapes.id(kind.id_prefix, "The Window Type every Window of the deleted one takes, or null " \
+                                                  "to remove them. Needed while Windows use it.", :nullable => true)
+                      else
+                        Shapes.id(kind.id_prefix, "The #{kind.label} that every Window Type and default using the " \
+                                                  "deleted one takes. Needed while any uses it.")
+                      end
         feature.action("#{prefix}.delete", :description => "Delete #{kind.label}; live references require replacement.",
-          :params => Shapes.object({ "id" => Shapes::ID, "expected_values" => kind.descriptor.patch_schema,
-          "replacement_id" => replacement },
+          :params => Shapes.object({ "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to delete."),
+            "expected_values" => Shapes.expected(kind), "replacement_id" => replacement },
             :optional => %w[expected_values replacement_id]),
           :result => Shapes::RESULT, :undo_name => "Delete #{kind.label}",
-          :side_effects => "Rewrites referring definitions and defaults, then deletes atomically.",
+          :side_effects => Shapes.side_effects("Rewrites referring definitions and defaults, then deletes atomically."),
           :examples => [{ "id" => example_id }]) { |request, proposal| Operations.delete(request, proposal,
             collection) }
       end

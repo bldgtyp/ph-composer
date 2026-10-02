@@ -16,7 +16,10 @@ module PhComposer
         values = DeepCopy.call(values)
         case command
         when "dimension" then dimension(copy, values)
-        when "element" then element(copy, values)
+        when "set_element_name" then set_element(copy, values, "name", values.fetch("name"))
+        when "set_element_glazing" then set_element(copy, values, "glazing_id", values.fetch("glazing_id"))
+        when "set_element_operation" then set_element(copy, values, "operation", values.fetch("operation"))
+        when "set_element_frame" then set_element_frame(copy, values)
         when "flip" then flip(copy)
         when "kind" then kind(copy, values)
         when "merge" then merge(copy, values, identity)
@@ -51,12 +54,17 @@ module PhComposer
         record[key][index] = values.fetch("value")
       end
 
-      def element(record, values)
+      # An Empty element is wall area: it takes a name and nothing else.
+      def set_element(record, values, field, value)
         cell = cells(record, [values.fetch("element_id")]).first
-        field = values.fetch("field")
-        refuse("This element field is not editable.") unless %w[name glazing_id frames operation].include?(field)
         refuse("Empty is wall area, without products.") if cell["kind"] == "empty" && field != "name"
-        cell[field] = values.fetch("value")
+        cell[field] = value
+      end
+
+      def set_element_frame(record, values)
+        cell = cells(record, [values.fetch("element_id")]).first
+        refuse("Empty is wall area, without products.") if cell["kind"] == "empty"
+        cell.fetch("frames")[values.fetch("side")] = values.fetch("frame_id")
       end
 
       def flip(record)

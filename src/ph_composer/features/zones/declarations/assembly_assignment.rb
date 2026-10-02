@@ -5,8 +5,13 @@ module PhComposer
     module Faces
       module AssemblyRegistration
         TARGET = Shapes.object({ "reference" => FACE_REFERENCE, "expected_values" => FACE_VALUES }).freeze
-        PARAMS = Shapes.object({ "targets" => Shapes.list(TARGET).merge("minItems" => 1),
-                                 "assembly_id" => { "type" => %w[string null] } }).freeze
+        PARAMS = Shapes.object({
+          "targets" => Shapes.list(TARGET).merge("minItems" => 1, "description" => "Each Face occurrence to " \
+                                                                                  "change, with the values last " \
+                                                                                  "read; a change refuses."),
+          "assembly_id" => { "type" => %w[string null], "description" => "The Assembly to assign, or null to clear " \
+                                                                         "it." }
+        }).freeze
         USAGE_ROW = Shapes.object({ "assembly_id" => Shapes::ID, "face_count" => Shapes::COUNT,
                                     "gross_area_m2" => { "type" => "number", "x-unit" => "m2" },
                                     "faces" => Shapes.list(FACE_REFERENCE) }).freeze

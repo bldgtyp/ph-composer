@@ -15,6 +15,8 @@
    views send viewport commands independently, so one slot would let the second answer strand the first
    in a pending state it could never settle out of. Read-only `query.invoke` results use the same keyed
    correlation in `state.ui.queryResults` and never republish a snapshot or open a Model operation.
+   `setup.invoke` carries session- and machine-state commands, such as adding a library on this machine,
+   keyed in `state.ui.setupResults` for the same reason as viewport commands.
 
    Two shapes: `run` is single flight (refuses while a request is pending, and `consume` settles it once);
    `send` never refuses and returns the id, for callers that keep several requests in flight, which match
@@ -24,6 +26,7 @@ PhComposerUI.define("request", [], function () {
   var sequence = 0;
   var SLOTS = { "action.invoke": { slot: "actionResult", keyed: false },
     "view.invoke": { slot: "viewResults", keyed: true }, "query.invoke": { slot: "queryResults", keyed: true },
+    "setup.invoke": { slot: "setupResults", keyed: true },
     "file_export.invoke": { slot: "fileExportResults", keyed: true } };
 
   function Channel(session, send, label, message) {

@@ -35,11 +35,33 @@ module PhComposer
     # (context/EXTENSIBILITY.md, "View commands").
     ViewCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
 
+    # A file or folder location only the user can choose (context/AGENT_INTERFACE.md, "User-controlled
+    # local access"). A setup command or file export that declares one runs only when a native client,
+    # the panel or a menu, has asked the user through the matching dialog and passes the answer to
+    # dispatch; every other caller is refused with `access.user_required` and no dialog opens. The
+    # handler reads the location from `request.approval`, never from params. `kind` is one of KINDS;
+    # `default_name` names a save destination and `filter` an opened file's pattern.
+    Approval = Struct.new(:kind, :title, :default_name, :filter, keyword_init: true) do
+      def to_h
+        super.compact.transform_keys(&:to_s)
+      end
+    end
+    Approval::KINDS = %w[save_file open_file open_folder].freeze
+
+    # A change to session or machine state that never reaches the Model: reading a configured library
+    # into session memory, adding or removing a library on this machine. `handler` is
+    # `->(request) { value }`, as a view command's is. It writes no record, opens no Model operation
+    # and leaves no Undo entry; it is granted apart from `view`, because a view command changes only
+    # what the host shows (context/EXTENSIBILITY.md, "Setup commands"). `approval` is an optional
+    # Approval.
+    SetupCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :approval, :handler,
+                              keyword_init: true)
+
     # A local file write under the explicit export grant. Its handler validates and writes the file;
-    # dispatch opens no Model transaction and consumes no action sequence. Native cancellation uses
-    # FileExportCancelled; destinations stay private to the handler, outside its JSON result.
-    FileExport = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
-    class FileExportCancelled < UserError; end
+    # dispatch opens no Model transaction and consumes no action sequence. A destination the user
+    # chooses is declared as an Approval and stays private to the handler, outside its JSON result.
+    FileExport = Struct.new(:name, :owner, :description, :params, :result, :examples, :approval, :handler,
+                            keyword_init: true)
 
     # A panel snapshot section: the result of one registered query, under the section's name.
     SnapshotSection = Struct.new(:name, :owner, :query, :params, keyword_init: true)

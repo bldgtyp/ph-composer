@@ -23,7 +23,7 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | --- | --- |
 | Feature | Stable namespaced id, contract version, declared feature dependencies, install entrypoint |
 | Record kind | Kind id, schema version, validator, SI field descriptors, declared references, persistence adapter |
-| Query, action, view command, FileExport | Namespaced id, description, input and result schemas, examples, handler |
+| Query, action, view command, setup command, FileExport | Namespaced id, description, input and result schemas, examples, handler |
 | Action additions | Side effects, confirmation policy (only `none` today), Undo name |
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
@@ -33,7 +33,9 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
 
 The capability an operation needs follows from its kind: a query and a preview need `read`, a view
-command `view`, an action and an outcome lookup `model_write`, and a FileExport or export task `export`.
+command `view`, a setup command `setup`, an action and an outcome lookup `model_write`, and a
+FileExport or export task `export`. Library loading and provider setup are setup commands; this
+replaces the archived Phase 2 choice of view commands for them (refactor R03, 2026-10-01).
 
 Every declared name starts with its feature's id. Registrations are staged and validated together:
 duplicate ids, missing dependencies, cycles, incompatible contract majors, invalid schemas and
@@ -65,17 +67,21 @@ are clients of it.
 - `describe(name:)`: one operation's schemas and examples, as a detached copy. Schemas come only
   from here.
 - `connect(session_id:, capabilities:)`: an explicit context for one Model session. Capabilities
-  default to `read`, `view` and `model_write`; `export` is granted explicitly.
+  default to `read`, `view` and `model_write`; `setup` and `export` are granted explicitly.
 - `query(context:, name:, params:)`: a bounded read returning values, never live SketchUp objects.
 - `preview(context:, name:, params:)`: builds and validates an action's proposal without writing,
   and returns its `proposal_digest`.
 - `view(context:, name:, params:)`: a view command that changes what the host shows and writes
   nothing to the Model, so it takes no request and leaves no Undo entry.
+- `setup(context:, name:, params:)`: a setup command that changes session or machine state, such
+  as the libraries configured on this machine, and never the Model. No request, no Undo entry.
 - `invoke(context:, name:, params:, request:)`: a validated synchronous mutation.
 - `outcome(context:, request:)`: a retained mutation outcome, without rerunning it.
 - `export_file(context:, name:, params:)`: a registered synchronous FileExport, with an explicit
-  `export` grant. It has no mutation sequence and opens no Model operation. Its owner obtains and
-  reviews the native destination and performs the guarded file write.
+  `export` grant. It has no mutation sequence and opens no Model operation. Its owner performs the
+  guarded file write. A FileExport or setup command that declares an `approval` needs a location
+  only the user can choose; through this interface it is refused with `access.user_required`, and
+  only the panel and native menus, which ask the user first, can run it.
 - The export task methods (`export_preflight`, `start_export`, `export_status`, `cancel_export`,
   `latest_export`) are specified in AGENT_INTERFACE.md, "Implemented export task contract".
 
@@ -127,6 +133,7 @@ Codes are stable `noun.condition` strings, one per outcome:
 | Area | Codes |
 | --- | --- |
 | Envelope | `request.malformed`, `request.unknown_operation`, `request.api_version`, `request.capability_denied` |
+| Access | `access.user_required` (the operation needs a location only the user can choose), `request.cancelled` (the user dismissed that dialog) |
 | Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |
 | Session | `session.unknown` (closed, reopened or never issued), `session.busy`, `session.closed`, `session.changed` (a native menu built for another Model), `session.inactive` (panel client only: its Model is no longer shown) |
 | Preconditions | `revision.stale`, `proposal.changed`, `record.unreadable` |
@@ -492,6 +499,13 @@ failure carrying its code and a fixed message; a provider exception that is not 
 `library.provider_failed`. An entry never read has generation null and state `unloaded`. Setup
 changes drop the affected provider's entries in every open session. Nothing is cached to disk.
 
+**Pages.** `catalog` and `in_file` page through `shell/pages.rb` like every other list: `limit`
+(default 100, maximum 500), `cursor` and `next_cursor`, with `total` on every page. Rows keep the
+provider's order; a cursor is bound to the generation it was read from, and an `in_file` cursor to
+the Model revision as well. A reload refuses it as `library.catalog_stale` when the caller names the
+generation, and as `query.cursor_expired` otherwise; an edit refuses an `in_file` cursor as
+`query.cursor_expired`.
+
 **Copy.** `ph_composer.library.copy` runs inside the ordinary action order of "Compound
 proposals". Its own checks run in this order, each refusing the whole proposal:
 
@@ -505,7 +519,8 @@ proposals". Its own checks run in this order, each refusing the whole proposal:
    first, then a case-insensitive name match and mapped-value equality. Outcomes are `create`,
    `reuse`, `review_required`, `ambiguous_source` and `ambiguous_name`. A stored fingerprint of
    another version reports no comparison rather than a change.
-6. The choice must fit the outcome. A supplied `local_id` that is not a reviewed candidate
+6. The choice, which is required, must fit the outcome. A read of the resolution is `in_file` or
+   a preview, never a copy that writes nothing. A supplied `local_id` that is not a reviewed candidate
    refuses first (`library.local_choice_required`); an unknown choice is `params.invalid`. `create` needs outcome `create` (`library.review_required`);
    `keep_local` and `use_library` need one reviewed candidate (`library.local_choice_required`);
    `use_library` needs the candidate's reviewed `expected_values` (`params.invalid`).

@@ -3,16 +3,17 @@
 module PhComposer
   # What a query or action handler receives. Colour-by projections and native menu tests receive the
   # same shape as a read: no params and no proposal (context/CONTRACTS.md, "Handler-side dependency
-  # reads").
+  # reads"). `approval` is the location the user chose for a declaration that needs one
+  # (Declarations::Approval), as a NativeApproval::Granted; it is nil everywhere else.
   HandlerRequest = Struct.new(:session, :model, :params, :engine, :revision, :registry, :owner, :proposal, :query_stack,
-                              :memos, keyword_init: true) do
+                              :memos, :approval, keyword_init: true) do
     # The one place a request is built from a session. `name` is the declaration the request runs
     # for, so a nested read of the same name is refused as recursive.
-    def self.for(session, owner:, name:, registry: Registry.current, params: {}, proposal: nil)
+    def self.for(session, owner:, name:, registry: Registry.current, params: {}, proposal: nil, approval: nil)
       new(:session => session, :model => session.model, :params => DeepCopy.call(params),
           :engine => Records::Engine.new(session.model, registry.catalog), :revision => session.revision,
           :registry => registry, :owner => owner, :proposal => proposal, :query_stack => [name],
-          :memos => {}.compare_by_identity)
+          :memos => {}.compare_by_identity, :approval => approval)
     end
 
     # A value computed once per request, shared with the nested reads and callbacks it makes. Keys

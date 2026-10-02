@@ -11,8 +11,8 @@ class MaterialSourceReportTest < PhComposerTestCase
     path = write_library(File.join(directory, "fixture.json"))
     PhComposer::Library::Setup.add_file(:id => "synthetic", :label => "Synthetic", :path => path)
     session = PhComposer::Sessions.for(Sketchup.active_model)
-    context = PhComposer::API.connect(:session_id => session.id)
-    loaded = PhComposer::API.view(:context => context, :name => "ph_composer.library.load",
+    context = PhComposer::API.connect(:session_id => session.id, :capabilities => %w[read view model_write setup])
+    loaded = PhComposer::API.setup(:context => context, :name => "ph_composer.library.load",
                                  :params => { "provider_id" => "synthetic", "kind" => "materials" })
     params = { "provider_id" => "synthetic", "kind" => "materials", "generation" => loaded.dig("value", "generation"),
                "library_id" => "synthetic.one", "record_id" => "public-1", "choice" => "create" }

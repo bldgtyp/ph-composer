@@ -5,7 +5,7 @@ PhComposerUI.define("library_setup", ["request", "snapshot", "workspace"], funct
   function Setup(session, send, changed) {
     var self = this;
     this.changed = changed; this.providers = []; this.enabled = false;
-    this.requests = request.channel(session, send, "library-setup", "view.invoke");
+    this.requests = request.channel(session, send, "library-setup", "setup.invoke");
     this.root = ui.formDialog("library-setup", function () { self.close(); });
     this.root.appendChild(el("h2", "", "Libraries"));
     this.root.appendChild(el("p", "muted", "Configure library files or folders on this machine."));
@@ -24,7 +24,7 @@ PhComposerUI.define("library_setup", ["request", "snapshot", "workspace"], funct
     this.enabled = Boolean(providers); this.providers = providers || [];
     if (!this.enabled) { this.requests.reset(); this.root.closeModal(); }
     var outcome = this.requests.consume(state);
-    if (outcome) this.error.textContent = outcome.status === "completed" ? "" : outcome.message;
+    if (outcome) this.error.textContent = ["completed", "cancelled"].includes(outcome.status) ? "" : outcome.message;
     this.paint();
   };
   Setup.prototype.paint = function () {

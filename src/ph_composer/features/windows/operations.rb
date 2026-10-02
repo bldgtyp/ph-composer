@@ -46,8 +46,11 @@ module PhComposer
         definition = kind(collection)
         values = request.params.fetch("values")
         unique_name!(values.fetch("name"), records(request, definition))
-        values = collection == "types" ? Types.defaults(values, :identity => allocator(request),
-          :unit_system => Preferences.unit_system) : Products.defaults(collection, values)
+        values = if collection == "types"
+                   Types.defaults(values, :identity => allocator(request))
+                 else
+                   Products.defaults(collection, values)
+                 end
         id = request.engine.propose_create(definition.id, proposal, :values => values,
           :user_data => request.params["user_data"])
         { "id" => id }

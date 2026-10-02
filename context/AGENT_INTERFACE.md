@@ -137,9 +137,28 @@ restart. Cancellation only rolls back work where the operation explicitly guaran
 
 `API.export_file(context:, name:, params:)` invokes a registered synchronous FileExport under
 the explicit `export` grant. Discovery and description expose its owner, schemas and examples.
-It does not consume a Model mutation sequence or create an Undo entry. The library export uses
-native destination and review dialogs; a caller supplies explicit scope and identity choices.
-Cancellation returns `export.cancelled` with no file or Model change. Panel clients correlate
+It does not consume a Model mutation sequence or create an Undo entry. A caller supplies explicit
+scope and identity choices; `export_preview` returns the counts and omissions the file will hold.
+
+### Locations only the user can choose
+
+A setup command or FileExport may declare an approval: a file to open, a folder or a save
+destination that only the user can choose. `describe` returns it as `approval` (`kind`, `title`).
+Dispatch runs such an operation only with the user's answer, which a native client obtains:
+`shell/native_approval.rb` opens the matching SketchUp dialog for the panel and the native menus,
+asks before replacing an existing file, and passes the chosen location to the handler outside params.
+The path never appears in params, a result, an outcome or a log. Every other caller, including a
+script calling `PhComposer::API`, is refused at once with `access.user_required`, effect `none`, and
+no dialog opens, so an unattended call cannot block SketchUp. A dismissed dialog returns
+`cancelled` with code `request.cancelled` and changes nothing.
+
+Three operations declare one today: `ph_composer.library.export_file`,
+`ph_composer.library.providers.add_file` and `.providers.add_folder`. An agent cannot export or add
+a library until user-approved file access lands; that work is recorded in
+[agent-authorized-file-access](../planning/features/unscheduled/agent-authorized-file-access/README.md).
+The HBJSON export task below predates this and still accepts a destination from a scripted caller.
+
+Panel clients correlate
 `file_export.invoke` and `file_export.result` by request id and Model session in a separate result
 slot. This operation is separate from the longer-lived HBJSON runtime task below.
 
@@ -163,9 +182,10 @@ unknown interrupted task succeeded.
 ## User-controlled local access
 
 External access is explicit and revocable, with a visible connection/access state. Separate read,
-view, model-write and file/import/export capabilities so the user can grant useful scope. `view`
-is the selection, reveal and camera operations below: it moves nothing in the SKP, so it is granted
-apart from model-write, and a read never carries it. Enforce grants
+view, model-write, setup and file/import/export capabilities so the user can grant useful scope.
+`view` is the selection, reveal and camera operations below: it moves nothing in the SKP, so it is
+granted apart from model-write, and a read never carries it. `setup` changes session or machine
+state, such as the libraries configured on this machine; it is never in the default grant. Enforce grants
 at dispatch; an action description or a client-supplied confirmation flag is not authorization.
 Do not require renewed permission for every request already covered by a valid grant.
 
@@ -232,19 +252,21 @@ Phase 2 features, programmatic reads and writes. Each has a panel-closed walkthr
   batch `types.installs.save`; `settings.update`; and Unit `place`, `remove`, `rehost`,
   `swap_type`, `reset_to_type`, `restore` and `new_flipped_type`. `units.place` takes an explicit
   host Face reference, anchor and offsets in metres, so the Place tool's picking has an
-  explicit-reference equivalent. A copied Unit identity has no named repair: the next Windows
-  action repairs it implicitly (review finding R03, item C).
+  explicit-reference equivalent. A native copy of a Unit shares its identity until repaired:
+  `units.repair_copied_identities` takes explicit Unit references and gives the copies sharing
+  their identities new ones, with a preview listing each old and new id, and the
+  `copy_id_pending` finding names it as its repair. Every other Windows action makes the same
+  repair over every copy first, and says so in its `side_effects`.
   [Walkthrough](../tools/examples/authoring/windows_walkthrough.rb),
   [placement](../tools/examples/authoring/windows_placement_walkthrough.rb).
 - **Library** (`ph_composer.library.*`). Reads: `providers`, `catalog`, `in_file` and
   `export_preview`. Writes: `copy`, with preview, an explicit choice and optional assignment, and
-  the `copy_into_proposal` participant for a feature's own action. `load` and `refresh` read a
-  configured provider into the session catalog. Two parts are dialog-only: adding a provider
-  (`providers.add_file`, `providers.add_folder`) opens a native file or folder picker, and
-  `export_file` opens a native save dialog and a confirmation. A scripted caller cannot supply
-  either. Ed decided on 2026-10-01 that these will refuse scripted calls cleanly (review finding
-  R03, item A); user-approved file access for agents is recorded in
-  [agent-authorized-file-access](../planning/features/unscheduled/agent-authorized-file-access/README.md).
+  the `copy_into_proposal` participant for a feature's own action. The setup command `load` reads a
+  configured provider into the session catalog and `providers.remove` removes one, both under the
+  `setup` grant. Adding a provider (`providers.add_file`, `providers.add_folder`) and `export_file`
+  need a location only the user can choose: the panel and the Libraries menu ask for it, and a
+  scripted caller is refused with `access.user_required` (see "Locations only the user can
+  choose").
   [Walkthrough](../tools/examples/library/materials_walkthrough.rb).
 
 Discovery also lists read-only `reference_targets`; description returns their descriptor: ID, owner,

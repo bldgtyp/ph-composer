@@ -42,6 +42,7 @@ module PhComposer
         end,
         "queries" => registry.queries.values.map { |query| summary(query) },
         "view_commands" => registry.view_commands.values.map { |command| summary(command) },
+        "setup_commands" => registry.setup_commands.values.map { |command| summary(command) },
         "file_exports" => registry.file_exports.values.map { |command| summary(command) },
         "actions" => registry.actions.values.map do |action|
           summary(action).merge("side_effects" => action.side_effects)
@@ -61,12 +62,13 @@ module PhComposer
       )
     end
 
-    # The full declaration of one registered query, action, view command, record kind or entity kind,
-    # or of one export task method, or nil when none has the name. The schemas are copies; validation keeps its own.
+    # The full declaration of one registered query, action, view command, setup command, file export,
+    # record kind or entity kind, or of one export task method, or nil when none has the name. The
+    # schemas are copies; validation keeps its own.
     def describe(name:)
       registry = Registry.current
       if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name] ||
-                      registry.file_exports[name])
+                      registry.setup_commands[name] || registry.file_exports[name])
         return DeepCopy.call(operation_description(operation))
       end
 
@@ -88,7 +90,9 @@ module PhComposer
     # the trusted in-process entry; a future external adapter must authenticate before calling it.
     # `view` grants the viewport-state commands: selection, camera and the active Colour-by mode. It is
     # separate from `read` because a read never moves either (context/AGENT_INTERFACE.md), and separate
-    # from `model_write` because nothing it does reaches the SKP.
+    # from `model_write` because nothing it does reaches the SKP. `setup` grants the session- and
+    # machine-state commands, such as adding a library on this machine; like `export`, it is never in
+    # the default set and is granted explicitly.
     def connect(session_id:, capabilities: %w[read view model_write])
       session = Sessions.find(session_id)
       raise CodedError.new("session.unknown", "That Model session is closed or was never opened.") unless session
@@ -104,6 +108,11 @@ module PhComposer
     # Changes what the host shows and never the Model, so it takes no request: see Declarations::ViewCommand.
     def view(context:, name:, params: {})
       Dispatch.new.view(context, name, params)
+    end
+
+    # Changes session or machine state and never the Model: see Declarations::SetupCommand.
+    def setup(context:, name:, params: {})
+      Dispatch.new.setup(context, name, params)
     end
 
     def export_file(context:, name:, params: {})
@@ -163,12 +172,13 @@ module PhComposer
       }.merge(
         operation.is_a?(Declarations::Action) ? { "side_effects" => operation.side_effects,
                                                    "confirmation" => operation.confirmation } : {}
-      )
+      ).merge(operation.respond_to?(:approval) && operation.approval ? { "approval" => operation.approval.to_h } : {})
     end
 
     def operation_kind(operation)
       return "action" if operation.is_a?(Declarations::Action)
       return "view_command" if operation.is_a?(Declarations::ViewCommand)
+      return "setup_command" if operation.is_a?(Declarations::SetupCommand)
       return "file_export" if operation.is_a?(Declarations::FileExport)
 
       "query"

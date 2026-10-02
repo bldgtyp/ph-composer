@@ -29,6 +29,9 @@ module PhComposer
     VIEW_FAILED = Outcome.build(
       "failed", "operation.failed", "The panel could not change what the viewport shows.", "none", nil
     ).freeze
+    SETUP_FAILED = Outcome.build(
+      "failed", "operation.failed", "The panel could not change that setup.", "none", nil
+    ).freeze
     QUERY_FAILED = Outcome.build(
       "failed", "operation.failed", "The panel could not read that information.", "none", nil
     ).freeze
@@ -144,6 +147,7 @@ module PhComposer
         when "panel.ready" then ready
         when "action.invoke" then invoke(payload)
         when "view.invoke" then view(payload)
+        when "setup.invoke" then setup(payload)
         when "query.invoke" then query(payload)
         when "file_export.invoke" then file_export(payload)
         when "preferences.set" then set_preference(payload)
@@ -155,6 +159,7 @@ module PhComposer
         case type
         when "action.invoke" then publish_result(payload, UNEXPECTED)
         when "view.invoke" then publish_view(payload, VIEW_FAILED)
+        when "setup.invoke" then publish_setup(payload, SETUP_FAILED)
         when "query.invoke" then publish_query(payload, QUERY_FAILED)
         when "file_export.invoke" then publish_file_export(payload, EXPORT_FAILED)
         when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
@@ -230,6 +235,27 @@ module PhComposer
                                "outcome" => outcome)
       end
 
+      # Session and machine state for the Model the panel shows. A completed command is followed by a
+      # snapshot, because a section may show what it changed; the revision does not move.
+      def setup(payload)
+        session = Sessions.current
+        unless session && payload["session"] == session.id
+          return publish_setup(payload, Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil))
+        end
+
+        outcome = NativeApproval.setup(context_for(session), payload["name"].to_s, payload.fetch("params", {}))
+        if outcome.fetch("status") == "completed"
+          session.refresh.cancel
+          publish_snapshot(session)
+        end
+        publish_setup(payload, outcome)
+      end
+
+      def publish_setup(payload, outcome)
+        publish("setup.result", "request_id" => payload["request_id"], "session" => payload["session"],
+                                "outcome" => outcome)
+      end
+
       # Read-only queries answer directly; they neither refresh the page nor consume a mutation sequence.
       def query(payload)
         session = Sessions.current
@@ -248,11 +274,12 @@ module PhComposer
       end
 
       # Registered local file commands use their export grant without a mutation sequence or snapshot refresh.
+      # The panel is a native client: it asks the user for a declared destination first (NativeApproval).
       def file_export(payload)
         session = Sessions.current
         outcome = if session && payload["session"] == session.id
-                    API.export_file(:context => context_for(session), :name => payload["name"].to_s,
-                                    :params => payload.fetch("params", {}))
+                    NativeApproval.file_export(context_for(session), payload["name"].to_s,
+                                               payload.fetch("params", {}))
                   else
                     Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
                   end
@@ -347,7 +374,7 @@ module PhComposer
         @contexts ||= {}
         @contexts.delete_if { |id, _context| Sessions.find(id).nil? }
         @contexts[session.id] ||= API.connect(:session_id => session.id,
-                                             :capabilities => %w[read view model_write export])
+                                             :capabilities => %w[read view model_write setup export])
       end
 
       def next_sequence(session)

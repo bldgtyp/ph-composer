@@ -12,14 +12,14 @@ function setup() {
   }, adapter: { title: "Synthetic library", wireKind: "test_parts", read: function () { return []; },
     properties: [], target: function () { return { params: target }; } }, onUse: function () {} });
   context.document.body.appendChild(sidebar.root);
-  var state = { session: "session", revision: 1, ui: { queryResults: {}, viewResults: {} }, sections: {
+  var state = { session: "session", revision: 1, ui: { queryResults: {}, setupResults: {} }, sections: {
     "ph_composer.library.provider_catalogs": { status: "completed", value: [{ id: "p", label: "Public provider",
       provider_kind: "example.provider", kinds: ["test_parts"], catalogs: [{ kind: "test_parts", generation: 1,
         state: "loaded" }] }] } } };
   sidebar.refresh(state, {}, true); sidebar.store.select("p");
   var request = sent[0].payload;
   state.ui.queryResults[request.request_id] = { session: "session", request_id: request.request_id,
-    outcome: { status: "completed", value: { generation: 1, state: "loaded", total: 1, next_offset: null,
+    outcome: { status: "completed", value: { generation: 1, state: "loaded", total: 1, next_cursor: null,
       rows: [{ library_id: "lib", library_name: "Public library", record_id: "r", snapshot: { id: "r", name: "Part" },
         resolution: { outcome: "create", candidates: [] } }] } } };
   sidebar.refresh(state, {}, true);
