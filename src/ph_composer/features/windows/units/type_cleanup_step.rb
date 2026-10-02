@@ -2,6 +2,8 @@
 
 require_relative "definition_index"
 require_relative "definition_geometry"
+require_relative "definition_writer"
+require_relative "native_unit"
 
 module PhComposer
   module Windows
@@ -46,7 +48,7 @@ module PhComposer
           definition = DefinitionIndex.resolve(model, @type_id)
           unless definition && DefinitionGeometry.capture(definition) == @native_before &&
                  definition.instances.map(&:persistent_id).sort == @remaining_ids
-            changed!("The deleted Type's native definition or users changed after preview.")
+            NativeUnit.changed!("The deleted Type's native definition or users changed after preview.")
           end
           DefinitionIndex.write(model, current.reject { |id, _| id == @type_id }, :expected => current)
           return unless @remaining_ids.empty?
@@ -65,27 +67,19 @@ module PhComposer
           id = @target && @target.fetch("id")
           unless id && !@index.key?(id) && current.keys.sort == (@index.keys + [id]).sort &&
                  current.reject { |key, _| key == id } == @index
-            changed!("The Window definition index changed after preview.")
+            NativeUnit.changed!("The Window definition index changed after preview.")
           end
           definition = DefinitionIndex.resolve(model, id)
-          behavior = definition&.behavior
-          unless definition && behavior.is2d? && behavior.cuts_opening? && behavior.snapto == SnapTo_Arbitrary &&
-                 behavior.no_scale_mask? == 127 && DefinitionGeometry.matches?(definition, :type_id => id,
-                   :plan => DefinitionPlan.build(@target))
-            changed!("The planned replacement definition changed before cleanup.")
+          unless definition && DefinitionWriter.configured?(definition.behavior) &&
+                 DefinitionGeometry.matches?(definition, :type_id => id, :plan => DefinitionPlan.build(@target))
+            NativeUnit.changed!("The planned replacement definition changed before cleanup.")
           end
         end
 
         def check_edit_context!(model)
-          return unless @definition_id && Array(model.active_path).any? do |entity|
-            entity.definition.persistent_id == @definition_id
-          end
+          return unless NativeUnit.editing?(model, @definition_id)
 
           raise CodedError.new("window.definition_editing", "Close the deleted Window definition before deletion.")
-        end
-
-        def changed!(message)
-          raise CodedError.new("target.changed", "#{message} Nothing was written.")
         end
       end
     end

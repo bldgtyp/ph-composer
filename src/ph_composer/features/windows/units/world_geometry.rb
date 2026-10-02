@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../../../core/face_geometry"
+require_relative "../../../core/vector3"
 require_relative "anchors"
 
 module PhComposer
@@ -53,9 +54,9 @@ module PhComposer
         def transform_state(matrix)
           transform = matrix_values(matrix)
           axes = basis(transform)
-          lengths = axes.map { |axis| length(axis) }
+          lengths = axes.map { |axis| Vector3.length(axis) }
           normalized = axes.zip(lengths).map { |axis, size| axis.map { |value| value / size } }
-          sheared = dot(normalized[0], normalized[1]).abs > TOLERANCE
+          sheared = Vector3.dot(normalized[0], normalized[1]).abs > TOLERANCE
           # Units are flat in XY. Changing only the unused normal basis changes no aperture size or shear.
           TransformState.new(:scaled => lengths.take(2).any? { |size| (size - 1.0).abs > TOLERANCE },
             :sheared => sheared, :mirrored => determinant(normalized).negative?).freeze
@@ -68,7 +69,7 @@ module PhComposer
           values = matrix.map(&:to_f)
           invalid!("The instance transform must be affine.") unless values.values_at(3, 7, 11, 15) == [0, 0, 0, 1]
           normalized = basis(values).map do |axis|
-            size = length(axis)
+            size = Vector3.length(axis)
             invalid!("The instance transform has a degenerate basis.") unless size.positive? && size.finite?
             axis.map { |value| value / size }
           end
@@ -105,14 +106,6 @@ module PhComposer
           [matrix.take(3), matrix[4, 3], matrix[8, 3]]
         end
 
-        def length(vector)
-          Math.hypot(Math.hypot(vector[0], vector[1]), vector[2])
-        end
-
-        def dot(left, right)
-          left.zip(right).sum { |a, b| a * b }
-        end
-
         def determinant(axes)
           a, b, c = axes
           a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) +
@@ -123,8 +116,8 @@ module PhComposer
           raise CodedError.new("geometry.invalid", "#{message} Nothing was written.")
         end
 
-        private_class_method :matrix_values, :transform_polygon, :transform_point, :numeric?, :basis, :length,
-                             :dot, :determinant, :invalid!
+        private_class_method :matrix_values, :transform_polygon, :transform_point, :numeric?, :basis, :determinant,
+                             :invalid!
       end
     end
   end

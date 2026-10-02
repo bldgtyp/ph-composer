@@ -5,6 +5,8 @@ require_relative "definition_index"
 require_relative "definition_geometry"
 require_relative "mutation_scope"
 require_relative "world_geometry"
+require_relative "native_unit"
+require_relative "host_guard"
 require_relative "../placement/host"
 require_relative "../placement/fit"
 
@@ -71,9 +73,11 @@ module PhComposer
           end
           definition = DefinitionIndex.resolve(model, @before.fetch("id"))
           current = Occurrences.all(model)
-          resolved = @rows.map { |row| resolve_row!(current, row) }
+          resolved = @rows.map do |row|
+            NativeUnit.unchanged!(current, row.fetch("reference").fetch("entity_path"), row.fetch("record"))
+          end
           verify_users!(definition, resolved, :code => "target.changed")
-          @rows.zip(resolved).each { |row, item| check_host!(row, item) }
+          @rows.zip(resolved).each { |row, item| HostGuard.verify!(item, row["host_geometry"]) }
           DefinitionWriter.rewrite(:model => model, :definition => definition, :type => @after,
             :plan => @after_plan) if @geometry_changed
           definition.name = DefinitionWriter::NAME_PREFIX + @after.fetch("name") if @name_changed
@@ -105,7 +109,7 @@ module PhComposer
           definition = model.definitions.to_a.find { |entry| entry.persistent_id == @definition_id }
           verify_users!(definition, canonical)
           canonical.map do |item|
-            mutable!(item)
+            Occurrences.mutable!(item)
             Occurrences.assert_leaf!(item) if @geometry_changed
             record = expected.fetch(item.path, item.record)
             Units.validate!(record)
@@ -133,8 +137,7 @@ module PhComposer
             "record" => DeepCopy.call(record), "matrix" => matrix, "after_matrix" => changed,
             "world_matrix" => item.transform.to_a,
             "after_world_matrix" => (parent * Geom::Transformation.new(changed)).to_a,
-            "definition_id" => @definition_id, "glued_face_id" => item.entity.glued_to&.persistent_id,
-            "parent_matrix" => parent.to_a }
+            "definition_id" => @definition_id, "glued_face_id" => item.entity.glued_to&.persistent_id }
         end
 
         def capture_host!(row, item, hosts, others)
@@ -143,17 +146,9 @@ module PhComposer
             raise CodedError.new("window.host_required",
               "Supply the host and complete other-unit outlines for each glued Window.")
           end
-          if host.values["boundary_condition"] == "Surface"
-            raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
-          end
-          unless host.parent_path == item.path[0...-1] && host.entity.persistent_id == row.fetch("glued_face_id") &&
-                 host.transform.to_a == row.fetch("parent_matrix")
-            raise CodedError.new("target.changed", "The supplied Window host occurrence has changed.")
-          end
-          row["host_geometry"] = DeepCopy.call(host.geometry.to_h)
+          row["host_geometry"] = HostGuard.capture(item, host)
           row["host_key"] = host.parent_path + [host.entity.persistent_id]
           row["other_polygons_m"] = DeepCopy.call(others.fetch(item.path))
-          check_host!(row, item)
         end
 
         def check_fit!
@@ -163,11 +158,8 @@ module PhComposer
 
             neighbors = @rows.reject { |other| other.equal?(row) }
             polygons = row.fetch("other_polygons_m") + neighbors.map { |other| outline(other) }
-            geometry = row.fetch("host_geometry")
-            host = FaceGeometry::Snapshot.new(:loops_m => geometry.fetch("loops_m"),
-              :normal => geometry.fetch("normal"))
             begin
-              Placement::Fit.check!(host, outline(row), :existing_polygons_m => polygons)
+              HostGuard.fit!(row.fetch("host_geometry"), outline(row), polygons)
             rescue CodedError => error
               raise unless %w[window.overhang window.overlap].include?(error.code)
 
@@ -184,34 +176,8 @@ module PhComposer
           WorldGeometry.map(@after_plan, row.fetch("after_world_matrix")).outer_polygon_m
         end
 
-        def check_host!(row, item)
-          return unless row["host_geometry"]
-
-          current = FaceGeometry.capture(item.entity.glued_to, Geom::Transformation.new(row.fetch("parent_matrix")))
-          unless current.to_h == row.fetch("host_geometry")
-            raise CodedError.new("target.changed", "The Window host geometry changed after preview.")
-          end
-        end
-
-        def resolve_row!(occurrences, row)
-          found = occurrences.select { |item| item.path == row.fetch("reference").fetch("entity_path") }
-          unless found.length == 1 && found.first.record == row.fetch("record")
-            raise CodedError.new("target.changed", "A Window unit record changed after preview.")
-          end
-          mutable!(found.first)
-          found.first
-        end
-
-        def mutable!(item)
-          if item.shared_storage
-            raise CodedError.new("target.shared_definition",
-              "Make the parent storage unique before changing this Window Type.")
-          end
-          raise CodedError.new("target.locked", "A Window unit or its parent is locked.") if item.locked
-        end
-
         def check_edit_context!(model)
-          return unless Array(model.active_path).any? { |entity| entity.definition.persistent_id == @definition_id }
+          return unless NativeUnit.editing?(model, @definition_id)
 
           raise CodedError.new("window.definition_editing",
             "Close the primary Window definition before changing its Type.",
