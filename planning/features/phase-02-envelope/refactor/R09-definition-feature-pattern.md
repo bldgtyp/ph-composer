@@ -1,7 +1,7 @@
 # R09: the definition-feature pattern is copied, forked by kind and driven by positional tables
 
 DATE: 2026-10-01
-STATUS: Requested
+STATUS: Implemented on branch `refactor/r09-definition-feature-pattern`; dual-Ruby `make ci` passes; no host gate named
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement, readability and contributor cost. No correctness defect found.
@@ -129,3 +129,76 @@ Two steps, the second only if Ed wants the abstraction.
 - `grep -n "Registry.current" src/ph_composer/library` is empty.
 - If item 8 is taken: `API.describe` of a Windows Type operation lists its refusal codes, and a test
   refuses registering an operation that names an undeclared code.
+
+## Outcome
+
+Implemented 2026-10-02 on `refactor/r09-definition-feature-pattern`, cut from `main` at `4f69240`.
+Correction steps 1, 2, 3 and 5 were taken (observed items 1 to 4, 6 and 7). Step 4
+(`CatalogInventory`) waits for Phase 3's first definition kind, as planned. Step 6 (item 8,
+`refuses:` on operations) stays optional: it is a shell, registry and `API.describe` contract change
+that this branch did not need.
+
+1. **Unfork and name.** Windows: `Products::Operations` (the three product kinds share one path,
+   chosen by collection) and `Types::Operations` (create, update, duplicate, delete, grid) replace
+   the collection-forked `Operations`. Assemblies: `Materials::Operations` and
+   `Assembly::Operations`. Each feature's shared reads and naming rules live in its `Definitions`
+   module (allocator, records, unique and duplicate names, `changed_values`); the reviewer pointed
+   out that `Catalog` already names `Records::Catalog` and library catalogs. Snapshots read per
+   kind (`Snapshot.types`, `.products`, `.materials`, `.assemblies`), and record and inventory
+   registrations are declared per kind. The Materials category param's dropped enum is named
+   (`Materials::Schema::LABELLED_FIELDS`, `Shapes.create(kind, labelled:)`) instead of a kind check.
+   Products declare each field in one call with a named unit and bounds (`Products.number`,
+   `.text`, `.color`); `Products.number_keys` answers which fields are thermal inputs. Each grid
+   gesture is a public `GridOperations` function that returns detached values. Its registration
+   names it through `Gesture#change`, and the string `case` is gone. Library assignment calls the
+   frame and glazing functions directly. `Assembly::Schema::MATERIAL_REFERENCE` names the Material
+   reference. Abbreviated locals are spelled out in `library/install.rb`, `types/thermal.rb` and
+   `types/grid_operations.rb`. The Psi-Install products hash uses one key, `psi_install_types`, in
+   thermal, snapshot, export and assessment inputs.
+2. **One schema builder.** `core/schema_shapes.rb` (`SchemaShapes`: `object`, `list`, `with`,
+   `described`, `id`) replaces six copies. Zones, Assemblies, Windows and Library `Shapes` and
+   `Schemas` modules extend it. `AuthoringFields.object` and its `required:` variant are gone.
+   `SchemaShapes` uses `extend self` so an extending module gets public methods.
+3. **Item 6, one `find` refusal.** `Engine#find` takes an optional `change_set:`.
+   `ProjectedEngine#find` reads through it, so a missing or staged-deleted record refuses
+   `target.not_found` and a failing one `record.unreadable`. Recorded in `context/CONTRACTS.md`,
+   "Callback write ownership".
+4. **Item 7, the factory receives the registry.** `State` calls each provider factory with the
+   published registry; `library/install.rb` no longer reads `Registry.current`. Recorded in
+   `context/EXTENSIBILITY.md`, `context/TECH_STACK.md`, the declaration comment and
+   `docs/LIBRARY_PROVIDER_EXAMPLE.md`. A lambda factory must take that argument.
+
+`docs/API_REFERENCE.md`: every schema block is semantically identical to `main` (compared as
+parsed JSON). Key order changed where Library's builder ordered keys differently, and parameterless
+Zones schemas gained `"required": []`. One description changed: product duplicates no longer claim
+to give new element ids, since products have no elements.
+
+Tests: no assertion changes. Call sites changed: `window_records_domain_test.rb` and
+`window_unit_flip_step_test.rb` call the named gesture functions; `window_export_test.rb` and the
+thermal-proof fixture helper key products by `psi_install_types` (the fixture file itself is
+unchanged); `window_library_kinds_test.rb` reads `Products.number_keys` and `KINDS` instead of
+`SPECS`. New: a library callback's `find` of a missing and of a staged-deleted record refuses
+`target.not_found` (fails on `main` with `reference.invalid`).
+
+Verification greps: no `== MATERIAL_KIND` or `== "types"` under `features/`; no `Registry.current`
+under `library/`.
+
+Review: one Sonnet pass with the architecture rubric. Taken: the `Definitions` rename, stale
+`TECH_STACK` and declaration comments, the `EXTENSIBILITY` example, the CONTRACTS line, the
+lambda-arity note, a strict labelled-field lookup, a realigned call and a renamed block param. Not
+taken: a uniform `(record, values, identity)` signature for every gesture, which trades twelve
+adapter lambdas for unused params in every gesture and test. The two identical allocators
+(`Windows::Definitions.allocator`, `Assemblies::Definitions.identity_allocator`) stay per feature,
+as item 1 allows; see Follow-ups.
+
+Gates: `make ci` passed on Ruby 3.2.2 and 2.7.2 (1371 Ruby runs, 172 Python, rubocop clean).
+
+No host gate is named for this finding. No panel or Python asset changed, so the runtime manifest
+was not refreshed.
+
+## Follow-ups
+
+- Lift the deterministic id allocator into core under one name, or record why it stays per feature.
+- `Assemblies::SchemaFields`, an alias of `Records::AuthoringFields` kept "for existing callers",
+  could go now that the schema builders moved.
+- Item 8, `refuses:` on operations, remains open and optional.
