@@ -17,6 +17,8 @@ module PhComposer
           "doors" => ["Doors", "wood"], "membrane" => ["Membrane", "violet"]
         }.freeze
         ALIASES = { "wood" => "woods", "metal" => "metals", "finish" => "finishes" }.freeze
+        # A category param also takes a label or alias, which `category` turns into its id.
+        LABELLED_FIELDS = ["category"].freeze
 
         module_function
 

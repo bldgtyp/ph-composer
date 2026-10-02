@@ -13,6 +13,7 @@ module PhComposer
     TEXT = { "type" => "string", "minLength" => 1 }.freeze
     OBJECT = { "type" => "object" }.freeze
     GENERATION = { "type" => "integer", "minimum" => 1 }.freeze
+    PAGE_EXAMPLE = { "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }.freeze
 
     extend SchemaShapes
     module_function
@@ -67,26 +68,28 @@ module PhComposer
       feature.snapshot_section("#{FEATURE_ID}.provider_catalogs", :query => "#{FEATURE_ID}.providers")
       feature.query("#{FEATURE_ID}.catalog", :description => "A bounded page of one immutable library catalog.",
                     :params => page_params, :result => Schemas.page,
-                    :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |request|
+                    :examples => [PAGE_EXAMPLE]) do |request|
         catalog_page(request, "#{FEATURE_ID}.catalog")
       end
       feature.query("#{FEATURE_ID}.in_file", :description => "Resolve catalog rows against local definitions.",
                     :params => page_params, :result => Schemas.page(:resolved => true),
-                    :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |request|
+                    :examples => [PAGE_EXAMPLE]) do |request|
         in_file(request)
       end
       feature.setup_command("#{FEATURE_ID}.load", :description => "Read a configured library into session memory.",
         :params => object(selected_params.fetch("properties").slice("provider_id", "kind")),
         :result => Schemas.summary,
         :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |request|
-        State.for(request.session).refresh(request.params.fetch("provider_id"), request.params.fetch("kind"), request.registry)
+        params = request.params
+        State.for(request.session).refresh(params.fetch("provider_id"), params.fetch("kind"), request.registry)
              .reject { |key, _value| key == "rows" }
       end
       feature.action("#{FEATURE_ID}.copy", :description => "Copy or reuse one library record with optional assignment.",
         :params => copy_params, :result => Schemas.copy_result, :undo_name => "Copy Library Record",
         :side_effects => "Copies or replaces local definitions and optional assignments in one Undo step.",
         :examples => [{ "provider_id" => "example", "kind" => "example_parts", "generation" => 1,
-                       "library_id" => "synthetic", "record_id" => "one", "choice" => "create" }]) do |request, proposal|
+                       "library_id" => "synthetic", "record_id" => "one",
+                       "choice" => "create" }]) do |request, proposal|
         Coordinator.copy(request, proposal)
       end
     end

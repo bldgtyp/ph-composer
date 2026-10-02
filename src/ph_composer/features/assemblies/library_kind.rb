@@ -58,7 +58,7 @@ module PhComposer
                               "source" => Materials::Schema::KIND.values_schema.fetch("properties").fetch("source") },
                             :optional => ["source"])
         callback(Shapes::NONE, Shapes.list(row)) do |request, _proposal|
-          Operations.records(request, MATERIAL_KIND).map do |record|
+          Catalog.records(request, MATERIAL_KIND).map do |record|
             projection = { "id" => record.fetch("id"), "mapped" => map(record),
                            "expected_values" => DeepCopy.call(record.slice(*FIELDS)) }
             projection["source"] = DeepCopy.call(record["source"]) if record.key?("source")
@@ -68,7 +68,7 @@ module PhComposer
       end
 
       def replace
-        params = Shapes.update(Materials::Schema::KIND, FIELDS)
+        params = Shapes.update(Materials::Schema::KIND, FIELDS, :labelled => Materials::Schema::LABELLED_FIELDS)
         params.fetch("properties").delete("user_data")
         params.fetch("properties").fetch("values").fetch("properties")["source"] =
           Materials::Schema::KIND.values_schema.fetch("properties").fetch("source")
@@ -77,10 +77,10 @@ module PhComposer
           record = request.engine.find(MATERIAL_KIND, id)
           values = request.params.fetch("values")
           if values["name"]
-            Commands.unique_name!(values["name"], Operations.records(request, MATERIAL_KIND), :except => id)
+            Commands.unique_name!(values["name"], Catalog.records(request, MATERIAL_KIND), :except => id)
           end
           result = Commands.update_material(record, :values => values.reject { |key, _value| key == "source" })
-          changes = Operations.changed_values(Materials::Schema::KIND, record, result.record)
+          changes = Catalog.changed_values(Materials::Schema::KIND, record, result.record)
           changes["source"] = DeepCopy.call(values["source"]) if values.key?("source")
           request.engine.propose_update(MATERIAL_KIND, id, proposal, :values => changes,
                                         :expected_values => request.params.fetch("expected_values"))
@@ -93,9 +93,10 @@ module PhComposer
           :fingerprint_version => 1, :wire_schema => wire_schema, :mapped_schema => schema,
           :fingerprint_fields => FIELDS, :map => method(:map), :reverse => method(:reverse),
           :fingerprint => method(:fingerprint), :local_read => local_read,
-          :create => callback(Shapes.create(Materials::Schema::KIND), Shapes::RESULT) do |request, proposal|
-            Operations.create(request, proposal, MATERIAL_KIND, :values => request.params.fetch("values"),
-                                                                :user_data => request.params["user_data"])
+          :create => callback(Shapes.create(Materials::Schema::KIND, :labelled => Materials::Schema::LABELLED_FIELDS),
+                             Shapes::RESULT) do |request, proposal|
+            Materials::Operations.create(request, proposal, :values => request.params.fetch("values"),
+                                                            :user_data => request.params["user_data"])
           end, :replace => replace,
           :assign => assign)
         feature.library_kind(NAME, :contract_version => 1, :record_kind => MATERIAL_KIND, :adapter => adapter)
@@ -111,7 +112,7 @@ module PhComposer
         params = Shapes.object({ "target" => target, "local_id" => Shapes::TEXT })
         callback(params, Shapes::RESULT) do |request, proposal|
           gesture = request.params.fetch("target").merge("material_id" => request.params.fetch("local_id"))
-          Operations.gesture(request, proposal, :id => gesture.fetch("id"),
+          Assembly::Operations.gesture(request, proposal, :id => gesture.fetch("id"),
                                                 :expected_values => gesture.fetch("expected_values")) do |record|
             SegmentRegistration.set_material(record, gesture, request)
           end

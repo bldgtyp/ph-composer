@@ -36,24 +36,30 @@ module PhComposer
         with(kind.descriptor.view_schema, "kind" => TEXT, "extension_status" => OBJECT, "findings" => FINDINGS)
       end
 
-      def editable_patch(kind, fields)
-        schema = kind.descriptor.patch_schema
-        schema["properties"] = schema.fetch("properties").select { |key, _value| fields.include?(key) }
-        schema["properties"]["category"].delete("enum") if kind.id == MATERIAL_KIND
+      # `labelled` names fields whose param also takes a display label the command resolves, so their
+      # param schema drops the stored enum.
+      def without_enums(schema, labelled)
+        labelled.each { |key| schema.fetch("properties")[key]&.delete("enum") }
         schema
       end
 
-      def create(kind)
-        values = DeepCopy.call(kind.values_schema).merge("required" => ["name"])
-        values["properties"]["category"].delete("enum") if kind.id == MATERIAL_KIND
+      def editable_patch(kind, fields, labelled: [])
+        schema = kind.descriptor.patch_schema
+        schema["properties"] = schema.fetch("properties").select { |key, _value| fields.include?(key) }
+        without_enums(schema, labelled)
+      end
+
+      def create(kind, labelled: [])
+        values = without_enums(DeepCopy.call(kind.values_schema).merge("required" => ["name"]), labelled)
         object({ "values" => described(values, "The new #{kind.label}'s values; name is required and every " \
                                                "other value takes its default."),
                  "user_data" => USER_DATA }, :optional => ["user_data"])
       end
 
-      def update(kind, fields)
+      def update(kind, fields, labelled: [])
         object({ "id" => id(kind.id_prefix, "The #{kind.label} to edit."),
-                 "values" => described(editable_patch(kind, fields), "The values to change; any not given stay."),
+                 "values" => described(editable_patch(kind, fields, :labelled => labelled),
+                                       "The values to change; any not given stay."),
                  "expected_values" => expected(kind), "user_data" => USER_DATA }, :optional => ["user_data"])
       end
 
