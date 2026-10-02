@@ -1,7 +1,7 @@
 # R10: feature screens live inside the UI kit, and two built-ins bypass the Library surface seam
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r10-ui-kit-organization`; dual-Ruby `make ci` and the eight browser workflows pass; asset-path host gate passed; R03's carried dialog, paging and grid checks not run
+STATUS: Merged to main 2026-10-02 (PR #28); dual-Ruby `make ci` and the eight browser workflows pass; asset-path host gate passed; R03's carried dialog, paging and grid checks not run
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation (item 1), otherwise optional improvement.
@@ -91,7 +91,7 @@ it by editing `sections/library.js`. The supported route is invisible unless the
 
 ## Outcome
 
-Implemented 2026-10-02 on `refactor/r10-ui-kit-organization`. Paths below are relative to
+Implemented 2026-10-02 on `refactor/r10-ui-kit-organization`; merged as PR #28. Paths below are relative to
 `src/ph_composer/html/`.
 
 1. **Every Library inventory is a registered surface.** `library/section.js` (was
