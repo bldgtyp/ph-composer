@@ -54,3 +54,22 @@ no edit-path timer is armed yet. Before-action ledger snapshot is `p217-held-a09
 authored fingerprint is `p217-held-authoring-before.json`, preparation is `p217-held-prepared.json`
 in the private corpus. Preserve this state until Ed's held Cmd-N/release gesture is read back.
 Existing historical trace/results were copied with the `pre-p217-` prefix before instrumentation.
+
+
+## Model-switch attempt and prepared repeat
+
+Ed reported the held Cmd-N sequence done. New empty session
+`2c8f0bfa-fbcb-45f3-abc5-8ec847f8129d` opened; original session revision remained 1,
+full authoring fingerprint was unchanged and modified was false. The callback trace contained
+no events and remained armed. The attempt is unknown for held-button cancellation, not a pass.
+The empty test Model was closed through native controls. An unarmed ordinary native click then
+recorded down/up, classified one Face and advanced revision. One native Undo restored the exact
+original fingerprint. This validates tracing, not the held-switch assertion. Its private journal
+is `p217-held-diagnostic-click.json`; any `held-classify-model-result.json` produced by that click
+must not be counted as the human acceptance result.
+
+Model mode is rearmed in the same isolated fixture/session at root, Classify Floor active.
+New before-action snapshot: `p217-held-repeat-a09-baseline.json`; full authoring fingerprint:
+`p217-held-repeat-authoring-before.json`. Ask Ed to activate SketchUp by clicking its title bar
+first, then hold on the tan Wall, Cmd-N and release after the new Model opens. The trace must
+observe down on the original Model and up after the switch before this assertion can pass.
