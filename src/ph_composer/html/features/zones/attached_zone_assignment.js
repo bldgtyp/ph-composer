@@ -1,7 +1,7 @@
 /* A pending Face assignment stays local until one public action commits it with its definition. */
-PhComposerUI.define("features/zones/attached_zone_assignment", ["workspace", "record_form",
+PhComposerUI.define("features/zones/attached_zone_assignment", ["workspace", "record_form", "inventory_forms",
   "features/zones/attached_zone_fields"],
-function (ui, RecordForm, fields) {
+function (ui, RecordForm, forms, fields) {
   "use strict";
   var CREATE = "ph_composer.zones.faces.attached_zone.create_and_assign";
   var CLASSIFY = "ph_composer.zones.faces.classify";
@@ -18,7 +18,7 @@ function (ui, RecordForm, fields) {
     this.faces = JSON.parse(JSON.stringify(Array.isArray(face) ? face : [face]));
     var firstValues = this.faces[0].values || {};
     this.trigger = trigger;
-    this.picker = fields.labelled(this.form, "Attached zone", ui.element("select"));
+    this.picker = forms.labelled(this.form, "Attached zone", ui.element("select"));
     var create = ui.element("option", "", "New attached zone…");
     create.value = NEW; this.picker.appendChild(create);
     records.forEach(function (record) {
@@ -28,7 +28,7 @@ function (ui, RecordForm, fields) {
     this.picker.value = records.some(function (record) { return record.id === firstValues.attached_zone_id; })
       ? firstValues.attached_zone_id : NEW;
     this.fieldMount = ui.element("div", "phc-form-fields");
-    this.fields = fields.build(this.fieldMount, records);
+    this.fields = fields.build(this.fieldMount, records, function () { self.submit(); });
     this.form.appendChild(this.fieldMount);
     this.picker.addEventListener("change", function () { self.paint(); });
     this.finish(); this.paint();
@@ -41,7 +41,7 @@ function (ui, RecordForm, fields) {
     var creating = this.picker.value === NEW;
     this.fieldMount.hidden = !creating;
     this.submitButton.textContent = creating ? "Create and assign" : "Assign";
-    this.fields.controls.forEach(function (control) { control.disabled = !creating; });
+    this.fields.setDisabled(!creating);
   };
   Assignment.prototype.submit = function () {
     if (this.busy()) return;
@@ -51,7 +51,7 @@ function (ui, RecordForm, fields) {
     if (this.faces.length === 1 && this.faces[0].values) params.expected_values = this.faces[0].values;
     if (this.picker.value === NEW) {
       params.values = this.fields.values();
-      if (!params.values) { this.error.textContent = "Enter a name and a factor between 0 and 1."; return; }
+      if (!params.values) { this.error.textContent = this.fields.message(); return; }
       this.spec.action = CREATE;
     } else {
       this.spec.action = CLASSIFY;
@@ -60,7 +60,7 @@ function (ui, RecordForm, fields) {
     }
     if (this.run(params)) {
       this.picker.disabled = true;
-      this.fields.controls.forEach(function (control) { control.disabled = true; });
+      this.fields.setDisabled(true);
     }
   };
   Assignment.prototype.consume = function (state) {
@@ -71,6 +71,7 @@ function (ui, RecordForm, fields) {
   };
   Assignment.prototype.dispose = function () {
     this.withdraw();
+    this.fields.dispose();
     if (this.root.parentNode) this.root.parentNode.removeChild(this.root);
     if (this.trigger && this.trigger.isConnected) this.trigger.focus();
   };

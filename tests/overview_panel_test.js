@@ -454,7 +454,7 @@ test("a refused inline assignment preserves the draft; success closes and restor
     session: "session-a", outcome: { status: "refused", message: "The Face changed." } } });
   assert.strictEqual(p.query("dialog"), dialog);
   assert.strictEqual(byLabel(dialog, "Name").value, "Garage draft");
-  assert.strictEqual(dialog.querySelector(".cell-error").textContent, "The Face changed.");
+  assert.strictEqual(dialog.querySelector("[role='status']").textContent, "The Face changed.");
   assert.strictEqual(dialog.querySelector(".phc-action-apply").disabled, false);
   form.listeners.submit({ preventDefault: function () {} });
   p.panel.receive({ type: "action.result", payload: { request_id: p.sent[1].payload.request_id,
@@ -545,7 +545,7 @@ test("native batch assignment switches to Zones / Faces and freezes heterogeneou
   p.panel.receive({ type: "action.result", payload: { session: "session-a", request_id: sent.request_id,
     outcome: { status: "refused", message: "The Model changed." } } });
   assert.strictEqual(p.query("dialog"), dialog);
-  assert.strictEqual(dialog.querySelector(".cell-error").textContent, "The Model changed.");
+  assert.strictEqual(dialog.querySelector("[role='status']").textContent, "The Model changed.");
   dialog.listeners.cancel({ preventDefault: function () {} });
   assert.strictEqual(p.query("dialog"), null);
   assert.strictEqual(p.sent[1].type, "view.invoke");
@@ -733,4 +733,13 @@ test("switching Models withdraws a dirty Zone details draft", function () {
 
   assert.strictEqual(byLabel(p.section, "Zone name"), undefined);
   assert.strictEqual(p.sent.length, 0);
+});
+
+test("inline create-and-assign reads the factor through the shared unit field", function () {
+  var p = page(), dialog = attachedDialog(p), factor = byLabel(dialog, "Temperature reduction factor");
+  assert.ok(factor.parentNode.className.includes("phc-unit-field"));
+  factor.value = "1.1";
+  dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  assert.strictEqual(p.sent.length, 0);
+  assert.ok(dialog.querySelector("[role='status']").textContent);
 });

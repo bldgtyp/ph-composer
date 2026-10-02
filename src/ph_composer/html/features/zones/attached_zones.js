@@ -1,67 +1,43 @@
 /* The Attached zones surface of the Library pane: the model's Attached zones as an editable inventory,
  * with New, Duplicate and Delete, which moves the assigned Faces to another Attached zone or a boundary
  * condition. */
-PhComposerUI.define("features/zones/attached_zones", ["panel", "workspace", "fields", "record_form", "unit_field",
-  "inventory", "inventory_forms", "library/section"],
-function (panel, ui, fields, RecordForm, unitFields, inventories, forms, library) {
+PhComposerUI.define("features/zones/attached_zones", ["panel", "workspace", "record_form", "inventory",
+  "inventory_forms", "library/section", "features/zones/attached_zone_fields"],
+function (panel, ui, RecordForm, inventories, forms, library, attachedFields) {
   "use strict";
   var ATTACHED = "ph_composer.zones.faces.attached_zone";
-  var KINDS = ["garage", "attic", "crawlspace", "stairwell", "other"].map(function (value) {
-    return { value: value, label: ui.titleCase(value) };
-  });
   function AttachedForm(session, send, changed) {
     var self = this;
     RecordForm.call(this, session, send, { title: "New Attached zone", action: ATTACHED + ".save",
       label: "attached-zone",
       submitLabel: "Save", pendingText: "Saving...", failureText: "The Attached zone was not saved.",
         changed: changed });
-    this.name = forms.labelled(this.form, "Name", ui.element("input"));
-    this.kind = forms.labelled(this.form, "Kind", ui.element("select"));
-    KINDS.forEach(function (entry) { self.kind.appendChild(ui.option(entry.value, entry.label)); });
-    this.factor = new unitFields.UnitField({ field: fields.with(fields.FRACTION,
-      { label: "Temperature reduction factor", max: 1, allowBlank: false }) });
-    forms.labelled(this.form, "Temperature reduction factor", this.factor.root);
-    this.name.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") { event.preventDefault();
-      self.submit(); }
-    });
-    this.factor.input.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        self.submit();
-      }
-    }, true);
+    this.fields = attachedFields.build(this.form, [], function () { self.submit(); });
     this.finish();
   }
   RecordForm.extend(AttachedForm);
-  AttachedForm.prototype.open = function () {
+  AttachedForm.prototype.open = function (records) {
     if (!this.enabled) return;
-    this.name.value = "";
-    this.kind.value = "other";
-    this.factor.cancel();
-    this.factor.setValue(0.95);
+    this.fields.reset(records);
     this.show();
-    this.name.focus();
+    this.fields.name.focus();
     this.submitButton.disabled = false;
   };
   AttachedForm.prototype.submit = function () {
     if (!this.enabled || this.busy()) return;
-    var parsed = this.factor.parse();
-    if (!this.name.value.trim() || !parsed.ok) { this.error.textContent = parsed.message || "Enter a name."; return; }
-    this.run({ values: { name: this.name.value.trim(), kind: this.kind.value,
-      temperature_reduction_factor: parsed.value } });
+    var values = this.fields.values();
+    if (!values) { this.error.textContent = this.fields.message(); return; }
+    this.run({ values: values });
   };
   AttachedForm.prototype.refresh = function (state) {
     var outcome = forms.refreshForm(this, state, ATTACHED + ".list");
     if (outcome && outcome.status === "completed") this.hide(outcome.value);
     this.submitButton.disabled = !this.enabled || this.busy();
-    this.name.disabled = this.kind.disabled = !this.enabled || this.busy();
-    this.factor.setDisabled(!this.enabled || this.busy());
+    this.fields.setDisabled(!this.enabled || this.busy());
   };
   AttachedForm.prototype.dispose = function () { this.enabled = false;
   this.withdraw();
-  this.factor.dispose(); };
+  this.fields.dispose(); };
 
   function AttachedDelete(session, send, changed) {
     var self = this;
@@ -115,9 +91,8 @@ function (panel, ui, fields, RecordForm, unitFields, inventories, forms, library
     this.inventory = new inventories.Inventory(root, state.session, send, panel.notify, changed, {
       section: ATTACHED + ".list", action: ATTACHED + ".save", label: "Attached zone",
       columns: [["name", "Name"], ["kind", "Kind"], ["temperature_reduction_factor", "Temperature reduction factor"]],
-      editable: ["name", "kind", "temperature_reduction_factor"], selectFields: { kind: KINDS },
-      quantities: { temperature_reduction_factor: fields.with(fields.FRACTION,
-        { label: "Temperature reduction factor", max: 1, allowBlank: false }) },
+      editable: ["name", "kind", "temperature_reduction_factor"], selectFields: { kind: attachedFields.KINDS },
+      quantities: { temperature_reduction_factor: attachedFields.FACTOR },
       groups: [["kind", "Kind"]], notice: panel.notify, value: function (record,
         field) { return record.values[field]; },
       group: function (record) { return { label: ui.titleCase(record.values.kind) }; },
@@ -137,7 +112,7 @@ function (panel, ui, fields, RecordForm, unitFields, inventories, forms, library
     if (this.forms.some(function (form) { return !form.root.hidden; })) return "Finish or cancel the open form.";
     return this.inventory.guard();
   };
-  Surface.prototype.create = function () { this.newAttached.open(); };
+  Surface.prototype.create = function () { this.newAttached.open(this.inventory.records); };
   Surface.prototype.canCreate = function () { return this.newAttached.enabled && !this.inventory.busy(); };
   Surface.prototype.render = function (state) {
     this.newAttached.refresh(state);
