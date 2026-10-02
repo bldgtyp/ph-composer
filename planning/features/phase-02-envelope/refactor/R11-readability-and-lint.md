@@ -1,7 +1,7 @@
 # R11: formatting and small readability items the gates do not catch
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r11-readability` 2026-10-02 (items 3 to 20); dual-Ruby `make ci` and `make ui-checks` pass; carried host gate not run (needs Ed at the host)
+STATUS: Merged to main 2026-10-02 (PR #30), items 3 to 20; dual-Ruby `make ci` and `make ui-checks` pass; carried host gate not run (needs Ed at the host)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement. Gate decision made 2026-10-01; see Decision.
@@ -177,7 +177,7 @@ short session with Ed at the host.
 
 ## Outcome
 
-Implemented 2026-10-02 on `refactor/r11-readability`. Items 1 and 2 stay with the formatting pull
+Implemented 2026-10-02 on `refactor/r11-readability`; merged as PR #30. Items 1 and 2 stay with the formatting pull
 request. Paths are relative to `src/ph_composer/`.
 
 - **3.** Named predicates in `features/windows/units/restore_panes.rb` (`faces_valid`, `stamps_valid`,
