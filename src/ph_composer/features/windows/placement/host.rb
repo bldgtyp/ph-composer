@@ -40,10 +40,11 @@ module PhComposer
 
         # A host a Window may be written to, named by an explicit Face reference. Locating it for
         # mutation refuses an ambiguous, shared or nested Zone, so its Zone state is `found`. A caller
-        # that already read the Face's `host_context` row passes it.
-        def writable(request, reference, row: nil)
+        # that already read the Face's `host_context` row passes it, and one locating many hosts while
+        # planning passes the Face target's read-phase `index` (`request.locate_index`).
+        def writable(request, reference, row: nil, index: nil)
           locator = request.locator(FACE_KIND)
-          located = locator.call(request.model, reference, :mutable => true)
+          located = locator.call(request.model, reference, :mutable => true, :index => index)
           row ||= context(request, [located.parent_path + [located.entity.persistent_id]]).values.first
           unless row && row.fetch("reference") == reference
             raise CodedError.new("target.changed", "The host Face reference no longer matches the Zone read.")
@@ -56,10 +57,14 @@ module PhComposer
             :geometry => FaceGeometry.capture(located.entity, located.transform), :locator => locator)
         end
 
-        # What Windows itself refuses in a host: a Zone that is not uniquely found, and a Surface Face.
+        # What a host refuses before anything is located: a Zone that is not uniquely found, the write
+        # refusal Zones reads from the Face's path, and a Surface Face, which Windows itself refuses.
         def placeable!(row, zone_state)
           unless zone_state == "found"
             raise CodedError.new("target.not_found", "Choose a Face in one writable, unambiguous Zone.")
+          end
+          if (refusal = row["write_refusal"])
+            raise CodedError.new(refusal.fetch("code"), refusal.fetch("message"))
           end
           return unless row.fetch("values")["boundary_condition"] == "Surface"
 

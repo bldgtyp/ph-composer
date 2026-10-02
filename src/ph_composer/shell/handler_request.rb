@@ -77,24 +77,19 @@ module PhComposer
     # request. The caller may read the entity's geometry and glue to it; record writes stay with the
     # owner (context/EXTENSIBILITY.md, "Entity-owned reference targets").
     def locator(kind)
-      target = registry.reference_targets[kind]
-      unless target
-        raise CodedError.new("reference.invalid", "Reference target #{kind} is not registered.", "target_kind" => kind)
-      end
-      target_owner = registry.owner_of(kind)
-      unless target_owner == owner || registry.features.fetch(owner).requires.include?(target_owner)
-        raise CodedError.new("operation.dependency_missing", "#{owner} does not require #{target_owner}.")
-      end
-      unless target.locatable?
-        raise CodedError.new("operation.locate_missing", "Reference target #{kind} cannot be located.",
-                             "target_kind" => kind)
-      end
-
-      target.method(:locate)
+      locatable_target(kind).method(:locate)
     end
 
-    def locate(kind, reference, mutable: true)
-      locator(kind).call(model, reference, :mutable => mutable)
+    # The owner's read-phase index for one locatable kind, or nil when the owner declares none. It is
+    # valid only until the next write, so an action builds it while planning and passes it as `index:`
+    # to each `locate`; a step never keeps it for apply (context/EXTENSIBILITY.md, "Entity-owned
+    # reference targets").
+    def locate_index(kind)
+      locatable_target(kind).locate_index(model)
+    end
+
+    def locate(kind, reference, mutable: true, index: nil)
+      locator(kind).call(model, reference, :mutable => mutable, :index => index)
     end
 
     def retarget_references(kind, from:, to:)
@@ -127,6 +122,25 @@ module PhComposer
         unless declaration
 
       declaration.handler
+    end
+
+    private
+
+    def locatable_target(kind)
+      target = registry.reference_targets[kind]
+      unless target
+        raise CodedError.new("reference.invalid", "Reference target #{kind} is not registered.", "target_kind" => kind)
+      end
+      target_owner = registry.owner_of(kind)
+      unless target_owner == owner || registry.features.fetch(owner).requires.include?(target_owner)
+        raise CodedError.new("operation.dependency_missing", "#{owner} does not require #{target_owner}.")
+      end
+      unless target.locatable?
+        raise CodedError.new("operation.locate_missing", "Reference target #{kind} cannot be located.",
+                             "target_kind" => kind)
+      end
+
+      target
     end
   end
 end

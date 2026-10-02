@@ -46,12 +46,17 @@ module PhComposer
 
         zone = matching_ids.first
         raise_target("target.changed", "The Zone occurrence path has changed.") unless zone.path == path
-        if mutable && zone.shared_definition
+        writable_zone!(zone) if mutable
+        zone
+      end
+
+      # What a write through a Zone occurrence refuses that its own path shows.
+      def writable_zone!(zone)
+        if zone.shared_definition
           raise_target("target.shared_definition", "That Zone is inside shared component storage.")
         end
-        raise_target("target.wrong_hierarchy", "A Zone cannot be nested inside another Zone.") if mutable && zone.nested
-        raise_target("target.locked", "A Group containing the Zone is locked.") if mutable && zone.locked_parent
-        zone
+        raise_target("target.wrong_hierarchy", "A Zone cannot be nested inside another Zone.") if zone.nested
+        raise_target("target.locked", "A Group containing the Zone is locked.") if zone.locked_parent
       end
 
       def faces(zone, index: nil)
@@ -83,16 +88,32 @@ module PhComposer
         if stamp && stamp["zone_id"] != zone.record["id"]
           raise_target("target.wrong_zone", "The Face stamp names another Zone.")
         end
-        if mutable && zone.entity.respond_to?(:locked?) && zone.entity.locked?
-          raise_target("target.locked", "The Zone is locked.")
-        end
+        unlocked_zone!(zone) if mutable
         occurrence
+      end
+
+      def unlocked_zone!(zone)
+        raise_target("target.locked", "The Zone is locked.") if zone.entity.respond_to?(:locked?) && zone.entity.locked?
+      end
+
+      # The refusal a write to this Face occurrence meets from its path alone, as `{ code, message }`, or
+      # nil. It runs the strict resolver's writable checks over the path without walking the Model, so
+      # it cannot see a duplicated Zone or Face id: a pointer move may ask it, and the write itself
+      # still resolves strictly.
+      def write_refusal(occurrence)
+        writable_zone!(occurrence.zone)
+        face_at(occurrence.zone, occurrence.path, :mutable => true)
+        unlocked_zone!(occurrence.zone)
+        nil
+      rescue CodedError => error
+        { "code" => error.code, "message" => error.message }
       end
 
       # The Face reference target's `locate:` (Records::ReferenceTarget): the owner's strict resolution,
       # so a reference read before the Face gained a record refuses rather than naming a different one.
-      def locate_face(model, reference, mutable:)
-        occurrence = resolve_face(model, reference, :mutable => mutable)
+      # Its read-phase `index:` is a Zones::Index.
+      def locate_face(model, reference, mutable:, index: nil)
+        occurrence = resolve_face(model, reference, :mutable => mutable, :index => index)
         Records::LocatedEntity.new(:kind => Faces::REFERENCE_KIND, :reference => DeepCopy.call(reference),
                                    :entity => occurrence.entity, :entities => occurrence.entities,
                                    :transform => occurrence.transform,
@@ -323,7 +344,7 @@ module PhComposer
         raise CodedError.new(code, message)
       end
       private_class_method :resolve_face_path, :shared_storage?, :walk_zones, :walk_faces, :raise_target,
-                           :zone_for_path, :cutting_component?, :contents
+                           :zone_for_path, :cutting_component?, :contents, :writable_zone!, :unlocked_zone!
     end
   end
 end

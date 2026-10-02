@@ -19,7 +19,7 @@ module PhComposer
           :id => REFERENCE_KIND, :label => "Face", :records => ReferenceTargets.method(:entries),
           :validate => Schema.method(:problems), :schema_version => 1, :values => FACE_VALUES,
           :occurrence => FACE_REFERENCE, :references => [ATTACHED_ZONE_REFERENCE, ASSEMBLY_REFERENCE],
-          :locate => Zones::Occurrences.method(:locate_face)
+          :locate => Zones::Occurrences.method(:locate_face), :locate_index => Zones::Index.method(:new)
         )
         ATTACHED_ZONE = AttachedZone::RECORD_KIND.descriptor
         EXAMPLE_FACE = { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201], "entity_path" => [1202],
@@ -115,7 +115,14 @@ module PhComposer
         HOST_CONTEXT_RESULT = Shapes.object({
           "faces" => Shapes.list(Shapes.object({
             "path" => PATH, "reference" => FACE_REFERENCE,
-            "values" => FACE_VALUES.merge("description" => "Empty for a Face with no record.")
+            "values" => FACE_VALUES.merge("description" => "Empty for a Face with no record."),
+            "write_refusal" => {
+              "type" => %w[object null], "additionalProperties" => false, "required" => %w[code message],
+              "properties" => { "code" => { "type" => "string" }, "message" => { "type" => "string" } },
+              "description" => "The refusal a write to this Face meets from its path alone (a shared, nested " \
+                               "or locked Zone, or locked or shared storage), or null. A duplicated Zone or Face " \
+                               "id is not visible here; the write itself still checks it."
+            }
           }), :description => "One row per path that names a Zone Face, in request order. Other paths are omitted.")
         }).freeze
         CHOOSE_PARAMS = Shapes.object({

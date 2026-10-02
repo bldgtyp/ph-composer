@@ -500,9 +500,15 @@ missing or ambiguous identities refuse without repairing storage. The owning fea
 to control all writes through its normal public actions.
 
 A target may also declare `locate:`, the owner's resolver from an occurrence reference to the live
-entity: `->(model, reference, mutable:) { Records::LocatedEntity }`, raising the owner's `target.*`
-refusals. A feature that requires the owner reaches it through `request.locate(kind, reference)`,
-or keeps `request.locator(kind)` for a step to call at apply. The owner stays the one authority on
+entity: `->(model, reference, mutable:, index:) { Records::LocatedEntity }`, raising the owner's
+`target.*` refusals. A feature that requires the owner reaches it through
+`request.locate(kind, reference)`, or keeps `request.locator(kind)` for a step to call at apply.
+A target may also declare `locate_index:`, `->(model) { index }`, the owner's read-phase index. A
+caller that locates many references while planning, before anything is written, builds it once
+with `request.locate_index(kind)` and passes it as `index:` to each `locate`, so the owner walks
+the Model once for the batch rather than once per reference. The index is opaque to the caller
+and valid only until the next write: a step never keeps it for apply, where it locates on the
+live Model. `index:` is nil when the caller has none or the owner declares no index. The owner stays the one authority on
 what a valid target is, so a rule it adds reaches every caller. The permitted use is to read the
 entity's geometry and glue to it. Writes to its records stay with the owner, through its actions.
 Ruby cannot enforce that limit; it is a rule of this contract and is checked in review. The Face

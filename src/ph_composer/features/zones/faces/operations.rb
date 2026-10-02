@@ -71,9 +71,9 @@ module PhComposer
         { "faces" => rows, "units" => { "area_m2" => "m2" }, "assembly_usage" => AssemblyAssignment.usage(rows) }
       end
 
-      # The narrow host read: one row per path naming a Zone Face, by the pick rule. It scans only the
-      # collections along each path, never the whole Model, so a viewport tool may call it on a pointer
-      # move. A hosting
+      # The narrow host read: one row per path naming a Zone Face, by the pick rule, with the refusal a
+      # write to it would meet from its path. It scans only the collections along each path, never the
+      # whole Model, so a viewport tool may call it on a pointer move. A hosting
       # feature reads this instead of `all`, which computes suggestions, adjacency and Assembly state
       # for every Face. Zone state needs every Zone occurrence, so it stays with the Zone reads.
       def host_context(request, paths:)
@@ -84,7 +84,8 @@ module PhComposer
           record = FACE_STORE.read(occurrence.entity)
           Schema.validate!(record) if record
           { "path" => path, "reference" => occurrence.reference(record&.fetch("id", nil)),
-            "values" => record ? Schema.values(record) : {} }
+            "values" => record ? Schema.values(record) : {},
+            "write_refusal" => Zones::Occurrences.write_refusal(occurrence) }
         end
         { "faces" => rows }
       end

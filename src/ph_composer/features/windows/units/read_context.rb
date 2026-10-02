@@ -7,8 +7,11 @@ require_relative "../placement/host"
 module PhComposer
   module Windows
     module Units
-      # One Window inventory, one Zones `host_context` read and one Zone read per action/read, with no
-      # private Zone dictionaries. Include unglued occurrences when measuring same-plane conflicts.
+      # One Window inventory per action or read, with no private Zone dictionaries. The Zones reads are
+      # made on first use and once: the glued hosts' `host_context` rows and the Zone states when a
+      # Unit's own host is asked for, and the Face target's read-phase index when a host is located.
+      # Placing on one explicit host makes none of them. Include unglued occurrences when measuring
+      # same-plane conflicts.
       class ReadContext
         attr_reader :occurrences
 
@@ -16,8 +19,6 @@ module PhComposer
           @request = request
           @occurrences = Occurrences.all(request.model)
           @types = request.engine.ids(TYPE_KIND).to_h { |id| [id, request.engine.find(TYPE_KIND, id)] }
-          @rows = Placement::Hosts.context(request, @occurrences.filter_map { |item| glued_path(item) })
-          @zone_states = Placement::Hosts.zone_states(request.query(Placement::Hosts::ZONES).fetch("zones"))
           @hosts = {}
         end
 
@@ -63,15 +64,15 @@ module PhComposer
         # The Zone Face a Unit is glued to, or nil. Writable hosts are located through Zones' resolver.
         def host(item, writable: true)
           path = glued_path(item)
-          row = path && @rows[path]
+          row = path && rows[path]
           return nil unless row
 
           @hosts[[path, writable]] ||= if writable
-                                         Placement::Hosts.writable(@request, row.fetch("reference"), :row => row)
+                                         Placement::Hosts.writable(@request, row.fetch("reference"), :row => row,
+                                           :index => locate_index)
                                        else
                                          Placement::Hosts.read(item.entity.glued_to, item.path[0...-1],
-                                           item.parent_transform, row,
-                                           Placement::Hosts.zone_state(@zone_states, row))
+                                           item.parent_transform, row, Placement::Hosts.zone_state(zone_states, row))
                                        end
         end
 
@@ -80,6 +81,19 @@ module PhComposer
         end
 
         private
+
+        def rows
+          @rows ||= Placement::Hosts.context(@request, @occurrences.filter_map { |item| glued_path(item) })
+        end
+
+        def zone_states
+          @zone_states ||= Placement::Hosts.zone_states(@request.query(Placement::Hosts::ZONES).fetch("zones"))
+        end
+
+        # Shared by every host this read locates, so a batch over many hosts walks the Zones once.
+        def locate_index
+          @locate_index ||= @request.locate_index(Placement::Hosts::FACE_KIND)
+        end
 
         def glued_path(item)
           face = item.entity.glued_to
