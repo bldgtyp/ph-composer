@@ -34,7 +34,7 @@ module PhComposer
           :undo_name => undo_name, :side_effects => side_effects,
           :examples => [example.merge("id" => Shapes::EXAMPLE_ID, "expected_values" => {})]) do |request, proposal|
           params = request.params
-          Operations.gesture(request, proposal, :id => params.fetch("id"),
+          Assembly::Operations.gesture(request, proposal, :id => params.fetch("id"),
                                                 :expected_values => params.fetch("expected_values")) do |record|
             command.call(record, params, request)
           end
@@ -56,9 +56,9 @@ module PhComposer
                :undo_name => "Add Layer-Segment",
                :side_effects => "Adds one Layer-Segment.") do |record, params, request|
           Commands.add_segment(record, :layer_id => params.fetch("layer_id"),
-                                :materials => Operations.materials(request),
+                                :materials => Definitions.materials(request),
                                 :width_mm => params.fetch("width_mm", 1000.0), :index => params["index"],
-                                :identity => Operations.identity_allocator(request, params))
+                                :identity => Definitions.identity_allocator(request, params))
         end
         action(feature, "remove", { "layer_id" => Shapes.id("lyr", LAYER_ID),
                                     "segment_id" => Shapes.id("seg", SEGMENT_ID) },
@@ -74,7 +74,7 @@ module PhComposer
         properties = Assembly::Schema::SEGMENT.fetch("properties").select do |key, _schema|
           %w[width_mm is_continuous_insulation steel_stud_spacing_mm].include?(key)
         end
-        values = Shapes.described(SchemaFields.object(properties),
+        values = Shapes.described(Shapes.object(properties, :optional => properties.keys),
                                   "The Layer-Segment values to change; any not given stay. A Layer carries at most " \
                                   "one steel stud spacing.")
         action(feature, "update", { "layer_id" => Shapes.id("lyr", LAYER_ID),
@@ -98,7 +98,7 @@ module PhComposer
       def set_material(record, params, request)
         Commands.set_segment_material(record, :layer_id => params.fetch("layer_id"),
           :segment_id => params.fetch("segment_id"), :material_id => params.fetch("material_id"),
-          :materials => Operations.materials(request))
+          :materials => Definitions.materials(request))
       end
 
       def declare_material(feature)

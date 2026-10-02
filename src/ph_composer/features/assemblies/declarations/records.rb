@@ -8,76 +8,101 @@ module PhComposer
       module_function
 
       def install(feature)
-        declare(feature, "materials", Materials::Schema::KIND, Commands::MATERIAL_EDITABLE, "mat_Ab12Cd34Ef56")
-        declare(feature, "assemblies", Assembly::Schema::KIND, Commands::ASSEMBLY_EDITABLE, Shapes::EXAMPLE_ID)
+        declare_materials(feature)
+        declare_assemblies(feature)
       end
 
-      def declare(feature, collection, kind, editable, example_id)
-        prefix = "#{FEATURE_ID}.#{collection}"
+      def create_action(feature, prefix, kind, labelled, &handler)
         feature.action("#{prefix}.create", :description => "Create one #{kind.label}, with default authoring values.",
-                       :params => Shapes.create(kind), :result => Shapes::RESULT,
+                       :params => Shapes.create(kind, :labelled => labelled), :result => Shapes::RESULT,
                        :undo_name => "Create #{kind.label}", :side_effects => "Creates one catalog record.",
-                       :examples => [{ "values" => { "name" => "Example #{kind.label}" } }]) do |request, proposal|
-          Operations.create(request, proposal, kind.id, :values => request.params.fetch("values"),
-                                                        :user_data => request.params["user_data"])
-        end
+                       :examples => [{ "values" => { "name" => "Example #{kind.label}" } }], &handler)
+      end
+
+      def update_action(feature, prefix, kind, editable, labelled, example_id, &handler)
         feature.action("#{prefix}.update", :description => "Edit one #{kind.label}; changed expected values refuse.",
-                       :params => Shapes.update(kind, editable), :result => Shapes::RESULT,
+                       :params => Shapes.update(kind, editable, :labelled => labelled), :result => Shapes::RESULT,
                        :undo_name => "Edit #{kind.label}", :side_effects => "Updates values and optional metadata.",
                        :examples => [{ "id" => example_id, "values" => { "name" => "Edited" },
-                                       "expected_values" => { "name" => "Original" } }]) do |request, proposal|
-          params = request.params
-          Operations.update(request, proposal, kind.id, :id => params.fetch("id"), :values => params.fetch("values"),
-            :expected_values => params.fetch("expected_values"), :user_data => params["user_data"])
-        end
-        declare_duplicate(feature, prefix, kind, example_id)
-        declare_delete(feature, prefix, kind, example_id)
+                                       "expected_values" => { "name" => "Original" } }], &handler)
       end
 
-      def declare_duplicate(feature, prefix, kind, example_id)
-        properties = { "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to copy.") }
-        if kind.id == MATERIAL_KIND
-          properties.merge!(
-            "name" => { "type" => "string", "minLength" => 1,
-                        "description" => "The copy's name; \"<name> (copy)\" when absent. Names are unique." },
-            "copy_datasheets" => { "type" => "boolean", "description" => "Keep the datasheet links on the copy; " \
-                                                                       "false when absent." }
-          )
-        end
+      def duplicate_action(feature, prefix, kind, properties, example_id, &handler)
         feature.action("#{prefix}.duplicate", :description => "Duplicate one #{kind.label} with independent identity.",
                        :params => Shapes.object(properties, :optional => %w[name copy_datasheets]),
                        :result => Shapes::RESULT, :undo_name => "Duplicate #{kind.label}",
                        :side_effects => "Creates one catalog record, preserving shared definition references.",
-                       :examples => [{ "id" => example_id }]) do |request, proposal|
-          Operations.duplicate(request, proposal, kind.id, :id => request.params.fetch("id"),
-            :name => request.params["name"], :copy_datasheets => request.params.fetch("copy_datasheets", false))
-        end
+                       :examples => [{ "id" => example_id }], &handler)
       end
 
-      def declare_delete(feature, prefix, kind, example_id)
+      def delete_action(feature, prefix, kind, replacement, example_id, &handler)
         properties = { "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to delete."),
-                       "expected_values" => Shapes.expected(kind) }
-        properties["replacement_id"] = if kind.id == MATERIAL_KIND
-                                         Shapes.id("mat", "The Material every Layer-Segment using the deleted one " \
-                                                          "takes instead. Needed while any Assembly uses it.")
-                                       else
-                                         Shapes.id("asm", "The Assembly every Face using the deleted one takes " \
-                                                          "instead, or null to clear those Faces' Assembly. " \
-                                                          "Needed while any Face uses it.", :nullable => true)
-                                       end
+                       "expected_values" => Shapes.expected(kind), "replacement_id" => replacement }
         feature.action("#{prefix}.delete", :description => "Delete #{kind.label}; remaining references refuse.",
                        :params => Shapes.object(properties, :optional => %w[expected_values replacement_id]),
                        :result => Shapes::RESULT, :undo_name => "Delete #{kind.label}",
                        :side_effects => "Replacement or explicit clearing rewrites uses and deletes atomically.",
-                       :examples => [{ "id" => example_id }]) do |request, proposal|
+                       :examples => [{ "id" => example_id }], &handler)
+      end
+
+      def declare_materials(feature)
+        kind = Materials::Schema::KIND
+        prefix = "#{FEATURE_ID}.materials"
+        example_id = "mat_Ab12Cd34Ef56"
+        create_action(feature, prefix, kind, Materials::Schema::LABELLED_FIELDS) do |request, proposal|
+          Materials::Operations.create(request, proposal, :values => request.params.fetch("values"),
+                                                          :user_data => request.params["user_data"])
+        end
+        update_action(feature, prefix, kind, Commands::MATERIAL_EDITABLE, Materials::Schema::LABELLED_FIELDS,
+                      example_id) do |request, proposal|
           params = request.params
-          target = { :id => params.fetch("id"), :expected_values => params.fetch("expected_values", {}),
-                     :replacement_id => params["replacement_id"] }
-          if kind.id == MATERIAL_KIND
-            Operations.delete_material(request, proposal, **target)
-          else
-            Operations.delete_assembly(request, proposal, **target, :retarget => params.key?("replacement_id"))
-          end
+          Materials::Operations.update(request, proposal, :id => params.fetch("id"), :values => params.fetch("values"),
+            :expected_values => params.fetch("expected_values"), :user_data => params["user_data"])
+        end
+        duplicate = {
+          "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to copy."),
+          "name" => { "type" => "string", "minLength" => 1,
+                      "description" => "The copy's name; \"<name> (copy)\" when absent. Names are unique." },
+          "copy_datasheets" => { "type" => "boolean", "description" => "Keep the datasheet links on the copy; " \
+                                                                     "false when absent." }
+        }
+        duplicate_action(feature, prefix, kind, duplicate, example_id) do |request, proposal|
+          Materials::Operations.duplicate(request, proposal, :id => request.params.fetch("id"),
+            :name => request.params["name"], :copy_datasheets => request.params.fetch("copy_datasheets", false))
+        end
+        replacement = Shapes.id("mat", "The Material every Layer-Segment using the deleted one takes instead. " \
+                                       "Needed while any Assembly uses it.")
+        delete_action(feature, prefix, kind, replacement, example_id) do |request, proposal|
+          params = request.params
+          Materials::Operations.delete(request, proposal, :id => params.fetch("id"),
+            :expected_values => params.fetch("expected_values", {}), :replacement_id => params["replacement_id"])
+        end
+      end
+
+      def declare_assemblies(feature)
+        kind = Assembly::Schema::KIND
+        prefix = "#{FEATURE_ID}.assemblies"
+        example_id = Shapes::EXAMPLE_ID
+        create_action(feature, prefix, kind, []) do |request, proposal|
+          Assembly::Operations.create(request, proposal, :values => request.params.fetch("values"),
+                                                         :user_data => request.params["user_data"])
+        end
+        update_action(feature, prefix, kind, Commands::ASSEMBLY_EDITABLE, [], example_id) do |request, proposal|
+          params = request.params
+          Assembly::Operations.update(request, proposal, :id => params.fetch("id"), :values => params.fetch("values"),
+            :expected_values => params.fetch("expected_values"), :user_data => params["user_data"])
+        end
+        duplicate = { "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to copy.") }
+        duplicate_action(feature, prefix, kind, duplicate, example_id) do |request, proposal|
+          Assembly::Operations.duplicate(request, proposal, :id => request.params.fetch("id"))
+        end
+        replacement = Shapes.id("asm", "The Assembly every Face using the deleted one takes instead, or null to " \
+                                       "clear those Faces' Assembly. Needed while any Face uses it.", :nullable => true)
+        delete_action(feature, prefix, kind, replacement, example_id) do |request, proposal|
+          params = request.params
+          Assembly::Operations.delete(request, proposal, :id => params.fetch("id"),
+            :expected_values => params.fetch("expected_values", {}), :retarget => params.key?("replacement_id"),
+            :replacement_id => params["replacement_id"])
         end
       end
     end

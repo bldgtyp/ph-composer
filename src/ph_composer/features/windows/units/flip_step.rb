@@ -114,8 +114,7 @@ module PhComposer
         end
 
         def validate_flip!
-          expected = GridOperations.apply(@source, "flip", {},
-            :identity => ->(_prefix) { raise "Flip cannot mint ids" })
+          expected = GridOperations.flip(@source)
           source_ids = @source.fetch("elements").map { |cell| cell.fetch("id") }
           target_ids = @target.fetch("elements").map { |cell| cell.fetch("id") }
           same_grid = %w[rows_m columns_m].all? { |key| expected.fetch(key) == @target.fetch(key) }

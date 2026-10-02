@@ -56,6 +56,19 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
     assert_nil @proposal.refusal
   end
 
+  def test_a_missing_or_staged_deleted_record_refuses_as_the_plain_engine_does
+    stored = PhComposer::Records::ChangeSet.new
+    id = create(@request, stored)
+    @engine.apply(stored)
+    invoke do |request, changes|
+      engine = request.engine
+      assert_equal "target.not_found", assert_raises(PhComposer::CodedError) { engine.find(KIND, "mat_missing") }.code
+      engine.propose_delete(KIND, id, changes)
+      assert_equal "target.not_found", assert_raises(PhComposer::CodedError) { engine.find(KIND, id) }.code
+      {}
+    end
+  end
+
   def test_a_write_into_another_change_set_refuses_the_callers
     invoke do |request, _changes|
       request.engine.propose_create(KIND, PhComposer::Records::ChangeSet.new,

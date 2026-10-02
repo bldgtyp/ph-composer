@@ -13,18 +13,10 @@ module PhComposer
     TEXT = { "type" => "string", "minLength" => 1 }.freeze
     OBJECT = { "type" => "object" }.freeze
     GENERATION = { "type" => "integer", "minimum" => 1 }.freeze
+    PAGE_EXAMPLE = { "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }.freeze
 
+    extend SchemaShapes
     module_function
-
-    def object(properties, optional: [])
-      { "type" => "object", "properties" => properties, "additionalProperties" => false,
-        "required" => properties.keys - optional }
-    end
-
-    # `schema` with what it means to a caller, for discovery.
-    def described(schema, text)
-      schema.merge("description" => text)
-    end
 
     def selected_params
       object({
@@ -62,42 +54,43 @@ module PhComposer
 
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => 1)
-      feature.library_provider(FileProvider::PROVIDER_KIND, :contract_version => 1, :kinds => ["*"]) do
-        current = Registry.current
-        kinds = current.library_kinds.values.map { |row| row.adapter.wire_kind }
-        adapters = ->(kind) { current.library_kinds.values.find { |row| row.adapter.wire_kind == kind }&.adapter }
+      feature.library_provider(FileProvider::PROVIDER_KIND, :contract_version => 1, :kinds => ["*"]) do |published|
+        kinds = published.library_kinds.values.map { |row| row.adapter.wire_kind }
+        adapters = ->(kind) { published.library_kinds.values.find { |row| row.adapter.wire_kind == kind }&.adapter }
         Setup.file_providers(:kinds => kinds, :adapters => adapters)
       end
       feature.query("#{FEATURE_ID}.providers", :description => "Configured libraries without transport addresses.",
                     :params => object({}), :result => Schemas.providers,
-                    :examples => [{}]) do |r|
-        State.for(r.session).metadata(r.registry)
+                    :examples => [{}]) do |request|
+        State.for(request.session).metadata(request.registry)
       end
       install_commands(feature)
       feature.snapshot_section("#{FEATURE_ID}.provider_catalogs", :query => "#{FEATURE_ID}.providers")
       feature.query("#{FEATURE_ID}.catalog", :description => "A bounded page of one immutable library catalog.",
                     :params => page_params, :result => Schemas.page,
-                    :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |r|
-        catalog_page(r, "#{FEATURE_ID}.catalog")
+                    :examples => [PAGE_EXAMPLE]) do |request|
+        catalog_page(request, "#{FEATURE_ID}.catalog")
       end
       feature.query("#{FEATURE_ID}.in_file", :description => "Resolve catalog rows against local definitions.",
                     :params => page_params, :result => Schemas.page(:resolved => true),
-                    :examples => [{ "provider_id" => "example", "kind" => "example_parts", "limit" => 100 }]) do |r|
-        in_file(r)
+                    :examples => [PAGE_EXAMPLE]) do |request|
+        in_file(request)
       end
       feature.setup_command("#{FEATURE_ID}.load", :description => "Read a configured library into session memory.",
         :params => object(selected_params.fetch("properties").slice("provider_id", "kind")),
         :result => Schemas.summary,
-        :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |r|
-        State.for(r.session).refresh(r.params.fetch("provider_id"), r.params.fetch("kind"), r.registry)
+        :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |request|
+        params = request.params
+        State.for(request.session).refresh(params.fetch("provider_id"), params.fetch("kind"), request.registry)
              .reject { |key, _value| key == "rows" }
       end
       feature.action("#{FEATURE_ID}.copy", :description => "Copy or reuse one library record with optional assignment.",
         :params => copy_params, :result => Schemas.copy_result, :undo_name => "Copy Library Record",
         :side_effects => "Copies or replaces local definitions and optional assignments in one Undo step.",
         :examples => [{ "provider_id" => "example", "kind" => "example_parts", "generation" => 1,
-                       "library_id" => "synthetic", "record_id" => "one", "choice" => "create" }]) do |r, proposal|
-        Coordinator.copy(r, proposal)
+                       "library_id" => "synthetic", "record_id" => "one",
+                       "choice" => "create" }]) do |request, proposal|
+        Coordinator.copy(request, proposal)
       end
     end
 
@@ -112,9 +105,9 @@ module PhComposer
     # is bound to the generation, and, for `in_file`, whose resolution reads local definitions, to
     # the Model revision as well.
     def catalog_page(request, query, revision: nil)
-      p = request.params
-      entry = State.for(request.session).fetch(p.fetch("provider_id"), p.fetch("kind"), request.registry,
-                                                :generation => p["generation"])
+      params = request.params
+      entry = State.for(request.session).fetch(params.fetch("provider_id"), params.fetch("kind"), request.registry,
+                                                :generation => params["generation"])
       rows = entry.fetch("rows").each_with_index.to_a
       page, next_cursor = Pages.slice(request, query, rows, :key => ->((_row, index)) { [index] },
                                                             :revision => [entry.fetch("generation"), revision])

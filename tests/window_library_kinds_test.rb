@@ -18,10 +18,10 @@ class WindowLibraryKindsTest < PhComposerTestCase
     @sequence = 0
     @directory = Dir.mktmpdir("window-libraries")
     @path = File.join(@directory, "synthetic.json")
-    @rows = W::Products::SPECS.to_h do |collection, spec|
+    @rows = W::Products::KINDS.keys.to_h do |collection|
       row = W::Products.defaults(collection, "name" => "Synthetic #{collection}")
       row.delete("source")
-      spec.fetch(:numbers).each_key { |key| row[key] = key.start_with?("psi") ? -0.01 : 0.25 }
+      W::Products.number_keys(collection).each { |key| row[key] = key.start_with?("psi") ? -0.01 : 0.25 }
       [collection, row.merge("id" => "public-#{collection}")]
     end
     write_library(@path, envelope(:kinds => @rows.transform_values { |row| [row] }).merge(
@@ -316,7 +316,7 @@ adapter(collection).map.call(stored(collection, id))
       replaced = invoke("#{L}.copy", copy_params(collection, "use_library").merge("expected_values" => expected))
       assert_equal "committed", replaced["effect"], replaced.inspect
       second = stored(collection, id).merge("id" => PhComposer::Records::Identity.mint(
-        W::Products::SPECS.fetch(collection).fetch(:prefix)), "name" => "Second #{collection}")
+        W::Products::KINDS.fetch(collection).id_prefix), "name" => "Second #{collection}")
       W::Products::KINDS.fetch(collection).store.write(@model, second)
       assert_equal "ambiguous_source", resolution(collection).fetch("outcome")
       refused = invoke("#{L}.copy", copy_params(collection, "keep_local"))
@@ -342,9 +342,8 @@ adapter(collection).map.call(stored(collection, id))
     @rows.each_key do |collection|
       a = adapter(collection)
       absent = a.map.call("name" => "Absent")
-      W::Products::SPECS.fetch(collection).fetch(:numbers).each_key { |key| assert_nil absent.fetch(key) }
-      zero = @rows[collection].merge(W::Products::SPECS.fetch(collection).fetch(:numbers).to_h { |key, _spec|
- [key, 0] })
+      W::Products.number_keys(collection).each { |key| assert_nil absent.fetch(key) }
+      zero = @rows[collection].merge(W::Products.number_keys(collection).to_h { |key| [key, 0] })
       normalized = a.map.call(zero)
       assert_equal a.fingerprint.call(zero), a.fingerprint.call(normalized)
       assert_equal [], PhComposer::JsonSchema.validate(normalized, a.mapped_schema)

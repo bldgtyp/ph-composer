@@ -101,7 +101,7 @@ module PhComposer
         return { "source" => "shared", "id" => nil, "psi_w_mk" => 0.0 } if shared
         resolution = EdgeResolution.resolve(cell, side, :perimeter, input["default_install_id"])
         id = resolution.effective_id
-        record = input.fetch("installs")[id]
+        record = input.fetch("psi_install_types")[id]
         { "source" => resolution.source.to_s, "id" => id,
           "psi_w_mk" => record && number(record["psi_w_mk"], :signed => true) }
       end
@@ -130,17 +130,17 @@ module PhComposer
           return result
         end
         top, right, bottom, left = widths
-        gw, gh = width - left - right, height - top - bottom
-        if gw <= 0 || gh <= 0
+        glazing_width, glazing_height = width - left - right, height - top - bottom
+        if glazing_width <= 0 || glazing_height <= 0
           findings << finding("window_type.glazing_area_nonpositive", "Frame widths leave no glazing area.")
           return result
         end
-        result["glazing_area_m2"] = gw * gh
-        result["frame_area_m2"] = result.fetch("area_m2") - gw * gh
-        coefficients(result, input, cell, frames, widths, gw, gh)
+        result["glazing_area_m2"] = glazing_width * glazing_height
+        result["frame_area_m2"] = result.fetch("area_m2") - glazing_width * glazing_height
+        coefficients(result, input, cell, frames, widths, glazing_width, glazing_height)
       end
 
-      def coefficients(result, input, cell, frames, widths, gw, gh)
+      def coefficients(result, input, cell, frames, widths, glazing_width, glazing_height)
         uf = frames.map { |frame| frame && number(frame["uf_w_m2k"]) }
         psi = frames.map { |frame| frame && number(frame["psi_g_w_mk"], :signed => true) }
         glazing = input.fetch("glazings")[cell["glazing_id"]]
@@ -149,11 +149,11 @@ module PhComposer
         result.fetch("edges").each_with_index do |edge, i|
           adjacent = i.even? ? left + right : top + bottom
           edge["frame_area_m2"] = widths[i] * (edge.fetch("length_m") - adjacent / 2.0)
-          edge["glass_edge_m"] = i.even? ? gw : gh
+          edge["glass_edge_m"] = i.even? ? glazing_width : glazing_height
           edge["h_frame_w_k"] = uf[i] && uf[i] * edge.fetch("frame_area_m2")
           edge["h_spacer_w_k"] = psi[i] && psi[i] * edge.fetch("glass_edge_m")
         end
-        result["h_glazing_w_k"] = ug && ug * gw * gh
+        result["h_glazing_w_k"] = ug && ug * glazing_width * glazing_height
         if ug.nil? || uf.any?(&:nil?) || psi.any?(&:nil?)
           result.fetch("findings") << finding("window_type.construction_unresolved",
                                               "A Glazing Ug, Frame Uf or Frame psi-g value is missing.")

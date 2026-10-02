@@ -2,7 +2,8 @@
 
 module PhComposer
   module Windows
-    # Pure grid gestures from the predecessor. Each returns detached authored values; the record
+    # Pure grid gestures from the predecessor, one public function per gesture. Each takes the
+    # stored record and the gesture's own params and returns detached authored values; the record
     # schema checks final coverage and references at the proposal boundary.
     module GridOperations
       module_function
@@ -11,25 +12,9 @@ module PhComposer
         raise CodedError.new("validation.failed", message)
       end
 
-      def apply(record, command, values, identity:)
-        copy = DeepCopy.call(record)
-        values = DeepCopy.call(values)
-        case command
-        when "dimension" then dimension(copy, values)
-        when "set_element_name" then set_element(copy, values, "name", values.fetch("name"))
-        when "set_element_glazing" then set_element(copy, values, "glazing_id", values.fetch("glazing_id"))
-        when "set_element_operation" then set_element(copy, values, "operation", values.fetch("operation"))
-        when "set_element_frame" then set_element_frame(copy, values)
-        when "flip" then flip(copy)
-        when "kind" then kind(copy, values)
-        when "merge" then merge(copy, values, identity)
-        when "split" then split(copy, values, identity)
-        when "insert" then insert(copy, values, identity)
-        when "remove" then remove(copy, values)
-        when "paste" then paste(copy, values)
-        else refuse("Unknown Window Type command.")
-        end
-        copy
+      # Copies of the record and params, so a gesture never changes its caller's values.
+      def detached(record, values)
+        [DeepCopy.call(record), DeepCopy.call(values)]
       end
 
       def cells(record, ids)
@@ -46,41 +31,63 @@ module PhComposer
       end
 
       def dimension(record, values)
+        record, values = detached(record, values)
         key = axis(values)
         index = values.fetch("index")
         unless index.is_a?(Integer) && index.between?(0, record.fetch(key).length - 1)
           refuse("Choose an existing band.")
         end
         record[key][index] = values.fetch("value")
+        record
+      end
+
+      def set_element_name(record, values)
+        set_element_field(record, values, "name")
+      end
+
+      def set_element_glazing(record, values)
+        set_element_field(record, values, "glazing_id")
+      end
+
+      def set_element_operation(record, values)
+        set_element_field(record, values, "operation")
       end
 
       # An Empty element is wall area: it takes a name and nothing else.
-      def set_element(record, values, field, value)
+      def set_element_field(record, values, field)
+        record, values = detached(record, values)
         cell = cells(record, [values.fetch("element_id")]).first
         refuse("Empty is wall area, without products.") if cell["kind"] == "empty" && field != "name"
-        cell[field] = value
+        cell[field] = values.fetch(field)
+        record
       end
 
       def set_element_frame(record, values)
+        record, values = detached(record, values)
         cell = cells(record, [values.fetch("element_id")]).first
         refuse("Empty is wall area, without products.") if cell["kind"] == "empty"
         cell.fetch("frames")[values.fetch("side")] = values.fetch("frame_id")
+        record
       end
 
       def flip(record)
+        record = DeepCopy.call(record)
+        last_column = record.fetch("columns_m").length - 1
         record.fetch("columns_m").reverse!
         record.fetch("elements").each do |cell|
-          a, b = cell.fetch("column_span")
-          cell["column_span"] = [record["columns_m"].length - 1 - b, record["columns_m"].length - 1 - a]
+          first, last = cell.fetch("column_span")
+          cell["column_span"] = [last_column - last, last_column - first]
           %w[frames installs].each do |field|
             cell[field]["left"], cell[field]["right"] = cell[field]["right"], cell[field]["left"]
           end
           next unless cell["operation"]
           cell["operation"]["directions"].map! { |side| { "left" => "right", "right" => "left" }.fetch(side, side) }
         end
+        record
       end
 
       def kind(record, values)
+        record, values = detached(record, values)
         refuse("Choose Glazed or Empty.") unless %w[glazed empty].include?(values["kind"])
         cells(record, values.fetch("ids")).each do |cell|
           next if cell.fetch("kind") == values.fetch("kind")
@@ -89,26 +96,30 @@ module PhComposer
           cell["installs"] = Types::SIDES.to_h { |side| [side, nil] }
           cell["glazing_id"] = cell["operation"] = nil
         end
+        record
       end
 
       def merge(record, values, identity)
+        record, values = detached(record, values)
         selected = cells(record, values.fetch("ids"))
         unless selected.length >= 2 && selected.map { |cell| cell.fetch("kind") }.uniq.length == 1
           refuse("Select at least two elements of the same kind.")
         end
-        r0 = selected.map { |cell| cell["row_span"].first }.min
-        r1 = selected.map { |cell| cell["row_span"].last }.max
-        c0 = selected.map { |cell| cell["column_span"].first }.min
-        c1 = selected.map { |cell| cell["column_span"].last }.max
+        rows = [selected.map { |cell| cell["row_span"].first }.min, selected.map { |cell| cell["row_span"].last }.max]
+        columns = [selected.map { |cell| cell["column_span"].first }.min,
+                   selected.map { |cell| cell["column_span"].last }.max]
         area = selected.sum do |cell|
           (cell["row_span"].last - cell["row_span"].first + 1) *
             (cell["column_span"].last - cell["column_span"].first + 1)
         end
-        refuse("Selection must cover one rectangle without gaps.") unless area == (r1 - r0 + 1) * (c1 - c0 + 1)
+        unless area == (rows.last - rows.first + 1) * (columns.last - columns.first + 1)
+          refuse("Selection must cover one rectangle without gaps.")
+        end
         merged = DeepCopy.call(selected.min_by { |cell| [cell["row_span"].first, cell["column_span"].first] })
-        merge_installs(selected, merged, [r0, r1], [c0, c1])
-        merged.merge!("id" => identity.call("wel"), "row_span" => [r0, r1], "column_span" => [c0, c1])
+        merge_installs(selected, merged, rows, columns)
+        merged.merge!("id" => identity.call("wel"), "row_span" => rows, "column_span" => columns)
         record["elements"] = record.fetch("elements").reject { |cell| values["ids"].include?(cell["id"]) } + [merged]
+        record
       end
 
       def merge_installs(selected, merged, rows, columns)
@@ -129,16 +140,19 @@ module PhComposer
       end
 
       def split(record, values, identity)
+        record, values = detached(record, values)
         source = cells(record, [values.fetch("element_id")]).first
-        r0, r1 = source.fetch("row_span")
-        c0, c1 = source.fetch("column_span")
-        refuse("Split needs a merged element spanning more than one cell.") if r0 == r1 && c0 == c1
-        replacements = (r0..r1).flat_map do |row|
-          (c0..c1).map do |column|
+        rows = source.fetch("row_span")
+        columns = source.fetch("column_span")
+        if rows.first == rows.last && columns.first == columns.last
+          refuse("Split needs a merged element spanning more than one cell.")
+        end
+        replacements = (rows.first..rows.last).flat_map do |row|
+          (columns.first..columns.last).map do |column|
             child = DeepCopy.call(source)
             child.merge!("id" => identity.call("wel"), "row_span" => [row, row], "column_span" => [column, column])
             Types::SIDES.each_with_index do |side, i|
-              unless Grid.edge([row, row], [column, column], i) == Grid.edge([r0, r1], [c0, c1], i)
+              unless Grid.edge([row, row], [column, column], i) == Grid.edge(rows, columns, i)
                 child["installs"][side] = nil
               end
             end
@@ -146,6 +160,7 @@ module PhComposer
           end
         end
         record["elements"] = record.fetch("elements").reject { |cell| cell["id"] == source["id"] } + replacements
+        record
       end
 
       def band_keys(values)
@@ -154,6 +169,7 @@ module PhComposer
       end
 
       def insert(record, values, identity)
+        record, values = detached(record, values)
         key, span_key, other_key = band_keys(values)
         index = values.fetch("index")
         refuse("Choose a grid boundary.") unless index.is_a?(Integer) && index.between?(0, record.fetch(key).length)
@@ -175,9 +191,11 @@ module PhComposer
             cell["installs"][Types::SIDES[i]] = nil if edges[i] == :perimeter && classification != :perimeter
           end
         end
+        record
       end
 
       def remove(record, values)
+        record, values = detached(record, values)
         key, span_key, = band_keys(values)
         index = values.fetch("index")
         unless index.is_a?(Integer) && index.between?(0, record.fetch(key).length - 1)
@@ -190,12 +208,14 @@ module PhComposer
         record[key].delete_at(index)
         record["elements"].reject! { |cell| cell[span_key] == [index, index] }
         record["elements"].each do |cell|
-          a, b = cell.fetch(span_key)
-          cell[span_key] = [a > index ? a - 1 : a, b >= index ? b - 1 : b]
+          first, last = cell.fetch(span_key)
+          cell[span_key] = [first > index ? first - 1 : first, last >= index ? last - 1 : last]
         end
+        record
       end
 
       def paste(record, values)
+        record, values = detached(record, values)
         source = cells(record, [values.fetch("source_id")]).first
         refuse("Empty cannot supply products.") if source.fetch("kind") == "empty"
         targets = cells(record, values.fetch("ids"))
@@ -213,6 +233,7 @@ module PhComposer
           end
           %w[glazing_id frames operation installs].each { |key| target[key] = DeepCopy.call(source[key]) }
         end
+        record
       end
     end
   end

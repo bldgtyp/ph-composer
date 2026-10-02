@@ -43,6 +43,7 @@ module WindowRecordFixtures
 
   def thermal_proof
     input = JSON.parse(File.read(File.join(__dir__, "../fixtures/windows/thermal-proof.json")))
+    input["psi_install_types"] = input.delete("installs")
     record = { "rows_m" => input.fetch("rows_m"), "columns_m" => input.fetch("columns_m"),
                "elements" => input.fetch("cells").each_with_index.map do |cell, i|
                  cell.merge("row_span" => [i / 2, i / 2], "column_span" => [i % 2, i % 2],

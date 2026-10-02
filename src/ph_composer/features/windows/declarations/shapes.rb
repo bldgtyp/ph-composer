@@ -3,17 +3,17 @@
 module PhComposer
   module Windows
     module Shapes
+      extend SchemaShapes
+
       # Any string: names, messages, codes and ids in results. A param naming a record uses `id`.
       TEXT = { "type" => "string" }.freeze
       OBJECT = { "type" => "object" }.freeze
-      NONE = Fields.object({}).freeze
-      RESULT = Fields.object({ "id" => TEXT }, :required => ["id"]).freeze
-      TYPE_RESULT = Fields.object({ "id" => TEXT, "unit_count" => { "type" => "integer", "minimum" => 0 } },
-        :required => %w[id unit_count]).freeze
-      UNREADABLE = { "type" => "array", "items" => Fields.object(
-        %w[id code message].to_h { |key| [key, TEXT] }, :required => %w[id code message]) }.freeze
-      FINDING = Fields.object({ "code" => TEXT, "message" => TEXT, "element_id" => TEXT, "side" => TEXT,
-                "product_id" => TEXT }, :required => %w[code message]).freeze
+      NONE = object({}).freeze
+      RESULT = object({ "id" => TEXT }).freeze
+      TYPE_RESULT = object({ "id" => TEXT, "unit_count" => { "type" => "integer", "minimum" => 0 } }).freeze
+      UNREADABLE = list(object(%w[id code message].to_h { |key| [key, TEXT] })).freeze
+      FINDING = object({ "code" => TEXT, "message" => TEXT, "element_id" => TEXT, "side" => TEXT,
+                "product_id" => TEXT }, :optional => %w[element_id side product_id]).freeze
       EXPECTED = "Any of the record's values as last read; if one changed since, the edit is refused as " \
                  "target.changed. {} skips the check."
       USER_DATA = { "type" => "object", "description" => "Free metadata kept with the record and exported " \
@@ -31,31 +31,8 @@ module PhComposer
         "#{text} #{COPIED_IDENTITIES}"
       end
 
-      def object(properties, optional: [])
-        Fields.object(properties, :required => properties.keys - optional)
-      end
-
-      # A param naming one record or part by its id, such as `wnt_Ab12Cd34Ef56` for prefix "wnt".
-      def id(prefix, description, nullable: false)
-        { "type" => nullable ? %w[string null] : "string", "pattern" => "^#{prefix}_[A-Za-z0-9]{12}$",
-          "description" => description }
-      end
-
-      def described(schema, description)
-        schema.merge("description" => description)
-      end
-
       def expected(kind)
         described(kind.descriptor.patch_schema, EXPECTED)
-      end
-
-      def list(items)
-        { "type" => "array", "items" => items }
-      end
-
-      def with(base, properties)
-        base.merge("required" => base.fetch("required", []) + properties.keys,
-          "properties" => base.fetch("properties").merge(properties))
       end
 
       def create_values(kind)

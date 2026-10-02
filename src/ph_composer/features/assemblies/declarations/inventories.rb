@@ -30,30 +30,33 @@ module PhComposer
 
       module_function
 
-      def result(kind, paged:)
-        material = kind == MATERIAL_KIND
-        properties = { "records" => Shapes.list(material ? MATERIAL_ROW : ASSEMBLY_ROW),
-                       "unreadable" => Shapes::UNREADABLE }
-        properties["categories"] = Shapes.list(CATEGORY) if material
+      def result(row, paged:, categories: false)
+        properties = { "records" => Shapes.list(row), "unreadable" => Shapes::UNREADABLE }
+        properties["categories"] = Shapes.list(CATEGORY) if categories
         properties.merge!("next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL) if paged
         Shapes.object(properties)
       end
 
       def install(feature)
-        declare(feature, "materials", MATERIAL_KIND)
-        declare(feature, "assemblies", ASSEMBLY_KIND)
+        declare(feature, "materials", MATERIAL_ROW, :categories => true) do |request, paged|
+          Snapshot.materials(request, :paged => paged)
+        end
+        declare(feature, "assemblies", ASSEMBLY_ROW) { |request, paged| Snapshot.assemblies(request, :paged => paged) }
       end
 
-      def declare(feature, collection, kind)
+      # The list and all queries for one collection; `read` takes the request and whether to page.
+      def declare(feature, collection, row, categories: false, &read)
         prefix = "#{FEATURE_ID}.#{collection}"
         feature.query("#{prefix}.list", :description => "One bounded page of #{collection}, with display findings.",
-                      :params => Shapes.list_params, :result => result(kind, :paged => true),
+                      :params => Shapes.list_params,
+                      :result => result(row, :paged => true, :categories => categories),
                       :examples => [{}, { "limit" => 20 }]) do |request|
-          Snapshot.list(request, kind)
+          read.call(request, true)
         end
         feature.query("#{prefix}.all", :description => "The complete #{collection} inventory for the panel snapshot.",
-                      :params => Shapes::NONE, :result => result(kind, :paged => false), :examples => [{}]) do |request|
-          Snapshot.list(request, kind, :paged => false)
+                      :params => Shapes::NONE, :result => result(row, :paged => false, :categories => categories),
+                      :examples => [{}]) do |request|
+          read.call(request, false)
         end
         feature.snapshot_section(prefix, :query => "#{prefix}.all")
       end

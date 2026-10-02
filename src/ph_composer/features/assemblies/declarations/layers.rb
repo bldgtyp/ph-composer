@@ -23,7 +23,7 @@ module PhComposer
           :undo_name => undo_name, :side_effects => side_effects,
           :examples => [example.merge("id" => Shapes::EXAMPLE_ID, "expected_values" => {})]) do |request, proposal|
           params = request.params
-          Operations.gesture(request, proposal, :id => params.fetch("id"),
+          Assembly::Operations.gesture(request, proposal, :id => params.fetch("id"),
                                                 :expected_values => params.fetch("expected_values")) do |record|
             command.call(record, params, request)
           end
@@ -48,7 +48,7 @@ module PhComposer
           :side_effects => "Adds one Layer to this Assembly.") do |record, params, request|
           Commands.add_layer(record, :index => params["index"], :thickness_mm => params.fetch("thickness_mm", 100.0),
             :anchor_layer_id => params["anchor_layer_id"], :side => params["side"],
-            :identity => Operations.identity_allocator(request, params))
+            :identity => Definitions.identity_allocator(request, params))
         end
       end
 

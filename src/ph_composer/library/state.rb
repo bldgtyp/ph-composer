@@ -28,7 +28,7 @@ module PhComposer
 
       def providers(registry)
         rows = registry.library_providers.values.flat_map do |declaration|
-          instances = factory_instances(declaration)
+          instances = factory_instances(declaration, registry)
           valid = instances.is_a?(Array) &&
                   instances.all? { |provider| valid_provider?(provider, declaration, registry) }
           unless valid
@@ -91,8 +91,8 @@ module PhComposer
 
       private
 
-      def factory_instances(declaration)
-        declaration.factory.call
+      def factory_instances(declaration, registry)
+        declaration.factory.call(registry)
       rescue StandardError
         raise Error.new("library.provider_failed", "Provider metadata is unavailable."), :cause => nil
       end

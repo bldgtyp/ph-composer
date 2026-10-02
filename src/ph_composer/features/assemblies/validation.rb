@@ -38,7 +38,7 @@ module PhComposer
         return [finding("assembly.invalid", problems.first, identity)] unless problems.empty?
 
         found = record.fetch("layers").flat_map { |layer| layer_findings(layer, materials, identity) }
-        used = Assembly::Schema::KIND.references.first.ids(record).uniq
+        used = Assembly::Schema::MATERIAL_REFERENCE.ids(record).uniq
         used.each do |id|
           material = materials[id]
           next unless material
@@ -102,7 +102,7 @@ module PhComposer
       # disclosed thermal mass default. Empty when it can.
       def export_blockers(record, materials, findings)
         identity = { "assembly_id" => record.fetch("id") }
-        used = Assembly::Schema::KIND.references.first.ids(record).uniq.filter_map { |id| materials[id] }
+        used = Assembly::Schema::MATERIAL_REFERENCE.ids(record).uniq.filter_map { |id| materials[id] }
         assembly_conversion(record, materials) +
           used.flat_map { |material| material_conversion(material).map { |entry| entry.merge(identity) } } +
           findings.reject { |entry| entry.fetch("code") == "material.thermal_mass_defaulted" }

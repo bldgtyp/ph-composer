@@ -4084,6 +4084,11 @@ Params:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind"
+  ],
   "properties": {
     "provider_id": {
       "type": "string",
@@ -4108,12 +4113,7 @@ Params:
       "type": "string",
       "description": "next_cursor from the previous page of the same query and filter."
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind"
-  ]
+  }
 }
 ```
 
@@ -4122,6 +4122,22 @@ Result:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind",
+    "generation",
+    "state",
+    "warnings",
+    "unavailable",
+    "freshness",
+    "published_at",
+    "failure",
+    "age_seconds",
+    "rows",
+    "total",
+    "next_cursor"
+  ],
   "properties": {
     "provider_id": {
       "type": "string"
@@ -4149,6 +4165,10 @@ Result:
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
         "properties": {
           "code": {
             "type": "string"
@@ -4166,17 +4186,17 @@ Result:
             "type": "integer",
             "minimum": 0
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
+        }
       }
     },
     "unavailable": {
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
         "properties": {
           "code": {
             "type": "string"
@@ -4194,15 +4214,13 @@ Result:
             "type": "integer",
             "minimum": 0
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
+        }
       }
     },
     "freshness": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [],
       "properties": {
         "loaded_at": {
           "type": "string"
@@ -4210,9 +4228,7 @@ Result:
         "exported_at": {
           "type": "string"
         }
-      },
-      "additionalProperties": false,
-      "required": []
+      }
     },
     "published_at": {
       "type": [
@@ -4225,6 +4241,11 @@ Result:
         "object",
         "null"
       ],
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
       "properties": {
         "code": {
           "type": "string"
@@ -4232,12 +4253,7 @@ Result:
         "message": {
           "type": "string"
         }
-      },
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "message"
-      ]
+      }
     },
     "age_seconds": {
       "type": [
@@ -4250,6 +4266,14 @@ Result:
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "library_id",
+          "library_name",
+          "record_id",
+          "wire_schema_version",
+          "snapshot"
+        ],
         "properties": {
           "library_id": {
             "type": "string"
@@ -4267,15 +4291,7 @@ Result:
           "snapshot": {
             "type": "object"
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "library_id",
-          "library_name",
-          "record_id",
-          "wire_schema_version",
-          "snapshot"
-        ]
+        }
       }
     },
     "total": {
@@ -4290,23 +4306,7 @@ Result:
       ],
       "description": "Pass back as cursor for the next page; null on the last page."
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind",
-    "generation",
-    "state",
-    "warnings",
-    "unavailable",
-    "freshness",
-    "published_at",
-    "failure",
-    "age_seconds",
-    "rows",
-    "total",
-    "next_cursor"
-  ]
+  }
 }
 ```
 
@@ -4329,6 +4329,8 @@ Params:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [],
   "properties": {
     "scope": {
       "type": "string",
@@ -4351,6 +4353,11 @@ Params:
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record_kind",
+          "id"
+        ],
         "properties": {
           "record_kind": {
             "type": "string",
@@ -4360,19 +4367,12 @@ Params:
             "type": "string",
             "minLength": 1
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "record_kind",
-          "id"
-        ]
+        }
       },
       "minItems": 1,
       "description": "With scope selected: the records to export, each by record kind and id."
     }
-  },
-  "additionalProperties": false,
-  "required": []
+  }
 }
 ```
 
@@ -4381,11 +4381,23 @@ Result:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kinds",
+    "omissions",
+    "projection_digest",
+    "revision"
+  ],
   "properties": {
     "kinds": {
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "count"
+        ],
         "properties": {
           "kind": {
             "type": "string",
@@ -4395,18 +4407,19 @@ Result:
             "type": "integer",
             "minimum": 0
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "kind",
-          "count"
-        ]
+        }
       }
     },
     "omissions": {
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record_kind",
+          "fields",
+          "reason"
+        ],
         "properties": {
           "record_kind": {
             "type": "string",
@@ -4427,13 +4440,7 @@ Result:
             "type": "string",
             "minLength": 1
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "record_kind",
-          "fields",
-          "reason"
-        ]
+        }
       }
     },
     "projection_digest": {
@@ -4444,14 +4451,7 @@ Result:
       "type": "integer",
       "minimum": 0
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "kinds",
-    "omissions",
-    "projection_digest",
-    "revision"
-  ]
+  }
 }
 ```
 
@@ -4470,6 +4470,11 @@ Params:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind"
+  ],
   "properties": {
     "provider_id": {
       "type": "string",
@@ -4494,12 +4499,7 @@ Params:
       "type": "string",
       "description": "next_cursor from the previous page of the same query and filter."
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind"
-  ]
+  }
 }
 ```
 
@@ -4508,6 +4508,22 @@ Result:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind",
+    "generation",
+    "state",
+    "warnings",
+    "unavailable",
+    "freshness",
+    "published_at",
+    "failure",
+    "age_seconds",
+    "rows",
+    "total",
+    "next_cursor"
+  ],
   "properties": {
     "provider_id": {
       "type": "string"
@@ -4535,6 +4551,10 @@ Result:
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
         "properties": {
           "code": {
             "type": "string"
@@ -4552,17 +4572,17 @@ Result:
             "type": "integer",
             "minimum": 0
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
+        }
       }
     },
     "unavailable": {
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
         "properties": {
           "code": {
             "type": "string"
@@ -4580,15 +4600,13 @@ Result:
             "type": "integer",
             "minimum": 0
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
+        }
       }
     },
     "freshness": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [],
       "properties": {
         "loaded_at": {
           "type": "string"
@@ -4596,9 +4614,7 @@ Result:
         "exported_at": {
           "type": "string"
         }
-      },
-      "additionalProperties": false,
-      "required": []
+      }
     },
     "published_at": {
       "type": [
@@ -4611,6 +4627,11 @@ Result:
         "object",
         "null"
       ],
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
       "properties": {
         "code": {
           "type": "string"
@@ -4618,12 +4639,7 @@ Result:
         "message": {
           "type": "string"
         }
-      },
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "message"
-      ]
+      }
     },
     "age_seconds": {
       "type": [
@@ -4636,6 +4652,15 @@ Result:
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "library_id",
+          "library_name",
+          "record_id",
+          "wire_schema_version",
+          "snapshot",
+          "resolution"
+        ],
         "properties": {
           "library_id": {
             "type": "string"
@@ -4655,6 +4680,11 @@ Result:
           },
           "resolution": {
             "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "outcome",
+              "candidates"
+            ],
             "properties": {
               "outcome": {
                 "type": "string",
@@ -4670,6 +4700,15 @@ Result:
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "name",
+                    "differences",
+                    "expected_values",
+                    "comparison_available",
+                    "source_changed"
+                  ],
                   "properties": {
                     "id": {
                       "type": "string"
@@ -4681,6 +4720,14 @@ Result:
                       "type": "array",
                       "items": {
                         "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "field",
+                          "local",
+                          "incoming",
+                          "local_present",
+                          "incoming_present"
+                        ],
                         "properties": {
                           "field": {
                             "type": "string"
@@ -4711,15 +4758,7 @@ Result:
                           "incoming_present": {
                             "type": "boolean"
                           }
-                        },
-                        "additionalProperties": false,
-                        "required": [
-                          "field",
-                          "local",
-                          "incoming",
-                          "local_present",
-                          "incoming_present"
-                        ]
+                        }
                       }
                     },
                     "expected_values": {
@@ -4734,35 +4773,12 @@ Result:
                         "null"
                       ]
                     }
-                  },
-                  "additionalProperties": false,
-                  "required": [
-                    "id",
-                    "name",
-                    "differences",
-                    "expected_values",
-                    "comparison_available",
-                    "source_changed"
-                  ]
+                  }
                 }
               }
-            },
-            "additionalProperties": false,
-            "required": [
-              "outcome",
-              "candidates"
-            ]
+            }
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "library_id",
-          "library_name",
-          "record_id",
-          "wire_schema_version",
-          "snapshot",
-          "resolution"
-        ]
+        }
       }
     },
     "total": {
@@ -4777,23 +4793,7 @@ Result:
       ],
       "description": "Pass back as cursor for the next page; null on the last page."
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind",
-    "generation",
-    "state",
-    "warnings",
-    "unavailable",
-    "freshness",
-    "published_at",
-    "failure",
-    "age_seconds",
-    "rows",
-    "total",
-    "next_cursor"
-  ]
+  }
 }
 ```
 
@@ -4816,9 +4816,9 @@ Params:
 ```json
 {
   "type": "object",
-  "properties": {},
   "additionalProperties": false,
-  "required": []
+  "required": [],
+  "properties": {}
 }
 ```
 
@@ -4829,6 +4829,14 @@ Result:
   "type": "array",
   "items": {
     "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "provider_kind",
+      "label",
+      "kinds",
+      "catalogs"
+    ],
     "properties": {
       "id": {
         "type": "string"
@@ -4849,6 +4857,15 @@ Result:
         "type": "array",
         "items": {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "generation",
+            "state",
+            "failure",
+            "age_seconds",
+            "freshness"
+          ],
           "properties": {
             "kind": {
               "type": "string"
@@ -4874,6 +4891,11 @@ Result:
                 "object",
                 "null"
               ],
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message"
+              ],
               "properties": {
                 "code": {
                   "type": "string"
@@ -4881,12 +4903,7 @@ Result:
                 "message": {
                   "type": "string"
                 }
-              },
-              "additionalProperties": false,
-              "required": [
-                "code",
-                "message"
-              ]
+              }
             },
             "age_seconds": {
               "type": [
@@ -4897,6 +4914,8 @@ Result:
             },
             "freshness": {
               "type": "object",
+              "additionalProperties": false,
+              "required": [],
               "properties": {
                 "loaded_at": {
                   "type": "string"
@@ -4904,31 +4923,12 @@ Result:
                 "exported_at": {
                   "type": "string"
                 }
-              },
-              "additionalProperties": false,
-              "required": []
+              }
             }
-          },
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "generation",
-            "state",
-            "failure",
-            "age_seconds",
-            "freshness"
-          ]
+          }
         }
       }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "provider_kind",
-      "label",
-      "kinds",
-      "catalogs"
-    ]
+    }
   }
 }
 ```
@@ -9688,6 +9688,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -9936,6 +9937,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -10055,6 +10057,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -10383,6 +10386,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -10447,6 +10451,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -10543,6 +10548,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -10627,6 +10633,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -10690,6 +10697,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -11320,6 +11328,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -11786,6 +11795,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -11882,6 +11892,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -19366,6 +19377,15 @@ Params:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind",
+    "generation",
+    "library_id",
+    "record_id",
+    "choice"
+  ],
   "properties": {
     "provider_id": {
       "type": "string",
@@ -19414,16 +19434,7 @@ Params:
       "type": "object",
       "description": "Optional: where the owning feature also assigns the copied record, in that kind's assignment target shape, such as one Window Type element side."
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind",
-    "generation",
-    "library_id",
-    "record_id",
-    "choice"
-  ]
+  }
 }
 ```
 
@@ -19432,9 +19443,20 @@ Result:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "resolution",
+    "local_id",
+    "assigned"
+  ],
   "properties": {
     "resolution": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "candidates"
+      ],
       "properties": {
         "outcome": {
           "type": "string",
@@ -19450,6 +19472,15 @@ Result:
           "type": "array",
           "items": {
             "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "differences",
+              "expected_values",
+              "comparison_available",
+              "source_changed"
+            ],
             "properties": {
               "id": {
                 "type": "string"
@@ -19461,6 +19492,14 @@ Result:
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "field",
+                    "local",
+                    "incoming",
+                    "local_present",
+                    "incoming_present"
+                  ],
                   "properties": {
                     "field": {
                       "type": "string"
@@ -19491,15 +19530,7 @@ Result:
                     "incoming_present": {
                       "type": "boolean"
                     }
-                  },
-                  "additionalProperties": false,
-                  "required": [
-                    "field",
-                    "local",
-                    "incoming",
-                    "local_present",
-                    "incoming_present"
-                  ]
+                  }
                 }
               },
               "expected_values": {
@@ -19514,24 +19545,10 @@ Result:
                   "null"
                 ]
               }
-            },
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "name",
-              "differences",
-              "expected_values",
-              "comparison_available",
-              "source_changed"
-            ]
+            }
           }
         }
-      },
-      "additionalProperties": false,
-      "required": [
-        "outcome",
-        "candidates"
-      ]
+      }
     },
     "local_id": {
       "type": [
@@ -19542,13 +19559,7 @@ Result:
     "assigned": {
       "type": "boolean"
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "resolution",
-    "local_id",
-    "assigned"
-  ]
+  }
 }
 ```
 
@@ -20031,7 +20042,7 @@ Example params:
 
 Duplicate a Frame with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Frame. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Duplicate Frame. Copies definition metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20847,7 +20858,7 @@ Example params:
 
 Duplicate a Glazing with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Glazing. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Duplicate Glazing. Copies definition metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21530,7 +21541,7 @@ Example params:
 
 Duplicate a Psi-Install Type with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Psi-Install Type. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Duplicate Psi-Install Type. Copies definition metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -33979,6 +33990,7 @@ Result:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -36101,6 +36113,7 @@ Params:
 {
   "type": "object",
   "additionalProperties": false,
+  "required": [],
   "properties": {}
 }
 ```
@@ -36167,6 +36180,11 @@ Params:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind"
+  ],
   "properties": {
     "provider_id": {
       "type": "string",
@@ -36178,12 +36196,7 @@ Params:
       "minLength": 1,
       "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind"
-  ]
+  }
 }
 ```
 
@@ -36192,6 +36205,19 @@ Result:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind",
+    "generation",
+    "state",
+    "warnings",
+    "unavailable",
+    "freshness",
+    "published_at",
+    "failure",
+    "age_seconds"
+  ],
   "properties": {
     "provider_id": {
       "type": "string"
@@ -36219,6 +36245,10 @@ Result:
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
         "properties": {
           "code": {
             "type": "string"
@@ -36236,17 +36266,17 @@ Result:
             "type": "integer",
             "minimum": 0
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
+        }
       }
     },
     "unavailable": {
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
         "properties": {
           "code": {
             "type": "string"
@@ -36264,15 +36294,13 @@ Result:
             "type": "integer",
             "minimum": 0
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "code"
-        ]
+        }
       }
     },
     "freshness": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [],
       "properties": {
         "loaded_at": {
           "type": "string"
@@ -36280,9 +36308,7 @@ Result:
         "exported_at": {
           "type": "string"
         }
-      },
-      "additionalProperties": false,
-      "required": []
+      }
     },
     "published_at": {
       "type": [
@@ -36295,6 +36321,11 @@ Result:
         "object",
         "null"
       ],
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
       "properties": {
         "code": {
           "type": "string"
@@ -36302,12 +36333,7 @@ Result:
         "message": {
           "type": "string"
         }
-      },
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "message"
-      ]
+      }
     },
     "age_seconds": {
       "type": [
@@ -36316,20 +36342,7 @@ Result:
       ],
       "minimum": 0
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id",
-    "kind",
-    "generation",
-    "state",
-    "warnings",
-    "unavailable",
-    "freshness",
-    "published_at",
-    "failure",
-    "age_seconds"
-  ]
+  }
 }
 ```
 
@@ -36353,9 +36366,9 @@ Params:
 ```json
 {
   "type": "object",
-  "properties": {},
   "additionalProperties": false,
-  "required": []
+  "required": [],
+  "properties": {}
 }
 ```
 
@@ -36366,6 +36379,12 @@ Result:
   "type": "array",
   "items": {
     "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ],
     "properties": {
       "id": {
         "type": "string"
@@ -36376,13 +36395,7 @@ Result:
       "provider_kind": {
         "type": "string"
       }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "label",
-      "provider_kind"
-    ]
+    }
   }
 }
 ```
@@ -36404,9 +36417,9 @@ Params:
 ```json
 {
   "type": "object",
-  "properties": {},
   "additionalProperties": false,
-  "required": []
+  "required": [],
+  "properties": {}
 }
 ```
 
@@ -36417,6 +36430,12 @@ Result:
   "type": "array",
   "items": {
     "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ],
     "properties": {
       "id": {
         "type": "string"
@@ -36427,13 +36446,7 @@ Result:
       "provider_kind": {
         "type": "string"
       }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "label",
-      "provider_kind"
-    ]
+    }
   }
 }
 ```
@@ -36453,17 +36466,17 @@ Params:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id"
+  ],
   "properties": {
     "provider_id": {
       "type": "string",
       "minLength": 1,
       "description": "The configured library to remove from this machine."
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "provider_id"
-  ]
+  }
 }
 ```
 
@@ -36474,6 +36487,12 @@ Result:
   "type": "array",
   "items": {
     "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "label",
+      "provider_kind"
+    ],
     "properties": {
       "id": {
         "type": "string"
@@ -36484,13 +36503,7 @@ Result:
       "provider_kind": {
         "type": "string"
       }
-    },
-    "additionalProperties": false,
-    "required": [
-      "id",
-      "label",
-      "provider_kind"
-    ]
+    }
   }
 }
 ```
@@ -36518,6 +36531,8 @@ Params:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [],
   "properties": {
     "scope": {
       "type": "string",
@@ -36548,6 +36563,11 @@ Params:
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record_kind",
+          "id"
+        ],
         "properties": {
           "record_kind": {
             "type": "string",
@@ -36557,12 +36577,7 @@ Params:
             "type": "string",
             "minLength": 1
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "record_kind",
-          "id"
-        ]
+        }
       },
       "minItems": 1,
       "description": "With scope selected: the records to export, each by record kind and id."
@@ -36577,9 +36592,7 @@ Params:
       "minimum": 0,
       "description": "The Model revision export_preview reported; refused if the Model changed since."
     }
-  },
-  "additionalProperties": false,
-  "required": []
+  }
 }
 ```
 
@@ -36588,11 +36601,25 @@ Result:
 ```json
 {
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kinds",
+    "omissions",
+    "library_id",
+    "library_name",
+    "identity",
+    "written"
+  ],
   "properties": {
     "kinds": {
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "count"
+        ],
         "properties": {
           "kind": {
             "type": "string",
@@ -36602,18 +36629,19 @@ Result:
             "type": "integer",
             "minimum": 0
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "kind",
-          "count"
-        ]
+        }
       }
     },
     "omissions": {
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record_kind",
+          "fields",
+          "reason"
+        ],
         "properties": {
           "record_kind": {
             "type": "string",
@@ -36634,13 +36662,7 @@ Result:
             "type": "string",
             "minLength": 1
           }
-        },
-        "additionalProperties": false,
-        "required": [
-          "record_kind",
-          "fields",
-          "reason"
-        ]
+        }
       }
     },
     "library_id": {
@@ -36661,16 +36683,7 @@ Result:
     "written": {
       "type": "boolean"
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "kinds",
-    "omissions",
-    "library_id",
-    "library_name",
-    "identity",
-    "written"
-  ]
+  }
 }
 ```
 

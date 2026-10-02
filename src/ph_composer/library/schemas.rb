@@ -4,6 +4,8 @@ module PhComposer
   module Library
     # Transport shapes stay generic; each registered kind validates its snapshot and mapped fields.
     module Schemas
+      extend SchemaShapes
+
       TEXT = { "type" => "string" }.freeze
       NULLABLE_TEXT = { "type" => %w[string null] }.freeze
       OBJECT = { "type" => "object" }.freeze
@@ -13,15 +15,6 @@ module PhComposer
       BOOLEAN = { "type" => "boolean" }.freeze
 
       module_function
-
-      def object(properties, optional: [])
-        { "type" => "object", "properties" => properties, "additionalProperties" => false,
-          "required" => properties.keys - optional }
-      end
-
-      def list(items)
-        { "type" => "array", "items" => items }
-      end
 
       def summary
         object({ "provider_id" => TEXT, "kind" => TEXT, "generation" => GENERATION,

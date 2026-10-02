@@ -60,6 +60,14 @@ attachment, so the section that builds Rooms names nothing attached to them (`co
 3. **Things placed on geometry.** Window units, and later Spaces and thermal bridges. Each names
    a definition and sits on a host from the layer below.
 
+A definition feature keeps one operations module per kind beside that kind's schema
+(`Materials::Operations`, `Assembly::Operations`, `Types::Operations`; the three Window products
+share `Products::Operations`, chosen by collection), with the reads and naming rules its kinds
+share in the feature's `Definitions` module. Following one kind's create
+never steps through another kind's branch. Declarations build params and results from
+`SchemaShapes` (`core/schema_shapes.rb`), which each feature's `Shapes` module extends with only its
+own constants.
+
 A lower layer never names a higher one. When a definition is deleted with a replacement, the
 references to it are rewritten by whoever declared them, through a foundation contract the
 deleting feature calls without knowing who answers. When a higher layer has facts worth showing in
@@ -81,7 +89,7 @@ dependency reads" and "Compound proposals", for schemas, refusals and final-stat
 A feature's operations take their inputs as named arguments, beside the request that supplies the
 engine, Model, session and revision. The declaration block unpacks `request.params` once and calls
 the operation, for example
-`Operations.update(request, proposal, kind, id:, values:, expected_values:, user_data:)`. Anything
+`Materials::Operations.update(request, proposal, id:, values:, expected_values:, user_data:)`. Anything
 else that needs the same change, such as a library kind's assignment, calls the same operation with
 its own values. A handler request is frozen. Only the foundation derives one (`request.with`), for a
 nested read, a retargeter or a library callback; feature code never copies or alters a request, and
@@ -169,10 +177,11 @@ installation in the MVP.
 ### Library providers and kind adapters
 
 `feature.library_provider(name, contract_version: 1, kinds: [...], &factory)` registers a
-zero-argument factory returning configured provider instances. Named wire kinds must already
+factory that is called with the published registry and returns configured provider instances. Named wire kinds must already
 have adapters in the registration batch. `kinds: ["*"]` explicitly serves all registered wire
 kinds; the wildcard is exclusive and cannot mix with named ids. The file provider uses this
-capability, so adding an adapter requires no edit to its declaration. Factories receive no Model
+capability, so adding an adapter requires no edit to its declaration. A factory reads the registered
+library kinds from the registry it is given, never `Registry.current`; a lambda factory must take that one argument. It receives no Model
 or request; private configuration belongs to the provider and its setup store.
 
 `feature.library_kind(name, contract_version: 1, record_kind:, adapter:)` registers the owner's

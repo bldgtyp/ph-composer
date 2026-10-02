@@ -8,11 +8,6 @@ module PhComposer
     module AuthoringFields
       module_function
 
-      def object(properties, required: [])
-        { "type" => "object", "additionalProperties" => false,
-          "required" => required, "properties" => properties }
-      end
-
       def number(unit, nullable: false)
         { "type" => nullable ? %w[number null] : "number", "exclusiveMinimum" => 0, "x-unit" => unit }
       end
@@ -35,14 +30,14 @@ module PhComposer
         properties.merge!("kind" => { "type" => "string", "enum" => %w[manual derived library] },
                           "fingerprint_version" => { "type" => "integer", "enum" => [1] },
                           "snapshot" => { "type" => "object" })
-        object(properties, :required => ["kind"])
+        SchemaShapes.object(properties, :optional => properties.keys - ["kind"])
       end
 
       # Until a library adapter declares a smaller wire set, snapshots have this kind's authored
       # field ceiling. Provenance and arbitrary metadata are excluded from that copied row.
       def source_snapshot_schema(fields)
         properties = fields.reject { |field| field.key == "source" }.to_h { |field| [field.key, field.schema] }
-        object(properties)
+        SchemaShapes.object(properties, :optional => properties.keys)
       end
 
       def source_problems(source, snapshot_schema)

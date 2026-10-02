@@ -31,35 +31,42 @@ module PhComposer
                 "complete" => { "type" => "boolean" } })
       USE = Shapes.object(%w[kind type_id element_id side name].to_h { |key| [key, Shapes::TEXT] },
         :optional => %w[type_id element_id side])
+      # What a Window Type row adds to its record view, and what a product row adds.
+      TYPE_ROW = { "display" => DISPLAY }.freeze
+      PRODUCT_ROW = { "uses" => Shapes.list(USE), "use_count" => { "type" => "integer", "minimum" => 0 },
+                      "element_use_count" => { "type" => "integer", "minimum" => 0 } }.freeze
 
       module_function
 
-      def result(kind, paged:)
-        extra = kind.id == TYPE_KIND ? { "display" => DISPLAY } : {
-          "uses" => Shapes.list(USE), "use_count" => { "type" => "integer", "minimum" => 0 },
-          "element_use_count" => { "type" => "integer", "minimum" => 0 }
-        }
-        properties = { "records" => Shapes.list(Shapes.with(Shapes.view(kind), extra)),
+      def result(kind, row, paged:)
+        properties = { "records" => Shapes.list(Shapes.with(Shapes.view(kind), row)),
                 "unreadable" => Shapes::UNREADABLE }
         properties.merge!("next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL) if paged
         Shapes.object(properties)
       end
 
       def install(feature)
-        (Products::KINDS.keys + ["types"]).each do |collection|
-          kind = Operations.kind(collection)
-          prefix = "#{FEATURE_ID}.#{collection}"
-          feature.query("#{prefix}.list", :description => "A bounded page of #{collection} with display findings.",
-            :params => Shapes.list_params, :result => result(kind, :paged => true),
-            :examples => [{}, { "limit" => 20 }]) do |request|
-            Snapshot.list(request, collection)
+        Products::KINDS.each do |collection, kind|
+          declare(feature, collection, kind, PRODUCT_ROW) do |request, paged|
+            Snapshot.products(request, collection, :paged => paged)
           end
-          feature.query("#{prefix}.all", :description => "The complete #{collection} inventory for the panel snapshot.",
-            :params => Shapes::NONE, :result => result(kind, :paged => false), :examples => [{}]) do |request|
-            Snapshot.list(request, collection, :paged => false)
-          end
-          feature.snapshot_section(prefix, :query => "#{prefix}.all")
         end
+        declare(feature, "types", Types::KIND, TYPE_ROW) { |request, paged| Snapshot.types(request, :paged => paged) }
+      end
+
+      # The list and all queries for one collection; `read` takes the request and whether to page.
+      def declare(feature, collection, kind, row, &read)
+        prefix = "#{FEATURE_ID}.#{collection}"
+        feature.query("#{prefix}.list", :description => "A bounded page of #{collection} with display findings.",
+          :params => Shapes.list_params, :result => result(kind, row, :paged => true),
+          :examples => [{}, { "limit" => 20 }]) do |request|
+          read.call(request, true)
+        end
+        feature.query("#{prefix}.all", :description => "The complete #{collection} inventory for the panel snapshot.",
+          :params => Shapes::NONE, :result => result(kind, row, :paged => false), :examples => [{}]) do |request|
+          read.call(request, false)
+        end
+        feature.snapshot_section(prefix, :query => "#{prefix}.all")
       end
     end
   end

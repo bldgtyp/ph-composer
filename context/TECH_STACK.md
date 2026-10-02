@@ -316,7 +316,8 @@ The implemented library foundation supplies the file/folder provider, session ca
 and guarded copy. Materials supplies its own kind adapter. The model owns each editable copy;
 no provider is required or privileged. No provider address is a shipped default.
 
-A registered provider factory takes no arguments and returns configured provider instances. Each
+A registered provider factory is called with the published registry and returns configured
+provider instances. Each
 instance answers `id`, `provider_kind`, `label`, `kinds`, `list(kind)` and `freshness`. It receives
 neither a Model nor a handler request. A list returns an immutable `Library::Provider::Batch` with
 complete row snapshots, structured warnings and unavailable-kind identities. Provider metadata

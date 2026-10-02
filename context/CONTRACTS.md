@@ -568,7 +568,8 @@ proposals". Its own checks run in this order, each refusing the whole proposal:
 Its request's engine is `engine.projected(proposal, writable_kinds:, refusal_code:)`
 (`Records::ProjectedEngine`): every read (`find`, `ids`, `kind`, `view`, `resolve_reference`,
 `incoming_references`, `check_identity_removal!`) answers as the proposal would leave the records,
-and a write into another change set or to a kind its owner did not register refuses at once with
+`find` refusing as the plain engine does (`target.not_found` for a record absent there, a staged
+delete included, `record.unreadable` for one that fails its kind), and a write into another change set or to a kind its owner did not register refuses at once with
 `library.mutation_owner`. A local read's projection accepts no write. After the callback returns,
 every write staged before it must be unchanged and every write it added must be to a record kind
 its owner registered; otherwise `library.mutation_owner`. Local reads get no proposal. Any

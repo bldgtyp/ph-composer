@@ -117,7 +117,7 @@ working namespace D8 confirmed; the final public name is still open. The followi
 | Path | Owns |
 | --- | --- |
 | `extension.rb` | The composition root: the feature list (`FEATURES`), the foundation capabilities (`FOUNDATION_FEATURES`) and the load order |
-| `core/` | What several features need and none owns: the record engine, dictionaries, JSON, geometry and units primitives, model operations |
+| `core/` | What several features need and none owns: the record engine, dictionaries, JSON and declaration-schema builders, geometry and units primitives, model operations |
 | `session/` | One `ModelSession` per open Model, its generation, observers and per-feature state objects. Names no feature |
 | `shell/` | Transport and the action registry: the panel dialog, actions, commands, preferences. Names no feature |
 | `features/` | One folder per feature, each registering itself in one `install`. `zones/` owns Zones, Faces and adjacency; `assemblies/` owns Materials and Assemblies; `windows/` owns products, Types, Units and Aperture export |

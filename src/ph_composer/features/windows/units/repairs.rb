@@ -31,7 +31,7 @@ module PhComposer
           unless items.all? { |item| counts.fetch(item.record.fetch("id")) > 1 }
             raise CodedError.new("params.invalid", "Choose Windows whose identity is shared with a copy.")
           end
-          updates = IdentityPlan.build(occurrences, :identity => Operations.allocator(request, "units" => units),
+          updates = IdentityPlan.build(occurrences, :identity => Definitions.allocator(request, "units" => units),
             :catalog => request.registry.catalog, :engine => request.engine,
             :only => items.map { |item| item.record.fetch("id") })
           proposal.add_step(IdentityStep.new(updates), :scopes => [MutationScope.new])
@@ -47,7 +47,7 @@ module PhComposer
 
         # `pane_paths` are the orphaned panes the new Unit adopts on `host`.
         def restore(request, proposal, host:, type_id:, pane_paths:)
-          identity = Operations.allocator(request, "host" => host, "type_id" => type_id, "pane_paths" => pane_paths)
+          identity = Definitions.allocator(request, "host" => host, "type_id" => type_id, "pane_paths" => pane_paths)
           Mutation.prepare(request, proposal, :identity => identity)
           reads = ReadContext.new(request)
           host = reads.host_reference(host)
@@ -77,17 +77,17 @@ module PhComposer
         end
 
         def flipped_type(request, proposal, source, name:, seed:)
-          identity = Operations.allocator(request, seed)
-          rows = Operations.records(request, Types::KIND)
-          name ||= Operations.duplicate_name("#{source.fetch('name')} (flipped)", rows)
-          Operations.unique_name!(name, rows)
+          identity = Definitions.allocator(request, seed)
+          rows = Definitions.records(request, Types::KIND)
+          name ||= Definitions.duplicate_name("#{source.fetch('name')} (flipped)", rows)
+          Definitions.unique_name!(name, rows)
           mapping = request.engine.propose_duplicate(TYPE_KIND, [source.fetch("id")], proposal) do |values|
             values["name"] = name.strip
             values["source"] = { "kind" => "derived" }
             values["datasheet_links"] = []
             values["product_photos"] = []
             values.fetch("elements").each { |element| element["id"] = identity.call("wel") }
-            GridOperations.apply(values, "flip", {}, :identity => identity)
+            GridOperations.flip(values)
           end
           proposal.find(TYPE_KIND, mapping.fetch(source.fetch("id"))).after
         end

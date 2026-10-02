@@ -19,8 +19,8 @@ module PhComposer
           end
         end
 
-        # Operations.delete has already prepared identity repairs. Reference removals retain the
-        # original inventory preimages; native steps consume the projected post-repair records.
+        # Types::Operations.delete has already prepared identity repairs. Reference removals retain
+        # the original inventory preimages; native steps consume the projected post-repair records.
         def retarget(request, proposal, from:, to:)
           occurrences = Occurrences.all(request.model)
           items = occurrences.select { |item| item.record.fetch("window_type_id") == from }

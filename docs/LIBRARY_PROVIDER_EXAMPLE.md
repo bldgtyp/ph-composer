@@ -11,8 +11,9 @@ Enable it again after PH-Composer finishes, or call `BldgtypExampleLibrary.activ
 Console. A duplicate registration is refused.
 
 The loader registers a `SketchupExtension`. Its install file declares a feature requiring the
-library foundation and the Materials owner. The feature registers a zero-argument provider
-factory through `feature.library_provider`. The provider exposes `id`, `provider_kind`, `label`,
+library foundation and the Materials owner. The feature registers a provider
+factory through `feature.library_provider`; the factory is called with the published registry,
+which this example does not need. The provider exposes `id`, `provider_kind`, `label`,
 `kinds`, `list(kind)` and `freshness`; it never receives a Model or writes a record. `list` returns
 an immutable `PhComposer::Library::Provider::Batch` with complete wire rows. Each row carries
 library identity, record identity, the wire schema version and a detached snapshot.
