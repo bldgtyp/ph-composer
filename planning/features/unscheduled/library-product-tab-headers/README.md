@@ -28,6 +28,11 @@ R10 left it alone because it is a visible change that needs the polish review an
 - `context/EXTENSIBILITY.md` then drops "A surface may instead keep its '+ New' inside its own tab
   body", so the surface contract has one route.
 
+- While the polish reference is open: `.agents/skills/ph-composer-ui-polish/references/patterns.md`
+  still lists Window placement under "Patterns still to be established", but the screen exists
+  (`src/ph_composer/html/features/windows/placement.js`). Move it to the local list with its path, or
+  say what remains unaccepted. Added 2026-10-02 from R11's follow-ups.
+
 ## Verification
 
 - `tests/window_inventory_test.js` and `tests/window_library_test.js` reach "+ New" through the pane

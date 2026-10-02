@@ -50,6 +50,14 @@ is owed.
   mechanism or replace both with the handle.
 - Where handles are stored, how long they live and how the user sees and revokes them.
 
+- **A stale export still asks for a destination first.** Added 2026-10-02 from R11 item 13. The
+  panel and menu now refuse before the native dialog when the grant, params or busy state would
+  refuse. `export_file`'s `expected_revision` is not among those checks: it is a param the handler
+  checks, after the save dialog, so a user can choose a destination and then be told the Model
+  changed. When this packet redesigns the export params around a handle, make the revision check part
+  of the operation's declared preconditions so dispatch can apply it before any dialog, for the
+  panel and for agents alike.
+
 ## Acceptance shape
 
 An agent, with the panel closed and a user-approved handle, exports a model library and adds a
