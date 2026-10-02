@@ -66,6 +66,13 @@ class ModelSettingsTest < PhComposerTestCase
     end
   end
 
+  def test_invalid_stored_settings_refuse_a_read_as_unreadable_without_the_mutation_sentence
+    @settings.store.write(@model, DEFAULTS.merge("lower" => 30))
+    error = assert_raises(PhComposer::CodedError) { @settings.read(@model) }
+    assert_equal "record.unreadable", error.code
+    refute_includes error.message, "Nothing was written."
+  end
+
   def test_write_undo_redo_and_per_model_values_preserve_absent_storage
     after = DEFAULTS.merge("enabled" => false)
     assert_equal "committed", update(after).fetch("effect")

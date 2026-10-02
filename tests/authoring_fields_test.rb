@@ -5,8 +5,9 @@ require_relative "test_helper"
 class AuthoringFieldsTest < PhComposerTestCase
   Fields = PhComposer::Records::AuthoringFields
 
-  def test_feature_alias_preserves_the_shared_public_api_and_feature_constants
-    assert_same Fields, PhComposer::Assemblies::SchemaFields
+  def test_both_features_name_the_shared_authoring_fields_and_keep_their_kind_constants
+    assert_same Fields, PhComposer::Assemblies::Fields
+    assert_same Fields, PhComposer::Windows::Fields
     assert_equal "ph_composer.assemblies", PhComposer::Assemblies::FEATURE_ID
     assert_equal "ph_composer.assemblies.material", PhComposer::Assemblies::MATERIAL_KIND
     assert_equal %w[name notes datasheet_links source], Fields.common.map(&:key)

@@ -41,24 +41,28 @@ module PhComposer
         def validate!(type_id, plan)
           stamps = @faces.map { |face| PANE_STORE.read(face) }
           expected = plan.panes.map(&:element_id).sort
-          unless @faces.all? { |face| face.is_a?(Sketchup::Face) && face.loops.length == 1 &&
-              face.outer_loop.vertices.length >= 4 && face.edges.length >= 4 } &&
-            stamps.all? { |stamp| stamp.is_a?(Hash) && stamp.keys.sort == %w[element_id window_type_id] &&
-              stamp["window_type_id"] == type_id && stamp["element_id"].is_a?(String) } &&
-            stamps.map { |stamp| stamp["element_id"] }.sort == expected
-            RestoreGeometry.refuse!
-          end
+          faces_valid = @faces.all? { |face| pane_face?(face) }
+          stamps_valid = stamps.all? { |stamp| pane_stamp?(stamp, type_id) }
+          ids_match = stamps.map { |stamp| stamp["element_id"] }.sort == expected
+          RestoreGeometry.refuse! unless faces_valid && stamps_valid && ids_match
           @faces.each do |face|
-            attrs = dictionaries(face)
-            unless attrs.keys == [PANE_STORE.dictionary] &&
-              attrs.fetch(PANE_STORE.dictionary).keys == [PANE_STORE.key] &&
-              [face.material, face.back_material].all? { |material| material&.name == DefinitionWriter::GLASS_NAME }
-              RestoreGeometry.refuse!
-            end
+            only_stamped = dictionaries(face).transform_values(&:keys) == { PANE_STORE.dictionary => [PANE_STORE.key] }
+            glazed = [face.material, face.back_material].all? { |material| material&.name == DefinitionWriter::GLASS_NAME }
+            RestoreGeometry.refuse! unless only_stamped && glazed
           end
           @edges.each do |edge|
             RestoreGeometry.refuse! unless (edge.faces - @faces).empty? && dictionaries(edge).empty?
           end
+        end
+
+        def pane_face?(face)
+          face.is_a?(Sketchup::Face) && face.loops.length == 1 && face.outer_loop.vertices.length >= 4 &&
+            face.edges.length >= 4
+        end
+
+        def pane_stamp?(stamp, type_id)
+          stamp.is_a?(Hash) && stamp.keys.sort == %w[element_id window_type_id] &&
+            stamp["window_type_id"] == type_id && stamp["element_id"].is_a?(String)
         end
 
         def capture(entity)

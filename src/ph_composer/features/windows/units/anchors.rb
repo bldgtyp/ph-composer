@@ -17,10 +17,14 @@ module PhComposer
 
         module_function
 
+        def validate!(anchor)
+          return anchor if FRACTIONS.key?(anchor)
+
+          raise CodedError.new("params.invalid", "Choose one of the nine Window anchors. Nothing was written.")
+        end
+
         def point(anchor = DEFAULT, width_m:, height_m:)
-          unless FRACTIONS.key?(anchor)
-            raise CodedError.new("params.invalid", "Choose one of the nine Window anchors. Nothing was written.")
-          end
+          validate!(anchor)
           unless DefinitionPlan.positive_dimension?(width_m) && DefinitionPlan.positive_dimension?(height_m)
             raise CodedError.new("validation.failed",
               "Anchor dimensions must be finite and positive. Nothing was written.")

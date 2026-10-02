@@ -35,7 +35,7 @@ module PhComposer
           "index" => { "type" => "integer", "minimum" => 0,
                        "description" => "Where to insert the Layer in the stored order, 0 first. Not with " \
                                         "anchor_layer_id." },
-          "thickness_mm" => Shapes.described(SchemaFields.number("mm"), "The new Layer's thickness; 100 mm when " \
+          "thickness_mm" => Shapes.described(Fields.number("mm"), "The new Layer's thickness; 100 mm when " \
                                                                         "absent."),
           "anchor_layer_id" => Shapes.id("lyr", "An existing Layer to place the new one beside, with side."),
           "side" => { "type" => "string", "enum" => %w[outside inside],
@@ -62,7 +62,7 @@ module PhComposer
           Commands.remove_layer(record, :layer_id => params.fetch("layer_id"))
         end
         action(feature, "update", { "layer_id" => Shapes.id("lyr", LAYER_ID),
-                                    "thickness_mm" => Shapes.described(SchemaFields.number("mm"),
+                                    "thickness_mm" => Shapes.described(Fields.number("mm"),
                                                                        "The new thickness.") },
                { "layer_id" => Shapes::EXAMPLE_LAYER, "thickness_mm" => 140 },
                :description => "Set one Layer's thickness.", :undo_name => "Change Layer Thickness",

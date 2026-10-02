@@ -2,7 +2,17 @@
 
 # A definitions feature: pure schemas and calculations, commands over detached records, then
 # registered handlers. Persistence and native transactions belong to the supplied engine/dispatcher.
-require_relative "schema_fields"
+require_relative "../../core/records/authoring_fields"
+
+module PhComposer
+  module Assemblies
+    FEATURE_ID = "ph_composer.assemblies"
+    MATERIAL_KIND = "#{FEATURE_ID}.material"
+    ASSEMBLY_KIND = "#{FEATURE_ID}.assembly"
+    Fields = Records::AuthoringFields
+  end
+end
+
 require_relative "materials/schema"
 require_relative "assembly/schema"
 require_relative "thermal"

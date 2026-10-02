@@ -260,16 +260,27 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
             raise AttachmentRefused(f"Surface Faces of Zone {names} have no emitted reciprocal counterpart", unpaired)
 
     def result_fields(self, objects: Mapping[str, TranslatedZone]) -> Mapping[str, JSONValue]:
-        usage: dict[str, dict[str, JSONValue]] = {}
+        usage: dict[str, _ConstructionUsage] = {}
         for zone in objects.values():
             for identifier in zone.faces:
                 specification = zone.specifications[identifier]
                 assembly_id = specification.assembly_id
                 assert assembly_id is not None
-                row = usage.setdefault(assembly_id, {"assembly_id": assembly_id, "face_count": 0, "gross_area_m2": 0.0})
-                row["face_count"] = int(row["face_count"]) + 1  # type: ignore[arg-type]
-                row["gross_area_m2"] = float(row["gross_area_m2"]) + specification.area_m2  # type: ignore[arg-type]
-        return {"construction_usage": [usage[identifier] for identifier in sorted(usage)]}
+                row = usage.setdefault(assembly_id, _ConstructionUsage())
+                row.face_count += 1
+                row.gross_area_m2 += specification.area_m2
+        return {"construction_usage": [usage[assembly_id].row(assembly_id) for assembly_id in sorted(usage)]}
+
+
+@dataclass
+class _ConstructionUsage:
+    """One Assembly's running Face count and gross area while result fields are summed."""
+
+    face_count: int = 0
+    gross_area_m2: float = 0.0
+
+    def row(self, assembly_id: str) -> JSONValue:
+        return {"assembly_id": assembly_id, "face_count": self.face_count, "gross_area_m2": self.gross_area_m2}
 
 
 def _read_omission(value: object, identifier: str, zone_id: str) -> FaceOmission | None:
