@@ -2,8 +2,9 @@
 var assert = require("assert"), test = require("node:test"), source = require("./support/panel_source");
 function setup() {
   var context = { Intl: Intl }; context.window = context;
-  var modules = source.start(context, ["library_store"]), sent = [];
-  var store = new modules.library_store("s", function (type, payload) { sent.push({ type: type, payload: payload }); },
+  var modules = source.start(context, ["library/store"]), sent = [];
+  var store = new modules["library/store"]("s", function (type, payload) {
+    sent.push({ type: type, payload: payload }); },
     "materials", function () {});
   var state = { session: "s", revision: 1,
     sections: { "ph_composer.library.provider_catalogs": { status: "completed",

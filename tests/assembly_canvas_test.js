@@ -16,7 +16,7 @@ var context = {
   Math: Math, Object: Object, Array: Array, String: String, Boolean: Boolean, Number: Number
 };
 context.window = context;
-var canvas = panelSource.start(context, ["assembly_canvas"]).assembly_canvas;
+var canvas = panelSource.start(context, ["features/assemblies/canvas"])["features/assemblies/canvas"];
 
 function segment(id, width, material) {
   return { id: id, width_mm: width, material_id: material };

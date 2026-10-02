@@ -12,7 +12,8 @@ function setup() {
     sketchup: { ph_composer_message: function (message) { sent.push(JSON.parse(message)); } } };
   context.window = context;
   dom.attachEvents(context);
-  var modules = source.start(context, ["sections/overview", "sections/classify", "sections/assemblies"]);
+  var modules = source.start(context, ["features/zones/overview", "features/zones/classify",
+    "features/assemblies/section"]);
   var state = fixtures.state("session-a");
   state.product = "PH-Composer";
   state.preferences = { unit_system: "SI", dimension_formats: {},

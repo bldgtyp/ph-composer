@@ -46,9 +46,10 @@ function classSelectors(css) {
 }
 
 test("every class the stylesheets style is written by the panel", function () {
-  var stylesheets = fs.readdirSync(panelFiles.html).filter(function (name) {
+  var stylesheets = fs.readdirSync(panelFiles.html, { recursive: true }).filter(function (name) {
     return path.extname(name) === ".css";
   }).sort();
+  assert.ok(stylesheets.indexOf(path.join("features", "zones", "zones.css")) >= 0, "feature stylesheets are scanned");
   assert.ok(stylesheets.length, "no panel stylesheets found");
   var sources = panelFiles.panelFiles().concat([path.join(panelFiles.html, "index.html")])
     .map(function (file) { return fs.readFileSync(file, "utf8"); });

@@ -4,8 +4,8 @@ var assert = require("assert"), test = require("node:test"), dom = require("./su
 function setup(kind) {
   var document = dom.buildDocument(""), context = { document: document, Intl: Intl, innerWidth: 1280,
     setTimeout: setTimeout, clearTimeout: clearTimeout }; context.window = context; dom.attachEvents(context);
-  var modules = source.start(context, ["window_inventory"]), state = fixtures.state(), sent = [];
-  var view = new modules.window_inventory.Inventory(document.body, "session", function (type, payload) {
+  var modules = source.start(context, ["features/windows/inventory"]), state = fixtures.state(), sent = [];
+  var view = new modules["features/windows/inventory"].Inventory(document.body, "session", function (type, payload) {
     sent.push({ type: type, payload: payload }); }, kind || "frames", function () {}); view.render(state);
   return { view: view, state: state, sent: sent, modules: modules };
 }

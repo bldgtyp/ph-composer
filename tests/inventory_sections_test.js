@@ -5,7 +5,7 @@ var dom = require("./support/dom_stub");
 var panelSource = require("./support/panel_source");
 var fixtures = require("./support/inventory_fixtures");
 
-function setup() {
+function setup(beforePaint) {
   var document = dom.buildDocument("");
   var sections = {}, guards = {}, sent = [], notices = [], state = fixtures.state();
   var roots = { library: dom.element("div"), assemblies: dom.element("div") };
@@ -19,7 +19,9 @@ function setup() {
     setTimeout: setTimeout, clearTimeout: clearTimeout };
   context.window = context;
   dom.attachEvents(context);
-  var modules = panelSource.start(context, ["sections/library", "sections/assemblies"], { panel: panel });
+  var modules = panelSource.start(context, ["library/section", "features/assemblies/section",
+    "features/assemblies/materials", "features/zones/attached_zones"], { panel: panel });
+  if (beforePaint) beforePaint(modules);
   paint();
   return { roots: roots, state: state, sent: sent, notices: notices, modules: modules, paint: paint, guards: guards };
 }
@@ -29,17 +31,18 @@ function enter(input, value) {
   input.listeners.keydown({ key: "Enter", preventDefault: function () {}, stopImmediatePropagation: function () {} });
 }
 function text(node) { return node.textContent + node.children.map(text).join(" "); }
+function materials(o) { return o.roots.library._view.surface("materials"); }
 
 test("library export offers deduped actual grid selection and defaults to all despite the filter", function () {
-  var o = setup(), view = o.roots.library._view, grid = view.material.grid;
-  grid.select(view.edits.cells["mat_a:name"]);
-  grid.select(view.edits.cells["mat_a:conductivity_w_mk"], true);
+  var o = setup(), view = o.roots.library._view, inventory = materials(o).inventory, grid = inventory.grid;
+  grid.select(inventory.edits.cells["mat_a:name"]);
+  grid.select(inventory.edits.cells["mat_a:conductivity_w_mk"], true);
   assert.deepStrictEqual(JSON.parse(JSON.stringify(view.selection())), {
     record_kind: "ph_composer.assemblies.material", ids: ["mat_a"] });
   view.exportLibrary.listeners.click({});
   assert.strictEqual(o.sent[0].payload.params.scope, "all");
   assert.strictEqual(view.exportForm.selection.length, 1); view.exportForm.hide();
-  view.controls.filter.value = "Wood"; view.controls.filter.listeners.input({});
+  inventory.controls.filter.value = "Wood"; inventory.controls.filter.listeners.input({});
   assert.strictEqual(view.selection().ids.length, 0, "a hidden selected row is withdrawn");
   view.exportLibrary.listeners.click({});
   assert.strictEqual(o.sent[1].payload.params.scope, "all");
@@ -48,7 +51,7 @@ test("library export offers deduped actual grid selection and defaults to all de
 
 test("inventories render transport values, material uses and withheld U-value reasons", function () {
   var o = setup();
-  assert.strictEqual(o.roots.library._view.edits.cells["mat_a:name"].input.value, "Mineral wool");
+  assert.strictEqual(materials(o).inventory.edits.cells["mat_a:name"].input.value, "Mineral wool");
   assert.ok(text(o.roots.library).includes("Definitions stored in this model."));
   var withheld = o.roots.assemblies.querySelector("[data-u-withheld]");
   assert.ok(withheld.getAttribute("aria-label").includes("Choose a Material for every Layer-Segment."));
@@ -57,7 +60,7 @@ test("inventories render transport values, material uses and withheld U-value re
 });
 
 test("an inline edit sends expected_values once and retains a refused draft", function () {
-  var o = setup(), input = o.roots.library._view.edits.cells["mat_a:conductivity_w_mk"].input;
+  var o = setup(), input = materials(o).inventory.edits.cells["mat_a:conductivity_w_mk"].input;
   enter(input, "0.05");
   assert.strictEqual(o.sent.length, 1);
   assert.strictEqual(o.sent[0].payload.name, "ph_composer.assemblies.materials.update");
@@ -70,7 +73,7 @@ test("an inline edit sends expected_values once and retains a refused draft", fu
 });
 
 test("display preferences reformat clean cells and preserve a typing draft", function () {
-  var o = setup(), view = o.roots.library._view;
+  var o = setup(), view = materials(o).inventory;
   var input = view.edits.cells["mat_a:conductivity_w_mk"].input;
   input.value = "0.05";
   input.listeners.input({});
@@ -82,7 +85,7 @@ test("display preferences reformat clean cells and preserve a typing draft", fun
 });
 
 test("an in-use Material delete requires an explicit replacement and names affected Assemblies", function () {
-  var o = setup(), view = o.roots.library._view;
+  var o = setup(), view = materials(o);
   view.replacement.open(o.state.sections["ph_composer.assemblies.materials"].value.records[0],
     o.state.sections["ph_composer.assemblies.materials"].value.records);
   assert.ok(view.replacement.uses.textContent.includes("Wall"));
@@ -95,7 +98,7 @@ test("an in-use Material delete requires an explicit replacement and names affec
 });
 
 test("view controls send nothing and refuse hiding an active draft", function () {
-  var o = setup(), view = o.roots.library._view;
+  var o = setup(), view = materials(o).inventory;
   view.controls.filter.value = "Wood";
   view.controls.filter.listeners.input({});
   view.controls.groupBy.value = "category";
@@ -115,7 +118,7 @@ test("view controls send nothing and refuse hiding an active draft", function ()
 test("Attached zones use only the existing save and duplicate actions", function () {
   var o = setup(), view = o.roots.library._view;
   view.tabs.select("attached_zones");
-  var input = view.attachedEdits.cells["atz_a:name"].input;
+  var input = view.surface("attached_zones").inventory.edits.cells["atz_a:name"].input;
   enter(input, "Carport");
   assert.strictEqual(o.sent[0].payload.name, "ph_composer.zones.faces.attached_zone.save");
   assert.strictEqual(o.sent[0].payload.params.expected_values.name, "Garage");
@@ -140,7 +143,7 @@ function result(o, index, status, value) {
 }
 
 test("new Material converts IP entries and a refused create retains its fields", function () {
-  var o = setup(), form = o.roots.library._view.newMaterial;
+  var o = setup(), form = materials(o).newMaterial;
   o.modules.unit_preferences.set("unit_system", "IP");
   form.open();
   form.fields.name.value = "New insulation";
@@ -172,7 +175,7 @@ test("new Assembly leaves unset hints absent and creation never authors Layers",
 });
 
 test("duplicate Material copies datasheet links only through the explicit checkbox", function () {
-  var o = setup(), form = o.roots.library._view.duplicate;
+  var o = setup(), form = materials(o).duplicate;
   form.open(o.state.sections["ph_composer.assemblies.materials"].value.records[0]);
   assert.strictEqual(form.copyDatasheets.checked, false);
   form.submit();
@@ -197,7 +200,7 @@ test("Assembly hint selects store honeybee words and clear with a null patch", f
 });
 
 test("range writes stay canonical, serialize individual actions and stop at a refusal", function () {
-  var o = setup(), inventory = o.roots.library._view.material;
+  var o = setup(), inventory = materials(o).inventory;
   inventory.ranges.submit([
     { id: "mat_a", values: { conductivity_w_mk: 0.06 }, expected_values: { conductivity_w_mk: 0.04 } },
     { id: "mat_b", values: { conductivity_w_mk: 0.06 }, expected_values: { conductivity_w_mk: 0.12 } }
@@ -212,7 +215,7 @@ test("range writes stay canonical, serialize individual actions and stop at a re
 });
 
 test("a host category change cannot collapse or filter away a refused draft", function () {
-  var o = setup(), inventory = o.roots.library._view.material;
+  var o = setup(), inventory = materials(o).inventory;
   inventory.controls.groupBy.value = "category";
   inventory.controls.groupBy.listeners.change({});
   var input = inventory.edits.cells["mat_b:name"].input;
@@ -226,22 +229,22 @@ test("a host category change cannot collapse or filter away a refused draft", fu
 });
 
 test("changing Model sessions disposes every old draft and form", function () {
-  var o = setup(), old = o.roots.library._view, cell = old.edits.cells["mat_a:name"];
+  var o = setup(), old = materials(o), cell = old.inventory.edits.cells["mat_a:name"];
   cell.input.value = "Old draft";
   cell.input.listeners.input({});
   o.state.session = "different-session";
   o.paint();
-  old.edits.commit(cell);
+  old.inventory.edits.commit(cell);
   old.newMaterial.fields.name.value = "Old form";
   old.newMaterial.submit();
   assert.strictEqual(o.sent.length, 0);
   old.color.open(o.state.sections["ph_composer.assemblies.materials"].value.records[0],
-    old.material.scroll._table.rows.mat_a.cells.color._color);
+    old.inventory.scroll._table.rows.mat_a.cells.color._color);
   old.color.submit();
   assert.strictEqual(o.sent.length, 0);
   assert.strictEqual(old.color.enabled, false);
-  assert.strictEqual(old.edits.disposed, true);
-  assert.strictEqual(o.roots.library._view.edits.cells["mat_a:name"].input.value, "Mineral wool");
+  assert.strictEqual(old.inventory.edits.disposed, true);
+  assert.strictEqual(materials(o).inventory.edits.cells["mat_a:name"].input.value, "Mineral wool");
 });
 
 test("the graphical color picker compares stored color even when the display color was computed", function () {
@@ -264,26 +267,26 @@ test("the graphical color picker compares stored color even when the display col
 });
 
 test("feature absence closes inventory forms and unreadable records have a visible explanation", function () {
-  var o = setup(), view = o.roots.library._view;
+  var o = setup(), library = o.roots.library._view, view = materials(o);
   o.state.sections["ph_composer.assemblies.materials"].value.unreadable = [
     { id: "mat_broken", message: "Unsupported record version." }
   ];
   o.paint();
-  assert.ok(view.material.unreadable.textContent.includes("mat_broken: Unsupported record version."));
+  assert.ok(view.inventory.unreadable.textContent.includes("mat_broken: Unsupported record version."));
   view.newMaterial.open();
   delete o.state.sections["ph_composer.assemblies.materials"];
   o.paint();
   assert.strictEqual(view.newMaterial.root.hidden, true);
-  assert.strictEqual(view.createMaterial.disabled, true);
+  assert.strictEqual(library.surfaces[0].create.disabled, true);
   view.newMaterial.fields.name.value = "Cannot create";
   view.newMaterial.submit();
   assert.strictEqual(o.sent.length, 0);
 });
 
 test("a modified color draft survives an outside navigation click", function () {
-  var o = setup(), view = o.roots.library._view;
+  var o = setup(), view = materials(o);
   var record = o.state.sections["ph_composer.assemblies.materials"].value.records[0];
-  view.color.open(record, view.material.scroll._table.rows.mat_a.cells.color._color);
+  view.color.open(record, view.inventory.scroll._table.rows.mat_a.cells.color._color);
   view.color.hex.value = "#123456";
   var prevented = false;
   view.color.dismissOutside({ target: o.roots.assemblies, preventDefault: function () { prevented = true; } });
@@ -294,19 +297,19 @@ test("a modified color draft survives an outside navigation click", function () 
 });
 
 test("withdrawn create requests can reopen with an enabled Cancel after their feature returns", function () {
-  var cases = [["library", "newMaterial", "ph_composer.assemblies.materials"],
-    ["assemblies", "newAssembly", "ph_composer.assemblies.assemblies"]];
+  var cases = [[function (o) { return materials(o).newMaterial; }, "ph_composer.assemblies.materials"],
+    [function (o) { return o.roots.assemblies._view.newAssembly; }, "ph_composer.assemblies.assemblies"]];
   cases.forEach(function (entry) {
-    var o = setup(), form = o.roots[entry[0]]._view[entry[1]], section = o.state.sections[entry[2]];
+    var o = setup(), form = entry[0](o), section = o.state.sections[entry[1]];
     form.open();
     form.fields.name.value = "Pending new record";
     form.submit();
     assert.strictEqual(form.cancel.disabled, true);
-    delete o.state.sections[entry[2]];
+    delete o.state.sections[entry[1]];
     o.paint();
     assert.strictEqual(form.busy(), false);
     assert.strictEqual(form.root.hidden, true);
-    o.state.sections[entry[2]] = section;
+    o.state.sections[entry[1]] = section;
     o.paint();
     form.open();
     assert.strictEqual(form.cancel.disabled, false);
@@ -317,7 +320,7 @@ test("withdrawn create requests can reopen with an enabled Cancel after their fe
 });
 
 test("withdrawing an inventory forgets its queued range and ignores the late outcome", function () {
-  var o = setup(), inventory = o.roots.library._view.material;
+  var o = setup(), inventory = materials(o).inventory;
   var section = o.state.sections["ph_composer.assemblies.materials"];
   inventory.ranges.submit([
     { id: "mat_a", values: { notes: "First" }, expected_values: { notes: "" } },
@@ -352,14 +355,15 @@ test("retained Assembly and Attached-zone Duplicate listeners cannot write after
   var o = setup(), library = o.roots.library._view, assemblies = o.roots.assemblies._view;
   var assemblyDuplicate = assemblies.inventory.scroll._table.rows.asm_a.controls.duplicate.node;
   library.tabs.select("attached_zones");
-  var attachedDuplicate = library.attached.scroll._table.rows.atz_a.controls.duplicate.node;
+  var attached = library.surface("attached_zones").inventory;
+  var attachedDuplicate = attached.scroll._table.rows.atz_a.controls.duplicate.node;
   o.state.session = "new-model-session";
   o.paint();
   assemblyDuplicate.listeners.click({});
   attachedDuplicate.listeners.click({});
   assert.strictEqual(o.sent.length, 0);
   assert.strictEqual(assemblies.inventory.disposed, true);
-  assert.strictEqual(library.attached.disposed, true);
+  assert.strictEqual(attached.disposed, true);
 });
 
 
@@ -379,4 +383,47 @@ test("Assembly numeric inventory cells follow the displayed SI and IP units", fu
   assert.ok(displayed.includes(units.format(0.2, fields.U_VALUE,
     units.profile(fields.U_VALUE, o.modules.unit_preferences.current()))));
   assert.strictEqual(o.sent.length, 0);
+});
+
+test("Library surfaces come from registrations in order, and the active one owns the New button", function () {
+  var built = [];
+  var o = setup(function (modules) {
+    modules["library/section"].registerSurface({ id: "outside", label: "Outside", order: 15,
+      createLabel: "+ New Outside", build: function (root) {
+        built.push(root);
+        return { records: [1, 2], guard: function () { return null; }, render: function () {},
+          dispose: function () {}, create: function () { built.push("created"); },
+          canCreate: function () { return true; } };
+      } });
+  });
+  var view = o.roots.library._view;
+  assert.strictEqual(view.surfaces.map(function (entry) { return entry.spec.id; }).join(),
+    "materials,outside,attached_zones");
+  assert.strictEqual(view.surfaces.map(function (entry) { return entry.create.hidden; }).join(),
+    "false,true,true");
+  view.tabs.select("outside");
+  o.paint();
+  assert.strictEqual(view.heading.textContent, "Library · 2");
+  view.surfaces[1].create.listeners.click({});
+  assert.strictEqual(built[1], "created");
+  assert.strictEqual(view.selection(), null, "a surface without a record kind exports nothing");
+});
+
+test("a surface missing what its spec declares is refused when the pane builds it", function () {
+  assert.throws(function () {
+    setup(function (modules) {
+      modules["library/section"].registerSurface({ id: "broken", label: "Broken", createLabel: "+ New",
+        build: function () {
+          return { records: [], guard: function () { return null; }, render: function () {}, dispose: function () {} };
+        } });
+    });
+  }, /Library surface broken is missing create, canCreate/);
+});
+
+test("an open library export form blocks a Library tab change", function () {
+  var o = setup(), view = o.roots.library._view;
+  view.exportLibrary.listeners.click({});
+  assert.strictEqual(view.tabs.select("attached_zones"), false);
+  assert.strictEqual(view.tabs.active, "materials");
+  assert.ok(o.guards.library("assemblies"));
 });

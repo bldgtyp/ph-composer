@@ -406,7 +406,8 @@ The panel is one client of `PhComposer::API`, not the owner of any Model behavio
   for the panel to show it. Nothing a programmatic caller does opens or raises the panel; only the
   Extensions menu command does.
 - A development composition entry may add a script the page runs after the kit starts
-  (`Panel.add_development_script`). Shipping features declare their modules in `html/`.
+  (`Panel.add_development_script`). Shipping features declare their modules under
+  `html/features/<feature>/` ([EXTENSIBILITY.md](EXTENSIBILITY.md), "Organization and dependencies").
 
 The page:
 

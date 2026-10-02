@@ -12,7 +12,7 @@ function setup() {
     clearTimeout: clearTimeout };
   context.window = context;
   dom.attachEvents(context);
-  var modules = source.start(context, ["assembly_editor"]), sent = [], notices = [];
+  var modules = source.start(context, ["features/assemblies/editor"]), sent = [], notices = [];
   var state = fixtures.state();
   var record = state.sections[ASSEMBLIES].value.records[0];
   record.values.orientation = "first_layer_outside";
@@ -26,7 +26,7 @@ function setup() {
   record.display = { total_thickness_mm: 152, color: "#c5e1a5", thermal: { complete: true,
     u_effective_w_m2k: 0.21, u_construction_w_m2k: 0.22, rsi_m2k_w: 0.13, rse_m2k_w: 0.04, direction: "horizontal",
     warnings: [], message_parts: [] } };
-  var editor = new modules.assembly_editor.Editor("session", function (type, payload) {
+  var editor = new modules["features/assemblies/editor"].Editor("session", function (type, payload) {
     sent.push({ type: type, payload: payload });
   }, function (message) { notices.push(message); }, function () {});
   document.body.appendChild(editor.root);
@@ -43,8 +43,9 @@ function result(o, status) {
   o.editor.refresh(o.state, o.record.id);
 }
 test("Canvas reference retains mixed widths, steel metadata and keyed selection without thermal math", function () {
-  var o = setup(), materials = o.modules.assembly_editor_shared.lookup(o.state.sections[MATERIALS].value.records);
-  var canvas = o.modules.assembly_canvas, layout = canvas.geometry(o.record.values, materials);
+  var o = setup(), shared = o.modules["features/assemblies/editor_shared"];
+  var materials = shared.lookup(o.state.sections[MATERIALS].value.records);
+  var canvas = o.modules["features/assemblies/canvas"], layout = canvas.geometry(o.record.values, materials);
   assert.strictEqual(layout.widthMm, 600);
   assert.strictEqual(layout.heightMm, 152);
   assert.strictEqual(layout.segments[2].xMm, 560);
@@ -157,8 +158,8 @@ test("each topology and descriptor gesture sends one operation with physical tar
   });
 });
 test("membranes draw as rules and air barrier faces follow orientation without changing dimensions", function () {
-  var o = setup(), values = o.record.values, canvas = o.modules.assembly_canvas;
-  var materials = o.modules.assembly_editor_shared.lookup(o.state.sections[MATERIALS].value.records);
+  var o = setup(), values = o.record.values, canvas = o.modules["features/assemblies/canvas"];
+  var materials = o.modules["features/assemblies/editor_shared"].lookup(o.state.sections[MATERIALS].value.records);
   materials.mat_b.category = "membrane";
   values.air_barrier = { layer_id: "layer_studs", face: "exterior" };
   var layout = canvas.geometry(values, materials);
