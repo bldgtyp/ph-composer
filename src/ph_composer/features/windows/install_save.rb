@@ -7,18 +7,16 @@ module PhComposer
     module InstallSave
       module_function
 
-      def call(request, proposal)
+      # The arguments are the action's params (InstallsRegistration::PARAMS).
+      def call(request, proposal, types:, psi_install_types:, expected_settings:, imports: [])
         Units::Mutation.prepare(request, proposal)
-        unless Settings.read(request.model) == request.params.fetch("expected_settings")
+        unless Settings.read(request.model) == expected_settings
           raise CodedError.new("target.changed", "Window defaults changed; reopen the Installs session.")
         end
-        products = request.params.fetch("psi_install_types")
-        mapping = LibraryImports.resolve(request, proposal, request.params.fetch("imports", []),
-          products.fetch("create"))
-        mapping.merge!(create_products(request, proposal, products.fetch("create")))
-        update_products(request, proposal, products.fetch("update"))
+        mapping = LibraryImports.resolve(request, proposal, imports, psi_install_types.fetch("create"))
+        mapping.merge!(create_products(request, proposal, psi_install_types.fetch("create")))
+        update_products(request, proposal, psi_install_types.fetch("update"))
         unique_final_names!(request, proposal)
-        types = request.params.fetch("types")
         duplicate_targets!(types, "id")
         types.each { |target| update_type(request, proposal, target, mapping) }
         { "type_ids" => types.map { |target| target.fetch("id") }, "psi_install_type_ids" => mapping }

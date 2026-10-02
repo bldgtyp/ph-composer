@@ -66,7 +66,7 @@ module PhComposer
           :side_effects => Shapes.side_effects(
             "Removes only the chosen instances; incoming references must remain valid."),
           :examples => [{ "units" => [EXAMPLE_UNIT] }]) do |request, proposal|
-          Units::Repairs.remove(request, proposal)
+          Units::Repairs.remove(request, proposal, :units => request.params.fetch("units"))
         end
         feature.action("#{prefix}.rehost", :description => "Glue an unmoved Window to an explicit same-storage Face.",
           :params => Shapes.object({ "unit" => unit(reference, "The Window occurrence to glue."),
@@ -77,7 +77,8 @@ module PhComposer
           :examples => [{ "unit" => { "unit_id" => "wun_Ab12Cd34Ef56", "entity_path" => [1201, 1203] },
             "host" => { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201],
               "entity_path" => [1202], "entity_id" => nil } }]) do |request, proposal|
-          Units::Repairs.rehost(request, proposal)
+          Units::Repairs.rehost(request, proposal, :unit => request.params.fetch("unit"),
+                                                   :host => request.params.fetch("host"))
         end
       end
 
@@ -90,7 +91,8 @@ module PhComposer
           :side_effects => Shapes.side_effects(
             "Reuses one target definition and preserves each Unit's metadata and host."),
           :examples => [{ "units" => [EXAMPLE_UNIT], "type_id" => "wnt_Ab12Cd34Ef56" }]) do |request, proposal|
-          Units::Repairs.swap_type(request, proposal)
+          Units::Repairs.swap_type(request, proposal, :units => request.params.fetch("units"),
+                                                      :type_id => request.params.fetch("type_id"))
         end
         feature.action("#{FEATURE_ID}.units.reset_to_type",
           :description => "Reset explicit Windows of one Type to its authored geometry.",
@@ -100,7 +102,7 @@ module PhComposer
           :side_effects => Shapes.side_effects(
             "Repairs selected instances; regenerating an edited primary affects all its Units."),
           :examples => [{ "units" => [EXAMPLE_UNIT] }]) do |request, proposal|
-          Units::Repairs.reset_to_type(request, proposal)
+          Units::Repairs.reset_to_type(request, proposal, :units => request.params.fetch("units"))
         end
       end
 
@@ -115,7 +117,7 @@ module PhComposer
           :result => Shapes.object({ "repairs" => Shapes.list(repair) }), :undo_name => "Repair Copied Windows",
           :side_effects => "Rewrites only the copied Unit records' identities; geometry, glue and metadata stay.",
           :examples => [{ "units" => [EXAMPLE_UNIT] }]) do |request, proposal|
-          Units::Repairs.copied_identities(request, proposal)
+          Units::Repairs.copied_identities(request, proposal, :units => request.params.fetch("units"))
         end
       end
 
@@ -131,7 +133,8 @@ module PhComposer
           :side_effects => Shapes.side_effects(
             "Creates one independent Type; preserves physical panes, metadata and glue."),
           :examples => [{ "unit" => EXAMPLE_UNIT }]) do |request, proposal|
-          Units::Repairs.new_flipped_type(request, proposal)
+          Units::Repairs.new_flipped_type(request, proposal, :unit => request.params.fetch("unit"),
+                                                             :name => request.params["name"])
         end
       end
 
@@ -148,7 +151,8 @@ module PhComposer
           :examples => [{ "host" => { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201],
             "entity_path" => [1202], "entity_id" => nil }, "type_id" => "wnt_Ab12Cd34Ef56",
             "pane_paths" => [[1201, 1204]] }]) do |request, proposal|
-          Units::Repairs.restore(request, proposal)
+          Units::Repairs.restore(request, proposal, :host => request.params.fetch("host"),
+            :type_id => request.params.fetch("type_id"), :pane_paths => request.params.fetch("pane_paths"))
         end
       end
 
@@ -170,7 +174,10 @@ module PhComposer
           :examples => [{ "host" => { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201],
             "entity_path" => [1202], "entity_id" => nil }, "type_id" => "wnt_Ab12Cd34Ef56",
             "anchor" => "sill_center", "offsets" => { "x_m" => 1.0, "y_m" => 0.8 } }]) do |request, proposal|
-          Units::Actions.place(request, proposal)
+          params = request.params
+          Units::Actions.place(request, proposal, :host => params.fetch("host"), :type_id => params.fetch("type_id"),
+            :offsets => params.fetch("offsets"), :anchor => params.fetch("anchor"),
+            :user_data => params.fetch("user_data", {}))
         end
       end
     end

@@ -7,19 +7,21 @@ module PhComposer
     module SplitIdentityRepair
       module_function
 
-      def plan(request)
+      # `zones` is the repair's declared scope, which must name `zone` once; `retaining_entity_path`
+      # names the piece that keeps the old identity when geometry cannot prove it.
+      def plan(request, zone:, face_id:, zones:, retaining_entity_path: nil)
         model = request.model
         index = Index.new(model)
-        zone = Occurrences.resolve_zone(model, request.params.fetch("zone"), :mutable => true, :index => index)
+        zone = Occurrences.resolve_zone(model, zone, :mutable => true, :index => index)
         refuse_locked!(zone)
-        scope_paths = mutation_scope(request, zone, index)
-        old_id = request.params.fetch("face_id")
+        scope_paths = mutation_scope(model, zones, zone, index)
+        old_id = face_id
         unless Faces::ID_PATTERN.match?(old_id)
           raise CodedError.new("params.invalid", "face_id is not a Face identity.")
         end
         originals = split_entries(model, index, zone, old_id)
         envelope = copied_surface_envelope!(originals)
-        keeper, basis = keeper_path(originals, envelope, zone, old_id, request.params["retaining_entity_path"])
+        keeper, basis = keeper_path(originals, envelope, zone, old_id, retaining_entity_path)
         counterpart = reciprocal(model, index, envelope, old_id, scope_paths)
         changes = changed_pieces(request, index, zone, old_id, originals, keeper, envelope)
         if counterpart
@@ -31,13 +33,12 @@ module PhComposer
         { :zone => zone.reference, :old_id => old_id, :changes => changes,
           :piece_paths => originals.map { |entry| entry.fetch(:path) },
           :scope_paths => scope_paths.map { |path| path[0...-1] }.uniq,
-          :scope_zones => request.params.fetch("zones"),
-          :choice_path => request.params["retaining_entity_path"], :value => result }
+          :scope_zones => zones, :choice_path => retaining_entity_path, :value => result }
       end
 
-      def mutation_scope(request, zone, index)
-        scope = request.params.fetch("zones").map do |reference|
-          Occurrences.resolve_zone(request.model, reference, :mutable => true, :index => index)
+      def mutation_scope(model, zones, zone, index)
+        scope = zones.map do |reference|
+          Occurrences.resolve_zone(model, reference, :mutable => true, :index => index)
         end
         paths = scope.map(&:path)
         if paths.uniq.length != paths.length || !paths.include?(zone.path)

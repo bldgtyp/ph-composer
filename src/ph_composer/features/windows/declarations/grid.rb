@@ -128,7 +128,10 @@ module PhComposer
             :params => Shapes.object(properties), :result => Shapes::TYPE_RESULT, :undo_name => gesture.undo_name,
             :side_effects => Shapes.side_effects("Changes this Window Type; its placed Windows follow."),
             :examples => [gesture.example.merge("id" => EXAMPLE_ID, "expected_values" => {})]) do |request, proposal|
-            Operations.grid(request, proposal, command)
+            params = request.params
+            Operations.grid(request, proposal, :command => command, :id => params.fetch("id"),
+              :values => params.reject { |key, _| %w[id expected_values].include?(key) },
+              :expected_values => params.fetch("expected_values"))
           end
         end
       end

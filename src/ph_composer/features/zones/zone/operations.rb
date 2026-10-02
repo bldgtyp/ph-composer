@@ -12,15 +12,16 @@ module PhComposer
       end
     end
 
-    def repair_split_face(request, proposal)
-      plan = SplitIdentityRepair.plan(request)
+    def repair_split_face(request, proposal, zone:, face_id:, zones:, retaining_entity_path: nil)
+      plan = SplitIdentityRepair.plan(request, :zone => zone, :face_id => face_id, :zones => zones,
+                                               :retaining_entity_path => retaining_entity_path)
       scopes = plan.fetch(:scope_paths).map { |path| Operations::EntityScope.new(path) }
       proposal.add_step(SplitIdentityRepair::Step.new(plan), :scopes => scopes)
       plan.fetch(:value)
     end
 
-    def repair_identity(request, proposal)
-      zone = Repair.occurrence_at(request.model, request.params.fetch("zone_path"))
+    def repair_identity(request, proposal, zone_path:)
+      zone = Repair.occurrence_at(request.model, zone_path)
       plan = Repair.identity_plan(request.model, zone, request.revision, request.registry.catalog, request.engine)
       proposal.add_step(RepairIdentityStep.new(:reference => zone.reference, :plan => plan),
                         :scopes => [Operations::EntityScope.new(zone.path[0...-1])])
@@ -28,10 +29,9 @@ module PhComposer
       { "zone_id" => plan.fetch(:record).fetch("id"), "retired_pairs" => retired }
     end
 
-    def restore(request, proposal)
-      record, offer = Repair.restore_plan(request.model, request.params.fetch("parent_path"),
-                                          request.params.fetch("zone_id"))
-      parent_path = Occurrences.integer_path(request.params.fetch("parent_path"))
+    def restore(request, proposal, parent_path:, zone_id:)
+      record, offer = Repair.restore_plan(request.model, parent_path, zone_id)
+      parent_path = Occurrences.integer_path(parent_path)
       step = MakeZoneStep.new(:parent_path => parent_path, :entity_ids => offer.fetch("entity_ids"),
                               :record => record)
       proposal.add_step(step, :scopes => [Operations::EntityScope.new(parent_path)])
@@ -82,16 +82,17 @@ module PhComposer
       row.slice("id", "reference", "state").merge("values" => row.fetch("values").slice(*fields))
     end
 
-    def make(request, proposal)
-      parent_path = Occurrences.integer_path(request.params.fetch("parent_path"))
-      entity_ids = request.params.fetch("entity_ids").map { |id| Integer(id) }
+    # `name` defaults to the next free "Zone N".
+    def make(request, proposal, parent_path:, entity_ids:, name: nil)
+      parent_path = Occurrences.integer_path(parent_path)
+      entity_ids = entity_ids.map { |id| Integer(id) }
       validate_make_target!(request.model, parent_path, entity_ids)
       zone_id = Records::Identity.derived("zon", "model" => request.model.guid, "revision" => request.revision,
                                                 "parent_path" => parent_path, "entity_ids" => entity_ids.sort)
       if Occurrences.zones(request.model).any? { |zone| zone.record.fetch("id") == zone_id }
         raise CodedError.new("target.ambiguous", "The proposed Zone identity is already present.")
       end
-      name = request.params.fetch("name", default_name(request.model))
+      name ||= default_name(request.model)
       record = {
         "id" => zone_id, "schema_version" => 1, "name" => name,
         "building_segment" => Occurrences.default_segment(request.model), "level" => nil,
@@ -109,17 +110,16 @@ module PhComposer
       { "zone_id" => zone_id }
     end
 
-    def update(request, proposal)
-      reference = request.params.fetch("reference")
+    def update(request, proposal, reference:, values:, expected_values:)
       occurrence = Occurrences.resolve_zone(request.model, reference, :mutable => true)
       before = occurrence.record
-      expected = request.params.fetch("expected_values")
+      expected = expected_values
       changed = expected.keys.reject { |key| before[key] == expected[key] }
       unless changed.empty?
         raise CodedError.new("target.changed", "The Zone changed since it was read (#{changed.join(', ')}).")
       end
       after = DeepCopy.call(before)
-      request.params.fetch("values").each { |key, value| after[key] = DeepCopy.call(value) }
+      values.each { |key, value| after[key] = DeepCopy.call(value) }
       Schema.validate!(after)
       return { "zone_id" => before.fetch("id") } if before == after
 

@@ -37,7 +37,8 @@ module PhComposer
           :params => Shapes.create(kind), :result => Shapes::RESULT, :undo_name => "Create #{kind.label}",
           :side_effects => Shapes.side_effects("Creates one Model-owned definition."),
           :examples => [{ "values" => { "name" => "Example #{kind.label}" } }]) do |request, proposal|
-          Operations.create(request, proposal, collection)
+          Operations.create(request, proposal, collection, :values => request.params.fetch("values"),
+                                                           :user_data => request.params["user_data"])
         end
         feature.action("#{prefix}.update", :description => "Edit guarded authored values of one #{kind.label}.",
           :params => Shapes.update(kind), :result => collection == "types" ? Shapes::TYPE_RESULT : Shapes::RESULT,
@@ -45,15 +46,23 @@ module PhComposer
           :side_effects => Shapes.side_effects("Updates one definition and preserves its metadata."),
           :examples => [{ "id" => example_id, "values" => { "name" => "Edited" },
           "expected_values" => { "name" => "Original" } }]) do |request, proposal|
-          Operations.update(request, proposal, collection)
+          params = request.params
+          Operations.update(request, proposal, collection, :id => params.fetch("id"), :values => params.fetch("values"),
+            :expected_values => params.fetch("expected_values"), :user_data => params["user_data"])
         end
         feature.action("#{prefix}.duplicate", :description => "Duplicate a #{kind.label} with independent identity.",
           :params => duplicate_params(kind),
           :result => Shapes::RESULT, :undo_name => "Duplicate #{kind.label}",
           :side_effects => Shapes.side_effects(
             "Copies definition metadata and retains shared products; new elements get fresh ids."),
-          :examples => [{ "id" => example_id }]) { |request, proposal| Operations.duplicate(request, proposal,
-            collection) }
+          :examples => [{ "id" => example_id }]) do |request, proposal|
+          Operations.duplicate(request, proposal, collection, :id => request.params.fetch("id"),
+            :name => request.params["name"], :copy_datasheets => request.params.fetch("copy_datasheets", false))
+        end
+        declare_delete(feature, collection, kind, prefix, example_id)
+      end
+
+      def declare_delete(feature, collection, kind, prefix, example_id)
         replacement = if collection == "types"
                         Shapes.id(kind.id_prefix, "The Window Type every Window of the deleted one takes, or null " \
                                                   "to remove them. Needed while Windows use it.", :nullable => true)
@@ -67,8 +76,12 @@ module PhComposer
             :optional => %w[expected_values replacement_id]),
           :result => Shapes::RESULT, :undo_name => "Delete #{kind.label}",
           :side_effects => Shapes.side_effects("Rewrites referring definitions and defaults, then deletes atomically."),
-          :examples => [{ "id" => example_id }]) { |request, proposal| Operations.delete(request, proposal,
-            collection) }
+          :examples => [{ "id" => example_id }]) do |request, proposal|
+          params = request.params
+          Operations.delete(request, proposal, collection, :id => params.fetch("id"),
+            :expected_values => params.fetch("expected_values", {}), :retarget => params.key?("replacement_id"),
+            :replacement_id => params["replacement_id"])
+        end
       end
     end
   end

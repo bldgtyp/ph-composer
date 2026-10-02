@@ -88,34 +88,33 @@ module PhComposer
         end
       end
 
-      def install(feature, registry)
-        assignment = registry.declared_actions.find do |action|
-          action.name == "#{FEATURE_ID}.assemblies.segments.set_material"
-        end
+      def install(feature)
         adapter = Declarations::LibraryAdapter.new(:wire_kind => "materials", :wire_version => 1,
           :fingerprint_version => 1, :wire_schema => wire_schema, :mapped_schema => schema,
           :fingerprint_fields => FIELDS, :map => method(:map), :reverse => method(:reverse),
           :fingerprint => method(:fingerprint), :local_read => local_read,
           :create => callback(Shapes.create(Materials::Schema::KIND), Shapes::RESULT) do |request, proposal|
-            Operations.create(request, proposal, MATERIAL_KIND)
+            Operations.create(request, proposal, MATERIAL_KIND, :values => request.params.fetch("values"),
+                                                                :user_data => request.params["user_data"])
           end, :replace => replace,
-          :assign => assign(assignment))
+          :assign => assign)
         feature.library_kind(NAME, :contract_version => 1, :record_kind => MATERIAL_KIND, :adapter => adapter)
       end
 
       # The coordinator names only a local identity and an opaque assignment target. Translating
-      # that identity into this feature's action field stays with the owner of the assignment.
-      def assign(action)
-        target = DeepCopy.call(action.params)
-        target.fetch("properties").delete("material_id")
-        target.fetch("required").delete("material_id")
+      # that identity into the set_material gesture stays with the owner of the assignment, which
+      # calls the same operation its action does.
+      def assign
+        target = SegmentRegistration.params(SegmentRegistration.material_properties.reject do |key, _schema|
+          key == "material_id"
+        end)
         params = Shapes.object({ "target" => target, "local_id" => Shapes::TEXT })
-        callback(params, action.result) do |request, proposal|
-          nested = request.dup
-          nested.params = DeepCopy.call(request.params.fetch("target")).merge(
-            "material_id" => request.params.fetch("local_id")
-          )
-          action.handler.call(nested, proposal)
+        callback(params, Shapes::RESULT) do |request, proposal|
+          gesture = request.params.fetch("target").merge("material_id" => request.params.fetch("local_id"))
+          Operations.gesture(request, proposal, :id => gesture.fetch("id"),
+                                                :expected_values => gesture.fetch("expected_values")) do |record|
+            SegmentRegistration.set_material(record, gesture, request)
+          end
         end
       end
     end

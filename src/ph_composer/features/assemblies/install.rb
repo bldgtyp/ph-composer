@@ -36,7 +36,7 @@ module PhComposer
       RecordRegistration.install(feature)
       LayerRegistration.install(feature)
       SegmentRegistration.install(feature)
-      MaterialsLibrary.install(feature, registry)
+      MaterialsLibrary.install(feature)
       ExportProjection.install(feature)
       SourceReport.install(feature)
       Codes.install(feature)

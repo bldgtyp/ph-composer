@@ -3,16 +3,18 @@
 module PhComposer
   module Windows
     # Operations are the persistence boundary: pure type transformations return detached values;
-    # the supplied engine validates all records and references in one native proposal.
+    # the supplied engine validates all records and references in one native proposal. Each takes
+    # its inputs as arguments, so a library assignment calls the same operation its action does.
     module Operations
       module_function
 
-      def allocator(request)
+      # `inputs` are the operation's arguments, so two edits at one revision derive different ids.
+      def allocator(request, inputs)
         position = 0
         lambda do |prefix|
           position += 1
           Records::Identity.derived(prefix, "session" => request.session.id, "revision" => request.revision,
-            "params" => request.params, "position" => position)
+            "params" => inputs, "position" => position)
         end
       end
 
@@ -41,33 +43,30 @@ module PhComposer
         end
       end
 
-      def create(request, proposal, collection)
+      def create(request, proposal, collection, values:, user_data: nil)
         Units::Mutation.prepare(request, proposal)
         definition = kind(collection)
-        values = request.params.fetch("values")
         unique_name!(values.fetch("name"), records(request, definition))
         values = if collection == "types"
-                   Types.defaults(values, :identity => allocator(request))
+                   Types.defaults(values, :identity => allocator(request, "values" => values))
                  else
                    Products.defaults(collection, values)
                  end
-        id = request.engine.propose_create(definition.id, proposal, :values => values,
-          :user_data => request.params["user_data"])
+        id = request.engine.propose_create(definition.id, proposal, :values => values, :user_data => user_data)
         { "id" => id }
       end
 
-      def update(request, proposal, collection)
+      def update(request, proposal, collection, id:, values:, expected_values:, user_data: nil)
         Units::Mutation.prepare(request, proposal)
         definition = kind(collection)
-        id = request.params.fetch("id")
         before = request.engine.find(definition.id, id)
-        values = DeepCopy.call(request.params.fetch("values"))
+        values = DeepCopy.call(values)
         if values["name"]
           values["name"] = values["name"].strip
           unique_name!(values["name"], records(request, definition), :except => id)
         end
         request.engine.propose_update(definition.id, id, proposal, :values => values,
-          :expected_values => request.params.fetch("expected_values"), :user_data => request.params["user_data"])
+          :expected_values => expected_values, :user_data => user_data)
         if collection == "types"
           after = proposal.find(definition.id, id)&.after || before
           Units::Changes.type(request, proposal, :before => before, :after => after)
@@ -76,17 +75,16 @@ module PhComposer
         { "id" => id }
       end
 
-      def duplicate(request, proposal, collection)
+      def duplicate(request, proposal, collection, id:, name: nil, copy_datasheets: false)
         Units::Mutation.prepare(request, proposal)
         definition = kind(collection)
         rows = records(request, definition)
-        id = request.params.fetch("id")
-        identity = allocator(request)
+        identity = allocator(request, "id" => id)
         mapping = request.engine.propose_duplicate(definition.id, [id], proposal) do |values|
-          values["name"] = (request.params["name"] || duplicate_name(values.fetch("name"), rows)).strip
+          values["name"] = (name || duplicate_name(values.fetch("name"), rows)).strip
           unique_name!(values["name"], rows)
           values["source"] = { "kind" => "derived" }
-          values["datasheet_links"] = [] unless request.params.fetch("copy_datasheets", false)
+          values["datasheet_links"] = [] unless copy_datasheets
           if collection == "types"
             values["product_photos"] = []
             values.fetch("elements").each { |element| element["id"] = identity.call("wel") }
@@ -96,22 +94,23 @@ module PhComposer
         { "id" => mapping.fetch(id) }
       end
 
-      def delete(request, proposal, collection)
+      # `retarget` moves every use to `replacement_id` first; for Window Types a nil replacement
+      # removes their Windows. Without it, a remaining use refuses, and a Window Type's own Windows go.
+      def delete(request, proposal, collection, id:, expected_values: {}, retarget: false, replacement_id: nil)
         Units::Mutation.prepare(request, proposal)
         definition = kind(collection)
-        id = request.params.fetch("id")
         current = request.engine.find(definition.id, id)
-        replacement = request.params["replacement_id"]
+        replacement = replacement_id
         plan = nil
-        if request.params.key?("replacement_id")
+        if retarget
           raise CodedError.new("params.invalid", "Choose a different replacement record.") if replacement == id
           request.engine.find(definition.id, replacement) if replacement
           replace_products(request, proposal, definition, current, replacement) unless collection == "types"
           plan = request.retarget_references(definition.id, :from => id, :to => replacement)
         end
         request.engine.propose_delete(definition.id, id, proposal,
-          :expected_values => request.params.fetch("expected_values", {}), :reference_plan => plan)
-        if collection == "types" && !request.params.key?("replacement_id")
+          :expected_values => expected_values, :reference_plan => plan)
+        if collection == "types" && !retarget
           Units::TypeRetargeter.cleanup(request, proposal, current)
         end
         { "id" => id }
@@ -135,15 +134,14 @@ module PhComposer
         end
       end
 
-      def grid(request, proposal, command)
+      # One grid gesture (GridRegistration::GESTURES) on one Window Type; `values` are its own params.
+      def grid(request, proposal, command:, id:, values:, expected_values:)
         Units::Mutation.prepare(request, proposal)
-        id = request.params.fetch("id")
         before = request.engine.find(TYPE_KIND, id)
-        values = request.params.reject { |key, _| %w[id expected_values].include?(key) }
-        after = GridOperations.apply(before, command, values, :identity => allocator(request))
+        after = GridOperations.apply(before, command, values,
+                                     :identity => allocator(request, values.merge("command" => command, "id" => id)))
         changed = Types::KIND.values(after).select { |key, value| before[key] != value }
-        request.engine.propose_update(TYPE_KIND, id, proposal, :values => changed,
-          :expected_values => request.params.fetch("expected_values"))
+        request.engine.propose_update(TYPE_KIND, id, proposal, :values => changed, :expected_values => expected_values)
         Units::Changes.type(request, proposal, :before => before,
           :after => proposal.find(TYPE_KIND, id)&.after || before)
         { "id" => id, "unit_count" => Units::Changes.count(request.model, id) }

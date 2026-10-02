@@ -6,8 +6,8 @@ module PhComposer
     # plan Classify composes into its own step.
     module_function
 
-    def solve_adjacency(request, proposal)
-      plan = Adjacency.plan(request.model, request.params.fetch("zones"))
+    def solve_adjacency(request, proposal, zones:)
+      plan = Adjacency.plan(request.model, zones)
       plan.findings.each { |finding| proposal.add_finding(finding) }
       unless plan.retirements.empty?
         scopes = plan.retirements.map do |reference, _before, _after|
@@ -177,8 +177,8 @@ module PhComposer
       pair_id
     end
 
-    def retire_adjacency(request, proposal)
-      occurrence = Occurrences.resolve_face(request.model, request.params.fetch("face"), :mutable => true)
+    def retire_adjacency(request, proposal, face:)
+      occurrence = Occurrences.resolve_face(request.model, face, :mutable => true)
       record = Faces::FACE_STORE.read(occurrence.entity)
       pair_id = record&.dig("adjacency", "pair_id")
       retire_pair(request, proposal, occurrence, record)

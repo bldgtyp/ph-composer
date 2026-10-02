@@ -36,14 +36,14 @@ module PhComposer
                        :examples => [{ "zones" => EXAMPLE_ZONES }],
                        :side_effects => "Retires old Surface pairs and writes current endpoints.") do |
                          request, proposal|
-          Zones.solve_adjacency(request, proposal)
+          Zones.solve_adjacency(request, proposal, :zones => request.params.fetch("zones"))
         end
         feature.action("#{FEATURE_ID}.retire_adjacency", :description => "Retire one reciprocal Surface pair.",
                        :params => RETIRE_PARAMS, :result => RETIRE_RESULT, :undo_name => "Retire Zone Adjacency",
                        :examples => [{ "face" => EXAMPLE_FACE }],
                        :side_effects => "Removes both endpoints and leaves their boundary condition unassigned.") do |
                          request, proposal|
-          Zones.retire_adjacency(request, proposal)
+          Zones.retire_adjacency(request, proposal, :face => request.params.fetch("face"))
         end
         feature.proposal_participant("#{FEATURE_ID}.retire_pairs") do |request, targets, index = nil|
           Zones.retire_pairs(request, targets, index)

@@ -54,11 +54,12 @@ module PhComposer
           session.feature_state(:faces_selection_assignment) { AssignmentState.new }
         end
 
-        def open_assignment(request)
-          if request.params.fetch("revision") != request.revision
+        # `revision` is the one the caller read `faces` at; a later Model refuses.
+        def open_assignment(request, revision:, faces:)
+          if revision != request.revision
             raise CodedError.new("revision.stale", "The Model changed after the selected Faces were read.")
           end
-          references = request.params.fetch("faces")
+          references = faces
           index = Zones::Index.new(request.model)
           if references.length > Faces.gesture_face_limit
             raise CodedError.new("gesture.too_large", "Choose at most #{Faces.gesture_face_limit} Faces.")

@@ -96,20 +96,20 @@ module PhComposer
           end
         end
 
-        def assign(request, proposal)
-          id = request.params.fetch("assembly_id")
+        # A nil `assembly_id` clears the Assembly of every target.
+        def assign(request, proposal, assembly_id:, targets:)
+          id = assembly_id
           resolve(request, id) if id
-          targets = request.params.fetch("targets")
           unique = targets.group_by { |target| Occurrences.key(target.fetch("reference")) }
           if unique.values.any? { |group| group.uniq.length > 1 }
             raise CodedError.new("params.invalid", "Repeated Face targets disagree on identity or expected values.")
           end
-          Faces.send(:check_limit!, unique.length)
+          Faces.check_limit!(unique.length)
           index = Zones::Index.new(request.model)
           updates = unique.values.filter_map do |group|
             target = group.first
             occurrence, before = target_record(request, target.fetch("reference"), index)
-            Faces.send(:check_expected!, before, target.fetch("expected_values"))
+            Faces.check_expected!(before, target.fetch("expected_values"))
             update(request, occurrence, before, id)
           end
           propose(proposal, updates)
@@ -128,7 +128,7 @@ module PhComposer
         def update(request, occurrence, before, id)
           return nil if before.nil? && id.nil?
 
-          after = before ? DeepCopy.call(before) : Faces.send(:new_record, request, occurrence)
+          after = before ? DeepCopy.call(before) : Faces.new_record(request, occurrence)
           id.nil? ? after.delete("assembly_id") : after["assembly_id"] = id
           return nil if before == after
 
@@ -174,7 +174,7 @@ module PhComposer
           refuse_stranded(from, stranded) unless stranded.empty?
           updates.compact!
           propose(proposal, updates)
-          Faces.send(:reassignment_plan, updates)
+          Faces.reassignment_plan(updates)
         end
 
         def refuse_stranded(id, rows)

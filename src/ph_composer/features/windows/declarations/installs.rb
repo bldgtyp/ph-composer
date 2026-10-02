@@ -39,7 +39,10 @@ module PhComposer
             "Creates or edits installation products and updates type edges atomically."),
           :examples => [{ "types" => [], "psi_install_types" => { "create" => [], "update" => [] },
           "expected_settings" => Settings::DEFAULTS }]) do |request, proposal|
-          InstallSave.call(request, proposal)
+          params = request.params
+          InstallSave.call(request, proposal, :types => params.fetch("types"),
+            :psi_install_types => params.fetch("psi_install_types"),
+            :expected_settings => params.fetch("expected_settings"), :imports => params.fetch("imports", []))
         end
       end
     end

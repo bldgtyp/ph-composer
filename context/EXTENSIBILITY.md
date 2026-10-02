@@ -78,6 +78,17 @@ calls `request.retarget_references` and gives its returned plan to `propose_dele
 and all rewrites share one proposal and Undo entry. See [CONTRACTS.md](CONTRACTS.md), "Handler-side
 dependency reads" and "Compound proposals", for schemas, refusals and final-state checks.
 
+A feature's operations take their inputs as named arguments, beside the request that supplies the
+engine, Model, session and revision. The declaration block unpacks `request.params` once and calls
+the operation, for example
+`Operations.update(request, proposal, kind, id:, values:, expected_values:, user_data:)`. Anything
+else that needs the same change, such as a library kind's assignment, calls the same operation with
+its own values. A handler request is frozen. Only the foundation derives one (`request.with`), for a
+nested read, a retargeter or a library callback; feature code never copies or alters a request, and
+never reads another declaration's handler out of registration. Paged list queries are the
+exception: they keep reading the request, because the shell's paging reads the cursor and the
+filter from it.
+
 Phase 2 built three features on these contracts. `assemblies` is a definition feature (layer 1)
 and requires no geometry feature. `zones` requires `assemblies`, declares the Face's Assembly
 reference and owns assignment, usage and retargeting. `windows` requires `zones` and spans two
@@ -174,14 +185,15 @@ property names in canonical order. Pure mapping and reverse mapping use detached
 fingerprint returns a lowercase SHA-256 hex string and excludes provenance and local identities.
 
 Local operations are `Declarations::LibraryCallback` values with `params`, `result` schemas and
-`handler(request, proposal)`. Local reads receive no mutable proposal and cannot stage writes;
-their projected engine still reads the current caller's staged records. They return detached
+`handler(request, proposal)`. The request's engine is projected through the caller's proposal
+(`engine.projected`): every engine read sees the records the proposal has staged. Local reads
+receive no mutable proposal and cannot stage writes. They return detached
 projections with `id`, semantic `mapped` values, raw authored `expected_values` and optional
 `source`. Create and replacement run under the adapter's owner and share the coordinator's
 proposal. Their schemas describe the owner's normal values and guards. Replacement preserves
 identity, references and metadata. Optional assignment accepts the generic wrapper
 `{ "target" => owner_target, "local_id" => copied_id }`; only the kind owner translates the
-wrapper into its assignment action's vocabulary. Copy and assignment refuse together.
+wrapper, by calling the operation its assignment action calls. Copy and assignment refuse together.
 
 A feature requiring `ph_composer.library` may join a library copy to its own proposal through
 `request.participant("ph_composer.library.copy_into_proposal").call(request, proposal, copy_params)`.

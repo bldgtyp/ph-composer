@@ -15,24 +15,23 @@ module PhComposer
       module Repairs
         module_function
 
-        def targets(request)
-          references = request.params.fetch("units")
+        def targets(model, references)
           unless references.map { |reference| reference.fetch("entity_path") }.uniq.length == references.length
             raise CodedError.new("params.invalid", "Choose each Window occurrence once.")
           end
-          references.map { |reference| Occurrences.resolve(request.model, reference, :mutable => true) }
+          references.map { |reference| Occurrences.resolve(model, reference, :mutable => true) }
         end
 
         # New identities for the copies sharing each chosen Unit's identity, and nothing else; the
         # automatic repair every other Windows action makes is the same plan over every copy.
-        def copied_identities(request, proposal)
-          items = targets(request)
+        def copied_identities(request, proposal, units:)
+          items = targets(request.model, units)
           occurrences = Occurrences.all(request.model)
           counts = occurrences.map { |item| item.record.fetch("id") }.tally
           unless items.all? { |item| counts.fetch(item.record.fetch("id")) > 1 }
             raise CodedError.new("params.invalid", "Choose Windows whose identity is shared with a copy.")
           end
-          updates = IdentityPlan.build(occurrences, :identity => Operations.allocator(request),
+          updates = IdentityPlan.build(occurrences, :identity => Operations.allocator(request, "units" => units),
             :catalog => request.registry.catalog, :engine => request.engine,
             :only => items.map { |item| item.record.fetch("id") })
           proposal.add_step(IdentityStep.new(updates), :scopes => [MutationScope.new])
@@ -46,27 +45,29 @@ module PhComposer
           Occurrences.all(request.model).to_h { |item| [item.path, Mutation.record(proposal, item)] }
         end
 
-        def restore(request, proposal)
-          identity = Operations.allocator(request)
+        # `pane_paths` are the orphaned panes the new Unit adopts on `host`.
+        def restore(request, proposal, host:, type_id:, pane_paths:)
+          identity = Operations.allocator(request, "host" => host, "type_id" => type_id, "pane_paths" => pane_paths)
           Mutation.prepare(request, proposal, :identity => identity)
           reads = ReadContext.new(request)
-          host = reads.host_reference(request.params.fetch("host"))
-          type = request.engine.find(TYPE_KIND, request.params.fetch("type_id"))
+          host = reads.host_reference(host)
+          type = request.engine.find(TYPE_KIND, type_id)
           record = { "id" => identity.call("wun"), "schema_version" => 1,
             "window_type_id" => type.fetch("id"), "anchor" => Anchors::DEFAULT }
           step = RestoreStep.new(:model => request.model, :host => host, :type => type, :record => record,
-            :pane_paths => request.params.fetch("pane_paths"), :existing_polygons_m => reads.other_polygons)
+            :pane_paths => pane_paths, :existing_polygons_m => reads.other_polygons)
           proposal.add_step(step, :scopes => step.scopes)
           { "unit_id" => record.fetch("id") }
         end
 
-        def new_flipped_type(request, proposal)
-          item = Occurrences.resolve(request.model, request.params.fetch("unit"), :mutable => true)
+        # `name` defaults to "<source name> (flipped)".
+        def new_flipped_type(request, proposal, unit:, name: nil)
+          item = Occurrences.resolve(request.model, unit, :mutable => true)
           Mutation.prepare(request, proposal)
           expected = projected_records(request, proposal)
           reads = ReadContext.new(request)
           source = request.engine.find(TYPE_KIND, item.record.fetch("window_type_id"))
-          target = flipped_type(request, proposal, source)
+          target = flipped_type(request, proposal, source, :name => name, :seed => { "unit" => unit, "name" => name })
           step = FlipStep.new(:model => request.model, :source_type => source, :target_type => target,
             :reference => item.reference, :expected_record => expected.fetch(item.path), :expected_records => expected,
             :host => reads.host(item), :other_polygons_m => reads.other_polygons(:except => [item.path]))
@@ -75,10 +76,10 @@ module PhComposer
           { "unit_id" => expected.fetch(item.path).fetch("id"), "type_id" => target.fetch("id") }
         end
 
-        def flipped_type(request, proposal, source)
-          identity = Operations.allocator(request)
+        def flipped_type(request, proposal, source, name:, seed:)
+          identity = Operations.allocator(request, seed)
           rows = Operations.records(request, Types::KIND)
-          name = request.params["name"] || Operations.duplicate_name("#{source.fetch('name')} (flipped)", rows)
+          name ||= Operations.duplicate_name("#{source.fetch('name')} (flipped)", rows)
           Operations.unique_name!(name, rows)
           mapping = request.engine.propose_duplicate(TYPE_KIND, [source.fetch("id")], proposal) do |values|
             values["name"] = name.strip
@@ -92,12 +93,12 @@ module PhComposer
         end
         private_class_method :flipped_type
 
-        def swap_type(request, proposal)
-          items = targets(request)
+        def swap_type(request, proposal, units:, type_id:)
+          items = targets(request.model, units)
           Mutation.prepare(request, proposal)
           expected = projected_records(request, proposal)
           reads = ReadContext.new(request)
-          type = request.engine.find(TYPE_KIND, request.params.fetch("type_id"))
+          type = request.engine.find(TYPE_KIND, type_id)
           others = reads.other_polygons(:except => items.map(&:path))
           step = SwapStep.new(:model => request.model, :target_type => type, :expected_records => expected,
             :items => items.map do |item|
@@ -108,8 +109,8 @@ module PhComposer
           { "unit_ids" => items.map { |item| expected.fetch(item.path).fetch("id") } }
         end
 
-        def reset_to_type(request, proposal)
-          items = targets(request)
+        def reset_to_type(request, proposal, units:)
+          items = targets(request.model, units)
           ids = items.map { |item| item.record.fetch("window_type_id") }.uniq
           unless ids.length == 1
             raise CodedError.new("params.invalid", "Reset one Window Type at a time.")
@@ -129,8 +130,8 @@ module PhComposer
           { "unit_ids" => items.map { |item| expected.fetch(item.path).fetch("id") } }
         end
 
-        def remove(request, proposal)
-          items = targets(request)
+        def remove(request, proposal, units:)
+          items = targets(request.model, units)
           Mutation.prepare(request, proposal)
           expected = projected_records(request, proposal)
           steps = items.map do |item|
@@ -156,12 +157,12 @@ module PhComposer
           { "unit_ids" => steps.map { |step| step.affected.first.fetch("id") } }
         end
 
-        def rehost(request, proposal)
-          item = Occurrences.resolve(request.model, request.params.fetch("unit"), :mutable => true)
+        def rehost(request, proposal, unit:, host:)
+          item = Occurrences.resolve(request.model, unit, :mutable => true)
           Mutation.prepare(request, proposal)
           expected = projected_records(request, proposal)
           reads = ReadContext.new(request)
-          host = reads.host_reference(request.params.fetch("host"))
+          host = reads.host_reference(host)
           type = request.engine.find(TYPE_KIND, item.record.fetch("window_type_id"))
           definition_ids = reads.occurrences.map { |row| row.entity.definition.persistent_id }
           scope = MutationScope.new(:definition_ids => definition_ids)

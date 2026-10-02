@@ -14,7 +14,7 @@ class HandlerRequestTest < PhComposerTestCase
   def test_memo_is_computed_once_and_shared_with_a_nested_request_of_the_same_owner
     calls = 0
     2.times { @request.memo(:catalog) { calls += 1 } }
-    nested = @request.dup
+    nested = @request.with
 
     assert_equal 1, nested.memo(:catalog) { calls += 1 }
     assert_equal 1, calls
@@ -22,11 +22,19 @@ class HandlerRequestTest < PhComposerTestCase
 
   def test_memo_is_scoped_to_owner_and_engine
     @request.memo(:catalog) { "zones" }
-    other_owner = @request.dup.tap { |request| request.owner = "ph_composer.windows" }
-    other_engine = @request.dup.tap { |request| request.engine = request.engine.dup }
+    other_owner = @request.with(:owner => "ph_composer.windows")
+    other_engine = @request.with(:engine => @request.engine.dup)
 
     assert_equal "windows", other_owner.memo(:catalog) { "windows" }
     assert_equal "projected", other_engine.memo(:catalog) { "projected" }
     assert_equal "zones", @request.memo(:catalog) { "again" }
+  end
+
+  def test_a_request_is_frozen_and_with_derives_a_new_one
+    assert_raises(FrozenError) { @request.owner = "ph_composer.windows" }
+    nested = @request.with(:params => { "id" => "x" }, :owner => "ph_composer.windows")
+
+    assert_equal [{ "id" => "x" }, "ph_composer.windows"], [nested.params, nested.owner]
+    assert_equal [{}, "ph_composer.zones"], [@request.params, @request.owner]
   end
 end
