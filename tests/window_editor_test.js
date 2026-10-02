@@ -15,7 +15,7 @@ test("drawing renders explicit three elements including Empty and canonical U he
   var o = setup(); assert.strictEqual(o.editor.canvas.root.querySelectorAll("[data-window-element]").length, 3);
   assert.ok(text(o.editor.uwMetric).includes("0.8")); assert.ok(text(o.editor.installedMetric).includes("0.9"));
   assert.strictEqual(o.sent.length, 0);
-  o.state.sections["ph_composer.windows.types"].value.records[0].display.thermal.u_w = null;
+  o.state.sections["ph_composer.windows.types"].value.records[0].display.thermal.uw_w_m2k = null;
   o.editor.render(o.state); assert.strictEqual(o.editor.uwMetric.textContent, "—");
 });
 test("toolbar sends one named grid action with explicit IDs and raw expected values", function () {
@@ -58,7 +58,8 @@ function outcome(o, status) {
 test("one and two-element drawings are independent of missing thermal data", function () {
   var o = setup(), record = o.state.sections["ph_composer.windows.types"].value.records[0];
   record.values.elements = record.values.elements.slice(0, 2); record.values.columns_m = [0.5, null];
-  record.display.thermal = { elements: [], u_w: null, u_effective: null, findings: ["Enter all grid dimensions."] };
+  record.display.thermal = { elements: [], uw_w_m2k: null, u_effective_w_m2k: null,
+    findings: [{ code: "window_type.dimensions_incomplete", message: "Enter all grid dimensions." }] };
   o.editor.render(o.state);
     assert.strictEqual(o.editor.canvas.root.querySelectorAll("[data-window-element]").length, 2);
   assert.ok(o.editor.canvas.root.querySelector("[aria-label='Set column 2 width']"));

@@ -33,8 +33,8 @@ module PhComposer
         flags = preview_flags(assembly, materials)
         block = {
           "complete" => flags.empty?, "flags" => flags, "warnings" => flags.map { |flag| PREVIEW_MESSAGES.fetch(flag) },
-          "u_effective" => nil, "u_construction" => nil, "r_construction" => nil,
-          "rsi" => films.fetch("r_in"), "rse" => films.fetch("r_out"),
+          "u_effective_w_m2k" => nil, "u_construction_w_m2k" => nil, "r_construction_m2k_w" => nil,
+          "rsi_m2k_w" => films.fetch("r_in"), "rse_m2k_w" => films.fetch("r_out"),
           "direction" => HEAT_FLOW.fetch(assembly["type"], "horizontal")
         }
         return block if flags.any?
@@ -114,9 +114,9 @@ module PhComposer
         r_construction = (r_parallel + r_isothermal) / 2.0
         films = surface_resistances(assembly)
         {
-          "u_effective" => round6(1.0 / (r_construction + films.fetch("r_in") + films.fetch("r_out"))),
-          "u_construction" => round6(1.0 / r_construction),
-          "r_construction" => round6(r_construction)
+          "u_effective_w_m2k" => round6(1.0 / (r_construction + films.fetch("r_in") + films.fetch("r_out"))),
+          "u_construction_w_m2k" => round6(1.0 / r_construction),
+          "r_construction_m2k_w" => round6(r_construction)
         }
       end
 

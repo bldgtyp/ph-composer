@@ -328,8 +328,8 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
     var readOnly = !this.enabled || this.requests.busy() || Boolean(this.dimensionField && this.dimensionField.editing);
     card.name.disabled = readOnly; card.operation.disabled = readOnly;
     Object.keys(card.directions).forEach(function (direction) { card.directions[direction].disabled = readOnly; });
-    card.uw.textContent = bare(detail.u_w, U_VALUE); card.value.title = detail.u_w == null ? "" : format(detail.u_w,
-      U_VALUE);
+    card.uw.textContent = bare(detail.uw_w_m2k, U_VALUE);
+    card.value.title = detail.uw_w_m2k == null ? "" : format(detail.uw_w_m2k, U_VALUE);
     card.units.forEach(function (unit, index) { var field = CARD_COLUMNS[index][1]; unit.textContent = field ? "[" +
       units.displayUnit(field, units.profile(field)) + "]" : ""; });
     var needs = cell.kind === "empty" ? {} : this.elementFindings(cell, detail);
@@ -355,7 +355,7 @@ PhComposerUI.define("window_cards", ["panel", "unit_field", "units", "window_edi
         INSTALL_SOURCES[edge.install.source];
       var values = glazing ? [bare(product && product.ug_w_m2k, U_VALUE), "—", bare(product && product.g_value),
         "—"] : [bare(product && product.uf_w_m2k, U_VALUE), bare(product && product.width_m, WINDOW_DIMENSION), "—",
-        bare(edge && edge.install.psi, LINEAR_PSI)];
+        bare(edge && edge.install.psi_w_mk, LINEAR_PSI)];
       row.cells.forEach(function (node, index) { node.textContent = values[index]; });
       row.cells[3].classList.toggle("is-muted", Boolean(source)); row.cells[3].title = source || "";
       flag(row.row, row.flag, needs[key]);

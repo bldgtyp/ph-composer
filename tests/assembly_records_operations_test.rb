@@ -44,7 +44,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     refute row["values"].key?("color")
     assert_match(/\A#[0-9a-f]{6}\z/, row["display"]["color"])
     assert_equal ["assembly.segment_unassigned"], row["display"]["thermal"]["flags"]
-    assert_nil row["display"]["thermal"]["u_effective"]
+    assert_nil row["display"]["thermal"]["u_effective_w_m2k"]
     assert_equal 100, row["display"]["total_thickness_mm"]
   end
 

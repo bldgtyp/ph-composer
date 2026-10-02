@@ -1848,7 +1848,9 @@ Result:
           "kind",
           "extension_status",
           "findings",
-          "display"
+          "display",
+          "export_ready",
+          "export_blockers"
         ],
         "properties": {
           "id": {
@@ -2279,11 +2281,11 @@ Result:
                   "flags",
                   "warnings",
                   "message_parts",
-                  "u_effective",
-                  "u_construction",
-                  "r_construction",
-                  "rsi",
-                  "rse",
+                  "u_effective_w_m2k",
+                  "u_construction_w_m2k",
+                  "r_construction_m2k_w",
+                  "rsi_m2k_w",
+                  "rse_m2k_w",
                   "direction"
                 ],
                 "properties": {
@@ -2311,32 +2313,32 @@ Result:
                       }
                     }
                   },
-                  "u_effective": {
+                  "u_effective_w_m2k": {
                     "type": [
                       "number",
                       "null"
                     ],
                     "x-unit": "W/m2K"
                   },
-                  "u_construction": {
+                  "u_construction_w_m2k": {
                     "type": [
                       "number",
                       "null"
                     ],
                     "x-unit": "W/m2K"
                   },
-                  "r_construction": {
+                  "r_construction_m2k_w": {
                     "type": [
                       "number",
                       "null"
                     ],
                     "x-unit": "m2K/W"
                   },
-                  "rsi": {
+                  "rsi_m2k_w": {
                     "type": "number",
                     "x-unit": "m2K/W"
                   },
-                  "rse": {
+                  "rse_m2k_w": {
                     "type": "number",
                     "x-unit": "m2K/W"
                   },
@@ -2349,6 +2351,55 @@ Result:
                 "type": "boolean"
               }
             }
+          },
+          "export_ready": {
+            "type": "boolean",
+            "description": "Whether a Face can export with this Assembly."
+          },
+          "export_blockers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "message_parts"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "message_parts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "assembly_id": {
+                  "type": "string"
+                },
+                "material_id": {
+                  "type": "string"
+                },
+                "layer_id": {
+                  "type": "string"
+                },
+                "segment_id": {
+                  "type": "string"
+                },
+                "missing_fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "description": "Why a Face cannot export with it; empty when export_ready."
           }
         }
       }
@@ -2445,7 +2496,9 @@ Result:
           "kind",
           "extension_status",
           "findings",
-          "display"
+          "display",
+          "export_ready",
+          "export_blockers"
         ],
         "properties": {
           "id": {
@@ -2876,11 +2929,11 @@ Result:
                   "flags",
                   "warnings",
                   "message_parts",
-                  "u_effective",
-                  "u_construction",
-                  "r_construction",
-                  "rsi",
-                  "rse",
+                  "u_effective_w_m2k",
+                  "u_construction_w_m2k",
+                  "r_construction_m2k_w",
+                  "rsi_m2k_w",
+                  "rse_m2k_w",
                   "direction"
                 ],
                 "properties": {
@@ -2908,32 +2961,32 @@ Result:
                       }
                     }
                   },
-                  "u_effective": {
+                  "u_effective_w_m2k": {
                     "type": [
                       "number",
                       "null"
                     ],
                     "x-unit": "W/m2K"
                   },
-                  "u_construction": {
+                  "u_construction_w_m2k": {
                     "type": [
                       "number",
                       "null"
                     ],
                     "x-unit": "W/m2K"
                   },
-                  "r_construction": {
+                  "r_construction_m2k_w": {
                     "type": [
                       "number",
                       "null"
                     ],
                     "x-unit": "m2K/W"
                   },
-                  "rsi": {
+                  "rsi_m2k_w": {
                     "type": "number",
                     "x-unit": "m2K/W"
                   },
-                  "rse": {
+                  "rse_m2k_w": {
                     "type": "number",
                     "x-unit": "m2K/W"
                   },
@@ -2946,6 +2999,55 @@ Result:
                 "type": "boolean"
               }
             }
+          },
+          "export_ready": {
+            "type": "boolean",
+            "description": "Whether a Face can export with this Assembly."
+          },
+          "export_blockers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "message_parts"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "message_parts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "assembly_id": {
+                  "type": "string"
+                },
+                "material_id": {
+                  "type": "string"
+                },
+                "layer_id": {
+                  "type": "string"
+                },
+                "segment_id": {
+                  "type": "string"
+                },
+                "missing_fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "description": "Why a Face cannot export with it; empty when export_ready."
           }
         }
       }
@@ -7737,8 +7839,8 @@ Result:
                 "required": [
                   "elements",
                   "findings",
-                  "u_w",
-                  "u_effective",
+                  "uw_w_m2k",
+                  "u_effective_w_m2k",
                   "complete"
                 ],
                 "properties": {
@@ -7755,8 +7857,8 @@ Result:
                         "h_construction_w_k",
                         "h_install_w_k",
                         "g_value",
-                        "u_w",
-                        "u_effective",
+                        "uw_w_m2k",
+                        "u_effective_w_m2k",
                         "complete"
                       ],
                       "properties": {
@@ -7797,7 +7899,7 @@ Result:
                                 "required": [
                                   "source",
                                   "id",
-                                  "psi"
+                                  "psi_w_mk"
                                 ],
                                 "properties": {
                                   "source": {
@@ -7809,11 +7911,12 @@ Result:
                                       "null"
                                     ]
                                   },
-                                  "psi": {
+                                  "psi_w_mk": {
                                     "type": [
                                       "number",
                                       "null"
-                                    ]
+                                    ],
+                                    "x-unit": "W/mK"
                                   }
                                 }
                               },
@@ -7851,7 +7954,23 @@ Result:
                         "findings": {
                           "type": "array",
                           "items": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "code",
+                              "message"
+                            ],
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              },
+                              "side": {
+                                "type": "string"
+                              }
+                            }
                           }
                         },
                         "h_construction_w_k": {
@@ -7895,14 +8014,14 @@ Result:
                             "null"
                           ]
                         },
-                        "u_w": {
+                        "uw_w_m2k": {
                           "type": [
                             "number",
                             "null"
                           ],
                           "x-unit": "W/m2K"
                         },
-                        "u_effective": {
+                        "u_effective_w_m2k": {
                           "type": [
                             "number",
                             "null"
@@ -7918,7 +8037,23 @@ Result:
                   "findings": {
                     "type": "array",
                     "items": {
-                      "type": "string"
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "side": {
+                          "type": "string"
+                        }
+                      }
                     }
                   },
                   "area_m2": {
@@ -7949,14 +8084,14 @@ Result:
                     ],
                     "x-unit": "W/K"
                   },
-                  "u_w": {
+                  "uw_w_m2k": {
                     "type": [
                       "number",
                       "null"
                     ],
                     "x-unit": "W/m2K"
                   },
-                  "u_effective": {
+                  "u_effective_w_m2k": {
                     "type": [
                       "number",
                       "null"
@@ -8649,8 +8784,8 @@ Result:
                 "required": [
                   "elements",
                   "findings",
-                  "u_w",
-                  "u_effective",
+                  "uw_w_m2k",
+                  "u_effective_w_m2k",
                   "complete"
                 ],
                 "properties": {
@@ -8667,8 +8802,8 @@ Result:
                         "h_construction_w_k",
                         "h_install_w_k",
                         "g_value",
-                        "u_w",
-                        "u_effective",
+                        "uw_w_m2k",
+                        "u_effective_w_m2k",
                         "complete"
                       ],
                       "properties": {
@@ -8709,7 +8844,7 @@ Result:
                                 "required": [
                                   "source",
                                   "id",
-                                  "psi"
+                                  "psi_w_mk"
                                 ],
                                 "properties": {
                                   "source": {
@@ -8721,11 +8856,12 @@ Result:
                                       "null"
                                     ]
                                   },
-                                  "psi": {
+                                  "psi_w_mk": {
                                     "type": [
                                       "number",
                                       "null"
-                                    ]
+                                    ],
+                                    "x-unit": "W/mK"
                                   }
                                 }
                               },
@@ -8763,7 +8899,23 @@ Result:
                         "findings": {
                           "type": "array",
                           "items": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "code",
+                              "message"
+                            ],
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              },
+                              "side": {
+                                "type": "string"
+                              }
+                            }
                           }
                         },
                         "h_construction_w_k": {
@@ -8807,14 +8959,14 @@ Result:
                             "null"
                           ]
                         },
-                        "u_w": {
+                        "uw_w_m2k": {
                           "type": [
                             "number",
                             "null"
                           ],
                           "x-unit": "W/m2K"
                         },
-                        "u_effective": {
+                        "u_effective_w_m2k": {
                           "type": [
                             "number",
                             "null"
@@ -8830,7 +8982,23 @@ Result:
                   "findings": {
                     "type": "array",
                     "items": {
-                      "type": "string"
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "side": {
+                          "type": "string"
+                        }
+                      }
                     }
                   },
                   "area_m2": {
@@ -8861,14 +9029,14 @@ Result:
                     ],
                     "x-unit": "W/K"
                   },
-                  "u_w": {
+                  "uw_w_m2k": {
                     "type": [
                       "number",
                       "null"
                     ],
                     "x-unit": "W/m2K"
                   },
-                  "u_effective": {
+                  "u_effective_w_m2k": {
                     "type": [
                       "number",
                       "null"
@@ -9114,7 +9282,24 @@ Result:
                   "type": "string"
                 },
                 "repair": {
-                  "type": "string"
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "params"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "params": {
+                      "type": "object"
+                    }
+                  },
+                  "description": "The action that repairs this condition and its params for this Window; a rehost adds `host` and a swap adds `type_id`. Null when no single action repairs it."
                 }
               }
             }
@@ -9446,7 +9631,24 @@ Result:
                   "type": "string"
                 },
                 "repair": {
-                  "type": "string"
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "params"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "params": {
+                      "type": "object"
+                    }
+                  },
+                  "description": "The action that repairs this condition and its params for this Window; a rehost adds `host` and a swap adds `type_id`. Null when no single action repairs it."
                 }
               }
             }

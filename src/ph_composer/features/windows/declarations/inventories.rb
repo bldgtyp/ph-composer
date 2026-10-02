@@ -4,7 +4,8 @@ module PhComposer
   module Windows
     module InventoryRegistration
       NUM = { "type" => %w[number null] }.freeze
-      EDGE_INSTALL = Shapes.object({ "source" => Shapes::TEXT, "id" => { "type" => %w[string null] }, "psi" => NUM })
+      EDGE_INSTALL = Shapes.object({ "source" => Shapes::TEXT, "id" => { "type" => %w[string null] },
+        "psi_w_mk" => NUM.merge("x-unit" => "W/mK") })
       EDGE = Shapes.object({ "side" => Shapes::TEXT, "length_m" => NUM.merge("x-unit" => "m"),
                 "install" => EDGE_INSTALL, "frame_area_m2" => NUM.merge("x-unit" => "m2"),
                 "glass_edge_m" => NUM.merge("x-unit" => "m"), "h_frame_w_k" => NUM.merge("x-unit" => "W/K"),
@@ -17,12 +18,12 @@ module PhComposer
                 "h_construction_w_k" => NUM.merge("x-unit" => "W/K"), "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
                 "glazing_area_m2" => NUM.merge("x-unit" => "m2"), "frame_area_m2" => NUM.merge("x-unit" => "m2"),
                 "h_glazing_w_k" => NUM.merge("x-unit" => "W/K"), "g_value" => NUM,
-                "u_w" => NUM.merge("x-unit" => "W/m2K"), "u_effective" => NUM.merge("x-unit" => "W/m2K"),
+                "uw_w_m2k" => NUM.merge("x-unit" => "W/m2K"), "u_effective_w_m2k" => NUM.merge("x-unit" => "W/m2K"),
                 "complete" => { "type" => "boolean" } }, :optional => %w[glazing_area_m2 frame_area_m2 h_glazing_w_k])
       THERMAL = Shapes.object({ "elements" => Shapes.list(ELEMENT_THERMAL), "findings" => Shapes.list(THERMAL_FINDING),
                 "area_m2" => NUM.merge("x-unit" => "m2"), "empty_area_m2" => NUM.merge("x-unit" => "m2"),
                 "h_construction_w_k" => NUM.merge("x-unit" => "W/K"), "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
-                "u_w" => NUM.merge("x-unit" => "W/m2K"), "u_effective" => NUM.merge("x-unit" => "W/m2K"),
+                "uw_w_m2k" => NUM.merge("x-unit" => "W/m2K"), "u_effective_w_m2k" => NUM.merge("x-unit" => "W/m2K"),
                 "complete" => { "type" => "boolean" } },
         :optional => %w[area_m2 empty_area_m2 h_construction_w_k h_install_w_k])
       DISPLAY = Shapes.object({ "thermal" => THERMAL, "width_m" => NUM.merge("x-unit" => "m"),

@@ -58,7 +58,8 @@ module PhComposer
         end
         plan = @plans[type["id"]]
         unless plan
-          issue("window_type.dimensions_incomplete", "Complete the placed Window Type's finite positive dimensions.", record, reference)
+          issue("window_type.dimensions_incomplete", "Complete the placed Window Type's finite positive dimensions.",
+            record, reference)
           return
         end
         definition = entry.native && entry.native["definition"]
@@ -120,8 +121,12 @@ module PhComposer
 
       def validate_transform(entry, record, reference)
         state = Units::WorldGeometry.transform_state(entry.transform)
-        issue("window.scaled", "The Unit has native in-plane scaling. Reset to Type.", record, reference) if state.scaled
-        issue("window.sheared", "The Unit has native in-plane shear. Reset to Type.", record, reference) if state.sheared
+        if state.scaled
+          issue("window.scaled", "The Unit has native in-plane scaling. Reset to Type.", record, reference)
+        end
+        if state.sheared
+          issue("window.sheared", "The Unit has native in-plane shear. Reset to Type.", record, reference)
+        end
         issue("window.mirrored", "The Unit is mirrored. Make a new flipped Type.", record, reference) if state.mirrored
       end
 
@@ -138,10 +143,12 @@ module PhComposer
         end
         values = face["record"]
         unless values && values["face_type"] && face["zone_id"]
-          issue("window.host_unclassified", "The Unit's host Face needs classification and an owning Zone.", record, reference)
+          issue("window.host_unclassified", "The Unit's host Face needs classification and an owning Zone.", record,
+            reference)
         end
         if values && values["face_type"] && !%w[Wall RoofCeiling].include?(values["face_type"])
-          issue("window.host_type_unsupported", "Window export requires a Wall or Roof/Ceiling host Face.", record, reference)
+          issue("window.host_type_unsupported", "Window export requires a Wall or Roof/Ceiling host Face.", record,
+            reference)
         end
         boundary = values && values["boundary_condition"]
         if boundary == "Surface"
@@ -166,7 +173,8 @@ module PhComposer
           detail = thermal.fetch("elements").find { |row| row["id"] == cell["id"] }
           identifiers += detail.fetch("edges").map { |edge| [edge.fetch("install")["id"], "installs"] } if detail
           if identifiers.any? { |id, collection| id && !@products.fetch(collection).key?(id) }
-            issue("window_type.product_dangling", "A placed Type names an unavailable Frame, Glazing or Psi-Install Type.",
+            issue("window_type.product_dangling",
+              "A placed Type names an unavailable Frame, Glazing or Psi-Install Type.",
               record, reference)
           end
         end
@@ -177,10 +185,11 @@ module PhComposer
             :blocking => code != "window_type.frame_operation_mismatch")
         end
         thermal.fetch("elements").each do |element|
-          u_w = element["u_w"]
+          u_w = element["uw_w_m2k"]
           next if u_w.nil? || (u_w.finite? && u_w.positive? && u_w <= 12)
 
-          issue("window_type.construction_unavailable", "The placed element's Uw must be greater than zero and no more than " \
+          issue("window_type.construction_unavailable",
+            "The placed element's Uw must be greater than zero and no more than " \
             "12 W/m2K for the pinned Honeybee simple glazing material. Authored values remain unchanged.",
             record, reference)
         end
@@ -213,9 +222,9 @@ module PhComposer
           [side, { "frame" => frame.slice("id", "name", "width_m", "uf_w_m2k", "psi_g_w_mk"),
             "install_id" => edge.fetch("install")["id"],
             "install_name" => @products.fetch("installs")[edge.fetch("install")["id"]]&.fetch("name"),
-            "psi_install_w_mk" => edge.fetch("install").fetch("psi") }]
+            "psi_install_w_mk" => edge.fetch("install").fetch("psi_w_mk") }]
         end
-        row = { "name" => glazing.fetch("name"), "u_w" => detail.fetch("u_w"),
+        row = { "name" => glazing.fetch("name"), "uw_w_m2k" => detail.fetch("uw_w_m2k"),
           "glazing" => glazing.slice("id", "name", "ug_w_m2k", "g_value"), "sides" => sides }
         signature = row.reject { |key, _| key == "name" }.merge(
           "glazing" => row.fetch("glazing").reject { |key, _| key == "name" },

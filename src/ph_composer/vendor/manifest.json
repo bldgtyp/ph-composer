@@ -26,9 +26,9 @@
       "sha256": "e48a7c50be824b4829ab0e5159cb52b38b93e22aaf0b6261a50273f2fd91f657"
     },
     "html/assembly_header.js": {
-      "bytes": 3576,
+      "bytes": 3600,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "94a84a7edcd20a3943443b98b9ea2630df7800b7bfd910d656f03bd1a15aa8bb"
+      "sha256": "05e12f7478b265bf192b8dadbbbf0c7382b3a64149e95b08fe99dbf5451172ba"
     },
     "html/assembly_inspector.js": {
       "bytes": 6171,
@@ -36,9 +36,9 @@
       "sha256": "24addf6e5630b594b2220aecf0259f06e9626ae68976c7656d14842e8a0c5265"
     },
     "html/assembly_stage.js": {
-      "bytes": 5951,
+      "bytes": 5971,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "9b6aba7fa654361b062dda769ddd52bf6792858e2241501c43491bd02206f97f"
+      "sha256": "b61ca9f58108680381e2bf8c831195137d552be03e69a79cc193f2c5bfb6fee2"
     },
     "html/base.css": {
       "bytes": 9588,
@@ -176,9 +176,9 @@
       "sha256": "d0ecc88e9f68278dcc73a66652093c4e218b6f860e008dde53d117c680f95b4f"
     },
     "html/sections/assemblies.js": {
-      "bytes": 7706,
+      "bytes": 7730,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "04c1ef39f5610c10e3aebf67e4c74933b1e0091378629b458e9ff0bc3c12fc28"
+      "sha256": "16b8e34829d7dc621b01dcaf6d4a3fc13e8c2e0805b43fb91c7df617c5ac8da9"
     },
     "html/sections/assembly_assignment.js": {
       "bytes": 12142,
@@ -306,9 +306,9 @@
       "sha256": "da1c330d23bb73f529274144be083aff0589fe9225147831d4cdeb128c8dca23"
     },
     "html/window_audit.js": {
-      "bytes": 3687,
+      "bytes": 3718,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "e8c76fc9341b6dea14d469014773b6faf92817494509bfc32f735834f5372dcf"
+      "sha256": "d7c56b6950735587d59f296f249628b6b46269e3401982a21749716246d3142b"
     },
     "html/window_canvas.js": {
       "bytes": 17947,
@@ -316,14 +316,14 @@
       "sha256": "133882a56dd387bc6a5b7309cf086fd0c8ded7f77ce81778c4fb0b4297fc0775"
     },
     "html/window_cards.js": {
-      "bytes": 28023,
+      "bytes": 28261,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "46bbfed0d13d046f15dbeedd69675928857753da5f20e09424be7525dca7d2dc"
+      "sha256": "21875a5b03c2fa3d0c1d82d8907be0fe04d9cdc07bcb89e8583cff23243312ad"
     },
     "html/window_editor.js": {
-      "bytes": 26149,
+      "bytes": 26160,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "107908be8a6933a9380a52b67a33b48d3444bb5701463301d7df9426f2558a62"
+      "sha256": "685a956df0f8077e4d2e674e6729e96baa35413f7372b39b4811a16de22bc429"
     },
     "html/window_editor_shared.js": {
       "bytes": 2960,
@@ -361,9 +361,9 @@
       "sha256": "5db0cc63bc6f34f3978c8e8db9adb837631ee8996f4465ef28fb931ff3c84c75"
     },
     "html/window_schedule.js": {
-      "bytes": 14320,
+      "bytes": 14722,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "b1fe7e07678ca5833055374ee256c75008f53a0aeef060ccbb77fa210df19fd4"
+      "sha256": "20f850ab91c3f54ab76c663e2664a7d2aeb8771e1898a6cc5df6550bc7b85d7a"
     },
     "html/window_type_list.js": {
       "bytes": 13106,
@@ -401,9 +401,9 @@
       "sha256": "04fdc9a69ba1f609ddc4275d7738862b82749e54dec0f2b8f74253cfa0e47191"
     },
     "python/ph_composer_translation/constructions.py": {
-      "bytes": 7037,
+      "bytes": 7039,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "52a8dbbfd0dcc964e17750181e9294e5f46627a9280d40208273a6abe65262fb"
+      "sha256": "d264c841e780cec8f4be100814545aa4b9336bf5731c27b7fcda04d140ca750e"
     },
     "python/ph_composer_translation/contract/__init__.py": {
       "bytes": 1494,
@@ -416,9 +416,9 @@
       "sha256": "ccdf74668bbfbe19fd018dbccd764b0db735f0b4ab62fd555634162e5001ce78"
     },
     "python/ph_composer_translation/contract/window_records.py": {
-      "bytes": 5792,
+      "bytes": 5933,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "ecb1bb1f780a89b8bf13bf2ac2357162a5a2c63c2752e54e3dab949a4240bb95"
+      "sha256": "8c24c31c6ca8273079778b0ac2d6d9de06882a813609c126d3384a932cd2a00d"
     },
     "python/ph_composer_translation/coordinator.py": {
       "bytes": 8636,
@@ -461,9 +461,9 @@
       "sha256": "1b73dab83dd4ee7d5b381d71d70e2a30a753b691f248b035903596f59ca6a740"
     },
     "python/ph_composer_translation/window_sections.py": {
-      "bytes": 6565,
+      "bytes": 6618,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "6753534840a507f8212623bbe6fdf40f99a485601ada19968e767f2f530a5992"
+      "sha256": "e5ad487f83edbd3bab898715b862e41f73c3881697b684037b1d8eaad664d946"
     },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,

@@ -8,7 +8,7 @@
         {
           "id": "con_small",
           "name": "Synthetic window",
-          "u_w": 0.9796000000000001,
+          "uw_w_m2k": 0.9796000000000001,
           "glazing": {
             "id": "glz_A",
             "name": "Synthetic glazing",
@@ -69,7 +69,7 @@
         {
           "id": "con_large",
           "name": "Synthetic window",
-          "u_w": 0.8687111111111112,
+          "uw_w_m2k": 0.8687111111111112,
           "glazing": {
             "id": "glz_A",
             "name": "Synthetic glazing",
@@ -130,7 +130,7 @@
         {
           "id": "con_equal",
           "name": "Synthetic window",
-          "u_w": 0.9796000000000001,
+          "uw_w_m2k": 0.9796000000000001,
           "glazing": {
             "id": "glz_A",
             "name": "Synthetic glazing",
@@ -191,7 +191,7 @@
         {
           "id": "con_zero",
           "name": "Synthetic window",
-          "u_w": 0.9796000000000001,
+          "uw_w_m2k": 0.9796000000000001,
           "glazing": {
             "id": "glz_zero",
             "name": "Synthetic glazing",
@@ -252,7 +252,7 @@
         {
           "id": "con_one",
           "name": "Synthetic window",
-          "u_w": 0.9796000000000001,
+          "uw_w_m2k": 0.9796000000000001,
           "glazing": {
             "id": "glz_one",
             "name": "Synthetic glazing",

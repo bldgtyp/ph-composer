@@ -225,7 +225,7 @@
     }
     function emptySides() { return { top: null, right: null, bottom: null, left: null }; }
     function invalidate(record) {
-      record.display = Object.assign({}, record.display, { thermal: { u_w: null, u_effective: null,
+      record.display = Object.assign({}, record.display, { thermal: { uw_w_m2k: null, u_effective_w_m2k: null,
         findings: ["Preview changed definition: canonical thermal results require the Ruby host."], elements: [] } });
     }
     if (name === "settings.update") {
@@ -506,7 +506,7 @@
         target.values.layers = [{ id: "lyr_preview" + this.sequence, thickness_mm: 100,
           segments: [{ id: "seg_preview" + this.sequence, width_mm: 100, material_id: null }] }];
         target.display = { color: "#bbdefb", total_thickness_mm: 100, thermal: { complete: false,
-          u_effective: null, warnings: ["Choose a Material for every Layer-Segment."] } };
+          u_effective_w_m2k: null, warnings: ["Choose a Material for every Layer-Segment."] } };
       }
       records.push(target);
     } else if (operation === "update" || operation === "save") {
@@ -551,8 +551,8 @@
     } else return refused("request.unknown_operation", "Unavailable fixture action.", this.revision);
     if (!material && !attached && operation === "update" && params.values.ventilated_cladding !== undefined) {
       // Synthetic canonical responses, not a thermal calculation in the preview host.
-      target.display.thermal.rse = params.values.ventilated_cladding ? 0.13 : 0.04;
-      target.display.thermal.u_effective = params.values.ventilated_cladding ? 0.195 : 0.2;
+      target.display.thermal.rse_m2k_w = params.values.ventilated_cladding ? 0.13 : 0.04;
+      target.display.thermal.u_effective_w_m2k = params.values.ventilated_cladding ? 0.195 : 0.2;
     }
     this.revision += 1;
     return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
@@ -743,7 +743,7 @@
     else if (cell) {
       if (params.kind === "frames") cell.frames[target.side] = local.id;
       else cell.glazing_id = local.id;
-      type.display.thermal = { u_w: null, u_effective: null, elements: [],
+      type.display.thermal = { uw_w_m2k: null, u_effective_w_m2k: null, elements: [],
         findings: ["Preview changed definition: canonical thermal results require the Ruby host."] };
     }
     if (!staged) this.revision++;

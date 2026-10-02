@@ -51,7 +51,8 @@ module PhComposer
         findings = product_findings(record, products)
         findings.concat(thermal.fetch("findings"))
         thermal.fetch("elements").each do |element|
-          findings.concat(element.fetch("findings").map { |finding| finding.merge("element_id" => element.fetch("id")) })
+          element_id = element.fetch("id")
+          findings.concat(element.fetch("findings").map { |finding| finding.merge("element_id" => element_id) })
         end
         default_id = settings.fetch("default_psi_install_id")
         if default_id && !products.fetch("installs").key?(default_id)

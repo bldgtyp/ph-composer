@@ -63,7 +63,7 @@ class WindowExportTest < PhComposerTestCase
     construction = result.constructions.fetch(0)
     assert_equal 0.04, construction.dig("sides", "top", "psi_install_w_mk")
     assert_in_delta W::Thermal.calculate(@type, @products, @settings["default_psi_install_id"])
-      .fetch("elements").first.fetch("u_w"), construction["u_w"], 1e-12
+      .fetch("elements").first.fetch("uw_w_m2k"), construction["uw_w_m2k"], 1e-12
     refute row["is_operable"]
     assert_empty @model.operation_starts
   end
@@ -425,7 +425,7 @@ class WindowExportTest < PhComposerTestCase
     input.fetch("polygon_m").zip(actual.fetch("polygon_m")).each do |left, right|
       left.zip(right).each { |a, b| assert_in_delta a, b, 1e-12 }
     end
-    assert_in_delta source.fetch("u_w"), construction.fetch("u_w"), 1e-12
+    assert_in_delta source.fetch("uw_w_m2k"), construction.fetch("uw_w_m2k"), 1e-12
     assert_equal source.fetch("glazing").merge("id" => fixture_identity("glz", source.dig("glazing", "id"))),
       construction.fetch("glazing")
     source.fetch("sides").each do |side, values|
@@ -477,7 +477,7 @@ class WindowExportTest < PhComposerTestCase
       :type => @type, :plan => U::DefinitionPlan.build(@type))
     resized = assess.constructions.first
     refute_equal one["id"], resized["id"]
-    refute_equal one["u_w"], resized["u_w"]
+    refute_equal one["uw_w_m2k"], resized["uw_w_m2k"]
   end
 
   def test_roof_opening_operability_and_frame_operation_mismatch_are_not_blocking

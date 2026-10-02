@@ -41,6 +41,10 @@ class WindowUnitActionsTest < PhComposerTestCase
     assignment_query("#{PREFIX}.units.list").fetch("units")
   end
 
+  def codes(row)
+    row.fetch("findings").map { |finding| finding.fetch("code") }
+  end
+
   def type
     PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).find(W::TYPE_KIND, @type_id)
   end
@@ -111,7 +115,7 @@ class WindowUnitActionsTest < PhComposerTestCase
       Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
     copy.glued_to = original.entity.glued_to
     U.write(copy, original.record)
-    assert(units.all? { |row| row.fetch("findings").any? { |finding| finding.fetch("code") == "window.copy_id_pending" } })
+    assert(units.all? { |row| codes(row).include?("window.copy_id_pending") })
     assert_equal 1, U::Occurrences.all(@model).map { |item| item.record.fetch("id") }.uniq.length
     scope = U::MutationScope.new(:definition_ids => [original.entity.definition.persistent_id])
     before = scope.capture(@model)
@@ -132,7 +136,7 @@ class WindowUnitActionsTest < PhComposerTestCase
       Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
     copy.glued_to = original.entity.glued_to
     U.write(copy, original.record)
-    listed = units.flat_map { |row| row.fetch("findings").map { |finding| finding.fetch("code") } }.uniq
+    listed = units.flat_map { |row| codes(row) }.uniq
     preflight = assignment_query("#{PREFIX}.export_preflight").fetch("findings").map { |row| row.fetch("code") }.uniq
     assert_equal ["window.copy_id_pending"], listed
     assert_includes preflight, "window.copy_id_pending"
@@ -162,7 +166,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     assert_equal original.record, after.fetch(original.path)
     new_id = result.dig("value", "repairs", 0, "new_unit_id")
     assert_equal original.record.merge("id" => new_id), after.fetch(copied.path)
-    assert units.none? { |row| row.fetch("findings").any? { |finding| finding.fetch("code") == "window.copy_id_pending" } }
+    assert(units.none? { |row| codes(row).include?("window.copy_id_pending") })
     @model.undo
     assert_equal before, U::MutationScope.new.capture(@model)
     @model.redo
@@ -244,8 +248,8 @@ class WindowUnitActionsTest < PhComposerTestCase
     rows = units
     assert_equal 2, rows.length
     assert_equal [[1000], [3000]], rows.map { |row| row.fetch("reference").fetch("entity_path")[0...-1] }.sort
-    assert rows.all? { |row| row.fetch("findings").any? { |finding| finding.fetch("code") == "window.copy_id_pending" } }
-    assert rows.all? { |row| row.fetch("findings").any? { |finding| finding.fetch("code") == "window.host_zone_unresolved" } }
+    assert(rows.all? { |row| codes(row).include?("window.copy_id_pending") })
+    assert(rows.all? { |row| codes(row).include?("window.host_zone_unresolved") })
   end
 
   def test_public_rehost_preserves_geometry_and_one_undo_restores_absent_glue

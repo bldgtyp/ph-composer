@@ -36,7 +36,7 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     values = row("types", id).fetch("values")
     assert_equal [1.5], values["rows_m"]
     assert_equal [1.0], values["columns_m"]
-    assert_nil row("types", id).dig("display", "thermal", "u_w")
+    assert_nil row("types", id).dig("display", "thermal", "uw_w_m2k")
     refute values.key?("install_depth_m")
     # The same call authors the same values whatever the display system; a client that wants the round
     # imperial start passes it.
@@ -281,8 +281,8 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     invoke("types.grid.kind", "id" => id, "ids" => [before["elements"][0]["id"]], "kind" => "empty",
       "expected_values" => before)
     thermal = row("types", id).dig("display", "thermal")
-    assert_nil thermal["u_w"]
-    assert_nil thermal["u_effective"]
+    assert_nil thermal["uw_w_m2k"]
+    assert_nil thermal["u_effective_w_m2k"]
     refute thermal["complete"]
     assert_equal [{ "code" => "window_type.no_glazed_elements", "message" => "No glazed elements." }],
       thermal["findings"]
@@ -291,7 +291,7 @@ class WindowRecordsOperationsTest < PhComposerTestCase
       "expected_values" => before)
     missing = row("types", id)
     assert_nil missing.dig("display", "height_m")
-    assert_nil missing.dig("display", "thermal", "u_w")
+    assert_nil missing.dig("display", "thermal", "uw_w_m2k")
     assert_equal ["window_type.dimensions_incomplete"],
       missing.dig("display", "thermal", "findings").map { |finding| finding.fetch("code") }
   end

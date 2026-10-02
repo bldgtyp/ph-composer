@@ -46,7 +46,7 @@ class AssemblyRecordsValidationTest < PhComposerTestCase
     refute Assemblies::Validation.complete?(findings)
     thermal = Assemblies::Thermal.preview(record, fixture_materials)
     assert_equal ["assembly.membrane_in_mixed_layer"], thermal.fetch("flags")
-    assert_nil thermal["u_effective"]
+    assert_nil thermal["u_effective_w_m2k"]
   end
 
   def test_unreadable_material_and_assembly_are_named_without_repair
@@ -57,7 +57,7 @@ class AssemblyRecordsValidationTest < PhComposerTestCase
     assert_includes findings.map { |entry| entry["code"] }, "material.invalid"
     thermal = Assemblies::Thermal.preview(record, materials)
     assert_equal ["material.invalid"], thermal.fetch("flags")
-    assert_nil thermal["u_effective"]
+    assert_nil thermal["u_effective_w_m2k"]
     record["unexpected"] = "kept"
     unreadable = Assemblies::Validation.assembly(record, materials)
     assert_equal ["assembly.invalid"], unreadable.map { |entry| entry["code"] }

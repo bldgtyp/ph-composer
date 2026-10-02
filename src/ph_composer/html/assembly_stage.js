@@ -4,8 +4,9 @@ PhComposerUI.define("assembly_stage", ["assembly_canvas", "assembly_editor_share
     "use strict";
     var el = ui.element;
     function boundary(thermal, exterior) {
-      return el("div", "assembly-boundary", exterior ? "EXTERIOR · Rse " + shared.format(thermal.rse, shared.R_VALUE) :
-        "INTERIOR · Rsi " + shared.format(thermal.rsi, shared.R_VALUE) +
+      return el("div", "assembly-boundary", exterior ?
+        "EXTERIOR · Rse " + shared.format(thermal.rse_m2k_w, shared.R_VALUE) :
+        "INTERIOR · Rsi " + shared.format(thermal.rsi_m2k_w, shared.R_VALUE) +
         (thermal.direction ? " · " + thermal.direction + " heat flow" : ""));
     }
     function stage(record, materials) {

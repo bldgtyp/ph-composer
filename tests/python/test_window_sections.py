@@ -86,7 +86,7 @@ def test_full_property_and_reference_roundtrip_with_exact_endpoints() -> None:
         assert aperture.identifier == source["id"]
         assert aperture.is_operable == source["is_operable"]
         assert {tuple(point) for point in aperture.geometry.boundary} == {tuple(p) for p in source["polygon_m"]}
-        assert construction.materials[0].u_factor == authored["u_w"]
+        assert construction.materials[0].u_factor == authored["uw_w_m2k"]
         assert construction.materials[0].shgc == authored["glazing"]["g_value"]
         assert construction.materials[0].vt == 0.6
         assert construction.properties.ph.ph_glazing.u_factor == authored["glazing"]["ug_w_m2k"]
@@ -129,8 +129,8 @@ def test_signature_includes_size_dependent_uw_and_ignores_presentation() -> None
     first, large, equal = [objects[row["id"]].construction for row in rows[:3]]  # type: ignore[attr-defined]
     assert first.identifier == equal.identifier
     assert first.identifier != large.identifier
-    assert first.materials[0].u_factor == rows[0]["u_w"]
-    assert large.materials[0].u_factor == rows[1]["u_w"]
+    assert first.materials[0].u_factor == rows[0]["uw_w_m2k"]
+    assert large.materials[0].u_factor == rows[1]["uw_w_m2k"]
     assert first.materials[0].u_factor > large.materials[0].u_factor
 
 
@@ -297,10 +297,10 @@ def test_authoring_provider_and_shading_metadata_never_reaches_hbjson() -> None:
     )
 
 
-@pytest.mark.parametrize("u_w", [0, -1, 12.01, True, "1.1"])
-def test_invalid_or_unrepresentable_uw_blocks_assigned_cell_without_clamping(u_w: object) -> None:
+@pytest.mark.parametrize("uw_w_m2k", [0, -1, 12.01, True, "1.1"])
+def test_invalid_or_unrepresentable_uw_blocks_assigned_cell_without_clamping(uw_w_m2k: object) -> None:
     payload = document()
-    payload["sections"][WINDOW_CONSTRUCTION_SECTION_ID]["records"][0]["u_w"] = u_w
+    payload["sections"][WINDOW_CONSTRUCTION_SECTION_ID]["records"][0]["uw_w_m2k"] = uw_w_m2k
     output = result(payload)
     assert not output["summary"]["publishable"]
     assert any(row["code"] == "dependency.unavailable" and row["object_id"] == "ap_0" for row in output["findings"])
@@ -309,7 +309,7 @@ def test_invalid_or_unrepresentable_uw_blocks_assigned_cell_without_clamping(u_w
 def test_signature_separates_every_translated_numeric_and_product_identity() -> None:
     original = windows()["sections"][WINDOW_CONSTRUCTION_SECTION_ID]["records"][0]
     reference = WindowConstructionRecord.read(original).signature()
-    changes = [("u_w",), ("glazing", "id"), ("glazing", "ug_w_m2k"), ("glazing", "g_value")]
+    changes = [("uw_w_m2k",), ("glazing", "id"), ("glazing", "ug_w_m2k"), ("glazing", "g_value")]
     for side in SIDES:
         changes.extend(("sides", side, "frame", key) for key in ("id", "width_m", "uf_w_m2k", "psi_g_w_mk"))
         changes.extend(("sides", side, key) for key in ("install_id", "psi_install_w_mk"))

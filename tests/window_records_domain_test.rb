@@ -10,13 +10,13 @@ class WindowRecordsDomainTest < PhComposerTestCase
     record, input = thermal_proof
     calc = W::Thermal.calculate(record, input, input.fetch("default_install_id"))
     assert_in_delta 6.92448, calc["h_construction_w_k"], 1e-10
-    assert_in_delta 1.0134, calc["u_effective"], 1e-10
-    assert_in_delta 0.9617333333333333, calc["u_w"], 1e-10
+    assert_in_delta 1.0134, calc["u_effective_w_m2k"], 1e-10
+    assert_in_delta 0.9617333333333333, calc["uw_w_m2k"], 1e-10
     assert calc["complete"]
     input["frames"]["left"]["uf_w_m2k"] = nil
     calc = W::Thermal.calculate(record, input, input.fetch("default_install_id"))
-    assert_nil calc["u_w"]
-    assert_nil calc["u_effective"]
+    assert_nil calc["uw_w_m2k"]
+    assert_nil calc["u_effective_w_m2k"]
     assert_in_delta 0.372, calc["h_install_w_k"], 1e-10
     refute calc["complete"]
     assert calc["elements"].all? { |element| !element["complete"] }
@@ -30,12 +30,12 @@ class WindowRecordsDomainTest < PhComposerTestCase
     assert_equal [:perimeter, :perimeter, :shared, :perimeter], W::Grid.new(record).classify(top)
     calc = W::Thermal.calculate(record, input, input["default_install_id"])
     assert_in_delta 7.2, calc["area_m2"], 1e-10
-    refute_nil calc["u_w"]
+    refute_nil calc["uw_w_m2k"]
     record["elements"].last["kind"] = "empty"
     assert_equal :partial, W::Grid.new(record).classify(top)[2]
     calc = W::Thermal.calculate(record, input, input["default_install_id"])
-    assert_nil calc["u_effective"]
-    refute_nil calc["u_w"]
+    assert_nil calc["u_effective_w_m2k"]
+    refute_nil calc["uw_w_m2k"]
     assert_operator calc["empty_area_m2"], :>, 0
   end
 
@@ -139,8 +139,8 @@ class WindowRecordsDomainTest < PhComposerTestCase
       finding.fetch("code") == "window_type.frame_operation_mismatch"
     end
     missing = W::Thermal.calculate(record, input, nil)
-    assert_nil missing["u_effective"]
-    refute_nil missing["u_w"]
+    assert_nil missing["u_effective_w_m2k"]
+    refute_nil missing["uw_w_m2k"]
     refute missing.fetch("complete")
   end
 

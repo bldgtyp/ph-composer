@@ -64,7 +64,8 @@ module PhComposer
           material = materials[segment["material_id"]]
           material && Materials::Schema.membrane?(material)
         }
-          found << finding("assembly.membrane_in_mixed_layer", "A membrane Layer holds one Layer-Segment.", layer_identity)
+          found << finding("assembly.membrane_in_mixed_layer", "A membrane Layer holds one Layer-Segment.",
+                           layer_identity)
         end
         layer.fetch("segments").each do |segment|
           segment_identity = layer_identity.merge("segment_id" => segment.fetch("id"))

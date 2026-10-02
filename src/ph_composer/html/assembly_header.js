@@ -56,10 +56,10 @@ PhComposerUI.define("assembly_header", ["assembly_editor_shared", "unit_field", 
       var metrics = el("div", "assembly-header-metrics");
       var withheld = thermal.complete !== true ? shared.reason(record) : null;
       metrics.appendChild(metric("Total thickness", display.total_thickness_mm, shared.DIMENSION));
-      metrics.appendChild(metric("U-value with films", thermal.u_effective, shared.U_VALUE,
-        withheld || (ui.blank(thermal.u_effective) ? shared.reason(record) : null)));
-      metrics.appendChild(metric("U-value construction only", thermal.u_construction, shared.U_VALUE,
-        withheld || (ui.blank(thermal.u_construction) ? shared.reason(record) : null)));
+      metrics.appendChild(metric("U-value with films", thermal.u_effective_w_m2k, shared.U_VALUE,
+        withheld || (ui.blank(thermal.u_effective_w_m2k) ? shared.reason(record) : null)));
+      metrics.appendChild(metric("U-value construction only", thermal.u_construction_w_m2k, shared.U_VALUE,
+        withheld || (ui.blank(thermal.u_construction_w_m2k) ? shared.reason(record) : null)));
       root.appendChild(metrics);
       if (withheld) root.appendChild(el("p", "assembly-incomplete", withheld));
       return root;

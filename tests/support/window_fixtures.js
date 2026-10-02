@@ -9,13 +9,13 @@ function record(id, values) { return { id: id, values: values, user_data: {}, ex
 function state() {
   var type = record("wnt_a", { name: "Three elements", notes: "", rows_m: [1.5], columns_m: [0.5, 0.5, 0.5],
     elements: [element("wel_a", 0), element("wel_b", 1), element("wel_c", 2, "empty")] });
-  type.display = { width_m: 1.5, height_m: 1.5, install_depth_m: 0.1, thermal: { u_w: 0.8, u_effective: 0.9,
+  type.display = { width_m: 1.5, height_m: 1.5, install_depth_m: 0.1, thermal: { uw_w_m2k: 0.8, u_effective_w_m2k: 0.9,
     complete: true, area_m2: 1.5, empty_area_m2: 0.75, findings: [],
       elements: type.values.elements.map(function (cell) {
-      return { id: cell.id, u_w: cell.kind === "empty" ? null : 0.8, findings: [], edges: ["top", "right", "bottom",
-        "left"].map(function (side) {
+      return { id: cell.id, uw_w_m2k: cell.kind === "empty" ? null : 0.8, findings: [],
+        edges: ["top", "right", "bottom", "left"].map(function (side) {
         return { side: side, length_m: 0.5, install: { source: (cell.id === "wel_a" && side === "right") ||
-          (cell.id === "wel_b" && side === "left") ? "shared" : "default", id: null, psi: 0.04 } };
+          (cell.id === "wel_b" && side === "left") ? "shared" : "default", id: null, psi_w_mk: 0.04 } };
       }) };
     }) } };
   var sections = {};

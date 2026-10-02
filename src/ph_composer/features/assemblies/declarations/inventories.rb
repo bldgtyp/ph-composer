@@ -6,11 +6,11 @@ module PhComposer
       THERMAL = Shapes.object({
         "complete" => { "type" => "boolean" }, "flags" => Shapes.list(Shapes::TEXT),
         "warnings" => Shapes.list(Shapes::TEXT), "message_parts" => Shapes.list(Shapes.list(Shapes::OBJECT)),
-        "u_effective" => { "type" => %w[number null], "x-unit" => "W/m2K" },
-        "u_construction" => { "type" => %w[number null], "x-unit" => "W/m2K" },
-        "r_construction" => { "type" => %w[number null], "x-unit" => "m2K/W" },
-        "rsi" => { "type" => "number", "x-unit" => "m2K/W" },
-        "rse" => { "type" => "number", "x-unit" => "m2K/W" }, "direction" => Shapes::TEXT
+        "u_effective_w_m2k" => { "type" => %w[number null], "x-unit" => "W/m2K" },
+        "u_construction_w_m2k" => { "type" => %w[number null], "x-unit" => "W/m2K" },
+        "r_construction_m2k_w" => { "type" => %w[number null], "x-unit" => "m2K/W" },
+        "rsi_m2k_w" => { "type" => "number", "x-unit" => "m2K/W" },
+        "rse_m2k_w" => { "type" => "number", "x-unit" => "m2K/W" }, "direction" => Shapes::TEXT
       })
       DISPLAY = Shapes.object({
         "color" => Shapes::TEXT, "layer_count" => { "type" => "integer", "minimum" => 1 },
