@@ -60,7 +60,8 @@ module PhComposer
            format("%.2f", area)]
         end
         heading = "Gross area (#{Units.label(:quantity => 'area', :system => display_units)})"
-        [Export::ReportHtml.section("Construction usage", Export::ReportHtml.table(["Assembly", "Faces", heading], rows))]
+        table = Export::ReportHtml.table(["Assembly", "Faces", heading], rows)
+        [Export::ReportHtml.section("Construction usage", table)]
       end
 
       # The one Zone occurrence containing a snapshot entry, as [entry, record], or nil. Two means a

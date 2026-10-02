@@ -203,14 +203,16 @@ opens. The server's token authorizes loading runtime assets and nothing else; it
 credential.
 
 A feature adds export coverage with `feature.export_contributor(name, section_version:, result:,
-report:, preflight:)` in its `install`, whose block returns the section's records, and a Python `Section` with
+report:, preflight:, requires:, projection:)` in its `install`, whose block returns the section's records, and a Python `Section` with
 the same id listed in `python/ph_composer_translation/composition.py`. The block reads through
 `Export::RecordReader`, which exports only declared values and named extension fields, leaves
 `user_data` and `local_only` data out with a finding, and blocks on data whose export relevance is
 unknown or required but unexported. When the translator adds result fields for the feature, the
-contributor declares them in `result` and renders them in `report`. The extraction carries every
-section under `sections`; `export/` knows no feature. The development example
-(`tools/examples/foundation/`) is the working pattern.
+contributor declares them in `result` and renders them in `report`; they arrive under the section's
+id. A feature whose translated objects sit inside another feature's, as Apertures sit in Faces,
+declares a Python `Attachment` instead of being imported by the host's section. The extraction
+carries every section under `sections`; `export/` knows no feature. The development example
+(`tools/examples/foundation/`, with `example_doors.py` for an attachment) is the working pattern.
 
 Export preflight is a declared query owned by the same feature as its contributor. It returns
 findings and optional registered repair actions. The shell runs only selected repairs before the
@@ -236,8 +238,8 @@ Assembly constructions and Window Apertures through their feature contributors. 
 incomplete assigned definitions block normal export. The separately composed synthetic provider
 exists only in historical development acceptance and is never a shipping fallback.
 
-The privacy allowlist is the shell's fields plus every contributor's declaration, composed on each
-check, so a result field no declaration names fails the export at `checking`. The report embeds
+The privacy allowlist is the shell's fields plus every contributor's declaration under its section
+id, composed on each check, so a result field no declaration names fails the export at `checking`. The report embeds
 the translator's result document unchanged.
 
 The canonical HBJSON is a string in that document, so the allowlist cannot see inside it. The

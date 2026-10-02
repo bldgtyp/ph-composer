@@ -29,7 +29,8 @@ class PhaseOneExportTest < PhComposerTestCase
     contributor = PhComposer::Registry.current.export_contributors.fetch(zones)
     view = PhComposer::Export::ResultView.new(result, contributor)
 
-    assert_includes PhComposer::Zones::ExportProjection.report(view, "si").join, "<td>&lt;Synthetic&gt;</td><td>2</td><td>10.00</td>"
+    assert_includes PhComposer::Zones::ExportProjection.report(view, "si").join,
+                    "<td>&lt;Synthetic&gt;</td><td>2</td><td>10.00</td>"
     assert_includes PhComposer::Zones::ExportProjection.report(view, "ip").join, "107.64"
     assert_empty PhComposer::Zones::ExportProjection.report(PhComposer::Export::ResultView.new({}, contributor), "si")
   end
