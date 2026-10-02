@@ -14,8 +14,7 @@ module PhComposer
       end
 
       def entries(read)
-        engine = read.engine
-        types = engine.ids(TYPE_KIND).to_h { |id| [id, engine.find(TYPE_KIND, id)] }
+        types = Snapshot.readable(read.engine, Types::KIND).to_h { |type| [type.fetch("id"), type] }
         Units::Occurrences.all(read.model).map do |unit|
           type = types[unit.record.fetch("window_type_id")]
           ColourBy::Entry.new(:entity => unit.entity, :transform => unit.transform,

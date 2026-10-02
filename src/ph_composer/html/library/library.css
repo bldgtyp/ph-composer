@@ -116,3 +116,4 @@
   .library-material-table, .library-material-workspace > .library-sidebar-root { width: 100%; box-sizing: border-box; }
   .library-source-review .phc-dialog-actions { flex-wrap: wrap; }
 }
+.library-setup-unreadable { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 12px 0; }

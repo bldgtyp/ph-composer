@@ -128,6 +128,19 @@ class RegistryTest < PhComposerTestCase
     assert_equal 1, called.length, "a catalog entry belongs to the session that built it"
   end
 
+  def test_a_context_menu_tests_an_entry_provider_once
+    tests = 0
+    counted = ->(_read) { (tests += 1).positive? }
+    Registry.install([feature do |registry|
+      registry.feature("probe.menu", :contract_version => 1)
+              .menu_entries("probe.menu.counted", :menu => "Probe", :available => counted) do
+        [PhComposer::Declarations::MenuEntry.new(:label => "Counted", :handler => ->(_current) {})]
+      end
+    end])
+    menus = PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)
+    assert_equal [["Counted", 1]], [[menus.fetch("Probe").entries.first.first, tests]]
+  end
+
   def test_a_raising_menu_test_or_provider_omits_only_its_own_item
     Registry.install([feature do |registry|
       scope = registry.feature("probe.menu", :contract_version => 1)

@@ -18,6 +18,12 @@ module PhComposer
         [rows, unreadable]
       end
 
+      # Every readable record of `kind`, in id order; an unreadable one is skipped, so a context menu
+      # or Colour-by mode built from them keeps working around it.
+      def readable(engine, kind)
+        read(engine, kind, engine.ids(kind.id).sort).first
+      end
+
       # The page of `kind`'s ids a list or all query reads, its cursor and the total.
       def page(request, kind, query, paged)
         ids = request.engine.ids(kind.id).sort

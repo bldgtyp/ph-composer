@@ -47,7 +47,7 @@ module PhComposer
           RestoreGeometry.refuse! unless faces_valid && stamps_valid && ids_match
           @faces.each do |face|
             only_stamped = dictionaries(face).transform_values(&:keys) == { PANE_STORE.dictionary => [PANE_STORE.key] }
-            glazed = [face.material, face.back_material].all? { |material| material&.name == DefinitionWriter::GLASS_NAME }
+            glazed = [face.material, face.back_material].all? { |item| item&.name == DefinitionWriter::GLASS_NAME }
             RestoreGeometry.refuse! unless only_stamped && glazed
           end
           @edges.each do |edge|

@@ -42,6 +42,7 @@ module PhComposer
             session.notice(outcome.fetch("message"), :tone => outcome["status"] == "completed" ? :info : :warning)
           end
         end
+        install_reset(feature, result)
         feature.setup_command("#{PREFIX}.remove", :description => "Remove a configured library from this machine.",
                              :params => Library.object({ "provider_id" => Library.described(Library::TEXT,
                                "The configured library to remove from this machine.") }), :result => result,
@@ -51,6 +52,31 @@ module PhComposer
           refresh_sessions
           value
         end
+      end
+
+      # An unreadable stored setup is reported, never silently replaced: changes refuse until reset.
+      def install_reset(feature, result)
+        feature.query("#{PREFIX}.setup_state",
+                      :description => "Whether this machine's stored library setup can be read. When it is " \
+                                      "unreadable, adding or removing a library is refused until reset clears it.",
+                      :params => Library.object({}), :result => setup_state, :examples => [{}]) do |_request|
+          { "state" => Setup.state }
+        end
+        feature.snapshot_section("ph_composer.library.provider_setup", :query => "#{PREFIX}.setup_state")
+        feature.setup_command("#{PREFIX}.reset",
+                              :description => "Clear this machine's library setup, removing every configured " \
+                                              "library. Use it when setup_state reports the setup unreadable.",
+                              :params => Library.object({}), :result => result, :examples => [{}]) do |_request|
+          value = Setup.reset
+          refresh_sessions
+          value
+        end
+      end
+
+      def setup_state
+        Library.object({ "state" => Library.described({ "type" => "string", "enum" => %w[readable unreadable] },
+                                                      "unreadable when the stored setup fails to parse or " \
+                                                      "validate; nothing stored yet is readable.") })
       end
 
       # The native menu is one client per session, as the panel is.

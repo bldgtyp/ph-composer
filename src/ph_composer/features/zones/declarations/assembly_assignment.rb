@@ -34,8 +34,8 @@ module PhComposer
             AssemblyAssignment.assign(request, proposal, :assembly_id => request.params.fetch("assembly_id"),
                                                          :targets => request.params.fetch("targets"))
           end
-          kind = AssemblyAssignment::KIND
-          feature.reference_retargeter("#{PREFIX}.retarget_assembly", :target_kind => kind) do |request, proposal, from:, to:|
+          feature.reference_retargeter("#{PREFIX}.retarget_assembly",
+                                       :target_kind => AssemblyAssignment::KIND) do |request, proposal, from:, to:|
             AssemblyAssignment.retarget(request, proposal, :from => from, :to => to)
           end
           feature.query("#{PREFIX}.assembly_usage", :description => "Face counts and gross areas by Assembly.",

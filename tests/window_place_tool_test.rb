@@ -395,6 +395,22 @@ class WindowPlaceToolTest < PhComposerTestCase
     assert_equal %w[refused record.unreadable], result.values_at("status", "code")
   end
 
+  def test_an_unreadable_type_is_skipped_and_leaves_place_window_in_the_context_menu
+    readable = assignment_invoke("ph_composer.windows.types.create",
+      "values" => { "name" => "Readable", "rows_m" => [1.5], "columns_m" => [0.7] }).fetch("value").fetch("id")
+    dictionary = "ph_composer.records.#{W::TYPE_KIND}"
+    record = JSON.parse(@model.get_attribute(dictionary, @type_id)).merge("rows_m" => "broken")
+    @model.set_attribute(dictionary, @type_id, JSON.generate(record))
+    @model.active_path = [@group]
+    @model.selection.add(@face)
+    menus = PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)
+    labels = menus.fetch(W::ViewportRegistration::MENU).entries.map(&:first)
+    assert_equal ["Place Window…", "Place Readable"], labels
+    read = PhComposer::HandlerRequest.for(@session, :owner => W::FEATURE_ID, :name => W::ColourModes::BY_TYPE)
+    assert_empty W::ColourModes.entries(read), "the Colour-by mode reads the same Types without raising"
+    assert_equal [readable], W::ViewportRegistration.type_rows(read.engine).map { |row| row.fetch("id") }
+  end
+
   def test_native_menu_read_refusal_is_visible_instead_of_doing_nothing
     refused = PhComposer::Outcome.refused("session.busy", "PH-Composer is busy.", :revision => @session.revision)
     API.stub(:query, refused) { W::ViewportRegistration.choose_from_menu(@session) }

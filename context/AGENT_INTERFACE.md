@@ -263,11 +263,13 @@ Phase 2 features, programmatic reads and writes. Each has a panel-closed walkthr
   repair over every copy first, and says so in its `side_effects`.
   [Walkthrough](../tools/examples/authoring/windows_walkthrough.rb),
   [placement](../tools/examples/authoring/windows_placement_walkthrough.rb).
-- **Library** (`ph_composer.library.*`). Reads: `providers`, `catalog`, `in_file` and
-  `export_preview`. Writes: `copy`, with preview, an explicit choice and optional assignment, and
-  the `copy_into_proposal` participant for a feature's own action. The setup command `load` reads a
-  configured provider into the session catalog and `providers.remove` removes one, both under the
-  `setup` grant. Adding a provider (`providers.add_file`, `providers.add_folder`) and `export_file`
+- **Library** (`ph_composer.library.*`). Reads: `providers`, `providers.setup_state`, `catalog`,
+  `in_file` and `export_preview`. Writes: `copy`, with preview, an explicit choice and optional
+  assignment, and the `copy_into_proposal` participant for a feature's own action. The setup command
+  `load` reads a configured provider into the session catalog and `providers.remove` removes one,
+  both under the `setup` grant. When `providers.setup_state` reports this machine's stored setup
+  `unreadable`, adding or removing a provider refuses with `library.setup_unreadable` until
+  `providers.reset` clears it. Adding a provider (`providers.add_file`, `providers.add_folder`) and `export_file`
   need a location only the user can choose: the panel and the Libraries menu ask for it, and a
   scripted caller is refused with `access.user_required` (see "Locations only the user can
   choose").
