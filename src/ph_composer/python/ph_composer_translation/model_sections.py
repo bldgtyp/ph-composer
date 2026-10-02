@@ -17,7 +17,7 @@ from . import stack
 from .constructions import CONSTRUCTIONS
 from .contract import JSONValue, RecordError, as_number, as_text
 from .result import Finding
-from .sections import MODEL, Attachment, DependencyUnavailable, Inputs, Requirement, Section
+from .sections import MODEL, Attachment, AttachmentRefused, DependencyUnavailable, Inputs, Requirement, Section
 
 FACE_SECTION_ID = "ph_composer.zones.faces.export.faces"
 ZONE_SECTION_ID = "ph_composer.zones.export.zones"
@@ -241,16 +241,23 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
         specifications = {identifier: spec for zone in objects for identifier, spec in zone.specifications.items()}
         omissions = _omissions(specifications)
         paired: set[str] = set()
-        for identifier, specification in specifications.items():
-            if identifier in omissions or specification.boundary_condition != "Surface" or identifier in paired:
-                continue
-            counterpart_id = _counterpart_id(specification)
-            counterpart = specifications.get(counterpart_id)
-            if counterpart is None or _counterpart_id(counterpart) != identifier or counterpart_id not in emitted:
-                raise RecordError(f"Surface face {identifier} has no emitted reciprocal counterpart")
-            emitted[identifier].set_adjacency(emitted[counterpart_id])
-            paired.update((identifier, counterpart_id))
+        unpaired: list[TranslatedZone] = []
+        for zone in objects:
+            for identifier, specification in zone.specifications.items():
+                if identifier in omissions or specification.boundary_condition != "Surface" or identifier in paired:
+                    continue
+                counterpart_id = _counterpart_id(specification)
+                counterpart = specifications.get(counterpart_id)
+                # A counterpart missing here belongs to a Zone that did not translate, which says so itself.
+                if counterpart is None or _counterpart_id(counterpart) != identifier or counterpart_id not in emitted:
+                    unpaired.append(zone)
+                    continue
+                emitted[identifier].set_adjacency(emitted[counterpart_id])
+                paired.update((identifier, counterpart_id))
         host.add_rooms([zone.room for zone in objects])
+        if unpaired:
+            names = ", ".join(sorted({zone.source.identifier for zone in unpaired}))
+            raise AttachmentRefused(f"Surface Faces of Zone {names} have no emitted reciprocal counterpart", unpaired)
 
     def result_fields(self, objects: Mapping[str, TranslatedZone]) -> Mapping[str, JSONValue]:
         usage: dict[str, dict[str, JSONValue]] = {}

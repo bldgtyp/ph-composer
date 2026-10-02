@@ -82,7 +82,8 @@ class AssembliesExportTest < PhComposerTestCase
     assert_includes html, "Membranes: Film."
     assert_includes html, "600 kg/m3"
     assert_includes html, "1000 J/kgK"
-    assert_equal 1, html.scan("Membranes carried in HBJSON").length
+    assert_equal 1, html.scan("Membranes of a used Assembly are carried in HBJSON").length
+    assert_includes html, "Only Assemblies that a Face uses are written to the HBJSON"
     assert_equal 1, html.scan("Air barrier, photos").length
     assert_equal 1, html.scan("Honeybee defaults:").length
     assert_includes html, "roughness MediumRough"

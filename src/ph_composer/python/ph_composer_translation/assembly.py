@@ -4,11 +4,12 @@ sections and artifacts").
 Honeybee nests Apertures in Faces, Faces in Rooms and Rooms in the Model. A section whose objects
 belong inside another declares `attaches = Attachment(host, key)`; the assembly attaches each host
 level in turn, outermost first, so a Face exists before anything is attached to it. Each host's
-objects are attached in one call, in extraction order, so the attaching section can check them
-together. The assembly names no section and knows no feature: it only follows the declarations.
+objects are attached in one call, in id order, so the attaching section can check them together.
+The assembly names no section and knows no feature: it only follows the declarations.
 
-The canonical model is serialized when it holds a Room and every declared object was attached, even when
-other findings keep it from being published, so a run that fails still shows what did translate. Its
+The canonical model is serialized when it holds a Room and no attachment was refused, even when other
+findings keep it from being published, so a run that fails still shows what did translate. Any refused
+attachment withholds it, blocking or not, because the Model would then not hold what the sections said. Its
 accounting counts what the Model holds, not what any section reports.
 """
 
@@ -21,7 +22,7 @@ from typing import Any
 from . import stack
 from .contract import JSONObject, RecordError
 from .result import OBJECT_UNAVAILABLE, Finding, Translation
-from .sections import FACE, HOSTS, MODEL, ROOM, Section
+from .sections import FACE, HOSTS, MODEL, ROOM, AttachmentRefused, Section
 
 MODEL_ID = "ph_composer_model"
 
@@ -60,7 +61,7 @@ def _attach(translation: Translation, section: Section[Any, Any], hosts: dict[st
     attachment = section.attaches
     assert attachment is not None
     groups: dict[str, list[tuple[str, object]]] = {}
-    for object_id, translated in translation.objects(section.id).items():
+    for object_id, translated in sorted(translation.objects(section.id).items()):
         groups.setdefault(attachment.key(translated), []).append((object_id, translated))
     complete = True
     for host_id, items in groups.items():
@@ -71,9 +72,11 @@ def _attach(translation: Translation, section: Section[Any, Any], hosts: dict[st
             section.attach(host, [translated for _, translated in items])
         except RecordError as error:
             complete = False
+            refused = error.refused if isinstance(error, AttachmentRefused) else [item for _, item in items]
             translation.findings.extend(
                 Finding(OBJECT_UNAVAILABLE, section.id, object_id, str(error), section.required_for_export)
-                for object_id, _ in items
+                for object_id, translated in items
+                if any(translated is item for item in refused)
             )
     return complete
 

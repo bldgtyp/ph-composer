@@ -69,6 +69,19 @@ def model(output: dict[str, Any]) -> Any:
     return stack.load("honeybee.model").Model.from_dict(json.loads(output["canonical_model"]["hbjson"]))
 
 
+def withheld(output: dict[str, Any], *aperture_ids: str) -> bool:
+    """Whether the run cannot publish and any diagnostic canonical model leaves the refused Apertures out."""
+    if output["summary"]["publishable"]:
+        return False
+    if "canonical_model" not in output:
+        return True
+    hbjson = json.loads(output["canonical_model"]["hbjson"])
+    emitted = {
+        ap["identifier"] for room in hbjson["rooms"] for face in room["faces"] for ap in face.get("apertures", [])
+    }
+    return emitted.isdisjoint(aperture_ids)
+
+
 def test_full_property_and_reference_roundtrip_with_exact_endpoints() -> None:
     value = document()
     output = result(value)
@@ -124,7 +137,8 @@ def test_signature_includes_size_dependent_uw_and_ignores_presentation() -> None
     for side in rows[2]["sides"].values():
         side["frame"]["name"] = "Renamed frame"
         side["install_name"] = "Renamed install"
-    translated = translate(value, (WindowConstructionSection(), ApertureSection()))
+    value["sections"][FaceSection.id] = {"version": 1, "records": []}
+    translated = translate(value, (FaceSection(), WindowConstructionSection(), ApertureSection()))
     objects = translated.objects(WINDOW_CONSTRUCTION_SECTION_ID)
     first, large, equal = [objects[row["id"]].construction for row in rows[:3]]  # type: ignore[attr-defined]
     assert first.identifier == equal.identifier
@@ -169,9 +183,8 @@ def test_orphan_or_wrong_parent_is_blocked_with_valid_zone(field: str, value: st
     payload = document()
     payload["sections"][APERTURE_SECTION_ID]["records"][0][field] = value
     output = result(payload)
-    assert not output["summary"]["publishable"]
-    assert "canonical_model" not in output
-    assert any(row["object_id"] == "ap_0" and row["blocks_export"] for row in output["findings"])
+    assert withheld(output, "ap_0")
+    assert [row["object_id"] for row in output["findings"] if row["blocks_export"]] == ["ap_0"]
 
 
 def test_wrong_face_zone_membership_with_another_valid_zone_diagnoses_aperture() -> None:
@@ -181,11 +194,11 @@ def test_wrong_face_zone_membership_with_another_valid_zone_diagnoses_aperture()
     zone.update(id="zone_B", face_ids=["face_missing"])
     payload["sections"][ZoneSection.id]["records"].append(zone)
     output = result(payload)
-    assert not output["summary"]["publishable"]
-    assert "canonical_model" not in output
+    assert withheld(output, "ap_0")
     assert any(
         row["object_id"] == "ap_0" and "not a Face of Zone zone_B" in row["message"] for row in output["findings"]
     )
+    assert not any(row["object_id"] in {"ap_1", "ap_2"} for row in output["findings"]), "one defect costs one Aperture"
 
 
 def test_no_valid_zone_never_produces_usable_artifact() -> None:
@@ -218,8 +231,7 @@ def test_invalid_host_geometry_or_classification_is_refused(failure: str) -> Non
     else:
         face["omission"] = {"code": "adjacency.stale", "reason": "Synthetic stale", "area_m2": 12, "zone_id": "zone_A"}
     output = result(payload)
-    assert not output["summary"]["publishable"]
-    assert "canonical_model" not in output
+    assert withheld(output, *(row["id"] for row in apertures))
 
 
 @pytest.mark.parametrize("g", [-0.01, 1.01, True, "0.5", float("inf")])

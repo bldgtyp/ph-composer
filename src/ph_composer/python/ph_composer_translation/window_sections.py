@@ -1,6 +1,7 @@
 """Window products and glazed cells, translated through the pinned Honeybee/PH stack.
 
-Apertures attach to their host Faces in the model assembly; this module names no other section."""
+Apertures attach to their host Faces in the model assembly. They read the Zones Face specifications, a layer
+down, to check their own host before attaching; the Zones sections name nothing here."""
 
 from __future__ import annotations
 
@@ -13,6 +14,7 @@ from typing import Any
 from . import stack
 from .contract import JSONValue, RecordError
 from .contract.window_records import SIDES, ApertureRecord, WindowConstructionRecord
+from .model_sections import FACES
 from .sections import FACE, Attachment, Inputs, Requirement, Section
 
 WINDOW_CONSTRUCTION_SECTION_ID = "ph_composer.windows.export.window_constructions"
@@ -85,13 +87,20 @@ class ApertureSection(Section[ApertureRecord, TranslatedAperture]):
     id = APERTURE_SECTION_ID
     versions = frozenset({1})
     object_type = TranslatedAperture
-    requires = (WINDOW_CONSTRUCTIONS,)
+    requires = (WINDOW_CONSTRUCTIONS, FACES)
     attaches = Attachment(FACE, lambda item: item.source.host_face_id)
 
     def read(self, raw: Mapping[str, object]) -> ApertureRecord:
         return ApertureRecord.read(raw)
 
     def translate(self, record: ApertureRecord, inputs: Inputs) -> TranslatedAperture:
+        host = inputs.get(FACES, record.host_face_id)
+        if host.zone_id != record.zone_id:
+            raise RecordError(f"aperture {record.id} host {host.identifier} is not a Face of Zone {record.zone_id}")
+        if host.omission or host.boundary_condition != "Outdoors" or host.face_type not in HOST_FACE_TYPES:
+            raise RecordError(
+                f"aperture {record.id} host {host.identifier} must be an emitted Outdoors Wall or RoofCeiling"
+            )
         translated = inputs.get(WINDOW_CONSTRUCTIONS, record.construction_id)
         construction = translated.construction
         hb_aperture = stack.load("honeybee.aperture")
@@ -112,19 +121,15 @@ class ApertureSection(Section[ApertureRecord, TranslatedAperture]):
         return TranslatedAperture(record, aperture, translated)
 
     def attach(self, host: Any, objects: Sequence[TranslatedAperture]) -> None:
-        """Adds a host Face's Apertures together, then checks they fit it and do not overlap."""
-        room = host.parent
-        for item in objects:
-            if room is None or room.identifier != item.source.zone_id:
-                raise RecordError(f"aperture host {host.identifier} is not a Face of Zone {item.source.zone_id}")
-        if host.boundary_condition.name != "Outdoors" or host.type.name not in HOST_FACE_TYPES:
-            raise RecordError(f"aperture host {host.identifier} must be an Outdoors Wall or RoofCeiling")
+        """Adds a host Face's Apertures together, then checks they fit it and do not overlap. Each Aperture
+        checked its own host in `translate`; what is left can only be judged for the Face as a whole."""
         try:
             for item in objects:
                 host.add_aperture(item.aperture)
             host.check_apertures_valid(tolerance=1e-6, angle_tolerance=0.001)
             host.check_sub_faces_overlapping(tolerance=1e-6)
         except (AssertionError, ValueError) as error:
+            host.remove_apertures()
             raise RecordError(f"aperture host {host.identifier} could not be built: {error}") from error
 
     def result_fields(self, objects: Mapping[str, TranslatedAperture]) -> Mapping[str, JSONValue]:
@@ -202,7 +207,9 @@ class ApertureSection(Section[ApertureRecord, TranslatedAperture]):
                     raise ValueError("canonical aperture must not carry install overrides")
         declared: dict[str, float] = {}
         exceptions = fields.get("window_schema_exceptions", [])
-        for row in exceptions if isinstance(exceptions, list) else ():
+        if not isinstance(exceptions, list):
+            raise ValueError("unsupported Window schema exception")
+        for row in exceptions:
             if not isinstance(row, Mapping) or set(row) != {"construction_id", "g_value"}:
                 raise ValueError("unsupported Window schema exception")
             identifier, g = row["construction_id"], row["g_value"]

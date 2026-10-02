@@ -409,3 +409,19 @@ def test_real_hbjson_reloads_with_omitted_surface_pair_and_counts_what_it_holds(
     assert all(face["boundary_condition"]["type"] != "Surface" for room in hbjson["rooms"] for face in room["faces"])
     with pytest.raises(ValueError, match="Surface accounting"):
         check({**canonical, "surface_pairs": 1})
+
+
+def test_a_failed_zone_costs_its_surface_partner_a_named_finding_and_withholds_the_model() -> None:
+    document = load_fixture()
+    faces = document["sections"]["ph_composer.zones.faces.export.faces"]["records"]
+    failed = next(face for face in faces if face["boundary_condition"] == "Surface")["zone_id"]
+    next(face for face in faces if face["zone_id"] == failed and face["boundary_condition"] != "Surface")[
+        "assembly_id"
+    ] = "asm_Absent000001"
+
+    result = cast(dict[str, Any], translate(document, SECTIONS).to_document())
+
+    blocking = sorted((row["code"], row["object_id"]) for row in result["findings"] if row["blocks_export"])
+    partner = ({"zon_AAAAAAAAAAAA", "zon_BBBBBBBBBBBB"} - {failed}).pop()
+    assert blocking == sorted([("dependency.unavailable", failed), ("object.unavailable", partner)])
+    assert "canonical_model" not in result

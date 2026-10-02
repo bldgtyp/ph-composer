@@ -558,10 +558,12 @@ The Honeybee Model is built by the foundation's model assembly (`assembly.py`), 
 no feature. A section whose objects belong inside another declares `attaches = Attachment(host,
 key)`, with `host` one of `MODEL`, `ROOM` or `FACE`, and implements `attach(host, objects)`. After
 every section has run, the assembly attaches the host levels outermost first and calls `attach` once
-per host with that host's objects. A missing host, or a `RecordError` from `attach`, is an
-`object.unavailable` finding on each of those objects. The canonical model, `{hbjson, rooms, faces,
+per host with that host's objects, in id order. A section checks what one object's own record
+shows in `translate`, so `attach` judges only what needs the host. A missing host, or a
+`RecordError` from `attach`, is an `object.unavailable` finding on each of those objects;
+`AttachmentRefused` names only the objects it refused. The canonical model, `{hbjson, rooms, faces,
 surface_pairs}` counted from the assembled Model, is a shell field of the result document; it is
-written when the Model holds a Room and nothing failed to attach. Each section's
+written when the Model holds a Room and no attachment was refused. Each section's
 `result_fields` are collected after assembly and sit under its id, `result[section_id][field]`; a
 section with none has no key. After the export reloads the canonical HBJSON, each section's
 `conformance(model, fields)` checks it against that section's own fields.

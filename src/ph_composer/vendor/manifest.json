@@ -391,9 +391,9 @@
       "sha256": "884e2725e72e1d8e08c345067699790718ca70c6a0a3c83ae241abb9dce64dbd"
     },
     "python/ph_composer_translation/assembly.py": {
-      "bytes": 3935,
+      "bytes": 4242,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "db2107cc95858cc962b20ca99fabca8d56e17b6761473dd7d05e4b60df571d1e"
+      "sha256": "32996193772548de1ab6a03ad5d99c6d5f7eac98174d402f29aee36c166b987b"
     },
     "python/ph_composer_translation/composition.py": {
       "bytes": 841,
@@ -446,9 +446,9 @@
       "sha256": "81afd69d32d75db8e3e2b9f305fd568c4c000be8a8d0d37128bbf637ccfd734f"
     },
     "python/ph_composer_translation/model_sections.py": {
-      "bytes": 16030,
+      "bytes": 16462,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "57eecba93e6527dee0c89160ced2d5fbc589283aa802ddd89c7c5327708b48e3"
+      "sha256": "34899e6a2e2451ba7509ba3c5ad4caf0bbb25ae77b328b64f78af226a9d60042"
     },
     "python/ph_composer_translation/result.py": {
       "bytes": 3570,
@@ -456,9 +456,9 @@
       "sha256": "c5ce3e684288159b36def0d454e0ebc6cff3839382f63f42ea58ee6be7afd1f7"
     },
     "python/ph_composer_translation/sections.py": {
-      "bytes": 6357,
+      "bytes": 6912,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "759c17f2e29900dda9ff9740da98111af1d6fc2299ca378f7abb30a2a3ae57af"
+      "sha256": "60b88a69d756abf37bf74c2968f6dde0d348cd25da1d03baed6ae4afd0e0444c"
     },
     "python/ph_composer_translation/stack.py": {
       "bytes": 1361,
@@ -466,9 +466,9 @@
       "sha256": "1b73dab83dd4ee7d5b381d71d70e2a30a753b691f248b035903596f59ca6a740"
     },
     "python/ph_composer_translation/window_sections.py": {
-      "bytes": 11134,
+      "bytes": 11533,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "d9a0cb4f58ef0e1809469fc8bb6b945e1f886dc7155334d28b9402673a21456d"
+      "sha256": "1a3e8e6e710846e0dfa633a4a79e4893b541dd22fa10456e485cb742ad3fcbbe"
     },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,

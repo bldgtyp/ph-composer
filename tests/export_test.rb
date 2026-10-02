@@ -64,6 +64,31 @@ class ExportTest < PhComposerTestCase
                  error.diagnostics.map { |item| [item.code, item.dependency, item.message] }
   end
 
+  def test_a_contributor_reads_a_declared_projection_once_and_nothing_undeclared
+    calls = []
+    feature = feature_declaring do |scope|
+      scope.export_contributor("test.export.hosts", :section_version => 1,
+                               :projection => lambda { |_reader|
+                                 calls << :projected
+                                 %w[h1]
+                               }) { [] }
+      scope.export_contributor("test.export.reader", :section_version => 1, :requires => ["test.export.hosts"]) { [] }
+      scope.export_contributor("test.export.other", :section_version => 1) { [] }
+    end
+    PhComposer::Registry.install([feature])
+    records = Export::RecordReader.new(PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog),
+                                       PhComposer::Registry.current.catalog)
+    reader = Export::SnapshotReader.new(records, Export::GeometrySnapshot.new([], 0))
+
+    hosts = "test.export.hosts"
+    read = reader.within("test.export.reader") { [reader.section(hosts), reader.section(hosts)] }
+
+    assert_equal [%w[h1], %w[h1]], read
+    assert_equal 1, calls.length, "a projection is computed once per export"
+    assert_raises(PhComposer::InternalError) { reader.within("test.export.other") { reader.section(hosts) } }
+    assert_raises(PhComposer::InternalError) { reader.section(hosts) }
+  end
+
   def test_a_report_reads_only_its_own_fields_and_declared_sections
     contributor = PhComposer::Declarations::ExportContributor.new(:name => "a.export.own",
                                                                   :requires => %w[b.export.x d.export.z])

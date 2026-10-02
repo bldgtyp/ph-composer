@@ -125,11 +125,13 @@ Written 2026-10-02 against the two decisions above, before code.
   `ROOM`, then `FACE`. A section declares `attaches = Attachment(host, key)` and implements
   `attach(host, items)`, called once per host with that host's objects in id order, so a host can
   validate all its children together. A missing host, or a `RecordError` from `attach`, becomes an
-  `object.unavailable` finding on each attached object, blocking as `required_for_export` says.
+  `object.unavailable` finding on each attached object, blocking as `required_for_export` says;
+  `AttachmentRefused` names only the refused objects.
   Zones attaches its Rooms to the Model; its `attach` sets building segments and pairs Surfaces,
   which `result_fields` used to do. Windows attaches Apertures to Faces; host eligibility and the
-  owning-Zone check move into `ApertureSection.attach`. The canonical model is serialized only when
-  the run is still publishable and holds at least one Room.
+  owning-Zone check run in `ApertureSection.translate` against the Zones Face specification, a layer
+  down, so one bad Aperture costs only itself. The canonical model is serialized when it holds a Room
+  and no attachment was refused, as a failed Zone already allowed, for diagnostics.
 - **Canonical accounting is the foundation's.** `canonical_model` is a shell field:
   `{hbjson, rooms, faces, surface_pairs}`, counted from the assembled Model. `omitted` leaves it;
   the Faces section's `surface_omissions` already lists every omission.
@@ -151,9 +153,9 @@ Written 2026-10-02 against the two decisions above, before code.
   report renders construction usage, naming each Assembly from Assemblies' `construction_definitions`.
   Assemblies' report lists its translated definitions with their disclosures.
 - **One matcher.** `GeometrySnapshot.definition_facts(definition)` becomes public. The live and
-  export checks both run `DefinitionMatch.matches?` over those facts. The export's extra
+  export checks both run `Units::DefinitionGeometry.facts_match?` over those facts. The export's extra
   `cuts_opening` and `is2d` requirement stays in the export assessment, so authoring behaviour does
-  not change. The assessment reuses `DefinitionIndex.valid_mapping?`.
+  not change. The assessment reuses `DefinitionIndex.valid?`.
 
 ## Verification
 

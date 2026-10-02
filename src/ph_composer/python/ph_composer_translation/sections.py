@@ -35,7 +35,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, ClassVar, Generic, TypeVar
 
-from .contract import JSONValue
+from .contract import JSONValue, RecordError
 from .result import Finding
 
 RecordT = TypeVar("RecordT")
@@ -68,6 +68,15 @@ class Attachment:
 
     host: str
     key: Callable[[Any], str] = _no_key
+
+
+class AttachmentRefused(RecordError):
+    """`attach` refuses some of a host's objects and has attached the rest. Only `refused` emit findings;
+    any refusal still keeps the canonical model from being written."""
+
+    def __init__(self, message: str, refused: Sequence[object]) -> None:
+        super().__init__(message)
+        self.refused = tuple(refused)
 
 
 class DependencyUnavailable(Exception):
@@ -130,7 +139,9 @@ class Section(ABC, Generic[RecordT, ObjectT]):
         return ()
 
     def attach(self, host: Any, objects: Sequence[ObjectT]) -> None:
-        """Joins `objects`, all naming `host`, to it. Raise `RecordError` to refuse them together."""
+        """Joins `objects`, all naming `host`, to it. Raise `RecordError` to refuse them all, leaving the host as
+        it was, or `AttachmentRefused` to refuse only some. Check what one object's own record can show in
+        `translate`, so a defect costs that object only."""
         raise NotImplementedError(f"{self.id} declares an attachment but does not attach")
 
     def result_fields(self, objects: Mapping[str, ObjectT]) -> Mapping[str, JSONValue]:

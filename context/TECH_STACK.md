@@ -265,8 +265,9 @@ run before any record is read, and a record whose required object did not transl
 `Inputs.get(requirement, id)` reads one declared typed object; `Inputs.all(requirement)` reads
 the declared section's translated objects as a detached mapping. Both reject undeclared
 dependencies. Window export adds construction and Aperture sections through the same contract;
-Zone translation declares the Apertures it joins to gross parent Faces. Neither joins raw
-extraction dictionaries or changes the coordinator for a specific feature.
+Apertures declare an attachment to their gross parent Faces, and the model assembly joins them, so
+Zone translation names nothing attached to its Faces. Neither joins raw extraction dictionaries or
+changes the coordinator for a specific feature.
 
 The translation package reads the extraction into typed records in `contract/` and never reads a
 section by key after that. Every section follows one failure policy. A defect that leaves the

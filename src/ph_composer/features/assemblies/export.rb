@@ -89,9 +89,12 @@ module PhComposer
           [definition.fetch("name"), disclosures.join(" ")]
         end
         body = Export::ReportHtml.table(%w[Assembly Disclosures], rows)
+        body += Export::ReportHtml.paragraph(
+          "Only Assemblies that a Face uses are written to the HBJSON; the Construction usage section lists them."
+        )
         if definitions.any? { |row| !row.fetch("membrane_names").empty? }
           body += Export::ReportHtml.paragraph(
-            "Membranes carried in HBJSON; ignored by the current PHX/METr conversion."
+            "Membranes of a used Assembly are carried in HBJSON; the current PHX/METr conversion ignores them."
           )
         end
         body += Export::ReportHtml.paragraph(
