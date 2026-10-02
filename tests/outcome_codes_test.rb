@@ -53,7 +53,7 @@ class OutcomeCodesTest < PhComposerTestCase
 
   # The schedule labels Unit conditions by code; a label for a code nothing declares is stale.
   def test_the_window_schedule_labels_only_declared_codes
-    source = File.read(File.join(SOURCE_ROOT, "ph_composer", "html", "window_schedule.js"))
+    source = File.read(File.join(SOURCE_ROOT, "ph_composer", "html", "features", "windows", "schedule.js"))
     labels = source[/var STATES = \{(.*?)\};/m, 1].scan(/"([a-z_.]+)":/).flatten
     refute_empty labels
     assert_empty labels - declared.keys

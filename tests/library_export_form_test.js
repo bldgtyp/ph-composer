@@ -3,9 +3,9 @@ var assert = require("assert"), test = require("node:test"), dom = require("./su
   source = require("./support/panel_source");
 function setup() {
   var document = dom.buildDocument(""), context = { document: document }; context.window = context;
-  var modules = source.start(context, ["library_export"]), sent = [], state = {
+  var modules = source.start(context, ["library/export"]), sent = [], state = {
     session: "session", revision: 4, ui: { queryResults: {}, fileExportResults: {} } };
-  var form = new modules.library_export(state.session, function (type, payload) {
+  var form = new modules["library/export"](state.session, function (type, payload) {
     sent.push({ type: type, payload: payload }); }, function () {});
   document.body.appendChild(form.root); form.refresh(state);
   return { form: form, sent: sent, state: state };

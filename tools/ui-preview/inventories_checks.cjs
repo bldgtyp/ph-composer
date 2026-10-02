@@ -66,8 +66,8 @@ fs.mkdirSync(output, { recursive: true });
     await wood.fill("0.13");
     await page.evaluate(() => { window.previewHost.materials.records[0].values.conductivity_w_mk = 0.14; });
     await wood.press("Enter");
-    await page.waitForFunction(() => document.querySelector("[data-section='library']")._view.edits.cells[
-      "mat_b:conductivity_w_mk"].status === "error");
+    await page.waitForFunction(() => document.querySelector("[data-section='library']")._view.surface("materials")
+      .inventory.edits.cells["mat_b:conductivity_w_mk"].status === "error");
     assert.equal(await wood.inputValue(), "0.13");
     await page.getByRole("button", { name: "Set display units to IP", exact: true }).click();
     assert.equal(await wood.inputValue(), "0.13", "refused draft keeps its starting units");

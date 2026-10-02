@@ -4,8 +4,8 @@ var assert = require("assert"), test = require("node:test"), dom = require("./su
 function setup(resolution) {
   var context = { document: dom.buildDocument(""), Intl: Intl, setTimeout: setTimeout, clearTimeout: clearTimeout };
   context.window = context; dom.attachEvents(context);
-  var modules = source.start(context, ["library_copy"]), sent = [];
-  var copy = new modules.library_copy("s", function (type, payload) { sent.push({ type: type, payload: payload }); },
+  var modules = source.start(context, ["library/copy"]), sent = [];
+  var copy = new modules["library/copy"]("s", function (type, payload) { sent.push({ type: type, payload: payload }); },
     { properties: [] }, function () {});
   context.document.body.appendChild(copy.root);
   var row = { values: { name: "Public" }, resolution: resolution,

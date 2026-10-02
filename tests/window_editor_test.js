@@ -4,8 +4,8 @@ var assert = require("assert"), test = require("node:test"), dom = require("./su
 function setup() {
   var document = dom.buildDocument(""), context = { document: document, Intl: Intl, innerWidth: 1280,
     setTimeout: setTimeout, clearTimeout: clearTimeout }; context.window = context; dom.attachEvents(context);
-  var modules = source.start(context, ["window_editor"]), state = fixtures.state(), sent = [];
-  var editor = new modules.window_editor.View(document.body, state.session, function (type, payload) {
+  var modules = source.start(context, ["features/windows/editor"]), state = fixtures.state(), sent = [];
+  var editor = new modules["features/windows/editor"].View(document.body, state.session, function (type, payload) {
     sent.push({ type: type, payload: payload }); }); editor.render(state);
   return { editor: editor, state: state, sent: sent, modules: modules, document: document };
 }
@@ -209,12 +209,12 @@ test("withdrawn or disposed Element name form cancels and retained Apply cannot 
 });
 test("Window section navigation uses the Element name guard and missing target cancels pending Apply", function () {
   var o = setup(), sectionGuard, context = { document: o.document }; context.window = context;
-  var modules = source.start(context, ["sections/windows"], {
+  var modules = source.start(context, ["features/windows/section"], {
     panel: { section: function () {}, navigationGuard: function (name, guard) { sectionGuard = guard; } },
-    window_editor: { View: function () { return o.editor; } },
-    window_inventory: { definitions: {} }, "sections/library": { registerSurface: function () {} }
+    "features/windows/editor": { View: function () { return o.editor; } },
+    "features/windows/inventory": { definitions: {} }, "library/section": { registerSurface: function () {} }
   });
-  modules["sections/windows"].render(o.document.body, o.state, function () {});
+  modules["features/windows/section"].render(o.document.body, o.state, function () {});
   o.editor.editName(o.editor.record().elements[0], o.editor.title);
   var bubble = o.editor.bubble, form = bubble.content.querySelector("form"), input = form.querySelector("input");
   input.value = "Pending name"; input.listeners.input({}); assert.ok(sectionGuard("library"));

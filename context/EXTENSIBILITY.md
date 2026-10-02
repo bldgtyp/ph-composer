@@ -105,12 +105,33 @@ call nothing in Zones; Window units and their placement are layer 3 and read Zon
 requires `windows`. The Assemblies inventory shows Face usage through a table contribution from
 Zones' panel module, so the inventory names no Face.
 
+The panel's files follow the same layers. The UI kit sits at the top of `html/`; the foundation's
+own screens are under `html/sections/` (shell, Colour-by, Export) and `html/library/` (the Library
+pane, its provider sidebar and the library export); each feature's screens are under
+`html/features/<feature>/`, matching the Ruby feature of the same name. A module outside
+`features/` depends on no feature module and names no feature id (`tests/panel_layout_test.js`).
+
 The panel has three contribution seams. `panel.section(name, render, { pane })` registers a
-feature's section renderer in a pane ([TECH_STACK.md](TECH_STACK.md), "Panel"). `ui.contributeTable`, below, adds columns and row actions to
-another module's named table. `library.registerSurface(spec)`, exported by the Library section
-(`html/sections/library.js`), adds a record inventory surface to the Library pane; the Windows
-section uses it for Frames, Glazings and Psi-Install Types. Materials and Attached zones are
-still built inside the Library section rather than through this seam (review finding R10).
+feature's section renderer in a pane ([TECH_STACK.md](TECH_STACK.md), "Panel"). The top-level tabs
+and their panes are static markup in `index.html`, so a feature that needs a new top-level pane
+edits `index.html`, which is a composition-root edit the rules permit; a section added to an
+existing pane needs no markup. The other two seams add to a screen another module owns:
+
+- `ui.contributeTable(tableId, contribution)`, below, adds columns and row actions to another
+  module's named table. Zones' Face usage column in the Assemblies inventory
+  (`html/features/zones/assembly_assignment.js`) is the built-in example.
+- `library.registerSurface(spec)`, exported by `html/library/section.js`, adds a record inventory
+  to the Library pane. The spec is `{ id, label, order, recordKind, createLabel, build }`;
+  `build(root, state, send)` returns the surface's view with `records`, `guard()`,
+  `render(state)` and `dispose()`. A `recordKind` makes the surface's selected rows exportable
+  through the view's `inventory`; a `createLabel` puts a "+ New" button in the pane heading that
+  calls the view's `create()` and is enabled by its `canCreate()`. Every built-in inventory uses
+  this seam: Materials (`html/features/assemblies/materials.js`), Attached zones
+  (`html/features/zones/attached_zones.js`) and the Windows products, whose
+  `html/features/windows/section.js` registers Frames, Glazings and Psi-Install Types from one
+  definition table in a few lines. Shared inventory mechanics are in the kit:
+  `html/inventory.js` (the table, view controls, cell and range edits) and `html/inventory_forms.js`
+  (the color picker and Delete with a replacement).
 
 `ui.contributeTable(tableId, contribution)` registers columns and row actions without retaining a
 snapshot. The owner calls `ui.composeTable(tableId, options, state, send)` for each paint.

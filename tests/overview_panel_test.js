@@ -14,7 +14,7 @@ function page() {
   };
   context.window = context;
   dom.attachEvents(context);
-  var modules = panelSource.start(context, ["sections/shell", "sections/overview"]);
+  var modules = panelSource.start(context, ["sections/shell", "features/zones/overview"]);
   return { context: context, panel: modules.panel, modules: modules, sent: sent,
     query: function (selector) { return context.document.querySelector(selector); } };
 }

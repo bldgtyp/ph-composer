@@ -17,7 +17,7 @@ function page() {
   };
   context.window = context;
   dom.attachEvents(context);
-  var modules = panelSource.start(context, ["sections/classify"]);
+  var modules = panelSource.start(context, ["features/zones/classify"]);
   return { context: context, panel: modules.panel, sent: sent,
     section: function () { return context.document.querySelector("[data-section='ph_composer.classify']"); } };
 }

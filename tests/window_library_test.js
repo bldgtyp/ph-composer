@@ -7,7 +7,8 @@ function setup(inventoryKind) {
   var create = document.createElement;
   document.createElement = function (tag) { var node = create(tag);
     node.remove = function () { if (node.parentNode) node.parentNode.removeChild(node); }; return node; };
-  var modules = source.start(context, ["window_editor", "window_inventory", "window_library"]),
+  var modules = source.start(context, ["features/windows/editor", "features/windows/inventory",
+    "features/windows/library"]),
     state = fixtures.state(), sent = [];
   state.sections["ph_composer.library.provider_catalogs"] = { status: "completed", value: [{ id: "provider",
     label: "Synthetic windows", provider_kind: "ph_composer.library.file", kinds: ["frames", "glazings",
@@ -15,8 +16,8 @@ function setup(inventoryKind) {
       return { kind: kind, generation: 1, state: "loaded" };
     }) }] };
   function send(type, payload) { sent.push({ type: type, payload: payload }); }
-  var view = inventoryKind ? new modules.window_inventory.Inventory(document.body, "session", send,
-    inventoryKind, function () {}) : new modules.window_editor.View(document.body, "session", send);
+  var view = inventoryKind ? new modules["features/windows/inventory"].Inventory(document.body, "session", send,
+    inventoryKind, function () {}) : new modules["features/windows/editor"].View(document.body, "session", send);
   view.render(state); return { view: view, state: state, sent: sent, modules: modules, document: document };
 }
 function provider(o, sidebar, kind) {
@@ -33,12 +34,13 @@ function click(node) { node.listeners.click({ preventDefault: function () {}, st
 function plain(value) { return JSON.parse(JSON.stringify(value)); }
 test("three Window adapters retain SI descriptors and manufacturer groups without requesting data", function () {
   var o = setup(); ["frames", "glazings", "psi_install_types"].forEach(function (kind) {
-    var adapter = o.modules.window_library.adapter(kind);
+    var adapter = o.modules["features/windows/library"].adapter(kind);
     assert.strictEqual(adapter.wireKind, kind); assert.ok(adapter.properties.length);
     assert.strictEqual(adapter.read(o.state).length, 1);
   });
-  assert.strictEqual(o.modules.window_library.adapter("frames").category({ values: { manufacturer: "Maker" } }),
-    "Maker"); assert.strictEqual(o.sent.length, 0);
+  var frames = o.modules["features/windows/library"].adapter("frames");
+  assert.strictEqual(frames.category({ values: { manufacturer: "Maker" } }), "Maker");
+  assert.strictEqual(o.sent.length, 0);
 });
 test("Frame native drag copies and assigns one canonical side using the full frozen Type guard", function () {
   var o = setup(), sidebar = o.view.sidebars.frames, row = provider(o, sidebar, "frames");

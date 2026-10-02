@@ -4,7 +4,7 @@ var assert = require("assert"), test = require("node:test"), dom = require("./su
 function setup() {
   var document = dom.buildDocument(""), context = { document: document, Intl: Intl, innerWidth: 1280,
     setTimeout: setTimeout, clearTimeout: clearTimeout }; context.window = context; dom.attachEvents(context);
-  var modules = source.start(context, ["window_editor"]), state = fixtures.state(), sent = [];
+  var modules = source.start(context, ["features/windows/editor"]), state = fixtures.state(), sent = [];
   var host = { zone_id: "zon_a", zone_path: [10], entity_path: [20], entity_id: null };
   state.sections["ph_composer.windows.place_tool"] = { status: "completed", value: {
     active: false, type_id: null, anchor: "sill_center", host: null } };
@@ -26,7 +26,7 @@ function setup() {
   state.sections["ph_composer.zones.faces.faces"] = { status: "completed", value: { faces: [
     { reference: host, values: { face_type: "Wall", boundary_condition: "Outdoors" } }
   ] } };
-  var editor = new modules.window_editor.View(document.body, state.session, function (type, payload) {
+  var editor = new modules["features/windows/editor"].View(document.body, state.session, function (type, payload) {
     sent.push({ type: type, payload: payload }); }); editor.render(state);
   return { editor: editor, state: state, sent: sent, document: document };
 }

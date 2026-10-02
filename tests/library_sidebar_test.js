@@ -5,9 +5,9 @@ function setup() {
   var context = { document: dom.buildDocument(""), Intl: Intl, innerWidth: 1280, innerHeight: 800,
     setTimeout: setTimeout, clearTimeout: clearTimeout };
   context.window = context; dom.attachEvents(context);
-  var modules = source.start(context, ["library_sidebar"]), sent = [], target = { id: "a", layer_id: "l",
+  var modules = source.start(context, ["library/sidebar"]), sent = [], target = { id: "a", layer_id: "l",
     segment_id: "s", expected_values: { name: "Assembly", layers: [] } };
-  var sidebar = new modules.library_sidebar({ session: "session", send: function (type, payload) {
+  var sidebar = new modules["library/sidebar"]({ session: "session", send: function (type, payload) {
     sent.push({ type: type, payload: payload });
   }, adapter: { title: "Synthetic library", wireKind: "test_parts", read: function () { return []; },
     properties: [], target: function () { return { params: target }; } }, onUse: function () {} });

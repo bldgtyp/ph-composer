@@ -124,7 +124,7 @@ working namespace D8 confirmed; the final public name is still open. The followi
 | `colour_by/` | The shared Colour-by service: the mode registry's consumers, the viewport overlay and HUD, and the drawing cache. Names no feature |
 | `library/` | The optional provider seam, file/folder provider, catalog/copy coordinator and model-library export |
 | `export/` | The export run: contributors, the attribute guard, artifact hygiene, the report, and the exporter registry |
-| `html/` | The UI kit: a module graph with a generated script list and owned stylesheets |
+| `html/` | The panel: the UI kit at its top level (a module graph with a generated script list and owned stylesheets), the foundation's screens in `sections/` and `library/`, and one folder per feature in `features/` |
 | `python/`, `runtime/`, `vendor/` | The translation package and exporter registry (no exporter registered yet), the Pyodide loader and the pinned payload |
 
 Outside it: `tests/` for the offline suites and fixtures, `tools/` for development-only build,
