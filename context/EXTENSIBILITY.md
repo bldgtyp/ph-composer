@@ -283,7 +283,8 @@ supplies current record-dependent items, such as Attached zones. Both receive th
 as a Colour-by projection, under the declaring feature's owner, with `read.session` for
 session-owned state. Menu handlers and `state:` tests still receive the session; a handler that
 reads or invokes is a client and keeps one long-lived context per session, as the Zones selection
-client and the Windows menu do. Providers run only while building a context menu;
+client and the Windows menu do. A test or provider that raises is logged and its item left out;
+the rest of the context menu is still built. Providers run only while building a context menu;
 the Extensions menu is installed once. The shell validates the supplied entry shapes and remains
 independent of contributor vocabulary and record kinds.
 

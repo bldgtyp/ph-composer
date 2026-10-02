@@ -385,12 +385,16 @@ commands; queries never change that state.
 Colour-by projections, native menu `available:` tests and `menu_entries` providers receive the
 same request with no params and no proposal, built by the shell under the declaring feature's owner
 (`HandlerRequest.for`). Features never build one, and none of these callbacks connects to the
-public API, so drawing the overlay or opening a context menu issues no caller handle.
+public API, so drawing the overlay or opening a context menu issues no caller handle. These reads
+do not pass dispatch: they are not refused while the session is busy, and a failing read raises
+rather than answering an outcome. The Colour-by service turns a raising projection off with a
+notice; the shell logs a raising menu test or provider and leaves out that item alone.
 
 `request.memo(key) { ... }` computes a value once per request and shares it with the nested reads
 and callbacks the request makes. A memo is keyed by the current owner, so two features cannot
 collide, and by the current engine, so a value read through one engine is never reused under a
-projected one (a library callback's). Memos end with the request.
+projected one (a library callback's). A memo does not observe writes the request stages after
+computing it. Memos end with the request.
 
 ## Compound proposals
 

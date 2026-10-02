@@ -51,7 +51,11 @@ module PhComposer
         private
 
         def type_values(type_id)
-          records = query("ph_composer.records.list", "kind" => TYPE_KIND, "ids" => [type_id]).fetch("records")
+          read = query("ph_composer.records.list", "kind" => TYPE_KIND, "ids" => [type_id])
+          if (unreadable = read.fetch("unreadable").first)
+            raise CodedError.new(unreadable.fetch("code"), unreadable.fetch("message"))
+          end
+          records = read.fetch("records")
           raise CodedError.new("target.not_found", "There is no Window Type with id #{type_id}.") if records.empty?
 
           records.first.fetch("values")

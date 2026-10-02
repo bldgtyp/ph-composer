@@ -23,10 +23,10 @@ module PhComposer
           unless Settings.read(model) == @settings
             raise CodedError.new("target.changed", "Zone settings changed after preview. Nothing was written.")
           end
-          request = Dispatch::Request.new(:session => @request.session, :model => model,
-                                           :params => { "zone" => slots.fetch(@zone_id) },
-                                           :engine => @request.engine, :revision => @request.revision,
-                                           :registry => @request.registry)
+          request = @request.dup
+          request.model = model
+          request.params = { "zone" => slots.fetch(@zone_id) }
+          request.proposal = nil
           suggestion = Operations::Proposal.new
           Faces.auto_classify(request, suggestion, :skip_unwritable => true)
           suggestion.apply(model, request.engine)

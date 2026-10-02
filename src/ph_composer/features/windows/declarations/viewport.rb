@@ -77,7 +77,7 @@ module PhComposer
 
         faces = read.query("ph_composer.zones.faces.selection").fetch("faces")
         faces.first if faces.length == 1
-      rescue CodedError, UserError
+      rescue UserError
         nil
       end
 
@@ -85,7 +85,9 @@ module PhComposer
       def choose_from_menu(session)
         types = query(session, "ph_composer.records.list", "kind" => TYPE_KIND, "fields" => ["name"],
                                                             "limit" => Pages::MAXIMUM_LIMIT)
-        rows = Array(types && types.fetch("records")).map do |row|
+        return unless types
+
+        rows = types.fetch("records").map do |row|
           { "id" => row.fetch("id"), "name" => row.dig("values", "name") }
         end
         return if rows.empty?
@@ -115,16 +117,24 @@ module PhComposer
 
       def invoke_choice(session, params)
         result = API.view(:context => context(session), :name => "#{PREFIX}.choose", :params => params)
-        unless result.fetch("status") == "completed"
-          Sketchup.status_text = result.fetch("message")
-          session.notice(result.fetch("message"), :tone => :warning)
-        end
+        show_refusal(session, result)
         result
       end
 
+      # A refused read is shown, as a refused choice is, rather than silently doing nothing.
       def query(session, name, params)
         result = API.query(:context => context(session), :name => name, :params => params)
-        result.fetch("value") if result.fetch("status") == "completed"
+        return result.fetch("value") if result.fetch("status") == "completed"
+
+        show_refusal(session, result)
+        nil
+      end
+
+      def show_refusal(session, result)
+        return if result.fetch("status") == "completed"
+
+        Sketchup.status_text = result.fetch("message")
+        session.notice(result.fetch("message"), :tone => :warning)
       end
 
       def context(session)

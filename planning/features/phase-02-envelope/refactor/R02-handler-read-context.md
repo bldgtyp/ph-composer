@@ -1,7 +1,7 @@
 # R02: projections and menus have no read context, so features improvise one
 
 DATE: 2026-10-01
-STATUS: Requested
+STATUS: Implemented on branch `refactor/r02-handler-read-context`, 2026-10-01. `make ci` passes on Ruby 3.2.2 and the offline suite on 2.7.2. Host gate outstanding.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Reproduced defect (caller-handle growth) inside an evidenced contract gap.
@@ -83,5 +83,63 @@ Related per-request state smuggled onto the request struct:
 - `grep -rn "instance_variable_" src` and `grep -rn "Registry.current" features` return nothing
   outside the composition root.
 - The Colour-by walkthrough (`tools/examples/authoring/colour_by_walkthrough.rb`) is updated to the
-  new projection signature and still passes. Host gate: Assembly and Window Type modes redraw after
+  new projection signature and still passes. Review: one independent Opus pass with the architecture rubric. It reproduced three Windows
+regressions, all fixed with a test each: an unreadable Type was reported as missing from the Place
+tool (now `record.unreadable`); a failing Zones selection read aborted every context menu (the
+shell now logs a raising `available:` test or provider and omits that item alone, as a refused
+`API.query` used to hide it); and a busy session made Place Window… silently do nothing (the
+refusal is now shown). `SuggestMadeZoneStep` built a second request by hand; it now duplicates its
+own. CONTRACTS records that these reads bypass busy checks and raise, and that a memo does not
+observe later staged writes. Memo reuse, the Colour-by failure path and Ruby 2.7 compatibility
+were traced clean.
+
+Host gate: Assembly and Window Type modes redraw after
   an edit, Undo and Redo (repeat of `assembly_colour_refresh_test.rb` behaviour on the host).
+
+## Outcome
+
+Implemented 2026-10-01 on `refactor/r02-handler-read-context`.
+
+1. **Read context.** `HandlerRequest.for(session, owner:, name:, ...)` is the one constructor; `Dispatch`
+   delegates to it. The Colour-by service passes a read request to each projection, and
+   `Commands` passes one to each `available:` test and `menu_entries` provider, under the declaring
+   feature's owner. All seven built-in modes and every built-in menu test changed in the same pass;
+   no `model`/`session` arity is kept. Zones' Assembly mode uses `read.query`; Windows' Type mode
+   and menus use `read.engine`. Menu handlers and `state:` tests still receive the session.
+2. **Memo.** `request.memo(key) { }`, keyed by owner inside a per-engine slot, replaces the six
+   `instance_variable_*` calls. Nested reads share it; a library callback's projected engine gets
+   its own slot.
+3. **Caller registry.** Projections and menu tests no longer connect. The Windows and Library menu
+   handlers keep one context per session (`session.feature_state`), as the Zones selection client
+   does. No `API.disconnect` was added; R03 reworks the public surface next.
+4. **`Hosts.resolve(model, reference, zone_rows:, face_rows:, writable:)`.** The fake request is
+   gone. The Place tool reads the Window Type through `ph_composer.records.list` instead of a
+   direct engine.
+5. Also: `ColourBy.registered?` replaces the Classify tool's `Registry.current` reach.
+
+Tests: `tests/read_context_test.rb` reproduced the growth first (callers 2 to 8 over three redraws
+and three context-menu builds) and now pins it unchanged; it also asserts that no file under
+`features/` or `library/` builds a read request or uses `instance_variable_`, and none under
+`features/` reaches `Registry.current`. `tests/handler_request_test.rb` covers memo sharing and
+scoping. The Colour-by walkthrough declares no mode, so it needed no change.
+
+Follow-ups left out:
+
+- `library/install.rb:48`: the file provider factory reaches `Registry.current`; the factory
+  contract takes no arguments, so this belongs with the provider contract, not here.
+- `Commands` evaluates an entry provider's `available:` twice per context-menu build (pre-existing).
+- `choose_from_menu` lists at most 500 Types and skips unreadable ones; the `available:` test and
+  the Window Type Colour-by mode still raise on an unreadable Type (pre-existing).
+
+Review: one independent Opus pass with the architecture rubric. It reproduced three Windows
+regressions, all fixed with a test each: an unreadable Type was reported as missing from the Place
+tool (now `record.unreadable`); a failing Zones selection read aborted every context menu (the
+shell now logs a raising `available:` test or provider and omits that item alone, as a refused
+`API.query` used to hide it); and a busy session made Place Window… silently do nothing (the
+refusal is now shown). `SuggestMadeZoneStep` built a second request by hand; it now duplicates its
+own. CONTRACTS records that these reads bypass busy checks and raise, and that a memo does not
+observe later staged writes. Memo reuse, the Colour-by failure path and Ruby 2.7 compatibility
+were traced clean.
+
+Host gate: Assembly and Window Type modes redraw after an edit, Undo and Redo. Outstanding. Because
+`shell/` and `colour_by/` changed, the acceptance ledger flags every case for recheck.

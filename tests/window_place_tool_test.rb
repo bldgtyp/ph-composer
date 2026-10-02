@@ -353,6 +353,21 @@ class WindowPlaceToolTest < PhComposerTestCase
     assert_empty W::Units::Occurrences.all(@model)
   end
 
+  def test_unreadable_type_refuses_with_its_own_code_not_as_missing
+    dictionary = "ph_composer.records.#{W::TYPE_KIND}"
+    record = JSON.parse(@model.get_attribute(dictionary, @type_id)).merge("rows_m" => "broken")
+    @model.set_attribute(dictionary, @type_id, JSON.generate(record))
+    result = API.view(:context => @context, :name => "#{PREFIX}.choose", :params => { "type_id" => @type_id })
+    assert_equal %w[refused record.unreadable], result.values_at("status", "code")
+  end
+
+  def test_native_menu_read_refusal_is_visible_instead_of_doing_nothing
+    refused = PhComposer::Outcome.refused("session.busy", "PH-Composer is busy.", :revision => @session.revision)
+    API.stub(:query, refused) { W::ViewportRegistration.choose_from_menu(@session) }
+    assert_equal ["PH-Composer is busy.", :warning], @notices.last
+    refute @tool.active?
+  end
+
   def test_place_snapshot_get_never_issues_a_native_tool_caller
     before = @session.callers.count
     2.times do

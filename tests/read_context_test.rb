@@ -35,7 +35,7 @@ class ReadContextTest < PhComposerTestCase
     root = File.expand_path("../src/ph_composer", __dir__)
     sources = Dir[File.join(root, "{features,library}", "**", "*.rb")].to_h { |path| [path, File.read(path)] }
 
-    assert_empty(sources.select { |_path, text| text.include?("HandlerRequest.for") }.keys)
+    assert_empty(sources.select { |_path, text| text.match?(/HandlerRequest\.for|Request\.new\(/) }.keys)
     assert_empty(sources.select { |_path, text| text.include?("instance_variable_") }.keys)
     assert_empty(sources.select { |path, text| path.include?("/features/") && text.include?("Registry.current") }.keys)
   end
