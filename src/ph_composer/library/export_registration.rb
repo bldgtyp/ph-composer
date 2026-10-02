@@ -10,12 +10,23 @@ module PhComposer
       def params
         text = { "type" => "string", "minLength" => 1 }
         selected = Library.object({ "record_kind" => text, "id" => text })
-        Library.object({ "scope" => { "type" => "string", "enum" => %w[all selected] },
-          "identity" => { "type" => "string", "enum" => %w[new update] },
-          "kinds" => { "type" => "array", "items" => text, "minItems" => 1 },
-          "records" => { "type" => "array", "items" => selected, "minItems" => 1 },
-          "library_name" => text, "expected_revision" => { "type" => "integer", "minimum" => 0 } },
-          :optional => %w[scope identity kinds records library_name expected_revision])
+        Library.object({
+          "scope" => Library.described({ "type" => "string", "enum" => %w[all selected] },
+                                       "all, the default, takes every supported local definition; selected takes " \
+                                       "only records."),
+          "identity" => Library.described({ "type" => "string", "enum" => %w[new update] },
+                                          "new, the default, gives the file a new library id; update keeps the id " \
+                                          "of the library file being replaced."),
+          "kinds" => Library.described({ "type" => "array", "items" => text, "minItems" => 1 },
+                                       "Limit the export to these library kinds, such as materials."),
+          "records" => Library.described({ "type" => "array", "items" => selected, "minItems" => 1 },
+                                         "With scope selected: the records to export, each by record kind and id."),
+          "library_name" => Library.described(text, "The library name written into the file. Defaults to Model " \
+                                                    "library, or to the replaced file's name for update."),
+          "expected_revision" => Library.described({ "type" => "integer", "minimum" => 0 },
+                                                   "The Model revision export_preview reported; refused if the " \
+                                                   "Model changed since.")
+        }, :optional => %w[scope identity kinds records library_name expected_revision])
       end
 
       def summary_fields

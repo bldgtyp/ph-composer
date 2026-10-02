@@ -16,8 +16,11 @@ module PhComposer
         state = Shapes.object({ "active" => { "type" => "boolean" },
           "type_id" => { "type" => %w[string null] }, "anchor" => { "type" => "string", "enum" => Units::Anchors::ALL },
           "host" => nullable_face })
-        params = Shapes.object({ "type_id" => Shapes::ID,
-          "anchor" => { "type" => "string", "enum" => Units::Anchors::ALL }, "host" => nullable_face },
+        params = Shapes.object({ "type_id" => Shapes.id("wnt", "The Window Type to place."),
+          "anchor" => UnitRegistration::ANCHOR.merge("description" => "#{UnitRegistration::ANCHOR_TEXT} " \
+                                                                      "sill_center when absent."),
+          "host" => nullable_face.merge("description" => "A Face to place on, or null to pick one in the " \
+                                                         "viewport.") },
           :optional => %w[anchor host])
         feature.query("#{PREFIX}.get", :description => "This Model's Place tool choice and active state.",
           :params => Shapes::NONE, :result => state, :examples => [{}]) do |request|
@@ -41,7 +44,8 @@ module PhComposer
         reference = Units::TARGET.descriptor.occurrence_schema
         feature.view_command("#{FEATURE_ID}.units.locate",
           :description => "Select and zoom to explicit Window occurrences.",
-          :params => Shapes.object({ "units" => Shapes.list(reference).merge("minItems" => 1, "maxItems" => 500) }),
+          :params => Shapes.object({ "units" => Shapes.list(reference).merge("minItems" => 1, "maxItems" => 500,
+            "description" => "The Window occurrences to select, as units.list references them.") }),
           :result => Shapes.object({ "units" => Shapes.list(reference) }),
           :examples => [{ "units" => [UnitRegistration::EXAMPLE_UNIT] }]) do |request|
           Units::Locate.call(request.model, request.params.fetch("units"))

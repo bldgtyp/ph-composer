@@ -21,8 +21,19 @@ module PhComposer
         "required" => properties.keys - optional }
     end
 
+    # `schema` with what it means to a caller, for discovery.
+    def described(schema, text)
+      schema.merge("description" => text)
+    end
+
     def selected_params
-      object({ "provider_id" => TEXT, "kind" => TEXT, "generation" => GENERATION }, :optional => ["generation"])
+      object({
+        "provider_id" => described(TEXT, "A configured library, by the id ph_composer.library.providers lists."),
+        "kind" => described(TEXT, "The library kind, such as materials or frames; providers lists the kinds each " \
+                                  "library serves."),
+        "generation" => described(GENERATION, "The catalog generation the caller read. Omit it to use the " \
+                                              "current one; a stale one is refused as library.catalog_stale.")
+      }, :optional => ["generation"])
     end
 
     def page_params
@@ -32,9 +43,19 @@ module PhComposer
 
     def copy_params
       properties = selected_params.fetch("properties").merge(
-        "library_id" => TEXT, "record_id" => TEXT,
-        "choice" => { "type" => "string", "enum" => %w[create keep_local use_library] },
-        "local_id" => TEXT, "expected_values" => OBJECT, "assignment" => OBJECT
+        "library_id" => described(TEXT, "The library holding the row, as the catalog row gives it."),
+        "record_id" => described(TEXT, "The row's record id within that library."),
+        "choice" => described({ "type" => "string", "enum" => %w[create keep_local use_library] },
+                              "create copies the row as a new local record; keep_local reuses a reviewed local " \
+                              "candidate unchanged; use_library replaces a reviewed candidate's values with the " \
+                              "library's. Read the resolution first with in_file or a preview."),
+        "local_id" => described(TEXT, "The reviewed local candidate for keep_local or use_library, from the " \
+                                      "resolution's candidates. May be omitted when there is exactly one."),
+        "expected_values" => described(OBJECT, "For use_library: the candidate's expected_values from the " \
+                                               "resolution. Refused when the local record changed since."),
+        "assignment" => described(OBJECT, "Optional: where the owning feature also assigns the copied record, " \
+                                          "in that kind's assignment target shape, such as one Window Type " \
+                                          "element side.")
       )
       object(properties, :optional => %w[local_id expected_values assignment])
     end

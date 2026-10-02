@@ -30,6 +30,8 @@ module PhComposer
           "value" => { "type" => %w[string null], "description" => "The value `set` writes." }
         }, :optional => ["value"])
         FACES = { "type" => "array", "items" => FACE_REFERENCE, "minItems" => 1 }.freeze
+        USER_DATA = { "type" => "object", "description" => "Free metadata kept with the record and exported " \
+                                                           "verbatim." }.freeze
         EXPECTED = FACE_VALUES.merge("description" => "The values last read for every target; a change refuses.")
         CLASSIFY_PARAMS = Shapes.object({
           # The ceiling is a feature bound, not a schema bound, so one Face over it refuses with
@@ -37,18 +39,25 @@ module PhComposer
           "faces" => FACES.merge("description" => "One gesture's deduplicated Face occurrences."),
           "intent" => Shapes.object({ "face_type" => INTENT, "boundary_condition" => INTENT,
                                       "attached_zone_id" => INTENT, "assembly_id" => INTENT },
-                                    :optional => %w[face_type boundary_condition attached_zone_id assembly_id]),
+                                    :optional => %w[face_type boundary_condition attached_zone_id assembly_id],
+                                    :description => "Per field: keep each Face's value, set one value on every " \
+                                                    "Face, or clear it. An absent field is kept."),
           "expected_values" => EXPECTED
         }, :optional => ["expected_values"]).freeze
         FACE_IDS_RESULT = Shapes.object({
           "face_ids" => Shapes.list(Shapes::ID, :description => "Face records written; empty when nothing changed.")
         }).freeze
-        AUTO_CLASSIFY_PARAMS = Shapes.object({ "zone" => ZONE_REFERENCE }).freeze
+        AUTO_CLASSIFY_PARAMS = Shapes.object({
+          "zone" => ZONE_REFERENCE.merge("description" => "The Zone occurrence whose unrecorded Faces get the " \
+                                                          "suggested classification.")
+        }).freeze
         AUTO_CLASSIFY_RESULT = Shapes.object({
           "classified" => Shapes::COUNT.merge("description" => "Faces given a suggested record."),
           "kept" => Shapes::COUNT.merge("description" => "Faces that already had a record and were left alone.")
         }).freeze
-        REVERSE_PARAMS = Shapes.object({ "face" => FACE_REFERENCE }).freeze
+        REVERSE_PARAMS = Shapes.object({
+          "face" => FACE_REFERENCE.merge("description" => "The Face occurrence whose orientation to reverse.")
+        }).freeze
         SUGGESTED = Shapes.object({ "face_type" => { "type" => "string", "enum" => FACE_TYPES },
                                     "boundary_condition" => { "type" => "string", "enum" => BOUNDARY_CONDITIONS } },
                                   :description => "What Suggest classification would write.")
@@ -98,7 +107,8 @@ module PhComposer
           )
         ).freeze
         CHOOSE_PARAMS = Shapes.object({
-          "field" => { "type" => "string", "enum" => %w[face_type boundary_condition attached_zone_id assembly_id] },
+          "field" => { "type" => "string", "enum" => %w[face_type boundary_condition attached_zone_id assembly_id],
+                       "description" => "The Classify palette field to choose a value for." },
           "value" => { "type" => %w[string null],
                        "description" => "The value to set, or null to keep whatever each Face has." },
           "reset" => { "type" => "boolean", "description" => "Clear other palette choices before this choice." }
@@ -119,19 +129,25 @@ module PhComposer
         }).freeze
         ATTACHED_ZONE_SAVE_PARAMS = Shapes.object({
           "id" => { "type" => "string", "description" => "The record to edit; absent creates one." },
-          "values" => ATTACHED_ZONE.patch_schema, "user_data" => { "type" => "object" },
+          "values" => ATTACHED_ZONE.patch_schema.merge("description" => "The Attached zone values to write; only " \
+                                                                        "those given change."),
+          "user_data" => USER_DATA,
           "expected_values" => ATTACHED_ZONE.patch_schema.merge("description" => "The values last read.")
         }, :optional => %w[id user_data expected_values]).freeze
         ATTACHED_ZONE_ID_RESULT = Shapes.object({ "id" => Shapes::ID }).freeze
         ATTACHED_ZONE_CREATE_ASSIGN_PARAMS = Shapes.object({
-          "faces" => FACES, "values" => ATTACHED_ZONE.patch_schema, "user_data" => { "type" => "object" },
-          "intent" => Shapes.object({ "face_type" => INTENT }, :optional => ["face_type"]),
+          "faces" => FACES.merge("description" => "The Face occurrences to assign the new Attached zone to."),
+          "values" => ATTACHED_ZONE.patch_schema.merge("description" => "The new Attached zone's values."),
+          "user_data" => USER_DATA,
+          "intent" => Shapes.object({ "face_type" => INTENT }, :optional => ["face_type"],
+                                    :description => "Optionally keep, set or clear the Faces' face_type in the " \
+                                                    "same step."),
           "expected_values" => EXPECTED
         }, :optional => %w[user_data intent expected_values]).freeze
         ATTACHED_ZONE_CREATE_ASSIGN_RESULT = Shapes.with(ATTACHED_ZONE_ID_RESULT,
                                                          FACE_IDS_RESULT.fetch("properties")).freeze
         ATTACHED_ZONE_DELETE_PARAMS = Shapes.object({
-          "id" => Shapes::ID,
+          "id" => Shapes::ID.merge("description" => "The Attached zone to delete."),
           # Either another Attached zone every referencing Face moves to, or an explicit boundary
           # condition they are reclassified as. There is no third, silent route.
           "replacement" => Shapes.object({
@@ -139,11 +155,14 @@ module PhComposer
             "attached_zone_id" => { "type" => "string", "description" => "With mode attached_zone." },
             "boundary_condition" => { "type" => "string", "enum" => %w[Outdoors Ground Adiabatic],
                                       "description" => "With mode boundary_condition." }
-          }, :optional => %w[attached_zone_id boundary_condition])
+          }, :optional => %w[attached_zone_id boundary_condition],
+             :description => "Where the Faces naming it go: to another Attached zone, or reclassified to a " \
+                             "boundary condition.")
         }).freeze
         ATTACHED_ZONE_DELETE_RESULT = Shapes.object({ "id" => Shapes::ID, "reassigned_faces" => Shapes::COUNT }).freeze
         ATTACHED_ZONE_DUPLICATE_PARAMS = Shapes.object({
-          "ids" => { "type" => "array", "items" => Shapes::ID, "minItems" => 1 }
+          "ids" => { "type" => "array", "items" => Shapes::ID, "minItems" => 1,
+                     "description" => "The Attached zones to copy, each under a new id and a numbered name." }
         }).freeze
         ATTACHED_ZONE_DUPLICATE_RESULT = Shapes.object({
           "ids" => { "type" => "object", "additionalProperties" => Shapes::ID,

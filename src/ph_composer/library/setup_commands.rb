@@ -43,7 +43,8 @@ module PhComposer
           end
         end
         feature.setup_command("#{PREFIX}.remove", :description => "Remove a configured library from this machine.",
-                             :params => Library.object({ "provider_id" => Library::TEXT }), :result => result,
+                             :params => Library.object({ "provider_id" => Library.described(Library::TEXT,
+                               "The configured library to remove from this machine.") }), :result => result,
                              :examples => [{ "provider_id" => "example" }]) do |request|
           id = request.params.fetch("provider_id")
           value = Setup.remove(id)

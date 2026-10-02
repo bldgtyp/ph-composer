@@ -41,7 +41,11 @@ module PhComposer
           end
           feature.snapshot_section("#{FEATURE_ID}.settings", :query => "#{FEATURE_ID}.settings.get")
           feature.action("#{FEATURE_ID}.settings.update", :description => "Set this Model's classification settings.",
-                         :params => Shapes.object({ "values" => VALUES, "expected_values" => VALUES }),
+                         :params => Shapes.object({
+                           "values" => VALUES.merge("description" => "The complete new settings."),
+                           "expected_values" => VALUES.merge("description" => "The settings last read; a change " \
+                                                                             "refuses.")
+                         }),
                          :result => VALUES, :undo_name => "Change Zone Settings",
                          :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }],
                          :side_effects => "Stores classification settings in this SKP in one Undo step.") do |

@@ -32,10 +32,14 @@ module PhComposer
       end
 
       def declare_duplicate(feature, prefix, kind, example_id)
-        properties = { "id" => Shapes::ID }
+        properties = { "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to copy.") }
         if kind.id == MATERIAL_KIND
-          properties.merge!("name" => { "type" => "string", "minLength" => 1 },
-                            "copy_datasheets" => { "type" => "boolean" })
+          properties.merge!(
+            "name" => { "type" => "string", "minLength" => 1,
+                        "description" => "The copy's name; \"<name> (copy)\" when absent. Names are unique." },
+            "copy_datasheets" => { "type" => "boolean", "description" => "Keep the datasheet links on the copy; " \
+                                                                       "false when absent." }
+          )
         end
         feature.action("#{prefix}.duplicate", :description => "Duplicate one #{kind.label} with independent identity.",
                        :params => Shapes.object(properties, :optional => %w[name copy_datasheets]),
@@ -47,12 +51,15 @@ module PhComposer
       end
 
       def declare_delete(feature, prefix, kind, example_id)
-        properties = { "id" => Shapes::ID, "expected_values" => kind.descriptor.patch_schema }
+        properties = { "id" => Shapes.id(kind.id_prefix, "The #{kind.label} to delete."),
+                       "expected_values" => Shapes.expected(kind) }
         properties["replacement_id"] = if kind.id == MATERIAL_KIND
-                                         Shapes::ID
+                                         Shapes.id("mat", "The Material every Layer-Segment using the deleted one " \
+                                                          "takes instead. Needed while any Assembly uses it.")
                                        else
-                                         { "type" => %w[string null],
-                                           "description" => "Replacement identity, or explicit null to clear uses." }
+                                         Shapes.id("asm", "The Assembly every Face using the deleted one takes " \
+                                                          "instead, or null to clear those Faces' Assembly. " \
+                                                          "Needed while any Face uses it.", :nullable => true)
                                        end
         feature.action("#{prefix}.delete", :description => "Delete #{kind.label}; remaining references refuse.",
                        :params => Shapes.object(properties, :optional => %w[expected_values replacement_id]),

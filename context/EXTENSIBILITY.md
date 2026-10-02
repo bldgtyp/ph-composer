@@ -131,10 +131,13 @@ table. Registries must diagnose duplicate registrations, missing dependencies an
 contract versions. Keep supported public APIs distinguishable from implementation details.
 
 Implemented registration checks: the JSON Schema subset's keyword values (counts, bounds, text,
-non-empty enums whose values fit their type, no lower bound above its upper, a closed object requiring only what it declares); a description, a callable
+an anchored `pattern` that compiles, non-empty enums whose values fit their type, no lower bound above its upper, a closed object requiring only what it declares); a description, a callable
 handler and examples for every query, action, view command, setup command and file export, where an operation whose params
 accept `{}` may omit examples and every example must validate; callable participants, menu items,
-subscriptions and Colour-by projections. Published operations are frozen with deep-frozen schemas
+subscriptions and Colour-by projections. A test over the built-in registry
+(`tests/api_reference_test.rb`) also requires a description on every top-level param, and an id
+param carries the `pattern` of its prefix, such as `^asm_[A-Za-z0-9]{12}$`. Write each operation's
+description, Undo name and side effects by hand at its declaration, not by interpolating its name. Published operations are frozen with deep-frozen schemas
 and examples, so a test or a contributor registers a new declaration rather than editing one.
 
 A composition-root registration or generated build inventory is permitted. Requiring a new

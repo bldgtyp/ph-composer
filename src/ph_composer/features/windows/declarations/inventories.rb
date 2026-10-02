@@ -4,20 +4,20 @@ module PhComposer
   module Windows
     module InventoryRegistration
       NUM = { "type" => %w[number null] }.freeze
-      EDGE_INSTALL = Shapes.object({ "source" => Shapes::ID, "id" => { "type" => %w[string null] }, "psi" => NUM })
-      EDGE = Shapes.object({ "side" => Shapes::ID, "length_m" => NUM.merge("x-unit" => "m"),
+      EDGE_INSTALL = Shapes.object({ "source" => Shapes::TEXT, "id" => { "type" => %w[string null] }, "psi" => NUM })
+      EDGE = Shapes.object({ "side" => Shapes::TEXT, "length_m" => NUM.merge("x-unit" => "m"),
                 "install" => EDGE_INSTALL, "frame_area_m2" => NUM.merge("x-unit" => "m2"),
                 "glass_edge_m" => NUM.merge("x-unit" => "m"), "h_frame_w_k" => NUM.merge("x-unit" => "W/K"),
                 "h_spacer_w_k" => NUM.merge("x-unit" => "W/K") },
         :optional => %w[frame_area_m2 glass_edge_m h_frame_w_k h_spacer_w_k])
-      ELEMENT_THERMAL = Shapes.object({ "id" => Shapes::ID, "area_m2" => NUM.merge("x-unit" => "m2"),
-                "edges" => Shapes.list(EDGE), "findings" => Shapes.list(Shapes::ID),
+      ELEMENT_THERMAL = Shapes.object({ "id" => Shapes::TEXT, "area_m2" => NUM.merge("x-unit" => "m2"),
+                "edges" => Shapes.list(EDGE), "findings" => Shapes.list(Shapes::TEXT),
                 "h_construction_w_k" => NUM.merge("x-unit" => "W/K"), "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
                 "glazing_area_m2" => NUM.merge("x-unit" => "m2"), "frame_area_m2" => NUM.merge("x-unit" => "m2"),
                 "h_glazing_w_k" => NUM.merge("x-unit" => "W/K"), "g_value" => NUM,
                 "u_w" => NUM.merge("x-unit" => "W/m2K"), "u_effective" => NUM.merge("x-unit" => "W/m2K"),
                 "complete" => { "type" => "boolean" } }, :optional => %w[glazing_area_m2 frame_area_m2 h_glazing_w_k])
-      THERMAL = Shapes.object({ "elements" => Shapes.list(ELEMENT_THERMAL), "findings" => Shapes.list(Shapes::ID),
+      THERMAL = Shapes.object({ "elements" => Shapes.list(ELEMENT_THERMAL), "findings" => Shapes.list(Shapes::TEXT),
                 "area_m2" => NUM.merge("x-unit" => "m2"), "empty_area_m2" => NUM.merge("x-unit" => "m2"),
                 "h_construction_w_k" => NUM.merge("x-unit" => "W/K"), "h_install_w_k" => NUM.merge("x-unit" => "W/K"),
                 "u_w" => NUM.merge("x-unit" => "W/m2K"), "u_effective" => NUM.merge("x-unit" => "W/m2K"),
@@ -26,7 +26,7 @@ module PhComposer
       DISPLAY = Shapes.object({ "thermal" => THERMAL, "width_m" => NUM.merge("x-unit" => "m"),
                 "height_m" => NUM.merge("x-unit" => "m"), "install_depth_m" => NUM.merge("x-unit" => "m"),
                 "complete" => { "type" => "boolean" } })
-      USE = Shapes.object(%w[kind type_id element_id side name].to_h { |key| [key, Shapes::ID] },
+      USE = Shapes.object(%w[kind type_id element_id side name].to_h { |key| [key, Shapes::TEXT] },
         :optional => %w[type_id element_id side])
 
       module_function

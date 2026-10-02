@@ -4,24 +4,24 @@ module PhComposer
   module Assemblies
     module InventoryRegistration
       THERMAL = Shapes.object({
-        "complete" => { "type" => "boolean" }, "flags" => Shapes.list(Shapes::ID),
-        "warnings" => Shapes.list(Shapes::ID), "message_parts" => Shapes.list(Shapes.list(Shapes::OBJECT)),
+        "complete" => { "type" => "boolean" }, "flags" => Shapes.list(Shapes::TEXT),
+        "warnings" => Shapes.list(Shapes::TEXT), "message_parts" => Shapes.list(Shapes.list(Shapes::OBJECT)),
         "u_effective" => { "type" => %w[number null], "x-unit" => "W/m2K" },
         "u_construction" => { "type" => %w[number null], "x-unit" => "W/m2K" },
         "r_construction" => { "type" => %w[number null], "x-unit" => "m2K/W" },
         "rsi" => { "type" => "number", "x-unit" => "m2K/W" },
-        "rse" => { "type" => "number", "x-unit" => "m2K/W" }, "direction" => Shapes::ID
+        "rse" => { "type" => "number", "x-unit" => "m2K/W" }, "direction" => Shapes::TEXT
       })
       DISPLAY = Shapes.object({
-        "color" => Shapes::ID, "layer_count" => { "type" => "integer", "minimum" => 1 },
+        "color" => Shapes::TEXT, "layer_count" => { "type" => "integer", "minimum" => 1 },
         "total_thickness_mm" => { "type" => "number", "minimum" => 0, "x-unit" => "mm" },
         "thermal" => THERMAL, "complete" => { "type" => "boolean" }
       })
-      USE = Shapes.object({ "assembly_id" => Shapes::ID, "name" => Shapes::ID })
+      USE = Shapes.object({ "assembly_id" => Shapes::TEXT, "name" => Shapes::TEXT })
       MATERIAL_ROW = Shapes.with(Shapes.view(Materials::Schema::KIND),
                                 "uses" => Shapes.list(USE), "use_count" => { "type" => "integer", "minimum" => 0 })
       ASSEMBLY_ROW = Shapes.with(Shapes.view(Assembly::Schema::KIND), "display" => DISPLAY)
-      CATEGORY = Shapes.object(%w[id label tone].to_h { |key| [key, Shapes::ID] })
+      CATEGORY = Shapes.object(%w[id label tone].to_h { |key| [key, Shapes::TEXT] })
 
       module_function
 

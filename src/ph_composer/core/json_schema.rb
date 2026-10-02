@@ -7,11 +7,13 @@ module PhComposer
   # standard keywords means a client can read the schema without learning a private vocabulary.
   #
   # `x-unit` is the one extension: the SI unit a number is stored and exchanged in, such as "mm".
+  # `pattern` is an ECMA-262 regular expression a string must match; declarations keep to the subset
+  # Ruby reads the same way, and a leading `^` and trailing `$` anchor the whole string.
   module JsonSchema
     TYPES = %w[object array string integer number boolean null].freeze
     KEYWORDS = %w[
       type description title examples properties required additionalProperties items enum
-      minimum maximum exclusiveMinimum exclusiveMaximum minItems maxItems minLength maxLength x-unit
+      minimum maximum exclusiveMinimum exclusiveMaximum minItems maxItems minLength maxLength pattern x-unit
     ].freeze
 
     module_function
@@ -54,6 +56,7 @@ module PhComposer
         found << "#{path}.#{key} must be a finite number" if schema.key?(key) && !type?(schema[key], "number")
       end
       TEXTS.each { |key| found << "#{path}.#{key} must be text" if schema.key?(key) && !schema[key].is_a?(String) }
+      found << "#{path}.pattern must be a regular expression" if schema.key?("pattern") && !pattern(schema)
       if schema.key?("enum") && !(schema["enum"].is_a?(Array) && !schema["enum"].empty?)
         found << "#{path}.enum must list at least one value"
       elsif schema.key?("enum") && schema["enum"].any? { |value| types.none? { |type| type?(value, type) } }
@@ -135,7 +138,19 @@ module PhComposer
       found = []
       found << "#{path} must not be empty" if schema.key?("minLength") && value.length < schema["minLength"]
       found << "#{path} is too long" if schema.key?("maxLength") && value.length > schema["maxLength"]
+      found << "#{path} must match #{schema['pattern']}" if schema.key?("pattern") && !pattern(schema).match?(value)
       found
+    end
+
+    # The Ruby expression for a schema's pattern, anchored at the whole string where the pattern is,
+    # or nil when the pattern is not one.
+    def pattern(schema)
+      text = schema["pattern"]
+      return nil unless text.is_a?(String)
+
+      Regexp.new(text.sub(/\A\^/, "\\A").sub(/(?<!\\)\$\z/, "\\z"))
+    rescue RegexpError
+      nil
     end
 
     def array_problems(value, schema, path)

@@ -42,10 +42,19 @@ class JsonSchemaTest < PhComposerTestCase
   end
 
   def test_a_schema_using_an_unsupported_keyword_or_type_is_refused_at_registration
-    properties = { "a" => { "type" => "text" }, "b" => { "type" => "string", "pattern" => "x" } }
+    properties = { "a" => { "type" => "text" }, "b" => { "type" => "string", "format" => "x" } }
     problems = Schema.schema_problems("type" => "object", "properties" => properties)
 
-    assert_equal ['$.a has unknown type "text"', '$.b uses unsupported keyword "pattern"'], problems
+    assert_equal ['$.a has unknown type "text"', '$.b uses unsupported keyword "format"'], problems
     assert_empty Schema.schema_problems(PART)
+  end
+
+  # An anchored pattern matches the whole string, so a line break cannot smuggle a second value past it.
+  def test_a_pattern_anchors_the_whole_string_and_an_invalid_one_is_refused
+    id = { "type" => "string", "pattern" => "^asm_[A-Za-z0-9]{12}$" }
+    assert_empty Schema.validate("asm_Ab12Cd34Ef56", id)
+    assert_equal ["$ must match ^asm_[A-Za-z0-9]{12}$"], Schema.validate("asm_Ab12Cd34Ef56\nx", id)
+    assert_equal ["$.pattern must be a regular expression"],
+                 Schema.schema_problems("type" => "string", "pattern" => "(")
   end
 end

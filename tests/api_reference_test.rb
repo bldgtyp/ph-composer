@@ -29,6 +29,21 @@ class ApiReferenceTest < PhComposerTestCase
     assert_equal %w[zone_id zone_path entity_path entity_id], face.dig("occurrence_reference", "required")
   end
 
+  # Discovery is how an agent learns what to send (context/AGENT_INTERFACE.md, "Discover before
+  # acting"), so every top-level param of every registered operation says what it means.
+  def test_every_registered_operation_param_has_a_description
+    found = API.discover
+    names = %w[queries actions view_commands setup_commands file_exports].flat_map do |group|
+      found.fetch(group).map { |operation| operation.fetch("name") }
+    end
+    missing = names.flat_map do |name|
+      API.describe(:name => name).dig("params", "properties").filter_map do |param, schema|
+        "#{name} #{param}" unless schema["description"].is_a?(String) && !schema["description"].strip.empty?
+      end
+    end
+    assert_empty missing, "Describe each param at its declaration"
+  end
+
   def test_every_building_operation_publishes_specific_schemas_and_a_valid_example
     names = building_operations
     assert_operator names.length, :>=, 22

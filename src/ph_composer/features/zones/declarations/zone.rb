@@ -20,10 +20,13 @@ module PhComposer
                           "description" => "One Group, or loose Faces and Edges, by persistent id." }
       })
       MAKE_PARAMS = Shapes.object(
-        MAKE_TARGET.fetch("properties").merge("name" => { "type" => "string", "minLength" => 1 }), :optional => ["name"]
+        MAKE_TARGET.fetch("properties").merge("name" => { "type" => "string", "minLength" => 1,
+                                                           "description" => "The new Zone's name; numbered when " \
+                                                                            "absent." }), :optional => ["name"]
       ).freeze
       UPDATE_PARAMS = Shapes.object({
-        "reference" => ZONE_REFERENCE, "values" => ZONE_VALUES,
+        "reference" => ZONE_REFERENCE.merge("description" => "The Zone occurrence to edit, as list returns it."),
+        "values" => ZONE_VALUES.merge("description" => "The Zone's complete new values."),
         "expected_values" => ZONE_VALUES.merge("description" => "The values last read; a change refuses.")
       }).freeze
       ZONE_ROW = Shapes.with(TARGET.descriptor.view_schema,

@@ -8,7 +8,7 @@ module PhComposer
       module_function
 
       def target_schema(collection)
-        target = { "id" => Shapes::ID, "element_id" => Shapes::ID,
+        target = { "id" => Shapes::TEXT, "element_id" => Shapes::TEXT,
                    "expected_values" => Types::KIND.descriptor.patch_schema }
         target["side"] = { "type" => "string", "enum" => Types::SIDES } unless collection == "glazings"
         return Shapes.object(target) unless collection == "psi_install_types"
@@ -24,7 +24,7 @@ module PhComposer
         end
         result = Shapes.object({ "assigned" => { "type" => "boolean" } })
         Declarations::LibraryCallback.new(
-          :params => Shapes.object({ "target" => target_schema(collection), "local_id" => Shapes::ID }),
+          :params => Shapes.object({ "target" => target_schema(collection), "local_id" => Shapes::TEXT }),
           :result => result, :handler => lambda do |request, proposal|
             target = request.params.fetch("target")
             id = request.params.fetch("local_id")

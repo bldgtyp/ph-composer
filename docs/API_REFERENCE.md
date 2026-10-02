@@ -2403,7 +2403,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -3510,7 +3511,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -3983,15 +3985,18 @@ Params:
   "properties": {
     "provider_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "A configured library, by the id ph_composer.library.providers lists."
     },
     "kind": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
     },
     "generation": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "The catalog generation the caller read. Omit it to use the current one; a stale one is refused as library.catalog_stale."
     },
     "limit": {
       "type": "number",
@@ -4228,7 +4233,8 @@ Params:
       "enum": [
         "all",
         "selected"
-      ]
+      ],
+      "description": "all, the default, takes every supported local definition; selected takes only records."
     },
     "kinds": {
       "type": "array",
@@ -4236,7 +4242,8 @@ Params:
         "type": "string",
         "minLength": 1
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "Limit the export to these library kinds, such as materials."
     },
     "records": {
       "type": "array",
@@ -4258,7 +4265,8 @@ Params:
           "id"
         ]
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "With scope selected: the records to export, each by record kind and id."
     }
   },
   "additionalProperties": false,
@@ -4363,15 +4371,18 @@ Params:
   "properties": {
     "provider_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "A configured library, by the id ph_composer.library.providers lists."
     },
     "kind": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
     },
     "generation": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "The catalog generation the caller read. Omit it to use the current one; a stale one is refused as library.catalog_stale."
     },
     "limit": {
       "type": "number",
@@ -5392,7 +5403,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -6072,7 +6084,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -6787,7 +6800,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -8033,7 +8047,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -9277,7 +9292,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Only these record ids; every record when absent."
     },
     "limit": {
       "type": "number",
@@ -11875,10 +11891,12 @@ Params:
         "photo_collections": {
           "type": "object"
         }
-      }
+      },
+      "description": "The new Assembly's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -11928,7 +11946,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to delete."
     },
     "expected_values": {
       "type": "object",
@@ -12292,14 +12312,16 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
       "type": [
         "string",
         "null"
       ],
-      "description": "Replacement identity, or explicit null to clear uses."
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly every Face using the deleted one takes instead, or null to clear those Faces' Assembly. Needed while any Face uses it."
     }
   }
 }
@@ -12347,7 +12369,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to copy."
     }
   }
 }
@@ -12380,9 +12404,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.add`
 
-Add Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Add a Layer with one Layer-Segment of no Material. With no position it goes after the last Layer in the stored order; give index, or anchor_layer_id and side. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Add Assembly Layer. Adds one Layer to this Assembly.
 
 Params:
 
@@ -12396,7 +12420,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -12760,26 +12786,32 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Where to insert the Layer in the stored order, 0 first. Not with anchor_layer_id."
     },
     "thickness_mm": {
       "type": "number",
       "exclusiveMinimum": 0,
-      "x-unit": "mm"
+      "x-unit": "mm",
+      "description": "The new Layer's thickness; 100 mm when absent."
     },
     "anchor_layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "An existing Layer to place the new one beside, with side."
     },
     "side": {
       "type": "string",
       "enum": [
         "outside",
         "inside"
-      ]
+      ],
+      "description": "Which side of anchor_layer_id, by the Assembly's orientation."
     }
   }
 }
@@ -12814,9 +12846,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.flip`
 
-Flip Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Reverse the stored order of the Layers and keep the orientation, so the outside Layer becomes the inside one. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Flip Assembly Layers. Reverses the Layer order.
 
 Params:
 
@@ -12830,7 +12862,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -13194,7 +13228,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -13228,9 +13263,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.flip_orientation`
 
-Flip orientation Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Switch which end of the stored Layer order is the outside (first_layer_outside or last_layer_outside) and keep the order. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Flip Assembly Orientation. Changes only the orientation.
 
 Params:
 
@@ -13244,7 +13279,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -13608,7 +13645,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -13642,9 +13680,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.move`
 
-Move Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Move one Layer one place outward or inward. A Layer already at that end stays. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Move Assembly Layer. Swaps two neighbouring Layers.
 
 Params:
 
@@ -13660,7 +13698,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -14024,17 +14064,21 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer, by its id within this Assembly."
     },
     "direction": {
       "type": "string",
       "enum": [
         "outward",
         "inward"
-      ]
+      ],
+      "description": "Toward the outside or the inside, as the Assembly's orientation defines them."
     }
   }
 }
@@ -14070,9 +14114,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.remove`
 
-Remove Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Remove one Layer. An Assembly keeps at least one Layer. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Remove Assembly Layer. Removes the Layer and its Layer-Segments; clears the air barrier if it was on that Layer.
 
 Params:
 
@@ -14087,7 +14131,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -14451,10 +14497,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer, by its id within this Assembly."
     }
   }
 }
@@ -14489,9 +14538,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.set_air_barrier`
 
-Set air barrier Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Mark one face of one Layer as the Assembly's air barrier, or clear it. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Set Air Barrier. Replaces the Assembly's one air barrier.
 
 Params:
 
@@ -14506,7 +14555,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -14870,20 +14921,24 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer carrying the air barrier, or null to clear it."
     },
     "face": {
       "type": "string",
       "enum": [
         "interior",
         "exterior"
-      ]
+      ],
+      "description": "Which face of the Layer is the air barrier."
     }
   }
 }
@@ -14919,9 +14974,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.layers.update`
 
-Update Layers of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Set one Layer's thickness. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layers. Updates the Assembly's authored Layer values.
+Undo step: Change Layer Thickness. Changes one Layer's thickness.
 
 Params:
 
@@ -14937,7 +14992,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -15301,15 +15358,19 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer, by its id within this Assembly."
     },
     "thickness_mm": {
       "type": "number",
       "exclusiveMinimum": 0,
-      "x-unit": "mm"
+      "x-unit": "mm",
+      "description": "The new thickness."
     }
   }
 }
@@ -15345,9 +15406,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.add`
 
-Add Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Add a Layer-Segment of no Material to one Layer. A membrane Layer holds one Layer-Segment. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Add Layer-Segment. Adds one Layer-Segment.
 
 Params:
 
@@ -15362,7 +15423,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -15726,19 +15789,24 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer to add a Layer-Segment to."
     },
     "width_mm": {
       "type": "number",
       "exclusiveMinimum": 0,
-      "x-unit": "mm"
+      "x-unit": "mm",
+      "description": "The new Layer-Segment's width; 1000 mm when absent."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Where to insert it among the Layer's Layer-Segments, 0 first; last when absent."
     }
   }
 }
@@ -15773,9 +15841,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.mirror`
 
-Mirror Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Reverse the order of the Layer-Segments in every Layer of one Assembly. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Mirror Layer-Segments. Reverses each Layer's Layer-Segment order.
 
 Params:
 
@@ -15789,7 +15857,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -16153,7 +16223,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -16187,9 +16258,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.remove`
 
-Remove Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Remove one Layer-Segment. A Layer keeps at least one. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Remove Layer-Segment. Removes one Layer-Segment.
 
 Params:
 
@@ -16205,7 +16276,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -16569,13 +16642,18 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer holding the Layer-Segment, by its id within this Assembly."
     },
     "segment_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^seg_[A-Za-z0-9]{12}$",
+      "description": "The Layer-Segment, by its id within that Layer."
     }
   }
 }
@@ -16611,9 +16689,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.set_material`
 
-Set material Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Set or clear one Layer-Segment's Material. A membrane Material needs a Layer of one Layer-Segment, and a membrane Layer thicker than 25 mm is reset to 1 mm. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Set Layer-Segment Material. Changes one Layer-Segment's Material and may reset a membrane Layer's thickness.
 
 Params:
 
@@ -16630,7 +16708,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -16994,19 +17074,26 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer holding the Layer-Segment, by its id within this Assembly."
     },
     "segment_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^seg_[A-Za-z0-9]{12}$",
+      "description": "The Layer-Segment, by its id within that Layer."
     },
     "material_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material, or null to clear it."
     }
   }
 }
@@ -17043,9 +17130,9 @@ Example params:
 
 ### `ph_composer.assemblies.assemblies.segments.update`
 
-Update Layer-Segments of one explicit Assembly. Owner: `ph_composer.assemblies`.
+Set one Layer-Segment's width, continuous-insulation flag or steel stud spacing. Owner: `ph_composer.assemblies`.
 
-Undo step: Edit Assembly Layer-Segments. Updates authored Layer-Segment values.
+Undo step: Edit Layer-Segment. Changes one Layer-Segment's values.
 
 Params:
 
@@ -17062,7 +17149,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "expected_values": {
       "type": "object",
@@ -17426,13 +17515,18 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "layer_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer holding the Layer-Segment, by its id within this Assembly."
     },
     "segment_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^seg_[A-Za-z0-9]{12}$",
+      "description": "The Layer-Segment, by its id within that Layer."
     },
     "values": {
       "type": "object",
@@ -17455,7 +17549,8 @@ Params:
           "exclusiveMinimum": 0,
           "x-unit": "mm"
         }
-      }
+      },
+      "description": "The Layer-Segment values to change; any not given stay. A Layer carries at most one steel stud spacing."
     }
   }
 }
@@ -17511,7 +17606,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
     },
     "values": {
       "type": "object",
@@ -17610,7 +17707,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -17974,10 +18072,12 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -18193,10 +18293,12 @@ Params:
         "color": {
           "type": "string"
         }
-      }
+      },
+      "description": "The new Material's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -18246,7 +18348,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material to delete."
     },
     "expected_values": {
       "type": "object",
@@ -18443,10 +18547,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material every Layer-Segment using the deleted one takes instead. Needed while any Assembly uses it."
     }
   }
 }
@@ -18494,14 +18601,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -18551,7 +18662,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^mat_[A-Za-z0-9]{12}$",
+      "description": "The Material to edit."
     },
     "values": {
       "type": "object",
@@ -18623,7 +18736,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -18820,10 +18934,12 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -18874,23 +18990,28 @@ Params:
   "properties": {
     "provider_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "A configured library, by the id ph_composer.library.providers lists."
     },
     "kind": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
     },
     "generation": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "The catalog generation the caller read. Omit it to use the current one; a stale one is refused as library.catalog_stale."
     },
     "library_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library holding the row, as the catalog row gives it."
     },
     "record_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The row's record id within that library."
     },
     "choice": {
       "type": "string",
@@ -18898,17 +19019,21 @@ Params:
         "create",
         "keep_local",
         "use_library"
-      ]
+      ],
+      "description": "create copies the row as a new local record; keep_local reuses a reviewed local candidate unchanged; use_library replaces a reviewed candidate's values with the library's. Read the resolution first with in_file or a preview."
     },
     "local_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The reviewed local candidate for keep_local or use_library, from the resolution's candidates. May be omitted when there is exactly one."
     },
     "expected_values": {
-      "type": "object"
+      "type": "object",
+      "description": "For use_library: the candidate's expected_values from the resolution. Refused when the local record changed since."
     },
     "assignment": {
-      "type": "object"
+      "type": "object",
+      "description": "Optional: where the owning feature also assigns the copied record, in that kind's assignment target shape, such as one Window Type element side."
     }
   },
   "additionalProperties": false,
@@ -19240,10 +19365,12 @@ Params:
         "color": {
           "type": "string"
         }
-      }
+      },
+      "description": "The new Frame's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -19293,7 +19420,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame to delete."
     },
     "expected_values": {
       "type": "object",
@@ -19482,10 +19611,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame that every Window Type and default using the deleted one takes. Needed while any uses it."
     }
   }
 }
@@ -19533,14 +19665,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -19590,7 +19726,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame to edit."
     },
     "values": {
       "type": "object",
@@ -19671,7 +19809,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -19860,10 +19999,12 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -20061,10 +20202,12 @@ Params:
         "color": {
           "type": "string"
         }
-      }
+      },
+      "description": "The new Glazing's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -20114,7 +20257,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing to delete."
     },
     "expected_values": {
       "type": "object",
@@ -20282,10 +20427,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing that every Window Type and default using the deleted one takes. Needed while any uses it."
     }
   }
 }
@@ -20333,14 +20481,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -20390,7 +20542,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing to edit."
     },
     "values": {
       "type": "object",
@@ -20459,7 +20613,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -20627,10 +20782,12 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -20784,10 +20941,12 @@ Params:
           ],
           "x-unit": "W/mK"
         }
-      }
+      },
+      "description": "The new Psi-Install Type's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -20837,7 +20996,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^psi_[A-Za-z0-9]{12}$",
+      "description": "The Psi-Install Type to delete."
     },
     "expected_values": {
       "type": "object",
@@ -20949,10 +21110,13 @@ Params:
           ],
           "x-unit": "W/mK"
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^psi_[A-Za-z0-9]{12}$",
+      "description": "The Psi-Install Type that every Window Type and default using the deleted one takes. Needed while any uses it."
     }
   }
 }
@@ -21000,14 +21164,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^psi_[A-Za-z0-9]{12}$",
+      "description": "The Psi-Install Type to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -21057,7 +21225,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^psi_[A-Za-z0-9]{12}$",
+      "description": "The Psi-Install Type to edit."
     },
     "values": {
       "type": "object",
@@ -21092,7 +21262,8 @@ Params:
           ],
           "x-unit": "W/mK"
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -21204,10 +21375,12 @@ Params:
           ],
           "x-unit": "W/mK"
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -21280,7 +21453,8 @@ Params:
           "minimum": 0,
           "x-unit": "m"
         }
-      }
+      },
+      "description": "The complete new defaults."
     },
     "expected_values": {
       "type": "object",
@@ -21301,7 +21475,8 @@ Params:
           "minimum": 0,
           "x-unit": "m"
         }
-      }
+      },
+      "description": "The defaults last read; a change refuses."
     }
   }
 }
@@ -21851,10 +22026,12 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "The new Window Type's values; name is required and every other value takes its default."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -21904,7 +22081,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to delete."
     },
     "expected_values": {
       "type": "object",
@@ -22417,13 +22596,16 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "replacement_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type every Window of the deleted one takes, or null to remove them. Needed while Windows use it."
     }
   }
 }
@@ -22471,14 +22653,18 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to copy."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The copy's name; \"<name> (copy)\" when absent. Names are unique."
     },
     "copy_datasheets": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Keep the datasheet links on the copy; false when absent."
     }
   }
 }
@@ -22511,9 +22697,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.dimension`
 
-Apply the dimension grid gesture. Owner: `ph_composer.windows`.
+Set one row or column band's size. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: dimension. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Resize Window Band. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -22534,11 +22720,13 @@ Params:
       "enum": [
         "rows_m",
         "columns_m"
-      ]
+      ],
+      "description": "rows_m for a horizontal band, columns_m for a vertical one."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "The band to size, 0 first."
     },
     "value": {
       "type": [
@@ -22546,10 +22734,13 @@ Params:
         "null"
       ],
       "exclusiveMinimum": 0,
-      "x-unit": "m"
+      "x-unit": "m",
+      "description": "The band's size, or null to unset it."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -23062,7 +23253,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -23104,9 +23296,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.flip`
 
-Apply the flip grid gesture. Owner: `ph_composer.windows`.
+Mirror the layout left to right, swapping left and right Frames, installs and operation directions. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: flip. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Flip Window Type. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -23120,7 +23312,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -23633,7 +23827,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -23672,9 +23867,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.insert`
 
-Apply the insert grid gesture. Owner: `ph_composer.windows`.
+Insert a row or column band at a grid boundary, filled with new glazed elements. Elements spanning that boundary must be split first. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: insert. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Insert Window Band. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -23695,11 +23890,13 @@ Params:
       "enum": [
         "rows_m",
         "columns_m"
-      ]
+      ],
+      "description": "rows_m for a horizontal band, columns_m for a vertical one."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "The boundary to insert at, 0 before the first band."
     },
     "value": {
       "type": [
@@ -23707,10 +23904,13 @@ Params:
         "null"
       ],
       "exclusiveMinimum": 0,
-      "x-unit": "m"
+      "x-unit": "m",
+      "description": "The new band's size, or null to leave it unset."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -24223,7 +24423,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -24265,9 +24466,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.kind`
 
-Apply the kind grid gesture. Owner: `ph_composer.windows`.
+Make elements glazed or Empty. Empty is wall area: it clears the elements' Glazing, Frames, installs and operation. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: kind. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Change Window Element Kind. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -24285,19 +24486,25 @@ Params:
     "ids": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^wel_[A-Za-z0-9]{12}$",
+        "description": "An element id within this Window Type."
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The elements to change."
     },
     "kind": {
       "type": "string",
       "enum": [
         "glazed",
         "empty"
-      ]
+      ],
+      "description": "glazed or empty."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -24810,7 +25017,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -24853,9 +25061,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.merge`
 
-Apply the merge grid gesture. Owner: `ph_composer.windows`.
+Merge two or more elements of one kind that cover one rectangle into a single element under a new id. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: merge. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Merge Window Elements. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -24872,12 +25080,17 @@ Params:
     "ids": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^wel_[A-Za-z0-9]{12}$",
+        "description": "An element id within this Window Type."
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The elements to merge."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -25390,7 +25603,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -25432,9 +25646,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.paste`
 
-Apply the paste grid gesture. Owner: `ph_composer.windows`.
+Copy one glazed element's Glazing, Frames, operation and installs onto other glazed elements. Installs copy only where the edges match. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: paste. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Paste Window Element. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -25450,17 +25664,24 @@ Params:
   ],
   "properties": {
     "source_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The glazed element to copy from."
     },
     "ids": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^wel_[A-Za-z0-9]{12}$",
+        "description": "An element id within this Window Type."
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The glazed elements to paste onto."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -25973,7 +26194,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -26016,9 +26238,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.remove`
 
-Apply the remove grid gesture. Owner: `ph_composer.windows`.
+Remove one row or column band and the elements only it held. Refused while the layout carries installation assignments, and for the last band. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: remove. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Remove Window Band. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -26038,14 +26260,18 @@ Params:
       "enum": [
         "rows_m",
         "columns_m"
-      ]
+      ],
+      "description": "rows_m for a horizontal band, columns_m for a vertical one."
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "The band to remove, 0 first."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -26558,7 +26784,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -26599,9 +26826,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.set_element_frame`
 
-Apply the set_element_frame grid gesture. Owner: `ph_composer.windows`.
+Set or clear the Frame on one side of one glazed element; the other sides stay. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: set_element_frame. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Set Window Frame. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -26618,7 +26845,9 @@ Params:
   ],
   "properties": {
     "element_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The element, by its id within this Window Type."
     },
     "side": {
       "type": "string",
@@ -26627,16 +26856,21 @@ Params:
         "right",
         "bottom",
         "left"
-      ]
+      ],
+      "description": "The element side, as seen from outside."
     },
     "frame_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "pattern": "^frm_[A-Za-z0-9]{12}$",
+      "description": "The Frame, or null to clear it."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -27149,7 +27383,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -27183,7 +27418,7 @@ Example params:
 {
   "element_id": "wel_Ab12Cd34Ef56",
   "side": "left",
-  "frame_id": "wfr_Ab12Cd34Ef56",
+  "frame_id": "frm_Ab12Cd34Ef56",
   "id": "wnt_Ab12Cd34Ef56",
   "expected_values": {}
 }
@@ -27191,9 +27426,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.set_element_glazing`
 
-Apply the set_element_glazing grid gesture. Owner: `ph_composer.windows`.
+Set or clear one glazed element's Glazing. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: set_element_glazing. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Set Window Glazing. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -27209,16 +27444,22 @@ Params:
   ],
   "properties": {
     "element_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The element, by its id within this Window Type."
     },
     "glazing_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "pattern": "^glz_[A-Za-z0-9]{12}$",
+      "description": "The Glazing, or null to clear it."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -27731,7 +27972,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -27764,7 +28006,7 @@ Example params:
 ```json
 {
   "element_id": "wel_Ab12Cd34Ef56",
-  "glazing_id": "wgl_Ab12Cd34Ef56",
+  "glazing_id": "glz_Ab12Cd34Ef56",
   "id": "wnt_Ab12Cd34Ef56",
   "expected_values": {}
 }
@@ -27772,9 +28014,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.set_element_name`
 
-Apply the set_element_name grid gesture. Owner: `ph_composer.windows`.
+Name one element. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: set_element_name. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Rename Window Element. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -27790,13 +28032,18 @@ Params:
   ],
   "properties": {
     "element_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The element, by its id within this Window Type."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "The element's name."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -28309,7 +28556,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -28350,9 +28598,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.set_element_operation`
 
-Apply the set_element_operation grid gesture. Owner: `ph_composer.windows`.
+Set or clear how one glazed element opens. A fixed element has no directions. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: set_element_operation. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Set Window Operation. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -28368,7 +28616,9 @@ Params:
   ],
   "properties": {
     "element_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The element, by its id within this Window Type."
     },
     "operation": {
       "type": [
@@ -28401,10 +28651,13 @@ Params:
             ]
           }
         }
-      }
+      },
+      "description": "fixed, swing or slide with the directions it opens toward, or null when not specified."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -28917,7 +29170,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -28963,9 +29217,9 @@ Example params:
 
 ### `ph_composer.windows.types.grid.split`
 
-Apply the split grid gesture. Owner: `ph_composer.windows`.
+Split one merged element back into one element per grid cell, each under a new id. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: split. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+Undo step: Split Window Element. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -28980,10 +29234,14 @@ Params:
   ],
   "properties": {
     "element_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wel_[A-Za-z0-9]{12}$",
+      "description": "The merged element to split."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "expected_values": {
       "type": "object",
@@ -29496,7 +29754,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     }
   }
 }
@@ -30132,7 +30391,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "Each Window Type to change, with its values last read and each element whose four install sides to replace."
     },
     "psi_install_types": {
       "type": "object",
@@ -30276,7 +30536,9 @@ Params:
             ],
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^psi_[A-Za-z0-9]{12}$",
+                "description": "The Psi-Install Type to edit."
               },
               "values": {
                 "type": "object",
@@ -30311,7 +30573,8 @@ Params:
                     ],
                     "x-unit": "W/mK"
                   }
-                }
+                },
+                "description": "The values to change; any not given stay."
               },
               "expected_values": {
                 "type": "object",
@@ -30423,15 +30686,18 @@ Params:
                     ],
                     "x-unit": "W/mK"
                   }
-                }
+                },
+                "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
               },
               "user_data": {
-                "type": "object"
+                "type": "object",
+                "description": "Free metadata kept with the record and exported verbatim."
               }
             }
           }
         }
-      }
+      },
+      "description": "Psi-Install Types to create, each under a temporary client_id a side may name, and to edit. Both lists may be empty."
     },
     "expected_settings": {
       "type": "object",
@@ -30452,7 +30718,8 @@ Params:
           "minimum": 0,
           "x-unit": "m"
         }
-      }
+      },
+      "description": "The Window defaults last read; a change refuses."
     },
     "imports": {
       "type": "array",
@@ -30519,7 +30786,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "Library rows to copy as Psi-Install Types, each under a temporary client_id a side may name."
     }
   }
 }
@@ -30587,7 +30855,9 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to edit."
     },
     "values": {
       "type": "object",
@@ -30830,7 +31100,8 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "The values to change; any not given stay."
     },
     "expected_values": {
       "type": "object",
@@ -31343,10 +31614,12 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -31422,11 +31695,13 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The mirrored Window occurrence."
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The new Type's name; \"<Type> (flipped)\" when absent."
     }
   }
 }
@@ -31517,10 +31792,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The writable Zone Face to place on."
     },
     "type_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to place."
     },
     "anchor": {
       "type": "string",
@@ -31534,7 +31812,8 @@ Params:
         "head_left",
         "head_center",
         "head_right"
-      ]
+      ],
+      "description": "Which point of the opening sits at the placement point: sill, center or head, by left, center or right as seen from outside."
     },
     "offsets": {
       "type": "object",
@@ -31552,10 +31831,12 @@ Params:
           "type": "number",
           "x-unit": "m"
         }
-      }
+      },
+      "description": "Where the anchor goes on the Face, in metres right and up from the Face's lowest, leftmost extent as seen from outside."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     }
   }
 }
@@ -31636,7 +31917,8 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The Window occurrence to glue."
     },
     "host": {
       "type": "object",
@@ -31669,7 +31951,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The Face to glue it to, in the same parent storage; the Window must lie on it."
     }
   }
 }
@@ -31755,7 +32038,8 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "The Window occurrences to remove."
     }
   }
 }
@@ -31836,7 +32120,8 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Windows whose identity a copy shares; either the original or a copy names the group."
     }
   }
 }
@@ -31937,7 +32222,8 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "The Window occurrences to reset, all of one Window Type."
     }
   }
 }
@@ -32028,10 +32314,13 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The Face the loose panes lie on."
     },
     "type_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type the panes were stamped with."
     },
     "pane_paths": {
       "type": "array",
@@ -32044,7 +32333,8 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Each stamped pane Face's entity path from the Model root."
     }
   }
 }
@@ -32131,10 +32421,13 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "The Window occurrences to swap."
     },
     "type_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type they take."
     }
   }
 }
@@ -32282,13 +32575,15 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "Each Face occurrence to change, with the values last read; a change refuses."
     },
     "assembly_id": {
       "type": [
         "string",
         "null"
-      ]
+      ],
+      "description": "The Assembly to assign, or null to clear it."
     }
   }
 }
@@ -32390,7 +32685,8 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The Face occurrences to assign the new Attached zone to."
     },
     "values": {
       "type": "object",
@@ -32440,10 +32736,12 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "The new Attached zone's values."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     },
     "intent": {
       "type": "object",
@@ -32474,7 +32772,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "Optionally keep, set or clear the Faces' face_type in the same step."
     },
     "expected_values": {
       "type": "object",
@@ -32591,7 +32890,8 @@ Params:
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "description": "The Attached zone to delete."
     },
     "replacement": {
       "type": "object",
@@ -32620,7 +32920,8 @@ Params:
           ],
           "description": "With mode boundary_condition."
         }
-      }
+      },
+      "description": "Where the Faces naming it go: to another Attached zone, or reclassified to a boundary condition."
     }
   }
 }
@@ -32681,7 +32982,8 @@ Params:
       "items": {
         "type": "string"
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The Attached zones to copy, each under a new id and a numbered name."
     }
   }
 }
@@ -32786,10 +33088,12 @@ Params:
             "type": "string"
           }
         }
-      }
+      },
+      "description": "The Attached zone values to write; only those given change."
     },
     "user_data": {
-      "type": "object"
+      "type": "object",
+      "description": "Free metadata kept with the record and exported verbatim."
     },
     "expected_values": {
       "type": "object",
@@ -32908,7 +33212,8 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The Zone occurrence whose unrecorded Faces get the suggested classification."
     }
   }
 }
@@ -33108,7 +33413,8 @@ Params:
             }
           }
         }
-      }
+      },
+      "description": "Per field: keep each Face's value, set one value on every Face, or clear it. An absent field is kept."
     },
     "expected_values": {
       "type": "object",
@@ -33281,7 +33587,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "The Face occurrence whose orientation to reverse."
     }
   }
 }
@@ -33348,7 +33655,8 @@ Params:
     },
     "name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The new Zone's name; numbered when absent."
     }
   }
 }
@@ -33402,7 +33710,8 @@ Params:
       "type": "array",
       "items": {
         "type": "integer"
-      }
+      },
+      "description": "The root-to-Zone path of the copy to reidentify, as list returns it."
     }
   }
 }
@@ -33477,10 +33786,12 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The Zone occurrence holding the split pieces."
     },
     "face_id": {
-      "type": "string"
+      "type": "string",
+      "description": "The Face id the split pieces share."
     },
     "zones": {
       "type": "array",
@@ -33710,10 +34021,12 @@ Params:
       "type": "array",
       "items": {
         "type": "integer"
-      }
+      },
+      "description": "The edit context holding the stamped members, as the restorable row in all gives it."
     },
     "zone_id": {
-      "type": "string"
+      "type": "string",
+      "description": "The exploded Zone's id, from that restorable row."
     }
   }
 }
@@ -33805,7 +34118,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "Either Face of the Surface pair to retire."
     }
   }
 }
@@ -33888,7 +34202,8 @@ Params:
           "minimum": 0,
           "maximum": 180
         }
-      }
+      },
+      "description": "The complete new settings."
     },
     "expected_values": {
       "type": "object",
@@ -33912,7 +34227,8 @@ Params:
           "minimum": 0,
           "maximum": 180
         }
-      }
+      },
+      "description": "The settings last read; a change refuses."
     }
   }
 }
@@ -34001,7 +34317,8 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The Zone occurrences whose shared Faces to pair; Faces shared with a Zone outside the scope are left alone."
     }
   }
 }
@@ -34090,7 +34407,8 @@ Params:
             "type": "integer"
           }
         }
-      }
+      },
+      "description": "The Zone occurrence to edit, as list returns it."
     },
     "values": {
       "type": "object",
@@ -34120,7 +34438,8 @@ Params:
           "type": "number",
           "x-unit": "mm"
         }
-      }
+      },
+      "description": "The Zone's complete new values."
     },
     "expected_values": {
       "type": "object",
@@ -34278,7 +34597,8 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "Each Zone occurrence to change, with the values last read; a change refuses."
     },
     "field": {
       "type": "string",
@@ -34287,14 +34607,16 @@ Params:
         "building_segment",
         "level",
         "ground_depth_mm"
-      ]
+      ],
+      "description": "The Zone value to set."
     },
     "value": {
       "type": [
         "string",
         "number",
         "null"
-      ]
+      ],
+      "description": "The new value: text for name, building_segment and level (null clears level), a number in mm for ground_depth_mm."
     }
   }
 }
@@ -34464,7 +34786,8 @@ Params:
             "unclassified"
           ]
         }
-      }
+      },
+      "description": "The legend row to show alone; omit it to show every row again."
     }
   }
 }
@@ -34561,7 +34884,8 @@ Params:
             "unclassified"
           ]
         }
-      }
+      },
+      "description": "The legend row whose entities to select, as the active mode's legend lists it."
     }
   }
 }
@@ -34610,7 +34934,9 @@ Params:
   ],
   "properties": {
     "type_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^wnt_[A-Za-z0-9]{12}$",
+      "description": "The Window Type to place."
     },
     "anchor": {
       "type": "string",
@@ -34624,7 +34950,8 @@ Params:
         "head_left",
         "head_center",
         "head_right"
-      ]
+      ],
+      "description": "Which point of the opening sits at the placement point: sill, center or head, by left, center or right as seen from outside. sill_center when absent."
     },
     "host": {
       "type": [
@@ -34660,7 +34987,8 @@ Params:
             "null"
           ]
         }
-      }
+      },
+      "description": "A Face to place on, or null to pick one in the viewport."
     }
   }
 }
@@ -34884,7 +35212,8 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "The Window occurrences to select, as units.list references them."
     }
   }
 }
@@ -34965,7 +35294,8 @@ Params:
         "boundary_condition",
         "attached_zone_id",
         "assembly_id"
-      ]
+      ],
+      "description": "The Classify palette field to choose a value for."
     },
     "value": {
       "type": [
@@ -35058,7 +35388,8 @@ Params:
   ],
   "properties": {
     "token": {
-      "type": "string"
+      "type": "string",
+      "description": "The token open_attached_assignment returned; another one leaves the handoff open."
     }
   }
 }
@@ -35286,10 +35617,12 @@ Params:
           }
         }
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The Faces the new Attached zone would be assigned to."
     },
     "revision": {
-      "type": "integer"
+      "type": "integer",
+      "description": "The revision the Faces were read at; a later one refuses."
     }
   }
 }
@@ -35458,11 +35791,13 @@ Params:
   "properties": {
     "provider_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "A configured library, by the id ph_composer.library.providers lists."
     },
     "kind": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
     }
   },
   "additionalProperties": false,
@@ -35742,7 +36077,8 @@ Params:
   "properties": {
     "provider_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The configured library to remove from this machine."
     }
   },
   "additionalProperties": false,
@@ -35809,14 +36145,16 @@ Params:
       "enum": [
         "all",
         "selected"
-      ]
+      ],
+      "description": "all, the default, takes every supported local definition; selected takes only records."
     },
     "identity": {
       "type": "string",
       "enum": [
         "new",
         "update"
-      ]
+      ],
+      "description": "new, the default, gives the file a new library id; update keeps the id of the library file being replaced."
     },
     "kinds": {
       "type": "array",
@@ -35824,7 +36162,8 @@ Params:
         "type": "string",
         "minLength": 1
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "Limit the export to these library kinds, such as materials."
     },
     "records": {
       "type": "array",
@@ -35846,15 +36185,18 @@ Params:
           "id"
         ]
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "With scope selected: the records to export, each by record kind and id."
     },
     "library_name": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "The library name written into the file. Defaults to Model library, or to the replaced file's name for update."
     },
     "expected_revision": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "The Model revision export_preview reported; refused if the Model changed since."
     }
   },
   "additionalProperties": false,

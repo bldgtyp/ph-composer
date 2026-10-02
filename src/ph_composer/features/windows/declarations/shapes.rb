@@ -3,16 +3,21 @@
 module PhComposer
   module Windows
     module Shapes
-      ID = { "type" => "string" }.freeze
+      # Any string: names, messages, codes and ids in results. A param naming a record uses `id`.
+      TEXT = { "type" => "string" }.freeze
       OBJECT = { "type" => "object" }.freeze
       NONE = Fields.object({}).freeze
-      RESULT = Fields.object({ "id" => ID }, :required => ["id"]).freeze
-      TYPE_RESULT = Fields.object({ "id" => ID, "unit_count" => { "type" => "integer", "minimum" => 0 } },
+      RESULT = Fields.object({ "id" => TEXT }, :required => ["id"]).freeze
+      TYPE_RESULT = Fields.object({ "id" => TEXT, "unit_count" => { "type" => "integer", "minimum" => 0 } },
         :required => %w[id unit_count]).freeze
       UNREADABLE = { "type" => "array", "items" => Fields.object(
-        %w[id code message].to_h { |key| [key, ID] }, :required => %w[id code message]) }.freeze
-      FINDING = Fields.object({ "code" => ID, "message" => ID, "element_id" => ID, "side" => ID,
-                "product_id" => ID }, :required => %w[code message]).freeze
+        %w[id code message].to_h { |key| [key, TEXT] }, :required => %w[id code message]) }.freeze
+      FINDING = Fields.object({ "code" => TEXT, "message" => TEXT, "element_id" => TEXT, "side" => TEXT,
+                "product_id" => TEXT }, :required => %w[code message]).freeze
+      EXPECTED = "Any of the record's values as last read; if one changed since, the edit is refused as " \
+                 "target.changed. {} skips the check."
+      USER_DATA = { "type" => "object", "description" => "Free metadata kept with the record and exported " \
+                                                         "verbatim." }.freeze
       FINDINGS = { "type" => "array", "items" => FINDING }.freeze
 
       # Every Windows action but the named repair first gives copied Units new identities.
@@ -30,6 +35,20 @@ module PhComposer
         Fields.object(properties, :required => properties.keys - optional)
       end
 
+      # A param naming one record or part by its id, such as `wnt_Ab12Cd34Ef56` for prefix "wnt".
+      def id(prefix, description, nullable: false)
+        { "type" => nullable ? %w[string null] : "string", "pattern" => "^#{prefix}_[A-Za-z0-9]{12}$",
+          "description" => description }
+      end
+
+      def described(schema, description)
+        schema.merge("description" => description)
+      end
+
+      def expected(kind)
+        described(kind.descriptor.patch_schema, EXPECTED)
+      end
+
       def list(items)
         { "type" => "array", "items" => items }
       end
@@ -44,7 +63,9 @@ module PhComposer
       end
 
       def create(kind)
-        object({ "values" => create_values(kind), "user_data" => OBJECT }, :optional => ["user_data"])
+        object({ "values" => described(create_values(kind), "The new #{kind.label}'s values; name is required " \
+                                                            "and every other value takes its default."),
+                 "user_data" => USER_DATA }, :optional => ["user_data"])
       end
 
       def patch(kind)
@@ -54,17 +75,19 @@ module PhComposer
       end
 
       def update(kind)
-        object({ "id" => ID, "values" => patch(kind), "expected_values" => kind.descriptor.patch_schema,
-                "user_data" => OBJECT }, :optional => ["user_data"])
+        object({ "id" => id(kind.id_prefix, "The #{kind.label} to edit."),
+                 "values" => described(patch(kind), "The values to change; any not given stay."),
+                 "expected_values" => expected(kind), "user_data" => USER_DATA }, :optional => ["user_data"])
       end
 
       def view(kind)
-        with(kind.descriptor.view_schema, "kind" => ID, "extension_status" => OBJECT, "findings" => FINDINGS)
+        with(kind.descriptor.view_schema, "kind" => TEXT, "extension_status" => OBJECT, "findings" => FINDINGS)
       end
 
       def list_params
-        object({ "ids" => list(ID).merge("maxItems" => Pages::MAXIMUM_LIMIT), "limit" => Pages::LIMIT,
-                "cursor" => Pages::CURSOR }, :optional => %w[ids limit cursor])
+        object({ "ids" => list(TEXT).merge("maxItems" => Pages::MAXIMUM_LIMIT,
+                                           "description" => "Only these record ids; every record when absent."),
+                 "limit" => Pages::LIMIT, "cursor" => Pages::CURSOR }, :optional => %w[ids limit cursor])
       end
     end
   end

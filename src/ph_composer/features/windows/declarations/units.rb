@@ -7,7 +7,23 @@ module PhComposer
   module Windows
     module UnitRegistration
       EXAMPLE_UNIT = { "unit_id" => "wun_Ab12Cd34Ef56", "entity_path" => [1201, 1203] }.freeze
+      ANCHOR = { "type" => "string", "enum" => Units::Anchors::ALL }.freeze
+      ANCHOR_TEXT = "Which point of the opening sits at the placement point: sill, center or head, by left, " \
+                    "center or right as seen from outside."
       module_function
+
+      # A list of explicit Unit occurrence references, as units.list returns them.
+      def units(reference, description)
+        Shapes.list(reference).merge("minItems" => 1, "maxItems" => 500, "description" => description)
+      end
+
+      def unit(reference, description)
+        Shapes.described(reference, description)
+      end
+
+      def host(face, description)
+        Shapes.described(face, description)
+      end
 
       def install(feature, registry)
         face = DeepCopy.call(registry.record_descriptor("ph_composer.zones.faces.face").occurrence_schema)
@@ -23,7 +39,7 @@ module PhComposer
       end
 
       def reads(feature, face, reference)
-        finding = Shapes.object({ "code" => Shapes::ID, "repair" => Shapes::ID })
+        finding = Shapes.object({ "code" => Shapes::TEXT, "repair" => Shapes::TEXT })
         view = Shapes.with(Units::RECORD_KIND.descriptor.view_schema,
           "reference" => reference, "host" => face.merge("type" => %w[object null]),
           "findings" => Shapes.list(finding))
@@ -42,16 +58,18 @@ module PhComposer
       def repairs(feature, face, reference)
         prefix = "#{FEATURE_ID}.units"
         feature.action("#{prefix}.remove", :description => "Remove explicit Window occurrences with reference guards.",
-          :params => Shapes.object({ "units" => Shapes.list(reference).merge("minItems" => 1, "maxItems" => 500) }),
-          :result => Shapes.object({ "unit_ids" => Shapes.list(Shapes::ID) }), :undo_name => "Remove Windows",
+          :params => Shapes.object({ "units" => units(reference, "The Window occurrences to remove.") }),
+          :result => Shapes.object({ "unit_ids" => Shapes.list(Shapes::TEXT) }), :undo_name => "Remove Windows",
           :side_effects => Shapes.side_effects(
             "Removes only the chosen instances; incoming references must remain valid."),
           :examples => [{ "units" => [EXAMPLE_UNIT] }]) do |request, proposal|
           Units::Repairs.remove(request, proposal)
         end
         feature.action("#{prefix}.rehost", :description => "Glue an unmoved Window to an explicit same-storage Face.",
-          :params => Shapes.object({ "unit" => reference, "host" => face }),
-          :result => Shapes.object({ "unit_id" => Shapes::ID }), :undo_name => "Re-host Window",
+          :params => Shapes.object({ "unit" => unit(reference, "The Window occurrence to glue."),
+            "host" => host(face, "The Face to glue it to, in the same parent storage; the Window must lie on " \
+                                 "it.") }),
+          :result => Shapes.object({ "unit_id" => Shapes::TEXT }), :undo_name => "Re-host Window",
           :side_effects => Shapes.side_effects("Changes glue only, after containment and overlap checks."),
           :examples => [{ "unit" => { "unit_id" => "wun_Ab12Cd34Ef56", "entity_path" => [1201, 1203] },
             "host" => { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201],
@@ -61,11 +79,11 @@ module PhComposer
       end
 
       def batch_repairs(feature, reference)
-        units = Shapes.list(reference).merge("minItems" => 1, "maxItems" => 500)
         feature.action("#{FEATURE_ID}.units.swap_type",
           :description => "Swap explicit Windows, preserving their anchors.",
-          :params => Shapes.object({ "units" => units, "type_id" => Shapes::ID }),
-          :result => Shapes.object({ "unit_ids" => Shapes.list(Shapes::ID) }), :undo_name => "Swap Window Type",
+          :params => Shapes.object({ "units" => units(reference, "The Window occurrences to swap."),
+            "type_id" => Shapes.id("wnt", "The Window Type they take.") }),
+          :result => Shapes.object({ "unit_ids" => Shapes.list(Shapes::TEXT) }), :undo_name => "Swap Window Type",
           :side_effects => Shapes.side_effects(
             "Reuses one target definition and preserves each Unit's metadata and host."),
           :examples => [{ "units" => [EXAMPLE_UNIT], "type_id" => "wnt_Ab12Cd34Ef56" }]) do |request, proposal|
@@ -73,8 +91,9 @@ module PhComposer
         end
         feature.action("#{FEATURE_ID}.units.reset_to_type",
           :description => "Reset explicit Windows of one Type to its authored geometry.",
-          :params => Shapes.object({ "units" => units }),
-          :result => Shapes.object({ "unit_ids" => Shapes.list(Shapes::ID) }), :undo_name => "Reset Windows to Type",
+          :params => Shapes.object({ "units" => units(reference, "The Window occurrences to reset, all of one " \
+                                                                 "Window Type.") }),
+          :result => Shapes.object({ "unit_ids" => Shapes.list(Shapes::TEXT) }), :undo_name => "Reset Windows to Type",
           :side_effects => Shapes.side_effects(
             "Repairs selected instances; regenerating an edited primary affects all its Units."),
           :examples => [{ "units" => [EXAMPLE_UNIT] }]) do |request, proposal|
@@ -84,11 +103,12 @@ module PhComposer
 
       def identity_repair(feature, reference)
         repair = Shapes.object({ "entity_path" => { "type" => "array", "items" => { "type" => "integer" } },
-          "old_unit_id" => Shapes::ID, "new_unit_id" => Shapes::ID })
+          "old_unit_id" => Shapes::TEXT, "new_unit_id" => Shapes::TEXT })
         feature.action("#{FEATURE_ID}.units.repair_copied_identities",
           :description => "Give the copies sharing each chosen Window's identity new identities. The first " \
                           "occurrence by entity path keeps the identity; a preview lists each old and new id.",
-          :params => Shapes.object({ "units" => Shapes.list(reference).merge("minItems" => 1, "maxItems" => 500) }),
+          :params => Shapes.object({ "units" => units(reference, "Windows whose identity a copy shares; either " \
+                                                                 "the original or a copy names the group.") }),
           :result => Shapes.object({ "repairs" => Shapes.list(repair) }), :undo_name => "Repair Copied Windows",
           :side_effects => "Rewrites only the copied Unit records' identities; geometry, glue and metadata stay.",
           :examples => [{ "units" => [EXAMPLE_UNIT] }]) do |request, proposal|
@@ -99,9 +119,11 @@ module PhComposer
       def flip_repair(feature, reference)
         feature.action("#{FEATURE_ID}.units.new_flipped_type",
           :description => "Create a horizontally flipped Type for one mirrored Window.",
-          :params => Shapes.object({ "unit" => reference, "name" => { "type" => "string", "minLength" => 1 } },
+          :params => Shapes.object({ "unit" => unit(reference, "The mirrored Window occurrence."),
+            "name" => { "type" => "string", "minLength" => 1,
+                        "description" => "The new Type's name; \"<Type> (flipped)\" when absent." } },
             :optional => ["name"]),
-          :result => Shapes.object({ "unit_id" => Shapes::ID, "type_id" => Shapes::ID }),
+          :result => Shapes.object({ "unit_id" => Shapes::TEXT, "type_id" => Shapes::TEXT }),
           :undo_name => "New Flipped Window Type",
           :side_effects => Shapes.side_effects(
             "Creates one independent Type; preserves physical panes, metadata and glue."),
@@ -113,9 +135,11 @@ module PhComposer
       def restore_repair(feature, face)
         path = { "type" => "array", "minItems" => 1, "items" => { "type" => "integer", "minimum" => 1 } }
         feature.action("#{FEATURE_ID}.units.restore", :description => "Recover a Unit from exact stamped pane Faces.",
-          :params => Shapes.object({ "host" => face, "type_id" => Shapes::ID,
-            "pane_paths" => Shapes.list(path).merge("minItems" => 1, "maxItems" => 500) }),
-          :result => Shapes.object({ "unit_id" => Shapes::ID }), :undo_name => "Restore Window",
+          :params => Shapes.object({ "host" => host(face, "The Face the loose panes lie on."),
+            "type_id" => Shapes.id("wnt", "The Window Type the panes were stamped with."),
+            "pane_paths" => Shapes.list(path).merge("minItems" => 1, "maxItems" => 500,
+              "description" => "Each stamped pane Face's entity path from the Model root.") }),
+          :result => Shapes.object({ "unit_id" => Shapes::TEXT }), :undo_name => "Restore Window",
           :side_effects => Shapes.side_effects(
             "Creates a new default-anchor Unit and removes only its exact loose panes and edges."),
           :examples => [{ "host" => { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201],
@@ -128,11 +152,15 @@ module PhComposer
       def place(feature, face)
         prefix = "#{FEATURE_ID}.units"
         feature.action("#{prefix}.place", :description => "Place an anchored Window on an explicit writable Zone Face.",
-          :params => Shapes.object({ "host" => face, "type_id" => Shapes::ID,
-            "anchor" => { "type" => "string", "enum" => Units::Anchors::ALL },
-            "offsets" => Shapes.object({ "x_m" => { "type" => "number", "x-unit" => "m" },
-              "y_m" => { "type" => "number", "x-unit" => "m" } }), "user_data" => Shapes::OBJECT },
-            :optional => ["user_data"]), :result => Shapes.object({ "unit_id" => Shapes::ID }),
+          :params => Shapes.object({ "host" => host(face, "The writable Zone Face to place on."),
+            "type_id" => Shapes.id("wnt", "The Window Type to place."),
+            "anchor" => ANCHOR.merge("description" => ANCHOR_TEXT),
+            "offsets" => Shapes.described(Shapes.object({ "x_m" => { "type" => "number", "x-unit" => "m" },
+              "y_m" => { "type" => "number", "x-unit" => "m" } }),
+              "Where the anchor goes on the Face, in metres right and up from the Face's lowest, leftmost " \
+              "extent as seen from outside."),
+            "user_data" => Shapes::USER_DATA },
+            :optional => ["user_data"]), :result => Shapes.object({ "unit_id" => Shapes::TEXT }),
           :undo_name => "Place Window",
           :side_effects => Shapes.side_effects(
             "Creates or reuses the Type definition, glues an instance and stores its Unit record."),

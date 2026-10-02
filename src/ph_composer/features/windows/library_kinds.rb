@@ -69,7 +69,7 @@ module PhComposer
         def local_read
           expected = kind.descriptor.patch_schema
           expected["properties"] = expected.fetch("properties").slice(*fields)
-          row = Shapes.object({ "id" => Shapes::ID, "mapped" => schema, "expected_values" => expected,
+          row = Shapes.object({ "id" => Shapes::TEXT, "mapped" => schema, "expected_values" => expected,
             "source" => kind.values_schema.fetch("properties").fetch("source") }, :optional => ["source"])
           callback(Shapes::NONE, Shapes.list(row)) do |request, _proposal|
             Operations.records(request, kind).map do |record|

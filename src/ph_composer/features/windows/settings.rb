@@ -61,7 +61,9 @@ module PhComposer
           :params => Shapes::NONE, :result => VALUES, :examples => [{}]) { |request| read(request.model) }
         feature.snapshot_section("#{FEATURE_ID}.settings", :query => "#{FEATURE_ID}.settings.get")
         feature.action("#{FEATURE_ID}.settings.update", :description => "Set guarded installation defaults.",
-          :params => Shapes.object({ "values" => VALUES, "expected_values" => VALUES }), :result => VALUES,
+          :params => Shapes.object({ "values" => Shapes.described(VALUES, "The complete new defaults."),
+            "expected_values" => Shapes.described(VALUES, "The defaults last read; a change refuses.") }),
+          :result => VALUES,
           :undo_name => "Change Window Defaults",
           :side_effects => Shapes.side_effects("Stores installation defaults in this SKP."),
           :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }]) do |request, proposal|

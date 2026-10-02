@@ -16,7 +16,7 @@ module PhComposer
       end
 
       def schema
-        Shapes.list(Shapes.object({ "client_id" => Shapes::ID, "copy" => copy_schema }))
+        Shapes.list(Shapes.object({ "client_id" => Shapes::TEXT, "copy" => copy_schema }))
       end
 
       def resolve(request, proposal, imports, creates)
