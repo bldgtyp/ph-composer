@@ -1,7 +1,7 @@
 # R05: export and translation layering runs upward
 
 DATE: 2026-10-01
-STATUS: Requested
+STATUS: Implemented on branch `refactor/r05-export-layering`, 2026-10-02; dual-Ruby `make ci` and the E06/E14 host readbacks pass
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation. Architecture change.
@@ -169,3 +169,88 @@ Written 2026-10-02 against the two decisions above, before code.
   regenerate a golden to pass.
 - `make ci` on both Rubies; the E06 and E14 export readbacks repeat on the host because the
   translation composition changed.
+
+## Outcome
+
+Implemented 2026-10-02 on `refactor/r05-export-layering`, following the Design above.
+
+- **Model assembly (1, 2).** `python/ph_composer_translation/assembly.py` builds the Model from
+  declared attachments. `ZoneSection` attaches Rooms to the Model, and its `attach` sets building
+  segments and pairs Surfaces. `ApertureSection` attaches to Faces. `ZoneSection` no longer imports
+  `window_sections` or requires Apertures. `AttachmentRefused` lets `attach` refuse only some
+  objects. Apertures read the Zones Face specifications (`FACES`, a layer down) and check their own
+  host in `translate`, so one bad Aperture costs only itself. Attachments run in id order.
+- **Canonical accounting.** `canonical_model` is a shell field, `{hbjson, rooms, faces,
+  surface_pairs}`, counted from the assembled Model. `omitted` is gone; the Faces section's
+  `surface_omissions` lists omissions, and the Export pane no longer shows that count. As before,
+  a run that cannot publish may still carry a diagnostic canonical model; a refused attachment
+  withholds it. A refused Aperture is now left out of that diagnostic model, where it used to cost
+  its whole Zone.
+- **Namespaced results (3).** `result[section_id][field]`, collected after assembly. Privacy
+  composes one optional entry per section, and the cross-contributor field-collision check is
+  gone. `export_contributor(..., requires:, projection:)` is checked in a new
+  `Registry::ExportValidation`, under `request.query`'s rule. Reports receive an
+  `Export::ResultView`.
+- **Derived joins (3a).** `window_face_areas` is the Apertures section's, read from each Aperture's
+  parent Face. Zones keeps `construction_usage` and renders it in a new "Construction usage" report
+  section, naming Assemblies through its declared read of the Assemblies section. Assemblies cannot
+  read Zones, so the Assemblies report now lists every translated definition with its disclosures.
+  It says that only used Assemblies reach the HBJSON.
+- **Declared projection read (4).** Faces registers `contexts` as its `projection:`. Both Windows
+  contributors declare `requires: [faces section]` and read it with `reader.section`.
+  `grep -rn "Zones::" features/windows` is empty.
+- **Conformance (5).** `Section.conformance(model, fields)`. The Aperture checks, including schema
+  exceptions, are `ApertureSection.conformance`. `entry.py` names no Window field.
+- **One matcher (6).** `GeometrySnapshot.definition_facts` is public. `DefinitionGeometry.matches?`
+  captures facts and runs `facts_match?`, which the export assessment also calls with its
+  `cuts_opening`/`is2d` check. `ExportGeometry.matches?` and its geometry helpers are deleted, and
+  the assessment uses `DefinitionIndex.valid?`. The export side now uses the live comparison:
+  per-axis tolerance, normalized expected contour, and no reversed winding. An upward normal is
+  already required, so reversed winding could not match before either.
+- **Example.** `tools/examples/foundation/example_doors.py` attaches Doors to Faces with no edit
+  to Zones or the assembly; `tests/python/test_example_doors.py` exports one.
+
+Fixtures: `tests/fixtures/foundation/result.json` was hand-edited to the namespaced shape. It is a
+hand-reviewed contract example, not a generated golden. `two_zones.hbjson` and the API reference
+are unchanged (`make fixtures-check`).
+
+Gates: `make ci` passed on Ruby 3.2.2 and 2.7.2 (1351 Ruby runs, 362 JS, 172 Python, mypy,
+rubocop, ruff, manifests, RBZ); `make phase-one-proof` passes.
+
+Host: the normal RBZ (`dist/ph_composer.rbz` SHA-256
+`13fa7535ba687757af104bf68b3a44436e4db32706219d0bf143bc9cc7c3d0fe`) was installed with SketchUp
+closed. SketchUp 26.1.188, Ruby 3.2.2, one fresh process per fixture, no runtime patches.
+Exports went through public `API.start_export` and the installed runtime.
+
+- E14: process 92030 opened a copy of `p214-integrated.skp` (SHA-256 `8d23fc20…22aeb`). The export
+  completed and was publishable: 2 Rooms, 12 Faces, 1 Surface pair. Net areas are 14.01, 9.76 and
+  19.01 m2, and the one g=0 construction exception is present. The HBJSON equals the accepted P2-17
+  integrated export once default UUIDs and unordered resource arrays are normalized, the same
+  comparison the archive used. The report shows Authored constructions, Construction usage and
+  Windows.
+- E06: process 92551 opened a copy of `reference-assigned.skp` (SHA-256 `147a5638…f7d9a`). The
+  export completed with the unused incomplete Assembly as a nonblocking finding. Its HBJSON equals
+  the accepted `reference.hbjson` under the same normalization.
+
+Private artifacts are `_private/host/envelope/r05-*`. SketchUp was quit cleanly with both Models
+unmodified.
+
+Review: one independent Opus pass using the architecture rubric found no upward reference, no
+privacy gap and no HBJSON change. Fixed: one refusal blamed every object on its host, including a
+healthy partner Zone; attachment followed extraction order rather than id order; the Assemblies
+report claimed unused membranes were in HBJSON; a refused Aperture group stayed attached; a
+malformed schema-exception field passed; one `context/` line and three Design-note names were
+stale; `SnapshotReader#section` was untested.
+
+Follow-ups, not done here:
+
+- A Zone whose Faces are all omitted builds a Room with no Faces. The diagnostic canonical model
+  then fails to reload. This predates R05, which only made it reachable without an Aperture.
+- Two contributors that read each other's projections would recurse. Registration does not check
+  for a section-read cycle.
+- `construction_usage` and `window_face_areas` are reported from runs that cannot publish.
+- An attaching section that is not required for export still withholds the canonical model when
+  it refuses. No such section exists yet.
+- The live matcher now captures `FaceGeometry` per pane, including a digest. Its cost was not
+  measured. R08 reworks those callers.
+
