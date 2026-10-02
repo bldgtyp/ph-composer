@@ -77,7 +77,7 @@ module PhComposer
         return [item] unless item.entries
         return [] unless session && available?(item, session)
 
-        entries = item.entries.call(session)
+        entries = contributed(item, []) { item.entries.call(read_request(item, session)) }
         unless entries.is_a?(Array) && entries.all? do |entry|
           entry.is_a?(Declarations::MenuEntry) && entry.label.is_a?(String) && !entry.label.strip.empty? &&
             entry.handler.respond_to?(:call) && (entry.state.nil? || entry.state.respond_to?(:call))
@@ -93,7 +93,23 @@ module PhComposer
         return false unless session
         return true unless item.available
 
-        item.available.call(session)
+        contributed(item, false) { item.available.call(read_request(item, session)) }
+      end
+
+      # A contributor's test or provider that raises costs only its own item: it is logged and left
+      # out, so one defect cannot remove every other feature's context menu. The entry shape check
+      # above still raises, because an invalid shape is a contract violation the suite must catch.
+      def contributed(item, omitted)
+        yield
+      rescue StandardError => error
+        Diagnostics.log("menu_failed", "operation" => item.name, "error_class" => error.class.name)
+        omitted
+      end
+
+      # Availability tests and entry providers read the Model the way a query handler does, under
+      # their owner's declared dependencies, without issuing a caller handle.
+      def read_request(item, session)
+        HandlerRequest.for(session, :owner => item.owner, :name => item.name)
       end
 
       def item_check(declaration)

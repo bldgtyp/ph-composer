@@ -31,7 +31,7 @@ class WindowColourModesTest < PhComposerTestCase
   def test_projection_uses_occurrences_native_transforms_and_detached_units_type
     unit = U::Occurrences.all(@model).first
     unit.entity.definition = @model.definitions.add("Detached colour fixture")
-    entries = W::ColourModes.entries(@model)
+    entries = W::ColourModes.entries(read)
     assert_equal [@type_id, @type_id], entries.map(&:value)
     assert_equal ["Colour test", "Colour test"], entries.map(&:label)
     assert_equal U::Occurrences.all(@model).map(&:path), entries.map(&:path)
@@ -42,7 +42,7 @@ class WindowColourModesTest < PhComposerTestCase
     unit = U::Occurrences.all(@model).first
     U::STORE.write(unit.entity, unit.record.merge("window_type_id" => "wnt_Unknown00000"))
     before = U::MutationScope.new.capture(@model)
-    entries = W::ColourModes.entries(@model)
+    entries = W::ColourModes.entries(read)
     assert_nil entries.first.value
     assert_equal @type_id, entries.last.value
     assert_equal before, U::MutationScope.new.capture(@model)
@@ -64,5 +64,11 @@ class WindowColourModesTest < PhComposerTestCase
     assert_equal operations, @model.operations.length
     @group.hidden = false
     assert_equal before, U::MutationScope.new.capture(@model)
+  end
+
+  private
+
+  def read
+    PhComposer::HandlerRequest.for(@session, :owner => W::FEATURE_ID, :name => W::ColourModes::BY_TYPE)
   end
 end

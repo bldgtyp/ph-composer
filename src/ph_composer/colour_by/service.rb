@@ -174,7 +174,8 @@ module PhComposer
         unclassified_triangles = []
         wash = []
         @visibility = OccurrenceVisibility.new(@session.model)
-        painted = Array(declaration.projection.call(@session.model)).map do |entry|
+        read = HandlerRequest.for(@session, :owner => declaration.owner, :name => declaration.name)
+        painted = Array(declaration.projection.call(read)).map do |entry|
           [entry, *paint(declaration, entry)]
         end
         # A row the user set aside can stop existing: the last Wall becomes a Floor, or its Zone is

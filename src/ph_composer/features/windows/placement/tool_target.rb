@@ -21,8 +21,7 @@ module PhComposer
             reference = row.fetch("reference")
             [reference.fetch("zone_path") + reference.fetch("entity_path"), reference]
           end
-          type = Records::Engine.new(@session.model, Registry.current.catalog).find(TYPE_KIND, type_id)
-          @plan = Units::DefinitionPlan.build(type)
+          @plan = Units::DefinitionPlan.build(type_values(type_id))
           @revision = @session.revision
           @edit_path = Array(@session.model.active_path).map(&:persistent_id)
           @plan
@@ -46,14 +45,24 @@ module PhComposer
         end
 
         def host(reference)
-          request = Struct.new(:model).new(@session.model)
-          Hosts.resolve(request, reference, :zone_rows => @zones, :face_rows => @faces)
+          Hosts.resolve(@session.model, reference, :zone_rows => @zones, :face_rows => @faces)
         end
 
         private
 
-        def query(name)
-          result = API.query(:context => @context, :name => name)
+        def type_values(type_id)
+          read = query("ph_composer.records.list", "kind" => TYPE_KIND, "ids" => [type_id])
+          if (unreadable = read.fetch("unreadable").first)
+            raise CodedError.new(unreadable.fetch("code"), unreadable.fetch("message"))
+          end
+          records = read.fetch("records")
+          raise CodedError.new("target.not_found", "There is no Window Type with id #{type_id}.") if records.empty?
+
+          records.first.fetch("values")
+        end
+
+        def query(name, params = {})
+          result = API.query(:context => @context, :name => name, :params => params)
           unless result.fetch("status") == "completed"
             raise CodedError.new(result.fetch("code"), result.fetch("message"))
           end

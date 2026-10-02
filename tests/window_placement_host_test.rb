@@ -16,17 +16,16 @@ class WindowPlacementHostTest < PhComposerTestCase
     PhComposer::Registry.install([W]) unless PhComposer::Registry.installed?(W::FEATURE_ID)
   end
 
-  def request
-    PhComposer::HandlerRequest.new(:model => @model, :session => @session, :revision => @session.revision,
-      :registry => PhComposer::Registry.current, :owner => W::FEATURE_ID, :query_stack => [], :params => {},
-      :engine => PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog))
+  def resolve(reference)
+    HOSTS.resolve(@model, reference, :zone_rows => assignment_query("ph_composer.zones.all").fetch("zones"),
+                                     :face_rows => assignment_faces)
   end
 
   def test_unclassified_host_uses_public_face_state_without_assignment_write
     group, faces = assignment_zone(100)
     reference = assignment_faces.first.fetch("reference")
     count = @model.operations.length
-    host = HOSTS.resolve(request, reference)
+    host = resolve(reference)
     assert_same faces.first, host.entity
     assert_equal [group.persistent_id], host.parent_path
     assert_empty host.values
@@ -38,7 +37,7 @@ class WindowPlacementHostTest < PhComposerTestCase
     group, faces = assignment_zone(200, 1, :nested => true)
     wrapper = group.entities.to_a.first
     wrapper.transformation = Geom::Transformation.translation([10, 20, 30])
-    host = HOSTS.resolve(request, assignment_faces.first.fetch("reference"))
+    host = resolve(assignment_faces.first.fetch("reference"))
     assert_equal [group.persistent_id, wrapper.persistent_id], host.parent_path
     assert_same faces.first, host.entity
     assert_equal [10, 20, 30].map { |value| value * PhComposer::INCH_TO_M }, host.geometry.outer_loop.first
@@ -46,7 +45,7 @@ class WindowPlacementHostTest < PhComposerTestCase
 
   def test_surface_host_refuses_from_public_semantics
     rows = assignment_pair(300)
-    error = assert_raises(PhComposer::CodedError) { HOSTS.resolve(request, rows.first.fetch("reference")) }
+    error = assert_raises(PhComposer::CodedError) { resolve(rows.first.fetch("reference")) }
     assert_equal "window.surface_host", error.code
   end
 
@@ -54,10 +53,10 @@ class WindowPlacementHostTest < PhComposerTestCase
     group, = assignment_zone(400)
     row = assignment_faces.first
     assignment_classify([row], "face_type" => { "mode" => "set", "value" => "Wall" })
-    error = assert_raises(PhComposer::CodedError) { HOSTS.resolve(request, row.fetch("reference")) }
+    error = assert_raises(PhComposer::CodedError) { resolve(row.fetch("reference")) }
     assert_equal "target.changed", error.code
     group.locked = true
-    error = assert_raises(PhComposer::CodedError) { HOSTS.resolve(request, assignment_faces.first.fetch("reference")) }
+    error = assert_raises(PhComposer::CodedError) { resolve(assignment_faces.first.fetch("reference")) }
     assert_equal "target.locked", error.code
   end
 
@@ -66,7 +65,7 @@ class WindowPlacementHostTest < PhComposerTestCase
     wrapper = group.entities.to_a.first
     group.entities << Sketchup::Group.new(700, wrapper.entities)
     reference = assignment_faces.first.fetch("reference")
-    error = assert_raises(PhComposer::CodedError) { HOSTS.resolve(request, reference) }
+    error = assert_raises(PhComposer::CodedError) { resolve(reference) }
     assert_equal "target.shared_definition", error.code
   end
 end

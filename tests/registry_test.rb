@@ -108,10 +108,10 @@ class RegistryTest < PhComposerTestCase
     called = []
     Registry.install([feature do |registry|
       registry.feature("probe.menu", :contract_version => 1)
-              .menu_entries("probe.menu.current", :menu => "Probe") do |session|
+              .menu_entries("probe.menu.current", :menu => "Probe") do |read|
         labels.map do |label|
           PhComposer::Declarations::MenuEntry.new(:label => label, :handler => ->(current) { called << current })
-        end.tap { assert_same PhComposer::Sessions.current, session }
+        end.tap { assert_same PhComposer::Sessions.current, read.session }
       end
     end])
     refute PhComposer::Commands.install_feature_menus(UI::Menu.new("Global")).key?("Probe")
@@ -128,6 +128,18 @@ class RegistryTest < PhComposerTestCase
     assert_equal 1, called.length, "a catalog entry belongs to the session that built it"
   end
 
+  def test_a_raising_menu_test_or_provider_omits_only_its_own_item
+    Registry.install([feature do |registry|
+      scope = registry.feature("probe.menu", :contract_version => 1)
+      scope.menu_item("probe.menu.kept", :label => "Kept", :menu => "Probe") { |_session| nil }
+      scope.menu_item("probe.menu.test", :label => "Test", :menu => "Probe",
+                                         :available => ->(_read) { raise "broken test" }) { |_session| nil }
+      scope.menu_entries("probe.menu.provider", :menu => "Probe") { |_read| raise "broken provider" }
+    end])
+    menus = PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)
+    assert_equal ["Kept"], menus.fetch("Probe").entries.map(&:first)
+  end
+
   def test_dynamic_context_menu_provider_and_entries_are_validated
     diagnostics = refused(feature do |registry|
       registry.feature("probe.menu", :contract_version => 1).menu_entries("probe.menu.missing", :menu => "Probe")
@@ -135,7 +147,7 @@ class RegistryTest < PhComposerTestCase
     assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
     Registry.install([feature do |registry|
       registry.feature("probe.menu", :contract_version => 1)
-              .menu_entries("probe.menu.invalid", :menu => "Probe") { |_session| ["invalid entry"] }
+              .menu_entries("probe.menu.invalid", :menu => "Probe") { |_read| ["invalid entry"] }
     end])
     assert_raises(PhComposer::InternalError) do
       PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)

@@ -30,27 +30,22 @@ module PhComposer
 
         def install(feature)
           feature.colour_mode(BY_FACE_TYPE, :label => "Face type", :entity_kind => "face",
-                                            :colours => ColourBy::Palette.fixed(FACE_TYPE_COLOURS)) do |model|
-            entries(model, "face_type", FACE_TYPE_LABELS)
+                                            :colours => ColourBy::Palette.fixed(FACE_TYPE_COLOURS)) do |read|
+            entries(read.model, "face_type", FACE_TYPE_LABELS)
           end
           feature.colour_mode(BY_BOUNDARY_CONDITION, :label => "Boundary condition", :entity_kind => "face",
-                                                     :colours => ColourBy::Palette.fixed(BOUNDARY_COLOURS)) do |model|
-            entries(model, "boundary_condition", BOUNDARY_LABELS)
+                                                     :colours => ColourBy::Palette.fixed(BOUNDARY_COLOURS)) do |read|
+            entries(read.model, "boundary_condition", BOUNDARY_LABELS)
           end
           feature.colour_mode(BY_ASSEMBLY, :label => "Assembly", :entity_kind => "face",
-                                          :colours => method(:assembly_colour)) { |model| assembly_entries(model) }
+                                          :colours => method(:assembly_colour)) { |read| assembly_entries(read) }
         end
 
         # One dependency read per projection, never per Face. Entries carry detached colour values,
         # so the shared service's colour callback needs no Model, feature access or cached Index.
-        def assembly_entries(model)
-          session = Sessions.for(model)
-          read = API.query(:context => API.connect(:session_id => session.id), :name => "#{PREFIX}.assembly_choices")
-          unless read["status"] == "completed"
-            raise CodedError.new(read.fetch("code"), read.fetch("message"))
-          end
-          rows = read.fetch("value").fetch("assemblies").to_h { |row| [row.fetch("id"), row] }
-          Zones::Index.new(model).all_faces.map do |face|
+        def assembly_entries(read)
+          rows = read.query("#{PREFIX}.assembly_choices").fetch("assemblies").to_h { |row| [row.fetch("id"), row] }
+          Zones::Index.new(read.model).all_faces.map do |face|
             record = FACE_STORE.read(face.entity)
             id = record && record["assembly_id"]
             assembly = rows[id]

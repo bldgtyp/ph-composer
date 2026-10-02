@@ -1,9 +1,31 @@
 # frozen_string_literal: true
 
 module PhComposer
-  # What a query or action handler receives.
+  # What a query or action handler receives. Colour-by projections and native menu tests receive the
+  # same shape as a read: no params and no proposal (context/CONTRACTS.md, "Handler-side dependency
+  # reads").
   HandlerRequest = Struct.new(:session, :model, :params, :engine, :revision, :registry, :owner, :proposal, :query_stack,
-                              keyword_init: true) do
+                              :memos, keyword_init: true) do
+    # The one place a request is built from a session. `name` is the declaration the request runs
+    # for, so a nested read of the same name is refused as recursive.
+    def self.for(session, owner:, name:, registry: Registry.current, params: {}, proposal: nil)
+      new(:session => session, :model => session.model, :params => DeepCopy.call(params),
+          :engine => Records::Engine.new(session.model, registry.catalog), :revision => session.revision,
+          :registry => registry, :owner => owner, :proposal => proposal, :query_stack => [name],
+          :memos => {}.compare_by_identity)
+    end
+
+    # A value computed once per request, shared with the nested reads and callbacks it makes. Keys
+    # are scoped to the current owner, so two features cannot collide, and to the current engine, so
+    # a value read through one engine is never reused under a projected one.
+    def memo(key)
+      self.memos ||= {}.compare_by_identity
+      slot = (memos[engine] ||= {})
+      return slot[[owner, key]] if slot.key?([owner, key])
+
+      slot[[owner, key]] = yield
+    end
+
     # Reads a declared dependency within the current read/proposal phase, without
     # re-entering the public dispatcher or bypassing the query's schemas.
     def query(name, params = {})

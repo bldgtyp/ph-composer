@@ -60,7 +60,7 @@ class AssemblyAssignmentReadsTest < PhComposerTestCase
     STORE.write(entities.last, "id" => "fac_000000000099", "schema_version" => 1,
                               "assembly_id" => "asm_000000000099")
     declaration = PhComposer::Registry.current.colour_modes.fetch("#{FACE_PREFIX}.by_assembly")
-    entries = declaration.projection.call(@model)
+    entries = declaration.projection.call(read(declaration))
     assert_equal "Colour", entries.first.label
     assert_equal [18, 52, 86], declaration.colours.call(entries.first.value)
     assert_nil entries[1].value
@@ -92,11 +92,17 @@ class AssemblyAssignmentReadsTest < PhComposerTestCase
     selection = assignment_query("#{FACE_PREFIX}.selection")
     assert_equal assignment_faces.first.fetch("values"), selection.fetch("targets").first.fetch("expected_values")
     menu = PhComposer::Registry.current.menu_items.fetch("#{FACE_PREFIX}.assembly_menu")
-    entries = menu.entries.call(@session)
+    entries = menu.entries.call(read(menu))
     assert_equal "Assembly: Z wall", entries.first.label
     entries.first.handler.call(@session)
     assert_equal wall, STORE.read(entities.first).fetch("assembly_id")
     assert_equal "Wall", STORE.read(entities.first).fetch("face_type")
     refute STORE.read(entities.first).key?("boundary_condition")
+  end
+
+  private
+
+  def read(declaration)
+    PhComposer::HandlerRequest.for(@session, :owner => declaration.owner, :name => declaration.name)
   end
 end

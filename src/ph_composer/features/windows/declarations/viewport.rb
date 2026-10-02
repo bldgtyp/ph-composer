@@ -50,11 +50,11 @@ module PhComposer
 
       def menus(feature)
         feature.menu_item("#{PREFIX}.menu", :label => "Place Window…", :menu => MENU,
-          :available => ->(session) { !type_rows(session).empty? }) { |session| choose_from_menu(session) }
+          :available => ->(read) { !type_rows(read.engine).empty? }) { |session| choose_from_menu(session) }
         feature.menu_entries("#{PREFIX}.face_menu", :menu => MENU,
-          :available => ->(session) { !selected_face(session).nil? }) do |session|
-          host = selected_face(session)
-          type_rows(session).map do |row|
+          :available => ->(read) { !selected_face(read).nil? }) do |read|
+          host = selected_face(read)
+          type_rows(read.engine).map do |row|
             id = row.fetch("id")
             Declarations::MenuEntry.new(:label => "Place #{row.fetch('name')}", :handler => ->(target) {
               invoke_choice(target, { "type_id" => id, "host" => host })
@@ -62,28 +62,34 @@ module PhComposer
           end
         end
         feature.menu_item("#{PREFIX}.exit_menu", :label => "Stop Place", :menu => MENU,
-          :available => ->(session) { Windows.place_tool(session).active? }) do |session|
+          :available => ->(read) { Windows.place_tool(read.session).active? }) do |session|
           Windows.place_tool(session).stop
         end
       end
 
-      def type_rows(session)
-        engine = Records::Engine.new(session.model, Registry.current.catalog)
+      def type_rows(engine)
         engine.ids(TYPE_KIND).map { |id| engine.find(TYPE_KIND, id).slice("id", "name") }
       end
 
-      def selected_face(session)
-        selected = session.model.selection.to_a
-        return unless selected.length == 1 && selected.first.is_a?(Sketchup::Face)
-        result = API.query(:context => API.connect(:session_id => session.id),
-          :name => "ph_composer.zones.faces.selection")
-        return unless result.fetch("status") == "completed"
-        faces = result.fetch("value").fetch("faces")
+      # The Zones selection read, for a menu test or entry provider. Anything but one Face is nil.
+      def selected_face(read)
+        return unless single_face?(read.model)
+
+        faces = read.query("ph_composer.zones.faces.selection").fetch("faces")
         faces.first if faces.length == 1
+      rescue UserError
+        nil
       end
 
+      # A menu handler is a client: it reads and chooses through one long-lived context per session.
       def choose_from_menu(session)
-        rows = type_rows(session)
+        types = query(session, "ph_composer.records.list", "kind" => TYPE_KIND, "fields" => ["name"],
+                                                            "limit" => Pages::MAXIMUM_LIMIT)
+        return unless types
+
+        rows = types.fetch("records").map do |row|
+          { "id" => row.fetch("id"), "name" => row.dig("values", "name") }
+        end
         return if rows.empty?
         choices = [rows.map { |row| row.fetch("name") }.join("|")]
         choice = UI.inputbox(["Window Type"], [rows.first.fetch("name")], choices,
@@ -92,19 +98,47 @@ module PhComposer
         selected = rows.find { |row| row.fetch("name") == choice.first }
         return unless selected
         params = { "type_id" => selected.fetch("id") }
-        host = selected_face(session)
+        host = selected_host(session)
         params["host"] = host if host
         invoke_choice(session, params)
       end
 
+      def selected_host(session)
+        return unless single_face?(session.model)
+
+        faces = query(session, "ph_composer.zones.faces.selection", {})&.fetch("faces")
+        faces.first if faces&.length == 1
+      end
+
+      def single_face?(model)
+        selected = model.selection.to_a
+        selected.length == 1 && selected.first.is_a?(Sketchup::Face)
+      end
+
       def invoke_choice(session, params)
-        result = API.view(:context => API.connect(:session_id => session.id), :name => "#{PREFIX}.choose",
-          :params => params)
-        unless result.fetch("status") == "completed"
-          Sketchup.status_text = result.fetch("message")
-          session.notice(result.fetch("message"), :tone => :warning)
-        end
+        result = API.view(:context => context(session), :name => "#{PREFIX}.choose", :params => params)
+        show_refusal(session, result)
         result
+      end
+
+      # A refused read is shown, as a refused choice is, rather than silently doing nothing.
+      def query(session, name, params)
+        result = API.query(:context => context(session), :name => name, :params => params)
+        return result.fetch("value") if result.fetch("status") == "completed"
+
+        show_refusal(session, result)
+        nil
+      end
+
+      def show_refusal(session, result)
+        return if result.fetch("status") == "completed"
+
+        Sketchup.status_text = result.fetch("message")
+        session.notice(result.fetch("message"), :tone => :warning)
+      end
+
+      def context(session)
+        session.feature_state(:windows_menu_context) { API.connect(:session_id => session.id) }
       end
     end
   end

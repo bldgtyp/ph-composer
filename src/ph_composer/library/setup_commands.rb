@@ -27,9 +27,8 @@ module PhComposer
           end
           feature.menu_item("#{PREFIX}.#{verb}_menu", :label => verb == "add_file" ? "Add Library File…" :
                             "Add Library Folder…", :menu => "Libraries",
-                            :available => ->(_session) { false }) do |session|
-            outcome = API.view(:context => API.connect(:session_id => session.id),
-                               :name => "#{PREFIX}.#{verb}", :params => {})
+                            :available => ->(_read) { false }) do |session|
+            outcome = API.view(:context => menu_context(session), :name => "#{PREFIX}.#{verb}", :params => {})
             session.notice(outcome.fetch("message"), :tone => outcome["status"] == "completed" ? :info : :warning)
           end
         end
@@ -41,6 +40,11 @@ module PhComposer
           refresh_sessions
           value
         end
+      end
+
+      # The native menu is one client per session, as the panel is.
+      def menu_context(session)
+        session.feature_state(:library_menu_context) { API.connect(:session_id => session.id) }
       end
 
       def kind_adapters(registry)

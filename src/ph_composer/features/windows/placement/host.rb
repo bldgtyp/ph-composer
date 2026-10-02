@@ -6,26 +6,24 @@ module PhComposer
       Host = Struct.new(:entity, :entities, :parent_path, :transform, :reference, :values, :geometry,
                         :zone_state, keyword_init: true)
 
-      # Face semantics come through the declared Zones dependency. The SDK path walk resolves only
-      # native geometry/storage, never another feature's dictionaries or private resolver.
+      # Face semantics come from the caller's Zones reads, passed in as rows. The SDK path walk resolves
+      # only native geometry/storage, never another feature's dictionaries or private resolver.
       module Hosts
         module_function
 
-        def resolve(request, reference, writable: true, zone_rows: nil, face_rows: nil)
+        def resolve(model, reference, zone_rows:, face_rows:, writable: true)
           zone_reference = reference.slice("zone_id", "zone_path")
-          zones = zone_rows || request.query("ph_composer.zones.all").fetch("zones")
-          zone = zones.find { |row| row.fetch("reference") == zone_reference }
+          zone = zone_rows.find { |row| row.fetch("reference") == zone_reference }
           unless zone && (!writable || zone.fetch("state") == "found")
             raise CodedError.new("target.not_found", "Choose a Face in one writable, unambiguous Zone.")
           end
-          rows = face_rows || request.query("ph_composer.zones.faces.all").fetch("faces")
-          row = rows.find { |item| item.fetch("reference") == reference }
+          row = face_rows.find { |item| item.fetch("reference") == reference }
           raise CodedError.new("target.changed", "The host Face reference no longer matches the Zone read.") unless row
 
           if writable && row.fetch("values")["boundary_condition"] == "Surface"
             raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
           end
-          native(request.model, reference, row.fetch("values"), writable).tap do |host|
+          native(model, reference, row.fetch("values"), writable).tap do |host|
             host.zone_state = zone.fetch("state")
           end
         end

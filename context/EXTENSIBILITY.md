@@ -214,8 +214,8 @@ Implemented in P1-D. A feature declares a mode in its own `install`, through the
 
 ```ruby
 feature.colour_mode("ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone",
-                    colours: ColourBy::Palette.ramp) do |model|
-  Zones::Occurrences.zones(model).map do |zone|
+                    colours: ColourBy::Palette.ramp) do |read|
+  Zones::Occurrences.zones(read.model).map do |zone|
     ColourBy::Entry.new(entity: zone.entity, transform: zone.transform, path: zone.path,
                         value: zone.record.fetch("id"), label: zone.record.fetch("name"))
   end
@@ -223,7 +223,10 @@ end
 ```
 
 The mode owns a pure projection over its own feature's entities and a colour function over the
-values that projection produces. `entity_kind` is open prose: the service tessellates whatever
+values that projection produces. The projection receives a read request, the shape a query handler
+receives, with no params and no proposal: `read.model`, `read.engine` for its owner's records, and
+`read.query` for a declared dependency's registered read. Zones' Assembly mode reads Assembly names
+and colours that way. A projection never connects to the public API. `entity_kind` is open prose: the service tessellates whatever
 entity an entry carries, so a later feature may colour a kind this one never anticipated. An
 entry's `transform` maps that entity's own contents to world. A value of nil is unclassified, and
 a projection that knows a record is only half filled in says `state: :incomplete`; the service
@@ -274,9 +277,14 @@ references and the read revision, then invoke the same public action used by the
 they never write Model records directly. A selected-Face choice applies one attribute immediately.
 Without selected Faces, the same choice loads the paint tool through its view command.
 
-`available: ->(session) { ... }` controls context-menu visibility. An optional
-`feature.menu_entries(name, menu: ..., available: ...) { |session| [Declarations::MenuEntry.new(label: ..., handler: ...)] }`
-supplies current record-dependent items, such as Attached zones. Providers run only while building a context menu;
+`available: ->(read) { ... }` controls context-menu visibility. An optional
+`feature.menu_entries(name, menu: ..., available: ...) { |read| [Declarations::MenuEntry.new(label: ..., handler: ...)] }`
+supplies current record-dependent items, such as Attached zones. Both receive the same read request
+as a Colour-by projection, under the declaring feature's owner, with `read.session` for
+session-owned state. Menu handlers and `state:` tests still receive the session; a handler that
+reads or invokes is a client and keeps one long-lived context per session, as the Zones selection
+client and the Windows menu do. A test or provider that raises is logged and its item left out;
+the rest of the context menu is still built. Providers run only while building a context menu;
 the Extensions menu is installed once. The shell validates the supplied entry shapes and remains
 independent of contributor vocabulary and record kinds.
 

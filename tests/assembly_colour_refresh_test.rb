@@ -3,8 +3,8 @@
 require_relative "test_helper"
 require_relative "support/assembly_assignment_fixtures"
 
-# This projection reads its contributor through the public API. A post-action rebuild therefore
-# needs the mutation lock released, not merely a committed native operation.
+# The overlay rebuilds from change publication, which runs after the mutation lock is released so
+# subscribers that read through the public API see the committed Model rather than session.busy.
 class AssemblyColourRefreshTest < PhComposerTestCase
   include AssemblyAssignmentFixtures
 

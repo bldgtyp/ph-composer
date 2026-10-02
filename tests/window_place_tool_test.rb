@@ -264,9 +264,11 @@ class WindowPlaceToolTest < PhComposerTestCase
   def test_selected_face_context_menu_routes_through_public_choose
     @model.active_path = [@group]
     @model.selection.add(@face)
-    entries = W::ViewportRegistration.type_rows(@session)
+    read = PhComposer::HandlerRequest.for(@session, :owner => W::FEATURE_ID,
+                                                    :name => "#{W::FEATURE_ID}.place_tool.face_menu")
+    entries = W::ViewportRegistration.type_rows(read.engine)
     assert_equal [@type_id], entries.map { |row| row.fetch("id") }
-    assert_equal @host, W::ViewportRegistration.selected_face(@session)
+    assert_equal @host, W::ViewportRegistration.selected_face(read)
     UI.stub(:inputbox, ->(*_args) { ["Place test"] }) { W::ViewportRegistration.choose_from_menu(@session) }
     assert_equal @host, @tool.state.fetch("host")
     assert @tool.active?
@@ -349,6 +351,21 @@ class WindowPlaceToolTest < PhComposerTestCase
     @session.detach
     assert_raises(PhComposer::CodedError) { @tool.choose(@type_id) }
     assert_empty W::Units::Occurrences.all(@model)
+  end
+
+  def test_unreadable_type_refuses_with_its_own_code_not_as_missing
+    dictionary = "ph_composer.records.#{W::TYPE_KIND}"
+    record = JSON.parse(@model.get_attribute(dictionary, @type_id)).merge("rows_m" => "broken")
+    @model.set_attribute(dictionary, @type_id, JSON.generate(record))
+    result = API.view(:context => @context, :name => "#{PREFIX}.choose", :params => { "type_id" => @type_id })
+    assert_equal %w[refused record.unreadable], result.values_at("status", "code")
+  end
+
+  def test_native_menu_read_refusal_is_visible_instead_of_doing_nothing
+    refused = PhComposer::Outcome.refused("session.busy", "PH-Composer is busy.", :revision => @session.revision)
+    API.stub(:query, refused) { W::ViewportRegistration.choose_from_menu(@session) }
+    assert_equal ["PH-Composer is busy.", :warning], @notices.last
+    refute @tool.active?
   end
 
   def test_place_snapshot_get_never_issues_a_native_tool_caller

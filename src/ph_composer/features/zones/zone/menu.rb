@@ -8,7 +8,7 @@ module PhComposer
 
       def install(feature)
         feature.menu_item("#{FEATURE_ID}.make_menu", :label => "Make Zone", :menu => EXTENSION_NAME,
-                          :available => ->(session) { !Zones.make_target(session.model).nil? }) do |session|
+                          :available => ->(read) { !Zones.make_target(read.model).nil? }) do |session|
           session.feature_state(:zones_menu) { Client.new(session) }.make
         end
       end
