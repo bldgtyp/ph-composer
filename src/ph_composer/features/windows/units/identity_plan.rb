@@ -4,17 +4,18 @@ module PhComposer
   module Windows
     module Units
       # A read reports copies; an owning mutation supplies the allocator and applies these detached
-      # changes in its native proposal. The first occurrence keeps its identity. Arbitrary user
-      # metadata stays verbatim; structured payloads follow the foundation's declared copy rules.
+      # changes in its native proposal. The first occurrence by entity path keeps its identity.
+      # Arbitrary user metadata stays verbatim; structured payloads follow the foundation's declared
+      # copy rules. `only` limits the repair to the named shared identities.
       module IdentityPlan
         Update = Struct.new(:reference, :before, :after, keyword_init: true)
         module_function
 
-        def build(occurrences, identity:, catalog: nil, engine: nil)
+        def build(occurrences, identity:, catalog: nil, engine: nil, only: nil)
           ids = occurrences.map { |item| item.record.fetch("id") }
           updates = []
-          occurrences.group_by { |item| item.record.fetch("id") }.each_value do |copies|
-            next if copies.length == 1
+          occurrences.group_by { |item| item.record.fetch("id") }.each do |shared, copies|
+            next if copies.length == 1 || (only && !only.include?(shared))
 
             if copies.any?(&:shared_storage) || copies.map { |item| item.path.last }.uniq.length != copies.length
               raise CodedError.new("target.shared_definition",

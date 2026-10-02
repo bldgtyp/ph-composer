@@ -19065,7 +19065,7 @@ Example params:
 
 Create one Frame with local defaults. Owner: `ph_composer.windows`.
 
-Undo step: Create Frame. Creates one Model-owned definition.
+Undo step: Create Frame. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -19280,7 +19280,7 @@ Example params:
 
 Delete Frame; live references require replacement. Owner: `ph_composer.windows`.
 
-Undo step: Delete Frame. Rewrites referring definitions and defaults, then deletes atomically.
+Undo step: Delete Frame. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -19520,7 +19520,7 @@ Example params:
 
 Duplicate a Frame with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Frame. Copies definition metadata and retains shared products; new elements get fresh ids.
+Undo step: Duplicate Frame. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -19575,7 +19575,7 @@ Example params:
 
 Edit guarded authored values of one Frame. Owner: `ph_composer.windows`.
 
-Undo step: Edit Frame. Updates one definition and preserves its metadata.
+Undo step: Edit Frame. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -19904,7 +19904,7 @@ Example params:
 
 Create one Glazing with local defaults. Owner: `ph_composer.windows`.
 
-Undo step: Create Glazing. Creates one Model-owned definition.
+Undo step: Create Glazing. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20101,7 +20101,7 @@ Example params:
 
 Delete Glazing; live references require replacement. Owner: `ph_composer.windows`.
 
-Undo step: Delete Glazing. Rewrites referring definitions and defaults, then deletes atomically.
+Undo step: Delete Glazing. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20320,7 +20320,7 @@ Example params:
 
 Duplicate a Glazing with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Glazing. Copies definition metadata and retains shared products; new elements get fresh ids.
+Undo step: Duplicate Glazing. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20375,7 +20375,7 @@ Example params:
 
 Edit guarded authored values of one Glazing. Owner: `ph_composer.windows`.
 
-Undo step: Edit Glazing. Updates one definition and preserves its metadata.
+Undo step: Edit Glazing. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20671,7 +20671,7 @@ Example params:
 
 Create one Psi-Install Type with local defaults. Owner: `ph_composer.windows`.
 
-Undo step: Create Psi-Install Type. Creates one Model-owned definition.
+Undo step: Create Psi-Install Type. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20824,7 +20824,7 @@ Example params:
 
 Delete Psi-Install Type; live references require replacement. Owner: `ph_composer.windows`.
 
-Undo step: Delete Psi-Install Type. Rewrites referring definitions and defaults, then deletes atomically.
+Undo step: Delete Psi-Install Type. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -20987,7 +20987,7 @@ Example params:
 
 Duplicate a Psi-Install Type with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Psi-Install Type. Copies definition metadata and retains shared products; new elements get fresh ids.
+Undo step: Duplicate Psi-Install Type. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21042,7 +21042,7 @@ Example params:
 
 Edit guarded authored values of one Psi-Install Type. Owner: `ph_composer.windows`.
 
-Undo step: Edit Psi-Install Type. Updates one definition and preserves its metadata.
+Undo step: Edit Psi-Install Type. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21248,7 +21248,7 @@ Example params:
 
 Set guarded installation defaults. Owner: `ph_composer.windows`.
 
-Undo step: Change Window Defaults. Stores installation defaults in this SKP.
+Undo step: Change Window Defaults. Stores installation defaults in this SKP. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21352,7 +21352,7 @@ Example params:
 
 Create one Window Type with local defaults. Owner: `ph_composer.windows`.
 
-Undo step: Create Window Type. Creates one Model-owned definition.
+Undo step: Create Window Type. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -21891,7 +21891,7 @@ Example params:
 
 Delete Window Type; live references require replacement. Owner: `ph_composer.windows`.
 
-Undo step: Delete Window Type. Rewrites referring definitions and defaults, then deletes atomically.
+Undo step: Delete Window Type. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -22458,7 +22458,7 @@ Example params:
 
 Duplicate a Window Type with independent identity. Owner: `ph_composer.windows`.
 
-Undo step: Duplicate Window Type. Copies definition metadata and retains shared products; new elements get fresh ids.
+Undo step: Duplicate Window Type. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -22513,7 +22513,7 @@ Example params:
 
 Apply the dimension grid gesture. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: dimension. Changes one definition in one Undo step.
+Undo step: Edit Window Type: dimension. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -23106,7 +23106,7 @@ Example params:
 
 Apply the element grid gesture. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: element. Changes one definition in one Undo step.
+Undo step: Edit Window Type: element. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -23699,7 +23699,7 @@ Example params:
 
 Apply the flip grid gesture. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: flip. Changes one definition in one Undo step.
+Undo step: Edit Window Type: flip. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -24267,7 +24267,7 @@ Example params:
 
 Apply the insert grid gesture. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: insert. Changes one definition in one Undo step.
+Undo step: Edit Window Type: insert. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -24860,7 +24860,7 @@ Example params:
 
 Apply the kind grid gesture. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: kind. Changes one definition in one Undo step.
+Undo step: Edit Window Type: kind. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -25448,7 +25448,7 @@ Example params:
 
 Apply the merge grid gesture. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: merge. Changes one definition in one Undo step.
+Undo step: Edit Window Type: merge. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -26027,7 +26027,7 @@ Example params:
 
 Apply the paste grid gesture. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: paste. Changes one definition in one Undo step.
+Undo step: Edit Window Type: paste. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -26611,7 +26611,7 @@ Example params:
 
 Apply the remove grid gesture. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: remove. Changes one definition in one Undo step.
+Undo step: Edit Window Type: remove. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -27194,7 +27194,7 @@ Example params:
 
 Apply the split grid gesture. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type: split. Changes one definition in one Undo step.
+Undo step: Edit Window Type: split. Changes one definition in one Undo step. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -27767,7 +27767,7 @@ Example params:
 
 Save the complete staged Installs session. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Installations. Creates or edits installation products and updates type edges atomically.
+Undo step: Edit Window Installations. Creates or edits installation products and updates type edges atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -28801,7 +28801,7 @@ Example params:
 
 Edit guarded authored values of one Window Type. Owner: `ph_composer.windows`.
 
-Undo step: Edit Window Type. Updates one definition and preserves its metadata.
+Undo step: Edit Window Type. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -29621,7 +29621,7 @@ Example params:
 
 Create a horizontally flipped Type for one mirrored Window. Owner: `ph_composer.windows`.
 
-Undo step: New Flipped Window Type. Creates one independent Type; preserves physical panes, metadata and glue.
+Undo step: New Flipped Window Type. Creates one independent Type; preserves physical panes, metadata and glue. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -29700,7 +29700,7 @@ Example params:
 
 Place an anchored Window on an explicit writable Zone Face. Owner: `ph_composer.windows`.
 
-Undo step: Place Window. Creates or reuses the Type definition, glues an instance and stores its Unit record.
+Undo step: Place Window. Creates or reuses the Type definition, glues an instance and stores its Unit record. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -29834,7 +29834,7 @@ Example params:
 
 Glue an unmoved Window to an explicit same-storage Face. Owner: `ph_composer.windows`.
 
-Undo step: Re-host Window. Changes glue only, after containment and overlap checks.
+Undo step: Re-host Window. Changes glue only, after containment and overlap checks. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -29949,7 +29949,7 @@ Example params:
 
 Remove explicit Window occurrences with reference guards. Owner: `ph_composer.windows`.
 
-Undo step: Remove Windows. Removes only the chosen instances; incoming references must remain valid.
+Undo step: Remove Windows. Removes only the chosen instances; incoming references must remain valid. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -30026,11 +30026,112 @@ Example params:
 }
 ```
 
+### `ph_composer.windows.units.repair_copied_identities`
+
+Give the copies sharing each chosen Window's identity new identities. The first occurrence by entity path keeps the identity; a preview lists each old and new id. Owner: `ph_composer.windows`.
+
+Undo step: Repair Copied Windows. Rewrites only the copied Unit records' identities; geometry, glue and metadata stay.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "units"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "entity_path"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "entity_path": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "repairs"
+  ],
+  "properties": {
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entity_path",
+          "old_unit_id",
+          "new_unit_id"
+        ],
+        "properties": {
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "old_unit_id": {
+            "type": "string"
+          },
+          "new_unit_id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "units": [
+    {
+      "unit_id": "wun_Ab12Cd34Ef56",
+      "entity_path": [
+        1201,
+        1203
+      ]
+    }
+  ]
+}
+```
+
 ### `ph_composer.windows.units.reset_to_type`
 
 Reset explicit Windows of one Type to its authored geometry. Owner: `ph_composer.windows`.
 
-Undo step: Reset Windows to Type. Repairs selected instances; regenerating an edited primary affects all its Units.
+Undo step: Reset Windows to Type. Repairs selected instances; regenerating an edited primary affects all its Units. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -30111,7 +30212,7 @@ Example params:
 
 Recover a Unit from exact stamped pane Faces. Owner: `ph_composer.windows`.
 
-Undo step: Restore Window. Creates a new default-anchor Unit and removes only its exact loose panes and edges.
+Undo step: Restore Window. Creates a new default-anchor Unit and removes only its exact loose panes and edges. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 
@@ -30223,7 +30324,7 @@ Example params:
 
 Swap explicit Windows, preserving their anchors. Owner: `ph_composer.windows`.
 
-Undo step: Swap Window Type. Reuses one target definition and preserves each Unit's metadata and host.
+Undo step: Swap Window Type. Reuses one target definition and preserves each Unit's metadata and host. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
 Params:
 

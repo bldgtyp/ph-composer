@@ -13,7 +13,7 @@ module PhComposer
         REPAIRS = { "unhosted" => "rehost", "off_host" => "rehost", "overlapping" => "rehost",
           "scaled" => "reset_to_type", "sheared" => "reset_to_type", "mirrored" => "new_flipped_type",
           "geometry_differs" => "reset_to_type", "detached_definition" => "reset_to_type",
-          "unknown_type" => "swap_type", "copy_id_pending" => "next_mutation",
+          "unknown_type" => "swap_type", "copy_id_pending" => "repair_copied_identities",
           "invalid_host" => "rehost" }.freeze
         module_function
 

@@ -35,7 +35,8 @@ module PhComposer
           properties = properties.merge("id" => Shapes::ID, "expected_values" => Types::KIND.descriptor.patch_schema)
           feature.action("#{FEATURE_ID}.types.grid.#{command}", :description => "Apply the #{command} grid gesture.",
             :params => Shapes.object(properties), :result => Shapes::TYPE_RESULT,
-            :undo_name => "Edit Window Type: #{command}", :side_effects => "Changes one definition in one Undo step.",
+            :undo_name => "Edit Window Type: #{command}",
+            :side_effects => Shapes.side_effects("Changes one definition in one Undo step."),
             :examples => [example.merge("id" => EXAMPLE_ID, "expected_values" => {})]) do |request, proposal|
             Operations.grid(request, proposal, command)
           end

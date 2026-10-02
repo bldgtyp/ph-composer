@@ -23,7 +23,8 @@ module PhComposer
         feature.action("#{FEATURE_ID}.types.installs.save",
           :description => "Save the complete staged Installs session.",
           :params => PARAMS, :result => RESULT, :undo_name => "Edit Window Installations",
-          :side_effects => "Creates or edits installation products and updates type edges atomically.",
+          :side_effects => Shapes.side_effects(
+            "Creates or edits installation products and updates type edges atomically."),
           :examples => [{ "types" => [], "psi_install_types" => { "create" => [], "update" => [] },
           "expected_settings" => Settings::DEFAULTS }]) do |request, proposal|
           InstallSave.call(request, proposal)

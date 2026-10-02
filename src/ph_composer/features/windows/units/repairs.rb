@@ -23,6 +23,25 @@ module PhComposer
           references.map { |reference| Occurrences.resolve(request.model, reference, :mutable => true) }
         end
 
+        # New identities for the copies sharing each chosen Unit's identity, and nothing else; the
+        # automatic repair every other Windows action makes is the same plan over every copy.
+        def copied_identities(request, proposal)
+          items = targets(request)
+          occurrences = Occurrences.all(request.model)
+          counts = occurrences.map { |item| item.record.fetch("id") }.tally
+          unless items.all? { |item| counts.fetch(item.record.fetch("id")) > 1 }
+            raise CodedError.new("params.invalid", "Choose Windows whose identity is shared with a copy.")
+          end
+          updates = IdentityPlan.build(occurrences, :identity => Operations.allocator(request),
+            :catalog => request.registry.catalog, :engine => request.engine,
+            :only => items.map { |item| item.record.fetch("id") })
+          proposal.add_step(IdentityStep.new(updates), :scopes => [MutationScope.new])
+          { "repairs" => updates.map do |update|
+            { "entity_path" => update.reference.fetch("entity_path"), "old_unit_id" => update.before.fetch("id"),
+              "new_unit_id" => update.after.fetch("id") }
+          end }
+        end
+
         def projected_records(request, proposal)
           Occurrences.all(request.model).to_h { |item| [item.path, Mutation.record(proposal, item)] }
         end

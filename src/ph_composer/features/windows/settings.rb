@@ -62,7 +62,8 @@ module PhComposer
         feature.snapshot_section("#{FEATURE_ID}.settings", :query => "#{FEATURE_ID}.settings.get")
         feature.action("#{FEATURE_ID}.settings.update", :description => "Set guarded installation defaults.",
           :params => Shapes.object({ "values" => VALUES, "expected_values" => VALUES }), :result => VALUES,
-          :undo_name => "Change Window Defaults", :side_effects => "Stores installation defaults in this SKP.",
+          :undo_name => "Change Window Defaults",
+          :side_effects => Shapes.side_effects("Stores installation defaults in this SKP."),
           :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }]) do |request, proposal|
           propose(request, proposal, :values => request.params.fetch("values"),
             :expected_values => request.params.fetch("expected_values"))

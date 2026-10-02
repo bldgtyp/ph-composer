@@ -252,8 +252,11 @@ Phase 2 features, programmatic reads and writes. Each has a panel-closed walkthr
   batch `types.installs.save`; `settings.update`; and Unit `place`, `remove`, `rehost`,
   `swap_type`, `reset_to_type`, `restore` and `new_flipped_type`. `units.place` takes an explicit
   host Face reference, anchor and offsets in metres, so the Place tool's picking has an
-  explicit-reference equivalent. A copied Unit identity has no named repair: the next Windows
-  action repairs it implicitly (review finding R03, item C).
+  explicit-reference equivalent. A native copy of a Unit shares its identity until repaired:
+  `units.repair_copied_identities` takes explicit Unit references and gives the copies sharing
+  their identities new ones, with a preview listing each old and new id, and the
+  `copy_id_pending` finding names it as its repair. Every other Windows action makes the same
+  repair over every copy first, and says so in its `side_effects`.
   [Walkthrough](../tools/examples/authoring/windows_walkthrough.rb),
   [placement](../tools/examples/authoring/windows_placement_walkthrough.rb).
 - **Library** (`ph_composer.library.*`). Reads: `providers`, `catalog`, `in_file` and

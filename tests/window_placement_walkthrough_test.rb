@@ -30,7 +30,8 @@ class WindowPlacementWalkthroughTest < PhComposerTestCase
     result = WindowPlacementWalkthrough.run(:host => assignment_faces.first.fetch("reference"),
       :offsets => { "x_m" => 3.0, "y_m" => 3.0 }, :copy_unit => copy)
     assert result.fetch("passed"), result.inspect
-    assert_equal 4, result.fetch("steps").length
+    assert_equal %w[units.place units.repair_copied_identities types.update types.duplicate units.swap_type],
+                 result.fetch("steps").map { |step| step.fetch("step") }
     rows = result.fetch("units")
     @model.undo
     assert_equal 1, W::Units::Occurrences.all(@model).map { |item| item.record.fetch("window_type_id") }.uniq.length

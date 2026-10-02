@@ -37,7 +37,7 @@ class WindowUnitStateTest < PhComposerTestCase
   def test_clean_hosted_unit_and_shared_id_reads_leave_model_unchanged
     before = U::MutationScope.new(:definition_ids => [@definition.persistent_id]).capture(@model)
     assert_empty codes
-    assert_equal [{ "code" => "copy_id_pending", "repair" => "next_mutation" }], findings(:shared_id => true)
+    assert_equal [{ "code" => "copy_id_pending", "repair" => "repair_copied_identities" }], findings(:shared_id => true)
     assert_equal before, U::MutationScope.new(:definition_ids => [@definition.persistent_id]).capture(@model)
   end
 

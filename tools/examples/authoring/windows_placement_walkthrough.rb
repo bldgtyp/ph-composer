@@ -19,12 +19,20 @@ module WindowPlacementWalkthrough
       row.dig("values", "window_type_id") == type_id
     end
     copied = copy_unit.call(original.fetch("reference"))
+    # A native copy shares the original's ID until it is repaired. The named repair previews the
+    # copy's new ID; any other Windows action would also repair it first.
+    repair = { "units" => [copied] }
+    preview = PhComposer::API.preview(:context => client.context,
+      :name => "#{WindowAuthoringWalkthrough::PREFIX}.units.repair_copied_identities", :params => repair)
+    raise "The copy repair preview failed: #{preview['code']}" unless preview["status"] == "completed"
+
+    invoke(client, "units.repair_copied_identities", repair)
     before = WindowAuthoringWalkthrough.read_type(client, type_id).fetch("values")
     columns = before.fetch("columns_m").dup
     columns[0] += 0.1
     invoke(client, "types.update", "id" => type_id, "values" => { "columns_m" => columns },
       "expected_values" => before)
-    # Native copies initially share an ID. Resolve the fresh ID by its exact occurrence path.
+    # Resolve the copy's fresh ID by its exact occurrence path.
     rows = query(client, "units.list", {}).fetch("units")
     copy = rows.find { |row| row.dig("reference", "entity_path") == copied.fetch("entity_path") }
     raise "The copied occurrence is absent." unless copy

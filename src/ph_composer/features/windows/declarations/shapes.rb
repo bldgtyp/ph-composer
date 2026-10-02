@@ -15,7 +15,16 @@ module PhComposer
                 "product_id" => ID }, :required => %w[code message]).freeze
       FINDINGS = { "type" => "array", "items" => FINDING }.freeze
 
+      # Every Windows action but the named repair first gives copied Units new identities.
+      COPIED_IDENTITIES = "It first gives every copied Window Unit that still shares an identity a new one, in the " \
+                          "same Undo step; #{FEATURE_ID}.units.repair_copied_identities does only that.".freeze
+
       module_function
+
+      # An action's side effects, with the copied-identity repair every Windows action makes.
+      def side_effects(text)
+        "#{text} #{COPIED_IDENTITIES}"
+      end
 
       def object(properties, optional: [])
         Fields.object(properties, :required => properties.keys - optional)

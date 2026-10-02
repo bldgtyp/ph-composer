@@ -124,6 +124,38 @@ class WindowUnitActionsTest < PhComposerTestCase
     assert_equal before, scope.capture(@model)
   end
 
+  # The named repair: a preview lists the copy's old and new id, the invoke gives only the copy a new
+  # identity in one Undo step, and a Window whose identity nobody shares is refused.
+  def test_repair_copied_identities_renames_only_the_copy_in_one_undo
+    place
+    original = U::Occurrences.all(@model).first
+    copy = @group.entities.add_instance(original.entity.definition,
+      Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
+    copy.glued_to = original.entity.glued_to
+    U.write(copy, original.record)
+    copied = U::Occurrences.all(@model).find { |item| item.entity.equal?(copy) }
+    name = "#{PREFIX}.units.repair_copied_identities"
+    preview = API.preview(:context => @context, :name => name, :params => { "units" => [copied.reference] })
+    assert_equal "completed", preview.fetch("status"), preview.inspect
+    repairs = preview.dig("value", "repairs")
+    assert_equal [[copied.path, original.record.fetch("id")]],
+                 repairs.map { |row| row.values_at("entity_path", "old_unit_id") }
+    assert_equal 1, U::Occurrences.all(@model).map { |item| item.record.fetch("id") }.uniq.length
+    before = U::MutationScope.new.capture(@model)
+    result = assignment_invoke(name, "units" => [original.reference])
+    assert_equal "committed", result.fetch("effect"), result.inspect
+    after = U::Occurrences.all(@model).to_h { |item| [item.path, item.record] }
+    assert_equal original.record, after.fetch(original.path)
+    new_id = result.dig("value", "repairs", 0, "new_unit_id")
+    assert_equal original.record.merge("id" => new_id), after.fetch(copied.path)
+    assert units.none? { |row| row.fetch("findings").any? { |finding| finding.fetch("code") == "copy_id_pending" } }
+    @model.undo
+    assert_equal before, U::MutationScope.new.capture(@model)
+    @model.redo
+    refused = assignment_invoke(name, "units" => [original.reference])
+    assert_equal "params.invalid", refused.fetch("code")
+  end
+
   def test_read_works_under_locked_parent_but_placement_refuses
     place
     @group.locked = true
