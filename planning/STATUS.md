@@ -48,6 +48,6 @@ States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·
 
 Phase 2 envelope is [accepted and archived](archive/phase-02-envelope/STATUS.md) on
 `codex/phase-02-envelope`, issue [#14](https://github.com/bldgtyp/ph-composer/issues/14).
-E01–E15/E17 pass with stated provenance; E16 is Phase 5. No main-repository push, PR or merge
-has occurred. The archive records acceptance, not release or platform support. Phase 3 remains
+E01–E15/E17 pass with stated provenance; E16 is Phase 5. Branch published for independent
+review in [PR #15](https://github.com/bldgtyp/ph-composer/pull/15); no merge has occurred. The archive records acceptance, not release or platform support. Phase 3 remains
 the next planned feature scope and requires its own implementation authorization.

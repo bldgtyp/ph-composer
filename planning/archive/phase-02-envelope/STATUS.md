@@ -30,7 +30,7 @@ Final normal restoration: PID 47711 / session `d26e1cae-e952-4c6f-8642-c92608a1f
 values equal the pre-test baseline. Native Select is active and normal export preflight succeeds
 with expected nonblocking disclosures. No fault overrides or shipping hotloads remain.
 
-Phase 2 is archived as accepted branch work. This does not merge or release it. Main-repository
-push, PR and merge have not been performed. SketchUp 2023, Windows, public distribution,
+Phase 2 is archived as accepted branch work. This does not merge or release it. The main-repository
+branch is published for independent review in [PR #15](https://github.com/bldgtyp/ph-composer/pull/15). No merge has occurred. SketchUp 2023, Windows, public distribution,
 certification and METr/PHX consumer gates remain separate. Phase 3 retains Spaces and thermal
 bridges, including the accepted D2-6 derived-geometry Colour-by extension.
