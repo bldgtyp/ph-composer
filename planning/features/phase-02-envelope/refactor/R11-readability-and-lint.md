@@ -1,7 +1,7 @@
 # R11: formatting and small readability items the gates do not catch
 
 DATE: 2026-10-01
-STATUS: Requested
+STATUS: Requested. Items 17 to 20 and the carried host gate added 2026-10-02 from R10
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement. Gate decision made 2026-10-01; see Decision.
@@ -82,6 +82,28 @@ frozen-string comment, `Style/Semicolon`, line length 120, method length 40, cla
     (`features/assemblies/schema_fields.rb`) aliases `Records::AuthoringFields` "so existing callers
     retain the same API". Windows calls the same module `Fields`. Since R09 moved the schema
     builders to `core/schema_shapes.rb`, the alias only renames the authoring-field helpers.
+17. **Panel navigation is called but does not exist.** Added 2026-10-02 from R10's follow-ups.
+    Found by reading the code, not by a click: `panel.js` exports no `navigate`, and `panel.section`
+    ignores the `onNavigate` option that `library/section.js` and `features/windows/section.js` pass.
+    Three Windows controls call `panel.navigate` and would throw a `TypeError`: "Open library" on a
+    Type card (`html/features/windows/cards.js`), "Open type" in a product's uses bubble
+    (`html/features/windows/inventory.js`), and leaving a dirty install editor
+    (`html/features/windows/section.js`). No offline test or browser check clicks any of them.
+    Pre-existing on main before R10.
+18. **Windows' panel depends on a Zones module.** Added 2026-10-02 from R10's follow-ups.
+    `html/features/windows/schedule.js` depends on `html/features/zones/face_words.js` for the
+    display words of honeybee face types and boundary conditions. The words are honeybee's
+    vocabulary shown on screen, not Zones' data, so a feature that shows a face type must otherwise
+    reach into Zones.
+19. **Two New Attached zone forms.** Added 2026-10-02 from R10's follow-ups.
+    `html/features/zones/attached_zone_fields.js` (inline create-and-assign from a Face chip) uses a
+    plain number input for the temperature reduction factor; `html/features/zones/attached_zones.js`
+    (the Library surface) uses a `UnitField`. The two validate differently, each lists the five
+    kinds, and `attached_zones.js` writes the factor's field descriptor twice.
+20. **The UI polish reference is behind Phase 2.** Added 2026-10-02 from R10's follow-ups.
+    `.agents/skills/ph-composer-ui-polish/references/patterns.md` lists the Assembly Builder,
+    Library and Window Types under "predecessor only" with predecessor file names, and says they
+    "arrive with Phase 2". They are local now, under `html/features/` and `html/library/`.
 
 ## Decision
 
@@ -120,9 +142,35 @@ touches.
     derived ids do not change; the existing preview-equals-invoke tests check that.
 15. Item 16: call `Records::AuthoringFields` (or one short alias shared by both features) directly
     and delete `schema_fields.rb`, moving its kind-id constants to the Assemblies entry file.
+16. Item 17: write the failing test first (click "Open library" on a Type card in
+    `window_editor_test.js`). Then add `panel.navigate(tab, intent)` to `panel.js`: it goes through
+    the same navigation guards as a tab click, shows the tab, and calls the destination section's
+    `onNavigate(root, intent)`. Document it beside `panel.section` in `context/TECH_STACK.md`,
+    "Panel".
+17. Item 18: move `face_words.js` into the kit (`html/face_words.js`). Zones and Windows both depend
+    on the kit module; `tests/panel_layout_test.js` keeps holding.
+18. Item 19: one Attached-zone field set used by both forms, built on `UnitField`, with the kinds and
+    the factor descriptor declared once in `attached_zone_fields.js`.
+19. Item 20: move the three entries to the local list with their `html/features/` and `html/library/`
+    paths, and drop the "arrive with Phase 2" sentence.
 
 ## Verification
 
-For this packet's remaining items (3 to 16): `make lint` passes on both Rubies under the current
-configuration. No behaviour change except items 6, 9, 10, 12 and 13, each with one focused test. The widened cop
-list is verified in the formatting pull request.
+For this packet's remaining items (3 to 20): `make lint` passes on both Rubies under the current
+configuration. No behaviour change except items 6, 9, 10, 12, 13, 17 and 19, each with one focused
+test. Items 17 to 19 change panel assets: refresh the runtime manifest and run `make ui-checks`. The
+widened cop list is verified in the formatting pull request.
+
+**Host gate, carried from R10** (which carried it from R03; neither ran it). Run in a fresh SketchUp
+process with the branch RBZ, after item 13 lands, because item 13 changes when the native approval
+dialog opens:
+
+- the library setup dialogs (add file, add folder), from the panel and from the Libraries menu;
+- library export to an existing destination: record whether the macOS save panel and the replace
+  message box both ask, as for HBJSON;
+- paging through a library longer than one page;
+- the Window Type grid gestures;
+- item 17's three navigation controls, clicked in the panel.
+
+Record the results in the native-acceptance case ledger. These need native modal dialogs, so plan a
+short session with Ed at the host.
