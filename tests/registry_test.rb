@@ -140,6 +140,19 @@ class RegistryTest < PhComposerTestCase
     assert_equal ["Kept"], menus.fetch("Probe").entries.map(&:first)
   end
 
+  def test_a_code_is_a_described_noun_condition_and_one_feature_owns_each_noun
+    diagnostics = refused(feature do |registry|
+      one = registry.feature("probe.one", :contract_version => 1)
+      one.code("probe.taken", :description => "First.")
+      one.code("Probe", :description => "Not a code.")
+      one.code("probe.taken", :description => "Again.")
+      registry.feature("probe.two", :contract_version => 1).code("probe.other", :description => "Same noun.")
+    end)
+    assert_equal %w[registration.schema_invalid registration.duplicate_id registration.duplicate_id],
+                 diagnostics.map(&:code)
+    assert_equal "probe.one", diagnostics.last.dependency
+  end
+
   def test_dynamic_context_menu_provider_and_entries_are_validated
     diagnostics = refused(feature do |registry|
       registry.feature("probe.menu", :contract_version => 1).menu_entries("probe.menu.missing", :menu => "Probe")

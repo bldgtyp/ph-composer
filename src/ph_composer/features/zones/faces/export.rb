@@ -5,6 +5,13 @@ module PhComposer
     module Faces
       module ExportProjection
         SECTION = "ph_composer.zones.faces.export.faces"
+        # The preflight code for each state a Face's reference can be in other than resolved or current.
+        ADJACENCY_CODES = { "stale" => "adjacency.stale", "unresolved" => "adjacency.unresolved",
+                            "invalid" => "adjacency.invalid" }.freeze
+        CONSTRUCTION_CODES = { "dangling" => "construction.dangling", "invalid" => "construction.invalid" }.freeze
+        ATTACHED_ZONE_CODES = { "absent" => "attached_zone.absent", "dangling" => "attached_zone.dangling",
+                                "invalid" => "attached_zone.invalid", "unavailable" => "attached_zone.unavailable" }
+                              .freeze
 
         module_function
 
@@ -83,7 +90,7 @@ module PhComposer
           end
           state = Zones::Adjacency.state(request.model, occurrence, record, :index => index)
           if state && state != "current"
-            issues << ["adjacency.#{state}", "Surface adjacency is #{state}; this Face will be omitted.", false]
+            issues << [ADJACENCY_CODES.fetch(state), "Surface adjacency is #{state}; this Face will be omitted.", false]
           end
           issues.concat(attached_zone_issues(request, record)) if record["boundary_condition"] == "AttachedZone"
           return issues unless record["boundary_condition"] && (!state || state == "current")
@@ -101,7 +108,7 @@ module PhComposer
 
           state = AssemblyAssignment.state(request, record)
           if state != "resolved"
-            return [["construction.#{state}", "Face #{record.fetch('id')} names #{state} Assembly #{id}.", true]]
+            return [[CONSTRUCTION_CODES.fetch(state), "Face #{record.fetch('id')} names #{state} Assembly #{id}.", true]]
           end
           assembly = AssemblyAssignment.catalog(request).fetch(:records).fetch(id)
           return [] if assembly.fetch("export_ready")
@@ -119,7 +126,7 @@ module PhComposer
                   end
           return [] if state == "resolved"
 
-          [["attached_zone.#{state}", "The Face's Attached zone reference is #{state}.", true]]
+          [[ATTACHED_ZONE_CODES.fetch(state), "The Face's Attached zone reference is #{state}.", true]]
         end
 
         def attached_record_state(request, id)

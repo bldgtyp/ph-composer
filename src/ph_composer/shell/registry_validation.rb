@@ -27,6 +27,7 @@ module PhComposer
         check_colour_modes
         check_menu_items
         check_subscriptions
+        check_codes
         @diagnostics
       end
 
@@ -92,6 +93,28 @@ module PhComposer
           next unless copies.length > 1 || @live.features.key?(id)
 
           add("registration.duplicate_id", id, id, "Feature #{id} is installed more than once.")
+        end
+      end
+
+      CODE_PATTERN = /\A[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\z/.freeze
+
+      # A code is `noun.condition`, declared once, with a description; one feature owns each noun.
+      def check_codes
+        nouns = @live.codes.values.to_h { |code| [code.code.split(".").first, code.owner] }
+        seen = @live.codes.keys
+        @staging.declared_codes.each do |code|
+          noun = code.code.to_s.split(".").first
+          if !CODE_PATTERN.match?(code.code.to_s) || !text?(code.description)
+            add("registration.schema_invalid", code.owner, code.code.to_s,
+                "#{code.code} must be a lowercase noun.condition code with a description.")
+          elsif seen.include?(code.code)
+            add("registration.duplicate_id", code.owner, code.code, "#{code.code} is declared more than once.")
+          elsif nouns.fetch(noun, code.owner) != code.owner
+            add("registration.duplicate_id", code.owner, code.code,
+                "The #{noun} noun belongs to #{nouns.fetch(noun)}.", nouns.fetch(noun))
+          end
+          seen << code.code
+          nouns[noun] ||= code.owner
         end
       end
 

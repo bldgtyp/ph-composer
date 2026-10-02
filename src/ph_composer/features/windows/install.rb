@@ -26,6 +26,7 @@ require_relative "declarations/viewport"
 require_relative "colour_modes"
 require_relative "export"
 require_relative "units/areas"
+require_relative "codes"
 
 module PhComposer
   module Windows
@@ -47,6 +48,7 @@ module PhComposer
       LibraryKinds.install(feature, registry)
       ExportProjection.install(feature)
       Units::Areas.install(feature, registry)
+      Codes.install(feature)
     end
   end
 end

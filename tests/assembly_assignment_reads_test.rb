@@ -36,9 +36,9 @@ class AssemblyAssignmentReadsTest < PhComposerTestCase
     assignment_invoke("#{FACE_PREFIX}.assign_assembly", assignment_params([rows.first], first))
     assignment_invoke("#{FACE_PREFIX}.assign_assembly", assignment_params([assignment_faces.last], second))
     rows = assignment_faces
-    assert_equal %w[assembly.type_mismatch assembly.exterior_condition_mismatch assembly.pair_mismatch],
+    assert_equal %w[face.assembly_type_mismatch face.assembly_exterior_condition_mismatch face.assembly_pair_mismatch],
                  rows.first.fetch("findings").map { |finding| finding.fetch("code") }
-    assert_equal %w[assembly.exterior_condition_mismatch assembly.pair_mismatch],
+    assert_equal %w[face.assembly_exterior_condition_mismatch face.assembly_pair_mismatch],
                  rows.last.fetch("findings").map { |finding| finding.fetch("code") }
     assert rows.all? { |row| row.fetch("state") == "classified" }
     assert rows.all? { |row| row.fetch("adjacency_state") == "current" }

@@ -8,6 +8,10 @@ module PhComposer
       module AssemblyAssignment
         KIND = "ph_composer.assemblies.assembly"
         READ = "ph_composer.assemblies.assemblies.all"
+        # Each Face value an Assembly hints at: the Assembly field and the finding when they differ.
+        MISMATCHES = { "face_type" => ["type", "face.assembly_type_mismatch"],
+                       "boundary_condition" => ["exterior_condition", "face.assembly_exterior_condition_mismatch"] }
+                     .freeze
         module_function
 
         def catalog(request)
@@ -56,11 +60,11 @@ module PhComposer
           assembly = record["assembly_id"] && catalog(request).fetch(:records)[record["assembly_id"]]
           found = []
           if assembly
-            { "face_type" => "type", "boundary_condition" => "exterior_condition" }.each do |field, hint|
+            MISMATCHES.each do |field, (hint, code)|
               value = assembly.fetch("values")[hint]
               next if value.nil? || record[field].nil? || record[field] == value
 
-              found << finding("assembly.#{hint}_mismatch", record,
+              found << finding(code, record,
                                "The Face #{field.tr('_', ' ')} #{record[field]} differs from its " \
                                "Assembly #{hint.tr('_', ' ')} #{value}.")
             end
@@ -71,7 +75,7 @@ module PhComposer
             other_record = FACE_STORE.read(other.entity)
             if other_record && other_record["assembly_id"] && record["assembly_id"] &&
                other_record["assembly_id"] != record["assembly_id"]
-              found << finding("assembly.pair_mismatch", record, "The paired Faces name different Assemblies.")
+              found << finding("face.assembly_pair_mismatch", record, "The paired Faces name different Assemblies.")
             end
           end
           found

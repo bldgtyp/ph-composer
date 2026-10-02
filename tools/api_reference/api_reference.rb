@@ -15,7 +15,7 @@ module PhComposerTools
 
     def markdown(registry)
       [intro, kinds(registry), *GROUPS.map { |title, key, capability| operations(registry, title, key, capability) },
-       tasks].join("\n")
+       tasks, codes(registry)].join("\n")
     end
 
     def intro
@@ -94,6 +94,17 @@ module PhComposerTools
       end
       "## Export tasks\n\nHBJSON runtime exports use retained task methods. " \
         "Each params key is the method's keyword argument.\n\n#{sections.join("\n")}"
+    end
+
+    # Each feature's own codes. Foundation and shared-noun codes are in context/CONTRACTS.md.
+    def codes(registry)
+      sections = registry.codes.values.group_by(&:owner).sort.map do |owner, codes|
+        rows = codes.sort_by(&:code).map { |code| "| `#{code.code}` | #{code.description} |" }
+        ["### `#{owner}`", "", "| Code | Meaning |", "| --- | --- |", *rows, ""].join("\n")
+      end
+      "## Feature codes\n\nThe codes each feature raises under its own noun, as an outcome's `code` or a " \
+        "finding's. The foundation's and the shared nouns' codes are listed in context/CONTRACTS.md, " \
+        "\"Outcomes and codes\".\n\n#{sections.join("\n")}"
     end
 
     def operation_section(declaration)

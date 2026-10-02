@@ -50,6 +50,7 @@ require_relative "declarations/faces"
 require_relative "declarations/adjacency"
 require_relative "declarations/repair"
 require_relative "declarations/selection"
+require_relative "codes"
 
 module PhComposer
   module Zones
@@ -68,6 +69,7 @@ module PhComposer
       AdjacencyRegistration.install(feature)
       ExportProjection.install(feature)
       RepairRegistration.install(feature)
+      Codes.install(feature)
     end
   end
 end

@@ -99,7 +99,7 @@ class FaceConstructionPreflightTest < PhComposerTestCase
     row = fixture.fetch("assemblies").find { |entry| entry["id"] == "asm_Single000001" }
     PhComposer::Assemblies::Assembly::Schema::KIND.store.write(@model, row.merge("type" => "Floor"))
     assignment_invoke("#{FACE_PREFIX}.assign_assembly", assignment_params(assignment_faces, row.fetch("id")))
-    assert_equal ["assembly.type_mismatch"], findings.map { |finding| finding.fetch("code") }
+    assert_equal ["face.assembly_type_mismatch"], findings.map { |finding| finding.fetch("code") }
     refute findings.first.fetch("blocks_export")
   end
 end

@@ -22,6 +22,7 @@ require_relative "declarations/records"
 require_relative "declarations/layers"
 require_relative "declarations/segments"
 require_relative "library_kind"
+require_relative "codes"
 
 module PhComposer
   module Assemblies
@@ -38,6 +39,7 @@ module PhComposer
       MaterialsLibrary.install(feature, registry)
       ExportProjection.install(feature)
       SourceReport.install(feature)
+      Codes.install(feature)
     end
   end
 end

@@ -31,13 +31,15 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Proposal participant | Name and handler another feature calls inside its own action |
 | Reference retargeter | Name, target kind and handler; the owner requires the target owner or owns the target itself |
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
+| Code | A `noun.condition` code under a noun the feature owns, and its description (see "Outcomes and codes") |
 
 The capability an operation needs follows from its kind: a query and a preview need `read`, a view
 command `view`, a setup command `setup`, an action and an outcome lookup `model_write`, and a
 FileExport or export task `export`. Library loading and provider setup are setup commands; this
 replaces the archived Phase 2 choice of view commands for them (refactor R03, 2026-10-01).
 
-Every declared name starts with its feature's id. Registrations are staged and validated together:
+Every declared name starts with its feature's id; a code instead starts with a noun only that
+feature declares. Registrations are staged and validated together:
 duplicate ids, missing dependencies, cycles, incompatible contract majors, invalid schemas and
 invalid examples each produce a `registration.*` diagnostic naming the owner and, where one is
 missing, the dependency. Any diagnostic refuses the whole batch and publishes nothing; the last
@@ -154,8 +156,12 @@ Shared nouns (`request`, `session`, `revision`, `proposal`, `target`, `params`, 
 thing wherever they appear; a feature uses them for those conditions. A condition only one feature
 can have takes that feature's noun (for example `zone.*`, `face.*`, `adjacency.*`, `gesture.*`,
 `window.*`). This table lists foundation codes, the codes of the `ph_composer.library`
-foundation feature, and shared-noun codes a feature raises; feature-noun codes are not listed. Add a foundation code here, with a test,
-before a caller relies on it.
+foundation feature, and shared-noun codes a feature raises. A feature declares each code under its
+own nouns with `feature.code(code, description:)`; registration refuses a malformed code, a repeat
+and a noun another feature owns, and `docs/API_REFERENCE.md` lists them by feature under "Feature
+codes". One condition has one code from every read, refusal and preflight that reports it. Add a
+foundation code here before a caller relies on it; `tests/outcome_codes_test.rb` fails when feature,
+library or translation source names a code that is neither listed here nor declared.
 
 ## Revisions, transactions and host execution
 

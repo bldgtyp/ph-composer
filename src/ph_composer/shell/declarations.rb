@@ -11,6 +11,10 @@ module PhComposer
 
     Feature = Struct.new(:id, :contract_version, :requires, keyword_init: true)
 
+    # One outcome or finding code a feature raises under its own noun (context/CONTRACTS.md, "Outcomes
+    # and codes"). Foundation and shared-noun codes are listed there instead.
+    Code = Struct.new(:code, :owner, :description, keyword_init: true)
+
     # A bounded read. `handler` is `->(request) { value }`; it must not write to the Model.
     Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
 

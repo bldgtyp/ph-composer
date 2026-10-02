@@ -37187,3 +37187,114 @@ Example arguments:
 ```json
 {}
 ```
+
+## Feature codes
+
+The codes each feature raises under its own noun, as an outcome's `code` or a finding's. The foundation's and the shared nouns' codes are listed in context/CONTRACTS.md, "Outcomes and codes".
+
+### `ph_composer.assemblies`
+
+| Code | Meaning |
+| --- | --- |
+| `assembly.calculation_limit` | The exact thermal calculation exceeds its path budget; no value is given. |
+| `assembly.geometry_invalid` | A Layer thickness, Layer-Segment width or steel-stud spacing is not positive. |
+| `assembly.invalid` | The Assembly record does not satisfy its schema. |
+| `assembly.material_dangling` | A Layer-Segment names a Material that is not in the Model. |
+| `assembly.membrane_in_mixed_layer` | A Layer holding a membrane has more than one Layer-Segment. |
+| `assembly.no_thermal_layers` | Every Layer is a membrane, so no U-value can be calculated. |
+| `assembly.segment_unassigned` | A Layer-Segment has no Material. |
+| `assembly.thermal_layer_limit` | The Assembly has more thermal Layers than a Honeybee OpaqueConstruction holds. |
+| `material.conductivity_missing` | A non-membrane Material has no conductivity. |
+| `material.invalid` | The Material record does not satisfy its schema. |
+| `material.specific_heat_too_low` | A Material's specific heat is below the Honeybee minimum. |
+| `material.thermal_mass_defaulted` | A Material has no density or specific heat; export uses disclosed defaults. |
+
+### `ph_composer.windows`
+
+| Code | Meaning |
+| --- | --- |
+| `window.copy_id_pending` | A native copy shares this Window's identity until it is repaired. |
+| `window.definition_changed` | The Window's geometry differs from its Type; reset it first. |
+| `window.definition_detached` | The Window does not use its Type's primary definition. |
+| `window.definition_editing` | The Window definition is open for editing; close it first. |
+| `window.definition_missing` | The Type's primary definition no longer matches the Type. |
+| `window.edited_geometry_replaced` | The Type edit replaces edited primary Window geometry. |
+| `window.geometry_differs` | The Window's generated geometry or cutting behaviour differs from its Type. |
+| `window.host_boundary_unsupported` | The host Face's boundary condition is not Outdoors. |
+| `window.host_required` | The action needs the matching host Face for this Window. |
+| `window.host_type_unsupported` | The host Face is neither a Wall nor a Roof/Ceiling. |
+| `window.host_unclassified` | The host Face has no Face type or owning Zone. |
+| `window.host_zone_unresolved` | The host Face is not in one unambiguous authored Zone. |
+| `window.mirrored` | The Window is mirrored; make a new flipped Type. |
+| `window.nested_units` | A Window is nested inside another Window. |
+| `window.not_component` | A Window record is not on a native ComponentInstance. |
+| `window.not_mirrored` | The chosen Window is not mirrored. |
+| `window.off_host` | The Window does not lie in its host Face's plane. |
+| `window.opening_area_exceeds_host` | The Windows on a Face cover more than its gross area. |
+| `window.outlines_required` | The action needs every Window outline keyed by occurrence path. |
+| `window.overhang` | The Window extends past its host Face or into one of its holes. |
+| `window.overlap` | The Window overlaps another Window on the same host. |
+| `window.rehost_parent` | A re-host Face must be in the Window's existing parent storage. |
+| `window.restore_unavailable` | The stamped panes do not uniquely match the Type's outline. |
+| `window.scaled` | The Window has native in-plane scaling. |
+| `window.shared_definition_reset` | Reset replaces an edited primary definition for all of its Windows. |
+| `window.sheared` | The Window has native in-plane shear. |
+| `window.surface_host` | A paired Surface Face cannot host a Window. |
+| `window.type_geometry_unknown` | A neighbouring Window's untouched geometry cannot be recovered. |
+| `window.unhosted` | The Window is not glued to a resolvable host Face. |
+| `window.unknown_type` | The Window names a Window Type that is not in the Model. |
+| `window_type.construction_unavailable` | An element's Uw is outside what the pinned Honeybee simple glazing material accepts. |
+| `window_type.construction_unresolved` | An element is missing a Glazing Ug, Frame Uf or Frame psi-g value. |
+| `window_type.default_install_dangling` | The Model default Psi-Install Type is not in the Model. |
+| `window_type.dimensions_incomplete` | A row or column dimension is missing or not positive. |
+| `window_type.frame_operation_mismatch` | A Frame's operation differs from its element's operation. |
+| `window_type.frame_width_unresolved` | An element's Frame width is missing. |
+| `window_type.g_value_missing` | An element's Glazing has no g-value. |
+| `window_type.geometry_unavailable` | The Type's opening area cannot be calculated. |
+| `window_type.glazing_area_nonpositive` | An element's Frame widths leave no glazing area. |
+| `window_type.install_unresolved` | No Psi-Install Type resolves for an element side. |
+| `window_type.no_glazed_elements` | Every element of the Type is empty. |
+| `window_type.operation_incomplete` | An element has no operation or no opening direction. |
+| `window_type.partial_shared_edge` | An element edge is only partly shared, which has no proved installation mapping. |
+| `window_type.product_dangling` | An element names a Frame, Glazing or Psi-Install Type that is not in the Model. |
+
+### `ph_composer.zones`
+
+| Code | Meaning |
+| --- | --- |
+| `adjacency.counterpart_omitted` | A Surface Face's counterpart is omitted from the export, so the pair is exported as omitted too. |
+| `adjacency.glued_instances` | A Face carries glued Component instances and was not cut for adjacency. |
+| `adjacency.invalid` | A Face's stored Surface adjacency cannot be read. |
+| `adjacency.multiple_neighbours` | A Face meets more than one neighbouring Zone and was not cut. |
+| `adjacency.not_surface` | The Face has no Surface pair to retire. |
+| `adjacency.overlapping_zones` | Two Zones overlap, facing the same way, so no Surface pair was made. |
+| `adjacency.sliver_skipped` | A shared region below the geometry tolerance was not cut. |
+| `adjacency.stale` | A Surface pair's geometry changed since it was matched; the Face is omitted. |
+| `adjacency.unresolved` | A Surface pair's counterpart cannot be found or does not point back. |
+| `adjacency.unsupported_shape` | A shared region's shape cannot be cut exactly. |
+| `assignment.pending` | An Attached zone assignment is still open; finish it first. |
+| `attached_zone.absent` | An AttachedZone Face names no Attached zone. |
+| `attached_zone.dangling` | An AttachedZone Face names an Attached zone that is not in the Model. |
+| `attached_zone.factor_below_phius_floor` | An Attached zone's factor is below the Phius floor and needs the Phius Temperature Reduction Factor evidence. |
+| `attached_zone.invalid` | An AttachedZone Face names an Attached zone record that cannot be read. |
+| `attached_zone.unavailable` | An AttachedZone Face names an Attached zone written by a newer schema or carrying extension data this installation does not understand. |
+| `construction.dangling` | A Face names an Assembly that is not in the Model. |
+| `construction.incomplete` | A Face names an Assembly that cannot export yet; the message gives the first of its export_blockers. |
+| `construction.invalid` | A Face names an Assembly record that cannot be read. |
+| `construction.missing` | An exported Face names no Assembly. |
+| `face.assembly_exterior_condition_mismatch` | The Face's boundary condition differs from its Assembly's exterior condition. |
+| `face.assembly_pair_mismatch` | The two Faces of a Surface pair name different Assemblies. |
+| `face.assembly_type_mismatch` | The Face's type differs from its Assembly's type. |
+| `face.boundary_unassigned` | A Face has no boundary condition and is omitted from the export. |
+| `face.identity_unique` | The Face has no split copies sharing its identity to repair. |
+| `face.invalid` | A Face's assignment record cannot be read. |
+| `face.type_missing` | A Face has no Face type. |
+| `face.unclassified` | A Zone has unclassified Faces. |
+| `face.wrong_zone` | A Face is contained by more than one Zone. |
+| `gesture.retirement_conflict` | One gesture would retire the same Face's pair two different ways. |
+| `gesture.too_large` | The gesture selects more Faces than one edit may change. |
+| `zone.identity_in_use` | The Zone being restored is already in the Model. |
+| `zone.identity_unique` | The Zone's identity is already unique; there is nothing to repair. |
+| `zone.none` | The Model has no Zone to export. |
+| `zone.restore_is_limited` | Restore recovers the Zone id, Building-Segment and Level only. |
+| `zone.restore_unsafe` | The Zone cannot be restored from what remains. |
