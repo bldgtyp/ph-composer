@@ -122,7 +122,7 @@ Extract only what is identical in meaning. Do not build a step base class with h
      `zones.all`.
    - Drop the transform comparison in `reset_step` if the tests still pass without it.
    - From R05: include the live matcher's per-pane `FaceGeometry` capture in the same measurement.
-9. **R04 follow-ups.** When `ExportAssessment` becomes a function (see Observed), let the Unit read
+9. **R04 follow-ups.** Make `ExportAssessment` a function (see Observed), then let the Unit read
    and the preflight share one host-condition check, so `units.list` reports
    `window.host_boundary_unsupported` and `window.host_unclassified` too. Give a side-less Type
    finding its element, so the preflight shows one row per element and condition.

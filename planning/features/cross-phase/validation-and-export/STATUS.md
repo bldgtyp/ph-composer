@@ -74,3 +74,4 @@ loss, two Models, nested edit paths, Undo/Redo and reopen. See the evidence for 
 | 2026-09-29 | Ed authorized P1-E: HBJSON/report always selected, blockers write no pair and remain visible, no implicit SKP save, METr deferred. |
 | 2026-09-30 | Phase 2 planning: construction and aperture export allocated to P2-06 and P2-14. Packet moved under `features/cross-phase/`. |
 | 2026-09-30 | P1-E implementation and P1-F current-host integrated acceptance complete on branch; independent review and final gates pass. Normal composition requires authored Assemblies. |
+| 2026-10-02 | Phase 2 review: R05's four export-run follow-ups recorded as owed, one a live defect (an empty Room fails to reload). None authorized. |

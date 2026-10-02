@@ -102,8 +102,8 @@ touches.
 11. Item 12: one Type read for all three callers that skips an unreadable Type, as `choose_from_menu`
     does, and pages past the first page or states the cap. One focused test: an unreadable Type
     leaves Place Window… in the menu.
-12. Item 13: run dispatch's non-interactive checks (known name, grant, params, busy,
-    `expected_revision`) before the dialog, and keep the post-dialog checks. One focused test: a
+12. Item 13: run dispatch's remaining non-interactive checks (grant, params, busy,
+    `expected_revision`; an unknown name and a closed session already open no dialog) before the dialog, and keep the post-dialog checks. One focused test: a
     busy session refuses without opening the dialog.
 13. Item 14: page `catalog` and `in_file` with `cursor` until `next_cursor` is null.
 
