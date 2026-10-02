@@ -11,8 +11,9 @@ settled most of it through recorded interviews between 2026-09-06 and 2026-09-17
 that did not depend on designPH carry over unchanged. Phase 1 implemented Zones, face
 classification and the HBJSON/report export described under Zones, Envelope and Handoff; assembly
 assignment, local libraries, Window Type records, the Builder and Unit operations are implemented
-on the Phase 2 feature branch. Place, Schedule and Window Type Colour-by pass current-host
-acceptance on SketchUp 2026. Aperture export also passes current-host acceptance. Spaces and
+and accepted on the Phase 2 feature branch for SketchUp 26.1.188 on macOS. Normal export
+includes authored opaque constructions and Apertures. File libraries, Place, Schedule and
+Window Type Colour-by pass their named current-host requirements. Connection libraries are Phase 5. Spaces and
 thermal bridges remain proposed.
 
 ## The working environment
@@ -101,7 +102,7 @@ undone independently.
 An Attached zone, such as a garage or attic, is a named boundary condition with its temperature
 reduction factor. Colour by shows face type, boundary condition, Zone, Building-Segment or Level on
 the model without changing its materials, and the Zones / Faces screen lists each Zone with its classified faces.
-Assembly assignment arrives with Assemblies in Phase 2. A face inside a repeated component is shared by every occurrence, and independent
+Assembly assignment is implemented with Assemblies on the Phase 2 branch. A face inside a repeated component is shared by every occurrence, and independent
 classification requires the user to make the parent unique first. PH-Composer never does that
 automatically. Unclassified faces are visible in validation and never silently exported.
 

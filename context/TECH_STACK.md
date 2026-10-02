@@ -231,9 +231,10 @@ interrupted one from the journal. Blocking findings write no canonical files, HB
 always selected together, and Export never saves the SKP (P1-Q4, confirmed 2026-09-29).
 
 The runtime installs only manifest-pinned local wheels on explicit export. There is no pip resolver,
-external download or system-Python fallback. The shipping composition still has no authored
-construction provider; the separately composed synthetic provider exists only in development
-acceptance and never becomes a stored Assembly or a shipping fallback.
+external download or system-Python fallback. The shipping composition supplies authored
+Assembly constructions and Window Apertures through their feature contributors. Missing or
+incomplete assigned definitions block normal export. The separately composed synthetic provider
+exists only in historical development acceptance and is never a shipping fallback.
 
 The privacy allowlist is the shell's fields plus every contributor's declaration, composed on each
 check, so a result field no declaration names fails the export at `checking`. The report embeds
@@ -352,7 +353,7 @@ load, preview, copy, retry and read-back.
 
 The connection provider remains proposed. Its HTTPS transport, grants, credential storage and
 asynchronous reconfiguration/disposal guards belong to the
-[libraries packet](../planning/features/phase-02-envelope/libraries/PRD.md). The file provider's
+[libraries packet](../planning/archive/libraries/PRD.md). The file provider's
 implementation does not establish those host contracts.
 
 ## Errors

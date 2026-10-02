@@ -77,7 +77,7 @@ The early proof does not mark the full feature packets complete.
 | # | Item | State | Note |
 | --- | --- | --- | --- |
 | 1.1 | [Zones and adjacency](archive/phase-01-zones-and-adjacency/README.md) | Phase 1 scope merged to main; later-phase scope remains | First, because a boundary condition names what is on the other side |
-| 1.2 | [Face assignment](features/phase-02-envelope/face-assignment/README.md) | Phase 1 scope merged to main and host-verified; assembly assignment implemented; held-Classify integration remains | Face type and boundary condition first. The assembly column waits for 2.1. Brings the Classify tools and the Colour-by component |
+| 1.2 | [Face assignment](archive/face-assignment/README.md) | Phase 1 scope merged to main and host-verified; assembly assignment implemented; affected integration accepted | Face type and boundary condition first. The Assembly column is delivered on the Phase 2 branch. Brings the Classify tools and the Colour-by component |
 | 1.3 | [Validation and export](features/cross-phase/validation-and-export/README.md) | Phase 1 HBJSON/report scope merged to main; METr exporter deferred | Owns the export run, findings, Export tab, canonical HBJSON/report pair; METr exporter deferred |
 
 Exit: draw two boxes, make them Zones, classify the faces, export and reload the exact HBJSON. Constructions
@@ -91,16 +91,16 @@ claiming that outcome. This change leaves envelope and mechanical feature work i
 
 ## Phase 2: envelope
 
-The [Phase 2 packet](features/phase-02-envelope/README.md) coordinates the three feature packets
-and the remainder of face assignment. Its [plan](features/phase-02-envelope/PLAN.md) has seventeen
-stages, P2-01 to P2-17, and its [decisions](features/phase-02-envelope/DECISIONS.md) list what
+The [Phase 2 packet](archive/phase-02-envelope/README.md) coordinates the three feature packets
+and the remainder of face assignment. Its [plan](archive/phase-02-envelope/PLAN.md) has seventeen
+stages, P2-01 to P2-17, and its [decisions](archive/phase-02-envelope/DECISIONS.md) list what
 Phase 1 changed in these packets and the ten choices Ed answered on 2026-09-30.
 
 | # | Item | State | Stages | Note |
 | --- | --- | --- | --- | --- |
-| 2.1 | [Assemblies and materials](features/phase-02-envelope/assemblies/README.md) | Implemented on branch; E02–E04/E06 pass, E05 integration pending | P2-01 to P2-06 | The largest port. Completes face assignment's assembly column and closes the Phase 1 construction gate |
-| 2.2 | [Libraries](features/phase-02-envelope/libraries/README.md): file provider, Materials kind | Implemented and accepted with stated provenance | P2-07 to P2-09 | The seam, the envelope format and the first kind. Starter library as a separate download |
-| 2.3 | [Window Types and placement](features/phase-02-envelope/window-types/README.md) | Implemented and accepted on current host | P2-10 to P2-14 | Type editor is a port. Placement is new and builds on spike 0.5 |
+| 2.1 | [Assemblies and materials](archive/assemblies/README.md) | Accepted and archived on branch; not merged | P2-01 to P2-06 | The largest port. Completes face assignment's assembly column and closes the Phase 1 construction gate |
+| 2.2 | [Libraries](archive/libraries/README.md): file provider, Materials kind | Implemented and accepted with stated provenance | P2-07 to P2-09 | The seam, the envelope format and the first kind. Starter library as a separate download |
+| 2.3 | [Window Types and placement](archive/window-types/README.md) | Implemented and accepted on current host | P2-10 to P2-14 | Type editor is a port. Placement is new and builds on spike 0.5 |
 | 2.4 | Libraries: Frames, Glazings, Psi-Install Types | Implemented and host-verified | P2-15 | Three more kind adapters on the seam from 2.2 |
 
 Exit: the two-Zone model with authored Assemblies and placed window units exports a canonical

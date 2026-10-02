@@ -1,6 +1,6 @@
 # PH-Composer
 
-**DATE:** 2026-09-30 | **STATUS:** Proposed product scope. Phase 1 (Zones, Face assignment, HBJSON/report export) implemented and merged to main.
+**DATE:** 2026-10-01 | **STATUS:** Product scope. Phase 1 merged; Phase 2 implemented and accepted on its branch for the current host. Later phases proposed.
 **OWNER:** Ed May, BLDGTYP
 
 ## Purpose
@@ -55,9 +55,10 @@ exporter. The contributor architecture names the supported kinds of contribution
 
 ## Proposed feature scope
 
-The phase numbers follow the proposed roadmap and are not implementation authorization. The three
-Phase 1 rows are implemented within the scope stated under Current capability below; every later
-row is proposed.
+The phase numbers follow the proposed roadmap and are not implementation authorization.
+Phase 1 is merged. Phase 2 Assemblies, file libraries and Windows are implemented and accepted
+on the feature branch within Current capability below; connection providers and later phases
+remain proposed.
 
 | Phase | Feature | User outcome |
 | --- | --- | --- |
@@ -65,7 +66,7 @@ row is proposed.
 | 1 | Face assignment | Classify envelope faces by face type and boundary condition; stable through Undo, save and nested contexts |
 | 1 | Validation and export | Produce canonical HBJSON and a coordinated report with complete accounting; METr exporter deferred to a later milestone |
 | 2 | Assemblies and materials | Graphically build layered assemblies; enter, reuse, edit and assign model-local materials and assemblies |
-| 2 | Optional library import | Copy curated definitions from interchangeable file or connection providers into editable model-local records |
+| 2 | Optional library import | Copy curated definitions from interchangeable file providers into editable model-local records; connections remain Phase 5 |
 | 2 | Window Types and placement | Compose Window Types from Frames, Glazings and Psi-Install Types; place and resize window units on classified envelope faces |
 | 3 | Spaces and airflows | Author Spaces and Volumes, classify iCFA floors, and enter ventilation rates. Space Types remain later scope |
 | 3 | Thermal bridges | Identify linear thermal bridges on the model and assign psi-values. Point bridges and chi-values are not part of the MVP |
@@ -119,8 +120,10 @@ shared units, the runtime shell and export infrastructure. Phase 1 merged on
 2026-09-30: Zones, Faces and the adjacency between them, the Classify tool, Auto-classify,
 Attached zones, Colour-by, the Zones / Faces screen, copy and split repairs, the public scripting
 interface, and the export run to canonical HBJSON and its report. Export needs authored
-Assemblies, which arrive in Phase 2, so the normal build refuses to export today; Phase 1 was
-proven with a development-only construction provider. Merging is separate from any release. METr
+Assemblies. Phase 2 supplies authored Materials and Assemblies, file libraries, Window Types and
+placed Units on its feature branch, accepted on SketchUp 26.1.188/macOS. The normal packaged
+build exports resolved opaque constructions and Apertures without a development provider.
+Phase 1 historical export proof used a development-only construction provider. Merging is separate from any release. METr
 export and import acceptance are deferred until further feature development; their return
 milestone is unscheduled.
 

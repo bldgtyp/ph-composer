@@ -112,8 +112,7 @@ shared review and polish process without widening scope.
 ## Repository map
 
 `src/ph_composer/` is the shipping extension. `PhComposer` and the `ph_composer` prefix are the
-working namespace D8 confirmed; the final public name is still open. `library/` is planned and
-does not exist yet; the rest is implemented:
+working namespace D8 confirmed; the final public name is still open. The following owners are implemented:
 
 | Path | Owns |
 | --- | --- |
@@ -121,9 +120,9 @@ does not exist yet; the rest is implemented:
 | `core/` | What several features need and none owns: the record engine, dictionaries, JSON, geometry and units primitives, model operations |
 | `session/` | One `ModelSession` per open Model, its generation, observers and per-feature state objects. Names no feature |
 | `shell/` | Transport and the action registry: the panel dialog, actions, commands, preferences. Names no feature |
-| `features/` | One folder per feature, each registering itself in one `install`. Today only `zones/`, which owns Zones, Faces and adjacency |
+| `features/` | One folder per feature, each registering itself in one `install`. `zones/` owns Zones, Faces and adjacency; `assemblies/` owns Materials and Assemblies; `windows/` owns products, Types, Units and Aperture export |
 | `colour_by/` | The shared Colour-by service: the mode registry's consumers, the viewport overlay and HUD, and the drawing cache. Names no feature |
-| `library/` | Planned: the provider contract and the shipped providers, starting with the library file |
+| `library/` | The optional provider seam, file/folder provider, catalog/copy coordinator and model-library export |
 | `export/` | The export run: contributors, the attribute guard, artifact hygiene, the report, and the exporter registry |
 | `html/` | The UI kit: a module graph with a generated script list and owned stylesheets |
 | `python/`, `runtime/`, `vendor/` | The translation package and exporter registry (no exporter registered yet), the Pyodide loader and the pinned payload |

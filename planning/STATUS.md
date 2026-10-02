@@ -19,11 +19,6 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
-| 2 | Phase 2: envelope | phase packet | Implemented on branch; E02–E04/E06–E15 pass with qualified provenance; E01/E05/E17 retain held-Classify and handoff | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/](features/phase-02-envelope/README.md) |
-| 2 | Face assignment | feature | Implemented on branch; E06 passes, E05 retains affected A09 held-Classify | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/face-assignment/](features/phase-02-envelope/face-assignment/README.md) |
-| 2 | Assemblies and materials | feature | Implemented on branch; E02–E04/E06 pass; affected integration/handoff pending | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/assemblies/](features/phase-02-envelope/assemblies/README.md) |
-| 2 | Window Types and placement | feature | Implemented and accepted on current host; E10–E15 pass; Phase 2 handoff pending | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/window-types/](features/phase-02-envelope/window-types/README.md) |
-| 2 | Libraries (provider seam) | feature | Implemented and accepted with stated provenance; E07–E09/E15 pass; connection deferred to Phase 5 | [#14](https://github.com/bldgtyp/ph-composer/issues/14) | [features/phase-02-envelope/libraries/](features/phase-02-envelope/libraries/README.md) |
 | 3 | Spaces | feature | Scoped, interviewed | none (no remote) | [features/phase-03-rooms-and-junctions/spaces/](features/phase-03-rooms-and-junctions/spaces/README.md) |
 | 3 | Thermal bridges | feature | Requested, PRD drafted | none (no remote) | [features/phase-03-rooms-and-junctions/thermal-bridges/](features/phase-03-rooms-and-junctions/thermal-bridges/README.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
@@ -47,3 +42,12 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·
 `Implemented on branch` · `Merged to main` · `Complete` · `Deferred` ·
 `Superseded`
+
+
+## Completed branch work awaiting delivery
+
+Phase 2 envelope is [accepted and archived](archive/phase-02-envelope/STATUS.md) on
+`codex/phase-02-envelope`, issue [#14](https://github.com/bldgtyp/ph-composer/issues/14).
+E01–E15/E17 pass with stated provenance; E16 is Phase 5. No main-repository push, PR or merge
+has occurred. The archive records acceptance, not release or platform support. Phase 3 remains
+the next planned feature scope and requires its own implementation authorization.

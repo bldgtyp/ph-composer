@@ -682,7 +682,7 @@
       "id": "E01",
       "label": "Phase 2 shared groundwork",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/core/records/*",
         "src/ph_composer/shell/*",
@@ -702,7 +702,7 @@
       "id": "E02",
       "label": "Phase 2 Material and Assembly records",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/assemblies/*",
         "src/ph_composer/core/records/*",
@@ -719,7 +719,7 @@
       "id": "E03",
       "label": "Phase 2 Material and Assembly inventories",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/html/*",
         "src/ph_composer/features/assemblies/*",
@@ -735,7 +735,7 @@
       "id": "E04",
       "label": "Phase 2 Assembly Builder",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/html/assembly*",
         "src/ph_composer/html/library_*",
@@ -752,7 +752,7 @@
       "id": "E05",
       "label": "Phase 2 Face Assembly assignment",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/zones/*",
         "src/ph_composer/features/assemblies/*",
@@ -769,7 +769,7 @@
       "id": "E06",
       "label": "Phase 2 Assembly HBJSON and report export",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/assemblies/*",
         "src/ph_composer/features/zones/*",
@@ -785,7 +785,7 @@
       "id": "E07",
       "label": "Phase 2 neutral library and file provider",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/library/*",
         "src/ph_composer/features/assemblies/library_kind.rb",
@@ -800,7 +800,7 @@
       "id": "E08",
       "label": "Phase 2 native library sidebar",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/html/library*",
         "src/ph_composer/html/sections/library.js",
@@ -815,7 +815,7 @@
       "id": "E09",
       "label": "Phase 2 library export and separate provider",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/library/*",
         "src/ph_composer/html/library_export.js",
@@ -834,7 +834,7 @@
       "id": "E10",
       "label": "Phase 2 Window product and type records",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/windows/*",
         "src/ph_composer/core/model_settings*",
@@ -849,7 +849,7 @@
       "id": "E11",
       "label": "Phase 2 native Window Builder and Installs",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/html/window*",
         "src/ph_composer/html/sections/windows.js",
@@ -866,7 +866,7 @@
       "id": "E12",
       "label": "Phase 2 Window units and cutting-component rules",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/windows/*",
         "src/ph_composer/features/zones/*",
@@ -883,7 +883,7 @@
       "id": "E13",
       "label": "Phase 2 native Window placement, Schedule and Colour-by",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/windows/*",
         "src/ph_composer/html/window*",
@@ -900,7 +900,7 @@
       "id": "E14",
       "label": "Phase 2 Window Aperture export and net opaque area",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/windows/*",
         "src/ph_composer/features/zones/*",
@@ -923,7 +923,7 @@
       "id": "E15",
       "label": "Phase 2 Window product library copy and export",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/windows/*",
         "src/ph_composer/library/*",
@@ -943,7 +943,7 @@
       "id": "E17",
       "label": "Phase 2 integrated authoring, lifecycle and export",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-02-envelope/ACCEPTANCE.md",
       "paths": [
         "src/*",
         "tests/*",

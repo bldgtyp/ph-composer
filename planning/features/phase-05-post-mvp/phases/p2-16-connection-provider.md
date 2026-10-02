@@ -15,7 +15,7 @@ serving the neutral envelope, which is work in another repository.
 Owns the second provider: one generic connection the user points at an address, and the
 one-page protocol. Nothing specific to any vendor enters the code and no address ships.
 
-Behavior owner: [libraries PRD](../../phase-02-envelope/libraries/PRD.md), "The connection protocol" and "Security
+Behavior owner: [libraries PRD](../../../archive/libraries/PRD.md), "The connection protocol" and "Security
 rules", Q6, Q7, Q16, Q18. Host rules: `context/TECH_STACK.md`, "The library provider seam".
 
 Predecessor paths are relative to `../ph-navigator-sketchup/src/ph_navigator_sketchup/` at
