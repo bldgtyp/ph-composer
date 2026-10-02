@@ -123,13 +123,16 @@ and three context-menu builds) and now pins it unchanged; it also asserts that n
 `features/` reaches `Registry.current`. `tests/handler_request_test.rb` covers memo sharing and
 scoping. The Colour-by walkthrough declares no mode, so it needed no change.
 
-Follow-ups left out:
+Follow-ups left out, each folded into a later finding:
 
 - `library/install.rb:48`: the file provider factory reaches `Registry.current`; the factory
-  contract takes no arguments, so this belongs with the provider contract, not here.
+  contract takes no arguments, so this belongs with the provider contract, not here. Recorded as
+  [R09](R09-definition-feature-pattern.md) item 7.
 - `Commands` evaluates an entry provider's `available:` twice per context-menu build (pre-existing).
+  Recorded as [R11](R11-readability-and-lint.md) item 11.
 - `choose_from_menu` lists at most 500 Types and skips unreadable ones; the `available:` test and
-  the Window Type Colour-by mode still raise on an unreadable Type (pre-existing).
+  the Window Type Colour-by mode still raise on an unreadable Type (pre-existing). Recorded as
+  [R11](R11-readability-and-lint.md) item 12.
 
 Review: one independent Opus pass with the architecture rubric. It reproduced three Windows
 regressions, all fixed with a test each: an unreadable Type was reported as missing from the Place

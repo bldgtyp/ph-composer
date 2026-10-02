@@ -65,6 +65,14 @@ name uniqueness, a library kind adapter.
    `use_library` replace of a record deleted since review answers a different code from the same
    edit through the `update` action. Pre-existing (the old wrapper behaved the same).
    `context/CONTRACTS.md`, "Callback write ownership", promises the full read surface.
+7. **The file provider factory reaches the registry itself.** Added 2026-10-02 from R02's
+   follow-ups. The `library_provider` factory block in `library/install.rb` takes no arguments, so it
+   reads `Registry.current` to list the registered library kinds and their adapters. The provider
+   contract hides what the factory depends on. Pre-existing.
+8. **Operations do not publish the codes they refuse with.** Added 2026-10-02 from R04's
+   follow-ups. R04 made every feature declare its codes (`feature.code`), but they appear only under
+   "Feature codes" in `docs/API_REFERENCE.md`. `API.describe` does not say which codes an operation
+   can answer. R04's optional item 7 (`refuses:` on operations) was not done.
 
 ## Consequence
 
@@ -102,6 +110,13 @@ Two steps, the second only if Ed wants the abstraction.
    offering the standard list, all, create, update, duplicate, delete registrations for one
    `RecordKind`, with hooks only for defaults and row display. Trace the contributor task before and
    after; adopt it only if the after is shorter to read, not just shorter to write.
+5. **Item 7: the factory receives what it needs.** The provider factory is called with the registry
+   (or the registered library kinds), so `library/install.rb` no longer reads `Registry.current`. A
+   contract change to `library_provider`; record it in `context/EXTENSIBILITY.md`. Do it with the
+   library adapter scaffolding in item 3.
+6. **Item 8, optional: operations declare `refuses:`.** Each operation names the declared codes it
+   can answer, registration refuses an undeclared one, and `API.describe` publishes the list. Do it
+   while the per-kind split rewrites the declarations, or record that it stays optional.
 
 ## Verification
 
@@ -111,3 +126,6 @@ Two steps, the second only if Ed wants the abstraction.
   renames are taken, in the named fields.
 - Existing operation and schema tests pass with no assertion changes other than renamed fields.
 - A library callback's `find` of a missing record refuses `target.not_found`.
+- `grep -n "Registry.current" src/ph_composer/library` is empty.
+- If item 8 is taken: `API.describe` of a Windows Type operation lists its refusal codes, and a test
+  refuses registering an operation that names an undeclared code.

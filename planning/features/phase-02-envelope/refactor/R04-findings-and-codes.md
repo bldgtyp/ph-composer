@@ -157,14 +157,17 @@ flipped Type and Rehost were offered for a Window with no known Type (a regressi
 panel's rule); the preflight built repairs without the Unit's other conditions; registration accepted
 foundation nouns and Symbol codes; the scan test missed bare codes and stale schedule labels.
 
-Follow-ups, not done here:
+Follow-ups, not done here, each folded into a later finding:
 
 - The Unit read checks fewer host conditions than the preflight: a Ground or unclassified host shows
   nothing in `units.list` but `window.host_boundary_unsupported` or `window.host_unclassified` in the
-  preflight. The codes agree where both report; the read could report the rest.
+  preflight. The codes agree where both report; the read could report the rest. Recorded as
+  [R08](R08-window-unit-steps.md) item 9.
 - Per-element Type findings without a side (`window_type.g_value_missing` on two elements) collapse
-  into one preflight row per Unit and do not name the element.
+  into one preflight row per Unit and do not name the element. Recorded as
+  [R08](R08-window-unit-steps.md) item 9.
 - Feature codes appear in the generated reference only, not in `API.describe`; item 7 is the place.
+  Recorded as [R09](R09-definition-feature-pattern.md) item 8.
 - R09 item 4's single name for the Psi-Install collection (`psi_install_types` and `installs`) is
-  still open.
+  still open. Already in [R09](R09-definition-feature-pattern.md)'s correction, step 1.
 

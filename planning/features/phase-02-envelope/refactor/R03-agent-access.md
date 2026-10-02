@@ -280,12 +280,17 @@ requires `^...$`, refuses inner line anchors and binds the whole string; a stale
 sentence; `NativeApproval::Granted` no longer prints its path through `to_s` or `to_h`;
 `NativeApproval` documented as a shell internal; a stale preview fixture.
 
-Follow-ups left out:
+Follow-ups left out, each folded into a later finding or since resolved:
 
 - `NativeApproval` opens the dialog before dispatch checks grant, params, busy state and
-  `expected_revision`; a pre-check would spare the user a dialog that then refuses.
-- The schedule still offers Reset to Type, not the named repair, for `copy_id_pending`.
-- `tools/examples/library_provider/walkthrough.rb` reads only the first `in_file` page.
+  `expected_revision`; a pre-check would spare the user a dialog that then refuses. Recorded as
+  [R11](R11-readability-and-lint.md) item 13.
+- The schedule still offers Reset to Type, not the named repair, for `copy_id_pending`. Resolved by
+  [R04](R04-findings-and-codes.md), PR #19: the schedule reads each finding's repair and offers
+  Repair copied identities.
+- `tools/examples/library_provider/walkthrough.rb` reads only the first `in_file` page. Recorded as
+  [R11](R11-readability-and-lint.md) item 14.
 - Host acceptance of the library setup and export dialogs, the Libraries menu add flow, grid
   gestures and library paging was not run; this file names no host gate. Whether the macOS save
-  panel and the replace message box both ask (as for HBJSON) is unobserved.
+  panel and the replace message box both ask (as for HBJSON) is unobserved. Recorded in
+  [R10](R10-ui-kit-organization.md)'s host gate, which moves the same screens.

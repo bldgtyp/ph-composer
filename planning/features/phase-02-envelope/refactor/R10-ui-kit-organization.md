@@ -48,7 +48,8 @@ name no feature.
 5. **Repair availability is decided twice.** `window_schedule.js:77-85` derives Reset, New flipped
    Type and Re-host from finding codes; Ruby already attaches a repair to each finding
    (`features/windows/units/state.rb`). See R04 item 5. `window_schedule.js:7-10` also maps codes to
-   labels, which is the panel's job and is fine.
+   labels, which is the panel's job and is fine. **Resolved by [R04](R04-findings-and-codes.md),
+   PR #19** (2026-10-02): the schedule reads each finding's repair and its derivation is gone.
 6. **`sections/windows.js:7`** maps collection names to record kind ids by hand
    (`{ frames: "frame", ... }`). The snapshot rows already carry `kind`.
 
@@ -81,3 +82,8 @@ it by editing `sections/library.js`. The supported route is invisible unless the
 - JS suite and the eight browser workflows pass; `node tools/panel_manifest.js` reports no stale page.
 - Host gate: the panel loads from the installed RBZ after any directory move (asset paths), and the
   Library pane shows all five surfaces.
+- Host gate, added 2026-10-02 from R03's follow-ups, which ran none of these on the host: the
+  library setup dialogs (add file, add folder) from the panel and from the Libraries menu, library
+  export with an existing destination (record whether the macOS save panel and the replace message
+  box both ask, as for HBJSON), paging through a library longer than one page, and the Window Type
+  grid gestures. Record the results in the native-acceptance case ledger.

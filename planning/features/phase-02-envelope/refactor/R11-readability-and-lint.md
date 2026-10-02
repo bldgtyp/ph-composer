@@ -56,6 +56,23 @@ frozen-string comment, `Style/Semicolon`, line length 120, method length 40, cla
     `HandlerRequest` freezes the struct (`shell/handler_request.rb`), but `params` stays a mutable
     Hash, so an operation could alter the params a later nested read or the dispatcher's digest
     sees. Nothing mutates them today; the contract is stated, not enforced.
+11. **A context menu tests an entry provider twice.** Added 2026-10-02 from R02's follow-ups.
+    `Commands#install_feature_menus` filters contextual items with `available?`, then
+    `menu_entries` calls `available?` again for an item with `entries` (`shell/commands.rb`). Each
+    test builds a read request and may run a query. Pre-existing.
+12. **An unreadable Window Type raises in some menu reads and not others.** Added 2026-10-02 from
+    R02's follow-ups. `choose_from_menu` (`features/windows/declarations/viewport.rb`) lists Types
+    through `records.list`, at most one page, and skips unreadable ones. `type_rows`, used by the
+    Place Window… `available:` test and the per-Face entry provider, calls `engine.find` and raises
+    on an unreadable Type; the Window Type Colour-by mode does the same. The shell logs the raise
+    and drops the item, so one bad Type removes Place Window… from the context menu. Pre-existing.
+13. **A native approval dialog opens before dispatch can refuse.** Added 2026-10-02 from R03's
+    follow-ups. `NativeApproval.call` (`shell/native_approval.rb`) asks for the file or folder
+    first; dispatch then checks grant, params, busy state and `expected_revision`. A refusal arrives
+    after the user has chosen a location.
+14. **The library provider walkthrough reads one page.** Added 2026-10-02 from R03's follow-ups.
+    `tools/examples/library_provider/walkthrough.rb` reads only the first page of `in_file` (and of
+    `catalog`), so the worked example does not show paging.
 
 ## Decision
 
@@ -81,9 +98,17 @@ touches.
 9. Item 10: deep-freeze `params` when a request is built (`HandlerRequest#initialize`, after the
    existing `DeepCopy`), so an in-place edit raises `FrozenError`. Run the suite to find any operation
    that edits its params in place and give it a copy. One focused test in `handler_request_test.rb`.
+10. Item 11: test each contextual item once per menu build and pass the verdict to `menu_entries`.
+11. Item 12: one Type read for all three callers that skips an unreadable Type, as `choose_from_menu`
+    does, and pages past the first page or states the cap. One focused test: an unreadable Type
+    leaves Place Window… in the menu.
+12. Item 13: run dispatch's non-interactive checks (known name, grant, params, busy,
+    `expected_revision`) before the dialog, and keep the post-dialog checks. One focused test: a
+    busy session refuses without opening the dialog.
+13. Item 14: page `catalog` and `in_file` with `cursor` until `next_cursor` is null.
 
 ## Verification
 
-For this packet's remaining items (3 to 10): `make lint` passes on both Rubies under the current
-configuration. No behaviour change except items 6, 9 and 10, each with one focused test. The widened cop
+For this packet's remaining items (3 to 14): `make lint` passes on both Rubies under the current
+configuration. No behaviour change except items 6, 9, 10, 12 and 13, each with one focused test. The widened cop
 list is verified in the formatting pull request.
