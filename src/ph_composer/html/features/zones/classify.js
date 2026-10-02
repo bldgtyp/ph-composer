@@ -9,7 +9,7 @@
  * let a user break a pair by painting over one of its ends.
  */
 PhComposerUI.define("features/zones/classify", ["panel", "workspace", "request", "snapshot",
-  "features/zones/face_words", "features/zones/attached_zone_fields", "features/zones/assembly_assignment"],
+  "face_words", "features/zones/attached_zone_fields", "features/zones/assembly_assignment"],
 function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   "use strict";
   var KEEP = "";

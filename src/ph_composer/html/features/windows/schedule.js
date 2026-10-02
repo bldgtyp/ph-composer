@@ -1,5 +1,5 @@
 /* A Schedule counts authored occurrences, including detached definitions and copied identities. */
-PhComposerUI.define("features/windows/schedule", ["request", "snapshot", "table", "features/zones/face_words",
+PhComposerUI.define("features/windows/schedule", ["request", "snapshot", "table", "face_words",
   "workspace", "units", "fields"],
 function (request, snapshot, tables, faceWords, ui, units, fields) {
   "use strict";

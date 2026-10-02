@@ -1,8 +1,9 @@
-/* The words this feature's screens show for the values it stores. honeybee's own strings are the
- * contract; these are what a user reads (context/UBIQUITOUS_LANGUAGE.md, ui-polish "Words on
- * screen"). One place, so the faces table and the Classify palette cannot disagree.
+/* The words any screen shows for honeybee's face types and boundary conditions. honeybee's own strings
+ * are the contract; these are what a user reads (context/UBIQUITOUS_LANGUAGE.md, ui-polish "Words on
+ * screen"). One place in the kit, so the faces table, the Classify palette and the Window schedule
+ * cannot disagree, and a feature that shows a face type need not reach into Zones.
  */
-PhComposerUI.define("features/zones/face_words", [], function () {
+PhComposerUI.define("face_words", [], function () {
   "use strict";
 
   var FACE_TYPES = { Wall: "Wall", RoofCeiling: "Roof or ceiling", Floor: "Floor",
