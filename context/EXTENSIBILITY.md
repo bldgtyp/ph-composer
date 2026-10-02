@@ -47,7 +47,8 @@ A feature that needs authored Face identity, such as window placement, depends o
 its queries, actions, reference targets and descriptors, never through its stores.
 
 Features sit in three layers and depend only downward. Ed set this on 2026-10-01, and the Ruby
-features follow it. The export and translation side does not yet: Zones' translation section
+feature dependencies follow it. The export and translation side does not yet: Windows' export
+contributor calls a Zones export module directly, Zones' translation section
 requires the Apertures section, Zones declares Window result fields, and the shared conformance
 code names Windows. The review of PR #15 records these as finding R05, to be corrected before
 Phase 3:

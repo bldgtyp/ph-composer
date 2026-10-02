@@ -146,8 +146,8 @@ Shared nouns (`request`, `session`, `revision`, `proposal`, `target`, `params`, 
 `reference`, `geometry`, `query`, `operation`, `selection`, `scope`, `identity`) mean the same
 thing wherever they appear; a feature uses them for those conditions. A condition only one feature
 can have takes that feature's noun (for example `zone.*`, `face.*`, `adjacency.*`, `gesture.*`,
-`window.*`). This table lists foundation codes, including those of the `ph_composer.library`
-foundation feature; feature-noun codes are not listed. Add a foundation code here, with a test,
+`window.*`). This table lists foundation codes, the codes of the `ph_composer.library`
+foundation feature, and shared-noun codes a feature raises; feature-noun codes are not listed. Add a foundation code here, with a test,
 before a caller relies on it.
 
 ## Revisions, transactions and host execution
@@ -303,7 +303,8 @@ leaves detached definitions alone. Ordinary mutations refuse a missing or differ
 primary as `window.definition_missing`. An index write checks the authored pre-image
 (`target.changed`) and that each pointer names exactly one definition carrying the same Type,
 inside the owning native proposal and Undo step. Reset to type is the explicit reassociation: it
-creates a new primary from the authored Type and never adopts an arbitrary matching copy.
+regenerates the primary from the authored Type, creating a new one when the indexed primary is
+missing or differently stamped, and never adopts an arbitrary matching copy.
 Definition names are presentation.
 
 ## Zones geometry rules
@@ -464,13 +465,16 @@ failing it. Withheld libraries are listed under `unavailable` with `library.dupl
 `library.kind_schema_unsupported` or `library.kind_malformed`. Skipped or trimmed rows are listed
 under `warnings` with `library.row_required_invalid`, `library.row_optional_invalid`,
 `library.unit_invalid` or `library.row_semantic_invalid` (row skipped), or
-`library.row_optional_absent` and `library.row_fields_omitted` (row kept). A note is not an
-outcome code.
+`library.row_optional_absent` and `library.row_fields_omitted` (row kept). A folder provider
+skips an unreadable or invalid file with a code-only warning carrying that file's outcome code,
+such as `library.file_malformed` or `library.format_invalid`. These are the notes the file
+provider and admission produce; another provider may add its own `library.*` codes, which
+admission passes through reduced to the note fields. A note is not an outcome.
 
 **Generations.** A session holds one generation counter shared by every provider and kind. A
 successful refresh publishes the next integer as an immutable entry, with state `loaded` or
 `empty`. A failed refresh keeps the previous entry unchanged except for state `failed` and a
-code-only failure; a provider exception that is not a `library.*` error becomes
+failure carrying its code and a fixed message; a provider exception that is not a `library.*` error becomes
 `library.provider_failed`. An entry never read has generation null and state `unloaded`. Setup
 changes drop the affected provider's entries in every open session. Nothing is cached to disk.
 
@@ -487,7 +491,8 @@ proposals". Its own checks run in this order, each refusing the whole proposal:
    first, then a case-insensitive name match and mapped-value equality. Outcomes are `create`,
    `reuse`, `review_required`, `ambiguous_source` and `ambiguous_name`. A stored fingerprint of
    another version reports no comparison rather than a change.
-6. The choice must fit the outcome: `create` needs outcome `create` (`library.review_required`);
+6. The choice must fit the outcome. A supplied `local_id` that is not a reviewed candidate
+   refuses first (`library.local_choice_required`); an unknown choice is `params.invalid`. `create` needs outcome `create` (`library.review_required`);
    `keep_local` and `use_library` need one reviewed candidate (`library.local_choice_required`);
    `use_library` needs the candidate's reviewed `expected_values` (`params.invalid`).
 7. The owner's callbacks run with validated params (`params.invalid`) and results
@@ -500,7 +505,7 @@ be to a record kind its owner registered; otherwise `library.mutation_owner`. Lo
 proposal. Any refusal inside the coordinator or a callback poisons the proposal, so a rescued
 error still writes nothing. `ph_composer.library.copy_into_proposal` applies the same rules
 inside another feature's action and refuses without that action's active proposal
-(`operation.proposal_required`) or without a declared dependency on the library
+(`operation.proposal_required`) or when its owner neither is nor requires the library
 (`operation.dependency_missing`).
 
 ## Translation sections and artifacts
