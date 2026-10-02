@@ -51,6 +51,7 @@ module PhComposer
             delta = [b[0] - a[0], b[1] - a[1]]
             square = delta.sum { |value| value * value }
             next unless square.positive?
+
             fraction = [[point.zip(a).zip(delta).sum { |(p, origin), d| (p - origin) * d } / square, 0].max, 1].min
             foot = a.zip(delta).map { |origin, d| origin + d * fraction }
             [point.zip(foot).sum { |p, f| (p - f)**2 }, foot, delta, Math.sqrt(square)]

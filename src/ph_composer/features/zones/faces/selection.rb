@@ -11,6 +11,7 @@ module PhComposer
           unless !entities.empty? && entities.all? { |entity| entity.is_a?(Sketchup::Face) }
             raise CodedError.new("selection.invalid", "Select Faces inside authored Zones. Nothing was written.")
           end
+
           if entities.length > Faces.gesture_face_limit
             raise CodedError.new("gesture.too_large", "Select at most #{Faces.gesture_face_limit} Faces. " \
                                                     "Nothing was written.")
@@ -22,11 +23,12 @@ module PhComposer
             unless picked
               raise CodedError.new("target.wrong_zone", "A selected Face is outside an authored Zone.")
             end
+
             record = FACE_STORE.read(entity)
             Schema.validate!(record) if record
             reference = picked.reference(record && record.fetch("id"))
             resolved = Zones::Occurrences.resolve_face(model, reference, :mutable => true,
-                                                      :allow_unassigned => record.nil?, :index => index)
+                                                                         :allow_unassigned => record.nil?, :index => index)
             Zones::Selection.resolve(model, resolved.zone.reference, index)
             reference
           end
@@ -37,7 +39,7 @@ module PhComposer
           references = selected(request.model, :index => index)
           targets = references.map do |reference|
             face = Zones::Occurrences.resolve_face(request.model, reference, :index => index,
-                                                  :allow_unassigned => reference["entity_id"].nil?)
+                                                                             :allow_unassigned => reference["entity_id"].nil?)
             record = FACE_STORE.read(face.entity)
             { "reference" => reference, "expected_values" => record ? Schema.values(record) : {} }
           end
@@ -59,20 +61,23 @@ module PhComposer
           if revision != request.revision
             raise CodedError.new("revision.stale", "The Model changed after the selected Faces were read.")
           end
+
           references = faces
           index = Zones::Index.new(request.model)
           if references.length > Faces.gesture_face_limit
             raise CodedError.new("gesture.too_large", "Choose at most #{Faces.gesture_face_limit} Faces.")
           end
+
           references.each do |reference|
             face = Zones::Occurrences.resolve_face(request.model, reference, :mutable => true,
-                                                  :allow_unassigned => reference["entity_id"].nil?, :index => index)
+                                                                             :allow_unassigned => reference["entity_id"].nil?, :index => index)
             Zones::Selection.resolve(request.model, face.zone.reference, index)
           end
           state = handoff(request.session)
           if state.snapshot.fetch("token")
             raise CodedError.new("assignment.pending", "Finish the open Attached zone assignment first.")
           end
+
           state.open(references, request.revision)
           request.session.changed(:zones, :attached_assignment)
           state.snapshot
@@ -160,7 +165,7 @@ module PhComposer
             entries = records.map do |row|
               id = row.fetch("id")
               Declarations::MenuEntry.new(:label => "Assembly: #{row.fetch('name')}",
-                                           :handler => ->(session) { Selection.client(session).assembly(id) })
+                                          :handler => ->(session) { Selection.client(session).assembly(id) })
             end
             entries << Declarations::MenuEntry.new(:label => "Clear assembly",
                                                    :handler => ->(session) { Selection.client(session).assembly(nil) })
@@ -197,9 +202,9 @@ module PhComposer
             records.map do |record|
               id = record.fetch("id")
               Declarations::MenuEntry.new(:label => "Attached zone: #{record.fetch('values').fetch('name')}",
-                                           :handler => ->(session) do
-                                             Selection.client(session).classify("attached_zone_id", id)
-                                           end)
+                                          :handler => ->(session) do
+                                            Selection.client(session).classify("attached_zone_id", id)
+                                          end)
             end
           end
 

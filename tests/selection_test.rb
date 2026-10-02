@@ -200,13 +200,15 @@ class SelectionTest < PhComposerTestCase
     read = query("ph_composer.zones.faces.selection")
     params = { "faces" => read.dig("value", "faces"), "revision" => read.fetch("revision") }
     result = API.view(:context => @context, :name => "ph_composer.zones.faces.open_attached_assignment",
-                     :params => params)
+                      :params => params)
     assert_equal "completed", result.fetch("status")
     token = result.dig("value", "token")
     params.fetch("faces").first["entity_path"] = [999]
     assert_equal 2, query("ph_composer.zones.faces.attached_assignment").dig("value", "faces").length
-    close = ->(value) { API.view(:context => @context, :name => "ph_composer.zones.faces.close_attached_assignment",
-                               :params => { "token" => value }) }
+    close = ->(value) {
+      API.view(:context => @context, :name => "ph_composer.zones.faces.close_attached_assignment",
+               :params => { "token" => value })
+    }
     assert_equal token, close.call("wrong").dig("value", "token")
     assert_nil close.call(token).dig("value", "token")
     stale = API.view(:context => @context, :name => "ph_composer.zones.faces.open_attached_assignment",
@@ -220,7 +222,7 @@ class SelectionTest < PhComposerTestCase
   def make_zone(id)
     faces = 3.times.map do |index|
       Sketchup::Face.new(id + index + 1, {}, :points => [Geom::Point3d.new(0, 0, index),
-                                                       Geom::Point3d.new(2, 0, index), Geom::Point3d.new(2, 2, index)])
+                                                         Geom::Point3d.new(2, 0, index), Geom::Point3d.new(2, 2, index)])
     end
     group = Sketchup::Group.new(id, Sketchup::Entities.new(faces))
     @model.entities << group
@@ -241,9 +243,9 @@ class SelectionTest < PhComposerTestCase
 
   def update(rows, field, value, revision)
     invoke("ph_composer.zones.update_field", { "field" => field, "value" => value,
-      "targets" => rows.map do |row|
-        { "reference" => row.fetch("reference"), "expected_values" => row.fetch("values") }
-      end },
+                                               "targets" => rows.map do |row|
+                                                              { "reference" => row.fetch("reference"), "expected_values" => row.fetch("values") }
+                                                            end },
            revision)
   end
 

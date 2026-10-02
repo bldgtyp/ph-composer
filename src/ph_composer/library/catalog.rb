@@ -19,10 +19,12 @@ module PhComposer
         unless batch.is_a?(Provider::Batch)
           raise Error.new("library.provider_invalid", "The provider did not return a valid catalog response.")
         end
+
         batch = yield(batch) if block_given?
         unless batch.is_a?(Provider::Batch)
           raise Error.new("library.provider_invalid", "The normalized catalog response is malformed.")
         end
+
         @generation += 1
         @entries[[provider.id, kind]] = Provider.immutable(
           "provider_id" => provider.id, "kind" => kind, "generation" => @generation,
@@ -49,6 +51,7 @@ module PhComposer
         if !generation.nil? && row.fetch("generation") != generation
           raise Error.new("library.catalog_stale", "The catalog generation has changed; read it again before copying.")
         end
+
         published = row["published_at"]
         age = published ? [@clock.call.to_f - Time.iso8601(published).to_f, 0.0].max : nil
         Provider.immutable(row.merge("age_seconds" => age))

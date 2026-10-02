@@ -8,7 +8,7 @@ class HandlerRequestTest < PhComposerTestCase
   def setup
     super
     @request = PhComposer::HandlerRequest.for(PhComposer::Sessions.for(Sketchup.active_model),
-                                             :owner => "ph_composer.zones", :name => "ph_composer.zones.list")
+                                              :owner => "ph_composer.zones", :name => "ph_composer.zones.list")
   end
 
   def test_memo_is_computed_once_and_shared_with_a_nested_request_of_the_same_owner

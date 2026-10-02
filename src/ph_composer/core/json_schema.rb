@@ -86,7 +86,7 @@ module PhComposer
 
       required = schema["required"]
       return ["#{path}.required must list property names"] unless required.is_a?(Array) &&
-                                                                   required.all? { |name| name.is_a?(String) }
+                                                                  required.all? { |name| name.is_a?(String) }
       return [] unless schema["additionalProperties"] == false
 
       undeclared = required - (schema["properties"] || {}).keys

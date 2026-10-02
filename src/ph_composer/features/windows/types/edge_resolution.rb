@@ -14,12 +14,12 @@ module PhComposer
       def resolve(cell, side, classification, default_id)
         assignment_id = cell.fetch("installs").fetch(side)
         source = if classification == :shared then :shared
-                elsif classification == :partial then :partial
-                elsif assignment_id then :assigned
-                else :default
+                 elsif classification == :partial then :partial
+                 elsif assignment_id then :assigned
+                 else :default
                  end
         effective_id = if source == :default then default_id
-                elsif source == :assigned then assignment_id
+                       elsif source == :assigned then assignment_id
                        end
         Resolution.new(:source => source, :assignment_id => assignment_id, :effective_id => effective_id)
       end

@@ -22,11 +22,13 @@ module PhComposer
         if request.params.key?("library_name") && request.params.fetch("library_name").strip.empty?
           raise Error.new("params.invalid", "The library name must not be blank.")
         end
+
         before = ExportProjection.build(request)
         writer = FileWriter.new(request.approval.path)
         if writer.replaces? && !request.approval.replace
           raise Error.new("export.replace_required", "The destination exists and was not approved for replacement.")
         end
+
         identity = request.params.fetch("identity", "new")
         library = if identity == "update"
                     existing(writer, request)
@@ -41,6 +43,7 @@ module PhComposer
         if bytes.bytesize > LibraryFile::MAX_BYTES
           raise Error.new("library.file_too_large", "The library export exceeds the 32 MiB file limit.")
         end
+
         writer.write(bytes)
         ExportProjection.summary(before).merge("library_id" => library.fetch("id"),
                                                "library_name" => library.fetch("name"),
@@ -63,6 +66,7 @@ module PhComposer
         unless parsed.fetch("unavailable").empty? && warnings_valid && valid_rows?(parsed, adapters)
           raise Error.new("library.update_destination_invalid", "Update identity needs valid rows and supported kinds.")
         end
+
         DeepCopy.call(parsed.fetch("library"))
       end
 

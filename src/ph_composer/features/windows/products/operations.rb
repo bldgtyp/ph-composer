@@ -28,7 +28,7 @@ module PhComposer
             Definitions.unique_name!(values["name"], Definitions.records(request, kind), :except => id)
           end
           request.engine.propose_update(kind.id, id, proposal, :values => values,
-            :expected_values => expected_values, :user_data => user_data)
+                                                               :expected_values => expected_values, :user_data => user_data)
           { "id" => id }
         end
 
@@ -61,7 +61,7 @@ module PhComposer
             plan = request.retarget_references(kind.id, :from => id, :to => replacement_id)
           end
           request.engine.propose_delete(kind.id, id, proposal,
-            :expected_values => expected_values, :reference_plan => plan)
+                                        :expected_values => expected_values, :reference_plan => plan)
           { "id" => id }
         end
 
@@ -70,6 +70,7 @@ module PhComposer
           if replacement && Products.number_keys(collection).any? { |key| !current[key].nil? && replacement[key].nil? }
             raise CodedError.new("validation.failed", "The replacement is missing an authored thermal input.")
           end
+
           kind_id = KINDS.fetch(collection).id
           references = Types::KIND.references.select { |reference| reference.target_kind == kind_id }
           remap = { current.fetch("id") => replacement && replacement.fetch("id") }
@@ -78,8 +79,8 @@ module PhComposer
 
             after = references.reduce(type) { |value, reference| reference.remap(value, remap) }
             request.engine.propose_update(TYPE_KIND, type.fetch("id"), proposal,
-              :values => { "elements" => after.fetch("elements") },
-              :expected_values => { "elements" => type.fetch("elements") })
+                                          :values => { "elements" => after.fetch("elements") },
+                                          :expected_values => { "elements" => type.fetch("elements") })
           end
         end
       end

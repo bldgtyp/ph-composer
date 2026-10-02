@@ -9,6 +9,7 @@ module PhComposer
       # copy rules. `only` limits the repair to the named shared identities.
       module IdentityPlan
         Update = Struct.new(:reference, :before, :after, keyword_init: true)
+
         module_function
 
         def build(occurrences, identity:, catalog: nil, engine: nil, only: nil)
@@ -19,7 +20,7 @@ module PhComposer
 
             if copies.any?(&:shared_storage) || copies.map { |item| item.path.last }.uniq.length != copies.length
               raise CodedError.new("target.shared_definition",
-                "Make copied parent storage unique before repairing Window identities.")
+                                   "Make copied parent storage unique before repairing Window identities.")
             end
             copies.sort_by(&:path).drop(1).each do |copy|
               if copy.locked
@@ -30,11 +31,12 @@ module PhComposer
               if ids.include?(id)
                 raise CodedError.new("identity.conflict", "The allocated Window identity already exists.")
               end
+
               after = DeepCopy.call(copy.record).merge("id" => id)
               Units.validate!(after)
               ids << id
               updates << Update.new(:reference => copy.reference, :before => DeepCopy.call(copy.record),
-                :after => after)
+                                    :after => after)
             end
           end
           copy_extensions!(updates, catalog, engine)
@@ -44,7 +46,7 @@ module PhComposer
         def copy_extensions!(updates, catalog, engine)
           plan = Records::ReferencePlan.new(:entries => updates.map do |update|
             Records::ReferenceEntry.new(:kind => REFERENCE_KIND, :key => update.reference.fetch("entity_path"),
-              :record => update.after)
+                                        :record => update.after)
           end)
           updates.each do |update|
             data = update.before.fetch("extension_data", {})
@@ -53,10 +55,11 @@ module PhComposer
             unless catalog && engine
               raise CodedError.new("copy.rule_missing", "Structured Window copy data needs installed reference rules.")
             end
+
             old_id = update.before.fetch("id")
             update.after["extension_data"] = Records::Extension.copy_data(data, catalog, "Window unit", old_id,
-              { old_id => update.after.fetch("id") }, :engine => engine, :reference_plan => plan,
-              :mapping_kind => REFERENCE_KIND)
+                                                                          { old_id => update.after.fetch("id") }, :engine => engine, :reference_plan => plan,
+                                                                                                                  :mapping_kind => REFERENCE_KIND)
           end
         end
         private_class_method :copy_extensions!

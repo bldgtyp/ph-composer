@@ -58,7 +58,7 @@ module PhComposer
 
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION,
-                                 :requires => ["ph_composer.assemblies"])
+                                             :requires => ["ph_composer.assemblies"])
       ZoneRegistration.install(feature)
       Names.install(feature)
       ZoneMenu.install(feature)

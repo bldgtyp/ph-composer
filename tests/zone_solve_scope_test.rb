@@ -98,8 +98,8 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal revision, @session.revision
     @sequence += 1
     result = API.invoke(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params,
-      :request => { "sequence" => @sequence, "expected_revision" => revision,
-                    "proposal_digest" => preview.fetch("proposal_digest") })
+                        :request => { "sequence" => @sequence, "expected_revision" => revision,
+                                      "proposal_digest" => preview.fetch("proposal_digest") })
     assert_equal %w[refused proposal.changed none], result.values_at("status", "code", "effect")
     assert_equal 2, faces.length
   end
@@ -109,9 +109,9 @@ class ZoneSolveScopeTest < PhComposerTestCase
     wall(110, 0, 2, 6, 0, 3, :west)
     author
     request = PhComposer::HandlerRequest.new(:session => @session, :model => @model,
-      :params => { "zones" => all_references }, :revision => @session.revision,
-      :registry => PhComposer::Registry.current,
-      :engine => PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog))
+                                             :params => { "zones" => all_references }, :revision => @session.revision,
+                                             :registry => PhComposer::Registry.current,
+                                             :engine => PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog))
     proposal = PhComposer::Operations::Proposal.new
     action = PhComposer::Registry.current.actions.fetch("ph_composer.zones.solve_adjacency")
     action.handler.call(request, proposal)
@@ -287,9 +287,9 @@ class ZoneSolveScopeTest < PhComposerTestCase
     store = PhComposer::Zones::Faces::FACE_STORE
     before = store.read(entity)
     store.write(entity, before.merge("extension_data" => {
-                  COPY_EXTENSION.namespace => COPY_EXTENSION.envelope("external_id" => "atz_000000000001",
-                                                                      "marker" => before.fetch("id"))
-                }))
+      COPY_EXTENSION.namespace => COPY_EXTENSION.envelope("external_id" => "atz_000000000001",
+                                                          "marker" => before.fetch("id"))
+    }))
     snapshot = faces
     params = { "zones" => all_references }
 
@@ -737,7 +737,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     rows = faces
 
     assert_equal [935, 920], rows.find { |row| row.dig("reference", "entity_id") == right_record.fetch("id") }
-      .dig("reference", "zone_path")
+                                 .dig("reference", "zone_path")
     assert_equal %w[unresolved unresolved], rows.map { |row| row.fetch("adjacency_state") }.sort
     assert_equal [920], store.read(right.entities.to_a.first).dig("adjacency", "self", "zone_path")
     assert_equal count, @model.operation_starts.length
@@ -791,7 +791,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     original = left.entities.to_a.first
     record = store.read(original)
     copied_face = Sketchup::Face.new(936, {},
-                                    :points => original.outer_loop.vertices.map(&:position), :normal => original.normal)
+                                     :points => original.outer_loop.vertices.map(&:position), :normal => original.normal)
     left.entities << copied_face
     store.write(copied_face, record)
     wrapper = Sketchup::Group.new(937, Sketchup::Entities.new)
@@ -818,7 +818,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     store = PhComposer::Zones::Faces::FACE_STORE
     face = right.entities.to_a.first
     copied = Sketchup::Face.new(944, {}, :points => face.outer_loop.vertices.map(&:position),
-                                        :normal => face.normal)
+                                         :normal => face.normal)
     store.write(copied, store.read(face))
     @model.entities << copied
     wrapper = Sketchup::Group.new(945, Sketchup::Entities.new)
@@ -840,7 +840,7 @@ class ZoneSolveScopeTest < PhComposerTestCase
     store = PhComposer::Zones::Faces::FACE_STORE
     face = left.entities.to_a.first
     copied = Sketchup::Face.new(946, {}, :points => face.outer_loop.vertices.map(&:position),
-                                        :normal => face.normal)
+                                         :normal => face.normal)
     store.write(copied, store.read(face))
     @model.entities << copied
     wrapper = Sketchup::Group.new(947, Sketchup::Entities.new)
@@ -1068,8 +1068,8 @@ class ZoneSolveScopeTest < PhComposerTestCase
       face = group.entities.to_a.first
       before = store.read(face)
       store.write(face, before.merge("extension_data" => {
-                    extension.namespace => extension.envelope("face_id" => before.fetch("id"))
-                  }))
+        extension.namespace => extension.envelope("face_id" => before.fetch("id"))
+      }))
     end
 
     result = solve(all_references)
@@ -1096,8 +1096,8 @@ class ZoneSolveScopeTest < PhComposerTestCase
     kind = PhComposer::Zones::Faces::AttachedZone::RECORD_KIND
     record = kind.store.read(@model, "atz_000000000001")
     kind.store.write(@model, record.merge("extension_data" => {
-                      "unavailable.incoming" => extension.envelope("face_id" => old_id)
-                    }))
+      "unavailable.incoming" => extension.envelope("face_id" => old_id)
+    }))
     before = faces
 
     result = without_native_survivor { solve(all_references) }
@@ -1154,8 +1154,8 @@ class ZoneSolveScopeTest < PhComposerTestCase
     before_record = store.read(group)
     id = faces.first.fetch("reference").fetch("entity_id")
     store.write(group, before_record.merge("extension_data" => {
-                  "unavailable.incoming" => entity_link_extension.envelope("face_id" => id)
-                }))
+      "unavailable.incoming" => entity_link_extension.envelope("face_id" => id)
+    }))
     before = faces
 
     result = without_native_survivor { solve(all_references) }

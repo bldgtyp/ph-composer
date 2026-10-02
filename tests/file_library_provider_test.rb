@@ -34,8 +34,8 @@ class FileLibraryProviderTest < PhComposerTestCase
   end
 
   def test_duplicate_folder_ids_refuse_affected_library_kind_and_preserve_other_kind_and_library
-    write_library(path("one.json"), 
-envelope(:kinds => { "materials" => [library_row], "synthetic_parts" => [library_row] }))
+    write_library(path("one.json"),
+                  envelope(:kinds => { "materials" => [library_row], "synthetic_parts" => [library_row] }))
     write_library(path("two.json"), envelope)
     write_library(path("three.json"), envelope(:library_id => "synthetic.other"))
     provider = file_provider(@directory)
@@ -115,8 +115,8 @@ envelope(:kinds => { "materials" => [library_row], "synthetic_parts" => [library
     write_library(path("one.json"), envelope(rows))
     write_library(path("two.json"), envelope(rows, :library_id => "synthetic.two"))
     assert_equal 20_000, file_provider(@directory).list("materials").rows.length
-    write_library(path("three.json"), 
-envelope(:library_id => "synthetic.three", :kinds => { "foreign" => [library_row] }))
+    write_library(path("three.json"),
+                  envelope(:library_id => "synthetic.three", :kinds => { "foreign" => [library_row] }))
     error = assert_raises(PhComposer::Library::Error) { file_provider(@directory).list("materials") }
     assert_equal "library.catalog_too_many_rows", error.code
   end

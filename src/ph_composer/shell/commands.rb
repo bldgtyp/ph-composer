@@ -63,6 +63,7 @@ module PhComposer
                 if declaration.is_a?(Declarations::MenuEntry) && !current.equal?(session)
                   raise CodedError.new("session.changed", "The active Model changed. Reopen the context menu.")
                 end
+
                 declaration.handler.call(current)
               end
             end
@@ -81,10 +82,11 @@ module PhComposer
         entries = contributed(item, []) { item.entries.call(read_request(item, session)) }
         unless entries.is_a?(Array) && entries.all? do |entry|
           entry.is_a?(Declarations::MenuEntry) && entry.label.is_a?(String) && !entry.label.strip.empty? &&
-            entry.handler.respond_to?(:call) && (entry.state.nil? || entry.state.respond_to?(:call))
+          entry.handler.respond_to?(:call) && (entry.state.nil? || entry.state.respond_to?(:call))
         end
           raise InternalError, "#{item.name} returned invalid native menu entries."
         end
+
         entries
       end
 

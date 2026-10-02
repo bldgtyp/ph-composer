@@ -20,12 +20,12 @@ module PhComposer
           type = request.engine.find(TYPE_KIND, type_id)
           point = Placement::Offsets.point(host.geometry, :x_m => offsets.fetch("x_m"), :y_m => offsets.fetch("y_m"))
           record = { "id" => identity.call("wun"), "schema_version" => 1,
-            "window_type_id" => type.fetch("id"), "anchor" => anchor,
-            "user_data" => DeepCopy.call(user_data), "extension_data" => {} }
+                     "window_type_id" => type.fetch("id"), "anchor" => anchor,
+                     "user_data" => DeepCopy.call(user_data), "extension_data" => {} }
           step = PlaceStep.new(:model => request.model, :host => host, :type => type, :record => record,
-            :point_m => point, :existing_polygons_m => reads.other_polygons)
+                               :point_m => point, :existing_polygons_m => reads.other_polygons)
           proposal.add_step(step, :scopes => [MutationScope.new(:definition_ids => step.definition_ids),
-            PhComposer::Operations::EntityScope.new(host.parent_path)])
+                                              PhComposer::Operations::EntityScope.new(host.parent_path)])
           { "unit_id" => record.fetch("id") }
         end
 
@@ -41,16 +41,17 @@ module PhComposer
             request.params.key?("ids")
           total = items.length
           items, cursor = Pages.slice(request, "#{FEATURE_ID}.units.list", items, :key => ->(item) {
- item.path }) if paged
+                                                                                            item.path
+                                                                                          }) if paged
           rows = items.map do |item|
             host = reads.host(item, :writable => false)
             canonical = primary(request.model, item.record.fetch("window_type_id"))
             others = polygons.reject { |path, _polygon| path == item.path }.values
             findings = State.findings(item, :type => reads.type(item), :canonical_definition => canonical,
-              :host_geometry => host&.geometry, :existing_polygons_m => others,
-              :host_values => host ? host.values : {},
-              :host_state => host ? host.zone_state : nil,
-              :shared_id => counts.fetch(item.record.fetch("id")) > 1)
+                                            :host_geometry => host&.geometry, :existing_polygons_m => others,
+                                            :host_values => host ? host.values : {},
+                                            :host_state => host ? host.zone_state : nil,
+                                            :shared_id => counts.fetch(item.record.fetch("id")) > 1)
             { "reference" => item.reference, "id" => item.record.fetch("id"), "schema_version" => 1,
               "values" => RECORD_KIND.values(item.record), "user_data" => item.record.fetch("user_data", {}),
               "extension_data" => item.record.fetch("extension_data", {}), "host" => host&.reference,

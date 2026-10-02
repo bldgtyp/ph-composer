@@ -17,8 +17,8 @@ class LibraryCopyParticipantTest < PhComposerTestCase
     @session = PhComposer::Sessions.for(Sketchup.active_model)
     @context = API.connect(:session_id => @session.id, :capabilities => %w[read view model_write setup])
     generation = API.setup(:context => @context, :name => "ph_composer.library.load",
-                         :params => { "provider_id" => "synthetic.file", "kind" => "materials" })
-                   .dig("value", "generation")
+                           :params => { "provider_id" => "synthetic.file", "kind" => "materials" })
+                    .dig("value", "generation")
     @copy = { "provider_id" => "synthetic.file", "kind" => "materials", "generation" => generation,
               "library_id" => "synthetic.one", "record_id" => "public-1", "choice" => "create" }
     @sequence = 0
@@ -33,10 +33,10 @@ class LibraryCopyParticipantTest < PhComposerTestCase
     probe = Module.new
     probe.define_singleton_method(:install) do |registry|
       feature = registry.feature("probe.library_copy", :contract_version => 1,
-                                 :requires => dependency ? ["ph_composer.library"] : [])
+                                                       :requires => dependency ? ["ph_composer.library"] : [])
       feature.action(ACTION, :description => "Synthetic composite copy.",
-        :params => { "type" => "object" }, :result => LIBRARY::Schemas.copy_result,
-        :undo_name => "Composite Copy", :side_effects => "Copies in the shared proposal.", :examples => [{}]) do |r, p|
+                             :params => { "type" => "object" }, :result => LIBRARY::Schemas.copy_result,
+                             :undo_name => "Composite Copy", :side_effects => "Copies in the shared proposal.", :examples => [{}]) do |r, p|
         result = r.participant("ph_composer.library.copy_into_proposal").call(r, p, r.params.fetch("copy"))
         if r.params["refuse_after_copy"] || r.params["wrong_proposal"]
           begin

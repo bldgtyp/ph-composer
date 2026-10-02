@@ -49,12 +49,13 @@ module PhComposer
           unless row && row.fetch("reference") == reference
             raise CodedError.new("target.changed", "The host Face reference no longer matches the Zone read.")
           end
+
           placeable!(row, "found")
 
           Host.new(:entity => located.entity, :entities => located.entities, :parent_path => located.parent_path,
-            :transform => located.transform, :reference => DeepCopy.call(reference),
-            :values => DeepCopy.call(row.fetch("values")), :zone_state => "found",
-            :geometry => FaceGeometry.capture(located.entity, located.transform), :locator => locator)
+                   :transform => located.transform, :reference => DeepCopy.call(reference),
+                   :values => DeepCopy.call(row.fetch("values")), :zone_state => "found",
+                   :geometry => FaceGeometry.capture(located.entity, located.transform), :locator => locator)
         end
 
         # What a host refuses before anything is located: a Zone that is not uniquely found, the write
@@ -92,8 +93,8 @@ module PhComposer
         # a pick. It does not locate, so a Unit in an ambiguous Zone stays a finding rather than a refusal.
         def read(face, parent_path, transform, row, zone_state)
           Host.new(:entity => face, :parent_path => parent_path.dup, :transform => transform,
-            :reference => DeepCopy.call(row.fetch("reference")), :values => DeepCopy.call(row.fetch("values")),
-            :zone_state => zone_state, :geometry => FaceGeometry.capture(face, transform))
+                   :reference => DeepCopy.call(row.fetch("reference")), :values => DeepCopy.call(row.fetch("values")),
+                   :zone_state => zone_state, :geometry => FaceGeometry.capture(face, transform))
         end
       end
     end

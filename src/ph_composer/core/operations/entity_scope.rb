@@ -28,6 +28,7 @@ module PhComposer
           unless entity.is_a?(Sketchup::Group)
             raise CodedError.new("target.shared_definition", "That edit path is not a unique Group occurrence.")
           end
+
           entity.entities
         end
       end
@@ -75,11 +76,11 @@ module PhComposer
         return {} unless collection
 
         collection.to_a.select { |dictionary| dictionary.name.start_with?("ph_composer.") }
-          .sort_by(&:name).to_h do |dictionary|
-            values = {}
-            dictionary.each { |key, value| values[key.to_s] = value }
-            [dictionary.name, values]
-          end
+                  .sort_by(&:name).to_h do |dictionary|
+          values = {}
+          dictionary.each { |key, value| values[key.to_s] = value }
+          [dictionary.name, values]
+        end
       end
 
       def point(value)

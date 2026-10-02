@@ -43,14 +43,14 @@ module PhComposer
           end
 
           mapping[face_id] = Records::Identity.derived("fac", "model" => model.guid, "revision" => revision,
-                                                            "zone_id" => new_id,
-                                                            "entity_path" => entry.fetch(:occurrence).path)
+                                                              "zone_id" => new_id,
+                                                              "entity_path" => entry.fetch(:occurrence).path)
         end
         reference_plan = identity_reference_plan(zone, faces, mapping)
         record = DeepCopy.call(zone.record).merge("id" => new_id)
         record["extension_data"] = Records::Extension.copy_data(zone.record.fetch("extension_data", {}), catalog,
                                                                 "Zone", old_id, mapping, :engine => engine,
-                                                                :reference_plan => reference_plan)
+                                                                                         :reference_plan => reference_plan)
         Schema.validate!(record)
         plans = face_plans(faces, zone, new_id, mapping, catalog, engine, reference_plan)
         { :old_id => old_id, :record => record, :faces => plans }
@@ -118,7 +118,7 @@ module PhComposer
         after["id"] = mapping.fetch(record.fetch("id"))
         after["extension_data"] = Records::Extension.copy_data(record.fetch("extension_data", {}), catalog,
                                                                "Face", record.fetch("id"), mapping, :engine => engine,
-                                                               :reference_plan => reference_plan)
+                                                                                                    :reference_plan => reference_plan)
         after.delete("adjacency")
         after.delete("boundary_condition") if record["boundary_condition"] == "Surface"
         Faces::Schema.validate!(after)
@@ -183,6 +183,7 @@ module PhComposer
         unless offer.fetch("parent_path") == wanted
           raise CodedError.new("target.changed", "Those stamped members are not in that parent context.")
         end
+
         if offer.fetch("refusal")
           raise CodedError.new("zone.restore_unsafe",
                                "Zone #{zone_id} cannot be restored: #{offer.fetch('refusal')}.")

@@ -12,7 +12,7 @@ class UnitsTest < PhComposerTestCase
     assert_equal Units::DEFINITIONS.keys.sort, rows.map { |row| row.fetch("quantity") }.sort
     rows.each do |row|
       actual = Units.to_display(row.fetch("canonical_value"), :quantity => row.fetch("quantity"), :system => "IP",
-                                                             :unit => row.fetch("canonical_unit"))
+                                                              :unit => row.fetch("canonical_unit"))
       assert_in_delta row.fetch("expected_ip_value"), actual, row.fetch("tolerance"), row.fetch("quantity")
     end
   end

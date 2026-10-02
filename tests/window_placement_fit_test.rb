@@ -13,7 +13,7 @@ class WindowPlacementFitTest < PhComposerTestCase
 
   def host(holes = [])
     PhComposer::FaceGeometry::Snapshot.new(:loops_m => [rectangle(0, 0, 4, 3)] + holes,
-      :normal => [0.0, 0.0, 1.0])
+                                           :normal => [0.0, 0.0, 1.0])
   end
 
   def test_fit_is_geometric_and_does_not_depend_on_host_glue

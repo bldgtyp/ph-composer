@@ -69,11 +69,11 @@ module PhComposer
           value = { "id" => entity.persistent_id, "dictionaries" => dictionaries(entity) }
           if entity.is_a?(Sketchup::Face)
             value.merge("loops" => entity.loops.map { |loop| loop.vertices.map { |vertex| point(vertex.position) } },
-              "normal" => point(entity.normal), "material" => entity.material&.name,
-              "back_material" => entity.back_material&.name)
+                        "normal" => point(entity.normal), "material" => entity.material&.name,
+                        "back_material" => entity.back_material&.name)
           else
             value.merge("vertices" => [point(entity.start.position), point(entity.end.position)],
-              "faces" => entity.faces.map(&:persistent_id).sort)
+                        "faces" => entity.faces.map(&:persistent_id).sort)
           end
         end
 
@@ -92,6 +92,7 @@ module PhComposer
         def reject_extra_edges!(entities, transform)
           entities.grep(Sketchup::Edge).each do |edge|
             next if @edges.include?(edge)
+
             points = [edge.start.position, edge.end.position].map do |position|
               point(position.transform(transform)).map { |value| value * INCH_TO_M }
             end

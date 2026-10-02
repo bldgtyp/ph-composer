@@ -24,6 +24,7 @@ module PhComposer
         loop do
           candidate = index == 1 ? "#{stem} (copy)" : "#{stem} (copy #{index})"
           return candidate unless existing.include?(candidate.downcase)
+
           index += 1
         end
       end

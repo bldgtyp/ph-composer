@@ -54,15 +54,15 @@ module PhComposer
 
         def descriptor
           DeepCopy.call("name" => "swap_window_unit_types", "target" => @target, "types" => @types,
-            "missing_source_types" => @missing_types.uniq.sort,
-            "index_before" => @index, "target_definition_id" => @target_definition_id,
-            "native_guard" => @guard, "items" => @rows)
+                        "missing_source_types" => @missing_types.uniq.sort,
+                        "index_before" => @index, "target_definition_id" => @target_definition_id,
+                        "native_guard" => @guard, "items" => @rows)
         end
 
         def reference_entries
           @rows.map do |row|
             Records::ReferenceEntry.new(:kind => REFERENCE_KIND,
-              :key => row.fetch("reference").fetch("entity_path").dup, :record => DeepCopy.call(row.fetch("after")))
+                                        :key => row.fetch("reference").fetch("entity_path").dup, :record => DeepCopy.call(row.fetch("after")))
           end
         end
 
@@ -103,16 +103,18 @@ module PhComposer
         def admit_type!(model, type, source: false)
           unless type.is_a?(Hash) && Types::KIND.problems(type).empty?
             raise CodedError.new(source ? "window.unknown_type" : "validation.failed",
-              "Choose a valid authored Window Type.")
+                                 "Choose a valid authored Window Type.")
           end
           stored = Types::KIND.store.read(model, type.fetch("id"))
           if source && stored.nil?
             raise CodedError.new("window.unknown_type", "The source Window Type is unavailable.")
           end
+
           NativeUnit.changed!("An authored Window Type no longer matches the supplied baseline.") unless stored == type
           if @types.key?(type.fetch("id")) && @types.fetch(type.fetch("id")) != type
             raise CodedError.new("params.invalid", "The batch supplies conflicting Type baselines.")
           end
+
           @types[type.fetch("id")] = DeepCopy.call(type)
         end
 
@@ -140,6 +142,7 @@ module PhComposer
             unless source_absent?(model, type_id)
               raise CodedError.new("window.unknown_type", "Supply the existing authored source Type for this Window.")
             end
+
             @missing_types << type_id
             return GeneratedGeometry.plan(item.entity.definition, :type_id => type_id)
           end
@@ -147,6 +150,7 @@ module PhComposer
           unless from_type.fetch("id") == type_id
             raise CodedError.new("window.unknown_type", "Supply the authored source Type for this Window.")
           end
+
           DefinitionPlan.build(from_type)
         end
 
@@ -157,7 +161,7 @@ module PhComposer
         def instance_row(item, record, old_plan)
           matrix = item.entity.transformation.to_a
           changed = WorldGeometry.reanchor(matrix, :before => old_plan, :after => @target_plan,
-            :anchor => record.fetch("anchor"))
+                                                   :anchor => record.fetch("anchor"))
           { "reference" => { "unit_id" => record.fetch("id"), "entity_path" => item.path.dup },
             "before" => record, "after" => record.merge("window_type_id" => @target.fetch("id")),
             "definition_id" => item.entity.definition.persistent_id, "matrix" => matrix,
@@ -206,7 +210,7 @@ module PhComposer
           definition = DefinitionWriter.create(:model => model, :type => @target, :plan => @target_plan)
           check_target!(definition, :code => "geometry.failed")
           DefinitionIndex.write(model, @index.merge(@target.fetch("id") => definition.persistent_id),
-            :expected => @index)
+                                :expected => @index)
           definition
         end
       end

@@ -26,7 +26,7 @@ module PhComposer
             Definitions.unique_name!(values["name"], Definitions.records(request, KIND), :except => id)
           end
           request.engine.propose_update(TYPE_KIND, id, proposal, :values => values,
-            :expected_values => expected_values, :user_data => user_data)
+                                                                 :expected_values => expected_values, :user_data => user_data)
           moved(request, proposal, before)
         end
 
@@ -59,7 +59,7 @@ module PhComposer
             plan = request.retarget_references(TYPE_KIND, :from => id, :to => replacement_id)
           end
           request.engine.propose_delete(TYPE_KIND, id, proposal,
-            :expected_values => expected_values, :reference_plan => plan)
+                                        :expected_values => expected_values, :reference_plan => plan)
           Units::TypeRetargeter.cleanup(request, proposal, current) unless retarget
           { "id" => id }
         end

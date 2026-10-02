@@ -40,12 +40,12 @@ class LibraryExportTest < PhComposerTestCase
   def test_allowlist_projection_metadata_omissions_and_origin_privacy
     row = @records.first
     row["user_data"] = { "secret" => "PRIVATE SECRET" }
-    row["extension_data"] = 
-{ "outside.vendor" => { "schema_version" => 9, "payload" => { "key" => "PRIVATE SECRET" } } }
+    row["extension_data"] =
+      { "outside.vendor" => { "schema_version" => 9, "payload" => { "key" => "PRIVATE SECRET" } } }
     row["source"] = { "kind" => "library", "provider_kind" => "ph_composer.library.file",
-      "library_id" => "public.library", "record_kind" => "materials", "record_id" => "public.row",
-      "copied_at" => "2026-01-01T00:00:00Z", "fingerprint_version" => 1,
-      "fingerprint" => "a" * 64, "snapshot" => row.slice(*Assemblies::MaterialsLibrary::FIELDS) }
+                      "library_id" => "public.library", "record_kind" => "materials", "record_id" => "public.row",
+                      "copied_at" => "2026-01-01T00:00:00Z", "fingerprint_version" => 1,
+                      "fingerprint" => "a" * 64, "snapshot" => row.slice(*Assemblies::MaterialsLibrary::FIELDS) }
     Assemblies::Materials::Schema::KIND.store.write(Sketchup.active_model, row)
     read = preview
     assert_equal "completed", read["status"], read.inspect
@@ -62,7 +62,8 @@ class LibraryExportTest < PhComposerTestCase
     document = JSON.parse(json)
     assert_equal %w[format schema_version library exported_at kind_schema_versions kinds record_origins], document.keys
     assert_equal @records.map { |item| item["id"] }.sort, document.dig("kinds", "materials").map { |item|
- item["id"] }.sort
+                                                            item["id"]
+                                                          }.sort
     assert_equal "ph_composer.library.file", document.dig("record_origins", "materials", row["id"], "label")
     refute document.dig("kinds", "materials").first.key?("schema_version")
     assert_equal before, [@session.revision, Sketchup.active_model.operations.length, Sketchup.active_model.modified?]
@@ -131,9 +132,9 @@ class LibraryExportTest < PhComposerTestCase
     Assemblies::Assembly::Schema::KIND.store.write(Sketchup.active_model, assembly)
     row = @records.first
     row["source"] = { "kind" => "library", "provider_kind" => "ph_composer.library.file",
-      "library_id" => "/PRIVATE SECRET/path", "record_kind" => "materials", "record_id" => "public.row",
-      "copied_at" => "2026-01-01T00:00:00Z", "fingerprint_version" => 1, "fingerprint" => "a" * 64,
-      "snapshot" => row.slice(*Assemblies::MaterialsLibrary::FIELDS) }
+                      "library_id" => "/PRIVATE SECRET/path", "record_kind" => "materials", "record_id" => "public.row",
+                      "copied_at" => "2026-01-01T00:00:00Z", "fingerprint_version" => 1, "fingerprint" => "a" * 64,
+                      "snapshot" => row.slice(*Assemblies::MaterialsLibrary::FIELDS) }
     row["user_data"] = { "/PRIVATE SECRET/path" => "SECRET VALUE" }
     Assemblies::Materials::Schema::KIND.store.write(Sketchup.active_model, row)
     result = export
@@ -204,7 +205,7 @@ class LibraryExportTest < PhComposerTestCase
 
   def test_registered_reverse_adapter_cannot_change_schema_valid_authored_semantics
     kind = PhComposer::Records::RecordKind.new(:id => "test.export.material", :label => "Probe Material",
-      :schema_version => 1, :id_prefix => "pmt", :fields => Assemblies::Materials::Schema::KIND.fields)
+                                               :schema_version => 1, :id_prefix => "pmt", :fields => Assemblies::Materials::Schema::KIND.fields)
     row = @records.first.merge("id" => "pmt_AAAAAAAAAAAA")
     kind.store.write(Sketchup.active_model, row)
     adapter = PhComposer::Registry.current.library_kinds.values.first.adapter.dup
@@ -217,7 +218,7 @@ class LibraryExportTest < PhComposerTestCase
         scope = registry.feature("test.export", :contract_version => 1)
         scope.record_kind(kind)
         scope.library_kind("test.export.library_material", :contract_version => 1,
-                           :record_kind => kind.id, :adapter => adapter)
+                                                           :record_kind => kind.id, :adapter => adapter)
       end
     end
     PhComposer::Registry.install([feature])
@@ -241,7 +242,8 @@ class LibraryExportTest < PhComposerTestCase
       refute_includes JSON.generate(result), "PRIVATE"
     end
     params = { "scope" => "selected", "records" => [
-      { "record_kind" => MATERIAL_KIND, "id" => "/PRIVATE SECRET/path" }] }
+      { "record_kind" => MATERIAL_KIND, "id" => "/PRIVATE SECRET/path" }
+    ] }
     result = preview(params)
     assert_equal "target.not_found", result["code"]
     refute_includes JSON.generate(result), "PRIVATE"
@@ -280,7 +282,7 @@ class LibraryExportTest < PhComposerTestCase
     assert_equal "completed", result["status"], result.inspect
     adapter = PhComposer::Registry.current.library_kinds.values.first.adapter
     provider = LIBRARY::FileProvider.new(:id => "exported", :label => "Exported", :path => @path,
-                                      :kinds => ["materials"], :adapters => ->(_) { adapter })
+                                         :kinds => ["materials"], :adapters => ->(_) { adapter })
     batch = provider.list("materials")
     assert_empty batch.warnings
     assert_empty batch.unavailable
@@ -290,7 +292,7 @@ class LibraryExportTest < PhComposerTestCase
     session = PhComposer::Sessions.for(Sketchup.active_model)
     context = API.connect(:session_id => session.id, :capabilities => %w[read model_write setup])
     loaded = API.setup(:context => context, :name => "ph_composer.library.load",
-                      :params => { "provider_id" => "exported", "kind" => "materials" })
+                       :params => { "provider_id" => "exported", "kind" => "materials" })
     assert_equal "completed", loaded["status"], loaded.inspect
     row = batch.rows.first
     copied = API.invoke(:context => context, :name => "ph_composer.library.copy", :params => {

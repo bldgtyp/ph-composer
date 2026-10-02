@@ -135,8 +135,8 @@ module ClassifyToolWalkthrough
     path = PhComposer::Pick.face_path(view, x_value, y_value)
     occurrence = path && PhComposer::Zones::Occurrences.occurrence_for_path(path)
     walked = occurrence && PhComposer::Zones::Occurrences
-                           .faces(PhComposer::Zones::Occurrences.zones(Sketchup.active_model).first)
-                           .find { |candidate| candidate.entity.equal?(occurrence.entity) }
+             .faces(PhComposer::Zones::Occurrences.zones(Sketchup.active_model).first)
+             .find { |candidate| candidate.entity.equal?(occurrence.entity) }
     {
       "active_path" => Array(Sketchup.active_model.active_path).map(&:persistent_id),
       "path" => Array(path).map { |entity| [entity.class.name.split("::").last, entity.persistent_id] },

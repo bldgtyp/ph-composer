@@ -26,10 +26,10 @@ class WindowUnitResetStepTest < PhComposerTestCase
 
   def place(id, point)
     record = { "id" => id, "schema_version" => 1, "window_type_id" => @type.fetch("id"),
-      "anchor" => "sill_center", "user_data" => { "literal" => ["preserve"] } }
+               "anchor" => "sill_center", "user_data" => { "literal" => ["preserve"] } }
     slots = {}
     U::PlaceStep.new(:model => @model, :host => @host, :type => @type, :record => record,
-      :point_m => point).apply(@model, slots)
+                     :point_m => point).apply(@model, slots)
     U::Occurrences.resolve(@model, slots.fetch(id)).entity
   end
 
@@ -48,7 +48,7 @@ class WindowUnitResetStepTest < PhComposerTestCase
       [entry.path, U::WorldGeometry.map(U::DefinitionPlan.build(@type), entry.transform.to_a).outer_polygon_m]
     end
     U::ResetStep.new(:model => @model, :type => @type, :items => selected,
-      :hosts => hosts, :outline_inventory_m => inventory, **options)
+                     :hosts => hosts, :outline_inventory_m => inventory, **options)
   end
 
   def capture
@@ -57,7 +57,7 @@ class WindowUnitResetStepTest < PhComposerTestCase
 
   def anchor(entity)
     U::WorldGeometry.anchor(U::DefinitionPlan.build(@type), U.read(entity).fetch("anchor"),
-      occurrence(entity).transform.to_a)
+                            occurrence(entity).transform.to_a)
   end
 
   def scale(entity, x = 2, y = 1.3, z = 1)
@@ -128,7 +128,7 @@ class WindowUnitResetStepTest < PhComposerTestCase
     step.apply(@model, {})
     @model.commit_operation
     assert U::DefinitionGeometry.matches?(canonical, :type_id => @type.fetch("id"),
-      :plan => U::DefinitionPlan.build(@type))
+                                                     :plan => U::DefinitionPlan.build(@type))
     assert_equal 127, canonical.behavior.no_scale_mask?
     assert_same canonical, second.definition
     assert_same @face, second.glued_to
@@ -141,7 +141,7 @@ class WindowUnitResetStepTest < PhComposerTestCase
     old = @first.definition
     other_type = @type.merge("id" => "wnt_CCCCCCCCCCCC", "name" => "Other")
     other = U::DefinitionWriter.create(:model => @model, :type => other_type,
-      :plan => U::DefinitionPlan.build(other_type))
+                                       :plan => U::DefinitionPlan.build(other_type))
     index = U::DefinitionIndex.read(@model)
     U::DefinitionIndex.write(@model, index.merge(other_type.fetch("id") => other.persistent_id), :expected => index)
     U::DEFINITION_STORE.write(old, "window_type_id" => "wnt_BBBBBBBBBBBB")
@@ -155,7 +155,7 @@ class WindowUnitResetStepTest < PhComposerTestCase
     assert_equal other.persistent_id, U::DefinitionIndex.read(@model).fetch(other_type.fetch("id"))
     @first.definition = old
     U::DefinitionIndex::STORE.write(@model, "schema_version" => 1,
-      "definitions" => { @type.fetch("id") => 999999, other_type.fetch("id") => other.persistent_id })
+                                            "definitions" => { @type.fetch("id") => 999999, other_type.fetch("id") => other.persistent_id })
     reset.apply(@model, {})
     refute_equal 999999, U::DefinitionIndex.read(@model).fetch(@type.fetch("id"))
     refute_same fresh, @first.definition
@@ -225,7 +225,7 @@ class WindowUnitResetStepTest < PhComposerTestCase
     end
     assert_raises(PhComposer::CodedError) do
       U::ResetStep.new(:model => @model, :type => @type, :items => input,
-        :hosts => { occurrence(@first).path => @host })
+                       :hosts => { occurrence(@first).path => @host })
     end
   end
 
@@ -254,7 +254,7 @@ class WindowUnitResetStepTest < PhComposerTestCase
     projected = original.merge("id" => "wun_BBBBBBBBBBBB")
     step = reset([item(@first, projected)], :expected_records => { occurrence(@first).path => projected })
     repair = U::IdentityStep.new([U::IdentityPlan::Update.new(:reference => occurrence(@first).reference,
-      :before => original, :after => projected)])
+                                                              :before => original, :after => projected)])
     repair.apply(@model, {})
     step.apply(@model, {})
     assert_equal projected, U.read(@first)

@@ -14,14 +14,17 @@ class WindowExportTest < PhComposerTestCase
     @model = Sketchup.active_model
     @type = window_record
     @type["elements"].first.merge!("glazing_id" => "glz_AAAAAAAAAAAA",
-      "frames" => W::Types::SIDES.to_h { |side| [side, "frm_AAAAAAAAAAAA"] },
-      "operation" => { "type" => "fixed", "directions" => [] })
+                                   "frames" => W::Types::SIDES.to_h { |side|
+                                                 [side, "frm_AAAAAAAAAAAA"]
+                                               },
+                                   "operation" => { "type" => "fixed",
+                                                    "directions" => [] })
     @products = { "frames" => { "frm_AAAAAAAAAAAA" => { "id" => "frm_AAAAAAAAAAAA", "name" => "Frame",
-      "width_m" => 0.1, "uf_w_m2k" => 1.0, "psi_g_w_mk" => 0.03 } },
-      "glazings" => { "glz_AAAAAAAAAAAA" => { "id" => "glz_AAAAAAAAAAAA", "name" => "Glazing",
-        "ug_w_m2k" => 0.6, "g_value" => 0.5 } },
-      "psi_install_types" => { "psi_AAAAAAAAAAAA" => { "id" => "psi_AAAAAAAAAAAA", "name" => "Standard",
-                                                    "psi_w_mk" => 0.04 } } }
+                                                        "width_m" => 0.1, "uf_w_m2k" => 1.0, "psi_g_w_mk" => 0.03 } },
+                  "glazings" => { "glz_AAAAAAAAAAAA" => { "id" => "glz_AAAAAAAAAAAA", "name" => "Glazing",
+                                                          "ug_w_m2k" => 0.6, "g_value" => 0.5 } },
+                  "psi_install_types" => { "psi_AAAAAAAAAAAA" => { "id" => "psi_AAAAAAAAAAAA", "name" => "Standard",
+                                                                   "psi_w_mk" => 0.04 } } }
     @settings = W::Settings::DEFAULTS.merge("default_psi_install_id" => "psi_AAAAAAAAAAAA")
     @group = @model.entities.add_group
     @face = @group.entities.add_face([[0, 0, 0], [8, 0, 0], [8, 0, 6], [0, 0, 6]].map { |p|
@@ -37,16 +40,16 @@ class WindowExportTest < PhComposerTestCase
     @unit = @group.entities.add_instance(@definition, transform)
     @unit.glued_to = @face
     U.write(@unit, { "id" => "wun_AAAAAAAAAAAA", "schema_version" => 1,
-      "window_type_id" => @type["id"], "anchor" => "sill_center" })
+                     "window_type_id" => @type["id"], "anchor" => "sill_center" })
   end
 
   def assess(face_values: {}, types: { @type["id"] => @type })
     snapshot = PhComposer::Export::GeometrySnapshot.capture(@model, :revision => 0)
     face = snapshot.entries.find { |e| e.kind == "face" }
     X.assess(:snapshot => snapshot, :types => types, :products => @products,
-      :settings => @settings, :faces => [{ "path" => face.path, "geometry" => face.geometry,
-        "zone_id" => "zon_AAAAAAAAAAAA", "record" => { "id" => "fac_AAAAAAAAAAAA",
-          "face_type" => "Wall", "boundary_condition" => "Outdoors" }.merge(face_values) }])
+             :settings => @settings, :faces => [{ "path" => face.path, "geometry" => face.geometry,
+                                                  "zone_id" => "zon_AAAAAAAAAAAA", "record" => { "id" => "fac_AAAAAAAAAAAA",
+                                                                                                 "face_type" => "Wall", "boundary_condition" => "Outdoors" }.merge(face_values) }])
   end
 
   def codes
@@ -64,7 +67,7 @@ class WindowExportTest < PhComposerTestCase
     construction = result.constructions.fetch(0)
     assert_equal 0.04, construction.dig("sides", "top", "psi_install_w_mk")
     assert_in_delta W::Thermal.calculate(@type, @products, @settings["default_psi_install_id"])
-      .fetch("elements").first.fetch("uw_w_m2k"), construction["uw_w_m2k"], 1e-12
+                              .fetch("elements").first.fetch("uw_w_m2k"), construction["uw_w_m2k"], 1e-12
     refute row["is_operable"]
     assert_empty @model.operation_starts
   end
@@ -85,14 +88,14 @@ class WindowExportTest < PhComposerTestCase
 
   def test_host_holes_moves_overlap_and_non_outdoors_have_distinct_blocking_rows
     assert_includes assess(:face_values => { "boundary_condition" => "Surface" }).findings.map { |f| f["code"] },
-      "window.surface_host"
+                    "window.surface_host"
     assert_includes assess(:face_values => { "boundary_condition" => "Ground" }).findings.map { |f| f["code"] },
-      "window.host_boundary_unsupported"
+                    "window.host_boundary_unsupported"
     assert_includes assess(:face_values => { "face_type" => nil }).findings.map { |f| f["code"] },
-      "window.host_unclassified"
+                    "window.host_unclassified"
     assert_includes assess(:types => {}).findings.map { |f| f["code"] }, "window.unknown_type"
     assert_includes assess(:face_values => { "face_type" => "Floor" }).findings.map { |f| f["code"] },
-      "window.host_type_unsupported"
+                    "window.host_type_unsupported"
     @face.add_hole!([[1.8, 0, 1.2], [2.2, 0, 1.2], [2.2, 0, 1.4], [1.8, 0, 1.4]].map { |p|
       Geom::Point3d.new(*p.map { |v| v / 0.0254 })
     })
@@ -125,9 +128,10 @@ class WindowExportTest < PhComposerTestCase
     first = @type.fetch("elements").first
     @type["columns_m"] = [1.0, 1.0]
     @type["elements"] = [first.merge("name" => "Left", "column_span" => [0, 0]),
-      PhComposer::DeepCopy.call(first).merge("id" => "wel_BBBBBBBBBBBB", "name" => "Right", "column_span" => [1, 1])]
+                         PhComposer::DeepCopy.call(first).merge("id" => "wel_BBBBBBBBBBBB", "name" => "Right",
+                                                                "column_span" => [1, 1])]
     U::DefinitionWriter.rewrite(:model => @model, :definition => @definition,
-      :type => @type, :plan => U::DefinitionPlan.build(@type))
+                                :type => @type, :plan => U::DefinitionPlan.build(@type))
     @products["glazings"].values.first.delete("g_value")
     rows = assess.findings.select { |row| row.fetch("code") == "window_type.g_value_missing" }
     assert_equal ["Left: Missing g-value.", "Right: Missing g-value."], rows.map { |row| row.fetch("message") }.sort
@@ -139,16 +143,17 @@ class WindowExportTest < PhComposerTestCase
     @type["rows_m"] = [0.75, 0.75]
     empty = W::Types.blank(0, 1, :identity => window_allocator).merge("kind" => "empty")
     @type["elements"] = [first.merge("row_span" => [0, 1]), empty.merge("row_span" => [0, 1]),
-      PhComposer::DeepCopy.call(first).merge("id" => "wel_BBBBBBBBBBBB", "row_span" => [0, 1], "column_span" => [2, 2])]
+                         PhComposer::DeepCopy.call(first).merge("id" => "wel_BBBBBBBBBBBB", "row_span" => [0, 1], "column_span" => [2, 2])]
     U::DefinitionWriter.rewrite(:model => @model, :definition => @definition,
-      :type => @type, :plan => U::DefinitionPlan.build(@type))
+                                :type => @type, :plan => U::DefinitionPlan.build(@type))
     result = assess
     assert_empty result.findings
     assert_equal [first["id"], "wel_BBBBBBBBBBBB"].sort, result.apertures.map { |row| row["element_id"] }.sort
     @type["elements"] = [first.merge("row_span" => [0, 1]),
-      PhComposer::DeepCopy.call(first).merge("id" => "wel_BBBBBBBBBBBB", "row_span" => [0, 1], "column_span" => [1, 2])]
+                         PhComposer::DeepCopy.call(first).merge("id" => "wel_BBBBBBBBBBBB", "row_span" => [0, 1],
+                                                                "column_span" => [1, 2])]
     U::DefinitionWriter.rewrite(:model => @model, :definition => @definition,
-      :type => @type, :plan => U::DefinitionPlan.build(@type))
+                                :type => @type, :plan => U::DefinitionPlan.build(@type))
     shared = assess.constructions.flat_map { |row| row["sides"].values }.select { |side| side["install_id"].nil? }
     assert_equal 2, shared.length
     assert shared.all? { |side| side["psi_install_w_mk"] == 0.0 && side["install_name"].nil? }
@@ -162,9 +167,9 @@ class WindowExportTest < PhComposerTestCase
     end
     W::Settings::SERVICE.store.write(@model, @settings)
     PhComposer::Zones::ZONE_STORE.write(@group, "id" => "zon_AAAAAAAAAAAA", "schema_version" => 1,
-      "name" => "Room", "building_segment" => "Main", "level" => "Ground", "ground_depth_mm" => 0)
+                                                "name" => "Room", "building_segment" => "Main", "level" => "Ground", "ground_depth_mm" => 0)
     PhComposer::Zones::Faces::FACE_STORE.write(@face, "id" => "fac_AAAAAAAAAAAA", "schema_version" => 1,
-      "face_type" => "Wall", "boundary_condition" => "Outdoors")
+                                                      "face_type" => "Wall", "boundary_condition" => "Outdoors")
   end
 
   def test_public_preflight_and_two_contributors_share_projection_and_omit_local_metadata
@@ -175,14 +180,14 @@ class WindowExportTest < PhComposerTestCase
     session = PhComposer::Sessions.for(@model)
     context = PhComposer::API.connect(:session_id => session.id)
     request = PhComposer::HandlerRequest.new(:model => @model, :session => session,
-      :registry => PhComposer::Registry.current,
-      :engine => PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog))
+                                             :registry => PhComposer::Registry.current,
+                                             :engine => PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog))
     assert_empty X.preflight(request).fetch("findings")
     result = PhComposer::API.query(:context => context, :name => X::PREFLIGHT)
     assert_equal "completed", result["status"], result.inspect
     assert_empty result.dig("value", "findings")
     extracted = PhComposer::Export::Collection.build(@model, :run_id => "test",
-      :contributors => [X::CONSTRUCTIONS, X::APERTURES])
+                                                             :contributors => [X::CONSTRUCTIONS, X::APERTURES])
     sections = extracted.document.fetch("sections")
     assert_equal 1, sections.fetch(X::CONSTRUCTIONS).fetch("records").length
     assert_equal 1, sections.fetch(X::APERTURES).fetch("records").length
@@ -195,7 +200,7 @@ class WindowExportTest < PhComposerTestCase
     assert refusal.dig("value", "findings").any? { |row| row["blocks_export"] }
     repair = refusal.dig("value", "repairs").find { |row| row["action"].end_with?("reset_to_type") }
     assert_equal [{ "unit_id" => U.read(@unit)["id"], "entity_path" => [@group.persistent_id, @unit.persistent_id] }],
-      repair.dig("params", "units")
+                 repair.dig("params", "units")
     assert_raises(PhComposer::Export::Blocked) do
       PhComposer::Export::Collection.build(@model, :run_id => "blocked", :contributors => [X::APERTURES])
     end
@@ -205,7 +210,7 @@ class WindowExportTest < PhComposerTestCase
   def test_empty_model_has_empty_window_sections_and_no_window_findings
     @model.entities.clear!
     extracted = PhComposer::Export::Collection.build(@model, :run_id => "none",
-      :contributors => [X::APERTURES, X::CONSTRUCTIONS])
+                                                             :contributors => [X::APERTURES, X::CONSTRUCTIONS])
     assert extracted.document["sections"].values.all? { |section| section["records"].empty? }
     assert_empty extracted.findings
   end
@@ -224,7 +229,7 @@ class WindowExportTest < PhComposerTestCase
     assert_equal "completed", invalid["status"], invalid.inspect
     assert invalid.dig("value", "findings").all? { |row| row["blocks_export"] }
     U.write(@unit, "id" => "wun_AAAAAAAAAAAA", "schema_version" => 1,
-      "window_type_id" => @type["id"], "anchor" => "sill_center")
+                   "window_type_id" => @type["id"], "anchor" => "sill_center")
     U::DefinitionIndex::STORE.write(@model, "schema_version" => 1, "definitions" => {}, "unexpected" => true)
     assert_includes codes, "record.unreadable"
   end
@@ -240,7 +245,7 @@ class WindowExportTest < PhComposerTestCase
       assert_includes %w[record.unreadable validation.failed], result.dig("value", "findings").first["code"]
     end
     U.write(@unit, "id" => "wun_AAAAAAAAAAAA", "schema_version" => 1,
-      "window_type_id" => @type["id"], "anchor" => "sill_center")
+                   "window_type_id" => @type["id"], "anchor" => "sill_center")
     [U::DEFINITION_STORE, U::PANE_STORE].each do |store|
       entity = store == U::DEFINITION_STORE ? @definition : @definition.entities.first
       before = entity.get_attribute(store.dictionary, store.key)
@@ -298,7 +303,7 @@ class WindowExportTest < PhComposerTestCase
     seed_export_records
     snapshot = PhComposer::Export::GeometrySnapshot.capture(@model, :revision => 0)
     records = PhComposer::Export::RecordReader.new(PhComposer::Records::Engine.new(@model,
-      PhComposer::Registry.current.catalog), PhComposer::Registry.current.catalog)
+                                                                                   PhComposer::Registry.current.catalog), PhComposer::Registry.current.catalog)
     reader = PhComposer::Export::SnapshotReader.new(records, snapshot)
     stored = PhComposer::Zones::Faces::FACE_STORE.read(@face)
     PhComposer::Zones::Faces::FACE_STORE.write(@face, stored.merge("boundary_condition" => "Ground"))
@@ -307,10 +312,11 @@ class WindowExportTest < PhComposerTestCase
     assert_equal [@group.persistent_id, @face.persistent_id], context["path"]
     assert_equal "zon_AAAAAAAAAAAA", context["zone_id"]
     assert_equal %w[assembly_id adjacency boundary_condition face_type id] & stored.keys,
-      context.fetch("record").keys.sort
+                 context.fetch("record").keys.sort
     PhComposer::Zones::Faces::FACE_STORE.write(@face, stored)
     U.write(@unit, U.read(@unit).merge("extension_data" => { "synthetic.required" => {
-      "schema_version" => 1, "export_relevance" => "required", "payload" => { "secret" => "local" } } }))
+      "schema_version" => 1, "export_relevance" => "required", "payload" => { "secret" => "local" }
+    } }))
     error = assert_raises(PhComposer::Export::Blocked) do
       PhComposer::Export::Collection.build(@model, :run_id => "private", :contributors => [X::APERTURES])
     end
@@ -324,7 +330,7 @@ class WindowExportTest < PhComposerTestCase
     # Ignore other contributors for this isolated geometry/data propagation check.
     declarations = PhComposer::Registry.current.export_contributors
     builder.instance_variable_set(:@contributors,
-      [declarations.fetch(X::CONSTRUCTIONS), declarations.fetch(X::APERTURES)])
+                                  [declarations.fetch(X::CONSTRUCTIONS), declarations.fetch(X::APERTURES)])
     loop { break if builder.advance }
     rows = builder.extraction.document.fetch("sections").fetch(X::CONSTRUCTIONS).fetch("records")
     assert_equal "Standard", rows.first.dig("sides", "top", "install_name")
@@ -333,10 +339,10 @@ class WindowExportTest < PhComposerTestCase
 
   def test_report_uses_translated_counts_names_areas_and_explicit_schema_exceptions
     result = { "window_usage" => [{ "type_id" => @type["id"], "type_name" => "<Window>",
-      "zone_id" => "Room", "unit_count" => 2, "aperture_count" => 4, "install_names" => ["Standard"] }],
-      "window_face_areas" => [{ "face_id" => "Host", "zone_id" => "Room", "gross_area_m2" => 10,
-        "glazed_area_m2" => 3, "net_area_m2" => 7 }],
-      "window_schema_exceptions" => [{ "construction_id" => "Construction", "g_value" => 0 }] }
+                                    "zone_id" => "Room", "unit_count" => 2, "aperture_count" => 4, "install_names" => ["Standard"] }],
+               "window_face_areas" => [{ "face_id" => "Host", "zone_id" => "Room", "gross_area_m2" => 10,
+                                         "glazed_area_m2" => 3, "net_area_m2" => 7 }],
+               "window_schema_exceptions" => [{ "construction_id" => "Construction", "g_value" => 0 }] }
     html = X.report(result, "si").join
     assert_includes html, "&lt;Window&gt;"
     assert_includes html, "Standard"
@@ -382,7 +388,7 @@ class WindowExportTest < PhComposerTestCase
       unless types.key?(type_id)
         types[type_id] = type
         definition = U::DefinitionWriter.create(:model => @model, :type => type,
-          :plan => U::DefinitionPlan.build(type))
+                                                :plan => U::DefinitionPlan.build(type))
         index[type_id] = definition.persistent_id
       end
       definition = @model.definitions.find { |item| item.persistent_id == index.fetch(type_id) }
@@ -405,12 +411,12 @@ class WindowExportTest < PhComposerTestCase
       frames[side] = frame["id"]
       installs[side] = fixture_identity("psi", values.fetch("install_id"))
       @products["psi_install_types"][installs[side]] = { "id" => installs[side], "name" => values.fetch("install_name"),
-        "psi_w_mk" => values.fetch("psi_install_w_mk") }
+                                                         "psi_w_mk" => values.fetch("psi_install_w_mk") }
     end
     cell = @type.fetch("elements").first.merge("id" => fixture_identity("wel", input.fetch("element_id")),
-      "glazing_id" => glazing["id"], "frames" => frames, "installs" => installs)
+                                               "glazing_id" => glazing["id"], "frames" => frames, "installs" => installs)
     @type.merge("id" => type_id, "name" => input.fetch("variant_type"), "rows_m" => [height],
-      "columns_m" => [width], "elements" => [cell], "install_depth_m" => input.fetch("install_depth_m"))
+                "columns_m" => [width], "elements" => [cell], "install_depth_m" => input.fetch("install_depth_m"))
   end
 
   def fixture_unit(input, definition, type_id)
@@ -439,10 +445,12 @@ class WindowExportTest < PhComposerTestCase
     end
     assert_in_delta source.fetch("uw_w_m2k"), construction.fetch("uw_w_m2k"), 1e-12
     assert_equal source.fetch("glazing").merge("id" => fixture_identity("glz", source.dig("glazing", "id"))),
-      construction.fetch("glazing")
+                 construction.fetch("glazing")
     source.fetch("sides").each do |side, values|
       expected_side = values.merge("install_id" => fixture_identity("psi", values.fetch("install_id")),
-        "frame" => values.fetch("frame").merge("id" => fixture_identity("frm", values.dig("frame", "id"))))
+                                   "frame" => values.fetch("frame").merge("id" => fixture_identity(
+                                     "frm", values.dig("frame", "id")
+                                   )))
       assert_equal expected_side, construction.fetch("sides").fetch(side)
     end
   end
@@ -488,7 +496,7 @@ class WindowExportTest < PhComposerTestCase
     refute_equal zero["id"], one["id"]
     @type["columns_m"] = [2.0]
     U::DefinitionWriter.rewrite(:model => @model, :definition => @definition,
-      :type => @type, :plan => U::DefinitionPlan.build(@type))
+                                :type => @type, :plan => U::DefinitionPlan.build(@type))
     resized = assess.constructions.first
     refute_equal one["id"], resized["id"]
     refute_equal one["uw_w_m2k"], resized["uw_w_m2k"]
@@ -550,9 +558,9 @@ class WindowExportTest < PhComposerTestCase
     @type["elements"].first["id"] = "wel_DDDDDDDDDDDD"
     assert_includes codes, "window.geometry_differs"
     U::DefinitionWriter.rewrite(:model => @model, :definition => @definition,
-      :type => @type, :plan => U::DefinitionPlan.build(@type))
+                                :type => @type, :plan => U::DefinitionPlan.build(@type))
     @definition.entities << Sketchup::Edge.new(900009, Geom::Point3d.new(1000, 0, 0),
-      Geom::Point3d.new(1100, 0, 0))
+                                               Geom::Point3d.new(1100, 0, 0))
     assert_includes codes, "window.geometry_differs"
   end
 

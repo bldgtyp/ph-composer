@@ -20,10 +20,10 @@ class WindowUnitRehostStepTest < PhComposerTestCase
     @face = face(@group.entities)
     @host = host(@face)
     @record = { "id" => "wun_AAAAAAAAAAAA", "schema_version" => 1, "window_type_id" => @type.fetch("id"),
-      "anchor" => "sill_center", "user_data" => { "literal" => ["preserve"] } }
+                "anchor" => "sill_center", "user_data" => { "literal" => ["preserve"] } }
     slots = {}
     U::PlaceStep.new(:model => @model, :host => @host, :type => @type, :record => @record,
-      :point_m => [2, 0, 1]).apply(@model, slots)
+                     :point_m => [2, 0, 1]).apply(@model, slots)
     @reference = slots.fetch(@record.fetch("id"))
     @unit = U::Occurrences.resolve(@model, @reference).entity
     @unit.glued_to = nil
@@ -34,7 +34,7 @@ class WindowUnitRehostStepTest < PhComposerTestCase
       Geom::Point3d.new(*point.map { |value| value / 0.0254 })
     }
     entities << Sketchup::Face.new(Sketchup::Entities.allocate_persistent_id, {}, :points => native,
-      :normal => Geom::Vector3d.new(0, -1, 0))
+                                                                                  :normal => Geom::Vector3d.new(0, -1, 0))
     entities.to_a.last
   end
 
@@ -44,7 +44,7 @@ class WindowUnitRehostStepTest < PhComposerTestCase
 
   def rehost(expected = @record, target = @host, **options)
     U::RehostStep.new(:model => @model, :reference => @reference, :expected_record => expected,
-      :host => target, :type => @type, **options)
+                      :host => target, :type => @type, **options)
   end
 
   def capture
@@ -77,7 +77,7 @@ class WindowUnitRehostStepTest < PhComposerTestCase
     expected = @record.merge("id" => "wun_BBBBBBBBBBBB")
     step = rehost(expected)
     identity = U::IdentityStep.new([U::IdentityPlan::Update.new(:reference => @reference,
-      :before => @record, :after => expected)])
+                                                                :before => @record, :after => expected)])
     identity.apply(@model, {})
     step.apply(@model, {})
     assert_equal expected, U.read(@unit)
@@ -95,7 +95,7 @@ class WindowUnitRehostStepTest < PhComposerTestCase
     shifted.loops.each { |loop| loop.vertices.each { |vertex| vertex.position.instance_variable_set(:@y, 10) } }
     assert_raises(PhComposer::CodedError) { rehost(@record, host(shifted)) }
     polygon = U::WorldGeometry.map(U::DefinitionPlan.build(@type),
-      U::Occurrences.resolve(@model, @reference).transform.to_a).outer_polygon_m
+                                   U::Occurrences.resolve(@model, @reference).transform.to_a).outer_polygon_m
     error = assert_raises(PhComposer::CodedError) { rehost(@record, @host, :existing_polygons_m => [polygon]) }
     assert_equal "window.overlap", error.code
     assert_nil @unit.glued_to
@@ -140,6 +140,7 @@ class WindowUnitRehostStepTest < PhComposerTestCase
       @model.start_operation("Failed rehost", true)
       unit.define_singleton_method(:glued_to=) do |_face|
         raise "Synthetic glue failure" if raises
+
         nil
       end
       assert_raises(raises ? RuntimeError : PhComposer::CodedError) { step.apply(@model, {}) }

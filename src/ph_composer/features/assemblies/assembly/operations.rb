@@ -23,8 +23,8 @@ module PhComposer
           end
           result = Commands.update_assembly(record, :values => values, :materials => Definitions.materials(request))
           request.engine.propose_update(ASSEMBLY_KIND, id, proposal,
-            :values => Definitions.changed_values(Schema::KIND, record, result.record),
-            :expected_values => expected_values, :user_data => user_data)
+                                        :values => Definitions.changed_values(Schema::KIND, record, result.record),
+                                        :expected_values => expected_values, :user_data => user_data)
           { "id" => id }
         end
 
@@ -45,6 +45,7 @@ module PhComposer
             if replacement_id == id
               raise CodedError.new("params.invalid", "Choose a different replacement Assembly.")
             end
+
             plan = request.retarget_references(ASSEMBLY_KIND, :from => id, :to => replacement_id)
           end
           request.engine.propose_delete(ASSEMBLY_KIND, id, proposal, :expected_values => expected_values,
@@ -57,8 +58,8 @@ module PhComposer
           record = request.engine.find(ASSEMBLY_KIND, id)
           result = yield record
           request.engine.propose_update(ASSEMBLY_KIND, id, proposal,
-            :values => Definitions.changed_values(Schema::KIND, record, result.record),
-            :expected_values => expected_values)
+                                        :values => Definitions.changed_values(Schema::KIND, record, result.record),
+                                        :expected_values => expected_values)
           { "id" => id }
         end
       end

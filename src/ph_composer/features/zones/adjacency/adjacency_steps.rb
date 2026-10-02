@@ -271,6 +271,7 @@ module PhComposer
           unless candidates.length == 1 && !matched.value?(candidates.first)
             raise CodedError.new("geometry.split_failed", "The partition did not produce one Face per shared region.")
           end
+
           matched[region.fetch("match_index")] = candidates.first
         end
       end

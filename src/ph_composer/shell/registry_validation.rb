@@ -457,7 +457,7 @@ module PhComposer
           %i[wire_schema mapped_schema].each do |part|
             add_schema_problems(item, part, adapter[part])
             problem(item, "#{part} must be an object") unless adapter[part].is_a?(Hash) &&
-                                                                       adapter[part]["type"] == "object"
+                                                              adapter[part]["type"] == "object"
           end
           check_library_fingerprint_fields(item, adapter)
           %i[map reverse fingerprint].each do |part|
@@ -510,7 +510,7 @@ module PhComposer
         end
         %i[params result].each { |schema| add_schema_problems(item, "#{part}.#{schema}", callback[schema]) }
         problem(item, "#{part} params must be an object") unless callback.params.is_a?(Hash) &&
-                                                                callback.params["type"] == "object"
+                                                                 callback.params["type"] == "object"
         problem(item, "#{part} needs a callable handler") unless callback.handler.respond_to?(:call)
       end
 
@@ -536,7 +536,6 @@ module PhComposer
           end
         end
       end
-
     end
   end
 end

@@ -90,8 +90,8 @@ class ApiReferenceTest < PhComposerTestCase
   def building_operations
     discovered = API.discover
     %w[queries actions view_commands].flat_map { |key| discovered.fetch(key) }
-                                      .select { |row| row.fetch("owner") == "ph_composer.zones" }
-                                      .map { |row| row.fetch("name") }
+                                     .select { |row| row.fetch("owner") == "ph_composer.zones" }
+                                     .map { |row| row.fetch("name") }
   end
 
   def write_text(path, text)

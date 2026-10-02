@@ -53,7 +53,6 @@ class OccurrenceIndexTest < PhComposerTestCase
 
     retiring = walks { reclassify(paired, "Outdoors") }
 
-
     assert_operator retiring, :<=, 2
     assert_equal ["Outdoors"], boundary_conditions.uniq, "the pair really did retire"
   end

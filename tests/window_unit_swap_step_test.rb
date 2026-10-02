@@ -15,19 +15,20 @@ class WindowUnitSwapStepTest < PhComposerTestCase
     @model = Sketchup.active_model
     @source = window_record("columns_m" => [1.0], "rows_m" => [1.5])
     @target = window_record("name" => "Target", "columns_m" => [1.2], "rows_m" => [1.8]).merge(
-      "id" => "wnt_BBBBBBBBBBBB")
+      "id" => "wnt_BBBBBBBBBBBB"
+    )
     [@source, @target].each { |type| W::Types::KIND.store.write(@model, type) }
     @definition = U::DefinitionWriter.create(:model => @model, :type => @source,
-      :plan => U::DefinitionPlan.build(@source))
+                                             :plan => U::DefinitionPlan.build(@source))
     U::DefinitionIndex.write(@model, { @source.fetch("id") => @definition.persistent_id }, :expected => {})
   end
 
   def unit(anchor = "sill_center", x: 0, definition: @definition, entities: @model.entities)
     item = entities.add_instance(definition, Geom::Transformation.translation([x / 0.0254, 0, 0]))
     U.write(item, "id" => window_allocator.call("wun"), "schema_version" => 1,
-      "window_type_id" => @source.fetch("id"), "anchor" => anchor,
-      "user_data" => { "literal" => [@source.fetch("id"), "unchanged"] },
-      "extension_data" => { "outside.fixture" => { "version" => 1, "payload" => { "literal" => "preserved" } } })
+                  "window_type_id" => @source.fetch("id"), "anchor" => anchor,
+                  "user_data" => { "literal" => [@source.fetch("id"), "unchanged"] },
+                  "extension_data" => { "outside.fixture" => { "version" => 1, "payload" => { "literal" => "preserved" } } })
     item
   end
 
@@ -64,7 +65,7 @@ class WindowUnitSwapStepTest < PhComposerTestCase
       point.zip(old.fetch(row.path).last).each { |a, b| assert_in_delta b, a, 1e-12 }
     end
     assert_equal units.map(&:persistent_id).sort,
-      swap.affected.map { |row| row.fetch("reference").fetch("entity_path").last }.sort
+                 swap.affected.map { |row| row.fetch("reference").fetch("entity_path").last }.sort
     after = capture
     assert @model.undo
     assert_equal before, capture
@@ -99,7 +100,7 @@ class WindowUnitSwapStepTest < PhComposerTestCase
 
   def test_explicit_swap_of_detached_source_uses_authored_source_dimensions_and_preserves_metadata
     detached = U::DefinitionWriter.create(:model => @model, :type => @source,
-      :plan => U::DefinitionPlan.build(@source))
+                                          :plan => U::DefinitionPlan.build(@source))
     item = unit("center", :x => 2, :definition => detached)
     face = detached.entities.first
     detached.entities.first.transform!(Geom::Transformation.scaling(1.5))
@@ -128,7 +129,7 @@ class WindowUnitSwapStepTest < PhComposerTestCase
   def test_missing_source_type_uses_generated_full_rectangle_including_empty_regions
     @source.fetch("elements").first["kind"] = "empty"
     U::DefinitionWriter.rewrite(:model => @model, :definition => @definition, :type => @source,
-      :plan => U::DefinitionPlan.build(@source))
+                                :plan => U::DefinitionPlan.build(@source))
     W::Types::KIND.store.delete(@model, @source.fetch("id"))
     items = %w[sill_right center head_left].each_with_index.map do |anchor, i|
       item = unit(anchor, :x => i * 3)
@@ -144,7 +145,7 @@ class WindowUnitSwapStepTest < PhComposerTestCase
     swap.apply(@model, {})
     U::Occurrences.all(@model).each do |item|
       actual = U::WorldGeometry.anchor(U::DefinitionPlan.build(@target), item.record.fetch("anchor"),
-        item.transform.to_a)
+                                       item.transform.to_a)
       actual.zip(before.fetch(item.path)).each { |a, b| assert_in_delta b, a, 1e-12 }
       assert_equal @target.fetch("id"), item.record.fetch("window_type_id")
     end
@@ -201,11 +202,11 @@ class WindowUnitSwapStepTest < PhComposerTestCase
   def test_stale_type_definition_matrix_record_and_glue_refuse_before_writes
     item = unit
     mutations = [-> { W::Types::KIND.store.write(@model, @target.merge("notes" => "changed")) },
-      -> { W::Types::KIND.store.write(@model, @source.merge("notes" => "changed")) },
-      -> { @definition.entities.first.reverse! },
-      -> { item.transformation = Geom::Transformation.translation([1, 0, 0]) },
-      -> { U.write(item, U.read(item).merge("user_data" => { "literal" => "changed" })) },
-      -> { item.glued_to = host_face }]
+                 -> { W::Types::KIND.store.write(@model, @source.merge("notes" => "changed")) },
+                 -> { @definition.entities.first.reverse! },
+                 -> { item.transformation = Geom::Transformation.translation([1, 0, 0]) },
+                 -> { U.write(item, U.read(item).merge("user_data" => { "literal" => "changed" })) },
+                 -> { item.glued_to = host_face }]
     mutations.each do |mutate|
       swap = step([item_for(item)])
       @model.start_operation("Drift")
@@ -326,7 +327,7 @@ class WindowUnitSwapStepTest < PhComposerTestCase
 
   def target_definition
     definition = U::DefinitionWriter.create(:model => @model, :type => @target,
-      :plan => U::DefinitionPlan.build(@target))
+                                            :plan => U::DefinitionPlan.build(@target))
     index = U::DefinitionIndex.read(@model)
     U::DefinitionIndex.write(@model, index.merge(@target.fetch("id") => definition.persistent_id), :expected => index)
     definition
@@ -337,14 +338,14 @@ class WindowUnitSwapStepTest < PhComposerTestCase
     loops << hole if hole
     points = loops.map { |loop| loop.map { |point| Geom::Point3d.new(*point.map { |value| value / 0.0254 }) } }
     face = Sketchup::Face.new(Sketchup::Entities.allocate_persistent_id, {}, :points => points.first,
-      :holes => points.drop(1))
+                                                                             :holes => points.drop(1))
     @model.entities << face
     face
   end
 
   def host_for(item)
     P::Host.new(:entity => item.glued_to, :parent_path => [], :transform => Geom::Transformation.new,
-      :reference => {}, :values => {}, :geometry => PhComposer::FaceGeometry.capture(item.glued_to,
-        Geom::Transformation.new))
+                :reference => {}, :values => {}, :geometry => PhComposer::FaceGeometry.capture(item.glued_to,
+                                                                                               Geom::Transformation.new))
   end
 end

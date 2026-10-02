@@ -69,10 +69,10 @@ module PhComposer
 
           @hosts[[path, writable]] ||= if writable
                                          Placement::Hosts.writable(@request, row.fetch("reference"), :row => row,
-                                           :index => locate_index)
+                                                                                                     :index => locate_index)
                                        else
                                          Placement::Hosts.read(item.entity.glued_to, item.path[0...-1],
-                                           item.parent_transform, row, Placement::Hosts.zone_state(zone_states, row))
+                                                               item.parent_transform, row, Placement::Hosts.zone_state(zone_states, row))
                                        end
         end
 

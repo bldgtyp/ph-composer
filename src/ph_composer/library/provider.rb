@@ -68,6 +68,7 @@ module PhComposer
           unless valid
             raise Error.new("library.provider_invalid", "The provider catalog response is malformed.")
           end
+
           @rows = Provider.immutable(rows)
           @warnings = Provider.immutable(warnings)
           @unavailable = Provider.immutable(unavailable)

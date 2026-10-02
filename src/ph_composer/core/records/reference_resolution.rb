@@ -27,6 +27,7 @@ module PhComposer
         unless problems.empty?
           raise CodedError.new("record.unreadable", "#{kind_id} #{id} cannot be used: #{problems.first}.")
         end
+
         ReferenceEntry.new(:kind => DeepCopy.call(entry.kind), :key => DeepCopy.call(entry.key),
                            :record => DeepCopy.call(entry.record))
       end
@@ -119,6 +120,7 @@ module PhComposer
           unless @catalog.reference_target(entry.kind)
             raise CodedError.new("reference.invalid", "Planned entity target #{entry.kind} is not registered.")
           end
+
           problems = reference_problems(entry)
           next if problems.empty?
 

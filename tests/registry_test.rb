@@ -25,8 +25,10 @@ class RegistryTest < PhComposerTestCase
     first = Registry::Staging.new(live)
     scope = first.feature("probe", :contract_version => 1)
     target = PhComposer::Records::ReferenceTarget.new(:id => "probe.entity", :label => "Synthetic",
-      :records => ->(_model) { [] }, :validate => ->(_record) { [] },
-      :occurrence => { "type" => "object", "properties" => { "path" => { "type" => "array" } } })
+                                                      :records => ->(_model) { [] }, :validate => ->(_record) {
+                                                                                                    []
+                                                                                                  },
+                                                      :occurrence => { "type" => "object", "properties" => { "path" => { "type" => "array" } } })
     scope.reference_target(target)
     assert_same target.descriptor, first.record_descriptor("probe.entity")
     assert_nil first.record_descriptor("probe.missing")
@@ -51,7 +53,7 @@ class RegistryTest < PhComposerTestCase
       diagnostics = refused(feature do |registry|
         registry.feature("probe.schema", :contract_version => 1)
                 .query("probe.schema.read#{index}", :description => "Probe.", :params => params, :result => OBJECT,
-                                                     :examples => [{}]) { {} }
+                                                    :examples => [{}]) { {} }
       end)
       assert_equal ["registration.schema_invalid"], diagnostics.map(&:code).uniq, params.inspect
     end
@@ -194,7 +196,7 @@ class RegistryTest < PhComposerTestCase
 
   def test_reference_target_requires_callable_provider_and_pure_validator
     target = PhComposer::Records::ReferenceTarget.new(:id => "outside.feature.object", :label => "Object",
-                                                       :records => nil, :validate => nil)
+                                                      :records => nil, :validate => nil)
     diagnostics = refused(feature do |registry|
       registry.feature("outside.feature", :contract_version => 1).reference_target(target)
     end)
@@ -298,7 +300,7 @@ class RegistryTest < PhComposerTestCase
     handler = ->(_request, _proposal, _payload) {}
     participant = feature("Participant") do |registry|
       registry.feature("test.participant", :contract_version => 1)
-        .proposal_participant("test.participant.retire", &handler)
+              .proposal_participant("test.participant.retire", &handler)
     end
 
     Registry.install([participant])
@@ -323,8 +325,11 @@ class RegistryTest < PhComposerTestCase
   end
 
   def test_names_must_sit_under_their_feature
-    diagnostics = refused(feature { |r| r.feature("probe.one", :contract_version => 1).query("other.read", **read) {
- {} } })
+    diagnostics = refused(feature { |r|
+                            r.feature("probe.one", :contract_version => 1).query("other.read", **read) {
+                              {}
+                            }
+                          })
 
     assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
   end

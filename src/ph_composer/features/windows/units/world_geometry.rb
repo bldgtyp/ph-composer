@@ -28,7 +28,8 @@ module PhComposer
           transform = matrix_values(matrix)
           panes = plan.panes.map do |pane|
             DefinitionPlan::Pane.new(:element_id => pane.element_id.dup.freeze,
-              :polygon_m => transform_polygon(pane.polygon_m, transform)).freeze
+                                     :polygon_m => transform_polygon(pane.polygon_m,
+                                                                     transform)).freeze
           end.freeze
           MappedPlan.new(:outer_polygon_m => transform_polygon(plan.outer_polygon_m, transform), :panes => panes).freeze
         end
@@ -59,7 +60,7 @@ module PhComposer
           sheared = Vector3.dot(normalized[0], normalized[1]).abs > TOLERANCE
           # Units are flat in XY. Changing only the unused normal basis changes no aperture size or shear.
           TransformState.new(:scaled => lengths.take(2).any? { |size| (size - 1.0).abs > TOLERANCE },
-            :sheared => sheared, :mirrored => determinant(normalized).negative?).freeze
+                             :sheared => sheared, :mirrored => determinant(normalized).negative?).freeze
         end
 
         def matrix_values(matrix)

@@ -20,7 +20,7 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     registry = PhComposer::Registry.current
     assert_equal ["ph_composer.zones", "ph_composer.library"], registry.features.fetch(W::FEATURE_ID).requires
     declarations = (registry.queries.values + registry.actions.values + registry.view_commands.values)
-      .select { |entry| entry.owner == W::FEATURE_ID }
+                   .select { |entry| entry.owner == W::FEATURE_ID }
     assert_equal 55, declarations.length
     declarations.each do |entry|
       assert_empty PhComposer::JsonSchema.schema_problems(entry.params), entry.name
@@ -56,10 +56,10 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     record["user_data"] = { "fixture" => { "notes" => ["kept"] } }
     kind.store.write(@model, record)
     refused = invoke("types.update", "id" => id, "values" => { "name" => "Edited" },
-      "expected_values" => { "name" => "stale" })
+                                     "expected_values" => { "name" => "stale" })
     assert_equal %w[refused target.changed none], refused.values_at("status", "code", "effect")
     no_op = invoke("types.update", "id" => id, "values" => { "name" => "Original" },
-      "expected_values" => { "name" => "Original" })
+                                   "expected_values" => { "name" => "Original" })
     assert_equal "none", no_op["effect"]
     copy_id = preview_invoke("types.duplicate", "id" => id).dig("value", "id")
     copy = stored(kind, copy_id)
@@ -73,7 +73,7 @@ class WindowRecordsOperationsTest < PhComposerTestCase
                 "references" => [], "export_relevance" => "required" }
     kind.store.write(@model, record.merge("extension_data" => { "fixture.unknown" => payload }))
     edit = invoke("types.update", "id" => id, "values" => { "notes" => "Edited" },
-      "expected_values" => { "notes" => "" })
+                                  "expected_values" => { "notes" => "" })
     assert_equal "committed", edit["effect"]
     assert_equal payload, stored(kind, id).dig("extension_data", "fixture.unknown")
     assert_equal "copy.rule_missing", invoke("types.duplicate", "id" => id)["code"]
@@ -114,14 +114,14 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     id = preview_invoke("types.create", "values" => { "name" => "Grid" }).dig("value", "id")
     original = row("types", id)["values"]
     preview_invoke("types.grid.insert", "id" => id, "axis" => "columns_m", "index" => 1,
-      "value" => 1.0, "expected_values" => original)
+                                        "value" => 1.0, "expected_values" => original)
     after = row("types", id)["values"]
     ids = after["elements"].map { |element| element["id"] }
     assert_equal 2, ids.uniq.length
     preview_invoke("types.grid.merge", "id" => id, "ids" => ids, "expected_values" => after)
     merged = row("types", id)["values"]
     preview_invoke("types.grid.split", "id" => id, "element_id" => merged["elements"][0]["id"],
-      "expected_values" => merged)
+                                       "expected_values" => merged)
     split = row("types", id)["values"]
     assert_empty ids & split["elements"].map { |element| element["id"] }
     failure = invoke("types.grid.merge", "id" => id, "ids" => ["wel_MISSING00000"], "expected_values" => split)
@@ -141,17 +141,17 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     values = row("types", id)["values"]
     element = values["elements"][0]["id"]
     preview_invoke("types.grid.set_element_frame", "id" => id, "element_id" => element, "side" => "left",
-      "frame_id" => frame_id, "expected_values" => values)
+                                                   "frame_id" => frame_id, "expected_values" => values)
     frames = row("types", id).dig("values", "elements", 0, "frames")
     assert_equal({ "top" => nil, "right" => nil, "bottom" => nil, "left" => frame_id }, frames)
     values = row("types", id)["values"]
     preview_invoke("types.grid.kind", "id" => id, "ids" => [element], "kind" => "empty", "expected_values" => values)
     values = row("types", id)["values"]
     refused = invoke("types.grid.set_element_glazing", "id" => id, "element_id" => element, "glazing_id" => nil,
-      "expected_values" => values)
+                                                       "expected_values" => values)
     assert_equal "validation.failed", refused["code"]
     preview_invoke("types.grid.set_element_name", "id" => id, "element_id" => element, "name" => "Spandrel",
-      "expected_values" => values)
+                                                  "expected_values" => values)
     assert_equal "Spandrel", row("types", id).dig("values", "elements", 0, "name")
   end
 
@@ -183,7 +183,8 @@ class WindowRecordsOperationsTest < PhComposerTestCase
       end,
       "psi_install_types" => {
         "create" => [{ "client_id" => "draft:junction",
-                "values" => { "name" => "Draft", "psi_w_mk" => 0.04 } }], "update" => [] },
+                       "values" => { "name" => "Draft", "psi_w_mk" => 0.04 } }], "update" => []
+      },
       "expected_settings" => settings
     }
     params["types"].last["expected_values"]["name"] = "Stale"
@@ -217,9 +218,9 @@ class WindowRecordsOperationsTest < PhComposerTestCase
       id = create("types", type)
       assert_equal "reference.in_use", invoke("#{collection}.delete", "id" => first)["code"]
       assert_equal "validation.failed", invoke("#{collection}.delete", "id" => first,
-        "replacement_id" => incomplete)["code"]
+                                                                       "replacement_id" => incomplete)["code"]
       assert_equal "target.changed", invoke("#{collection}.delete", "id" => first,
-        "replacement_id" => second, "expected_values" => { "name" => "stale" })["code"]
+                                                                    "replacement_id" => second, "expected_values" => { "name" => "stale" })["code"]
       assert_equal "committed", invoke("#{collection}.delete", "id" => first, "replacement_id" => second)["effect"]
       refs = W::Types::KIND.references.select { |reference| reference.target_kind == W::Products::KINDS[collection].id }
       assert_equal [second], refs.flat_map { |reference| reference.ids(stored(W::Types::KIND, id)) }.uniq
@@ -235,14 +236,14 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     result = invoke("settings.update", "values" => before, "expected_values" => before)
     assert_equal "target.changed", result["code"]
     bad = invoke("settings.update", "values" => before.merge("default_psi_install_id" => "psi_MISSING00000"),
-      "expected_values" => settings)
+                                    "expected_values" => settings)
     assert_equal "target.not_found", bad["code"]
     @model.undo
     assert_equal before, settings
     @model.redo
     assert_equal psi, settings["default_psi_install_id"]
     reset = invoke("types.update", "id" => id, "values" => { "install_depth_m" => nil },
-      "expected_values" => { "install_depth_m" => 0.1 })
+                                   "expected_values" => { "install_depth_m" => 0.1 })
     assert_equal "committed", reset["effect"]
     refute row("types", id)["values"].key?("install_depth_m")
     assert_equal 0.2, row("types", id).dig("display", "install_depth_m")
@@ -250,7 +251,9 @@ class WindowRecordsOperationsTest < PhComposerTestCase
 
   def test_supported_extension_copies_without_aliasing_and_product_duplicate_has_unique_names
     extension = PhComposer::Records::Extension.new(:namespace => "fixture.windows.review", :schema_version => 1,
-      :export_relevance => "local_only", :validate => ->(_payload) { [] })
+                                                   :export_relevance => "local_only", :validate => ->(_payload) {
+                                                                                                     []
+                                                                                                   })
     feature = Module.new do
       define_singleton_method(:install) do |registry|
         registry.feature("fixture.windows", :contract_version => 1).extension(extension)
@@ -279,21 +282,21 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     id = create("types", "name" => "Empty")
     before = row("types", id)["values"]
     invoke("types.grid.kind", "id" => id, "ids" => [before["elements"][0]["id"]], "kind" => "empty",
-      "expected_values" => before)
+                              "expected_values" => before)
     thermal = row("types", id).dig("display", "thermal")
     assert_nil thermal["uw_w_m2k"]
     assert_nil thermal["u_effective_w_m2k"]
     refute thermal["complete"]
     assert_equal [{ "code" => "window_type.no_glazed_elements", "message" => "No glazed elements." }],
-      thermal["findings"]
+                 thermal["findings"]
     before = row("types", id)["values"]
     invoke("types.grid.dimension", "id" => id, "axis" => "rows_m", "index" => 0, "value" => nil,
-      "expected_values" => before)
+                                   "expected_values" => before)
     missing = row("types", id)
     assert_nil missing.dig("display", "height_m")
     assert_nil missing.dig("display", "thermal", "uw_w_m2k")
     assert_equal ["window_type.dimensions_incomplete"],
-      missing.dig("display", "thermal", "findings").map { |finding| finding.fetch("code") }
+                 missing.dig("display", "thermal", "findings").map { |finding| finding.fetch("code") }
   end
 
   def test_installs_creation_and_update_cannot_finish_with_duplicate_product_names
@@ -316,11 +319,11 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     kind.store.write(other, record.merge("name" => "Other Model"))
     context = API.connect(:session_id => PhComposer::Sessions.for(other).id)
     outcome = API.query(:context => context, :name => "#{W::FEATURE_ID}.types.list",
-      :params => { "ids" => [record["id"]] })
+                        :params => { "ids" => [record["id"]] })
     assert_equal "Other Model", outcome.dig("value", "records", 0, "values", "name")
     before = row("types", record["id"])["values"]
     result = invoke("types.update", "id" => record["id"], "values" => { "name" => "First Model" },
-      "expected_values" => before)
+                                    "expected_values" => before)
     assert_equal "committed", result["effect"]
     assert_equal "Other Model", kind.store.read(other, record["id"])["name"]
     set_settings("default_psi_install_id" => nil, "default_install_depth_m" => 0.4)
@@ -333,7 +336,7 @@ class WindowRecordsOperationsTest < PhComposerTestCase
   def invoke(name, params)
     @sequence += 1
     API.invoke(:context => @context, :name => "#{W::FEATURE_ID}.#{name}", :params => params,
-      :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
+               :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
   end
 
   def preview_invoke(name, params)
@@ -341,8 +344,8 @@ class WindowRecordsOperationsTest < PhComposerTestCase
     assert_equal "ok", preview["code"], preview.inspect
     @sequence += 1
     outcome = API.invoke(:context => @context, :name => "#{W::FEATURE_ID}.#{name}", :params => params,
-      :request => { "sequence" => @sequence, "expected_revision" => preview.fetch("revision"),
-      "proposal_digest" => preview.fetch("proposal_digest") })
+                         :request => { "sequence" => @sequence, "expected_revision" => preview.fetch("revision"),
+                                       "proposal_digest" => preview.fetch("proposal_digest") })
     assert_equal "committed", outcome["effect"], outcome.inspect
     outcome
   end

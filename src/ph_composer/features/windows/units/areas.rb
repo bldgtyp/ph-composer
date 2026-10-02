@@ -10,22 +10,23 @@ module PhComposer
       module Areas
         QUERY = "#{FEATURE_ID}.units.glazed_area_by_face"
         SECTION = "#{FEATURE_ID}.unit_areas"
+
         module_function
 
         def install(feature, registry)
           face = DeepCopy.call(registry.record_descriptor("ph_composer.zones.faces.face").occurrence_schema)
           area = { "type" => %w[number null], "minimum" => 0, "x-unit" => "m2" }
           row = Shapes.object({ "reference" => face, "gross_area_m2" => area,
-            "glazed_area_m2" => area, "net_opaque_area_m2" => area,
-            "unit_count" => { "type" => "integer", "minimum" => 0 }, "findings" => Shapes.list(Shapes::TEXT) })
+                                "glazed_area_m2" => area, "net_opaque_area_m2" => area,
+                                "unit_count" => { "type" => "integer", "minimum" => 0 }, "findings" => Shapes.list(Shapes::TEXT) })
           result = Shapes.object({ "faces" => Shapes.list(row),
-            "unhosted_units" => Shapes.list(TARGET.descriptor.occurrence_schema) })
+                                   "unhosted_units" => Shapes.list(TARGET.descriptor.occurrence_schema) })
           feature.query(QUERY,
-            :description => "Glazed opening and net opaque area; uncertain geometry withholds values.",
-            :params => Shapes::NONE, :result => result, :examples => [{}]) do |request|
+                        :description => "Glazed opening and net opaque area; uncertain geometry withholds values.",
+                        :params => Shapes::NONE, :result => result, :examples => [{}]) do |request|
             types = request.engine.ids(TYPE_KIND).to_h { |id| [id, request.engine.find(TYPE_KIND, id)] }
             measure(request.query("ph_composer.zones.faces.all").fetch("faces"),
-              request.query("#{FEATURE_ID}.units.all").fetch("units"), types)
+                    request.query("#{FEATURE_ID}.units.all").fetch("units"), types)
           end
           feature.snapshot_section(SECTION, :query => QUERY)
         end
@@ -56,7 +57,7 @@ module PhComposer
           end
           references = faces.map { |face| face.fetch("reference") }
           { "faces" => rows, "unhosted_units" => units.reject { |unit| references.include?(unit["host"]) }
-            .map { |unit| DeepCopy.call(unit.fetch("reference")) } }
+                                                      .map { |unit| DeepCopy.call(unit.fetch("reference")) } }
         end
 
         def opening_area(type)

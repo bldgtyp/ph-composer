@@ -62,8 +62,8 @@ class WindowUnitRestoreStepTest < PhComposerTestCase
 
   def step(**options)
     U::RestoreStep.new(:model => @model, :host => host, :type => @type, :record => record,
-      :pane_paths => @panes.map { |face| [@group.persistent_id, face.persistent_id] },
-      :existing_polygons_m => [], **options)
+                       :pane_paths => @panes.map { |face| [@group.persistent_id, face.persistent_id] },
+                       :existing_polygons_m => [], **options)
   end
 
   def apply(restore)
@@ -129,7 +129,7 @@ class WindowUnitRestoreStepTest < PhComposerTestCase
     assert_equal 3, capture(restore).length
     instance = apply(restore)
     actual = U::WorldGeometry.map(U::DefinitionPlan.build(@type),
-      (@group.transformation * instance.transformation).to_a).outer_polygon_m
+                                  (@group.transformation * instance.transformation).to_a).outer_polygon_m
     assert U::RestoreGeometry.same_polygon?(expected, actual)
   end
 
@@ -245,7 +245,7 @@ class WindowUnitRestoreStepTest < PhComposerTestCase
     template = @type.fetch("elements").first
     @type["elements"] = [0, 1, 2].map do |column|
       template.merge("id" => window_allocator.call("wel"), "column_span" => [column, column],
-        "kind" => column == 1 ? "empty" : "glazed")
+                     "kind" => column == 1 ? "empty" : "glazed")
     end
     store_type
     add_panes
@@ -346,7 +346,7 @@ class WindowUnitRestoreStepTest < PhComposerTestCase
     edges = face.edges.dup
     restore = step
     assert_equal 5, restore.descriptor.fetch("panes_before").find { |row| row["id"] == face.persistent_id }
-      .fetch("loops").first.length
+                           .fetch("loops").first.length
     assert_equal 5, edges.length
     apply(restore)
     assert edges.none? { |edge| @group.entities.to_a.include?(edge) }

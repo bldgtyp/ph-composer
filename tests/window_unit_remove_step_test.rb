@@ -15,12 +15,12 @@ class WindowUnitRemoveStepTest < PhComposerTestCase
     @model = Sketchup.active_model
     @type = window_record
     @definition = U::DefinitionWriter.create(:model => @model, :type => @type,
-      :plan => U::DefinitionPlan.build(@type))
+                                             :plan => U::DefinitionPlan.build(@type))
     @group = @model.entities.add_group
     @face = @group.entities.add_face([Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(100, 0, 0),
-      Geom::Point3d.new(100, 100, 0)])
+                                      Geom::Point3d.new(100, 100, 0)])
     @record = { "id" => "wun_AAAAAAAAAAAA", "schema_version" => 1, "window_type_id" => @type.fetch("id"),
-      "anchor" => "sill_center", "user_data" => { "literal" => ["preserve"] } }
+                "anchor" => "sill_center", "user_data" => { "literal" => ["preserve"] } }
     @unit = @group.entities.add_instance(@definition, Geom::Transformation.translation([20, 30, 40]))
     @unit.glued_to = @face
     U.write(@unit, @record)
@@ -73,7 +73,7 @@ class WindowUnitRemoveStepTest < PhComposerTestCase
     typed.before.fetch("user_data").fetch("literal") << "detached"
     assert_equal @record, step.removal(:before_record => @record).before
     identity = U::IdentityStep.new([U::IdentityPlan::Update.new(:reference => @reference,
-      :before => @record, :after => expected)])
+                                                                :before => @record, :after => expected)])
     before = capture
     @model.start_operation("Repair and remove", true)
     identity.apply(@model, {})

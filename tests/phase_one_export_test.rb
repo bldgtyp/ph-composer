@@ -48,7 +48,7 @@ class PhaseOneExportTest < PhComposerTestCase
     assert_equal before + 1, @model.entities.each_count
     assert_empty extraction.findings
     assert_equal [6, 6], extraction.document.dig("sections", PhComposer::Zones::ExportProjection::SECTION, "records")
-      .map { |zone| zone.fetch("face_ids").length }
+                                   .map { |zone| zone.fetch("face_ids").length }
     faces = extraction.document.dig("sections", PhComposer::Zones::Faces::ExportProjection::SECTION, "records")
     assert_equal 12, faces.length
     assert_equal 2, faces.count { |face| face["boundary_condition"] == "Surface" }

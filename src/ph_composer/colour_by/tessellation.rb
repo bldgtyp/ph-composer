@@ -50,6 +50,7 @@ module PhComposer
       MAX_HATCH_SEGMENTS = 8_192
       HATCH_EPSILON = 1.0e-8
       HatchTriangle = Struct.new(:vertices, :coordinates, :minimum, :maximum, keyword_init: true)
+
       module_function
 
       def call(entity, transform)

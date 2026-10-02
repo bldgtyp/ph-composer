@@ -35,8 +35,10 @@ module PhComposer
         prepare_outlines
         @units.each { |entry, record| assess_unit(entry, record) }
         Result.new(:apertures => @apertures.sort_by { |row| row.fetch("id") },
-          :constructions => @constructions.uniq { |row| row.fetch("id") }.sort_by { |row| row.fetch("id") },
-          :findings => @findings, :repairs => @repairs).freeze
+                   :constructions => @constructions.uniq { |row|
+                                       row.fetch("id")
+                                     }.sort_by { |row| row.fetch("id") },
+                   :findings => @findings, :repairs => @repairs).freeze
       end
 
       private
@@ -75,7 +77,7 @@ module PhComposer
         plan = @plans[type["id"]]
         unless plan
           issue("window_type.dimensions_incomplete", "Complete the placed Window Type's finite positive dimensions.",
-            record, reference)
+                record, reference)
           return
         end
         definition = entry.native && entry.native["definition"]
@@ -111,15 +113,15 @@ module PhComposer
           next unless repair
 
           @repairs << { "id" => "#{code}:#{reference['entity_path'].join('.')}",
-            "label" => action == "reset_to_type" ? "Reset to Type" : "New flipped Type", "checked" => false,
-            "action" => repair.fetch("name"), "params" => repair.fetch("params") }
+                        "label" => action == "reset_to_type" ? "Reset to Type" : "New flipped Type", "checked" => false,
+                        "action" => repair.fetch("name"), "params" => repair.fetch("params") }
         end
       end
 
       def validate_record(entry, record, reference)
         Units.validate!(record)
         issue("window.copy_id_pending", "Copied Units share an identity; resolve their identities before export.",
-          record, reference) if @ids.fetch(record["id"]).length > 1
+              record, reference) if @ids.fetch(record["id"]).length > 1
         if @units.any? { |other, _| other != entry && @snapshot.contains?(other, entry) }
           issue("window.nested_units", "A Window Unit is nested inside another Unit.", record, reference)
         end
@@ -131,6 +133,7 @@ module PhComposer
           if stored && !Units::DefinitionIndex.valid?(stored)
             raise Export::Blocked.new("record.unreadable", "The Window definition index is invalid.")
           end
+
           stored ? stored.fetch("definitions") : {}
         end
       end
@@ -138,12 +141,12 @@ module PhComposer
       def validate_definition(definition, type, plan, record, reference)
         if index[type["id"]] != definition["id"]
           issue("window.definition_detached", "The Unit does not use its Type's primary definition. Reset to Type.",
-            record, reference)
+                record, reference)
         end
         unless definition["cuts_opening"] && definition["is2d"] &&
                Units::DefinitionGeometry.facts_match?(definition, :type_id => type["id"], :plan => plan)
           issue("window.geometry_differs", "The Unit's generated geometry or cutting behavior differs from its Type.",
-            record, reference)
+                record, reference)
         end
       end
 
@@ -166,7 +169,7 @@ module PhComposer
       def validate_host(entry, face, record, reference)
         unless face
           issue("window.unhosted", "The Unit has no resolvable native glued host Face. Rehost it before export.",
-            record, reference)
+                record, reference)
           return
         end
         Placement::Hosts.conditions(face["record"] || {}, :zoned => !face["zone_id"].nil?).each do |code|
@@ -184,16 +187,16 @@ module PhComposer
       def validate_products(type, thermal, record, reference)
         type.fetch("elements").reject { |cell| cell["kind"] == "empty" }.each do |cell|
           identifiers = [[cell["glazing_id"], "glazings"]] +
-            cell.fetch("frames").values.map { |id| [id, "frames"] } +
-            cell.fetch("installs").values.map { |id| [id, "psi_install_types"] }
+                        cell.fetch("frames").values.map { |id| [id, "frames"] } +
+                        cell.fetch("installs").values.map { |id| [id, "psi_install_types"] }
           detail = thermal.fetch("elements").find { |row| row["id"] == cell["id"] }
           if detail
             identifiers += detail.fetch("edges").map { |edge| [edge.fetch("install")["id"], "psi_install_types"] }
           end
           if identifiers.any? { |id, collection| id && !@products.fetch(collection).key?(id) }
             issue("window_type.product_dangling",
-              "A placed Type names an unavailable Frame, Glazing or Psi-Install Type.",
-              record, reference)
+                  "A placed Type names an unavailable Frame, Glazing or Psi-Install Type.",
+                  record, reference)
           end
         end
         # An element's condition names the element, so two elements with one condition are two rows.
@@ -213,9 +216,9 @@ module PhComposer
           next if u_w.nil? || (u_w.finite? && u_w.positive? && u_w <= 12)
 
           issue("window_type.construction_unavailable",
-            "The placed element's Uw must be greater than zero and no more than " \
-            "12 W/m2K for the pinned Honeybee simple glazing material. Authored values remain unchanged.",
-            record, reference)
+                "The placed element's Uw must be greater than zero and no more than " \
+                "12 W/m2K for the pinned Honeybee simple glazing material. Authored values remain unchanged.",
+                record, reference)
         end
       end
 
@@ -228,13 +231,13 @@ module PhComposer
           polygon = mapped.panes.find { |pane| pane.element_id == cell["id"] }.polygon_m
           polygon = polygon.reverse if opposite?(polygon, face.fetch("geometry").normal)
           @apertures << { "id" => "wap_#{CanonicalJson.digest([record['id'], cell['id']])}",
-            "unit_id" => record["id"], "type_id" => type["id"], "element_id" => cell["id"],
-            "name" => "#{type.fetch('name')} / #{cell.fetch('name')}",
-            "host_face_id" => face.fetch("record").fetch("id"),
-            "zone_id" => face.fetch("zone_id"), "construction_id" => construction["id"], "polygon_m" => polygon,
-            "variant_type" => type.fetch("name"),
-            "install_depth_m" => type.fetch("install_depth_m", @settings.fetch("default_install_depth_m")),
-            "is_operable" => cell.fetch("operation").fetch("type") != "fixed" }
+                          "unit_id" => record["id"], "type_id" => type["id"], "element_id" => cell["id"],
+                          "name" => "#{type.fetch('name')} / #{cell.fetch('name')}",
+                          "host_face_id" => face.fetch("record").fetch("id"),
+                          "zone_id" => face.fetch("zone_id"), "construction_id" => construction["id"], "polygon_m" => polygon,
+                          "variant_type" => type.fetch("name"),
+                          "install_depth_m" => type.fetch("install_depth_m", @settings.fetch("default_install_depth_m")),
+                          "is_operable" => cell.fetch("operation").fetch("type") != "fixed" }
         end
       end
 
@@ -244,16 +247,20 @@ module PhComposer
           frame = @products.fetch("frames").fetch(cell.fetch("frames").fetch(side))
           edge = detail.fetch("edges").find { |item| item["side"] == side }
           [side, { "frame" => frame.slice("id", "name", "width_m", "uf_w_m2k", "psi_g_w_mk"),
-            "install_id" => edge.fetch("install")["id"],
-            "install_name" => @products.fetch("psi_install_types")[edge.fetch("install")["id"]]&.fetch("name"),
-            "psi_install_w_mk" => edge.fetch("install").fetch("psi_w_mk") }]
+                   "install_id" => edge.fetch("install")["id"],
+                   "install_name" => @products.fetch("psi_install_types")[edge.fetch("install")["id"]]&.fetch("name"),
+                   "psi_install_w_mk" => edge.fetch("install").fetch("psi_w_mk") }]
         end
         row = { "name" => glazing.fetch("name"), "uw_w_m2k" => detail.fetch("uw_w_m2k"),
-          "glazing" => glazing.slice("id", "name", "ug_w_m2k", "g_value"), "sides" => sides }
+                "glazing" => glazing.slice("id", "name", "ug_w_m2k", "g_value"), "sides" => sides }
         signature = row.reject { |key, _| key == "name" }.merge(
           "glazing" => row.fetch("glazing").reject { |key, _| key == "name" },
-          "sides" => sides.transform_values { |side| side.reject { |k, _| k == "install_name" }.merge(
-            "frame" => side.fetch("frame").reject { |k, _| k == "name" }) })
+          "sides" => sides.transform_values { |side|
+                       side.reject { |k, _| k == "install_name" }.merge(
+                         "frame" => side.fetch("frame").reject { |k, _| k == "name" }
+                       )
+                     }
+        )
         row.merge("id" => "wwc_#{CanonicalJson.digest(signature)}")
       end
 
@@ -267,7 +274,7 @@ module PhComposer
       def issue(code, message, record, reference, blocking: true)
         id = record["id"].is_a?(String) ? record["id"] : nil
         finding = { "code" => code, "section" => ExportProjection::APERTURES, "object_id" => id,
-          "message" => message, "blocks_export" => blocking }
+                    "message" => message, "blocks_export" => blocking }
         if id
           finding["locate"] = { "name" => "#{FEATURE_ID}.units.locate", "params" => { "units" => [reference] } }
         end

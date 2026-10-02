@@ -28,13 +28,17 @@ module PhComposer
           unless ids.uniq.length == ids.length && ids.all? { |id| id.is_a?(Integer) && id.positive? }
             raise CodedError.new("record.unreadable", "The definition catalog has invalid identities.")
           end
+
           value = { "index" => model.get_attribute(DefinitionIndex::STORE.dictionary, DefinitionIndex::STORE.key),
-            "definition_ids" => ids.sort, "definitions" => selected_definitions(definitions),
-            "materials" => model.materials.map { |material| material_values(material) }.sort_by { |row| row["name"] },
-            "units" => unit_values(model, expected_records) }
+                    "definition_ids" => ids.sort, "definitions" => selected_definitions(definitions),
+                    "materials" => model.materials.map { |material|
+                                     material_values(material)
+                                   }.sort_by { |row| row["name"] },
+                    "units" => unit_values(model, expected_records) }
           unless JsonValue.problems(value).empty?
             raise CodedError.new("record.unreadable", "Window mutation state is not detached JSON.")
           end
+
           CanonicalJson.digest(value)
         rescue CodedError
           raise
@@ -92,8 +96,8 @@ module PhComposer
             if entity.is_a?(Sketchup::Face)
               check_stamp!(PANE_STORE, entity, %w[window_type_id element_id])
               row.merge!("loops" => entity.loops.map { |loop| loop.vertices.map { |vertex| point(vertex.position) } },
-                "normal" => point(entity.normal), "material" => material_name(entity.material),
-                "back_material" => material_name(entity.back_material))
+                         "normal" => point(entity.normal), "material" => material_name(entity.material),
+                         "back_material" => material_name(entity.back_material))
             elsif entity.is_a?(Sketchup::Edge)
               row["vertices"] = [point(entity.start.position), point(entity.end.position)]
             elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
@@ -111,7 +115,7 @@ module PhComposer
           raise CodedError.new("record.unreadable", "Window definition storage is recursive.") if ancestors.include?(id)
 
           row.merge!("name" => entity.name, "transformation" => entity.transformation.to_a,
-            "definition_id" => id, "entities" => entity_values(definition.entities, ancestors + [id]))
+                     "definition_id" => id, "entities" => entity_values(definition.entities, ancestors + [id]))
         end
 
         def material_name(material)
@@ -136,6 +140,7 @@ module PhComposer
           unless expected_records.is_a?(Hash) && (expected_records.keys - occurrences.map(&:path)).empty?
             raise CodedError.new("target.not_found", "A projected Window occurrence does not exist.")
           end
+
           occurrences.map do |occurrence|
             entity = occurrence.entity
             record = expected_records.fetch(occurrence.path, occurrence.record)

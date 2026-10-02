@@ -38,6 +38,7 @@ module PhComposer
       unless before == expected_values
         raise CodedError.new("target.changed", "#{label} settings changed since they were read. Nothing was written.")
       end
+
       after = validate!(values)
       proposal.add_step(step(before, after), :scopes => [scope]) unless before == after
       after

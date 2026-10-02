@@ -15,9 +15,12 @@ module PhComposer
             { "reference" => DeepCopy.call(update.reference), "before" => DeepCopy.call(update.before),
               "after" => DeepCopy.call(update.after) }
           end
-          @affected = @updates.map { |row| { "kind" => REFERENCE_KIND, "id" => row.fetch("after").fetch("id"),
-            "change" => "identity_repaired", "reference" => row.fetch("reference").merge(
-              "unit_id" => row.fetch("after").fetch("id")) } }
+          @affected = @updates.map { |row|
+            { "kind" => REFERENCE_KIND, "id" => row.fetch("after").fetch("id"),
+              "change" => "identity_repaired", "reference" => row.fetch("reference").merge(
+                "unit_id" => row.fetch("after").fetch("id")
+              ) }
+          }
         end
 
         def descriptor
@@ -34,6 +37,7 @@ module PhComposer
             unless item.record == row.fetch("before")
               raise CodedError.new("target.changed", "A copied Window record changed after preview.")
             end
+
             [item.entity, row.fetch("after")]
           end
           resolved.each { |entity, record| Units.write(entity, record) }
@@ -51,7 +55,7 @@ module PhComposer
           # stay unique because a proposal holds one IdentityStep and each commit moves the revision.
           allocator = identity || Records::Identity.allocator(request, "repair" => "unit_identity")
           changes = IdentityPlan.build(Occurrences.all(request.model), :identity => allocator,
-            :catalog => request.registry.catalog, :engine => request.engine)
+                                                                       :catalog => request.registry.catalog, :engine => request.engine)
           return nil if changes.empty?
 
           proposal.add_step(IdentityStep.new(changes), :scopes => [MutationScope.new])

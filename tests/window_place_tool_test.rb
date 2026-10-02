@@ -23,7 +23,7 @@ class WindowPlaceToolTest < PhComposerTestCase
     assert_equal "completed", made.fetch("status"), made.inspect
     @host = assignment_faces.first.fetch("reference")
     created = assignment_invoke("ph_composer.windows.types.create",
-      "values" => { "name" => "Place test", "rows_m" => [1.5], "columns_m" => [0.7] })
+                                "values" => { "name" => "Place test", "rows_m" => [1.5], "columns_m" => [0.7] })
     assert_equal "completed", created.fetch("status"), created.inspect
     @type_id = created.fetch("value").fetch("id")
     @tool = W.place_tool(@session)
@@ -35,7 +35,7 @@ class WindowPlaceToolTest < PhComposerTestCase
 
   def choose(params = {})
     result = API.view(:context => @context, :name => "#{PREFIX}.choose",
-      :params => { "type_id" => @type_id }.merge(params))
+                      :params => { "type_id" => @type_id }.merge(params))
     assert_equal "completed", result.fetch("status"), result.inspect
     result.fetch("value")
   end
@@ -141,7 +141,7 @@ class WindowPlaceToolTest < PhComposerTestCase
     choose
     down
     changed = assignment_invoke("ph_composer.windows.types.update", "id" => @type_id,
-      "values" => { "notes" => "Changed" }, "expected_values" => { "notes" => type.fetch("notes") })
+                                                                    "values" => { "notes" => "Changed" }, "expected_values" => { "notes" => type.fetch("notes") })
     assert_equal "completed", changed.fetch("status"), changed.inspect
     before = @model.operations.length
     up
@@ -286,7 +286,7 @@ class WindowPlaceToolTest < PhComposerTestCase
     revision = @session.revision
     reference = units.first.fetch("reference")
     result = API.view(:context => @context, :name => "ph_composer.windows.units.locate",
-      :params => { "units" => [reference, reference.merge("unit_id" => "wun_missing")] })
+                      :params => { "units" => [reference, reference.merge("unit_id" => "wun_missing")] })
     assert_equal "completed", result.fetch("status"), result.inspect
     assert_equal [reference], result.fetch("value").fetch("units")
     assert_equal 1, @model.selection.to_a.length
@@ -313,7 +313,7 @@ class WindowPlaceToolTest < PhComposerTestCase
 
   def test_different_type_mid_gesture_keeps_frozen_type_and_next_hover_uses_new_type
     created = assignment_invoke("ph_composer.windows.types.create",
-      "values" => { "name" => "Other Type", "rows_m" => [1.0], "columns_m" => [0.9] })
+                                "values" => { "name" => "Other Type", "rows_m" => [1.0], "columns_m" => [0.9] })
     assert_equal "completed", created.fetch("status"), created.inspect
     choose
     down
@@ -367,7 +367,7 @@ class WindowPlaceToolTest < PhComposerTestCase
     @tool.draw(@view)
     before = @view.draws.length
     changed = assignment_invoke("ph_composer.windows.types.update", "id" => @type_id,
-      "values" => { "notes" => "New revision" }, "expected_values" => { "notes" => type.fetch("notes") })
+                                                                    "values" => { "notes" => "New revision" }, "expected_values" => { "notes" => type.fetch("notes") })
     assert_equal "completed", changed.fetch("status"), changed.inspect
     picked { @tool.onMouseMove(0, 10, 10, @view) }
     @tool.draw(@view)
@@ -397,7 +397,8 @@ class WindowPlaceToolTest < PhComposerTestCase
 
   def test_an_unreadable_type_is_skipped_and_leaves_place_window_in_the_context_menu
     readable = assignment_invoke("ph_composer.windows.types.create",
-      "values" => { "name" => "Readable", "rows_m" => [1.5], "columns_m" => [0.7] }).fetch("value").fetch("id")
+                                 "values" => { "name" => "Readable", "rows_m" => [1.5],
+                                               "columns_m" => [0.7] }).fetch("value").fetch("id")
     dictionary = "ph_composer.records.#{W::TYPE_KIND}"
     record = JSON.parse(@model.get_attribute(dictionary, @type_id)).merge("rows_m" => "broken")
     @model.set_attribute(dictionary, @type_id, JSON.generate(record))
@@ -501,7 +502,7 @@ class WindowPlaceToolTest < PhComposerTestCase
     revision = @session.revision
     [first, second].zip([@group, shared_group]).each do |reference, ancestor|
       result = API.view(:context => @context, :name => "ph_composer.windows.units.locate",
-        :params => { "units" => [reference] })
+                        :params => { "units" => [reference] })
       assert_equal "completed", result.fetch("status"), result.inspect
       assert_equal [reference], result.dig("value", "units")
       assert_equal [ancestor], @model.selection.to_a

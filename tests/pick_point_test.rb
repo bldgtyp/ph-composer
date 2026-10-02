@@ -7,7 +7,7 @@ class PickPointTest < PhComposerTestCase
     super
     @view = Sketchup.active_model.active_view
     @face = Sketchup::Face.new(9_501, {}, :points => [Geom::Point3d.new(0, 0, 0),
-      Geom::Point3d.new(20, 0, 0), Geom::Point3d.new(20, 20, 0)])
+                                                      Geom::Point3d.new(20, 0, 0), Geom::Point3d.new(20, 20, 0)])
     @view.picks[[4, 5]] = [@face]
     def @view.pickray(_x, _y)
       [Geom::Point3d.new(4, 5, 100), Geom::Vector3d.new(0, 0, -1)]

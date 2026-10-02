@@ -52,8 +52,10 @@ module PhComposer
         flags = layers.each_with_object([]) do |layer, result|
           segments = Array(layer["segments"])
           result << "assembly.geometry_invalid" unless layer["thickness_mm"].to_f.positive?
-          if segments.length > 1 && segments.any? { |entry| materials[entry["material_id"]] &&
-              Materials::Schema.membrane?(materials.fetch(entry["material_id"])) }
+          if segments.length > 1 && segments.any? { |entry|
+               materials[entry["material_id"]] &&
+               Materials::Schema.membrane?(materials.fetch(entry["material_id"]))
+             }
             result << "assembly.membrane_in_mixed_layer"
           end
           segments.each { |segment| result.concat(segment_flags(segment, materials)) }
@@ -141,10 +143,12 @@ module PhComposer
         assigned = Array(layer["segments"]).each_with_object([]) do |segment, result|
           material = materials[segment["material_id"]]
           next unless material && material["conductivity_w_mk"].to_f.positive?
+
           result << [segment, material]
         end
         total = assigned.sum { |segment, _material| segment.fetch("width_mm") }
         return [] unless total.positive?
+
         assigned.map do |segment, material|
           [(layer.fetch("thickness_mm") / 1000.0) / material.fetch("conductivity_w_mk"),
            segment.fetch("width_mm").to_f / total]
@@ -175,6 +179,7 @@ module PhComposer
       def isothermal(per_layer)
         per_layer.sum do |paths|
           next paths.first.first if paths.length == 1
+
           1.0 / paths.sum { |resistance, fraction| fraction / resistance }
         end
       end

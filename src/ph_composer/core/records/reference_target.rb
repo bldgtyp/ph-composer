@@ -90,6 +90,7 @@ module PhComposer
         unless valid_entries && valid_removals
           raise InternalError, "A reference plan needs typed record occurrences."
         end
+
         keys = (entries + removals).map { |entry| [entry.kind, entry.key] }
         raise InternalError, "A reference plan repeats an occurrence." unless keys.uniq.length == keys.length
 

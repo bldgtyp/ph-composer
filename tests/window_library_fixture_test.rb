@@ -10,8 +10,8 @@ class WindowLibraryFixtureTest < PhComposerTestCase
     declarations = PhComposer::Registry.current.library_kinds.values
     adapters = declarations.to_h { |entry| [entry.adapter.wire_kind, entry.adapter] }
     provider = PhComposer::Library::FileProvider.new(:id => "example.file", :label => "Synthetic products",
-      :path => File.expand_path("../tools/examples/library/materials.json", __dir__),
-      :kinds => adapters.keys, :adapters => adapters.method(:[]))
+                                                     :path => File.expand_path("../tools/examples/library/materials.json", __dir__),
+                                                     :kinds => adapters.keys, :adapters => adapters.method(:[]))
     assert_equal %w[frames glazings materials psi_install_types], adapters.keys.sort
     adapters.each do |kind, adapter|
       batch = assert_library_provider(provider, kind)

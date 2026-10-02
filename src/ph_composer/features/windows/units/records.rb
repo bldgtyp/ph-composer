@@ -12,11 +12,13 @@ module PhComposer
       DEFINITION_STORE = Records::EntityStore.new("ph_composer.window_definition")
       PANE_STORE = Records::EntityStore.new("ph_composer.window_pane")
       RECORD_KIND = Records::RecordKind.new(:id => REFERENCE_KIND, :label => "Window unit",
-        :schema_version => 1, :id_prefix => "wun", :fields => [
-          Fields.field("window_type_id", { "type" => "string" }, :required => true),
-          Fields.field("anchor", { "type" => "string", "enum" => Anchors::ALL }, :required => true)
-        ], :references => [Records::Reference.new(:key => "window_type_id", :target_kind => TYPE_KIND,
-          :cardinality => "one")])
+                                            :schema_version => 1, :id_prefix => "wun", :fields => [
+                                              Fields.field("window_type_id",
+                                                           { "type" => "string" }, :required => true),
+                                              Fields.field("anchor",
+                                                           { "type" => "string", "enum" => Anchors::ALL }, :required => true)
+                                            ], :references => [Records::Reference.new(:key => "window_type_id", :target_kind => TYPE_KIND,
+                                                                                      :cardinality => "one")])
 
       module_function
 
@@ -38,6 +40,7 @@ module PhComposer
         unless entity.is_a?(Sketchup::ComponentInstance)
           raise CodedError.new("target.wrong_kind", "Window units are stored on ComponentInstances.")
         end
+
         STORE.write(entity, validate!(record))
       end
     end

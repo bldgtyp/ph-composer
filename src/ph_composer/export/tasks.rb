@@ -30,8 +30,9 @@ module PhComposer
         if @session.busy_reason
           raise Blocked.new("session.busy", @session.busy_reason)
         end
+
         task = Task.new(@session, :destination => destination, :replace => replace,
-                       :runtime_factory => runtime_factory)
+                                  :runtime_factory => runtime_factory)
         task.start
         @tasks[task.id] = task
         task.snapshot

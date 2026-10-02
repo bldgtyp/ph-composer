@@ -23,7 +23,7 @@ module PhComposer
     def completed(revision:, value: nil, effect: "none", affected: [], findings: [], proposal_digest: nil,
                   message: "Done.")
       build("completed", "ok", message, effect, revision, :value => value, :affected => affected,
-            :findings => findings, :proposal_digest => proposal_digest)
+                                                          :findings => findings, :proposal_digest => proposal_digest)
     end
 
     # A request turned away before anything was written. `mutation` adds the sentence that tells a

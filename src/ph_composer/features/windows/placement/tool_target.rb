@@ -33,16 +33,18 @@ module PhComposer
         # through Zones' resolver when the gesture commits, which catches a duplicated id as well.
         def resolve(picked, fixed_host = nil)
           return unless picked
+
           entities = picked.fetch(:path)
           path = entities.map(&:persistent_id)
           row = row(path)
           unless row
             raise CodedError.new("target.wrong_zone",
-              "That Face is in no Zone. Make it a Zone before placing a Window.")
+                                 "That Face is in no Zone. Make it a Zone before placing a Window.")
           end
           if fixed_host && fixed_host != row.fetch("reference")
             raise CodedError.new("target.changed", "Point at the Face chosen for this Place tool.")
           end
+
           state = Hosts.zone_state(@zone_states, row)
           Hosts.placeable!(row, state)
           transform = entities[0...-1].reduce(Geom::Transformation.new) do |carried, entity|
@@ -57,6 +59,7 @@ module PhComposer
           unless row && row.fetch("reference") == reference
             raise CodedError.new("target.changed", "The host Face reference no longer matches the Zone read.")
           end
+
           Hosts.placeable!(row, Hosts.zone_state(@zone_states, row))
         end
 
@@ -73,6 +76,7 @@ module PhComposer
           if (unreadable = read.fetch("unreadable").first)
             raise CodedError.new(unreadable.fetch("code"), unreadable.fetch("message"))
           end
+
           records = read.fetch("records")
           raise CodedError.new("target.not_found", "There is no Window Type with id #{type_id}.") if records.empty?
 
@@ -84,6 +88,7 @@ module PhComposer
           unless result.fetch("status") == "completed"
             raise CodedError.new(result.fetch("code"), result.fetch("message"))
           end
+
           result.fetch("value")
         end
       end

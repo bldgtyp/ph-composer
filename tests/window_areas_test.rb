@@ -12,7 +12,7 @@ class WindowAreasTest < PhComposerTestCase
     @face = { "zone_id" => "zon_a", "zone_path" => [10], "entity_path" => [20], "entity_id" => "fac_a" }
     @type = window_record("rows_m" => [1.0], "columns_m" => [1.0, 2.0])
     @type["elements"] = [W::Types.blank(0, 0, :identity => window_allocator),
-      W::Types.blank(0, 1, :identity => window_allocator)]
+                         W::Types.blank(0, 1, :identity => window_allocator)]
     @type.fetch("elements").last["kind"] = "empty"
   end
 

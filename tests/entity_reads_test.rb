@@ -42,7 +42,7 @@ class EntityReadsTest < PhComposerTestCase
       .map { |row| row.dig("reference", "zone_path") }
     assert_nil second.fetch("next_cursor")
     assert_equal "params.invalid", read(ZONES, "limit" => 2, "fields" => ["name"],
-                                              "cursor" => first.fetch("next_cursor")).fetch("code")
+                                               "cursor" => first.fetch("next_cursor")).fetch("code")
     make_zone(box(400, 1))
     assert_equal "query.cursor_expired", read(ZONES, "limit" => 2, "cursor" => first.fetch("next_cursor")).fetch("code")
   end

@@ -61,6 +61,7 @@ module AdjacencyWalkthrough
     faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     surface = faces.find { |face| face["adjacency_state"] == "stale" }
     raise "Moving the east Zone did not expose a stale pair." unless surface
+
     stale_states = faces.map { |face| face["adjacency_state"] }.compact
 
     result = client.invoke("ph_composer.zones.retire_adjacency", "face" => surface.fetch("reference"))
@@ -83,7 +84,7 @@ module AdjacencyWalkthrough
     states = faces.map { |face| face["adjacency_state"] }.compact
     names = [PhComposer::Zones::Faces::ExportProjection::SECTION, PhComposer::Zones::ExportProjection::SECTION]
     extraction = PhComposer::Export::Collection.build(Sketchup.active_model, :run_id => "host-p1c",
-                                                                              :contributors => names)
+                                                                             :contributors => names)
     {
       "zones" => zones.length, "faces" => faces.length,
       "classified" => faces.count { |face| face.dig("reference", "entity_id") },
@@ -114,8 +115,8 @@ module AdjacencyWalkthrough
     b = PhComposer::FaceGeometry.capture(right_face, right.transformation)
     PhComposer::FaceGeometry.equivalent_full_face?(
       a, b, :plane_tolerance_m => PhComposer::Zones::Adjacency::PLANE_TOLERANCE_M,
-      :angle_tolerance_degrees => PhComposer::Zones::Adjacency::NORMAL_ANGLE_TOLERANCE_DEGREES,
-      :point_tolerance_m => PhComposer::Zones::Adjacency::POINT_TOLERANCE_M
+            :angle_tolerance_degrees => PhComposer::Zones::Adjacency::NORMAL_ANGLE_TOLERANCE_DEGREES,
+            :point_tolerance_m => PhComposer::Zones::Adjacency::POINT_TOLERANCE_M
     )
   end
 

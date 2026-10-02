@@ -107,7 +107,7 @@ module TestFeature
                                            :params => { "type" => "object", "required" => ["ids"],
                                                         "properties" => { "ids" => { "type" => "array" } } },
                                            :result => OBJECT, :undo_name => "Migrate Test Review",
-                                            :examples => [{ "ids" => ["tpt_Ab12Cd34Ef56"] }],
+                                           :examples => [{ "ids" => ["tpt_Ab12Cd34Ef56"] }],
                                            :side_effects => "Rewrites extension data.") do |request, changes|
       ids = request.params.fetch("ids")
       { "results" => request.engine.propose_migration("#{ID}.part", ids, "#{ID}.review", changes) }

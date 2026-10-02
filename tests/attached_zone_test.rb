@@ -285,7 +285,7 @@ class AttachedZoneTest < PhComposerTestCase
 
   def records
     API.query(:context => @context, :name => "ph_composer.records.list", :params => { "kind" => KIND })
-      .dig("value", "records")
+       .dig("value", "records")
   end
 
   def faces

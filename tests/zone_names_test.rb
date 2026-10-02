@@ -63,7 +63,7 @@ class ZoneNamesTest < PhComposerTestCase
     values = row.fetch("values")
 
     result = invoke("ph_composer.zones.update", "reference" => row.fetch("reference"),
-                    "expected_values" => values, "values" => values.merge("level" => "L1"))
+                                                "expected_values" => values, "values" => values.merge("level" => "L1"))
 
     assert_equal "completed", result.fetch("status")
     stored = ZONES::ZONE_STORE.read(@group)
@@ -78,7 +78,7 @@ class ZoneNamesTest < PhComposerTestCase
     native_rename("North")
 
     result = invoke("ph_composer.zones.update", "reference" => row.fetch("reference"),
-                    "expected_values" => row.fetch("values"), "values" => row.fetch("values"))
+                                                "expected_values" => row.fetch("values"), "values" => row.fetch("values"))
 
     assert_equal "target.changed", result.fetch("code")
     assert_equal "none", result.fetch("effect")
@@ -164,7 +164,7 @@ class ZoneNamesTest < PhComposerTestCase
 
     result = ZONES::STAMP_STORE.stub(:write, failing) do
       invoke("ph_composer.zones.update", "reference" => row.fetch("reference"),
-             "expected_values" => values, "values" => values.merge("name" => "Failed"))
+                                         "expected_values" => values, "values" => values.merge("name" => "Failed"))
     end
 
     assert_equal "rolled_back", result.fetch("effect")
@@ -306,7 +306,7 @@ class ZoneNamesTest < PhComposerTestCase
                "extension_data" => { "test.opaque" => { "schema_version" => 1, "payload" => { "keep" => true } } } }
     ZONES::ZONE_STORE.write(group, record)
     ZONES::Faces::FACE_STORE.write(face, "id" => "fac_#{(id + 1).to_s.rjust(12, '0')}", "schema_version" => 1,
-                                        "face_type" => "Wall", "boundary_condition" => "Outdoors")
+                                         "face_type" => "Wall", "boundary_condition" => "Outdoors")
     @model.entities << group
     group
   end

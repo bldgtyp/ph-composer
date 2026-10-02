@@ -7,11 +7,12 @@ module PhComposer
     module SourceReport
       SECTION = "#{FEATURE_ID}.export.material_sources"
       FIELDS = %w[id name provider_kind library_id record_id].freeze
+
       module_function
 
       def install(feature)
         feature.export_contributor(SECTION, :section_version => 1,
-          :result => { "material_sources" => [Export::Privacy.fields(FIELDS)] }, :report => method(:report)) do |reader|
+                                            :result => { "material_sources" => [Export::Privacy.fields(FIELDS)] }, :report => method(:report)) do |reader|
           reader.records(MATERIAL_KIND).filter_map do |record|
             source = record["source"]
             next unless source.is_a?(Hash) && source["kind"] == "library"

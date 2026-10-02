@@ -238,14 +238,14 @@ class ApiTest < PhComposerTestCase
   def test_envelope_problems_are_refused_before_anything_runs
     reader = API.connect(:session_id => @session.id, :capabilities => ["read"])
     wrong_major = PhComposer::OperationContext.new(:api_major => 2, :session_id => @session.id,
-        :caller => @context.caller)
+                                                   :caller => @context.caller)
 
     assert_equal "request.capability_denied", API.invoke(:context => reader, :name => "test.fixture.create",
                                                          :params => {}, :request => request(1)).fetch("code")
     assert_equal "request.api_version",
-        API.query(:context => wrong_major, :name => "test.fixture.total_length").fetch("code")
+                 API.query(:context => wrong_major, :name => "test.fixture.total_length").fetch("code")
     assert_equal "request.unknown_operation",
-        API.query(:context => @context, :name => "test.fixture.absent").fetch("code")
+                 API.query(:context => @context, :name => "test.fixture.absent").fetch("code")
     assert_equal "request.malformed", API.invoke(:context => @context, :name => "test.fixture.create",
                                                  :params => { "parts" => [] },
                                                  :request => request(1).merge("preview" => true)).fetch("code")
@@ -318,13 +318,13 @@ class ApiTest < PhComposerTestCase
 
     assert_equal "request.outcome_unavailable", expired.fetch("code")
     assert_equal "request.outcome_unavailable",
-        API.outcome(:context => @context, :request => { "sequence" => 1 }).fetch("code")
+                 API.outcome(:context => @context, :request => { "sequence" => 1 }).fetch("code")
     assert_equal 1, records.dig("value", "total")
   end
 
   def test_a_retry_while_the_first_attempt_runs_is_pending
     TestFeature.reentry = { :context => @context, :name => "test.fixture.reenter", :params => {},
-        :request => request(1) }
+                            :request => request(1) }
 
     result = invoke("test.fixture.reenter", {}, 1)
 
@@ -467,7 +467,7 @@ class ApiTest < PhComposerTestCase
     invoke("test.fixture.update_parts", edit(part, 300.0), 2, @session.revision)
 
     other_page = API.query(:context => other_context, :name => "ph_composer.records.list",
-        :params => { "kind" => PART })
+                           :params => { "kind" => PART })
     assert_equal 1200.0, other_page.dig("value", "records", 0, "values", "length_mm")
     assert_equal 300.0, stored(part).fetch("length_mm")
   end
@@ -484,7 +484,7 @@ class ApiTest < PhComposerTestCase
     refute_equal @session.id, reopened.id
     fresh = API.connect(:session_id => reopened.id)
     assert_equal 1, API.query(:context => fresh, :name => "ph_composer.records.list",
-                                                 :params => { "kind" => PART }).dig("value", "total")
+                              :params => { "kind" => PART }).dig("value", "total")
   end
 
   def test_undo_and_redo_restore_values_and_advance_the_revision
@@ -503,7 +503,8 @@ class ApiTest < PhComposerTestCase
 
     preview = API.preview(:context => @context, :name => "test.fixture.duplicate_parts", :params => { "ids" => parts })
     assert_equal [%w[created] * 2, 2], [preview.fetch("affected").map { |row|
- row.fetch("change") }, records.dig("value", "total")]
+                                          row.fetch("change")
+                                        }, records.dig("value", "total")]
 
     duplicated = invoke("test.fixture.duplicate_parts", { "ids" => parts }, 2, @session.revision)
     assert_equal 4, records.dig("value", "total")

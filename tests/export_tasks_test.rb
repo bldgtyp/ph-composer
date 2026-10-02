@@ -24,13 +24,13 @@ class ExportTasksTest < PhComposerTestCase
 
     def blocked(canonical: nil)
       result = {
-                       "schema_version" => 1, "run_id" => @id, "state" => "complete_with_findings",
-                       "summary" => { "objects" => 0, "unavailable" => 1, "findings" => 1, "publishable" => false },
-                       "sections" => [], "failure" => nil,
-                       "findings" => [{ "code" => "object.unavailable", "section" => "fixture",
-                                        "object_id" => "zone", "message" => "Choose an authored construction.",
-                                        "blocks_export" => true }]
-                     }
+        "schema_version" => 1, "run_id" => @id, "state" => "complete_with_findings",
+        "summary" => { "objects" => 0, "unavailable" => 1, "findings" => 1, "publishable" => false },
+        "sections" => [], "failure" => nil,
+        "findings" => [{ "code" => "object.unavailable", "section" => "fixture",
+                         "object_id" => "zone", "message" => "Choose an authored construction.",
+                         "blocks_export" => true }]
+      }
       result["canonical_model"] = canonical if canonical
       @callback.call("runtime.translation", "request_id" => @id, "result" => result)
     end
@@ -41,12 +41,12 @@ class ExportTasksTest < PhComposerTestCase
 
     def success
       @callback.call("runtime.translation", "request_id" => @id, "result" => {
-                       "schema_version" => 1, "run_id" => @id, "state" => "complete",
-                       "summary" => { "objects" => 0, "unavailable" => 0, "findings" => 0, "publishable" => true },
-                       "sections" => [], "failure" => nil, "findings" => [],
-                       "canonical_model" => { "hbjson" => JSON.generate("type" => "Model", "rooms" => []),
-                                              "rooms" => 0, "faces" => 0, "surface_pairs" => 0 }
-                     })
+        "schema_version" => 1, "run_id" => @id, "state" => "complete",
+        "summary" => { "objects" => 0, "unavailable" => 0, "findings" => 0, "publishable" => true },
+        "sections" => [], "failure" => nil, "findings" => [],
+        "canonical_model" => { "hbjson" => JSON.generate("type" => "Model", "rooms" => []),
+                               "rooms" => 0, "faces" => 0, "surface_pairs" => 0 }
+      })
     end
   end
 
@@ -124,7 +124,7 @@ class ExportTasksTest < PhComposerTestCase
     task = start
     drain
     @runtime.blocked(:canonical => { "hbjson" => JSON.generate("type" => "Model", "rooms" => []),
-                                    "rooms" => 1, "faces" => 6, "surface_pairs" => 0 })
+                                     "rooms" => 1, "faces" => 6, "surface_pairs" => 0 })
     outcome = @tasks.status(task.fetch("task_id")).fetch("outcome")
     refute outcome.dig("value", "result", "canonical_model").key?("hbjson")
     assert_equal 1, outcome.dig("value", "result", "canonical_model", "rooms")

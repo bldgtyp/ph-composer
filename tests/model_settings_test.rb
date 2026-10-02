@@ -5,15 +5,15 @@ require_relative "test_helper"
 class ModelSettingsTest < PhComposerTestCase
   DEFAULTS = { "enabled" => true, "lower" => 10.0, "upper" => 20.0 }.freeze
   VALUES = { "type" => "object", "additionalProperties" => false, "required" => DEFAULTS.keys,
-    "properties" => { "enabled" => { "type" => "boolean" }, "lower" => { "type" => "number" },
-                      "upper" => { "type" => "number" } } }.freeze
+             "properties" => { "enabled" => { "type" => "boolean" }, "lower" => { "type" => "number" },
+                               "upper" => { "type" => "number" } } }.freeze
 
   def setup
     super
     @model = Sketchup.active_model
     @settings = PhComposer::ModelSettings.new(:dictionary => "ph_composer.test_settings", :defaults => DEFAULTS,
-      :schema => VALUES, :label => "Example", :step_name => "update_example_settings",
-      :affected => [{ "kind" => "example_settings", "id" => "test.settings", "change" => "updated" }]) do |values|
+                                              :schema => VALUES, :label => "Example", :step_name => "update_example_settings",
+                                              :affected => [{ "kind" => "example_settings", "id" => "test.settings", "change" => "updated" }]) do |values|
       values.fetch("lower") < values.fetch("upper") ? [] : ["Lower must precede upper."]
     end
     settings = @settings
@@ -24,10 +24,10 @@ class ModelSettingsTest < PhComposerTestCase
         params = { "type" => "object", "additionalProperties" => false, "required" => %w[values expected_values],
                    "properties" => { "values" => VALUES, "expected_values" => VALUES } }
         scope.action("test.settings.update", :description => "Update model settings.", :params => params,
-          :result => VALUES, :undo_name => "Change Example Settings", :side_effects => "Writes settings.",
-          :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }]) do |request, proposal|
+                                             :result => VALUES, :undo_name => "Change Example Settings", :side_effects => "Writes settings.",
+                                             :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }]) do |request, proposal|
           settings.propose(request.model, proposal, :values => request.params.fetch("values"),
-                           :expected_values => request.params.fetch("expected_values"))
+                                                    :expected_values => request.params.fetch("expected_values"))
         end
       end
     end
@@ -40,8 +40,8 @@ class ModelSettingsTest < PhComposerTestCase
   def update(values, expected = @settings.read(@model))
     @sequence += 1
     PhComposer::API.invoke(:context => @context, :name => "test.settings.update",
-      :params => { "values" => values, "expected_values" => expected },
-      :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
+                           :params => { "values" => values, "expected_values" => expected },
+                           :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
   end
 
   def test_defaults_are_detached_and_read_without_a_dictionary_or_undo_entry

@@ -45,7 +45,7 @@ class WindowUnitReadContextTest < PhComposerTestCase
   def unit(definition, x_m, id)
     entity = @model.entities.add_instance(definition, Geom::Transformation.translation([x_m / 0.0254, 0, 0]))
     U.write(entity, "id" => id, "schema_version" => 1, "window_type_id" => @type.fetch("id"),
-      "anchor" => "sill_left", "user_data" => {})
+                    "anchor" => "sill_left", "user_data" => {})
     entity
   end
 
@@ -76,8 +76,8 @@ class WindowUnitReadContextTest < PhComposerTestCase
     inventory = context.occurrences.to_h { |item| [item.path, context.polygon(item)] }
     error = assert_raises(PhComposer::CodedError) do
       U::ResetStep.new(:model => @model, :type => @type,
-        :items => [{ :reference => selected.reference, :expected_record => selected.record }],
-        :outline_inventory_m => inventory)
+                       :items => [{ :reference => selected.reference, :expected_record => selected.record }],
+                       :outline_inventory_m => inventory)
     end
     assert_equal "window.overlap", error.code
     assert_same @old, @outside.definition
@@ -106,7 +106,7 @@ class WindowUnitReadContextTest < PhComposerTestCase
     context = reads
     assert_in_delta 13, context.polygon(occurrence(context, @outside)).map(&:first).max, 1e-10
     U::DefinitionIndex.write(@model, { @type.fetch("id") => empty_old.persistent_id },
-      :expected => U::DefinitionIndex.read(@model))
+                             :expected => U::DefinitionIndex.read(@model))
     context = reads
     assert_in_delta 13, context.polygon(occurrence(context, @outside)).map(&:first).max, 1e-10
   end

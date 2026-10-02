@@ -18,9 +18,9 @@ module PhComposer
 
       def summary
         object({ "provider_id" => TEXT, "kind" => TEXT, "generation" => GENERATION,
-          "state" => { "type" => "string", "enum" => %w[unloaded empty loaded failed] },
-          "warnings" => list(note), "unavailable" => list(note), "freshness" => freshness,
-          "published_at" => NULLABLE_TEXT, "failure" => failure, "age_seconds" => NULLABLE_NUMBER })
+                 "state" => { "type" => "string", "enum" => %w[unloaded empty loaded failed] },
+                 "warnings" => list(note), "unavailable" => list(note), "freshness" => freshness,
+                 "published_at" => NULLABLE_TEXT, "failure" => failure, "age_seconds" => NULLABLE_NUMBER })
       end
 
       def note
@@ -49,8 +49,8 @@ module PhComposer
         difference = object({ "field" => TEXT, "local" => VALUE, "incoming" => VALUE,
                               "local_present" => BOOLEAN, "incoming_present" => BOOLEAN })
         candidate = object({ "id" => TEXT, "name" => TEXT, "differences" => list(difference),
-          "expected_values" => OBJECT, "comparison_available" => BOOLEAN,
-          "source_changed" => { "type" => %w[boolean null] } })
+                             "expected_values" => OBJECT, "comparison_available" => BOOLEAN,
+                             "source_changed" => { "type" => %w[boolean null] } })
         outcomes = %w[create reuse review_required ambiguous_source ambiguous_name]
         object({ "outcome" => { "type" => "string", "enum" => outcomes },
                  "candidates" => list(candidate) })
@@ -62,7 +62,7 @@ module PhComposer
         row["properties"]["resolution"] = resolution if resolved
         row["required"] << "resolution" if resolved
         object(summary.fetch("properties").merge("rows" => list(row),
-          "total" => Pages::TOTAL, "next_cursor" => Pages::NEXT_CURSOR))
+                                                 "total" => Pages::TOTAL, "next_cursor" => Pages::NEXT_CURSOR))
       end
 
       def copy_result

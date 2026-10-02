@@ -18,7 +18,8 @@ class WindowsWalkthroughTest < PhComposerTestCase
     before = engine.find(W::TYPE_KIND, result.fetch("type_id"))
     model.undo
     assert engine.find(W::TYPE_KIND, result.fetch("type_id"))["elements"].all? { |element|
- element["installs"].values.none? }
+             element["installs"].values.none?
+           }
     model.redo
     assert_equal before, engine.find(W::TYPE_KIND, result.fetch("type_id"))
     text = File.read(File.expand_path("../tools/examples/authoring/windows_walkthrough.rb", __dir__))

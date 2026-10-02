@@ -51,7 +51,7 @@ class ExportTest < PhComposerTestCase
   def test_a_section_read_from_a_feature_not_required_is_refused
     feature = feature_declaring do |scope|
       scope.export_contributor("test.export.reader", :section_version => 1,
-                               :requires => ["example.foundation.export.parts", "test.export.nowhere"]) { [] }
+                                                     :requires => ["example.foundation.export.parts", "test.export.nowhere"]) { [] }
     end
 
     error = assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([feature]) }
@@ -68,10 +68,10 @@ class ExportTest < PhComposerTestCase
     calls = []
     feature = feature_declaring do |scope|
       scope.export_contributor("test.export.hosts", :section_version => 1,
-                               :projection => lambda { |_reader|
-                                 calls << :projected
-                                 %w[h1]
-                               }) { [] }
+                                                    :projection => lambda { |_reader|
+                                                                     calls << :projected
+                                                                     %w[h1]
+                                                                   }) { [] }
       scope.export_contributor("test.export.reader", :section_version => 1, :requires => ["test.export.hosts"]) { [] }
       scope.export_contributor("test.export.other", :section_version => 1) { [] }
     end
@@ -145,7 +145,7 @@ class ExportTest < PhComposerTestCase
 
   def test_an_exported_extension_stored_at_an_older_version_blocks_until_migrated
     store_part("extension_data" => { REVIEW => { "schema_version" => 1, "payload" => { "status" => "draft" },
-                                                "references" => [], "export_relevance" => "required" } })
+                                                 "references" => [], "export_relevance" => "required" } })
 
     error = assert_raises(Export::Blocked) { example_collection("r") }
 
@@ -155,8 +155,8 @@ class ExportTest < PhComposerTestCase
 
   def test_an_exported_extension_failing_its_installed_validator_blocks_the_export
     store_part("extension_data" => { REVIEW => { "schema_version" => 2, "payload" => {}, "references" => [
-                 { "path" => "$.checked_against", "target_kind" => PART, "cardinality" => "one" }
-               ], "export_relevance" => "required" } })
+      { "path" => "$.checked_against", "target_kind" => PART, "cardinality" => "one" }
+    ], "export_relevance" => "required" } })
 
     error = assert_raises(Export::Blocked) { example_collection("r") }
 
@@ -226,7 +226,7 @@ class ExportTest < PhComposerTestCase
 
   def example_collection(run_id)
     names = PhComposer::Registry.current.export_contributors.values
-      .select { |contributor| contributor.owner == "example.foundation" }.map(&:name)
+                                .select { |contributor| contributor.owner == "example.foundation" }.map(&:name)
     Export::Collection.build(@model, :run_id => run_id, :contributors => names)
   end
 
@@ -256,7 +256,7 @@ class ExportTest < PhComposerTestCase
 
   def store_part(extra)
     definition = invoke("example.foundation.create_parts", "definition_label" => "Frame",
-                                                            "parts" => [{ "label" => "Sill", "length_mm" => 1 }])
+                                                           "parts" => [{ "label" => "Sill", "length_mm" => 1 }])
     id = definition.dig("value", "part_ids", 0)
     store = PhComposer::Records::DictionaryStore.new(PART)
     store.write(@model, store.read(@model, id).merge(extra))

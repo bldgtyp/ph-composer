@@ -23,7 +23,7 @@ class WindowColourModesTest < PhComposerTestCase
     @type_id = result.dig("value", "id")
     [3.0, 7.0].each do |x|
       result = assignment_invoke("ph_composer.windows.units.place", "host" => @host, "type_id" => @type_id,
-        "anchor" => "sill_center", "offsets" => { "x_m" => x, "y_m" => 3.0 })
+                                                                    "anchor" => "sill_center", "offsets" => { "x_m" => x, "y_m" => 3.0 })
       assert_equal "ok", result.fetch("code"), result.inspect
     end
   end

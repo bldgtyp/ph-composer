@@ -39,7 +39,7 @@ class AssemblyAssignmentTest < PhComposerTestCase
     assert_equal({ "assembly_id" => id, "face_type" => "Wall", "boundary_condition" => "AttachedZone" },
                  assignment_faces.first.fetch("values"))
     intent = assembly_intent(id).merge("face_type" => { "mode" => "set", "value" => "Floor" },
-                                      "boundary_condition" => { "mode" => "clear" })
+                                       "boundary_condition" => { "mode" => "clear" })
     assert_equal "completed", assignment_classify([rows[1]], intent).fetch("status")
     assert_equal({ "assembly_id" => id, "face_type" => "Floor" }, assignment_faces[1].fetch("values"))
     blank = assignment_assembly("Blank")

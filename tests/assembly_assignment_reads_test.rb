@@ -17,7 +17,7 @@ class AssemblyAssignmentReadsTest < PhComposerTestCase
     group, entities = assignment_zone(200, 1, :nested => true)
     assignment_invoke("#{FACE_PREFIX}.assign_assembly", assignment_params(assignment_faces, id))
     group.entities << Sketchup::Group.new(250, group.entities.to_a.first.entities,
-                                         :transformation => Geom::Transformation.scaling(2))
+                                          :transformation => Geom::Transformation.scaling(2))
     read = assignment_query("#{FACE_PREFIX}.all")
     rows = read.fetch("faces")
     usage = read.fetch("assembly_usage").first
@@ -58,7 +58,7 @@ class AssemblyAssignmentReadsTest < PhComposerTestCase
     id = assignment_assembly("Colour", "color" => "#123456")
     assignment_invoke("#{FACE_PREFIX}.assign_assembly", assignment_params([assignment_faces.first], id))
     STORE.write(entities.last, "id" => "fac_000000000099", "schema_version" => 1,
-                              "assembly_id" => "asm_000000000099")
+                               "assembly_id" => "asm_000000000099")
     declaration = PhComposer::Registry.current.colour_modes.fetch("#{FACE_PREFIX}.by_assembly")
     entries = declaration.projection.call(read(declaration))
     assert_equal "Colour", entries.first.label
@@ -71,14 +71,14 @@ class AssemblyAssignmentReadsTest < PhComposerTestCase
   def test_choose_accepts_assembly_with_null_keep_and_missing_choice_refuses
     id = assignment_assembly("Paint")
     chosen = API.view(:context => @context, :name => "#{FACE_PREFIX}.choose",
-                       :params => { "field" => "assembly_id", "value" => id })
+                      :params => { "field" => "assembly_id", "value" => id })
     assert_equal "completed", chosen.fetch("status"), chosen.inspect
     assert_equal id, chosen.dig("value", "palette", "assembly_id")
     missing = API.view(:context => @context, :name => "#{FACE_PREFIX}.choose",
-                        :params => { "field" => "assembly_id", "value" => "asm_000000000099" })
+                       :params => { "field" => "assembly_id", "value" => "asm_000000000099" })
     assert_equal %w[refused reference.invalid], missing.values_at("status", "code")
     kept = API.view(:context => @context, :name => "#{FACE_PREFIX}.choose",
-                     :params => { "field" => "assembly_id", "value" => nil })
+                    :params => { "field" => "assembly_id", "value" => nil })
     refute kept.fetch("value").fetch("palette").key?("assembly_id")
   end
 

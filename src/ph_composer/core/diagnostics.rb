@@ -41,6 +41,7 @@ module PhComposer
           fields.each do |key, value|
             name = key.to_s
             next unless ALLOWED_FIELDS.include?(name)
+
             payload[name] = redact(value.to_s)
           end
           write_line(JSON.generate(payload) + "\n")
@@ -61,6 +62,7 @@ module PhComposer
 
       def path
         return @path_override if @path_override
+
         File.join(data_root, "logs", LOG_NAME)
       end
 
@@ -79,6 +81,7 @@ module PhComposer
           text.gsub!(secret.to_s, "[REDACTED]")
         end
         return "[REDACTED_PATH]" if absolute_path?(text)
+
         text
       end
 
@@ -99,6 +102,7 @@ module PhComposer
       def data_root
         plugins = Sketchup.find_support_file("Plugins") if Sketchup.respond_to?(:find_support_file)
         return File.join(File.dirname(plugins), EXTENSION_NAME) if plugins && !plugins.empty?
+
         File.join(Dir.tmpdir, EXTENSION_ID)
       end
 
@@ -111,6 +115,7 @@ module PhComposer
 
       def rotate_if_needed(log_path, incoming_bytes)
         return unless File.size(log_path) + incoming_bytes > MAX_BYTES
+
         archive = log_path + ".1"
         FileUtils.rm_f(archive)
         File.rename(log_path, archive)

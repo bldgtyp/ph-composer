@@ -19,15 +19,16 @@ module PhComposer
         "add_folder" => "Add a folder of library files the user chooses in a native picker to this machine's " \
                         "libraries."
       }.freeze
+
       module_function
 
       def install(feature)
         result = Schemas.list(Schemas.object({ "id" => Schemas::TEXT, "label" => Schemas::TEXT,
-                                              "provider_kind" => Schemas::TEXT }))
+                                               "provider_kind" => Schemas::TEXT }))
         ADDS.each do |verb, approval|
           feature.setup_command("#{PREFIX}.#{verb}", :description => DESCRIPTIONS.fetch(verb),
-                                :params => Library.object({}), :result => result, :examples => [{}],
-                                :approval => approval) do |request|
+                                                     :params => Library.object({}), :result => result, :examples => [{}],
+                                                     :approval => approval) do |request|
             kinds, adapters = kind_adapters(request.registry)
             value = add_path(request.approval.path, :kinds => kinds, :adapters => adapters)
             refresh_sessions
@@ -35,7 +36,7 @@ module PhComposer
           end
           feature.menu_item("#{PREFIX}.#{verb}_menu", :label => verb == "add_file" ? "Add Library File…" :
                             "Add Library Folder…", :menu => "Libraries",
-                            :available => ->(_read) { false }) do |session|
+                                                      :available => ->(_read) { false }) do |session|
             # The picker would only lead to the same refusal; say so before it opens.
             next session.notice(Setup::UNREADABLE, :tone => :warning) if Setup.state == "unreadable"
 
@@ -47,9 +48,9 @@ module PhComposer
         end
         install_reset(feature, result)
         feature.setup_command("#{PREFIX}.remove", :description => "Remove a configured library from this machine.",
-                             :params => Library.object({ "provider_id" => Library.described(Library::TEXT,
-                               "The configured library to remove from this machine.") }), :result => result,
-                             :examples => [{ "provider_id" => "example" }]) do |request|
+                                                  :params => Library.object({ "provider_id" => Library.described(Library::TEXT,
+                                                                                                                 "The configured library to remove from this machine.") }), :result => result,
+                                                  :examples => [{ "provider_id" => "example" }]) do |request|
           id = request.params.fetch("provider_id")
           value = Setup.remove(id)
           refresh_sessions
@@ -108,8 +109,10 @@ module PhComposer
           provider = FileProvider.new(:id => "validation", :label => "Library", :path => path,
                                       :kinds => kinds, :adapters => adapters)
           provider.list(kinds.first) unless kinds.empty?
-          files = Dir.children(path).select { |name| File.extname(name).downcase == ".json" &&
-                                                    File.file?(File.join(path, name)) }
+          files = Dir.children(path).select { |name|
+            File.extname(name).downcase == ".json" &&
+              File.file?(File.join(path, name))
+          }
           return File.basename(path) unless files.length == 1
 
           begin

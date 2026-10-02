@@ -37,7 +37,7 @@ module AuthoringWalkthrough
     zones = client.query("ph_composer.zones.all").dig("value", "zones")
     west = zones.find { |zone| zone.dig("values", "name") == "west" }
     values = west.fetch("values").merge("name" => "West Zone", "building_segment" => "Walkthrough",
-                                         "level" => "L1", "ground_depth_mm" => 150.0)
+                                        "level" => "L1", "ground_depth_mm" => 150.0)
     edited = client.invoke("ph_composer.zones.update", {
       "reference" => west.fetch("reference"), "values" => values, "expected_values" => west.fetch("values")
     })

@@ -23,6 +23,7 @@ module PhComposer
           unless @type.fetch("id") == @expected_record.fetch("window_type_id") && Types::KIND.problems(@type).empty?
             raise CodedError.new("validation.failed", "Choose the authored Type referenced by this Window unit.")
           end
+
           item = NativeUnit.resolve!(Occurrences.all(model), @reference, :expected_record => @expected_record)
           @reference["unit_id"] = @expected_record.fetch("id")
           @plan = DefinitionPlan.build(@type)
@@ -38,19 +39,20 @@ module PhComposer
           if expected_scope.nil? != expected_state.nil?
             raise ArgumentError, "A host scope and expected state must be paired."
           end
+
           check_host_values!
           check_fit!(model, item)
           @affected = [{ "kind" => REFERENCE_KIND, "id" => @expected_record.fetch("id"), "change" => "rehosted",
-            "reference" => DeepCopy.call(@reference) }]
+                         "reference" => DeepCopy.call(@reference) }]
         end
 
         def descriptor
           DeepCopy.call("name" => "rehost_window_unit", "reference" => @reference,
-            "expected_record" => @expected_record, "type" => @type, "native_before" => @native_before,
-            "host" => @host_reference, "host_values" => @host_values, "host_path" => @host_path,
-            "host_id" => @host_id, "host_geometry" => @host_geometry, "host_transform" => @host_transform,
-            "existing_polygons_m" => @existing_polygons, "scope_path" => @expected_scope&.path,
-            "scope_before" => @expected_state)
+                        "expected_record" => @expected_record, "type" => @type, "native_before" => @native_before,
+                        "host" => @host_reference, "host_values" => @host_values, "host_path" => @host_path,
+                        "host_id" => @host_id, "host_geometry" => @host_geometry, "host_transform" => @host_transform,
+                        "existing_polygons_m" => @existing_polygons, "scope_path" => @expected_scope&.path,
+                        "scope_before" => @expected_state)
         end
 
         def temporary_ids
@@ -70,6 +72,7 @@ module PhComposer
           unless item.entity.glued_to == face
             raise CodedError.new("geometry.failed", "The native Window instance could not glue to its new host Face.")
           end
+
           keys = %w[matrix definition_id definition_before]
           unless NativeUnit.preimage(item).slice(*keys) == @native_before.slice(*keys)
             raise CodedError.new("geometry.failed", "Native re-host changed the Window matrix or geometry.")
@@ -81,14 +84,14 @@ module PhComposer
         def check_fit!(model, item)
           unless item.path[0...-1] == @host_path
             raise CodedError.new("window.rehost_parent",
-              "Re-host requires a Face in the Window's existing parent storage.")
+                                 "Re-host requires a Face in the Window's existing parent storage.")
           end
           unless Types::KIND.store.read(model, @type.fetch("id")) == @type
             NativeUnit.changed!("The authored Window Type changed after re-host preview.")
           end
           unless DefinitionGeometry.matches?(item.entity.definition, :type_id => @type.fetch("id"), :plan => @plan)
             raise CodedError.new("window.definition_changed",
-              "Reset the Window geometry to its Type before re-hosting.")
+                                 "Reset the Window geometry to its Type before re-hosting.")
           end
           located = @locator.call(model, @host_reference, :mutable => true)
           face, transform = located.entity, located.transform

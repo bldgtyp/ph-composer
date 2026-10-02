@@ -8,17 +8,19 @@ module PhComposer
     # SketchUp object, so a contributor cannot mutate the Model or rescan a definition behind export.
     class GeometrySnapshot
       Entry = Struct.new(:kind, :path, :transform, :dictionaries, :geometry, :native_name, :native,
-        :keyword_init => true) do
+                         :keyword_init => true) do
         def record(dictionary)
           text = dictionaries.dig(dictionary, "record")
           return nil if text.nil?
           unless text.is_a?(String)
             raise Blocked.new("record.unreadable", "The #{dictionary} entity record is not JSON text.")
           end
+
           record = JSON.parse(text)
           unless record.is_a?(Hash)
             raise Blocked.new("record.unreadable", "The #{dictionary} entity record is not a JSON object.")
           end
+
           record
         rescue JSON::ParserError
           raise Blocked.new("record.unreadable", "The #{dictionary} entity record is not valid JSON.")
@@ -76,7 +78,7 @@ module PhComposer
           if entity.is_a?(Sketchup::Face)
             entry = if capture_faces
                       Entry.new(:kind => "face", :path => child_path.freeze, :transform => transform.to_a.freeze,
-                        :dictionaries => dictionaries, :geometry => FaceGeometry.capture(entity, transform))
+                                :dictionaries => dictionaries, :geometry => FaceGeometry.capture(entity, transform))
                     end
             block.call(entry)
           elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
@@ -90,7 +92,7 @@ module PhComposer
 
             child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
             walk(child_entities, child_path, child_transform, definitions, :capture_faces => capture_faces && !cuts,
-              &block)
+                 &block)
           else
             block.call(nil)
           end
@@ -156,6 +158,7 @@ module PhComposer
       def records(dictionary, kind: nil)
         entries.filter_map do |entry|
           next if kind && entry.kind != kind
+
           record = entry.record(dictionary)
           [entry, record] if record
         end
@@ -166,6 +169,7 @@ module PhComposer
         if matches.length > 1
           raise Blocked.new("target.ambiguous", "An export occurrence path resolves more than once.")
         end
+
         matches.first
       end
 

@@ -53,7 +53,7 @@ module PhComposer
         def reader
           records = RecordReader.new(Records::Engine.new(@model, @registry.catalog), @registry.catalog)
           snapshot = GeometrySnapshot.new(@cursor.entries, Sessions.for(@model).revision,
-            :model_dictionaries => @cursor.model_dictionaries)
+                                          :model_dictionaries => @cursor.model_dictionaries)
           SnapshotReader.new(records, snapshot, :registry => @registry)
         end
       end
@@ -78,6 +78,7 @@ module PhComposer
         if session.revision != revision
           raise Blocked.new("export.model_changed", "The Model changed while export geometry was collected.")
         end
+
         document = { "schema_version" => SCHEMA_VERSION, "run_id" => run_id.to_s, "sections" => sections }
         Extraction.new(:document => document, :findings => reader.findings.map(&:to_h))
       end

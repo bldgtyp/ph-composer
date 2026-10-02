@@ -29,7 +29,7 @@ class LibraryCoordinatorTest < PhComposerTestCase
 
   def load_catalog
     API.setup(:context => @context, :name => "#{PREFIX}.load",
-             :params => { "provider_id" => "synthetic.file", "kind" => "materials" })
+              :params => { "provider_id" => "synthetic.file", "kind" => "materials" })
   end
 
   def params(choice = "create")
@@ -90,8 +90,8 @@ class LibraryCoordinatorTest < PhComposerTestCase
                 "proposal_digest" => preview.fetch("proposal_digest") }
     result = API.invoke(:context => @context, :name => "#{PREFIX}.copy", :params => input, :request => request)
     assert_equal "committed", result["effect"], result.inspect
-    assert_equal result, 
-API.invoke(:context => @context, :name => "#{PREFIX}.copy", :params => input, :request => request)
+    assert_equal result,
+                 API.invoke(:context => @context, :name => "#{PREFIX}.copy", :params => input, :request => request)
     assert_equal 1, materials.length
     source = materials.first.dig("values", "source")
     assert_equal "ph_composer.library.file", source["provider_kind"]
@@ -104,7 +104,7 @@ API.invoke(:context => @context, :name => "#{PREFIX}.copy", :params => input, :r
     created = invoke("#{PREFIX}.copy", params("create"))
     id = created.dig("value", "local_id")
     invoke("#{MATERIALS}.update", "id" => id, "values" => { "name" => "Edited", "conductivity_w_mk" => 0.08 },
-                                    "expected_values" => { "name" => "Synthetic insulation" })
+                                  "expected_values" => { "name" => "Synthetic insulation" })
     assert_equal "reuse", in_file.fetch("rows").first.dig("resolution", "outcome")
     reused = invoke("#{PREFIX}.copy", params("keep_local"))
     assert_equal id, reused.dig("value", "local_id")
@@ -165,7 +165,7 @@ API.invoke(:context => @context, :name => "#{PREFIX}.copy", :params => input, :r
   def test_source_change_comparison_ignores_local_edits_and_reports_incompatible_versions
     id = invoke("#{PREFIX}.copy", params("create")).dig("value", "local_id")
     invoke("#{MATERIALS}.update", "id" => id, "values" => { "conductivity_w_mk" => 0.08 },
-                                    "expected_values" => { "conductivity_w_mk" => 0.04 })
+                                  "expected_values" => { "conductivity_w_mk" => 0.04 })
     candidate = in_file.fetch("rows").first.fetch("resolution").fetch("candidates").first
     assert_equal true, candidate.fetch("comparison_available")
     assert_equal false, candidate.fetch("source_changed")
@@ -181,7 +181,7 @@ API.invoke(:context => @context, :name => "#{PREFIX}.copy", :params => input, :r
     local = { "id" => id, "mapped" => adapter.map.call(record), "source" => record.fetch("source") }
     source = record.fetch("source").slice(*PhComposer::Library::Resolver::IDENTITY_FIELDS)
     candidate = PhComposer::Library::Coordinator.resolve(adapter, source, adapter.map.call(changed), [local])
-                           .fetch("candidates").first
+                                                .fetch("candidates").first
     assert_equal false, candidate.fetch("comparison_available")
     assert_nil candidate.fetch("source_changed")
   end
@@ -221,7 +221,7 @@ API.invoke(:context => @context, :name => "#{PREFIX}.copy", :params => input, :r
     assert_equal "library.catalog_stale", result["code"], result.inspect
     assert_empty materials
     assert_equal "unloaded", API.query(:context => @context, :name => "#{PREFIX}.providers")
-                                   .dig("value", 0, "catalogs", 0, "state")
+                                .dig("value", 0, "catalogs", 0, "state")
   end
 
   def test_refresh_publishes_a_new_generation_and_old_copy_is_refused

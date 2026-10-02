@@ -24,8 +24,8 @@ class AuthoringFieldsTest < PhComposerTestCase
     snapshot = Fields.source_snapshot_schema(Fields.common)
     refute snapshot.fetch("properties").key?("source")
     provenance = { "kind" => "library", "provider_kind" => "test.provider", "library_id" => "test-library",
-      "record_kind" => "widgets", "record_id" => "row", "fingerprint" => "digest", "fingerprint_version" => 1,
-      "copied_at" => "2026-10-01T12:00:00Z", "snapshot" => { "name" => "Example" } }
+                   "record_kind" => "widgets", "record_id" => "row", "fingerprint" => "digest", "fingerprint_version" => 1,
+                   "copied_at" => "2026-10-01T12:00:00Z", "snapshot" => { "name" => "Example" } }
     assert_empty Fields.source_problems(provenance, snapshot)
     provenance.fetch("snapshot")["private_address"] = "private"
     refute_empty Fields.source_problems(provenance, snapshot)

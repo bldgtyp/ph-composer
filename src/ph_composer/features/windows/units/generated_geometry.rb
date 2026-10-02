@@ -21,7 +21,7 @@ module PhComposer
           validate_native!(definition, width, height)
           polygon = [[0.0, -height, 0.0], [width, -height, 0.0], [width, 0.0, 0.0], [0.0, 0.0, 0.0]]
           DefinitionPlan::Plan.new(:width_m => width, :height_m => height,
-            :outer_polygon_m => polygon.map(&:freeze).freeze, :panes => [].freeze, :signature => nil).freeze
+                                   :outer_polygon_m => polygon.map(&:freeze).freeze, :panes => [].freeze, :signature => nil).freeze
         end
 
         def valid_size?(size)
@@ -33,22 +33,22 @@ module PhComposer
         def validate_native!(definition, width, height)
           definition.entities.each do |entity|
             vertices = case entity
-            when Sketchup::Face then entity.loops.flat_map(&:vertices)
-            when Sketchup::Edge then [entity.start, entity.end]
-            else unknown!
-            end
+                       when Sketchup::Face then entity.loops.flat_map(&:vertices)
+                       when Sketchup::Edge then [entity.start, entity.end]
+                       else unknown!
+                       end
             vertices.each do |vertex|
               x, y, z = [vertex.position.x, vertex.position.y, vertex.position.z].map { |value| value.to_f * INCH_TO_M }
               tolerance = FaceGeometry::QUANTUM_M
               unknown! unless [x, y, z].all?(&:finite?) && z.abs <= tolerance &&
-                x.between?(-tolerance, width + tolerance) && y.between?(-height - tolerance, tolerance)
+                              x.between?(-tolerance, width + tolerance) && y.between?(-height - tolerance, tolerance)
             end
           end
         end
 
         def unknown!
           raise CodedError.new("window.type_geometry_unknown",
-            "Window geometry has no trustworthy generated outline; choose a new placement explicitly.")
+                               "Window geometry has no trustworthy generated outline; choose a new placement explicitly.")
         end
 
         private_class_method :valid_size?, :validate_native!, :unknown!

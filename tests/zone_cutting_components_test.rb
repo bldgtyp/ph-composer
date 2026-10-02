@@ -52,7 +52,7 @@ class ZoneCuttingComponentsTest < PhComposerTestCase
     end
     assert_equal "target.wrong_kind", error.code
     result = invoke("ph_composer.zones.faces.classify", "faces" => [reference], "expected_values" => {},
-      "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" } })
+                                                        "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" } })
     assert_equal %w[refused target.wrong_kind none], result.values_at("status", "code", "effect")
     tool = Zones::Faces.classify_tool(@session)
     tool.choose("face_type", "Wall")

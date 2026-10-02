@@ -7,6 +7,7 @@ module PhComposer
       # stamp, so the stamp alone cannot distinguish a detached definition. Names are presentation.
       module DefinitionIndex
         STORE = Records::EntityStore.new("ph_composer.window_definitions", :key => "index")
+
         module_function
 
         def read(model)
@@ -32,7 +33,7 @@ module PhComposer
           found = matching_definition(model, type_id, persistent_id)
           unless found
             raise CodedError.new("window.definition_missing",
-              "The primary Window definition no longer matches its type.")
+                                 "The primary Window definition no longer matches its type.")
           end
           found
         end
@@ -42,14 +43,15 @@ module PhComposer
           unless read(model) == expected
             raise CodedError.new("target.changed", "The Window definition index changed after preview.")
           end
+
           unless valid_mapping?(definitions)
             raise CodedError.new("validation.failed",
-              "Window definition pointers must be distinct type/persistent-id pairs.")
+                                 "Window definition pointers must be distinct type/persistent-id pairs.")
           end
           definitions.each do |type_id, persistent_id|
             unless matching_definition(model, type_id, persistent_id)
               raise CodedError.new("target.changed",
-                "A planned primary Window definition is missing or differently stamped.")
+                                   "A planned primary Window definition is missing or differently stamped.")
             end
           end
           STORE.write(model, "schema_version" => 1, "definitions" => definitions)

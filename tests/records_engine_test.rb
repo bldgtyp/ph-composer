@@ -109,7 +109,7 @@ class RecordsEngineTest < PhComposerTestCase
     part = seed_part
     error = assert_raises(PhComposer::CodedError) do
       @engine.propose_update("test.fixture.part", part, PhComposer::Records::ChangeSet.new,
-          :values => { "length_mm" => -1 })
+                             :values => { "length_mm" => -1 })
     end
 
     assert_equal "validation.failed", error.code
@@ -185,8 +185,8 @@ class RecordsEngineTest < PhComposerTestCase
     second = seed_part("neighbour_ids" => [first])
     changes = PhComposer::Records::ChangeSet.new
     @engine.propose_update("test.fixture.part", second, changes, :extension_payloads => {
-                             "test.fixture.review" => { "review_status" => "checked", "checked_against" => first }
-                           })
+      "test.fixture.review" => { "review_status" => "checked", "checked_against" => first }
+    })
     @engine.apply(changes)
 
     changes = PhComposer::Records::ChangeSet.new
@@ -272,7 +272,8 @@ class RecordsEngineTest < PhComposerTestCase
     changes = PhComposer::Records::ChangeSet.new
 
     error = assert_raises(PhComposer::CodedError) {
- @engine.propose_duplicate("test.fixture.part", [plain, foreign], changes) }
+      @engine.propose_duplicate("test.fixture.part", [plain, foreign], changes)
+    }
 
     assert_equal "copy.rule_missing", error.code
     assert_equal "unavailable", error.detail.fetch("status")
@@ -286,9 +287,9 @@ class RecordsEngineTest < PhComposerTestCase
     data = { REVIEW.namespace => REVIEW.envelope("review_status" => "checked", "checked_against" => old_id) }
 
     first = PhComposer::Records::Extension.copy_data(data, record_catalog, "Test part", old_id,
-                                                      { old_id => first_id })
+                                                     { old_id => first_id })
     second = PhComposer::Records::Extension.copy_data(data, record_catalog, "Test part", old_id,
-                                                       { old_id => second_id })
+                                                      { old_id => second_id })
 
     assert_equal first_id, first.dig(REVIEW.namespace, "payload", "checked_against")
     assert_equal second_id, second.dig(REVIEW.namespace, "payload", "checked_against")
@@ -345,7 +346,7 @@ class RecordsEngineTest < PhComposerTestCase
     changes = PhComposer::Records::ChangeSet.new
 
     results = @engine.propose_migration("test.fixture.part", [outdated, current, absent], "test.fixture.review",
-        changes)
+                                        changes)
     @engine.apply(changes)
 
     assert_equal({ outdated => "migrated", current => "current", absent => "absent" }, results)
@@ -361,7 +362,7 @@ class RecordsEngineTest < PhComposerTestCase
 
     error = assert_raises(PhComposer::CodedError) do
       @engine.propose_migration("test.fixture.part", [good, bad], "test.fixture.review",
-          PhComposer::Records::ChangeSet.new)
+                                PhComposer::Records::ChangeSet.new)
     end
 
     assert_equal "extension.migration_failed", error.code
@@ -377,7 +378,7 @@ class RecordsEngineTest < PhComposerTestCase
     end
     missing_error = assert_raises(PhComposer::CodedError) do
       engine_without.propose_migration("test.fixture.part", [newer], "test.fixture.review",
-          PhComposer::Records::ChangeSet.new)
+                                       PhComposer::Records::ChangeSet.new)
     end
 
     assert_equal "extension.schema_unsupported", newer_error.code
@@ -410,7 +411,7 @@ class RecordsEngineTest < PhComposerTestCase
 
     statuses = [bad_payload, bad_references].map do |id|
       @engine.view("test.fixture.part", @engine.find("test.fixture.part", id)).dig("extension_status",
-                                                                                "test.fixture.review")
+                                                                                   "test.fixture.review")
     end
 
     assert_equal %w[invalid invalid], statuses

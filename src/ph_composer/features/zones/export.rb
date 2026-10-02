@@ -12,15 +12,15 @@ module PhComposer
       def install(feature)
         feature.export_contributor(
           SECTION, :section_version => 1,
-          :preflight => "#{FEATURE_ID}.export_preflight",
-          # What the Zone translation writes on each Room (python/ph_composer_translation/model_sections.py).
-          :user_data_keys => %w[ph_composer.level ph_composer.building_segment],
-          :result => { "construction_usage" => [Export::Privacy.fields(%w[assembly_id face_count gross_area_m2])] },
-          :requires => [CONSTRUCTIONS], :report => method(:report)
+                   :preflight => "#{FEATURE_ID}.export_preflight",
+                   # What the Zone translation writes on each Room (python/ph_composer_translation/model_sections.py).
+                   :user_data_keys => %w[ph_composer.level ph_composer.building_segment],
+                   :result => { "construction_usage" => [Export::Privacy.fields(%w[assembly_id face_count gross_area_m2])] },
+                   :requires => [CONSTRUCTIONS], :report => method(:report)
         ) { |reader| records(reader) }
         feature.query("#{FEATURE_ID}.export_preflight", :description => "All-Zone export checks and adjacency repair.",
-                      :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
-                      :examples => [{}]) { |request| preflight(request) }
+                                                        :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
+                                                        :examples => [{}]) { |request| preflight(request) }
       end
 
       def preflight(request)

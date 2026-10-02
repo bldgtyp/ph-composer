@@ -86,8 +86,8 @@ class ZoneRepairTest < PhComposerTestCase
     old_face_ids = copy.entities.to_a.map { |face| FACE_STORE.read(face).fetch("id") }
     zone_envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001", "marker" => old_zone_id)
     ZONE_STORE.write(copy, ZONE_STORE.read(copy).merge("extension_data" => {
-                       COPY_EXTENSION.namespace => zone_envelope
-                     }))
+      COPY_EXTENSION.namespace => zone_envelope
+    }))
     copy.entities.to_a.each do |face|
       before = FACE_STORE.read(face)
       envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001", "marker" => old_face_ids.last)
@@ -103,13 +103,13 @@ class ZoneRepairTest < PhComposerTestCase
     refute_equal old_zone_id, new_zone_id
     refute_equal old_face_ids, new_face_ids
     assert_equal "atz_000000000001", ZONE_STORE.read(copy).dig("extension_data", COPY_EXTENSION.namespace,
-                                                                   "payload", "external_id")
+                                                               "payload", "external_id")
     assert_equal old_zone_id, ZONE_STORE.read(copy).dig("extension_data", COPY_EXTENSION.namespace,
-                                                      "payload", "marker")
+                                                        "payload", "marker")
     copy.entities.to_a.each do |face|
       repaired = FACE_STORE.read(face)
       assert_equal "atz_000000000001", repaired.dig("extension_data", COPY_EXTENSION.namespace,
-                                                      "payload", "external_id")
+                                                    "payload", "external_id")
       assert_equal old_face_ids.last, repaired.dig("extension_data", COPY_EXTENSION.namespace,
                                                    "payload", "marker")
       assert_equal old_face_ids.last, repaired.dig("user_data", "literal")

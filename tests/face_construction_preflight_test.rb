@@ -13,7 +13,7 @@ class FaceConstructionPreflightTest < PhComposerTestCase
     assignment_setup
     assignment_zone(800)
     assignment_classify(assignment_faces, "face_type" => { "mode" => "set", "value" => "Wall" },
-                                         "boundary_condition" => { "mode" => "set", "value" => "Outdoors" })
+                                          "boundary_condition" => { "mode" => "set", "value" => "Outdoors" })
   end
 
   def findings

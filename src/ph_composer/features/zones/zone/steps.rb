@@ -134,7 +134,7 @@ module PhComposer
 
         { "kind" => "face", "id" => after.fetch("id"), "change" => "updated",
           "reference" => face.fetch(:reference).merge("zone_id" => @record.fetch("id"),
-                                                     "entity_id" => after.fetch("id")) }
+                                                      "entity_id" => after.fetch("id")) }
       end
 
       def resolve_member(zone, face)

@@ -380,13 +380,13 @@ module PhComposer
 
       def library_provider(name, contract_version:, kinds:, &factory)
         declaration = Declarations::LibraryProvider.new(:name => name, :owner => id,
-          :contract_version => contract_version, :kinds => kinds, :factory => factory)
+                                                        :contract_version => contract_version, :kinds => kinds, :factory => factory)
         @staging.add(:declared_library_providers, id, name, declaration)
       end
 
       def library_kind(name, contract_version:, record_kind:, adapter:)
         declaration = Declarations::LibraryKind.new(:name => name, :owner => id,
-          :contract_version => contract_version, :record_kind => record_kind, :adapter => adapter)
+                                                    :contract_version => contract_version, :record_kind => record_kind, :adapter => adapter)
         @staging.add(:declared_library_kinds, id, name, declaration)
       end
 
@@ -400,7 +400,7 @@ module PhComposer
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).
       def on_host_event(kind, &handler)
         @staging.declared_subscriptions << Declarations::HostEventSubscription.new(:owner => id, :kind => kind,
-                                                                                    :handler => handler)
+                                                                                   :handler => handler)
       end
     end
   end

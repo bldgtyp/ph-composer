@@ -12,6 +12,7 @@ module PhComposer
       # complete authored outlines agree; an Empty band must never be guessed from symmetry.
       module RestoreGeometry
         TOLERANCE_M = FaceGeometry::QUANTUM_M
+
         module_function
 
         def infer(plan, panes, geometry)
@@ -21,9 +22,10 @@ module PhComposer
           candidates = actual.length.times.filter_map do |offset|
             matrix = candidate(first.polygon_m, actual.rotate(offset))
             next unless matrix && matches?(plan, panes, matrix)
+
             plane = Placement::Plane.new(geometry)
             next unless Vector3.dot(matrix[8, 3], plane.normal).positive? &&
-              actual.all? { |point| plane.signed_distance_m(point).abs <= TOLERANCE_M }
+                        actual.all? { |point| plane.signed_distance_m(point).abs <= TOLERANCE_M }
 
             matrix
           end
@@ -43,10 +45,11 @@ module PhComposer
           dx = local[1][0] - local[0][0]
           dy = local[2][1] - local[1][1]
           return if dx.zero? || dy.zero?
+
           x = Vector3.subtract(world[1], world[0]).map { |value| value / dx }
           y = Vector3.subtract(world[2], world[1]).map { |value| value / dy }
           return unless [x, y].all? { |axis| (Vector3.dot(axis, axis) - 1).abs <= TOLERANCE_M } &&
-            Vector3.dot(x, y).abs <= TOLERANCE_M
+                        Vector3.dot(x, y).abs <= TOLERANCE_M
 
           x = Vector3.normalize(x)
           y = Vector3.normalize(y)
@@ -100,7 +103,7 @@ module PhComposer
 
         def refuse!
           raise CodedError.new("window.restore_unavailable",
-            "The stamped Faces do not uniquely match the complete Window Type outline. Use Place instead.")
+                               "The stamped Faces do not uniquely match the complete Window Type outline. Use Place instead.")
         end
       end
     end

@@ -61,8 +61,10 @@ class ZoneSplitIdentityMenuTest < PhComposerTestCase
   end
 
   def test_refused_preview_is_shown_without_invoke_or_confirmation
-    run_with(->(**_args) { { "status" => "refused", "code" => "copy.rule_missing",
-                            "message" => "The unavailable payload prevents safe repair." } })
+    run_with(->(**_args) {
+               { "status" => "refused", "code" => "copy.rule_missing",
+                 "message" => "The unavailable payload prevents safe repair." }
+             })
 
     assert_empty @invocations
     assert_equal ["The unavailable payload prevents safe repair."], UI.messages

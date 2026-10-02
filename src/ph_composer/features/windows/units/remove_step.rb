@@ -20,12 +20,12 @@ module PhComposer
           @reference["unit_id"] = @expected_record.fetch("id")
           @native_before = NativeUnit.preimage(item)
           @affected = [{ "kind" => REFERENCE_KIND, "id" => @expected_record.fetch("id"), "change" => "removed",
-            "reference" => DeepCopy.call(@reference) }]
+                         "reference" => DeepCopy.call(@reference) }]
         end
 
         def descriptor
           DeepCopy.call("name" => "remove_window_unit", "reference" => @reference,
-            "expected_record" => @expected_record, "native_before" => @native_before)
+                        "expected_record" => @expected_record, "native_before" => @native_before)
         end
 
         def temporary_ids
@@ -35,7 +35,7 @@ module PhComposer
         # The inventory preimage may precede a planned IdentityStep. Never replace this with a UUID-wide removal.
         def removal(before_record:)
           Records::ReferenceRemoval.new(:kind => REFERENCE_KIND, :key => @reference.fetch("entity_path").dup,
-            :before => DeepCopy.call(Units.validate!(before_record)))
+                                        :before => DeepCopy.call(Units.validate!(before_record)))
         end
 
         def apply(model, _slots)

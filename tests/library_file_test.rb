@@ -20,8 +20,8 @@ class LibraryFileTest < PhComposerTestCase
 
   def test_envelope_problems_refuse_before_row_normalization_with_sanitized_distinct_codes
     [{ "schema_version" => 2 }, { "format" => "other" }, { "library" => nil }, { "exported_at" => "bad" }]
-      .zip(%w[library.schema_unsupported library.format_invalid library.file_malformed 
-library.file_malformed]) do |change, code|
+      .zip(%w[library.schema_unsupported library.format_invalid library.file_malformed
+              library.file_malformed]) do |change, code|
       error = assert_raises(PhComposer::Library::Error) { parse_library(envelope.merge(change)) }
       assert_equal code, error.code
       refute_includes error.message, "bad"

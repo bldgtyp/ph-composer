@@ -41,15 +41,16 @@ class AssemblyRecordsThermalTest < PhComposerTestCase
   def test_ventilated_cladding_changes_only_the_with_films_value
     base = Assemblies::Thermal.preview(fixture_assembly(reference_layers), fixture_materials)
     ventilated = Assemblies::Thermal.preview(fixture_assembly(reference_layers, "ventilated_cladding" => true),
-                                           fixture_materials)
+                                             fixture_materials)
     assert_equal 0.13, ventilated["rse_m2k_w"]
     assert_equal base["u_construction_w_m2k"], ventilated["u_construction_w_m2k"]
     refute_equal base["u_effective_w_m2k"], ventilated["u_effective_w_m2k"]
     { "Wall" => 0.13, "RoofCeiling" => 0.10, "Floor" => 0.17 }.each do |type, rsi|
       assert_equal rsi, Assemblies::Thermal.preview(fixture_assembly(reference_layers, "type" => type),
-                                                  fixture_materials)["rsi_m2k_w"]
+                                                    fixture_materials)["rsi_m2k_w"]
     end
   end
+
   def test_exact_calculation_accepts_the_path_budget_and_withholds_one_path_above_it
     budget = Assemblies::Thermal::PATH_BUDGET
     boundary = fixture_assembly([[100, Array.new(budget) { [1, "wool"] }]])
@@ -87,5 +88,4 @@ class AssemblyRecordsThermalTest < PhComposerTestCase
     isothermal = base + 0.1 / (0.5 * 0.04 + 0.5 * 0.13)
     assert_equal ((parallel + isothermal) / 2).round(6), result["r_construction_m2k_w"]
   end
-
 end

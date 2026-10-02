@@ -24,10 +24,12 @@ module PhComposer
           unless @hbjson_path.downcase.end_with?(".hbjson")
             raise PairError, "The export destination must end in .hbjson."
           end
+
           @report_path = ArtifactPair.report_path(@hbjson_path)
           @directory = File.dirname(@hbjson_path)
           @run_id = run_id.to_s
           raise PairError, "The export run id is missing." if @run_id.empty?
+
           @fault = fault
           @owned = []
         end
@@ -71,6 +73,7 @@ module PhComposer
           restore_from_journal
           @owned.each { |path| safe_delete(path) }
           raise error if error.is_a?(PairError)
+
           raise PairError, "The coordinated artifact pair could not be committed (#{error.class}: #{error.message})."
         ensure
           @owned = []
@@ -123,6 +126,7 @@ module PhComposer
 
         def restore_from_journal
           return unless File.file?(journal_path)
+
           journal = JSON.parse(File.read(journal_path))
           validate_journal!(journal)
           paths = journal.transform_values do |value|
@@ -160,6 +164,7 @@ module PhComposer
           unless %w[prepared committed].include?(journal.fetch("state"))
             raise PairError, "The prior Export commit journal has an invalid state."
           end
+
           expected = {
             "hbjson_final" => File.basename(@hbjson_path),
             "report_final" => File.basename(@report_path)
@@ -181,6 +186,7 @@ module PhComposer
           hb_exists = File.exist?(@hbjson_path)
           report_exists = File.exist?(@report_path)
           return if hb_exists == report_exists
+
           raise IncompletePriorPairError,
                 "Only one destination artifact exists. Move or rename it before replacing the coordinated pair."
         end
@@ -206,6 +212,7 @@ module PhComposer
           unless File.binread(paths["report_stage"]) == report_html.b
             raise PairError, "The staged report does not match the rendered export."
           end
+
           JSON.parse(hbjson)
           unless report_html.include?(@run_id) && report_html.include?(Report::RESULT_ELEMENT_ID)
             raise PairError, "The staged report does not identify the export run."
@@ -243,6 +250,7 @@ module PhComposer
 
         def safe_delete(path)
           return unless path && File.file?(path)
+
           File.delete(path)
         end
 

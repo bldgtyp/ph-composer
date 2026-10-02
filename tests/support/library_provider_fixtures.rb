@@ -42,7 +42,7 @@ module LibraryProviderFixtures
 
   def file_provider(path)
     PhComposer::Library::FileProvider.new(:id => "provider.synthetic", :label => "Synthetic provider",
-                                         :path => path, :kinds => adapters.keys, :adapters => adapters.method(:[]))
+                                          :path => path, :kinds => adapters.keys, :adapters => adapters.method(:[]))
   end
 
   def write_library(path, value = envelope, bytes: nil)

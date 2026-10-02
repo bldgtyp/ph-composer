@@ -36,7 +36,7 @@ module PhComposer
 
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => 1,
-        :requires => ["ph_composer.zones", "ph_composer.library"])
+                                             :requires => ["ph_composer.zones", "ph_composer.library"])
       Products::KINDS.each_value { |kind| feature.record_kind(kind) }
       feature.record_kind(Types::KIND)
       Settings.install(feature)

@@ -34,14 +34,13 @@ module PhComposer
                        :description => "Reconcile and pair shared Faces within an explicit Zone scope.",
                        :params => SOLVE_PARAMS, :result => SOLVE_RESULT, :undo_name => "Solve Zone Adjacency",
                        :examples => [{ "zones" => EXAMPLE_ZONES }],
-                       :side_effects => "Retires old Surface pairs and writes current endpoints.") do |
-                         request, proposal|
+                       :side_effects => "Retires old Surface pairs and writes current endpoints.") do |request, proposal|
           Zones.solve_adjacency(request, proposal, :zones => request.params.fetch("zones"))
         end
         feature.action("#{FEATURE_ID}.retire_adjacency", :description => "Retire one reciprocal Surface pair.",
-                       :params => RETIRE_PARAMS, :result => RETIRE_RESULT, :undo_name => "Retire Zone Adjacency",
-                       :examples => [{ "face" => EXAMPLE_FACE }],
-                       :side_effects => "Removes both endpoints and leaves their boundary condition unassigned.") do |
+                                                         :params => RETIRE_PARAMS, :result => RETIRE_RESULT, :undo_name => "Retire Zone Adjacency",
+                                                         :examples => [{ "face" => EXAMPLE_FACE }],
+                                                         :side_effects => "Removes both endpoints and leaves their boundary condition unassigned.") do |
                          request, proposal|
           Zones.retire_adjacency(request, proposal, :face => request.params.fetch("face"))
         end

@@ -22,6 +22,7 @@ module PhComposer
 
       def choose(type_id, anchor: DEFAULT_ANCHOR, host: nil)
         raise CodedError.new("session.unknown", "That Model session is closed.") unless @session.valid?
+
         @context ||= API.connect(:session_id => @session.id)
         @target ||= Placement::ToolTarget.new(@session, @context)
         Units::Anchors.validate!(anchor)
@@ -98,6 +99,7 @@ module PhComposer
         cancel if @gesture && (flags.to_i & MK_LBUTTON).zero?
         cancel if @gesture && @gesture.fetch("edit_path") != edit_path
         return unless @target.current?
+
         @hover = hover(Pick.face_point(view, x, y))
         view.tooltip = GUIDANCE if view.respond_to?(:tooltip=)
         view.invalidate
@@ -108,12 +110,14 @@ module PhComposer
       def onLButtonDown(_flags, x, y, view)
         @gesture = nil
         return unless available?
+
         @plan = @target.refresh(@type_id)
         chosen = hover(Pick.face_point(view, x, y))
         return unless chosen
+
         @gesture = { "params" => { "host" => chosen.fetch(:host).reference, "type_id" => @type_id,
-          "anchor" => @anchor, "offsets" => Placement::Offsets.from_point(chosen.fetch(:host).geometry,
-            chosen.fetch(:point)) }, "revision" => @session.revision, "edit_path" => edit_path }
+                                   "anchor" => @anchor, "offsets" => Placement::Offsets.from_point(chosen.fetch(:host).geometry,
+                                                                                                   chosen.fetch(:point)) }, "revision" => @session.revision, "edit_path" => edit_path }
         @gesture = DeepCopy.call(@gesture)
         view.invalidate
       rescue StandardError => error
@@ -124,9 +128,10 @@ module PhComposer
         gesture = @gesture
         @gesture = nil
         return unless gesture && available? && gesture.fetch("edit_path") == edit_path
+
         @sequence += 1
         result = API.invoke(:context => @context, :name => ACTION, :params => gesture.fetch("params"),
-          :request => { "sequence" => @sequence, "expected_revision" => gesture.fetch("revision") })
+                            :request => { "sequence" => @sequence, "expected_revision" => gesture.fetch("revision") })
         message = result.fetch("status") == "completed" ? "Placed Window." : result.fetch("message")
         announce(message, result.fetch("status") == "completed" ? :info : :warning)
         @hover = nil
@@ -138,6 +143,7 @@ module PhComposer
 
       def onUserText(text, view)
         return unless available?
+
         @measurements.set(text)
         @hover = nil
         Sketchup.status_text = "Measurement set. #{GUIDANCE}"
@@ -152,6 +158,7 @@ module PhComposer
 
       def draw(view)
         return unless available? && @target.current? && @hover
+
         polygon = @hover.fetch(:outline).map { |point| Geom::Point3d.new(*point.map { |value| value / INCH_TO_M }) }
         segments = polygon.each_with_index.flat_map { |point, index| [point, polygon[(index + 1) % polygon.length]] }
         view.drawing_color = Sketchup::Color.new(47, 143, 131)
@@ -182,6 +189,7 @@ module PhComposer
       def hover(picked)
         host = @target.resolve(picked, @host)
         return unless host
+
         point = picked.fetch(:point)
         metres = [point.x, point.y, point.z].map { |value| value.to_f * INCH_TO_M }
         metres = @measurements.point(host.geometry, metres, @plan, @anchor)

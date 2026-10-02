@@ -14,6 +14,7 @@ module PhComposer
           if classification == :partial
             raise CodedError.new("validation.failed", "Partly shared edges need a proved installation mapping.")
           end
+
           result << [element.fetch("id"), side]
         end
         result
@@ -32,17 +33,19 @@ module PhComposer
           layout = Grid.new(record)
           record.fetch("elements").each do |element|
             next if element.fetch("kind") == "empty"
+
             classifications = layout.classify(element)
             { GLAZING_KIND => { "glazing" => element["glazing_id"] }, FRAME_KIND => element.fetch("frames"),
               PSI_INSTALL_KIND => element.fetch("installs") }.each do |kind, slots|
               slots.each do |side, assignment|
                 inherited = kind == PSI_INSTALL_KIND && assignment.nil? &&
-                classifications.fetch(Types::SIDES.index(side)) != :shared
+                            classifications.fetch(Types::SIDES.index(side)) != :shared
                 id = inherited ? default_id : assignment
                 next unless id
+
                 result[[kind, id]] << { "kind" => "window_element", "type_id" => record.fetch("id"),
-                "element_id" => element.fetch("id"), "side" => side,
-                "name" => "#{record['name']} / #{element['name']} / #{side}#{inherited ? ' (default)' : ''}" }
+                                        "element_id" => element.fetch("id"), "side" => side,
+                                        "name" => "#{record['name']} / #{element['name']} / #{side}#{inherited ? ' (default)' : ''}" }
               end
             end
           end

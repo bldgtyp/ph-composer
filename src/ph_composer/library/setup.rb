@@ -13,6 +13,7 @@ module PhComposer
       SECTION = "ph_composer.library"
       KEY = "file_providers"
       MAX_STORED_BYTES = 256 * 1024
+
       module_function
 
       # The configured libraries. An unreadable stored setup reads as none, so every library read
@@ -32,6 +33,7 @@ module PhComposer
         if previous_state == "unreadable"
           raise Error.new("library.setup_unreadable", UNREADABLE)
         end
+
         replace(previous, rows)
       end
 
@@ -52,7 +54,8 @@ module PhComposer
 
       def providers
         Provider.immutable(load.map { |row|
- row.slice("id", "label").merge("provider_kind" => FileProvider::PROVIDER_KIND) })
+                             row.slice("id", "label").merge("provider_kind" => FileProvider::PROVIDER_KIND)
+                           })
       end
 
       def file_providers(kinds:, adapters:)
@@ -67,6 +70,7 @@ module PhComposer
         unless configuration
           raise Error.new("library.provider_unavailable", "The configured library provider is unavailable.")
         end
+
         FileProvider.new(:id => configuration.fetch("id"), :label => configuration.fetch("label"),
                          :path => configuration.fetch("path"), :kinds => kinds, :adapters => adapters)
       end
@@ -94,6 +98,7 @@ module PhComposer
         unless Sketchup.write_default(SECTION, KEY, [text].pack("m0"))
           raise Error.new("library.setup_unavailable", "Provider setup could not be saved.")
         end
+
         changed_ids = (previous + rows).map { |row| row.fetch("id") }.uniq.select do |id|
           previous.find { |row| row.fetch("id") == id } != rows.find { |row| row.fetch("id") == id }
         end

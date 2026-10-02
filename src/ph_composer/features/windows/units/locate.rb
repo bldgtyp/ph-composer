@@ -42,6 +42,7 @@ module PhComposer
             unless matches.length == 1
               raise CodedError.new("target.changed", "The Window occurrence ancestor no longer resolves uniquely.")
             end
+
             entity = matches.first
             collection = entity.entities if entity.is_a?(Sketchup::Group)
             collection = entity.definition.entities if entity.is_a?(Sketchup::ComponentInstance)

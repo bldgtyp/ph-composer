@@ -18,7 +18,7 @@ class WindowUnitFlipStepTest < PhComposerTestCase
     @source = window_record("columns_m" => [0.4, 0.3, 0.8], "rows_m" => [1.5], "elements" => cells)
     W::Types::KIND.store.write(@model, @source)
     @definition = U::DefinitionWriter.create(:model => @model, :type => @source,
-      :plan => U::DefinitionPlan.build(@source))
+                                             :plan => U::DefinitionPlan.build(@source))
     U::DefinitionIndex.write(@model, { @source.fetch("id") => @definition.persistent_id }, :expected => {})
     @target = target_type
     @unit = unit
@@ -35,9 +35,9 @@ class WindowUnitFlipStepTest < PhComposerTestCase
   def unit(anchor = "sill_center", matrix = Geom::Transformation.scaling(-1, 1, 1))
     entity = @model.entities.add_instance(@definition, matrix)
     U.write(entity, "id" => window_allocator.call("wun"), "schema_version" => 1,
-      "window_type_id" => @source.fetch("id"), "anchor" => anchor,
-      "user_data" => { "literal" => ["preserve"] },
-      "extension_data" => { "outside.example" => { "version" => 1, "payload" => { "note" => "literal" } } })
+                    "window_type_id" => @source.fetch("id"), "anchor" => anchor,
+                    "user_data" => { "literal" => ["preserve"] },
+                    "extension_data" => { "outside.example" => { "version" => 1, "payload" => { "note" => "literal" } } })
     entity
   end
 
@@ -47,14 +47,16 @@ class WindowUnitFlipStepTest < PhComposerTestCase
 
   def step(expected = U.read(@unit), other_polygons_m: [], **options)
     U::FlipStep.new(:model => @model, :source_type => @source, :target_type => @target,
-      :reference => occurrence.reference, :expected_record => expected,
-      :other_polygons_m => other_polygons_m, **options)
+                    :reference => occurrence.reference, :expected_record => expected,
+                    :other_polygons_m => other_polygons_m, **options)
   end
 
   def panes(plan, matrix)
-    U::WorldGeometry.map(plan, matrix).panes.map { |pane| pane.polygon_m.map { |point|
-      point.map { |value| value.round(9) }
-    }.sort }.sort
+    U::WorldGeometry.map(plan, matrix).panes.map { |pane|
+      pane.polygon_m.map { |point|
+        point.map { |value| value.round(9) }
+      }.sort
+    }.sort
   end
 
   def capture
@@ -97,7 +99,7 @@ class WindowUnitFlipStepTest < PhComposerTestCase
     U::Anchors::ALL.each_with_index do |anchor, index|
       @target = target_type
       transform = Geom::Transformation.translation([(index * 3 + 10) / 0.0254, 0, 0]) *
-        Geom::Transformation.scaling(-1, 1, 1)
+                  Geom::Transformation.scaling(-1, 1, 1)
       @unit = unit(anchor, transform)
       fixed = U::WorldGeometry.anchor(U::DefinitionPlan.build(@source), anchor, occurrence.transform.to_a)
       step.apply(@model, {})
@@ -139,8 +141,8 @@ class WindowUnitFlipStepTest < PhComposerTestCase
     face = @model.entities.add_face(points)
     @unit.glued_to = face
     P::Host.new(:entity => face, :entities => @model.entities, :parent_path => [],
-      :transform => Geom::Transformation.new, :reference => { "zone_id" => "zone_synthetic" }, :values => {},
-      :geometry => PhComposer::FaceGeometry.capture(face, Geom::Transformation.new))
+                :transform => Geom::Transformation.new, :reference => { "zone_id" => "zone_synthetic" }, :values => {},
+                :geometry => PhComposer::FaceGeometry.capture(face, Geom::Transformation.new))
   end
 
   def test_glue_and_full_world_outline_fit_are_preserved_without_native_geometry_movement
@@ -158,7 +160,7 @@ class WindowUnitFlipStepTest < PhComposerTestCase
     expected = before_record.merge("id" => "wun_ZZZZZZZZZZZZ")
     flip = step(expected, :expected_records => { occurrence.path => expected })
     repair = U::IdentityStep.new([U::IdentityPlan::Update.new(:reference => occurrence.reference,
-      :before => before_record, :after => expected)])
+                                                              :before => before_record, :after => expected)])
     repair.apply(@model, {})
     flip.apply(@model, {})
     assert_equal expected.merge("window_type_id" => @target.fetch("id"), "anchor" => "head_right"), U.read(@unit)
@@ -220,7 +222,7 @@ class WindowUnitFlipStepTest < PhComposerTestCase
     assert_equal "window.overlap", error.code
     index = U::DefinitionIndex.read(@model)
     reserved = U::DefinitionWriter.create(:model => @model, :type => @target,
-      :plan => U::DefinitionPlan.build(@target))
+                                          :plan => U::DefinitionPlan.build(@target))
     U::DefinitionIndex.write(@model, index.merge(@target.fetch("id") => reserved.persistent_id), :expected => index)
     assert_equal "target.changed", assert_raises(PhComposer::CodedError) { step }.code
     assert_equal 2, @model.definitions.length
