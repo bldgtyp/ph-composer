@@ -1,7 +1,7 @@
 # R01: `context/` did not absorb what Phase 2 settled
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r01-context-doc-drift`, 2026-10-01. Documentation only.
+STATUS: Merged to main through [PR #16](https://github.com/bldgtyp/ph-composer/pull/16), 2026-10-01. Documentation only.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced. Documentation only; no code or host gate.
@@ -67,7 +67,7 @@ cited in a `src/` comment still exists (`grep -rn "context/CONTRACTS.md, \"" src
 
 ## Outcome
 
-Implemented 2026-10-01 on `refactor/r01-context-doc-drift`.
+Implemented 2026-10-01 on `refactor/r01-context-doc-drift`; merged through PR #16.
 
 | Item | Disposition |
 | --- | --- |
