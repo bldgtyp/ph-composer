@@ -14,17 +14,8 @@ module PhComposer
     OBJECT = { "type" => "object" }.freeze
     GENERATION = { "type" => "integer", "minimum" => 1 }.freeze
 
+    extend SchemaShapes
     module_function
-
-    def object(properties, optional: [])
-      { "type" => "object", "properties" => properties, "additionalProperties" => false,
-        "required" => properties.keys - optional }
-    end
-
-    # `schema` with what it means to a caller, for discovery.
-    def described(schema, text)
-      schema.merge("description" => text)
-    end
 
     def selected_params
       object({

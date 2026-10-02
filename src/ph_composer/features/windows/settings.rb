@@ -8,9 +8,8 @@ module PhComposer
     module Settings
       KIND = "#{FEATURE_ID}.settings_record"
       DEFAULTS = { "default_psi_install_id" => nil, "default_install_depth_m" => 0.0 }.freeze
-      VALUES = Fields.object({ "default_psi_install_id" => { "type" => %w[string null] },
-                "default_install_depth_m" => { "type" => "number", "minimum" => 0, "x-unit" => "m" } },
-        :required => DEFAULTS.keys).freeze
+      VALUES = SchemaShapes.object({ "default_psi_install_id" => { "type" => %w[string null] },
+                "default_install_depth_m" => { "type" => "number", "minimum" => 0, "x-unit" => "m" } }).freeze
       SERVICE = ModelSettings.new(:dictionary => "ph_composer.windows_settings", :defaults => DEFAULTS,
         :schema => VALUES, :label => "Window", :step_name => "update_window_settings",
         :affected => [{ "kind" => "window_settings", "id" => FEATURE_ID, "change" => "updated" }])

@@ -9,21 +9,21 @@ module PhComposer
         TYPES = %w[Wall RoofCeiling Floor].freeze
         CONDITIONS = %w[Outdoors Ground AttachedZone Adiabatic].freeze
         ORIENTATIONS = %w[first_layer_outside last_layer_outside].freeze
-        SEGMENT = SchemaFields.object({
+        SEGMENT = SchemaShapes.object({
           "id" => { "type" => "string" }, "width_mm" => SchemaFields.number("mm"),
           "material_id" => { "type" => %w[string null] },
           "is_continuous_insulation" => { "type" => "boolean" },
           "steel_stud_spacing_mm" => SchemaFields.number("mm", :nullable => true)
-        }, :required => %w[id width_mm material_id is_continuous_insulation steel_stud_spacing_mm])
-        LAYER = SchemaFields.object({
+        })
+        LAYER = SchemaShapes.object({
           "id" => { "type" => "string" }, "thickness_mm" => SchemaFields.number("mm"),
           "segments" => { "type" => "array", "minItems" => 1, "items" => SEGMENT }
-        }, :required => %w[id thickness_mm segments])
+        })
         LAYERS = { "type" => "array", "minItems" => 1, "items" => LAYER }.freeze
-        AIR_BARRIER = SchemaFields.object({
+        AIR_BARRIER = SchemaShapes.object({
           "layer_id" => { "type" => "string" },
           "face" => { "type" => "string", "enum" => %w[interior exterior] }
-        }, :required => %w[layer_id face]).merge("type" => %w[object null])
+        }).merge("type" => %w[object null])
         RAMP = %w[#a8c9ad #a5c5d7 #d5bea3 #cab6d4 #d5b1ad #b8c9cd].freeze
 
         module_function

@@ -12,18 +12,17 @@ module PhComposer
       ID = { "type" => %w[string null] }.freeze
       SPAN = { "type" => "array", "minItems" => 2, "maxItems" => 2,
                "items" => { "type" => "integer", "minimum" => 0 } }.freeze
-      SIDE_SCHEMA = Fields.object(SIDES.to_h { |side| [side, ID] }, :required => SIDES).freeze
-      OPERATION = Fields.object({ "type" => { "type" => "string", "enum" => %w[fixed swing slide] },
+      SIDE_SCHEMA = SchemaShapes.object(SIDES.to_h { |side| [side, ID] }).freeze
+      OPERATION = SchemaShapes.object({ "type" => { "type" => "string", "enum" => %w[fixed swing slide] },
                 "directions" => { "type" => "array",
                 "items" => { "type" => "string",
-                "enum" => %w[left right up down] } } },
-        :required => %w[type directions]).merge("type" => %w[object null]).freeze
-      ELEMENT = Fields.object({
+                "enum" => %w[left right up down] } } }).merge("type" => %w[object null]).freeze
+      ELEMENT = SchemaShapes.object({
         "id" => { "type" => "string" }, "name" => { "type" => "string" },
                 "kind" => { "type" => "string", "enum" => %w[glazed empty] },
                 "row_span" => SPAN, "column_span" => SPAN, "glazing_id" => ID,
                 "frames" => SIDE_SCHEMA, "installs" => SIDE_SCHEMA, "operation" => OPERATION
-      }, :required => %w[id name kind row_span column_span glazing_id frames installs operation]).freeze
+      }).freeze
       BANDS = { "type" => "array", "minItems" => 1, "maxItems" => 40,
                 "items" => { "type" => %w[number null], "exclusiveMinimum" => 0, "x-unit" => "m" } }.freeze
 

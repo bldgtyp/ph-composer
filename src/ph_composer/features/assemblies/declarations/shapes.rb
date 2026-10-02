@@ -3,11 +3,13 @@
 module PhComposer
   module Assemblies
     module Shapes
+      extend SchemaShapes
+
       # Any string: names, messages, codes and ids in results. A param naming a record uses `id`.
       TEXT = { "type" => "string" }.freeze
       OBJECT = { "type" => "object" }.freeze
-      NONE = SchemaFields.object({}).freeze
-      RESULT = SchemaFields.object({ "id" => TEXT }, :required => ["id"]).freeze
+      NONE = object({}).freeze
+      RESULT = object({ "id" => TEXT }).freeze
       EXPECTED = "Any of the record's values as last read; if one changed since, the edit is refused as " \
                  "target.changed. {} skips the check."
       USER_DATA = { "type" => "object", "description" => "Free metadata kept with the record and exported " \
@@ -15,44 +17,19 @@ module PhComposer
       EXAMPLE_ID = "asm_Ab12Cd34Ef56"
       EXAMPLE_LAYER = "lyr_Ab12Cd34Ef56"
       EXAMPLE_SEGMENT = "seg_Ab12Cd34Ef56"
-      FINDING = SchemaFields.object({
+      FINDING = object({
         "code" => TEXT, "message" => TEXT,
         "message_parts" => { "type" => "array", "items" => OBJECT },
         "assembly_id" => TEXT, "material_id" => TEXT, "layer_id" => TEXT, "segment_id" => TEXT,
         "missing_fields" => { "type" => "array", "items" => TEXT }
-      }, :required => %w[code message message_parts]).freeze
+      }, :optional => %w[assembly_id material_id layer_id segment_id missing_fields]).freeze
       FINDINGS = { "type" => "array", "items" => FINDING }.freeze
-      UNREADABLE = { "type" => "array", "items" => SchemaFields.object({
-        "id" => TEXT, "code" => TEXT, "message" => TEXT
-      }, :required => %w[id code message]) }.freeze
+      UNREADABLE = list(object({ "id" => TEXT, "code" => TEXT, "message" => TEXT })).freeze
 
       module_function
 
-      # A param naming one record or part by its id, such as `asm_Ab12Cd34Ef56` for prefix "asm".
-      def id(prefix, description, nullable: false)
-        { "type" => nullable ? %w[string null] : "string", "pattern" => "^#{prefix}_[A-Za-z0-9]{12}$",
-          "description" => description }
-      end
-
-      def described(schema, description)
-        schema.merge("description" => description)
-      end
-
       def expected(kind)
         described(kind.descriptor.patch_schema, EXPECTED)
-      end
-
-      def object(properties, optional: [])
-        SchemaFields.object(properties, :required => properties.keys - optional)
-      end
-
-      def list(items)
-        { "type" => "array", "items" => items }
-      end
-
-      def with(base, properties)
-        base.merge("required" => base.fetch("required", []) + properties.keys,
-                   "properties" => base.fetch("properties").merge(properties))
       end
 
       def view(kind)

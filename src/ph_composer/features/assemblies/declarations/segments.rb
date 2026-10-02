@@ -74,7 +74,7 @@ module PhComposer
         properties = Assembly::Schema::SEGMENT.fetch("properties").select do |key, _schema|
           %w[width_mm is_continuous_insulation steel_stud_spacing_mm].include?(key)
         end
-        values = Shapes.described(SchemaFields.object(properties),
+        values = Shapes.described(Shapes.object(properties, :optional => properties.keys),
                                   "The Layer-Segment values to change; any not given stay. A Layer carries at most " \
                                   "one steel stud spacing.")
         action(feature, "update", { "layer_id" => Shapes.id("lyr", LAYER_ID),
