@@ -47,10 +47,9 @@ module PhComposer
         end }
       end
 
-      def update_field(request, proposal)
-        field = request.params.fetch("field")
+      # Sets one `field` to one `value` on every target Zone, each guarded by its expected values.
+      def update_field(request, proposal, field:, value:, targets:)
         index = Index.new(request.model)
-        targets = request.params.fetch("targets")
         if targets.map { |target| target.fetch("reference").fetch("zone_path") }.uniq.length != targets.length
           raise CodedError.new("params.invalid", "A Zone may appear only once in the batch.")
         end
@@ -60,7 +59,7 @@ module PhComposer
           unless Schema.view(before).fetch("values") == target.fetch("expected_values")
             raise CodedError.new("target.changed", "A Zone changed since the selection was read.")
           end
-          after = DeepCopy.call(before).merge(field => DeepCopy.call(request.params.fetch("value")))
+          after = DeepCopy.call(before).merge(field => DeepCopy.call(value))
           Schema.validate!(after)
           [zone, before, after]
         end

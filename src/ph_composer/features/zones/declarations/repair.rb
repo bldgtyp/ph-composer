@@ -51,7 +51,9 @@ module PhComposer
                        :undo_name => "Repair Split Face Identity",
                        :side_effects => "Reidentifies split pieces and retires invalid Surface links.") do |
                          request, proposal|
-          Zones.repair_split_face(request, proposal)
+          params = request.params
+          Zones.repair_split_face(request, proposal, :zone => params.fetch("zone"), :face_id => params.fetch("face_id"),
+            :zones => params.fetch("zones"), :retaining_entity_path => params["retaining_entity_path"])
         end
         feature.action("#{FEATURE_ID}.repair_identity",
                        :description => "Give one copied Zone occurrence an identity of its own.",
@@ -59,7 +61,7 @@ module PhComposer
                        :examples => [{ "zone_path" => [1401] }],
                        :side_effects => "Reidentifies the named occurrence and its Faces; the original is " \
                                         "left untouched.") do |request, proposal|
-          Zones.repair_identity(request, proposal)
+          Zones.repair_identity(request, proposal, :zone_path => request.params.fetch("zone_path"))
         end
         feature.action("#{FEATURE_ID}.restore",
                        :description => "Regroup the stamped members of an exploded Zone, recovering only their stamp.",
@@ -67,7 +69,8 @@ module PhComposer
                        :examples => [{ "parent_path" => [], "zone_id" => "zon_Ab12Cd34Ef56" }],
                        :side_effects => "Groups stamped Faces in one parent context and writes a Zone record.") do |
                          request, proposal|
-          Zones.restore(request, proposal)
+          Zones.restore(request, proposal, :parent_path => request.params.fetch("parent_path"),
+                                           :zone_id => request.params.fetch("zone_id"))
         end
       end
     end

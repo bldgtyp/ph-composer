@@ -26,8 +26,8 @@ module PhComposer
       # Locate changes the selection and the camera and nothing else, which is why it is a view command
       # rather than an action: registering it as an action would manufacture an Undo entry for a read
       # (context/AGENT_INTERFACE.md, "explicit selection, reveal and camera operations").
-      def locate(request)
-        references = request.params.fetch("faces")
+      def locate(request, faces:)
+        references = faces
         found = Locate.call(request.session, references)
         { "found" => found.length, "missing" => references.length - found.length }
       end
@@ -76,8 +76,8 @@ module PhComposer
       # move. A hosting
       # feature reads this instead of `all`, which computes suggestions, adjacency and Assembly state
       # for every Face. Zone state needs every Zone occurrence, so it stays with the Zone reads.
-      def host_context(request)
-        rows = request.params.fetch("paths").filter_map do |path|
+      def host_context(request, paths:)
+        rows = paths.filter_map do |path|
           occurrence = Zones::Occurrences.occurrence_at(request.model, path)
           next unless occurrence
 
@@ -98,9 +98,8 @@ module PhComposer
 
       # One gesture, one step, all or nothing. Targets are deduplicated by occurrence before anything
       # is resolved, so an over-limit gesture refuses without walking the Model once per Face.
-      def classify(request, proposal)
-        plan_classification(request, proposal, request.params.fetch("faces"), request.params.fetch("intent"),
-                            request.params.fetch("expected_values", {}))
+      def classify(request, proposal, faces:, intent:, expected_values: {})
+        plan_classification(request, proposal, faces, intent, expected_values)
       end
 
       def plan_classification(request, proposal, faces, intent, expected)
@@ -175,17 +174,17 @@ module PhComposer
 
       # The one geometry repair this feature owns. The record survives untouched; the changed normal
       # is what makes any Surface pair read stale on the next reconciliation.
-      def reverse(request, proposal)
-        reference = request.params.fetch("face")
+      def reverse(request, proposal, face:)
+        reference = face
         Zones::Occurrences.resolve_face(request.model, reference, :mutable => true, :allow_unassigned => true)
         scope = Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
         proposal.add_step(ReverseFaceStep.new(:reference => reference), :scopes => [scope])
         {}
       end
 
-      def save_attached_zone(request, proposal)
-        patch = request.params.fetch("values")
-        id = request.params["id"]
+      # Without `id` it creates a record; with it, `values` patches that record.
+      def save_attached_zone(request, proposal, values:, id: nil, expected_values: {}, user_data: nil)
+        patch = values
         if id
           # `values` is a partial patch, so the findings have to read the record the save will leave
           # behind. Reading the patch alone drops the low-factor warning on every edit that does not
@@ -193,12 +192,11 @@ module PhComposer
           values = merged_values(request.engine.kind(AttachedZone::KIND_ID)
                                    .values(request.engine.find(AttachedZone::KIND_ID, id)), patch)
           request.engine.propose_update(AttachedZone::KIND_ID, id, proposal, :values => patch,
-                                        :user_data => request.params["user_data"],
-                                        :expected_values => request.params.fetch("expected_values", {}))
+                                        :user_data => user_data, :expected_values => expected_values)
         else
           values = { "temperature_reduction_factor" => AttachedZone::DEFAULT_FACTOR }.merge(patch)
           id = request.engine.propose_create(AttachedZone::KIND_ID, proposal, :values => values,
-                                             :user_data => request.params["user_data"])
+                                             :user_data => user_data)
         end
         AttachedZone.findings(values.merge("id" => id)).each { |finding| proposal.add_finding(finding) }
         { "id" => id }
@@ -207,15 +205,15 @@ module PhComposer
       # The record proposal and the complete Face proposal are validated before the dispatcher
       # opens its native operation. ClassifyStep then writes the Faces, followed by the staged record
       # write; a host failure rolls both back. The new id is frozen into preview's normalized digest.
-      def create_and_assign_attached_zone(request, proposal)
-        created = save_attached_zone(request, proposal)
+      def create_and_assign_attached_zone(request, proposal, values:, faces:, intent: {}, expected_values: {},
+                                          user_data: nil)
+        created = save_attached_zone(request, proposal, :values => values, :user_data => user_data)
         id = created.fetch("id")
-        intent = request.params.fetch("intent", {}).merge(
+        intent = intent.merge(
           "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" },
           "attached_zone_id" => { "mode" => "set", "value" => id }
         )
-        classified = plan_classification(request, proposal, request.params.fetch("faces"), intent,
-                                         request.params.fetch("expected_values", {}))
+        classified = plan_classification(request, proposal, faces, intent, expected_values)
         created.merge(classified)
       end
 
@@ -230,10 +228,8 @@ module PhComposer
       # record goes. A Face the caller cannot reach refuses the whole delete, naming the routes. The
       # engine's own reference check sees every Face through the Face descriptor and reads the planned
       # reassignment, so it is the backstop for any other caller.
-      def delete_attached_zone(request, proposal)
-        id = request.params.fetch("id")
+      def delete_attached_zone(request, proposal, id:, replacement:)
         request.engine.find(AttachedZone::KIND_ID, id)
-        replacement = request.params.fetch("replacement")
         validate_replacement!(request, replacement, id)
 
         updates = reassignable_faces(request.model, id).map do |occurrence, record|

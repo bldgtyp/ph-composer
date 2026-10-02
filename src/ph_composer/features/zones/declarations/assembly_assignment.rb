@@ -31,7 +31,8 @@ module PhComposer
                          :examples => [{ "targets" => [{ "reference" => Registration::EXAMPLE_FACE,
                                                           "expected_values" => {} }],
                                          "assembly_id" => "asm_Ab12Cd34Ef56" }]) do |request, proposal|
-            AssemblyAssignment.assign(request, proposal)
+            AssemblyAssignment.assign(request, proposal, :assembly_id => request.params.fetch("assembly_id"),
+                                                         :targets => request.params.fetch("targets"))
           end
           feature.reference_retargeter("#{PREFIX}.retarget_assembly", :target_kind => AssemblyAssignment::KIND) do |
             request, proposal, from:, to:|

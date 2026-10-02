@@ -10,17 +10,18 @@ module PhComposer
       module Actions
         module_function
 
-        def place(request, proposal)
-          identity = Windows::Operations.allocator(request, request.params)
+        # `offsets` place the anchor on the host Face, in metres along its plane axes.
+        def place(request, proposal, host:, type_id:, offsets:, anchor:, user_data: {})
+          identity = Windows::Operations.allocator(request, "host" => host, "type_id" => type_id,
+                                                            "offsets" => offsets, "anchor" => anchor)
           Mutation.prepare(request, proposal, :identity => identity)
           reads = ReadContext.new(request)
-          host = reads.host_reference(request.params.fetch("host"))
-          type = request.engine.find(TYPE_KIND, request.params.fetch("type_id"))
-          offsets = request.params.fetch("offsets")
+          host = reads.host_reference(host)
+          type = request.engine.find(TYPE_KIND, type_id)
           point = Placement::Offsets.point(host.geometry, :x_m => offsets.fetch("x_m"), :y_m => offsets.fetch("y_m"))
           record = { "id" => identity.call("wun"), "schema_version" => 1,
-            "window_type_id" => type.fetch("id"), "anchor" => request.params.fetch("anchor"),
-            "user_data" => DeepCopy.call(request.params.fetch("user_data", {})), "extension_data" => {} }
+            "window_type_id" => type.fetch("id"), "anchor" => anchor,
+            "user_data" => DeepCopy.call(user_data), "extension_data" => {} }
           step = PlaceStep.new(:model => request.model, :host => host, :type => type, :record => record,
             :point_m => point, :existing_polygons_m => reads.other_polygons)
           proposal.add_step(step, :scopes => [MutationScope.new(:definition_ids => step.definition_ids),

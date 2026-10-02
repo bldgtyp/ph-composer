@@ -96,10 +96,10 @@ module PhComposer
           end
         end
 
-        def assign(request, proposal)
-          id = request.params.fetch("assembly_id")
+        # A nil `assembly_id` clears the Assembly of every target.
+        def assign(request, proposal, assembly_id:, targets:)
+          id = assembly_id
           resolve(request, id) if id
-          targets = request.params.fetch("targets")
           unique = targets.group_by { |target| Occurrences.key(target.fetch("reference")) }
           if unique.values.any? { |group| group.uniq.length > 1 }
             raise CodedError.new("params.invalid", "Repeated Face targets disagree on identity or expected values.")

@@ -30,7 +30,8 @@ module PhComposer
                        :examples => [{ "targets" => [{ "reference" => ZoneRegistration::EXAMPLE_REFERENCE,
                                                         "expected_values" => ZoneRegistration::EXAMPLE_VALUES }],
                                        "field" => "level", "value" => "L1" }]) do |request, proposal|
-          Selection.update_field(request, proposal)
+          Selection.update_field(request, proposal, :field => request.params.fetch("field"),
+            :value => request.params.fetch("value"), :targets => request.params.fetch("targets"))
         end
         Selection.install(feature)
         install_faces(feature)
@@ -60,7 +61,8 @@ module PhComposer
                              :result => ASSIGNMENT,
                              :examples => [{ "faces" => [Faces::Registration::EXAMPLE_FACE], "revision" => 1 }]) do |
                                request|
-          Faces::Selection.open_assignment(request)
+          Faces::Selection.open_assignment(request, :revision => request.params.fetch("revision"),
+                                                    :faces => request.params.fetch("faces"))
         end
         feature.view_command("#{prefix}.close_attached_assignment",
                              :description => "Close the native assignment handoff.",
