@@ -40,7 +40,7 @@ module PhComposer
                        "description" => "Where to insert the Layer in the stored order, 0 first. Not with " \
                                         "anchor_layer_id." },
           "thickness_mm" => Shapes.described(Fields.number("mm"), "The new Layer's thickness; 100 mm when " \
-                                                                        "absent."),
+                                                                  "absent."),
           "anchor_layer_id" => Shapes.id("lyr", "An existing Layer to place the new one beside, with side."),
           "side" => { "type" => "string", "enum" => %w[outside inside],
                       "description" => "Which side of anchor_layer_id, by the Assembly's orientation." }
@@ -48,7 +48,7 @@ module PhComposer
         action(feature, "add", properties, { "thickness_mm" => 100 },
                :optional => properties.keys,
                :description => "Add a Layer with one Layer-Segment of no Material. With no position it goes after " \
-                          "the last Layer in the stored order; give index, or anchor_layer_id and side.",
+                               "the last Layer in the stored order; give index, or anchor_layer_id and side.",
                :undo_name => "Add Assembly Layer",
                :side_effects => "Adds one Layer to this Assembly.") do |record, params, request|
           Commands.add_layer(record, :index => params["index"], :thickness_mm => params.fetch("thickness_mm", 100.0),

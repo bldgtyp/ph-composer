@@ -49,7 +49,7 @@ module PhComposer
         properties = {
           "layer_id" => Shapes.id("lyr", "The Layer to add a Layer-Segment to."),
           "width_mm" => Shapes.described(Fields.number("mm"), "The new Layer-Segment's width; 1000 mm when " \
-                                                                    "absent."),
+                                                              "absent."),
           "index" => { "type" => "integer", "minimum" => 0,
                        "description" => "Where to insert it among the Layer's Layer-Segments, 0 first; last when " \
                                         "absent." }

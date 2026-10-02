@@ -22,7 +22,7 @@ module PhComposer
       MAKE_PARAMS = Shapes.object(
         MAKE_TARGET.fetch("properties").merge("name" => { "type" => "string", "minLength" => 1,
                                                           "description" => "The new Zone's name; numbered when " \
-                                                                            "absent." }), :optional => ["name"]
+                                                                           "absent." }), :optional => ["name"]
       ).freeze
       UPDATE_PARAMS = Shapes.object({
         "reference" => ZONE_REFERENCE.merge("description" => "The Zone occurrence to edit, as list returns it."),

@@ -23,7 +23,7 @@ module PhComposer
                                    "description" => "#{UnitRegistration::ANCHOR_TEXT} sill_center when absent."
                                  ),
                                  "host" => nullable_face.merge("description" => "A Face to place on, or null to pick " \
-                                                         "one in the viewport.") },
+                                                                                "one in the viewport.") },
                                :optional => %w[anchor host])
         feature.query("#{PREFIX}.get", :description => "This Model's Place tool choice and active state.",
                                        :params => Shapes::NONE, :result => state, :examples => [{}]) do |request|

@@ -7,8 +7,8 @@ module PhComposer
         TARGET = Shapes.object({ "reference" => FACE_REFERENCE, "expected_values" => FACE_VALUES }).freeze
         PARAMS = Shapes.object({
           "targets" => Shapes.list(TARGET).merge("minItems" => 1, "description" => "Each Face occurrence to " \
-                                                                                  "change, with the values last " \
-                                                                                  "read; a change refuses."),
+                                                                                   "change, with the values last " \
+                                                                                   "read; a change refuses."),
           "assembly_id" => { "type" => %w[string null], "description" => "The Assembly to assign, or null to clear " \
                                                                          "it." }
         }).freeze

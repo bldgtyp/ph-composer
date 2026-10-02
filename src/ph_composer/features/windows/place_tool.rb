@@ -10,7 +10,7 @@ module PhComposer
       ACTION = "#{FEATURE_ID}.units.place"
       DEFAULT_ANCHOR = "sill_center"
       GUIDANCE = "Place Window: click a Zone Face; sill=<length> sets the opening sill; " \
-        "offset=<length> insets the chosen anchor from the nearest outer edge. Escape stops."
+                 "offset=<length> insets the chosen anchor from the nearest outer edge. Escape stops."
 
       def initialize(session)
         @session = session

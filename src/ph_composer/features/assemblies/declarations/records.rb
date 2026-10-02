@@ -70,7 +70,7 @@ module PhComposer
           "name" => { "type" => "string", "minLength" => 1,
                       "description" => "The copy's name; \"<name> (copy)\" when absent. Names are unique." },
           "copy_datasheets" => { "type" => "boolean", "description" => "Keep the datasheet links on the copy; " \
-                                                                     "false when absent." }
+                                                                       "false when absent." }
         }
         duplicate_action(feature, prefix, kind, duplicate, example_id) do |request, proposal|
           Materials::Operations.duplicate(request, proposal,

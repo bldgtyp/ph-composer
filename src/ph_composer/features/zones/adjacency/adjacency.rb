@@ -293,7 +293,7 @@ module PhComposer
         case result.kind
         when :same_normal
           "#{names.join(' and ')} overlap: these coplanar Faces point the same way, so neither is a " \
-            "boundary of the other."
+          "boundary of the other."
         when :sliver
           "A shared region between #{names.join(' and ')} was skipped because #{result.reason}."
         else

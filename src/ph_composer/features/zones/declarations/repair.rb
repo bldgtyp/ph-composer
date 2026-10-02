@@ -20,7 +20,7 @@ module PhComposer
         "zones" => { "type" => "array", "items" => ZONE_REFERENCE, "minItems" => 1,
                      "description" => "Every Zone the repair may write, the counterpart's included." },
         "retaining_entity_path" => PATH.merge("description" => "The piece that keeps face_id, when no stored " \
-                                                                "endpoint proves it.")
+                                                               "endpoint proves it.")
       }, :optional => ["retaining_entity_path"]).freeze
       SPLIT_REPAIR_RESULT = Shapes.object({
         "face_id" => Shapes::ID, "retaining_entity_path" => PATH,

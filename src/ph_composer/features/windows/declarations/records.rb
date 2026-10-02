@@ -27,7 +27,7 @@ module PhComposer
                                     "description" => "The copy's name; \"<name> (copy)\" when absent. Names " \
                                                      "are unique." },
                         "copy_datasheets" => { "type" => "boolean", "description" => "Keep the datasheet links on " \
-                                                                     "the copy; false when absent." } },
+                                                                                     "the copy; false when absent." } },
                       :optional => %w[name copy_datasheets])
       end
 

@@ -7,8 +7,8 @@ module PhComposer
       ROW = Shapes.object({ "reference" => ZONE_REFERENCE, "values" => ZONE_VALUES }).freeze
       UPDATE = Shapes.object({
         "targets" => Shapes.list(TARGET).merge("minItems" => 1, "description" => "Each Zone occurrence to change, " \
-                                                                                "with the values last read; a " \
-                                                                                "change refuses."),
+                                                                                 "with the values last read; a " \
+                                                                                 "change refuses."),
         "field" => { "type" => "string", "enum" => Selection::FIELDS.keys, "description" => "The Zone value to set." },
         "value" => { "type" => %w[string number null],
                      "description" => "The new value: text for name, building_segment and level (null clears " \
@@ -64,8 +64,8 @@ module PhComposer
                              :description => "Review a new Attached zone assignment for explicit Faces.",
                              :params => Shapes.object({
                                "faces" => Faces::Registration::FACES.merge("description" => "The Faces the new " \
-                                                                                         "Attached zone would be " \
-                                                                                         "assigned to."),
+                                                                                            "Attached zone would be " \
+                                                                                            "assigned to."),
                                "revision" => { "type" => "integer", "description" => "The revision the Faces were " \
                                                                                      "read at; a later one refuses." }
                              }),

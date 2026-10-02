@@ -14,7 +14,7 @@ module PhComposer
 
           if entities.length > Faces.gesture_face_limit
             raise CodedError.new("gesture.too_large", "Select at most #{Faces.gesture_face_limit} Faces. " \
-                                                    "Nothing was written.")
+                                                      "Nothing was written.")
           end
           index ||= Zones::Index.new(model)
           parent = Array(model.active_path)

@@ -47,7 +47,7 @@ module PhComposer
                          :params => Shapes.object({
                            "values" => VALUES.merge("description" => "The complete new settings."),
                            "expected_values" => VALUES.merge("description" => "The settings last read; a change " \
-                                                                             "refuses.")
+                                                                              "refuses.")
                          }),
                          :result => VALUES, :undo_name => "Change Zone Settings",
                          :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }],

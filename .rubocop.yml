@@ -26,6 +26,19 @@ Style/Semicolon:
 Layout:
   Enabled: true
 
+# Cops RuboCop 1.50 still marks pending; the whole department includes them.
+Layout/LineContinuationLeadingSpace:
+  Enabled: true
+
+Layout/LineContinuationSpacing:
+  Enabled: true
+
+Layout/LineEndStringConcatenationIndentation:
+  Enabled: true
+
+Layout/SpaceBeforeBrackets:
+  Enabled: true
+
 # context/CODING_STANDARDS.md "Line and size limits": 120, including transplanted code.
 Layout/LineLength:
   Enabled: true
