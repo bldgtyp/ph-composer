@@ -1,7 +1,7 @@
 # R03: agent access gaps in the Phase 2 surface
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r03-agent-access`, 2026-10-01. Host acceptance of the changed screens not run (none named below)
+STATUS: Merged to main 2026-10-01 (PR #18). Host acceptance of the changed screens not run (none named below)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Mixed. Each item states its class.
