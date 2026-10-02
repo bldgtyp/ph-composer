@@ -39,10 +39,7 @@ class WindowUnitRehostStepTest < PhComposerTestCase
   end
 
   def host(face, group = @group, values = {})
-    P::Host.new(:entity => face, :entities => group.entities, :parent_path => [group.persistent_id],
-      :transform => group.transformation, :reference => { "zone_id" => "zone_synthetic",
-        "zone_path" => [group.persistent_id], "entity_path" => [face.persistent_id] }, :values => values,
-      :geometry => PhComposer::FaceGeometry.capture(face, group.transformation))
+    zone_host(face, group, values)
   end
 
   def rehost(expected = @record, target = @host, **options)

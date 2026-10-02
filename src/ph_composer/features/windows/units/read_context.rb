@@ -7,8 +7,8 @@ require_relative "../placement/host"
 module PhComposer
   module Windows
     module Units
-      # Public Zones reads and one Window inventory per action/read, with no private Zone
-      # dictionaries. Include unglued occurrences when measuring same-plane conflicts.
+      # One Window inventory, one Zones `host_context` read and one Zone read per action/read, with no
+      # private Zone dictionaries. Include unglued occurrences when measuring same-plane conflicts.
       class ReadContext
         attr_reader :occurrences
 
@@ -16,8 +16,8 @@ module PhComposer
           @request = request
           @occurrences = Occurrences.all(request.model)
           @types = request.engine.ids(TYPE_KIND).to_h { |id| [id, request.engine.find(TYPE_KIND, id)] }
-          @faces = request.query("ph_composer.zones.faces.all").fetch("faces")
-          @zones = request.query("ph_composer.zones.all").fetch("zones")
+          @rows = Placement::Hosts.context(request, @occurrences.filter_map { |item| glued_path(item) })
+          @zone_states = Placement::Hosts.zone_states(request.query(Placement::Hosts::ZONES).fetch("zones"))
           @hosts = {}
         end
 
@@ -60,23 +60,30 @@ module PhComposer
           occurrences.reject { |item| except.include?(item.path) }.map { |item| polygon(item) }
         end
 
+        # The Zone Face a Unit is glued to, or nil. Writable hosts are located through Zones' resolver.
         def host(item, writable: true)
-          return nil unless item.entity.glued_to
-
-          native_path = item.path[0...-1] + [item.entity.glued_to.persistent_id]
-          row = @faces.find do |face|
-            reference = face.fetch("reference")
-            reference.fetch("zone_path") + reference.fetch("entity_path") == native_path
-          end
+          path = glued_path(item)
+          row = path && @rows[path]
           return nil unless row
 
-          reference = row.fetch("reference")
-          @hosts[[native_path, writable]] ||= Placement::Hosts.resolve(@request.model, reference, :writable => writable,
-            :zone_rows => @zones, :face_rows => @faces)
+          @hosts[[path, writable]] ||= if writable
+                                         Placement::Hosts.writable(@request, row.fetch("reference"), :row => row)
+                                       else
+                                         Placement::Hosts.read(item.entity.glued_to, item.path[0...-1],
+                                           item.parent_transform, row,
+                                           Placement::Hosts.zone_state(@zone_states, row))
+                                       end
         end
 
         def host_reference(reference)
-          Placement::Hosts.resolve(@request.model, reference, :zone_rows => @zones, :face_rows => @faces)
+          Placement::Hosts.writable(@request, reference)
+        end
+
+        private
+
+        def glued_path(item)
+          face = item.entity.glued_to
+          face && item.path[0...-1] + [face.persistent_id]
         end
       end
     end

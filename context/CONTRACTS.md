@@ -143,7 +143,7 @@ Codes are stable `noun.condition` strings, one per outcome:
 | Validation | `params.invalid`, `validation.failed`, `reference.invalid`, `reference.in_use`, `geometry.invalid`, `geometry.failed`, `geometry.split_failed` |
 | Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_required`, `extension.migration_failed`, `extension.invalid`, `copy.rule_missing` |
 | Query | `query.limit_invalid`, `query.cursor_expired` |
-| Operation | `operation.failed`, `operation.rollback_unverified`, `operation.participant_missing`, `operation.proposal_required`, `operation.query_missing`, `operation.dependency_missing`, `operation.query_cycle` |
+| Operation | `operation.failed`, `operation.rollback_unverified`, `operation.participant_missing`, `operation.proposal_required`, `operation.query_missing`, `operation.dependency_missing`, `operation.query_cycle`, `operation.locate_missing` |
 | Identity and scope | `identity.conflict`, `identity.choice_required`, `identity.choice_conflicts`, `scope.incomplete`, `selection.invalid` |
 | Registration | `registration.duplicate_id`, `registration.missing_dependency`, `registration.cycle`, `registration.contract_major`, `registration.schema_invalid` |
 | Translation | `payload.contract`, `section.missing_dependency`, `section.cycle`, `section.duplicate`, `section.version_unsupported`, `object.unavailable`, `dependency.unavailable` |
@@ -288,7 +288,16 @@ A Face target uses this reference shape; a Zone target carries only `zone_id` an
 starts inside the Zone and ends at the target. Persistent ids locate candidates; durable ids prove
 identity. Resolution verifies every parent-child step and the Zone record and never searches by
 name or geometry to repair a stale path. Mutation accepts only a unique, writable target: a path
-through shared component storage, a locked Group or another Zone refuses with its `target.*` code.
+through shared component storage, a locked Group (above the Zone or inside it) or another Zone
+refuses with its `target.*` code.
+
+Zones is the only owner of that resolution. The Face reference target declares it as its `locate:`,
+and a feature that requires Zones reaches the live Face through `request.locate`, with these same
+refusals (see "Handler-side dependency reads"). A reference with no `entity_id` refuses a Face that
+has since gained a record (`target.changed`). A feature that holds a native path rather than a
+reference, a pick or a glued instance, reads `ph_composer.zones.faces.host_context`: each path
+naming a Zone Face answers its reference and values. It scans only the collections along each path,
+never the whole Model, so a viewport tool may call it on a pointer move. Zone state needs every Zone occurrence and stays in `ph_composer.zones.all`.
 
 A Window unit target is reached from the Model root, not from a Zone, because a Unit may sit
 outside every Zone and still blocks deletion of its Type:
@@ -402,6 +411,16 @@ public API, so drawing the overlay or opening a context menu issues no caller ha
 do not pass dispatch: they are not refused while the session is busy, and a failing read raises
 rather than answering an outcome. The Colour-by service turns a raising projection off with a
 notice; the shell logs a raising menu test or provider and leaves out that item alone.
+
+`request.locate(kind, reference, mutable: true)` returns the live entity a reference target's
+`locate:` resolves, as a `Records::LocatedEntity`: the entity, the collection holding it, its
+parent-to-world transform and its parent path. `request.locator(kind)` returns the bound resolver,
+which a step keeps and calls again on the live Model at apply, where it has no request. Both apply
+the `query` rule: the target must belong to the caller or a feature it requires
+(`operation.dependency_missing`); an unregistered kind refuses with `reference.invalid` and a target
+with no resolver with `operation.locate_missing`. The owner's `target.*` refusals pass through
+unchanged. A located entity is for reading geometry and gluing to; its records stay the owner's to
+write (context/EXTENSIBILITY.md, "Entity-owned reference targets").
 
 `request.memo(key) { ... }` computes a value once per request and shares it with the nested reads
 and callbacks the request makes. A memo is keyed by the current owner, so two features cannot

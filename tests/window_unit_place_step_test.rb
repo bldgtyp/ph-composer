@@ -21,11 +21,7 @@ class WindowUnitPlaceStepTest < PhComposerTestCase
   end
 
   def host
-    transform = @group.transformation
-    P::Host.new(:entity => @face, :entities => @group.entities, :parent_path => [@group.persistent_id],
-      :transform => transform, :reference => { "zone_id" => "zone_synthetic", "zone_path" => [@group.persistent_id],
-        "entity_path" => [@face.persistent_id] }, :values => {},
-      :geometry => PhComposer::FaceGeometry.capture(@face, transform))
+    zone_host(@face, @group)
   end
 
   def record(id = "wun_AAAAAAAAAAAA")

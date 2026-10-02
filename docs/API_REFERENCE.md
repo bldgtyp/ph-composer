@@ -10799,6 +10799,162 @@ Example params:
 {}
 ```
 
+### `ph_composer.zones.faces.host_context`
+
+The reference and values of the Faces at explicit native paths, for a feature that hosts objects on Faces. Scans only each path, never the whole Model; Zone state is in ph_composer.zones.all. Owner: `ph_composer.zones`.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "paths"
+  ],
+  "properties": {
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "minItems": 1
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "Root-to-Face persistent-id paths, as a pick or a glued instance holds them."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "faces"
+  ],
+  "properties": {
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "reference",
+          "values"
+        ],
+        "properties": {
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "face_type": {
+                "type": "string",
+                "enum": [
+                  "Wall",
+                  "RoofCeiling",
+                  "Floor",
+                  "AirBoundary"
+                ]
+              },
+              "boundary_condition": {
+                "type": "string",
+                "enum": [
+                  "Outdoors",
+                  "Ground",
+                  "Adiabatic",
+                  "Surface",
+                  "AttachedZone"
+                ]
+              },
+              "attached_zone_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of an Attached zone record; only with AttachedZone."
+              },
+              "assembly_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Id of the Face's Assembly."
+              },
+              "adjacency": {
+                "type": "object",
+                "description": "The Surface pair envelope Solve adjacencies writes; only with Surface."
+              }
+            },
+            "description": "Empty for a Face with no record."
+          }
+        }
+      },
+      "description": "One row per path that names a Zone Face, in request order. Other paths are omitted."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "paths": [
+    [
+      1201,
+      1202
+    ]
+  ]
+}
+```
+
 ### `ph_composer.zones.faces.list`
 
 One page of path-qualified Face occurrences in authored Zones, filtered and projected. Owner: `ph_composer.zones`.

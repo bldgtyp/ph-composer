@@ -17,8 +17,7 @@ class WindowPlacementHostTest < PhComposerTestCase
   end
 
   def resolve(reference)
-    HOSTS.resolve(@model, reference, :zone_rows => assignment_query("ph_composer.zones.all").fetch("zones"),
-                                     :face_rows => assignment_faces)
+    HOSTS.writable(PhComposer::HandlerRequest.for(@session, :owner => W::FEATURE_ID, :name => "test.hosts"), reference)
   end
 
   def test_unclassified_host_uses_public_face_state_without_assignment_write

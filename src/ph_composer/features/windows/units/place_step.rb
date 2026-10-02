@@ -24,6 +24,7 @@ module PhComposer
             raise CodedError.new("validation.failed", "Choose the authored Window Type referenced by this unit.")
           end
           @plan = DefinitionPlan.build(@type)
+          @locator = host.locator or raise ArgumentError, "A placement host must be located."
           @parent_path = host.parent_path.dup
           @face_id = host.entity.persistent_id
           @host_reference = DeepCopy.call(host.reference)
@@ -65,7 +66,8 @@ module PhComposer
           if @expected_scope && !@expected_scope.unchanged?(model, @expected_state)
             changed!("The placement scope changed after preview.")
           end
-          entities, face, transform = resolve_host(model)
+          located = @locator.call(model, @host_reference, :mutable => true)
+          entities, face, transform = located.entities, located.entity, located.transform
           geometry = FaceGeometry.capture(face, transform)
           changed!("The host Face changed after preview.") unless geometry.to_h == @host_geometry &&
             transform.to_a == @host_transform
@@ -134,33 +136,6 @@ module PhComposer
           DefinitionIndex.write(model, @expected_index.merge(@type.fetch("id") => definition.persistent_id),
             :expected => @expected_index)
           definition
-        end
-
-        def resolve_host(model)
-          transform = Geom::Transformation.new
-          entities = @parent_path.reduce(model.entities) do |collection, id|
-            group = unique(collection, id)
-            unless group.is_a?(Sketchup::Group) && group.definition.instances.length == 1
-              raise CodedError.new("target.shared_definition",
-                "Make the host's parent storage unique before placement.")
-            end
-            raise CodedError.new("target.locked", "The host's parent Group is locked.") if group.locked?
-
-            transform *= group.transformation
-            group.entities
-          end
-          face = unique(entities, @face_id)
-          unless face.is_a?(Sketchup::Face)
-            raise CodedError.new("target.wrong_kind", "The placement host must still be a Face.")
-          end
-
-          [entities, face, transform]
-        end
-
-        def unique(entities, id)
-          found = entities.to_a.select { |entity| entity.persistent_id == id }
-          changed!("The host occurrence no longer resolves uniquely.") unless found.length == 1
-          found.first
         end
 
         def changed!(message)

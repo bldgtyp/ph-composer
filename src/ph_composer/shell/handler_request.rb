@@ -56,6 +56,31 @@ module PhComposer
       DeepCopy.call(value)
     end
 
+    # The owner's resolver for one entity reference target, under the same dependency rule as `query`.
+    # A step keeps the returned callable and re-locates on the live Model at apply, where it has no
+    # request. The caller may read the entity's geometry and glue to it; record writes stay with the
+    # owner (context/EXTENSIBILITY.md, "Entity-owned reference targets").
+    def locator(kind)
+      target = registry.reference_targets[kind]
+      unless target
+        raise CodedError.new("reference.invalid", "Reference target #{kind} is not registered.", "target_kind" => kind)
+      end
+      target_owner = registry.owner_of(kind)
+      unless target_owner == owner || registry.features.fetch(owner).requires.include?(target_owner)
+        raise CodedError.new("operation.dependency_missing", "#{owner} does not require #{target_owner}.")
+      end
+      unless target.locatable?
+        raise CodedError.new("operation.locate_missing", "Reference target #{kind} cannot be located.",
+                             "target_kind" => kind)
+      end
+
+      target.method(:locate)
+    end
+
+    def locate(kind, reference, mutable: true)
+      locator(kind).call(model, reference, :mutable => mutable)
+    end
+
     def retarget_references(kind, from:, to:)
       raise InternalError, "Reference retargeting needs an action proposal." unless proposal
 

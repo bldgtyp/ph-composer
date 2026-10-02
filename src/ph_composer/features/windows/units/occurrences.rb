@@ -3,7 +3,10 @@
 module PhComposer
   module Windows
     module Units
-      Occurrence = Struct.new(:entity, :path, :transform, :record, :shared_storage, :locked, keyword_init: true) do
+      # `transform` is the instance's world transform; `parent_transform` the world transform of the
+      # collection holding it, which a re-placed or re-defined instance is written relative to.
+      Occurrence = Struct.new(:entity, :path, :transform, :parent_transform, :record, :shared_storage, :locked,
+                              keyword_init: true) do
         def reference
           { "unit_id" => record.fetch("id"), "entity_path" => path.dup }
         end
@@ -74,7 +77,8 @@ module PhComposer
                 raise CodedError.new("target.wrong_kind", "A Window unit record is stored on a Group.")
               end
               found << Occurrence.new(:entity => entity, :path => current, :transform => carried,
-                :record => record, :shared_storage => shared, :locked => child_locked)
+                :parent_transform => transform, :record => record, :shared_storage => shared,
+                :locked => child_locked)
             end
             definition_shared = entity.is_a?(Sketchup::ComponentInstance) ||
                                 (entity.respond_to?(:definition) && entity.definition.instances.length > 1)

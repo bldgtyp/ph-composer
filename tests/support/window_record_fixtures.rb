@@ -21,6 +21,26 @@ module WindowRecordFixtures
     window_values(overrides).merge("id" => "wnt_AAAAAAAAAAAA", "schema_version" => 1)
   end
 
+  # A writable host on `face` in `group`, which becomes a synthetic Zone the first time, located through
+  # the Zones Face target's resolver as the Units actions locate one. `values` stand in for the
+  # `host_context` row, so a step can be shown a Surface host without classifying the Face.
+  def zone_host(face, group, values = {})
+    zone_id = "zon_#{group.persistent_id.to_s.rjust(12, '0')}"
+    unless PhComposer::Zones::ZONE_STORE.read(group)
+      PhComposer::Zones::ZONE_STORE.write(group, "id" => zone_id, "schema_version" => 1, "name" => "Zone",
+        "building_segment" => "Building", "level" => nil, "ground_depth_mm" => 0.0, "user_data" => {},
+        "extension_data" => {})
+    end
+    reference = { "zone_id" => zone_id, "zone_path" => [group.persistent_id], "entity_path" => [face.persistent_id],
+                  "entity_id" => nil }
+    locator = PhComposer::Zones::Faces::Registration::TARGET.method(:locate)
+    located = locator.call(Sketchup.active_model, reference, :mutable => true)
+    W::Placement::Host.new(:entity => located.entity, :entities => located.entities,
+      :parent_path => located.parent_path, :transform => located.transform, :reference => reference,
+      :values => values, :zone_state => "found", :locator => locator,
+      :geometry => PhComposer::FaceGeometry.capture(located.entity, located.transform))
+  end
+
   def thermal_proof
     input = JSON.parse(File.read(File.join(__dir__, "../fixtures/windows/thermal-proof.json")))
     record = { "rows_m" => input.fetch("rows_m"), "columns_m" => input.fetch("columns_m"),

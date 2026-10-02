@@ -3,66 +3,74 @@
 module PhComposer
   module Windows
     module Placement
+      # A Face that hosts, or may host, a Window unit. `locator` is set on a writable host only: the
+      # Zones Face target's resolver, which a placing step calls again at apply to find the live Face.
       Host = Struct.new(:entity, :entities, :parent_path, :transform, :reference, :values, :geometry,
-                        :zone_state, keyword_init: true)
+                        :zone_state, :locator, keyword_init: true)
 
-      # Face semantics come from the caller's Zones reads, passed in as rows. The SDK path walk resolves
-      # only native geometry/storage, never another feature's dictionaries or private resolver.
+      # Face semantics come from Zones' public contract: `host_context` for a Face's reference and values,
+      # `zones.all` for Zone state, and the Face reference target's `locate` for a writable host's live
+      # Face, with Zones' own refusals. Windows walks no Zone path and reads no Zone dictionary.
       module Hosts
+        FACE_KIND = "ph_composer.zones.faces.face"
+        CONTEXT = "ph_composer.zones.faces.host_context"
+        ZONES = "ph_composer.zones.all"
+
         module_function
 
-        def resolve(model, reference, zone_rows:, face_rows:, writable: true)
-          zone_reference = reference.slice("zone_id", "zone_path")
-          zone = zone_rows.find { |row| row.fetch("reference") == zone_reference }
-          unless zone && (!writable || zone.fetch("state") == "found")
+        # The `host_context` rows for root-to-Face native paths, keyed by path, in reads of at most the
+        # query's page limit each.
+        def context(request, paths)
+          paths.uniq.each_slice(Pages::MAXIMUM_LIMIT).each_with_object({}) do |slice, rows|
+            request.query(CONTEXT, "paths" => slice).fetch("faces").each { |row| rows[row.fetch("path")] = row }
+          end
+        end
+
+        # Each Zone occurrence's state from a `zones.all` read, keyed by Zone reference.
+        def zone_states(zone_rows)
+          zone_rows.to_h { |zone| [zone.fetch("reference"), zone.fetch("state")] }
+        end
+
+        # The state of the Zone a `host_context` row's Face is in; nil when no Zone read names it.
+        def zone_state(states, row)
+          states[row.fetch("reference").slice("zone_id", "zone_path")]
+        end
+
+        # A host a Window may be written to, named by an explicit Face reference. Locating it for
+        # mutation refuses an ambiguous, shared or nested Zone, so its Zone state is `found`. A caller
+        # that already read the Face's `host_context` row passes it.
+        def writable(request, reference, row: nil)
+          locator = request.locator(FACE_KIND)
+          located = locator.call(request.model, reference, :mutable => true)
+          row ||= context(request, [located.parent_path + [located.entity.persistent_id]]).values.first
+          unless row && row.fetch("reference") == reference
+            raise CodedError.new("target.changed", "The host Face reference no longer matches the Zone read.")
+          end
+          placeable!(row, "found")
+
+          Host.new(:entity => located.entity, :entities => located.entities, :parent_path => located.parent_path,
+            :transform => located.transform, :reference => DeepCopy.call(reference),
+            :values => DeepCopy.call(row.fetch("values")), :zone_state => "found",
+            :geometry => FaceGeometry.capture(located.entity, located.transform), :locator => locator)
+        end
+
+        # What Windows itself refuses in a host: a Zone that is not uniquely found, and a Surface Face.
+        def placeable!(row, zone_state)
+          unless zone_state == "found"
             raise CodedError.new("target.not_found", "Choose a Face in one writable, unambiguous Zone.")
           end
-          row = face_rows.find { |item| item.fetch("reference") == reference }
-          raise CodedError.new("target.changed", "The host Face reference no longer matches the Zone read.") unless row
+          return unless row.fetch("values")["boundary_condition"] == "Surface"
 
-          if writable && row.fetch("values")["boundary_condition"] == "Surface"
-            raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
-          end
-          native(model, reference, row.fetch("values"), writable).tap do |host|
-            host.zone_state = zone.fetch("state")
-          end
+          raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
         end
 
-        def native(model, reference, values, writable)
-          path = reference.fetch("zone_path") + reference.fetch("entity_path")
-          entities = model.entities
-          transform = Geom::Transformation.new
-          path[0...-1].each do |persistent_id|
-            container = unique(entities, persistent_id)
-            unless container.is_a?(Sketchup::Group) && (!writable || container.definition.instances.length == 1)
-              raise CodedError.new("target.shared_definition",
-                "Make the host's parent storage unique before placement.")
-            end
-            if writable && container.locked?
-              raise CodedError.new("target.locked", "The host's parent Group is locked.")
-            end
-
-            transform *= container.transformation
-            entities = container.entities
-          end
-          face = unique(entities, path.last)
-          unless face.is_a?(Sketchup::Face)
-            raise CodedError.new("target.wrong_kind", "The host path must end at a Face.")
-          end
-
-          Host.new(:entity => face, :entities => entities, :parent_path => path[0...-1], :transform => transform,
-            :reference => DeepCopy.call(reference), :values => DeepCopy.call(values),
-            :geometry => FaceGeometry.capture(face, transform))
+        # A read-only host on a Face the caller already holds: a Unit's glue, in the Unit's own parent, or
+        # a pick. It does not locate, so a Unit in an ambiguous Zone stays a finding rather than a refusal.
+        def read(face, parent_path, transform, row, zone_state)
+          Host.new(:entity => face, :parent_path => parent_path.dup, :transform => transform,
+            :reference => DeepCopy.call(row.fetch("reference")), :values => DeepCopy.call(row.fetch("values")),
+            :zone_state => zone_state, :geometry => FaceGeometry.capture(face, transform))
         end
-
-        def unique(entities, persistent_id)
-          found = entities.to_a.select { |entity| entity.persistent_id == persistent_id }
-          unless found.length == 1
-            raise CodedError.new("target.not_found", "The host occurrence path no longer resolves uniquely.")
-          end
-          found.first
-        end
-        private_class_method :native, :unique
       end
     end
   end

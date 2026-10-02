@@ -147,7 +147,7 @@ module PhComposer
           if selected && WorldGeometry.transform_state(item.transform.to_a).mirrored
             raise CodedError.new("window.mirrored", "Create a new flipped Type to repair a mirrored Window.")
           end
-          parent = parent_transform(model, item.path[0...-1])
+          parent = item.parent_transform
           matrix = item.entity.transformation.to_a
           world = item.transform.to_a
           world_after = selected && inplane_changed?(world) ? normalized_world(world, record) : world
@@ -312,19 +312,6 @@ module PhComposer
             found[current] = transform if entity.is_a?(Sketchup::ComponentInstance) && id == @definition_id
             found.merge!(native_parents(entity.definition.entities, current, transform * entity.transformation,
               ancestors + [id]))
-          end
-        end
-
-        def parent_transform(model, path)
-          entities = model.entities
-          path.reduce(Geom::Transformation.new) do |transform, id|
-            found = entities.to_a.select { |entity| entity.persistent_id == id }
-            unless found.length == 1 && found.first.is_a?(Sketchup::Group)
-              changed!("The reset Window parent no longer resolves uniquely.")
-            end
-            group = found.first
-            entities = group.entities
-            transform * group.transformation
           end
         end
 

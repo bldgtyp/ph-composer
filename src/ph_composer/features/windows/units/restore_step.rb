@@ -277,7 +277,8 @@ module PhComposer
         end
 
         def apply(model, slots)
-          entities, _face, transform = resolve_host(model)
+          located = @locator.call(model, @host_reference, :mutable => true)
+          entities, transform = located.entities, located.transform
           panes = RestorePanes.new(entities, resolve_panes(entities), transform, @type.fetch("id"), @plan)
           unless panes.snapshot == @panes_before
             changed!("The loose stamped panes changed after preview.")
@@ -306,7 +307,9 @@ module PhComposer
 
         def resolve_panes(entities)
           @pane_paths.map do |path|
-            face = unique(entities, path.last)
+            found = entities.to_a.select { |entity| entity.persistent_id == path.last }
+            changed!("A stamped pane no longer resolves uniquely.") unless found.length == 1
+            face = found.first
             RestoreGeometry.refuse! unless face.is_a?(Sketchup::Face) && face.persistent_id != @face_id
             face
           end
