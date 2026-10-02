@@ -1,15 +1,26 @@
 # frozen_string_literal: true
 
 require_relative "export_geometry"
+require_relative "codes"
+require_relative "placement/host"
 
 module PhComposer
   module Windows
     # Assessment is detached and read-only. Every authored Unit is accounted for, including invalid
     # and unhosted Units. Blocking rows never become partial apertures or zero thermal placeholders.
+    # `ExportAssessment.call` is the entry point; an instance is the working state of one call.
     class ExportAssessment
-      attr_reader :apertures, :constructions, :findings, :repairs
+      # Aperture and construction rows for the translation, the preflight findings, and the batch
+      # repairs the preflight offers.
+      Result = Struct.new(:apertures, :constructions, :findings, :repairs, keyword_init: true)
 
-      def initialize(snapshot:, types:, products:, settings:, faces:)
+      # Assesses every Window Unit in a captured `snapshot` against the authored Types, product
+      # collections and settings, placing each on its host from the Zones Faces section's `faces` rows.
+      def self.call(snapshot:, types:, products:, settings:, faces:)
+        new(snapshot, types, products, settings, faces).run
+      end
+
+      def initialize(snapshot, types, products, settings, faces)
         @snapshot, @types, @products, @settings = snapshot, types, products, settings
         @faces = faces.to_h { |face| [face.fetch("path"), face] }
         @apertures, @constructions, @findings, @repairs = [], [], [], []
@@ -17,10 +28,15 @@ module PhComposer
         @ids = @units.group_by { |_entry, record| record["id"] }
         @plans = {}
         @outlines = {}
+      end
+      private_class_method :new
+
+      def run
         prepare_outlines
         @units.each { |entry, record| assess_unit(entry, record) }
-        @constructions = @constructions.uniq { |row| row.fetch("id") }.sort_by { |row| row.fetch("id") }
-        @apertures.sort_by! { |row| row.fetch("id") }
+        Result.new(:apertures => @apertures.sort_by { |row| row.fetch("id") },
+          :constructions => @constructions.uniq { |row| row.fetch("id") }.sort_by { |row| row.fetch("id") },
+          :findings => @findings, :repairs => @repairs).freeze
       end
 
       private
@@ -153,20 +169,8 @@ module PhComposer
             record, reference)
           return
         end
-        values = face["record"]
-        unless values && values["face_type"] && face["zone_id"]
-          issue("window.host_unclassified", "The Unit's host Face needs classification and an owning Zone.", record,
-            reference)
-        end
-        if values && values["face_type"] && !%w[Wall RoofCeiling].include?(values["face_type"])
-          issue("window.host_type_unsupported", "Window export requires a Wall or Roof/Ceiling host Face.", record,
-            reference)
-        end
-        boundary = values && values["boundary_condition"]
-        if boundary == "Surface"
-          issue("window.surface_host", "A paired Surface Face cannot host a Window unit.", record, reference)
-        elsif boundary != "Outdoors"
-          issue("window.host_boundary_unsupported", "Windows require an Outdoors host Face.", record, reference)
+        Placement::Hosts.conditions(face["record"] || {}, :zoned => !face["zone_id"].nil?).each do |code|
+          issue(code, Codes::ALL.fetch(code), record, reference)
         end
         mapped = @outlines[entry.path]
         return unless mapped
@@ -190,11 +194,17 @@ module PhComposer
               record, reference)
           end
         end
-        conditions = thermal.fetch("findings") + thermal.fetch("elements").flat_map { |row| row.fetch("findings") }
-        conditions.uniq { |finding| finding.values_at("code", "message") }.each do |finding|
-          code = finding.fetch("code")
-          issue(code, finding.fetch("message"), record, reference,
-            :blocking => code != "window_type.frame_operation_mismatch")
+        # An element's condition names the element, so two elements with one condition are two rows.
+        conditions = thermal.fetch("findings").map { |finding| [finding.fetch("code"), finding.fetch("message")] }
+        thermal.fetch("elements").each do |detail|
+          name = type.fetch("elements").find { |cell| cell["id"] == detail["id"] }&.fetch("name", nil)
+          detail.fetch("findings").each do |finding|
+            message = finding.fetch("message")
+            conditions << [finding.fetch("code"), name ? "#{name}: #{message}" : message]
+          end
+        end
+        conditions.uniq.each do |code, message|
+          issue(code, message, record, reference, :blocking => code != "window_type.frame_operation_mismatch")
         end
         thermal.fetch("elements").each do |element|
           u_w = element["uw_w_m2k"]

@@ -15,6 +15,8 @@ module PhComposer
         FACE_KIND = "ph_composer.zones.faces.face"
         CONTEXT = "ph_composer.zones.faces.host_context"
         ZONES = "ph_composer.zones.all"
+        # The Face types a Window may be placed in.
+        SUPPORTED_FACE_TYPES = %w[Wall RoofCeiling].freeze
 
         module_function
 
@@ -62,6 +64,23 @@ module PhComposer
           return unless row.fetch("values")["boundary_condition"] == "Surface"
 
           raise CodedError.new("window.surface_host", "A paired Surface Face cannot host a Window unit.")
+        end
+
+        # The Window conditions a host Face's Zones values raise, as codes: the same codes for the same
+        # Face in a Unit read and in the export preflight. `zoned` is whether the Face has an owning Zone.
+        # A Face with no record has no Face type or boundary, so it raises both of those conditions.
+        def conditions(values, zoned:)
+          face_type = values["face_type"]
+          boundary = values["boundary_condition"]
+          codes = []
+          codes << "window.host_unclassified" unless face_type && zoned
+          codes << "window.host_type_unsupported" if face_type && !SUPPORTED_FACE_TYPES.include?(face_type)
+          if boundary == "Surface"
+            codes << "window.surface_host"
+          elsif boundary != "Outdoors"
+            codes << "window.host_boundary_unsupported"
+          end
+          codes
         end
 
         # A read-only host on a Face the caller already holds: a Unit's glue, in the Unit's own parent, or

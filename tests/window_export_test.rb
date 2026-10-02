@@ -120,6 +120,18 @@ class WindowExportTest < PhComposerTestCase
     assert_includes codes, "record.unreadable"
   end
 
+  def test_a_type_condition_on_two_elements_is_two_rows_each_naming_its_element
+    first = @type.fetch("elements").first
+    @type["columns_m"] = [1.0, 1.0]
+    @type["elements"] = [first.merge("name" => "Left", "column_span" => [0, 0]),
+      PhComposer::DeepCopy.call(first).merge("id" => "wel_BBBBBBBBBBBB", "name" => "Right", "column_span" => [1, 1])]
+    U::DefinitionWriter.rewrite(:model => @model, :definition => @definition,
+      :type => @type, :plan => U::DefinitionPlan.build(@type))
+    @products["glazings"].values.first.delete("g_value")
+    rows = assess.findings.select { |row| row.fetch("code") == "window_type.g_value_missing" }
+    assert_equal ["Left: Missing g-value.", "Right: Missing g-value."], rows.map { |row| row.fetch("message") }.sort
+  end
+
   def test_mulled_empty_and_merged_elements_keep_ids_and_shared_install_zero
     first = @type.fetch("elements").first
     @type["columns_m"] = [0.5, 0.5, 0.5]
