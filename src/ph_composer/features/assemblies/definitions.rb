@@ -5,7 +5,7 @@ module PhComposer
     # Reads every Assemblies definition kind shares. Feature handlers read the explicit record target
     # and stage through the public record engine; the dispatcher validates and applies the entire
     # proposal in one native transaction.
-    module Catalog
+    module Definitions
       module_function
 
       # Preview and invoke rebuild the same nested identities at the same revision. The allocator

@@ -10,7 +10,7 @@ module PhComposer
         module_function
 
         def create(request, proposal, values:, user_data: nil)
-          Commands.unique_name!(values.fetch("name"), Catalog.records(request, MATERIAL_KIND))
+          Commands.unique_name!(values.fetch("name"), Definitions.records(request, MATERIAL_KIND))
           id = request.engine.propose_create(MATERIAL_KIND, proposal, :values => Schema.defaults(values),
                                                                       :user_data => user_data)
           { "id" => id }
@@ -19,17 +19,17 @@ module PhComposer
         def update(request, proposal, id:, values:, expected_values:, user_data: nil)
           record = request.engine.find(MATERIAL_KIND, id)
           if values["name"]
-            Commands.unique_name!(values["name"], Catalog.records(request, MATERIAL_KIND), :except => id)
+            Commands.unique_name!(values["name"], Definitions.records(request, MATERIAL_KIND), :except => id)
           end
           result = Commands.update_material(record, :values => values)
           request.engine.propose_update(MATERIAL_KIND, id, proposal,
-            :values => Catalog.changed_values(Schema::KIND, record, result.record),
+            :values => Definitions.changed_values(Schema::KIND, record, result.record),
             :expected_values => expected_values, :user_data => user_data)
           { "id" => id }
         end
 
         def duplicate(request, proposal, id:, name: nil, copy_datasheets: false)
-          catalog = Catalog.records(request, MATERIAL_KIND)
+          catalog = Definitions.records(request, MATERIAL_KIND)
           mapping = request.engine.propose_duplicate(MATERIAL_KIND, [id], proposal) do |values|
             Commands.duplicate_material_values(values, catalog, :name => name, :copy_datasheets => copy_datasheets)
           end
@@ -43,15 +43,15 @@ module PhComposer
           if replacement_id
             raise CodedError.new("params.invalid", "Choose a different replacement Material.") if replacement_id == id
 
-            catalog = Catalog.materials(request)
+            catalog = Definitions.materials(request)
             replacement = request.engine.find(MATERIAL_KIND, replacement_id)
-            Catalog.records(request, ASSEMBLY_KIND).each do |record|
+            Definitions.records(request, ASSEMBLY_KIND).each do |record|
               next unless Assembly::Schema::MATERIAL_REFERENCE.ids(record).include?(id)
 
               result = Commands.replace_material(record, :material_id => id, :replacement => replacement,
                                                           :materials => catalog)
               request.engine.propose_update(ASSEMBLY_KIND, record.fetch("id"), proposal,
-                :values => Catalog.changed_values(Assembly::Schema::KIND, record, result.record),
+                :values => Definitions.changed_values(Assembly::Schema::KIND, record, result.record),
                 :expected_values => { "layers" => record.fetch("layers") })
             end
           end

@@ -56,9 +56,9 @@ module PhComposer
                :undo_name => "Add Layer-Segment",
                :side_effects => "Adds one Layer-Segment.") do |record, params, request|
           Commands.add_segment(record, :layer_id => params.fetch("layer_id"),
-                                :materials => Catalog.materials(request),
+                                :materials => Definitions.materials(request),
                                 :width_mm => params.fetch("width_mm", 1000.0), :index => params["index"],
-                                :identity => Catalog.identity_allocator(request, params))
+                                :identity => Definitions.identity_allocator(request, params))
         end
         action(feature, "remove", { "layer_id" => Shapes.id("lyr", LAYER_ID),
                                     "segment_id" => Shapes.id("seg", SEGMENT_ID) },
@@ -98,7 +98,7 @@ module PhComposer
       def set_material(record, params, request)
         Commands.set_segment_material(record, :layer_id => params.fetch("layer_id"),
           :segment_id => params.fetch("segment_id"), :material_id => params.fetch("material_id"),
-          :materials => Catalog.materials(request))
+          :materials => Definitions.materials(request))
       end
 
       def declare_material(feature)

@@ -4,7 +4,7 @@ module PhComposer
   module Windows
     # Reads and naming rules every Windows definition kind shares: products, Window Types, and the
     # Window Unit repairs that create Types.
-    module Catalog
+    module Definitions
       module_function
 
       # A deterministic id allocator for the records one operation creates. `inputs` are the

@@ -12,8 +12,8 @@ module PhComposer
 
         # `offsets` place the anchor on the host Face, in metres along its plane axes.
         def place(request, proposal, host:, type_id:, offsets:, anchor:, user_data: {})
-          identity = Catalog.allocator(request, "host" => host, "type_id" => type_id,
-                                                            "offsets" => offsets, "anchor" => anchor)
+          identity = Definitions.allocator(request, "host" => host, "type_id" => type_id,
+                                                    "offsets" => offsets, "anchor" => anchor)
           Mutation.prepare(request, proposal, :identity => identity)
           reads = ReadContext.new(request)
           host = reads.host_reference(host)

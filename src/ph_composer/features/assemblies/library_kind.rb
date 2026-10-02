@@ -58,7 +58,7 @@ module PhComposer
                               "source" => Materials::Schema::KIND.values_schema.fetch("properties").fetch("source") },
                             :optional => ["source"])
         callback(Shapes::NONE, Shapes.list(row)) do |request, _proposal|
-          Catalog.records(request, MATERIAL_KIND).map do |record|
+          Definitions.records(request, MATERIAL_KIND).map do |record|
             projection = { "id" => record.fetch("id"), "mapped" => map(record),
                            "expected_values" => DeepCopy.call(record.slice(*FIELDS)) }
             projection["source"] = DeepCopy.call(record["source"]) if record.key?("source")
@@ -77,10 +77,10 @@ module PhComposer
           record = request.engine.find(MATERIAL_KIND, id)
           values = request.params.fetch("values")
           if values["name"]
-            Commands.unique_name!(values["name"], Catalog.records(request, MATERIAL_KIND), :except => id)
+            Commands.unique_name!(values["name"], Definitions.records(request, MATERIAL_KIND), :except => id)
           end
           result = Commands.update_material(record, :values => values.reject { |key, _value| key == "source" })
-          changes = Catalog.changed_values(Materials::Schema::KIND, record, result.record)
+          changes = Definitions.changed_values(Materials::Schema::KIND, record, result.record)
           changes["source"] = DeepCopy.call(values["source"]) if values.key?("source")
           request.engine.propose_update(MATERIAL_KIND, id, proposal, :values => changes,
                                         :expected_values => request.params.fetch("expected_values"))

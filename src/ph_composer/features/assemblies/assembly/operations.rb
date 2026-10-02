@@ -10,8 +10,8 @@ module PhComposer
         module_function
 
         def create(request, proposal, values:, user_data: nil)
-          Commands.unique_name!(values.fetch("name"), Catalog.records(request, ASSEMBLY_KIND))
-          defaults = Schema.defaults(values, :identity => Catalog.identity_allocator(request, "values" => values))
+          Commands.unique_name!(values.fetch("name"), Definitions.records(request, ASSEMBLY_KIND))
+          defaults = Schema.defaults(values, :identity => Definitions.identity_allocator(request, "values" => values))
           id = request.engine.propose_create(ASSEMBLY_KIND, proposal, :values => defaults, :user_data => user_data)
           { "id" => id }
         end
@@ -19,18 +19,18 @@ module PhComposer
         def update(request, proposal, id:, values:, expected_values:, user_data: nil)
           record = request.engine.find(ASSEMBLY_KIND, id)
           if values["name"]
-            Commands.unique_name!(values["name"], Catalog.records(request, ASSEMBLY_KIND), :except => id)
+            Commands.unique_name!(values["name"], Definitions.records(request, ASSEMBLY_KIND), :except => id)
           end
-          result = Commands.update_assembly(record, :values => values, :materials => Catalog.materials(request))
+          result = Commands.update_assembly(record, :values => values, :materials => Definitions.materials(request))
           request.engine.propose_update(ASSEMBLY_KIND, id, proposal,
-            :values => Catalog.changed_values(Schema::KIND, record, result.record),
+            :values => Definitions.changed_values(Schema::KIND, record, result.record),
             :expected_values => expected_values, :user_data => user_data)
           { "id" => id }
         end
 
         def duplicate(request, proposal, id:)
-          catalog = Catalog.records(request, ASSEMBLY_KIND)
-          identity = Catalog.identity_allocator(request, "id" => id)
+          catalog = Definitions.records(request, ASSEMBLY_KIND)
+          identity = Definitions.identity_allocator(request, "id" => id)
           mapping = request.engine.propose_duplicate(ASSEMBLY_KIND, [id], proposal) do |values|
             Commands.duplicate_assembly_values(values, catalog, :identity => identity)
           end
@@ -57,7 +57,7 @@ module PhComposer
           record = request.engine.find(ASSEMBLY_KIND, id)
           result = yield record
           request.engine.propose_update(ASSEMBLY_KIND, id, proposal,
-            :values => Catalog.changed_values(Schema::KIND, record, result.record),
+            :values => Definitions.changed_values(Schema::KIND, record, result.record),
             :expected_values => expected_values)
           { "id" => id }
         end

@@ -48,7 +48,7 @@ module PhComposer
           :side_effects => "Adds one Layer to this Assembly.") do |record, params, request|
           Commands.add_layer(record, :index => params["index"], :thickness_mm => params.fetch("thickness_mm", 100.0),
             :anchor_layer_id => params["anchor_layer_id"], :side => params["side"],
-            :identity => Catalog.identity_allocator(request, params))
+            :identity => Definitions.identity_allocator(request, params))
         end
       end
 

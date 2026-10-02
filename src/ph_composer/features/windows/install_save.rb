@@ -31,13 +31,13 @@ module PhComposer
       def create_products(request, proposal, rows)
         duplicate_targets!(rows, "client_id")
         kind = Products::KINDS.fetch("psi_install_types")
-        known = Catalog.records(request, kind)
+        known = Definitions.records(request, kind)
         rows.to_h do |row|
           if request.engine.ids(PSI_INSTALL_KIND).include?(row.fetch("client_id"))
             raise CodedError.new("params.invalid", "A temporary identity collides with a saved product.")
           end
           values = Products.defaults("psi_install_types", row.fetch("values"))
-          Catalog.unique_name!(values.fetch("name"), known)
+          Definitions.unique_name!(values.fetch("name"), known)
           id = request.engine.propose_create(PSI_INSTALL_KIND, proposal, :values => values,
             :user_data => row["user_data"])
           known << values.merge("id" => id)
@@ -48,12 +48,12 @@ module PhComposer
       def update_products(request, proposal, rows)
         duplicate_targets!(rows, "id")
         kind = Products::KINDS.fetch("psi_install_types")
-        known = Catalog.records(request, kind)
+        known = Definitions.records(request, kind)
         rows.each do |row|
           values = DeepCopy.call(row.fetch("values"))
           if values["name"]
             values["name"] = values["name"].strip
-            Catalog.unique_name!(values["name"], known, :except => row.fetch("id"))
+            Definitions.unique_name!(values["name"], known, :except => row.fetch("id"))
             known.find { |record| record.fetch("id") == row.fetch("id") }&.merge!("name" => values["name"])
           end
           request.engine.propose_update(PSI_INSTALL_KIND, row.fetch("id"), proposal, :values => values,
@@ -62,7 +62,7 @@ module PhComposer
       end
 
       def unique_final_names!(request, proposal)
-        rows = Catalog.records(request, Products::KINDS.fetch("psi_install_types"))
+        rows = Definitions.records(request, Products::KINDS.fetch("psi_install_types"))
                 .to_h { |record| [record.fetch("id"), record] }
         proposal.writes.select { |write| write.kind == PSI_INSTALL_KIND }.each do |write|
           rows[write.id] = write.after

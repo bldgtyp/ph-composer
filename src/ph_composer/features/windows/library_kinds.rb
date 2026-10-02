@@ -72,7 +72,7 @@ module PhComposer
           row = Shapes.object({ "id" => Shapes::TEXT, "mapped" => schema, "expected_values" => expected,
             "source" => kind.values_schema.fetch("properties").fetch("source") }, :optional => ["source"])
           callback(Shapes::NONE, Shapes.list(row)) do |request, _proposal|
-            Catalog.records(request, kind).map do |record|
+            Definitions.records(request, kind).map do |record|
               projection = { "id" => record.fetch("id"), "mapped" => map(record),
                              "expected_values" => DeepCopy.call(record.slice(*fields)) }
               projection["source"] = DeepCopy.call(record["source"]) if record.key?("source")

@@ -39,7 +39,7 @@ module PhComposer
       # `labelled` names fields whose param also takes a display label the command resolves, so their
       # param schema drops the stored enum.
       def without_enums(schema, labelled)
-        labelled.each { |key| schema.fetch("properties")[key]&.delete("enum") }
+        labelled.each { |key| schema.fetch("properties").fetch(key).delete("enum") }
         schema
       end
 

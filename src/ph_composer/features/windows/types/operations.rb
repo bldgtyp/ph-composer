@@ -11,8 +11,8 @@ module PhComposer
 
         def create(request, proposal, values:, user_data: nil)
           Units::Mutation.prepare(request, proposal)
-          Catalog.unique_name!(values.fetch("name"), Catalog.records(request, KIND))
-          values = Types.defaults(values, :identity => Catalog.allocator(request, "values" => values))
+          Definitions.unique_name!(values.fetch("name"), Definitions.records(request, KIND))
+          values = Types.defaults(values, :identity => Definitions.allocator(request, "values" => values))
           id = request.engine.propose_create(TYPE_KIND, proposal, :values => values, :user_data => user_data)
           { "id" => id }
         end
@@ -23,7 +23,7 @@ module PhComposer
           values = DeepCopy.call(values)
           if values["name"]
             values["name"] = values["name"].strip
-            Catalog.unique_name!(values["name"], Catalog.records(request, KIND), :except => id)
+            Definitions.unique_name!(values["name"], Definitions.records(request, KIND), :except => id)
           end
           request.engine.propose_update(TYPE_KIND, id, proposal, :values => values,
             :expected_values => expected_values, :user_data => user_data)
@@ -32,11 +32,11 @@ module PhComposer
 
         def duplicate(request, proposal, id:, name: nil, copy_datasheets: false)
           Units::Mutation.prepare(request, proposal)
-          rows = Catalog.records(request, KIND)
-          identity = Catalog.allocator(request, "id" => id)
+          rows = Definitions.records(request, KIND)
+          identity = Definitions.allocator(request, "id" => id)
           mapping = request.engine.propose_duplicate(TYPE_KIND, [id], proposal) do |values|
-            values["name"] = (name || Catalog.duplicate_name(values.fetch("name"), rows)).strip
-            Catalog.unique_name!(values["name"], rows)
+            values["name"] = (name || Definitions.duplicate_name(values.fetch("name"), rows)).strip
+            Definitions.unique_name!(values["name"], rows)
             values["source"] = { "kind" => "derived" }
             values["datasheet_links"] = [] unless copy_datasheets
             values["product_photos"] = []
@@ -70,7 +70,7 @@ module PhComposer
         def grid(request, proposal, gesture:, id:, values:, expected_values:)
           Units::Mutation.prepare(request, proposal)
           before = request.engine.find(TYPE_KIND, id)
-          after = yield before, Catalog.allocator(request, values.merge("command" => gesture, "id" => id))
+          after = yield before, Definitions.allocator(request, values.merge("command" => gesture, "id" => id))
           changed = KIND.values(after).select { |key, value| before[key] != value }
           request.engine.propose_update(TYPE_KIND, id, proposal, :values => changed,
                                                                  :expected_values => expected_values)

@@ -123,7 +123,8 @@ module PhComposer
 
     ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)
 
-    # Zero-argument factories return configured provider instances, never a Model or request.
+    # A factory is called with the published registry and returns configured provider instances; it
+    # never receives a Model or request.
     # `kinds: ["*"]` exclusively declares every registered wire kind; it cannot mix with named kinds.
     # The coordinator resolves that capability against current adapters before constructing a provider.
     LibraryProvider = Struct.new(:name, :owner, :contract_version, :kinds, :factory, keyword_init: true)
