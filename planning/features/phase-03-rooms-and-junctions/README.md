@@ -17,3 +17,8 @@ Carried in from Phase 2 planning: a derived-geometry extension to the Colour-by 
 by Spaces (spaces Q22) and by the Window Type mode's operation marks. Ed confirmed on 2026-09-30
 (Phase 2 decision D2-6) that the marks wait for this extension. Design it once, here, against
 both users.
+
+Carried in from the Phase 2 review (R05): four export-run items, including one live defect (a Zone
+with every Face omitted builds an empty Room), that Spaces' first export section will meet. They are
+recorded in [validation and export](../cross-phase/validation-and-export/STATUS.md), "Owed from the
+Phase 2 review". Settle them before or with that section.

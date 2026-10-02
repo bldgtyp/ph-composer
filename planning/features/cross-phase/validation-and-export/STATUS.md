@@ -35,6 +35,25 @@ Phase 2 planning (2026-09-30) allocates the next changes to this feature: real c
 [P2-14](../../../archive/phase-02-envelope/phases/p2-14-aperture-export.md). See [PLAN.md](PLAN.md). Neither
 is authorized.
 
+### Owed from the Phase 2 review
+
+Added 2026-10-02 from [R05](../../phase-02-envelope/refactor/R05-export-layering.md)'s follow-ups.
+None is authorized yet.
+
+1. **Defect: a Room with no Faces.** A Zone whose Faces are all omitted builds a Room with no Faces,
+   and the diagnostic canonical model then fails to reload. It predates R05, which made it reachable
+   without an Aperture. Reproduce it in a focused test first, then refuse or omit the empty Room
+   with a declared code. Do it before Spaces adds its first export section, or sooner.
+2. **Section-read cycles.** Two contributors that read each other's projections would recurse;
+   registration does not check for a cycle in declared section reads. Refuse a cycle at
+   registration. Spaces is the first feature likely to add a cross-section read.
+3. **Results from runs that cannot publish.** `construction_usage` and `window_face_areas` are
+   reported from runs that write no canonical pair. Decide whether a blocked run reports them and
+   say so in the report.
+4. **An optional attaching section withholds the model.** An attaching section that is not required
+   for export still withholds the canonical model when it refuses. No such section exists yet; settle
+   the rule before the first one does.
+
 ## Verification
 
 Both Ruby 3.2.2 and 2.7.2 full offline gates pass, with coverage, real-panel browser checks,
@@ -55,3 +74,4 @@ loss, two Models, nested edit paths, Undo/Redo and reopen. See the evidence for 
 | 2026-09-29 | Ed authorized P1-E: HBJSON/report always selected, blockers write no pair and remain visible, no implicit SKP save, METr deferred. |
 | 2026-09-30 | Phase 2 planning: construction and aperture export allocated to P2-06 and P2-14. Packet moved under `features/cross-phase/`. |
 | 2026-09-30 | P1-E implementation and P1-F current-host integrated acceptance complete on branch; independent review and final gates pass. Normal composition requires authored Assemblies. |
+| 2026-10-02 | Phase 2 review: R05's four export-run follow-ups recorded as owed, one a live defect (an empty Room fails to reload). None authorized. |

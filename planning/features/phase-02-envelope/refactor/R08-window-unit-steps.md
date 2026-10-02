@@ -74,6 +74,18 @@ host-resolution copies (see its Outcome). Re-count before extracting.
 - **A redundant comparison.** `reset_step` compares a read host's transform with the Unit's parent
   transform; since R06 both come from the same source.
 
+**Added 2026-10-02 from R04's and R05's follow-ups.**
+
+- **The Unit read and the preflight disagree on host conditions.** A Window on a Ground or
+  unclassified host shows no finding in `units.list` but `window.host_boundary_unsupported` or
+  `window.host_unclassified` in the export preflight (`ExportAssessment`). The codes agree where both
+  report.
+- **Per-element Type findings lose the element.** A Type finding with no side (for example
+  `window_type.g_value_missing` on two elements) collapses into one preflight row per Unit that does
+  not name the element.
+- **Unmeasured matcher cost.** Since R05 the live matcher captures `FaceGeometry` per pane,
+  including a digest. Its cost was not measured.
+
 ## Consequence
 
 - A change to one guard (for example a new unsupported host state) has to be found and made in four
@@ -109,6 +121,11 @@ Extract only what is identical in meaning. Do not build a step base class with h
    - Let `ReadContext` take what the action needs, so `units.place` reads its one host and no
      `zones.all`.
    - Drop the transform comparison in `reset_step` if the tests still pass without it.
+   - From R05: include the live matcher's per-pane `FaceGeometry` capture in the same measurement.
+9. **R04 follow-ups.** Make `ExportAssessment` a function (see Observed), then let the Unit read
+   and the preflight share one host-condition check, so `units.list` reports
+   `window.host_boundary_unsupported` and `window.host_unclassified` too. Give a side-less Type
+   finding its element, so the preflight shows one row per element and condition.
 
 ## Verification
 
@@ -121,5 +138,7 @@ Extract only what is identical in meaning. Do not build a step base class with h
   measured before and after and recorded in `context/SKETCHUP_HOST_BEHAVIOR.md`, "Window-edit
   measurements"; a hover over a locked Zone refuses again (focused test in
   `window_place_tool_test.rb`).
+- R04 follow-ups: a Unit on a Ground host reports the same code from `units.list` and the preflight;
+  a Type missing g on two elements gives two preflight rows, each naming its element.
 - Host gate: repeat E12 (resize a used Type with three anchors, Swap, Re-host, Reset, flipped Type,
   Restore) because every native write path moves.

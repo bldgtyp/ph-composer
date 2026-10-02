@@ -242,7 +242,9 @@ report claimed unused membranes were in HBJSON; a refused Aperture group stayed 
 malformed schema-exception field passed; one `context/` line and three Design-note names were
 stale; `SnapshotReader#section` was untested.
 
-Follow-ups, not done here:
+Follow-ups, not done here. The first four are export-run contracts and are recorded in
+[validation and export](../../cross-phase/validation-and-export/STATUS.md), "Owed from the Phase 2
+review"; the fifth is in [R08](R08-window-unit-steps.md) item 8:
 
 - A Zone whose Faces are all omitted builds a Room with no Faces. The diagnostic canonical model
   then fails to reload. This predates R05, which only made it reachable without an Aperture.
