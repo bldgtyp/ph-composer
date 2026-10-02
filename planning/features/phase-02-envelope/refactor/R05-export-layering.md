@@ -1,7 +1,7 @@
 # R05: export and translation layering runs upward
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `refactor/r05-export-layering`, 2026-10-02; dual-Ruby `make ci` and the E06/E14 host readbacks pass
+STATUS: Merged to main 2026-10-02 (PR #20); dual-Ruby `make ci` and the E06/E14 host readbacks pass
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Evidenced contract violation. Architecture change.
