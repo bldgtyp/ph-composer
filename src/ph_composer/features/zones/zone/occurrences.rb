@@ -84,12 +84,16 @@ module PhComposer
           raise_target("target.changed", "The Face now has an assignment record.")
         end
 
-        stamp = STAMP_STORE.read(entity)
-        if stamp && stamp["zone_id"] != zone.record["id"]
-          raise_target("target.wrong_zone", "The Face stamp names another Zone.")
-        end
+        stamped_for!(zone, entity)
         unlocked_zone!(zone) if mutable
         occurrence
+      end
+
+      def stamped_for!(zone, entity)
+        stamp = STAMP_STORE.read(entity)
+        return unless stamp && stamp["zone_id"] != zone.record["id"]
+
+        raise_target("target.wrong_zone", "The Face stamp names another Zone.")
       end
 
       def unlocked_zone!(zone)
@@ -103,6 +107,7 @@ module PhComposer
       def write_refusal(occurrence)
         writable_zone!(occurrence.zone)
         face_at(occurrence.zone, occurrence.path, :mutable => true)
+        stamped_for!(occurrence.zone, occurrence.entity)
         unlocked_zone!(occurrence.zone)
         nil
       rescue CodedError => error
@@ -344,7 +349,8 @@ module PhComposer
         raise CodedError.new(code, message)
       end
       private_class_method :resolve_face_path, :shared_storage?, :walk_zones, :walk_faces, :raise_target,
-                           :zone_for_path, :cutting_component?, :contents, :writable_zone!, :unlocked_zone!
+                           :zone_for_path, :cutting_component?, :contents, :writable_zone!, :unlocked_zone!,
+                           :stamped_for!
     end
   end
 end

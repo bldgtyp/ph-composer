@@ -118,6 +118,7 @@ module PhComposer
         end
 
         def fitted(world_matrix, geometry)
+          WorldGeometry.transform_state(world_matrix)
           Placement::Fit.check!(geometry, WorldGeometry.map(@plan, world_matrix).outer_polygon_m,
             :existing_polygons_m => @existing_polygons)
           world_matrix

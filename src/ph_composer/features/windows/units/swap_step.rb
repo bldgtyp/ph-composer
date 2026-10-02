@@ -126,7 +126,11 @@ module PhComposer
           old_plan = source_plan(model, item, record, from_type)
           row = instance_row(item, record, old_plan)
           row["other_polygons_m"] = DeepCopy.call(input.fetch(:other_polygons_m))
-          row["host_geometry"] = HostGuard.capture(item, input[:host]) if item.entity.glued_to
+          if item.entity.glued_to
+            row["host_geometry"] = HostGuard.capture(item, input[:host])
+          elsif input[:host]
+            NativeUnit.changed!("A host was supplied for a Window that is no longer glued.")
+          end
           row
         end
 

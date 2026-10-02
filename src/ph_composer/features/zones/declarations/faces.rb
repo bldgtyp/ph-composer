@@ -120,8 +120,9 @@ module PhComposer
               "type" => %w[object null], "additionalProperties" => false, "required" => %w[code message],
               "properties" => { "code" => { "type" => "string" }, "message" => { "type" => "string" } },
               "description" => "The refusal a write to this Face meets from its path alone (a shared, nested " \
-                               "or locked Zone, or locked or shared storage), or null. A duplicated Zone or Face " \
-                               "id is not visible here; the write itself still checks it."
+                               "or locked Zone, locked or shared storage, or a stamp naming another Zone), or " \
+                               "null. A duplicated Zone or Face id is not visible here; the write itself still " \
+                               "checks it."
             }
           }), :description => "One row per path that names a Zone Face, in request order. Other paths are omitted.")
         }).freeze

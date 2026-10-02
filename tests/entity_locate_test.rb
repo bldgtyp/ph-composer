@@ -158,5 +158,13 @@ class EntityLocateTest < PhComposerTestCase
     assert_nil row.call.fetch("write_refusal")
     group.locked = true
     assert_equal "target.locked", row.call.fetch("write_refusal").fetch("code")
+    group.locked = false
+    face = Sketchup::Face.new(202)
+    wrapper = Sketchup::Group.new(201, Sketchup::Entities.new([face]))
+    group.entities << wrapper
+    group.entities << Sketchup::Group.new(203, wrapper.entities)
+    path = [100, 201, 202]
+    rows = request.query("ph_composer.zones.faces.host_context", "paths" => [path]).fetch("faces")
+    assert_equal refusal("zon_AAAAAAAAAAAA", path), rows.first.fetch("write_refusal").fetch("code")
   end
 end
