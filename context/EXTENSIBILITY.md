@@ -169,10 +169,11 @@ installation in the MVP.
 ### Library providers and kind adapters
 
 `feature.library_provider(name, contract_version: 1, kinds: [...], &factory)` registers a
-zero-argument factory returning configured provider instances. Named wire kinds must already
+factory that is called with the published registry and returns configured provider instances. Named wire kinds must already
 have adapters in the registration batch. `kinds: ["*"]` explicitly serves all registered wire
 kinds; the wildcard is exclusive and cannot mix with named ids. The file provider uses this
-capability, so adding an adapter requires no edit to its declaration. Factories receive no Model
+capability, so adding an adapter requires no edit to its declaration. A factory reads the registered
+library kinds from the registry it is given, never `Registry.current`. It receives no Model
 or request; private configuration belongs to the provider and its setup store.
 
 `feature.library_kind(name, contract_version: 1, record_kind:, adapter:)` registers the owner's

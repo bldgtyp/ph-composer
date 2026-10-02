@@ -53,10 +53,9 @@ module PhComposer
 
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => 1)
-      feature.library_provider(FileProvider::PROVIDER_KIND, :contract_version => 1, :kinds => ["*"]) do
-        current = Registry.current
-        kinds = current.library_kinds.values.map { |row| row.adapter.wire_kind }
-        adapters = ->(kind) { current.library_kinds.values.find { |row| row.adapter.wire_kind == kind }&.adapter }
+      feature.library_provider(FileProvider::PROVIDER_KIND, :contract_version => 1, :kinds => ["*"]) do |registry|
+        kinds = registry.library_kinds.values.map { |row| row.adapter.wire_kind }
+        adapters = ->(kind) { registry.library_kinds.values.find { |row| row.adapter.wire_kind == kind }&.adapter }
         Setup.file_providers(:kinds => kinds, :adapters => adapters)
       end
       feature.query("#{FEATURE_ID}.providers", :description => "Configured libraries without transport addresses.",
