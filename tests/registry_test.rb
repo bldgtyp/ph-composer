@@ -52,7 +52,7 @@ class RegistryTest < PhComposerTestCase
       diagnostics = refused(feature do |registry|
         registry.feature("probe.schema", :contract_version => 1)
                 .query("probe.schema.read#{index}", :description => "Probe.", :params => params, :result => OBJECT,
-                                                    :examples => [{}]) { {} }
+                                                    :examples => [{}], :refuses => []) { {} }
       end)
       assert_equal ["registration.schema_invalid"], diagnostics.map(&:code).uniq, params.inspect
     end
@@ -63,17 +63,17 @@ class RegistryTest < PhComposerTestCase
                "properties" => { "n" => { "type" => "integer" } } }
     cases = {
       "no description" => lambda do |scope|
-        scope.query("probe.ops.a", :description => " ", :params => OBJECT, :result => OBJECT) { {} }
+        scope.query("probe.ops.a", :description => " ", :params => OBJECT, :result => OBJECT, :refuses => []) { {} }
       end,
       "no example" => lambda do |scope|
-        scope.query("probe.ops.b", :description => "B.", :params => params, :result => OBJECT) { {} }
+        scope.query("probe.ops.b", :description => "B.", :params => params, :result => OBJECT, :refuses => []) { {} }
       end,
       "invalid example" => lambda do |scope|
         scope.query("probe.ops.c", :description => "C.", :params => params, :result => OBJECT,
-                                   :examples => [{ "n" => "one" }]) { {} }
+                                   :examples => [{ "n" => "one" }], :refuses => []) { {} }
       end,
       "not callable" => lambda do |scope|
-        scope.query("probe.ops.d", :description => "D.", :params => OBJECT, :result => OBJECT) { {} }
+        scope.query("probe.ops.d", :description => "D.", :params => OBJECT, :result => OBJECT, :refuses => []) { {} }
         scope.instance_variable_get(:@staging).declared_queries.last.handler = "not callable"
       end
     }
@@ -98,7 +98,8 @@ class RegistryTest < PhComposerTestCase
   def test_an_operation_whose_params_accept_nothing_needs_no_example
     Registry.install([feature do |registry|
       registry.feature("probe.empty", :contract_version => 1)
-              .query("probe.empty.read", :description => "Read.", :params => OBJECT, :result => OBJECT) { {} }
+              .query("probe.empty.read", :description => "Read.", :params => OBJECT, :result => OBJECT,
+                                         :refuses => []) { {} }
     end])
 
     assert Registry.installed?("probe.empty")
@@ -190,6 +191,25 @@ class RegistryTest < PhComposerTestCase
     end
   end
 
+  # Every operation says what it refuses with; `[]` is the explicit "nothing beyond the common sets".
+  def test_an_operation_without_refuses_is_refused
+    diagnostics = refused(feature do |registry|
+      registry.feature("probe.silent", :contract_version => 1)
+              .query("probe.silent.read", :description => "Read.", :params => OBJECT, :result => OBJECT) { {} }
+    end)
+    assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
+    assert_includes diagnostics.first.message, "refuses"
+
+    Registry.reset
+    diagnostics = refused(feature do |registry|
+      scope = registry.feature("probe.silent", :contract_version => 1)
+      scope.query("probe.silent.read", :description => "Read.", :params => OBJECT, :result => OBJECT,
+                                       :refuses => []) { {} }
+      scope.instance_variable_get(:@staging).declared_queries.last.refuses = nil
+    end)
+    assert_equal ["probe.silent.read needs refuses, a list of codes."], diagnostics.map(&:message)
+  end
+
   def test_dynamic_context_menu_provider_and_entries_are_validated
     diagnostics = refused(feature do |registry|
       registry.feature("probe.menu", :contract_version => 1).menu_entries("probe.menu.missing", :menu => "Probe")
@@ -207,7 +227,8 @@ class RegistryTest < PhComposerTestCase
   def test_published_declarations_are_frozen
     Registry.install([feature do |registry|
       registry.feature("probe.frozen", :contract_version => 1)
-              .query("probe.frozen.read", :description => "Read.", :params => OBJECT, :result => OBJECT) { {} }
+              .query("probe.frozen.read", :description => "Read.", :params => OBJECT, :result => OBJECT,
+                                          :refuses => []) { {} }
     end])
     query = Registry.current.queries.fetch("probe.frozen.read")
 
@@ -364,9 +385,10 @@ class RegistryTest < PhComposerTestCase
     diagnostics = refused(feature do |r|
       scope = r.feature("probe.one", :contract_version => 1)
       scope.record_kind(kind)
-      scope.query("probe.one.bad", :description => "", :params => { "type" => "text" }, :result => OBJECT) { {} }
+      scope.query("probe.one.bad", :description => "", :params => { "type" => "text" }, :result => OBJECT,
+                                   :refuses => []) { {} }
       scope.action("probe.one.ask", :description => "", :params => OBJECT, :result => OBJECT, :undo_name => "Ask",
-                                    :side_effects => "", :confirmation => "always") { {} }
+                                    :side_effects => "", :confirmation => "always", :refuses => []) { {} }
       scope.snapshot_section("probe.one.view", :query => "probe.one.absent")
       scope.on_host_event(:model_closed) { nil }
     end)
@@ -410,7 +432,7 @@ class RegistryTest < PhComposerTestCase
     Registry.install([feature do |registry|
       registry.feature("outside.probe", :contract_version => 1)
               .view_command("outside.probe.look", :description => "Look.", :params => OBJECT,
-                                                  :result => OBJECT) { |_request| {} }
+                                                  :result => OBJECT, :refuses => []) { |_request| {} }
     end])
 
     assert Registry.current.view_commands.key?("outside.probe.look")
@@ -423,7 +445,8 @@ class RegistryTest < PhComposerTestCase
   def test_a_view_command_with_no_handler_refuses_the_whole_batch
     probe = feature do |registry|
       registry.feature("outside.probe", :contract_version => 1)
-              .view_command("outside.probe.look", :description => "Look.", :params => OBJECT, :result => OBJECT)
+              .view_command("outside.probe.look", :description => "Look.", :params => OBJECT, :result => OBJECT,
+                                                  :refuses => [])
     end
 
     error = assert_raises(PhComposer::RegistrationError) { Registry.install([probe]) }
@@ -447,7 +470,7 @@ class RegistryTest < PhComposerTestCase
   private
 
   def read
-    { :description => "Read.", :params => OBJECT, :result => OBJECT }
+    { :description => "Read.", :params => OBJECT, :result => OBJECT, :refuses => [] }
   end
 
   def subscriber(received = [])

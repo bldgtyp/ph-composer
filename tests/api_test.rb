@@ -454,6 +454,26 @@ class ApiTest < PhComposerTestCase
     assert_equal %w[refused request.unknown_operation], outcome.values_at("status", "code")
   end
 
+  # The offline suite fails a test whose operation refuses with a code it did not declare, naming both.
+  def test_a_refusal_outside_the_declared_codes_is_reported_by_operation_and_code
+    probe = Module.new do
+      def self.install(registry)
+        registry.feature("probe.audit", :contract_version => 1)
+                .query("probe.audit.read", :description => "Refuses with a code it does not declare.",
+                                           :params => { "type" => "object" }, :result => { "type" => "object" },
+                                           :refuses => []) do
+          raise PhComposer::CodedError.new("target.not_found", "Gone.")
+        end
+      end
+    end
+    PhComposer::Registry.install([probe])
+
+    outcome = API.query(:context => @context, :name => "probe.audit.read")
+
+    assert_equal "target.not_found", outcome.fetch("code")
+    assert_equal ["probe.audit.read refused with target.not_found"], @undeclared_refusals.slice!(0..)
+  end
+
   # ------------------------------------------------------------------ Models and lifecycle
 
   def test_two_models_with_identical_record_ids_stay_isolated
@@ -561,9 +581,10 @@ class ApiTest < PhComposerTestCase
       define_singleton_method(:install) do |registry|
         scope = registry.feature("test.mismatch", :contract_version => 1)
         scope.query("test.mismatch.read", :description => "Read.", :params => { "type" => "object" },
-                                          :result => array) { {} }
+                                          :result => array, :refuses => []) { {} }
         scope.action("test.mismatch.create", :description => "Create parts.", :params => parts, :result => array,
-                                             :undo_name => "Create", :side_effects => "Creates records.",
+                                             :refuses => [], :undo_name => "Create",
+                                             :side_effects => "Creates records.",
                                              :examples => [{ "parts" => [] }]) do |request, changes|
           request.engine.propose_create("test.fixture.definition", changes, :values => { "label" => "Frame" })
           {}

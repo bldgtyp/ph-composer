@@ -37,7 +37,7 @@ module TestFeature
 
   def declare_reads(feature)
     feature.query("#{ID}.total_length", :description => "Total part length.", :params => { "type" => "object" },
-                                        :result => OBJECT) do |request|
+                                        :result => OBJECT, :refuses => []) do |request|
       engine = request.engine
       lengths = engine.ids("#{ID}.part").map { |id| engine.find("#{ID}.part", id).fetch("length_mm") }
       { "total_length_mm" => lengths.sum }
@@ -50,7 +50,8 @@ module TestFeature
                                        :params => { "type" => "object", "required" => ["count"],
                                                     "additionalProperties" => false,
                                                     "properties" => { "count" => { "type" => "integer" } } },
-                                       :result => OBJECT, :examples => [{ "count" => 1 }]) do |request|
+                                       :result => OBJECT, :examples => [{ "count" => 1 }],
+                                       :refuses => %w[validation.failed]) do |request|
       raise PhComposer::UserError, "There is nothing to look at." if request.params.fetch("count").zero?
 
       request.model.selection.clear
@@ -65,7 +66,7 @@ module TestFeature
     feature.action("#{ID}.create", :description => "Create a definition and parts that name it.",
                                    :params => { "type" => "object", "required" => ["parts"],
                                                 "properties" => { "parts" => { "type" => "array" } } },
-                                   :result => OBJECT, :undo_name => "Create Test Parts",
+                                   :result => OBJECT, :refuses => [], :undo_name => "Create Test Parts",
                                    :examples => [{ "parts" => [{ "label" => "Sill", "length_mm" => 1200.0 }] }],
                                    :side_effects => "Creates records.") do |request, changes|
       definition = request.engine.propose_create("#{ID}.definition", changes, :values => { "label" => "Frame" })
@@ -78,7 +79,8 @@ module TestFeature
     feature.action("#{ID}.update_parts", :description => "Edit parts, all or none.",
                                          :params => { "type" => "object", "required" => ["edits"],
                                                       "properties" => { "edits" => EDITS } },
-                                         :result => OBJECT, :undo_name => "Edit Test Parts",
+                                         :result => OBJECT, :refuses => %w[validation.failed],
+                                         :undo_name => "Edit Test Parts",
                                          :examples => [{ "edits" => [{ "id" => "tpt_Ab12Cd34Ef56" }] }],
                                          :side_effects => "Changes part values and metadata.") do |request, changes|
       request.params.fetch("edits").each do |edit|
@@ -97,7 +99,7 @@ module TestFeature
     feature.action("#{ID}.duplicate_parts", :description => "Duplicate parts as one collection.",
                                             :params => { "type" => "object", "required" => ["ids"],
                                                          "properties" => { "ids" => { "type" => "array" } } },
-                                            :result => OBJECT, :undo_name => "Duplicate Test Parts",
+                                            :result => OBJECT, :refuses => [], :undo_name => "Duplicate Test Parts",
                                             :examples => [{ "ids" => ["tpt_Ab12Cd34Ef56"] }],
                                             :side_effects => "Creates records.") do |request, changes|
       { "mapping" => request.engine.propose_duplicate("#{ID}.part", request.params.fetch("ids"), changes) }
@@ -106,7 +108,7 @@ module TestFeature
     feature.action("#{ID}.migrate_review", :description => "Raise review data to the installed version.",
                                            :params => { "type" => "object", "required" => ["ids"],
                                                         "properties" => { "ids" => { "type" => "array" } } },
-                                           :result => OBJECT, :undo_name => "Migrate Test Review",
+                                           :result => OBJECT, :refuses => [], :undo_name => "Migrate Test Review",
                                            :examples => [{ "ids" => ["tpt_Ab12Cd34Ef56"] }],
                                            :side_effects => "Rewrites extension data.") do |request, changes|
       ids = request.params.fetch("ids")
@@ -117,7 +119,8 @@ module TestFeature
     feature.action("#{ID}.swallow_refusal", :description => "Migrate, ignoring refusals.",
                                             :params => { "type" => "object", "required" => ["ids"],
                                                          "properties" => { "ids" => { "type" => "array" } } },
-                                            :result => OBJECT, :undo_name => "Swallow",
+                                            :result => OBJECT, :refuses => %w[extension.migration_failed],
+                                            :undo_name => "Swallow",
                                             :examples => [{ "ids" => ["tpt_Ab12Cd34Ef56"] }],
                                             :side_effects => "Rewrites extension data.") do |request, changes|
       begin
@@ -130,7 +133,7 @@ module TestFeature
 
     # Calls the API again while its own request is still running, as a re-entrant client would.
     feature.action("#{ID}.reenter", :description => "Re-enter the dispatcher.", :params => { "type" => "object" },
-                                    :result => OBJECT, :undo_name => "Re-enter",
+                                    :result => OBJECT, :refuses => [], :undo_name => "Re-enter",
                                     :side_effects => "None.") do |_request, _changes|
       { "inner" => PhComposer::API.invoke(**TestFeature.reentry) }
     end

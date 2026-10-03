@@ -10,8 +10,9 @@ class SnapshotQueriesTest < PhComposerTestCase
       define_singleton_method(:name) { 'SnapshotProbe' }
       define_singleton_method(:install) do |registry|
         scope = registry.feature('test.snapshot', :contract_version => 1)
+        scope.code('test.refused', :description => 'A synthetic read refusal.')
         scope.query('test.snapshot.read', :description => 'Read one detached projection.',
-                                          :params => OBJECT, :result => OBJECT, &handler)
+                                          :params => OBJECT, :result => OBJECT, :refuses => ['test.refused'], &handler)
         scope.snapshot_section('test.snapshot.first', :query => 'test.snapshot.read',
                                                       :params => { 'offset' => 3, 'limit' => 1 })
         scope.snapshot_section('test.snapshot.second', :query => 'test.snapshot.read',

@@ -173,7 +173,7 @@ module PhComposer
         "kind" => operation_kind(operation),
         "name" => operation.name, "owner" => operation.owner, "description" => operation.description,
         "params" => operation.params, "result" => operation.result, "examples" => operation.examples,
-        "refuses" => Array(operation.refuses).sort.map { |code| refusal(registry, code) },
+        "refuses" => operation.refuses.sort.map { |code| refusal(registry, code) },
         "common_refusal_sets" => Refusals.common_sets(operation)
       }.merge(
         operation.is_a?(Declarations::Action) ? { "side_effects" => operation.side_effects,

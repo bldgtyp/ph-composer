@@ -262,7 +262,8 @@ class EntityReferencesTest < PhComposerTestCase
       define_singleton_method(:install) do |registry|
         registry.feature("test.reference_read", :contract_version => 1).query(
           "test.reference_read.resolve", :description => "Resolve the fixture Face.",
-                                         :params => { "type" => "object" }, :result => { "type" => "object" }
+                                         :params => { "type" => "object" }, :result => { "type" => "object" },
+                                         :refuses => %w[record.unreadable]
         ) { |request| request.engine.resolve_reference(FACE::REFERENCE_KIND, id).record }
       end
     end

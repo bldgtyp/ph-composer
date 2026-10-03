@@ -277,7 +277,7 @@ module PhComposer
         @staging.add(:declared_extensions, id, extension.namespace, extension)
       end
 
-      def query(name, description:, params:, result:, examples: [], refuses: nil, &handler)
+      def query(name, description:, params:, result:, refuses:, examples: [], &handler)
         declaration = Declarations::Query.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :handler => handler
@@ -285,7 +285,7 @@ module PhComposer
         @staging.add(:declared_queries, id, name, declaration)
       end
 
-      def action(name, description:, params:, result:, undo_name:, side_effects:, examples: [], refuses: nil,
+      def action(name, description:, params:, result:, refuses:, undo_name:, side_effects:, examples: [],
                  confirmation: "none", &handler)
         declaration = Declarations::Action.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
@@ -297,7 +297,7 @@ module PhComposer
 
       # One viewport-state command: it changes what the host shows and never the Model, so it takes
       # no `undo_name` and no sequence number. A handler that would write a record wants `action`.
-      def view_command(name, description:, params:, result:, examples: [], refuses: nil, &handler)
+      def view_command(name, description:, params:, result:, refuses:, examples: [], &handler)
         declaration = Declarations::ViewCommand.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :handler => handler
@@ -307,7 +307,7 @@ module PhComposer
 
       # One session- or machine-state command: it never touches the Model, so it takes no `undo_name`
       # and no sequence number, and it changes nothing the viewport shows unless a refresh follows.
-      def setup_command(name, description:, params:, result:, examples: [], refuses: nil, approval: nil, &handler)
+      def setup_command(name, description:, params:, result:, refuses:, examples: [], approval: nil, &handler)
         declaration = Declarations::SetupCommand.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :approval => approval, :handler => handler
@@ -320,7 +320,7 @@ module PhComposer
         @staging.add(:declared_snapshot_sections, id, name, declaration)
       end
 
-      def file_export(name, description:, params:, result:, examples: [], refuses: nil, approval: nil, &handler)
+      def file_export(name, description:, params:, result:, refuses:, examples: [], approval: nil, &handler)
         declaration = Declarations::FileExport.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :approval => approval, :handler => handler

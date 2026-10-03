@@ -426,10 +426,8 @@ module PhComposer
         declared = @live.codes.keys + @staging.declared_codes.map(&:code)
         @staging.declared_operations.each do |operation|
           refuses = operation.refuses
-          next if refuses.nil?
-
           unless refuses.is_a?(Array) && refuses.all?(String)
-            problem(operation, "refuses must be a list of codes")
+            problem(operation, "needs refuses, a list of codes")
             next
           end
           common = Refusals.common(operation)

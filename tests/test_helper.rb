@@ -30,7 +30,20 @@ class PhComposerTestCase < Minitest::Test
     PhComposer::Diagnostics.strict = true
     # Hermetic: the real reader asks macOS `defaults`, which a test must not depend on.
     PhComposer::Preferences.apple_locale_reader = -> {}
+    @undeclared_refusals = []
+    PhComposer::Refusals.audit = lambda do |declaration, code|
+      next if Array(declaration.refuses).include?(code) || PhComposer::Refusals.common(declaration).include?(code)
+
+      @undeclared_refusals << "#{declaration.name} refused with #{code}"
+    end
     # Last, so a test measuring host timers measures its own and none that setup started.
     UI.reset
+  end
+
+  # An operation that refuses with a code outside its `refuses` and its common sets publishes an
+  # incomplete list (context/CONTRACTS.md, "Outcomes and codes"). Declare the code; never suppress this.
+  def after_teardown
+    super
+    assert_empty Array(@undeclared_refusals), "Add each code to the operation's refuses:"
   end
 end

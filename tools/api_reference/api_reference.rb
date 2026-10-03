@@ -144,7 +144,7 @@ module PhComposerTools
     def refuses_line(declaration)
       sets = PhComposer::Refusals.common_sets(declaration).map { |set| "`#{set}`" }.join(" and ")
       noun = sets.include?(" and ") ? "sets" : "set"
-      codes = Array(declaration.refuses).sort
+      codes = declaration.refuses.sort
       return "Refuses: only the #{sets} common #{noun}." if codes.empty?
 
       "Refuses: #{codes.map { |code| "`#{code}`" }.join(', ')}, and the #{sets} common #{noun}."
