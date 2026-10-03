@@ -1,7 +1,7 @@
 # Packet 8: completeness
 
 DATE: 2026-10-03
-STATUS: Implemented; pull request open
+STATUS: Merged to main
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -75,7 +75,8 @@ for the D7 capture session.
 
 ## Outcome, 2026-10-03
 
-Implemented on `feat/ui-completeness`. `make ci` and `make ui-checks` pass.
+Implemented on `feat/ui-completeness`, merged as pull request
+[#66](https://github.com/bldgtyp/ph-composer/pull/66). `make ci` and `make ui-checks` pass.
 
 What differs from the plan above:
 

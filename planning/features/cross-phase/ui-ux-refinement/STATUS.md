@@ -5,9 +5,10 @@ STATUS: In progress
 
 ## Where this stands
 
-Packets 1 to 7 and the Zones / Faces follow-up are merged to main (last merge: pull request #65).
-No branch is open and nothing is half-built. Packet 8 is next and has no plan yet. Ed gave a
-standing go on 2026-10-03 to proceed through the remaining packets on the recorded
+All eight packets and the Zones / Faces follow-up are merged to main (last merge: pull request
+#66). No branch is open and nothing is half-built. What is left needs Ed: his verification pass
+below, the host capture session for the viewport tools (D7), and then the Design System artifact.
+Ed gave a standing go on 2026-10-03 to proceed through the packets on the recorded
 recommendations, with his checks gathered into one verification pass at the end.
 
 | Step | State | Note |
@@ -23,7 +24,7 @@ recommendations, with his checks gathered into one verification pass at the end.
 | Packet 5, Window Types frame (W1, W2, W3, W5, K9) | Merged to main 2026-10-03, [#63](https://github.com/bldgtyp/ph-composer/pull/63) | [phases/phase-05-window-types-frame.md](phases/phase-05-window-types-frame.md) |
 | Packet 6, Assembly Builder toolbar and row actions (A1 to A4) | Merged to main 2026-10-03, [#64](https://github.com/bldgtyp/ph-composer/pull/64) | [phases/phase-06-assembly-builder.md](phases/phase-06-assembly-builder.md) |
 | Packet 7, Library (L1 to L3, K11, D5) | Merged to main 2026-10-03, [#65](https://github.com/bldgtyp/ph-composer/pull/65) | [phases/phase-07-library.md](phases/phase-07-library.md) |
-| Packet 8, completeness | Requested | F1, F3, X1, K10 in FINDINGS.md |
+| Packet 8, completeness (X1, F3, K10; ruling on F1) | Merged to main 2026-10-03, [#66](https://github.com/bldgtyp/ph-composer/pull/66) | [phases/phase-08-completeness.md](phases/phase-08-completeness.md) |
 | Host capture of viewport surfaces (D7) | Not started | Was to follow packets 1 and 2; needs one SketchUp session with Ed present |
 | Design System artifact | Not started | After the kit-wide packets settle |
 
@@ -33,11 +34,14 @@ check sections say what was and was not covered.
 
 ## Next steps, in order
 
-1. **Write the packet 8 plan**: completeness. One vocabulary for "not finished" (F3), Export
-   readiness with findings grouped by cause and named in glossary words (X1), empty states that name
-   the next step (K10), and first-run orientation (F1).
-2. **The D7 host capture session** for the viewport tools, the real Colour-by legend and Export.
-3. **The Design System artifact**, once the kit-wide packets have settled.
+1. **Ed's verification pass**, below: one sitting in SketchUp with a real project Model.
+2. **The D7 host capture session** for the viewport tools (Classify, Place, Paint in their active
+   states), the real Colour-by legend and a completed Export. It needs Ed present, and can share
+   the sitting with step 1. F4 (the viewport tools signal their active state differently) waits on
+   it.
+3. **The Design System artifact**, now that the kit-wide packets have settled.
+4. **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
+   taken" table), as small follow-up changes.
 
 ## For Ed's verification pass
 
@@ -49,6 +53,12 @@ Gathered here so they can be checked in one sitting, in SketchUp, by hand:
   instructions appear for the first time, in the panel's notice under the tab row. Say if any is
   unwanted or badly placed.
 - A notice that is only information no longer blocks a click on the control beneath it.
+- Export: the readiness line and the grouped findings on a real Model, with Locate all and
+  "Open <tab>"; a completed export, which no host check here has run. "Open" goes to the tab of the
+  feature that reported the finding, so a Material's gap opens Assemblies. Decisions P8-Q1 to Q3
+  are in the packet 8 plan; P8-Q2 declines a first-run guide (F1).
+- Empty states: Assemblies, each Library tab and Window Types with nothing in them. The amber mark
+  on an incomplete Window Type in the rail.
 - Library: "+ New Assembly" now makes "Assembly N" at once and opens the Builder (D5); the sidebar
   beside a Library table points at the source select instead of repeating the table; record forms
   mark required fields; Library setup's wording for a provider that is not a file ("Added by
@@ -78,6 +88,9 @@ Gathered here so they can be checked in one sitting, in SketchUp, by hand:
 - Locate from outside a Zone selects its Faces while the edit path is the Model, and the selection
   inspector does not recognise Faces selected that way ("0 Faces selected" in the snapshot). Seen in
   the host on 2026-10-03; it predates this work.
+- Export's header is rebuilt on every repaint, so Choose destination and Cancel export lose keyboard
+  focus. Export's findings are grouped in the panel; a summary sentence per cause from Ruby would be
+  cleaner but changes the findings contract (P8-Q1). Routes finer than one tab per feature.
 - The Psi-Install Types tab still lists its records in the sidebar, because that list also sets the
   Model default. After a refused New Assembly, keyboard focus is not returned to the button.
 - The Assembly Builder rebuilds its work surface on every repaint, so keyboard focus falls to the

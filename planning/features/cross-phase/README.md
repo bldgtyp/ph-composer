@@ -12,4 +12,4 @@ allocation in its own PLAN or STATUS.
 | --- | --- | --- |
 | [units](units/README.md) | The shared modules, in Phase 0 | Follow-ups and new quantities, with each owning feature |
 | [validation-and-export](validation-and-export/README.md) | The HBJSON/report workflow, in Phase 1 | Each later feature's contributor and findings; METr in its own packet |
-| [ui-ux-refinement](ui-ux-refinement/README.md) | Capture and critique; packets 1 to 7 (page frame, table chrome, Zones / Faces layout, Installs editor, Window Types frame, Assembly Builder, Library) and the D9/D10 follow-up, merged 2026-10-03 | Packet 8, the host capture session, the Design System artifact |
+| [ui-ux-refinement](ui-ux-refinement/README.md) | Capture and critique; all eight packets (page frame, table chrome, Zones / Faces layout, Installs editor, Window Types frame, Assembly Builder, Library, completeness) and the D9/D10 follow-up, merged 2026-10-03 | Ed's verification pass, the host capture session, the Design System artifact |
