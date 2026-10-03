@@ -41,6 +41,7 @@ module PhComposer
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION)
       feature.query(LIST, :description => "Stored records of one kind, in id order, a page at a time.",
+                          :refuses => %w[query.cursor_expired query.limit_invalid],
                           :params => PARAMS, :result => RESULT,
                           :examples => [{ "kind" => "example.foundation.part", "limit" => 20 }]) do |request|
         list(request)

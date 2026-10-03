@@ -27,6 +27,7 @@ module PhComposer
         def install(feature)
           feature.action("#{PREFIX}.assign_assembly",
                          :description => "Set or clear only the Assembly of explicit Faces.",
+                         :refuses => Refuses::FACE_TARGET + %w[gesture.too_large reference.invalid],
                          :params => PARAMS, :result => Registration::FACE_IDS_RESULT,
                          :undo_name => "Assign Assembly", :side_effects => "Changes only assembly_id on all targets.",
                          :examples => [{ "targets" => [{ "reference" => Registration::EXAMPLE_FACE,
@@ -41,6 +42,7 @@ module PhComposer
           end
           feature.query("#{PREFIX}.assembly_usage",
                         :description => "Face counts and gross areas by Assembly.",
+                        :refuses => Refuses::READ + %w[geometry.invalid],
                         :params => Shapes::NONE, :result => Shapes.object({ "assemblies" => USAGE }),
                         :examples => [{}]) { |request| { "assemblies" => Faces.all(request).fetch("assembly_usage") } }
           # Identical snapshot queries are memoized for this build by the shared shell. Usage and the
@@ -48,6 +50,7 @@ module PhComposer
           feature.snapshot_section("#{PREFIX}.usage", :query => "#{PREFIX}.all")
           feature.query("#{PREFIX}.assembly_choices",
                         :description => "Current Assembly names, hints and colours.",
+                        :refuses => [],
                         :params => Shapes::NONE, :result => CHOICES, :examples => [{}]) do |request|
             { "assemblies" => AssemblyAssignment.catalog(request).fetch(:records).values.map do |row|
               { "id" => row.fetch("id"), "name" => row.fetch("values").fetch("name"),

@@ -12,9 +12,9 @@ module PhComposer
         declare_assemblies(feature)
       end
 
-      def create_action(feature, prefix, kind, labelled, &handler)
+      def create_action(feature, prefix, kind, labelled, refuses, &handler)
         feature.action("#{prefix}.create",
-                       :description => "Create one #{kind.label}, with default authoring values.",
+                       :description => "Create one #{kind.label}, with default authoring values.", :refuses => refuses,
                        :params => Shapes.create(kind, :labelled => labelled), :result => Shapes::RESULT,
                        :undo_name => "Create #{kind.label}", :side_effects => "Creates one catalog record.",
                        :examples => [{ "values" => { "name" => "Example #{kind.label}" } }], &handler)
@@ -23,6 +23,7 @@ module PhComposer
       def update_action(feature, prefix, kind, editable, labelled, example_id, &handler)
         feature.action("#{prefix}.update",
                        :description => "Edit one #{kind.label}; changed expected values refuse.",
+                       :refuses => Refuses::EDIT,
                        :params => Shapes.update(kind, editable, :labelled => labelled), :result => Shapes::RESULT,
                        :undo_name => "Edit #{kind.label}", :side_effects => "Updates values and optional metadata.",
                        :examples => [{ "id" => example_id, "values" => { "name" => "Edited" },
@@ -32,6 +33,7 @@ module PhComposer
       def duplicate_action(feature, prefix, kind, properties, example_id, &handler)
         feature.action("#{prefix}.duplicate",
                        :description => "Duplicate one #{kind.label} with independent identity.",
+                       :refuses => Refuses::DUPLICATE,
                        :params => Shapes.object(properties, :optional => %w[name copy_datasheets]),
                        :result => Shapes::RESULT, :undo_name => "Duplicate #{kind.label}",
                        :side_effects => "Creates one catalog record, preserving shared definition references.",
@@ -43,6 +45,7 @@ module PhComposer
                        "expected_values" => Shapes.expected(kind), "replacement_id" => replacement }
         feature.action("#{prefix}.delete",
                        :description => "Delete #{kind.label}; remaining references refuse.",
+                       :refuses => Refuses::DELETE,
                        :params => Shapes.object(properties, :optional => %w[expected_values replacement_id]),
                        :result => Shapes::RESULT, :undo_name => "Delete #{kind.label}",
                        :side_effects => "Replacement or explicit clearing rewrites uses and deletes atomically.",
@@ -53,7 +56,8 @@ module PhComposer
         kind = Materials::Schema::KIND
         prefix = "#{FEATURE_ID}.materials"
         example_id = "mat_Ab12Cd34Ef56"
-        create_action(feature, prefix, kind, Materials::Schema::LABELLED_FIELDS) do |request, proposal|
+        create_action(feature, prefix, kind, Materials::Schema::LABELLED_FIELDS,
+                      Refuses::CREATE - %w[reference.invalid]) do |request, proposal|
           Materials::Operations.create(request, proposal, :values => request.params.fetch("values"),
                                                           :user_data => request.params["user_data"])
         end
@@ -94,7 +98,7 @@ module PhComposer
         kind = Assembly::Schema::KIND
         prefix = "#{FEATURE_ID}.assemblies"
         example_id = Shapes::EXAMPLE_ID
-        create_action(feature, prefix, kind, []) do |request, proposal|
+        create_action(feature, prefix, kind, [], Refuses::CREATE) do |request, proposal|
           Assembly::Operations.create(request, proposal, :values => request.params.fetch("values"),
                                                          :user_data => request.params["user_data"])
         end

@@ -23,7 +23,7 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | --- | --- |
 | Feature | Stable namespaced id, contract version, declared feature dependencies, install entrypoint |
 | Record kind | Kind id, schema version, validator, SI field descriptors, declared references, persistence adapter |
-| Query, action, view command, setup command, FileExport | Namespaced id, description, input and result schemas, examples, handler |
+| Query, action, view command, setup command, FileExport | Namespaced id, description, input and result schemas, examples, refusal codes (`refuses`), handler |
 | Action additions | Side effects, confirmation policy (only `none` today), Undo name |
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
@@ -65,9 +65,10 @@ lists them explicitly in `composition.py`; see "Translation sections and artifac
 `PhComposer::API` is the one application interface. The panel, native menus, scripts and agents
 are clients of it.
 
-- `discover`: versions, open Model sessions, and every operation's name, owner and description.
-- `describe(name:)`: one operation's schemas and examples, as a detached copy. Schemas come only
-  from here.
+- `discover`: versions, open Model sessions, every operation's name, owner and description, and the
+  common refusal sets (see "Outcomes and codes").
+- `describe(name:)`: one operation's schemas, examples and refusal codes, as a detached copy.
+  Schemas come only from here.
 - `connect(session_id:, capabilities:)`: an explicit context for one Model session. Capabilities
   default to `read`, `view` and `model_write`; `setup` and `export` are granted explicitly.
 - `query(context:, name:, params:)`: a bounded read returning values, never live SketchUp objects.
@@ -162,6 +163,27 @@ a noun another feature owns and a noun this table uses (`Declarations::FOUNDATIO
 codes". One condition has one code from every read, refusal and preflight that reports it. Add a
 foundation code here before a caller relies on it; `tests/outcome_codes_test.rb` fails when feature,
 library or translation source names a code that is neither listed here nor declared.
+
+Every operation declares `refuses:`, the codes its handler and the dependencies it calls can
+answer with an outcome that is not `completed`: reads, locators, participants and retargeters
+included, since their codes reach the caller unchanged. Codes a caller sees as findings on a
+completed outcome are not refusals, and neither is a domain cause a step raises while the operation
+applies: that answers `operation.failed` or `operation.rollback_unverified`, with the cause in
+`detail.cause`. Codes dispatch answers for every operation of a kind are not
+repeated: `Refusals::COMMON` (`shell/refusals.rb`) holds one set per kind (`query`, `action`,
+`view_command`, `setup_command`, `file_export`) and an `approval` set that an operation declaring an
+approval also answers. `refuses: []` says the operation answers nothing beyond its common sets.
+Registration refuses an entry that is neither listed here nor declared by the operation's feature or
+one it requires, a repeat, a common code, and a code only dispatch gives (`request.unknown_operation`
+and the `approval` set). `Declarations::FOUNDATION_CODES` is the checked mirror of this table, and
+`tests/outcome_codes_test.rb` keeps the two equal. `discover` publishes the common sets once as
+`common_refusals`; `describe` returns an operation's own codes as `refuses`, each with its owner and,
+for a feature code, its description, and the sets it answers as `common_refusal_sets`. A refusal
+outside an operation's declared and common codes is a defect: dispatch reports every refusal to
+`Refusals.audit`, which production leaves unset and the offline suite fails on. One gap is known: a
+foundation operation that runs a feature's callbacks, such as `ph_composer.library.copy` running a
+library kind's create and assign, cannot list the codes those callbacks raise under the feature's
+own noun, because the foundation names no feature.
 
 ## Revisions, transactions and host execution
 

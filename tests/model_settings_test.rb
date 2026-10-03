@@ -27,7 +27,8 @@ class ModelSettingsTest < PhComposerTestCase
                    "properties" => { "values" => VALUES, "expected_values" => VALUES } }
         scope.action("test.settings.update",
                      :description => "Update model settings.", :params => params,
-                     :result => VALUES, :undo_name => "Change Example Settings", :side_effects => "Writes settings.",
+                     :result => VALUES, :refuses => %w[target.changed], :undo_name => "Change Example Settings",
+                     :side_effects => "Writes settings.",
                      :examples => [{ "values" => DEFAULTS, "expected_values" => DEFAULTS }]) do |request, proposal|
           settings.propose(request.model, proposal, :values => request.params.fetch("values"),
                                                     :expected_values => request.params.fetch("expected_values"))

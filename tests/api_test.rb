@@ -454,6 +454,27 @@ class ApiTest < PhComposerTestCase
     assert_equal %w[refused request.unknown_operation], outcome.values_at("status", "code")
   end
 
+  # The offline suite fails a test whose operation refuses with a code it did not declare, naming both,
+  # whichever way the operation is called.
+  def test_a_refusal_outside_the_declared_codes_is_reported_by_operation_and_code
+    PhComposer::Registry.install([undeclared_refusals_probe])
+    context = API.connect(:session_id => @session.id, :capabilities => %w[read view model_write setup export])
+    request = { "sequence" => 1, "expected_revision" => @session.revision }
+
+    outcomes = [API.query(:context => context, :name => "probe.audit.read"),
+                API.view(:context => context, :name => "probe.audit.look"),
+                API.setup(:context => context, :name => "probe.audit.configure"),
+                API.export_file(:context => context, :name => "probe.audit.write"),
+                API.preview(:context => context, :name => "probe.audit.change"),
+                API.invoke(:context => context, :name => "probe.audit.change", :params => {}, :request => request)]
+
+    assert_equal ["target.not_found"], outcomes.map { |outcome| outcome.fetch("code") }.uniq
+    expected = %w[read look configure write change change].map do |verb|
+      "probe.audit.#{verb} refused with target.not_found"
+    end
+    assert_equal expected, @undeclared_refusals.slice!(0..)
+  end
+
   # ------------------------------------------------------------------ Models and lifecycle
 
   def test_two_models_with_identical_record_ids_stay_isolated
@@ -552,6 +573,24 @@ class ApiTest < PhComposerTestCase
 
   PART_KIND = RecordFixtures::PART
 
+  # One operation of each kind, each refusing with a code it does not declare.
+  def undeclared_refusals_probe
+    Module.new do
+      def self.install(registry)
+        scope = registry.feature("probe.audit", :contract_version => 1)
+        refuse = ->(*) { raise PhComposer::CodedError.new("target.not_found", "Gone.") }
+        closed = { "type" => "object", "properties" => {}, "additionalProperties" => false }
+        common = { :description => "Refuses with a code it does not declare.", :params => closed,
+                   :result => closed, :refuses => [] }
+        scope.query("probe.audit.read", **common, &refuse)
+        scope.view_command("probe.audit.look", **common, &refuse)
+        scope.setup_command("probe.audit.configure", **common, &refuse)
+        scope.file_export("probe.audit.write", **common, &refuse)
+        scope.action("probe.audit.change", **common, :undo_name => "Change", :side_effects => "None.", &refuse)
+      end
+    end
+  end
+
   # A read and a write whose handlers return an object while each declares an array. Published
   # declarations are frozen, so the mismatch is registered rather than patched in.
   def install_mismatched_results
@@ -561,9 +600,10 @@ class ApiTest < PhComposerTestCase
       define_singleton_method(:install) do |registry|
         scope = registry.feature("test.mismatch", :contract_version => 1)
         scope.query("test.mismatch.read", :description => "Read.", :params => { "type" => "object" },
-                                          :result => array) { {} }
+                                          :result => array, :refuses => []) { {} }
         scope.action("test.mismatch.create", :description => "Create parts.", :params => parts, :result => array,
-                                             :undo_name => "Create", :side_effects => "Creates records.",
+                                             :refuses => [], :undo_name => "Create",
+                                             :side_effects => "Creates records.",
                                              :examples => [{ "parts" => [] }]) do |request, changes|
           request.engine.propose_create("test.fixture.definition", changes, :values => { "label" => "Frame" })
           {}

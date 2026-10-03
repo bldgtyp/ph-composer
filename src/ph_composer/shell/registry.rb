@@ -135,7 +135,7 @@ module PhComposer
     # A published operation is what validation and discovery read, so nothing may change it afterwards:
     # its schemas and examples are deep-frozen copies and the declaration itself is frozen.
     def freeze_operation(operation)
-      %i[params result examples].each do |part|
+      %i[params result examples refuses].each do |part|
         operation[part] = deep_freeze(DeepCopy.call(operation[part]))
       end
       operation.freeze
@@ -277,19 +277,21 @@ module PhComposer
         @staging.add(:declared_extensions, id, extension.namespace, extension)
       end
 
-      def query(name, description:, params:, result:, examples: [], &handler)
+      # Every operation names `refuses:`. It defaults to nil only so validation can name each operation
+      # that omits it, rather than one Ruby error ending the feature's install.
+      def query(name, description:, params:, result:, refuses: nil, examples: [], &handler)
         declaration = Declarations::Query.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :handler => handler
+          :examples => examples, :refuses => refuses, :handler => handler
         )
         @staging.add(:declared_queries, id, name, declaration)
       end
 
-      def action(name, description:, params:, result:, undo_name:, side_effects:, examples: [], confirmation: "none",
-                 &handler)
+      def action(name, description:, params:, result:, undo_name:, side_effects:, examples: [],
+                 refuses: nil, confirmation: "none", &handler)
         declaration = Declarations::Action.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :undo_name => undo_name, :side_effects => side_effects,
+          :examples => examples, :refuses => refuses, :undo_name => undo_name, :side_effects => side_effects,
           :confirmation => confirmation, :handler => handler
         )
         @staging.add(:declared_actions, id, name, declaration)
@@ -297,20 +299,20 @@ module PhComposer
 
       # One viewport-state command: it changes what the host shows and never the Model, so it takes
       # no `undo_name` and no sequence number. A handler that would write a record wants `action`.
-      def view_command(name, description:, params:, result:, examples: [], &handler)
+      def view_command(name, description:, params:, result:, refuses: nil, examples: [], &handler)
         declaration = Declarations::ViewCommand.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :handler => handler
+          :examples => examples, :refuses => refuses, :handler => handler
         )
         @staging.add(:declared_view_commands, id, name, declaration)
       end
 
       # One session- or machine-state command: it never touches the Model, so it takes no `undo_name`
       # and no sequence number, and it changes nothing the viewport shows unless a refresh follows.
-      def setup_command(name, description:, params:, result:, examples: [], approval: nil, &handler)
+      def setup_command(name, description:, params:, result:, refuses: nil, examples: [], approval: nil, &handler)
         declaration = Declarations::SetupCommand.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :approval => approval, :handler => handler
+          :examples => examples, :refuses => refuses, :approval => approval, :handler => handler
         )
         @staging.add(:declared_setup_commands, id, name, declaration)
       end
@@ -320,10 +322,10 @@ module PhComposer
         @staging.add(:declared_snapshot_sections, id, name, declaration)
       end
 
-      def file_export(name, description:, params:, result:, examples: [], approval: nil, &handler)
+      def file_export(name, description:, params:, result:, refuses: nil, examples: [], approval: nil, &handler)
         declaration = Declarations::FileExport.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :approval => approval, :handler => handler
+          :examples => examples, :refuses => refuses, :approval => approval, :handler => handler
         )
         @staging.add(:declared_file_exports, id, name, declaration)
       end

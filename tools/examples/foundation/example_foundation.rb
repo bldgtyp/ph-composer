@@ -85,6 +85,7 @@ module ExampleFoundation
   def declare_summary(feature)
     feature.query(
       "#{ID}.summary", :description => "Count and total length of every part.",
+                       :refuses => %w[record.unreadable],
                        :params => { "type" => "object", "additionalProperties" => false },
                        :result => { "type" => "object", "properties" => {
                          "parts" => { "type" => "integer" }, "total_length_mm" => { "type" => "number",
@@ -105,7 +106,7 @@ module ExampleFoundation
                    "properties" => { "definition_label" => { "type" => "string", "minLength" => 1 },
                                      "parts" => { "type" => "array", "items" => PART_VALUES,
                                                   "minItems" => 1 } } },
-      :result => OBJECT, :undo_name => "Create Example Parts",
+      :result => OBJECT, :refuses => %w[reference.invalid validation.failed], :undo_name => "Create Example Parts",
       :side_effects => "Creates records.",
       :examples => [{ "definition_label" => "Frame", "parts" => [{ "label" => "Sill",
                                                                    "length_mm" => 1200 }] }]
@@ -128,6 +129,9 @@ module ExampleFoundation
                                          "properties" => { "edits" => { "type" => "array", "items" => EDIT,
                                                                         "minItems" => 1 } } },
                             :result => OBJECT, :undo_name => "Edit Example Parts",
+                            :refuses => %w[extension.migration_required extension.schema_unsupported
+                                           extension.unavailable record.unreadable reference.invalid target.changed
+                                           target.not_found validation.failed],
                             :side_effects => "Changes part values and metadata.",
                             :examples => [{ "edits" => [{ "id" => "exp_Ab12Cd34Ef56",
                                                           "values" => { "length_mm" => 900 } }] }]
@@ -150,6 +154,8 @@ module ExampleFoundation
       :description => "Duplicate parts as one collection.",
       :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
       :result => OBJECT, :undo_name => "Duplicate Example Parts",
+      :refuses => %w[copy.rule_missing extension.invalid record.unreadable reference.invalid target.not_found
+                     validation.failed],
       :side_effects => "Creates records.",
       :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
     ) do |request, changes|
@@ -161,6 +167,8 @@ module ExampleFoundation
       :description => "Raise review data to the installed version.",
       :params => { "type" => "object", "required" => ["ids"], "properties" => { "ids" => IDS } },
       :result => OBJECT, :undo_name => "Migrate Example Review",
+      :refuses => %w[extension.invalid extension.migration_failed extension.schema_unsupported record.unreadable
+                     target.not_found validation.failed],
       :side_effects => "Rewrites extension data.",
       :examples => [{ "ids" => ["exp_Ab12Cd34Ef56"] }]
     ) do |request, changes|

@@ -6,6 +6,7 @@ require_relative "schemas"
 require_relative "setup_commands"
 require_relative "export_registration"
 require_relative "copy_participant"
+require_relative "refuses"
 
 module PhComposer
   module Library
@@ -61,6 +62,7 @@ module PhComposer
         Setup.file_providers(:kinds => kinds, :adapters => adapters)
       end
       feature.query("#{FEATURE_ID}.providers", :description => "Configured libraries without transport addresses.",
+                                               :refuses => Refuses::PROVIDERS,
                                                :params => object({}), :result => Schemas.providers,
                                                :examples => [{}]) do |request|
         State.for(request.session).metadata(request.registry)
@@ -70,6 +72,7 @@ module PhComposer
       install_catalog(feature)
       feature.action("#{FEATURE_ID}.copy",
                      :description => "Copy or reuse one library record with optional assignment.",
+                     :refuses => Refuses::COPY,
                      :params => copy_params, :result => Schemas.copy_result, :undo_name => "Copy Library Record",
                      :side_effects => "Copies or replaces local definitions and optional assignments in one Undo step.",
                      :examples => [{ "provider_id" => "example", "kind" => "example_parts", "generation" => 1,
@@ -83,17 +86,20 @@ module PhComposer
     # and the setup command that loads it into session memory.
     def install_catalog(feature)
       feature.query("#{FEATURE_ID}.catalog", :description => "A bounded page of one immutable library catalog.",
+                                             :refuses => Refuses::CATALOG,
                                              :params => page_params, :result => Schemas.page,
                                              :examples => [PAGE_EXAMPLE]) do |request|
         catalog_page(request, "#{FEATURE_ID}.catalog")
       end
       feature.query("#{FEATURE_ID}.in_file", :description => "Resolve catalog rows against local definitions.",
+                                             :refuses => Refuses::IN_FILE,
                                              :params => page_params, :result => Schemas.page(:resolved => true),
                                              :examples => [PAGE_EXAMPLE]) do |request|
         in_file(request)
       end
       feature.setup_command("#{FEATURE_ID}.load",
                             :description => "Read a configured library into session memory.",
+                            :refuses => Refuses::LOAD,
                             :params => object(selected_params.fetch("properties").slice("provider_id", "kind")),
                             :result => Schemas.summary,
                             :examples => [{ "provider_id" => "example", "kind" => "example_parts" }]) do |request|

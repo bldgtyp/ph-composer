@@ -32,6 +32,7 @@ module PhComposer
       def install(feature)
         feature.action("#{FEATURE_ID}.solve_adjacency",
                        :description => "Reconcile and pair shared Faces within an explicit Zone scope.",
+                       :refuses => Refuses::SOLVE,
                        :params => SOLVE_PARAMS, :result => SOLVE_RESULT, :undo_name => "Solve Zone Adjacency",
                        :examples => [{ "zones" => EXAMPLE_ZONES }],
                        :side_effects => "Retires old Surface pairs and writes current " \
@@ -40,6 +41,7 @@ module PhComposer
         end
         feature.action("#{FEATURE_ID}.retire_adjacency",
                        :description => "Retire one reciprocal Surface pair.",
+                       :refuses => Refuses::FACE_TARGET + %w[adjacency.not_surface adjacency.unresolved],
                        :params => RETIRE_PARAMS, :result => RETIRE_RESULT, :undo_name => "Retire Zone Adjacency",
                        :examples => [{ "face" => EXAMPLE_FACE }],
                        :side_effects => "Removes both endpoints and leaves their boundary condition " \

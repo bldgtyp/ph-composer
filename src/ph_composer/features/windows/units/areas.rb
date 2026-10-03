@@ -24,6 +24,7 @@ module PhComposer
                                    "unhosted_units" => Shapes.list(TARGET.descriptor.occurrence_schema) })
           feature.query(QUERY,
                         :description => "Glazed opening and net opaque area; uncertain geometry withholds values.",
+                        :refuses => Refuses::UNIT_READ,
                         :params => Shapes::NONE, :result => result, :examples => [{}]) do |request|
             types = request.engine.ids(TYPE_KIND).to_h { |id| [id, request.engine.find(TYPE_KIND, id)] }
             measure(request.query("ph_composer.zones.faces.all").fetch("faces"),

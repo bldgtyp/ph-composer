@@ -38,12 +38,14 @@ module PhComposer
         def install(feature)
           feature.query("#{FEATURE_ID}.settings.get",
                         :description => "This Model's classification settings.",
+                        :refuses => %w[record.unreadable],
                         :params => Shapes::NONE, :result => VALUES, :examples => [{}]) do |request|
             read(request.model)
           end
           feature.snapshot_section("#{FEATURE_ID}.settings", :query => "#{FEATURE_ID}.settings.get")
           feature.action("#{FEATURE_ID}.settings.update",
                          :description => "Set this Model's classification settings.",
+                         :refuses => %w[record.unreadable target.changed validation.failed],
                          :params => Shapes.object({
                            "values" => VALUES.merge("description" => "The complete new settings."),
                            "expected_values" => VALUES.merge("description" => "The settings last read; a change " \

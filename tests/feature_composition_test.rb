@@ -31,9 +31,13 @@ class FeatureCompositionTest < PhComposerTestCase
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID])
       scope.query("test.consumer.read", :description => "Read dependency.", :params => OBJECT,
-                                        :result => OBJECT) { |request| request.query("test.fixture.total_length") }
+                                        :result => OBJECT, :refuses => []) do |request|
+        request.query("test.fixture.total_length")
+      end
       scope.query("test.consumer.invalid", :description => "Invalid dependency read.", :params => OBJECT,
-                                           :result => OBJECT) { |request| request.query("test.fixture.look") }
+                                           :result => OBJECT, :refuses => %w[operation.query_missing]) do |request|
+        request.query("test.fixture.look")
+      end
     end])
     assert_equal({ "total_length_mm" => 0 }, read("test.consumer.read").fetch("value"))
     assert_equal "operation.query_missing", read("test.consumer.invalid").fetch("code")
@@ -44,9 +48,13 @@ class FeatureCompositionTest < PhComposerTestCase
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.stranger", :contract_version => 1)
       scope.query("test.stranger.read", :description => "Read dependency.", :params => OBJECT,
-                                        :result => OBJECT) { |request| request.query("test.fixture.total_length") }
+                                        :result => OBJECT, :refuses => %w[operation.dependency_missing]) do |request|
+        request.query("test.fixture.total_length")
+      end
       scope.query("test.stranger.cycle", :description => "Recursive read.", :params => OBJECT,
-                                         :result => OBJECT) { |request| request.query("test.stranger.cycle") }
+                                         :result => OBJECT, :refuses => %w[operation.query_cycle]) do |request|
+        request.query("test.stranger.cycle")
+      end
     end])
     assert_equal "operation.dependency_missing", read("test.stranger.read").fetch("code")
     assert_equal "operation.query_cycle", read("test.stranger.cycle").fetch("code")
@@ -126,7 +134,7 @@ class FeatureCompositionTest < PhComposerTestCase
       end
       scope.action("test.consumer.delete",
                    :description => "Delete with retargeting.", :params => OBJECT,
-                   :result => OBJECT, :undo_name => "Delete",
+                   :result => OBJECT, :refuses => [], :undo_name => "Delete",
                    :side_effects => "Deletes definitions.") do |request, proposal|
         plan = request.retarget_references(KIND, :from => request.params.fetch("id"), :to => nil)
         request.engine.propose_delete(KIND, request.params.fetch("id"), proposal, :reference_plan => plan)
@@ -223,7 +231,8 @@ class FeatureCompositionTest < PhComposerTestCase
       end
       owner = registry.feature("test.deleting", :contract_version => 1, :requires => [TestFeature::ID])
       owner.action("test.deleting.delete", :description => "Delete definition.", :params => OBJECT,
-                                           :result => OBJECT, :undo_name => "Delete definition",
+                                           :result => OBJECT, :refuses => %w[target.locked],
+                                           :undo_name => "Delete definition",
                                            :side_effects => "Retarget and delete.") do |request, proposal|
         begin
           plan = request.retarget_references(KIND, :from => request.params.fetch("id"),
@@ -352,13 +361,14 @@ class FeatureCompositionTest < PhComposerTestCase
     PhComposer::Registry.install([feature do |registry|
       scope = registry.feature("test.consumer", :contract_version => 1)
       scope.query("test.consumer.read", :description => "Attempt mutation in read.", :params => OBJECT,
-                                        :result => OBJECT) do |request|
+                                        :result => OBJECT, :refuses => []) do |request|
         request.retarget_references(KIND, :from => "tdf_AAAAAAAAAAAA", :to => nil)
         {}
       end
       scope.action("test.consumer.write",
                    :description => "Read from action.", :params => OBJECT,
-                   :result => OBJECT, :undo_name => "Read", :side_effects => "None.") do |request, _proposal|
+                   :result => OBJECT, :refuses => [], :undo_name => "Read",
+                   :side_effects => "None.") do |request, _proposal|
         request.query("test.consumer.read")
       end
     end])
@@ -384,18 +394,19 @@ class FeatureCompositionTest < PhComposerTestCase
     PhComposer::Registry.install([feature do |registry|
       lower = registry.feature("test.lower", :contract_version => 1)
       schema = { "type" => "object", "properties" => { "count" => { "type" => "integer" } } }
-      lower.query("test.lower.read", :description => "Read.", :params => schema, :result => OBJECT) { shared }
+      lower.query("test.lower.read", :description => "Read.", :params => schema, :result => OBJECT,
+                                     :refuses => []) { shared }
       lower.query("test.lower.bad", :description => "Bad result.", :params => OBJECT,
-                                    :result => { "type" => "object", "required" => ["missing"] }) { {} }
+                                    :result => { "type" => "object", "required" => ["missing"] }, :refuses => []) { {} }
       upper = registry.feature("test.upper", :contract_version => 1, :requires => ["test.lower"])
       upper.query("test.upper.read", :description => "Read dependency.", :params => OBJECT,
-                                     :result => OBJECT) do |request|
+                                     :result => OBJECT, :refuses => []) do |request|
         result = request.query("test.lower.read", request.params)
         result.fetch("items") << "local"
         result
       end
       upper.query("test.upper.bad", :description => "Read bad result.", :params => OBJECT,
-                                    :result => OBJECT) { |request| request.query("test.lower.bad") }
+                                    :result => OBJECT, :refuses => []) { |request| request.query("test.lower.bad") }
     end])
     assert_equal ["original", "local"], read("test.upper.read").dig("value", "items")
     assert_equal({ "items" => ["original"] }, shared)
@@ -425,7 +436,7 @@ class FeatureCompositionTest < PhComposerTestCase
       scope = registry.feature("test.consumer", :contract_version => 1, :requires => [TestFeature::ID])
       scope.action("test.consumer.duplicate",
                    :description => "Duplicate with failing transform.", :params => OBJECT,
-                   :result => OBJECT, :undo_name => "Duplicate",
+                   :result => OBJECT, :refuses => [], :undo_name => "Duplicate",
                    :side_effects => "Duplicates records.") do |request, proposal|
         calls = 0
         begin

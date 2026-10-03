@@ -23,7 +23,8 @@ module PhComposer
     module_function
 
     # Versions, open Model sessions and everything registered, by name. Full schemas come from
-    # `describe`, so discovery stays small however many operations are installed. Like `describe`,
+    # `describe`, so discovery stays small however many operations are installed. `common_refusals`
+    # holds the codes every operation of a kind can answer, once (shell/refusals.rb). Like `describe`,
     # it answers with a copy: a caller that edits what it was given changes nothing registered.
     def discover
       registry = Registry.current
@@ -32,6 +33,7 @@ module PhComposer
         "extension" => { "id" => EXTENSION_ID, "version" => VERSION },
         "contract_versions" => [Declarations::CONTRACT_VERSION],
         "capabilities" => CallerRegistry::CAPABILITIES,
+        "common_refusals" => Refusals::COMMON,
         "tasks" => { "export" => { "preflight" => "export_preflight", "start" => "start_export",
                                    "status" => "export_status", "cancel" => "cancel_export",
                                    "latest" => "latest_export", "retention_limit" => Export::Tasks::LIMIT,
@@ -69,7 +71,7 @@ module PhComposer
       registry = Registry.current
       if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name] ||
                       registry.setup_commands[name] || registry.file_exports[name])
-        return DeepCopy.call(operation_description(operation))
+        return DeepCopy.call(operation_description(registry, operation))
       end
 
       # A catalog kind and an entity-owned target describe themselves the same way (Records::Descriptor).
@@ -164,25 +166,33 @@ module PhComposer
       { "name" => operation.name, "owner" => operation.owner, "description" => operation.description }
     end
 
-    def operation_description(operation)
+    # `refuses` is the operation's own refusal codes; `common_refusal_sets` names the sets of
+    # `discover`'s `common_refusals` it answers as well.
+    def operation_description(registry, operation)
       {
         "kind" => operation_kind(operation),
         "name" => operation.name, "owner" => operation.owner, "description" => operation.description,
-        "params" => operation.params, "result" => operation.result, "examples" => operation.examples
+        "params" => operation.params, "result" => operation.result, "examples" => operation.examples,
+        "refuses" => operation.refuses.sort.map { |code| refusal(registry, code) },
+        "common_refusal_sets" => Refusals.common_sets(operation)
       }.merge(
         operation.is_a?(Declarations::Action) ? { "side_effects" => operation.side_effects,
                                                   "confirmation" => operation.confirmation } : {}
       ).merge(operation.respond_to?(:approval) && operation.approval ? { "approval" => operation.approval.to_h } : {})
     end
 
-    def operation_kind(operation)
-      return "action" if operation.is_a?(Declarations::Action)
-      return "view_command" if operation.is_a?(Declarations::ViewCommand)
-      return "setup_command" if operation.is_a?(Declarations::SetupCommand)
-      return "file_export" if operation.is_a?(Declarations::FileExport)
+    # A feature's code carries its owner and description; a foundation code is described in
+    # context/CONTRACTS.md, "Outcomes and codes".
+    def refusal(registry, code)
+      declared = registry.codes[code]
+      return { "code" => code, "owner" => "foundation" } unless declared
 
-      "query"
+      { "code" => code, "owner" => declared.owner, "description" => declared.description }
     end
-    private_class_method :session_summary, :summary, :operation_description, :operation_kind
+
+    def operation_kind(operation)
+      Declarations::OPERATION_KINDS.fetch(operation.class)
+    end
+    private_class_method :session_summary, :summary, :operation_description, :refusal, :operation_kind
   end
 end

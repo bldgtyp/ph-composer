@@ -82,16 +82,18 @@ module PhComposer
         ColourModes.install(feature)
         feature.query("#{FEATURE_ID}.list",
                       :description => "One page of Zone occurrences, filtered and projected, and the Make Zone target.",
-                      :params => LIST_PARAMS, :result => LIST_RESULT,
+                      :refuses => Refuses::READ + Refuses::PAGE, :params => LIST_PARAMS, :result => LIST_RESULT,
                       :examples => [{}, { "fields" => ["name"], "limit" => 20 }]) { |request| Zones.list(request) }
         feature.query("#{FEATURE_ID}.all",
                       :description => "Every Zone occurrence in one complete projection, for the panel. Scripts " \
                                       "page #{FEATURE_ID}.list instead.",
+                      :refuses => Refuses::READ,
                       :params => Shapes::NONE, :result => ALL_RESULT, :examples => [{}]) do |request|
           Zones.all(request)
         end
         feature.action("#{FEATURE_ID}.make",
                        :description => "Make one Zone from explicit entities in one edit context.",
+                       :refuses => Refuses::ZONE_TARGET - %w[target.changed] + %w[target.edit_path_changed],
                        :params => MAKE_PARAMS, :result => ZONE_ID_RESULT, :undo_name => "Make Zone",
                        :examples => [{ "parent_path" => [], "entity_ids" => [1201] }],
                        :side_effects => "Groups loose geometry when needed and writes a Zone " \
@@ -101,6 +103,7 @@ module PhComposer
                      :entity_ids => request.params.fetch("entity_ids"), :name => request.params["name"])
         end
         feature.action("#{FEATURE_ID}.update", :description => "Update one explicit Zone occurrence.",
+                                               :refuses => Refuses::ZONE_TARGET,
                                                :params => UPDATE_PARAMS, :result => ZONE_ID_RESULT,
                                                :undo_name => "Edit Zone",
                                                :examples => [{ "reference" => EXAMPLE_REFERENCE,

@@ -14,6 +14,7 @@ module PhComposer
       def install(feature)
         feature.query("#{FEATURE_ID}.export_preflight",
                       :description => "Material and Assembly export conditions.",
+                      :refuses => [],
                       :params => { "type" => "object", "properties" => {}, "additionalProperties" => false },
                       :result => Export::PREFLIGHT_RESULT, :examples => [{}]) { |request| preflight(request) }
         feature.export_contributor(SECTION,

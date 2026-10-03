@@ -1,7 +1,8 @@
 # Operations publish the codes they refuse with
 
 DATE: 2026-10-02
-STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md); Ed decided D1 to D4 the same day. Moved out of the
+STATUS: Implemented on branch `feat/operation-refusal-codes`, 2026-10-03 ([PLAN.md](PLAN.md),
+"Implementation outcome"). Scoped 2026-10-02; Ed decided D1 to D4 the same day. Moved out of the
 Phase 2 review's R09 on 2026-10-02, which did not take it.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/39

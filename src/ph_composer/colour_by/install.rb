@@ -82,18 +82,21 @@ module PhComposer
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION)
       feature.query(STATE, :description => "The active Colour-by mode, every registered mode and the legend.",
+                           :refuses => [],
                            :params => { "type" => "object", "additionalProperties" => false, "properties" => {} },
                            :result => STATE_RESULT, :examples => [{}]) do |request|
         state(request.session)
       end
       feature.view_command("#{FEATURE_ID}.activate",
                            :description => "Turn one Colour-by mode on, or turn Colour-by off.",
+                           :refuses => %w[validation.failed],
                            :params => ACTIVATE_PARAMS, :result => STATE_RESULT,
                            :examples => [{ "mode" => nil }]) do |request|
         activate(request.session, request.params.fetch("mode"))
       end
       feature.view_command("#{FEATURE_ID}.select_row",
                            :description => "Select and zoom to the entities one legend row stands for.",
+                           :refuses => %w[validation.failed],
                            :params => SELECT_ROW_PARAMS, :result => SELECT_ROW_RESULT,
                            :examples => [{ "row" => { "value" => "Wall", "state" => "classified" } }]) do |request|
         row = request.params.fetch("row")
@@ -101,6 +104,7 @@ module PhComposer
       end
       feature.view_command("#{FEATURE_ID}.isolate",
                            :description => "Show one legend row on its own, or show every row again.",
+                           :refuses => %w[validation.failed],
                            :params => ISOLATE_PARAMS, :result => STATE_RESULT, :examples => [{}]) do |request|
         row = request.params["row"]
         self.for(request.session).isolate(row && [row.fetch("value"), row.fetch("state")])

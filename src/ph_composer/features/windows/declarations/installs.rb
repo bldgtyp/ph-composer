@@ -35,6 +35,7 @@ module PhComposer
                                        "a side. A side may name a temporary client_id from psi_install_types.create " \
                                        "or imports instead of a saved id. The panel's Installs session and the " \
                                        "library assignment both use it; for one edge, list one Type with one element.",
+                       :refuses => Refuses::EDIT + Refuses::LIBRARY_COPY,
                        :params => PARAMS, :result => RESULT, :undo_name => "Edit Window Installations",
                        :side_effects => Shapes.side_effects(
                          "Creates or edits installation products and updates type edges atomically."

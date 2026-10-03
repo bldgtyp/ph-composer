@@ -32,6 +32,7 @@ module PhComposer
 
         def install(feature)
           feature.query("#{PREFIX}.export_preflight", :description => "Face classification and Assembly checks.",
+                                                      :refuses => Refuses::READ,
                                                       :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
                                                       :examples => [{}]) { |request| preflight(request) }
           feature.export_contributor(SECTION,

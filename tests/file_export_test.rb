@@ -17,7 +17,7 @@ class FileExportTest < PhComposerTestCase
       item.define_singleton_method(:install) do |registry|
         registry.feature("test.files", :contract_version => 1).file_export(
           NAME, :description => "Write a synthetic file without changing the Model.", :params => params,
-                :result => result, :examples => [{}], :approval => approval, &handler
+                :result => result, :examples => [{}], :refuses => [], :approval => approval, &handler
         )
       end
     end
@@ -153,7 +153,8 @@ class FileExportTest < PhComposerTestCase
       registry.feature("test.other", :contract_version => 1).query(NAME,
                                                                    :description => "Colliding capability name.",
                                                                    :params => { "type" => "object" },
-                                                                   :result => { "type" => "object" }) { {} }
+                                                                   :result => { "type" => "object" },
+                                                                   :refuses => []) { {} }
     end
     error = assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([collision]) }
     assert_includes error.diagnostics.map(&:code), "registration.duplicate_id"

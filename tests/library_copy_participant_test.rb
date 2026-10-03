@@ -37,6 +37,7 @@ class LibraryCopyParticipantTest < PhComposerTestCase
       feature.action(ACTION,
                      :description => "Synthetic composite copy.",
                      :params => { "type" => "object" }, :result => LIBRARY::Schemas.copy_result,
+                     :refuses => %w[library.catalog_stale operation.dependency_missing operation.proposal_required],
                      :undo_name => "Composite Copy", :side_effects => "Copies in the shared proposal.",
                      :examples => [{}]) do |r, p|
         result = r.participant("ph_composer.library.copy_into_proposal").call(r, p, r.params.fetch("copy"))

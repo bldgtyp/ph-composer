@@ -52,10 +52,12 @@ module PhComposer
         result = Shapes.object({ "units" => Shapes.list(view) })
         feature.query("#{prefix}.list",
                       :description => "Window occurrences and native findings, without writes.",
+                      :refuses => Refuses::UNIT_READ + Refuses::PAGE,
                       :params => Shapes.list_params,
                       :result => Shapes.with(result, "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL),
                       :examples => [{}]) { |request| Units::Actions.list(request) }
         feature.query("#{prefix}.all", :description => "All Window occurrences and native findings for the snapshot.",
+                                       :refuses => Refuses::UNIT_READ,
                                        :params => Shapes::NONE, :result => result, :examples => [{}]) do |request|
           Units::Actions.list(request, :paged => false)
         end
@@ -66,6 +68,7 @@ module PhComposer
         prefix = "#{FEATURE_ID}.units"
         feature.action("#{prefix}.remove",
                        :description => "Remove explicit Window occurrences with reference guards.",
+                       :refuses => Refuses::DELETE + %w[window.nested_units],
                        :params => Shapes.object({ "units" => units(reference, "The Window occurrences to remove.") }),
                        :result => Shapes.object({ "unit_ids" => Shapes.list(Shapes::TEXT) }),
                        :undo_name => "Remove Windows",
@@ -77,6 +80,7 @@ module PhComposer
         end
         feature.action("#{prefix}.rehost",
                        :description => "Glue an unmoved Window to an explicit same-storage Face.",
+                       :refuses => Refuses::UNIT_GEOMETRY + %w[window.definition_changed window.rehost_parent],
                        :params => Shapes.object({ "unit" => unit(reference, "The Window occurrence to glue."),
                                                   "host" => host(face, "The Face to glue it to, in the same parent " \
                                                                        "storage; the Window must lie on it.") }),
@@ -94,6 +98,7 @@ module PhComposer
       def batch_repairs(feature, reference)
         feature.action("#{FEATURE_ID}.units.swap_type",
                        :description => "Swap explicit Windows, preserving their anchors.",
+                       :refuses => Refuses::SWAP_TYPE,
                        :params => Shapes.object({ "units" => units(reference, "The Window occurrences to swap."),
                                                   "type_id" => Shapes.id("wnt", "The Window Type they take.") }),
                        :result => Shapes.object({ "unit_ids" => Shapes.list(Shapes::TEXT) }),
@@ -108,6 +113,7 @@ module PhComposer
         end
         feature.action("#{FEATURE_ID}.units.reset_to_type",
                        :description => "Reset explicit Windows of one Type to its authored geometry.",
+                       :refuses => Refuses::RESET_TO_TYPE,
                        :params => Shapes.object({ "units" => units(reference, "The Window occurrences to reset, all " \
                                                                               "of one Window Type.") }),
                        :result => Shapes.object({ "unit_ids" => Shapes.list(Shapes::TEXT) }),
@@ -127,6 +133,7 @@ module PhComposer
                        :description => "Give the copies sharing each chosen Window's identity new identities. The " \
                                        "first occurrence by entity path keeps the identity; a preview lists each old " \
                                        "and new id.",
+                       :refuses => Refuses::EDIT,
                        :params => Shapes.object({ "units" => units(reference, "Windows whose identity a copy shares; " \
                                                                               "either the original or a copy names " \
                                                                               "the group.") }),
@@ -142,6 +149,7 @@ module PhComposer
       def flip_repair(feature, reference)
         feature.action("#{FEATURE_ID}.units.new_flipped_type",
                        :description => "Create a horizontally flipped Type for one mirrored Window.",
+                       :refuses => Refuses::NEW_FLIPPED_TYPE,
                        :params => Shapes.object({ "unit" => unit(reference, "The mirrored Window occurrence."),
                                                   "name" => { "type" => "string", "minLength" => 1,
                                                               "description" => "The new Type's name; " \
@@ -162,6 +170,7 @@ module PhComposer
         path = { "type" => "array", "minItems" => 1, "items" => { "type" => "integer", "minimum" => 1 } }
         feature.action("#{FEATURE_ID}.units.restore",
                        :description => "Recover a Unit from exact stamped pane Faces.",
+                       :refuses => Refuses::RESTORE,
                        :params => Shapes.object({ "host" => host(face, "The Face the loose panes lie on."),
                                                   "type_id" => Shapes.id("wnt", "The Window Type the panes were " \
                                                                                 "stamped with."),
@@ -189,6 +198,7 @@ module PhComposer
         prefix = "#{FEATURE_ID}.units"
         feature.action("#{prefix}.place",
                        :description => "Place an anchored Window on an explicit writable Zone Face.",
+                       :refuses => Refuses::UNIT_GEOMETRY + %w[window.definition_changed window.definition_missing],
                        :params => Shapes.object({ "host" => host(face, "The writable Zone Face to place on."),
                                                   "type_id" => Shapes.id("wnt", "The Window Type to place."),
                                                   "anchor" => ANCHOR.merge("description" => ANCHOR_TEXT),

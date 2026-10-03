@@ -262,7 +262,8 @@ class EntityReferencesTest < PhComposerTestCase
       define_singleton_method(:install) do |registry|
         registry.feature("test.reference_read", :contract_version => 1).query(
           "test.reference_read.resolve", :description => "Resolve the fixture Face.",
-                                         :params => { "type" => "object" }, :result => { "type" => "object" }
+                                         :params => { "type" => "object" }, :result => { "type" => "object" },
+                                         :refuses => %w[record.unreadable]
         ) { |request| request.engine.resolve_reference(FACE::REFERENCE_KIND, id).record }
       end
     end
@@ -300,6 +301,25 @@ class EntityReferencesTest < PhComposerTestCase
     end
     assert_equal "reference.invalid", code
     assert_empty bad.writes
+  end
+
+  # An understood extension's reference is checked on every edit and copy, so an entity id that now
+  # occurs twice refuses both, as their published refusal codes say.
+  def test_an_extension_reference_to_a_duplicated_entity_id_refuses_edit_and_copy
+    _zone, faces = zone(100, [101])
+    record = attached("atz_000000000001")
+    data = { EXTENSION.namespace => EXTENSION.envelope("self" => face_id(faces.first)) }
+    ATTACHED.store.write(@model, record.merge("extension_data" => data))
+    orphan = make_face(201)
+    FACE::FACE_STORE.write(orphan, FACE::FACE_STORE.read(faces.first))
+    @model.entities << orphan
+
+    saved = invoke("ph_composer.zones.faces.attached_zone.save",
+                   "id" => record.fetch("id"), "values" => { "name" => "Carport" })
+    copied = invoke("ph_composer.zones.faces.attached_zone.duplicate", "ids" => [record.fetch("id")])
+
+    [saved, copied].each { |outcome| assert_equal %w[refused target.ambiguous], outcome.values_at("status", "code") }
+    assert_equal "Garage", ATTACHED.store.read(@model, record.fetch("id")).fetch("name")
   end
 
   def test_catalog_copy_keeps_an_outside_target_with_the_same_uuid_string

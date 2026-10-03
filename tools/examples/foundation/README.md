@@ -31,7 +31,9 @@ is one extraction the export contributors produce and the result the sections tr
 3. **Operations.** `feature.query(...) { |request| value }` reads. `feature.action(...) { |request,
    changes| value }` proposes record writes through `request.engine` into `changes` and returns a
    value. It never writes, opens an operation or shows a dialog: the dispatcher validates the
-   proposal, opens one native Undo step and applies it, or writes nothing.
+   proposal, opens one native Undo step and applies it, or writes nothing. Each names `refuses:`,
+   the codes it can refuse with beyond its kind's common set; the engine's codes count, since they
+   reach the caller unchanged.
 4. **Registration.** `install(registry)` declares everything under the feature's own namespace.
    The registry validates the declarations together and publishes nothing if any is wrong.
 5. **A panel section.** `PhComposerUI.get("panel").section(name, render)` mounts a section in a

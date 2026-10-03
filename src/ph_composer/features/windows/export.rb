@@ -17,6 +17,7 @@ module PhComposer
 
       def install(feature)
         feature.query(PREFLIGHT, :description => "Placed Window geometry, hosts and thermal readiness for export.",
+                                 :refuses => [],
                                  :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
                                  :examples => [{}]) { |request| preflight(request) }
         # Both sections read one assessment, which places each Unit on its host Face.

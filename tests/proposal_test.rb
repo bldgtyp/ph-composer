@@ -56,7 +56,7 @@ class ProposalTest < PhComposerTestCase
       feature.record_kind(KIND)
       feature.action("test.geometry.fail", :description => "Fail after a geometry write.",
                                            :params => { "type" => "object" },
-                                           :result => { "type" => "object" },
+                                           :result => { "type" => "object" }, :refuses => [],
                                            :undo_name => "Fail geometry",
                                            :side_effects => "Test only.") do |_request, proposal|
         proposal.add_step(FailingGeometryStep.new, :scopes => [PhComposer::Operations::EntityScope.new([])])
@@ -64,7 +64,7 @@ class ProposalTest < PhComposerTestCase
       end
       feature.action("test.geometry.record_fail", :description => "Fail a record write after geometry.",
                                                   :params => { "type" => "object" },
-                                                  :result => { "type" => "object" },
+                                                  :result => { "type" => "object" }, :refuses => [],
                                                   :undo_name => "Fail compound operation",
                                                   :side_effects => "Test only.") do |request, proposal|
         proposal.add_step(SuccessfulGeometryStep.new,

@@ -18,17 +18,58 @@ module PhComposer
     FOUNDATION_CODE_NOUNS = %w[access copy dependency export extension geometry identity library object operation
                                params payload proposal query record reference registration request revision runtime
                                scope section selection session target task validation].freeze
+    # Every code that table lists, so registration can check an operation's `refuses:` list against it.
+    # The table stays the readable authority; tests/outcome_codes_test.rb keeps the two equal.
+    FOUNDATION_CODES = %w[
+      request.malformed request.unknown_operation request.api_version request.capability_denied
+      access.user_required request.cancelled
+      request.pending request.sequence_conflict request.outcome_unavailable
+      session.unknown session.busy session.closed session.changed session.inactive
+      revision.stale proposal.changed record.unreadable
+      target.not_found target.changed target.ambiguous target.locked target.wrong_kind target.wrong_hierarchy
+      target.wrong_zone target.same_zone target.shared_definition target.edit_path_changed
+      params.invalid validation.failed reference.invalid reference.in_use geometry.invalid geometry.failed
+      geometry.split_failed
+      extension.unavailable extension.schema_unsupported extension.migration_required extension.migration_failed
+      extension.invalid copy.rule_missing
+      query.limit_invalid query.cursor_expired
+      operation.failed operation.rollback_unverified operation.participant_missing operation.proposal_required
+      operation.query_missing operation.dependency_missing operation.query_cycle operation.locate_missing
+      identity.conflict identity.choice_required identity.choice_conflicts scope.incomplete selection.invalid
+      registration.duplicate_id registration.missing_dependency registration.cycle registration.contract_major
+      registration.schema_invalid
+      payload.contract section.missing_dependency section.cycle section.duplicate section.version_unsupported
+      object.unavailable dependency.unavailable
+      export.blocked export.busy export.cancelled export.failed export.refused export.model_changed
+      export.destination_changed export.replace_required export.privacy_undeclared export.relevance_unknown
+      export.metadata_omitted task.expired
+      library.adapter_invalid library.assignment_unavailable library.callback_invalid library.catalog_budget
+      library.catalog_stale library.catalog_too_large library.catalog_too_many_rows library.destination_changed
+      library.destination_invalid library.export_write_failed library.file_malformed library.file_too_large
+      library.file_unreadable library.format_invalid library.kind_unavailable library.local_choice_required
+      library.mutation_owner library.provider_ambiguous library.provider_failed library.provider_invalid
+      library.provider_unavailable library.review_required library.row_unavailable library.schema_unsupported
+      library.setup_invalid library.setup_too_large library.setup_unavailable library.setup_unreadable
+      library.update_destination_invalid library.update_destination_required
+      runtime.asset_refused runtime.boot_timeout runtime.boot_failed runtime.translation_failed runtime.stopped
+      runtime.closed
+    ].freeze
+
+    # Every operation kind below declares `refuses`: the codes its handler and the dependencies it
+    # calls can answer with an outcome that is not `completed`, beyond the codes every operation of its
+    # kind can answer (Refusals::COMMON). `[]` says there are none beyond those.
 
     # A bounded read. `handler` is `->(request) { value }`; it must not write to the Model.
-    Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
+    Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :handler,
+                       keyword_init: true)
 
     # A validated Model change. `handler` is `->(request, changes) { value }`: it proposes record
     # writes into `changes` (a Records::ChangeSet) and never writes itself. The dispatcher applies the
     # proposal as one native operation named `undo_name`. `confirmation` is the policy every client
     # must satisfy before the operation opens; only "none" is supported.
     Action = Struct.new(
-      :name, :owner, :description, :params, :result, :examples, :undo_name, :side_effects, :confirmation, :handler,
-      keyword_init: true
+      :name, :owner, :description, :params, :result, :examples, :refuses, :undo_name, :side_effects, :confirmation,
+      :handler, keyword_init: true
     )
 
     # A change to what the host shows, and nothing else, as a contribution seam. `handler` is
@@ -41,7 +82,8 @@ module PhComposer
     # user can undo, and there is nothing here to undo. Both halves of that are why the seam exists:
     # before it, such a change could be reached from a native menu and from Ruby but from no client
     # (context/EXTENSIBILITY.md, "View commands").
-    ViewCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :handler, keyword_init: true)
+    ViewCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :handler,
+                             keyword_init: true)
 
     # A file or folder location only the user can choose (context/AGENT_INTERFACE.md, "User-controlled
     # local access"). A setup command or file export that declares one runs only when a native client,
@@ -62,14 +104,18 @@ module PhComposer
     # and leaves no Undo entry; it is granted apart from `view`, because a view command changes only
     # what the host shows (context/EXTENSIBILITY.md, "Setup commands"). `approval` is an optional
     # Approval.
-    SetupCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :approval, :handler,
-                              keyword_init: true)
+    SetupCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :approval,
+                              :handler, keyword_init: true)
 
     # A local file write under the explicit export grant. Its handler validates and writes the file;
     # dispatch opens no Model transaction and consumes no action sequence. A destination the user
     # chooses is declared as an Approval and stays private to the handler, outside its JSON result.
-    FileExport = Struct.new(:name, :owner, :description, :params, :result, :examples, :approval, :handler,
+    FileExport = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :approval, :handler,
                             keyword_init: true)
+
+    # The kind each operation is published as, by `describe` and in Refusals::COMMON.
+    OPERATION_KINDS = { Query => "query", Action => "action", ViewCommand => "view_command",
+                        SetupCommand => "setup_command", FileExport => "file_export" }.freeze
 
     # A panel snapshot section: the result of one registered query, under the section's name.
     SnapshotSection = Struct.new(:name, :owner, :query, :params, keyword_init: true)

@@ -9,7 +9,9 @@ module BrokenSectionFeature
   def self.install(registry)
     feature = registry.feature("test.broken", :contract_version => 1)
     feature.query("test.broken.read", :description => "Always fails.", :params => { "type" => "object" },
-                                      :result => { "type" => "object" }) { |_request| raise "section bug" }
+                                      :result => { "type" => "object" }, :refuses => []) do |_request|
+      raise "section bug"
+    end
     feature.snapshot_section("test.broken.section", :query => "test.broken.read")
   end
 end
@@ -121,7 +123,7 @@ class PanelTest < PhComposerTestCase
                           :params => { "type" => "object", "properties" => {},
                                        "required" => [], "additionalProperties" => false },
                           :result => { "type" => "object", "properties" => {}, "required" => [],
-                                       "additionalProperties" => false }) { |_request| {} }
+                                       "additionalProperties" => false }, :refuses => []) { |_request| {} }
       end
     end
     PhComposer::Registry.install([feature])

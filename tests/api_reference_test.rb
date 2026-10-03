@@ -61,6 +61,22 @@ class ApiReferenceTest < PhComposerTestCase
     end
   end
 
+  # An agent learns what an operation can refuse with from two reads: its own codes from `describe`,
+  # and the common sets it names from `discover`.
+  def test_an_operation_describes_its_own_refusals_and_the_common_sets_it_answers
+    type_update = API.describe(:name => "ph_composer.windows.types.update")
+    file_export = API.describe(:name => PhComposer::Registry.current.file_exports.keys.first)
+
+    assert_equal PhComposer::Refusals::COMMON, API.discover.fetch("common_refusals")
+    assert_equal ["action"], type_update.fetch("common_refusal_sets")
+    assert_equal %w[file_export approval], file_export.fetch("common_refusal_sets")
+    assert_includes type_update.fetch("refuses"),
+                    { "code" => "window.overlap", "owner" => "ph_composer.windows",
+                      "description" => PhComposer::Registry.current.codes.fetch("window.overlap").description }
+    assert_includes type_update.fetch("refuses"), { "code" => "target.changed", "owner" => "foundation" }
+    refute_includes type_update.fetch("refuses").map { |row| row.fetch("code") }, "revision.stale"
+  end
+
   def test_quantities_carry_their_units
     zones = API.describe(:name => "ph_composer.zones.list").fetch("result")
     faces = API.describe(:name => "ph_composer.zones.faces.list").fetch("result")
@@ -74,6 +90,12 @@ class ApiReferenceTest < PhComposerTestCase
     text = PhComposerTools::ApiReference.markdown(PhComposer::Registry.current)
 
     refute_match(/[–—]/, text, "docs/ is client-facing: no em or en dashes")
+    PhComposerTools::ApiReference::GROUPS.each do |_title, key, _capability|
+      PhComposer::Registry.current.public_send(key).each_key do |name|
+        section = text[/^### `#{Regexp.escape(name)}`\n.*?(?=^#|\z)/m]
+        assert_match(/^Refuses: /, section.to_s, "#{name} has no refusal line")
+      end
+    end
     PhComposer::Registry.current.file_exports.each_key do |name|
       assert_includes text, "### `#{name}`", "Registered file export missing from public reference"
       assert_equal "file_export", API.describe(:name => name).fetch("kind")

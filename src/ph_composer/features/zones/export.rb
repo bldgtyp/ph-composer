@@ -21,6 +21,7 @@ module PhComposer
                    :requires => [CONSTRUCTIONS], :report => method(:report)
         ) { |reader| records(reader) }
         feature.query("#{FEATURE_ID}.export_preflight", :description => "All-Zone export checks and adjacency repair.",
+                                                        :refuses => Refuses::READ,
                                                         :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
                                                         :examples => [{}]) { |request| preflight(request) }
       end

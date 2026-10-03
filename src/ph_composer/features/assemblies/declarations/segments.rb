@@ -32,6 +32,7 @@ module PhComposer
       def action(feature, name, properties, example, description:, undo_name:, side_effects:, optional: [], &command)
         feature.action("#{FEATURE_ID}.assemblies.segments.#{name}",
                        :description => description,
+                       :refuses => Refuses::EDIT,
                        :params => params(properties, :optional => optional), :result => Shapes::RESULT,
                        :undo_name => undo_name, :side_effects => side_effects,
                        :examples => [example.merge("id" => Shapes::EXAMPLE_ID,
