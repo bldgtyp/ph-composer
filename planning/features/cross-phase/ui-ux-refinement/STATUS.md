@@ -43,36 +43,43 @@ check sections say what was and was not covered.
 4. **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
    taken" table), as small follow-up changes.
 
-## For Ed's verification pass
+## Verification pass, 2026-10-03
 
-Gathered here so they can be checked in one sitting, in SketchUp, by hand:
+Run with Ed on SketchUp 26.1.188, merged main installed, Model `ui-verification-run.skp` (the
+synthetic fixture, then worked on by hand). Items 1 to 7 were Ed's own mouse and keyboard. Items 8
+to 14 were real pointer and key input sent to the panel through computer use, on the Model as Ed
+left it.
 
-- Installs editor: Escape from the keyboard at each layer, and painting edges with the pointer.
-  Both were exercised offline and in the browser checks, not with native input.
-- Window Types now shows its messages. Notices such as "Installs saved." and the eyedropper
-  instructions appear for the first time, in the panel's notice under the tab row. Say if any is
-  unwanted or badly placed.
-- A notice that is only information no longer blocks a click on the control beneath it.
-- Export: the readiness line and the grouped findings on a real Model, with Locate all and
-  "Open <tab>"; a completed export, which no host check here has run. "Open" goes to the tab of the
-  feature that reported the finding, so a Material's gap opens Assemblies. Decisions P8-Q1 to Q3
-  are in the packet 8 plan; P8-Q2 declines a first-run guide (F1).
-- Empty states: Assemblies, each Library tab and Window Types with nothing in them. The amber mark
-  on an incomplete Window Type in the rail.
-- Library: "+ New Assembly" now makes "Assembly N" at once and opens the Builder (D5); the sidebar
-  beside a Library table points at the source select instead of repeating the table; record forms
-  mark required fields; Library setup's wording for a provider that is not a file ("Added by
-  another tool"). Decisions P7-Q1 to Q3 are in the packet 7 plan.
-- Assembly Builder: the single toolbar (selection tools appear with a selection; Mirror and the two
-  Flips are in the "..." menu), the back link above the title, the teal selection outline, and the
-  grouped row icons in the Assemblies table with the new Replace glyph. Decisions P6-Q1 to Q3 are in
-  the packet 6 plan.
-- Window Types: the anchor bubble beside Place (a three by three grid in place of the Anchor
-  select), rail rows on hover and in manual order, and the restyled library sidebar on every screen
-  that has one. Decision P5-Q2 left the Installs palette where it is, not in a pane inspector.
-- Zones / Faces: click a Zone row while Faces are selected, then change the selection (D9).
-- The selection's Assembly control with Faces that share an Assembly, and with Faces that differ
-  (D10).
+| Item | Result |
+| --- | --- |
+| 1 to 3. Faces selected, Zone row takes the inspector, a new selection takes it back (D9) | Pass (Ed) |
+| 4. "+ New Assembly" opens the Builder with the title selected (D5) | Pass (Ed) |
+| 5. Builder: teal selection, selection tools, the "..." menu, Add Layer | Pass (Ed) |
+| 6. Assemblies row icons in two groups, Replace glyph | Pass (Ed) |
+| 7. The selection's Assembly control shows the shared Assembly, then "Mixed" (D10) | Pass (Ed) |
+| 8. A new Window Type from the rail | Pass (Ed made "A New Type") |
+| 9. Anchor bubble: three by three, Sill center tinted, Head right chosen | Pass |
+| 10. Installs: a clicked edge repaints, Escape asks "Discard Installs changes?" | Pass |
+| 11. A subtab click over a staged session asks the same | Pass |
+| 12. Save Installs closes the editor and shows "Installs saved."; the next click clears it | Pass, with the notice finding below |
+| 13. Library: the sidebar's one line in place of a repeated list; New Material's "required" mark and "Enter a name." | Pass |
+| 14. Export: "Finish 6 things before exporting.", ten causes in two groups, Locate all selects ten Faces, Open Zones / Faces navigates | Pass, with the wording findings below |
+| 15. A completed export | Not run: the Model has six blocking causes |
+
+Found in the pass, not yet fixed:
+
+- **The notice covers the subtabs.** "Installs saved." sits over U-Values and Schedule on the
+  Window Types tab until the next click. Clicks pass through it, but the labels are hidden.
+- **Zones / Faces at about 1150 wide with the inspector open:** the table is wider than its space
+  and the Type column slides under the sticky Name column, leaving a header that reads "e".
+- **No rail mark on a Window Type with no products.** "A New Type" has four blocking Export causes
+  and no amber mark in the rail. The mark follows the thermal findings, which were empty here.
+- **Export wording from the Model:** "Element: top: no Psi-Install Type resolves." names no Window
+  Type; "The Face face type RoofCeiling differs from its Assembly type Wall." shows honeybee's
+  stored word where the glossary says "Roof or ceiling"; "Face names incomplete Assembly" is hard
+  to read. These come from Ruby (P8-Q1).
+- **Locate all from Export does not fill the selection inspector**, the known limit for Faces
+  selected from outside their Zone.
 
 ## Follow-ups noted, not scheduled
 
