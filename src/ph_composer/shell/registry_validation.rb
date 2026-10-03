@@ -420,10 +420,11 @@ module PhComposer
       end
 
       # An operation's `refuses` names codes a caller can look up: each is listed in context/CONTRACTS.md
-      # or declared by a feature, appears once, and is not already in the common sets the operation's
-      # kind answers, so the list says only what is particular to this operation.
+      # or declared by the operation's own feature or one it requires, appears once, and is neither in
+      # the common sets the operation's kind answers nor a code only dispatch gives, so the list says
+      # only what is particular to this operation.
       def check_refusals
-        declared = @live.codes.keys + @staging.declared_codes.map(&:code)
+        owners = (@live.codes.values + @staging.declared_codes).to_h { |code| [code.code, code.owner] }
         @staging.declared_operations.each do |operation|
           refuses = operation.refuses
           unless refuses.is_a?(Array) && refuses.all?(String)
@@ -431,14 +432,21 @@ module PhComposer
             next
           end
           common = Refusals.common(operation)
+          requires = @staging.declared_features.find { |feature| feature.id == operation.owner }&.requires || []
           refuses.tally.each do |code, count|
+            owner = owners[code]
             if count > 1
               problem(operation, "refuses lists #{code} more than once")
             elsif common.include?(code)
               problem(operation, "refuses lists #{code}, which every operation of its kind answers")
-            elsif !Declarations::FOUNDATION_CODES.include?(code) && !declared.include?(code)
+            elsif Refusals::DISPATCH_ONLY.include?(code)
+              problem(operation, "refuses lists #{code}, which only dispatch gives")
+            elsif !Declarations::FOUNDATION_CODES.include?(code) && owner.nil?
               problem(operation, "refuses lists #{code}, which no feature declares and context/CONTRACTS.md " \
                                  "does not list")
+            elsif owner && owner != operation.owner && !requires.include?(owner)
+              problem(operation, "refuses lists #{code}, which belongs to #{owner}; #{operation.owner} must " \
+                                 "require it")
             end
           end
         end

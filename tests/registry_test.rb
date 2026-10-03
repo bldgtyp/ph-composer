@@ -182,7 +182,8 @@ class RegistryTest < PhComposerTestCase
     assert_equal %w[probe.refused target.not_found], Registry.current.queries.fetch("probe.refuses.read").refuses
 
     { "an undeclared code" => %w[probe.unheard], "a repeat" => %w[target.not_found target.not_found],
-      "a common code" => %w[session.busy] }.each do |label, refuses|
+      "a common code" => %w[session.busy], "a dispatch-only code" => %w[access.user_required] }
+      .each do |label, refuses|
       Registry.reset
       diagnostics = refused(declare.call(refuses))
       assert_equal ["registration.schema_invalid"], diagnostics.map(&:code), label
@@ -191,14 +192,33 @@ class RegistryTest < PhComposerTestCase
     end
   end
 
+  # A feature's code reaches only operations of that feature or one requiring it.
+  def test_refuses_names_another_features_code_only_through_a_requirement
+    owner = feature do |registry|
+      registry.feature("probe.owner", :contract_version => 1).code("probe.gone", :description => "Gone.")
+    end
+    reader = lambda do |requires|
+      feature do |registry|
+        registry.feature("probe.reader", :contract_version => 1, :requires => requires)
+                .query("probe.reader.read", :description => "Read.", :params => OBJECT, :result => OBJECT,
+                                            :refuses => %w[probe.gone]) { {} }
+      end
+    end
+    diagnostics = refused(owner, reader.call([]))
+    assert_equal ["probe.reader.read refuses lists probe.gone, which belongs to probe.owner; probe.reader must " \
+                  "require it."], diagnostics.map(&:message)
+    Registry.reset
+    Registry.install([owner, reader.call(["probe.owner"])])
+    assert_equal %w[probe.gone], Registry.current.queries.fetch("probe.reader.read").refuses
+  end
+
   # Every operation says what it refuses with; `[]` is the explicit "nothing beyond the common sets".
   def test_an_operation_without_refuses_is_refused
     diagnostics = refused(feature do |registry|
       registry.feature("probe.silent", :contract_version => 1)
               .query("probe.silent.read", :description => "Read.", :params => OBJECT, :result => OBJECT) { {} }
     end)
-    assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
-    assert_includes diagnostics.first.message, "refuses"
+    assert_equal ["probe.silent.read needs refuses, a list of codes."], diagnostics.map(&:message)
 
     Registry.reset
     diagnostics = refused(feature do |registry|
@@ -234,6 +254,7 @@ class RegistryTest < PhComposerTestCase
 
     assert_raises(FrozenError) { query.result = { "type" => "array" } }
     assert_raises(FrozenError) { query.params["type"] = "array" }
+    assert_raises(FrozenError) { query.refuses << "target.not_found" }
   end
 
   def test_reference_target_requires_callable_provider_and_pure_validator

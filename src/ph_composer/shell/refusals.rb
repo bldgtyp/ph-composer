@@ -19,6 +19,9 @@ module PhComposer
       "file_export" => ANY_OPERATION,
       "approval" => %w[access.user_required request.cancelled].freeze
     }.freeze
+    # Codes no handler raises: an unknown name never reaches one, and only dispatch or a native client
+    # answers for an approval. An operation's `refuses` never lists them.
+    DISPATCH_ONLY = (%w[request.unknown_operation] + COMMON.fetch("approval")).freeze
 
     class << self
       # A callable receiving `(declaration, code)` for every outcome of a registered operation that is

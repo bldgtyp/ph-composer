@@ -191,9 +191,12 @@ What landed, and where it differs from the phases above:
   sees every path, including the `validation.failed` a handler's `UserError` becomes, which
   `coded_outcome` never receives. `setup_refusal` and `file_export_refusal` are not reported: no handler
   runs there, so only common codes arise.
-- **Required keyword.** `refuses:` is a required keyword on all five registration methods (a missing one
-  is a `registration.schema_invalid` diagnostic from the failed install), and validation refuses a nil
-  list set directly on a declaration.
+- **Required, by validation.** `refuses:` keeps a nil default on the five registration methods so that
+  validation names each operation that omits it ("X needs refuses, a list of codes") instead of one Ruby
+  `ArgumentError` ending the feature's install and hiding its other diagnostics. D1 holds: nothing
+  without a list publishes. Validation also refuses a code only dispatch gives
+  (`request.unknown_operation`, the approval set) and another feature's code unless the operation's
+  feature requires that feature.
 - **Seeding.** A recorded run of the suite produced 214 refusals outside any declaration across about 60
   operations. Two read-only source traces then covered all 133 built-in operations, following each
   handler into the record engine, locators, dependency reads, participants and retargeters. Every
@@ -213,10 +216,23 @@ What landed, and where it differs from the phases above:
   reference's `Refuses:` line under every operation; `tests/api_test.rb` shows the collector naming an
   undeclared refusal's operation and code.
 
+Review: one fresh-context Opus pass with the architecture rubric, 2026-10-03. No defect reproduced and
+production behavior unchanged. Fixed on the branch: the audit is now tested through all six dispatch
+entries, not only `query`; CONTRACTS.md says apply-time causes are not refusals and API_QUICKSTART.md no
+longer claims the lists are exhaustive; EXTENSIBILITY.md tells a library kind contributor how its
+callbacks may refuse; per-operation diagnostics for a missing list; the ownership and dispatch-only
+checks; a frozen-`refuses` assertion. Left as follow-ups below.
+
 Follow-ups, not in this branch:
 
 - A library kind adapter could declare the codes its callbacks raise, so `library.copy` publishes them
   without the foundation naming a feature.
+- `describe` gives foundation codes no `description`, and nothing in the API points to CONTRACTS.md for
+  their meaning.
+- `Dispatch#proposal_preview` has no `rescue UserError`, so a handler's `UserError` answers
+  `operation.failed` on preview but `validation.failed` on invoke (pre-existing).
+- Codes CONTRACTS.md lists outside the table, such as `library.row_semantic_invalid`, cannot be named in
+  `refuses`; admission filters those rows today, so it looks unreachable.
 - Export task methods remain out of scope until agent-authorized-file-access Phase 5 settles
   `start_export`.
 

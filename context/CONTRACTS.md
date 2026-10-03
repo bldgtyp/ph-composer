@@ -167,12 +167,15 @@ library or translation source names a code that is neither listed here nor decla
 Every operation declares `refuses:`, the codes its handler and the dependencies it calls can
 answer with an outcome that is not `completed`: reads, locators, participants and retargeters
 included, since their codes reach the caller unchanged. Codes a caller sees as findings on a
-completed outcome are not refusals. Codes dispatch answers for every operation of a kind are not
+completed outcome are not refusals, and neither is a domain cause a step raises while the operation
+applies: that answers `operation.failed` or `operation.rollback_unverified`, with the cause in
+`detail.cause`. Codes dispatch answers for every operation of a kind are not
 repeated: `Refusals::COMMON` (`shell/refusals.rb`) holds one set per kind (`query`, `action`,
 `view_command`, `setup_command`, `file_export`) and an `approval` set that an operation declaring an
 approval also answers. `refuses: []` says the operation answers nothing beyond its common sets.
-Registration refuses an entry that is neither listed here nor declared by a feature, a repeat, and
-a common code. `Declarations::FOUNDATION_CODES` is the checked mirror of this table, and
+Registration refuses an entry that is neither listed here nor declared by the operation's feature or
+one it requires, a repeat, a common code, and a code only dispatch gives (`request.unknown_operation`
+and the `approval` set). `Declarations::FOUNDATION_CODES` is the checked mirror of this table, and
 `tests/outcome_codes_test.rb` keeps the two equal. `discover` publishes the common sets once as
 `common_refusals`; `describe` returns an operation's own codes as `refuses`, each with its owner and,
 for a feature code, its description, and the sets it answers as `common_refusal_sets`. A refusal

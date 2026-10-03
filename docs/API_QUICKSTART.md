@@ -85,9 +85,9 @@ Zone.
 ## 5. Recover from a stale revision
 
 A write based on an old read refuses with `revision.stale` and changes nothing. Read again, rebuild
-the params from what you now see, and send them under the next sequence. Every code an operation can
-refuse with is listed before you call it: its own in `describe`'s `refuses`, and the sets it shares
-with every operation of its kind in `discover`'s `common_refusals`.
+the params from what you now see, and send them under the next sequence. Before you call, `describe`
+lists the codes an operation refuses with as `refuses`, and `discover` lists the codes every operation
+of its kind can answer as `common_refusals`.
 
 ```ruby
 stale = PhComposer::API.invoke(context: context, name: "ph_composer.zones.update", params: edit,

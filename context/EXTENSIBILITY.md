@@ -211,10 +211,13 @@ feature.action("ph_composer.zones.settings.update",
 Operations registered in a loop share one list, and a feature whose operations share paths keeps
 named lists beside its `codes.rb` (`features/windows/refuses.rb`). A code reached through a dependency's query,
 locator or participant counts, because it reaches the caller unchanged. Registration refuses an
-operation without `refuses:`, a code nothing declares, a repeat and a code its common sets already
-hold. The offline suite installs a `Refusals.audit` that fails any test whose operation refuses
+operation without `refuses:`, a code nothing declares, another feature's code unless the operation's
+feature requires it, a repeat, and a code its common sets already hold. The offline suite installs a `Refusals.audit` that fails any test whose operation refuses
 with a code outside its list and common sets, so coverage keeps the lists complete: a missing code
-is declared, never suppressed.
+is declared, never suppressed. A library kind's callbacks run inside `ph_composer.library.copy` and
+`ph_composer.library.in_file`, whose lists the foundation owns, so a callback refuses with a shared or
+library code (`validation.failed`, `target.*`, `library.*`) rather than one under its own noun until
+adapters can declare their own.
 
 A composition-root registration or generated build inventory is permitted. Requiring a new
 feature branch inside shell, session, export orchestration or UI-kit internals is a contract
