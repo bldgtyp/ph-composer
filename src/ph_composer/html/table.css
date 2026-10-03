@@ -59,6 +59,6 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-group-chevron { width: 12px; }
 .phc-group-chevron svg { width: 14px; height: 14px; }
 .phc-group-toggle[aria-expanded="false"] .phc-group-chevron { transform: rotate(-90deg); }
-.phc-inventory-controls input { width: 190px; }
+.phc-inventory-controls input { width: 150px; }
 .phc-view-count { color: var(--muted); font-size: 12px; }
 .phc-group-label { font-weight: 600; }

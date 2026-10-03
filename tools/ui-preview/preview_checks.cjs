@@ -27,6 +27,8 @@ fs.mkdirSync(output, { recursive: true });
   for (const [width, height] of [[1280, 800], [900, 650], [360, 520], [1680, 1000]]) {
     await page.setViewportSize({ width, height });
     assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), `no page scroll at ${width}`);
+    assert(await page.evaluate(() => { const tabs = document.querySelector(".phc-tabs"); return tabs.scrollWidth <= tabs.clientWidth; }),
+      `every working tab is in view at ${width}`);
     await shot(`overview-${width}`);
   }
   await page.setViewportSize({ width: 1280, height: 800 });

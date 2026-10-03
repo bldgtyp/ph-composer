@@ -1,7 +1,5 @@
 /* Definition inventories share the table kit; feature styling only supplies their display treatments. */
 .phc-inventory-surface { padding: 0; border: 0; margin: 0; border-radius: 0; }
-.phc-inventory-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-.phc-inventory-heading button { flex: none; }
 .phc-inventory-table { width: 100%; min-width: 0; overflow: auto; margin-top: 8px; }
 .phc-inventory-table .phc-table .col-name { position: static; }
 .phc-inventory-table .phc-table :is(.col-name, .col-category, .col-notes, .col-type, .col-exterior_condition) {

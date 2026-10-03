@@ -1,12 +1,12 @@
 # Packet 1: page frame
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 Covers findings K1, K2, K3, K4 and K6 and rulings D1 and D3 in [FINDINGS.md](../FINDINGS.md).
-Not authorized: this is the plan Ed reads before saying go.
+Ed said go on 2026-10-03 and accepted both recommendations under "Open points".
 
 ## Outcome
 
@@ -106,3 +106,28 @@ that follows any shipped panel asset change.
 
 View controls and table chrome (packet 2). Any Zones / Faces layout change (packet 3). Builder
 toolbars (packets 5 and 6). Empty-state wording (packet 8).
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-page-frame`. `make ci` passes (1390 Ruby runs, 380 JavaScript tests, 172
+Python tests) and `make ui-checks` passes at every width it covers. The host check is owed.
+
+What differs from the plan above:
+
+- `pageHeader` is reached through the `ui` facade in `workspace.js`, so no feature gained a
+  dependency entry.
+- The header has no bottom rule. A table or a subtab row follows it directly on every screen.
+- Library's count stays in the header but names its tab ("2 Materials"), and the header's primary
+  action is the shown tab's New button. Moving the count into each tab's action bar meant a new
+  option threaded through five inventories; that belongs with packet 2's work on that row.
+- Under 500 wide the tab row wraps to a second line instead of shrinking. Five labels do not fit
+  one row at 360.
+- The filter field is 150 wide, down from 190, so the Psi-Install defaults stay on the
+  view-controls row at 1280 now that the pane has a gutter.
+- `windows_checks.cjs` waits two frames after its full-page screenshot. That screenshot resizes
+  the page, the drawing repaints on resize, and the next line could hold an element mid-repaint.
+  The race was there before (about 1 run in 24) and the new layout made it frequent.
+
+Seen and left alone: the Glazing library sidebar still runs past the right edge at 1280 (W3,
+packet 5). `make ci` needs a UTF-8 locale; with `LANG` unset five Ruby tests that read source files
+raise an encoding error.

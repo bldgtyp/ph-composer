@@ -48,11 +48,8 @@ PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "librar
     if (reason) panel.notify(reason);
     return !reason; }
     root.replaceChildren();
-    view.heading = ui.element("h1", "", "Library");
-    view.headingRow = ui.element("div", "phc-inventory-heading");
-    view.headingRow.appendChild(view.heading);
-    root.appendChild(view.headingRow);
-    root.appendChild(ui.element("p", "muted", "Definitions stored in this model."));
+    view.header = ui.pageHeader({ title: "Library" });
+    root.appendChild(view.header.root);
     view.surfaces = registered.map(function (spec) {
       var surface = ui.element("section", "phc-inventory-surface");
       return { spec: spec, root: surface, view: checked(spec, spec.build(surface, state, send)) };
@@ -70,7 +67,6 @@ PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "librar
       root.appendChild(entry.root);
       if (!entry.spec.createLabel) return;
       entry.create = ui.button(entry.spec.createLabel, function () { if (allowed()) entry.view.create(); });
-      view.headingRow.appendChild(entry.create);
     });
     view.exportForm = new ExportForm(state.session, send, changed);
     view.exportLibrary = ui.button("Export library", function () {
@@ -80,7 +76,7 @@ PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "librar
         return { record_kind: selection.record_kind, id: id };
       }) : []);
     });
-    view.headingRow.appendChild(view.exportLibrary);
+    view.header.setActions([view.exportLibrary]);
     root.appendChild(view.exportForm.root);
     view.selection = function () {
       var entry = active(view);
@@ -111,12 +107,12 @@ PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "librar
     view.exportForm.refresh(state);
     view.surfaces.forEach(function (entry) {
       entry.view.render(state);
-      if (!entry.create) return;
-      entry.create.disabled = !entry.view.canCreate();
-      entry.create.hidden = view.tabs.active !== entry.spec.id;
+      if (entry.create) entry.create.disabled = !entry.view.canCreate();
     });
+    // The count is the shown tab's, so it carries that tab's name; the New button is that tab's too.
     var shown = active(view);
-    view.heading.textContent = "Library · " + (shown ? shown.view.records.length : 0);
+    view.header.setCount(shown ? shown.view.records.length + " " + shown.spec.label : "");
+    view.header.setPrimary(shown && shown.create || null);
   }
   panel.navigationGuard("library", function (next) { return next === "library" ? null : guard(current); },
     panel.notify);

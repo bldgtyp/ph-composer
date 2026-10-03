@@ -63,7 +63,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     this.products = shared.records(this.state, "psi_install_types").map(function (row) { return clone(row); });
     this.creates = {}; this.updates = {}; this.imports = {};
     this.settings = clone(snapshot.value(this.state, shared.PREFIX + "settings"));
-    this.dirty = false; this.root.hidden = false; this.notice.textContent = "Assignments belong to this Window Type.";
+    this.dirty = false; this.root.hidden = false; this.notice.textContent = "";
     this.paint();
   };
   Editor.prototype.guard = function () {

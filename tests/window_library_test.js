@@ -159,8 +159,9 @@ test("the Library pane heading carries each Window product's New button and refu
   paint(); var view = root._view;
   assert.strictEqual(view.surfaces.map(function (entry) { return entry.create.textContent; }).join(),
     "+ New Frame,+ New Glazing,+ New Psi-Install Type");
-  assert.ok(view.surfaces.every(function (entry) { return entry.create.parentNode === view.headingRow; }));
-  assert.strictEqual(view.surfaces.map(function (entry) { return entry.create.hidden; }).join(), "false,true,true");
+  assert.strictEqual(view.surfaces.map(function (entry) {
+    return entry.create.parentNode === view.header.root.querySelector(".phc-heading-actions");
+  }).join(), "true,false,false");
   assert.ok(view.surfaces.every(function (entry) {
     return entry.root.querySelectorAll("h2").every(function (title) { return title.closest("dialog, [role=dialog]"); });
   }), "only a dialog carries a title inside a surface");

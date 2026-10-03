@@ -1,5 +1,5 @@
 /* Assembly Builder owns its work surface; all shared interaction colours come from base.css. */
-.assembly-editor { display: flex; align-items: stretch; gap: 16px; min-width: 0; padding: 16px; box-sizing: border-box; }
+.assembly-editor { display: flex; align-items: stretch; gap: 16px; min-width: 0; padding: 16px 0; box-sizing: border-box; }
 .assembly-editor-main { flex: 1 1 0; min-width: 0; }
 .assembly-header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
 .assembly-header > button { white-space: nowrap; }
