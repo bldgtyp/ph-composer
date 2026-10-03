@@ -161,6 +161,21 @@ test("new Material converts IP entries and a refused create retains its fields",
   assert.strictEqual(form.cancel.disabled, false);
 });
 
+test("an inventory with no records names the next step; a filter that hides them all says so instead", function () {
+  var o = setup(), section = o.state.sections["ph_composer.assemblies.assemblies"], kept = section.value.records;
+  section.value.records = [];
+  o.paint();
+  assert.ok(text(o.roots.assemblies).includes("No Assembly records yet. Choose + New Assembly."));
+  section.value.records = kept;
+  o.paint();
+  var filter = o.roots.assemblies.querySelectorAll("input").filter(function (node) {
+    return node.type === "search" || /Name or notes/.test(node.placeholder || node.getAttribute("aria-label") || "");
+  })[0];
+  filter.value = "no such assembly"; filter.listeners.input({});
+  o.paint();
+  assert.ok(text(o.roots.assemblies).includes("No Assembly records match this view."));
+});
+
 test("New Assembly creates at once under a free name and opens the new record in the Builder", function () {
   var o = setup(), view = o.roots.assemblies._view, section = o.state.sections["ph_composer.assemblies.assemblies"];
   section.value.records[0].values.name = "Assembly 1";

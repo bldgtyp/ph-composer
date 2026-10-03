@@ -48,7 +48,7 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
     var outcome = result.outcome || {};
     if (operation === "preflight") {
       checks = outcome.status === "completed" ? outcome.value : {
-        findings: [{ message: outcome.message, blocks_export: true }], repairs: [] };
+        failed: true, findings: [{ message: outcome.message, blocks_export: true }], repairs: [] };
       checks.repairs.forEach(function (repair) {
         if (!Object.prototype.hasOwnProperty.call(selected, repair.id)) selected[repair.id] = repair.checked === true;
       });
@@ -67,16 +67,22 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
       if (operation === "status") task = null;
     }
   }
-  // A record id inside a finding's sentence, such as "fac_c3d5e3f176e1". The sentence reads without it.
-  var RECORD_ID = /\s*\b[a-z]{2,4}_[A-Za-z0-9]{6,}\b/g;
+  // A record id inside a finding's sentence: three letters, an underscore and twelve characters, such as
+  // "fac_c3d5e3f176e1". The sentence reads without it; a name the user typed is never that shape by accident.
+  var RECORD_ID = /\s*\b[a-z]{3}_[A-Za-z0-9]{12}\b/g;
+  // The most records one Locate carries; a viewport command may refuse a longer list.
+  var LOCATE_LIMIT = 500;
   function sentence(finding) {
-    return String(finding.message || "").replace(RECORD_ID, "");
+    var text = String(finding.message || "");
+    if (finding.object_id) text = text.split(" " + finding.object_id).join("");
+    return text.replace(RECORD_ID, "");
   }
+  function cause(finding) { return String(finding.code || "") + "|" + sentence(finding); }
   /* One group per cause: the same code and the same sentence once its record id is taken out. */
   function grouped(rows) {
     var list = [], byKey = Object.create(null);
     rows.forEach(function (finding) {
-      var text = sentence(finding), key = String(finding.code || "") + "|" + text, group = byKey[key];
+      var text = sentence(finding), key = cause(finding), group = byKey[key];
       if (!group) { group = byKey[key] = { text: text, findings: [] }; list.push(group); }
       group.findings.push(finding);
     });
@@ -95,27 +101,36 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
         else if (!Object.prototype.hasOwnProperty.call(params, key)) params[key] = value;
       });
     });
-    return { name: name, params: params };
+    var total = 0;
+    Object.keys(params).forEach(function (key) {
+      if (!Array.isArray(params[key])) return;
+      total = Math.max(total, params[key].length);
+      params[key] = params[key].slice(0, LOCATE_LIMIT);
+    });
+    return { name: name, params: params, capped: total > LOCATE_LIMIT };
   }
-  // Where a finding is fixed: the tab the feature that reported it said its records are worked on.
-  function tabFor(group) {
-    return panel.tabFor(group.findings[0].section) || panel.tabFor(group.findings[0].code);
-  }
+  // Where a finding is looked into: the tab the feature that reported it said its records are worked on.
+  function tabFor(group) { return panel.tabFor(group.findings[0].section); }
   function findingList(title, rows) {
     var block = element("section", "phc-export-group");
     block.appendChild(element("h2", "", title));
     var list = element("ul", "phc-export-findings");
     grouped(rows).forEach(function (group) {
       var row = element("li"), count = group.findings.length, locate = locateAll(group), tab = tabFor(group);
-      row.appendChild(element("span", "phc-export-finding", group.text));
+      var text = element("span", "phc-export-finding", group.text);
+      row.appendChild(text);
       if (count > 1) {
         var badge = element("span", "phc-export-count", "\u00d7 " + count);
-        badge.setAttribute("aria-label", count + " records");
+        badge.setAttribute("aria-label", count + " findings");
         row.appendChild(badge);
       }
-      // The sentences as the Model reported them, record ids included, for diagnosis.
-      row.title = group.findings.slice(0, 20).map(function (finding) { return finding.message; }).join("\n");
-      if (locate) row.appendChild(ui.button(count > 1 ? "Locate all" : "Locate", function () {
+      // The records behind the sentence, by id, for diagnosis: on the sentence, never in it.
+      var ids = group.findings.map(function (finding) {
+        return finding.object_id || (String(finding.message || "").match(RECORD_ID) || [""])[0].trim();
+      }).filter(function (id, index, all) { return id && all.indexOf(id) === index; });
+      if (ids.length) text.title = ids.slice(0, 20).join(", ") + (ids.length > 20 ? " and more" : "");
+      if (locate) row.appendChild(ui.button(locate.capped ? "Locate first " + LOCATE_LIMIT :
+        count > 1 ? "Locate all" : "Locate", function () {
         last.send("view.invoke", { request_id: "export-locate:" + String(sequence += 1), session: session,
           name: locate.name, params: locate.params });
       }));
@@ -140,8 +155,9 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
     if (!checks) root.appendChild(element("p", "phc-export-readiness", "Checking the Model…"));
     if (checks) {
       var causes = grouped(blocking).length;
-      var ready = element("p", "phc-export-readiness" + (causes ? " is-blocked" : ""), causes ?
-        "Finish " + causes + (causes === 1 ? " thing" : " things") + " before exporting." : "Ready to export.");
+      var ready = element("p", "phc-export-readiness" + (causes ? " is-blocked" : ""), checks.failed ?
+        "The Model could not be checked." : causes ?
+          "Finish " + causes + (causes === 1 ? " thing" : " things") + " before exporting." : "Ready to export.");
       root.appendChild(ready);
       checks.repairs.forEach(function (repair) {
         var label = element("label", "phc-export-repair"), input = element("input");
@@ -150,7 +166,8 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
         input.addEventListener("change", function () { selected[repair.id] = input.checked; });
         label.appendChild(input); label.appendChild(element("span", "", repair.label)); root.appendChild(label);
       });
-      if (!active() && !task) {
+      // Listed whenever the line above counts them, whether or not an earlier export is still on the page.
+      if (!active()) {
         if (blocking.length) root.appendChild(findingList("Before exporting", blocking));
         if (advisory.length) root.appendChild(findingList("Worth checking", advisory));
       }
@@ -164,7 +181,11 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
         root.appendChild(element("p", "", path.split(/[\\/]/).pop()));
       });
     }
-    if (findings.length) root.appendChild(findingList("From this export", findings));
+    // What the last export reported and the checks above do not already say.
+    var listed = Object.create(null);
+    if (checks && !active()) checks.findings.forEach(function (finding) { listed[cause(finding)] = true; });
+    var reported = findings.filter(function (finding) { return !listed[cause(finding)]; });
+    if (reported.length) root.appendChild(findingList("From the last export", reported));
   }
   function render(root, state, send) {
     last = { root: root, state: state, send: send };

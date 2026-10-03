@@ -436,14 +436,15 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     // `guard(tab)` answers why the tab may not change, or null; `refused`, when given, runs after a
     // refusal is shown, so a section can point the user at the work that holds the tab.
     navigationGuard: function (name, guard, refused) { navigationGuards[name] = { guard: guard, refused: refused }; },
-    // A feature says which tab its records are worked on: `prefix` is its id, the start of every section and
-    // finding code it owns. `tabFor(owner)` answers { tab, label } for the longest prefix that fits, or null,
-    // so a foundation screen can send the user to a gap without naming any feature.
+    // A feature says which tab its records are worked on: `prefix` is its id, which every section it owns
+    // starts with. `tabFor(owner)` answers { tab, label } for the longest prefix that is `owner` or ends at one
+    // of its dots, or null, so a foundation screen can send the user to a gap without naming any feature.
     workedOn: function (prefix, tab) { worked.push({ prefix: prefix, tab: tab }); },
     tabFor: function (owner) {
       var text = String(owner || ""), best = null;
       worked.forEach(function (entry) {
-        if (text.indexOf(entry.prefix) === 0 && (!best || entry.prefix.length > best.prefix.length)) best = entry;
+        var fits = text === entry.prefix || text.indexOf(entry.prefix + ".") === 0;
+        if (fits && (!best || entry.prefix.length > best.prefix.length)) best = entry;
       });
       var button = best && document.querySelector("[data-tab='" + best.tab + "']");
       return button ? { tab: best.tab, label: String(button.textContent || "").trim() || best.tab } : null;
