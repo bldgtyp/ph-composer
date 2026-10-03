@@ -80,9 +80,8 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
     return list;
   }
   function paint(root) {
-    var heading = element("div", "phc-heading");
-    heading.appendChild(element("h1", "", "Export"));
-    var actions = element("div", "phc-export-actions");
+    var heading = ui.pageHeader({ title: "Export" }).root;
+    var actions = element("div");
     var blocked = !checks || checks.findings.some(function (finding) { return finding.blocks_export; });
     actions.appendChild(ui.button(waiting("start") ? "Choosing destination…" : "Choose destination…", choose,
       Boolean(active() || waiting("start") || waiting("preflight") || blocked)));

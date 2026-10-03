@@ -1,5 +1,7 @@
 /* Window drawing and product-card styles ported from the frozen desktop reference. */
+/* The workspace scrolls, so it carries the page gutter itself and its rules reach the panel edge. */
 .window-workspace { position:relative; display:flex; flex-direction:column; min-height:0; height:100%; overflow:auto; }
+.live-panel section.window-workspace { margin:0 calc(-1 * var(--page-gutter)); padding:0 var(--page-gutter); }
 .window-heading,.window-card-heading { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
 .window-toolbar button[aria-pressed=true] { background:var(--interaction-highlight); color:#fff; }
 .window-layout { display:grid; grid-template-columns:210px minmax(0,1fr); min-height:0; flex:1; }
@@ -176,6 +178,7 @@
 .window-workspace .window-drawing { text-align:left; min-width:0; }
 .window-workspace .window-header-metric { min-width:100px; }
 .window-install-editor { padding:12px; min-width:0; }
+.window-install-editor>[role=status]:empty { display:none; }
 .window-install-body { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; }
 .window-install-drawing { overflow:auto; min-width:0; }
 .window-install-drawing svg { display:block; width:100%; min-width:180px; }

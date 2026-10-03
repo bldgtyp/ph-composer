@@ -52,7 +52,7 @@ test("library export offers deduped actual grid selection and defaults to all de
 test("inventories render transport values, material uses and withheld U-value reasons", function () {
   var o = setup();
   assert.strictEqual(materials(o).inventory.edits.cells["mat_a:name"].input.value, "Mineral wool");
-  assert.ok(text(o.roots.library).includes("Definitions stored in this model."));
+  assert.ok(!text(o.roots.library).includes("Definitions stored in this model."), "no caption under the title");
   var withheld = o.roots.assemblies.querySelector("[data-u-withheld]");
   assert.ok(withheld.getAttribute("aria-label").includes("Choose a Material for every Layer-Segment."));
   assert.strictEqual(o.roots.library.querySelector("[data-material-use-count]").textContent, "1");
@@ -399,11 +399,12 @@ test("Library surfaces come from registrations in order, and the active one owns
   var view = o.roots.library._view;
   assert.strictEqual(view.surfaces.map(function (entry) { return entry.spec.id; }).join(),
     "materials,outside,attached_zones");
-  assert.strictEqual(view.surfaces.map(function (entry) { return entry.create.hidden; }).join(),
-    "false,true,true");
+  assert.strictEqual(view.surfaces.map(function (entry) { return Boolean(entry.create.parentNode); }).join(),
+    "true,false,false");
   view.tabs.select("outside");
   o.paint();
-  assert.strictEqual(view.heading.textContent, "Library · 2");
+  assert.strictEqual(view.header.root.querySelector(".phc-heading-count").textContent, "2 Outside");
+  assert.strictEqual(view.surfaces[1].create.parentNode, view.header.root.querySelector(".phc-heading-actions"));
   view.surfaces[1].create.listeners.click({});
   assert.strictEqual(built[1], "created");
   assert.strictEqual(view.selection(), null, "a surface without a record kind exports nothing");

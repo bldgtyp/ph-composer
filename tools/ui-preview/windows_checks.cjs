@@ -41,6 +41,9 @@ const { chromium } = require("playwright");
     await page.screenshot({ path: path.join(directory, "schedule-" + width + ".png"), fullPage: true });
     await pane.getByRole("tab", { name: "Window Types", exact: true }).click();
     await page.screenshot({ path: path.join(directory, "builder-" + width + ".png"), fullPage: true });
+    // A full-page screenshot resizes the page, and the drawing repaints on resize: let that repaint land
+    // before holding one of its elements.
+    await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
     const shape = pane.getByRole("button", { name: "Element 1 glazed", exact: true });
     await shape.waitFor({ state: "visible" });
     await shape.scrollIntoViewIfNeeded();

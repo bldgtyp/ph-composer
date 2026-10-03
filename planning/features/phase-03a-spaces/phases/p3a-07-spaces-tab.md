@@ -23,7 +23,7 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 
 ## Steps
 
-1. **The pane.** In `html/index.html`, replace the disabled "Spaces · Planned" button with an
+1. **The pane.** In `html/index.html`, replace the disabled "Spaces" planned button (it sits after Export until then) with an
    enabled tab and add its pane, with a subtabs host holding one subtab for now. The tab row
    stays static, as Phase 2 F14 ruled.
 2. **Projection.** `html/features/spaces/tree.js`: a pure function from the `spaces` snapshot

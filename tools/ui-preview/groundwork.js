@@ -15,9 +15,7 @@
   rows.forEach(function (row) { row.record.values.category = "First"; });
   var root = ui.element("main");
   root.style.padding = "20px";
-  var heading = ui.element("div", "phc-heading");
-  heading.appendChild(ui.element("h1", "", "Shared controls"));
-  root.appendChild(heading);
+  root.appendChild(ui.pageHeader({ title: "Shared controls" }).root);
   var cellsSurface = ui.element("section"), gridSurface = ui.element("section");
   var notice = ui.floatingNotice(root);
   root.appendChild(notice);

@@ -1,12 +1,12 @@
 # Packet 1: page frame
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: In review
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 Covers findings K1, K2, K3, K4 and K6 and rulings D1 and D3 in [FINDINGS.md](../FINDINGS.md).
-Not authorized: this is the plan Ed reads before saying go.
+Ed said go on 2026-10-03 and accepted both recommendations under "Open points".
 
 ## Outcome
 
@@ -106,3 +106,58 @@ that follows any shipped panel asset change.
 
 View controls and table chrome (packet 2). Any Zones / Faces layout change (packet 3). Builder
 toolbars (packets 5 and 6). Empty-state wording (packet 8).
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-page-frame`. `make ci` passes (1390 Ruby runs, 381 JavaScript tests, 172
+Python tests) and `make ui-checks` passes at every width it covers. Pull request
+[#55](https://github.com/bldgtyp/ph-composer/pull/55).
+
+What differs from the plan above:
+
+- `pageHeader` is reached through the `ui` facade in `workspace.js`, so no feature gained a
+  dependency entry.
+- The header has no bottom rule. A table or a subtab row follows it directly on every screen.
+- Library's count stays in the header but names its tab ("2 Materials"), and the header's primary
+  action is the shown tab's New button. Moving the count into each tab's action bar meant a new
+  option threaded through five inventories; that belongs with packet 2's work on that row.
+- Tabs never shrink or scroll. A row too narrow for them all wraps to a second line at any width,
+  so no label is squeezed and no tab is off-screen.
+- In the Library's tabs the filter field is 150 wide, down from 190, so the Psi-Install defaults
+  stay on the view-controls row at 1280 now that the pane has a gutter.
+- `windows_checks.cjs` waits two frames after its full-page screenshot. That screenshot resizes
+  the page, the drawing repaints on resize, and the next line could hold an element mid-repaint.
+  The race was there before (about 1 run in 24) and the new layout made it frequent.
+
+One Sonnet diff review ran against the architecture and ui-polish rubrics: no blocking bug, and
+its valid findings are applied (a too-broad Export paragraph rule, tab labels squeezing between 500
+and 900 wide, a check assertion that could not fail, two development pages building headings by
+hand, an empty status paragraph in the Installs editor). Not taken: a visible "Planned" hint on
+planned tabs, which D3 ruled on.
+
+Seen and left alone: the Glazing library sidebar still runs past the right edge at 1280 (W3,
+packet 5). `make ci` needs a UTF-8 locale; with `LANG` unset five Ruby tests that read source files
+raise an encoding error.
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+commit `af04f8b`, Model `ui-frame-run.skp` copied fresh from the synthetic
+`ux-followups-integrated.skp` (two Zones, twelve classified Faces, no Assemblies or Window Types).
+Tab changes and panel resizes were driven through development `eval` on the panel's dialog, not by
+native clicks; the captures are native window pixels taken by window id. The Model stayed
+unmodified throughout.
+
+| Check | Result |
+| --- | --- |
+| Zones / Faces, Assemblies, Window Types, Library, Export at 1496 by 938 | Pass: one header, one gutter, primary at the right, subtab rule to the panel edge |
+| Zones / Faces, Library, Window Types at 700 wide | Pass: planned tabs wrap to a second row, no label squeezed |
+| Same at 420 wide | Pass: five working tabs on two rows, planned tabs hidden, header actions stay on one line |
+| "+ New Assembly" from the header's primary button | Pass: the form opens and Cancel returns with nothing written |
+
+Not covered: a populated Window Type Builder or Assembly Builder (the fixture has neither), native
+pointer and keyboard gestures, SketchUp 2023, Windows. Evidence is in the gitignored
+`_private/host/ui-frame-evidence/`.
+
+Seen in the host and filed under X1: Export lists its blocking findings by record id ("Face
+fac_c3d5e3f176e1 needs an authored Assembly"), twelve rows of them for one cause.

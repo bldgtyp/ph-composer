@@ -37,11 +37,8 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
     root.replaceChildren();
     view.listRoot = ui.element("div", "assembly-inventory");
     root.appendChild(view.listRoot);
-    view.heading = ui.element("h1", "", "Assemblies");
-    view.headingRow = ui.element("div", "phc-inventory-heading");
-    view.headingRow.appendChild(view.heading);
-    view.listRoot.appendChild(view.headingRow);
-    view.listRoot.appendChild(ui.element("p", "muted", "Definitions stored in this model."));
+    view.header = ui.pageHeader({ title: "Assemblies" });
+    view.listRoot.appendChild(view.header.root);
     view.newAssembly = new AssemblyForm(state.session, send, changed);
     view.replacement = new forms.ReplacementForm(state.session, send, changed,
       { section: SECTION, label: "Assembly", replacement: true, allowClear: true, alwaysReplacement: true });
@@ -64,7 +61,7 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
       view.editor.refresh(view.state, record.id);
     };
     view.create = ui.button("+ New Assembly", function () { if (allowed()) view.newAssembly.open(); });
-    view.headingRow.appendChild(view.create);
+    view.header.setPrimary(view.create);
     view.inventory = new inventories.Inventory(view.listRoot, state.session, send, notice, changed, {
       tableId: SECTION, section: SECTION, action: SECTION + ".update", label: "Assembly", columns: columns,
       editable: ["name", "type", "exterior_condition", "notes"], quantities: quantities,
@@ -134,7 +131,7 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
     });
     view.inventory.render(state);
     if (view.editor) view.editor.refresh(state, view.editor.assemblyId);
-    view.heading.textContent = "Assemblies · " + view.inventory.records.length;
+    view.header.setCount(view.inventory.records.length);
     view.create.disabled = !payload || view.inventory.busy();
   }
   panel.navigationGuard("assemblies", function (next) { return next === "assemblies" ?

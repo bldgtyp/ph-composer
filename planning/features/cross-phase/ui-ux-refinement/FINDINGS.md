@@ -93,7 +93,7 @@ Replace-and-delete for a Material in use is clear and well worded. Keep it as th
 
 | Id | Sev | Finding | Evidence |
 | --- | --- | --- | --- |
-| X1 | High | Export is one sentence and one button. It is where the flow ends and where the user should learn what is incomplete, with a route back to each gap. The preview stubs the run, so confirm in the host what a real Model shows before sizing this. | `tabs/authoring--export.png` |
+| X1 | High | Export is one sentence and one button. It is where the flow ends and where the user should learn what is incomplete, with a route back to each gap. Confirmed in the host on 2026-10-03: a Model with twelve Faces and no Assemblies lists twelve rows of "Face fac_c3d5e3f176e1 needs an authored Assembly", each with Locate. The record id is on screen, which the skill's words rule forbids, and one cause is repeated per Face instead of grouped. | `tabs/authoring--export.png` |
 
 ## Across flows
 

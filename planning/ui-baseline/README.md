@@ -50,7 +50,7 @@ repository: `screens/` is gitignored (U4).
 | --- | --- |
 | Window title "PH-Navigator for SketchUp" | Change to the product name |
 | One row of primary tabs, the active tab filled dark teal | Keep |
-| A tab for a feature that is not built yet, shown muted as "Ducts · Planned" | Keep the pattern. It tells a contributor and a user what is coming |
+| A tab for a feature that is not built yet, shown muted as "Ducts · Planned" | Change (UI and UX refinement D3, 2026-10-03). The tab stays, muted and disabled, after the working tabs, with a short label and "Planned" in its tooltip. It moves to its working position in the change that ships it |
 | IP / SI toggle at the right end of the tab row | Keep. It changes display and entry only; everything stored is SI (libraries Q14) |
 | Status bar: product version, then "Editing: Model" showing the active edit context | Keep. The context readout matters more now, since Create Space and Place depend on being inside a Zone |
 | Page heading with a count beside it, primary "+ New" button at the right | Keep |

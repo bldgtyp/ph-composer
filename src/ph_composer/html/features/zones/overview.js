@@ -279,14 +279,6 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     state.edits.run("ph_composer.zones.faces.auto_classify", { zone: row.record.zone.reference });
   }
 
-  function heading(title, count, action) {
-    var node = ui.element("div", "phc-zone-heading"), title_node = ui.element("h2", "", title);
-    if (count !== null) title_node.appendChild(ui.element("span", "phc-view-count", " " + count));
-    node.appendChild(title_node);
-    if (action) node.appendChild(action);
-    return node;
-  }
-
   function makeButton(state, target) {
     var make = ui.element("button", "primary", state.edits.busy() ? "Making Zone…" : "Make Zone");
     make.disabled = state.edits.busy() || !target;
@@ -339,12 +331,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         screenState.controls.root,
         ui.element("div", "phc-table-mount"), ui.element("div", "phc-details-mount"));
     }
-    var actions = ui.element("div", "phc-zone-actions");
-    actions.appendChild(makeButton(screenState, zones.make_zone));
-    actions.appendChild(solveButton(screenState, zones.zones));
-    actions.appendChild(screenState.settings.bubble.root);
     root.querySelector(".phc-selection-mount").replaceChildren(screenState.selectionAssignment.root);
-    root.querySelector(".phc-heading-mount").replaceChildren(heading("Zones", zones.zones.length, actions));
+    root.querySelector(".phc-heading-mount").replaceChildren(ui.pageHeader({ title: "Zones",
+      count: zones.zones.length, actions: [solveButton(screenState, zones.zones), screenState.settings.bubble.root],
+      primary: makeButton(screenState, zones.make_zone) }).root);
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
     paintDetails(root.querySelector(".phc-details-mount"), rows, screenState);
   }
@@ -428,7 +418,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     }
     disposeZoneEditor(state);
     state.zoneEditor = zoneForm(row.key, row.record.zone, state);
-    mount.replaceChildren(heading("Zone details", null, null), state.zoneEditor.root);
+    var title = ui.element("div", "phc-zone-heading");
+    title.appendChild(ui.element("h2", "", "Zone details"));
+    mount.replaceChildren(title, state.zoneEditor.root);
   }
 
   function disposeZoneEditor(state) {
