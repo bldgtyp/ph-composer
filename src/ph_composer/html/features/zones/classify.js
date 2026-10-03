@@ -14,6 +14,8 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   "use strict";
   var KEEP = "";
   var screen = null;
+  var HELP = "Choose what to set, then click or drag over Faces. Anything you leave unchosen keeps what each " +
+    "Face has. Surface is set by Solve adjacencies. An Attached zone is chosen from its list.";
 
   // Editors and bubbles consume their own Escape first. A modal dialog receives the native
   // cancel event after keydown, so leave that press to it even before it marks the event handled.
@@ -40,13 +42,14 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
      is, and pressing it again clears the field back to keeping what the Face has. */
   function chips(state, field, values, chosen, table) {
     var row = ui.element("div", "phc-chips");
-    values.forEach(function (value) {
-      var word = table[value] || value, reason = words.UNCHOOSABLE[value];
-      var chip = ui.element("button", "phc-chip", reason ? word + " · " + reason : word);
+    // Only what a chip can set. Surface and Attached zone are explained once, in the palette's help.
+    values.filter(function (value) { return !words.UNCHOOSABLE[value]; }).forEach(function (value) {
+      var word = table[value] || value;
+      var chip = ui.element("button", "phc-chip", word);
       var current = chosen === value;
       chip.setAttribute("aria-pressed", String(current));
-      chip.setAttribute("aria-label", reason ? word + ", " + reason : word);
-      chip.disabled = state.view.busy() || Boolean(reason);
+      chip.setAttribute("aria-label", word);
+      chip.disabled = state.view.busy();
       chip.addEventListener("click", function () { choose(state, field, current ? null : value); });
       row.appendChild(chip);
     });
@@ -203,11 +206,15 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
       screenState.edits.busy()], function () {
       var heading = ui.element("div", "phc-zone-heading");
       var body = ui.element("div", "phc-palette");
+      var help = ui.helpButton("Classify faces", HELP);
+      help.classList.add("phc-icon-button");
+      help.setAttribute("data-tooltip", HELP);
       heading.appendChild(ui.element("h2", "", "Classify faces"));
+      heading.appendChild(help);
       if (tool.active) heading.appendChild(stopButton(screenState));
-      body.appendChild(field("Face type", "blank keeps what each Face has",
+      body.appendChild(field("Face type", null,
         chips(screenState, "face_type", tool.face_types, tool.palette.face_type, words.FACE_TYPES)));
-      body.appendChild(field("Boundary condition", "blank keeps what each Face has",
+      body.appendChild(field("Boundary condition", null,
         chips(screenState, "boundary_condition", tool.boundary_conditions,
           tool.palette.boundary_condition, words.BOUNDARIES)));
       body.appendChild(field("Attached zone", null, attachedZones(screenState, tool.palette, records)));

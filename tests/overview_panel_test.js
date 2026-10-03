@@ -772,3 +772,30 @@ test("a Model switch brings the new session's control row, with the pane's tools
   assert.strictEqual(p.query("[data-section='example.tool']"), tool);
   assert.strictEqual(tool.parentNode.parentNode, after);
 });
+
+test("a missing value is flagged on its cell, a Face row has nothing to expand, and State is gone", function () {
+  var p = page(), payload = snapshot();
+  var face = payload.sections["ph_composer.zones.faces.faces"].value.faces[0];
+  delete face.values.boundary_condition;
+  face.state = "incomplete";
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var boundary = byLabel(section, "Set Wall 1 boundary");
+  assert.ok(boundary, "the control names what is to be set");
+  assert.deepStrictEqual([boundary.children[0].textContent, boundary.children[0].disabled], ["?", true]);
+  assert.ok(/is-missing/.test(boundary.parentNode.className));
+  assert.strictEqual(section.querySelector(".col-state"), null);
+  var chevrons = section.querySelectorAll(".row-chevron");
+  assert.deepStrictEqual(chevrons.map(function (node) { return node.classList.contains("is-leaf"); }), [false, true]);
+});
+
+test("a blocked Make Zone says why beside it", function () {
+  var p = page(), payload = snapshot();
+  payload.sections["ph_composer.zones.overview"].value.make_zone = null;
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var reason = p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason");
+  assert.ok(/Select one Group or loose geometry/.test(reason.getAttribute("aria-label")));
+  payload.sections["ph_composer.zones.overview"].value.make_zone = { entity_path: [1] };
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  assert.strictEqual(p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason"), null);
+});

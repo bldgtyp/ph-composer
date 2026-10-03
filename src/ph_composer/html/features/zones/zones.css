@@ -9,6 +9,7 @@
 .phc-zone-setting input[type="number"] { width: 72px; }
 /* The tree is the pane's work surface, so it takes the height the shell, the header and the control row leave. */
 .phc-table-mount { overflow: auto; max-height: max(240px, calc(100vh - 250px)); border: 1px solid var(--line); border-radius: 6px; }
+.phc-workspace .phc-blocked-reason { color: var(--warning-ink); border-color: transparent; background: transparent; }
 .phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
   color: var(--warning-ink); background: var(--warning-surface); }
 /* Zone details and the Face selection are the inspector's: one field to a line, the label above it. */

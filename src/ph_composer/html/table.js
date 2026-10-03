@@ -271,6 +271,10 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     var selected = options.selected && options.selected(row);
     entry.node.className = "tier-" + row.depth + (selected ? " host-selected" : "");
     if (entry.chevron) {
+      // A row with nothing under it keeps the chevron's place, so its label lines up, but offers nothing to open.
+      var leaf = Boolean(options.expandable && !options.expandable(row));
+      entry.chevron.classList.toggle("is-leaf", leaf);
+      entry.chevron.disabled = leaf;
       entry.chevron.setAttribute("aria-label", (isOpen ? "Collapse " : "Expand ") + row.tier + " " + rowLabel(row));
       entry.chevron.setAttribute("aria-expanded", String(isOpen));
       if (entry.target) entry.target.disabled = Boolean(options.disabled);
@@ -283,6 +287,7 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
         }
         entry.marker.textContent = marker.text;
         entry.marker.setAttribute("data-tooltip", marker.tooltip); entry.marker.hidden = false;
+        entry.marker.setAttribute("aria-label", marker.tooltip);
       } else if (entry.marker) entry.marker.hidden = true;
     }
     paintCells(cache, entry, row, options);

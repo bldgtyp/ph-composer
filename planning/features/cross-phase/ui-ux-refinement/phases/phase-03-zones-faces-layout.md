@@ -290,3 +290,26 @@ read back from SketchUp; captures are native window pixels by window id.
 
 Not covered: native pointer input, an Assembly assigned from the selection inspector (the fixture
 has no Assemblies; covered by the browser check), a selection over the 250-Face ceiling.
+
+## P3-3 outcome, 2026-10-03
+
+Ed authorized P3-3 on 2026-10-03, to start once #58 merged. Implemented on `feat/ui-zones-words`.
+`make ci` passes (1390 Ruby runs, 397 JavaScript tests, 172 Python tests) and `make ui-checks`
+passes.
+
+- **Palette (Z2).** Chips only. "blank keeps what each Face has" is gone from each field, and the
+  two explanations drawn as disabled chips are gone. One help button in the palette's heading says
+  it once: what unchosen means, that Surface comes from Solve adjacencies, and that an Attached
+  zone is chosen from its list.
+- **Make Zone (Z3).** While it is unavailable an alert icon sits beside it; its name and tooltip
+  give the reason, and pressing it raises the reason as a notice.
+- **State (Z4).** The State column is gone. A Face missing a type or a boundary shows an amber
+  "?" pill in that cell, named "Set <Face> boundary". The Zone's amber count carries its tooltip
+  text as its accessible name.
+- **Chevrons (Z5).** The table takes `expandable(row)`; a Face row keeps the chevron's place but
+  offers nothing to open.
+
+Not done, and why: the Classify tool still turns on the last colour mode the user chose
+(`classify_tool.rb`, `force_colour_by`). That is the accepted Phase 1 contract ("Off at rest, with
+the remembered mode used", D7 gate handoff), so changing it to always use Face type is a decision
+for Ed, not a wording fix.

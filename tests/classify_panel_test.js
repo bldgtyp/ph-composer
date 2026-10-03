@@ -83,15 +83,16 @@ test("pressing the chosen chip again goes back to keeping what each Face has", f
     { field: "face_type", value: null });
 });
 
-test("Surface is shown and refused, with the reason on the control", function () {
+test("the palette offers only what a chip can set, and its help explains the rest once", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-  var surface = chip(p, "Surface, set by Solve adjacencies");
 
-  assert.strictEqual(surface.textContent, "Surface · set by Solve adjacencies");
-  assert.strictEqual(surface.disabled, true);
-  assert.strictEqual(chip(p, "Attached zone, choose a record below").disabled, true,
-    "an Attached zone is chosen by its record, not by its chip");
+  assert.deepStrictEqual(chips(p).map(function (node) { return node.textContent; }),
+    ["Wall", "Roof or ceiling", "Floor", "Outdoors", "Ground", "To neighbour"]);
+  assert.ok(chips(p).every(function (node) { return !node.disabled; }), "no chip is there only to explain");
+  var help = p.section().querySelector(".phc-help").getAttribute("aria-label");
+  assert.ok(/keeps what each Face has/.test(help) && /Solve adjacencies/.test(help) && /Attached zone/.test(help));
+  assert.strictEqual(p.section().querySelector(".phc-palette-hint"), null, "the hint is not repeated per field");
 });
 
 test("the picker lists the Attached zones and choosing one names it", function () {
@@ -148,8 +149,10 @@ test("Stop classifying appears only while the tool has the viewport", function (
   }).length, 0, "nothing to stop, so no control for it");
 
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
-  var running = p.section().querySelectorAll("button")[0];
-  assert.strictEqual(running.textContent, "Stop classifying");
+  var running = p.section().querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Stop classifying";
+  })[0];
+  assert.ok(running);
   running.listeners.click({});
 
   assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
