@@ -1,13 +1,13 @@
 # Packet 2: table chrome and cells
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 Covers findings K5, K7 and K8 and ruling D2 in [FINDINGS.md](../FINDINGS.md), plus the Library
-count that packet 1 left in the page header. Not authorized: this is the plan Ed reads before
-saying go. It builds on packet 1 ([#55](https://github.com/bldgtyp/ph-composer/pull/55)) and
+count that packet 1 left in the page header. Ed said go on 2026-10-03 and accepted the three recommendations
+under "Open points". It builds on packet 1 ([#55](https://github.com/bldgtyp/ph-composer/pull/55)) and
 starts from main once that is merged.
 
 ## Outcome
@@ -106,3 +106,23 @@ runtime manifest, and `references/patterns.md` in the ui-polish skill.
 
 Row actions and their icons (packet 6). Empty-state wording (packet 8). The Zones / Faces layout
 and the State column (packet 3). Builder metric labels (packet 6).
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-table-chrome`. `make ci` passes (1390 Ruby runs, 382 JavaScript tests, 172
+Python tests) and `make ui-checks` passes.
+
+What differs from the plan above:
+
+- The visible "Filter" label is gone; the field keeps its placeholder and its accessible name.
+  P2-Q2 kept the labels unless the row wrapped at 1280, and with the fill tools and help in the row
+  the Psi-Install tab did wrap. "Group by" and "Order by" keep their labels, because a bare "None"
+  or "Name" says nothing.
+- The Library's filter field stays 150 wide for the same reason. The Psi-Install row has 43 to 72
+  px to spare at 1280, in IP and SI.
+- A Library tab's total reads "3 total", not a bare "3".
+- The sort toggle's icon shows the order in force; its name and tooltip give the change it offers.
+- The enum pill keeps its 28 px height. Dropping it to 24 changes row density, which is a
+  separate decision.
+- `units.format` now honours `showUnit: false` for a decimal length format. An architectural
+  format (feet and inches) keeps its marks, since they are the number.

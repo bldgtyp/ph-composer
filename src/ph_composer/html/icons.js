@@ -10,6 +10,8 @@ PhComposerUI.define("icons", ["dom"], function (dom) {
     add: '<path d="M12 4v16M4 12h16"/>',
     group_add: '<path d="M3 6h7l2 2h9v11H3Z"/><path d="M12 11v6m-3-3h6"/>',
     sort: '<path d="M8 6h12M8 12h8M8 18h4M4 5v14m-2-2 2 2 2-2"/>',
+    sort_ascending: '<path d="m3 8 4-4 4 4M7 4v16M11 12h4M11 16h7M11 20h10"/>',
+    sort_descending: '<path d="m3 16 4 4 4-4M7 20V4M11 4h10M11 8h7M11 12h4"/>',
     material_add: '<path d="M5 3h9l5 5v13H5ZM14 3v6h5M8 15h8m-4-4v8"/>',
     stop: '<rect x="6" y="6" width="12" height="12" rx="1"/>',
     refresh: '<path d="M20 4v6h-6M4 20v-6h6M5.6 8a7 7 0 0 1 11.6-2L20 10M4 14l2.8 4A7 7 0 0 0 18.4 16"/>',

@@ -100,8 +100,9 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
           marker.setAttribute("data-tooltip", reason);
           marker.tabIndex = 0;
           td.replaceChildren(marker);
+        // The column header carries the unit, so the cell is the number alone.
         } else td.textContent = units.format(value, quantities[field],
-          units.profile(quantities[field], preferences.current()));
+          units.profile(quantities[field], preferences.current()), { showUnit: false });
         return true;
       } });
     view.edits = view.inventory.edits;

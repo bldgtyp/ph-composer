@@ -43,7 +43,8 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
       input.value = initial; input.setAttribute("aria-label", label); input.addEventListener("change", changed);
       wrap.appendChild(input); self.root.appendChild(wrap); return input;
     }
-    var filterLabel = element("label", "phc-view-control", "Filter");
+    // The search field says what it is through its placeholder; its accessible name carries "Filter".
+    var filterLabel = element("label", "phc-view-control");
     this.filter = element("input"); this.filter.type = "search"; this.filter.placeholder = options.placeholder;
     this.filter.setAttribute("aria-label", "Filter " + options.label);
     this.filter.addEventListener("input", filterChanged);
@@ -57,7 +58,19 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     if (options.groups === undefined) this.groupBy.parentNode.hidden = true;
     this.orderBy = select("Order by", options.fields, options.initialOrder || "name", "field");
     this._fieldSignature = JSON.stringify(options.fields);
-    this.direction = select("Direction", [["asc", "Ascending"], ["desc", "Descending"]], "asc");
+    // One button for the two directions: its icon shows the order in force and its name the change it offers.
+    this.direction = { value: "asc" };
+    this.directionToggle = icons.iconButton("", "sort_ascending", function () {
+      self.direction.value = self.direction.value === "asc" ? "desc" : "asc";
+      paintDirection(); changed();
+    });
+    function paintDirection() {
+      var ascending = self.direction.value === "asc";
+      icons.paintIconButton(self.directionToggle, ascending ? "Sort descending" : "Sort ascending",
+        ascending ? "sort_ascending" : "sort_descending");
+    }
+    paintDirection();
+    this.root.appendChild(this.directionToggle);
     this.toggleGroup = function (key) { self.collapsed[key] = !self.collapsed[key]; changed(); };
     this.collapseAll = button("Collapse all", function () {
       if (options.expansion) options.expansion.collapseAll();
@@ -146,8 +159,9 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     this.expandAll.disabled = expansion ? !expansion.canExpand(projection) :
       this.groups.every(function (entry) { return !entry.collapsed; });
     this.clear.hidden = !query;
+    // `count: "always"` shows the total while unfiltered too, for a list whose page header counts nothing.
     this.count.textContent = this.options.count === false ? "" :
-      (query ? count + " of " + records.length : "");
+      (query ? count + " of " + records.length : this.options.count === "always" ? records.length + " total" : "");
     return projection;
   };
   return { ViewControls: ViewControls, groupToggle: groupToggle, paintGroupToggle: paintGroupToggle };

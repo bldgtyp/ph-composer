@@ -53,6 +53,10 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table .row-chevron[aria-expanded="true"] svg { transform: rotate(90deg); }
 .phc-inventory-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-right: auto; }
 .phc-view-control { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+/* An enum cell is a pill with a chevron on every screen. A value with a colour of its own sets
+   --category-fill on the cell; the rest take the neutral fill. */
+.phc-table select.phc-enum-cell { width: 100%; min-height: 28px; border-radius: 14px; font: inherit;
+  background-color: var(--category-fill, #edf1f2); }
 .phc-table .phc-group-row td { background: #f5f8f9; padding: 6px 10px; }
 .phc-workspace .phc-group-toggle, .phc-table .phc-group-toggle { display: flex; align-items: center; gap: 10px; border: 0; border-radius: 0; background: transparent; text-align: left; width: 100%; }
 .phc-group-count { color: var(--muted); font-size: 12px; }

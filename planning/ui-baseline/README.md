@@ -54,8 +54,8 @@ repository: `screens/` is gitignored (U4).
 | IP / SI toggle at the right end of the tab row | Keep. It changes display and entry only; everything stored is SI (libraries Q14) |
 | Status bar: product version, then "Editing: Model" showing the active edit context | Keep. The context readout matters more now, since Create Space and Place depend on being inside a Zone |
 | Page heading with a count beside it, primary "+ New" button at the right | Keep |
-| Filter, Group by, Order by, Direction as one control row above every inventory | Keep |
-| Grid toolbar: fill down, fill right, the keyboard hint, and a "…" Table options menu | Keep |
+| Filter, Group by, Order by, Direction as one control row above every inventory | Change (UI and UX refinement D2, 2026-10-03). Still one row: the filter field without a label, Group by, Order by, and Direction as one icon toggle |
+| Grid toolbar: fill down, fill right, the keyboard hint, and a "…" Table options menu | Change (D2). The fill tools join the control row and show once a range is selected; the hint sits behind a help button. The Table options menu is not built yet and arrives with the first table that needs column show and hide |
 | Yellow banner under the page heading for warnings | Keep the pattern. Its designPH messages go |
 | Enum values as coloured chips with a chevron | Keep. The values change where a packet says so |
 

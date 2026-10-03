@@ -58,7 +58,10 @@ test("records come back in the chosen order and direction, blanks last either wa
   control(h, "Order by").value = "size";
   assert.deepStrictEqual(names(h.controls.project(RECORDS, config())), ["Attic", "Basement", "Cellar"]);
 
-  control(h, "Direction").value = "desc";
+  assert.strictEqual(h.controls.directionToggle.getAttribute("aria-label"), "Sort descending");
+  h.controls.directionToggle.listeners.click({});
+  assert.strictEqual(h.controls.directionToggle.getAttribute("aria-label"), "Sort ascending",
+    "the button names the change it offers");
   assert.deepStrictEqual(names(h.controls.project(RECORDS, config())), ["Basement", "Attic", "Cellar"],
     "a record with no value stays at the end rather than leading a descending sort");
 });
@@ -159,4 +162,14 @@ test("the order choices are replaced only when they actually differ", function (
   h.controls.setFields([["name", "Name"], ["size", "Area"]]);
   assert.deepStrictEqual(order.children.map(function (node) { return node.textContent; }), ["Name", "Area"]);
   assert.strictEqual(order.value, "size", "the selected field survives a relabelling");
+});
+
+test("a list whose page header counts nothing shows its total while unfiltered", function () {
+  var quiet = harness(), counted = harness({ count: "always" });
+  quiet.controls.project(RECORDS, config());
+  counted.controls.project(RECORDS, config());
+  assert.deepStrictEqual([quiet.controls.count.textContent, counted.controls.count.textContent], ["", "3 total"]);
+  counted.controls.filter.value = "cell";
+  counted.controls.project(RECORDS, config());
+  assert.strictEqual(counted.controls.count.textContent, "1 of 3");
 });

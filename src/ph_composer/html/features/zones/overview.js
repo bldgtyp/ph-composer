@@ -216,7 +216,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     if (face.values[field] && offered.indexOf(face.values[field]) < 0) return false;
     chip = td._chip;
     if (!chip || td._chipValues !== offered.join(",")) {
-      chip = ui.element("select", "phc-cell-input");
+      chip = ui.element("select", "phc-cell-input phc-enum-cell");
       offered.forEach(function (choice) {
         var option = ui.element("option", "", chipLabel(field, choice));
         option.value = choice;

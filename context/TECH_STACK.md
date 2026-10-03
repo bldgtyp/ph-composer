@@ -566,7 +566,7 @@ this foundation when their feature lands.
   muted count, secondary actions, then the one filled primary action at the right, and no caption.
   `--page-gutter` in `base.css` is the one horizontal inset; a screen does not style its own heading
   or set its own page padding.
-- `ui.ViewControls` for filtering, ordering and grouping; filtering hides rows and never drops
+- `ui.ViewControls` for filtering, ordering (with a sort-direction toggle) and grouping; filtering hides rows and never drops
   records, so drafts and expansion survive.
 - `ui.Bubble` for non-modal editors anchored to a control: shared surface and pointer, viewport
   positioning, one active bubble, Escape and outside-click dismissal, focus return.

@@ -56,9 +56,11 @@ PhComposerUI.define("inventory_grid", ["record_edits", "workspace"], function (R
     this.fillRight = ui.iconButton("Fill selected cells right", "fill_right", function () { self.fill(true); });
     tools.appendChild(this.fillDown);
     tools.appendChild(this.fillRight);
-    this.toolbar.appendChild(tools);
-    this.toolbar.appendChild(ui.element("small", "phc-grid-hint",
+    this.tools = tools;
+    // Help first: the fill tools keep their place while idle, and an empty place reads best at the row's end.
+    this.toolbar.appendChild(ui.helpButton("Editing cells",
       "Select cells with Shift-click. Press Enter to edit; Escape to cancel."));
+    this.toolbar.appendChild(tools);
     if (options.toolbarParent) options.toolbarParent.appendChild(this.toolbar);
     else (options.scroll.parentNode || options.root).insertBefore(this.toolbar, options.scroll);
     this.copyListener = function (event) { self.copy(event); };
@@ -131,10 +133,13 @@ PhComposerUI.define("inventory_grid", ["record_edits", "workspace"], function (R
   };
   Grid.prototype.matrix = function () { return this.range().rows; };
   Grid.prototype.paint = function () {
-    var selected = Object.create(null);
+    var selected = Object.create(null), count = 0;
     this.matrix().forEach(function (row) {
-      row.forEach(function (cell) { if (cell) selected[cell.row.key + ":" + cell.field] = true; });
+      row.forEach(function (cell) { if (cell) { selected[cell.row.key + ":" + cell.field] = true; count += 1; } });
     });
+    // The fill tools need a range to act on. Until there is one they are out of sight but keep their place,
+    // so the row does not move when they appear.
+    this.tools.classList.toggle("is-idle", count < 2);
     this.cells.forEach(function (cell) {
       cell.input.parentNode.classList.toggle("inventory-selected", Boolean(selected[cell.row.key + ":" + cell.field]));
     });

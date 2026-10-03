@@ -109,9 +109,8 @@ PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "librar
       entry.view.render(state);
       if (entry.create) entry.create.disabled = !entry.view.canCreate();
     });
-    // The count is the shown tab's, so it carries that tab's name; the New button is that tab's too.
+    // Each tab counts its own records in its action bar; the header carries the shown tab's New button.
     var shown = active(view);
-    view.header.setCount(shown ? shown.view.records.length + " " + shown.spec.label : "");
     view.header.setPrimary(shown && shown.create || null);
   }
   panel.navigationGuard("library", function (next) { return next === "library" ? null : guard(current); },

@@ -373,15 +373,22 @@ test("Assembly numeric inventory cells follow the displayed SI and IP units", fu
   rows[0].display.total_thickness_mm = 165;
   rows[0].display.thermal.u_effective_w_m2k = 0.2;
   o.paint();
-  assert.ok(text(o.roots.assemblies).includes(units.format(165, fields.LENGTH_MM,
-    units.profile(fields.LENGTH_MM, { unit_system: "SI" }))));
+  function cells(field) {
+    return o.roots.assemblies.querySelectorAll("td").filter(function (td) {
+      return td.className.indexOf("col-" + field) >= 0;
+    }).map(function (td) { return td.textContent; });
+  }
+  // The header names the unit, so a cell is the number alone.
+  assert.ok(cells("total_thickness_mm").indexOf("165") >= 0);
+  assert.ok(cells("u_effective_w_m2k").indexOf(units.format(0.2, fields.U_VALUE,
+    units.profile(fields.U_VALUE, { unit_system: "SI" }), { showUnit: false })) >= 0);
   o.modules.unit_preferences.set("unit_system", "IP");
   o.paint();
   var displayed = text(o.roots.assemblies);
   assert.ok(displayed.includes(units.format(165, fields.LENGTH_MM,
-    units.profile(fields.LENGTH_MM, o.modules.unit_preferences.current()))));
-  assert.ok(displayed.includes(units.format(0.2, fields.U_VALUE,
-    units.profile(fields.U_VALUE, o.modules.unit_preferences.current()))));
+    units.profile(fields.LENGTH_MM, o.modules.unit_preferences.current()), { showUnit: false })));
+  assert.ok(cells("u_effective_w_m2k").indexOf(units.format(0.2, fields.U_VALUE,
+    units.profile(fields.U_VALUE, o.modules.unit_preferences.current()), { showUnit: false })) >= 0);
   assert.strictEqual(o.sent.length, 0);
 });
 
@@ -403,7 +410,8 @@ test("Library surfaces come from registrations in order, and the active one owns
     "true,false,false");
   view.tabs.select("outside");
   o.paint();
-  assert.strictEqual(view.header.root.querySelector(".phc-heading-count").textContent, "2 Outside");
+  assert.strictEqual(view.header.root.querySelector(".phc-heading-count").textContent, "",
+    "a tab counts its own records in its action bar, not in the page header");
   assert.strictEqual(view.surfaces[1].create.parentNode, view.header.root.querySelector(".phc-heading-actions"));
   view.surfaces[1].create.listeners.click({});
   assert.strictEqual(built[1], "created");
