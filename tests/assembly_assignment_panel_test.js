@@ -249,6 +249,8 @@ test("the selection's Assembly rests on what the Faces share, and reads Mixed wh
   assert.deepStrictEqual([picker.value, picker.children[0].textContent], ["asm_a", "Choose Assembly"]);
   picker.listeners.change({});
   assert.strictEqual(o.sent.length, 0, "choosing what is already assigned sends nothing");
+  picker.value = ""; picker.listeners.change({});
+  assert.deepStrictEqual([picker.value, o.sent.length], ["asm_a", 0], "the label is not a choice");
   var second = JSON.parse(JSON.stringify(targets[0]));
   second.reference.entity_path = [999];
   second.expected_values.assembly_id = null;

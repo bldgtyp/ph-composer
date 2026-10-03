@@ -39,7 +39,9 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     this.resting = "";
     this.select.addEventListener("change", function () {
       var chosen = self.select.value, reason;
-      if (self.disposed || !self.enabled || self.requests.busy() || !chosen || chosen === self.resting) return;
+      if (self.disposed || !self.enabled || self.requests.busy()) return;
+      // The first option is a label, not a choice: the control goes back to what the Faces hold.
+      if (!chosen || chosen === self.resting) { self.select.value = self.resting; return; }
       reason = self.guard && self.guard();
       if (reason) { self.select.value = self.resting; self.refused(reason); return; }
       self.submit(chosen);

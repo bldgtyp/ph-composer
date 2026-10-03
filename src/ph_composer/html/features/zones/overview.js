@@ -471,8 +471,13 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     return Boolean(screen && screen.targets && screen.targets.length && screen.chosenOver === undefined);
   }
 
+  /* Which Faces are selected, whatever order the host lists them in. A Face's record id is left out: it
+     appears when the Face is first classified, which is not a change of selection. */
   function selectionKey(targets) {
-    return JSON.stringify(targets.map(function (target) { return target.reference; }));
+    return targets.map(function (target) {
+      var reference = target.reference || {};
+      return JSON.stringify([reference.zone_id, reference.zone_path, reference.entity_path]);
+    }).sort().join("|");
   }
 
   /* What the selected Faces share, one attribute at a time: each choice applies at once to every Face
@@ -593,7 +598,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         else state.columnWidths[field] = width;
       },
       action: function (row, item) {
-        if (item.id === "locate") locate(state, row);
+        // Locate selects, so the selection takes the inspector back even when it was already these Faces.
+        if (item.id === "locate") { state.chosenOver = undefined; locate(state, row); }
         if (item.id === "suggest") suggest(state, row);
       }
     });
