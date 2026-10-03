@@ -20,7 +20,20 @@ module PhComposer
       "approval" => %w[access.user_required request.cancelled].freeze
     }.freeze
 
+    class << self
+      # A callable receiving `(declaration, code)` for every outcome of a registered operation that is
+      # not `completed`. Nil in production; the offline suite installs one that fails a test whose
+      # operation answers a code outside its `refuses` and common sets.
+      attr_accessor :audit
+    end
+
     module_function
+
+    # Hands `outcome` to the audit when it is a registered operation's refusal, and returns it.
+    def report(declaration, outcome)
+      audit&.call(declaration, outcome["code"]) if declaration && outcome && outcome["status"] != "completed"
+      outcome
+    end
 
     # The names of the COMMON sets one operation answers.
     def common_sets(declaration)

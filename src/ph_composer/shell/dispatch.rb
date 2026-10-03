@@ -18,7 +18,7 @@ module PhComposer
     end
 
     def query(context, name, params)
-      answer(context, "read", name, @registry.queries, params)
+      Refusals.report(@registry.queries[name], answer(context, "read", name, @registry.queries, params))
     end
 
     # File export has its own grant and never enters a Model mutation. Polling and cancellation
@@ -74,7 +74,7 @@ module PhComposer
     # It refuses while the session is busy, as a read does, so it cannot move the camera or the
     # selection out from under an operation that is still running.
     def view(context, name, params)
-      answer(context, "view", name, @registry.view_commands, params)
+      Refusals.report(@registry.view_commands[name], answer(context, "view", name, @registry.view_commands, params))
     end
 
     # A change to session or machine state (Declarations::SetupCommand). It runs as a view command
@@ -84,19 +84,21 @@ module PhComposer
     # location (NativeApproval). The public API never passes one, so a scripted caller of such a
     # declaration is refused before anything runs.
     def setup(context, name, params, approval: nil)
-      answer(context, "setup", name, @registry.setup_commands, params, :approval => approval)
+      Refusals.report(@registry.setup_commands[name],
+                      answer(context, "setup", name, @registry.setup_commands, params, :approval => approval))
     end
 
     # Registered local-file commands share validation and session targeting with reads. Their
     # separate grant permits file writes, never a Model transaction or an action retry sequence.
     def file_export(context, name, params, approval: nil)
-      answer(context, "export", name, @registry.file_exports, params, :approval => approval)
+      Refusals.report(@registry.file_exports[name],
+                      answer(context, "export", name, @registry.file_exports, params, :approval => approval))
     end
 
     # The refusal `setup` or `file_export` would give before its handler runs (session, grant, params,
     # busy), or nil when none applies. A native client asks before it opens a dialog, so the user never
     # chooses a location for a call that was going to be refused anyway. Dispatch repeats every check
-    # after the dialog.
+    # after the dialog. No handler runs, so only common refusals arise and none is reported for audit.
     def setup_refusal(context, name, params)
       admission_refusal(context, "setup", name, @registry.setup_commands, params)
     end
@@ -108,6 +110,35 @@ module PhComposer
     # What an operation would change, without changing anything. The result is bound to the revision
     # it reports; applying it later still revalidates everything.
     def preview(context, name, params)
+      Refusals.report(@registry.actions[name], proposal_preview(context, name, params))
+    end
+
+    # A request whose params are not plain JSON is refused before acceptance. It cannot be digested,
+    # so it consumes no sequence and retains no outcome; the caller resends it corrected under the
+    # same sequence.
+    def invoke(context, name, params, request)
+      Refusals.report(@registry.actions[name], mutation(context, name, params, request))
+    end
+
+    # The retained outcome of an earlier mutation request, without running it again.
+    def outcome(context, request)
+      session, caller, = resolve(context, "model_write", nil, nil)
+      sequence = request.is_a?(Hash) ? request["sequence"] : nil
+      raise CodedError.new("request.malformed", "The request needs an integer sequence.") unless sequence.is_a?(Integer)
+
+      entry = session.outcomes.lookup(caller.handle, sequence)
+      return pending(session) if entry&.pending?
+      return session.outcomes.retained(caller.handle, sequence) if entry
+
+      raise CodedError.new("request.outcome_unavailable", "No retained outcome for sequence #{sequence}; " \
+                                                          "inspect the Model before issuing new work.")
+    rescue CodedError => error
+      coded_outcome(error, session)
+    end
+
+    private
+
+    def proposal_preview(context, name, params)
       session, _caller, action = resolve(context, "read", name, @registry.actions)
       check_params!(action, params, session)
       refuse_if_busy!(session)
@@ -125,10 +156,7 @@ module PhComposer
       unexpected_outcome(error, session, name)
     end
 
-    # A request whose params are not plain JSON is refused before acceptance. It cannot be digested,
-    # so it consumes no sequence and retains no outcome; the caller resends it corrected under the
-    # same sequence.
-    def invoke(context, name, params, request)
+    def mutation(context, name, params, request)
       session, caller, action = resolve(context, "model_write", name, @registry.actions)
       sequence, expected_revision, proposal_digest = read_request!(request, session)
       check_json!(params, session)
@@ -154,24 +182,6 @@ module PhComposer
     rescue StandardError => error
       unexpected_outcome(error, session, name)
     end
-
-    # The retained outcome of an earlier mutation request, without running it again.
-    def outcome(context, request)
-      session, caller, = resolve(context, "model_write", nil, nil)
-      sequence = request.is_a?(Hash) ? request["sequence"] : nil
-      raise CodedError.new("request.malformed", "The request needs an integer sequence.") unless sequence.is_a?(Integer)
-
-      entry = session.outcomes.lookup(caller.handle, sequence)
-      return pending(session) if entry&.pending?
-      return session.outcomes.retained(caller.handle, sequence) if entry
-
-      raise CodedError.new("request.outcome_unavailable", "No retained outcome for sequence #{sequence}; " \
-                                                          "inspect the Model before issuing new work.")
-    rescue CodedError => error
-      coded_outcome(error, session)
-    end
-
-    private
 
     # ---------------------------------------------------------------- acceptance
 
