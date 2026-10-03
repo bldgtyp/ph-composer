@@ -32,6 +32,6 @@ with expected nonblocking disclosures. No fault overrides or shipping hotloads r
 
 Phase 2 is archived as accepted work. [PR #15](https://github.com/bldgtyp/ph-composer/pull/15) merged it to main on
 2026-10-01 as merge commit `c687a73`, after an independent whole-diff review whose findings are in the
-[refactor packet](../../features/phase-02-envelope/refactor/README.md). The merge is not a release. SketchUp 2023, Windows, public distribution,
+[refactor packet](../phase-02-envelope-review/README.md). The merge is not a release. SketchUp 2023, Windows, public distribution,
 certification and METr/PHX consumer gates remain separate. Phase 3 retains Spaces and thermal
 bridges, including the accepted D2-6 derived-geometry Colour-by extension.

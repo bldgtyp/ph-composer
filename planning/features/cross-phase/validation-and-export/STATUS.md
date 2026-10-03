@@ -37,7 +37,7 @@ is authorized.
 
 ### Owed from the Phase 2 review
 
-Added 2026-10-02 from [R05](../../phase-02-envelope/refactor/R05-export-layering.md)'s follow-ups.
+Added 2026-10-02 from [R05](../../../archive/phase-02-envelope-review/R05-export-layering.md)'s follow-ups.
 None is authorized yet.
 
 1. **Defect: a Room with no Faces.** A Zone whose Faces are all omitted builds a Room with no Faces,

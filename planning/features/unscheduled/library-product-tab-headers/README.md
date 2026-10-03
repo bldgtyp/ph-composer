@@ -7,7 +7,7 @@ ISSUE: none (local planning draft)
 
 ## Why this packet exists
 
-R10 ([R10](../../phase-02-envelope/refactor/R10-ui-kit-organization.md)) made every Library
+R10 ([R10](../../../archive/phase-02-envelope-review/R10-ui-kit-organization.md)) made every Library
 inventory a registered surface. A surface can name a `createLabel`, and the Library pane then shows
 that surface's "+ New" button in its own heading, beside "Export library". Materials and Attached
 zones do this. The three Windows products (Frames, Glazings, Psi-Install Types) still open their tab

@@ -12,7 +12,7 @@ Three library operations need a file location that the user approves: exporting 
 (`ph_composer.library.export_file`), adding a library file (`providers.add_file`) and adding a library
 folder (`providers.add_folder`). Phase 2 shipped them with the native dialogs inside the operation,
 so a scripted or agent caller blocks SketchUp on a dialog nobody answers. See
-[R03 item A](../../phase-02-envelope/refactor/R03-agent-access.md).
+[R03 item A](../../../archive/phase-02-envelope-review/R03-agent-access.md).
 
 Ed decided on 2026-10-01 to do this in two parts:
 

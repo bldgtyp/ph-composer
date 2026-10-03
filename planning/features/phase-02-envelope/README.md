@@ -7,5 +7,5 @@ records acceptance, verification, deferred scope and delivery boundaries. No rel
 The `evidence` symlink preserves original paths cited by the append-only native acceptance ledger.
 It points to the archived synthetic summaries; private host artifacts remain outside Git.
 
-The [refactor packet](refactor/README.md) records the independent review of PR #15: eleven findings
-worked one branch per finding in number order. R01 is merged (PR #16); R02 is merged (PR #17); R03 is next.
+The [review packet](../../archive/phase-02-envelope-review/README.md) records the independent review
+of PR #15: eleven findings, each worked on its own branch and merged by 2026-10-02, then archived.

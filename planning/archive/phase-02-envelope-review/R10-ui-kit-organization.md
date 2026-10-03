@@ -165,5 +165,5 @@ Follow-ups, each recorded where it will be done:
 - R03's carried host checks (setup dialogs, export over an existing file, paging, grid gestures):
   R11's carried host gate.
 - The Windows product tabs keep an `h2` title and "+ New" inside the tab body:
-  [library-product-tab-headers](../../unscheduled/library-product-tab-headers/README.md), a UI
+  [library-product-tab-headers](../../features/unscheduled/library-product-tab-headers/README.md), a UI
   change for the polish skill.
