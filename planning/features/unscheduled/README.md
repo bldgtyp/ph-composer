@@ -17,5 +17,5 @@ requests. A packet moves into a phase directory when it is scheduled.
 | [zones-entry-points](zones-entry-points/README.md) | feature | Requested |
 | [agent-authorized-file-access](agent-authorized-file-access/README.md) | feature | Scoped 2026-10-02 ([plan](agent-authorized-file-access/PLAN.md)), decisions made; deferred from the Phase 2 review on 2026-10-01. Lets agents export and configure libraries through user-approved handles |
 | [library-product-tab-headers](library-product-tab-headers/README.md) | feature | Scoped 2026-10-02 ([plan](library-product-tab-headers/PLAN.md)), decisions made; a UI follow-up from R10. The Windows product tabs move "+ New" into the Library heading |
-| [host-gate-ui-findings](host-gate-ui-findings/README.md) | feature | Implemented on branch 2026-10-02 ([plan](host-gate-ui-findings/PLAN.md)); in review, host look owed. Five small UI findings from the R11 host gate |
+| [host-gate-ui-findings](host-gate-ui-findings/README.md) | feature | Implemented on branch 2026-10-02 ([plan](host-gate-ui-findings/PLAN.md)); host check passed; in review, PR #40. Five small UI findings from the R11 host gate |
 | [operation-refusal-codes](operation-refusal-codes/README.md) | feature | Scoped 2026-10-02 ([plan](operation-refusal-codes/PLAN.md)), decisions made; moved out of R09. `refuses:` on operations, published by `API.describe` |

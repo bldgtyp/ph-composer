@@ -970,6 +970,27 @@
         "tests/file_export_test.rb"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "HGUI",
+      "label": "Host-gate UI findings: disabled dialog actions, export form wording, replace consent, menu add notice, uses bubble",
+      "mode": "mixed",
+      "authority": "planning/features/unscheduled/host-gate-ui-findings/PLAN.md",
+      "paths": [
+        "src/ph_composer/html/overlay.css",
+        "src/ph_composer/html/library/*",
+        "src/ph_composer/html/features/windows/*",
+        "src/ph_composer/library/*",
+        "src/ph_composer/shell/native_approval.rb",
+        "src/ph_composer/export/workflow.rb",
+        "src/ph_composer/export/artifact_pair.rb",
+        "tests/library*",
+        "tests/window_inventory_test.js",
+        "tests/file_export_test.rb",
+        "tests/panel_test.rb",
+        "tests/artifact_pair_test.rb"
+      ],
+      "native_control_required": true
     }
   ]
 }

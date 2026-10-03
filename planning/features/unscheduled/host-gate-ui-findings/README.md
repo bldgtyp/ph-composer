@@ -2,7 +2,7 @@
 
 DATE: 2026-10-02
 STATUS: Implemented on branch `feat/host-gate-ui-findings` 2026-10-02 ([PLAN.md](PLAN.md), "Implementation
-record"); in review. Host look owed. Five small UI findings from the R11 carried host gate; none failed a check.
+record"); host check passed 2026-10-02; in review, PR #40. Five small UI findings from the R11 carried host gate; none failed a check.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/37
 
