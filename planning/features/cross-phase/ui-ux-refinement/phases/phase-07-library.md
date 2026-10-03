@@ -1,7 +1,7 @@
 # Packet 7: Library
 
 DATE: 2026-10-03
-STATUS: Implemented; pull request open
+STATUS: Merged to main
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -79,7 +79,8 @@ Empty states and one vocabulary for "not finished" (packet 8).
 
 ## Outcome, 2026-10-03
 
-Implemented on `feat/ui-library`. `make ci` and `make ui-checks` pass.
+Implemented on `feat/ui-library`, merged as pull request
+[#65](https://github.com/bldgtyp/ph-composer/pull/65). `make ci` and `make ui-checks` pass.
 
 What differs from the plan above:
 
