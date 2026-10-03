@@ -184,6 +184,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     function choice(id, name, value, row) {
       var root = el("div", "window-install-choice"), button = ui.button("", function () { self.selected = id;
         self.paint(); });
+      button.className = "phc-setting-choice"; // The current choice keeps its tint under hover and focus.
       button.appendChild(el("span", "window-install-choice-name", name));
       button.appendChild(el("span", "window-install-choice-value", value == null ? "Missing" :
         shared.bare(value, fields.LINEAR_PSI)));

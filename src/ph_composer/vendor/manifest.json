@@ -101,9 +101,9 @@
       "sha256": "0467424418574a9d0caa592c7dc0ccaedf06fab119ff06924e56aa2001ea589d"
     },
     "html/features/windows/install_editor.js": {
-      "bytes": 22214,
+      "bytes": 22321,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "f377f07c6fd6e7a05019a9a8ca8c1c6f7da746955d2d30943140f3a79b72287f"
+      "sha256": "fa11b4f76802ab44abe3b5eba665614ef69891650e0e5f7f854683c457916ac5"
     },
     "html/features/windows/inventory.js": {
       "bytes": 15759,
@@ -141,9 +141,9 @@
       "sha256": "3e9bdd455d18a4a6dc9c6a70deca17e778c57ad90332e6fe07ca5a631603f2f9"
     },
     "html/features/windows/windows.css": {
-      "bytes": 25930,
+      "bytes": 25743,
       "mime": "text/css; charset=utf-8",
-      "sha256": "ee7e8ccdbabddbe4acc70c24e61a82b3e6e0200ff255c887d7f0773bdd5e039d"
+      "sha256": "57db3c43a4277b6c59b6d9522d4d2327f8b44accceb38ff8e2baac84b5cc25ed"
     },
     "html/features/zones/assembly_assignment.js": {
       "bytes": 10989,

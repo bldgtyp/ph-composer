@@ -202,7 +202,6 @@
 .window-install-choice-value { flex:none; color:var(--muted); font-variant-numeric:tabular-nums; }
 .window-install-choice [aria-pressed=true] .window-install-choice-value { color:inherit; }
 .phc-workspace .window-install-panel>button { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.phc-workspace .window-install-choice [aria-pressed=true] { border-color:var(--interaction-highlight); background:var(--interaction-highlight-tint); color:var(--interaction-highlight); }
 .window-install-form { display:grid; gap:8px; margin-top:10px; }
 .window-install-copy { display:grid; gap:6px; }
 /* The defaults stay inside a narrow panel: a long Psi-Install name shrinks to an ellipsis, its full name in

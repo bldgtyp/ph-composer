@@ -160,3 +160,32 @@ after accepting a Psi-Install form. Not taken: tests for every left and right la
 Seen and left alone: a main tab click on a clean Installs session is still refused with a notice
 where a subtab click now leaves; the Psi-Install library sidebar still wraps under the drawing at
 900 (W3, packet 5).
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+this branch, Model `ui-installs-run.skp` copied fresh from the synthetic
+`ux-followups-integrated.skp`. A Window Type was made with the panel's own Add button and given a
+second column, so it has a shared edge. Panel steps were driven through development `eval` on the
+panel's dialog, not by native clicks; captures are native window pixels taken by window id; Model
+readbacks are the stored record dictionaries.
+
+| Check | Result |
+| --- | --- |
+| Editor opens with the kit header, Save and Cancel in it, Anchor row hidden | Pass |
+| Two elements: "?" outside each perimeter edge with no default set, one "0" on the shared edge, warning dashes | Pass |
+| A refused Builder action now shows a warning in the panel's notice | Pass ("Split needs a merged element spanning more than one cell.") |
+| Subtab click with the Psi-Install form open | Pass: refused, "Accept or cancel the Psi-Install Type edit first." |
+| Accept a new Psi-Install Type, paint one edge: solid stroke, value 0.03 outside the outline, chosen type tinted | Pass |
+| Subtab click with a staged change | Pass: "Discard Installs changes?" opens; Keep editing returns to the session |
+| Save Installs | Pass: one Psi-Install Type record created and the edge assigned |
+| One SketchUp Undo | Pass: the assignment and the new Psi-Install Type both go |
+| Reopen after Undo | Pass: the editor shows the undone state |
+
+In the host the chosen palette row first drew as a filled teal button under focus. It now uses the
+kit's `phc-setting-choice`, and the check was rerun on that build from a fresh process.
+
+Not covered: native pointer and keyboard gestures (Escape was exercised offline and in the browser
+checks only), Redo (the scripted call did not take; not a product claim either way), the library
+sidebar's review inside the session, SketchUp 2023, Windows. Evidence is in the gitignored
+`_private/host/ui-installs-evidence/`.
