@@ -172,10 +172,14 @@ test("New Assembly creates at once under a free name and opens the new record in
     "a name and nothing else: the Model supplies the rest and the Builder edits it");
   view.create.listeners.click({});
   assert.strictEqual(o.sent.length, 1, "a second click waits for the first");
-  var fresh = JSON.parse(JSON.stringify(section.value.records[0]));
-  fresh.id = "asm_new"; fresh.values.name = "Assembly 2";
+  // The outcome names the new record; an unrelated record arriving first is not mistaken for it.
+  var other_ = JSON.parse(JSON.stringify(section.value.records[0])), fresh = JSON.parse(JSON.stringify(other_));
+  other_.id = "asm_elsewhere"; fresh.id = "asm_new"; fresh.values.name = "Assembly 2";
+  section.value.records.push(other_);
+  result(o, 0, "completed", { id: "asm_new" });
+  assert.ok(!view.editor, "nothing opens until the new record is in the snapshot");
   section.value.records.push(fresh);
-  result(o, 0, "completed");
+  o.paint();
   assert.ok(view.editor, "the Builder opens");
   assert.strictEqual(view.editor.assemblyId, "asm_new");
   // A refused create opens nothing and leaves the button ready.

@@ -23,29 +23,28 @@ PhComposerUI.define("features/assemblies/form", ["request", "snapshot"], functio
     while (taken.indexOf("assembly " + n) >= 0) n += 1;
     return "Assembly " + n;
   };
-  /* Sends the create and remembers which records existed, so the owner can tell which one is new whichever of
-     the outcome and the snapshot arrives first. */
   Form.prototype.create = function (records) {
     if (!this.allowed || this.disposed || this.busy()) return false;
+    this.createdId = null;
     if (!this.requests.run(SECTION + ".create", { values: { name: this.freeName(records) } })) return false;
-    this.known = records.map(function (record) { return record.id; });
     this.changed();
     return true;
   };
-  /* The record this form created, once: null until it is in `records`, and null if the create was refused
-     (the panel's notice has already said why). */
+  /* The record this form created, once: null until the create has completed and its record is in `records`,
+     whichever of the outcome and the snapshot arrives first. A refused create never has one; the panel's
+     notice has already said why. */
   Form.prototype.created = function (records) {
-    if (!this.known || this.busy()) return null;
-    if (this.failed) { this.known = null; this.failed = false; return null; }
-    var known = this.known, fresh = records.filter(function (record) { return known.indexOf(record.id) < 0; })[0];
-    if (fresh) this.known = null;
+    var id = this.createdId;
+    if (!id) return null;
+    var fresh = records.filter(function (record) { return record.id === id; })[0];
+    if (fresh) this.createdId = null;
     return fresh || null;
   };
   Form.prototype.refresh = function (state, busy) {
     this.allowed = Boolean(snapshot.value(state, SECTION) && !busy);
-    if (!snapshot.value(state, SECTION)) { this.requests.reset(); this.known = null; return; }
+    if (!snapshot.value(state, SECTION)) { this.requests.reset(); this.createdId = null; return; }
     var outcome = this.requests.consume(state);
-    if (outcome && outcome.status !== "completed") this.failed = true;
+    if (outcome && outcome.status === "completed") this.createdId = (outcome.value || {}).id || null;
   };
   Form.prototype.dispose = function () { this.disposed = true; this.requests.reset(); };
   Form.types = types;

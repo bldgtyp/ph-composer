@@ -11,6 +11,7 @@ function (RecordForm, snapshot, unitFields, fields, ui) {
       allowZero: false }),
     emissivity: fields.with(fields.FRACTION, { label: "Emissivity", max: 1, allowBlank: true })
   };
+  var NAME_HINT = "Enter a name.";
   function choices(select, catalog, value) {
     select.replaceChildren(ui.option("", "None"));
     catalog.forEach(function (entry) { select.appendChild(ui.option(entry.id, entry.label)); });
@@ -38,7 +39,10 @@ function (RecordForm, snapshot, unitFields, fields, ui) {
       } else label.appendChild(input);
       self.fields[entry[0]] = input;
       if (entry[0] === "name") RecordForm.required(label, input);
-      input.addEventListener("input", function () { self.updateButton(); });
+      input.addEventListener("input", function () {
+        if (!self.busy()) self.error.textContent = "";
+        self.updateButton();
+      });
       input.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
           event.preventDefault();
@@ -67,16 +71,17 @@ function (RecordForm, snapshot, unitFields, fields, ui) {
     return message;
   };
   Form.prototype.updateButton = function () {
-    var waiting = !this.fields.name.value.trim() ? "Enter a name." : this.invalid();
-    this.submitButton.disabled = !this.allowed || this.disposed || this.busy() || Boolean(waiting);
-    // A disabled Create says what it is waiting for; a pending or refused request keeps its own line.
-    if (!this.busy() && (waiting || this.waiting)) this.error.textContent = waiting || "";
-    this.error.classList.toggle("phc-form-hint", Boolean(waiting) && this.error.textContent === waiting);
-    this.waiting = waiting;
+    var unnamed = !this.fields.name.value.trim();
+    this.submitButton.disabled = !this.allowed || this.disposed || this.busy() || unnamed || Boolean(this.invalid());
+    // A disabled Create says what it is waiting for, as guidance. A pending or refused request, and an entry
+    // that does not parse, keep the status line for themselves.
+    if (unnamed && !this.busy() && !this.error.textContent) this.error.textContent = NAME_HINT;
+    else if (!unnamed && this.error.textContent === NAME_HINT) this.error.textContent = "";
+    this.error.classList.toggle("phc-form-hint", this.error.textContent === NAME_HINT);
   };
   Form.prototype.submit = function () {
     this.updateButton();
-    if (this.submitButton.disabled) { this.error.textContent = this.invalid() || "Enter a Material name."; return; }
+    if (this.submitButton.disabled) { this.error.textContent = this.invalid() || NAME_HINT; return; }
     var values = {}, invalid;
     Object.keys(this.fields).forEach(function (key) {
       if (this.unitFields[key]) {

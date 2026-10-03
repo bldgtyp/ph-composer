@@ -37,7 +37,9 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
         mode: "model_default", expected_settings: shared.clone(self.settings) } } :
         { hint: "Choose a target in Window Types." };
     });
-    this.sidebar = new Sidebar({ session: session, send: send, adapter: adapter, changed: changed, besideTable: true,
+    // The Psi-Install list also sets the Model default, so it stays; the others would only repeat their table.
+    this.sidebar = new Sidebar({ session: session, send: send, adapter: adapter, changed: changed,
+      besideTable: kind !== "psi_install_types",
       busy: function () { return Boolean(self.guard()); }, onUse: kind === "psi_install_types" ?
         function (row, target) {
           return self.requests.run(shared.PREFIX + "settings.update", { values: {

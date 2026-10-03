@@ -344,5 +344,6 @@ function (RecordForm, request, snapshot, ui) {
     td._color.disabled = !form.enabled || form.requests.busy();
   }
   return { ReplacementForm: ReplacementForm, ColorForm: ColorForm, colorCell: colorCell, labelled: labelled,
+    required: RecordForm.required,
     refreshForm: refreshForm };
 });

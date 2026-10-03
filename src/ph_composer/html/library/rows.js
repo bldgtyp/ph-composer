@@ -12,8 +12,10 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
     var repeats = this.besideTable && !(this.store && this.store.selected);
     this.search.hidden = this.count.hidden = repeats;
     if (repeats) {
-      this.list.appendChild(el("p", "muted",
-        "These records are in the table. Choose a library above to copy records from it."));
+      // The source select offers a library only once one is set up.
+      this.list.appendChild(el("p", "muted", "These records are in the table. " +
+        (this.source.children.length > 1 ? "Choose a library above to copy records from it." :
+          "Add a library with Library setup to copy records from it.")));
       return;
     }
     this.records.filter(function (row) { return adapter.searchText(row).toLowerCase().includes(query); })

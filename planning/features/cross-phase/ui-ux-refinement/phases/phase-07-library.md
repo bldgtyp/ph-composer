@@ -1,7 +1,7 @@
 # Packet 7: Library
 
 DATE: 2026-10-03
-STATUS: Plan; built under Ed's standing go of 2026-10-03
+STATUS: Implemented; pull request open
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -76,3 +76,26 @@ split. Then the manifests.
 ## Not in this packet
 
 Empty states and one vocabulary for "not finished" (packet 8).
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-library`. `make ci` and `make ui-checks` pass.
+
+What differs from the plan above:
+
+- The required mark is `RecordForm.required(label, control)` in `record_form.js`, re-exported by
+  `inventory_forms.js`, since the record forms depend on the first and not the second.
+- The Psi-Install Types tab keeps its local list. There the list also sets the Model default, so
+  it is not a repeat of the table.
+- With no library set up, the line beside a table says to add one with Library setup; "Choose a
+  library above" would point at a select with one entry.
+- A provider that is not a file or folder reads "Added by another tool". "Extension" in the
+  glossary means PH-Composer itself.
+- New Assembly opens the record the create's outcome names, not the first record that was not there
+  before, so a record added by something else in the same moment is never opened by mistake.
+
+One Sonnet diff review ran against the architecture and ui-polish rubrics. Applied: the wrong
+record opening when another record arrives during the create, the dead end with no library set up,
+a refusal left on screen while the user edits the Material form, an unparsable entry shown in the
+hint tone, two owners for the required mark, the unreachable Psi default route, the ambiguous
+"extension". Not taken: returning focus to New Assembly after a refused create.
