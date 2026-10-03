@@ -195,3 +195,27 @@ Left for later, on purpose:
 - The inspector's 52 px top offset assumes a one-line page header.
 - Under 900 wide the palette opens beneath a tall tree, out of view; the toggle's pressed state is
   the only cue until the user scrolls.
+
+## P3-1 host check, 2026-10-03
+
+SketchUp 26.1.188, fresh process, build installed from the branch, Model `ui-inspector-run.skp`
+copied fresh from the synthetic `uxk1-rerun.skp` (two Zones, twelve classified Faces). Panel
+controls were pressed through development `eval` on the panel's dialog, not by native input;
+captures are native window pixels by window id; tool state was read back from SketchUp. The Model
+stayed unmodified.
+
+| Check | Result |
+| --- | --- |
+| At rest | Pass: no inspector, the tree shows all fourteen rows, the Classify toggle and Colour-by select end the control row |
+| Classify toggle | Pass: the palette opens in the inspector beside the tree; the tree keeps its place |
+| Choose "Wall" in the palette | Pass: SketchUp's active tool becomes the Classify tool, the toggle is pressed, "Stop classifying" shows |
+| Press the toggle while painting | Pass: SketchUp returns to the Select tool, the palette closes, the tree takes the full width |
+| Colour by Zone | Pass: the real legend shows in the inspector with two rows |
+| Classify over a legend | Pass: the palette takes the inspector; closing it brings the legend back |
+
+Not covered: native pointer input on the toggle, a Model switch in the host (covered by a unit
+test), a panel under 900 wide in the host (covered by the browser check).
+
+Seen and not this stage's: while it paints, the Classify tool turns on the last colour mode the
+user chose, falling back to Face type (`classify_tool.rb`, `force_colour_by`). On this machine that
+was Window Type, which says nothing about what is being classified. Filed for P3-3.
