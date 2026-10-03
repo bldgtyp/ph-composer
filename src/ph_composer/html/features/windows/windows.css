@@ -190,7 +190,12 @@
 .window-install-choice [aria-pressed=true] { background:var(--interaction-highlight-tint); }
 .window-install-form { display:grid; gap:8px; margin-top:10px; }
 .window-install-copy { display:grid; gap:6px; }
-.window-default-control { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+/* The defaults stay inside a narrow panel: a long Psi-Install name shrinks to an ellipsis, its full name in
+   the tooltip and accessible label. */
+.phc-inventory-settings>.phc-bubble-anchor { min-width:0; max-width:100%; }
+.window-default-control { display:inline-flex; align-items:center; gap:4px; max-width:100%; min-width:0; white-space:nowrap; }
+.window-default-control>span:first-child,.window-default-control>.phc-glyph { flex:none; }
+.window-default-value { min-width:0; max-width:11em; overflow:hidden; text-overflow:ellipsis; }
 .window-default-control .muted { color:var(--muted); }
 .window-use-row { display:flex; align-items:center; gap:8px; margin:4px 0; }
 .window-use-label { display:flex; flex:1 1 auto; flex-direction:column; min-width:0; }

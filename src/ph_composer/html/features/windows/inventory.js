@@ -52,7 +52,9 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
       columns: spec.columns, editable: spec.columns.map(function (column) { return column[0];
         }).filter(function (field) {
         return field !== "color";
-      }), quantities: quantities, groups: kind === "psi_install_types" ? [] : [["manufacturer", "Manufacturer"]],
+      }), quantities: quantities,
+      // Psi-Install Types have no grouping, so the kit leaves out its Group by control.
+      groups: kind === "psi_install_types" ? undefined : [["manufacturer", "Manufacturer"]],
       value: function (record, field) { return record.values[field]; },
       group: function (record) { return { label: record.values.manufacturer || "Manual" }; },
       settings: this.defaults,
@@ -116,8 +118,9 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
   }
   Inventory.prototype.buildDefaults = function () {
     var self = this;
-    this.defaultPsi = new ui.Bubble(settingControl("Default Psi-Install"), "Default Psi-Install");
-    this.depthBubble = new ui.Bubble(settingControl("Install depth"), "Default install depth", {
+    // Short visible labels keep the action bar on one line; the accessible names say "Default".
+    this.defaultPsi = new ui.Bubble(settingControl("Psi-Install"), "Default Psi-Install");
+    this.depthBubble = new ui.Bubble(settingControl("Depth"), "Default install depth", {
       guard: function () { return self.depthBlocked(); } });
     this.depth = new unitFields.UnitField({ field: DEPTH,
       onCancel: function () { self.settingsExpected = null; self.closeDepth(true); } });
@@ -167,7 +170,7 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     var chosen = this.records.filter(function (row) { return row.id === current; })[0];
     var name = chosen ? chosen.values.name : "None", trigger = this.defaultPsi.trigger;
     trigger.valueText.textContent = name; trigger.valueText.classList.toggle("muted", !chosen);
-    trigger.setAttribute("aria-label", "Default Psi-Install: " + name);
+    trigger.setAttribute("aria-label", "Default Psi-Install: " + name); trigger.title = name;
     var choices = [[null, "None"]].concat(this.records.map(function (row) { return [row.id, row.values.name]; }));
     var key = JSON.stringify([current, choices]);
     if (key !== this.choicesKey) {
@@ -180,7 +183,7 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     }
     var depth = this.settings.default_install_depth_m, text = units.format(depth, DEPTH, units.profile(DEPTH));
     trigger = this.depthBubble.trigger; trigger.valueText.textContent = text;
-    trigger.setAttribute("aria-label", "Install depth: " + text);
+    trigger.setAttribute("aria-label", "Default install depth: " + text);
     this.depth.setValue(depth); this.depth.setDisabled(busy);
   };
   Inventory.prototype.captureSettings = function () {

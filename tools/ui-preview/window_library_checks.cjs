@@ -66,10 +66,22 @@ const { chromium } = require("playwright");
     await page.getByRole("tab", { name: "Psi-Install Types", exact: true }).click();
     const settings = library.locator(".phc-inventory-settings:visible");
     const psiDefault = settings.getByRole("button", { name: /^Default Psi-Install: / });
-    const depthDefault = settings.getByRole("button", { name: /^Install depth: / });
+    const depthDefault = settings.getByRole("button", { name: /^Default install depth: / });
+    // A long selected name shrinks to an ellipsis inside the panel; at 1280 px, with the Psi-Install
+    // Library sidebar open, the defaults stay on the view controls' row.
+    await page.evaluate(name => {
+      previewHost.windows.psi_install_types.records[0].values.name = name; previewHost.snapshot();
+    }, "Synthetic thermally broken masonry sill installation detail");
+    await psiDefault.and(page.getByTitle(/masonry sill/)).waitFor();
+    for (const control of [psiDefault, depthDefault]) {
+      const box = await control.boundingBox(), chevron = await control.locator(".phc-glyph").boundingBox();
+      assert.ok(box.x >= 0 && box.x + box.width <= width && chevron.x + chevron.width <= box.x + box.width,
+        "a default control and its chevron stay inside the panel at " + width + " px");
+    }
     if (width === 1280) {
-      const tops = [await psiDefault.boundingBox(), await depthDefault.boundingBox()].map(box => Math.round(box.y));
-      assert.strictEqual(tops[0], tops[1], "the two defaults share one row");
+      const filter = library.getByRole("searchbox", { name: "Filter Psi-Install Type", exact: true });
+      const tops = [psiDefault, depthDefault, filter].map(async control => Math.round((await control.boundingBox()).y));
+      assert.strictEqual(new Set(await Promise.all(tops)).size, 1, "the defaults share the view controls' row");
     }
     await psiDefault.click();
     const current = page.getByRole("dialog", { name: "Default Psi-Install", exact: true })
