@@ -27,9 +27,11 @@ module PhComposer
           record = read_record(request, record_kind, id)
           row = reverse(declaration.adapter, record)
           rows.fetch(declaration.adapter.wire_kind) << row
-          fields = record.keys - declaration.adapter.wire_schema.fetch("properties").keys - ["schema_version"]
-          omissions << omission(record_kind, id, fields.sort, "fields_not_in_wire_schema") unless fields.empty?
           origin = origin(record["source"], declaration.adapter.wire_kind)
+          # A recorded origin carries the source attribution, so `source` is omitted only without one.
+          fields = record.keys - declaration.adapter.wire_schema.fetch("properties").keys - ["schema_version"]
+          fields -= ["source"] if origin
+          omissions << omission(record_kind, id, fields.sort, "fields_not_in_wire_schema") unless fields.empty?
           if origin
             (origins[declaration.adapter.wire_kind] ||= {})[id] = origin
           elsif record["source"].is_a?(Hash) && record["source"]["kind"] == "library"
@@ -143,9 +145,17 @@ module PhComposer
         result
       end
 
-      def summary(projection)
-        { "kinds" => projection.fetch("kinds").map { |kind, rows| { "kind" => kind, "count" => rows.length } },
-          "omissions" => DeepCopy.call(projection.fetch("omissions")) }
+      # Counts and omissions, each labelled with its registered record kind's label for display.
+      def summary(projection, registry)
+        wire = registry.library_kinds.values.to_h { |row| [row.adapter.wire_kind, row.record_kind] }
+        label = ->(record_kind) { registry.record_kinds.fetch(record_kind).label }
+        kinds = projection.fetch("kinds").map do |kind, rows|
+          { "kind" => kind, "record_kind_label" => label.call(wire.fetch(kind)), "count" => rows.length }
+        end
+        omissions = projection.fetch("omissions").map do |row|
+          DeepCopy.call(row).merge("record_kind_label" => label.call(row.fetch("record_kind")))
+        end
+        { "kinds" => kinds, "omissions" => omissions }
       end
       private_class_method :scope, :targets, :read_record, :reverse, :mapped_values, :origin, :safe_identity?, :omission
     end

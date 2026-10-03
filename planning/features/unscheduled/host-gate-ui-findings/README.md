@@ -1,8 +1,8 @@
 # UI findings from the R11 host gate
 
 DATE: 2026-10-02
-STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md); Ed decided item 3 the same day. Five small UI findings
-from the R11 carried host gate; none failed a check.
+STATUS: Implemented on branch `feat/host-gate-ui-findings` 2026-10-02 ([PLAN.md](PLAN.md), "Implementation
+record"); host check passed 2026-10-02; in review, PR #40. Five small UI findings from the R11 carried host gate; none failed a check.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/37
 

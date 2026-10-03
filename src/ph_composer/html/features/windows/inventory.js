@@ -78,14 +78,37 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     }
     td._uses.root.hidden = false; td._uses.trigger.textContent = String(record.element_use_count || record.use_count);
     td._uses.trigger.setAttribute("aria-label", record.values.name + " uses"); td._uses.content.replaceChildren();
-    td._uses.content.appendChild(ui.element("p", "muted", (record.element_use_count || 0) + " element uses"));
-    (record.uses || []).forEach(function (use) {
-      var root = ui.element("div", "window-use-row"); root.appendChild(ui.element("span", "", use.name));
-      if (use.type_id) root.appendChild(ui.button("Open type", function () {
-        if (self.guard()) return; td._uses.close(false); panel.navigate("windows", { use: use });
+    var rows = useRows(record.uses || []), elements = rows.filter(function (row) { return row.sides.length; }).length;
+    td._uses.content.appendChild(ui.element("p", "muted", !elements ? "Used as the Model default" :
+      "Used by " + elements + (elements === 1 ? " element" : " elements") +
+      (rows.length > elements ? " and the Model default" : "")));
+    rows.forEach(function (row) {
+      var root = ui.element("div", "window-use-row"), label = ui.element("span", "window-use-label");
+      label.appendChild(ui.element("span", "", row.name));
+      if (row.sides.length) {
+        label.appendChild(ui.element("span", "window-use-sides", ui.titleCase(row.sides.join(", "))));
+      }
+      root.appendChild(label);
+      if (row.use.type_id) root.appendChild(ui.button("Open type", function () {
+        if (self.guard()) return; td._uses.close(false); panel.navigate("windows", { use: row.use });
       })); td._uses.content.appendChild(root);
     });
   };
+  /* One row per element with its sides beneath, in first-use order. The snapshot keeps one use per side, named
+     "Type / Element / side" with "(default)" after an inherited side; Open type navigates with the element's
+     first use. The Model default stays its own row. */
+  function useRows(uses) {
+    var rows = [], byElement = {};
+    uses.forEach(function (use) {
+      if (!use.element_id) { rows.push({ name: use.name, use: use, sides: [] }); return; }
+      var key = use.type_id + " " + use.element_id, split = use.name.lastIndexOf(" / " + use.side);
+      if (!byElement[key]) {
+        rows.push(byElement[key] = { name: split < 0 ? use.name : use.name.slice(0, split), use: use, sides: [] });
+      }
+      byElement[key].sides.push(split < 0 ? use.side : use.name.slice(split + 3));
+    });
+    return rows;
+  }
   Inventory.prototype.buildDefaults = function () {
     var self = this; this.defaults = ui.element("section", "window-defaults");
     this.defaults.appendChild(ui.element("h3", "", "Model installation defaults"));

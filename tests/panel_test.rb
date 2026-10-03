@@ -372,9 +372,11 @@ class PanelTest < PhComposerTestCase
     assert_equal "Export cancelled. Nothing was written.", outcome.fetch("message")
   end
 
-  # Declining replacement preserves the pair and starts no runtime or task timers.
+  # Declining replacement preserves the pair and starts no runtime or task timers. On macOS the Save
+  # sheet already asked about the HBJSON, so only another platform asks again.
   def test_declining_replacement_preserves_the_pair_and_starts_no_runtime
     dialog = open_panel
+    Sketchup.platform_value = :platform_win
     Dir.mktmpdir("phc-export-destination") do |directory|
       destination = File.join(directory, "existing.hbjson")
       File.write(destination, "prior export")
@@ -392,8 +394,34 @@ class PanelTest < PhComposerTestCase
       assert_equal "export:2", outcome.fetch("request_id")
       assert_equal %w[cancelled export.cancelled none],
                    outcome.fetch("outcome").values_at("status", "code", "effect")
+      assert_equal ["Replace the existing HBJSON and Export report beside it?"], UI.messages
       assert_equal before, destination_contents(directory)
       assert_equal timers, UI.timer_count
+    end
+  end
+
+  # A destination the pair would refuse, half a prior pair or a name without .hbjson, is refused as soon
+  # as the Save sheet returns: nothing asks to replace it and no runtime starts.
+  def test_an_unusable_destination_is_refused_before_any_question
+    dialog = open_panel
+    Dir.mktmpdir("phc-export-destination") do |directory|
+      File.write(File.join(directory, "lone-export-report.html"), "prior report")
+      File.write(File.join(directory, "noext-export-report.html"), "prior report")
+      before = destination_contents(directory)
+      [["lone.hbjson", "Only one destination artifact exists"], ["noext", "must end in .hbjson"]]
+        .each_with_index do |(name, message), index|
+        UI.selected_save_path = File.join(directory, name)
+        PhComposer::AssetServer.stub(:new, ->(*) { flunk "Export started the runtime server" }) do
+          with_ready_export do
+            send_message(dialog, "export.start", "request_id" => "export:unusable:#{index}", "session" => @session.id)
+          end
+        end
+        outcome = messages(dialog, "export.result").last.fetch("outcome")
+        assert_equal %w[refused export.refused none], outcome.values_at("status", "code", "effect")
+        assert_includes outcome.fetch("message"), message
+      end
+      assert_empty UI.messages.to_a
+      assert_equal before, destination_contents(directory)
     end
   end
 

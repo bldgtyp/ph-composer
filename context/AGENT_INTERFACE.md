@@ -150,8 +150,12 @@ destination that only the user can choose. `describe` returns it as `approval` (
 Dispatch runs such an operation only with the user's answer, which a native client obtains:
 `shell/native_approval.rb` first asks dispatch whether the call would be refused (grant, params, a
 busy session) and opens no dialog if so; otherwise it opens the matching SketchUp dialog for the panel
-and the native menus, asks before replacing an existing file, and passes the chosen location to the
-handler outside params. Dispatch repeats every check after the dialog closes.
+and the native menus, obtains consent before replacing an existing file, and passes the chosen location
+to the handler outside params. `NativeApproval.confirm_replace` owns that rule: on macOS the Save sheet's
+own question is the consent, and other platforms ask once more. The HBJSON export first refuses a
+destination its artifact pair would refuse (`Export::ArtifactPair.destination_problem`: no `.hbjson`
+extension, or only one of the HBJSON and its Export report exists), so no question precedes a refusal.
+Dispatch repeats every check after the dialog closes.
 The path never appears in params, a result, an outcome or a log. Every other caller, including a
 script calling `PhComposer::API`, is refused at once with `access.user_required`, effect `none`, and
 no dialog opens, so an unattended call cannot block SketchUp. A dismissed dialog returns

@@ -194,6 +194,8 @@
 .window-defaults h3 { width:100%; margin:0; }
 .window-defaults label { display:flex; flex-direction:column; gap:4px; }
 .window-use-row { display:flex; align-items:center; gap:8px; margin:4px 0; }
+.window-use-label { display:flex; flex:1 1 auto; flex-direction:column; min-width:0; }
+.window-use-sides { color:var(--muted); font-size:12px; }
 @media(max-width:900px) {
   .window-layout,.window-layout.collapsed { grid-template-columns:36px minmax(0,1fr); }
   .window-layout>.library-sidebar-root { grid-column:1 / -1; }

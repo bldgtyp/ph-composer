@@ -40,6 +40,8 @@ class ArtifactPairTest < PhComposerTestCase
       hbjson = File.join(directory, "model.hbjson")
       File.write(hbjson, model("old"))
 
+      assert_equal Pair::INCOMPLETE, Pair.destination_problem(hbjson), "a native client refuses before asking"
+      assert_includes Pair.destination_problem(File.join(directory, "model")), ".hbjson"
       assert_raises(Pair::IncompletePriorPairError) do
         Pair::Transaction.new(hbjson, :run_id => "new").commit(model("new"), report_html("new"))
       end
@@ -111,6 +113,7 @@ class ArtifactPairTest < PhComposerTestCase
         )
       end
 
+      assert_nil Pair.destination_problem(hbjson), "an interrupted run's journal is left to the commit's recovery"
       Pair::Transaction.new(hbjson, :run_id => "recovery").recover
       assert_equal model("old"), File.read(hbjson)
       assert_equal report_html("old"), File.read(report)

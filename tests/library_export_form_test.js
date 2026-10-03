@@ -17,7 +17,8 @@ function answer(o, message, value, status) {
   o.form.refresh(o.state);
 }
 function projection(revision) {
-  return { revision: revision, kinds: [{ kind: "materials", count: 2 }], omissions: [] };
+  return { revision: revision, kinds: [{ kind: "materials", record_kind_label: "Material", count: 2 }],
+    omissions: [] };
 }
 test("export defaults to all even with selected rows and sends no filter or action mutation", function () {
   var o = setup(); o.form.open([{ record_kind: "material", id: "mat_a" }]);
@@ -60,4 +61,21 @@ test("a transport answering synchronously cannot overwrite the refusal or disabl
   };
   o.form.submit(); assert.strictEqual(o.form.error.textContent, "Cancelled");
   assert.strictEqual(o.form.cancel.disabled, false); assert.strictEqual(o.form.busy(), false);
+});
+test("the summary shows kind labels and one plain line per omitted kind and reason", function () {
+  var o = setup(), frame = "ph_composer.windows.frame", value = projection(4); o.form.open();
+  value.omissions = [
+    { record_kind: frame, record_kind_label: "Frame", id: "frm_a", fields: ["source"],
+      reason: "fields_not_in_wire_schema" },
+    { record_kind: frame, record_kind_label: "Frame", id: "frm_b", fields: ["source"],
+      reason: "fields_not_in_wire_schema" },
+    { record_kind: "ph_composer.windows.window_type", record_kind_label: "Window Type", id: "wt_a", fields: [],
+      reason: "unsupported_kind" },
+    { record_kind: "outside.part", record_kind_label: "Part", id: "prt_a", fields: [], reason: "outside.reason" }];
+  answer(o, o.sent[0], value);
+  var lines = o.form.summary.children.map(function (node) { return node.textContent; });
+  assert.deepStrictEqual(lines, ["Material: 2", "Frame (2): source attribution is not exported",
+    "Window Type: not a library record; it stays in this Model", "Part: not exported"]);
+  lines.forEach(function (line) { assert.ok(!/ph_composer\.|_/.test(line), line); });
+  assert.ok(o.form.summary.children[3].title.includes("outside.reason"));
 });

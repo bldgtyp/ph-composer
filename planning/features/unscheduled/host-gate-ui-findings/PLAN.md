@@ -1,7 +1,9 @@
 # UI findings from the R11 host gate: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. All five items are ready; Ed decided D1 on 2026-10-02. Not yet authorized.
+STATUS: Implemented on branch `feat/host-gate-ui-findings` 2026-10-02, all five items; `make ci` passes on
+Ruby 2.7.2 and 3.2.2; host check passed 2026-10-02 after an item 3 revision Ed agreed at the host
+([evidence](../../../native-acceptance/evidence/host-gate-ui-findings-2026-10-02.md)). In review, PR #40.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/37
 
@@ -175,3 +177,45 @@ with that element.
   the menu add notice (item 4) and the three Save-dialog cases (item 3). Record the result in
   `planning/native-acceptance/evidence/` and link it here.
 - Review: one Sonnet diff review with the architecture and UI polish rubrics.
+
+## Implementation record
+
+Implemented 2026-10-02 on `feat/host-gate-ui-findings`, one commit per item plus a manifest refresh.
+
+| Item | Change | Tests |
+| --- | --- | --- |
+| 1 | One disabled rule for `.primary` and `.phc-action-delete` in the dialog action row (`overlay.css`) | `library_checks.cjs`: the preview host now publishes `ph_composer.library.provider_setup`; an unreadable setup disables "Add library file…", and its disabled fill differs from the enabled one in both the apply and destructive roles |
+| 2 | `record_kind_label` on each `kinds` row and omission (`ExportProjection.summary(projection, registry)`); `export.js` groups omissions by kind and reason with glossary sentences; codes and field keys in the tooltip. A recorded origin no longer reports `source` as omitted | `library_export_test.rb`, `library_export_form_test.js`, `windows_checks.cjs` |
+| 3 | `NativeApproval.confirm_replace(path, question)`, used by the library export and `Export::Workflow.consent`: on macOS the Save sheet's question is the consent. The HBJSON export first refuses a destination the artifact pair would refuse (`ArtifactPair.destination_problem`) | `file_export_test.rb`, `panel_test.rb` (Windows pair; lone report and no extension refuse with no question), `artifact_pair_test.rb`, `library_export_test.rb` |
+| 4 | The Libraries menu notifies "Added library <label>." on completion (`setup_commands.rb`) | `library_setup_commands_test.rb` |
+| 5 | The uses bubble groups per-side uses by element, sides beneath, heading counts what it lists; a Model-default-only Type reads "Used as the Model default" | `window_inventory_test.js` |
+
+Deviations from the text above, each the simpler choice:
+
+- Item 2 counts read "Material: 2", "Frame: 2", not "Materials: 4". The registry holds singular labels
+  only, and a pluralizing rule would mislabel a contributor's kind.
+- Item 3 departs from D1's companion question. The host check showed it could only lead to a refusal:
+  the artifact pair refuses half a prior pair, and a name typed without `.hbjson` comes back from the
+  Save sheet without the extension. The export now refuses both right after the sheet; Ed agreed at the
+  host on 2026-10-02.
+- Item 1's check compares disabled against enabled fills rather than against the secondary button:
+  `base.css` gives a disabled primary its own grey, which the new rule reuses.
+
+Verification run: `make ci` (Ruby 3.2.2 and `RUBY=$(rbenv prefix 2.7.2)/bin/ruby`), `make fixtures`
+(API reference gains `record_kind_label`), `make runtime-manifest`. `make ui-checks`: every script passes
+except an intermittent `windows_checks.cjs:46` failure ("Element 1 glazed" detached during
+`scrollIntoViewIfNeeded`), which `main` shows at the same rate (3 of 20 runs) and is left as a follow-up. Preview captures: Libraries dialog with an unreadable setup, Export library
+form with grouped omissions, Frame uses bubble at 1280 and 420 px.
+
+Host check, 2026-10-02 ([evidence](../../../native-acceptance/evidence/host-gate-ui-findings-2026-10-02.md),
+ledger case `HGUI`): items 1, 2, 4 and 5 pass; item 3 passes for the library export, the HBJSON pair,
+the lone report and the name without `.hbjson`, the last two after the revision above.
+
+Review: one Sonnet diff review with both rubrics found no confirmed defects. Applied: the uses bubble
+reads the side from `use.side` rather than parsing the name alone, and the origin reason reads "library
+source attribution is not exported". Not applied: asking about the report when the pair exists (D1).
+
+Follow-ups, not in scope: "Add library file…" carries the apply ✓ although it opens a picker; the uses
+bubble lists sides in stored order ("Bottom, left, right, top"); the HBJSON export result shows internal
+text and Material ids ("segment material id must be non-empty text", `mat_…`); the
+`windows_checks.cjs:46` flake.

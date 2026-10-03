@@ -45,9 +45,9 @@ module PhComposer
         end
 
         writer.write(bytes)
-        ExportProjection.summary(before).merge("library_id" => library.fetch("id"),
-                                               "library_name" => library.fetch("name"),
-                                               "identity" => identity, "written" => true)
+        ExportProjection.summary(before, request.registry).merge("library_id" => library.fetch("id"),
+                                                                 "library_name" => library.fetch("name"),
+                                                                 "identity" => identity, "written" => true)
       rescue SystemCallError, IOError, EncodingError
         raise Error.new("library.export_write_failed", "The library file could not be written."), :cause => nil
       end

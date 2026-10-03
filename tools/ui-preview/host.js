@@ -26,6 +26,7 @@
     this.libraryProviders = JSON.parse(JSON.stringify(settings.libraryProviders || []));
     this.libraryCatalogs = JSON.parse(JSON.stringify(settings.libraryCatalogs || {}));
     this.libraryGenerations = {}; this.libraryFailures = {};
+    this.librarySetupState = settings.librarySetupState || "readable";
     this.windows = JSON.parse(JSON.stringify(settings.windows || {}));
     this.session = "preview-session";
     this.revision = 1;
@@ -60,6 +61,7 @@
       file_name: "preview.skp", edit_path: [], preferences: JSON.parse(JSON.stringify(this.preferences)),
       sections: {
         ["ph_composer.library.provider_catalogs"]: { status: "completed", value: this.libraryMetadata() },
+        ["ph_composer.library.provider_setup"]: { status: "completed", value: { state: this.librarySetupState } },
         [SETTINGS]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.zoneSettings)) },
         [PARTS]: { status: "completed", code: "ok", revision: this.revision,
@@ -670,13 +672,13 @@
   };
   Host.prototype.libraryExportPreview = function (payload) {
     var params = payload.params, selected = params.records || [], sources = [
-      ["materials", "ph_composer.assemblies.material", this.materials],
-      ["frames", "ph_composer.windows.frame", this.windows.frames],
-      ["glazings", "ph_composer.windows.glazing", this.windows.glazings],
-      ["psi_install_types", "ph_composer.windows.psi_install_type", this.windows.psi_install_types]
+      ["materials", "ph_composer.assemblies.material", this.materials, "Material"],
+      ["frames", "ph_composer.windows.frame", this.windows.frames, "Frame"],
+      ["glazings", "ph_composer.windows.glazing", this.windows.glazings, "Glazing"],
+      ["psi_install_types", "ph_composer.windows.psi_install_type", this.windows.psi_install_types, "Psi-Install Type"]
     ];
     var kinds = sources.filter(function (entry) { return entry[2]; }).map(function (entry) {
-      return { kind: entry[0], count: (entry[2].records || []).filter(function (record) {
+      return { kind: entry[0], record_kind_label: entry[3], count: (entry[2].records || []).filter(function (record) {
         return params.scope !== "selected" || selected.some(function (row) {
           return row.record_kind === entry[1] && row.id === record.id;
         });
@@ -685,8 +687,21 @@
     this.publish("query.result", { request_id: payload.request_id, session: payload.session,
       outcome: payload.session !== this.session ? refused("session.inactive", "The Model changed.", null) : {
         status: "completed", revision: this.revision,
-        value: { kinds: kinds, omissions: [], projection_digest: "preview", revision: this.revision }
+        value: { kinds: kinds, omissions: this.libraryExportOmissions(), projection_digest: "preview",
+          revision: this.revision }
       } });
+  };
+  // Synthetic omissions in the real projection's shape: Window Types are not library records, and Frames without
+  // a library origin drop their source attribution.
+  Host.prototype.libraryExportOmissions = function () {
+    var types = ((this.windows.types || {}).records || []).map(function (record) {
+      return { record_kind: "ph_composer.windows.window_type", record_kind_label: "Window Type", id: record.id,
+        fields: [], reason: "unsupported_kind" };
+    });
+    return types.concat(((this.windows.frames || {}).records || []).map(function (record) {
+      return { record_kind: "ph_composer.windows.frame", record_kind_label: "Frame", id: record.id,
+        fields: ["source"], reason: "fields_not_in_wire_schema" };
+    }));
   };
   Host.prototype.librarySetup = function (payload) {
     var params = payload.params, verb = payload.name.split(".").pop();

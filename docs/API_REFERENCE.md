@@ -4396,12 +4396,18 @@ Result:
         "additionalProperties": false,
         "required": [
           "kind",
+          "record_kind_label",
           "count"
         ],
         "properties": {
           "kind": {
             "type": "string",
             "minLength": 1
+          },
+          "record_kind_label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The registered record kind's label, for display; kind and record_kind stay the identifiers."
           },
           "count": {
             "type": "integer",
@@ -4417,6 +4423,7 @@ Result:
         "additionalProperties": false,
         "required": [
           "record_kind",
+          "record_kind_label",
           "fields",
           "reason"
         ],
@@ -4424,6 +4431,11 @@ Result:
           "record_kind": {
             "type": "string",
             "minLength": 1
+          },
+          "record_kind_label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The registered record kind's label, for display; kind and record_kind stay the identifiers."
           },
           "id": {
             "type": "string",
@@ -36710,12 +36722,18 @@ Result:
         "additionalProperties": false,
         "required": [
           "kind",
+          "record_kind_label",
           "count"
         ],
         "properties": {
           "kind": {
             "type": "string",
             "minLength": 1
+          },
+          "record_kind_label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The registered record kind's label, for display; kind and record_kind stay the identifiers."
           },
           "count": {
             "type": "integer",
@@ -36731,6 +36749,7 @@ Result:
         "additionalProperties": false,
         "required": [
           "record_kind",
+          "record_kind_label",
           "fields",
           "reason"
         ],
@@ -36738,6 +36757,11 @@ Result:
           "record_kind": {
             "type": "string",
             "minLength": 1
+          },
+          "record_kind_label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The registered record kind's label, for display; kind and record_kind stay the identifiers."
           },
           "id": {
             "type": "string",
