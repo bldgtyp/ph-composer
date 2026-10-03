@@ -106,9 +106,9 @@
       "sha256": "b6c95966094c0f40e850ac2b318bf91e795d09acae450e64c2ce73c96c5f8ead"
     },
     "html/features/windows/inventory.js": {
-      "bytes": 12413,
+      "bytes": 12538,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "5293663caf98c26c19bdd82efddee83bcbb62ad435504bd00f57ef6005a8d757"
+      "sha256": "af93f03662fbb136abfdfe99cde890db28661c75f22e36e8bfc3a070bcf199e4"
     },
     "html/features/windows/library.js": {
       "bytes": 2831,
@@ -241,9 +241,9 @@
       "sha256": "02f17bae01c81128e32eb085d2fb7d76e1a78263acd37bc47289ac2115ce276d"
     },
     "html/library/export.js": {
-      "bytes": 6408,
+      "bytes": 6420,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "9c9b658748ac1df9eea4ac2344085f6255fb62472d83dce9eda8b24ba83c75a8"
+      "sha256": "7907abe2ccda411bdf126a28a119f62c34b7198730f87f469b51a15602b813c4"
     },
     "html/library/library.css": {
       "bytes": 8495,

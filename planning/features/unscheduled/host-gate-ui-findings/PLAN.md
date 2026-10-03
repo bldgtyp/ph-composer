@@ -1,7 +1,8 @@
 # UI findings from the R11 host gate: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. All five items are ready; Ed decided D1 on 2026-10-02. Not yet authorized.
+STATUS: Implemented on branch `feat/host-gate-ui-findings` 2026-10-02, all five items; `make ci` passes on
+Ruby 2.7.2 and 3.2.2. In review. The host look (Verification) is owed, including item 3's Save-sheet cases.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/37
 
@@ -175,3 +176,41 @@ with that element.
   the menu add notice (item 4) and the three Save-dialog cases (item 3). Record the result in
   `planning/native-acceptance/evidence/` and link it here.
 - Review: one Sonnet diff review with the architecture and UI polish rubrics.
+
+## Implementation record
+
+Implemented 2026-10-02 on `feat/host-gate-ui-findings`, one commit per item plus a manifest refresh.
+
+| Item | Change | Tests |
+| --- | --- | --- |
+| 1 | One disabled rule for `.primary` and `.phc-action-delete` in the dialog action row (`overlay.css`) | `library_checks.cjs`: the preview host now publishes `ph_composer.library.provider_setup`; an unreadable setup disables "Add library file…", and its disabled fill differs from the enabled one in both the apply and destructive roles |
+| 2 | `record_kind_label` on each `kinds` row and omission (`ExportProjection.summary(projection, registry)`); `export.js` groups omissions by kind and reason with glossary sentences; codes and field keys in the tooltip. A recorded origin no longer reports `source` as omitted | `library_export_test.rb`, `library_export_form_test.js`, `windows_checks.cjs` |
+| 3 | `NativeApproval.confirm_replace(path, question, companions: {})`, per D1, used by the library export and `Export::Workflow.consent` | `file_export_test.rb`, `panel_test.rb` (macOS lone report, Windows pair), `library_export_test.rb` |
+| 4 | The Libraries menu notifies "Added library <label>." on completion (`setup_commands.rb`) | `library_setup_commands_test.rb` |
+| 5 | The uses bubble groups per-side uses by element, sides beneath, heading counts what it lists; a Model-default-only Type reads "Used as the Model default" | `window_inventory_test.js` |
+
+Deviations from the text above, each the simpler choice:
+
+- Item 2 counts read "Material: 2", "Frame: 2", not "Materials: 4". The registry holds singular labels
+  only, and a pluralizing rule would mislabel a contributor's kind.
+- Item 3's signature takes the whole-set question and a `{ path => question }` companion map, so each
+  caller keeps its own wording; the macOS companion question reads "Replace the existing Export report
+  beside this HBJSON?".
+- Item 1's check compares disabled against enabled fills rather than against the secondary button:
+  `base.css` gives a disabled primary its own grey, which the new rule reuses.
+
+Verification run: `make ci` (Ruby 3.2.2 and `RUBY=$(rbenv prefix 2.7.2)/bin/ruby`), `make fixtures`
+(API reference gains `record_kind_label`), `make runtime-manifest`. `make ui-checks`: every script passes
+except an intermittent `windows_checks.cjs:46` failure ("Element 1 glazed" detached during
+`scrollIntoViewIfNeeded`), which `main` shows at the same rate (3 of 20 runs) and is left as a follow-up. Preview captures: Libraries dialog with an unreadable setup, Export library
+form with grouped omissions, Frame uses bubble at 1280 and 420 px.
+
+Owed before acceptance: the host look through `ph-composer-native-acceptance` (items 1, 2, 4, 5), and
+item 3's three Save-dialog cases on macOS, which need Ed at the host. Add a fourth: type the name
+without `.hbjson` over an existing pair, to confirm the sheet checked the path SketchUp returns, since
+macOS now asks nothing more when that path exists.
+
+Review: one Sonnet diff review with both rubrics found no confirmed defects. Applied: the uses bubble
+reads the side from `use.side` rather than parsing the name alone, and the origin reason reads "library
+source attribution is not exported". Not applied: asking about the report when the pair exists (D1). Follow-up for Ed, not in scope:
+"Add library file…" carries the apply ✓ although it opens a picker.

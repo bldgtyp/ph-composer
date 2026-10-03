@@ -95,14 +95,17 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     });
   };
   /* One row per element with its sides beneath, in first-use order. The snapshot keeps one use per side, named
-     "Type / Element / side"; Open type navigates with the element's first. The Model default stays its own row. */
+     "Type / Element / side" with "(default)" after an inherited side; Open type navigates with the element's
+     first use. The Model default stays its own row. */
   function useRows(uses) {
     var rows = [], byElement = {};
     uses.forEach(function (use) {
       if (!use.element_id) { rows.push({ name: use.name, use: use, sides: [] }); return; }
-      var key = use.type_id + " " + use.element_id, split = use.name.lastIndexOf(" / ");
-      if (!byElement[key]) rows.push(byElement[key] = { name: use.name.slice(0, split), use: use, sides: [] });
-      byElement[key].sides.push(use.name.slice(split + 3));
+      var key = use.type_id + " " + use.element_id, split = use.name.lastIndexOf(" / " + use.side);
+      if (!byElement[key]) {
+        rows.push(byElement[key] = { name: split < 0 ? use.name : use.name.slice(0, split), use: use, sides: [] });
+      }
+      byElement[key].sides.push(split < 0 ? use.side : use.name.slice(split + 3));
     });
     return rows;
   }
