@@ -1,0 +1,124 @@
+# Packet 4: Installs editor
+
+DATE: 2026-10-03
+STATUS: Plan; not authorized
+AUTHOR: Ed May, BLDGTYP, with Claude
+ISSUE: none (local planning draft)
+
+Covers finding W4 in [FINDINGS.md](../FINDINGS.md). Nothing here is built until Ed has read it
+and said go.
+
+## Outcome
+
+The Installs editor reads as part of the Window Types screen it opens from: the kit's header with
+Save and Cancel in it, a drawing whose labels can be read, edge states in the kit's own colours,
+and a session the keyboard can leave. No command, payload, guard or Undo step changes: one Save
+still writes the whole session through `types.installs.save`, and Cancel still writes nothing.
+
+## What is there today, re-measured on main
+
+W4 was captured before packets 1 to 3. Each claim was run again on 2026-10-03 in the preview
+(`windows` fixture, 800 high) so the plan fixes what is there now.
+
+| W4 claim | On main today | Cause |
+| --- | --- | --- |
+| Element names and edge values overlap | Still true at every width | `paintDrawing` puts each value at a fixed offset inside the element: a left or right value lands on the element's name at mid-height |
+| Heading flush to the panel edge, constant caption | Caption gone and gutter applied in packet 1. The heading is still a bare `h2` under the Anchor control, not the kit header | `install_editor.js` builds its own title |
+| Save and Cancel under the status bar | In view at 1280 and 420 (y 707 and 750, status bar at 764). At 900 wide they are at y 887, below the fold, because the library sidebar wraps beneath the drawing | The action row is the last child of a tall section |
+| A subtab click does nothing and says nothing | Still true. A click on U-Values or Schedule keeps the editor and shows no notice. A click on a main tab (Assemblies) does show "Save or cancel the Installs session before leaving." | Not established. `editor.js` wires `refused` to the notice and the guard returns the message, so the notice should show. The first step of the build is a failing test that pins it |
+| Escape does not leave | True right after opening: focus stays on the "Edit Window Type installs" button, outside the editor, and the editor's `keydown` listener never sees the key. With focus inside the editor Escape works | `open()` moves focus nowhere |
+| A third highlight colour | True: `.window-install-edge.default` is `#327bce`, 10 wide and dashed | `windows.css` line 186 |
+
+Also seen: a clean session (nothing staged) still asks nothing on Cancel, which is right; a click
+on the "Window Types" subtab, the one already active, is the natural "take me back" and does
+nothing.
+
+## Design
+
+**Header.** `ui.pageHeader({ title: "<Type name> Installs", actions: [Cancel], primary: Save
+Installs })` replaces the `h2` and the trailing action row. Save and Cancel are then in view at
+every width without a sticky footer, and the heading matches the Builder's. The status line
+(`role="status"`) stays directly under the header. The editor root takes `--page-gutter` in place
+of its own 12px.
+
+**The Anchor control is hidden while the editor is open.** It belongs to Place, and Place is
+refused during an Installs session. Moving it for good is W1, packet 5.
+
+**Drawing labels.**
+
+- An element's name stays at its centre.
+- A perimeter edge's value moves outside the outline: above a top edge, below a bottom edge, left
+  of a left edge and right of a right edge. The view box grows a margin for them.
+- A shared edge keeps one label, "0", centred on the edge itself with the white halo the labels
+  already have.
+- "D · 0.04" becomes the value alone. Default against assigned is already carried by the stroke
+  (dashed against solid) and by the edge's accessible label and tooltip, which do not change.
+- A value label is dropped when its edge is shorter than the label needs. The test is on the
+  drawn length, not on measured text, so it runs in the offline suite.
+
+**Edge colours.** Edge state is data. It uses the kit's tokens and leaves `--drawing-highlight`
+for hover and keyboard focus, as `patterns.md` says.
+
+| State | Today | Proposed |
+| --- | --- | --- |
+| Assigned | `--interaction-highlight`, solid, 10 wide | Same colour, solid, 4 wide |
+| Model default | `#327bce`, dashed | `--interaction-highlight`, dashed, 4 wide |
+| Missing or partly shared | `--warning-ink`, dashed | Unchanged colour, 4 wide |
+| Shared (derived zero) | Grey dotted | Unchanged, 2 wide |
+| Hover and focus on a paintable edge | None of its own | `--drawing-highlight` halo |
+
+The line that takes the click stays 12 wide and transparent under the visible stroke, so the
+target does not shrink with the stroke.
+
+**The palette.** The hint sentence goes behind a help button beside "Psi-Install Types", the
+palette's new heading. A choice reads name at the left and a bare value at the right under one
+unit caption, in place of "Insulated junction · 0.04 W/(m K)" wrapping to two lines. "Apply to all
+eligible edges" names what it applies ("Apply Insulated junction to all edges") and "Copy to other
+Window Types" sits last, since it acts on the whole session.
+
+**Leaving.**
+
+- Opening the editor moves focus to the selected palette choice.
+- Escape unwinds one layer: an open Psi-Install form, then an open copy list, then the session
+  (which asks before discarding staged changes, as now).
+- A subtab click while the editor is open behaves like a main tab click: with staged changes it
+  opens "Discard Installs changes?" and goes to that subtab on Discard; with none it closes the
+  editor and goes. A click on the active "Window Types" subtab does the same and lands on the
+  Builder. While a Save is in flight the click is refused with the existing "Wait for Installs
+  Save." notice.
+- Saving or cancelling returns focus to the "Edit Window Type installs" button, as now.
+
+## Open points for Ed
+
+| Id | Question | Recommendation |
+| --- | --- | --- |
+| P4-Q1 | Move the palette into a Window Types pane inspector (the region packet 3 added), held while the session is dirty? | Not here. It is the right shape, but packet 5 reworks the Window Types frame and its two sidebars; doing the inspector there avoids building this layout twice. |
+| P4-Q2 | Drop the "D ·" prefix from default edge values in the drawing? | Yes. The dashed stroke and the tooltip carry it, and the prefix is what collides most. |
+| P4-Q3 | A subtab click with nothing staged closes the editor without asking. Agree? | Yes. Nothing is lost, and it matches Cancel on a clean session. |
+| P4-Q4 | The Psi-Install library sidebar wraps under the drawing at 900 and is clipped at 1280. Fix here? | No. That is W3, packet 5. With Save in the header it no longer hides anything. |
+
+## Files
+
+`src/ph_composer/html/features/windows/`: `install_editor.js`, `editor.js` (subtab refusal and
+the Anchor row), `windows.css`. `src/ph_composer/html/subtabs.js` only if the failing test shows
+the silent refusal is the kit's. Then `make panel-manifest` and the vendor manifest refresh.
+
+## Tests and gates
+
+- `tests/window_editor_test.js`: focus on open; Escape through the three layers; a subtab click
+  with and without staged changes; the active subtab click; value labels outside the outline and
+  dropped on a short edge; header carries Save and Cancel.
+- `tools/ui-preview/windows_checks.cjs`: Save Installs is inside the viewport at 1280, 900 and 420
+  by 800; no two drawing labels' boxes intersect in the `windows` fixture.
+- `tests/css_selectors_test.js` covers the edge classes.
+- `make ci`, `make ui-checks`, one Sonnet diff review against the architecture and ui-polish
+  rubrics. No kit contract changes, so no second review unless `subtabs.js` changes.
+- Host check on SketchUp 26.1.188 through the development bridge: open the editor on a Window Type
+  with a shared edge, paint, Save, Undo once, reopen; leave through a subtab with staged changes.
+  The `ux-followups-integrated.skp` fixture has no Window Type, so the run model gets one through
+  the public `types.create` action first.
+
+## Not in this packet
+
+W1 (Anchor placement), W2 (rail names), W3 (library sidebars), W5 (Empty element mark): packet 5.
+The Psi-Install form's fields (D5 keeps it a form). Any change to what Save writes.

@@ -6,8 +6,9 @@ STATUS: In progress
 ## Where this stands
 
 Packets 1, 2 and 3 are merged to main (last merge commit `6a3133d`, pull request #60). No branch
-is open and nothing is half-built. Packet 4 is next and has no plan yet. No polish work is
-authorized beyond what is merged: each packet gets a plan Ed reads before it is built.
+is open and nothing is half-built. The packet 4 plan is written and waits for Ed's go. The five
+open points from packets 1 to 3 are ruled (D8 to D12 in FINDINGS.md); two of them change code and
+wait for the same go. No polish work is authorized beyond what is merged.
 
 | Step | State | Note |
 | --- | --- | --- |
@@ -17,7 +18,8 @@ authorized beyond what is merged: each packet gets a plan Ed reads before it is 
 | Packet 1, page frame | Merged to main 2026-10-03, [#55](https://github.com/bldgtyp/ph-composer/pull/55) | [phases/phase-01-page-frame.md](phases/phase-01-page-frame.md) |
 | Packet 2, table chrome | Merged to main 2026-10-03, [#56](https://github.com/bldgtyp/ph-composer/pull/56) | [phases/phase-02-table-chrome.md](phases/phase-02-table-chrome.md) |
 | Packet 3, Zones / Faces layout | Merged to main 2026-10-03: P3-1 [#57](https://github.com/bldgtyp/ph-composer/pull/57), P3-2 [#58](https://github.com/bldgtyp/ph-composer/pull/58), P3-3 [#59](https://github.com/bldgtyp/ph-composer/pull/59), P3-4 [#60](https://github.com/bldgtyp/ph-composer/pull/60) | [phases/phase-03-zones-faces-layout.md](phases/phase-03-zones-faces-layout.md) |
-| Packet 4, Installs editor (W4) | Requested; no plan yet | Next |
+| Packet 4, Installs editor (W4) | Plan written 2026-10-03; not authorized | [phases/phase-04-installs-editor.md](phases/phase-04-installs-editor.md) |
+| Zones / Faces follow-up (D9, D10) | Ruled 2026-10-03; not built | Small change, described under "Next steps" |
 | Packets 5 to 8 | Requested | Order and coverage in FINDINGS.md, "Proposed packets" |
 | Host capture of viewport surfaces (D7) | Not started | Was to follow packets 1 and 2; needs one SketchUp session with Ed present |
 | Design System artifact | Not started | After the kit-wide packets settle |
@@ -28,28 +30,22 @@ check sections say what was and was not covered.
 
 ## Next steps, in order
 
-1. **Write the packet 4 plan**: the Window Type Installs editor, finding W4. Labels overlap in the
-   drawing; Save and Cancel sit under the status bar at 800 high; a subtab click is refused with
-   no message; Escape does not leave; the thick blue dashed edges are a third highlight colour.
-   The source is `src/ph_composer/html/features/windows/install_editor.js` and `windows.css`.
-2. **Ed's rulings on the open points below**, which can ride with any later packet.
-3. **Packets 5 to 8** as FINDINGS.md orders them: the Window Types frame (Anchor control, rail
-   names, library sidebars), the Assembly Builder toolbars and inventory row actions, the Library,
-   then completeness (one vocabulary for "not finished", Export readiness, empty states).
-4. **The D7 host capture session** for the viewport tools, the real Colour-by legend and Export.
-5. **The Design System artifact**, once the kit-wide packets have settled.
-
-## Open points for Ed
-
-Raised during packets 1 to 3 and not ruled on. None blocks packet 4.
-
-| From | Question |
-| --- | --- |
-| Packet 1 | Planned tabs say "Planned" only in their tooltip. Keep, or add a small visible hint? |
-| P3-2 | With Faces selected in the viewport, clicking a Zone row shows the Face selection, not Zone details, because a selection outranks a record. Locate on a Zone row has the same effect. Should an explicit row click win? |
-| P3-2 | The selection inspector's Assembly control reads "Choose Assembly", not the Assembly the selection already shares. Show the shared one? |
-| P3-3 | While it paints, the Classify tool turns on the last colour mode the user chose, not Face type. That is the accepted Phase 1 contract. Change it to always use Face type? |
-| P3-4 | A Zone's area and Locate now cover every Face, recorded or not. Keep, or return the area to recorded Faces only? |
+1. **Ed reads the packet 4 plan** and answers its four open points (P4-Q1 to P4-Q4).
+2. **Build packet 4** on his go.
+3. **Zones / Faces follow-up (D9, D10)**, one small pull request on his go, in
+   `features/zones/overview.js` and `assembly_assignment.js`:
+   - D9: a Zone row click records that Zone as the inspector's explicit subject, and
+     `ph_composer.zones.details` answers `"hold"` for it until the viewport selection changes.
+   - D10: the selection's `Picker` is given the shared Assembly id (or "Mixed") and shows it as its
+     resting value.
+   Each gets one focused test in `tests/overview_panel_test.js` or
+   `tests/assembly_assignment_panel_test.js`, then the usual gates and a short host check.
+4. **Packets 5 to 8** as FINDINGS.md orders them: the Window Types frame (Anchor control, rail
+   names, library sidebars, and the Installs palette as a pane inspector if P4-Q1 is accepted), the
+   Assembly Builder toolbars and inventory row actions, the Library, then completeness (one
+   vocabulary for "not finished", Export readiness, empty states).
+5. **The D7 host capture session** for the viewport tools, the real Colour-by legend and Export.
+6. **The Design System artifact**, once the kit-wide packets have settled.
 
 ## Follow-ups noted, not scheduled
 

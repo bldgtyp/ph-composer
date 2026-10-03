@@ -144,3 +144,14 @@ Ed accepted all seven recommendations on 2026-10-03.
 | D5 | New acts at once with defaults where the record draws something (Assembly, Window Type). Records that are only numbers (Material, Frame, Glazing, Psi-Install Type, Attached zone) keep a form, with required fields marked. The ui-polish skill states the split when packet 7 lands. | Packets 6 and 7 |
 | D6 | The primary route for assigning an Assembly is select Faces, then one control. Paint stays as the secondary modal tool. The Assembly select leaves the Classify palette. | Packet 3 |
 | D7 | The host capture session runs after packets 1 and 2. | After packet 2 |
+
+The five points raised during packets 1 to 3 were ruled on 2026-10-03. Ed accepted the
+recommendations before they were written down; they are recorded here as made, for him to overturn.
+
+| Id | Ruling | Lands in |
+| --- | --- | --- |
+| D8 | Planned tabs keep "Planned" in the tooltip and accessible name only. No visible hint; D3 stands. | No change |
+| D9 | An explicit click on a Zone row shows that Zone's details in the inspector even while Faces are selected in the viewport. The Face selection takes the inspector back when the selection next changes. Locate on a Zone row still shows the selection, since selecting is what Locate does. | Zones / Faces follow-up |
+| D10 | The selection inspector's Assembly control shows the Assembly every selected Face shares, "Mixed" when they differ and "Choose Assembly" when none has one, as Type and Boundary already do. | Zones / Faces follow-up |
+| D11 | The Classify tool keeps the accepted Phase 1 contract: it turns on the colour mode the user last chose, not always Face type. | No change |
+| D12 | A Zone's area and Locate cover every Face of the Zone, recorded or not, so they agree with the rows listed under it. | No change |
