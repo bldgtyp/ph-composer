@@ -150,7 +150,7 @@ function (shared, preferences, ui) {
     var listSignature = JSON.stringify([signature, this.active, this.groups, this.groupNames, this.manual,
       this.placement.enabled, this.placement.channel.busy(), records.map(function (record) {
         return self.placement.available(record.id); }), this.entries.map(function (entry) {
-        return entry.calculation.findings; })]);
+        return entry.findings; })]);
     // Keep the target row and its focused input keyed until Apply or Cancel. Deferred labels repaint then.
     if (this.renameDraft) return;
     if (listSignature === this.listSignature) return; this.listSignature = listSignature;
@@ -172,11 +172,13 @@ function (shared, preferences, ui) {
         var choose = ui.button(record.name, function () { self.choose(record.id); }); row.appendChild(choose);
         // "Not finished" is the amber mark it is on every other screen, with what is missing in its tooltip.
         var entry = self.entries.filter(function (item) { return item.record.id === record.id; })[0];
-        var missing = entry ? (entry.calculation.findings || []).map(function (finding) {
-          return finding.message || String(finding); }) : [];
+        var missing = entry ? entry.findings.map(function (finding) {
+          return finding.message || String(finding);
+        }).filter(function (message, index, all) { return all.indexOf(message) === index; }) : [];
         if (missing.length) {
           var flag = ui.glyph("alert"); flag.classList.add("window-type-flag"); flag.setAttribute("role", "img");
-          flag.setAttribute("aria-label", record.name + " is incomplete"); flag.title = missing.join(" ");
+          flag.setAttribute("aria-label", record.name + " is incomplete");
+          flag.title = missing.slice(0, 6).join(" ") + (missing.length > 6 ? " And more." : "");
           row.appendChild(flag);
         }
         var actions = el("span", "window-type-row-actions");

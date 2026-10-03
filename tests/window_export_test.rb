@@ -134,7 +134,8 @@ class WindowExportTest < PhComposerTestCase
                                 :type => @type, :plan => U::DefinitionPlan.build(@type))
     @products["glazings"].values.first.delete("g_value")
     rows = assess.findings.select { |row| row.fetch("code") == "window_type.g_value_missing" }
-    assert_equal ["Left: Missing g-value.", "Right: Missing g-value."], rows.map { |row| row.fetch("message") }.sort
+    assert_equal ["Test type, Left: Missing g-value.", "Test type, Right: Missing g-value."],
+                 rows.map { |row| row.fetch("message") }.sort
   end
 
   def test_mulled_empty_and_merged_elements_keep_ids_and_shared_install_zero

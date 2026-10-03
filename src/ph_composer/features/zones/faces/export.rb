@@ -9,6 +9,8 @@ module PhComposer
         ADJACENCY_CODES = { "stale" => "adjacency.stale", "unresolved" => "adjacency.unresolved",
                             "invalid" => "adjacency.invalid" }.freeze
         CONSTRUCTION_CODES = { "dangling" => "construction.dangling", "invalid" => "construction.invalid" }.freeze
+        UNRESOLVED_ASSEMBLY = { "dangling" => "This Face's Assembly is no longer in the Model.",
+                                "invalid" => "This Face's Assembly cannot be read." }.freeze
         ATTACHED_ZONE_CODES = { "absent" => "attached_zone.absent", "dangling" => "attached_zone.dangling",
                                 "invalid" => "attached_zone.invalid", "unavailable" => "attached_zone.unavailable" }
                               .freeze
@@ -108,18 +110,21 @@ module PhComposer
 
         def construction_issues(request, record)
           id = record["assembly_id"]
-          return [["construction.missing", "Face #{record.fetch('id')} needs an authored Assembly.", true]] unless id
+          # The finding's object_id carries the Face; its sentence is for a reader and names no record id, so
+          # every Face with one cause reads the same.
+          return [["construction.missing", "This Face has no Assembly.", true]] unless id
 
           state = AssemblyAssignment.state(request, record)
           if state != "resolved"
-            message = "Face #{record.fetch('id')} names #{state} Assembly #{id}."
+            message = UNRESOLVED_ASSEMBLY.fetch(state, "This Face's Assembly is #{state}.")
             return [[CONSTRUCTION_CODES.fetch(state), message, true]]
           end
           assembly = AssemblyAssignment.catalog(request).fetch(:records).fetch(id)
           return [] if assembly.fetch("export_ready")
 
           reason = assembly.fetch("export_blockers").first.fetch("message")
-          [["construction.incomplete", "Face #{record.fetch('id')} names incomplete Assembly #{id}: #{reason}", true]]
+          name = assembly.fetch("values")["name"]
+          [["construction.incomplete", "This Face's Assembly #{name} is not finished: #{reason}", true]]
         end
 
         def attached_zone_issues(request, record)

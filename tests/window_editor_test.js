@@ -486,12 +486,14 @@ test("an incomplete Window Type carries the amber mark in the rail; no Types nam
   var o = setup(), record = o.state.sections["ph_composer.windows.types"].value.records[0];
   assert.strictEqual(o.editor.list.querySelectorAll(".window-type-flag").length, 0);
   assert.strictEqual(o.editor.emptyPrompt.hidden, true);
-  record.display.thermal.findings = [{ code: "window_type.dimensions_incomplete",
-    message: "Enter all grid dimensions." }];
+  // The record's own findings, which also carry what its elements are missing.
+  record.findings = [{ code: "window_type.glazing_missing", element_id: "wel_a", message: "Missing g-value." },
+    { code: "window_type.glazing_missing", element_id: "wel_b", message: "Missing g-value." },
+    { code: "window_type.dimensions_incomplete", message: "Enter all grid dimensions." }];
   o.editor.render(o.state);
   var flag = o.editor.list.querySelector(".window-type-flag");
   assert.strictEqual(flag.getAttribute("aria-label"), "Three elements is incomplete");
-  assert.strictEqual(flag.title, "Enter all grid dimensions.");
+  assert.strictEqual(flag.title, "Missing g-value. Enter all grid dimensions.", "each thing once");
   o.state.sections["ph_composer.windows.types"].value.records = [];
   o.editor.render(o.state);
   assert.strictEqual(o.editor.emptyPrompt.hidden, false);
