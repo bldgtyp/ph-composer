@@ -23,6 +23,12 @@ Phase 2 planning (2026-09-30) places U1-F3 in
 [P2-11](../../../archive/phase-02-envelope/phases/p2-11-window-type-builder.md). The table-layout
 preferences deferred from Phase 1 stay deferred; no Phase 2 screen needs a saved layout.
 
+Phase 3 planning (2026-10-03) allocates the Ruby `volume` and `airflow` quantity rows to
+[P3a-01](../../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md); the panel
+table already has both. U1-F1 is measured in
+[P3a-07](../../phase-03a-spaces/phases/p3a-07-spaces-tab.md) before any optimization,
+and the Spaces table takes the saved column layout there. Neither is authorized.
+
 ## Blockers
 
 - The owning packets for the new quantities (piping, ducting, equipment, climate) are drafts, so
@@ -43,3 +49,4 @@ New quantity rows and the feature follow-ups remain with their owners.
 | 2026-09-18 | PRD drafted from the predecessor's U1 record. |
 | 2026-09-18 | Ed confirmed inherited behavior and the shared-infrastructure-only Phase 0 scope. No implementation authorized. |
 | 2026-09-18 | Phase 0 portion implemented on branch in P0-E. Builder names became dimension scopes a screen names; table-layout preferences defer to the first table screen. |
+| 2026-10-03 | Phase 3 planning: Ruby volume and airflow rows allocated to P3a-01; U1-F1 measurement and saved layout to P3a-07. |

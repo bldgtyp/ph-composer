@@ -40,6 +40,12 @@ is authorized.
 Added 2026-10-02 from [R05](../../../archive/phase-02-envelope-review/R05-export-layering.md)'s follow-ups.
 None is authorized yet.
 
+Phase 3 planning (2026-10-03) allocates items 1 and 2 to
+[P3a-01](../../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md) and item 3
+to [P3a-10](../../phase-03a-spaces/phases/p3a-10-spaces-export.md), with the Spaces
+contributor, section and report schedule. Item 4 stays here if Ed confirms D3a-9, which makes the
+Spaces section required for export, so it is not the first optional attaching section.
+
 1. **Defect: a Room with no Faces.** A Zone whose Faces are all omitted builds a Room with no Faces,
    and the diagnostic canonical model then fails to reload. It predates R05, which made it reachable
    without an Aperture. Reproduce it in a focused test first, then refuse or omit the empty Room
@@ -52,7 +58,10 @@ None is authorized yet.
    say so in the report.
 4. **An optional attaching section withholds the model.** An attaching section that is not required
    for export still withholds the canonical model when it refuses. No such section exists yet; settle
-   the rule before the first one does.
+   the rule before the first one does. Allocated 2026-10-03 to Phase 3
+   [P3b-08](../../phase-03b-thermal-bridges/phases/p3b-08-thermal-bridge-export.md): Ed made the
+   thermal-bridge section optional, so a refused run is omitted and disclosed and the canonical model
+   is still written.
 
 ## Verification
 
@@ -75,3 +84,4 @@ loss, two Models, nested edit paths, Undo/Redo and reopen. See the evidence for 
 | 2026-09-30 | Phase 2 planning: construction and aperture export allocated to P2-06 and P2-14. Packet moved under `features/cross-phase/`. |
 | 2026-09-30 | P1-E implementation and P1-F current-host integrated acceptance complete on branch; independent review and final gates pass. Normal composition requires authored Assemblies. |
 | 2026-10-02 | Phase 2 review: R05's four export-run follow-ups recorded as owed, one a live defect (an empty Room fails to reload). None authorized. |
+| 2026-10-03 | Phase 3 planning: R05 items 1 and 2 allocated to P3a-01 and item 3 to P3a-10, with the Spaces export section. Item 4 stays owed pending D3a-9. None authorized. |

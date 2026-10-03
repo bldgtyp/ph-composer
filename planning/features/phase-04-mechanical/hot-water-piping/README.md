@@ -6,7 +6,7 @@ recirculation loop. New work: the predecessor held this as a 55-line discovery b
 
 ## Read order
 
-1. [thermal-bridges PRD, "Edge tagging rules"](../../phase-03-rooms-and-junctions/thermal-bridges/PRD.md#edge-tagging-rules).
+1. [thermal-bridges PRD, "Edge tagging rules"](../../phase-03b-thermal-bridges/PRD.md#edge-tagging-rules).
    This packet follows them.
 2. [PRD.md](PRD.md).
 3. [STATUS.md](STATUS.md).

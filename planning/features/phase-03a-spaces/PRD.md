@@ -127,7 +127,7 @@ Floor Segment   identifier, display_name, icfa_factor (default 1.0),
 
 - **Identity.** Each `identifier` is a UUID in PH-Composer's own dictionary on the entity, as
   the predecessor's `identifiers.rb` issues it. It is the durable identity that
-  [TECH_STACK.md](../../../../context/TECH_STACK.md) requires, because cut and paste can replace a
+  [TECH_STACK.md](../../../context/TECH_STACK.md) requires, because cut and paste can replace a
   `persistent_id`. References to a Space from the table, the overlay, the report and the export
   use the identifier plus the occurrence path. The honeybee-ph identifiers derive from it.
 - **Copies (Q20).** A native copy of a Space, a Volume or a Floor Segment face copies its
@@ -138,7 +138,7 @@ Floor Segment   identifier, display_name, icfa_factor (default 1.0),
   and paste. A Space inside a repeated component is the same finding with no repair offered:
   PH-Composer never makes a parent unique.
 - **`user_data`.** All three records carry the `user_data` mapping and structured extension
-  payloads that [EXTENSIBILITY.md](../../../../context/EXTENSIBILITY.md) requires, under the
+  payloads that [EXTENSIBILITY.md](../../../context/EXTENSIBILITY.md) requires, under the
   foundation's storage contract. Move Space to Zone keeps it. Make independent keeps it, since a
   copy is the user's own. None of it is exported.
 
@@ -308,7 +308,7 @@ as the table and the totals per Zone and Building-Segment.
 
 ### Carried from zones-and-adjacency
 
-Moved here on 2026-09-30 when the [zones-and-adjacency packet](../../../archive/phase-01-zones-and-adjacency/PRD.md) was archived. Its Phase 1
+Moved here on 2026-09-30 when the [zones-and-adjacency packet](../../archive/phase-01-zones-and-adjacency/PRD.md) was archived. Its Phase 1
 scope is implemented; these Space-dependent parts are not.
 
 - Every Space group carries the Zone stamp (Zone id, Building-Segment, Level). Limited Restore Zone

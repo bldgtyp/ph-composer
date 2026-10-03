@@ -92,8 +92,11 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Layer-Segment | One side-by-side strip of a Layer: a Material and a width. Always written with its qualifier, as Building-Segment is. Exports as one column of the layer's honeybee-ph `PhDivisionGrid` |
 | SD assembly | A placeholder assembly for early design: three real layers sized to a target U-value, after honeybee-grasshopper-ph's SD constructions. Planned, not in the first assemblies phase. PH-Composer has no assembly without layers |
 | Assembly usage | The set of envelope faces assigned to a Model-library assembly, measured by a scan and reported as of the scan time |
-| Thermal bridge | A linear junction the user identifies on the Model, with a psi-value and measured length. Point bridges and chi-values are outside the MVP because honeybee-ph has no canonical carrier |
-| Thermal bridge assignment | The record binding an edge in the Model to a Thermal Bridge Type. The MVP has no point assignment |
+| Thermal Bridge Type | A reusable junction detail stored in the Model: a name, one psi-value, a group, a colour and a link to the psi-value calculation report. A different psi-value is a different type. Maps to the psi-value and group of honeybee-ph's `PhThermalBridge` |
+| Thermal bridge | One run of assigned edges with a measured length and its type's psi-value. The exported object, honeybee-ph's `PhThermalBridge`, held by the Building-Segment of the Zone that contains the edges. Point bridges and chi-values are outside the MVP because honeybee-ph has no canonical carrier |
+| Thermal bridge assignment | The record on one SketchUp edge naming its Thermal Bridge Type and a quantity. The edge is the record: a split or a copy carries it, and deleting the edge removes it. The MVP has no point assignment |
+| Run | Connected assigned edges with the same Zone, type and quantity, ending at a free end or at a junction of three or more. A closed loop is one run. Derived each time the Model is read, never stored |
+| Thermal bridge group | Ambient, Perimeter, or floor slab and basement ceiling. Stored as honeybee-ph's `15-Ambient`, `16-Perimeter` and `17-FS/BC`; shown in METr's words |
 
 ## Windows
 

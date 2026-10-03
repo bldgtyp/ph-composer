@@ -111,8 +111,13 @@ library file. METr conversion stays deferred.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 3.1 | [Spaces](features/phase-03-rooms-and-junctions/spaces/README.md) | Scoped, interviewed | Mostly a port. Volume preview depends on spike 0.4 |
-| 3.2 | [Thermal bridges](features/phase-03-rooms-and-junctions/thermal-bridges/README.md) | Requested, PRD drafted | New. Depends on spike 0.6. Brings the edge Classify tool that phase 4 reuses |
+| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | Scoped; planned as P3a-01 to P3a-12, none authorized | Mostly a port, with the reconciler, edit-context and Colour-by foundation it was expected to inherit still to build. Phase 3a, its own packet |
+| 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09, none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
+
+Ed split Phase 3 on 2026-10-03 into two sub-phases, each one packet planned and worked on its own:
+[3a Spaces](features/phase-03a-spaces/README.md) and
+[3b thermal bridges](features/phase-03b-thermal-bridges/README.md). Phase 3 closes when both do.
+3b waits on two 3a stages (P3a-01 and P3a-05) and is otherwise independent.
 
 These two are independent of each other and of phase 2. Either can move earlier if a port is
 wanted as a warm-up. They sit here because neither is needed for the Phase 1 canonical HBJSON proof.
@@ -188,3 +193,6 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-09-30 | Phase 1 merged through PR #3 and PR #6, closing #2; Ed accepted R05 on offline coverage; the packet is archived. |
 | 2026-09-30 | Phase 2 planned in detail: a coordinating packet with seventeen stages. Feature packets regrouped into phase directories under `features/`. Ed answered Phase 2 decisions D2-1 to D2-10. No implementation authorized. |
 | 2026-10-01 | Ed revised Phase 2 decision D2-1: features sit in three layers, definitions below Zones and placed things above. |
+| 2026-10-03 | Spaces planned in detail in the Phase 3 coordinating packet: twelve stages, P3a-01 to P3a-12, and twelve decisions for Ed. Thermal bridges not planned. No implementation authorized. |
+| 2026-10-03 | Thermal bridges planned in detail in the same packet: nine stages, P3b-01 to P3b-09, and twenty-one decisions plus the PRD's interview questions for Ed. No implementation authorized. |
+| 2026-10-03 | Phase 3 split into two sub-phase packets, `phase-03a-spaces/` and `phase-03b-thermal-bridges/`, with ids restarted per sub-phase (P3a-, D3a-; P3b-, D3b-). |
