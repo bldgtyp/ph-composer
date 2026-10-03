@@ -224,7 +224,10 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       entry.cells[column[0]] = td; entry.node.appendChild(td);
     });
     var hierarchy = entry.cells.hierarchy;
-    if (hierarchy && row.depth < 2) {
+    // Built when the row first sits at a depth that opens. A row can change depth and keep its key (a
+    // Face that gains a record moves up under its Zone), so paintRow asks for it again.
+    entry.needChevron = function () {
+      if (entry.chevron || !hierarchy) return;
       entry.chevron = button("", function () {
         expanded[entry.row.key] = !entry.open;
         table(root, cache.records, cache.options);
@@ -232,8 +235,9 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       });
       entry.chevron.className = "row-chevron";
       entry.chevron.innerHTML = icons.ROW_CHEVRON;
-      hierarchy.appendChild(entry.chevron);
-    }
+      hierarchy.insertBefore(entry.chevron, hierarchy.firstChild);
+    };
+    if (row.depth < 2) entry.needChevron();
     if (hierarchy) {
       entry.target = button(row.tier, function () { if (cache.options.inspect) cache.options.inspect(entry.row); });
       entry.target.className = "row-target";
@@ -272,14 +276,16 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     if (options.actionsCell) options.actionsCell(entry.cells.actions, row);
     var selected = options.selected && options.selected(row);
     entry.node.className = "tier-" + row.depth + (selected ? " host-selected" : "");
+    if (row.depth < 2) entry.needChevron();
+    if (entry.target) entry.target.disabled = Boolean(options.disabled);
     if (entry.chevron) {
+      entry.chevron.hidden = row.depth >= 2;
       // A row with nothing under it keeps the chevron's place, so its label lines up, but offers nothing to open.
       var leaf = Boolean(options.expandable && !options.expandable(row));
       entry.chevron.classList.toggle("is-leaf", leaf);
       entry.chevron.disabled = leaf;
       entry.chevron.setAttribute("aria-label", (isOpen ? "Collapse " : "Expand ") + row.tier + " " + rowLabel(row));
       entry.chevron.setAttribute("aria-expanded", String(isOpen));
-      if (entry.target) entry.target.disabled = Boolean(options.disabled);
     }
     if (entry.cells.hierarchy && options.marker) {
       var marker = options.marker(row);

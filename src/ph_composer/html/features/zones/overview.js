@@ -1,13 +1,13 @@
-/* The Overview screen: the model tree of Zones with their classified Faces beneath, the shared view
- * controls above it, and the selected Zone's own fields below.
+/* The Zones / Faces screen: the model tree of Zones with their Faces beneath, the shared view controls
+ * above it, and the inspector's Face selection and Zone details beside it.
  *
  * The table is the shared record table; this file holds only this screen's vocabulary: its columns,
  * what each cell reads, its row actions and its editable chips. Every write goes through a registered
  * action carrying the values the row was painted from, and Locate goes through the view command,
  * which changes the selection and the camera and writes nothing.
  *
- * An unclassified Face is not a row. Its Zone's row carries the count and the Suggest
- * classification action that gives those Faces a record.
+ * A Face with no record is a row too, under its Zone's "N unclassified Faces" summary. The Zone's row
+ * carries their count and the Suggest classification action that gives them all a record.
  */
 PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request", "snapshot", "units",
   "unit_preferences", "unit_field", "table", "view_controls", "fields", "face_words",
@@ -45,7 +45,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
     if (screen && screen.settings) screen.settings.dispose();
     if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
-    screen = { session: session, selected: null, expanded: Object.create(null), columnWidths: {},
+    screen = { session: session, selected: null, expanded: Object.create(null), showAll: Object.create(null),
+      columnWidths: {},
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
     screen.settings = new ZoneSettings(session, send, function () { return draftReason(screen); }, refuse);
@@ -104,8 +105,13 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
      zones read reports both and says so in `state`. Keying on the id would put the copy's Faces
      under the original's row, sum both areas into it and drop one Zone off the screen entirely.
 
-     A Face with no record counts towards its Zone's marker rather than towards a row of its own. */
-  function project(zones, faces) {
+     A Face with no record is a row too, so the tree lists everything that is left to do. Those rows
+     sit together under one summary row per Zone, after the recorded Faces: a short list opens by
+     itself, a long one waits to be opened, and a very long one shows its first rows and offers the
+     rest, because a new Zone can hold hundreds. */
+  var OPEN_UP_TO = 10, SHOWN_AT_FIRST = 50;
+
+  function project(zones, faces, showAll) {
     var byZone = Object.create(null), rows = [];
     faces.forEach(function (face) {
       var key = occurrence(face.reference.zone_path);
@@ -116,13 +122,30 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       var recorded = own.filter(function (face) { return face.state !== "unclassified"; });
       var key = JSON.stringify(["Zone", zone.reference.zone_path]);
       rows.push({ key: key, parent: null, tier: "Zone", depth: 0,
-        record: { id: key, name: zone.values.name, zone: zone, faces: recorded,
+        record: { id: key, name: zone.values.name, zone: zone, faces: recorded, every: own,
           state: zone.state, unclassified: own.length - recorded.length } });
-      recorded.forEach(function (face) {
-        rows.push({ key: JSON.stringify(["Face", zone.reference.zone_path, face.reference.entity_path]),
-          parent: key, tier: "Face", depth: 1,
-          record: { id: face.reference.entity_id, name: faceName(face, own), face: face } });
+      function faceRow(face, parent, depth) {
+        return { key: JSON.stringify(["Face", zone.reference.zone_path, face.reference.entity_path]),
+          parent: parent, tier: "Face", depth: depth,
+          record: { id: face.reference.entity_id, name: faceName(face, own), face: face } };
+      }
+      recorded.forEach(function (face) { rows.push(faceRow(face, key, 1)); });
+      var waiting = own.filter(function (face) { return face.state === "unclassified"; });
+      if (!waiting.length) return;
+      var summary = JSON.stringify(["Unclassified", zone.reference.zone_path]);
+      var all = Boolean(showAll && showAll[summary]) || waiting.length <= SHOWN_AT_FIRST;
+      rows.push({ key: summary, parent: key, tier: "Faces", depth: 1,
+        record: { id: summary, faces: waiting, summary: true,
+          name: waiting.length + (waiting.length === 1 ? " unclassified Face" : " unclassified Faces") } });
+      (all ? waiting : waiting.slice(0, SHOWN_AT_FIRST)).forEach(function (face) {
+        rows.push(faceRow(face, summary, 2));
       });
+      if (!all) {
+        rows.push({ key: JSON.stringify(["More", zone.reference.zone_path]), parent: summary, tier: "Show all",
+          depth: 2, record: { id: summary, faces: [], more: summary,
+            name: (waiting.length - SHOWN_AT_FIRST) + " more unclassified " +
+              (waiting.length - SHOWN_AT_FIRST === 1 ? "Face" : "Faces") } });
+      }
     });
     return rows;
   }
@@ -143,7 +166,11 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function value(row, field, profile) {
     var face = row.record.face;
     if (field === "name") return row.record.name;
-    if (!face) return field === "area_m2" ? area(totalArea(row.record.faces), profile) : "";
+    if (!face) {
+      return field === "area_m2" && !row.record.more ?
+        area(totalArea(row.record.every || row.record.faces), profile) : "";
+    }
+    if (field === "assembly_id") return "";
     if (field === "face_type") return words.faceType(face.values.face_type);
     if (field === "boundary_condition") {
       return words.boundary(face.values.boundary_condition);
@@ -172,10 +199,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function actions(row) {
-    var locatable = row.record.face || row.record.faces.length;
+    if (row.record.more) return [];
+    var locatable = row.record.face || (row.record.every || row.record.faces).length;
     var items = [{ id: "locate", icon: "locate", disabled: !locatable,
-      label: locatable ? "Locate " + row.record.name :
-        "Nothing to locate: no Face in " + row.record.name + " has a record yet" }];
+      label: locatable ? "Locate " + row.record.name : "Nothing to locate: " + row.record.name + " has no Faces" }];
     if (row.depth === 0 && row.record.unclassified) {
       items.push({ id: "suggest", icon: "sort", label: "Suggest classification for " + row.record.name });
     }
@@ -230,7 +257,13 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
      control: an `AirBoundary` Face, or one the solver paired, reads what it is and refuses the edit. */
   function cell(td, row, field, text, state) {
     var face = row.record.face, offered, chip;
-    if (field === "assembly_id") return assemblies.cell(td, row, state, draftReason, refuse);
+    // A Face with no record has nothing to hang an Assembly on yet; its type or boundary comes first.
+    if (field === "assembly_id") {
+      if (!face || face.state !== "unclassified") return assemblies.cell(td, row, state, draftReason, refuse);
+      // Back to text: the control this cell may have held (the Face had a record until an Undo) is forgotten.
+      if (td._assemblyChip) { td._assemblyChip = null; td.className = "col-assembly_id"; }
+      return false;
+    }
     if (!face || (field !== "face_type" && field !== "boundary_condition")) return false;
     var issue = problem(face, field);
     if (field === "boundary_condition" && face.values.boundary_condition === "AttachedZone") {
@@ -312,7 +345,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
 
   function locate(state, row) {
     var references = row.record.face ? [row.record.face.reference]
-      : row.record.faces.map(function (face) { return face.reference; });
+      : (row.record.every || row.record.faces).map(function (face) { return face.reference; });
     if (references.length) state.look.run("ph_composer.zones.faces.locate", { faces: references });
   }
 
@@ -371,11 +404,20 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     screenState.selectionAssignment.consume(state, screenState.attachedRecords);
     screenState.faceTypes = tool.face_types || [];
     screenState.boundaries = tool.boundary_conditions || [];
-    var rows = project(zones.zones, faces);
+    var rows = project(zones.zones, faces, screenState.showAll);
+    // A short list of unclassified Faces opens by itself. That is decided once, when the list first
+    // appears, so it does not snap shut or open under the user as the count changes.
+    rows.forEach(function (row) {
+      if (row.record.summary && !Object.prototype.hasOwnProperty.call(screenState.expanded, row.key)) {
+        screenState.expanded[row.key] = row.record.faces.length <= OPEN_UP_TO;
+      }
+    });
     screenState.edits.consume(state);
     screenState.look.consume(state);
     screenState.settings.consume(state, snapshot.value(state, "ph_composer.zones.settings"));
-    screenState.zoneKeys = rows.filter(depth(0)).map(function (row) { return row.key; });
+    // Collapse all and Expand all reach everything that opens: Zones and their unclassified summaries.
+    screenState.zoneKeys = rows.filter(function (row) { return row.depth === 0 || row.record.summary; })
+      .map(function (row) { return row.key; });
     if (!root.querySelector(".phc-table-mount")) {
       root.className = "phc-overview";
       root.replaceChildren(ui.element("div", "phc-heading-mount"), screenState.controls.root,
@@ -512,7 +554,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     zoneRows.forEach(function (row) { byId[row.record.id] = row; });
     var projection = state.controls.project(zoneRows.map(function (row) { return row.record; }), {
       id: function (record) { return record.id; },
-      value: function (record, field) { return field === "area_m2" ? totalArea(record.faces) : record.name; },
+      value: function (record, field) { return field === "area_m2" ? totalArea(record.every) : record.name; },
       search: function (record) { return searchText(record, state); },
       rows: function () { return rows; }
     });
@@ -529,6 +571,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       marker: marker, actions: actions, rowHidden: projection.hidden,
       selected: function (row) { return state.selected === row.key; },
       inspect: function (row) {
+        if (row.record.more) { state.showAll[row.record.more] = true; panel.repaint(); return; }
         var reason = row.key !== state.selected && draftReason(state);
         if (reason) return refuse(reason);
         state.selected = row.key;
@@ -547,7 +590,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function searchText(record, state) {
-    return [record.name].concat(record.faces.map(function (face) {
+    return [record.name, record.unclassified ? "unclassified" : ""].concat(record.faces.map(function (face) {
       var assigned = assemblies.choices(state.snapshot, []).filter(function (record) {
         return record.id === face.values.assembly_id;
       })[0];
@@ -559,11 +602,13 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   /* The Zone order the controls settled on, each Zone followed by its own Face rows. */
   function ordered(records, byId, rows) {
     var children = Object.create(null);
-    rows.filter(depth(1)).forEach(function (row) { (children[row.parent] = children[row.parent] || []).push(row); });
-    return records.reduce(function (all, record) {
-      var row = byId[record.id];
-      return all.concat([row], children[row.key] || []);
-    }, []);
+    rows.forEach(function (row) {
+      if (row.parent) (children[row.parent] = children[row.parent] || []).push(row);
+    });
+    function withChildren(row) {
+      return (children[row.key] || []).reduce(function (all, child) { return all.concat(withChildren(child)); }, [row]);
+    }
+    return records.reduce(function (all, record) { return all.concat(withChildren(byId[record.id])); }, []);
   }
 
   /* The selected Zone's own fields. They belong to the Zone rather than to any one row, so they are a
