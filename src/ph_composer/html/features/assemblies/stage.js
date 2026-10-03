@@ -14,7 +14,8 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
       var self = this, values = record.values, thermal = (record.display || {}).thermal || {};
       var layout = canvas.geometry(values, materials), root = el("div", "assembly-canvas-block");
       if (this.zoom === null) {
-        this.zoom = canvas.fitZoom(layout.widthMm, this.main.clientWidth || window.innerWidth - 320);
+        // Less room for the scroll area's padding and a scrollbar, so a drawing that fits is not cut at its right.
+        this.zoom = canvas.fitZoom(layout.widthMm, (this.main.clientWidth || window.innerWidth - 320) - 12);
       }
       root.appendChild(boundary(thermal, values.orientation !== "last_layer_outside"));
       var scroll = el("div", "assembly-stage-scroll"), drawingStage = el("div", "assembly-stage");

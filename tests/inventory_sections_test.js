@@ -129,7 +129,7 @@ test("Assembly Open shows the Builder and exposes no provider controls", functio
   view.open(o.state.sections["ph_composer.assemblies.assemblies"].value.records[0]);
   assert.ok(view.editor);
   assert.ok(view.listRoot.hidden);
-  assert.ok(text(view.editor.root).includes("Back to Assemblies"));
+  assert.ok(view.editor.root.querySelector("[aria-label='Back to Assemblies']"));
   assert.ok(!text(o.roots.assemblies).includes("designPH"));
   assert.ok(!o.roots.assemblies.querySelector("[data-row-action='faces']"));
   assert.strictEqual(o.sent.length, 0);

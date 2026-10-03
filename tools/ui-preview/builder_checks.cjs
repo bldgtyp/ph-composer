@@ -77,6 +77,10 @@ fs.mkdirSync(output, { recursive: true });
     await editor.locator("[data-builder-action='segments.remove']").click();
     await editor.getByRole("dialog").getByRole("button", { name: "Delete segment", exact: true }).click();
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].segments.length === 2);
+    const groups = await editor.locator(".assembly-toolbar > .assembly-tool-group").evaluateAll(nodes =>
+      nodes.map(node => Math.round(node.getBoundingClientRect().top)));
+    assert.ok(Math.max(...groups) - Math.min(...groups) < 12, "the toolbar is one row at 1280");
+    await editor.getByRole("button", { name: "More drawing actions", exact: true }).click();
     await editor.locator("[data-builder-action='layers.flip_orientation']").click();
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.orientation === "last_layer_outside");
     await editor.getByRole("button", { name: "Advanced", exact: true }).click();

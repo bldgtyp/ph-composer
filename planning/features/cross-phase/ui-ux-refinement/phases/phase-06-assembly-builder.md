@@ -1,7 +1,7 @@
 # Packet 6: Assembly Builder toolbars and inventory row actions
 
 DATE: 2026-10-03
-STATUS: Plan; built under Ed's standing go of 2026-10-03
+STATUS: Implemented; pull request open
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -82,3 +82,44 @@ table draws a hairline before it. Zones marks its first contributed action, so t
 
 New Assembly acting at once (D5) and the Materials form: packet 7. The library sidebar's controls:
 packet 7.
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-assembly-builder`. `make ci` and `make ui-checks` pass.
+
+What differs from the plan above:
+
+- At 1000 wide and under, the selection's tools always take the toolbar's second row, selected or
+  not, so selecting a Layer-Segment does not move the drawing. Under 700 the selection's name is
+  dropped from that row; the chip and the outline in the drawing identify it.
+- A4 is half met. The toolbar is one or two rows where it was four. At 420 the drawing is still
+  wider than the panel at its smallest zoom step and scrolls; adding a smaller step changes what
+  Fit means and is left alone.
+- A disabled Add segment or Delete segment icon says why in its tooltip.
+- The `restore` icon is removed: Replace was its only user.
+
+One Sonnet diff review ran against the architecture and ui-polish rubrics. Applied: the toolbar
+height changing with selection at 900 and 420, silent disabled icons, a comment that did not match
+its number, a test assertion that could not fail, the unused icon. Not taken: restoring keyboard
+focus after a toolbar action repaints the Builder, which predates this packet and is recorded as a
+follow-up.
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+this branch, Model `ui-builder-run.skp` copied fresh from the synthetic
+`ux-followups-integrated.skp`. One Assembly was made through the panel's New Assembly form. Panel
+steps were driven through development `eval` on the panel's dialog; captures are native window
+pixels taken by window id.
+
+| Check | Result |
+| --- | --- |
+| Assemblies row: three record icons, a hairline, three Model icons with the new Replace glyph | Pass, after a fix: the first build gave the group a margin and the host clipped the last icon to an ellipsis. The hairline now sits in the gap the icons already have |
+| Builder opens with the quiet back link, a boxless title, metrics and one toolbar row | Pass |
+| Selecting a Layer-Segment: teal outline, its name, "No Material" chip, Add and Delete segment, Layer tools, Segment properties; Delete disabled on the only segment | Pass |
+| Add Layer from the toolbar | Pass: a second Layer is drawn and Total thickness reads 200 mm |
+| More drawing actions opens with Mirror segments, Flip Layers and Flip orientation | Pass |
+
+Not covered: native pointer and keyboard gestures, the narrow layouts (covered in the browser at
+900 and 420), Undo of a toolbar action (the commands are unchanged), SketchUp 2023, Windows.
+Evidence is in the gitignored `_private/host/ui-builder-evidence/`.

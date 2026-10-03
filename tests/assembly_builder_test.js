@@ -267,3 +267,21 @@ test("outside drag only suppresses its trailing pointer click and permits keyboa
   assert.strictEqual(entry.suppressClick, false);
   assert.strictEqual(o.sent.length, 0);
 });
+
+test("the toolbar shows a selection's tools only while a Layer-Segment is selected", function () {
+  var o = setup(), bar = o.editor.root.querySelector(".assembly-toolbar");
+  var selection = bar.querySelector(".assembly-selection-tools");
+  assert.strictEqual(selection.querySelectorAll("button").length, 0);
+  assert.strictEqual(selection.children[0].textContent, "Select a Layer-Segment");
+  assert.strictEqual(o.editor.root.querySelectorAll("[data-builder-action='segments.add']").length, 0);
+  ["segments.mirror", "layers.flip", "layers.flip_orientation"].forEach(function (action) {
+    assert.ok(bar.querySelector("[data-builder-action='" + action + "']"), action + " is in the menu");
+  });
+  o.editor.select({ layerId: "layer_studs", segmentId: "seg_steel" });
+  bar = o.editor.root.querySelector(".assembly-toolbar");
+  ["Add segment", "Delete segment", "Segment properties"].forEach(function (label) {
+    assert.ok(bar.querySelectorAll("button").some(function (node) {
+      return node.getAttribute("aria-label") === label; }), label + " is an icon named for what it does");
+  });
+  assert.strictEqual(o.editor.root.querySelector(".assembly-back").getAttribute("aria-label"), "Back to Assemblies");
+});

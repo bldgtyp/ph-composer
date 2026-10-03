@@ -20,7 +20,8 @@ PhComposerUI.define("icons", ["dom"], function (dom) {
     close: '<path d="M10 3h10v18H10M15 12H3m4-4-4 4 4 4"/>',
     locate: '<circle cx="12" cy="12" r="6"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>',
     delete: '<path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/>',
-    restore: '<path d="M4 5v6h6M4 11a8 8 0 1 1 1 7"/>',
+    replace: '<path d="M14 4a2 2 0 0 1 2-2m0 8a2 2 0 0 1-2-2m6-6a2 2 0 0 1 2 2m0 4a2 2 0 0 1-2 2M3 7l3 3 3-3M6 10V5a3 3 0 0 1 3-3h1"/>' +
+      '<rect x="2" y="14" width="8" height="8" rx="2"/>',
     repair: '<path d="m15 3-3 3 1 4 4 1 3-3a6 6 0 0 1-7 8l-6 6-4-4 6-6a6 6 0 0 1 6-9Z"/>',
     duplicate: '<path d="M8 8h12v12H8zM4 4h12v4M4 4v12h4"/>',
     variant: '<path d="M12 3v18M3 12h18M5 5l14 14M19 5 5 19"/>',

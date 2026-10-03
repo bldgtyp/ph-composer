@@ -48,6 +48,8 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table .row-icon:disabled { opacity: .4; background: transparent; }
 .phc-table .row-delete:hover:enabled, .phc-table .row-delete:focus-visible { color: var(--red); background: var(--error-surface); }
 .phc-table .row-icon:last-child { margin-right: 0; }
+/* The hairline sits in the gap the icons already have, so a group costs the column no width. */
+.phc-table .row-icon.row-icon-starts { box-shadow: -3px 0 0 -2px var(--line); }
 .phc-table .row-chevron { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: 20px; height: 26px; padding: 0; }
 .phc-table .row-chevron svg { display: block; }
 .phc-table .row-chevron.is-leaf { visibility: hidden; }

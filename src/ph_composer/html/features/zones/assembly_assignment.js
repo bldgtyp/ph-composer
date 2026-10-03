@@ -173,10 +173,11 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
       return true;
     }, actions: function (row, state) {
       var count = usage(state, row.record.id).face_count;
-      return [{ id: "select_assembly_faces", icon: "locate", disabled: !count,
+      // These act on Faces in the Model, not on the Assembly record, so they start their own group.
+      return [{ id: "select_assembly_faces", icon: "locate", disabled: !count, starts: true,
         label: "Select faces using " + row.record.values.name },
       { id: "paint_assembly", icon: "paint_bucket", label: "Paint " + row.record.values.name + " onto faces" },
-      { id: "replace_assembly", icon: "restore", disabled: !count,
+      { id: "replace_assembly", icon: "replace", disabled: !count,
         label: "Replace " + row.record.values.name + " on assigned Faces" }];
     }, action: function (row, action, control, state, send) {
       var live = panel.state || state;

@@ -2,9 +2,16 @@
 .assembly-editor { display: flex; align-items: stretch; gap: 16px; min-width: 0; padding: 16px 0; box-sizing: border-box; }
 .assembly-editor-main { flex: 1 1 0; min-width: 0; }
 .assembly-header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
-.assembly-header > button { white-space: nowrap; }
+.phc-workspace .assembly-back { flex: 1 1 100%; margin: 0 0 -6px; padding: 0; border: 0; background: transparent;
+  color: var(--muted); font-size: 12px; font-weight: 400; text-align: left; white-space: nowrap; }
+.assembly-back::before { content: "\2039\00a0"; }
+.phc-workspace .assembly-back:hover:enabled { background: transparent; color: var(--interaction-highlight); }
 .assembly-identity { flex: 1 1 220px; min-width: 0; }
-.assembly-name .phc-cell-input { font-size: 20px; font-weight: 650; width: 100%; }
+/* The title reads as a title and takes a field's box only under the pointer or with focus. */
+.assembly-name .phc-cell-input { font-size: 20px; font-weight: 650; width: 100%; border-color: transparent;
+  background: transparent; padding-left: 0; }
+.assembly-name .phc-cell-input:hover, .assembly-name .phc-cell-input:focus { border-color: var(--line);
+  background: #fff; padding-left: 6px; }
 .assembly-header-hints { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
 .assembly-hint { min-width: 90px; max-width: 170px; }
 .assembly-color { width: 26px; min-width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 4px; }
@@ -13,12 +20,19 @@
 .assembly-header-metric small { color: var(--muted); }
 .assembly-header-metric strong { white-space: nowrap; font-size: 15px; font-weight: 600; }
 .assembly-incomplete { flex: 1 1 100%; margin: 0; color: var(--muted); }
-.assembly-inspector { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 108px;
-  padding: 10px; border: 1px solid var(--line); background: var(--surface); border-radius: 5px; }
-.assembly-selection-label { flex: 1 1 220px; font-size: 12px; }
-.assembly-tool-group { display: flex; flex-wrap: wrap; gap: 4px; }
-.assembly-tool-group button { padding: 5px 8px; font-size: 11px; }
-.assembly-drawing-tools { flex: 1 1 100%; }
+.assembly-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-height: 50px;
+  padding: 9px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); box-sizing: border-box; }
+.assembly-tool-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.assembly-tool-group + .assembly-tool-group { border-left: 1px solid var(--line); padding-left: 10px; }
+.assembly-toolbar .assembly-selection-tools { margin-left: auto; border-left: 0; padding-left: 0; }
+.assembly-selection-label { font-size: 12px; margin-right: 4px; white-space: nowrap; }
+.phc-workspace .assembly-material-chip { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Where the selection's tools cannot share the first row they always take the second, selected or not, so
+   selecting a Layer-Segment never moves the drawing it was clicked in. */
+@media (max-width: 1000px) {
+  .assembly-toolbar { min-height: 92px; align-content: flex-start; }
+  .assembly-toolbar .assembly-selection-tools { flex: 1 1 100%; margin-left: 0; min-height: 32px; }
+}
 .assembly-inline-field { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
 .assembly-inline-field input[type="checkbox"] { width: auto; align-self: flex-start; }
 .assembly-dimension-editor .phc-unit-field { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
@@ -36,17 +50,18 @@
 .assembly-drawing { position: relative; flex: 0 0 auto; }
 .assembly-drawing svg { display: block; overflow: visible; }
 .assembly-segment { transition: stroke .1s; }
-.assembly-segment.is-selected { stroke: var(--drawing-highlight); stroke-width: 3; }
+.assembly-segment.is-selected { stroke: var(--interaction-highlight); stroke-width: 3; }
 .assembly-segment.is-membrane { stroke-width: 3; }
 .assembly-segment.is-air-barrier, .assembly-air-barrier { stroke: var(--drawing-highlight); stroke-width: 3; }
 .assembly-editor .assembly-hit-target { position: absolute; z-index: 1; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .assembly-hit-target:hover, .assembly-hit-target:focus-visible, .assembly-hit-target.is-drop-target {
   background: var(--drawing-highlight-halo); outline: 2px solid var(--drawing-highlight); outline-offset: -2px; }
-.assembly-hit-target[aria-pressed="true"] { outline: 2px solid var(--drawing-highlight); outline-offset: -2px; }
+/* Selection is teal; the red above is the pointer and keyboard focus. */
+.assembly-hit-target[aria-pressed="true"] { outline: 2px solid var(--interaction-highlight); outline-offset: -2px; }
 .assembly-width-lane { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; padding: 12px 0 6px 104px; }
 .assembly-width-lane > small { color: var(--muted); }
 @media (max-width: 700px) {
   .assembly-editor { flex-direction: column; gap: 10px; }
   .assembly-header-metrics { gap: 12px; }
-  .assembly-inspector { min-height: 140px; }
+  .assembly-selection-tools strong.assembly-selection-label { display: none; }
 }

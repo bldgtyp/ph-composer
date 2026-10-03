@@ -102,6 +102,18 @@ test("collapsing a parent hides its children and leaves it in the tree", functio
   assert.strictEqual(h.root.querySelectorAll("[data-row-key]").length, 2, "the child row is gone");
 });
 
+test("an action that starts a group is set apart from the ones before it", function () {
+  var h = harness();
+  paint(h, {
+    actions: function (row) {
+      return row.key !== "a" ? [] : [{ id: "open", icon: "document", label: "Open" },
+        { id: "locate", icon: "locate", label: "Locate", starts: true }];
+    }
+  });
+  var buttons = h.root.querySelectorAll("[data-row-action]");
+  assert.deepStrictEqual(buttons.map(function (node) { return /row-icon-starts/.test(node.className); }),
+    [false, true]);
+});
 test("row actions are the caller's, and clicking one hands back its row", function () {
   var h = harness();
   var acted = [];
