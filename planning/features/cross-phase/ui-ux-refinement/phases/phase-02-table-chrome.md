@@ -1,7 +1,7 @@
 # Packet 2: table chrome and cells
 
 DATE: 2026-10-03
-STATUS: Implemented on branch
+STATUS: In review
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -135,3 +135,20 @@ valid findings are applied: the help button takes the icon-button size and the k
 enum pill carries its own focus ring and locked look, the fill tools start idle, and the tests the
 plan promised are in. Left as follow-ups: the sort toggle announces no state change to a screen
 reader, and a Library surface that is not a kit `Inventory` shows no count.
+
+## Host check, 2026-10-03: part done
+
+SketchUp 26.1.188, fresh process, build installed from the branch, Model `ui-chrome-run.skp`
+copied fresh from the synthetic `uxk1-rerun.skp` (two Zones, twelve classified Faces). Captures are
+native window pixels by window id; tab changes were driven through development `eval`.
+
+| Check | Result |
+| --- | --- |
+| Zones / Faces at 1496 by 938 | Pass: one control row with the sort toggle, Type, Boundary and Assembly cells as the kit's enum pill |
+| Assemblies, empty | Pass: one row (filter, Group by, Order by, toggle, help), header count 0 |
+| Library Materials, empty | Pass: one row with "0 total", no count in the header |
+| Assemblies and Library with records: bare numbers, pills, fill tools on a range | Not run. Two Materials and two Assemblies were created in the scratch Model through the panel's own forms, then the screen locked and macOS refused window captures |
+| Range fill and one enum edit by native pointer | Not run |
+
+Pull request [#56](https://github.com/bldgtyp/ph-composer/pull/56) stays open until the last two
+rows pass. Evidence so far is in the gitignored `_private/host/ui-chrome-evidence/`.

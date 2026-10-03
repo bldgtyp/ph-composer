@@ -10,7 +10,7 @@ STATUS: Scoped
 | Flow critique | Done for the panel 2026-10-03 | [FINDINGS.md](FINDINGS.md) |
 | Ed's rulings on D1 to D7 | Done 2026-10-03 | All seven recommendations accepted; recorded in FINDINGS.md |
 | Packet 1, page frame | Merged to main 2026-10-03, [#55](https://github.com/bldgtyp/ph-composer/pull/55); host check passed | [phases/phase-01-page-frame.md](phases/phase-01-page-frame.md) |
-| Packet 2, table chrome | Implemented on branch `feat/ui-table-chrome` 2026-10-03; `make ci` and `make ui-checks` pass; host check owed | [phases/phase-02-table-chrome.md](phases/phase-02-table-chrome.md) |
+| Packet 2, table chrome | In review: [#56](https://github.com/bldgtyp/ph-composer/pull/56). `make ci` and `make ui-checks` pass; host check part done, populated tables and native gestures owed | [phases/phase-02-table-chrome.md](phases/phase-02-table-chrome.md) |
 | Packets 3 to 8 | Requested | Order in FINDINGS.md; each gets its plan when the one before lands |
 | Design System artifact | Not started | After the kit-wide packets settle |
 
