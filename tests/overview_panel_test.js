@@ -150,12 +150,12 @@ test("area headers and Zone and Face values follow the display profile together"
   }
 
   assert.ok(header().textContent.includes("Gross area ft²"));
-  assert.deepStrictEqual(areas(), ["43.06", "10.76", "32.29", "86.11", "86.11"],
-    "the Zone, its two recorded Faces, then its unclassified Faces as a group and one by one");
+  assert.deepStrictEqual(areas(), ["129.17", "10.76", "32.29", "86.11", "86.11"],
+    "the Zone over every Face it has, its two recorded Faces, then the unclassified as a group and one by one");
   p.modules.unit_preferences.set("unit_system", "SI");
   p.panel.repaint();
   assert.ok(header().textContent.includes("Gross area m²"));
-  assert.deepStrictEqual(areas(), ["4", "1", "3", "8", "8"]);
+  assert.deepStrictEqual(areas(), ["12", "1", "3", "8", "8"]);
   assert.strictEqual(faces[0].area_m2, 1, "display changes leave the canonical snapshot alone");
 });
 
@@ -344,7 +344,8 @@ test("Locate goes to the viewport channel and never to an action", function () {
 
   assert.strictEqual(p.sent[0].type, "view.invoke");
   assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.locate");
-  assert.strictEqual(p.sent[0].payload.params.faces.length, 1, "a Zone locates only its recorded Faces");
+  assert.strictEqual(p.sent[0].payload.params.faces.length, 2,
+    "a Zone locates every Face it has, recorded or not, as its rows now list them");
   assert.strictEqual(p.sent[0].payload.expected_revision, undefined, "a view command guards no revision");
 });
 
@@ -879,4 +880,59 @@ test("a blocked Make Zone says why beside it", function () {
   payload.sections["ph_composer.zones.overview"].value.make_zone = { entity_path: [1] };
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   assert.strictEqual(p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason"), null);
+});
+
+test("a Face that gains a record moves up under its Zone and lines up there; Undo moves it back", function () {
+  var p = page(), payload = snapshot();
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var key = JSON.stringify(["Face", [100], [102]]);
+  function row() {
+    return section.querySelectorAll("[data-row-key]").filter(function (node) {
+      return node.getAttribute("data-row-key") === key;
+    })[0];
+  }
+  var unclassified = row();
+  assert.ok(/tier-2/.test(unclassified.className));
+  assert.strictEqual(unclassified.querySelector(".row-chevron"), null, "a row under the summary has no chevron");
+
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
+  faces[1].state = "classified";
+  faces[1].reference.entity_id = "fac_b";
+  faces[1].values = { face_type: "Floor", boundary_condition: "Ground" };
+  payload.sections["ph_composer.zones.faces.assemblies"] = { status: "completed", value: { assemblies: [] } };
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  assert.strictEqual(row(), unclassified, "the same row, so selection and focus go with it");
+  assert.ok(/tier-1/.test(unclassified.className));
+  var chevron = unclassified.querySelector(".row-chevron");
+  assert.ok(chevron && chevron.classList.contains("is-leaf") && !chevron.hidden,
+    "it takes the chevron's place its neighbours keep, so its label lines up");
+
+  faces[1].state = "unclassified";
+  faces[1].reference.entity_id = null;
+  faces[1].values = {};
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  assert.ok(/tier-2/.test(row().className));
+  assert.strictEqual(row().querySelector(".row-chevron").hidden, true);
+});
+
+test("Expand all and Collapse all reach the unclassified summary, and the filter finds unclassified", function () {
+  var p = page(), payload = snapshot();
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  function count() {
+    return section.querySelectorAll("[data-row-key]").filter(function (node) { return !node.hidden; }).length;
+  }
+  function byText(root, text) {
+    return root.querySelectorAll("button").filter(function (node) { return node.textContent === text; })[0];
+  }
+  assert.strictEqual(count(), 4);
+  byText(section, "Collapse all").listeners.click({});
+  assert.strictEqual(count(), 1);
+  byText(section, "Expand all").listeners.click({});
+  assert.strictEqual(count(), 4);
+  var filter = byLabel(section, "Filter Zones");
+  filter.value = "unclassified";
+  filter.listeners.input({});
+  assert.strictEqual(count(), 4, "a Zone with unclassified Faces matches the word");
 });

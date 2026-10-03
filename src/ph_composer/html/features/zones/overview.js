@@ -1,13 +1,13 @@
-/* The Overview screen: the model tree of Zones with their classified Faces beneath, the shared view
- * controls above it, and the selected Zone's own fields below.
+/* The Zones / Faces screen: the model tree of Zones with their Faces beneath, the shared view controls
+ * above it, and the inspector's Face selection and Zone details beside it.
  *
  * The table is the shared record table; this file holds only this screen's vocabulary: its columns,
  * what each cell reads, its row actions and its editable chips. Every write goes through a registered
  * action carrying the values the row was painted from, and Locate goes through the view command,
  * which changes the selection and the camera and writes nothing.
  *
- * An unclassified Face is not a row. Its Zone's row carries the count and the Suggest
- * classification action that gives those Faces a record.
+ * A Face with no record is a row too, under its Zone's "N unclassified Faces" summary. The Zone's row
+ * carries their count and the Suggest classification action that gives them all a record.
  */
 PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request", "snapshot", "units",
   "unit_preferences", "unit_field", "table", "view_controls", "fields", "face_words",
@@ -122,7 +122,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       var recorded = own.filter(function (face) { return face.state !== "unclassified"; });
       var key = JSON.stringify(["Zone", zone.reference.zone_path]);
       rows.push({ key: key, parent: null, tier: "Zone", depth: 0,
-        record: { id: key, name: zone.values.name, zone: zone, faces: recorded,
+        record: { id: key, name: zone.values.name, zone: zone, faces: recorded, every: own,
           state: zone.state, unclassified: own.length - recorded.length } });
       function faceRow(face, parent, depth) {
         return { key: JSON.stringify(["Face", zone.reference.zone_path, face.reference.entity_path]),
@@ -143,7 +143,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       if (!all) {
         rows.push({ key: JSON.stringify(["More", zone.reference.zone_path]), parent: summary, tier: "Show all",
           depth: 2, record: { id: summary, faces: [], more: summary,
-            name: (waiting.length - SHOWN_AT_FIRST) + " more unclassified Faces" } });
+            name: (waiting.length - SHOWN_AT_FIRST) + " more unclassified " +
+              (waiting.length - SHOWN_AT_FIRST === 1 ? "Face" : "Faces") } });
       }
     });
     return rows;
@@ -165,7 +166,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function value(row, field, profile) {
     var face = row.record.face;
     if (field === "name") return row.record.name;
-    if (!face) return field === "area_m2" && !row.record.more ? area(totalArea(row.record.faces), profile) : "";
+    if (!face) {
+      return field === "area_m2" && !row.record.more ?
+        area(totalArea(row.record.every || row.record.faces), profile) : "";
+    }
     if (field === "assembly_id") return "";
     if (field === "face_type") return words.faceType(face.values.face_type);
     if (field === "boundary_condition") {
@@ -196,10 +200,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
 
   function actions(row) {
     if (row.record.more) return [];
-    var locatable = row.record.face || row.record.faces.length;
+    var locatable = row.record.face || (row.record.every || row.record.faces).length;
     var items = [{ id: "locate", icon: "locate", disabled: !locatable,
-      label: locatable ? "Locate " + row.record.name :
-        "Nothing to locate: no Face in " + row.record.name + " has a record yet" }];
+      label: locatable ? "Locate " + row.record.name : "Nothing to locate: " + row.record.name + " has no Faces" }];
     if (row.depth === 0 && row.record.unclassified) {
       items.push({ id: "suggest", icon: "sort", label: "Suggest classification for " + row.record.name });
     }
@@ -256,7 +259,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var face = row.record.face, offered, chip;
     // A Face with no record has nothing to hang an Assembly on yet; its type or boundary comes first.
     if (field === "assembly_id") {
-      return face && face.state === "unclassified" ? false : assemblies.cell(td, row, state, draftReason, refuse);
+      if (!face || face.state !== "unclassified") return assemblies.cell(td, row, state, draftReason, refuse);
+      // Back to text: the control this cell may have held (the Face had a record until an Undo) is forgotten.
+      if (td._assemblyChip) { td._assemblyChip = null; td.className = "col-assembly_id"; }
+      return false;
     }
     if (!face || (field !== "face_type" && field !== "boundary_condition")) return false;
     var issue = problem(face, field);
@@ -339,7 +345,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
 
   function locate(state, row) {
     var references = row.record.face ? [row.record.face.reference]
-      : row.record.faces.map(function (face) { return face.reference; });
+      : (row.record.every || row.record.faces).map(function (face) { return face.reference; });
     if (references.length) state.look.run("ph_composer.zones.faces.locate", { faces: references });
   }
 
@@ -399,7 +405,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     screenState.faceTypes = tool.face_types || [];
     screenState.boundaries = tool.boundary_conditions || [];
     var rows = project(zones.zones, faces, screenState.showAll);
-    // A short list of unclassified Faces opens by itself; the user's own choice, once made, stands.
+    // A short list of unclassified Faces opens by itself. That is decided once, when the list first
+    // appears, so it does not snap shut or open under the user as the count changes.
     rows.forEach(function (row) {
       if (row.record.summary && !Object.prototype.hasOwnProperty.call(screenState.expanded, row.key)) {
         screenState.expanded[row.key] = row.record.faces.length <= OPEN_UP_TO;
@@ -408,7 +415,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     screenState.edits.consume(state);
     screenState.look.consume(state);
     screenState.settings.consume(state, snapshot.value(state, "ph_composer.zones.settings"));
-    screenState.zoneKeys = rows.filter(depth(0)).map(function (row) { return row.key; });
+    // Collapse all and Expand all reach everything that opens: Zones and their unclassified summaries.
+    screenState.zoneKeys = rows.filter(function (row) { return row.depth === 0 || row.record.summary; })
+      .map(function (row) { return row.key; });
     if (!root.querySelector(".phc-table-mount")) {
       root.className = "phc-overview";
       root.replaceChildren(ui.element("div", "phc-heading-mount"), screenState.controls.root,
@@ -545,7 +554,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     zoneRows.forEach(function (row) { byId[row.record.id] = row; });
     var projection = state.controls.project(zoneRows.map(function (row) { return row.record; }), {
       id: function (record) { return record.id; },
-      value: function (record, field) { return field === "area_m2" ? totalArea(record.faces) : record.name; },
+      value: function (record, field) { return field === "area_m2" ? totalArea(record.every) : record.name; },
       search: function (record) { return searchText(record, state); },
       rows: function () { return rows; }
     });
@@ -581,7 +590,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function searchText(record, state) {
-    return [record.name].concat(record.faces.map(function (face) {
+    return [record.name, record.unclassified ? "unclassified" : ""].concat(record.faces.map(function (face) {
       var assigned = assemblies.choices(state.snapshot, []).filter(function (record) {
         return record.id === face.values.assembly_id;
       })[0];

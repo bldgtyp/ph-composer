@@ -89,7 +89,7 @@ that a feature names no other feature's internals.
 | Z3 blocked Make Zone | While it is disabled, an alert icon beside it opens the reason: "Select one Group or loose geometry in SketchUp" |
 | Z4 state | The State column goes. An incomplete Face shows the amber "?" pill in the cell that is empty, with what is missing in its tooltip. The Zone's amber count keeps its tooltip and gains the words in its accessible name |
 | Z5 chevrons | A Face row has a chevron only when it has rows under it. The Hierarchy column keeps "Zone" and "Face" as the row's kind |
-| Z6, D4 unclassified Faces | One summary row per Zone, "N unclassified Faces", collapsed by default. Expanded, each Face is a row with empty Type and Boundary pills flagged amber; choosing a value classifies it through the same action the selection route uses. Above 50, the first 50 show with a "Show all N" row, because Phase 1's gate met 500 in one Zone |
+| Z6, D4 unclassified Faces | One summary row per Zone, "N unclassified Faces", open at ten or fewer and closed above (P3-Q5). Expanded, each Face is a row with empty Type and Boundary pills flagged amber; choosing a value classifies it through the same action the selection route uses. Above 50, the first 50 show with a "Show all N" row, because Phase 1's gate met 500 in one Zone |
 | Z7 moving table | The selection controls live in the inspector |
 | Z8 Zone details | In the inspector, as a normal form: fields at full contrast, Save and Cancel shown once a field changes |
 | F2, D6 one route | The selection inspector offers Type, Boundary and Assembly for the selected Faces, each applied on its own. The per-row pills stay, since a row is a selection of one. The Assembly select leaves the Classify palette. Paint from an Assemblies row stays |
@@ -348,7 +348,7 @@ product fault.
 ## P3-4 outcome, 2026-10-03
 
 Ed authorized P3-4 on 2026-10-03, to start once #59 merged. Implemented on
-`feat/ui-unclassified-rows`. `make ci` passes (1390 Ruby runs, 400 JavaScript tests, 172 Python
+`feat/ui-unclassified-rows`. `make ci` passes (1390 Ruby runs, 402 JavaScript tests, 172 Python
 tests) and `make ui-checks` passes. This reverses the Phase 1 decision that an unclassified Face
 is not a row (D4).
 
@@ -367,3 +367,23 @@ is not a row (D4).
 Scale, in the browser preview with 500 unclassified Faces added to one Zone: 27 ms to paint with
 fifty shown, 107 ms for "Show all" (510 rows), 25 ms for a repaint with all shown. Rows under a
 closed summary are not painted at all.
+
+One Sonnet diff review ran. Applied:
+
+- A Face that gains a record moves from under the summary to among its Zone's Faces and keeps its
+  row. It now also takes the chevron's place its new neighbours keep, so its label lines up; an
+  Undo moves it back cleanly, and its Assembly cell is rebuilt when it needs a control again.
+- A Zone's area and its Locate cover every Face it has, recorded or not, so the rows under a Zone
+  add up to it. Before, both counted recorded Faces only.
+- Expand all and Collapse all reach the unclassified summaries. Typing "unclassified" in the
+  filter keeps the Zones that have any.
+- A row under the summary is disabled while an edit is in flight, as other rows are.
+
+Known and left:
+
+- An unclassified row sends empty `expected_values`, so if another route classifies that Face in
+  the moment before the next snapshot, the row's choice overwrites it. A recorded row would be
+  refused. The revision check narrows the window to one snapshot.
+- Pressing "Show all" removes that row, and focus falls to the page.
+- Locating a summary of more than 250 Faces selects them all, which is over the selection
+  inspector's ceiling, so the inspector does not appear for that selection.
