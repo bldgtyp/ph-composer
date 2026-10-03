@@ -57,6 +57,9 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
    --category-fill on the cell; the rest take the neutral fill. */
 .phc-table select.phc-enum-cell { width: 100%; min-height: 28px; border-radius: 14px; font: inherit;
   background-color: var(--category-fill, #edf1f2); }
+/* The pill covers its cell, so it carries the focus ring and the locked look itself. */
+.phc-workspace .phc-table select.phc-enum-cell:focus-visible { outline: 2px solid var(--interaction-highlight); outline-offset: -2px; }
+.phc-table select.phc-enum-cell:disabled { opacity: .6; }
 .phc-table .phc-group-row td { background: #f5f8f9; padding: 6px 10px; }
 .phc-workspace .phc-group-toggle, .phc-table .phc-group-toggle { display: flex; align-items: center; gap: 10px; border: 0; border-radius: 0; background: transparent; text-align: left; width: 100%; }
 .phc-group-count { color: var(--muted); font-size: 12px; }

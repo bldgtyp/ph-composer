@@ -78,6 +78,7 @@ test("a range containing a read-only target refuses the entire batch", function 
 
 test("Shift-click selects a range, which brings the fill tools, and the help button describes editing", function () {
   var o = owner();
+  assert.ok(o.grid.tools.classList.contains("is-idle"), "idle from the start");
   o.edits.cells["a:width"].input.listeners.mousedown({ shiftKey: false });
   assert.ok(o.grid.tools.classList.contains("is-idle"), "one cell is not a range to fill");
   o.edits.cells["b:height"].input.listeners.mousedown({ shiftKey: true });
@@ -87,6 +88,8 @@ test("Shift-click selects a range, which brings the fill tools, and the help but
   assert.strictEqual(o.grid.toolbar.querySelector("small"), null, "no permanent hint line");
   assert.ok(o.grid.toolbar.querySelector(".phc-help").getAttribute("aria-label").includes("Enter"));
   assert.ok(o.edits.cells["b:height"].input.parentNode.classList.contains("inventory-selected"));
+  o.grid.clear();
+  assert.ok(o.grid.tools.classList.contains("is-idle"), "clearing the range puts the fill tools away");
 });
 
 test("copy and paste round-trip quoted rows, and a disposed grid cannot write", function () {

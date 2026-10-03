@@ -72,7 +72,7 @@ Copy datasheet links unchecked by default. Ordinary reuse never creates another 
 The Assemblies inventory shows one row per assembly with its attributes, thermal performance,
 usage and validation state. The Builder edits the drawing through an always-visible toolbar and
 anchored property bubbles. Total thickness and U-value stay visible in the header. Both
-inventories share Filter, Group by, Order by and Direction controls; filtering retains local
+inventories share filter, Group by, Order by and sort direction controls; filtering retains local
 drafts and never changes the model or the export scope.
 
 ## Zones

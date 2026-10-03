@@ -57,9 +57,13 @@ PhComposerUI.define("inventory_grid", ["record_edits", "workspace"], function (R
     tools.appendChild(this.fillDown);
     tools.appendChild(this.fillRight);
     this.tools = tools;
-    // Help first: the fill tools keep their place while idle, and an empty place reads best at the row's end.
-    this.toolbar.appendChild(ui.helpButton("Editing cells",
-      "Select cells with Shift-click. Press Enter to edit; Escape to cancel."));
+    tools.classList.add("is-idle");
+    // Help first: the fill tools keep their place while idle, and an empty place reads best after the help.
+    var hint = "Select cells with Shift-click. Press Enter to edit; Escape to cancel.";
+    var help = ui.helpButton("Editing cells", hint);
+    help.classList.add("phc-icon-button");
+    help.setAttribute("data-tooltip", hint);
+    this.toolbar.appendChild(help);
     this.toolbar.appendChild(tools);
     if (options.toolbarParent) options.toolbarParent.appendChild(this.toolbar);
     else (options.scroll.parentNode || options.root).insertBefore(this.toolbar, options.scroll);

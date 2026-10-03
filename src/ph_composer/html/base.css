@@ -166,7 +166,7 @@ html { height: 100%; }
   background: var(--interaction-highlight-tint);
   border-color: var(--interaction-highlight);
 }
-.phc-grid-toolbar { display: flex; align-items: center; gap: 8px; }
+.phc-grid-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .phc-grid-tool-group { display: flex; gap: 4px; }
 .phc-grid-tool-group.is-idle { visibility: hidden; }
 .phc-editable-cell { position: relative; }

@@ -109,7 +109,7 @@ and the State column (packet 3). Builder metric labels (packet 6).
 
 ## Outcome, 2026-10-03
 
-Implemented on `feat/ui-table-chrome`. `make ci` passes (1390 Ruby runs, 382 JavaScript tests, 172
+Implemented on `feat/ui-table-chrome`. `make ci` passes (1390 Ruby runs, 383 JavaScript tests, 172
 Python tests) and `make ui-checks` passes.
 
 What differs from the plan above:
@@ -126,3 +126,12 @@ What differs from the plan above:
   separate decision.
 - `units.format` now honours `showUnit: false` for a decimal length format. An architectural
   format (feet and inches) keeps its marks, since they are the number.
+- The same `units.format` change makes the Window Type product cards' width cells bare numbers
+  ("60", not "60 mm"). Their column headings already carry the unit, and the call was already
+  asking for a bare value.
+
+One Sonnet diff review ran against the architecture and ui-polish rubrics: nothing blocking. Its
+valid findings are applied: the help button takes the icon-button size and the kit tooltip, the
+enum pill carries its own focus ring and locked look, the fill tools start idle, and the tests the
+plan promised are in. Left as follow-ups: the sort toggle announces no state change to a screen
+reader, and a Library surface that is not a kit `Inventory` shows no count.

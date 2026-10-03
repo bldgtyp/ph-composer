@@ -130,6 +130,9 @@ test("area headers and Zone and Face values follow the display profile together"
   faces.push(additional);
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var section = p.query("[data-section='ph_composer.overview']");
+  assert.ok(section.querySelectorAll("select").some(function (node) {
+    return node.classList.contains("phc-enum-cell") && node.classList.contains("phc-cell-input");
+  }), "a Face's type and boundary chips are the kit's enum cell");
   function areas() {
     return section.querySelectorAll(".col-area_m2").filter(function (node) { return node.tagName === "td"; })
       .map(function (node) { return node.textContent; });

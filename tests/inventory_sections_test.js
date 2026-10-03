@@ -188,6 +188,8 @@ test("duplicate Material copies datasheet links only through the explicit checkb
 
 test("Assembly hint selects store honeybee words and clear with a null patch", function () {
   var o = setup(), cell = o.roots.assemblies._view.edits.cells["asm_a:type"];
+  assert.ok(cell.input.classList.contains("phc-enum-cell"), "every select cell is the kit's enum cell");
+  assert.strictEqual(materials(o).inventory.controls.options.count, "always", "a Library tab counts its own records");
   cell.input.value = "RoofCeiling";
   cell.input.listeners.change({});
   assert.strictEqual(o.sent[0].payload.params.values.type, "RoofCeiling");
@@ -384,9 +386,8 @@ test("Assembly numeric inventory cells follow the displayed SI and IP units", fu
     units.profile(fields.U_VALUE, { unit_system: "SI" }), { showUnit: false })) >= 0);
   o.modules.unit_preferences.set("unit_system", "IP");
   o.paint();
-  var displayed = text(o.roots.assemblies);
-  assert.ok(displayed.includes(units.format(165, fields.LENGTH_MM,
-    units.profile(fields.LENGTH_MM, o.modules.unit_preferences.current()), { showUnit: false })));
+  assert.ok(cells("total_thickness_mm").indexOf(units.format(165, fields.LENGTH_MM,
+    units.profile(fields.LENGTH_MM, o.modules.unit_preferences.current()), { showUnit: false })) >= 0);
   assert.ok(cells("u_effective_w_m2k").indexOf(units.format(0.2, fields.U_VALUE,
     units.profile(fields.U_VALUE, o.modules.unit_preferences.current()), { showUnit: false })) >= 0);
   assert.strictEqual(o.sent.length, 0);
