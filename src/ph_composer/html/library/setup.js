@@ -21,8 +21,12 @@ PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], funct
     this.folder = ui.button("Add library folder…", function () { self.run("add_folder", {}); });
     this.cancel = ui.button("Close", function () { self.close(); });
     this.cancel.setAttribute("aria-label", "Close"); this.file.setAttribute("aria-label", "Add library file…");
-    var adds = ui.actionRow(this.cancel, this.file); adds.classList.add("library-setup-adds");
-    adds.insertBefore(this.folder, this.file); this.root.appendChild(adds);
+    // Both open a native picker, so neither carries the check mark of an action that applies at once. Adding a
+    // file is still the dialog's primary action.
+    this.cancel.className += " phc-action-cancel"; this.file.className += " primary";
+    var adds = ui.element("div", "phc-dialog-actions library-setup-adds");
+    [this.cancel, this.folder, this.file].forEach(function (button) { adds.appendChild(button); });
+    this.root.appendChild(adds);
   }
   Setup.prototype.refresh = function (state) {
     if (this.disposed) return;
@@ -44,7 +48,7 @@ PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], funct
         var remove = ui.button("Remove", function () { self.run("remove", { provider_id: provider.id }); });
         remove.setAttribute("aria-label", "Remove " + provider.label); remove.disabled = busy || !self.enabled;
         row.appendChild(remove);
-      }
+      } else row.appendChild(el("small", "muted", "Added by another tool"));
       self.list.appendChild(row);
     });
     if (!this.providers.length && !this.unreadable) this.list.appendChild(el("p", "muted", "No libraries configured."));

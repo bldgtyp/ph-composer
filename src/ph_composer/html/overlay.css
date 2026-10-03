@@ -273,6 +273,12 @@
   display: flex; flex-wrap: wrap; gap: 12px 16px;
 }
 .phc-form-dialog form > :not(label) { flex-basis: 100%; }
+/* On the label's own line, at its right end, so a required field is no taller than its neighbours. */
+.phc-form-dialog label { position: relative; }
+.phc-required { position: absolute; top: 1px; right: 0; color: var(--muted); font-size: 10px; font-weight: 400;
+  letter-spacing: .04em; }
+/* What a disabled Create is waiting for is guidance, not an error. */
+.phc-form-dialog .cell-error.phc-form-hint { color: var(--muted); }
 .phc-form-dialog label {
   display: flex;
   flex: 1 1 220px;

@@ -26,7 +26,7 @@ function (ui, fields, unitFields, forms) {
     var factor = new unitFields.UnitField({ field: FACTOR });
     var label = ui.element("label", "", FACTOR.label);
     label.appendChild(factor.root); form.appendChild(label);
-    name.required = true;
+    name.required = true; forms.required(name.parentNode, name);
     [name, factor.input].forEach(function (input) {
       input.addEventListener("keydown", function (event) {
         if (event.key === "Enter") { event.preventDefault(); submit(); }

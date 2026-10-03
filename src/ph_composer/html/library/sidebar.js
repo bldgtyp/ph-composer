@@ -8,6 +8,8 @@ PhComposerUI.define("library/sidebar", ["library/adapters", "library/drag", "lib
       var self = this;
       this.adapter = adapters.adapter(options.adapter);
       this.onUse = options.onUse;
+      // Beside the table of the same records, the local list would only repeat it.
+      this.besideTable = Boolean(options.besideTable);
       this.ownerBusy = options.busy || function () { return false; };
       this.changed = options.changed || function () {};
       this.entries = Object.create(null);

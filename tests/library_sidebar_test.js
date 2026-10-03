@@ -91,3 +91,19 @@ test("a failed refresh preserves a held review when its generation remains valid
   o.sidebar.copy.apply("keep_local");
   assert.strictEqual(o.sent.filter(function (message) { return message.type === "action.invoke"; }).length, 1);
 });
+
+test("a library's row says its click adds it; beside a table the local list gives way to one line", function () {
+  var o = setup(), entry = o.sidebar.entries[o.sidebar.records[0].id];
+  assert.strictEqual(entry.button.title, "Add Part to this file");
+  assert.strictEqual(entry.addGlyph.hidden, false);
+  o.sidebar.records[0].resolution.candidates = [{ id: "local" }];
+  o.sidebar.renderList();
+  assert.strictEqual(entry.addGlyph.hidden, true);
+  assert.strictEqual(entry.button.title, "Part is already in this file");
+  o.sidebar.besideTable = true; o.sidebar.renderList();
+  assert.strictEqual(o.sidebar.search.hidden, false, "a chosen library is listed as before");
+  o.sidebar.store.select(""); o.sidebar.updateRows(); o.sidebar.renderList();
+  assert.strictEqual(o.sidebar.search.hidden, true);
+  assert.ok(o.sidebar.list.children[0].textContent.indexOf("These records are in the table") === 0);
+  assert.strictEqual(o.sidebar.list.querySelectorAll("button").length, 0);
+});

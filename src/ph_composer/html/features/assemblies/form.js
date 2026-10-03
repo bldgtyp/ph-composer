@@ -1,6 +1,5 @@
-/* New Assembly has one definition shape. Its Layers are authored later in the Builder. */
-PhComposerUI.define("features/assemblies/form", ["record_form", "snapshot", "workspace"], function (RecordForm,
-  snapshot, ui) {
+/* New Assembly, and the type and exterior choices the Assemblies table and the Builder share. */
+PhComposerUI.define("features/assemblies/form", ["request", "snapshot"], function (request, snapshot) {
   "use strict";
   var SECTION = "ph_composer.assemblies.assemblies";
   var types = [{ value: "", label: "None" }, { value: "Wall", label: "Wall" },
@@ -8,68 +7,46 @@ PhComposerUI.define("features/assemblies/form", ["record_form", "snapshot", "wor
   var exteriors = [{ value: "", label: "None" }, { value: "Outdoors", label: "Outdoors" },
     { value: "Ground", label: "Ground" }, { value: "AttachedZone", label: "Attached zone" },
     { value: "Adiabatic", label: "To neighbour" }];
+  /* New Assembly acts at once: one create under a free default name. The Builder is where its type, exterior
+     and Layers are set, so there is no form to fill first. */
   function Form(session, send, changed) {
-    var self = this;
-    RecordForm.call(this, session, send, { title: "New Assembly", action: SECTION + ".create", label: "new-assembly",
-      submitLabel: "Create Assembly", pendingText: "Creating Assembly...", failureText: "The Assembly was not created.",
-      changed: changed });
-    this.fields = {};
+    this.session = session;
+    this.requests = request.channel(session, send, "new-assembly");
+    this.changed = changed;
     this.allowed = false;
     this.disposed = false;
-    [["name", "Name", null], ["type", "Type", types], ["exterior_condition", "Exterior", exteriors],
-      ["notes", "Notes", null]].forEach(function (entry) {
-      var label = ui.element("label", "", entry[1]), input = ui.element(entry[2] ? "select" : "input");
-      if (entry[2]) entry[2].forEach(function (choice) { input.appendChild(ui.option(choice.value, choice.label)); });
-      input.value = "";
-      input.setAttribute("aria-label", entry[1]);
-      input.addEventListener("input", function () { self.error.textContent = "";
-      self.updateButton(); });
-      input.addEventListener("keydown", function (event) {
-        if (event.key === "Enter" && !entry[2]) { event.preventDefault();
-        self.submit(); }
-      });
-      self.fields[entry[0]] = input;
-      label.appendChild(input);
-      self.form.appendChild(label);
-    });
-    this.finish();
   }
-  RecordForm.extend(Form);
-  Form.prototype.open = function () {
-    if (!this.allowed || this.disposed) return;
-    this.show();
-    this.fields.name.focus();
-    this.updateButton();
+  Form.prototype.busy = function () { return this.requests.busy(); };
+  // The first "Assembly N" no record in the file already has.
+  Form.prototype.freeName = function (records) {
+    var taken = records.map(function (record) { return String(record.values.name).trim().toLowerCase(); }), n = 1;
+    while (taken.indexOf("assembly " + n) >= 0) n += 1;
+    return "Assembly " + n;
   };
-  Form.prototype.updateButton = function () {
-    this.submitButton.disabled = !this.allowed || this.disposed || this.busy() || !this.fields.name.value.trim();
+  Form.prototype.create = function (records) {
+    if (!this.allowed || this.disposed || this.busy()) return false;
+    this.createdId = null;
+    if (!this.requests.run(SECTION + ".create", { values: { name: this.freeName(records) } })) return false;
+    this.changed();
+    return true;
   };
-  Form.prototype.submit = function () {
-    this.updateButton();
-    if (this.submitButton.disabled) return;
-    var values = {};
-    Object.keys(this.fields).forEach(function (key) { values[key] = this.fields[key].value.trim(); }, this);
-    if (!values.type) delete values.type;
-    if (!values.exterior_condition) delete values.exterior_condition;
-    this.run({ values: values });
+  /* The record this form created, once: null until the create has completed and its record is in `records`,
+     whichever of the outcome and the snapshot arrives first. A refused create never has one; the panel's
+     notice has already said why. */
+  Form.prototype.created = function (records) {
+    var id = this.createdId;
+    if (!id) return null;
+    var fresh = records.filter(function (record) { return record.id === id; })[0];
+    if (fresh) this.createdId = null;
+    return fresh || null;
   };
   Form.prototype.refresh = function (state, busy) {
     this.allowed = Boolean(snapshot.value(state, SECTION) && !busy);
-    if (!snapshot.value(state, SECTION)) {
-      this.withdraw();
-    }
-    var outcome = this.settle(state);
-    if (outcome && outcome.status === "completed") {
-      Object.keys(this.fields).forEach(function (key) { this.fields[key].value = ""; }, this);
-      this.hide(outcome.value);
-    }
-    Object.keys(this.fields).forEach(function (key) {
-      this.fields[key].disabled = !this.allowed || this.busy();
-    }, this);
-    this.updateButton();
+    if (!snapshot.value(state, SECTION)) { this.requests.reset(); this.createdId = null; return; }
+    var outcome = this.requests.consume(state);
+    if (outcome && outcome.status === "completed") this.createdId = (outcome.value || {}).id || null;
   };
-  Form.prototype.dispose = function () { this.disposed = true;
-  this.withdraw(); };
+  Form.prototype.dispose = function () { this.disposed = true; this.requests.reset(); };
   Form.types = types;
   Form.exteriors = exteriors;
   return Form;

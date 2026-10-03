@@ -57,6 +57,13 @@ PhComposerUI.define("record_form", ["request", "workspace"], function (request, 
     this.error.textContent = outcome.status === "completed" ? "" : (outcome.message || this.spec.failureText);
     return outcome;
   };
+  /* Marks a labelled control as one the form waits for: the label gains a muted "required" after its text,
+     and the control says so to assistive technology. */
+  RecordForm.required = function (label, control) {
+    control.setAttribute("aria-required", "true");
+    label.insertBefore(ui.element("small", "phc-required", "required"), label.children[0] || null);
+    return control;
+  };
   /* The feature went away: forget the request and close. */
   RecordForm.prototype.withdraw = function (message) {
     this.requests.reset(); this.close();

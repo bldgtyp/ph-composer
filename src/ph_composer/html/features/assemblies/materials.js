@@ -75,7 +75,7 @@ function (panel, snapshot, ui, fields, RecordForm, inventories, forms, Sidebar, 
       return self.categories.filter(function (entry) { return entry.id === record.values.category; })[0] ||
         { label: record.values.category || "None", tone: "neutral" };
     }
-    this.sidebar = new Sidebar({ session: state.session, send: send, changed: changed,
+    this.sidebar = new Sidebar({ session: state.session, send: send, changed: changed, besideTable: true,
       busy: function () { return Boolean(self.inventory && self.inventory.guard()); },
       adapter: { title: "Material Library", wireKind: "materials", read: function (live) {
         return (snapshot.value(live, MATERIALS) || {}).records || [];
