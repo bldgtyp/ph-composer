@@ -41,11 +41,8 @@ PhComposerUI.define("features/windows/placement", ["request", "snapshot", "works
     return this.run("place_tool.choose", { type_id: typeId, anchor: this.anchorValue });
   };
   Controls.prototype.run = function (name, params) {
-    var self = this;
     if (this.disposed || !this.enabled || name === "place_tool.stop" && !this.tool.active) return false;
-    var result = this.channel.run(PREFIX + name, params, { onFail: function (outcome) {
-      self.owner.notice.show(outcome.message || "The placement command was refused.", { tone: "warning" });
-    } });
+    var result = this.channel.run(PREFIX + name, params);
     this.paint(); return result;
   };
   Controls.prototype.render = function (state) {

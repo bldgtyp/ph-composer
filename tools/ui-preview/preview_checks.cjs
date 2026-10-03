@@ -75,7 +75,7 @@ fs.mkdirSync(output, { recursive: true });
   await page.evaluate(() => { window.previewHost.parts[0].length_mm = 1500; });
   await sill.fill("1300");
   await sill.press("Enter");
-  const notice = page.locator(".phc-floating-notice");
+  const notice = page.locator("[data-notice-layer] .phc-floating-notice");
   assert.equal(await notice.getAttribute("data-tone"), "warning");
   await shot("refused-edit");
   await page.mouse.click(5, 5);

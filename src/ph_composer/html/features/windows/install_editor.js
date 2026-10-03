@@ -1,10 +1,12 @@
 /* Detached Installs session: products, perimeter assignments and compatible copies commit together. */
 PhComposerUI.define("features/windows/install_editor", ["features/windows/editor_shared", "request", "snapshot",
-  "unit_field", "fields", "library/sidebar", "features/windows/library", "features/windows/library_stage",
+  "unit_field", "units", "fields", "library/sidebar", "features/windows/library", "features/windows/library_stage",
   "workspace"],
-  function (shared, request, snapshot, unitFields, fields, Sidebar, library, StagedCopy, ui) {
+  function (shared, request, snapshot, unitFields, units, fields, Sidebar, library, StagedCopy, ui) {
   "use strict";
   var el = ui.element, clone = shared.clone, sides = shared.sides;
+  // Drawing units an edge needs before its value is written beside it: along the edge, and across a line of text.
+  var VALUE_ROOM = 44, LINE_ROOM = 40, INSIDE_ROOM = 96;
   function topology(record) {
     return JSON.stringify([record.rows_m, record.columns_m, record.elements.map(function (cell) {
       return [cell.kind, cell.row_span, cell.column_span];
@@ -13,20 +15,27 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
   function Editor(session, send, close) {
     var self = this; this.requests = request.channel(session, send, "window-installs"); this.close = close;
     this.root = el("section", "window-install-editor"); this.root.hidden = true;
-    this.title = el("h2", "", "Window Type Installs"); this.root.appendChild(this.title);
+    this.cancel = ui.button("Cancel", function () { self.cancelSession(); });
+    this.save = ui.button("Save Installs", function () { self.saveAction(); });
+    this.save.setAttribute("aria-label", "Save Installs"); this.cancel.setAttribute("aria-label", "Cancel Installs");
+    this.header = ui.pageHeader({ title: "Window Type Installs", actions: [this.cancel], primary: this.save });
+    this.root.appendChild(this.header.root);
     this.notice = el("p", "muted"); this.notice.setAttribute("role", "status"); this.root.appendChild(this.notice);
     this.body = el("div", "window-install-body"); this.root.appendChild(this.body);
     this.drawing = el("div", "window-install-drawing"); this.body.appendChild(this.drawing);
     this.panel = el("aside", "window-install-panel"); this.body.appendChild(this.panel);
-    this.hint = el("p", "", "Choose a Psi-Install Type, then paint perimeter edges.");
-      this.panel.appendChild(this.hint);
-    this.apply = ui.button("Apply to all eligible edges", function () { self.applyAll(); });
-      this.panel.appendChild(this.apply);
-    this.copyButton = ui.button("Copy to other Window Types", function () { self.showCopy(); });
-      this.panel.appendChild(this.copyButton);
+    var heading = el("div", "window-install-heading"); this.panel.appendChild(heading);
+    heading.appendChild(el("strong", "", "Psi-Install Types"));
+    heading.appendChild(ui.helpButton("Painting installs", "Choose a Psi-Install Type, then click perimeter edges " +
+      "to paint them. Click a painted edge again to return it to the Model default."));
+    this.unit = el("small", "muted"); heading.appendChild(this.unit);
     this.list = el("div", "window-install-list"); this.panel.appendChild(this.list);
     this.add = ui.button("+ New Psi-Install Type", function () { self.editProduct(); });
       this.panel.appendChild(this.add);
+    this.apply = ui.button("Apply to perimeter edges", function () { self.applyAll(); });
+      this.panel.appendChild(this.apply);
+    this.copyButton = ui.button("Copy to other Window Types", function () { self.showCopy(); });
+      this.panel.appendChild(this.copyButton);
     this.form = el("form", "window-install-form"); this.form.hidden = true; this.panel.appendChild(this.form);
     this.sidebar = new Sidebar({ session: session, send: send, changed: function () { self.paint(); },
       busy: function () { return self.requests.busy() || !self.form.hidden || Boolean(self.sidebar.guard()); },
@@ -45,16 +54,22 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     };
     this.copyForm = el("div", "window-install-copy"); this.copyForm.hidden = true;
       this.panel.appendChild(this.copyForm);
-    this.cancel = ui.button("Cancel", function () { self.cancelSession(); });
-    this.save = ui.button("Save Installs", function () { self.saveAction(); }); this.save.className = "primary";
-    this.save.setAttribute("aria-label", "Save Installs"); this.cancel.setAttribute("aria-label", "Cancel Installs");
-    this.root.appendChild(ui.actionRow(this.cancel, this.save));
     this.confirm = ui.formDialog("", function () { self.confirm.closeModal(); }); this.root.appendChild(this.confirm);
-    this.root.addEventListener("keydown", function (event) {
-      if (event.defaultPrevented || event.key !== "Escape" || self.requests.busy()) return;
-      event.preventDefault(); self.cancelSession();
-    });
+    // The owning view also sends its own Escape here, so the key works from the subtabs and from the page body,
+    // where a repaint of the drawing or the list leaves focus.
+    this.onKeydown = function (event) {
+      if (event.defaultPrevented || event.key !== "Escape" || self.disposed || self.root.hidden ||
+        self.requests.busy() || !self.confirm.hidden || self.sidebar.guard()) return;
+      event.preventDefault(); self.escape();
+    };
+    this.root.addEventListener("keydown", this.onKeydown);
   }
+  // One layer at a time: the Psi-Install form, then the copy list, then the session itself.
+  Editor.prototype.escape = function () {
+    if (!this.form.hidden) { this.dismissForm(); this.add.focus(); }
+    else if (!this.copyForm.hidden) { this.copyForm.hidden = true; this.copyButton.focus(); }
+    else this.cancelSession();
+  };
   Editor.prototype.open = function (record) {
     if (this.disposed || this.requests.busy() || !this.root.hidden) return;
     if (!snapshot.value(this.state, shared.PREFIX + "settings")) return;
@@ -63,8 +78,8 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     this.products = shared.records(this.state, "psi_install_types").map(function (row) { return clone(row); });
     this.creates = {}; this.updates = {}; this.imports = {};
     this.settings = clone(snapshot.value(this.state, shared.PREFIX + "settings"));
-    this.dirty = false; this.root.hidden = false; this.notice.textContent = "";
-    this.paint();
+    this.dirty = false; this.root.hidden = false; this.notice.textContent = ""; this.copyForm.hidden = true;
+    this.paint(); if (this.current) this.current.focus();
   };
   Editor.prototype.guard = function () {
     if (this.root.hidden || this.disposed) return null;
@@ -151,7 +166,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
         var id = "draft_" + (++Editor.sequence); self.creates[id] = { client_id: id, values: values };
         self.products.push({ id: id, values: values }); self.selected = id;
       }
-      self.dirty = true; self.dismissForm(); self.paint();
+      self.dirty = true; self.dismissForm(); self.paint(); (self.current || self.add).focus();
     };
     this.form.addEventListener("submit", this.form.onsubmit); name.focus();
   };
@@ -162,12 +177,19 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
   };
   Editor.prototype.paint = function () {
     if (this.root.hidden || this.disposed) return;
-    var self = this, record = this.drafts[this.active]; this.title.textContent = record.name + " Installs";
-    this.list.replaceChildren();
+    var self = this, record = this.drafts[this.active]; this.header.setTitle(record.name + " Installs");
+    var held = this.list.contains(document.activeElement), chosen = "Model default";
+    this.list.replaceChildren(); this.current = null;
+    this.unit.textContent = units.displayUnit(fields.LINEAR_PSI, units.profile(fields.LINEAR_PSI));
     function choice(id, name, value, row) {
-      var root = el("div", "window-install-choice"), button = ui.button(name + (value == null ? " · Missing" :
-        " · " + shared.format(value, fields.LINEAR_PSI)), function () { self.selected = id; self.paint(); });
+      var root = el("div", "window-install-choice"), button = ui.button("", function () { self.selected = id;
+        self.paint(); });
+      button.className = "phc-setting-choice"; // The current choice keeps its tint under hover and focus.
+      button.appendChild(el("span", "window-install-choice-name", name));
+      button.appendChild(el("span", "window-install-choice-value", value == null ? "Missing" :
+        shared.bare(value, fields.LINEAR_PSI)));
       button.setAttribute("aria-pressed", String(self.selected === id)); root.appendChild(button);
+      if (self.selected === id) { self.current = button; chosen = name; }
       if (row) root.appendChild(ui.iconButton("Edit " + name, "pencil", function () { self.editProduct(row); }));
       self.list.appendChild(root);
     }
@@ -176,18 +198,24 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     choice(null, "Model default", defaultProduct && defaultProduct.values.psi_w_mk);
     this.products.forEach(function (row) { choice(row.id, row.values.name, row.values.psi_w_mk,
       row.libraryDraft ? null : row); });
+    this.apply.title = "Apply " + chosen + " to every perimeter edge";
+    if (held && this.current) this.current.focus();
     this.sidebar.refresh(this.state, {}, true);
     this.paintDrawing(record);
     [this.save, this.cancel, this.apply, this.copyButton, this.add].forEach(function (button) {
       button.disabled = self.requests.busy();
     });
   };
+  // Layers, back to front: element fills and names, edge targets, edge strokes, value labels.
   Editor.prototype.paintDrawing = function (record) {
-    var self = this, svg = ui.svg;
+    var self = this, svg = ui.svg, targets = [], strokes = [], labels = [];
     function sum(bands) { return bands.reduce(function (total, value) { return total + (value || 1); }, 0); }
     var width = sum(record.columns_m), height = sum(record.rows_m);
-    var drawing = svg("svg", { viewBox: "0 0 600 440", role: "group", "aria-label": "Window installation edges" });
-    var scale = Math.min(500 / width, 340 / height), x0 = 50, y0 = 50;
+    var drawing = svg("svg", { viewBox: "0 0 600 430", role: "group", "aria-label": "Window installation edges" });
+    var scale = Math.min(480 / width, 340 / height), x0 = 60, y0 = 40;
+    function value(x, y, anchor, text) {
+      labels.push(svg("text", { x: x, y: y, "text-anchor": anchor, "class": "window-install-edge-label" }, text));
+    }
     record.elements.forEach(function (cell) {
       var x = x0 + sum(record.columns_m.slice(0, cell.column_span[0])) * scale;
       var y = y0 + sum(record.rows_m.slice(0, cell.row_span[0])) * scale;
@@ -195,7 +223,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
       var h = sum(record.rows_m.slice(cell.row_span[0], cell.row_span[1] + 1)) * scale;
       drawing.appendChild(svg("rect", { x: x, y: y, width: w, height: h,
         "class": cell.kind === "empty" ? "window-empty" : "window-glass" }));
-      drawing.appendChild(svg("text", { x: x + w / 2, y: y + h / 2, "text-anchor": "middle" }, cell.name));
+      drawing.appendChild(svg("text", { x: x + w / 2, y: y + h / 2 + 4, "text-anchor": "middle" }, cell.name));
       if (cell.kind === "empty") return;
       sides.forEach(function (side) {
         var classification = shared.classification(record, cell, side), eligible = classification === "perimeter";
@@ -207,27 +235,42 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
             (!assigned ? " · Model default" : "") : assigned ? "Missing product" : "Missing default");
         var points = { top: [x, y, x + w, y], right: [x + w, y, x + w, y + h],
           bottom: [x, y + h, x + w, y + h], left: [x, y, x, y + h] }[side];
-        var line = svg("line", { x1: points[0], y1: points[1], x2: points[2], y2: points[3],
-          "class": "window-install-edge " + source, role: eligible ? "button" : "img", tabindex: eligible ? "0" : "-1",
-          "aria-label": label, "aria-disabled": String(!eligible || self.requests.busy()),
-          "data-install-element": cell.id, "data-install-side": side });
-        line.appendChild(svg("title", {}, label));
+        var ends = { x1: points[0], y1: points[1], x2: points[2], y2: points[3] };
+        strokes.push(svg("line", Object.assign({ "class": "window-install-edge " + source }, ends)));
+        // The target is wider than the stroke it sits under, so a thin edge is still easy to hit.
+        var target = svg("line", Object.assign({ "class": "window-install-target", role: eligible ? "button" : "img",
+          tabindex: eligible ? "0" : "-1", "aria-label": label,
+          "aria-disabled": String(!eligible || self.requests.busy()), "data-install-element": cell.id,
+          "data-install-side": side }, ends));
+        target.appendChild(svg("title", {}, label));
         function paint() { self.paintEdge(cell.id, side); }
-        line.addEventListener("click", paint);
-        line.addEventListener("keydown", function (event) {
+        target.addEventListener("click", paint);
+        target.addEventListener("keydown", function (event) {
           if (event.key === "Enter" || event.key === " ") { event.preventDefault(); paint(); }
-        }); drawing.appendChild(line);
-        var psi = classification === "shared" ? "0" : product ? shared.bare(product.values.psi_w_mk,
-          fields.LINEAR_PSI) : "?";
-        var valueLabel = (eligible && !assigned ? "D · " : "") + psi;
-        if (classification !== "shared" || side === "right" || side === "bottom") {
-          drawing.appendChild(svg("text", { x: (points[0] + points[2]) / 2 + (side === "left" ? 12 :
-            side === "right" ? -12 : 0), y: (points[1] + points[3]) / 2 + (side === "top" ? 22 :
-            side === "bottom" ? -12 : 4), "text-anchor": side === "left" ? "start" : side === "right" ? "end" :
-            "middle", "class": "window-install-edge-label" }, valueLabel));
+        }); targets.push(target);
+        var across = side === "top" || side === "bottom", middleX = (points[0] + points[2]) / 2,
+          middleY = (points[1] + points[3]) / 2;
+        // A value is drawn only where its edge has room for it; the edge's tooltip always carries it.
+        if ((across ? w : h) < (across ? VALUE_ROOM : LINE_ROOM)) return;
+        if (classification === "shared") {
+          if (side === "right" || side === "bottom") value(middleX, middleY + 4, "middle", "0");
+        } else if (eligible) {
+          var text = product ? shared.bare(product.values.psi_w_mk, fields.LINEAR_PSI) : "?";
+          // Outside the Window Type where the edge is on its outline. An edge that faces an Empty element keeps
+          // its value inside its own element, so two facing values never share the Empty element between them.
+          var outer = { top: y < y0 + 1, bottom: y + h > y0 + height * scale - 1, left: x < x0 + 1,
+            right: x + w > x0 + width * scale - 1 }[side], out = outer ? 1 : -1;
+          if (!outer && (across ? h : w) < INSIDE_ROOM) return;
+          // Left and right values sit above the line an element's name is written on.
+          if (side === "top") value(middleX, y - (outer ? 9 : -19), "middle", text);
+          else if (side === "bottom") value(middleX, y + h + (outer ? 19 : -9), "middle", text);
+          else if (side === "left") value(x - 9 * out, middleY - 14, outer ? "end" : "start", text);
+          else value(x + w + 9 * out, middleY - 14, outer ? "start" : "end", text);
         }
       });
-    }); this.drawing.replaceChildren(drawing);
+    });
+    targets.concat(strokes, labels).forEach(function (node) { drawing.appendChild(node); });
+    this.drawing.replaceChildren(drawing);
   };
   Editor.prototype.saveAction = function () {
     if (this.disposed || this.root.hidden || this.requests.busy() || !this.form.hidden || this.sidebar.guard()) {
@@ -277,6 +320,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
   };
   Editor.prototype.dispose = function () {
     this.disposed = true; this.requests.reset(); this.dismissForm(); this.confirm.closeModal(); this.root.hidden = true;
+    this.root.removeEventListener("keydown", this.onKeydown);
     this.sidebar.dispose();
   };
   return Editor;

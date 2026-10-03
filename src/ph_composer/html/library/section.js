@@ -61,7 +61,8 @@ PhComposerUI.define("library/section", ["panel", "workspace", "subtabs", "librar
     view.tabs = new Subtabs({ label: "Library definitions", state: page, stateKey: "surface",
       tabs: view.surfaces.map(function (entry) {
         return { id: entry.spec.id, label: entry.spec.label, surface: entry.root };
-      }), guard: function () { return guard(view); }, refused: panel.notify, changed: changed });
+      }), guard: function () { return guard(view); }, refused: function (reason) { panel.notify(reason); },
+      changed: changed });
     root.appendChild(view.tabs.root);
     view.surfaces.forEach(function (entry) {
       root.appendChild(entry.root);

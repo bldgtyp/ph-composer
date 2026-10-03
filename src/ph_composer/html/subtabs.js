@@ -1,7 +1,8 @@
 /* Peer work surfaces share one navigation control. The owning page supplies its session-scoped state;
    rebuilding the view preserves that state's selected surface without touching Model data.
-   new Subtabs({ label, state, stateKey, tabs: [{ id, label, surface }], guard, refused, changed })
-   guard(nextId) returns a refusal message while a draft or operation must remain visible. */
+   new Subtabs({ label, state, stateKey, tabs: [{ id, label, surface }], guard, refused, changed, reselected })
+   guard(nextId) returns a refusal message while a draft or operation must remain visible; refused(reason, nextId)
+   then runs. reselected(id) runs when the shown tab is chosen again, for an owner whose surface is covered. */
 PhComposerUI.define("subtabs", ["dom"], function (ui) {
   "use strict";
   var sequence = 0;
@@ -49,11 +50,14 @@ PhComposerUI.define("subtabs", ["dom"], function (ui) {
   };
   Subtabs.prototype.select = function (id) {
     if (this.disposed || !this.buttons[id]) return false;
-    if (id === this.active) return true;
+    if (id === this.active) {
+      if (this.options.reselected) this.options.reselected(id);
+      return true;
+    }
     var reason = this.options.guard && this.options.guard(id);
     if (!reason && this.focusedInput()) reason = "Finish editing the focused field before changing sections.";
     if (reason) {
-      if (this.options.refused) this.options.refused(reason);
+      if (this.options.refused) this.options.refused(reason, id);
       return false;
     }
     this.active = id;

@@ -16,7 +16,9 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.groupNames = this.page.groupNames || [""]; this.manual = Boolean(this.page.manual);
     this.active = this.page.active; this.collapsed = this.page.collapsed; this.entries = [];
     root.replaceChildren(); root.classList.add("window-workspace");
-    this.notice = ui.floatingNotice(root);
+    // The panel owns the one floating notice; a refused or failed request is already shown there by the panel.
+    this.notice = { show: function (text, options) { panel.notify(text, options && options.tone); },
+      clear: function () { panel.notify(""); } };
     this.layout = el("div", "window-layout"); this.audit = el("div", "window-audit");
     this.scheduleSurface = el("div");
     this.tabs = new Subtabs({ label: "Window Types sections", state: this.page, stateKey: "surface",
@@ -24,7 +26,10 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
         { id: "audit", label: "U-Values", surface: this.audit },
         { id: "schedule", label: "Schedule", surface: this.scheduleSurface }], guard: function () {
           return self.guard(); },
-      refused: function (reason) { self.notice.show(reason); }, changed: function () { self.paint(); } });
+      refused: function (reason, id) {
+        if (self.installEditor.root.hidden) self.notice.show(reason); else self.leaveInstalls(id);
+      }, reselected: function (id) { if (!self.installEditor.root.hidden) self.leaveInstalls(id); },
+      changed: function () { self.paint(); } });
     root.appendChild(this.tabs.root); root.appendChild(this.layout); root.appendChild(this.audit);
     root.appendChild(this.scheduleSurface);
     this.installEditor = new InstallEditor(session, send, function (message) {
@@ -67,12 +72,19 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     if (review) return review;
     return this.installEditor.guard();
   };
+  // A subtab chosen over an open Installs session ends it the way Cancel does, asking first when changes are staged.
+  View.prototype.leaveInstalls = function (id) {
+    var self = this, installs = this.installEditor;
+    var open = installs.requests.busy() ? installs.guard() : !installs.form.hidden ?
+      "Accept or cancel the Psi-Install Type edit first." : installs.sidebar.guard();
+    if (open) { this.notice.show(open, { tone: "warning" }); return; }
+    installs.cancelSession(false, function () { if (self.tabs.select(id)) self.tabs.buttons[id].focus(); });
+  };
   View.prototype.request = function (action, params, done, allowDraft) {
     if (this.disposed || !this.enabled || this.requests.busy() || !this.installEditor.root.hidden) return false;
     if (!allowDraft && this.guard()) { this.notice.show(this.guard()); return false; }
     var self = this;
     var result = this.requests.run(action, params || {}, { onDone: done, onFail: function (outcome) {
-      self.notice.show(outcome.message || "The edit was refused. The draft is retained.", { persistent: true });
       if (self.renameNodes) self.renameNodes.forEach(function (node) { node.disabled = false; });
       if (self.dimensionField) { self.dimensionField.error.textContent = outcome.message || "Review and retry.";
         self.dimensionField.error.hidden = false; }
@@ -252,7 +264,9 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
   View.prototype.buildKeyboard = function () {
     var self = this;
     this.onKeydown = function (event) {
-      if (event.defaultPrevented || self.disposed || self.root.hidden || self.guard()) return;
+      if (event.defaultPrevented || self.disposed || self.root.hidden) return;
+      if (!self.installEditor.root.hidden) { self.installEditor.onKeydown(event); return; }
+      if (self.guard()) return;
       if (/INPUT|SELECT|TEXTAREA/.test((event.target.tagName || "").toUpperCase())) return;
       if (event.key === "Escape") {
         if (self.picking || self.source) { self.picking = false; self.source = null; }
@@ -288,6 +302,8 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.renderList(); var record = this.record(); this.main.hidden = !record;
     this.paintPending();
     this.placement.paint(); this.schedule.paint();
+    // The Anchor belongs to Place, which an Installs session refuses.
+    if (!this.installEditor.root.hidden && !(this.placement.tool || {}).active) this.placement.root.hidden = true;
     this.installButton.disabled = this.installButton.disabled || !snapshot.value(this.state, shared.PREFIX +
       "settings");
     Object.assign(this.page, { active: this.active, order: this.order, groups: this.groups,
@@ -385,7 +401,7 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     if (this.bubble) this.bubble.close(false);
     Object.keys(this.sidebars).forEach(function (kind) { this.sidebars[kind].dispose(); }, this);
     this.root.removeEventListener("keydown", this.onKeydown); document.removeEventListener("keydown", this.documentKey);
-    if (this.resize) this.resize.disconnect(); if (this.notice.dispose) this.notice.dispose();
+    if (this.resize) this.resize.disconnect();
   };
   Object.assign(View.prototype, typeList, cards, audit);
   return { View: View };

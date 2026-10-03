@@ -34,6 +34,10 @@
   transition: opacity 180ms ease, transform 180ms ease;
 }
 .phc-floating-notice.is-dismissing { opacity: 0; transform: translateY(-4px); pointer-events: none; }
+/* A confirmation that fades on the next interaction never blocks the control beneath it: the click goes
+   through, and that same click fades the notice. Its Dismiss button still takes the pointer. */
+.phc-floating-notice[data-tone="info"][data-persistent="false"] { pointer-events: none; }
+.phc-floating-notice[data-tone="info"][data-persistent="false"] .phc-floating-notice-dismiss { pointer-events: auto; }
 .phc-workspace .phc-floating-notice-dismiss {
   position: absolute;
   top: 50%;

@@ -101,11 +101,9 @@ function (request, snapshot, tables, faceWords, ui, units, fields) {
     if (this.disposed || !this.enabled) return;
     if (this.owner.guard()) { this.owner.notice.show(this.owner.guard()); return; }
     if (action.id === "place") { this.owner.placement.choose(row.record.type.id); return; }
-    var self = this, unit = clone(row.record.unit);
+    var unit = clone(row.record.unit);
     if (action.id === "locate") {
-      this.views.run(PREFIX + "units.locate", { units: [unit.reference] }, { onFail: function (outcome) {
-        self.owner.notice.show(outcome.message || "The Window could not be located.", { tone: "warning" });
-      } }); this.paint(); return;
+      this.views.run(PREFIX + "units.locate", { units: [unit.reference] }); this.paint(); return;
     }
     if (!this.owner.enabled) return;
     if (!this.units.some(function (current) { return JSON.stringify(current.reference) ===

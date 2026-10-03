@@ -59,7 +59,6 @@
 .window-schedule { min-width:0; }
 .window-schedule > .muted { margin:8px 0; }
 .window-repair-dialog select { width:100%; min-width:0; }
-.window-workspace .phc-notice-layer { top:46px; }
 .window-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:50px; padding:9px 0; border-bottom:1px solid var(--line); }
 .window-tool-group { display:flex; align-items:center; gap:3px; }
 .window-tool-group + .window-tool-group { border-left:1px solid var(--line); padding-left:10px; }
@@ -177,20 +176,32 @@
 .window-main { padding:0 12px 12px; }
 .window-workspace .window-drawing { text-align:left; min-width:0; }
 .window-workspace .window-header-metric { min-width:100px; }
-.window-install-editor { padding:12px; min-width:0; }
+.window-install-editor { min-width:0; }
 .window-install-editor>[role=status]:empty { display:none; }
 .window-install-body { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; }
 .window-install-drawing { overflow:auto; min-width:0; }
-.window-install-drawing svg { display:block; width:100%; min-width:180px; }
-.window-install-edge { stroke:var(--interaction-highlight); stroke-width:10; cursor:pointer; }
-.window-install-edge.default { stroke:#327bce; stroke-dasharray:10 7; }
-.window-install-edge.shared { stroke:#7c8c92; stroke-dasharray:2 7; cursor:not-allowed; }
-.window-install-edge.partial,.window-install-edge.missing { stroke:var(--warning-ink); stroke-dasharray:5 7; }
-.window-install-panel { min-width:0; }
-.window-install-list { max-height:280px; overflow:auto; }
+/* Under this width the drawing scrolls; shrinking further would make its labels unreadable. */
+.window-install-drawing svg { display:block; width:100%; min-width:480px; max-width:760px; font-size:13px; }
+/* Edge state is data in the selection teal: solid when assigned, dashed when it follows the Model default. The red
+   drawing highlight is kept for the pointer and keyboard focus. */
+.window-install-edge { stroke:var(--interaction-highlight); stroke-width:4; pointer-events:none; }
+.window-install-edge.default { stroke-dasharray:9 6; }
+.window-install-edge.shared { stroke:#7c8c92; stroke-width:2; stroke-dasharray:2 6; }
+.window-install-edge.partial,.window-install-edge.missing { stroke:var(--warning-ink); stroke-dasharray:5 6; }
+.window-install-target { stroke:transparent; stroke-width:14; outline:none; cursor:not-allowed; }
+.window-install-target[aria-disabled=false] { cursor:pointer; }
+.window-install-target[aria-disabled=false]:hover { stroke:var(--drawing-highlight-halo); }
+.window-install-target[aria-disabled=false]:focus-visible { stroke:var(--drawing-highlight); stroke-opacity:.55; }
+.window-install-panel { display:flex; flex-direction:column; align-items:stretch; gap:6px; min-width:0; }
+.window-install-heading { display:flex; align-items:center; gap:6px; min-height:28px; }
+.window-install-heading small { margin-left:auto; }
+.window-install-list { display:flex; flex-direction:column; gap:4px; max-height:280px; overflow:auto; }
 .window-install-choice { display:flex; gap:4px; }
-.window-install-choice>button:first-child { flex:1; min-width:0; white-space:normal; text-align:left; }
-.window-install-choice [aria-pressed=true] { background:var(--interaction-highlight-tint); }
+.window-install-choice>button:first-child { display:flex; flex:1; align-items:baseline; gap:8px; min-width:0; text-align:left; }
+.window-install-choice-name { flex:1; min-width:0; overflow-wrap:anywhere; }
+.window-install-choice-value { flex:none; color:var(--muted); font-variant-numeric:tabular-nums; }
+.window-install-choice [aria-pressed=true] .window-install-choice-value { color:inherit; }
+.phc-workspace .window-install-panel>button { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .window-install-form { display:grid; gap:8px; margin-top:10px; }
 .window-install-copy { display:grid; gap:6px; }
 /* The defaults stay inside a narrow panel: a long Psi-Install name shrinks to an ellipsis, its full name in
