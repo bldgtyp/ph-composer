@@ -1,7 +1,7 @@
 # Packet 1: page frame
 
 DATE: 2026-10-03
-STATUS: Implemented on branch
+STATUS: In review
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -110,7 +110,8 @@ toolbars (packets 5 and 6). Empty-state wording (packet 8).
 ## Outcome, 2026-10-03
 
 Implemented on `feat/ui-page-frame`. `make ci` passes (1390 Ruby runs, 381 JavaScript tests, 172
-Python tests) and `make ui-checks` passes at every width it covers. The host check is owed.
+Python tests) and `make ui-checks` passes at every width it covers. Pull request
+[#55](https://github.com/bldgtyp/ph-composer/pull/55).
 
 What differs from the plan above:
 
@@ -137,3 +138,26 @@ planned tabs, which D3 ruled on.
 Seen and left alone: the Glazing library sidebar still runs past the right edge at 1280 (W3,
 packet 5). `make ci` needs a UTF-8 locale; with `LANG` unset five Ruby tests that read source files
 raise an encoding error.
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+commit `af04f8b`, Model `ui-frame-run.skp` copied fresh from the synthetic
+`ux-followups-integrated.skp` (two Zones, twelve classified Faces, no Assemblies or Window Types).
+Tab changes and panel resizes were driven through development `eval` on the panel's dialog, not by
+native clicks; the captures are native window pixels taken by window id. The Model stayed
+unmodified throughout.
+
+| Check | Result |
+| --- | --- |
+| Zones / Faces, Assemblies, Window Types, Library, Export at 1496 by 938 | Pass: one header, one gutter, primary at the right, subtab rule to the panel edge |
+| Zones / Faces, Library, Window Types at 700 wide | Pass: planned tabs wrap to a second row, no label squeezed |
+| Same at 420 wide | Pass: five working tabs on two rows, planned tabs hidden, header actions stay on one line |
+| "+ New Assembly" from the header's primary button | Pass: the form opens and Cancel returns with nothing written |
+
+Not covered: a populated Window Type Builder or Assembly Builder (the fixture has neither), native
+pointer and keyboard gestures, SketchUp 2023, Windows. Evidence is in the gitignored
+`_private/host/ui-frame-evidence/`.
+
+Seen in the host and filed under X1: Export lists its blocking findings by record id ("Face
+fac_c3d5e3f176e1 needs an authored Assembly"), twelve rows of them for one cause.
