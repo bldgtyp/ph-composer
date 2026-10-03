@@ -103,3 +103,23 @@ eating names the user typed; a fallback on finding codes that never matched and 
 said it did; prefixes matching past a dot; ids missing from the tooltip for findings that carry
 them in `object_id`. Not taken: routes finer than one tab per feature, keeping the header's
 buttons across repaints so they keep focus, a `createLabel` passed to the inventory.
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+this branch, Model `ui-completeness-run.skp` copied fresh from the synthetic
+`ux-followups-integrated.skp` (two Zones, twelve classified Faces, no Assemblies). This is the
+Model on which X1 was first seen in the host. Panel steps were driven through development `eval`
+on the panel's dialog; captures are native window pixels taken by window id.
+
+| Check | Result |
+| --- | --- |
+| Export on twelve Faces with no Assembly | Pass: "Finish 1 thing before exporting.", then one row, "Face needs an authored Assembly." with "× 12", where there were twelve rows of record ids. Choose destination is disabled in the header. The adjacency repair checkbox is unchanged |
+| Locate all | Pass: twelve Faces are selected in the Model |
+| Open Zones / Faces | Pass: the panel shows the Zones / Faces tab |
+| Assemblies with no records | Pass: "No Assembly records yet. Choose + New Assembly." |
+
+Not covered: an export that completes (no destination was chosen and nothing was written), a group
+past 500 records, a Windows finding, the Window Types rail mark and empty prompt in the host
+(covered offline and in the browser), native pointer and keyboard gestures, SketchUp 2023, Windows.
+Evidence is in the gitignored `_private/host/ui-completeness-evidence/`.
