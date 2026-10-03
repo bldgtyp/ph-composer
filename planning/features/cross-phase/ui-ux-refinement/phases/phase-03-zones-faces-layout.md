@@ -322,3 +322,25 @@ Not done, and why: the Classify tool still turns on the last colour mode the use
 (`classify_tool.rb`, `force_colour_by`). That is the accepted Phase 1 contract ("Off at rest, with
 the remembered mode used", D7 gate handoff), so changing it to always use Face type is a decision
 for Ed, not a wording fix.
+
+## P3-3 host check, 2026-10-03
+
+SketchUp 26.1.188, fresh process, build installed from the branch, Model `ui-zones-words-run.skp`
+copied fresh from the synthetic `p1b-authoring.skp` (two Zones, each with one classified Face and
+five unclassified). The SketchUp selection was set through development `eval`; panel controls were
+changed by script; captures are native window pixels by window id.
+
+| Check | Result |
+| --- | --- |
+| At rest | Pass: no State column; Face rows have no chevron; each Zone's amber count reads 5; an alert icon sits beside the unavailable Make Zone |
+| Classify palette | Pass: six chips, one help button, the Attached zone picker; no disabled explanation chips |
+| One unclassified Face given a type only, from the selection inspector | Pass: the Face becomes a row with Type "Wall" and an amber "?" Boundary; its Zone's count drops from 5 to 4 |
+
+Not covered in the host: a stale adjacency and a dangling Attached zone on the Boundary cell (unit
+tests only; the fixture has neither), native pointer and keyboard input, arrow-key navigation.
+
+One capture during this check came back blank. SketchUp's windows had gone off-screen at that
+moment, and after the panel was reopened the first window id found was the closed one. The panel
+itself rendered correctly once the on-screen window was captured, the renderer was idle, and the
+same steps in the browser preview raise no error. Recorded so the blank image is not read as a
+product fault.
