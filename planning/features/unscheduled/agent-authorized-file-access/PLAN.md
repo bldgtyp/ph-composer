@@ -109,8 +109,10 @@ the file it names. A second question appears only when a companion file the shee
 would be replaced (the HBJSON report). One function owns that rule. Windows behavior of
 `UI.savepanel` is unverified and Windows support is separately gated, so the rule is stated for
 macOS and the Windows packet re-checks it. [host-gate-ui-findings](../host-gate-ui-findings/README.md)
-item 3 landed this rule as `NativeApproval.confirm_replace` (implemented on branch
-`feat/host-gate-ui-findings`, 2026-10-02); this plan reuses it.
+item 3 landed this rule as `NativeApproval.confirm_replace(path, question)` (implemented on branch
+`feat/host-gate-ui-findings`, 2026-10-02); this plan reuses it. The host check showed the companion
+clause above is moot: the artifact pair refuses half a prior pair, so the HBJSON export now refuses that
+destination right after the Save sheet instead of asking about the report (Ed, 2026-10-02).
 
 **Separate decision, not this plan's:** whether to open the agent connection and access-grant
 packet now. Under D1 = C this packet does not wait for it.

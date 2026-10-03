@@ -152,8 +152,9 @@ Dispatch runs such an operation only with the user's answer, which a native clie
 busy session) and opens no dialog if so; otherwise it opens the matching SketchUp dialog for the panel
 and the native menus, obtains consent before replacing an existing file, and passes the chosen location
 to the handler outside params. `NativeApproval.confirm_replace` owns that rule: on macOS the Save sheet's
-own question is the consent, and a companion file the sheet did not name (the Export report beside an
-HBJSON) is asked about only when it exists alone; other platforms keep one question for the whole set.
+own question is the consent, and other platforms ask once more. The HBJSON export first refuses a
+destination its artifact pair would refuse (`Export::ArtifactPair.destination_problem`: no `.hbjson`
+extension, or only one of the HBJSON and its Export report exists), so no question precedes a refusal.
 Dispatch repeats every check after the dialog closes.
 The path never appears in params, a result, an outcome or a log. Every other caller, including a
 script calling `PhComposer::API`, is refused at once with `access.user_required`, effect `none`, and

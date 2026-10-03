@@ -98,26 +98,6 @@ class FileExportTest < PhComposerTestCase
     end
   end
 
-  def test_a_companion_the_save_dialog_did_not_name_is_asked_about_on_its_own
-    Dir.mktmpdir("phc-replace") do |directory|
-      path = File.join(directory, "model.hbjson")
-      report = File.join(directory, "model-export-report.html")
-      ask = lambda do
-        PhComposer::NativeApproval.confirm_replace(path, "Replace both?", :companions => { report => "Report?" })
-      end
-      assert ask.call, "nothing exists"
-      File.write(report, "prior")
-      UI.messagebox_result = IDNO
-      refute ask.call, "the companion alone is asked about and declined"
-      File.write(path, "prior")
-      assert ask.call, "the sheet's consent covers the pair"
-      assert_equal ["Report?"], UI.messages
-      Sketchup.platform_value = :platform_win
-      refute ask.call
-      assert_equal ["Report?", "Replace both?"], UI.messages
-    end
-  end
-
   def test_a_busy_session_or_invalid_params_refuse_before_the_native_dialog_opens
     approval = PhComposer::Declarations::Approval.new(:kind => "save_file", :title => "Save synthetic",
                                                       :default_name => "synthetic.json")

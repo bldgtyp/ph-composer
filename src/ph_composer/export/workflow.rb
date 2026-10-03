@@ -6,6 +6,7 @@ module PhComposer
     module Workflow
       TITLE = "Export HBJSON"
       CANCELLED = "Export cancelled. Nothing was written."
+      REPLACE_QUESTION = "Replace the existing HBJSON and Export report beside it?"
 
       module_function
 
@@ -21,7 +22,8 @@ module PhComposer
         return Outcome.refused("params.invalid", "Choose only declared preflight repairs.",
                                :revision => session.revision) unless chosen
 
-        destination, replace = consent(session.model)
+        destination, refused = consent(session)
+        return refused if refused
         return Outcome.build("cancelled", "export.cancelled", CANCELLED, "none", session.revision) unless destination
         return model_changed(session) unless unchanged?(session, preflight)
 
@@ -31,6 +33,7 @@ module PhComposer
         revalidated = checked_preflight(session, context)
         return revalidated unless revalidated["status"] == "completed"
 
+        replace = [destination, ArtifactPair.report_path(destination)].any? { |path| File.exist?(path) }
         API.start_export(:context => context, :destination => destination, :replace => replace)
       end
 
@@ -42,21 +45,19 @@ module PhComposer
         declared.select { |repair| repairs.include?(repair.fetch("id")) }
       end
 
-      # [destination, replace] from the native dialogs, or nil when the user cancelled either.
-      def consent(model)
+      # [destination, nil] from the native dialogs, nil when the user cancelled either, or [nil, refusal]
+      # when the pair would refuse the destination, checked before anything asks to replace it.
+      def consent(session)
+        model = session.model
         directory = model.path.to_s.empty? ? nil : File.dirname(model.path)
         destination = UI.savepanel(TITLE, directory, "#{default_name(model)}.hbjson")
         return nil if destination.nil?
 
-        report = ArtifactPair.report_path(destination)
-        consented = NativeApproval.confirm_replace(destination,
-                                                   "Replace the existing HBJSON and Export report beside it?",
-                                                   :companions => {
-                                                     report => "Replace the existing Export report beside this HBJSON?"
-                                                   })
-        return nil unless consented
+        problem = ArtifactPair.destination_problem(destination)
+        return [nil, Outcome.refused("export.refused", problem, :revision => session.revision)] if problem
+        return nil unless NativeApproval.confirm_replace(destination, REPLACE_QUESTION)
 
-        [destination, [destination, report].any? { |path| File.exist?(path) }]
+        [destination, nil]
       end
 
       # A native dialog may admit Model switches or changes, so the preflight's revision must still hold.

@@ -14,6 +14,8 @@ module PhComposer
       class PairError < UserError; end
       class IncompletePriorPairError < PairError; end
 
+      INCOMPLETE = "Only one destination artifact exists. Move or rename it before replacing the coordinated pair."
+
       Result = Struct.new(:hbjson_path, :report_path, :replaced, keyword_init: true)
 
       class Transaction
@@ -32,6 +34,11 @@ module PhComposer
 
           @fault = fault
           @owned = []
+        end
+
+        # Exactly one of the pair exists and no interrupted run's journal could restore the other.
+        def incomplete_prior_pair?
+          !File.file?(journal_path) && File.exist?(@hbjson_path) != File.exist?(@report_path)
         end
 
         def commit(hbjson, report_html)
@@ -183,12 +190,9 @@ module PhComposer
         end
 
         def assert_prior_pair!
-          hb_exists = File.exist?(@hbjson_path)
-          report_exists = File.exist?(@report_path)
-          return if hb_exists == report_exists
+          return if File.exist?(@hbjson_path) == File.exist?(@report_path)
 
-          raise IncompletePriorPairError,
-                "Only one destination artifact exists. Move or rename it before replacing the coordinated pair."
+          raise IncompletePriorPairError, INCOMPLETE
         end
 
         def write_exclusive(path, content)
@@ -260,6 +264,16 @@ module PhComposer
       end
 
       module_function
+
+      # Why a commit to `hbjson_path` would be refused before it writes anything, or nil: a destination
+      # without the .hbjson extension, or half a prior pair. A native client checks this before asking to
+      # replace, so it never asks a question whose answer the commit refuses. A destination holding an
+      # interrupted run's journal is left to the commit, which recovers it first.
+      def destination_problem(hbjson_path)
+        Transaction.new(hbjson_path, :run_id => "check").incomplete_prior_pair? ? INCOMPLETE : nil
+      rescue PairError => error
+        error.message
+      end
 
       def report_path(hbjson_path)
         base = hbjson_path.to_s.sub(/\.hbjson\z/i, "")
