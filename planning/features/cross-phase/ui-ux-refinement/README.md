@@ -16,6 +16,7 @@ unit of review is the consultant's task, not the tab.
 2. [STATUS.md](STATUS.md): what has run and what is authorized.
 3. [phases/phase-01-page-frame.md](phases/phase-01-page-frame.md): the first polish packet's plan.
 4. [phases/phase-02-table-chrome.md](phases/phase-02-table-chrome.md): the second packet's plan.
+5. [phases/phase-03-zones-faces-layout.md](phases/phase-03-zones-faces-layout.md): the third packet's plan, with a design step.
 
 The rubric is `.agents/skills/ph-composer-ui-polish/SKILL.md`. The predecessor rulings are in
 [`../../../ui-baseline/README.md`](../../../ui-baseline/README.md); where a finding here

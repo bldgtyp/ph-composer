@@ -1,7 +1,7 @@
 # Packet 2: table chrome and cells
 
 DATE: 2026-10-03
-STATUS: In review
+STATUS: Merged to main
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
