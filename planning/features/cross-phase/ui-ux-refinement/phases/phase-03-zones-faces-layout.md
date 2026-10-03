@@ -387,3 +387,32 @@ Known and left:
 - Pressing "Show all" removes that row, and focus falls to the page.
 - Locating a summary of more than 250 Faces selects them all, which is over the selection
   inspector's ceiling, so the inspector does not appear for that selection.
+
+## P3-4 host check, 2026-10-03
+
+SketchUp 26.1.188, fresh process, build installed from the branch. Panel controls were changed by
+script on the panel's dialog; Face records, Undo and timings were read back; captures are native
+window pixels by window id.
+
+On `ui-unclassified-run.skp`, a fresh copy of the synthetic `p1b-authoring.skp` (two Zones, each
+with one classified Face and five unclassified):
+
+| Check | Result |
+| --- | --- |
+| At rest | Pass: each Zone shows its Floor, then "5 unclassified Faces" open with five rows of "?" pills and no Assembly cell; the Zone's area (80) is the Floor (16) plus the unclassified group (64) |
+| Type set to Wall on "Face 2" from its row | Pass: the record reads Wall with no boundary; the row becomes "Wall 2" among the Zone's Faces, level with "Floor 1", with an amber "?" Boundary; the count and the summary both drop to 4 |
+| One Undo | Pass: the record is gone and the row is back under the summary |
+
+Scale, on `ui-unclassified-scale-run.skp`, a fresh copy of the synthetic `p1d-colour-scale.skp`
+(86 Zones of six Faces) with every Face record removed through development `eval`, so all 516
+Faces are unclassified and every summary opens by itself:
+
+| Measure | Result |
+| --- | --- |
+| Rows painted with everything open | 688 |
+| Collapse all | 59 ms, to 86 rows |
+| Expand all | 123 ms, back to 688 rows |
+| Ruby refresh of the panel's snapshot | 205 ms |
+
+Not covered in the host: a single Zone with more than fifty unclassified Faces, so the "Show all"
+row is covered by the unit test and the browser timing only; native pointer and keyboard input.
