@@ -16,14 +16,27 @@ const { chromium } = require("playwright");
     const toolStart = await page.evaluate(() => ({ revision: previewHost.revision,
       actions: previewHost.sent.filter(message => message.type === "action.invoke").length }));
     await pane.getByRole("button", { name: "Place", exact: true }).click();
-    const anchor = pane.getByRole("combobox", { name: "Window placement anchor", exact: true });
-    assert.strictEqual(await anchor.locator("option").count(), 9);
+    if (width === 1280) {
+      const sidebar = await pane.locator(".window-layout > .library-sidebar-root:not([hidden])").boundingBox();
+      assert.ok(sidebar.x + sidebar.width <= 1280, "the library sidebar ends inside the panel");
+      assert.strictEqual(await pane.locator(".window-type-row > button:first-child").evaluateAll(nodes =>
+        nodes.filter(node => node.scrollWidth > node.clientWidth).length), 0, "each rail name is shown whole");
+    }
+    if (width === 900) await pane.getByRole("button", { name: "Expand Window Types sidebar" }).waitFor();
+    assert.strictEqual(await pane.locator(".window-placement").isVisible(), true, "the row shows while placing");
+    const anchors = pane.getByRole("dialog", { name: "Placement anchor", exact: true });
+    await pane.getByRole("button", { name: "Placement anchor: Sill center", exact: true }).click();
+    assert.strictEqual(await anchors.getByRole("button").count(), 10, "nine anchors and Close");
+    await page.keyboard.press("Escape");
     await pane.getByRole("button", { name: "Stop placing", exact: true }).waitFor();
-    await anchor.selectOption("head_right");
+    await pane.getByRole("button", { name: "Placement anchor: Sill center", exact: true }).click();
+    await anchors.getByRole("button", { name: "Head right", exact: true }).click();
+    await pane.getByRole("button", { name: "Placement anchor: Head right", exact: true }).waitFor();
     assert.strictEqual(await page.evaluate(() => previewHost.windows.place_tool.anchor), "head_right");
     await page.screenshot({ path: path.join(directory, "placement-" + width + ".png"), fullPage: true });
     await pane.getByRole("button", { name: "Stop placing", exact: true }).click();
     await pane.getByRole("button", { name: "Stop placing", exact: true }).waitFor({ state: "hidden" });
+    assert.strictEqual(await pane.locator(".window-placement").isVisible(), false, "no placement row while idle");
     await pane.getByRole("tab", { name: "Schedule", exact: true }).click();
     const schedule = pane.locator(".window-schedule");
     await schedule.getByText(/Net opaque host area/).waitFor();

@@ -38,6 +38,7 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     }); root.appendChild(this.installEditor.root);
     this.buildRail(); this.buildHeading(); this.buildWorkspace(); this.buildSidebar(); this.buildKeyboard();
     this.placement = new Placement.Controls(this); root.insertBefore(this.placement.root, this.layout);
+    this.typeActions.insertBefore(this.placement.anchorRoot, this.placeButton);
     this.schedule = new Schedule.Schedule(this); this.scheduleSurface.appendChild(this.schedule.root);
   }
   View.prototype.rawRecord = function (id) {
@@ -229,7 +230,8 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
   };
 
   View.prototype.railCollapsed = function () {
-    return this.collapsed === undefined ? window.innerWidth < 900 : this.collapsed;
+    // At 900 and under, in step with the stylesheet that narrows the rail's column.
+    return this.collapsed === undefined ? window.innerWidth <= 900 : this.collapsed;
   };
   View.prototype.toggleRail = function () { this.collapsed = !this.railCollapsed(); this.paint(); };
   View.prototype.buildSidebar = function () {
@@ -302,8 +304,6 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.renderList(); var record = this.record(); this.main.hidden = !record;
     this.paintPending();
     this.placement.paint(); this.schedule.paint();
-    // The Anchor belongs to Place, which an Installs session refuses.
-    if (!this.installEditor.root.hidden && !(this.placement.tool || {}).active) this.placement.root.hidden = true;
     this.installButton.disabled = this.installButton.disabled || !snapshot.value(this.state, shared.PREFIX +
       "settings");
     Object.assign(this.page, { active: this.active, order: this.order, groups: this.groups,

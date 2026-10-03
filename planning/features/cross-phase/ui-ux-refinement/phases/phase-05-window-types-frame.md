@@ -1,7 +1,7 @@
 # Packet 5: Window Types frame
 
 DATE: 2026-10-03
-STATUS: Plan; built under Ed's standing go of 2026-10-03
+STATUS: Implemented; pull request open
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -79,3 +79,40 @@ rail. Markup, names and behaviour are unchanged.
 
 The library sidebar's controls and copy-in affordance (packet 7). The Builder's toolbar. Any
 change to what Place does in the viewport.
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-window-types-frame`. `make ci` and `make ui-checks` pass.
+
+What differs from the plan above:
+
+- The Empty element carries the caption "Empty" and no hatch. A hatch read as a material.
+- The library sidebar's title folds the sidebar as before and now shows a small chevron, since
+  without a border nothing else marked it as a control.
+- In manual order the move handle joins the row's other action icons in the overlay. Left as a
+  separate handle it sat under them.
+
+One Sonnet diff review ran against the architecture and ui-polish rubrics. Applied: the move
+handle buried under the row actions in manual order, the anchor bubble left open after a refused
+choice, a hard-coded chevron colour. Not taken: collapsing the library sidebar at exactly 900 in
+step with the rail, which changes a default the Library's own check relies on; restoring focus
+after an anchor choice re-arms the tool (the old select lost it the same way).
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+this branch, Model `ui-wtframe-run.skp` (a copy of the packet 4 run model: the synthetic fixture
+plus one two-element Window Type). Panel steps were driven through development `eval` on the
+panel's dialog; captures are native window pixels taken by window id.
+
+| Check | Result |
+| --- | --- |
+| Builder at 1300 wide: no Anchor row, rail name whole, library sidebar inside the panel with its title, count and empty state | Pass |
+| Anchor icon opens the three by three bubble with Sill center tinted | Pass |
+| Choosing Head right, then Place: the tool starts in SketchUp and the placement row shows what is being placed, the hint and Stop placing | Pass (active tool `RubyTool`) |
+| Stop placing: the row goes and SketchUp returns to its Select tool | Pass |
+
+Not covered: a click in the viewport to place a Window (no host geometry was changed), the rail's
+hover overlay and manual-order handle (pointer states; covered in the browser at 1280), an Empty
+element in the host (covered offline and in the browser), SketchUp 2023, Windows. Evidence is in
+the gitignored `_private/host/ui-wtframe-evidence/`.

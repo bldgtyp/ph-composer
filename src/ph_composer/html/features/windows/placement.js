@@ -2,23 +2,24 @@
 PhComposerUI.define("features/windows/placement", ["request", "snapshot", "workspace"], function (request, snapshot,
   ui) {
   "use strict";
-  var PREFIX = "ph_composer.windows.", ANCHORS = ["sill_left", "sill_center", "sill_right", "center_left",
-    "center", "center_right", "head_left", "head_center", "head_right"];
+  // The nine anchors as they sit on a window: the head row first, the sill row last.
+  var PREFIX = "ph_composer.windows.", ANCHORS = ["head_left", "head_center", "head_right", "center_left",
+    "center", "center_right", "sill_left", "sill_center", "sill_right"];
+  /* `root` is the row an active Place tool needs: what is being placed, how it measures, and Stop. `anchorRoot`
+     is the tool's one setting, an icon beside Place that opens the nine anchors. */
   function Controls(owner) {
     var self = this; this.owner = owner; this.anchorValue = owner.page.anchor || "sill_center";
     this.channel = request.channel(owner.session, owner.send, "window-placement", "view.invoke");
     this.root = ui.element("div", "window-placement");
     this.chosen = ui.element("span", "window-placement-chosen"); this.root.appendChild(this.chosen);
-    var label = ui.element("label", "window-placement-anchor", "Anchor");
-    this.anchor = ui.element("select"); this.anchor.setAttribute("aria-label", "Window placement anchor");
-    ANCHORS.forEach(function (id) { self.anchor.appendChild(ui.option(id, ui.titleCase(id))); });
-    label.appendChild(this.anchor); this.root.appendChild(label);
-    this.anchor.addEventListener("change", function () {
-      if (self.disposed || !self.enabled) return;
-      if (self.owner.guard()) { self.anchor.value = self.anchorValue;
-        self.owner.notice.show(self.owner.guard()); return; }
-      self.anchorValue = self.anchor.value; self.owner.page.anchor = self.anchorValue;
-      if (self.tool.active) self.choose(self.tool.type_id);
+    this.anchorButton = ui.iconButton("Placement anchor", "anchor");
+    this.anchorBubble = new ui.Bubble(this.anchorButton, "Placement anchor");
+    this.anchorRoot = this.anchorBubble.root;
+    var grid = ui.element("div", "window-anchor-grid"); this.anchorBubble.content.appendChild(grid);
+    this.anchors = {};
+    ANCHORS.forEach(function (id) {
+      var choice = ui.button(ui.titleCase(id), function () { self.setAnchor(id); });
+      choice.className = "phc-setting-choice"; self.anchors[id] = choice; grid.appendChild(choice);
     });
     this.hint = ui.element("span", "muted window-placement-hint",
       "Measurements: sill=opening bottom above host base; offset=anchor inset from nearest edge");
@@ -26,6 +27,14 @@ PhComposerUI.define("features/windows/placement", ["request", "snapshot", "works
     this.stop = ui.button("Stop placing", function () { self.run("place_tool.stop", {}); });
     this.root.appendChild(this.stop);
   }
+  // A new anchor re-arms a tool that is already placing, so the next click uses it.
+  Controls.prototype.setAnchor = function (id) {
+    if (this.disposed || !this.enabled) return;
+    this.anchorBubble.close(true);
+    if (this.owner.guard()) { this.owner.notice.show(this.owner.guard()); return; }
+    this.anchorValue = id; this.owner.page.anchor = id;
+    if (this.tool.active) this.choose(this.tool.type_id); else this.paint();
+  };
   Controls.prototype.available = function (typeId) {
     var raw = this.owner.rawRecord(typeId);
     return Boolean(raw && [raw.values.rows_m, raw.values.columns_m].every(function (bands) {
@@ -55,11 +64,15 @@ PhComposerUI.define("features/windows/placement", ["request", "snapshot", "works
   };
   Controls.prototype.paint = function () {
     var tool = this.tool || {}, raw = this.owner.rawRecord(tool.type_id || this.owner.active);
-    this.root.hidden = !this.enabled;
+    var self = this, label = "Placement anchor: " + ui.titleCase(this.anchorValue);
+    this.root.hidden = !this.enabled || !tool.active;
     this.chosen.textContent = tool.active ? "Placing " + (raw ? raw.values.name : "Window Type") : "";
-    this.chosen.hidden = !tool.active; this.anchor.value = this.anchorValue;
-    this.anchor.disabled = !this.enabled || this.channel.busy();
-    this.hint.hidden = !tool.active; this.stop.hidden = !tool.active; this.stop.disabled = this.channel.busy();
+    this.stop.disabled = this.channel.busy();
+    this.anchorButton.setAttribute("aria-label", label); this.anchorButton.title = label;
+    this.anchorButton.disabled = !this.enabled || this.channel.busy();
+    Object.keys(this.anchors).forEach(function (id) {
+      self.anchors[id].setAttribute("aria-pressed", String(id === self.anchorValue));
+    });
     if (this.owner.placeButton) {
       this.owner.placeButton.disabled = !this.enabled || this.channel.busy() || !this.available(this.owner.active);
       this.owner.placeButton.title = this.available(this.owner.active) ? "Place this Window Type in SketchUp" :
