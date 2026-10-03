@@ -165,27 +165,38 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   /* A pane's regions. `main` is the work surface and every section that names no region. `inspector` is
      a column beside it that shows one section at a time. `tools` is a group of small controls the work
-     surface places in its own control row (`region(pane, "tools")`); until it is placed it leads the
-     main region. A pane with only `main` sections is laid out exactly as before. */
+     surface places in its own control row (`region(pane, "tools")`); a pane that offers tools must place
+     them, and until it does they lead the main region. A pane with only `main` sections is laid out
+     exactly as before. The regions are marked `data-phc-region`, a name no section's content uses. */
+  var REGIONS = ["main", "inspector", "tools"];
+  /* Which inspector section shows when several want to: a tool in use, then what is selected, then the
+     record in hand, then ambient reference. `order` breaks a tie inside a tier. */
+  var TIERS = ["tool", "selection", "record", "ambient"];
+
   function region(paneName, name) {
     var pane = document.querySelector("[data-pane='" + paneName + "']");
     var node, main;
     if (!pane) throw new Error("no pane \"" + paneName + "\"");
-    node = pane.querySelector("[data-region='" + name + "']");
-    if (node || name === "main" && !pane.querySelector("[data-region]")) return node || pane;
+    if (REGIONS.indexOf(name) < 0) throw new Error("no pane region \"" + name + "\"");
+    node = pane.querySelector("[data-phc-region='" + name + "']");
+    if (node || name === "main" && !pane.querySelector("[data-phc-region]")) return node || pane;
     // The first region a pane asks for wraps what is already in it as `main`.
-    main = pane.querySelector("[data-region='main']");
+    main = pane.querySelector("[data-phc-region='main']");
     if (!main) {
       main = ui.element("div", "phc-pane-main");
-      main.setAttribute("data-region", "main");
+      main.setAttribute("data-phc-region", "main");
       while (pane.firstChild) main.appendChild(pane.firstChild);
       pane.appendChild(main);
     }
     if (name === "main") return main;
     node = name === "inspector" ? ui.element("aside", "phc-pane-inspector") : ui.element("div", "phc-pane-tools");
-    node.setAttribute("data-region", name);
-    if (name === "inspector") { node.hidden = true; pane.classList.add("has-inspector"); pane.appendChild(node); }
-    else main.insertBefore(node, main.firstChild);
+    node.setAttribute("data-phc-region", name);
+    if (name === "inspector") {
+      node.hidden = true;
+      node.setAttribute("aria-label", "Inspector");
+      pane.classList.add("has-inspector");
+      pane.appendChild(node);
+    } else main.insertBefore(node, main.firstChild);
     return node;
   }
 
@@ -197,23 +208,49 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     }
     root = ui.element("section");
     root.setAttribute("data-section", entry.name);
+    if (entry.region === "inspector") root.tabIndex = -1;
     region(entry.pane, entry.region).appendChild(root);
     return root;
   }
 
-  /* An inspector shows one section: the first, in order, whose `when(state)` says it has something to
-     show. Every section still renders, because rendering is also how it consumes its results. */
+  /* An inspector shows one section. Each section's `when(state)` answers false, true or "hold": the
+     first to hold wins, because it has a draft the user must not lose sight of; otherwise the first to
+     answer true, by tier and then order. `when` runs after every section has rendered, so it may read
+     what its own render just worked out. If the section that had the focus is hidden, the focus moves
+     to the one now shown. */
+  function wants(entry) {
+    try { return entry.when ? entry.when(state) : true; } catch (error) {
+      if (window.console) window.console.error("panel section \"" + entry.name + "\" failed its when", error);
+      return false;
+    }
+  }
+
+  function within(root, node) {
+    for (; node; node = node.parentNode) if (node === root) return true;
+    return false;
+  }
+
   function showInspectors() {
-    var shown = Object.create(null);
-    sections.filter(function (entry) { return entry.region === "inspector"; }).forEach(function (entry) {
-      var root = document.querySelector("[data-section='" + entry.name + "']"), wanted = false;
-      if (!root) return;
-      try { wanted = !shown[entry.pane] && (!entry.when || Boolean(entry.when(state))); } catch (error) {
-        if (window.console) window.console.error("panel section \"" + entry.name + "\" failed its when", error);
-      }
-      root.hidden = !wanted;
-      if (wanted) shown[entry.pane] = true;
-      region(entry.pane, "inspector").hidden = !shown[entry.pane];
+    var byPane = Object.create(null);
+    sections.forEach(function (entry) {
+      var root = entry.region === "inspector" && document.querySelector("[data-section='" + entry.name + "']");
+      if (root) (byPane[entry.pane] = byPane[entry.pane] || []).push({ entry: entry, root: root, want: wants(entry) });
+    });
+    Object.keys(byPane).forEach(function (paneName) {
+      var candidates = byPane[paneName].slice().sort(function (left, right) {
+        return TIERS.indexOf(left.entry.tier) - TIERS.indexOf(right.entry.tier) ||
+          left.entry.order - right.entry.order || left.entry.registered - right.entry.registered;
+      });
+      var chosen = candidates.filter(function (item) { return item.want === "hold"; })[0] ||
+        candidates.filter(function (item) { return item.want; })[0] || null;
+      var active = document.activeElement, lostFocus = false;
+      candidates.forEach(function (item) {
+        var hide = item !== chosen;
+        if (hide && !item.root.hidden && within(item.root, active)) lostFocus = true;
+        item.root.hidden = hide;
+      });
+      region(paneName, "inspector").hidden = !chosen;
+      if (lostFocus && chosen) chosen.root.focus();
     });
   }
 
@@ -298,13 +335,20 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
      order they registered. A pane holds the screen's work surface first and its secondary controls
      after it, and load order is decided by the module graph, so a section that cares says so.
      `options.onNavigate(root, intent)` receives the intent of a `navigate` to its pane.
-     `options.region` places it in the pane's `inspector` or `tools` region instead of `main`, and an
-     inspector section's `options.when(state)` answers whether it has something to show. */
+     `options.region` places it in the pane's `inspector` or `tools` region instead of `main`. An
+     inspector section names its `options.tier` and may give `options.when(state)`; see showInspectors. */
   function section(name, renderFunction, options) {
     var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview",
       region: (options && options.region) || "main", when: options && options.when,
+      tier: options && options.tier,
       order: (options && options.order) !== undefined ? options.order : DEFAULT_ORDER,
       onNavigate: options && options.onNavigate, registered: sections.length };
+    if (REGIONS.indexOf(entry.region) < 0) {
+      throw new Error("panel section \"" + name + "\" names no region \"" + entry.region + "\"");
+    }
+    if (entry.region === "inspector" && TIERS.indexOf(entry.tier) < 0) {
+      throw new Error("inspector section \"" + name + "\" needs a tier: " + TIERS.join(", "));
+    }
     if (!document.querySelector("[data-section='" + name + "']") &&
         !document.querySelector("[data-pane='" + entry.pane + "']")) {
       throw new Error("panel section \"" + name + "\" names no pane \"" + entry.pane + "\"");

@@ -105,6 +105,7 @@ function (panel, ui, requests, snapshot) {
   function renderMode(root, state, send) {
     var legend = legendOf(state);
     var screenState = forSession(state.session, send);
+    screenState.view.consume(state);
     ui.memoPaint(root, "mode", [state.session, legend.mode, legend.modes, screenState.view.busy()], function () {
       var label = ui.element("label", "phc-view-control", "Colour by");
       label.appendChild(modeControl(screenState, legend));
@@ -114,6 +115,6 @@ function (panel, ui, requests, snapshot) {
   }
 
   panel.section("ph_composer.colour_by.mode", renderMode, { region: "tools", order: 20 });
-  panel.section("ph_composer.colour_by", render, { region: "inspector", order: 20,
+  panel.section("ph_composer.colour_by", render, { region: "inspector", tier: "ambient",
     when: function (state) { return Boolean(legendOf(state).mode); } });
 });

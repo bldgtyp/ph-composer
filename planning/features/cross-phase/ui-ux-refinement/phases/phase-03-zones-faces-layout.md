@@ -144,15 +144,17 @@ Empty-state wording and first-run guidance (packet 8). The viewport tools' own c
 
 ## P3-1 outcome, 2026-10-03
 
-Implemented on `feat/ui-inspector-region`. `make ci` passes (1390 Ruby runs, 386 JavaScript tests,
+Implemented on `feat/ui-inspector-region`. `make ci` passes (1390 Ruby runs, 392 JavaScript tests,
 172 Python tests) and `make ui-checks` passes, with a new check that the inspector is away at
 rest, beside the tree at 1280, under it at 900 and 420, and that the tree does not move.
 
 The contract as built:
 
-- `panel.section(name, render, { pane, region, order, when })`. `region` is `main` (default),
-  `inspector` or `tools`. An inspector shows the first section, by `order`, whose `when(state)` is
-  true; every inspector section still renders, because rendering consumes its results.
+- `panel.section(name, render, { pane, region, tier, order, when })`. `region` is `main` (default),
+  `inspector` or `tools`; anything else is refused. An inspector section names a `tier` (`tool`,
+  `selection`, `record`, `ambient`) and its `when(state)` answers false, true or `"hold"`. The
+  first to hold shows, else the first to answer true by tier, then `order`. Every section still
+  renders, because rendering consumes its results.
 - `panel.region(pane, "tools")` returns the node the work surface places in its control row.
 - A pane whose sections all use `main` is laid out exactly as before; the wrappers appear only
   when a pane first asks for another region.
@@ -173,3 +175,23 @@ What differs from the plan:
 - The tree's height is `calc(100vh - 250px)` with a 240 px floor, up from 60vh. The Window
   Schedule shares that mount class and takes the same height.
 - Colour by off no longer shows "Choose what to colour the model by."; the select says "Off".
+
+Two reviews ran: a Sonnet diff review and a fresh-context Opus review of the contract. Both found
+that a Model switch dropped the tools out of the control row, because the overview never swapped
+in the new session's controls (an older fault this stage exposed). Fixed, with a test. From the
+Opus review, taken now so P3-2 does not build on the weaker shape: named tiers in place of
+precedence by `order` number, `"hold"` so a tool started from the viewport cannot hide a dirty
+draft, refusal of an unknown region or tier, and a region attribute (`data-phc-region`) that no
+section's content can collide with. From the Sonnet review: the tools consume their own request
+results, the Classify toggle is built once so a press keeps its focus and its name, the palette
+closes when the tool ends however it was opened, and focus moves when its section is hidden.
+
+Left for later, on purpose:
+
+- Regions are still created on first use, not written into `index.html`. Every section registers
+  before the first snapshot today, so nothing live is moved. Static markup is the sturdier form
+  and is a small composition-root edit; do it when a second pane takes an inspector.
+- The kit does not warn when a pane's tools are never placed or are placed twice.
+- The inspector's 52 px top offset assumes a one-line page header.
+- Under 900 wide the palette opens beneath a tall tree, out of view; the toggle's pressed state is
+  the only cue until the user scrolls.

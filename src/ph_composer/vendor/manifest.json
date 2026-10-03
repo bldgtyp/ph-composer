@@ -166,14 +166,14 @@
       "sha256": "49c0d071618ea87c9fe2e5c7144204995ce75ee4dcc6b205d90f6f23719b89ee"
     },
     "html/features/zones/classify.js": {
-      "bytes": 12240,
+      "bytes": 12576,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "89256471d00527593bab1c157419c12c32d44ec0839625d41a25765e08050955"
+      "sha256": "df7eadd8592bb6dfe07fe3f49e23ead70f642a30346a82cdee1de1491d5d8605"
     },
     "html/features/zones/overview.js": {
-      "bytes": 27150,
+      "bytes": 27482,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "8bd2de97cd0ee64286cc5dc7f57f2135a9347f2f6ad7ec9132754278a5dff170"
+      "sha256": "69e151603ddcef658b66287a444fc2666706e771bd551c2b06f5110364cf911b"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 2572,
@@ -296,9 +296,9 @@
       "sha256": "860a447b8123868eb15775a3f39985cf0444e18455e6063ff742a471261edb45"
     },
     "html/panel.js": {
-      "bytes": 18163,
+      "bytes": 20353,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "e43a8f10194ab7615dbcc598c4423e7e1e62d373d1665ab329513fd816813f9b"
+      "sha256": "86d30bad0cbfb3573dfd8ad7c6f1aff12dd81a6a804bfcc1103c5bfbe3d9f5ab"
     },
     "html/record_edits.js": {
       "bytes": 15234,
@@ -326,9 +326,9 @@
       "sha256": "d0ecc88e9f68278dcc73a66652093c4e218b6f860e008dde53d117c680f95b4f"
     },
     "html/sections/colour_by.js": {
-      "bytes": 5569,
+      "bytes": 5612,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "df34390c75a484e99f363a1b7ce50a9863ae9fcd6b5c649eeef99ab1419a8e9a"
+      "sha256": "1b4c69475ae4d566bc33bf1a79ab610ec97c3795b7c9c7905405b7f5a81bef5b"
     },
     "html/sections/export.js": {
       "bytes": 7322,
@@ -341,9 +341,9 @@
       "sha256": "8801e69e8143d6a8db6003fa2acd751e8a3b03d9a06c39f7292bf6156355088e"
     },
     "html/shell.css": {
-      "bytes": 2520,
+      "bytes": 2605,
       "mime": "text/css; charset=utf-8",
-      "sha256": "21240908ab6c8c7f6114ec3fad6d3d1f70366edd191685b2879733b773703560"
+      "sha256": "f43ce0b9383913a679fde020c484d788670be213ba96301bb1ccd89f6649f1d7"
     },
     "html/snapshot.js": {
       "bytes": 1462,

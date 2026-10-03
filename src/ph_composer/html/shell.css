@@ -7,10 +7,12 @@
    Under 900 wide the column drops beneath the work surface. */
 .live-panel [data-pane].has-inspector:not([hidden]) { display: flex; align-items: flex-start; gap: 16px; }
 .phc-pane-main { flex: 1 1 0; min-width: 0; }
+.phc-pane-inspector > section:focus { outline: 0; }
 .phc-pane-inspector { flex: 0 0 264px; min-width: 0; margin-top: 52px; padding-left: 12px; border-left: 1px solid var(--line); }
 .phc-pane-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 @media (max-width: 900px) {
   .live-panel [data-pane].has-inspector:not([hidden]) { flex-direction: column; align-items: stretch; }
+  .phc-pane-main { flex: none; }
   .phc-pane-inspector { flex-basis: auto; margin-top: 0; padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--line); }
 }
 /* A rule that separates page regions runs the panel's full width, through the gutter. */

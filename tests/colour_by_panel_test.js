@@ -64,7 +64,7 @@ test("with Colour by off the mode control offers every registered mode and the i
   assert.strictEqual(p.section().parentNode.hidden, true, "and an inspector with nothing to show is away");
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
   assert.deepStrictEqual([p.section().hidden, p.section().parentNode.hidden], [false, false]);
-  assert.strictEqual(p.mode().parentNode.getAttribute("data-region"), "tools");
+  assert.strictEqual(p.mode().parentNode.getAttribute("data-phc-region"), "tools");
 });
 
 test("choosing a mode sends the viewport command and never an action", function () {

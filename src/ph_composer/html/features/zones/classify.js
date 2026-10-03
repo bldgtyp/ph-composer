@@ -228,27 +228,31 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     }
   }
 
-  /* The palette is the inspector's while the tool has the viewport or the user has opened it. The toggle
-     says which: pressed while either holds. Pressing it during painting gives the viewport back. */
+  /* The palette is the inspector's while the tool has the viewport or the user has opened it, and the
+     toggle is pressed while either holds. Pressing it during painting gives the viewport back. When the
+     tool ends any other way (Escape, Stop, another tool) the palette closes with it. The button is built
+     once a session and repainted, so pressing it never drops the focus it holds. */
   function renderToggle(root, state, send) {
-    var tool = snapshot.value(state, "ph_composer.zones.faces.palette") || { active: false };
-    var screenState = forSession(state.session, send);
-    ui.memoPaint(root, "toggle", [state.session, Boolean(tool.active), Boolean(screenState.open),
-      screenState.view.busy()], function () {
-      var pressed = Boolean(tool.active || screenState.open);
-      var toggle = ui.iconButton(pressed ? "Close Classify faces" : "Classify faces", "paint_bucket", function () {
-        if (tool.active) screenState.view.run("ph_composer.zones.faces.stop_classifying", {});
+    var tool = snapshot.value(state, "ph_composer.zones.faces.palette");
+    var screenState = forSession(state.session, send), active = Boolean(tool && tool.active);
+    screenState.view.consume(state);
+    if (screenState.wasActive && !active) screenState.open = false;
+    screenState.wasActive = active;
+    if (!screenState.toggle || screenState.toggle.parentNode !== root) {
+      screenState.toggle = ui.iconButton("Classify faces", "paint_bucket", function () {
+        var pressed = screenState.wasActive || screenState.open;
+        if (screenState.wasActive) screenState.view.run("ph_composer.zones.faces.stop_classifying", {});
         screenState.open = !pressed;
         panel.repaint();
       });
-      toggle.setAttribute("aria-pressed", String(pressed));
-      toggle.disabled = screenState.view.busy();
       root.className = "phc-classify-toggle";
-      root.replaceChildren(toggle);
-    });
+      root.replaceChildren(screenState.toggle);
+    }
+    screenState.toggle.setAttribute("aria-pressed", String(active || Boolean(screenState.open)));
+    screenState.toggle.disabled = !tool || screenState.view.busy();
   }
 
   panel.section("ph_composer.classify.toggle", renderToggle, { region: "tools", order: 10 });
-  panel.section("ph_composer.classify", render, { region: "inspector", order: 10,
+  panel.section("ph_composer.classify", render, { region: "inspector", tier: "tool",
     when: function () { return Boolean(screen && (screen.active || screen.open)); } });
 });

@@ -114,7 +114,7 @@ fs.mkdirSync(output, { recursive: true });
   await page.getByRole("heading", { name: "Zones" }).waitFor();
   for (const [width, beside] of [[1280, true], [900, false], [420, false]]) {
     await page.setViewportSize({ width, height: 800 });
-    const table = page.locator("[data-pane=overview] .phc-table-mount"), inspector = page.locator("[data-region=inspector]");
+    const table = page.locator("[data-pane=overview] .phc-table-mount"), inspector = page.locator("[data-phc-region=inspector]");
     assert.equal(await inspector.isVisible(), false, `no inspector at rest at ${width}`);
     const before = await table.boundingBox();
     await page.getByRole("button", { name: "Classify faces", exact: true }).click();
@@ -124,7 +124,7 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(column.x >= after.x + after.width, beside, `inspector ${beside ? "beside" : "under"} the tree at ${width}`);
     assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), `no page scroll at ${width}`);
     await shot(`inspector-classify-${width}`);
-    await page.getByRole("button", { name: "Close Classify faces", exact: true }).click();
+    await page.getByRole("button", { name: "Classify faces", exact: true }).click();
   }
 
   assert.deepEqual(errors, []);
