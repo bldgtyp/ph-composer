@@ -80,13 +80,14 @@
       function () {
         var create = ui.button("New part", function () { view.form.show(); });
         create.className = "primary";
+        // A section inside a pane, not a page: it keeps an h2 and borrows the header's action group.
+        var actions = ui.element("div", "phc-heading-actions");
+        actions.appendChild(unitField.DimensionFormatControl(SCOPE, function (format, system) {
+          panel.setPreference("dimension_format", format, { scope: SCOPE, system: system });
+        }).root);
+        actions.appendChild(create);
         view.header.replaceChildren(
-          ui.element("h2", "", "Example parts"), ui.element("span", "phc-heading-note", "Development only"),
-          unitField.DimensionFormatControl(SCOPE, function (format, system) {
-            panel.setPreference("dimension_format", format, { scope: SCOPE, system: system });
-          }).root,
-          create
-        );
+          ui.element("h2", "", "Example parts"), ui.element("span", "phc-heading-count", "Development only"), actions);
       });
   }
 

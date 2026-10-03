@@ -1,9 +1,9 @@
 {
   "assets": {
     "html/base.css": {
-      "bytes": 10486,
+      "bytes": 10415,
       "mime": "text/css; charset=utf-8",
-      "sha256": "260546aa2dd0b976b50466a56976d11c37b55994519a580ca3114200f6b975ae"
+      "sha256": "808e57eef75110eb5578a793ef17007cea8f2f952359759dea05f5b8dd21d3b9"
     },
     "html/dom.js": {
       "bytes": 4030,
@@ -141,9 +141,9 @@
       "sha256": "3e9bdd455d18a4a6dc9c6a70deca17e778c57ad90332e6fe07ca5a631603f2f9"
     },
     "html/features/windows/windows.css": {
-      "bytes": 24520,
+      "bytes": 24581,
       "mime": "text/css; charset=utf-8",
-      "sha256": "8884c73e6855fac15f2e41a3a6d4209bce42458ef44b34df2b52b5948f364eeb"
+      "sha256": "0d5ad2ee8986e42768247203003cf7bfeba182dd6578ff28b727b05e0518c530"
     },
     "html/features/zones/assembly_assignment.js": {
       "bytes": 12150,
@@ -246,9 +246,9 @@
       "sha256": "7907abe2ccda411bdf126a28a119f62c34b7198730f87f469b51a15602b813c4"
     },
     "html/library/library.css": {
-      "bytes": 8576,
+      "bytes": 8743,
       "mime": "text/css; charset=utf-8",
-      "sha256": "d855c4dccaa6d79f6731fc1a9506cec2bfdf6362bd3ac225d518fed2831192d8"
+      "sha256": "0dcc97e08784beb552b1a2db6cd8ec6b942b6b8edfb1700a3ef9af37012726cb"
     },
     "html/library/rows.js": {
       "bytes": 6727,
@@ -331,9 +331,9 @@
       "sha256": "1ee0e1484862da2695af4a84642e97679a6da391842faa5f96fd9459231f21c2"
     },
     "html/sections/export.js": {
-      "bytes": 7344,
+      "bytes": 7322,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "9a306fadb236db68310f386791d4380e7d4ae4fc014de6f68245b4f8f4837f5e"
+      "sha256": "309d754a9e3fad8d777a839d6566ab94bfa204c5cdc0185551c345e41e120a98"
     },
     "html/sections/shell.js": {
       "bytes": 758,
@@ -341,9 +341,9 @@
       "sha256": "8801e69e8143d6a8db6003fa2acd751e8a3b03d9a06c39f7292bf6156355088e"
     },
     "html/shell.css": {
-      "bytes": 1776,
+      "bytes": 1719,
       "mime": "text/css; charset=utf-8",
-      "sha256": "d7ad9be3837ba17795c8f12ae52cfc3db4a097684161f2c47ab34f6851de34cf"
+      "sha256": "b320a8070c5d95b35b39118103f10615a45e8548a26ba578fb4e017b0aff16b5"
     },
     "html/snapshot.js": {
       "bytes": 1462,
@@ -358,7 +358,7 @@
     "html/table.css": {
       "bytes": 5418,
       "mime": "text/css; charset=utf-8",
-      "sha256": "0cf0c56cc2eef994e7a29234be9acf35e6907e1c22a1a0aa2d2f606dcad69bb0"
+      "sha256": "8f6c1a2dec7eda479cc97ea9a3836233935fcd66649f1d322aec9589038d796c"
     },
     "html/table.js": {
       "bytes": 18281,

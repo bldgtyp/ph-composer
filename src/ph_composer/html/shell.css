@@ -16,7 +16,6 @@
 /* The Export pane: one command and the host's answer under it. */
 .live-panel .phc-export-status { margin: 0; padding: 12px 0; color: var(--muted); }
 .live-panel .phc-export-status:empty { display: none; }
-.live-panel [data-pane="export"] p { margin: 0 0 12px; }
 .live-panel .phc-export-repair { display: flex; align-items: center; gap: 8px; margin: 16px 0; }
 .live-panel .phc-export-repair input { min-height: 0; width: 16px; height: 16px; padding: 0; margin: 0; }
 .live-panel .phc-export-findings { margin: 12px 0; padding-left: 20px; }

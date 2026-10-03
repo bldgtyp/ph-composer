@@ -178,6 +178,7 @@
 .window-workspace .window-drawing { text-align:left; min-width:0; }
 .window-workspace .window-header-metric { min-width:100px; }
 .window-install-editor { padding:12px; min-width:0; }
+.window-install-editor>[role=status]:empty { display:none; }
 .window-install-body { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; }
 .window-install-drawing { overflow:auto; min-width:0; }
 .window-install-drawing svg { display:block; width:100%; min-width:180px; }

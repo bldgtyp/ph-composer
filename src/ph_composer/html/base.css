@@ -153,9 +153,9 @@ html { height: 100%; }
   border-bottom: 1px solid var(--line);
   background: #f8f9fa;
 }
-.phc-tabs { display: flex; min-width: 0; flex: 1 1 auto; gap: 6px; padding: 10px var(--page-gutter); overflow-x: auto; }
-/* A tab is as wide as its label and gives way before the row scrolls. */
-.phc-tabs button { flex: 0 1 auto; min-width: 0; padding: 9px 14px; border: 0; }
+.phc-tabs { display: flex; flex-wrap: wrap; min-width: 0; flex: 1 1 auto; gap: 2px 6px; padding: 10px var(--page-gutter); }
+/* A tab is as wide as its label. A row too narrow for them all wraps, so no tab is clipped or off-screen. */
+.phc-tabs button { flex: none; padding: 9px 14px; border: 0; white-space: nowrap; }
 .phc-tabs [aria-pressed=true] { background: var(--accent); color: white; }
 .phc-subtabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px var(--page-gutter); border-bottom: 1px solid var(--line); }
 .phc-workspace .phc-subtabs button { background: transparent; color: var(--muted-strong); border-color: transparent; }
@@ -232,8 +232,7 @@ html { height: 100%; }
 }
 @media (max-width: 500px) {
   :root { --page-gutter: 8px; }
-  /* Too narrow for one row: the tabs wrap, so none is ever off-screen. */
-  .phc-tabs { flex-wrap: wrap; gap: 2px; overflow-x: visible; }
+  .phc-tabs { gap: 2px; }
   .phc-tabs button { padding: 6px; }
   .phc-heading h1 { font-size: 17px; }
   .phc-form { max-height: 220px; overflow: auto; }

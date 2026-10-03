@@ -39,3 +39,14 @@ test("the count and the primary action change in place", function () {
   header.setPrimary(null);
   assert.deepStrictEqual(names(header), []);
 });
+
+test("setting the same primary again leaves the actions untouched, so its focus survives a repaint", function () {
+  var pageHeader = start(), solve = dom.element("button"), make = dom.element("button");
+  var header = pageHeader({ title: "Zones", actions: [solve], primary: make });
+  var actions = header.root.querySelector(".phc-heading-actions"), replaced = 0, original = actions.replaceChildren;
+  actions.replaceChildren = function () { replaced += 1; return original.apply(actions, arguments); };
+  header.setPrimary(make);
+  assert.strictEqual(replaced, 0);
+  header.setActions([]);
+  assert.deepStrictEqual(actions.children, [make]);
+});

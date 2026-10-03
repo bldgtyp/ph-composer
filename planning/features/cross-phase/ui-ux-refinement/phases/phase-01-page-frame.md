@@ -109,7 +109,7 @@ toolbars (packets 5 and 6). Empty-state wording (packet 8).
 
 ## Outcome, 2026-10-03
 
-Implemented on `feat/ui-page-frame`. `make ci` passes (1390 Ruby runs, 380 JavaScript tests, 172
+Implemented on `feat/ui-page-frame`. `make ci` passes (1390 Ruby runs, 381 JavaScript tests, 172
 Python tests) and `make ui-checks` passes at every width it covers. The host check is owed.
 
 What differs from the plan above:
@@ -120,13 +120,19 @@ What differs from the plan above:
 - Library's count stays in the header but names its tab ("2 Materials"), and the header's primary
   action is the shown tab's New button. Moving the count into each tab's action bar meant a new
   option threaded through five inventories; that belongs with packet 2's work on that row.
-- Under 500 wide the tab row wraps to a second line instead of shrinking. Five labels do not fit
-  one row at 360.
-- The filter field is 150 wide, down from 190, so the Psi-Install defaults stay on the
-  view-controls row at 1280 now that the pane has a gutter.
+- Tabs never shrink or scroll. A row too narrow for them all wraps to a second line at any width,
+  so no label is squeezed and no tab is off-screen.
+- In the Library's tabs the filter field is 150 wide, down from 190, so the Psi-Install defaults
+  stay on the view-controls row at 1280 now that the pane has a gutter.
 - `windows_checks.cjs` waits two frames after its full-page screenshot. That screenshot resizes
   the page, the drawing repaints on resize, and the next line could hold an element mid-repaint.
   The race was there before (about 1 run in 24) and the new layout made it frequent.
+
+One Sonnet diff review ran against the architecture and ui-polish rubrics: no blocking bug, and
+its valid findings are applied (a too-broad Export paragraph rule, tab labels squeezing between 500
+and 900 wide, a check assertion that could not fail, two development pages building headings by
+hand, an empty status paragraph in the Installs editor). Not taken: a visible "Planned" hint on
+planned tabs, which D3 ruled on.
 
 Seen and left alone: the Glazing library sidebar still runs past the right edge at 1280 (W3,
 packet 5). `make ci` needs a UTF-8 locale; with `LANG` unset five Ruby tests that read source files

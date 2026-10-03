@@ -27,8 +27,12 @@ fs.mkdirSync(output, { recursive: true });
   for (const [width, height] of [[1280, 800], [900, 650], [360, 520], [1680, 1000]]) {
     await page.setViewportSize({ width, height });
     assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), `no page scroll at ${width}`);
-    assert(await page.evaluate(() => { const tabs = document.querySelector(".phc-tabs"); return tabs.scrollWidth <= tabs.clientWidth; }),
-      `every working tab is in view at ${width}`);
+    assert(await page.evaluate(() => {
+      const last = document.querySelector("[data-tab=export]").getBoundingClientRect();
+      const toggle = document.querySelector(".phc-unit-toggle").getBoundingClientRect();
+      const row = document.querySelector("[data-tab=overview]").getBoundingClientRect().height;
+      return last.width > 0 && last.left >= 0 && last.right <= toggle.left && last.height === row && row < 40;
+    }), `the Export tab is in view, clear of the unit switch and on one line at ${width}`);
     await shot(`overview-${width}`);
   }
   await page.setViewportSize({ width: 1280, height: 800 });
