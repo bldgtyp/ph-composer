@@ -129,9 +129,11 @@ existing pane needs no markup. The other two seams add to a screen another modul
   `canCreate()`. The pane throws when a view lacks a member its spec needs. Surfaces appear by
   `order` (the built-ins use 10 to 32; an omitted order is 0), then by id. The `id` is also the
   sub-tab key the pane remembers for each Model session. Register when the module loads:
-  the pane builds its surfaces once per Model session. A surface may instead keep its "+ New"
-  inside its own tab body, as the Windows products still do. Every built-in inventory uses
-  this seam: Materials (`html/features/assemblies/materials.js`), Attached zones
+  the pane builds its surfaces once per Model session. A surface's tab-specific settings go in
+  the `settings` option of its `Inventory` config, an array of nodes the feature owns, which the
+  kit appends at the end of the action bar after the view controls; the Psi-Install Types tab's
+  Model defaults (`html/features/windows/inventory.js`) are the built-in example. Every built-in
+  inventory uses this seam: Materials (`html/features/assemblies/materials.js`), Attached zones
   (`html/features/zones/attached_zones.js`) and the Windows products, whose
   `html/features/windows/section.js` registers Frames, Glazings and Psi-Install Types from one
   definition table in a few lines. Shared inventory mechanics are in the kit:

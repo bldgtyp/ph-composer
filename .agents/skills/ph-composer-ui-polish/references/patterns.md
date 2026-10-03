@@ -23,7 +23,7 @@ Paths under **Local** are in this repository at `src/ph_composer/html/`. The UI 
 - Export: `sections/export.js`. A running export locks tab changes through the navigation guard and keeps its progress and Cancel visible.
 - Assembly Builder: `features/assemblies/editor.js`, `features/assemblies/canvas.js`, `features/assemblies/assembly.css`. Use for compact toolbars, header metrics, contextual inspectors, crisp drawings, insertion controls, and anchored editors.
 - Library and library sidebar: `library/section.js`, `library/sidebar.js`, `library/library.css`. Use for browsing density, source status, filters, row selection, and collapsible sidebar behavior. The sidebar is provider-agnostic: it shows a provider's name and connection state, never its address.
-- Library tabs: `library/section.js` and `features/windows/inventory.js`. One page heading for every tab; each tab body opens with the shared action bar (view controls, tab settings, then "+ New") and keeps it to one line at 1280 px. Record forms use `formDialog`; a record's uses open in a bubble anchored to its row action.
+- Library tabs: `library/section.js` and `features/windows/inventory.js`. One page heading for every tab, holding the active tab's "+ New" beside Export library; each tab body opens with the shared action bar (view controls, then tab settings) and keeps it to one line at 1280 px. Tab settings sit at the end of the action bar through the kit `Inventory`'s `settings` option, as compact controls that open a choice list (the current choice `aria-pressed`) or a single-value bubble; the Psi-Install Types Model defaults are the example. Record forms use `formDialog`; a record's uses open in a bubble anchored to its row action.
 - Window Types: `features/windows/editor.js`, `features/windows/canvas.js`, `features/windows/windows.css`. Use for the page-header action hierarchy, title and metrics, floating notices, contextual drawing tools, selection treatment, edge inserts, single-value dimension bubbles and the adapted collapsible sidebar.
 
 ## Accepted screen patterns (predecessor only)
@@ -33,7 +33,7 @@ Paths under **Local** are in this repository at `src/ph_composer/html/`. The UI 
 
 ## Patterns still to be established
 
-- Window placement: a viewport tool from a Window Type. The predecessor proved the anchor grammar and the placement transaction; its panel affordance was minimal.
+- Window placement: functionally accepted in Phase 2 E13 (`features/windows/placement.js`, `src/ph_composer/features/windows/place_tool.rb`), not yet reviewed as the pattern for other viewport tools; decide when thermal-bridge picking is designed.
 - Thermal bridges: edge and point picking in the viewport plus a schedule. No accepted pattern yet.
 
 Record each here once the owner accepts a screen.
