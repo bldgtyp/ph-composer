@@ -31,11 +31,22 @@ issue #38, PR #46. Ledger case `PTAB`.
 | 8 | 420 px | A | pass | Heading on one line; both defaults on one row below the view controls; the depth bubble fits inside the panel. |
 | 9 | Escape restores and closes | A | pass | Ed pressed Escape with an "abc" draft: the bubble closed, the trigger still read "0 m"; an injected keydown logger recorded `Escape` on the input; readback unchanged, revision unchanged. |
 
+## Recheck after the PR review
+
+Build C: the branch after the review fix (bounded defaults, short labels, no Group by on Psi-Install
+Types), SHA256 `6ee343df…292a`; package comparison matches, fresh launch. The fixture's Psi-Install
+Type was renamed to a 59-character name and set as the Model default through the public
+`psi_install_types.update` and `settings.update` actions (both `completed`).
+
+| # | Check | Build | Result | Observation |
+| --- | --- | --- | --- | --- |
+| 10 | 1280 px, sidebar open, long name | C | pass | Filter, Order by, Direction, "Psi-Install: Synthetic thermally b…" and "Depth: 0 m" on one row. |
+| 11 | 420 px, long name | C | pass | Both defaults on one row, the name truncated with an ellipsis, both chevrons inside the panel. |
+
 ## Observations, not failures
 
-- At 1280 px the defaults wrap as a group to a second, right-aligned line when the Psi-Install
-  Library sidebar is expanded; with it collapsed the whole action bar fits one line. The decision
-  recorded in the packet stands.
+- On builds A and B, at 1280 px the defaults wrapped as a group to a second line when the Psi-Install
+  Library sidebar was expanded; build C keeps them on one row (checks 10 and 11).
 - Escape synthesized by the computer-use controller never reached the panel's web view, on the new
   bubble or on the existing record form; Backspace, Enter and letters did. A physical Escape did.
 - Under background control, clicks stopped reaching the panel after a few interactions and Edit >

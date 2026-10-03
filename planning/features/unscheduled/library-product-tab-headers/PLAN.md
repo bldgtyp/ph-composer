@@ -179,12 +179,9 @@ Verification:
 - `make ui-checks` passes with the updated Windows and Window library checks (Playwright from a scratch
   `NODE_PATH`). One run of `windows_checks.cjs` at 280 px failed with a bare `Error` and passed on three
   reruns; the cause is unknown.
-- Preview captures at 1280 and 420 px of the Psi-Install Types tab. At 1280 px with the Library sidebar
-  expanded the table column is 998 px wide; the view controls take about 740 px and the two defaults
-  about 424 px, so the settings group wraps as one unit to a right-aligned second line. The two controls
-  share their row. In SketchUp the same holds, and with the sidebar collapsed the whole action bar fits
-  one line. This misses "keeps it to one line at 1280 px" in `references/patterns.md` while the sidebar
-  is open; Ed to decide whether to shorten the labels or accept the wrap.
+- Preview captures at 1280 and 420 px of the Psi-Install Types tab. The first build wrapped the defaults
+  to a second line at 1280 px with the Library sidebar open (view controls about 740 px, defaults about
+  424 px, 998 px available). The PR review resolved it as below.
 - Review: one Sonnet diff review with the architecture and UI polish rubrics. It found no crash or data
   loss and judged the `settings` seam a clean public contract. Fixed: focus pulled back to the trigger
   on an unchanged leave, typing lost during a pending request, a bubble left open after Escape while
@@ -202,10 +199,24 @@ now mark their choices `phc-setting-choice`, and the Window library browser chec
 
 Remaining before archive: Ed's review of PR #46, the 1280 px wrap decision above, and the merge.
 
+PR review, 2026-10-03 (Ed, comment review on PR #46):
+
+- P2: a long selected Psi-Install name clipped the control at 420 px (498.6 px wide in a 420 px panel)
+  while `scrollWidth` stayed 420. Fixed: the settings group, bubble anchor and trigger are bounded to
+  the available width and the name shrinks to an ellipsis (at most 11em), with the full name in the
+  tooltip and accessible label.
+- 1280 px wrap: resolved as the review recommended, one row with the sidebar open. The visible labels
+  are "Psi-Install: <name>" and "Depth: <value>"; the accessible names keep "Default Psi-Install" and
+  "Default install depth", as do the bubble titles. Psi-Install Types also drop the kit's Group by
+  control, which offered only "None" (`groups` undefined instead of empty).
+- `window_library_checks.cjs` now sets a 59-character name and asserts each control and its chevron
+  inside the panel at 1280, 900, 420 and 280 px, and the defaults on the filter's row at 1280 px. It
+  fails against the previous CSS at both 1280 and 420 px.
+- The review's third point, the SketchUp look, was already recorded above when the review was read.
+
 Follow-ups, not taken here:
 
 - Extract a kit single-value bubble from `features/windows/cards.js` `methods.editQuantity` and the depth
   bubble here (the plan's recorded follow-up).
 - `.agents/skills/ph-composer-ui-polish/SKILL.md` rule 2 still lists "the primary New action" last in the
   tab action bar; the Library pane puts it in the page heading.
-- The Psi-Install Types tab shows a Group by control with only "None", because the kit always renders it.
