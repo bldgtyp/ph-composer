@@ -1,13 +1,13 @@
 # Packet 2: table chrome and cells
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: In review
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 Covers findings K5, K7 and K8 and ruling D2 in [FINDINGS.md](../FINDINGS.md), plus the Library
-count that packet 1 left in the page header. Not authorized: this is the plan Ed reads before
-saying go. It builds on packet 1 ([#55](https://github.com/bldgtyp/ph-composer/pull/55)) and
+count that packet 1 left in the page header. Ed said go on 2026-10-03 and accepted the three recommendations
+under "Open points". It builds on packet 1 ([#55](https://github.com/bldgtyp/ph-composer/pull/55)) and
 starts from main once that is merged.
 
 ## Outcome
@@ -106,3 +106,53 @@ runtime manifest, and `references/patterns.md` in the ui-polish skill.
 
 Row actions and their icons (packet 6). Empty-state wording (packet 8). The Zones / Faces layout
 and the State column (packet 3). Builder metric labels (packet 6).
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-table-chrome`. `make ci` passes (1390 Ruby runs, 383 JavaScript tests, 172
+Python tests) and `make ui-checks` passes.
+
+What differs from the plan above:
+
+- The visible "Filter" label is gone; the field keeps its placeholder and its accessible name.
+  P2-Q2 kept the labels unless the row wrapped at 1280, and with the fill tools and help in the row
+  the Psi-Install tab did wrap. "Group by" and "Order by" keep their labels, because a bare "None"
+  or "Name" says nothing.
+- The Library's filter field stays 150 wide for the same reason. The Psi-Install row has 43 to 72
+  px to spare at 1280, in IP and SI.
+- A Library tab's total reads "3 total", not a bare "3".
+- The sort toggle's icon shows the order in force; its name and tooltip give the change it offers.
+- The enum pill keeps its 28 px height. Dropping it to 24 changes row density, which is a
+  separate decision.
+- `units.format` now honours `showUnit: false` for a decimal length format. An architectural
+  format (feet and inches) keeps its marks, since they are the number.
+- The same `units.format` change makes the Window Type product cards' width cells bare numbers
+  ("60", not "60 mm"). Their column headings already carry the unit, and the call was already
+  asking for a bare value.
+
+One Sonnet diff review ran against the architecture and ui-polish rubrics: nothing blocking. Its
+valid findings are applied: the help button takes the icon-button size and the kit tooltip, the
+enum pill carries its own focus ring and locked look, the fill tools start idle, and the tests the
+plan promised are in. Left as follow-ups: the sort toggle announces no state change to a screen
+reader, and a Library surface that is not a kit `Inventory` shows no count.
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188, fresh process, build installed from the branch, Model `ui-chrome-run.skp`
+copied fresh from the synthetic `uxk1-rerun.skp` (two Zones, twelve classified Faces). Two
+Materials and two Assemblies were added to that scratch copy through the panel's own forms, by
+script. Captures are native window pixels by window id; tab changes were driven through
+development `eval`. The last two rows are native pointer and keyboard input delivered through
+computer use.
+
+| Check | Result |
+| --- | --- |
+| Zones / Faces at 1496 by 938 | Pass: one control row with the sort toggle; Type, Boundary and Assembly cells as the kit's enum pill |
+| Assemblies and Library Materials, empty | Pass: one row, header count 0 on Assemblies, "0 total" in the Library row |
+| Assemblies with two records | Pass: "100" under "Thickness mm", the withheld U-value marker, Type and Exterior as pills |
+| Library Materials with two records | Pass: "2 total", coloured Category pills, no header count |
+| Range and fill by native input | Pass: click a conductivity cell, Shift+Down extends the range, the fill tools appear in the row without moving the table, fill down writes 0.04 to the second row |
+| Enum edit by native input | Pass: the Category dropdown opens its native menu and choosing Woods repaints the pill and the library sidebar. The pill shows its focus ring |
+
+Not covered: the Psi-Install tab's defaults in the host, SketchUp 2023, Windows. Evidence is in the
+gitignored `_private/host/ui-chrome-evidence/`.

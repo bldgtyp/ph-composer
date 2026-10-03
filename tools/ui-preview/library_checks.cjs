@@ -36,7 +36,7 @@ async function writes(page) {
       await details.getByText("Library: Public insulation", { exact: true }).waitFor();
       assert.equal(await writes(page), 0, "opening a provider row never copies");
       await details.getByRole("button", { name: "Add to file", exact: true }).click();
-      await library.locator(".phc-heading-count").getByText("3 Materials", { exact: true }).waitFor();
+      await library.locator(".phc-view-count").getByText("3 total", { exact: true }).waitFor();
       assert.equal(await writes(page), 1);
       await details.getByRole("button", { name: "Close Synthetic fiber", exact: true }).click();
       const wool = sidebar.locator(".library-sidebar-row-button").filter({ hasText: "Mineral wool" });

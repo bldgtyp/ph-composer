@@ -233,7 +233,7 @@ PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", 
           error: ui.element("small", this.inline ? "phc-cell-status" : "cell-error") };
         this.cells[key] = cell;
         cell.input.value = cell.display;
-        if (isSelect(this, field)) paintOptions(cell);
+        if (isSelect(this, field)) { cell.input.className = "phc-enum-cell"; paintOptions(cell); }
         if (!isSelect(this, field)) {
           cell.input.setAttribute("type", "text");
           if (this.quantities[field] || this.textInputs) cell.input.setAttribute("inputmode", "decimal");

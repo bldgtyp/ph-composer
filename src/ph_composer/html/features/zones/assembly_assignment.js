@@ -117,7 +117,7 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
       var ownerSession = state.session;
       var reject = refused || function (reason) { panel.notify(reason, "warning"); };
       td._assemblySession = ownerSession;
-      chip = td._assemblyChip = ui.element("select", "phc-cell-input");
+      chip = td._assemblyChip = ui.element("select", "phc-cell-input phc-enum-cell");
       chip.addEventListener("change", function () {
         var live = td._assemblyState;
         if (!live || live.session !== ownerSession || live.disposed || !chip.isConnected ||

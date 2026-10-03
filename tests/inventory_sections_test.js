@@ -188,6 +188,8 @@ test("duplicate Material copies datasheet links only through the explicit checkb
 
 test("Assembly hint selects store honeybee words and clear with a null patch", function () {
   var o = setup(), cell = o.roots.assemblies._view.edits.cells["asm_a:type"];
+  assert.ok(cell.input.classList.contains("phc-enum-cell"), "every select cell is the kit's enum cell");
+  assert.strictEqual(materials(o).inventory.controls.options.count, "always", "a Library tab counts its own records");
   cell.input.value = "RoofCeiling";
   cell.input.listeners.change({});
   assert.strictEqual(o.sent[0].payload.params.values.type, "RoofCeiling");
@@ -373,15 +375,21 @@ test("Assembly numeric inventory cells follow the displayed SI and IP units", fu
   rows[0].display.total_thickness_mm = 165;
   rows[0].display.thermal.u_effective_w_m2k = 0.2;
   o.paint();
-  assert.ok(text(o.roots.assemblies).includes(units.format(165, fields.LENGTH_MM,
-    units.profile(fields.LENGTH_MM, { unit_system: "SI" }))));
+  function cells(field) {
+    return o.roots.assemblies.querySelectorAll("td").filter(function (td) {
+      return td.className.indexOf("col-" + field) >= 0;
+    }).map(function (td) { return td.textContent; });
+  }
+  // The header names the unit, so a cell is the number alone.
+  assert.ok(cells("total_thickness_mm").indexOf("165") >= 0);
+  assert.ok(cells("u_effective_w_m2k").indexOf(units.format(0.2, fields.U_VALUE,
+    units.profile(fields.U_VALUE, { unit_system: "SI" }), { showUnit: false })) >= 0);
   o.modules.unit_preferences.set("unit_system", "IP");
   o.paint();
-  var displayed = text(o.roots.assemblies);
-  assert.ok(displayed.includes(units.format(165, fields.LENGTH_MM,
-    units.profile(fields.LENGTH_MM, o.modules.unit_preferences.current()))));
-  assert.ok(displayed.includes(units.format(0.2, fields.U_VALUE,
-    units.profile(fields.U_VALUE, o.modules.unit_preferences.current()))));
+  assert.ok(cells("total_thickness_mm").indexOf(units.format(165, fields.LENGTH_MM,
+    units.profile(fields.LENGTH_MM, o.modules.unit_preferences.current()), { showUnit: false })) >= 0);
+  assert.ok(cells("u_effective_w_m2k").indexOf(units.format(0.2, fields.U_VALUE,
+    units.profile(fields.U_VALUE, o.modules.unit_preferences.current()), { showUnit: false })) >= 0);
   assert.strictEqual(o.sent.length, 0);
 });
 
@@ -403,7 +411,8 @@ test("Library surfaces come from registrations in order, and the active one owns
     "true,false,false");
   view.tabs.select("outside");
   o.paint();
-  assert.strictEqual(view.header.root.querySelector(".phc-heading-count").textContent, "2 Outside");
+  assert.strictEqual(view.header.root.querySelector(".phc-heading-count").textContent, "",
+    "a tab counts its own records in its action bar, not in the page header");
   assert.strictEqual(view.surfaces[1].create.parentNode, view.header.root.querySelector(".phc-heading-actions"));
   view.surfaces[1].create.listeners.click({});
   assert.strictEqual(built[1], "created");

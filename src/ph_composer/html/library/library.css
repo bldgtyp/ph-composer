@@ -8,9 +8,6 @@
   text-align: left;
 }
 .phc-inventory-table .phc-table select.phc-cell-input { width: 100%; font: inherit; }
-.phc-inventory-table .phc-table .col-category select, .phc-inventory-table .phc-table .col-type select,
-.phc-inventory-table .phc-table .col-exterior_condition select { border-radius: 14px; min-height: 28px; background: var(--category-fill, #edf1f2); }
-.phc-inventory-table .phc-table .col-category select { background: var(--category-fill, #edf1f2); }
 .category-warm { --category-fill: #fff2cc; }
 .category-rose { --category-fill: #f6e3e3; }
 .category-wood { --category-fill: #efe3d1; }

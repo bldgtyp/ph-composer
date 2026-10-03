@@ -160,7 +160,7 @@ PhComposerUI.define("units", ["length_expression", "unit_numbers", "unit_tables"
     if (dimension) {
       return roundedText(base / LENGTH_UNITS[dimension.id].metres,
         edit ? dimension.editDigits : dimension.displayDigits, format, false) +
-        (edit ? "" : " " + dimension.id);
+        (edit || opts.showUnit === false ? "" : " " + dimension.id);
     }
     converted = baseToUnit(base, definition, system);
     text = converted === Infinity ? "∞" :

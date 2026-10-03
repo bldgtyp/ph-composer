@@ -55,7 +55,8 @@ function (request, snapshot, ui, tables, viewControls, RecordEdits, Grid, units,
       label: function (row, field) { return row.record.values.name + " " + self.columnLabel(field); },
       recordLabel: config.label });
     this.controls = new viewControls.ViewControls({ label: config.label, placeholder: "Name or notes",
-      fields: config.columns, groups: config.groups, guard: function () { return self.guard(); }, refused: notice },
+      fields: config.columns, groups: config.groups, count: config.count,
+      guard: function () { return self.guard(); }, refused: notice },
       function () {
         if (self.dirty()) self.controls.collapsed = Object.create(null);
         changed();
@@ -63,9 +64,8 @@ function (request, snapshot, ui, tables, viewControls, RecordEdits, Grid, units,
     this.unreadable = ui.element("p", "phc-inventory-warning");
     this.unreadable.setAttribute("role", "status");
     root.appendChild(this.unreadable);
-    this.tools = ui.element("div");
     this.scroll = ui.element("div", "phc-table-scroll phc-inventory-table");
-    this.grid = new Grid({ edits: this.edits, scroll: this.scroll, toolbarParent: this.tools,
+    this.grid = new Grid({ edits: this.edits, scroll: this.scroll, toolbarParent: this.controls.root,
       hiddenColumns: function () { return {}; }, isBusy: function () { return self.busy(); }, notify: notice,
       submitBatch: function (changes) { self.ranges.submit(changes); } });
     // A feature's tab settings (`config.settings`, nodes it owns) end the action bar after the view controls.
@@ -75,7 +75,6 @@ function (request, snapshot, ui, tables, viewControls, RecordEdits, Grid, units,
       this.controls.root.appendChild(this.settingsRoot);
     }
     root.appendChild(this.controls.root);
-    root.appendChild(this.tools);
     root.appendChild(this.scroll);
     this.unsubscribe = preferences.subscribe(changed);
   }

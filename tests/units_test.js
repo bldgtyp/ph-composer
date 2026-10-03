@@ -176,6 +176,16 @@ test("each dimension format has its own display text and edit seed", function ()
   });
 });
 
+test("a cell under a unit header drops a decimal length's unit and keeps architectural marks", function () {
+  var field = { quantity: "length", unit: "mm" };
+  var mm = { system: "SI", numberFormat: US, dimensionFormat: "mm" };
+  var arch = { system: "IP", numberFormat: US, dimensionFormat: "ft-in" };
+  assert.strictEqual(units.format(762, field, mm), "762 mm");
+  assert.strictEqual(units.format(762, field, mm, { showUnit: false }), "762");
+  assert.strictEqual(units.format(762, field, arch, { showUnit: false }), units.format(762, field, arch),
+    "feet and inches marks are the number, not a unit label");
+});
+
 test("feet and inches carry rather than printing twelve inches or sixteen sixteenths", function () {
   var arch = { system: "IP", numberFormat: US, dimensionFormat: "ft-in" };
   var inchFraction = { system: "IP", numberFormat: US, dimensionFormat: "in-frac" };

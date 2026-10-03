@@ -1,7 +1,7 @@
 # Packet 1: page frame
 
 DATE: 2026-10-03
-STATUS: In review
+STATUS: Merged to main
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 

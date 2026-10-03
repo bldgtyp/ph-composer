@@ -19,7 +19,7 @@ fs.mkdirSync(output, { recursive: true });
     await page.locator("[data-tab='library']").click();
     const library = page.locator("[data-section='library']");
     await library.getByRole("heading", { name: "Library", exact: true }).waitFor();
-    await library.locator(".phc-heading-count").getByText("2 Materials", { exact: true }).waitFor();
+    await library.locator(".phc-view-count").getByText("2 total", { exact: true }).waitFor();
     assert.equal(await library.locator("[data-material-use-count]").textContent(), "1");
     await library.locator("[data-material-use-count]").click();
     await library.getByRole("dialog", { name: "Used by Assemblies" }).getByText("Wall", { exact: true }).waitFor();
