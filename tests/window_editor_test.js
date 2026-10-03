@@ -210,7 +210,8 @@ test("withdrawn or disposed Element name form cancels and retained Apply cannot 
 test("Window section navigation uses the Element name guard and missing target cancels pending Apply", function () {
   var o = setup(), sectionGuard, context = { document: o.document }; context.window = context;
   var modules = source.start(context, ["features/windows/section"], {
-    panel: { section: function () {}, navigationGuard: function (name, guard) { sectionGuard = guard; } },
+    panel: { section: function () {}, workedOn: function () {},
+      navigationGuard: function (name, guard) { sectionGuard = guard; } },
     "features/windows/editor": { View: function () { return o.editor; } },
     "features/windows/inventory": { definitions: {} }, "library/section": { registerSurface: function () {} }
   });
@@ -479,4 +480,20 @@ test("an Empty element says so in the Builder and in the Installs drawing", func
   assert.deepStrictEqual(marks.map(function (node) { return node.textContent; }), ["Empty"]);
   o.editor.installEditor.open(o.editor.rawRecord());
   assert.strictEqual(o.editor.installEditor.drawing.querySelectorAll(".window-empty-mark").length, 1);
+});
+
+test("an incomplete Window Type carries the amber mark in the rail; no Types names the next step", function () {
+  var o = setup(), record = o.state.sections["ph_composer.windows.types"].value.records[0];
+  assert.strictEqual(o.editor.list.querySelectorAll(".window-type-flag").length, 0);
+  assert.strictEqual(o.editor.emptyPrompt.hidden, true);
+  record.display.thermal.findings = [{ code: "window_type.dimensions_incomplete",
+    message: "Enter all grid dimensions." }];
+  o.editor.render(o.state);
+  var flag = o.editor.list.querySelector(".window-type-flag");
+  assert.strictEqual(flag.getAttribute("aria-label"), "Three elements is incomplete");
+  assert.strictEqual(flag.title, "Enter all grid dimensions.");
+  o.state.sections["ph_composer.windows.types"].value.records = [];
+  o.editor.render(o.state);
+  assert.strictEqual(o.editor.emptyPrompt.hidden, false);
+  assert.strictEqual(o.editor.main.hidden, true);
 });

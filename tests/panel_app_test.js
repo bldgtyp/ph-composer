@@ -265,9 +265,41 @@ test("blocking preflight disables destination selection and preserves its comple
   enterExport(p, [{ code: "construction.missing", message: "Assign an Assembly.", blocks_export: true }]);
   var pane = p.query("[data-section='export']");
   assert.strictEqual(pane.querySelector("button").disabled, true);
-  assert.strictEqual(pane.querySelector("li").textContent, "Assign an Assembly.");
+  assert.strictEqual(pane.querySelector(".phc-export-finding").textContent, "Assign an Assembly.");
+  assert.strictEqual(pane.querySelector(".phc-export-readiness").textContent, "Finish 1 thing before exporting.");
   pane.querySelector("button").listeners.click({});
   assert.deepStrictEqual(p.sent, []);
+});
+
+test("Export states each cause once, without record ids, with one Locate and a way to its tab", function () {
+  var p = page(), faces = [1, 2, 3].map(function (n) {
+    return { code: "construction.missing", section: "ph_composer.zones.faces", blocks_export: true,
+      message: "Face fac_c3d5e3f176e" + n + " needs an authored Assembly.",
+      locate: { name: "ph_composer.zones.faces.locate", params: { faces: [{ entity_path: [n] }] } } };
+  });
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  // A feature says where its records are worked on; Export names no feature itself.
+  p.panel.workedOn("ph_composer.zones", "overview");
+  assert.strictEqual(p.panel.tabFor("ph_composer.assemblies.export"), null);
+  enterExport(p, faces.concat([{ code: "adjacency.stale", section: "ph_composer.zones", blocks_export: false,
+    message: "Adjacency was solved before the last edit." }]));
+  var pane = p.query("[data-section='export']"), groups = pane.querySelectorAll(".phc-export-group");
+  assert.deepStrictEqual(groups.map(function (group) { return group.querySelector("h2").textContent; }),
+    ["Before exporting", "Worth checking"]);
+  var rows = groups[0].querySelectorAll("li");
+  assert.strictEqual(rows.length, 1, "three Faces with one cause are one row");
+  assert.strictEqual(rows[0].querySelector(".phc-export-finding").textContent, "Face needs an authored Assembly.");
+  assert.strictEqual(rows[0].querySelector(".phc-export-count").getAttribute("aria-label"), "3 records");
+  assert.ok(rows[0].title.indexOf("fac_c3d5e3f176e1") > 0, "the ids stay in the tooltip");
+  assert.strictEqual(pane.querySelector(".phc-export-readiness").textContent, "Finish 1 thing before exporting.");
+  var buttons = rows[0].querySelectorAll("button");
+  assert.strictEqual(buttons[0].textContent, "Locate all");
+  assert.strictEqual(buttons[1].textContent.indexOf("Open "), 0, "named for the tab the feature registered");
+  buttons[0].listeners.click({});
+  assert.strictEqual(p.sent.length, 1);
+  assert.strictEqual(p.sent[0].payload.params.faces.length, 3, "one Locate carries every Face");
+  buttons[1].listeners.click({});
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview");
 });
 
 test("running Export remains visible until cancelled and a Model switch drops its handle", function () {
@@ -281,7 +313,9 @@ test("running Export remains visible until cancelled and a Model switch drops it
   p.panel.showTab("overview");
   assert.strictEqual(p.panel.state.ui.activeTab, "export");
   var buttons = p.query("[data-section='export']").querySelectorAll("button");
-  buttons[1].listeners.click({});
+  // The header puts Cancel export before the primary action.
+  assert.strictEqual(buttons[0].textContent, "Cancel export");
+  buttons[0].listeners.click({});
   var cancellation = p.sent[p.sent.length - 1];
   assert.strictEqual(cancellation.type, "export.cancel");
   assert.strictEqual(cancellation.payload.task_id, "task-a");

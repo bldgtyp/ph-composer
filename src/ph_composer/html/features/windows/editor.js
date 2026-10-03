@@ -96,6 +96,9 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
   View.prototype.buildHeading = function () {
     var self = this;
     this.main = el("div", "window-main"); this.layout.appendChild(this.main);
+    // Shown in the Builder's place while there is no Window Type to build.
+    this.emptyPrompt = el("p", "muted window-empty-prompt",
+      "No Window Types yet. Choose + in the Window Types list."); this.layout.appendChild(this.emptyPrompt);
     this.heading = el("div", "window-heading"); this.main.appendChild(this.heading);
     this.identity = el("div", "window-identity"); this.heading.appendChild(this.identity);
     this.title = ui.button("Select a Window Type", function () { self.renameInline(); });
@@ -302,6 +305,7 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.audit.hidden = this.surface !== "audit" || !this.installEditor.root.hidden;
     this.scheduleSurface.hidden = this.surface !== "schedule" || !this.installEditor.root.hidden;
     this.renderList(); var record = this.record(); this.main.hidden = !record;
+    this.emptyPrompt.hidden = Boolean(record) || !this.enabled;
     this.paintPending();
     this.placement.paint(); this.schedule.paint();
     this.installButton.disabled = this.installButton.disabled || !snapshot.value(this.state, shared.PREFIX +
@@ -309,7 +313,9 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     Object.assign(this.page, { active: this.active, order: this.order, groups: this.groups,
       groupNames: this.groupNames, manual: this.manual, interior: this.interior, zoom: this.zoom,
         collapsed: this.collapsed });
+    // With no Window Type there is nothing to give a product to, so the product libraries stay out of the way.
     if (!record) { Object.keys(this.sidebars).forEach(function (kind) {
+      self.sidebars[kind].root.hidden = true;
       self.sidebars[kind].refresh(self.state, {}, false);
     }); this.audit.replaceChildren(el("p", "muted", this.enabled ? "Add a Window Type." :
       "Window Type definitions are unavailable.")); return; }

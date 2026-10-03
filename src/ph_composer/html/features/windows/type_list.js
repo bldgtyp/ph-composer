@@ -149,7 +149,8 @@ function (shared, preferences, ui) {
     this.sortTypes.setAttribute("aria-pressed", String(Boolean(this.manual)));
     var listSignature = JSON.stringify([signature, this.active, this.groups, this.groupNames, this.manual,
       this.placement.enabled, this.placement.channel.busy(), records.map(function (record) {
-        return self.placement.available(record.id); })]);
+        return self.placement.available(record.id); }), this.entries.map(function (entry) {
+        return entry.calculation.findings; })]);
     // Keep the target row and its focused input keyed until Apply or Cancel. Deferred labels repaint then.
     if (this.renameDraft) return;
     if (listSignature === this.listSignature) return; this.listSignature = listSignature;
@@ -169,6 +170,15 @@ function (shared, preferences, ui) {
           if (self.order.indexOf(id) < 0) return; self.order.splice(self.order.indexOf(id), 1);
           self.order.splice(self.order.indexOf(record.id), 0, id); move(id); });
         var choose = ui.button(record.name, function () { self.choose(record.id); }); row.appendChild(choose);
+        // "Not finished" is the amber mark it is on every other screen, with what is missing in its tooltip.
+        var entry = self.entries.filter(function (item) { return item.record.id === record.id; })[0];
+        var missing = entry ? (entry.calculation.findings || []).map(function (finding) {
+          return finding.message || String(finding); }) : [];
+        if (missing.length) {
+          var flag = ui.glyph("alert"); flag.classList.add("window-type-flag"); flag.setAttribute("role", "img");
+          flag.setAttribute("aria-label", record.name + " is incomplete"); flag.title = missing.join(" ");
+          row.appendChild(flag);
+        }
         var actions = el("span", "window-type-row-actions");
         var place = ui.iconButton("Place " + record.name, "add", function () { self.placement.choose(record.id); });
         place.disabled = !self.placement.enabled || !self.placement.available(record.id);

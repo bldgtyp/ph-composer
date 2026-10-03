@@ -155,6 +155,7 @@ test("the Library pane heading carries each Window product's New button and refu
   function paint() { sections.library(root, state, function () {}); }
   source.start(context, ["library/section", "features/windows/section"], { panel: {
     section: function (name, render) { sections[name] = render; }, repaint: paint, navigationGuard: function () {},
+    workedOn: function () {},
     notify: function (message, tone) {
       notices.push(tone ? message + " / " + tone : message); }, navigate: function () {} } });
   paint(); var view = root._view;

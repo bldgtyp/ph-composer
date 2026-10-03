@@ -786,6 +786,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     if (screen && screen.zoneEditor) screen.zoneEditor.focus();
   });
   panel.section("ph_composer.overview", render, { order: 10 });
+  panel.workedOn("ph_composer.zones", "overview");
   panel.section("ph_composer.zones.selection", renderSelection, { region: "inspector", tier: "selection",
     order: 11, when: selectionWanted });
   panel.section("ph_composer.zones.details", renderDetails, { region: "inspector", tier: "record",

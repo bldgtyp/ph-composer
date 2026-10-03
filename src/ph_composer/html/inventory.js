@@ -145,7 +145,9 @@ function (request, snapshot, ui, tables, viewControls, RecordEdits, Grid, units,
         self.grid.bind(td, row, field, !payload || self.ranges.busy());
         if (config.afterCell) config.afterCell(td, row, field);
         return true;
-      }, empty: payload ? "No " + config.label + " records match this view." :
+      // With no records at all the next step is to make one; a filter that hides them all says that instead.
+      }, empty: payload ? (this.records.length ? "No " + config.label + " records match this view." :
+        "No " + config.label + " records yet. Choose + New " + config.label + ".") :
         snapshot.message(snapshot.section(state, config.section) || {}, config.label + " records are unavailable.") };
     if (config.tableId) this.tableOptions = ui.composeTable(config.tableId, this.tableOptions, state,
       this.requests.transport);

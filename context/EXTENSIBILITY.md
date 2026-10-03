@@ -139,6 +139,12 @@ must place them; until it does they lead the main region. A feature adds an insp
 it does not own without naming that pane's owner, which is how Colour by and the Classify palette
 share the Zones / Faces pane. A pane whose sections all use `main` is laid out as before.
 
+A feature that owns a tab says so once with `panel.workedOn(prefix, tab)`, where `prefix` is its
+feature id, the start of every section and finding code it owns. A foundation screen then asks
+`panel.tabFor(owner)` for `{ tab, label }` and can send the user to the place a gap is fixed without
+naming a feature: Export does this for each group of findings. The longest registered prefix wins,
+and an owner no feature registered returns null.
+
 The other two seams add to a screen another module owns:
 
 - `ui.contributeTable(tableId, contribution)`, below, adds columns and row actions to another

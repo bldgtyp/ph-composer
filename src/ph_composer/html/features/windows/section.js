@@ -29,6 +29,7 @@ PhComposerUI.define("features/windows/section", ["panel", "features/windows/edit
         current.installEditor.cancelSession(false, function () { panel.navigate(destination); });
       }
     });
+    panel.workedOn("ph_composer.windows", "windows");
     panel.section("windows", render, { pane: "windows", onNavigate: function (root, intent) {
       if (root._view && intent.use) root._view.openUse(intent.use);
     } });

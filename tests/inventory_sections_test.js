@@ -13,7 +13,7 @@ function setup(beforePaint) {
   function send(type, payload) { sent.push({ type: type, payload: payload }); }
   function paint() { Object.keys(sections).forEach(function (key) { sections[key](roots[key], state, send); }); }
   var panel = { section: function (name, render) { sections[name] = render; }, repaint: paint,
-    navigationGuard: function (name, guard) { guards[name] = guard; },
+    navigationGuard: function (name, guard) { guards[name] = guard; }, workedOn: function () {},
     notify: function (message) { notices.push(message); } };
   var context = { document: document, Intl: Intl, innerWidth: 1280, innerHeight: 800,
     setTimeout: setTimeout, clearTimeout: clearTimeout };

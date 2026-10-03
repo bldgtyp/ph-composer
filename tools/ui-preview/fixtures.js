@@ -592,7 +592,7 @@
       {
         "id": "wnt_two",
         "values": {
-          "name": "Two elements · incomplete",
+          "name": "Two elements",
           "notes": "",
           "rows_m": [
             1.5
