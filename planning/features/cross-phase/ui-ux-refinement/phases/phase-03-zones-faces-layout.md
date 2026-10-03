@@ -219,3 +219,32 @@ test), a panel under 900 wide in the host (covered by the browser check).
 Seen and not this stage's: while it paints, the Classify tool turns on the last colour mode the
 user chose, falling back to Face type (`classify_tool.rb`, `force_colour_by`). On this machine that
 was Window Type, which says nothing about what is being classified. Filed for P3-3.
+
+## P3-2 outcome, 2026-10-03
+
+Ed authorized P3-2 on 2026-10-03. Implemented on `feat/ui-zones-inspector`. `make ci` passes (1390
+Ruby runs, 393 JavaScript tests, 172 Python tests) and `make ui-checks` passes.
+
+- **Zone details** are the inspector section `ph_composer.zones.details`, tier `record`. Save and
+  Cancel show once a field changes, and the section holds the inspector while it has a draft, so
+  neither a Face selection nor a tool started from the viewport hides it. Every draft refusal
+  (row selection, filter, tab change, settings, table and selection edits) is unchanged and its
+  tests pass as written, apart from where they look for the form.
+- **The Face selection** is the inspector section `ph_composer.zones.selection`, tier `selection`:
+  "N Faces selected", then Type, Boundary and Assembly. Each choice applies at once to every
+  selected Face. Type and Boundary show the shared value or "Mixed". The Assembly picker's Apply
+  and Cancel are gone (P3-Q4); a refusal says why beside the control and leaves it ready.
+- **The Classify palette** offers no Assembly (D6). While an Assembly is being painted from its
+  row in Assemblies, the palette names it, read only.
+- The tree no longer has a selection bar above it or a form below it.
+
+What differs from the plan:
+
+- Boundary in the selection inspector does not offer Attached zone. It needs a record picker; the
+  per-row cell and the right-click menu still offer it.
+- With several Faces selected, a Type or Boundary edit is sent without `expected_values`, since
+  the operation takes one set for all targets and a mixed selection has none. One selected Face is
+  guarded as a row edit is. Assembly assignment keeps its per-target guard.
+- The Assembly picker no longer freezes its targets at the moment of choosing, because choosing is
+  now applying. The browser check's stale-target step went with it; the unit test covers the
+  refusal message.
