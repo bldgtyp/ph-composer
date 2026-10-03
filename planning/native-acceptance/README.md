@@ -6,7 +6,7 @@ ISSUE: none (local tooling work)
 
 [`cases.json`](cases.json) holds case identities, owning authorities, deferred scope and conservative
 source dependency patterns. [`results.jsonl`](results.jsonl) is an append-only result index with
-15 historical evidence pointers and 36 observed results. Historical pointers are not reconstructed host runs. Detailed case requirements
+15 historical evidence pointers and 42 observed results. Historical pointers are not reconstructed host runs. Detailed case requirements
 and closure remain in [the owning acceptance register](../archive/phase-01-faces-and-zones/ACCEPTANCE.md). Add finer case IDs
 when a gate needs independent reruns; a partial subcase does not close its parent.
 
@@ -29,6 +29,7 @@ not make them disposable.
 | [UXK1 rerun](evidence/uxk1-rerun-2026-09-30.md) | Later build baseline for the bounded Colour-by case |
 | [Phase 1 after PR #10](evidence/phase-1-recheck-2026-09-30.md) | Ten-case recheck, walkthrough probe corrections and draft-settings observation |
 | [Phase 1 for PR #11](evidence/phase-1-recheck-pr11-2026-09-30.md) | Later ten-case recheck including the settings gear draft guard; R05 pending visibility remains `unknown` with Ed's acceptance of offline coverage |
+| [R11 host gate](evidence/r11-host-gate-2026-10-02.md) | Library dialogs, export replace, paging, Window Type grid gestures, panel navigation and unreadable setup on the installed build |
 
 Raw Models, screenshots and traces live outside this folder in gitignored `_private/`. They are
 not part of this cleanup.

@@ -2,7 +2,7 @@
 
 DATE: 2026-10-01
 STATUS: In progress. Review complete and Ed's eight decisions recorded on 2026-10-01. R01 is
-merged (PR #16); R02 is merged (PR #17) with its host gate passed; R03 is merged (PR #18); R04 is merged (PR #19); R05 is merged (PR #20) with its host gate passed; R06 is merged (PR #21) with its host gate passed; R07 is merged (PR #22); R08 is merged (PR #25) with its host gate run; R09 is merged (PR #26); R10 is merged (PR #28) with its asset-path host gate passed; R03's carried dialog checks move to R11's host gate; R11 is merged (PR #30), its carried host gate not run. Only the formatting-only pull request remains.
+merged (PR #16); R02 is merged (PR #17) with its host gate passed; R03 is merged (PR #18); R04 is merged (PR #19); R05 is merged (PR #20) with its host gate passed; R06 is merged (PR #21) with its host gate passed; R07 is merged (PR #22); R08 is merged (PR #25) with its host gate run; R09 is merged (PR #26); R10 is merged (PR #28) with its asset-path host gate passed; R03's carried dialog checks move to R11's host gate; R11 is merged (PR #30) with its carried host gate passed on 2026-10-02; the formatting pull request is merged (PR #32). Every finding is done; the packet is ready to archive.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft). Reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15), merged 2026-10-01 as `c687a73`, which closed [#14](https://github.com/bldgtyp/ph-composer/issues/14).
 
@@ -80,7 +80,7 @@ reproduced defect, evidenced contract violation, unverified risk, optional impro
 | [R08](R08-window-unit-steps.md) | Seven Unit steps each carry their own copy of the same guards and vector maths; planning lives in long constructors; one matcher swallows every error; R06's four placement follow-ups (batch locate, hover refusal, Place over-reading, a redundant Reset check); R04's Unit read and preflight disagreement and side-less Type findings; R05's unmeasured matcher cost. **Merged 2026-10-02, PR #25; host gate run** | Optional improvement, one silent-failure pattern | Medium |
 | [R09](R09-definition-feature-pattern.md) | Definition features fork one generic path by kind, build kinds and actions from positional tables, and repeat schema builders six times; a library callback's `find` refuses with a different code (from R07); the provider factory reads `Registry.current` (from R02); optional `refuses:` on operations (from R04) | Optional improvement. **Merged 2026-10-02, PR #26**; `refuses:` left optional | Medium |
 | [R10](R10-ui-kit-organization.md) | Library pane hard-codes Materials and Attached zones beside a surface seam only Windows uses; feature screens share a flat directory with the kit; its host gate carries R03's unrun library dialog, paging and grid checks. Item 5 resolved by R04. **Merged 2026-10-02, PR #28; asset-path host gate passed** | One evidenced, rest optional | Small to medium |
-| [R11](R11-readability-and-lint.md) | Mechanically wrapped lines, inconsistent continuation style, folded conditions; `Layout` cops are off; the frozen request's params are not frozen (from R07); a double menu test and unreadable-Type menu reads (from R02); approval dialog before dispatch checks and a one-page walkthrough (from R03); one shared id allocator and the `SchemaFields` alias (from R09); missing panel navigation, a Windows-to-Zones panel dependency, two Attached-zone forms, a stale UI reference and R03's unrun host checks (from R10). Formatting itself moves to a separate post-merge pull request **Merged 2026-10-02, PR #30; carried host gate not run** | Optional improvement | Small |
+| [R11](R11-readability-and-lint.md) | Mechanically wrapped lines, inconsistent continuation style, folded conditions; `Layout` cops are off; the frozen request's params are not frozen (from R07); a double menu test and unreadable-Type menu reads (from R02); approval dialog before dispatch checks and a one-page walkthrough (from R03); one shared id allocator and the `SchemaFields` alias (from R09); missing panel navigation, a Windows-to-Zones panel dependency, two Attached-zone forms, a stale UI reference and R03's unrun host checks (from R10). Formatting itself moves to a separate post-merge pull request **Merged 2026-10-02, PR #30; carried host gate passed** | Optional improvement | Small |
 
 R05's four export-run follow-ups, one of them a live defect (a Zone with every Face omitted builds
 an empty Room that fails to reload), are not refactor items. They are recorded in
@@ -122,9 +122,8 @@ moved files are free now and should be done completely rather than staged.
 2. **Last: the formatting-only pull request** in
    [planning/refactor/rubocop-layout.md](../../../refactor/rubocop-layout.md). Merged
    2026-10-02 as PR #32.
-3. **Owed before this packet closes: R11's carried host gate.** Native dialogs with Ed at the host;
-   the checks are listed in [R11](R11-readability-and-lint.md), "Verification" and "Outcome". It can
-   run before or after the formatting pull request. The packet archives once both are done.
+3. **R11's carried host gate.** Passed 2026-10-02 (ledger case `R11H`). With the formatting pull
+   request merged, the packet archives.
 
 A branch that changes shipping Ruby, Python or panel assets ends with `make ci` on both Rubies and
 the host gates its finding file names. Refresh the vendor manifest after panel or Python changes.
