@@ -84,3 +84,42 @@ test("Duplicate and Delete hide entire quantity labels; reopening Create restore
   assert.strictEqual(form.unitFields.width_m.root.hidden, false);
   assert.strictEqual(o.sent.length, 0);
 });
+function frameUses(record, elements) {
+  record.uses = []; elements.forEach(function (element) {
+    ["top", "right", "bottom", "left"].forEach(function (side) {
+      record.uses.push({ kind: "window_element", type_id: "wnt_a", element_id: element, side: side,
+        name: "R11 type / " + element + " / " + side });
+    });
+  });
+  record.use_count = record.uses.length; record.element_use_count = elements.length;
+}
+function bubble(o, record) {
+  var td = o.view.root.ownerDocument.createElement("td"); o.view.uses(td, record);
+  var rows = td._uses.content.children.slice(1).map(function (row) {
+    return row.children[0].children.map(function (node) { return node.textContent; });
+  });
+  return { td: td, heading: td._uses.content.children[0].textContent, rows: rows };
+}
+test("the uses bubble lists one row per element with its sides and counts what it lists", function () {
+  var o = setup(), record = o.state.sections["ph_composer.windows.frames"].value.records[0], navigated = [];
+  frameUses(record, ["Element A"]); var one = bubble(o, record);
+  assert.strictEqual(one.td._uses.trigger.textContent, "1"); assert.strictEqual(one.heading, "Used by 1 element");
+  assert.deepStrictEqual(one.rows, [["R11 type / Element A", "Top, right, bottom, left"]]);
+  frameUses(record, ["Element A", "Element B"]); var two = bubble(o, record);
+  assert.strictEqual(two.heading, "Used by 2 elements"); assert.strictEqual(two.rows.length, 2);
+  o.modules.panel.navigate = function (name, intent) { navigated.push([name, intent.use]); };
+  two.td._uses.content.children[2].children[1].listeners.click({});
+  assert.deepStrictEqual(navigated, [["windows", record.uses[4]]]);
+});
+test("a Psi-Install Type that is also the Model default lists that row and says so", function () {
+  var o = setup("psi_install_types"),
+    record = o.state.sections["ph_composer.windows.psi_install_types"].value.records[0];
+  record.uses = [{ kind: "window_element", type_id: "wnt_a", element_id: "wel_a", side: "top",
+    name: "R11 type / Element A / top (default)" }, { kind: "model_default", name: "Model default" }];
+  record.use_count = 2; record.element_use_count = 1;
+  var view = bubble(o, record);
+  assert.strictEqual(view.heading, "Used by 1 element and the Model default");
+  assert.deepStrictEqual(view.rows, [["R11 type / Element A", "Top (default)"], ["Model default"]]);
+  record.uses = [record.uses[1]]; record.use_count = 1; record.element_use_count = 0;
+  assert.strictEqual(bubble(o, record).heading, "Used as the Model default");
+});
