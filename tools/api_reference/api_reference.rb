@@ -14,7 +14,8 @@ module PhComposerTools
     module_function
 
     def markdown(registry)
-      [intro, kinds(registry), *GROUPS.map { |title, key, capability| operations(registry, title, key, capability) },
+      [intro, kinds(registry), common_refusals,
+       *GROUPS.map { |title, key, capability| operations(registry, title, key, capability) },
        tasks, codes(registry)].join("\n")
     end
 
@@ -81,6 +82,19 @@ module PhComposerTools
         declarations.map { |declaration| operation_section(declaration) }.join("\n")
     end
 
+    # The codes every operation of a kind can answer, printed once instead of under each operation.
+    def common_refusals
+      rows = PhComposer::Refusals::COMMON.map do |set, codes|
+        "| `#{set}` | #{codes.map { |code| "`#{code}`" }.join(', ')} |"
+      end
+      "## Common refusals\n\nEvery operation answers the codes of its kind's set besides its own, and an " \
+        "operation that needs the user to choose a location also answers the `approval` set. Each operation " \
+        "below lists only its own codes. `PhComposer::API.discover` returns these sets as `common_refusals`, " \
+        "and `describe` returns an operation's own codes as `refuses` and the sets it answers as " \
+        "`common_refusal_sets`. The foundation's codes are described in context/CONTRACTS.md, \"Outcomes and " \
+        "codes\".\n\n| Set | Codes |\n| --- | --- |\n#{rows.join("\n")}\n"
+    end
+
     # The shell's export task methods: API methods with keyword arguments, not registered operations.
     def tasks
       sections = PhComposer::Export::TaskContract::TASKS.keys.map do |name|
@@ -119,10 +133,21 @@ module PhComposerTools
                  "with `access.user_required`."
         lines << ""
       end
+      lines << refuses_line(declaration)
+      lines << ""
       lines.concat(json_block("Params", declaration.params))
       lines.concat(json_block("Result", declaration.result))
       Array(declaration.examples).each { |example| lines.concat(json_block("Example params", example)) }
       lines.join("\n")
+    end
+
+    def refuses_line(declaration)
+      sets = PhComposer::Refusals.common_sets(declaration).map { |set| "`#{set}`" }.join(" and ")
+      noun = sets.include?(" and ") ? "sets" : "set"
+      codes = Array(declaration.refuses)
+      return "Refuses: only the #{sets} common #{noun}." if codes.empty?
+
+      "Refuses: #{codes.map { |code| "`#{code}`" }.join(', ')}, and the #{sets} common #{noun}."
     end
 
     # Empty containers are collapsed because json gem versions lay them out differently; the page
