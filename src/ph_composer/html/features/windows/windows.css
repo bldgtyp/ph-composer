@@ -181,7 +181,8 @@
 .window-install-editor>[role=status]:empty { display:none; }
 .window-install-body { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; }
 .window-install-drawing { overflow:auto; min-width:0; }
-.window-install-drawing svg { display:block; width:100%; min-width:180px; max-width:760px; }
+/* Under this width the drawing scrolls; shrinking further would make its labels unreadable. */
+.window-install-drawing svg { display:block; width:100%; min-width:480px; max-width:760px; font-size:13px; }
 /* Edge state is data in the selection teal: solid when assigned, dashed when it follows the Model default. The red
    drawing highlight is kept for the pointer and keyboard focus. */
 .window-install-edge { stroke:var(--interaction-highlight); stroke-width:4; pointer-events:none; }

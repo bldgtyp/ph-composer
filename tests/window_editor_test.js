@@ -375,11 +375,11 @@ test("Manage in Library on a product picker opens the Library tab at that kind",
   assert.deepStrictEqual(JSON.parse(JSON.stringify(intents)), [{ kind: "frames" }]);
 });
 
-function escape(node) {
-  var event = { type: "keydown", key: "Escape", target: node, preventDefault: function () { this.defaultPrevented = true; } };
-  node.dispatchEvent(event); return event;
+function escape(node, target) {
+  node.dispatchEvent({ type: "keydown", key: "Escape", target: target || node,
+    preventDefault: function () { this.defaultPrevented = true; } });
 }
-test("Installs opens with focus inside it, Save and Cancel in its header, and Escape unwinds one layer", function () {
+test("Installs opens focused, with Save and Cancel in its header, and Escape unwinds one layer", function () {
   var o = setup(), installs = o.editor.installEditor; installs.open(o.editor.rawRecord());
   assert.ok(installs.list.contains(o.document.activeElement), "focus moves to the chosen Psi-Install Type");
   assert.strictEqual(o.document.activeElement.getAttribute("aria-pressed"), "true");
@@ -387,14 +387,16 @@ test("Installs opens with focus inside it, Save and Cancel in its header, and Es
   assert.ok(text(header).includes("Three elements Installs"));
   assert.ok(header.contains(installs.save) && header.contains(installs.cancel));
   installs.editProduct(); assert.strictEqual(installs.form.hidden, false);
-  escape(installs.root); assert.strictEqual(installs.form.hidden, true); assert.strictEqual(installs.root.hidden, false);
+  escape(installs.root); assert.strictEqual(installs.form.hidden, true);
+    assert.strictEqual(installs.root.hidden, false);
   installs.showCopy(); assert.strictEqual(installs.copyForm.hidden, false);
   escape(installs.root); assert.strictEqual(installs.copyForm.hidden, true);
     assert.strictEqual(installs.root.hidden, false);
   // The page body holds focus after a repaint; Escape still reaches the session.
-  escape(o.document.body); assert.strictEqual(installs.root.hidden, true); assert.strictEqual(o.sent.length, 0);
+  escape(o.document, o.document.body);
+    assert.strictEqual(installs.root.hidden, true); assert.strictEqual(o.sent.length, 0);
 });
-test("a subtab chosen over Installs leaves a clean session at once and asks before discarding a staged one", function () {
+test("a subtab chosen over Installs leaves a clean session and asks before discarding a staged one", function () {
   var o = setup(), installs = o.editor.installEditor; installs.open(o.editor.rawRecord());
   click(o.editor.tabs.buttons.audit);
   assert.ok(installs.root.hidden); assert.strictEqual(o.editor.tabs.active, "audit");
@@ -425,7 +427,8 @@ test("Installs writes each perimeter value outside its element and one zero on a
     return y < top || y > bottom || x < left || label.getAttribute("text-anchor") === "start";
   }), "no perimeter value sits inside the first element");
   assert.strictEqual(labels.filter(function (label) { return label.textContent === "0"; }).length, 1);
-  var target = installs.drawing.querySelector("[data-install-element=wel_a][data-install-side=top]");
+  var target = installs.drawing.querySelectorAll("[data-install-side=top]").filter(function (node) {
+    return node.getAttribute("data-install-element") === "wel_a"; })[0];
   assert.strictEqual(target.getAttribute("role"), "button");
   // An edge too short to hold its value keeps its target and tooltip and drops the label.
   var record = JSON.parse(JSON.stringify(o.editor.rawRecord())); record.values.columns_m = [0.05, 0.05, 3];

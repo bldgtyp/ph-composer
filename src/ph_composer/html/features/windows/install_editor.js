@@ -55,18 +55,14 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     this.copyForm = el("div", "window-install-copy"); this.copyForm.hidden = true;
       this.panel.appendChild(this.copyForm);
     this.confirm = ui.formDialog("", function () { self.confirm.closeModal(); }); this.root.appendChild(this.confirm);
-    // Escape reaches the session wherever focus landed: repainting the drawing or the list drops it to the page.
+    // The owning view also sends its own Escape here, so the key works from the subtabs and from the page body,
+    // where a repaint of the drawing or the list leaves focus.
     this.onKeydown = function (event) {
       if (event.defaultPrevented || event.key !== "Escape" || self.disposed || self.root.hidden ||
         self.requests.busy() || !self.confirm.hidden) return;
       event.preventDefault(); self.escape();
     };
     this.root.addEventListener("keydown", this.onKeydown);
-    this.documentKey = function (event) {
-      if (event.target !== document.body && event.target !== document.documentElement) return;
-      for (var node = self.root; node; node = node.parentNode) if (node.hidden) return;
-      self.onKeydown(event);
-    }; document.addEventListener("keydown", this.documentKey);
   }
   // One layer at a time: the Psi-Install form, then the copy list, then the session itself.
   Editor.prototype.escape = function () {
@@ -319,7 +315,6 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
   Editor.prototype.dispose = function () {
     this.disposed = true; this.requests.reset(); this.dismissForm(); this.confirm.closeModal(); this.root.hidden = true;
     this.root.removeEventListener("keydown", this.onKeydown);
-    document.removeEventListener("keydown", this.documentKey);
     this.sidebar.dispose();
   };
   return Editor;

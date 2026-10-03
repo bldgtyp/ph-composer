@@ -17,7 +17,8 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.active = this.page.active; this.collapsed = this.page.collapsed; this.entries = [];
     root.replaceChildren(); root.classList.add("window-workspace");
     this.notice = ui.floatingNotice(root);
-    var noticeLayer = el("div", "phc-notice-layer"); noticeLayer.appendChild(this.notice); root.appendChild(noticeLayer);
+    var noticeLayer = el("div", "phc-notice-layer"); noticeLayer.appendChild(this.notice);
+    root.appendChild(noticeLayer);
     this.layout = el("div", "window-layout"); this.audit = el("div", "window-audit");
     this.scheduleSurface = el("div");
     this.tabs = new Subtabs({ label: "Window Types sections", state: this.page, stateKey: "surface",
@@ -262,7 +263,9 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
   View.prototype.buildKeyboard = function () {
     var self = this;
     this.onKeydown = function (event) {
-      if (event.defaultPrevented || self.disposed || self.root.hidden || self.guard()) return;
+      if (event.defaultPrevented || self.disposed || self.root.hidden) return;
+      if (!self.installEditor.root.hidden) { self.installEditor.onKeydown(event); return; }
+      if (self.guard()) return;
       if (/INPUT|SELECT|TEXTAREA/.test((event.target.tagName || "").toUpperCase())) return;
       if (event.key === "Escape") {
         if (self.picking || self.source) { self.picking = false; self.source = null; }

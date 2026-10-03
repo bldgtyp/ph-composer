@@ -58,7 +58,17 @@ const { chromium } = require("playwright");
     await installs.locator(".window-install-list").getByRole("button", { name: /^Insulated junction/ }).click();
     const edge = installs.locator("[data-install-element=wel_a][data-install-side=top]");
     const edgeBox = await edge.boundingBox();
-    await page.mouse.click(edgeBox.x + edgeBox.width / 2, edgeBox.y);
+    await page.mouse.click(edgeBox.x + edgeBox.width / 2, edgeBox.y + edgeBox.height / 2);
+    assert.strictEqual(await installs.locator(".window-install-edge.assigned").count(), 1, "the edge is painted");
+    const saveBox = await installs.getByRole("button", { name: "Save Installs", exact: true }).boundingBox();
+    assert.ok(saveBox.y + saveBox.height < 800, "Save Installs is in view without scrolling at " + width);
+    assert.strictEqual(await installs.evaluate(root => {
+      const boxes = Array.from(root.querySelectorAll(".window-install-drawing text")).map(node => node.getBoundingClientRect());
+      return boxes.filter((a, index) => boxes.slice(index + 1).some(b => a.left < b.right && b.left < a.right &&
+        a.top < b.bottom && b.top < a.bottom)).length;
+    }), 0, "no two drawing labels overlap at " + width);
+    await page.keyboard.press("Escape");
+    await installs.getByRole("button", { name: "Keep editing" }).click();
     assert.strictEqual(await page.evaluate(() => previewHost.sent.filter(message => message.type === "action.invoke").length), before);
     assert.strictEqual(await installs.locator("[data-install-element=wel_a][data-install-side=right]").getAttribute("aria-disabled"), "true");
     await installs.getByRole("button", { name: "Save Installs", exact: true }).click();
