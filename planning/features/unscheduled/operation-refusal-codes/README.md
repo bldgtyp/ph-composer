@@ -1,9 +1,10 @@
 # Operations publish the codes they refuse with
 
 DATE: 2026-10-02
-STATUS: Requested. Optional; moved out of the Phase 2 review's R09 on 2026-10-02, which did not take it.
+STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md), awaiting Ed's decisions D1 to D4. Moved out of the
+Phase 2 review's R09 on 2026-10-02, which did not take it.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/39
 
 ## Why this packet exists
 

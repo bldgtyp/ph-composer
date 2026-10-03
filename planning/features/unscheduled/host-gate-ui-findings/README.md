@@ -1,9 +1,10 @@
 # UI findings from the R11 host gate
 
 DATE: 2026-10-02
-STATUS: Requested. Five small UI findings from the R11 carried host gate; none failed a check.
+STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md); item 3 awaits Ed's decision. Five small UI findings
+from the R11 carried host gate; none failed a check.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/37
 
 Observed in real SketchUp on 2026-10-02
 ([evidence](../../../native-acceptance/evidence/r11-host-gate-2026-10-02.md)). Each is small. Work

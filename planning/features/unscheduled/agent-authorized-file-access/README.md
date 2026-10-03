@@ -1,10 +1,11 @@
 # Agent-authorized file access for library export and setup
 
 DATE: 2026-10-01
-STATUS: Requested. Deferred from the Phase 2 review by Ed on 2026-10-01; must be delivered before
-any claim that users' agents can manage libraries.
+STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md), awaiting Ed's decisions D1 to D6. Deferred from the
+Phase 2 review by Ed on 2026-10-01; must be delivered before any claim that users' agents can manage
+libraries.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/36
 
 ## Why this packet exists
 
@@ -65,4 +66,5 @@ library folder; a second agent without the handle is refused; no path appears in
 The limitation paragraph added to `context/AGENT_INTERFACE.md` by R03 item A is removed in the same
 change.
 
-Next step: schedule with the agent connection packet when Ed opens it.
+Next step: Ed decides D1 to D6 in [PLAN.md](PLAN.md). Under the recommended D1, this packet no longer
+waits for the agent connection packet.
