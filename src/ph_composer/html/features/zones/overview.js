@@ -441,6 +441,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     // Set before the tree paints, so the inspector never works from an earlier pass if painting fails.
     screenState.rows = rows;
     screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
+    // A Zone row the user chose keeps the inspector until the viewport selection next changes.
+    if (screenState.chosenOver !== undefined && screenState.chosenOver !== selectionKey(screenState.targets)) {
+      screenState.chosenOver = undefined;
+    }
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
   }
 
@@ -464,7 +468,16 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function selectionWanted() {
-    return Boolean(screen && screen.targets && screen.targets.length);
+    return Boolean(screen && screen.targets && screen.targets.length && screen.chosenOver === undefined);
+  }
+
+  /* Which Faces are selected, whatever order the host lists them in. A Face's record id is left out: it
+     appears when the Face is first classified, which is not a change of selection. */
+  function selectionKey(targets) {
+    return targets.map(function (target) {
+      var reference = target.reference || {};
+      return JSON.stringify([reference.zone_id, reference.zone_path, reference.entity_path]);
+    }).sort().join("|");
   }
 
   /* What the selected Faces share, one attribute at a time: each choice applies at once to every Face
@@ -575,6 +588,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         var reason = row.key !== state.selected && draftReason(state);
         if (reason) return refuse(reason);
         state.selected = row.key;
+        // An explicit choice of a Zone outranks the Faces selected in the viewport, as they stand now.
+        state.chosenOver = row.depth === 0 && state.targets.length ? selectionKey(state.targets) : undefined;
         panel.repaint();
       },
       columnResize: function (field, width) {
@@ -583,7 +598,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         else state.columnWidths[field] = width;
       },
       action: function (row, item) {
-        if (item.id === "locate") locate(state, row);
+        // Locate selects, so the selection takes the inspector back even when it was already these Faces.
+        if (item.id === "locate") { state.chosenOver = undefined; locate(state, row); }
         if (item.id === "suggest") suggest(state, row);
       }
     });

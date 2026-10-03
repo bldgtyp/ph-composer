@@ -218,18 +218,45 @@ test("Assembly selection and table refusals preserve the dirty Zone and return f
   });
 });
 
-test("selected Faces outrank a selected Zone in the inspector until the Zone has a draft to hold", function () {
+test("selected Faces hold the inspector until a Zone row is chosen; a new selection takes it back", function () {
   var o = setup(), overview = o.query("[data-section='ph_composer.overview']");
   var selection = o.query("[data-section='ph_composer.zones.selection']");
   var details = o.query("[data-section='ph_composer.zones.details']");
-  click(overview.querySelector(".row-target"));
   assert.deepStrictEqual([selection.hidden, details.hidden], [false, true]);
+  click(overview.querySelector(".row-target"));
+  assert.deepStrictEqual([selection.hidden, details.hidden], [true, false], "the chosen Zone outranks the selection");
+  o.paint();
+  assert.strictEqual(details.hidden, false, "and keeps the inspector while the selection stands");
   var save = details.querySelectorAll("button").filter(function (node) { return node.textContent === "Save"; })[0];
   assert.strictEqual(save.hidden, true, "Save belongs to a draft");
+  var targets = o.state.sections[PREFIX + ".selected"].value.targets;
+  var second = JSON.parse(JSON.stringify(targets[0]));
+  second.reference.entity_path = [999];
+  targets.push(second);
+  o.paint();
+  assert.deepStrictEqual([selection.hidden, details.hidden], [false, true], "a changed selection takes it back");
   var name = byLabel(details, "Zone name");
   name.value = "Draft"; name.listeners.input({});
   o.paint();
-  assert.deepStrictEqual([selection.hidden, details.hidden, save.hidden], [true, false, false]);
+  assert.deepStrictEqual([selection.hidden, details.hidden, save.hidden], [true, false, false], "a draft holds it");
+});
+
+test("the selection's Assembly rests on what the Faces share, and reads Mixed when they differ", function () {
+  var o = setup(), targets = o.state.sections[PREFIX + ".selected"].value.targets;
+  var picker = byLabel(o.document.body, "Assembly for selected Faces");
+  targets[0].expected_values.assembly_id = "asm_a";
+  o.paint();
+  assert.deepStrictEqual([picker.value, picker.children[0].textContent], ["asm_a", "Choose Assembly"]);
+  picker.listeners.change({});
+  assert.strictEqual(o.sent.length, 0, "choosing what is already assigned sends nothing");
+  picker.value = ""; picker.listeners.change({});
+  assert.deepStrictEqual([picker.value, o.sent.length], ["asm_a", 0], "the label is not a choice");
+  var second = JSON.parse(JSON.stringify(targets[0]));
+  second.reference.entity_path = [999];
+  second.expected_values.assembly_id = null;
+  targets.push(second);
+  o.paint();
+  assert.deepStrictEqual([picker.value, picker.children[0].textContent], ["", "Mixed"]);
 });
 
 test("selected Faces that disagree read Mixed; a value the tree keeps read only is read only here", function () {
