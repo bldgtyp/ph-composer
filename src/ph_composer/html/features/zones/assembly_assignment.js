@@ -18,9 +18,10 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     if (clear) select.appendChild(ui.option("__clear__", "Clear Assembly"));
     records.forEach(function (record) { select.appendChild(ui.option(record.id, record.name)); });
   }
-  /* The Assembly for the Faces selected in the viewport. Choosing one assigns it at once, as one Undo
-     step, to the targets the snapshot named when the choice was made; a refusal says why and leaves the
-     control ready for another choice. */
+  /* The Assembly for the Faces selected in the viewport. It rests on the Assembly they all share, reads
+     "Mixed" when they differ and "Choose Assembly" when none has one. Choosing one assigns it at once, as
+     one Undo step, to the targets the snapshot named when the choice was made; a refusal says why and
+     returns the control to its resting value. */
   function Picker(session, send, guard, refused) {
     var self = this;
     this.session = session;
@@ -35,11 +36,12 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     this.root.appendChild(this.select);
     this.root.appendChild(this.error);
     this.currentTargets = [];
+    this.resting = "";
     this.select.addEventListener("change", function () {
       var chosen = self.select.value, reason;
-      if (self.disposed || !self.enabled || self.requests.busy() || !chosen) return;
+      if (self.disposed || !self.enabled || self.requests.busy() || !chosen || chosen === self.resting) return;
       reason = self.guard && self.guard();
-      if (reason) { self.select.value = ""; self.refused(reason); return; }
+      if (reason) { self.select.value = self.resting; self.refused(reason); return; }
       self.submit(chosen);
     });
   }
@@ -54,9 +56,9 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     this.error.textContent = "";
     this.requests.run(PREFIX + ".assign_assembly", { targets: clone(this.currentTargets),
       assembly_id: chosen === "__clear__" ? null : chosen }, {
-      onDone: function () { self.select.value = ""; },
+      onDone: function () { self.select.value = self.resting; },
       onFail: function (outcome) {
-        self.select.value = "";
+        self.select.value = self.resting;
         self.error.textContent = snapshot.message(outcome, "The Assembly was not assigned. Nothing was written.");
       }
     });
@@ -75,13 +77,18 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
       return target.expected_values.face_type;
     }));
     var selected = this.select.value;
-    var signature = records.map(function (record) { return record.id + ":" + record.name; }).join("|");
+    var held = this.currentTargets.map(function (target) { return target.expected_values.assembly_id || ""; });
+    var shared = held.every(function (id) { return id === held[0]; }) ? held[0] || "" : null;
+    var first = shared === null ? "Mixed" : "Choose Assembly";
+    var signature = first + "|" + records.map(function (record) { return record.id + ":" + record.name; }).join("|");
     // Rebuilt only when the choices change: a snapshot follows every viewport click.
     if (this.signature !== signature) {
-      options(this.select, records, "Choose Assembly", true);
+      options(this.select, records, first, true);
       this.signature = signature;
     }
-    this.select.value = selected;
+    this.resting = shared && records.some(function (record) { return record.id === shared; }) ? shared : "";
+    // A choice in flight stays shown until its outcome arrives.
+    this.select.value = this.requests.busy() ? selected : this.resting;
     this.paint();
   };
   Picker.prototype.dispose = function () {

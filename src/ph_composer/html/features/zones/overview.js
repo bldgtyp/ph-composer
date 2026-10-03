@@ -441,6 +441,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     // Set before the tree paints, so the inspector never works from an earlier pass if painting fails.
     screenState.rows = rows;
     screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
+    // A Zone row the user chose keeps the inspector until the viewport selection next changes.
+    if (screenState.chosenOver !== undefined && screenState.chosenOver !== selectionKey(screenState.targets)) {
+      screenState.chosenOver = undefined;
+    }
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
   }
 
@@ -464,7 +468,11 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function selectionWanted() {
-    return Boolean(screen && screen.targets && screen.targets.length);
+    return Boolean(screen && screen.targets && screen.targets.length && screen.chosenOver === undefined);
+  }
+
+  function selectionKey(targets) {
+    return JSON.stringify(targets.map(function (target) { return target.reference; }));
   }
 
   /* What the selected Faces share, one attribute at a time: each choice applies at once to every Face
@@ -575,6 +583,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         var reason = row.key !== state.selected && draftReason(state);
         if (reason) return refuse(reason);
         state.selected = row.key;
+        // An explicit choice of a Zone outranks the Faces selected in the viewport, as they stand now.
+        state.chosenOver = row.depth === 0 && state.targets.length ? selectionKey(state.targets) : undefined;
         panel.repaint();
       },
       columnResize: function (field, width) {
