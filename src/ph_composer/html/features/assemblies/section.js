@@ -17,6 +17,7 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
     if (view.forms.some(function (form) { return !form.root.hidden; })) {
       return "Finish or cancel the open form.";
     }
+    if (view.newAssembly.busy()) return "Wait for the new Assembly.";
     return view.editor ? view.editor.guard() : view.inventory.guard();
   }
   function withheldReason(record) {
@@ -43,7 +44,7 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
     view.replacement = new forms.ReplacementForm(state.session, send, changed,
       { section: SECTION, label: "Assembly", replacement: true, allowClear: true, alwaysReplacement: true });
     view.color = new forms.ColorForm(state.session, send, SECTION + ".update", changed);
-    view.forms = [view.newAssembly, view.replacement, view.color];
+    view.forms = [view.replacement, view.color];
     view.open = function (record) {
       if (!allowed()) return;
       view.editor = new builder.Editor(state.session, send, notice, function (_nextId, message) {
@@ -60,7 +61,9 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
       root.appendChild(view.editor.root);
       view.editor.refresh(view.state, record.id);
     };
-    view.create = ui.button("+ New Assembly", function () { if (allowed()) view.newAssembly.open(); });
+    view.create = ui.button("+ New Assembly", function () {
+      if (allowed()) view.newAssembly.create(view.inventory.records);
+    });
     view.header.setPrimary(view.create);
     view.inventory = new inventories.Inventory(view.listRoot, state.session, send, notice, changed, {
       tableId: SECTION, section: SECTION, action: SECTION + ".update", label: "Assembly", columns: columns,
@@ -110,6 +113,7 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
     view.forms.forEach(function (form) { root.appendChild(form.root); });
     view.dispose = function () {
       view.forms.forEach(function (form) { form.dispose(); });
+      view.newAssembly.dispose();
       if (view.editor) view.editor.dispose();
       view.inventory.dispose();
     };
@@ -127,10 +131,17 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
     view.newAssembly.refresh(state);
     view.replacement.refresh(state);
     view.color.refresh(state, Boolean(payload), payload ? payload.records : []);
-    view.inventory.externalBusy = view.forms.some(function (form) {
+    view.inventory.externalBusy = view.newAssembly.busy() || view.forms.some(function (form) {
       return form.busy ? form.busy() : form.requests.busy();
     });
     view.inventory.render(state);
+    // A new Assembly opens in the Builder with its title ready to rename.
+    var fresh = !view.editor && view.newAssembly.created(view.inventory.records);
+    if (fresh) {
+      view.open(fresh);
+      var title = view.editor && view.editor.root.querySelector(".assembly-name input");
+      if (title) { title.focus(); title.select(); }
+    }
     if (view.editor) view.editor.refresh(state, view.editor.assemblyId);
     view.header.setCount(view.inventory.records.length);
     view.create.disabled = !payload || view.inventory.busy();

@@ -95,6 +95,8 @@
 .library-sidebar-swatch { display: inline-block; width: 14px; min-width: 14px; height: 14px; border: 1px solid var(--line);
   border-radius: 3px; }
 .library-sidebar-name { overflow: hidden; text-overflow: ellipsis; }
+.library-sidebar-row-button > .phc-glyph { flex: none; margin-left: auto; color: var(--muted); }
+.library-sidebar-row-button > .phc-glyph svg { width: 14px; height: 14px; }
 .library-record-card { min-width: 220px; }
 .library-sidebar-row.is-dragging { opacity: .5; }
 .library-drag-ghost { position: fixed; z-index: 100; pointer-events: none; display: flex; gap: 8px; padding: 9px 12px;

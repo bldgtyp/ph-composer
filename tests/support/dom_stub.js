@@ -80,6 +80,7 @@ function element(tag, attributes) {
       if (name === "id") this.id = "";
     },
     showModal: function () { this.open = true; }, close: function () { this.open = false; },
+    remove: function () { if (this.parentNode) this.parentNode.removeChild(this); },
     /* Focus dispatches, because panel code listens for it; a bare assignment would not fire. */
     focus: function (options) {
       this.focusOptions = options;

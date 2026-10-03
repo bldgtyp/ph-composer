@@ -16,6 +16,7 @@ PhComposerUI.define("features/windows/form", ["record_form", "snapshot", "unit_f
         self.unitFields[column[0]] = new unitFields.UnitField({ input: input, field: spec.quantities[column[0]] });
         label.appendChild(self.unitFields[column[0]].root);
       } else label.appendChild(input);
+      if (column[0] === "name") RecordForm.required(label, input);
       self.form.appendChild(label);
     });
     this.explanation = ui.element("p", "muted"); this.form.appendChild(this.explanation);

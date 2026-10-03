@@ -9,6 +9,13 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
     this.visible = [];
     var scrollTop = this.list.scrollTop;
     this.list.replaceChildren();
+    var repeats = this.besideTable && !(this.store && this.store.selected);
+    this.search.hidden = this.count.hidden = repeats;
+    if (repeats) {
+      this.list.appendChild(el("p", "muted",
+        "These records are in the table. Choose a library above to copy records from it."));
+      return;
+    }
     this.records.filter(function (row) { return adapter.searchText(row).toLowerCase().includes(query); })
       .sort(function (a, b) { return adapter.compare(adapter.name(a), adapter.name(b)); })
       .forEach(function (row) {
@@ -34,6 +41,12 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
           entry.badge = el("small", "library-local-badge", "In this file"); entry.button.appendChild(entry.badge);
         }
         entry.name.textContent = adapter.name(row);
+        // A library's record says where its click leads; a record already in the file has nothing to add.
+        var known = Boolean(row.resolution && row.resolution.candidates.length);
+        if (row.library && !entry.addGlyph) entry.button.appendChild(entry.addGlyph = ui.glyph("add"));
+        if (entry.addGlyph) entry.addGlyph.hidden = !row.library || known;
+        entry.button.title = !row.library ? "" : known ? adapter.name(row) + " is already in this file" :
+          "Add " + adapter.name(row) + " to this file";
         entry.bubble.panel.setAttribute("aria-label", adapter.name(row));
         entry.bubble.heading.querySelector("strong").textContent = adapter.name(row);
         entry.bubble.closeButton.setAttribute("aria-label", "Close " + adapter.name(row));

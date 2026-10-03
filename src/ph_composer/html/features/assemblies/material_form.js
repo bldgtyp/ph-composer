@@ -37,8 +37,8 @@ function (RecordForm, snapshot, unitFields, fields, ui) {
         label.appendChild(self.unitFields[entry[0]].root);
       } else label.appendChild(input);
       self.fields[entry[0]] = input;
-      input.addEventListener("input", function () { self.error.textContent = "";
-      self.updateButton(); });
+      if (entry[0] === "name") RecordForm.required(label, input);
+      input.addEventListener("input", function () { self.updateButton(); });
       input.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
           event.preventDefault();
@@ -67,8 +67,12 @@ function (RecordForm, snapshot, unitFields, fields, ui) {
     return message;
   };
   Form.prototype.updateButton = function () {
-    this.submitButton.disabled = !this.allowed || this.disposed || this.busy() ||
-      !this.fields.name.value.trim() || Boolean(this.invalid());
+    var waiting = !this.fields.name.value.trim() ? "Enter a name." : this.invalid();
+    this.submitButton.disabled = !this.allowed || this.disposed || this.busy() || Boolean(waiting);
+    // A disabled Create says what it is waiting for; a pending or refused request keeps its own line.
+    if (!this.busy() && (waiting || this.waiting)) this.error.textContent = waiting || "";
+    this.error.classList.toggle("phc-form-hint", Boolean(waiting) && this.error.textContent === waiting);
+    this.waiting = waiting;
   };
   Form.prototype.submit = function () {
     this.updateButton();

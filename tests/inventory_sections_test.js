@@ -161,17 +161,30 @@ test("new Material converts IP entries and a refused create retains its fields",
   assert.strictEqual(form.cancel.disabled, false);
 });
 
-test("new Assembly leaves unset hints absent and creation never authors Layers", function () {
-  var o = setup(), form = o.roots.assemblies._view.newAssembly;
-  form.open();
-  form.fields.name.value = "New wall";
-  form.submit();
-  var values = o.sent[0].payload.params.values;
+test("New Assembly creates at once under a free name and opens the new record in the Builder", function () {
+  var o = setup(), view = o.roots.assemblies._view, section = o.state.sections["ph_composer.assemblies.assemblies"];
+  section.value.records[0].values.name = "Assembly 1";
+  o.paint();
+  view.create.listeners.click({});
+  assert.strictEqual(o.sent.length, 1);
   assert.strictEqual(o.sent[0].payload.name, "ph_composer.assemblies.assemblies.create");
-  assert.strictEqual(Object.prototype.hasOwnProperty.call(values, "type"), false);
-  assert.strictEqual(Object.prototype.hasOwnProperty.call(values, "exterior_condition"), false);
-  assert.strictEqual(Object.prototype.hasOwnProperty.call(values, "layers"), false);
-  assert.strictEqual(Object.prototype.hasOwnProperty.call(values, "kind"), false);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params.values)), { name: "Assembly 2" },
+    "a name and nothing else: the Model supplies the rest and the Builder edits it");
+  view.create.listeners.click({});
+  assert.strictEqual(o.sent.length, 1, "a second click waits for the first");
+  var fresh = JSON.parse(JSON.stringify(section.value.records[0]));
+  fresh.id = "asm_new"; fresh.values.name = "Assembly 2";
+  section.value.records.push(fresh);
+  result(o, 0, "completed");
+  assert.ok(view.editor, "the Builder opens");
+  assert.strictEqual(view.editor.assemblyId, "asm_new");
+  // A refused create opens nothing and leaves the button ready.
+  var other = setup(), refused = other.roots.assemblies._view;
+  refused.create.listeners.click({});
+  result(other, 0, "refused");
+  assert.ok(!refused.editor);
+  refused.create.listeners.click({});
+  assert.strictEqual(other.sent.length, 2);
 });
 
 test("duplicate Material copies datasheet links only through the explicit checkbox", function () {
@@ -299,8 +312,7 @@ test("a modified color draft survives an outside navigation click", function () 
 });
 
 test("withdrawn create requests can reopen with an enabled Cancel after their feature returns", function () {
-  var cases = [[function (o) { return materials(o).newMaterial; }, "ph_composer.assemblies.materials"],
-    [function (o) { return o.roots.assemblies._view.newAssembly; }, "ph_composer.assemblies.assemblies"]];
+  var cases = [[function (o) { return materials(o).newMaterial; }, "ph_composer.assemblies.materials"]];
   cases.forEach(function (entry) {
     var o = setup(), form = entry[0](o), section = o.state.sections[entry[1]];
     form.open();
