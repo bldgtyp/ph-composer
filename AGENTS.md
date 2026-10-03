@@ -39,10 +39,8 @@ the owning packet.
 
 - Keep proposed product behavior distinct from implemented contracts. Product shape belongs in
   `docs/`; the durable rules that constrain code belong in `context/`; plans, decisions, status
-  and acceptance evidence belong in `planning/`. Phase 0 (foundation) and Phase 1 (Zones,
-  face classification, adjacency, Colour-by and the HBJSON/report export) are merged and archived;
-  other feature behavior remains proposed until its owning packet records implementation and
-  acceptance.
+  and acceptance evidence belong in `planning/`. Feature behavior is proposed until its owning
+  packet records implementation and acceptance; `planning/STATUS.md` says which phases have.
 - Feature interviews establish shared understanding but do not authorize code. Follow the current
   owning plan and explicit implementation scope.
 - The model is the authoring authority. Library records become editable local copies. No provider
