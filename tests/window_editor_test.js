@@ -453,3 +453,30 @@ test("Installs writes each perimeter value outside its element and one zero on a
   assert.strictEqual(installs.drawing.querySelectorAll(".window-install-edge-label").filter(function (label) {
     return label.getAttribute("text-anchor") === "middle" && label.textContent !== "0"; }).length, 0);
 });
+
+test("the Place anchor is one setting beside Place; its row shows only while the tool is placing", function () {
+  var o = setup(), placement = o.editor.placement, tool = "ph_composer.windows.place_tool";
+  o.state.sections[tool] = JSON.parse(JSON.stringify(o.state.sections["ph_composer.windows.settings"]));
+  o.state.sections[tool].value = { active: false }; o.editor.render(o.state);
+  assert.strictEqual(placement.root.hidden, true, "nothing is placing");
+  assert.ok(o.editor.typeActions.contains(placement.anchorButton));
+  assert.strictEqual(placement.anchorButton.getAttribute("aria-label"), "Placement anchor: Sill center");
+  var choices = placement.anchorBubble.content.querySelectorAll("button");
+  assert.strictEqual(choices.length, 9);
+  assert.deepStrictEqual(choices.filter(function (node) { return node.getAttribute("aria-pressed") === "true"; })
+    .map(function (node) { return node.textContent; }), ["Sill center"]);
+  click(placement.anchors.head_right);
+  assert.strictEqual(placement.anchorButton.getAttribute("aria-label"), "Placement anchor: Head right");
+  assert.strictEqual(o.sent.length, 0, "an idle tool is not started by choosing its anchor");
+  o.state.sections[tool].value = { active: true, type_id: o.editor.active, anchor: "head_right" };
+  o.editor.render(o.state); assert.strictEqual(placement.root.hidden, false);
+  click(placement.anchors.center);
+  assert.strictEqual(o.sent.length, 1);
+  assert.strictEqual(o.sent[0].payload.params.anchor, "center", "a placing tool is re-armed with the new anchor");
+});
+test("an Empty element says so in the Builder and in the Installs drawing", function () {
+  var o = setup(), marks = o.editor.canvas.root.querySelectorAll(".window-empty-mark");
+  assert.deepStrictEqual(marks.map(function (node) { return node.textContent; }), ["Empty"]);
+  o.editor.installEditor.open(o.editor.rawRecord());
+  assert.strictEqual(o.editor.installEditor.drawing.querySelectorAll(".window-empty-mark").length, 1);
+});

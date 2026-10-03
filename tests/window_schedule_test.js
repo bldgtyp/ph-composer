@@ -48,10 +48,10 @@ test("Place uses the view channel; active tool keeps Stop and measurement guidan
   viewOutcome(o, "completed");
   o.state.sections["ph_composer.windows.place_tool"].value = {
     active: true, type_id: "wnt_a", anchor: "head_right", host: null }; o.editor.render(o.state);
-  assert.strictEqual(o.editor.placement.anchor.value, "head_right");
-  assert.strictEqual(o.editor.placement.stop.hidden, false);
+  assert.strictEqual(o.editor.placement.anchorButton.getAttribute("aria-label"), "Placement anchor: Head right");
+  assert.strictEqual(o.editor.placement.root.hidden, false);
   assert.ok(text(o.editor.placement.root).includes("sill="));
-  o.editor.placement.anchor.value = "center"; o.editor.placement.anchor.listeners.change({});
+  click(o.editor.placement.anchors.center);
   assert.strictEqual(o.sent[1].payload.params.anchor, "center"); viewOutcome(o, "completed");
   click(o.editor.placement.stop); assert.strictEqual(o.sent[2].payload.name, "ph_composer.windows.place_tool.stop");
   assert.strictEqual(o.sent.filter(function (call) { return call.type === "action.invoke"; }).length, 0);
@@ -108,8 +108,8 @@ test("finite geometry permits Place without complete products; each route choose
   var o = setup(), record = o.editor.rawRecord(); record.display.thermal.complete = false;
   record.values.elements[0].glazing_id = null; o.editor.render(o.state);
   assert.strictEqual(o.editor.placeButton.disabled, false);
-  assert.strictEqual(o.editor.placement.anchor.children.length, 9);
-  assert.strictEqual(o.editor.placement.stop.hidden, true);
+  assert.strictEqual(Object.keys(o.editor.placement.anchors).length, 9);
+  assert.strictEqual(o.editor.placement.root.hidden, true);
   click(o.editor.list.querySelector("[aria-label='Place Three elements']"));
   assert.strictEqual(o.sent[0].payload.params.type_id, "wnt_a"); viewOutcome(o, "completed");
   o.editor.tabs.select("schedule"); click(o.editor.schedule.root.querySelector("[data-row-action='place']"));

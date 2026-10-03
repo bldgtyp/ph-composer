@@ -20,8 +20,11 @@
 .phc-workspace .window-type-row>.window-type-move { flex:0 0 28px; width:28px; height:28px; min-height:28px; padding:2px; color:var(--muted); visibility:hidden; cursor:grab; }
 .window-type-row:hover>.window-type-move,.window-type-row:focus-within>.window-type-move { visibility:visible; }
 .window-type-row:hover { outline:1px solid var(--interaction-highlight-outline); outline-offset:-1px; }
-.window-type-row-actions { display:flex; align-items:center; padding-right:4px; visibility:hidden; }
-.window-type-row:hover .window-type-row-actions,.window-type-row:focus-within .window-type-row-actions { visibility:visible; }
+/* A row's actions take no width at rest, so its name has the whole rail. On hover and focus they are laid over
+   the end of the row, on the row's own background. */
+.window-type-row-actions { position:absolute; top:0; right:0; z-index:1; display:none; align-items:center; height:28px; padding:0 4px; background:#fff; }
+.window-type-row.selected .window-type-row-actions { background:linear-gradient(var(--interaction-highlight-tint),var(--interaction-highlight-tint)),#fff; }
+.window-type-row:hover .window-type-row-actions,.window-type-row:focus-within .window-type-row-actions { display:flex; }
 .window-type-row.is-renaming .window-type-row-actions { display:none; }
 .phc-workspace .window-type-row-actions .phc-icon-button { width:24px; height:24px; min-height:24px; padding:5px; border:0; background:transparent; color:var(--muted); }
 .phc-workspace .window-type-row-actions .phc-icon-button:hover:enabled { color:var(--ink); background:#1e29310f; }
@@ -53,8 +56,9 @@
 .window-type-actions button { white-space:nowrap; }
 .window-placement { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; padding:8px 0; min-width:0; }
 .window-placement-chosen { font-weight:600; }
-.window-placement-anchor { display:flex; align-items:center; gap:8px; color:var(--muted); }
-.window-placement-anchor select { min-width:0; max-width:170px; }
+.window-anchor-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+.phc-workspace .window-anchor-grid button { min-height:28px; padding:2px 6px; font-size:12px; white-space:nowrap; }
+.window-empty-mark { fill:var(--muted); font-size:calc(10px * var(--window-type, 1)); letter-spacing:.06em; text-transform:uppercase; pointer-events:none; }
 .window-placement-hint { flex:1 1 280px; font-size:11px; }
 .window-schedule { min-width:0; }
 .window-schedule > .muted { margin:8px 0; }
@@ -168,8 +172,9 @@
 .window-layout.collapsed { grid-template-columns:36px minmax(0,1fr); }
 .phc-workspace .window-workspace .phc-bubble { position:fixed; z-index:1000; max-width:calc(100vw - 20px); max-height:calc(100vh - 30px); overflow:auto; }
 .window-workspace [hidden] { display:none!important; }
-.window-layout { grid-template-columns:180px minmax(0,1fr) 240px; }
-.window-layout.collapsed { grid-template-columns:36px minmax(0,1fr) 240px; }
+/* The third column is as wide as the library sidebar in it, open or collapsed. */
+.window-layout { grid-template-columns:180px minmax(0,1fr) auto; }
+.window-layout.collapsed { grid-template-columns:36px minmax(0,1fr) auto; }
 .window-workspace .window-heading { flex-wrap:wrap; gap:12px; }
 .window-workspace .window-identity { min-width:0; flex-basis:100%; }
 .window-toolbar { flex-wrap:wrap; justify-content:flex-start; }

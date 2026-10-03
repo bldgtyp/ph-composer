@@ -224,7 +224,11 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
       drawing.appendChild(svg("rect", { x: x, y: y, width: w, height: h,
         "class": cell.kind === "empty" ? "window-empty" : "window-glass" }));
       drawing.appendChild(svg("text", { x: x + w / 2, y: y + h / 2 + 4, "text-anchor": "middle" }, cell.name));
-      if (cell.kind === "empty") return;
+      if (cell.kind === "empty") {
+        if (h > 60 && w > 44) drawing.appendChild(svg("text", { x: x + w / 2, y: y + h / 2 + 22,
+          "text-anchor": "middle", "class": "window-empty-mark" }, "Empty"));
+        return;
+      }
       sides.forEach(function (side) {
         var classification = shared.classification(record, cell, side), eligible = classification === "perimeter";
         var assigned = cell.installs[side], id = assigned || self.settings.default_psi_install_id;

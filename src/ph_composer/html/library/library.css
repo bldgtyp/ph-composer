@@ -71,17 +71,27 @@
 
 .library-sidebar-root { width: 264px; flex: 0 0 264px; min-width: 0; border-left: 1px solid var(--line); padding-left: 12px; }
 .library-sidebar-root.is-collapsed { width: 42px; flex-basis: 42px; }
-.library-sidebar-toggle { width: 100%; margin-bottom: 10px; font-size: 12px; }
-.library-sidebar-root.is-collapsed .library-sidebar-toggle { writing-mode: vertical-rl; padding: 12px 8px; }
+/* The sidebar reads as a title, group captions and record rows. Each is a button for the keyboard, and only the
+   kit's general button look is taken off, which needs the workspace prefix to outrank it. */
+.phc-workspace .library-sidebar-toggle { width: 100%; margin-bottom: 10px; padding: 4px 0; border: 0; border-radius: 0;
+  background: transparent; font-size: 13px; font-weight: 600; text-align: left; }
+.phc-workspace .library-sidebar-toggle { position: relative; }
+/* A chevron marks the title as the control that folds the sidebar away: it points at the list when open. */
+.library-sidebar-toggle::after { content: ""; position: absolute; top: 50%; right: 6px; width: 5px; height: 5px;
+  border-right: 1.5px solid #53676e; border-bottom: 1.5px solid #53676e; transform: translateY(-70%) rotate(45deg); }
+.phc-workspace .library-sidebar-root.is-collapsed .library-sidebar-toggle { writing-mode: vertical-rl; padding: 12px 8px; }
+.library-sidebar-root.is-collapsed .library-sidebar-toggle::after { display: none; }
 .library-sidebar-content { display: flex; flex-direction: column; gap: 9px; }
 .library-sidebar-source { color: var(--muted); font-size: 11px; }
 .library-sidebar-content > input { width: 100%; box-sizing: border-box; font-size: 11px; }
 .library-sidebar-list { max-height: 70vh; overflow: auto; }
-.library-sidebar-group-heading { width: 100%; text-align: left; padding: 7px 4px; font-size: 11px;
-  color: var(--muted); border: 0; background: var(--surface); }
-.library-sidebar-row-button { width: 100%; display: flex; align-items: center; gap: 8px; text-align: left;
-  padding: 8px 4px; border: 0; border-radius: 0; background: transparent; font-size: 12px; }
-.library-sidebar-row-button:hover, .library-sidebar-row-button:focus-visible { background: var(--interaction-highlight-tint); }
+.phc-workspace .library-sidebar-group-heading { width: 100%; text-align: left; padding: 10px 4px 5px; font-size: 10px;
+  font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border: 0;
+  border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
+.phc-workspace .library-sidebar-row-button { width: 100%; display: flex; align-items: center; gap: 8px; text-align: left;
+  min-height: 28px; padding: 4px; border: 0; border-radius: 0; background: transparent; font-size: 12px; font-weight: 400; }
+.phc-workspace .library-sidebar-row-button:hover:enabled, .phc-workspace .library-sidebar-row-button:focus-visible {
+  background: var(--interaction-highlight-tint); }
 .library-sidebar-swatch { display: inline-block; width: 14px; min-width: 14px; height: 14px; border: 1px solid var(--line);
   border-radius: 3px; }
 .library-sidebar-name { overflow: hidden; text-overflow: ellipsis; }
@@ -110,7 +120,7 @@
 @media (max-width: 700px) {
   .library-sidebar-root, .library-sidebar-root.is-collapsed { width: auto; flex-basis: auto; border-left: 0;
     border-top: 1px solid var(--line); padding: 10px 0 0; }
-  .library-sidebar-root.is-collapsed .library-sidebar-toggle { writing-mode: horizontal-tb; padding: 8px; }
+  .phc-workspace .library-sidebar-root.is-collapsed .library-sidebar-toggle { writing-mode: horizontal-tb; padding: 8px; }
 
   .library-material-workspace { flex-direction: column; }
   .library-material-table, .library-material-workspace > .library-sidebar-root { width: 100%; box-sizing: border-box; }

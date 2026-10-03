@@ -119,6 +119,9 @@ PhComposerUI.define("features/windows/canvas", ["workspace"], function (ui) {
         "class": "window-name" }, shownName));
       action(nameControl, "Rename " + cell.name, function () { view.editName(cell, nameControl); });
         group.appendChild(nameControl);
+      // Empty is a state the user set, so it says so; an unmarked white element reads as unfinished.
+      if (cell.kind === "empty" && ch > 60 * type && cw > 44 * type) group.appendChild(svg("text", { x: x + cw / 2,
+        y: y + ch / 2 + 27 * type, "text-anchor": "middle", "class": "window-empty-mark" }, "Empty"));
       if (!options.proposed) self.edgeInserts(record, cell, group, overlay, x, y, cw, ch);
       self.root.appendChild(group);
     });
