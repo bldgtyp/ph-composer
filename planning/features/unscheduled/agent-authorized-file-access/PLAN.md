@@ -1,7 +1,8 @@
 # Agent-authorized file access: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. Decisions D1 to D6 are Ed's; nothing below is authorized for implementation.
+STATUS: Scoped. Ed decided D1 to D6 on 2026-10-02, each as recommended. Not yet authorized for
+implementation.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/36
 
@@ -35,7 +36,14 @@ Read [README.md](README.md) first for the required behavior. This plan says how 
 - `export_file`'s `expected_revision` is checked inside `ExportWorkflow.run` (line 19), after the
   native dialog. `Dispatch#admission_refusal` cannot see it (R11 item 13).
 
-## Decisions needed before Phase 2
+## Decisions
+
+Ed decided all six on 2026-10-02, each as recommended below: D1 C now and B with the connection
+packet; D2 the injected `location` param; D3 destinations persist, file and folder approvals are
+single use, no time expiry; D4 user-named labels with generic defaults, and the folder-name fallback
+removed for every route; D5 HBJSON migrates in this packet; D6 the Save sheet is consent for the
+file it names, with one question only for an unnamed companion, macOS only. The options are kept
+below as the record of what was weighed.
 
 **D1. What makes a handle usable by one agent and not another.** The acceptance shape says "a
 second agent without the handle is refused". Caller handles die with their session, and no
@@ -236,7 +244,7 @@ Load `.agents/skills/ph-composer-ui-polish/SKILL.md` before this phase.
   handle, revoked handle, overwrite refusal), run by a test as written.
 - `make fixtures` regenerates `docs/API_REFERENCE.md`; `tests/api_reference_test.rb` fails on any
   undescribed param, so every `location` field carries a description.
-- README acceptance sentence edited per D1.
+- README acceptance sentence: edited on 2026-10-02 when D1 was decided.
 - Host gate (`ph-composer-native-acceptance` skill): approve a destination and a folder in real
   SketchUp, close the panel, run the walkthrough through the development bridge, revoke in the panel,
   rerun and see `location.revoked`; grep the SketchUp Ruby console and any extension log for the

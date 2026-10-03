@@ -1,7 +1,7 @@
 # UI findings from the R11 host gate: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. Items 1, 2, 4 and 5 are ready; item 3 needs Ed's decision (D1). Not yet authorized.
+STATUS: Scoped. All five items are ready; Ed decided D1 on 2026-10-02. Not yet authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/37
 
@@ -12,7 +12,9 @@ offline yet, and the first step of each item is a failing test.
 Load `.agents/skills/ph-composer-ui-polish/SKILL.md` before starting. One branch, one commit per
 item, `make ci` and `make ui-checks` at the end, one short host look (Verification).
 
-## Decision needed
+## Decision
+
+Decided 2026-10-02 by Ed, as recommended, together with agent-authorized-file-access D6.
 
 **D1 (item 3). Is the macOS Save sheet enough consent to replace the file it names?**
 Recommendation: yes. A second question appears only for a companion file the sheet did not name: the

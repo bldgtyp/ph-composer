@@ -1,7 +1,7 @@
 # Library product tabs use the pane heading
 
 DATE: 2026-10-02
-STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md), awaiting Ed's decisions D1 and D2. A UI follow-up from
+STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md); Ed decided D1 and D2 the same day. A UI follow-up from
 the Phase 2 review's R10, which did not take it.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/38

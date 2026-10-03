@@ -1,7 +1,7 @@
 # Operations publish the codes they refuse with
 
 DATE: 2026-10-02
-STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md), awaiting Ed's decisions D1 to D4. Moved out of the
+STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md); Ed decided D1 to D4 the same day. Moved out of the
 Phase 2 review's R09 on 2026-10-02, which did not take it.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/39
@@ -21,8 +21,8 @@ the registry and `API.describe`, which its per-kind split did not need.
 - Registration refuses a `refuses:` entry that no feature in the batch declares, and a foundation
   code it does not own is named by its existing foundation id.
 - `API.describe` publishes the list for each operation, and `docs/API_REFERENCE.md` shows it.
-- Built-in features declare `refuses:` on their operations. Whether to require it on every
-  operation, or keep it optional, is decided when this is scheduled.
+- Built-in features declare `refuses:` on their operations. Ed decided on 2026-10-02 to require
+  it on every operation (PLAN.md D1).
 
 ## Verification
 

@@ -1,7 +1,7 @@
 # Agent-authorized file access for library export and setup
 
 DATE: 2026-10-01
-STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md), awaiting Ed's decisions D1 to D6. Deferred from the
+STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md); Ed decided D1 to D6 the same day. Deferred from the
 Phase 2 review by Ed on 2026-10-01; must be delivered before any claim that users' agents can manage
 libraries.
 AUTHOR: Ed May, BLDGTYP, with Claude
@@ -62,9 +62,11 @@ is owed.
 ## Acceptance shape
 
 An agent, with the panel closed and a user-approved handle, exports a model library and adds a
-library folder; a second agent without the handle is refused; no path appears in any result or log.
+library folder; a caller without the `export` or `setup` grant is refused (binding an approval to a
+named connection follows with the connection packet, per D1 of [PLAN.md](PLAN.md)); no path appears
+in any result or log.
 The limitation paragraph added to `context/AGENT_INTERFACE.md` by R03 item A is removed in the same
 change.
 
-Next step: Ed decides D1 to D6 in [PLAN.md](PLAN.md). Under the recommended D1, this packet no longer
-waits for the agent connection packet.
+Next step: schedule and authorize implementation. Under D1 this packet no longer waits for the agent
+connection packet.

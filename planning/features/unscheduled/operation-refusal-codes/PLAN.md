@@ -1,7 +1,8 @@
 # Operations publish the codes they refuse with: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. Decisions D1 to D4 are Ed's; nothing below is authorized for implementation.
+STATUS: Scoped. Ed decided D1 to D4 on 2026-10-02, each as recommended. Not yet authorized for
+implementation.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/39
 
@@ -42,6 +43,10 @@ Read [README.md](README.md) first for the required behavior. Facts below are fro
   `start_export`. Revisit after that lands.
 
 ## Decisions
+
+Ed decided all four on 2026-10-02, each as recommended: D1 required (optional only during the
+rollout phases); D2 the `FOUNDATION_CODES` constant mirrored by test; D3 a common set per kind,
+published once; D4 the test-only refusal audit.
 
 **D1. Required or optional.** Recommendation: required on every operation, with `refuses: []` as an
 explicit "nothing beyond the common set". Optional means a contributor skips it and `describe` is

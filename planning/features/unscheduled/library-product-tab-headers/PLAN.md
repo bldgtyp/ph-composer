@@ -1,7 +1,7 @@
 # Library product tabs use the pane heading: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. Two small decisions (D1, D2) are Ed's; not yet authorized.
+STATUS: Scoped. Ed decided D1, D2 and the Window placement entry on 2026-10-02. Not yet authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/38
 
@@ -36,6 +36,9 @@ Read [README.md](README.md) for the required behavior. Load
   the Psi-Install model default in Library. Both stay; only their placement changes.
 
 ## Decisions
+
+Ed decided on 2026-10-02, each as recommended: D1 two action-bar controls; D2 the kit `settings`
+option; Window placement stays pending in `patterns.md` (Step 4).
 
 **D1. The defaults' form in the action bar.** The polish skill puts tab-specific settings in the
 action bar and configuration in anchored bubbles; a single value edits in a small bubble with no
@@ -131,12 +134,10 @@ One branch, one commit per step, focused tests per step, `make ci` and `make ui-
 - `.agents/skills/ph-composer-ui-polish/references/patterns.md` (`.claude/skills` links to it):
   - "Library tabs" stays, now true; add that tab settings sit at the end of the action bar as
     compact controls opening a choice list or a single-value bubble.
-  - Window placement: move from "Patterns still to be established" to the local list with
-    `features/windows/placement.js` (panel anchor choice) and `src/ph_composer/features/windows/place_tool.rb`
-    (viewport tool), citing Phase 2 acceptance E13
-    (`planning/archive/phase-02-envelope/ACCEPTANCE.md`, Place tool passed on the current host). E13
-    is a functional acceptance; **Ed confirms whether it also accepts the screen as a pattern.** If
-    not, the entry stays under "still to be established" with one line naming what remains.
+  - Window placement stays under "Patterns still to be established" (Ed, 2026-10-02). Replace its
+    line with: functionally accepted in Phase 2 E13 (`features/windows/placement.js`,
+    `src/ph_composer/features/windows/place_tool.rb`), not yet reviewed as the pattern for other
+    viewport tools; decide when thermal-bridge picking is designed.
 - `planning/ui-baseline/README.md:151`: no wording change; note in this packet that the install-depth
   default now sits in the action bar.
 
