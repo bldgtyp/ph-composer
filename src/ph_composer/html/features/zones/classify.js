@@ -211,14 +211,18 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
         chips(screenState, "boundary_condition", tool.boundary_conditions,
           tool.palette.boundary_condition, words.BOUNDARIES)));
       body.appendChild(field("Attached zone", null, attachedZones(screenState, tool.palette, records)));
-      var assembly = ui.element("select");
-      assembly.setAttribute("aria-label", "Classify Assembly");
-      assemblies.options(assembly, assemblies.choices(state, [tool.palette.face_type]),
-        "Keep each Face's Assembly", false);
-      assembly.value = tool.palette.assembly_id || "";
-      assembly.disabled = screenState.view.busy() || !snapshot.value(state, "ph_composer.zones.faces.assemblies");
-      assembly.addEventListener("change", function () { choose(screenState, "assembly_id", assembly.value || null); });
-      body.appendChild(field("Assembly", "blank keeps what each Face has", assembly));
+      // Painting an Assembly starts from that Assembly's own row; the palette only says which one it is.
+      var painting = assemblies.choices(state, []).filter(function (record) {
+        return record.id === tool.palette.assembly_id;
+      })[0];
+      if (tool.palette.assembly_id) {
+        var inHand = ui.element("div", "phc-chips");
+        var drop = ui.button("Stop painting it", function () { choose(screenState, "assembly_id", null); });
+        drop.disabled = screenState.view.busy();
+        inHand.appendChild(ui.element("span", "phc-palette-value", painting ? painting.name : "Missing Assembly"));
+        inHand.appendChild(drop);
+        body.appendChild(field("Assembly", null, inHand));
+      }
       root.className = "phc-classify" + (tool.active ? " is-active" : "");
       root.replaceChildren(heading, body);
     });
@@ -241,6 +245,8 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     if (!screenState.toggle || screenState.toggle.parentNode !== root) {
       screenState.toggle = ui.iconButton("Classify faces", "paint_bucket", function () {
         var pressed = screenState.wasActive || screenState.open;
+        var held = !pressed && panel.inspectorHeld(root.closest("[data-pane]").getAttribute("data-pane"));
+        if (held) { panel.notify("Save or cancel the draft in the inspector first.", "warning"); return; }
         if (screenState.wasActive) screenState.view.run("ph_composer.zones.faces.stop_classifying", {});
         screenState.open = !pressed;
         panel.repaint();

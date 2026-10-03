@@ -219,3 +219,74 @@ test), a panel under 900 wide in the host (covered by the browser check).
 Seen and not this stage's: while it paints, the Classify tool turns on the last colour mode the
 user chose, falling back to Face type (`classify_tool.rb`, `force_colour_by`). On this machine that
 was Window Type, which says nothing about what is being classified. Filed for P3-3.
+
+## P3-2 outcome, 2026-10-03
+
+Ed authorized P3-2 on 2026-10-03. Implemented on `feat/ui-zones-inspector`. `make ci` passes (1390
+Ruby runs, 395 JavaScript tests, 172 Python tests) and `make ui-checks` passes.
+
+- **Zone details** are the inspector section `ph_composer.zones.details`, tier `record`. Save and
+  Cancel show once a field changes, and the section holds the inspector while it has a draft, so
+  neither a Face selection nor a tool started from the viewport hides it. Every draft refusal
+  (row selection, filter, tab change, settings, table and selection edits) is unchanged and its
+  tests pass as written, apart from where they look for the form.
+- **The Face selection** is the inspector section `ph_composer.zones.selection`, tier `selection`:
+  "N Faces selected", then Type, Boundary and Assembly. Each choice applies at once to every
+  selected Face. Type and Boundary show the shared value or "Mixed". The Assembly picker's Apply
+  and Cancel are gone (P3-Q4); a refusal says why beside the control and leaves it ready.
+- **The Classify palette** offers no Assembly (D6). While an Assembly is being painted from its
+  row in Assemblies, the palette names it, read only.
+- The tree no longer has a selection bar above it or a form below it.
+
+What differs from the plan:
+
+- Boundary in the selection inspector does not offer Attached zone. It needs a record picker; the
+  per-row cell and the right-click menu still offer it.
+- With several Faces selected, a Type or Boundary edit is sent without `expected_values`, since
+  the operation takes one set for all targets and a mixed selection has none. One selected Face is
+  guarded as a row edit is. Assembly assignment keeps its per-target guard.
+- The Assembly picker no longer freezes its targets at the moment of choosing, because choosing is
+  now applying. The browser check's stale-target step went with it; the unit test covers the
+  refusal message.
+
+One Sonnet diff review ran. It confirmed that no draft refusal is lost and that a multi-Face edit
+without `expected_values` matches the right-click and paint routes, with the revision check and
+the 250-Face ceiling still in force. Its valid findings are applied:
+
+- The palette's Assembly line has "Stop painting it", since the select that used to clear it is
+  gone and the host keeps the palette for the Model's life.
+- A value the tree shows as read only (a paired Surface, an Air boundary, an Attached zone) makes
+  that selection control read only too, so one click cannot un-pair a Surface.
+- "Mixed" and "Not set" cannot be chosen.
+- The Classify toggle refuses, with a notice, while Zone details hold the inspector
+  (`panel.inspectorHeld`), instead of starting a tool whose palette cannot show.
+- Focus moves to the Name field when Save or Cancel hide themselves; the Assembly picker no longer
+  rebuilds an open dropdown; the inspector's inputs are set before the tree paints.
+
+For Ed to judge in the host:
+
+- With Faces selected in the viewport, clicking a Zone row shows the Face selection, not Zone
+  details, because a selection outranks a record. Locate on a Zone row selects its Faces, so it
+  has the same effect. Deselecting in the viewport brings Zone details back.
+- The selection inspector's Assembly control shows "Choose Assembly", not the Assembly the
+  selection shares.
+
+## P3-2 host check, 2026-10-03
+
+SketchUp 26.1.188, fresh process, build installed from the branch, Model
+`ui-zones-inspector-run.skp` copied fresh from the synthetic `uxk1-rerun.skp`. The SketchUp
+selection was set through development `eval` (enter the first Zone's Group, select two of its
+Faces); panel controls were changed by script on the panel's dialog; Face records and Undo were
+read back from SketchUp; captures are native window pixels by window id.
+
+| Check | Result |
+| --- | --- |
+| Two Faces selected in SketchUp (a Roof and a Floor, both Outdoors) | Pass: the inspector shows "2 Faces selected", Type "Mixed", Boundary "Outdoors", Assembly "Choose Assembly"; the tree does not move |
+| Boundary set to Ground from the selection inspector | Pass: both selected Faces' records read Ground, their types are kept, the third Face is untouched |
+| One Undo | Pass: both records read Outdoors again, so the edit was one Undo step |
+| Zone row selected with nothing selected in the viewport | Pass: Zone details show in the inspector with no Save or Cancel |
+| Zone name edited, then the Classify toggle pressed | Pass: Save and Cancel appear; the toggle refuses with "Save or cancel the draft in the inspector first." and SketchUp stays on the Select tool |
+| Cancel | Pass: the stored name returns and Save and Cancel go |
+
+Not covered: native pointer input, an Assembly assigned from the selection inspector (the fixture
+has no Assemblies; covered by the browser check), a selection over the 250-Face ceiling.

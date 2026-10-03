@@ -50,8 +50,16 @@ function snapshot() {
   };
 }
 
+/* The Zone details form, which the inspector holds. */
+function zoneCard(p) {
+  return p.query("[data-section='ph_composer.zones.details']").querySelector(".phc-zone-card");
+}
+
+/* A control by its accessible name, anywhere in the root's pane: the tree is the work surface, and the
+   Zone details and the Face selection are in the inspector beside it. */
 function byLabel(root, label) {
-  return root.querySelectorAll("input, select, button").filter(function (node) {
+  var scope = root.closest("[data-pane]") || root;
+  return scope.querySelectorAll("input, select, button").filter(function (node) {
     return node.getAttribute("aria-label") === label;
   })[0];
 }
@@ -306,11 +314,11 @@ test("Zone details appear for the selected Zone and save against the values last
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   var section = p.query("[data-section='ph_composer.overview']");
-  assert.strictEqual(section.querySelector(".phc-zone-card"), null, "nothing is selected yet");
+  assert.strictEqual(zoneCard(p), null, "nothing is selected yet");
 
   section.querySelector(".row-target").listeners.click({});
   byLabel(section, "Zone name").value = "North Zone";
-  section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  zoneCard(p).listeners.submit({ preventDefault: function () {} });
 
   var sent = p.sent[0].payload;
   assert.strictEqual(sent.name, "ph_composer.zones.update");
@@ -329,7 +337,7 @@ test("Zone ground depth follows display units and sends canonical millimetres", 
   var depth = byLabel(section, "Ground depth");
   depth.value = "1 ft";
   depth.listeners.input({});
-  section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  zoneCard(p).listeners.submit({ preventDefault: function () {} });
 
   assert.strictEqual(p.sent[0].payload.params.values.ground_depth_mm, 304.8);
 });
@@ -373,7 +381,7 @@ test("a selected Zone keeps its draft and stale guard through a native unit refr
   assert.strictEqual(byLabel(section, "Zone name").value, "Unsaved east draft");
   assert.strictEqual(byLabel(section, "Ground depth"), depth);
   assert.strictEqual(byLabel(section, "Ground depth").value, "12 in");
-  section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  zoneCard(p).listeners.submit({ preventDefault: function () {} });
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), {
     reference: { zone_id: "zon_a", zone_path: [100] },
     values: { name: "Unsaved east draft", building_segment: "house", level: null, ground_depth_mm: 304.8 },
@@ -381,7 +389,7 @@ test("a selected Zone keeps its draft and stale guard through a native unit refr
   });
   assert.strictEqual(name.disabled, true);
   assert.strictEqual(depth.disabled, true);
-  assert.strictEqual(section.querySelectorAll("button").filter(function (node) {
+  assert.strictEqual(zoneCard(p).querySelectorAll("button").filter(function (node) {
     return node.textContent === "Save";
   })[0].disabled, true);
   refreshed = snapshot();
@@ -402,7 +410,7 @@ test("a selected Zone keeps its draft and stale guard through a native unit refr
   assert.strictEqual(depth.value, "305");
   name.value = "Saved east draft";
   name.listeners.input({});
-  section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  zoneCard(p).listeners.submit({ preventDefault: function () {} });
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[1].payload.params.expected_values)), {
     name: "canonical east", building_segment: "house", level: null, ground_depth_mm: 305
   });
@@ -597,7 +605,9 @@ function draftPage(payload) {
   p.section = section;
   p.notice = function () { return p.context.document.querySelector(".phc-floating-notice"); };
   p.button = function (text) {
-    return section.querySelectorAll("button").filter(function (node) { return node.textContent === text; })[0];
+    return section.closest("[data-pane]").querySelectorAll("button").filter(function (node) {
+      return node.textContent === text;
+    })[0];
   };
   p.selectedKey = function () {
     return section.querySelectorAll("[data-row-key]").filter(function (node) {
@@ -698,7 +708,7 @@ test("Cancel restores the stored values and unlocks navigation", function () {
 test("a pending Save keeps the form and locks navigation; success unlocks it", function () {
   var p = draftPage(), zoneKey = p.selectedKey();
   type(byLabel(p.section, "Zone name"), "North Zone");
-  p.section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  zoneCard(p).listeners.submit({ preventDefault: function () {} });
   assert.strictEqual(p.sent.length, 1);
   assert.strictEqual(p.button("Cancel").disabled, true, "an in-flight Save cannot be cancelled");
 
@@ -716,7 +726,7 @@ test("a pending Save keeps the form and locks navigation; success unlocks it", f
 test("a refused Save keeps the draft locked and gives focus back to the form", function () {
   var p = draftPage(), zoneKey = p.selectedKey();
   type(byLabel(p.section, "Zone name"), "North Zone");
-  p.section.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  zoneCard(p).listeners.submit({ preventDefault: function () {} });
   p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
     session: "session-a", outcome: { status: "refused", message: "The Zone changed." } } });
 

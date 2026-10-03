@@ -126,7 +126,8 @@ section names a `tier`, one of `tool`, `selection`, `record` or `ambient`, and m
 or else the first that answers true, by tier in that order and then by `order`. A section holds
 while it carries a draft the user must not lose sight of, so a tool started from the viewport
 cannot hide it. With nothing to show the column is away. If the section that had the focus is
-hidden, the focus moves to the one now shown.
+hidden, the focus moves to the one now shown. A control that would open another inspector
+section asks `panel.inspectorHeld(pane)` first and says why it cannot.
 
 The kit owns visibility, here as with tabs: every section renders on every snapshot whether or
 not it is shown, because rendering is how a section consumes its results. `when` runs after the

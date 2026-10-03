@@ -49,20 +49,18 @@ function byLabel(root, label) {
 }
 function click(node) { node.listeners.click({ preventDefault: function () {} }); }
 function text(node) { return node.textContent + node.children.map(text).join(" "); }
-test("selection Assembly choices prioritize matching hints, Apply freezes full guarded targets", function () {
+test("selection Assembly choices prioritize matching hints; a choice assigns at once to its targets", function () {
   var o = setup(), picker = byLabel(o.document.body, "Assembly for selected Faces");
   assert.deepStrictEqual(picker.children.map(function (entry) { return entry.textContent; }),
     ["Choose Assembly", "Clear Assembly", "Wall", "A Roof"]);
+  assert.strictEqual(byLabel(o.document.body, "Apply Assembly to selected Faces"), undefined, "no Apply step");
   picker.value = "asm_a";
   picker.listeners.change({});
-  o.state.sections[PREFIX + ".selected"].value.targets = [];
-  o.paint();
-  click(byLabel(o.document.body, "Apply Assembly to selected Faces"));
   assert.strictEqual(o.sent.length, 1);
   assert.strictEqual(o.sent[0].payload.name, PREFIX + ".assign_assembly");
   assert.deepStrictEqual(o.sent[0].payload.params, { targets: [{ reference: o.face.reference,
     expected_values: o.face.values }], assembly_id: "asm_a" });
-  assert.ok(text(o.document.body).includes("1 Face"));
+  assert.ok(text(o.document.body).includes("1 Face selected"));
 });
 test("table Assembly chip names dangling references and clears only the guarded Assembly", function () {
   var o = setup(), chip = byLabel(o.document.body, "Wall 1 Assembly");
@@ -73,12 +71,13 @@ test("table Assembly chip names dangling references and clears only the guarded 
   assert.deepStrictEqual(o.sent[0].payload.params, { targets: [{ reference: o.face.reference,
     expected_values: o.face.values }], assembly_id: null });
 });
-test("Classify Assembly picker uses keep when blank and retains the palette's other choices", function () {
-  var o = setup(), chip = byLabel(o.document.body, "Classify Assembly");
-  chip.value = "asm_a";
-  chip.listeners.change({});
-  assert.strictEqual(o.sent[0].type, "view.invoke");
-  assert.deepStrictEqual(o.sent[0].payload.params, { field: "assembly_id", value: "asm_a" });
+test("the Classify palette offers no Assembly choice and names the one being painted", function () {
+  var o = setup(), palette = o.query("[data-section='ph_composer.classify']");
+  assert.strictEqual(byLabel(o.document.body, "Classify Assembly"), undefined);
+  assert.ok(!text(palette).includes("Assembly"), "nothing about Assemblies until one is being painted");
+  o.state.sections[PREFIX + ".palette"].value.palette.assembly_id = "asm_a";
+  o.paint();
+  assert.ok(text(palette).includes("Wall"), "the Assembly being painted is named");
 });
 test("Zones contributes gross usage and view actions through the generic Assembly inventory seam", function () {
   var o = setup(), inventory = o.query("[data-section='assemblies']")._view.inventory;
@@ -96,20 +95,20 @@ test("Zones contributes gross usage and view actions through the generic Assembl
   o.paint();
   assert.ok(!inventory.tableOptions.columns.some(function (column) { return column[0] === "face_usage"; }));
 });
-test("assignment refusal retains the draft; a Model switch forbids retained controls", function () {
+test("an assignment refusal says why and leaves the control ready; a Model switch forbids it", function () {
   var o = setup(), picker = byLabel(o.document.body, "Assembly for selected Faces");
   picker.value = "asm_a";
   picker.listeners.change({});
-  var apply = byLabel(o.document.body, "Apply Assembly to selected Faces");
-  click(apply);
   o.panel.receive({ type: "action.result", payload: { session: "session-a",
     request_id: o.sent[0].payload.request_id, outcome: { status: "refused", message: "Changed in the Model." } } });
-  assert.strictEqual(picker.value, "asm_a");
+  assert.strictEqual(picker.value, "", "nothing is left looking chosen");
+  assert.strictEqual(picker.disabled, false);
   assert.ok(text(o.document.body).includes("Changed in the Model."));
   var chip = byLabel(o.document.body, "Wall 1 Assembly");
   o.state.session = "session-b";
   o.paint();
-  click(apply);
+  picker.value = "asm_b";
+  picker.listeners.change({});
   chip.value = "asm_b";
   chip.listeners.change({});
   assert.strictEqual(o.sent.length, 1);
@@ -133,35 +132,30 @@ test("Assembly replacement UI requires an explicit replacement or Clear before o
   assert.strictEqual(o.sent[0].payload.name, "ph_composer.assemblies.assemblies.delete");
   assert.strictEqual(o.sent[0].payload.params.replacement_id, null);
 });
-test("selection Clear is explicit; Classify keeps and inventory Paint resets other fields", function () {
+test("selection Clear is explicit and inventory Paint resets other fields", function () {
   var o = setup(), picker = byLabel(o.document.body, "Assembly for selected Faces");
   picker.value = "__clear__";
   picker.listeners.change({});
-  click(byLabel(o.document.body, "Apply Assembly to selected Faces"));
   assert.strictEqual(o.sent[0].payload.params.assembly_id, null);
   o = setup();
-  var classify = byLabel(o.document.body, "Classify Assembly");
-  classify.value = ""; classify.listeners.change({});
-  assert.deepStrictEqual(o.sent[0].payload.params, { field: "assembly_id", value: null });
   var inventory = o.query("[data-section='assemblies']")._view.inventory, row = { record: inventory.records[0] };
   var paint = inventory.tableOptions.actions(row).filter(function (action) {
     return action.id === "paint_assembly";
   })[0];
   inventory.tableOptions.action(row, paint);
-  assert.strictEqual(o.sent.length, 2);
-  assert.deepStrictEqual(o.sent[1].payload.params, { field: "assembly_id", value: "asm_a", reset: true });
+  assert.strictEqual(o.sent.length, 1);
+  assert.deepStrictEqual(o.sent[0].payload.params, { field: "assembly_id", value: "asm_a", reset: true });
 });
-test("withdrawal forgets pending selection requests and restores navigation without a late result", function () {
+test("withdrawal forgets a pending selection request and restores navigation without a late result", function () {
   var o = setup(), picker = byLabel(o.document.body, "Assembly for selected Faces");
   picker.value = "asm_a"; picker.listeners.change({});
-  click(byLabel(o.document.body, "Apply Assembly to selected Faces"));
   o.panel.showTab("assemblies");
-  assert.strictEqual(o.panel.state.ui.activeTab, "overview");
+  assert.strictEqual(o.panel.state.ui.activeTab, "overview", "a request in flight holds the tab");
   delete o.state.sections[PREFIX + ".selected"]; o.paint();
   o.panel.showTab("assemblies");
   assert.strictEqual(o.panel.state.ui.activeTab, "assemblies");
   assert.ok(picker.disabled);
-  click(byLabel(o.document.body, "Apply Assembly to selected Faces"));
+  picker.value = "asm_b"; picker.listeners.change({});
   assert.strictEqual(o.sent.length, 1);
 });
 test("contributed actions respect inventory drafts and withdrawn replacement controls cannot write", function () {
@@ -187,25 +181,34 @@ test("contributed actions respect inventory drafts and withdrawn replacement con
 });
 
 
-test("a retained Classify Assembly choice cannot write when its read is withdrawn or the Model changes", function () {
-  var o = setup(), select = byLabel(o.document.body, "Classify Assembly");
-  delete o.state.sections[PREFIX + ".assemblies"]; o.paint();
-  select.value = "asm_a"; select.listeners.change({});
-  assert.strictEqual(o.sent.length, 0);
-  o.state.session = "session-b"; o.paint();
-  select.listeners.change({});
-  assert.strictEqual(o.sent.length, 0);
+test("the selection inspector sets Type and Boundary on every selected Face, one attribute at a time", function () {
+  var o = setup(), type = byLabel(o.document.body, "Type for selected Faces");
+  var boundary = byLabel(o.document.body, "Boundary for selected Faces");
+  assert.strictEqual(type.value, o.face.values.face_type, "what the selection shares is shown");
+  assert.ok(!boundary.children.some(function (entry) { return entry.value === "AttachedZone"; }),
+    "an Attached zone needs a record, so it is not offered here");
+  boundary.value = "Ground";
+  boundary.listeners.change({});
+  assert.strictEqual(o.sent[0].payload.name, PREFIX + ".classify");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params)), { faces: [o.face.reference],
+    intent: { face_type: { mode: "keep" }, boundary_condition: { mode: "set", value: "Ground" } },
+    expected_values: o.face.values });
+  var section = o.query("[data-section='ph_composer.zones.selection']");
+  assert.strictEqual(section.hidden, false);
+  assert.strictEqual(section.parentNode.getAttribute("data-phc-region"), "inspector");
+  o.state.sections[PREFIX + ".selected"].value.targets = []; o.paint();
+  assert.strictEqual(section.hidden, true, "no selection, no selection inspector");
 });
 
 test("Assembly selection and table refusals preserve the dirty Zone and return focus to Save", function () {
   ["Assembly for selected Faces", "Wall 1 Assembly"].forEach(function (label) {
     var o = setup(), overview = o.query("[data-section='ph_composer.overview']");
     click(overview.querySelector(".row-target"));
-    var name = byLabel(overview, "Zone name");
+    var name = byLabel(o.document.body, "Zone name");
     name.value = "Unsaved Zone draft"; name.listeners.input({});
-    var select = byLabel(overview, label);
+    var select = byLabel(o.document.body, label);
     select.focus(); select.value = "asm_b"; select.listeners.change({});
-    var save = overview.querySelectorAll("button").filter(function (node) {
+    var save = o.document.body.querySelectorAll("button").filter(function (node) {
       return node.textContent === "Save";
     })[0];
     assert.strictEqual(name.value, "Unsaved Zone draft");
@@ -213,4 +216,61 @@ test("Assembly selection and table refusals preserve the dirty Zone and return f
     assert.strictEqual(o.sent.length, 0);
     assert.strictEqual(select.value, label === "Wall 1 Assembly" ? "asm_missing" : "");
   });
+});
+
+test("selected Faces outrank a selected Zone in the inspector until the Zone has a draft to hold", function () {
+  var o = setup(), overview = o.query("[data-section='ph_composer.overview']");
+  var selection = o.query("[data-section='ph_composer.zones.selection']");
+  var details = o.query("[data-section='ph_composer.zones.details']");
+  click(overview.querySelector(".row-target"));
+  assert.deepStrictEqual([selection.hidden, details.hidden], [false, true]);
+  var save = details.querySelectorAll("button").filter(function (node) { return node.textContent === "Save"; })[0];
+  assert.strictEqual(save.hidden, true, "Save belongs to a draft");
+  var name = byLabel(details, "Zone name");
+  name.value = "Draft"; name.listeners.input({});
+  o.paint();
+  assert.deepStrictEqual([selection.hidden, details.hidden, save.hidden], [true, false, false]);
+});
+
+test("selected Faces that disagree read Mixed; a value the tree keeps read only is read only here", function () {
+  var o = setup(), targets = o.state.sections[PREFIX + ".selected"].value.targets;
+  var second = JSON.parse(JSON.stringify(targets[0]));
+  second.reference.entity_path = [999];
+  second.expected_values = { face_type: "Floor", boundary_condition: "Surface" };
+  targets.push(second);
+  o.paint();
+  var type = byLabel(o.document.body, "Type for selected Faces");
+  var boundary = byLabel(o.document.body, "Boundary for selected Faces");
+  assert.deepStrictEqual([type.value, type.children[0].textContent, type.children[0].disabled], ["", "Mixed", true]);
+  assert.strictEqual(boundary.disabled, true, "one of them is a paired Surface");
+  type.value = "Wall";
+  type.listeners.change({});
+  var params = JSON.parse(JSON.stringify(o.sent[0].payload.params));
+  assert.strictEqual(params.faces.length, 2);
+  assert.strictEqual(params.expected_values, undefined, "several Faces share no one set of values to guard by");
+});
+
+test("a Zone draft refuses a Type choice and the Classify toggle, and the palette can drop its Assembly", function () {
+  var o = setup(), overview = o.query("[data-section='ph_composer.overview']");
+  click(overview.querySelector(".row-target"));
+  var name = byLabel(o.document.body, "Zone name");
+  name.value = "Draft"; name.listeners.input({});
+  o.paint();
+  var type = byLabel(o.document.body, "Type for selected Faces");
+  type.value = "Floor";
+  type.listeners.change({});
+  assert.strictEqual(o.sent.length, 0);
+  assert.strictEqual(type.value, o.face.values.face_type, "the control goes back to what the Faces have");
+  var toggle = o.query("[data-section='ph_composer.classify.toggle']").querySelector("button");
+  click(toggle);
+  assert.strictEqual(toggle.getAttribute("aria-pressed"), "false", "the draft keeps the inspector");
+  assert.strictEqual(o.sent.length, 0);
+
+  o = setup();
+  o.state.sections[PREFIX + ".palette"].value.palette.assembly_id = "asm_a";
+  o.paint();
+  click(o.query("[data-section='ph_composer.classify']").querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Stop painting it";
+  })[0]);
+  assert.deepStrictEqual(o.sent[0].payload.params, { field: "assembly_id", value: null });
 });

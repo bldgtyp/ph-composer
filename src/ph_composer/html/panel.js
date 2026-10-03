@@ -230,6 +230,14 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     return false;
   }
 
+  /* Whether a section is holding the pane's inspector. A control that would open another section there
+     asks first, and says why it cannot, rather than opening something the user will not see. */
+  function inspectorHeld(paneName) {
+    return sections.some(function (entry) {
+      return entry.region === "inspector" && entry.pane === paneName && wants(entry) === "hold";
+    });
+  }
+
   function showInspectors() {
     var byPane = Object.create(null);
     sections.forEach(function (entry) {
@@ -420,8 +428,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
      row) repaints every section from the state already in hand. It never reaches the host. */
   function repaint() { render(); }
 
-  api = { receive: receive, section: section, region: region, ready: ready, state: state, showTab: showTab,
-    navigate: navigate,
+  api = { receive: receive, section: section, region: region, inspectorHeld: inspectorHeld, ready: ready,
+    state: state, showTab: showTab, navigate: navigate,
     send: send,
     setPreference: setPreference, repaint: repaint, notify: notify,
     // `guard(tab)` answers why the tab may not change, or null; `refused`, when given, runs after a

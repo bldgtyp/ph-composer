@@ -16,32 +16,28 @@ fs.mkdirSync(output, { recursive: true });
     page.on("pageerror", error => errors.push(error.message));
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=assignment`);
     const picker = page.getByRole("combobox", { name: "Assembly for selected Faces", exact: true });
-    const apply = page.getByRole("button", { name: "Apply Assembly to selected Faces", exact: true });
     const writes = () => page.evaluate(() => window.previewHost.sent.filter(m => m.type === "action.invoke").length);
     const initial = await page.evaluate(() => window.previewHost.faces.slice(0, 2).map(face => ({ ...face.values })));
-    await picker.selectOption("asm_a");
-    await page.locator("[data-tab='assemblies']").click();
-    assert(await picker.isVisible(), "the selected Faces review guards navigation");
-    await page.getByRole("button", { name: "Set display units to IP", exact: true }).click();
-    await page.evaluate(() => { window.previewHost.selectedFaces = []; window.previewHost.snapshot(); });
+    const inspector = page.locator("[data-phc-region=inspector]");
+    await inspector.getByRole("heading", { name: "2 Faces selected", exact: true }).waitFor();
+    assert.equal(await page.getByRole("button", { name: "Apply Assembly to selected Faces" }).count(), 0);
+
+    // A choice assigns at once to every selected Face, and nothing else about them changes.
     assert.equal(await writes(), 0);
-    await apply.click();
+    await picker.selectOption("asm_a");
+    await page.waitForFunction(() => window.previewHost.faces.slice(0, 2).every(f => f.values.assembly_id === "asm_a"));
     assert.equal(await writes(), 1);
     assert.deepEqual(await page.evaluate(() => window.previewHost.faces.slice(0, 2).map(face => ({ ...face.values }))),
       initial.map(value => ({ ...value, assembly_id: "asm_a" })));
 
-    // A stale target is refused in place, including across a unit switch, until explicitly cancelled.
+    // One selected Face: Type and Boundary are set from the same place, one attribute at a time.
     await page.evaluate(() => {
       window.previewHost.selectedFaces = [window.previewHost.faces[0].reference]; window.previewHost.snapshot();
     });
-    await picker.selectOption("asm_b");
-    await page.evaluate(() => { window.previewHost.faces[0].values.boundary_condition = "Ground"; });
-    await apply.click();
-    await page.locator(".phc-selection-mount").getByText(
-      "A selected Face changed. Nothing was written.", { exact: true }).waitFor();
-    assert.equal(await picker.inputValue(), "asm_b");
-    assert(await apply.isDisabled());
-    await page.getByRole("button", { name: "Cancel Assembly", exact: true }).click();
+    await inspector.getByRole("heading", { name: "1 Face selected", exact: true }).waitFor();
+    await page.getByRole("combobox", { name: "Boundary for selected Faces", exact: true }).selectOption("Ground");
+    await page.waitForFunction(() => window.previewHost.faces[0].values.boundary_condition === "Ground");
+    assert.equal(await page.evaluate(() => window.previewHost.faces[0].values.assembly_id), "asm_a");
 
     // A table choice clears only assembly_id and preserves the edited boundary and Face type.
     await page.getByRole("combobox", { name: "Wall 1 Assembly", exact: true }).selectOption("");
@@ -58,7 +54,10 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await page.evaluate(() => window.previewHost.selectedFaces.length), 1);
     const beforePaint = await writes();
     await row.getByRole("button", { name: "Paint Incomplete roof onto faces", exact: true }).click();
-    assert(await picker.isVisible());
+    // Painting takes the inspector: the palette shows over the selection and names the Assembly in hand.
+    await inspector.getByRole("heading", { name: "Classify faces", exact: true }).waitFor();
+    await inspector.locator(".phc-palette-value").getByText("Incomplete roof", { exact: true }).waitFor();
+    assert.equal(await picker.isVisible(), false);
     assert.deepEqual(await page.evaluate(() => window.previewHost.palette.palette), { assembly_id: "asm_b" });
     assert.equal(await writes(), beforePaint);
     await page.locator("[data-tab='assemblies']").click();

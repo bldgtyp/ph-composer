@@ -146,9 +146,9 @@
       "sha256": "0d5ad2ee8986e42768247203003cf7bfeba182dd6578ff28b727b05e0518c530"
     },
     "html/features/zones/assembly_assignment.js": {
-      "bytes": 12164,
+      "bytes": 10989,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "fdffa7e58f06573b0dcb254bb8ecb9822284624c83343bbe16c47acea5ad852c"
+      "sha256": "ed9875e848e972b03e22edb9ae0adf1ce07be2b06b8d7b3e58faa5dceb8f7140"
     },
     "html/features/zones/attached_zone_assignment.js": {
       "bytes": 4211,
@@ -166,14 +166,14 @@
       "sha256": "49c0d071618ea87c9fe2e5c7144204995ce75ee4dcc6b205d90f6f23719b89ee"
     },
     "html/features/zones/classify.js": {
-      "bytes": 12576,
+      "bytes": 12891,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "df7eadd8592bb6dfe07fe3f49e23ead70f642a30346a82cdee1de1491d5d8605"
+      "sha256": "bf6967c3d2029382b442145fac10d72fb2de82856e12d204235db91b0efde417"
     },
     "html/features/zones/overview.js": {
-      "bytes": 27482,
+      "bytes": 33311,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "69e151603ddcef658b66287a444fc2666706e771bd551c2b06f5110364cf911b"
+      "sha256": "9b69134cc889de34f5ffe4b268099529c3156af730a4cb556b645ce211245c73"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 2572,
@@ -186,9 +186,9 @@
       "sha256": "6f0aa9838900a0674a1b1a7666e66554518cd63282d69c947e795824a8a748bc"
     },
     "html/features/zones/zones.css": {
-      "bytes": 3520,
+      "bytes": 3556,
       "mime": "text/css; charset=utf-8",
-      "sha256": "3ab7a75d4b63f84705aaa04f059552d5c046bbd933d825031be27a68aaade956"
+      "sha256": "d6efea038f8db98d8e94b883de542ca02085263975b2d5fad02f762a2ca9541a"
     },
     "html/fields.js": {
       "bytes": 1756,
@@ -296,9 +296,9 @@
       "sha256": "860a447b8123868eb15775a3f39985cf0444e18455e6063ff742a471261edb45"
     },
     "html/panel.js": {
-      "bytes": 20353,
+      "bytes": 20775,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "86d30bad0cbfb3573dfd8ad7c6f1aff12dd81a6a804bfcc1103c5bfbe3d9f5ab"
+      "sha256": "9f2948edce601cf3a7260cfe8c49e944f633b2939ab8bf80413c92a020ae41da"
     },
     "html/record_edits.js": {
       "bytes": 15234,

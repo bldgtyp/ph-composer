@@ -18,66 +18,45 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     if (clear) select.appendChild(ui.option("__clear__", "Clear Assembly"));
     records.forEach(function (record) { select.appendChild(ui.option(record.id, record.name)); });
   }
+  /* The Assembly for the Faces selected in the viewport. Choosing one assigns it at once, as one Undo
+     step, to the targets the snapshot named when the choice was made; a refusal says why and leaves the
+     control ready for another choice. */
   function Picker(session, send, guard, refused) {
     var self = this;
     this.session = session;
     this.guard = guard;
     this.refused = refused || function (reason) { panel.notify(reason, "warning"); };
     this.requests = requests.channel(session, send, "selected-assembly");
-    this.root = ui.element("div", "phc-chips");
-    this.count = ui.element("strong");
+    this.root = ui.element("div", "phc-selection-assembly");
     this.select = ui.element("select");
     this.select.setAttribute("aria-label", "Assembly for selected Faces");
-    this.apply = ui.button("Apply Assembly", function () { self.submit(); });
-    this.apply.setAttribute("aria-label", "Apply Assembly to selected Faces");
-    this.cancel = ui.button("Cancel Assembly", function () { self.cancelDraft(); });
-    this.cancel.setAttribute("aria-label", "Cancel Assembly");
     this.error = ui.element("span", "cell-error");
     this.error.setAttribute("role", "status");
-    this.root.appendChild(this.count);
     this.root.appendChild(this.select);
-    this.actions = ui.actionRow(this.cancel, this.apply);
-    this.root.appendChild(this.actions);
     this.root.appendChild(this.error);
+    this.currentTargets = [];
     this.select.addEventListener("change", function () {
-      if (self.disposed || !self.enabled || self.requests.busy()) return;
-      var reason = !self.dirty && self.guard && self.guard();
+      var chosen = self.select.value, reason;
+      if (self.disposed || !self.enabled || self.requests.busy() || !chosen) return;
+      reason = self.guard && self.guard();
       if (reason) { self.select.value = ""; self.refused(reason); return; }
-      if (!self.dirty) self.targets = clone(self.currentTargets);
-      self.dirty = Boolean(self.select.value);
-      self.paint();
+      self.submit(chosen);
     });
   }
-  Picker.prototype.active = function () { return this.dirty || this.requests.busy(); };
+  Picker.prototype.active = function () { return this.requests.busy(); };
   Picker.prototype.paint = function () {
-    var targets = this.dirty ? this.targets : this.currentTargets || [];
-    this.count.textContent = targets.length + (targets.length === 1 ? " Face selected" : " Faces selected");
-    this.root.hidden = !this.enabled || !targets.length;
-    this.select.disabled = this.disposed || !this.enabled || this.requests.busy() || !targets.length;
-    this.apply.disabled = this.select.disabled || !this.dirty || this.requiresCancel;
-    this.cancel.disabled = this.requests.busy();
-    this.cancel.hidden = !this.dirty;
-    this.actions.hidden = !this.dirty;
+    this.root.hidden = !this.enabled || !this.currentTargets.length;
+    this.select.disabled = this.disposed || !this.enabled || this.requests.busy() || !this.currentTargets.length;
   };
-  Picker.prototype.cancelDraft = function () {
-    if (this.disposed || this.requests.busy()) return;
-    this.dirty = false;
-    this.requiresCancel = false;
-    this.targets = null;
-    this.select.value = "";
+  Picker.prototype.submit = function (chosen) {
+    var self = this;
+    if (!this.currentTargets.length) return;
     this.error.textContent = "";
-    this.refresh(this.state);
-  };
-  Picker.prototype.submit = function () {
-    if (this.disposed || !this.enabled || !this.dirty || this.requiresCancel || this.requests.busy()) return;
-    var self = this, chosen = this.select.value;
-    if (!this.targets.length) return;
-    this.requests.run(PREFIX + ".assign_assembly", { targets: clone(this.targets),
+    this.requests.run(PREFIX + ".assign_assembly", { targets: clone(this.currentTargets),
       assembly_id: chosen === "__clear__" ? null : chosen }, {
-      onDone: function () {
-        self.dirty = false; self.targets = null; self.select.value = ""; self.error.textContent = "";
-      }, onFail: function (outcome) {
-        self.requiresCancel = true;
+      onDone: function () { self.select.value = ""; },
+      onFail: function (outcome) {
+        self.select.value = "";
         self.error.textContent = snapshot.message(outcome, "The Assembly was not assigned. Nothing was written.");
       }
     });
@@ -90,22 +69,23 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     this.enabled = Boolean(snapshot.section(state, PREFIX + ".selected") &&
       snapshot.value(state, PREFIX + ".assemblies") && snapshot.value(state, PREFIX + ".faces"));
     this.currentTargets = selection ? selection.targets || [] : [];
-    if (!this.enabled) {
-      this.requests.reset(); this.dirty = false; this.targets = null;
-      this.requiresCancel = false; this.select.value = ""; this.error.textContent = "";
-    } else this.requests.consume(state);
-    var targets = this.dirty ? this.targets : this.currentTargets;
-    var records = choices(state, targets.map(function (target) { return target.expected_values.face_type; }));
+    if (!this.enabled) { this.requests.reset(); this.select.value = ""; this.error.textContent = ""; }
+    else this.requests.consume(state);
+    var records = choices(state, this.currentTargets.map(function (target) {
+      return target.expected_values.face_type;
+    }));
     var selected = this.select.value;
-    options(this.select, records, "Choose Assembly", true);
-    if (selected && selected !== "__clear__" && !records.some(function (record) { return record.id === selected; })) {
-      this.select.appendChild(ui.option(selected, "Missing Assembly · " + selected));
+    var signature = records.map(function (record) { return record.id + ":" + record.name; }).join("|");
+    // Rebuilt only when the choices change: a snapshot follows every viewport click.
+    if (this.signature !== signature) {
+      options(this.select, records, "Choose Assembly", true);
+      this.signature = signature;
     }
     this.select.value = selected;
     this.paint();
   };
   Picker.prototype.dispose = function () {
-    this.disposed = true; this.enabled = false; this.dirty = false;
+    this.disposed = true; this.enabled = false;
     this.requests.reset(); this.paint();
   };
   function cell(td, row, state, guard, refused) {

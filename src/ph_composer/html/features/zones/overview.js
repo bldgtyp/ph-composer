@@ -327,25 +327,121 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     screenState.zoneKeys = rows.filter(depth(0)).map(function (row) { return row.key; });
     if (!root.querySelector(".phc-table-mount")) {
       root.className = "phc-overview";
-      root.replaceChildren(ui.element("div", "phc-heading-mount"), ui.element("div", "phc-selection-mount"),
-        screenState.controls.root,
-        ui.element("div", "phc-table-mount"), ui.element("div", "phc-details-mount"));
+      root.replaceChildren(ui.element("div", "phc-heading-mount"), screenState.controls.root,
+        ui.element("div", "phc-table-mount"));
     }
     // The pane's tools (whatever sections registered there) end this screen's control row. Found before the
     // row changes hands, so a new session's row inherits them instead of leaving them in the old one.
     var tools = panel.region(root.closest("[data-pane]").getAttribute("data-pane"), "tools");
-    var row = root.children[2];
+    var row = root.children[1];
     if (row !== screenState.controls.root) {
       root.insertBefore(screenState.controls.root, row);
       root.removeChild(row);
     }
     if (tools.parentNode !== screenState.controls.root) screenState.controls.root.appendChild(tools);
-    root.querySelector(".phc-selection-mount").replaceChildren(screenState.selectionAssignment.root);
     root.querySelector(".phc-heading-mount").replaceChildren(ui.pageHeader({ title: "Zones",
       count: zones.zones.length, actions: [solveButton(screenState, zones.zones), screenState.settings.bubble.root],
       primary: makeButton(screenState, zones.make_zone) }).root);
+    // Set before the tree paints, so the inspector never works from an earlier pass if painting fails.
+    screenState.rows = rows;
+    screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
-    paintDetails(root.querySelector(".phc-details-mount"), rows, screenState);
+  }
+
+  /* The inspector's two sections. Both paint from what the tree's render just worked out, which the
+     panel guarantees by rendering in order. Zone details hold the inspector while they carry a draft. */
+  function renderDetails(root, state) {
+    if (!screen || screen.session !== state.session || !screen.rows) { root.replaceChildren(); return; }
+    paintDetails(root, screen.rows, screen);
+  }
+
+  function detailsWanted() {
+    var editor = screen && screen.zoneEditor;
+    return editor ? (editor.dirty || editor.pending ? "hold" : true) : false;
+  }
+
+  function renderSelection(root, state) {
+    if (!screen || screen.session !== state.session) { root.replaceChildren(); return; }
+    var controls = screen.selectionControls || (screen.selectionControls = selectionControls(screen));
+    if (controls.root.parentNode !== root) { root.className = "phc-selection"; root.replaceChildren(controls.root); }
+    controls.paint();
+  }
+
+  function selectionWanted() {
+    return Boolean(screen && screen.targets && screen.targets.length);
+  }
+
+  /* What the selected Faces share, one attribute at a time: each choice applies at once to every Face
+     selected, as one Undo step. A value they do not share reads "Mixed". Attached zone needs a record,
+     so it is offered where a record can be chosen: a Face's own row and the right-click menu. */
+  function selectionControls(state) {
+    var root = ui.element("div", "phc-selection-controls"), title = ui.element("h2");
+    var heading = ui.element("div", "phc-zone-heading");
+    var fields = {};
+    function common(field) {
+      var values = state.targets.map(function (target) { return target.expected_values[field] || ""; });
+      return values.every(function (value) { return value === values[0]; }) ? values[0] : null;
+    }
+    function control(field, label) {
+      var select = ui.element("select"), wrap = ui.element("label", "phc-selection-field");
+      select.setAttribute("aria-label", label + " for selected Faces");
+      select.addEventListener("change", function () {
+        var reason = draftReason(state), chosen = select.value;
+        if (!chosen) { paint(); return; }
+        if (reason) { paint(); refuse(reason); return; }
+        var intent = { face_type: { mode: "keep" }, boundary_condition: { mode: "keep" } };
+        var params = { faces: state.targets.map(function (target) { return target.reference; }), intent: intent };
+        intent[field] = { mode: "set", value: chosen };
+        // One Face is guarded by the values it was read with; several rarely share them, so the Model's
+        // own checks stand alone.
+        if (state.targets.length === 1) params.expected_values = state.targets[0].expected_values;
+        state.edits.run("ph_composer.zones.faces.classify", params);
+        paint();
+      });
+      wrap.appendChild(ui.element("span", "", label));
+      wrap.appendChild(select);
+      root.appendChild(wrap);
+      fields[field] = select;
+    }
+    function paint() {
+      var count = state.targets.length;
+      title.textContent = count + (count === 1 ? " Face selected" : " Faces selected");
+      Object.keys(fields).forEach(function (field) {
+        var select = fields[field], shared = common(field);
+        var offered = choices(state, field).filter(function (choice) { return choice !== "AttachedZone"; });
+        var first = shared === null ? "Mixed" :
+          shared && offered.indexOf(shared) < 0 ? chipLabel(field, shared) : "Not set";
+        // A value the tree shows as read only (a paired Surface, an Air boundary, an Attached zone) is
+        // read only here too: the Face's own row is where it can be changed.
+        var locked = state.targets.some(function (target) {
+          var stored = target.expected_values[field];
+          return Boolean(stored) && offered.indexOf(stored) < 0;
+        });
+        var signature = first + "|" + offered.join(",");
+        // Rebuilt only when what it offers changes: a snapshot follows every viewport click, and
+        // rebuilding would close a dropdown the user has open.
+        if (select._signature !== signature) {
+          var placeholder = ui.option("", first);
+          placeholder.disabled = true;
+          select.replaceChildren(placeholder);
+          offered.forEach(function (choice) { select.appendChild(ui.option(choice, chipLabel(field, choice))); });
+          select._signature = signature;
+        }
+        select.value = shared && offered.indexOf(shared) >= 0 ? shared : "";
+        select.disabled = state.edits.busy() || !offered.length || locked;
+        select.title = locked ? "Set on the Face's own row" : "";
+      });
+      assembly.hidden = state.selectionAssignment.root.hidden;
+    }
+    var assembly = ui.element("label", "phc-selection-field");
+    heading.appendChild(title);
+    root.appendChild(heading);
+    control("face_type", "Type");
+    control("boundary_condition", "Boundary");
+    assembly.appendChild(ui.element("span", "", "Assembly"));
+    assembly.appendChild(state.selectionAssignment.root);
+    root.appendChild(assembly);
+    return { root: root, paint: paint };
   }
 
   function depth(wanted) {
@@ -413,7 +509,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   /* The selected Zone's own fields. They belong to the Zone rather than to any one row, so they are a
-     form beneath the table rather than more columns (UI polish: reveal contextual tools on selection). */
+     form in the inspector rather than more columns (UI polish: reveal contextual tools on selection). */
   function paintDetails(mount, rows, state) {
     var row = rows.filter(function (candidate) { return candidate.key === state.selected; })[0];
     if (!row || row.depth !== 0) {
@@ -429,6 +525,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     state.zoneEditor = zoneForm(row.key, row.record.zone, state);
     var title = ui.element("div", "phc-zone-heading");
     title.appendChild(ui.element("h2", "", "Zone details"));
+    mount.className = "phc-zone-details";
     mount.replaceChildren(title, state.zoneEditor.root);
   }
 
@@ -468,9 +565,15 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       value: depthValue,
       onCommit: function (committed) { depthValue = committed; }
     });
-    var save = ui.element("button", "", "Save"), cancel = ui.button("Cancel", function () {
+    var save = ui.element("button", "primary", "Save"), cancel = ui.button("Cancel", function () {
       editor.cancel(); panel.repaint();
     });
+    // Save and Cancel belong to a draft, so they show once there is one.
+    function paintActions() {
+      var hide = !(editor.dirty || editor.pending), active = document.activeElement;
+      if (hide && (active === save || active === cancel)) name.focus();
+      save.hidden = cancel.hidden = hide;
+    }
     save.type = "submit";
     cancel.type = "button";
     card.appendChild(labelled("Name", name));
@@ -492,6 +595,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         editor.pending = pending;
         [name, segment, level, save, cancel].forEach(function (control) { control.disabled = pending; });
         ground.setDisabled(pending);
+        paintActions();
       },
       focus: function () { if (!save.disabled) save.focus(); },
       // The whole form goes back to what the Model last said, and the draft ends.
@@ -501,6 +605,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         editor.skipSync = false;
         ground.cancel();
         editor.sync(editor.stored);
+        paintActions();
       },
       dispose: function () { editor.disposed = true; ground.dispose(); },
       accept: function (submitted) {
@@ -508,6 +613,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         editor.dirty = false;
         editor.skipSync = true;
         ground.setValue(submitted.ground_depth_mm);
+        paintActions();
       },
       sync: function (authoritative) {
         editor.stored = authoritative;
@@ -528,8 +634,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       }
     };
     [name, segment, level, ground.input].forEach(function (control) {
-      control.addEventListener("input", function () { editor.dirty = true; });
+      control.addEventListener("input", function () { editor.dirty = true; paintActions(); });
     });
+    paintActions();
     card.addEventListener("submit", function (event) {
       event.preventDefault();
       if (!ground.commit().ok) return;
@@ -560,4 +667,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     if (screen && screen.zoneEditor) screen.zoneEditor.focus();
   });
   panel.section("ph_composer.overview", render, { order: 10 });
+  panel.section("ph_composer.zones.selection", renderSelection, { region: "inspector", tier: "selection",
+    order: 11, when: selectionWanted });
+  panel.section("ph_composer.zones.details", renderDetails, { region: "inspector", tier: "record",
+    order: 12, when: detailsWanted });
 });
