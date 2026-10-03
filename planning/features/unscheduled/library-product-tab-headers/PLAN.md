@@ -1,7 +1,7 @@
 # Library product tabs use the pane heading: implementation plan
 
 DATE: 2026-10-02
-STATUS: Implemented on branch `feat/library-product-tab-headers` 2026-10-02; offline gates pass; the SketchUp host look is outstanding. Ed authorized implementation through `implement-loop` on 2026-10-02, after deciding D1,
+STATUS: Implemented on branch `feat/library-product-tab-headers` 2026-10-02; host look passed 2026-10-03 (ledger `PTAB`); awaiting review and merge (PR #46). Ed authorized implementation through `implement-loop` on 2026-10-02, after deciding D1,
 D2 and the Window placement entry the same day.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/38
@@ -158,7 +158,8 @@ One branch, one commit per step, focused tests per step, `make ci` and `make ui-
 ## Implementation record
 
 Implemented on branch `feat/library-product-tab-headers`, 2026-10-02, one commit per step plus one review
-fix: Step 1 `fbdb9cd`, Step 2 `522bf6a`, Step 3 `4c45c68`, Step 4 `cc73de2`, review fixes `f7f3018`.
+fix: Step 1 `fbdb9cd`, Step 2 `522bf6a`, Step 3 `4c45c68`, Step 4 `cc73de2`, review fixes `f7f3018`, host-look
+fix `fe80410`.
 
 - Step 1 to 4 as planned. The kit option is `settings` on the `Inventory` config; the group node it
   builds is `inventory.settingsRoot`.
@@ -181,8 +182,9 @@ Verification:
 - Preview captures at 1280 and 420 px of the Psi-Install Types tab. At 1280 px with the Library sidebar
   expanded the table column is 998 px wide; the view controls take about 740 px and the two defaults
   about 424 px, so the settings group wraps as one unit to a right-aligned second line. The two controls
-  share their row. This misses "keeps it to one line at 1280 px" in `references/patterns.md`; decide at
-  the host look whether to shorten the labels or accept the wrap.
+  share their row. In SketchUp the same holds, and with the sidebar collapsed the whole action bar fits
+  one line. This misses "keeps it to one line at 1280 px" in `references/patterns.md` while the sidebar
+  is open; Ed to decide whether to shorten the labels or accept the wrap.
 - Review: one Sonnet diff review with the architecture and UI polish rubrics. It found no crash or data
   loss and judged the `settings` seam a clean public contract. Fixed: focus pulled back to the trigger
   on an unchanged leave, typing lost during a pending request, a bubble left open after Escape while
@@ -190,9 +192,15 @@ Verification:
   on a blocked close (the message is already in the bubble), a Cancel button (the skill rules it out),
   throwing on a non-array `settings`, and the optional stale-expected and re-send cases.
 
-Outstanding before archive: the host look in SketchUp at 1280 and 420 px through the polish checklist,
-creating a Frame from the heading button and changing both defaults as one Undo step each, recorded in
-`planning/native-acceptance/evidence/`.
+Host look, 2026-10-03: passed on build `a3d9f7be…aaeb`, recorded as ledger case `PTAB` in
+[the evidence summary](../../../native-acceptance/evidence/library-product-tab-headers-2026-10-03.md).
+A Frame created from the heading button and each default change undo as one native Undo step; the
+depth bubble keeps an invalid entry, applies on Enter and restores on a physical Escape. It found one
+defect, fixed in `fe80410`: the current choice in the Default Psi-Install list was unmarked at rest
+because the shared at-rest rule in `base.css` matched only dimension-format buttons. Setting lists
+now mark their choices `phc-setting-choice`, and the Window library browser check asserts it.
+
+Remaining before archive: Ed's review of PR #46, the 1280 px wrap decision above, and the merge.
 
 Follow-ups, not taken here:
 

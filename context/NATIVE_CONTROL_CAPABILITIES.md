@@ -19,6 +19,8 @@ these are observed limitations of this run, not permanent limits of SketchUp or 
 | Destination selection | Native Save dialog navigation followed by actual path readback | An entered full path became a colon filename in Documents in this run. Use the dialog's folder navigation; do not assume the requested directory was selected. |
 | Missing/blank window | Refresh current surface and check active Space/document | A missing capture is not proof of a failed panel. Bridge state may remain available. |
 | Window-bounded capture and menu labels | Current native computer-use controller: bind SketchUp, capture its window, read fresh accessibility state and invoke the observed menu item | Window screenshots and native menu targeting worked on 2026-10-01 for SketchUp and PH-Composer. The 2026-09-30 capture limitation is historical. `getScreenshot` returned pixels; an AX-plus-screenshot call did not consistently include pixels. Use the explicit screenshot call when needed. Never capture the full screen. |
+| Escape inside the panel | A physical keypress, with the bridge reading the Model before and after | Escape synthesized by the computer-use controller did not reach the panel's web view on 2026-10-03, while Backspace, Enter and letters did; a physical Escape did. Ask for the one keypress. |
+| Panel clicks and Edit > Undo | SketchUp frontmost under full-screen control, with the model window clicked before the Edit menu | Under background control, clicks stopped reaching the panel after a few interactions and Undo stayed disabled (2026-10-03). Undo reads "Undo <operation>" only while the model window is key. `Sketchup.send_action("editUndo:")` did nothing while SketchUp was in the background. |
 | Fresh process / install | Existing hostkit launch and build/install workflow | Inspect all open documents first. `launch` quits the host and may kill it after timeout; a scratch save does not authorize discarding unrelated work. |
 
 A human handoff names one action, its starting state, when to release/stop, the expected visible cue,
@@ -41,4 +43,5 @@ Sources: [Phase 2 groundwork observations](../planning/features/phase-02-envelop
 [Colour-by toggle continuation](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-colour-by-continuation.md),
 [held gesture/context continuation](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-keyboard-context.md),
 [export lifecycle and restoration](../planning/archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md),
-[R06 rerun](../planning/native-acceptance/evidence/r06-rerun-2026-09-30.md).
+[R06 rerun](../planning/native-acceptance/evidence/r06-rerun-2026-09-30.md),
+[Library product tabs](../planning/native-acceptance/evidence/library-product-tab-headers-2026-10-03.md).

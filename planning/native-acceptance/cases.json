@@ -991,6 +991,22 @@
         "tests/artifact_pair_test.rb"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "PTAB",
+      "label": "Library product tabs: New in the Library heading, Psi-Install defaults in the action bar, single-value depth bubble, one Undo step each",
+      "mode": "mixed",
+      "authority": "planning/features/unscheduled/library-product-tab-headers/PLAN.md",
+      "paths": [
+        "src/ph_composer/html/base.css",
+        "src/ph_composer/html/inventory.js",
+        "src/ph_composer/html/library/*",
+        "src/ph_composer/html/features/windows/*",
+        "tests/window_inventory_test.js",
+        "tests/window_library_test.js",
+        "tests/inventory_sections_test.js"
+      ],
+      "native_control_required": true
     }
   ]
 }
