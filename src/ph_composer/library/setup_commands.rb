@@ -41,10 +41,11 @@ module PhComposer
             # The picker would only lead to the same refusal; say so before it opens.
             next session.notice(Setup::UNREADABLE, :tone => :warning) if Setup.state == "unreadable"
 
+            before = Setup.providers.map { |row| row.fetch("id") }
             outcome = NativeApproval.setup(menu_context(session), "#{PREFIX}.#{verb}", {})
             next if outcome["status"] == "cancelled"
 
-            session.notice(outcome.fetch("message"), :tone => outcome["status"] == "completed" ? :info : :warning)
+            session.notice(menu_message(outcome, before), :tone => outcome["status"] == "completed" ? :info : :warning)
           end
         end
         install_reset(feature, result)
@@ -85,6 +86,14 @@ module PhComposer
         Library.object({ "state" => Library.described({ "type" => "string", "enum" => %w[readable unreadable] },
                                                       "unreadable when the stored setup fails to parse or " \
                                                       "validate; nothing stored yet is readable.") })
+      end
+
+      # A completed add names the library it added, which is not among the ids `before` it; any other
+      # outcome shows its own message.
+      def menu_message(outcome, before)
+        added = outcome["status"] == "completed" &&
+                outcome.fetch("value").find { |row| !before.include?(row.fetch("id")) }
+        added ? "Added library #{added.fetch('label')}." : outcome.fetch("message")
       end
 
       # The native menu is one client per session, as the panel is.

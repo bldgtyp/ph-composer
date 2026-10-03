@@ -95,6 +95,28 @@ class LibrarySetupCommandsTest < PhComposerTestCase
     end
   end
 
+  # The menu has no list to repaint, so a completed add names the library; a refusal keeps its own message.
+  def test_the_menu_add_names_the_added_library_and_refusals_and_cancels_keep_their_answer
+    session = PhComposer::Sessions.for(Sketchup.active_model)
+    menu = PhComposer::Registry.current.menu_items.fetch("#{Commands::PREFIX}.add_file_menu")
+    notices = []
+    run = lambda do |path|
+      session.stub(:notice, ->(message, tone:) { notices << [message, tone] }) do
+        UI.stub(:openpanel, path) { menu.handler.call(session) }
+      end
+    end
+    Dir.mktmpdir do |folder|
+      Setup.add_file(:id => "existing", :label => "Existing library", :path => "/nowhere/library.json")
+      run.call(write_library(File.join(folder, "library.json")))
+      invalid = File.join(folder, "invalid.json")
+      File.write(invalid, "not json")
+      run.call(invalid)
+      run.call(nil)
+    end
+    assert_equal [["Added library Synthetic library.", :info],
+                  ["The library file is not readable JSON.", :warning]], notices
+  end
+
   # An unreadable stored setup is reported, never silently replaced: the menu says so before any picker
   # opens, reset clears it, and reset leaves a readable setup alone.
   def test_an_unreadable_setup_is_reported_refused_before_the_picker_and_reset_through_the_api
