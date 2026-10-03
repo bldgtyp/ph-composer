@@ -41,6 +41,7 @@ module PhComposer
         prefix = "#{FEATURE_ID}.#{collection}"
         feature.action("#{prefix}.create",
                        :description => "Create one #{kind.label} with local defaults.",
+                       :refuses => Refuses::WRITE,
                        :params => Shapes.create(kind), :result => Shapes::RESULT, :undo_name => "Create #{kind.label}",
                        :side_effects => Shapes.side_effects("Creates one Model-owned definition."),
                        :examples => [{ "values" => { "name" => "Example #{kind.label}" } }]) do |request, proposal|
@@ -49,6 +50,7 @@ module PhComposer
         end
         feature.action("#{prefix}.update",
                        :description => "Edit guarded authored values of one #{kind.label}.",
+                       :refuses => Refuses::EDIT,
                        :params => Shapes.update(kind), :result => Shapes::RESULT, :undo_name => "Edit #{kind.label}",
                        :side_effects => Shapes.side_effects("Updates one definition and preserves its metadata."),
                        :examples => [update_example(kind)]) do |request, proposal|
@@ -65,6 +67,7 @@ module PhComposer
       def declare_product_copy_and_delete(feature, prefix, collection, kind)
         feature.action("#{prefix}.duplicate",
                        :description => "Duplicate a #{kind.label} with independent identity.",
+                       :refuses => Refuses::DUPLICATE,
                        :params => duplicate_params(kind), :result => Shapes::RESULT,
                        :undo_name => "Duplicate #{kind.label}",
                        :side_effects => Shapes.side_effects("Copies definition metadata."),
@@ -79,6 +82,7 @@ module PhComposer
                                                 "deleted one takes. Needed while any uses it.")
         feature.action("#{prefix}.delete",
                        :description => "Delete #{kind.label}; live references require replacement.",
+                       :refuses => Refuses::DELETE,
                        :params => delete_params(kind, replacement), :result => Shapes::RESULT,
                        :undo_name => "Delete #{kind.label}",
                        :side_effects => Shapes.side_effects("Rewrites referring definitions and defaults, then " \
@@ -101,6 +105,7 @@ module PhComposer
                        :description => "Create one Window Type with one glazed element, #{width} m wide by #{height} " \
                                        "m high unless values give columns_m and rows_m. The size does not follow the " \
                                        "display unit system.",
+                       :refuses => Refuses::WRITE,
                        :params => Shapes.create(kind), :result => Shapes::RESULT, :undo_name => "Create #{kind.label}",
                        :side_effects => Shapes.side_effects("Creates one Model-owned definition."),
                        :examples => [{ "values" => { "name" => "Example #{kind.label}" } }]) do |request, proposal|
@@ -109,6 +114,7 @@ module PhComposer
         end
         feature.action("#{prefix}.update",
                        :description => "Edit guarded authored values of one #{kind.label}.",
+                       :refuses => Refuses::TYPE_EDIT,
                        :params => Shapes.update(kind), :result => Shapes::TYPE_RESULT,
                        :undo_name => "Edit #{kind.label}",
                        :side_effects => Shapes.side_effects("Updates one definition and preserves its metadata."),
@@ -125,6 +131,7 @@ module PhComposer
       def declare_type_copy_and_delete(feature, prefix, kind)
         feature.action("#{prefix}.duplicate",
                        :description => "Duplicate a #{kind.label} with independent identity.",
+                       :refuses => Refuses::DUPLICATE,
                        :params => duplicate_params(kind), :result => Shapes::RESULT,
                        :undo_name => "Duplicate #{kind.label}",
                        :side_effects => Shapes.side_effects(
@@ -141,6 +148,7 @@ module PhComposer
                                                 "to remove them. Needed while Windows use it.", :nullable => true)
         feature.action("#{prefix}.delete",
                        :description => "Delete #{kind.label}; live references require replacement.",
+                       :refuses => Refuses::TYPE_DELETE,
                        :params => delete_params(kind, replacement), :result => Shapes::RESULT,
                        :undo_name => "Delete #{kind.label}",
                        :side_effects => Shapes.side_effects("Rewrites referring definitions and defaults, then " \

@@ -4104,7 +4104,7 @@ Example params:
 
 A bounded page of one immutable library catalog. Owner: `ph_composer.library`.
 
-Refuses: only the `query` common set.
+Refuses: `library.catalog_stale`, `library.kind_unavailable`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `query.cursor_expired`, `query.limit_invalid`, and the `query` common set.
 
 Params:
 
@@ -4351,7 +4351,7 @@ Example params:
 
 Review local library export counts and omissions. Owner: `ph_composer.library`.
 
-Refuses: only the `query` common set.
+Refuses: `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.kind_unavailable`, `record.unreadable`, `target.not_found`, and the `query` common set.
 
 Params:
 
@@ -4506,7 +4506,7 @@ Example params:
 
 Resolve catalog rows against local definitions. Owner: `ph_composer.library`.
 
-Refuses: only the `query` common set.
+Refuses: `library.adapter_invalid`, `library.callback_invalid`, `library.catalog_stale`, `library.kind_unavailable`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -4854,7 +4854,7 @@ Example params:
 
 Configured libraries without transport addresses. Owner: `ph_composer.library`.
 
-Refuses: only the `query` common set.
+Refuses: `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, and the `query` common set.
 
 Params:
 
@@ -4988,7 +4988,7 @@ Example params:
 
 Whether this machine's stored library setup can be read. When it is unreadable, adding or removing a library is refused until reset clears it. Owner: `ph_composer.library`.
 
-Refuses: only the `query` common set.
+Refuses: `library.setup_unavailable`, and the `query` common set.
 
 Params:
 
@@ -5033,7 +5033,7 @@ Example params:
 
 Stored records of one kind, in id order, a page at a time. Owner: `ph_composer.records`.
 
-Refuses: only the `query` common set.
+Refuses: `query.cursor_expired`, `query.limit_invalid`, and the `query` common set.
 
 Params:
 
@@ -5256,7 +5256,7 @@ Example params:
 
 The complete frames inventory for the panel snapshot. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -5588,7 +5588,7 @@ Example params:
 
 A bounded page of frames with display findings. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -5959,7 +5959,7 @@ Example params:
 
 The complete glazings inventory for the panel snapshot. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -6273,7 +6273,7 @@ Example params:
 
 A bounded page of glazings with display findings. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -6725,7 +6725,7 @@ Example params:
 
 The complete psi_install_types inventory for the panel snapshot. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -6995,7 +6995,7 @@ Example params:
 
 A bounded page of psi_install_types with display findings. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -7304,7 +7304,7 @@ Example params:
 
 The Model's installation defaults. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -7353,7 +7353,7 @@ Example params:
 
 The complete types inventory for the panel snapshot. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -8281,7 +8281,7 @@ Example params:
 
 A bounded page of types with display findings. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -9248,7 +9248,7 @@ Example params:
 
 All Window occurrences and native findings for the snapshot. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -9437,7 +9437,7 @@ Example params:
 
 Glazed opening and net opaque area; uncertain geometry withholds values. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -9582,7 +9582,7 @@ Example params:
 
 Window occurrences and native findings, without writes. Owner: `ph_composer.windows`.
 
-Refuses: only the `query` common set.
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -19560,7 +19560,7 @@ Copy or reuse one library record with optional assignment. Owner: `ph_composer.l
 
 Undo step: Copy Library Record. Copies or replaces local definitions and optional assignments in one Undo step.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `library.adapter_invalid`, `library.callback_invalid`, `library.catalog_stale`, `library.kind_unavailable`, `library.local_choice_required`, `library.mutation_owner`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_unavailable`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -19772,7 +19772,7 @@ Create one Frame with local defaults. Owner: `ph_composer.windows`.
 
 Undo step: Create Frame. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.locked`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -19991,7 +19991,7 @@ Delete Frame; live references require replacement. Owner: `ph_composer.windows`.
 
 Undo step: Delete Frame. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -20238,7 +20238,7 @@ Duplicate a Frame with independent identity. Owner: `ph_composer.windows`.
 
 Undo step: Duplicate Frame. Copies definition metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -20299,7 +20299,7 @@ Edit guarded authored values of one Frame. Owner: `ph_composer.windows`.
 
 Undo step: Edit Frame. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -20635,7 +20635,7 @@ Create one Glazing with local defaults. Owner: `ph_composer.windows`.
 
 Undo step: Create Glazing. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.locked`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -20836,7 +20836,7 @@ Delete Glazing; live references require replacement. Owner: `ph_composer.windows
 
 Undo step: Delete Glazing. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -21062,7 +21062,7 @@ Duplicate a Glazing with independent identity. Owner: `ph_composer.windows`.
 
 Undo step: Duplicate Glazing. Copies definition metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -21123,7 +21123,7 @@ Edit guarded authored values of one Glazing. Owner: `ph_composer.windows`.
 
 Undo step: Edit Glazing. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -21426,7 +21426,7 @@ Create one Psi-Install Type with local defaults. Owner: `ph_composer.windows`.
 
 Undo step: Create Psi-Install Type. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.locked`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -21583,7 +21583,7 @@ Delete Psi-Install Type; live references require replacement. Owner: `ph_compose
 
 Undo step: Delete Psi-Install Type. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -21753,7 +21753,7 @@ Duplicate a Psi-Install Type with independent identity. Owner: `ph_composer.wind
 
 Undo step: Duplicate Psi-Install Type. Copies definition metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -21814,7 +21814,7 @@ Edit guarded authored values of one Psi-Install Type. Owner: `ph_composer.window
 
 Undo step: Edit Psi-Install Type. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -22027,7 +22027,7 @@ Set guarded installation defaults. Owner: `ph_composer.windows`.
 
 Undo step: Change Window Defaults. Stores installation defaults in this SKP. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -22135,7 +22135,7 @@ Create one Window Type with one glazed element, 1.0 m wide by 1.5 m high unless 
 
 Undo step: Create Window Type. Creates one Model-owned definition. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.locked`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -22678,7 +22678,7 @@ Delete Window Type; live references require replacement. Owner: `ph_composer.win
 
 Undo step: Delete Window Type. Rewrites referring definitions and defaults, then deletes atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_changed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, `window.unknown_type`, and the `action` common set.
 
 Params:
 
@@ -23252,7 +23252,7 @@ Duplicate a Window Type with independent identity. Owner: `ph_composer.windows`.
 
 Undo step: Duplicate Window Type. Copies definition metadata and retains shared products; new elements get fresh ids. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -23313,7 +23313,7 @@ Set one row or column band's size. Owner: `ph_composer.windows`.
 
 Undo step: Resize Window Band. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -23914,7 +23914,7 @@ Mirror the layout left to right, swapping left and right Frames, installs and op
 
 Undo step: Flip Window Type. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -24487,7 +24487,7 @@ Insert a row or column band at a grid boundary, filled with new glazed elements.
 
 Undo step: Insert Window Band. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -25088,7 +25088,7 @@ Make elements glazed or Empty. Empty is wall area: it clears the elements' Glazi
 
 Undo step: Change Window Element Kind. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -25685,7 +25685,7 @@ Merge two or more elements of one kind that cover one rectangle into a single el
 
 Undo step: Merge Window Elements. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -26272,7 +26272,7 @@ Copy one glazed element's Glazing, Frames, operation and installs onto other gla
 
 Undo step: Paste Window Element. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -26866,7 +26866,7 @@ Remove one row or column band and the elements only it held. Refused while the l
 
 Undo step: Remove Window Band. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -27456,7 +27456,7 @@ Set or clear the Frame on one side of one glazed element; the other sides stay. 
 
 Undo step: Set Window Frame. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -28058,7 +28058,7 @@ Set or clear one glazed element's Glazing. Owner: `ph_composer.windows`.
 
 Undo step: Set Window Glazing. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -28648,7 +28648,7 @@ Name one element. Owner: `ph_composer.windows`.
 
 Undo step: Rename Window Element. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -29234,7 +29234,7 @@ Set or clear how one glazed element opens. A fixed element has no directions. Ow
 
 Undo step: Set Window Operation. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -29855,7 +29855,7 @@ Split one merged element back into one element per grid cell, each under a new i
 
 Undo step: Split Window Element. Changes this Window Type; its placed Windows follow. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -30435,7 +30435,7 @@ Assign Psi-Install Types to the edges of Window Type elements, in one Undo step,
 
 Undo step: Edit Window Installations. Creates or edits installation products and updates type edges atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `library.adapter_invalid`, `library.callback_invalid`, `library.catalog_stale`, `library.kind_unavailable`, `library.local_choice_required`, `library.mutation_owner`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_unavailable`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -31480,7 +31480,7 @@ Edit guarded authored values of one Window Type. Owner: `ph_composer.windows`.
 
 Undo step: Edit Window Type. Updates one definition and preserves its metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -32307,7 +32307,7 @@ Create a horizontally flipped Type for one mirrored Window. Owner: `ph_composer.
 
 Undo step: New Flipped Window Type. Creates one independent Type; preserves physical panes, metadata and glue. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_changed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.not_mirrored`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -32390,7 +32390,7 @@ Place an anchored Window on an explicit writable Zone Face. Owner: `ph_composer.
 
 Undo step: Place Window. Creates or reuses the Type definition, glues an instance and stores its Unit record. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_changed`, `window.definition_missing`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -32532,7 +32532,7 @@ Glue an unmoved Window to an explicit same-storage Face. Owner: `ph_composer.win
 
 Undo step: Re-host Window. Changes glue only, after containment and overlap checks. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_changed`, `window.overhang`, `window.overlap`, `window.rehost_parent`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -32651,7 +32651,7 @@ Remove explicit Window occurrences with reference guards. Owner: `ph_composer.wi
 
 Undo step: Remove Windows. Removes only the chosen instances; incoming references must remain valid. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, `window.nested_units`, and the `action` common set.
 
 Params:
 
@@ -32735,7 +32735,7 @@ Give the copies sharing each chosen Window's identity new identities. The first 
 
 Undo step: Repair Copied Windows. Rewrites only the copied Unit records' identities; geometry, glue and metadata stay.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -32839,7 +32839,7 @@ Reset explicit Windows of one Type to its authored geometry. Owner: `ph_composer
 
 Undo step: Reset Windows to Type. Repairs selected instances; regenerating an edited primary affects all its Units. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.mirrored`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, `window.unknown_type`, and the `action` common set.
 
 Params:
 
@@ -32923,7 +32923,7 @@ Recover a Unit from exact stamped pane Faces. Owner: `ph_composer.windows`.
 
 Undo step: Restore Window. Creates a new default-anchor Unit and removes only its exact loose panes and edges. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_changed`, `window.definition_missing`, `window.overhang`, `window.overlap`, `window.restore_unavailable`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -33041,7 +33041,7 @@ Swap explicit Windows, preserving their anchors. Owner: `ph_composer.windows`.
 
 Undo step: Swap Window Type. Reuses one target definition and preserves each Unit's metadata and host. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_changed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, `window.unknown_type`, and the `action` common set.
 
 Params:
 
@@ -35366,7 +35366,7 @@ Called with a context granted `view`.
 
 Turn one Colour-by mode on, or turn Colour-by off. Owner: `ph_composer.colour_by`.
 
-Refuses: only the `view_command` common set.
+Refuses: `validation.failed`, and the `view_command` common set.
 
 Params:
 
@@ -35449,7 +35449,7 @@ Example params:
 
 Show one legend row on its own, or show every row again. Owner: `ph_composer.colour_by`.
 
-Refuses: only the `view_command` common set.
+Refuses: `validation.failed`, and the `view_command` common set.
 
 Params:
 
@@ -35546,7 +35546,7 @@ Example params:
 
 Select and zoom to the entities one legend row stands for. Owner: `ph_composer.colour_by`.
 
-Refuses: only the `view_command` common set.
+Refuses: `validation.failed`, and the `view_command` common set.
 
 Params:
 
@@ -35620,7 +35620,7 @@ Example params:
 
 Choose a Type and anchor, then start Place. Owner: `ph_composer.windows`.
 
-Refuses: only the `view_command` common set.
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.surface_host`, and the `view_command` common set.
 
 Params:
 
@@ -35880,7 +35880,7 @@ Example params:
 
 Select and zoom to explicit Window occurrences. Owner: `ph_composer.windows`.
 
-Refuses: only the `view_command` common set.
+Refuses: `record.unreadable`, `target.changed`, `target.wrong_kind`, `validation.failed`, and the `view_command` common set.
 
 Params:
 
@@ -36497,7 +36497,7 @@ Called with a context granted `setup`.
 
 Read a configured library into session memory. Owner: `ph_composer.library`.
 
-Refuses: only the `setup_command` common set.
+Refuses: `library.kind_unavailable`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, and the `setup_command` common set.
 
 Params:
 
@@ -36685,7 +36685,7 @@ Add a library file the user chooses in a native picker to this machine's librari
 
 Needs the user: the panel or menu asks for a file first; any other caller is refused with `access.user_required`.
 
-Refuses: only the `setup_command` and `approval` common sets.
+Refuses: `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.schema_unsupported`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` common sets.
 
 Params:
 
@@ -36738,7 +36738,7 @@ Add a folder of library files the user chooses in a native picker to this machin
 
 Needs the user: the panel or menu asks for a folder first; any other caller is refused with `access.user_required`.
 
-Refuses: only the `setup_command` and `approval` common sets.
+Refuses: `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.file_too_large`, `library.file_unreadable`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` common sets.
 
 Params:
 
@@ -36789,7 +36789,7 @@ Example params:
 
 Remove a configured library from this machine. Owner: `ph_composer.library`.
 
-Refuses: only the `setup_command` common set.
+Refuses: `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` common set.
 
 Params:
 
@@ -36850,7 +36850,7 @@ Example params:
 
 Clear this machine's library setup when setup_state reports it unreadable. A readable setup is left unchanged. Owner: `ph_composer.library`.
 
-Refuses: only the `setup_command` common set.
+Refuses: `library.setup_unavailable`, and the `setup_command` common set.
 
 Params:
 
@@ -36907,7 +36907,7 @@ Write local definitions to a library file the user chooses in the native save di
 
 Needs the user: the panel or menu asks for a destination file first; any other caller is refused with `access.user_required`.
 
-Refuses: only the `file_export` and `approval` common sets.
+Refuses: `export.replace_required`, `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.format_invalid`, `library.kind_unavailable`, `library.schema_unsupported`, `library.update_destination_invalid`, `library.update_destination_required`, `record.unreadable`, `revision.stale`, `target.not_found`, and the `file_export` and `approval` common sets.
 
 Params:
 

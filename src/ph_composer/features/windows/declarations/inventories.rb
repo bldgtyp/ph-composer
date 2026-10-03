@@ -67,12 +67,14 @@ module PhComposer
       def declare(feature, collection, kind, row, &read)
         prefix = "#{FEATURE_ID}.#{collection}"
         feature.query("#{prefix}.list", :description => "A bounded page of #{collection} with display findings.",
+                                        :refuses => Refuses::PAGE + %w[record.unreadable],
                                         :params => Shapes.list_params, :result => result(kind, row, :paged => true),
                                         :examples => [{}, { "limit" => 20 }]) do |request|
           read.call(request, true)
         end
         feature.query("#{prefix}.all",
                       :description => "The complete #{collection} inventory for the panel snapshot.",
+                      :refuses => %w[record.unreadable],
                       :params => Shapes::NONE, :result => result(kind, row,
                                                                  :paged => false), :examples => [{}]) do |request|
           read.call(request, false)

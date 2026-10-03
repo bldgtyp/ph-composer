@@ -19,6 +19,15 @@ module PhComposer
         "add_folder" => "Add a folder of library files the user chooses in a native picker to this machine's " \
                         "libraries."
       }.freeze
+      # A file is parsed whole; a folder lists its files, whose parse problems become catalog warnings.
+      REFUSES = {
+        "add_file" => %w[library.file_malformed library.file_too_large library.file_unreadable library.format_invalid
+                         library.schema_unsupported library.setup_too_large library.setup_unavailable
+                         library.setup_unreadable],
+        "add_folder" => %w[library.catalog_too_large library.catalog_too_many_rows library.file_too_large
+                           library.file_unreadable library.setup_too_large library.setup_unavailable
+                           library.setup_unreadable]
+      }.freeze
 
       module_function
 
@@ -27,7 +36,7 @@ module PhComposer
                                                "provider_kind" => Schemas::TEXT }))
         ADDS.each do |verb, approval|
           feature.setup_command("#{PREFIX}.#{verb}",
-                                :description => DESCRIPTIONS.fetch(verb),
+                                :description => DESCRIPTIONS.fetch(verb), :refuses => REFUSES.fetch(verb),
                                 :params => Library.object({}), :result => result, :examples => [{}],
                                 :approval => approval) do |request|
             kinds, adapters = kind_adapters(request.registry)
@@ -51,6 +60,7 @@ module PhComposer
         install_reset(feature, result)
         feature.setup_command("#{PREFIX}.remove",
                               :description => "Remove a configured library from this machine.",
+                              :refuses => %w[library.setup_unavailable library.setup_unreadable],
                               :params => Library.object({ "provider_id" => Library.described(
                                 Library::TEXT, "The configured library to remove from this machine."
                               ) }),
@@ -68,6 +78,7 @@ module PhComposer
         feature.query("#{PREFIX}.setup_state",
                       :description => "Whether this machine's stored library setup can be read. When it is " \
                                       "unreadable, adding or removing a library is refused until reset clears it.",
+                      :refuses => %w[library.setup_unavailable],
                       :params => Library.object({}), :result => setup_state, :examples => [{}]) do |_request|
           { "state" => Setup.state }
         end
@@ -75,6 +86,7 @@ module PhComposer
         feature.setup_command("#{PREFIX}.reset",
                               :description => "Clear this machine's library setup when setup_state reports it " \
                                               "unreadable. A readable setup is left unchanged.",
+                              :refuses => %w[library.setup_unavailable],
                               :params => Library.object({}), :result => result, :examples => [{}]) do |_request|
           value = Setup.reset
           refresh_sessions

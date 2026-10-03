@@ -29,6 +29,7 @@ require_relative "colour_modes"
 require_relative "export"
 require_relative "units/areas"
 require_relative "codes"
+require_relative "refuses"
 
 module PhComposer
   module Windows

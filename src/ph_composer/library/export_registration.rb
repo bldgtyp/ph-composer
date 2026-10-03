@@ -49,6 +49,7 @@ module PhComposer
         feature.file_export("#{FEATURE_ID}.export_file",
                             :description => "Write local definitions to a library file the user chooses in the " \
                                             "native save dialog; export_preview shows what it will hold.",
+                            :refuses => Refuses::EXPORT_FILE,
                             :params => params, :result => shape, :approval => ExportWorkflow::APPROVAL,
                             :examples => [{}, { "scope" => "selected", "records" => [
                                                                          { "record_kind" => "example_parts",
@@ -65,6 +66,7 @@ module PhComposer
                                         :optional => %w[scope kinds records])
         feature.query("#{FEATURE_ID}.export_preview",
                       :description => "Review local library export counts and omissions.",
+                      :refuses => Refuses::EXPORT_PREVIEW,
                       :params => preview_params, :result => preview_shape, :examples => [{}]) do |request|
           projection = ExportProjection.build(request)
           summary = ExportProjection.summary(projection, request.registry)

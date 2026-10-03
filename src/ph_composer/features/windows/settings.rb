@@ -64,10 +64,12 @@ module PhComposer
         end
         feature.query("#{FEATURE_ID}.settings.get",
                       :description => "The Model's installation defaults.",
+                      :refuses => %w[record.unreadable],
                       :params => Shapes::NONE, :result => VALUES, :examples => [{}]) { |request| read(request.model) }
         feature.snapshot_section("#{FEATURE_ID}.settings", :query => "#{FEATURE_ID}.settings.get")
         feature.action("#{FEATURE_ID}.settings.update",
                        :description => "Set guarded installation defaults.",
+                       :refuses => Refuses::EDIT,
                        :params => Shapes.object({ "values" => Shapes.described(VALUES, "The complete new defaults."),
                                                   "expected_values" => Shapes.described(
                                                     VALUES, "The defaults last read; a change refuses."

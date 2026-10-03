@@ -139,6 +139,7 @@ module PhComposer
                                                 "expected_values" => Shapes.expected(Types::KIND))
           feature.action("#{FEATURE_ID}.types.grid.#{name}",
                          :description => gesture.description,
+                         :refuses => Refuses::TYPE_EDIT,
                          :params => Shapes.object(properties), :result => Shapes::TYPE_RESULT,
                          :undo_name => gesture.undo_name,
                          :side_effects => Shapes.side_effects("Changes this Window Type; its placed Windows follow."),
