@@ -176,12 +176,7 @@ module PhComposer
     end
 
     def operation_kind(operation)
-      return "action" if operation.is_a?(Declarations::Action)
-      return "view_command" if operation.is_a?(Declarations::ViewCommand)
-      return "setup_command" if operation.is_a?(Declarations::SetupCommand)
-      return "file_export" if operation.is_a?(Declarations::FileExport)
-
-      "query"
+      Declarations::OPERATION_KINDS.fetch(operation.class)
     end
     private_class_method :session_summary, :summary, :operation_description, :operation_kind
   end

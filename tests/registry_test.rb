@@ -168,6 +168,28 @@ class RegistryTest < PhComposerTestCase
     assert_equal "probe.one", diagnostics.last.dependency
   end
 
+  def test_refuses_names_a_declared_or_foundation_code_once_and_not_a_common_one
+    declare = lambda do |refuses|
+      feature do |registry|
+        scope = registry.feature("probe.refuses", :contract_version => 1)
+        scope.code("probe.refused", :description => "A declared refusal.")
+        scope.query("probe.refuses.read", :description => "Read.", :params => OBJECT, :result => OBJECT,
+                                          :refuses => refuses) { {} }
+      end
+    end
+    Registry.install([declare.call(%w[probe.refused target.not_found])])
+    assert_equal %w[probe.refused target.not_found], Registry.current.queries.fetch("probe.refuses.read").refuses
+
+    { "an undeclared code" => %w[probe.unheard], "a repeat" => %w[target.not_found target.not_found],
+      "a common code" => %w[session.busy] }.each do |label, refuses|
+      Registry.reset
+      diagnostics = refused(declare.call(refuses))
+      assert_equal ["registration.schema_invalid"], diagnostics.map(&:code), label
+      assert_includes diagnostics.first.message, "probe.refuses.read", label
+      assert_includes diagnostics.first.message, refuses.first, label
+    end
+  end
+
   def test_dynamic_context_menu_provider_and_entries_are_validated
     diagnostics = refused(feature do |registry|
       registry.feature("probe.menu", :contract_version => 1).menu_entries("probe.menu.missing", :menu => "Probe")

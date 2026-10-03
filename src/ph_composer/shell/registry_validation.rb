@@ -389,6 +389,7 @@ module PhComposer
 
       def diagnostics
         check_codes
+        check_refusals
         @diagnostics
       end
 
@@ -415,6 +416,33 @@ module PhComposer
           end
           seen << code.code
           nouns[noun] ||= code.owner
+        end
+      end
+
+      # An operation's `refuses` names codes a caller can look up: each is listed in context/CONTRACTS.md
+      # or declared by a feature, appears once, and is not already in the common sets the operation's
+      # kind answers, so the list says only what is particular to this operation.
+      def check_refusals
+        declared = @live.codes.keys + @staging.declared_codes.map(&:code)
+        @staging.declared_operations.each do |operation|
+          refuses = operation.refuses
+          next if refuses.nil?
+
+          unless refuses.is_a?(Array) && refuses.all?(String)
+            problem(operation, "refuses must be a list of codes")
+            next
+          end
+          common = Refusals.common(operation)
+          refuses.tally.each do |code, count|
+            if count > 1
+              problem(operation, "refuses lists #{code} more than once")
+            elsif common.include?(code)
+              problem(operation, "refuses lists #{code}, which every operation of its kind answers")
+            elsif !Declarations::FOUNDATION_CODES.include?(code) && !declared.include?(code)
+              problem(operation, "refuses lists #{code}, which no feature declares and context/CONTRACTS.md " \
+                                 "does not list")
+            end
+          end
         end
       end
     end

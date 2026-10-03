@@ -40,6 +40,11 @@ class OutcomeCodesTest < PhComposerTestCase
     end
   end
 
+  # Registration checks `refuses:` lists against this constant, so it must say what the table says.
+  def test_the_foundation_code_constant_mirrors_the_table
+    assert_equal table_codes, PhComposer::Declarations::FOUNDATION_CODES
+  end
+
   def test_every_code_literal_in_feature_library_and_translation_source_is_listed_or_declared
     known = contracts.scan(/`([^`]+)`/).flatten.grep(CODE) + declared.keys
     nouns = (table_codes + declared.keys).map { |code| code.split(".").first }.uniq
