@@ -63,6 +63,20 @@ const { chromium } = require("playwright");
     await page.getByRole("tab", { name: "Glazings", exact: true }).click();
     const library = page.locator("[data-pane=library]");
     await library.locator(".library-sidebar-root[aria-label='Glazing Library']").waitFor();
+    await page.getByRole("tab", { name: "Psi-Install Types", exact: true }).click();
+    const settings = library.locator(".phc-inventory-settings:visible");
+    const psiDefault = settings.getByRole("button", { name: /^Default Psi-Install: / });
+    const depthDefault = settings.getByRole("button", { name: /^Install depth: / });
+    if (width === 1280) {
+      const tops = [await psiDefault.boundingBox(), await depthDefault.boundingBox()].map(box => Math.round(box.y));
+      assert.strictEqual(tops[0], tops[1], "the two defaults share one row");
+    }
+    await depthDefault.click();
+    const depthBubble = page.getByRole("dialog", { name: "Default install depth", exact: true });
+    await depthBubble.getByRole("textbox", { name: "Default install depth", exact: true }).waitFor();
+    await page.screenshot({ path: path.join(directory, "psi-defaults-" + width + ".png"), fullPage: true });
+    await page.keyboard.press("Escape"); await depthBubble.waitFor({ state: "hidden" });
+    assert.strictEqual(await writes(), before + 3);
     assert.strictEqual(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     assert.deepStrictEqual(errors, []); await page.close(); console.log("Window library screens " + width + "px: pass");
   }
