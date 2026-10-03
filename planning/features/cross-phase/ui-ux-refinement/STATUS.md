@@ -8,8 +8,9 @@ STATUS: Scoped
 | Panel capture from the preview | Done 2026-10-03 | 105 tab captures, 57 flow captures, three widths |
 | Host capture of viewport surfaces | Not started | Needs one SketchUp session with Ed present |
 | Flow critique | Done for the panel 2026-10-03 | [FINDINGS.md](FINDINGS.md) |
-| Ed's rulings on D1 to D7 | Open | |
-| Polish packets | Not authorized | Proposed order in FINDINGS.md |
+| Ed's rulings on D1 to D7 | Done 2026-10-03 | All seven recommendations accepted; recorded in FINDINGS.md |
+| Packet 1, page frame | Scoped; plan written 2026-10-03, not authorized | [phases/phase-01-page-frame.md](phases/phase-01-page-frame.md) |
+| Packets 2 to 8 | Requested | Order in FINDINGS.md; each gets its plan when the one before lands |
 | Design System artifact | Not started | After the kit-wide packets settle |
 
 ## Known capture gaps

@@ -1,7 +1,7 @@
 # UI and UX refinement: findings
 
 DATE: 2026-10-03
-STATUS: Scoped; D1 to D7 open
+STATUS: Scoped; D1 to D7 ruled 2026-10-03
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -131,14 +131,16 @@ design step with Ed before code. Packet 3 and the viewport-tool pattern (F4) are
 Claude Design canvas explorations would help. The rest are applications of rules the skill
 already has.
 
-## Decisions for Ed
+## Decisions
 
-| Id | Decision | Recommendation |
+Ed accepted all seven recommendations on 2026-10-03.
+
+| Id | Ruling | Lands in |
 | --- | --- | --- |
-| D1 | Which header is the standard? | The Window Type Builder's scale: a moderate title, a muted count, actions at the right, no caption. Inventory pages take the same frame. |
-| D2 | May the baseline's four-control view row change? | Yes. Keep Filter; fold Direction into Order by as a toggle; move the keyboard hint into the Table options menu. The baseline README is then corrected to match. |
-| D3 | What happens to Planned tabs? | Keep the pattern the baseline ruled on, but shorten the labels and move Planned tabs after the working ones, so the row survives a narrow panel. |
-| D4 | Revisit the Phase 1 decision that an unclassified Face is not a row? | Yes. List them as rows flagged on their empty cells, so the table is the complete list of what is left. The Phase 1 gate saw 500 unclassified Faces in one Zone, so the rows would need to start collapsed under the count. |
-| D5 | New record: empty form or instant create? | Instant create with defaults where the record draws something (Assembly, Window Type). A form where a record is only numbers and has no sensible default (Material, Frame, Glazing), with required fields marked. Then state that split in the skill. |
-| D6 | Primary route for assigning an Assembly to Faces? | Select Faces in the viewport or the tree, then choose from one control. Paint stays as the secondary modal tool. Drop the Assembly select from the Classify palette. |
-| D7 | Host capture session now or after packets 1 and 2? | After. The frame changes will not touch the viewport, and one session can then cover the tools, the legend and Export readiness together. |
+| D1 | The standard page header is the Window Type Builder's scale: a moderate title, a muted count, actions at the right, no caption. Inventory pages take the same frame. | Packet 1 |
+| D2 | The view-control row may change: keep Filter, fold Direction into Order by as a toggle, move the keyboard hint into the Table options menu. The baseline README is corrected when this lands. | Packet 2 |
+| D3 | Planned tabs keep their pattern with shorter labels and sit after the working tabs. | Packet 1 |
+| D4 | The Phase 1 decision that an unclassified Face is not a row is reopened. Unclassified Faces become rows flagged on their empty cells, collapsed under the Zone's count by default. | Packet 3 |
+| D5 | New acts at once with defaults where the record draws something (Assembly, Window Type). Records that are only numbers (Material, Frame, Glazing, Psi-Install Type, Attached zone) keep a form, with required fields marked. The ui-polish skill states the split when packet 7 lands. | Packets 6 and 7 |
+| D6 | The primary route for assigning an Assembly is select Faces, then one control. Paint stays as the secondary modal tool. The Assembly select leaves the Classify palette. | Packet 3 |
+| D7 | The host capture session runs after packets 1 and 2. | After packet 2 |

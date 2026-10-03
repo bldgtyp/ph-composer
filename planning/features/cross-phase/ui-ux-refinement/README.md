@@ -14,6 +14,7 @@ unit of review is the consultant's task, not the tab.
 1. [FINDINGS.md](FINDINGS.md): the critique, ranked, with the evidence for each finding and the
    decisions Ed owes.
 2. [STATUS.md](STATUS.md): what has run and what is authorized.
+3. [phases/phase-01-page-frame.md](phases/phase-01-page-frame.md): the first polish packet's plan.
 
 The rubric is `.agents/skills/ph-composer-ui-polish/SKILL.md`. The predecessor rulings are in
 [`../../../ui-baseline/README.md`](../../../ui-baseline/README.md); where a finding here
@@ -31,7 +32,7 @@ challenges one of them it says so and waits for Ed.
 5. Polish packets, kit-wide first, each run with the ui-polish skill and its host check.
 6. Publish the settled kit as a Design System artifact and point the ui-polish skill at it.
 
-Steps 1 to 3 are done for the panel. Nothing in step 5 is authorized.
+Steps 1 to 4 are done for the panel. Nothing in step 5 is authorized.
 
 ## Evidence
 
