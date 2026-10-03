@@ -1,7 +1,7 @@
 # Packet 6: Assembly Builder toolbars and inventory row actions
 
 DATE: 2026-10-03
-STATUS: Implemented; pull request open
+STATUS: Merged to main
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -85,7 +85,8 @@ packet 7.
 
 ## Outcome, 2026-10-03
 
-Implemented on `feat/ui-assembly-builder`. `make ci` and `make ui-checks` pass.
+Implemented on `feat/ui-assembly-builder`, merged as pull request
+[#64](https://github.com/bldgtyp/ph-composer/pull/64). `make ci` and `make ui-checks` pass.
 
 What differs from the plan above:
 
