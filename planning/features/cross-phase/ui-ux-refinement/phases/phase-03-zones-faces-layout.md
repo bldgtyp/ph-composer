@@ -294,7 +294,7 @@ has no Assemblies; covered by the browser check), a selection over the 250-Face 
 ## P3-3 outcome, 2026-10-03
 
 Ed authorized P3-3 on 2026-10-03, to start once #58 merged. Implemented on `feat/ui-zones-words`.
-`make ci` passes (1390 Ruby runs, 397 JavaScript tests, 172 Python tests) and `make ui-checks`
+`make ci` passes (1390 Ruby runs, 399 JavaScript tests, 172 Python tests) and `make ui-checks`
 passes.
 
 - **Palette (Z2).** Chips only. "blank keeps what each Face has" is gone from each field, and the
@@ -308,6 +308,15 @@ passes.
   text as its accessible name.
 - **Chevrons (Z5).** The table takes `expandable(row)`; a Face row keeps the chevron's place but
   offers nothing to open.
+
+One Sonnet diff review ran, and one of its findings changed the stage. The State column also
+reported two things nothing else on screen shows: an Attached zone boundary whose record is
+missing, and a Surface whose adjacency has gone stale. Dropping the column would have hidden both.
+They are now flagged on the Boundary cell, amber with the reason in its tooltip, whether the cell
+is a control or read-only text. Also applied: focus stays on a cell when its "?" is filled; a Zone
+with no recorded Faces has no chevron; arrow keys skip the open and close step on a leaf row; the
+Zone's count is an `img` with a name, since a bare span takes none; Make Zone's reason covers the
+other causes the host has for refusing (already a Zone, inside one).
 
 Not done, and why: the Classify tool still turns on the last colour mode the user chose
 (`classify_tool.rb`, `force_colour_by`). That is the accepted Phase 1 contract ("Off at rest, with

@@ -63,6 +63,7 @@ PhComposerUI.define("inventory_grid", ["record_edits", "workspace"], function (R
     var help = ui.helpButton("Editing cells", hint);
     help.classList.add("phc-icon-button");
     help.setAttribute("data-tooltip", hint);
+    help.title = "";
     this.toolbar.appendChild(help);
     this.toolbar.appendChild(tools);
     if (options.toolbarParent) options.toolbarParent.appendChild(this.toolbar);

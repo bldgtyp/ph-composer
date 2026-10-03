@@ -5,8 +5,8 @@
  * condition on already-typed Faces, or only the type. Choosing any chip also gives the tool the
  * viewport, which is what the native Classify menu does.
  *
- * Surface is shown and refused: Solve adjacencies writes it, and a palette that offered it would
- * let a user break a pair by painting over one of its ends.
+ * Surface and Attached zone are not chips: Solve adjacencies writes the first, and the second is
+ * chosen as a record from its list. The palette's help says so once.
  */
 PhComposerUI.define("features/zones/classify", ["panel", "workspace", "request", "snapshot",
   "face_words", "features/zones/attached_zone_fields", "features/zones/assembly_assignment"],
@@ -62,10 +62,9 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     state.view.run("ph_composer.zones.faces.choose", { field: field, value: value });
   }
 
-  function field(title, hint, body) {
+  function field(title, body) {
     var node = ui.element("div", "phc-palette-field");
     var heading = ui.element("h3", "", title);
-    if (hint) heading.appendChild(ui.element("span", "phc-palette-hint", " " + hint));
     node.appendChild(heading);
     node.appendChild(body);
     return node;
@@ -209,15 +208,16 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
       var help = ui.helpButton("Classify faces", HELP);
       help.classList.add("phc-icon-button");
       help.setAttribute("data-tooltip", HELP);
+      help.title = "";
       heading.appendChild(ui.element("h2", "", "Classify faces"));
       heading.appendChild(help);
       if (tool.active) heading.appendChild(stopButton(screenState));
-      body.appendChild(field("Face type", null,
+      body.appendChild(field("Face type",
         chips(screenState, "face_type", tool.face_types, tool.palette.face_type, words.FACE_TYPES)));
-      body.appendChild(field("Boundary condition", null,
+      body.appendChild(field("Boundary condition",
         chips(screenState, "boundary_condition", tool.boundary_conditions,
           tool.palette.boundary_condition, words.BOUNDARIES)));
-      body.appendChild(field("Attached zone", null, attachedZones(screenState, tool.palette, records)));
+      body.appendChild(field("Attached zone", attachedZones(screenState, tool.palette, records)));
       // Painting an Assembly starts from that Assembly's own row; the palette only says which one it is.
       var painting = assemblies.choices(state, []).filter(function (record) {
         return record.id === tool.palette.assembly_id;
@@ -228,7 +228,7 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
         drop.disabled = screenState.view.busy();
         inHand.appendChild(ui.element("span", "phc-palette-value", painting ? painting.name : "Missing Assembly"));
         inHand.appendChild(drop);
-        body.appendChild(field("Assembly", null, inHand));
+        body.appendChild(field("Assembly", inHand));
       }
       root.className = "phc-classify" + (tool.active ? " is-active" : "");
       root.replaceChildren(heading, body);

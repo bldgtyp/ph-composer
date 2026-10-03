@@ -193,8 +193,35 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     return field === "face_type" ? words.faceType(value) : words.boundary(value);
   }
 
-  /* Type and boundary are editable chips; area and state are read only. An edit sends the values the
-     row was painted from, so a Model that changed underneath refuses rather than overwriting.
+  /* What a Face's type or boundary cell still needs, in words, or null. The host's verdict for the whole
+     row is `state`; this says which cell it is about, so the flag sits where the fix is made. */
+  function problem(face, field) {
+    if (!face || (field !== "face_type" && field !== "boundary_condition")) return null;
+    if (!face.values[field]) return field === "face_type" ? "Type not set" : "Boundary not set";
+    if (field !== "boundary_condition") return null;
+    if (face.attached_zone_state && face.attached_zone_state !== "resolved") {
+      return "The Attached zone record is missing. Choose one.";
+    }
+    if (face.adjacency_state && face.adjacency_state !== "current") {
+      return "This adjacency is out of date. Run Solve adjacencies.";
+    }
+    return null;
+  }
+
+  function flag(td, issue) {
+    td.classList.toggle("is-flagged", Boolean(issue));
+    if (issue) td.title = issue;
+  }
+
+  /* A cell that shows its value as text: an earlier control, if it had one, is forgotten. */
+  function readOnly(td, field) {
+    if (td._chip || td._attachedChip) td.className = "col-" + field;
+    td._chip = td._attachedChip = td._chipValues = null;
+    return false;
+  }
+
+  /* Type and boundary are editable chips; area is read only. An edit sends the values the row was
+     painted from, so a Model that changed underneath refuses rather than overwriting.
 
      The control is built once per cell and repainted afterwards. Rebuilding it on every snapshot
      would take the user's open dropdown with it, and a snapshot follows every viewport click.
@@ -205,17 +232,21 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var face = row.record.face, offered, chip;
     if (field === "assembly_id") return assemblies.cell(td, row, state, draftReason, refuse);
     if (!face || (field !== "face_type" && field !== "boundary_condition")) return false;
+    var issue = problem(face, field);
     if (field === "boundary_condition" && face.values.boundary_condition === "AttachedZone") {
-      return attachedCell(td, row, state);
+      attachedCell(td, row, state);
+      flag(td, issue);
+      return true;
     }
     td._attachedChip = null;
     offered = choices(state, field);
-    if (!offered.length) return false;
-    if (face.values[field] && offered.indexOf(face.values[field]) < 0) return false;
+    if (!offered.length) return readOnly(td, field);
+    if (face.values[field] && offered.indexOf(face.values[field]) < 0) return readOnly(td, field);
     chip = td._chip;
-    // A Face with no value here yet shows "?" on amber, on the cell that needs it.
+    // A Face with no value here yet reads "?": the flag sits on the cell that needs it.
     var missing = !face.values[field], signature = (missing ? "?," : "") + offered.join(",");
     if (!chip || td._chipValues !== signature) {
+      var hadFocus = Boolean(chip) && document.activeElement === chip;
       chip = ui.element("select", "phc-cell-input phc-enum-cell");
       if (missing) {
         var unset = ui.option("", "?");
@@ -233,10 +264,12 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
           chip.value = td._face.values[field] || "";
         } else apply(td._state, td._face, field, chip.value);
       });
-      td.className = "col-" + field + " phc-editable-cell" + (missing ? " is-missing" : "");
+      td.className = "col-" + field + " phc-editable-cell";
       td.replaceChildren(chip);
       td._chip = chip;
       td._chipValues = signature;
+      // Filling a "?" rebuilds the control without it; the user's place in the table stays.
+      if (hadFocus) chip.focus();
     }
     td._state = state;
     td._face = face;
@@ -244,7 +277,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     chip.disabled = state.edits.busy();
     chip.setAttribute("aria-label", (missing ? "Set " : "") + row.record.name +
       (field === "face_type" ? " type" : " boundary"));
-    chip.title = missing ? (field === "face_type" ? "Type not set" : "Boundary not set") : "";
+    td.title = "";
+    flag(td, issue);
     return true;
   }
 
@@ -298,7 +332,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function makeZoneReason() {
-    var reason = "Select one Group or loose geometry in SketchUp, then choose Make Zone.";
+    var reason = "Make Zone needs one Group, or loose Faces and Edges, selected in SketchUp and not " +
+      "already part of a Zone.";
     var node = ui.iconButton("Why Make Zone is unavailable: " + reason, "alert", function () {
       panel.notify(reason);
     });
@@ -357,7 +392,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     if (tools.parentNode !== screenState.controls.root) screenState.controls.root.appendChild(tools);
     var headerActions = [solveButton(screenState, zones.zones), screenState.settings.bubble.root];
     // Why the primary action is not available, beside it.
-    if (!zones.make_zone && !screenState.edits.busy()) headerActions.push(makeZoneReason());
+    if (!zones.make_zone) headerActions.push(makeZoneReason());
     root.querySelector(".phc-heading-mount").replaceChildren(ui.pageHeader({ title: "Zones",
       count: zones.zones.length, actions: headerActions,
       primary: makeButton(screenState, zones.make_zone) }).root);
@@ -481,9 +516,12 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       search: function (record) { return searchText(record, state); },
       rows: function () { return rows; }
     });
+    var parents = Object.create(null);
+    rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     tables.table(mount, rows, {
       rows: ordered(projection.records, byId, rows), columns: columns(profile), expanded: state.expanded,
-      expandable: depth(0),
+      expandable: function (row) { return Boolean(parents[row.key]); },
+      decorate: function (td, row, field) { flag(td, problem(row.record.face, field)); },
       columnWidths: state.columnWidths, visibleCount: projection.visibleCount, disabled: state.edits.busy(),
       empty: zoneRows.length ? "No Zones match this filter." : "No Zones yet. Select geometry and choose Make Zone.",
       value: function (row, field) { return value(row, field, profile); },

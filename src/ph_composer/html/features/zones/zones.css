@@ -43,7 +43,6 @@
 .phc-classify.is-active h2 { color: var(--interaction-highlight); }
 .phc-palette { display: grid; gap: 10px; }
 .phc-palette-field h3 { margin: 0 0 4px; font-size: 12px; font-weight: 600; }
-.phc-palette-hint { color: var(--muted); font-size: 11px; font-weight: 400; }
 .phc-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .phc-chip[aria-pressed="true"] { border-color: var(--interaction-highlight);
   background: var(--interaction-highlight-tint); color: var(--interaction-highlight); }

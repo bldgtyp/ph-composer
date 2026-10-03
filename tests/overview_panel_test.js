@@ -783,10 +783,54 @@ test("a missing value is flagged on its cell, a Face row has nothing to expand, 
   var boundary = byLabel(section, "Set Wall 1 boundary");
   assert.ok(boundary, "the control names what is to be set");
   assert.deepStrictEqual([boundary.children[0].textContent, boundary.children[0].disabled], ["?", true]);
-  assert.ok(/is-missing/.test(boundary.parentNode.className));
+  assert.ok(boundary.parentNode.classList.contains("is-flagged"));
+  assert.strictEqual(boundary.parentNode.title, "Boundary not set");
   assert.strictEqual(section.querySelector(".col-state"), null);
   var chevrons = section.querySelectorAll(".row-chevron");
   assert.deepStrictEqual(chevrons.map(function (node) { return node.classList.contains("is-leaf"); }), [false, true]);
+
+  // Filling the "?" rebuilds the control without it, and the focus stays on the cell.
+  boundary.focus();
+  face.values.boundary_condition = "Outdoors";
+  face.state = "classified";
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var filled = byLabel(section, "Wall 1 boundary");
+  assert.strictEqual(filled.value, "Outdoors");
+  assert.strictEqual(p.context.document.activeElement, filled);
+  assert.strictEqual(filled.parentNode.classList.contains("is-flagged"), false);
+});
+
+test("what the old State column said about a boundary is said on the boundary cell", function () {
+  var p = page(), payload = snapshot();
+  var face = payload.sections["ph_composer.zones.faces.faces"].value.faces[0];
+  face.values.boundary_condition = "Surface";
+  face.adjacency_state = "stale";
+  face.state = "incomplete";
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var cell = section.querySelectorAll("td").filter(function (td) {
+    return /col-boundary_condition/.test(td.className);
+  })[1];
+  assert.strictEqual(cell.textContent, "Surface", "a paired Face stays read only");
+  assert.ok(cell.classList.contains("is-flagged"));
+  assert.match(cell.title, /out of date/);
+
+  face.values.boundary_condition = "AttachedZone";
+  face.adjacency_state = null;
+  face.attached_zone_state = "dangling";
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  assert.ok(cell.classList.contains("is-flagged"));
+  assert.match(cell.title, /Attached zone record is missing/);
+});
+
+test("a Zone with no recorded Faces offers nothing to expand", function () {
+  var p = page(), payload = snapshot();
+  payload.sections["ph_composer.zones.faces.faces"].value.faces.forEach(function (face) {
+    face.values = {}; face.state = "unclassified"; face.reference.entity_id = null;
+  });
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var chevrons = p.query("[data-section='ph_composer.overview']").querySelectorAll(".row-chevron");
+  assert.deepStrictEqual(chevrons.map(function (node) { return node.classList.contains("is-leaf"); }), [true]);
 });
 
 test("a blocked Make Zone says why beside it", function () {
@@ -794,7 +838,7 @@ test("a blocked Make Zone says why beside it", function () {
   payload.sections["ph_composer.zones.overview"].value.make_zone = null;
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var reason = p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason");
-  assert.ok(/Select one Group or loose geometry/.test(reason.getAttribute("aria-label")));
+  assert.ok(/needs one Group, or loose Faces and Edges/.test(reason.getAttribute("aria-label")));
   payload.sections["ph_composer.zones.overview"].value.make_zone = { entity_path: [1] };
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   assert.strictEqual(p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason"), null);
