@@ -566,6 +566,20 @@ this foundation when their feature lands.
   muted count, secondary actions, then the one filled primary action at the right, and no caption.
   `--page-gutter` in `base.css` is the one horizontal inset; a screen does not style its own heading
   or set its own page padding.
+  `setTitle` renames it in place. A session that covers a work surface uses the same header, with
+  Cancel as its action and Save as its primary.
+- `Subtabs` reports a refused tab by name (`refused(reason, nextId)`) and a click on the shown tab
+  (`reselected(id)`), so an owner whose surface is covered can leave that session the way its Cancel
+  does.
+- One floating notice, the panel's (`panel.notify`). A feature view does not build its own. An
+  information notice fades on the next interaction and never blocks the control beneath it.
+- `RecordForm.required(label, control)` marks a field a record form waits for, and a disabled Create
+  says why in the form's status line. New acts at once where the record draws something to work on;
+  a record that is only numbers keeps a form.
+- `panel.workedOn(prefix, tab)` and `panel.tabFor(owner)`, so a foundation screen such as Export can
+  send the user to the tab a gap is looked into without naming a feature.
+- A table action may start a group (`starts: true`), set apart by a hairline, for actions that act on
+  something other than the row's record.
 - One work surface per pane, with an inspector beside it for what the current tool or selection needs
   (`panel.section` with `region: "inspector"`). Do not stack a second job under the work surface.
 - `ui.ViewControls` for filtering, ordering (with a sort-direction toggle) and grouping; filtering hides rows and never drops
