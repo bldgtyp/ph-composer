@@ -259,7 +259,8 @@ class LibraryExportTest < PhComposerTestCase
   end
 
   # A scripted caller cannot answer a save dialog, so it is refused before anything runs and no dialog
-  # opens; the panel's native path asks first, and a dismissed dialog writes nothing.
+  # opens; the panel's native path asks first, and a dismissed dialog writes nothing. On macOS the Save
+  # sheet's own question is the consent to replace, so declining it is dismissing the sheet.
   def test_a_scripted_export_is_refused_without_a_dialog_and_a_native_cancel_writes_nothing
     File.write(@path, "original")
     UI.stub(:savepanel, ->(*) { flunk "A scripted export must not open a dialog." }) do
@@ -270,15 +271,13 @@ class LibraryExportTest < PhComposerTestCase
     end
     assert_equal({ "kind" => "save_file", "title" => "Export Library File", "default_name" => "model-library.json" },
                  API.describe(:name => NAME).fetch("approval"))
-    UI.stub(:savepanel, @path) do
-      UI.stub(:messagebox, IDNO) do
-        cancelled = PhComposer::NativeApproval.file_export(@context, NAME, {})
-        assert_equal %w[cancelled request.cancelled none], cancelled.values_at("status", "code", "effect")
-      end
+    UI.stub(:savepanel, nil) do
+      cancelled = PhComposer::NativeApproval.file_export(@context, NAME, {})
+      assert_equal %w[cancelled request.cancelled none], cancelled.values_at("status", "code", "effect")
     end
     assert_equal "original", File.read(@path)
     UI.stub(:savepanel, @path) do
-      UI.stub(:messagebox, IDYES) do
+      UI.stub(:messagebox, ->(*) { flunk "The Save sheet already asked." }) do
         assert_equal "completed", PhComposer::NativeApproval.file_export(@context, NAME, {})["status"]
       end
     end
