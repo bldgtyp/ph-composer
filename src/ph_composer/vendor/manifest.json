@@ -106,9 +106,9 @@
       "sha256": "b6c95966094c0f40e850ac2b318bf91e795d09acae450e64c2ce73c96c5f8ead"
     },
     "html/features/windows/inventory.js": {
-      "bytes": 12538,
+      "bytes": 12429,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "af93f03662fbb136abfdfe99cde890db28661c75f22e36e8bfc3a070bcf199e4"
+      "sha256": "7fc0c928df0be7754223c13c1c5bffb0b2bd5286834eccaafd43e9b07bf0f623"
     },
     "html/features/windows/library.js": {
       "bytes": 2831,
@@ -131,9 +131,9 @@
       "sha256": "7622c9885ac47afd89a913587fe2736ee5316a1bdd3abc61210c16c76491bc71"
     },
     "html/features/windows/section.js": {
-      "bytes": 1786,
+      "bytes": 1828,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "eea93401781ec7256bdaca06a26d6816379a8181f80151657bfe9e1b25e78a1d"
+      "sha256": "0cfbf6ca61c7f3a6bf9e761a56bf8df9bc31220f6de04896f4354f7913251390"
     },
     "html/features/windows/type_list.js": {
       "bytes": 13124,

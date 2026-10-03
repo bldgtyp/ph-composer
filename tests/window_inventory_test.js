@@ -38,8 +38,14 @@ test("withdrawn settings reset a pending defaults channel and retained Apply can
   assert.strictEqual(o.view.requests.busy(), false); assert.strictEqual(o.view.defaultDirty, false);
   assert.strictEqual(o.view.guard(), null); o.view.saveDefaults(); assert.strictEqual(o.sent.length, 1);
 });
+test("the pane's New button is offered only while the inventory has a payload and is idle", function () {
+  var o = setup(); assert.strictEqual(o.view.canCreate(), true);
+  o.view.inventory.externalBusy = true; assert.strictEqual(o.view.canCreate(), false);
+  delete o.state.sections["ph_composer.windows.frames"]; o.view.render(o.state);
+  assert.strictEqual(o.view.canCreate(), false);
+});
 test("a refused creation keeps the form draft and permits retry after a new snapshot", function () {
-  var o = setup(); o.view.form.open("create", null, o.view.records); o.view.form.fields.name.value = "New Frame";
+  var o = setup(); o.view.create(); o.view.form.fields.name.value = "New Frame";
   o.view.form.submit(); o.state.ui.actionResult = { session: "session", request_id: o.sent[0].payload.request_id,
     outcome: { status: "refused", message: "The name is already used." } }; o.view.render(o.state);
   assert.strictEqual(o.view.form.fields.name.value, "New Frame");
@@ -47,7 +53,7 @@ test("a refused creation keeps the form draft and permits retry after a new snap
   o.view.form.fields.name.value = "Other Frame"; o.view.form.submit(); assert.strictEqual(o.sent.length, 2);
 });
 test("new Frame parses authored width and thermal quantities and completion releases the form", function () {
-  var o = setup(), form = o.view.form; form.open("create", null, o.view.records);
+  var o = setup(), form = o.view.form; o.view.create();
   form.fields.name.value = " New frame "; form.fields.manufacturer.value = " Synthetic maker ";
   form.fields.width_m.value = "80 mm"; form.fields.uf_w_m2k.value = "1.2"; form.fields.psi_g_w_mk.value = "0.03";
   form.submit(); assert.strictEqual(o.sent.length, 1);
@@ -59,7 +65,7 @@ test("new Frame parses authored width and thermal quantities and completion rele
   assert.ok(form.root.hidden); assert.strictEqual(o.view.guard(), null);
 });
 test("new Glazing rejects an out-of-range g-value and preserves the draft for corrected Apply", function () {
-  var o = setup("glazings"), form = o.view.form; form.open("create", null, o.view.records);
+  var o = setup("glazings"), form = o.view.form; o.view.create();
   form.fields.name.value = "New glazing"; form.fields.ug_w_m2k.value = "0.6"; form.fields.g_value.value = "1.2";
   form.submit(); assert.strictEqual(o.sent.length, 0); assert.ok(form.error.textContent);
   assert.strictEqual(form.fields.name.value, "New glazing"); assert.strictEqual(form.root.hidden, false);

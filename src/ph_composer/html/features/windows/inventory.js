@@ -30,11 +30,6 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     var spec = Object.assign({}, this.spec, { quantities: quantities });
     this.form = new Form(session, send, kind, spec, changed);
     this.requests = request.channel(session, send, "window-defaults");
-    this.heading = ui.element("div", "phc-inventory-heading"); this.heading.appendChild(ui.element("h2", "",
-      spec.title));
-    this.add = ui.button("+ New " + spec.label, function () { if (!self.guard()) self.form.open("create", null,
-      self.records); });
-    this.heading.appendChild(this.add); root.appendChild(this.heading);
     this.body = ui.element("div", "window-product-workspace"); root.appendChild(this.body);
     this.tableRoot = ui.element("div", "window-product-table"); this.body.appendChild(this.tableRoot);
     var adapter = library.adapter(kind, function () {
@@ -140,6 +135,9 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
       default_install_depth_m: parsed.value }, expected_values: shared.clone(this.settingsExpected) };
     return this.requests.run(shared.PREFIX + "settings.update", params);
   };
+  // The Library pane owns the "+ New" button and runs its guard before calling create.
+  Inventory.prototype.create = function () { this.form.open("create", null, this.records); };
+  Inventory.prototype.canCreate = function () { return Boolean(this.enabled) && !this.inventory.busy(); };
   Inventory.prototype.guard = function () {
     if (this.disposed) return null;
     if (!this.form.root.hidden || !this.color.root.hidden) return "Finish or cancel the product form.";
@@ -155,7 +153,7 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     var self = this;
     function renderInventory() {
       self.inventory.externalBusy = self.form.busy() || self.color.requests.busy() || self.requests.busy();
-      self.inventory.render(state); self.add.disabled = !self.enabled || self.inventory.busy();
+      self.inventory.render(state);
       self.sidebar.refresh(state, {}, self.enabled);
     }
     if (!this.defaults) { renderInventory(); return; }
