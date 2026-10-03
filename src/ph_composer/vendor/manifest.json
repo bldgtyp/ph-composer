@@ -356,9 +356,9 @@
       "sha256": "d753fd13b0e1fd771cd43efea04910c576b8a44eeaf7264da357c5de1c310f2e"
     },
     "html/table.css": {
-      "bytes": 6517,
+      "bytes": 6596,
       "mime": "text/css; charset=utf-8",
-      "sha256": "f12abcefa73d31540b61219843440c3051fdbca25b519a85b6ca510704d43614"
+      "sha256": "201f2632e4591d572ea477b75ca90ea9b35d56dfff5c1c33d8af45cbb272db65"
     },
     "html/table.js": {
       "bytes": 19422,

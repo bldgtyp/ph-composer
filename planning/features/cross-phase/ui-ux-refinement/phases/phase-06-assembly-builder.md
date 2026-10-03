@@ -103,3 +103,23 @@ height changing with selection at 900 and 420, silent disabled icons, a comment 
 its number, a test assertion that could not fail, the unused icon. Not taken: restoring keyboard
 focus after a toolbar action repaints the Builder, which predates this packet and is recorded as a
 follow-up.
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+this branch, Model `ui-builder-run.skp` copied fresh from the synthetic
+`ux-followups-integrated.skp`. One Assembly was made through the panel's New Assembly form. Panel
+steps were driven through development `eval` on the panel's dialog; captures are native window
+pixels taken by window id.
+
+| Check | Result |
+| --- | --- |
+| Assemblies row: three record icons, a hairline, three Model icons with the new Replace glyph | Pass, after a fix: the first build gave the group a margin and the host clipped the last icon to an ellipsis. The hairline now sits in the gap the icons already have |
+| Builder opens with the quiet back link, a boxless title, metrics and one toolbar row | Pass |
+| Selecting a Layer-Segment: teal outline, its name, "No Material" chip, Add and Delete segment, Layer tools, Segment properties; Delete disabled on the only segment | Pass |
+| Add Layer from the toolbar | Pass: a second Layer is drawn and Total thickness reads 200 mm |
+| More drawing actions opens with Mirror segments, Flip Layers and Flip orientation | Pass |
+
+Not covered: native pointer and keyboard gestures, the narrow layouts (covered in the browser at
+900 and 420), Undo of a toolbar action (the commands are unchanged), SketchUp 2023, Windows.
+Evidence is in the gitignored `_private/host/ui-builder-evidence/`.
