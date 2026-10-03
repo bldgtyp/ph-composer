@@ -28,7 +28,13 @@ class FaceConstructionPreflightTest < PhComposerTestCase
     assignment_invoke("#{FACE_PREFIX}.assign_assembly", assignment_params(assignment_faces, id))
     incomplete = findings.find { |row| row["code"] == "construction.incomplete" }
     assert incomplete.fetch("blocks_export")
-    assert_includes incomplete.fetch("message"), id
+    # The sentence names the Assembly as the user knows it and carries no record id; the Face is the
+    # finding's object.
+    assert_equal "This Face's Assembly Empty is not finished: A Layer-Segment has no Material.",
+                 incomplete.fetch("message")
+    refute_includes incomplete.fetch("message"), id
+    assert_match(/\Afac_/, incomplete.fetch("object_id"))
+    assert_equal "This Face has no Assembly.", missing.fetch("message")
   end
 
   def test_dangling_and_invalid_references_have_distinct_blocking_rows

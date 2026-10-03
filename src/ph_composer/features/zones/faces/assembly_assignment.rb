@@ -45,6 +45,18 @@ module PhComposer
           end
         end
 
+        # The glossary's words for both sides, never honeybee's stored strings.
+        def mismatch(field, face, assembly)
+          if field == "face_type"
+            labels = ColourModes::FACE_TYPE_LABELS
+            "This Face is a #{labels.fetch(face, face)}; its Assembly is for a #{labels.fetch(assembly, assembly)}."
+          else
+            labels = ColourModes::BOUNDARY_LABELS
+            "This Face's boundary is #{labels.fetch(face, face)}; its Assembly is for " \
+              "#{labels.fetch(assembly, assembly)}."
+          end
+        end
+
         def state(request, record)
           id = record && record["assembly_id"]
           return "absent" if id.nil?
@@ -65,9 +77,7 @@ module PhComposer
               value = assembly.fetch("values")[hint]
               next if value.nil? || record[field].nil? || record[field] == value
 
-              found << finding(code, record,
-                               "The Face #{field.tr('_', ' ')} #{record[field]} differs from its " \
-                               "Assembly #{hint.tr('_', ' ')} #{value}.")
+              found << finding(code, record, mismatch(field, record[field], value))
             end
           end
           if record["boundary_condition"] == "Surface" && record["adjacency"]

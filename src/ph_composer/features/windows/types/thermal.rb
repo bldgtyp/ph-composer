@@ -119,7 +119,7 @@ module PhComposer
         edges = SIDES.each_with_index.map do |side, i|
           resolved = install(input, cell, side, shared[i])
           if resolved["psi_w_mk"].nil?
-            findings << finding("window_type.install_unresolved", "#{side}: no Psi-Install Type resolves.",
+            findings << finding("window_type.install_unresolved", "The #{side} edge has no Psi-Install Type.",
                                 :side => side)
           end
           { "side" => side, "length_m" => i.even? ? width : height, "install" => resolved }

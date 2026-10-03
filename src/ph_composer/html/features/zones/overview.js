@@ -574,6 +574,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var parents = Object.create(null);
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     tables.table(mount, rows, {
+      // Sized so the whole table shows beside the inspector at the panel's usual width; the user can still
+      // drag any column wider.
+      defaultWidths: { name: 154, face_type: 112, boundary_condition: 118, area_m2: 100, assembly_id: 140 },
       rows: ordered(projection.records, byId, rows), columns: columns(profile), expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
       decorate: function (td, row, field) { flag(td, problem(row.record.face, field)); },

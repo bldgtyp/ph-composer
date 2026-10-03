@@ -15,7 +15,9 @@
 .phc-floating-notice {
   position: relative;
   flex: 0 0 auto;
-  width: min(680px, calc(100% - 32px));
+  /* As wide as its message, so a short confirmation does not lie across the controls under it. */
+  width: fit-content;
+  max-width: min(680px, calc(100% - 32px));
   height: auto;
   min-height: max-content;
   margin-top: 10px;

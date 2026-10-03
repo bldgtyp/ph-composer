@@ -373,7 +373,9 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.state = state; this.enabled = Boolean(snapshot.value(state, shared.PREFIX + "types"));
     this.entries = shared.records(state, "types").map(function (raw) {
       return { record: Object.assign(shared.flat(raw), { _authored: clone(raw.values) }),
-        calculation: (raw.display || {}).thermal || { elements: [], findings: [] } };
+        calculation: (raw.display || {}).thermal || { elements: [], findings: [] },
+        // Everything the Model says is unfinished about this Type, its elements included.
+        findings: raw.findings || ((raw.display || {}).thermal || {}).findings || [] };
     });
     if (this.renameTarget && !this.entries.some(function (entry) {
       return entry.record.id === this.renameTarget;
