@@ -7,7 +7,7 @@ description: Run or resume PH-Composer acceptance in real SketchUp, preserving f
 
 Resolve the repository from the task or this skill's real path. Use the owning acceptance packet;
 this skill does not authorize a feature, release, restart of unrelated documents or publication.
-Read the relevant machine-workflows host section before controlling SketchUp. Reuse orientation,
+Read the active agent's machine-level host-automation guidance before controlling SketchUp. Reuse orientation,
 accepted decisions, the existing independent reviewer and unchanged evidence within a coherent task.
 
 1. Select a bounded batch of named cases from the owning packet and

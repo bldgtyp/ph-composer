@@ -7,7 +7,7 @@ description: Polish, refactor, or review PH-Composer HtmlDialog screens using th
 
 Treat each screen as another view of one application, not a standalone visual redesign. Preserve behavior and domain language while making the initial state quiet, legible, and predictable.
 
-The patterns here were established in the predecessor, PH-Navigator for SketchUp, between 2026-09-06 and 2026-09-17, and its UI kit transplanted into this repository. [references/patterns.md](references/patterns.md) lists local paths separately from predecessor-only screens not yet built here. The rules are the same for both.
+The patterns come from the predecessor, PH-Navigator for SketchUp, whose UI kit was transplanted into this repository. [references/patterns.md](references/patterns.md) lists local paths separately from predecessor-only screens not yet built here. The rules are the same for both.
 
 ## Priorities
 
