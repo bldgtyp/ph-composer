@@ -201,7 +201,10 @@ module PhComposer
         end
         # An element's condition names its Window Type and the element, so two elements with one condition are
         # two rows and each says where it is.
-        conditions = thermal.fetch("findings").map { |finding| [finding.fetch("code"), finding.fetch("message")] }
+        conditions = thermal.fetch("findings").map do |finding|
+          message = finding.fetch("message")
+          [finding.fetch("code"), type["name"] ? "#{type['name']}: #{message}" : message]
+        end
         thermal.fetch("elements").each do |detail|
           name = type.fetch("elements").find { |cell| cell["id"] == detail["id"] }&.fetch("name", nil)
           detail.fetch("findings").each do |finding|

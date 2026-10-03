@@ -49,10 +49,11 @@ module PhComposer
         def mismatch(field, face, assembly)
           if field == "face_type"
             labels = ColourModes::FACE_TYPE_LABELS
-            "This Face is a #{labels.fetch(face, face)}; its Assembly is for a #{labels.fetch(assembly, assembly)}."
+            "This Face's type is #{labels.fetch(face, face)}; its Assembly's type is " \
+              "#{labels.fetch(assembly, assembly)}."
           else
             labels = ColourModes::BOUNDARY_LABELS
-            "This Face's boundary is #{labels.fetch(face, face)}; its Assembly is for " \
+            "This Face's Boundary condition is #{labels.fetch(face, face)}; its Assembly's is " \
               "#{labels.fetch(assembly, assembly)}."
           end
         end

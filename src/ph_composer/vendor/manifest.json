@@ -86,9 +86,9 @@
       "sha256": "8d9c8f38e3317d02717e7d8c8596bf01efc22c5cdea6291d7f6749a20a4c8a75"
     },
     "html/features/windows/editor.js": {
-      "bytes": 27993,
+      "bytes": 28221,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "db75e3e9163e582c61c758137450158069d3ad962b518c8d86d7aa67ad32c9cc"
+      "sha256": "6642e7a537d41e89f8b537258b65a2b9675393cb662eccde4d4b10d75cf3b503"
     },
     "html/features/windows/editor_shared.js": {
       "bytes": 2972,
