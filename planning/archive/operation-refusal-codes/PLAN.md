@@ -2,7 +2,7 @@
 
 DATE: 2026-10-02
 STATUS: Merged to main 2026-10-03 ([PR #50](https://github.com/bldgtyp/ph-composer/pull/50), `0c651be`),
-Phases 1 to 5; archived. Ed decided
+Phases 1 to 5; archived. Follow-ups #51 to #54. Ed decided
 D1 to D4 on 2026-10-02, each as recommended, and authorized all five phases in one PR on 2026-10-03.
 See "Implementation outcome".
 AUTHOR: Ed May, BLDGTYP, with Claude
@@ -235,13 +235,15 @@ examples in EXTENSIBILITY.md now carry `refuses:`.
 Follow-ups, not in this branch:
 
 - A library kind adapter could declare the codes its callbacks raise, so `library.copy` publishes them
-  without the foundation naming a feature.
+  without the foundation naming a feature ([#51](https://github.com/bldgtyp/ph-composer/issues/51)).
 - `describe` gives foundation codes no `description`, and nothing in the API points to CONTRACTS.md for
-  their meaning.
+  their meaning ([#52](https://github.com/bldgtyp/ph-composer/issues/52)).
 - `Dispatch#proposal_preview` has no `rescue UserError`, so a handler's `UserError` answers
-  `operation.failed` on preview but `validation.failed` on invoke (pre-existing).
+  `operation.failed` on preview but `validation.failed` on invoke (pre-existing,
+  [#53](https://github.com/bldgtyp/ph-composer/issues/53)).
 - Codes CONTRACTS.md lists outside the table, such as `library.row_semantic_invalid`, cannot be named in
-  `refuses`; admission filters those rows today, so it looks unreachable.
+  `refuses`; admission filters those rows today, so it looks unreachable
+  ([#54](https://github.com/bldgtyp/ph-composer/issues/54)).
 - Export task methods remain out of scope until agent-authorized-file-access Phase 5 settles
   `start_export`.
 
