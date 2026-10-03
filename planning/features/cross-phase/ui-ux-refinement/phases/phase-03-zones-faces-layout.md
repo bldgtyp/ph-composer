@@ -1,13 +1,13 @@
 # Packet 3: Zones / Faces layout
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 Covers findings Z1 to Z8 and F2 and rulings D4 and D6 in [FINDINGS.md](../FINDINGS.md). Not
-authorized. This packet changes how a flow works, so it has a design step: Ed rules on the open
-points below, then the stages are built one pull request at a time.
+authorized until Ed ruled: on 2026-10-03 he accepted all seven recommendations under "Open points"
+and authorized stage P3-1. Each later stage needs its own go.
 
 ## The problem
 
@@ -141,3 +141,81 @@ public kit contract. `context/TECH_STACK.md`, `context/EXTENSIBILITY.md` and the
 
 Empty-state wording and first-run guidance (packet 8). The viewport tools' own cursor and HUD
 (F4, after the host capture session). Colour-by legend rows and their "Show only this" buttons.
+
+## P3-1 outcome, 2026-10-03
+
+Implemented on `feat/ui-inspector-region`. `make ci` passes (1390 Ruby runs, 392 JavaScript tests,
+172 Python tests) and `make ui-checks` passes, with a new check that the inspector is away at
+rest, beside the tree at 1280, under it at 900 and 420, and that the tree does not move.
+
+The contract as built:
+
+- `panel.section(name, render, { pane, region, tier, order, when })`. `region` is `main` (default),
+  `inspector` or `tools`; anything else is refused. An inspector section names a `tier` (`tool`,
+  `selection`, `record`, `ambient`) and its `when(state)` answers false, true or `"hold"`. The
+  first to hold shows, else the first to answer true by tier, then `order`. Every section still
+  renders, because rendering consumes its results.
+- `panel.region(pane, "tools")` returns the node the work surface places in its control row.
+- A pane whose sections all use `main` is laid out exactly as before; the wrappers appear only
+  when a pane first asks for another region.
+
+What moved: Colour by is `ph_composer.colour_by.mode` (a tool) and `ph_composer.colour_by` (the
+legend, shown while a mode is on). Classify is `ph_composer.classify.toggle` (an icon toggle,
+pressed while the palette shows) and `ph_composer.classify` (the palette, shown while the tool has
+the viewport or the user opened it). Their content is unchanged.
+
+What differs from the plan:
+
+- With nothing to show, the inspector column is away, so opening a tool narrows the tree. The plan
+  had a one-line hint there. An always-present empty column costs 280 px of table for nothing
+  until P3-2 gives it a selection and Zone details to show; revisit then.
+- The inspector does not collapse like the library sidebar yet. Closing the tool closes it.
+- The page header's actions end at the work surface's edge, so the inspector starts level with
+  the control row, not beside the header.
+- The tree's height is `calc(100vh - 250px)` with a 240 px floor, up from 60vh. The Window
+  Schedule shares that mount class and takes the same height.
+- Colour by off no longer shows "Choose what to colour the model by."; the select says "Off".
+
+Two reviews ran: a Sonnet diff review and a fresh-context Opus review of the contract. Both found
+that a Model switch dropped the tools out of the control row, because the overview never swapped
+in the new session's controls (an older fault this stage exposed). Fixed, with a test. From the
+Opus review, taken now so P3-2 does not build on the weaker shape: named tiers in place of
+precedence by `order` number, `"hold"` so a tool started from the viewport cannot hide a dirty
+draft, refusal of an unknown region or tier, and a region attribute (`data-phc-region`) that no
+section's content can collide with. From the Sonnet review: the tools consume their own request
+results, the Classify toggle is built once so a press keeps its focus and its name, the palette
+closes when the tool ends however it was opened, and focus moves when its section is hidden.
+
+Left for later, on purpose:
+
+- Regions are still created on first use, not written into `index.html`. Every section registers
+  before the first snapshot today, so nothing live is moved. Static markup is the sturdier form
+  and is a small composition-root edit; do it when a second pane takes an inspector.
+- The kit does not warn when a pane's tools are never placed or are placed twice.
+- The inspector's 52 px top offset assumes a one-line page header.
+- Under 900 wide the palette opens beneath a tall tree, out of view; the toggle's pressed state is
+  the only cue until the user scrolls.
+
+## P3-1 host check, 2026-10-03
+
+SketchUp 26.1.188, fresh process, build installed from the branch, Model `ui-inspector-run.skp`
+copied fresh from the synthetic `uxk1-rerun.skp` (two Zones, twelve classified Faces). Panel
+controls were pressed through development `eval` on the panel's dialog, not by native input;
+captures are native window pixels by window id; tool state was read back from SketchUp. The Model
+stayed unmodified.
+
+| Check | Result |
+| --- | --- |
+| At rest | Pass: no inspector, the tree shows all fourteen rows, the Classify toggle and Colour-by select end the control row |
+| Classify toggle | Pass: the palette opens in the inspector beside the tree; the tree keeps its place |
+| Choose "Wall" in the palette | Pass: SketchUp's active tool becomes the Classify tool, the toggle is pressed, "Stop classifying" shows |
+| Press the toggle while painting | Pass: SketchUp returns to the Select tool, the palette closes, the tree takes the full width |
+| Colour by Zone | Pass: the real legend shows in the inspector with two rows |
+| Classify over a legend | Pass: the palette takes the inspector; closing it brings the legend back |
+
+Not covered: native pointer input on the toggle, a Model switch in the host (covered by a unit
+test), a panel under 900 wide in the host (covered by the browser check).
+
+Seen and not this stage's: while it paints, the Classify tool turns on the last colour mode the
+user chose, falling back to Face type (`classify_tool.rb`, `force_colour_by`). On this machine that
+was Window Type, which says nothing about what is being classified. Filed for P3-3.

@@ -746,3 +746,19 @@ test("inline create-and-assign reads the factor through the shared unit field", 
   assert.strictEqual(p.sent.length, 0);
   assert.ok(dialog.querySelector("[role='status']").textContent);
 });
+
+test("a Model switch brings the new session's control row, with the pane's tools still in it", function () {
+  var p = page(), first = snapshot(), second = snapshot();
+  p.panel.section("example.tool", function (root) { root.textContent = "tool"; }, { region: "tools" });
+  p.panel.receive({ type: "panel.snapshot", payload: first });
+  var section = p.query("[data-section='ph_composer.overview']"), tool = p.query("[data-section='example.tool']");
+  var before = section.querySelector(".phc-inventory-controls");
+  assert.strictEqual(tool.parentNode.parentNode, before, "the tools end the control row");
+  second.session = "session-b";
+  p.panel.receive({ type: "panel.snapshot", payload: second });
+  var after = section.querySelector(".phc-inventory-controls");
+  assert.notStrictEqual(after, before, "the new session's own controls are the ones on screen");
+  assert.strictEqual(section.querySelectorAll(".phc-inventory-controls").length, 1);
+  assert.strictEqual(p.query("[data-section='example.tool']"), tool);
+  assert.strictEqual(tool.parentNode.parentNode, after);
+});

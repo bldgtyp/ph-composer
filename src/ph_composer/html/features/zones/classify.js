@@ -228,5 +228,31 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     }
   }
 
-  panel.section("ph_composer.classify", render, { order: 30 });
+  /* The palette is the inspector's while the tool has the viewport or the user has opened it, and the
+     toggle is pressed while either holds. Pressing it during painting gives the viewport back. When the
+     tool ends any other way (Escape, Stop, another tool) the palette closes with it. The button is built
+     once a session and repainted, so pressing it never drops the focus it holds. */
+  function renderToggle(root, state, send) {
+    var tool = snapshot.value(state, "ph_composer.zones.faces.palette");
+    var screenState = forSession(state.session, send), active = Boolean(tool && tool.active);
+    screenState.view.consume(state);
+    if (screenState.wasActive && !active) screenState.open = false;
+    screenState.wasActive = active;
+    if (!screenState.toggle || screenState.toggle.parentNode !== root) {
+      screenState.toggle = ui.iconButton("Classify faces", "paint_bucket", function () {
+        var pressed = screenState.wasActive || screenState.open;
+        if (screenState.wasActive) screenState.view.run("ph_composer.zones.faces.stop_classifying", {});
+        screenState.open = !pressed;
+        panel.repaint();
+      });
+      root.className = "phc-classify-toggle";
+      root.replaceChildren(screenState.toggle);
+    }
+    screenState.toggle.setAttribute("aria-pressed", String(active || Boolean(screenState.open)));
+    screenState.toggle.disabled = !tool || screenState.view.busy();
+  }
+
+  panel.section("ph_composer.classify.toggle", renderToggle, { region: "tools", order: 10 });
+  panel.section("ph_composer.classify", render, { region: "inspector", tier: "tool",
+    when: function () { return Boolean(screen && (screen.active || screen.open)); } });
 });

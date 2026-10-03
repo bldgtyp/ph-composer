@@ -286,3 +286,43 @@ test("changing Model session discards an unsaved Attached zone draft", function 
   assert.strictEqual(opened.dialog.isConnected, false);
   assert.strictEqual(p.sent.length, 0);
 });
+
+function toggle(p) {
+  return p.context.document.querySelector("[data-section='ph_composer.classify.toggle']").querySelector("button");
+}
+
+test("the toggle opens the palette in the inspector, keeps its focus, and closes it again", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
+  var button = toggle(p);
+  assert.deepStrictEqual([p.section().hidden, button.getAttribute("aria-pressed")], [true, "false"]);
+  button.focus();
+  button.listeners.click({});
+  assert.deepStrictEqual([p.section().hidden, button.getAttribute("aria-pressed")], [false, "true"]);
+  assert.strictEqual(toggle(p), button, "the same button, so the focus it holds survives the press");
+  assert.strictEqual(p.context.document.activeElement, button);
+  assert.strictEqual(button.getAttribute("aria-label"), "Classify faces", "a pressed toggle keeps its name");
+  button.listeners.click({});
+  assert.strictEqual(p.section().hidden, true);
+  assert.strictEqual(p.sent.length, 0, "opening and closing the palette sends nothing");
+});
+
+test("an active tool shows the palette; pressing the toggle stops it, and so does the tool ending", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
+  toggle(p).listeners.click({});
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
+  assert.deepStrictEqual([p.section().hidden, toggle(p).getAttribute("aria-pressed")], [false, "true"]);
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, false)) });
+  assert.strictEqual(p.section().hidden, true, "Escape or Stop closes the palette however it was opened");
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
+  toggle(p).listeners.click({});
+  assert.strictEqual(p.sent[p.sent.length - 1].payload.name, "ph_composer.zones.faces.stop_classifying");
+});
+
+test("with no palette to show the toggle refuses", function () {
+  var p = page(), empty = snapshot(palette());
+  delete empty.sections["ph_composer.zones.faces.palette"];
+  p.panel.receive({ type: "panel.snapshot", payload: empty });
+  assert.strictEqual(toggle(p).disabled, true);
+});

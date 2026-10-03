@@ -1,11 +1,14 @@
 /* The Overview screen: its heading row, the tree table's mounts and the Zone details form. The table
    itself is styled by table.css, which names no screen. */
 .phc-overview { display: grid; gap: 12px; padding-bottom: 24px; }
+/* The control row spans the work surface, so the pane's tools sit at its far end. */
+.phc-overview > .phc-inventory-controls { margin-right: 0; }
 .phc-zone-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .phc-zone-heading h2 { margin: 0; font-size: 17px; }
 .phc-zone-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0; }
 .phc-zone-setting input[type="number"] { width: 72px; }
-.phc-table-mount { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 6px; }
+/* The tree is the pane's work surface, so it takes the height the shell, the header and the control row leave. */
+.phc-table-mount { overflow: auto; max-height: max(240px, calc(100vh - 250px)); border: 1px solid var(--line); border-radius: 6px; }
 .phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
   color: var(--warning-ink); background: var(--warning-surface); }
 .phc-details-mount:empty { display: none; }
@@ -21,7 +24,7 @@
 
 /* The Colour-by legend. One row per colour: the row itself selects and zooms to what it counts,
    and the control beside it sets every other row aside. */
-.phc-colour-by { padding: 18px 24px 24px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.phc-colour-by { display: grid; gap: 12px; }
 .phc-legend { display: grid; gap: 2px; }
 .phc-legend-row { display: flex; align-items: center; gap: 8px; }
 .phc-legend-locate { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 4px 8px;
@@ -36,7 +39,7 @@
 
 /* The Classify tool's palette. Chips read as choices, and the chosen one is marked the way an
    active row is; a chip the palette cannot set says why on itself. */
-.phc-classify { padding: 18px 24px 24px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.phc-classify { display: grid; gap: 12px; }
 .phc-classify.is-active h2 { color: var(--interaction-highlight); }
 .phc-palette { display: grid; gap: 10px; }
 .phc-palette-field h3 { margin: 0 0 4px; font-size: 12px; font-weight: 600; }

@@ -115,7 +115,30 @@ The panel has three contribution seams. `panel.section(name, render, { pane })` 
 feature's section renderer in a pane ([TECH_STACK.md](TECH_STACK.md), "Panel"). The top-level tabs
 and their panes are static markup in `index.html`, so a feature that needs a new top-level pane
 edits `index.html`, which is a composition-root edit the rules permit; a section added to an
-existing pane needs no markup. The other two seams add to a screen another module owns:
+existing pane needs no markup.
+
+A pane has three regions, and a section names one with `{ region }`: `main` (the default),
+`inspector` or `tools`. Any other name is refused at registration.
+
+`inspector` is one column beside the work surface that shows a single section. Each inspector
+section names a `tier`, one of `tool`, `selection`, `record` or `ambient`, and may give
+`when(state)`, which answers false, true or `"hold"`. The section shown is the first that holds,
+or else the first that answers true, by tier in that order and then by `order`. A section holds
+while it carries a draft the user must not lose sight of, so a tool started from the viewport
+cannot hide it. With nothing to show the column is away. If the section that had the focus is
+hidden, the focus moves to the one now shown.
+
+The kit owns visibility, here as with tabs: every section renders on every snapshot whether or
+not it is shown, because rendering is how a section consumes its results. `when` runs after the
+render pass, so it may read what its section's render just worked out.
+
+`tools` holds small controls for the work surface's control row. The work surface places them
+with `panel.region(pane, "tools")`, taking the pane from its own root. A pane that offers tools
+must place them; until it does they lead the main region. A feature adds an inspector section or a tool to a pane
+it does not own without naming that pane's owner, which is how Colour by and the Classify palette
+share the Zones / Faces pane. A pane whose sections all use `main` is laid out as before.
+
+The other two seams add to a screen another module owns:
 
 - `ui.contributeTable(tableId, contribution)`, below, adds columns and row actions to another
   module's named table. Zones' Face usage column in the Assemblies inventory

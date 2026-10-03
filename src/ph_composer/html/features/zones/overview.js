@@ -331,6 +331,15 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         screenState.controls.root,
         ui.element("div", "phc-table-mount"), ui.element("div", "phc-details-mount"));
     }
+    // The pane's tools (whatever sections registered there) end this screen's control row. Found before the
+    // row changes hands, so a new session's row inherits them instead of leaving them in the old one.
+    var tools = panel.region(root.closest("[data-pane]").getAttribute("data-pane"), "tools");
+    var row = root.children[2];
+    if (row !== screenState.controls.root) {
+      root.insertBefore(screenState.controls.root, row);
+      root.removeChild(row);
+    }
+    if (tools.parentNode !== screenState.controls.root) screenState.controls.root.appendChild(tools);
     root.querySelector(".phc-selection-mount").replaceChildren(screenState.selectionAssignment.root);
     root.querySelector(".phc-heading-mount").replaceChildren(ui.pageHeader({ title: "Zones",
       count: zones.zones.length, actions: [solveButton(screenState, zones.zones), screenState.settings.bubble.root],

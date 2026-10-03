@@ -108,6 +108,25 @@ fs.mkdirSync(output, { recursive: true });
   await shot("zone-settings-narrow");
   await page.keyboard.press("Escape");
 
+  // The inspector: away until a tool has something to show, beside the tree on a wide panel and
+  // under it on a narrow one, and the tree never moves down for it.
+  await page.goto(`${BASE}?fixture=authoring`);
+  await page.getByRole("heading", { name: "Zones" }).waitFor();
+  for (const [width, beside] of [[1280, true], [900, false], [420, false]]) {
+    await page.setViewportSize({ width, height: 800 });
+    const table = page.locator("[data-pane=overview] .phc-table-mount"), inspector = page.locator("[data-phc-region=inspector]");
+    assert.equal(await inspector.isVisible(), false, `no inspector at rest at ${width}`);
+    const before = await table.boundingBox();
+    await page.getByRole("button", { name: "Classify faces", exact: true }).click();
+    await page.getByRole("heading", { name: "Classify faces" }).waitFor();
+    const after = await table.boundingBox(), column = await inspector.boundingBox();
+    assert.equal(after.y, before.y, `the tree stays put at ${width}`);
+    assert.equal(column.x >= after.x + after.width, beside, `inspector ${beside ? "beside" : "under"} the tree at ${width}`);
+    assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), `no page scroll at ${width}`);
+    await shot(`inspector-classify-${width}`);
+    await page.getByRole("button", { name: "Classify faces", exact: true }).click();
+  }
+
   assert.deepEqual(errors, []);
   console.log(`PASS: preview on the real panel: 4 viewports, draft through a unit switch, invalid entry, ` +
     `form Escape, refused edit warning, empty, Export and authoring panes; evidence in ${output}`);

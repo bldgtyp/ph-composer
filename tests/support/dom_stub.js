@@ -147,6 +147,7 @@ function element(tag, attributes) {
      out of the panel HTML and a node built in a test answer `.className` alike. */
   if (node.attributes.class !== undefined) node.className = String(node.attributes.class);
   if (node.attributes.id !== undefined) node.id = String(node.attributes.id);
+  Object.defineProperty(node, "firstChild", { get: function () { return node.children[0] || null; } });
   Object.defineProperty(node, "lastChild", { get: function () { return node.children[node.children.length - 1]; } });
   node.querySelectorAll = function (selector) { return descendants(node, selector); };
   node.querySelector = function (selector) { return this.querySelectorAll(selector)[0] || null; };
