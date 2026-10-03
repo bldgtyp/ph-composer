@@ -82,25 +82,38 @@ function (panel, ui, requests, snapshot) {
   /* Repainted only when what it shows has changed. A snapshot follows every viewport command, and
      rebuilding these controls each time would close a dropdown the user had open and take the focus
      out of whatever they were pressing. */
+  function legendOf(state) {
+    return snapshot.value(state, "ph_composer.colour_by.legend") || { mode: null, modes: [], rows: [] };
+  }
+
   function render(root, state, send) {
-    var legend = snapshot.value(state, "ph_composer.colour_by.legend") || { mode: null, modes: [], rows: [] };
+    var legend = legendOf(state);
     var screenState = forSession(state.session, send);
     screenState.view.consume(state);
     ui.memoPaint(root, "legend", [state.session, legend, screenState.view.busy()], function () {
       var heading = ui.element("div", "phc-zone-heading");
       var body = ui.element("div", "phc-legend");
       heading.appendChild(ui.element("h2", "", "Colour by"));
-      heading.appendChild(modeControl(screenState, legend));
-      if (legend.mode) {
-        legend.rows.forEach(function (row) { body.appendChild(legendRow(screenState, row)); });
-        if (!legend.rows.length) body.appendChild(ui.element("p", "phc-empty", "Nothing to colour yet."));
-      } else {
-        body.appendChild(ui.element("p", "phc-empty", "Choose what to colour the model by."));
-      }
+      legend.rows.forEach(function (row) { body.appendChild(legendRow(screenState, row)); });
+      if (!legend.rows.length) body.appendChild(ui.element("p", "phc-empty", "Nothing to colour yet."));
       root.className = "phc-colour-by";
       root.replaceChildren(heading, body);
     });
   }
 
-  panel.section("ph_composer.colour_by", render, { order: 20 });
+  /* The mode is a tool in the work surface's control row; the legend it produces is the inspector's. */
+  function renderMode(root, state, send) {
+    var legend = legendOf(state);
+    var screenState = forSession(state.session, send);
+    ui.memoPaint(root, "mode", [state.session, legend.mode, legend.modes, screenState.view.busy()], function () {
+      var label = ui.element("label", "phc-view-control", "Colour by");
+      label.appendChild(modeControl(screenState, legend));
+      root.className = "phc-colour-mode";
+      root.replaceChildren(label);
+    });
+  }
+
+  panel.section("ph_composer.colour_by.mode", renderMode, { region: "tools", order: 20 });
+  panel.section("ph_composer.colour_by", render, { region: "inspector", order: 20,
+    when: function (state) { return Boolean(legendOf(state).mode); } });
 });

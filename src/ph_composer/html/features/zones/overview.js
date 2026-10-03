@@ -331,6 +331,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         screenState.controls.root,
         ui.element("div", "phc-table-mount"), ui.element("div", "phc-details-mount"));
     }
+    // The pane's tools (whatever sections registered there) end this screen's control row.
+    var tools = panel.region("overview", "tools");
+    if (tools.parentNode !== screenState.controls.root) screenState.controls.root.appendChild(tools);
     root.querySelector(".phc-selection-mount").replaceChildren(screenState.selectionAssignment.root);
     root.querySelector(".phc-heading-mount").replaceChildren(ui.pageHeader({ title: "Zones",
       count: zones.zones.length, actions: [solveButton(screenState, zones.zones), screenState.settings.bubble.root],

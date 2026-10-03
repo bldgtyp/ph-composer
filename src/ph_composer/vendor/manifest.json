@@ -166,14 +166,14 @@
       "sha256": "49c0d071618ea87c9fe2e5c7144204995ce75ee4dcc6b205d90f6f23719b89ee"
     },
     "html/features/zones/classify.js": {
-      "bytes": 10946,
+      "bytes": 12240,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "10defd27156bacba3111bb451ea8c8e8d673022321d2ed0bfc4c3001eba54c4b"
+      "sha256": "89256471d00527593bab1c157419c12c32d44ec0839625d41a25765e08050955"
     },
     "html/features/zones/overview.js": {
-      "bytes": 26905,
+      "bytes": 27150,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "4b737d496431ed65b67054cfd298c1699f2ae295af8f41c26d729bca85561b89"
+      "sha256": "8bd2de97cd0ee64286cc5dc7f57f2135a9347f2f6ad7ec9132754278a5dff170"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 2572,
@@ -186,9 +186,9 @@
       "sha256": "6f0aa9838900a0674a1b1a7666e66554518cd63282d69c947e795824a8a748bc"
     },
     "html/features/zones/zones.css": {
-      "bytes": 3351,
+      "bytes": 3520,
       "mime": "text/css; charset=utf-8",
-      "sha256": "23e4f7817f82694779df0183702359805595e8910a505bea48610b59ff717630"
+      "sha256": "3ab7a75d4b63f84705aaa04f059552d5c046bbd933d825031be27a68aaade956"
     },
     "html/fields.js": {
       "bytes": 1756,
@@ -296,9 +296,9 @@
       "sha256": "860a447b8123868eb15775a3f39985cf0444e18455e6063ff742a471261edb45"
     },
     "html/panel.js": {
-      "bytes": 15458,
+      "bytes": 18163,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "ebb4c00532a7715e6c135b06485722ee4be4c576e07b0a5cfc4ab75a246ee5c4"
+      "sha256": "e43a8f10194ab7615dbcc598c4423e7e1e62d373d1665ab329513fd816813f9b"
     },
     "html/record_edits.js": {
       "bytes": 15234,
@@ -326,9 +326,9 @@
       "sha256": "d0ecc88e9f68278dcc73a66652093c4e218b6f860e008dde53d117c680f95b4f"
     },
     "html/sections/colour_by.js": {
-      "bytes": 4961,
+      "bytes": 5569,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "1ee0e1484862da2695af4a84642e97679a6da391842faa5f96fd9459231f21c2"
+      "sha256": "df34390c75a484e99f363a1b7ce50a9863ae9fcd6b5c649eeef99ab1419a8e9a"
     },
     "html/sections/export.js": {
       "bytes": 7322,
@@ -341,9 +341,9 @@
       "sha256": "8801e69e8143d6a8db6003fa2acd751e8a3b03d9a06c39f7292bf6156355088e"
     },
     "html/shell.css": {
-      "bytes": 1719,
+      "bytes": 2520,
       "mime": "text/css; charset=utf-8",
-      "sha256": "b320a8070c5d95b35b39118103f10615a45e8548a26ba578fb4e017b0aff16b5"
+      "sha256": "21240908ab6c8c7f6114ec3fad6d3d1f70366edd191685b2879733b773703560"
     },
     "html/snapshot.js": {
       "bytes": 1462,

@@ -19,7 +19,8 @@ function page() {
   dom.attachEvents(context);
   var modules = panelSource.start(context, ["sections/colour_by"]);
   return { context: context, panel: modules.panel, sent: sent,
-    section: function () { return context.document.querySelector("[data-section='ph_composer.colour_by']"); } };
+    section: function () { return context.document.querySelector("[data-section='ph_composer.colour_by']"); },
+    mode: function () { return context.document.querySelector("[data-section='ph_composer.colour_by.mode']"); } };
 }
 
 function snapshot(legend) {
@@ -52,21 +53,24 @@ function buttons(p) {
   return p.section().querySelectorAll("button");
 }
 
-test("with Colour by off the legend offers every registered mode and says what it is for", function () {
+test("with Colour by off the mode control offers every registered mode and the inspector shows no legend", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(off()) });
-  var control = p.section().querySelector("select");
+  var control = p.mode().querySelector("select");
 
   assert.deepStrictEqual(control.children.map(function (node) { return node.textContent; }), ["Off", "Side"]);
   assert.strictEqual(control.value, "");
-  assert.strictEqual(p.section().querySelector(".phc-empty").textContent,
-    "Choose what to colour the model by.");
+  assert.strictEqual(p.section().hidden, true, "no mode, no legend");
+  assert.strictEqual(p.section().parentNode.hidden, true, "and an inspector with nothing to show is away");
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
+  assert.deepStrictEqual([p.section().hidden, p.section().parentNode.hidden], [false, false]);
+  assert.strictEqual(p.mode().parentNode.getAttribute("data-region"), "tools");
 });
 
 test("choosing a mode sends the viewport command and never an action", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(off()) });
-  var control = p.section().querySelector("select");
+  var control = p.mode().querySelector("select");
 
   control.value = "outside.probe.by_side";
   control.listeners.change({});
@@ -80,7 +84,7 @@ test("choosing a mode sends the viewport command and never an action", function 
 test("Off turns Colour by off rather than naming a mode", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
-  var control = p.section().querySelector("select");
+  var control = p.mode().querySelector("select");
 
   assert.strictEqual(control.value, "outside.probe.by_side");
   control.value = "";
@@ -147,7 +151,7 @@ test("a request in flight leaves every legend control refusing until it settles"
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
 
   assert.ok(buttons(p).every(function (node) { return node.disabled; }), "every control waits");
-  assert.strictEqual(p.section().querySelector("select").disabled, true);
+  assert.strictEqual(p.mode().querySelector("select").disabled, true);
 
   p.panel.receive({ type: "view.result", payload: { request_id: p.sent[0].payload.request_id,
     session: "session-a", outcome: { status: "completed", value: { selected: 7 } } } });

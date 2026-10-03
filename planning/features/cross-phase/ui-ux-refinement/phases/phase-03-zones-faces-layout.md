@@ -1,13 +1,13 @@
 # Packet 3: Zones / Faces layout
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 Covers findings Z1 to Z8 and F2 and rulings D4 and D6 in [FINDINGS.md](../FINDINGS.md). Not
-authorized. This packet changes how a flow works, so it has a design step: Ed rules on the open
-points below, then the stages are built one pull request at a time.
+authorized until Ed ruled: on 2026-10-03 he accepted all seven recommendations under "Open points"
+and authorized stage P3-1. Each later stage needs its own go.
 
 ## The problem
 
@@ -141,3 +141,35 @@ public kit contract. `context/TECH_STACK.md`, `context/EXTENSIBILITY.md` and the
 
 Empty-state wording and first-run guidance (packet 8). The viewport tools' own cursor and HUD
 (F4, after the host capture session). Colour-by legend rows and their "Show only this" buttons.
+
+## P3-1 outcome, 2026-10-03
+
+Implemented on `feat/ui-inspector-region`. `make ci` passes (1390 Ruby runs, 386 JavaScript tests,
+172 Python tests) and `make ui-checks` passes, with a new check that the inspector is away at
+rest, beside the tree at 1280, under it at 900 and 420, and that the tree does not move.
+
+The contract as built:
+
+- `panel.section(name, render, { pane, region, order, when })`. `region` is `main` (default),
+  `inspector` or `tools`. An inspector shows the first section, by `order`, whose `when(state)` is
+  true; every inspector section still renders, because rendering consumes its results.
+- `panel.region(pane, "tools")` returns the node the work surface places in its control row.
+- A pane whose sections all use `main` is laid out exactly as before; the wrappers appear only
+  when a pane first asks for another region.
+
+What moved: Colour by is `ph_composer.colour_by.mode` (a tool) and `ph_composer.colour_by` (the
+legend, shown while a mode is on). Classify is `ph_composer.classify.toggle` (an icon toggle,
+pressed while the palette shows) and `ph_composer.classify` (the palette, shown while the tool has
+the viewport or the user opened it). Their content is unchanged.
+
+What differs from the plan:
+
+- With nothing to show, the inspector column is away, so opening a tool narrows the tree. The plan
+  had a one-line hint there. An always-present empty column costs 280 px of table for nothing
+  until P3-2 gives it a selection and Zone details to show; revisit then.
+- The inspector does not collapse like the library sidebar yet. Closing the tool closes it.
+- The page header's actions end at the work surface's edge, so the inspector starts level with
+  the control row, not beside the header.
+- The tree's height is `calc(100vh - 250px)` with a 240 px floor, up from 60vh. The Window
+  Schedule shares that mount class and takes the same height.
+- Colour by off no longer shows "Choose what to colour the model by."; the select says "Off".

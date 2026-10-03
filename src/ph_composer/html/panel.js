@@ -163,16 +163,58 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     render();
   }
 
+  /* A pane's regions. `main` is the work surface and every section that names no region. `inspector` is
+     a column beside it that shows one section at a time. `tools` is a group of small controls the work
+     surface places in its own control row (`region(pane, "tools")`); until it is placed it leads the
+     main region. A pane with only `main` sections is laid out exactly as before. */
+  function region(paneName, name) {
+    var pane = document.querySelector("[data-pane='" + paneName + "']");
+    var node, main;
+    if (!pane) throw new Error("no pane \"" + paneName + "\"");
+    node = pane.querySelector("[data-region='" + name + "']");
+    if (node || name === "main" && !pane.querySelector("[data-region]")) return node || pane;
+    // The first region a pane asks for wraps what is already in it as `main`.
+    main = pane.querySelector("[data-region='main']");
+    if (!main) {
+      main = ui.element("div", "phc-pane-main");
+      main.setAttribute("data-region", "main");
+      while (pane.firstChild) main.appendChild(pane.firstChild);
+      pane.appendChild(main);
+    }
+    if (name === "main") return main;
+    node = name === "inspector" ? ui.element("aside", "phc-pane-inspector") : ui.element("div", "phc-pane-tools");
+    node.setAttribute("data-region", name);
+    if (name === "inspector") { node.hidden = true; pane.classList.add("has-inspector"); pane.appendChild(node); }
+    else main.insertBefore(node, main.firstChild);
+    return node;
+  }
+
   function mount(entry) {
     var root = document.querySelector("[data-section='" + entry.name + "']");
-    var pane;
     if (root) return root;
-    pane = document.querySelector("[data-pane='" + entry.pane + "']");
-    if (!pane) throw new Error("panel section \"" + entry.name + "\" names no pane \"" + entry.pane + "\"");
+    if (!document.querySelector("[data-pane='" + entry.pane + "']")) {
+      throw new Error("panel section \"" + entry.name + "\" names no pane \"" + entry.pane + "\"");
+    }
     root = ui.element("section");
     root.setAttribute("data-section", entry.name);
-    pane.appendChild(root);
+    region(entry.pane, entry.region).appendChild(root);
     return root;
+  }
+
+  /* An inspector shows one section: the first, in order, whose `when(state)` says it has something to
+     show. Every section still renders, because rendering is also how it consumes its results. */
+  function showInspectors() {
+    var shown = Object.create(null);
+    sections.filter(function (entry) { return entry.region === "inspector"; }).forEach(function (entry) {
+      var root = document.querySelector("[data-section='" + entry.name + "']"), wanted = false;
+      if (!root) return;
+      try { wanted = !shown[entry.pane] && (!entry.when || Boolean(entry.when(state))); } catch (error) {
+        if (window.console) window.console.error("panel section \"" + entry.name + "\" failed its when", error);
+      }
+      root.hidden = !wanted;
+      if (wanted) shown[entry.pane] = true;
+      region(entry.pane, "inspector").hidden = !shown[entry.pane];
+    });
   }
 
   /* One section's failure stays in that section: the shell, the notices and every other section still
@@ -190,7 +232,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     renderNotice();
     renderUnitToggle();
     applyTab();
-    if (state.session !== null) sections.forEach(renderSection);
+    if (state.session !== null) { sections.forEach(renderSection); showInspectors(); }
   }
 
   /* One floating notice above the panes, so a late message never reflows the page. Warnings and errors stay
@@ -255,9 +297,12 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
      it within that pane, low first; sections that do not ask are placed after those that do, in the
      order they registered. A pane holds the screen's work surface first and its secondary controls
      after it, and load order is decided by the module graph, so a section that cares says so.
-     `options.onNavigate(root, intent)` receives the intent of a `navigate` to its pane. */
+     `options.onNavigate(root, intent)` receives the intent of a `navigate` to its pane.
+     `options.region` places it in the pane's `inspector` or `tools` region instead of `main`, and an
+     inspector section's `options.when(state)` answers whether it has something to show. */
   function section(name, renderFunction, options) {
     var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview",
+      region: (options && options.region) || "main", when: options && options.when,
       order: (options && options.order) !== undefined ? options.order : DEFAULT_ORDER,
       onNavigate: options && options.onNavigate, registered: sections.length };
     if (!document.querySelector("[data-section='" + name + "']") &&
@@ -268,7 +313,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     sections.sort(function (left, right) {
       return left.order - right.order || left.registered - right.registered;
     });
-    if (state.session !== null) sections.forEach(renderSection);
+    if (state.session !== null) { sections.forEach(renderSection); showInspectors(); }
   }
 
   function preferenceValue(key, extra) {
@@ -331,7 +376,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
      row) repaints every section from the state already in hand. It never reaches the host. */
   function repaint() { render(); }
 
-  api = { receive: receive, section: section, ready: ready, state: state, showTab: showTab, navigate: navigate,
+  api = { receive: receive, section: section, region: region, ready: ready, state: state, showTab: showTab,
+    navigate: navigate,
     send: send,
     setPreference: setPreference, repaint: repaint, notify: notify,
     // `guard(tab)` answers why the tab may not change, or null; `refused`, when given, runs after a

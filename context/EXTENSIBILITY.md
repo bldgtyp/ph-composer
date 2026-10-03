@@ -115,7 +115,19 @@ The panel has three contribution seams. `panel.section(name, render, { pane })` 
 feature's section renderer in a pane ([TECH_STACK.md](TECH_STACK.md), "Panel"). The top-level tabs
 and their panes are static markup in `index.html`, so a feature that needs a new top-level pane
 edits `index.html`, which is a composition-root edit the rules permit; a section added to an
-existing pane needs no markup. The other two seams add to a screen another module owns:
+existing pane needs no markup.
+
+A pane has three regions, and a section names one with `{ region }`. `main`, the default, is the
+work surface. `inspector` is one column beside the work surface that shows a single section: the
+first, by `order`, whose `when(state)` returns true. Every inspector section still renders on
+every snapshot, because rendering is how a section consumes its results, so `when` only decides
+what is visible. With nothing to show the column is away. `tools` holds small controls for the
+work surface's control row; the work surface places them with `panel.region(pane, "tools")`, and
+until it does they lead the main region. A feature adds an inspector section or a tool to a pane
+it does not own without naming that pane's owner, which is how Colour by and the Classify palette
+share the Zones / Faces pane. A pane whose sections all use `main` is laid out as before.
+
+The other two seams add to a screen another module owns:
 
 - `ui.contributeTable(tableId, contribution)`, below, adds columns and row actions to another
   module's named table. Zones' Face usage column in the Assemblies inventory

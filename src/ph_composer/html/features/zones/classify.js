@@ -228,5 +228,27 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     }
   }
 
-  panel.section("ph_composer.classify", render, { order: 30 });
+  /* The palette is the inspector's while the tool has the viewport or the user has opened it. The toggle
+     says which: pressed while either holds. Pressing it during painting gives the viewport back. */
+  function renderToggle(root, state, send) {
+    var tool = snapshot.value(state, "ph_composer.zones.faces.palette") || { active: false };
+    var screenState = forSession(state.session, send);
+    ui.memoPaint(root, "toggle", [state.session, Boolean(tool.active), Boolean(screenState.open),
+      screenState.view.busy()], function () {
+      var pressed = Boolean(tool.active || screenState.open);
+      var toggle = ui.iconButton(pressed ? "Close Classify faces" : "Classify faces", "paint_bucket", function () {
+        if (tool.active) screenState.view.run("ph_composer.zones.faces.stop_classifying", {});
+        screenState.open = !pressed;
+        panel.repaint();
+      });
+      toggle.setAttribute("aria-pressed", String(pressed));
+      toggle.disabled = screenState.view.busy();
+      root.className = "phc-classify-toggle";
+      root.replaceChildren(toggle);
+    });
+  }
+
+  panel.section("ph_composer.classify.toggle", renderToggle, { region: "tools", order: 10 });
+  panel.section("ph_composer.classify", render, { region: "inspector", order: 10,
+    when: function () { return Boolean(screen && (screen.active || screen.open)); } });
 });
