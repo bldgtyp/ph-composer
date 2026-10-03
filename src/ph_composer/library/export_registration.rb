@@ -31,8 +31,11 @@ module PhComposer
 
       def summary_fields
         text = { "type" => "string", "minLength" => 1 }
-        counted = Library.object({ "kind" => text, "count" => { "type" => "integer", "minimum" => 0 } })
-        omitted = Library.object({ "record_kind" => text, "id" => text,
+        label = Library.described(text, "The registered record kind's label, for display; kind and record_kind " \
+                                        "stay the identifiers.")
+        counted = Library.object({ "kind" => text, "record_kind_label" => label,
+                                   "count" => { "type" => "integer", "minimum" => 0 } })
+        omitted = Library.object({ "record_kind" => text, "record_kind_label" => label, "id" => text,
                                    "fields" => { "type" => "array", "items" => text }, "reason" => text },
                                  :optional => ["id"])
         { "kinds" => { "type" => "array", "items" => counted },
@@ -64,8 +67,9 @@ module PhComposer
                       :description => "Review local library export counts and omissions.",
                       :params => preview_params, :result => preview_shape, :examples => [{}]) do |request|
           projection = ExportProjection.build(request)
-          ExportProjection.summary(projection).merge("projection_digest" => projection.fetch("projection_digest"),
-                                                     "revision" => request.session.revision)
+          summary = ExportProjection.summary(projection, request.registry)
+          summary.merge("projection_digest" => projection.fetch("projection_digest"),
+                        "revision" => request.session.revision)
         end
       end
     end

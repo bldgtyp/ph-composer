@@ -6,6 +6,34 @@ PhComposerUI.define("library/export", ["record_form", "request", "workspace"], f
     var label = ui.element("label", "", title);
     node.setAttribute("aria-label", title); label.appendChild(node); form.appendChild(label); return node;
   }
+  // Omissions in glossary words, one line per record kind and reason; codes and field keys stay in the tooltip.
+  function omitted(fields) {
+    var source = fields.indexOf("source") >= 0, other = fields.some(function (key) { return key !== "source"; });
+    if (source && !other) return "source attribution is not exported";
+    return (source ? "source attribution and some fields" : "some fields") + " are not exported";
+  }
+  var REASONS = {
+    unsupported_kind: function () { return "not a library record; it stays in this Model"; },
+    fields_not_in_wire_schema: omitted,
+    origin_identity_unavailable: function () { return "library origin is not exported"; }
+  };
+  function omissionLines(omissions) {
+    var groups = {}, order = [];
+    omissions.forEach(function (row) {
+      var key = row.record_kind + " " + row.reason;
+      if (!groups[key]) { groups[key] = { row: row, count: 0, fields: [] }; order.push(key); }
+      groups[key].count += 1;
+      row.fields.forEach(function (field) {
+        if (groups[key].fields.indexOf(field) < 0) groups[key].fields.push(field);
+      });
+    });
+    return order.map(function (key) {
+      var group = groups[key], reason = REASONS[group.row.reason];
+      return { text: group.row.record_kind_label + (group.count > 1 ? " (" + group.count + ")" : "") + ": " +
+          (reason ? reason(group.fields) : "not exported"),
+        detail: [group.row.record_kind, group.row.reason].concat(group.fields).join(" · ") };
+    });
+  }
   function ExportForm(session, send, changed) {
     var self = this;
     RecordForm.call(this, session, send, { title: "Export library", action: NAME + ".export_file",
@@ -59,11 +87,10 @@ PhComposerUI.define("library/export", ["record_form", "request", "workspace"], f
       this.summary.replaceChildren();
       if (this.projection) {
         this.projection.kinds.forEach(function (kind) {
-          this.summary.appendChild(ui.element("p", "", kind.kind + ": " + kind.count));
+          this.summary.appendChild(ui.element("p", "", kind.record_kind_label + ": " + kind.count));
         }, this);
-        this.projection.omissions.forEach(function (omission) {
-          this.summary.appendChild(ui.element("p", "muted", omission.record_kind + ": " + omission.reason +
-            (omission.fields.length ? " (" + omission.fields.join(", ") + ")" : "")));
+        omissionLines(this.projection.omissions).forEach(function (line) {
+          var row = ui.element("p", "muted", line.text); row.title = line.detail; this.summary.appendChild(row);
         }, this);
       } else this.error.textContent = preview.message || "The export scope could not be read.";
     }
