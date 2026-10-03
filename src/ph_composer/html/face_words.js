@@ -10,9 +10,8 @@ PhComposerUI.define("face_words", [], function () {
     AirBoundary: "Air boundary" };
   var BOUNDARIES = { Outdoors: "Outdoors", Ground: "Ground", Adiabatic: "To neighbour",
     Surface: "Surface", AttachedZone: "Attached zone" };
-  // Boundary conditions a chip cannot set on its own, and why. Shown rather than hidden, because a
-  // user who looks for Surface and does not find it learns nothing (ui-polish: say why on the
-  // control before the click).
+  // Boundary conditions a chip cannot set on its own, and why. The Classify palette leaves them out
+  // and says why once, in its help; a Face that already holds one shows it read only.
   var UNCHOOSABLE = { Surface: "set by Solve adjacencies", AttachedZone: "choose a record below" };
 
   function label(table, value) {

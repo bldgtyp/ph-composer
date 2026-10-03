@@ -50,6 +50,11 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table .row-icon:last-child { margin-right: 0; }
 .phc-table .row-chevron { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: 20px; height: 26px; padding: 0; }
 .phc-table .row-chevron svg { display: block; }
+.phc-table .row-chevron.is-leaf { visibility: hidden; }
+/* A cell that still needs something from the user: amber, with the reason in its tooltip. A value not
+   yet given reads "?". */
+.phc-table td.is-flagged { background: var(--warning-surface); color: var(--warning-ink); }
+.phc-table td.is-flagged select.phc-enum-cell { background-color: var(--warning-surface-alt); color: var(--warning-ink); }
 .phc-table .row-chevron[aria-expanded="true"] svg { transform: rotate(90deg); }
 .phc-inventory-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-right: auto; }
 .phc-view-control { display: flex; align-items: center; gap: 6px; color: var(--muted); }

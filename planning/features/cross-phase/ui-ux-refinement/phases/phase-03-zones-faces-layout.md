@@ -290,3 +290,57 @@ read back from SketchUp; captures are native window pixels by window id.
 
 Not covered: native pointer input, an Assembly assigned from the selection inspector (the fixture
 has no Assemblies; covered by the browser check), a selection over the 250-Face ceiling.
+
+## P3-3 outcome, 2026-10-03
+
+Ed authorized P3-3 on 2026-10-03, to start once #58 merged. Implemented on `feat/ui-zones-words`.
+`make ci` passes (1390 Ruby runs, 399 JavaScript tests, 172 Python tests) and `make ui-checks`
+passes.
+
+- **Palette (Z2).** Chips only. "blank keeps what each Face has" is gone from each field, and the
+  two explanations drawn as disabled chips are gone. One help button in the palette's heading says
+  it once: what unchosen means, that Surface comes from Solve adjacencies, and that an Attached
+  zone is chosen from its list.
+- **Make Zone (Z3).** While it is unavailable an alert icon sits beside it; its name and tooltip
+  give the reason, and pressing it raises the reason as a notice.
+- **State (Z4).** The State column is gone. A Face missing a type or a boundary shows an amber
+  "?" pill in that cell, named "Set <Face> boundary". The Zone's amber count carries its tooltip
+  text as its accessible name.
+- **Chevrons (Z5).** The table takes `expandable(row)`; a Face row keeps the chevron's place but
+  offers nothing to open.
+
+One Sonnet diff review ran, and one of its findings changed the stage. The State column also
+reported two things nothing else on screen shows: an Attached zone boundary whose record is
+missing, and a Surface whose adjacency has gone stale. Dropping the column would have hidden both.
+They are now flagged on the Boundary cell, amber with the reason in its tooltip, whether the cell
+is a control or read-only text. Also applied: focus stays on a cell when its "?" is filled; a Zone
+with no recorded Faces has no chevron; arrow keys skip the open and close step on a leaf row; the
+Zone's count is an `img` with a name, since a bare span takes none; Make Zone's reason covers the
+other causes the host has for refusing (already a Zone, inside one).
+
+Not done, and why: the Classify tool still turns on the last colour mode the user chose
+(`classify_tool.rb`, `force_colour_by`). That is the accepted Phase 1 contract ("Off at rest, with
+the remembered mode used", D7 gate handoff), so changing it to always use Face type is a decision
+for Ed, not a wording fix.
+
+## P3-3 host check, 2026-10-03
+
+SketchUp 26.1.188, fresh process, build installed from the branch, Model `ui-zones-words-run.skp`
+copied fresh from the synthetic `p1b-authoring.skp` (two Zones, each with one classified Face and
+five unclassified). The SketchUp selection was set through development `eval`; panel controls were
+changed by script; captures are native window pixels by window id.
+
+| Check | Result |
+| --- | --- |
+| At rest | Pass: no State column; Face rows have no chevron; each Zone's amber count reads 5; an alert icon sits beside the unavailable Make Zone |
+| Classify palette | Pass: six chips, one help button, the Attached zone picker; no disabled explanation chips |
+| One unclassified Face given a type only, from the selection inspector | Pass: the Face becomes a row with Type "Wall" and an amber "?" Boundary; its Zone's count drops from 5 to 4 |
+
+Not covered in the host: a stale adjacency and a dangling Attached zone on the Boundary cell (unit
+tests only; the fixture has neither), native pointer and keyboard input, arrow-key navigation.
+
+One capture during this check came back blank. SketchUp's windows had gone off-screen at that
+moment, and after the panel was reopened the first window id found was the closed one. The panel
+itself rendered correctly once the on-screen window was captured, the renderer was idle, and the
+same steps in the browser preview raise no error. Recorded so the blank image is not read as a
+product fault.
