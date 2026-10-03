@@ -61,10 +61,15 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
       var membrane = canvas.geometry(values, materials).layers.filter(function (entry) {
         return entry.layer.id === selected.layer.id;
       })[0].isMembrane;
-      control(this, selection, "Add segment", "segments.add", { layer_id: selected.layer.id }, membrane, null, "split");
-      control(this, selection, "Delete segment", "segments.remove",
-        { layer_id: selected.layer.id, segment_id: selected.segment.id }, selected.layer.segments.length === 1,
+      var only = selected.layer.segments.length === 1;
+      var add = control(this, selection, "Add segment", "segments.add", { layer_id: selected.layer.id }, membrane,
+        null, "split");
+      var remove = control(this, selection, "Delete segment", "segments.remove",
+        { layer_id: selected.layer.id, segment_id: selected.segment.id }, only,
         selected.segment.material_id ? "Delete this Layer-Segment and its Material assignment?" : null, "delete");
+      // An icon that cannot act says why, where its name would be.
+      if (membrane) add.title = "A membrane Layer has one Layer-Segment";
+      if (only) remove.title = "A Layer keeps at least one Layer-Segment";
       var layerTrigger = ui.button("Layer tools");
       var layerMenu = new ui.Bubble(layerTrigger, "Layer tools");
       control(this, layerMenu.content, "Add outside", "layers.add",

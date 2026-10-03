@@ -272,8 +272,7 @@ test("the toolbar shows a selection's tools only while a Layer-Segment is select
   var o = setup(), bar = o.editor.root.querySelector(".assembly-toolbar");
   var selection = bar.querySelector(".assembly-selection-tools");
   assert.strictEqual(selection.querySelectorAll("button").length, 0);
-  assert.ok(selection.textContent.includes("Select a Layer-Segment") ||
-    selection.children[0].textContent === "Select a Layer-Segment");
+  assert.strictEqual(selection.children[0].textContent, "Select a Layer-Segment");
   assert.strictEqual(o.editor.root.querySelectorAll("[data-builder-action='segments.add']").length, 0);
   ["segments.mirror", "layers.flip", "layers.flip_orientation"].forEach(function (action) {
     assert.ok(bar.querySelector("[data-builder-action='" + action + "']"), action + " is in the menu");
