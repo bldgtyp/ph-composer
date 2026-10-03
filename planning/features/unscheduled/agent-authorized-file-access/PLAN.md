@@ -108,9 +108,9 @@ item 3 records the double prompt. Recommendation: the native Save sheet is suffi
 the file it names. A second question appears only when a companion file the sheet did not name
 would be replaced (the HBJSON report). One function owns that rule. Windows behavior of
 `UI.savepanel` is unverified and Windows support is separately gated, so the rule is stated for
-macOS and the Windows packet re-checks it. [host-gate-ui-findings](../host-gate-ui-findings/README.md)
-item 3 landed this rule as `NativeApproval.confirm_replace(path, question)` (implemented on branch
-`feat/host-gate-ui-findings`, 2026-10-02); this plan reuses it. The host check showed the companion
+macOS and the Windows packet re-checks it. [host-gate-ui-findings](../../../archive/host-gate-ui-findings/README.md)
+item 3 landed this rule as `NativeApproval.confirm_replace(path, question)` (merged to main in PR #40,
+2026-10-02); this plan reuses it. The host check showed the companion
 clause above is moot: the artifact pair refuses half a prior pair, so the HBJSON export now refuses that
 destination right after the Save sheet instead of asking about the report (Ed, 2026-10-02).
 

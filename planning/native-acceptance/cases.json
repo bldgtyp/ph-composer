@@ -975,7 +975,7 @@
       "id": "HGUI",
       "label": "Host-gate UI findings: disabled dialog actions, export form wording, replace consent, menu add notice, uses bubble",
       "mode": "mixed",
-      "authority": "planning/features/unscheduled/host-gate-ui-findings/PLAN.md",
+      "authority": "planning/archive/host-gate-ui-findings/PLAN.md",
       "paths": [
         "src/ph_composer/html/overlay.css",
         "src/ph_composer/html/library/*",

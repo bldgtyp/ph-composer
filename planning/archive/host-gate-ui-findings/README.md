@@ -1,13 +1,13 @@
 # UI findings from the R11 host gate
 
 DATE: 2026-10-02
-STATUS: Implemented on branch `feat/host-gate-ui-findings` 2026-10-02 ([PLAN.md](PLAN.md), "Implementation
-record"); host check passed 2026-10-02; in review, PR #40. Five small UI findings from the R11 carried host gate; none failed a check.
+STATUS: Complete. Merged to main 2026-10-02 (PR #40, merge commit `58b347c`); host check passed 2026-10-02
+([PLAN.md](PLAN.md), "Implementation record"). Archived. Five small UI findings from the R11 carried host gate; none failed a check.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/37
 
 Observed in real SketchUp on 2026-10-02
-([evidence](../../../native-acceptance/evidence/r11-host-gate-2026-10-02.md)). Each is small. Work
+([evidence](../../native-acceptance/evidence/r11-host-gate-2026-10-02.md)). Each is small. Work
 them with the UI polish skill, together or alongside the next Library or Window Types screen change.
 
 1. **A disabled primary button looks active.** In the Libraries dialog with an unreadable setup,
