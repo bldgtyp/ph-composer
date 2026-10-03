@@ -25,10 +25,12 @@ module PhComposer
                          %w[copy.rule_missing extension.invalid reference.invalid zone.identity_unique]).freeze
       RESTORE = %w[record.unreadable target.changed target.not_found target.wrong_kind validation.failed
                    zone.identity_in_use zone.restore_unsafe].freeze
-      # Editing, copying and deleting an Attached zone through the record engine.
-      RECORD_EDIT = %w[record.unreadable reference.invalid target.changed target.not_found validation.failed].freeze
-      RECORD_COPY = %w[copy.rule_missing extension.invalid record.unreadable reference.invalid target.not_found
+      # Editing, copying and deleting an Attached zone through the record engine. An edit or copy checks
+      # every reference the record carries, an extension's included, and an entity id may now occur twice.
+      RECORD_EDIT = %w[record.unreadable reference.invalid target.ambiguous target.changed target.not_found
                        validation.failed].freeze
+      RECORD_COPY = %w[copy.rule_missing extension.invalid record.unreadable reference.invalid target.ambiguous
+                       target.not_found validation.failed].freeze
       RECORD_DELETE = %w[copy.rule_missing record.unreadable reference.in_use target.not_found target.wrong_kind
                          validation.failed].freeze
     end

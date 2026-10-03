@@ -12900,7 +12900,7 @@ Duplicate one Assembly with independent identity. Owner: `ph_composer.assemblies
 
 Undo step: Duplicate Assembly. Creates one catalog record, preserving shared definition references.
 
-Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -12952,7 +12952,7 @@ Add a Layer with one Layer-Segment of no Material. With no position it goes afte
 
 Undo step: Add Assembly Layer. Adds one Layer to this Assembly.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -13396,7 +13396,7 @@ Reverse the stored order of the Layers and keep the orientation, so the outside 
 
 Undo step: Flip Assembly Layers. Reverses the Layer order.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -13815,7 +13815,7 @@ Switch which end of the stored Layer order is the outside (first_layer_outside o
 
 Undo step: Flip Assembly Orientation. Changes only the orientation.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -14234,7 +14234,7 @@ Move one Layer one place outward or inward. A Layer already at that end stays. O
 
 Undo step: Move Assembly Layer. Swaps two neighbouring Layers.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -14670,7 +14670,7 @@ Remove one Layer. An Assembly keeps at least one Layer. Owner: `ph_composer.asse
 
 Undo step: Remove Assembly Layer. Removes the Layer and its Layer-Segments; clears the air barrier if it was on that Layer.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -15096,7 +15096,7 @@ Mark one face of one Layer as the Assembly's air barrier, or clear it. Owner: `p
 
 Undo step: Set Air Barrier. Replaces the Assembly's one air barrier.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -15534,7 +15534,7 @@ Set one Layer's thickness. Owner: `ph_composer.assemblies`.
 
 Undo step: Change Layer Thickness. Changes one Layer's thickness.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -15968,7 +15968,7 @@ Add a Layer-Segment of no Material to one Layer. A membrane Layer holds one Laye
 
 Undo step: Add Layer-Segment. Adds one Layer-Segment.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -16405,7 +16405,7 @@ Reverse the order of the Layer-Segments in every Layer of one Assembly. Owner: `
 
 Undo step: Mirror Layer-Segments. Reverses each Layer's Layer-Segment order.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -16824,7 +16824,7 @@ Remove one Layer-Segment. A Layer keeps at least one. Owner: `ph_composer.assemb
 
 Undo step: Remove Layer-Segment. Removes one Layer-Segment.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -17257,7 +17257,7 @@ Set or clear one Layer-Segment's Material. A membrane Material needs a Layer of 
 
 Undo step: Set Layer-Segment Material. Changes one Layer-Segment's Material and may reset a membrane Layer's thickness.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -17700,7 +17700,7 @@ Set one Layer-Segment's width, continuous-insulation flag or steel stud spacing.
 
 Undo step: Edit Layer-Segment. Changes one Layer-Segment's values.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -18161,7 +18161,7 @@ Edit one Assembly; changed expected values refuse. Owner: `ph_composer.assemblie
 
 Undo step: Edit Assembly. Updates values and optional metadata.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -19164,7 +19164,7 @@ Duplicate one Material with independent identity. Owner: `ph_composer.assemblies
 
 Undo step: Duplicate Material. Creates one catalog record, preserving shared definition references.
 
-Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -19225,7 +19225,7 @@ Edit one Material; changed expected values refuse. Owner: `ph_composer.assemblie
 
 Undo step: Edit Material. Updates values and optional metadata.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -33629,7 +33629,7 @@ Copy Attached zones without reassigning any Face. Owner: `ph_composer.zones`.
 
 Undo step: Duplicate Attached Zone. Creates Attached zone records with fresh ids.
 
-Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -33690,7 +33690,7 @@ Create or edit one Attached zone. Owner: `ph_composer.zones`.
 
 Undo step: Save Attached Zone. Writes one Attached zone record.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 

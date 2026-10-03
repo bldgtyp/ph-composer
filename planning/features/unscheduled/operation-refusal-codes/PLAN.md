@@ -223,6 +223,14 @@ longer claims the lists are exhaustive; EXTENSIBILITY.md tells a library kind co
 callbacks may refuse; per-operation diagnostics for a missing list; the ownership and dispatch-only
 checks; a frozen-`refuses` assertion. Left as follow-ups below.
 
+PR review ([bldgtyp/ph-composer#50](https://github.com/bldgtyp/ph-composer/pull/50)), 2026-10-03. Ed
+reproduced one missing declaration: an understood extension on an Attached zone that refers to a Face
+id now occurring twice makes `attached_zone.save` refuse with `target.ambiguous`, which the record
+engine's reference check raises. `target.ambiguous` now sits in Zones `RECORD_EDIT` and `RECORD_COPY`
+and Assemblies `EDIT` and `DUPLICATE`, which share that path, and `tests/entity_references_test.rb`
+covers the edit and the copy through the API. The view command, setup command and file export
+examples in EXTENSIBILITY.md now carry `refuses:`.
+
 Follow-ups, not in this branch:
 
 - A library kind adapter could declare the codes its callbacks raise, so `library.copy` publishes them

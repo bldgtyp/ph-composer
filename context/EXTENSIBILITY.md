@@ -280,7 +280,7 @@ installation and standalone repository remain open. A connection provider is sti
 
 ### Registered file exports
 
-`feature.file_export(name, description:, params:, result:, examples:, &handler)` declares a
+`feature.file_export(name, description:, params:, result:, refuses:, examples:, &handler)` declares a
 synchronous file write under the owner's namespace and the explicit `export` grant. It runs
 without a Model proposal, sequence or Undo operation. The handler receives the validated request;
 the result is detached and validated against its declared schema. A destination only the user can
@@ -392,7 +392,7 @@ nothing here to undo.
 ```ruby
 feature.view_command("ph_composer.zones.faces.locate",
                      description: "Select an explicit set of Faces and bring them into view.",
-                     params: LOCATE_PARAMS, result: LOCATE_RESULT) do |request|
+                     params: LOCATE_PARAMS, result: LOCATE_RESULT, refuses: []) do |request|
   Zones::Faces.locate(request)
 end
 ```
@@ -425,7 +425,8 @@ host shows.
 ```ruby
 feature.setup_command("ph_composer.library.providers.remove",
                       description: "Remove a configured library from this machine.",
-                      params: REMOVE_PARAMS, result: PROVIDERS) do |request|
+                      params: REMOVE_PARAMS, result: PROVIDERS,
+                      refuses: %w[library.setup_unavailable library.setup_unreadable]) do |request|
   Library::Setup.remove(request.params.fetch("provider_id"))
 end
 ```
