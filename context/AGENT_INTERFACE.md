@@ -50,6 +50,10 @@ Expose a bounded capability description with:
 - Record schemas and relationships, stable identifiers, occurrence-path meaning, supported import
   and export formats, and pointers to concise documentation.
 
+Each operation publishes the codes it can refuse with: `describe` returns its own as `refuses` and
+names the common sets it also answers as `common_refusal_sets`, which `discover` returns once as
+`common_refusals`. A client plans recovery from these lists rather than learning codes by trying.
+
 Do not make a client infer action names or capabilities from private file paths or the current UI.
 Reject incompatible API versions explicitly and document deprecations. New features register
 their agent-visible contracts alongside their existing operations rather than editing an adapter.

@@ -197,6 +197,25 @@ leaving the panel to derive it (`ph_composer.windows.units.list`). A feature tha
 readiness reads a published field, such as `export_ready` and `export_blockers` on
 `ph_composer.assemblies.assemblies.all` rows, rather than matching that feature's codes.
 
+Every query, action, view command, setup command and file export declares `refuses:`, the codes it
+can refuse with beyond the common sets of its kind (context/CONTRACTS.md, "Outcomes and codes").
+A small operation lists them at its declaration:
+
+```ruby
+feature.action("ph_composer.zones.settings.update",
+               :description => "...", :params => params, :result => result,
+               :undo_name => "Change Zone Settings", :side_effects => "...",
+               :refuses => %w[record.unreadable target.changed validation.failed]) { |request, proposal| ... }
+```
+
+Operations registered in a loop share one list, and a feature whose operations share paths keeps
+named lists beside its `codes.rb` (`features/windows/refuses.rb`). A code reached through a dependency's query,
+locator or participant counts, because it reaches the caller unchanged. Registration refuses an
+operation without `refuses:`, a code nothing declares, a repeat and a code its common sets already
+hold. The offline suite installs a `Refusals.audit` that fails any test whose operation refuses
+with a code outside its list and common sets, so coverage keeps the lists complete: a missing code
+is declared, never suppressed.
+
 A composition-root registration or generated build inventory is permitted. Requiring a new
 feature branch inside shell, session, export orchestration or UI-kit internals is a contract
 defect. Explicit registration does not promise dynamic plugin loading, a marketplace or separate

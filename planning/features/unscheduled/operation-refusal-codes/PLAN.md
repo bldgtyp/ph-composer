@@ -1,8 +1,9 @@
 # Operations publish the codes they refuse with: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. Ed decided D1 to D4 on 2026-10-02, each as recommended. Not yet authorized for
-implementation.
+STATUS: Implemented on branch `feat/operation-refusal-codes`, 2026-10-03, Phases 1 to 5. Ed decided
+D1 to D4 on 2026-10-02, each as recommended, and authorized all five phases in one PR on 2026-10-03.
+See "Implementation outcome".
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/39
 
@@ -166,3 +167,56 @@ One branch, one commit per phase, focused tests per phase, `make ci` at the end.
   and the collector makes the gap visible the first time a test reaches it.
 - `FOUNDATION_CODES` duplicates the CONTRACTS.md table by design; the equality test keeps them
   together.
+
+## Implementation outcome
+
+Branch `feat/operation-refusal-codes`, one commit per phase except Zones and Assemblies, which share
+one commit because the generated reference is regenerated once for both. `make ci` passes.
+
+What landed, and where it differs from the phases above:
+
+- **Common sets.** They live in `Refusals::COMMON` (`shell/refusals.rb`), not `Dispatch::COMMON_REFUSALS`:
+  the refusal contract is one small module, and `Dispatch` stays under its class-size signal. Each kind's
+  set holds `request.malformed`, `request.api_version`, `request.capability_denied`, `session.unknown`,
+  `session.busy`, `params.invalid` and `operation.failed`; actions add the retry, revision, proposal and
+  rollback codes; an `approval` set holds `access.user_required` and `request.cancelled`.
+  `request.unknown_operation` is left out, since no described operation can answer it.
+- **`describe` field.** `common_refusal_sets` is a list of set names rather than one
+  `common_refusals_kind`, because the approval set is orthogonal to kind: a setup command with an
+  approval answers `["setup_command", "approval"]`. Foundation codes appear as
+  `{"code", "owner": "foundation"}` with no description; the CONTRACTS.md table describes them, and
+  writing ~120 descriptions in Ruby would be a second catalog. Lists are published sorted.
+- **Audit placement.** `Refusals.report` runs at each public dispatch entry (`query`, `view`, `setup`,
+  `file_export`, `preview`, `invoke`) on the finished outcome, not inside `coded_outcome`. That one site
+  sees every path, including the `validation.failed` a handler's `UserError` becomes, which
+  `coded_outcome` never receives. `setup_refusal` and `file_export_refusal` are not reported: no handler
+  runs there, so only common codes arise.
+- **Required keyword.** `refuses:` is a required keyword on all five registration methods (a missing one
+  is a `registration.schema_invalid` diagnostic from the failed install), and validation refuses a nil
+  list set directly on a declaration.
+- **Seeding.** A recorded run of the suite produced 214 refusals outside any declaration across about 60
+  operations. Two read-only source traces then covered all 133 built-in operations, following each
+  handler into the record engine, locators, dependency reads, participants and retargeters. Every
+  recorded refusal is explained by source. The published lists therefore also carry codes no test
+  reaches; the audit enforces only what tests reach. Step-apply errors were excluded, since they surface
+  as `operation.failed`. Codes reachable only through an installed extension (`extension.invalid`,
+  some `reference.invalid`) were kept, because records may carry extension payloads.
+- **Where lists live.** Zones, Assemblies, Windows and the library foundation keep named lists in a
+  `refuses.rb` beside `codes.rb`, composed from the paths their operations share; Colour-by and the
+  records query declare theirs inline.
+- **Known gap.** `ph_composer.library.copy` runs the receiving kind's callbacks, whose own-noun codes
+  (`window.*` from the Windows kinds) reach the caller. The foundation names no feature and installs
+  without Windows in some compositions, so it cannot list them. Recorded in CONTRACTS.md.
+- **Tests.** `tests/registry_test.rb` covers declared, foundation, undeclared, repeated, common and
+  missing entries; `tests/outcome_codes_test.rb` keeps `FOUNDATION_CODES` equal to the table;
+  `tests/api_reference_test.rb` covers `describe` of a Windows Type action, `discover`'s sets and the
+  reference's `Refuses:` line under every operation; `tests/api_test.rb` shows the collector naming an
+  undeclared refusal's operation and code.
+
+Follow-ups, not in this branch:
+
+- A library kind adapter could declare the codes its callbacks raise, so `library.copy` publishes them
+  without the foundation naming a feature.
+- Export task methods remain out of scope until agent-authorized-file-access Phase 5 settles
+  `start_export`.
+

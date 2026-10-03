@@ -70,7 +70,11 @@ class ApiReferenceTest < PhComposerTestCase
     assert_equal PhComposer::Refusals::COMMON, API.discover.fetch("common_refusals")
     assert_equal ["action"], type_update.fetch("common_refusal_sets")
     assert_equal %w[file_export approval], file_export.fetch("common_refusal_sets")
-    assert_kind_of Array, type_update.fetch("refuses")
+    assert_includes type_update.fetch("refuses"),
+                    { "code" => "window.overlap", "owner" => "ph_composer.windows",
+                      "description" => PhComposer::Registry.current.codes.fetch("window.overlap").description }
+    assert_includes type_update.fetch("refuses"), { "code" => "target.changed", "owner" => "foundation" }
+    refute_includes type_update.fetch("refuses").map { |row| row.fetch("code") }, "revision.stale"
   end
 
   def test_quantities_carry_their_units
