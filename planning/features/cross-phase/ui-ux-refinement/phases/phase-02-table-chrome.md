@@ -136,19 +136,23 @@ enum pill carries its own focus ring and locked look, the fill tools start idle,
 plan promised are in. Left as follow-ups: the sort toggle announces no state change to a screen
 reader, and a Library surface that is not a kit `Inventory` shows no count.
 
-## Host check, 2026-10-03: part done
+## Host check, 2026-10-03
 
 SketchUp 26.1.188, fresh process, build installed from the branch, Model `ui-chrome-run.skp`
-copied fresh from the synthetic `uxk1-rerun.skp` (two Zones, twelve classified Faces). Captures are
-native window pixels by window id; tab changes were driven through development `eval`.
+copied fresh from the synthetic `uxk1-rerun.skp` (two Zones, twelve classified Faces). Two
+Materials and two Assemblies were added to that scratch copy through the panel's own forms, by
+script. Captures are native window pixels by window id; tab changes were driven through
+development `eval`. The last two rows are native pointer and keyboard input delivered through
+computer use.
 
 | Check | Result |
 | --- | --- |
-| Zones / Faces at 1496 by 938 | Pass: one control row with the sort toggle, Type, Boundary and Assembly cells as the kit's enum pill |
-| Assemblies, empty | Pass: one row (filter, Group by, Order by, toggle, help), header count 0 |
-| Library Materials, empty | Pass: one row with "0 total", no count in the header |
-| Assemblies and Library with records: bare numbers, pills, fill tools on a range | Not run. Two Materials and two Assemblies were created in the scratch Model through the panel's own forms, then the screen locked and macOS refused window captures |
-| Range fill and one enum edit by native pointer | Not run |
+| Zones / Faces at 1496 by 938 | Pass: one control row with the sort toggle; Type, Boundary and Assembly cells as the kit's enum pill |
+| Assemblies and Library Materials, empty | Pass: one row, header count 0 on Assemblies, "0 total" in the Library row |
+| Assemblies with two records | Pass: "100" under "Thickness mm", the withheld U-value marker, Type and Exterior as pills |
+| Library Materials with two records | Pass: "2 total", coloured Category pills, no header count |
+| Range and fill by native input | Pass: click a conductivity cell, Shift+Down extends the range, the fill tools appear in the row without moving the table, fill down writes 0.04 to the second row |
+| Enum edit by native input | Pass: the Category dropdown opens its native menu and choosing Woods repaints the pill and the library sidebar. The pill shows its focus ring |
 
-Pull request [#56](https://github.com/bldgtyp/ph-composer/pull/56) stays open until the last two
-rows pass. Evidence so far is in the gitignored `_private/host/ui-chrome-evidence/`.
+Not covered: the Psi-Install tab's defaults in the host, SketchUp 2023, Windows. Evidence is in the
+gitignored `_private/host/ui-chrome-evidence/`.
