@@ -17,6 +17,7 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.active = this.page.active; this.collapsed = this.page.collapsed; this.entries = [];
     root.replaceChildren(); root.classList.add("window-workspace");
     this.notice = ui.floatingNotice(root);
+    var noticeLayer = el("div", "phc-notice-layer"); noticeLayer.appendChild(this.notice); root.appendChild(noticeLayer);
     this.layout = el("div", "window-layout"); this.audit = el("div", "window-audit");
     this.scheduleSurface = el("div");
     this.tabs = new Subtabs({ label: "Window Types sections", state: this.page, stateKey: "surface",
@@ -24,7 +25,10 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
         { id: "audit", label: "U-Values", surface: this.audit },
         { id: "schedule", label: "Schedule", surface: this.scheduleSurface }], guard: function () {
           return self.guard(); },
-      refused: function (reason) { self.notice.show(reason); }, changed: function () { self.paint(); } });
+      refused: function (reason, id) {
+        if (self.installEditor.root.hidden) self.notice.show(reason); else self.leaveInstalls(id);
+      }, reselected: function (id) { if (!self.installEditor.root.hidden) self.leaveInstalls(id); },
+      changed: function () { self.paint(); } });
     root.appendChild(this.tabs.root); root.appendChild(this.layout); root.appendChild(this.audit);
     root.appendChild(this.scheduleSurface);
     this.installEditor = new InstallEditor(session, send, function (message) {
@@ -66,6 +70,12 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     }, this).filter(Boolean)[0];
     if (review) return review;
     return this.installEditor.guard();
+  };
+  // A subtab chosen over an open Installs session ends it the way Cancel does, asking first when changes are staged.
+  View.prototype.leaveInstalls = function (id) {
+    var self = this, installs = this.installEditor;
+    if (installs.requests.busy()) { this.notice.show(installs.guard(), { tone: "warning" }); return; }
+    installs.cancelSession(false, function () { if (self.tabs.select(id)) self.tabs.buttons[id].focus(); });
   };
   View.prototype.request = function (action, params, done, allowDraft) {
     if (this.disposed || !this.enabled || this.requests.busy() || !this.installEditor.root.hidden) return false;
@@ -288,6 +298,8 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.renderList(); var record = this.record(); this.main.hidden = !record;
     this.paintPending();
     this.placement.paint(); this.schedule.paint();
+    // The Anchor belongs to Place, which an Installs session refuses.
+    if (!this.installEditor.root.hidden && !(this.placement.tool || {}).active) this.placement.root.hidden = true;
     this.installButton.disabled = this.installButton.disabled || !snapshot.value(this.state, shared.PREFIX +
       "settings");
     Object.assign(this.page, { active: this.active, order: this.order, groups: this.groups,

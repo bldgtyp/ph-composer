@@ -23,10 +23,11 @@ PhComposerUI.define("features/windows/section", ["panel", "features/windows/edit
       leaving = next; return next === "windows" || !current ? null : current.guard();
     }, function () {
       if (!current) return;
+      // The panel has already said why; a staged Installs session also offers to discard and continue.
       if (!current.installEditor.root.hidden && current.installEditor.dirty) {
         var destination = leaving;
         current.installEditor.cancelSession(false, function () { panel.navigate(destination); });
-      } else current.notice.show(current.guard());
+      }
     });
     panel.section("windows", render, { pane: "windows", onNavigate: function (root, intent) {
       if (root._view && intent.use) root._view.openUse(intent.use);

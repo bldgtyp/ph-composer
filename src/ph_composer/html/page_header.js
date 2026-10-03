@@ -1,14 +1,16 @@
 /* The one page header every pane opens with: the title, a muted count, then at the right the secondary
    actions and the one primary action last. A screen never styles its own heading.
    pageHeader({ title, count, actions: [node], primary: node }) returns
-   { root, setCount(text), setActions(nodes), setPrimary(node) }; a blank count or a null primary shows nothing. */
+   { root, setTitle(text), setCount(text), setActions(nodes), setPrimary(node) }; a blank count or a null primary
+   shows nothing. */
 PhComposerUI.define("page_header", ["dom"], function (dom) {
   "use strict";
 
   function pageHeader(options) {
     var root = dom.element("div", "phc-heading"), count = dom.element("span", "phc-heading-count");
     var actions = dom.element("div", "phc-heading-actions"), secondary = [], primary = null;
-    root.appendChild(dom.element("h1", "", options.title));
+    var title = dom.element("h1", "", options.title);
+    root.appendChild(title);
     root.appendChild(count);
     root.appendChild(actions);
     function place() {
@@ -16,6 +18,7 @@ PhComposerUI.define("page_header", ["dom"], function (dom) {
     }
     var header = {
       root: root,
+      setTitle: function (text) { title.textContent = text; },
       setCount: function (text) {
         count.textContent = dom.blank(text) ? "" : String(text);
         count.hidden = !count.textContent;

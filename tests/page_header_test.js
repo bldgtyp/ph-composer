@@ -31,6 +31,8 @@ test("the count and the primary action change in place", function () {
   first.textContent = "First"; second.textContent = "Second";
   var header = pageHeader({ title: "Library" }), count = header.root.querySelector(".phc-heading-count");
   assert.strictEqual(count.hidden, true, "a blank count shows nothing");
+  header.setTitle("Materials");
+  assert.strictEqual(header.root.querySelector("h1").textContent, "Materials");
   header.setCount("3 Materials");
   assert.deepStrictEqual([count.textContent, count.hidden], ["3 Materials", false]);
   header.setPrimary(first);

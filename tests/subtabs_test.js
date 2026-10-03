@@ -68,3 +68,12 @@ test("tabs have linked accessible surfaces and keyboard navigation", function ()
   o.tabs.dispose();
   assert.strictEqual(o.tabs.select("second"), false);
 });
+
+test("a refusal names the tab that was asked for, and choosing the shown tab again is reported", function () {
+  var seen = [], o = setup({}, { guard: function (id) { return id === "second" ? "Finish the draft." : null; },
+    refused: function (reason, id) { seen.push(reason + " " + id); },
+    reselected: function (id) { seen.push("again " + id); } });
+  assert.strictEqual(o.tabs.select("second"), false);
+  assert.strictEqual(o.tabs.select("first"), true);
+  assert.deepStrictEqual(seen, ["Finish the draft. second", "again first"]);
+});
