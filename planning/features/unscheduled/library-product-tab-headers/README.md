@@ -1,8 +1,8 @@
 # Library product tabs use the pane heading
 
 DATE: 2026-10-02
-STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md); Ed decided D1 and D2 the same day. A UI follow-up from
-the Phase 2 review's R10, which did not take it.
+STATUS: Implemented on branch `feat/library-product-tab-headers` 2026-10-02; host look passed 2026-10-03 (ledger `PTAB`); awaiting review and merge (PR #46). See [PLAN.md](PLAN.md) "Implementation record". Scoped and decided (D1, D2) 2026-10-02.
+A UI follow-up from the Phase 2 review's R10, which did not take it.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/38
 

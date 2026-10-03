@@ -63,6 +63,42 @@ const { chromium } = require("playwright");
     await page.getByRole("tab", { name: "Glazings", exact: true }).click();
     const library = page.locator("[data-pane=library]");
     await library.locator(".library-sidebar-root[aria-label='Glazing Library']").waitFor();
+    await page.getByRole("tab", { name: "Psi-Install Types", exact: true }).click();
+    const settings = library.locator(".phc-inventory-settings:visible");
+    const psiDefault = settings.getByRole("button", { name: /^Default Psi-Install: / });
+    const depthDefault = settings.getByRole("button", { name: /^Default install depth: / });
+    // A long selected name shrinks to an ellipsis inside the panel; at 1280 px, with the Psi-Install
+    // Library sidebar open, the defaults stay on the view controls' row.
+    await page.evaluate(name => {
+      previewHost.windows.psi_install_types.records[0].values.name = name; previewHost.snapshot();
+    }, "Synthetic thermally broken masonry sill installation detail");
+    await psiDefault.and(page.getByTitle(/masonry sill/)).waitFor();
+    for (const control of [psiDefault, depthDefault]) {
+      const box = await control.boundingBox(), chevron = await control.locator(".phc-glyph").boundingBox();
+      assert.ok(box.x >= 0 && box.x + box.width <= width && chevron.x + chevron.width <= box.x + box.width,
+        "a default control and its chevron stay inside the panel at " + width + " px");
+    }
+    if (width === 1280) {
+      const filter = library.getByRole("searchbox", { name: "Filter Psi-Install Type", exact: true });
+      const tops = [psiDefault, depthDefault, filter].map(async control => Math.round((await control.boundingBox()).y));
+      assert.strictEqual(new Set(await Promise.all(tops)).size, 1, "the defaults share the view controls' row");
+    }
+    await psiDefault.click();
+    const current = page.getByRole("dialog", { name: "Default Psi-Install", exact: true })
+      .locator("button[aria-pressed=true]");
+    await page.mouse.move(0, 0); await current.blur();
+    assert.strictEqual(await current.evaluate(node => getComputedStyle(node).color),
+      await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--interaction-highlight")
+        .trim()).then(hex => { const n = parseInt(hex.slice(1), 16);
+          return "rgb(" + [n >> 16, (n >> 8) & 255, n & 255].join(", ") + ")"; }),
+      "the current Psi-Install choice is marked teal at rest");
+    await psiDefault.click();
+    await depthDefault.click();
+    const depthBubble = page.getByRole("dialog", { name: "Default install depth", exact: true });
+    await depthBubble.getByRole("textbox", { name: "Default install depth", exact: true }).waitFor();
+    await page.screenshot({ path: path.join(directory, "psi-defaults-" + width + ".png"), fullPage: true });
+    await page.keyboard.press("Escape"); await depthBubble.waitFor({ state: "hidden" });
+    assert.strictEqual(await writes(), before + 3);
     assert.strictEqual(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     assert.deepStrictEqual(errors, []); await page.close(); console.log("Window library screens " + width + "px: pass");
   }

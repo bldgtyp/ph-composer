@@ -1,8 +1,8 @@
 /* The three local product inventories share grid editing, lifecycle forms and use-site inspection. */
 PhComposerUI.define("features/windows/inventory", ["panel", "inventory", "inventory_forms", "features/windows/form",
   "features/windows/editor_shared", "fields", "request", "snapshot", "unit_field", "library/sidebar",
-  "features/windows/library", "workspace"],
-function (panel, inventories, forms, Form, shared, fields, request, snapshot, unitFields, Sidebar, library, ui) {
+  "features/windows/library", "units", "workspace"],
+function (panel, inventories, forms, Form, shared, fields, request, snapshot, unitFields, Sidebar, library, units, ui) {
   "use strict";
   var quantities = {
     width_m: fields.with(fields.WIDTH_M_AS_MM, { label: "Width", allowBlank: true }),
@@ -30,11 +30,6 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     var spec = Object.assign({}, this.spec, { quantities: quantities });
     this.form = new Form(session, send, kind, spec, changed);
     this.requests = request.channel(session, send, "window-defaults");
-    this.heading = ui.element("div", "phc-inventory-heading"); this.heading.appendChild(ui.element("h2", "",
-      spec.title));
-    this.add = ui.button("+ New " + spec.label, function () { if (!self.guard()) self.form.open("create", null,
-      self.records); });
-    this.heading.appendChild(this.add); root.appendChild(this.heading);
     this.body = ui.element("div", "window-product-workspace"); root.appendChild(this.body);
     this.tableRoot = ui.element("div", "window-product-table"); this.body.appendChild(this.tableRoot);
     var adapter = library.adapter(kind, function () {
@@ -51,14 +46,18 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
         } : null });
     this.body.appendChild(this.sidebar.root);
     this.color = new forms.ColorForm(session, send, shared.PREFIX + kind + ".update", changed);
+    if (kind === "psi_install_types") this.buildDefaults();
     this.inventory = new inventories.Inventory(this.tableRoot, session, send, panel.notify, changed, {
       section: shared.PREFIX + kind, action: shared.PREFIX + kind + ".update", label: spec.label,
       columns: spec.columns, editable: spec.columns.map(function (column) { return column[0];
         }).filter(function (field) {
         return field !== "color";
-      }), quantities: quantities, groups: kind === "psi_install_types" ? [] : [["manufacturer", "Manufacturer"]],
+      }), quantities: quantities,
+      // Psi-Install Types have no grouping, so the kit leaves out its Group by control.
+      groups: kind === "psi_install_types" ? undefined : [["manufacturer", "Manufacturer"]],
       value: function (record, field) { return record.values[field]; },
       group: function (record) { return { label: record.values.manufacturer || "Manual" }; },
+      settings: this.defaults,
       actions: function (row) { return [{ id: "duplicate", icon: "duplicate", label: "Duplicate " +
         row.record.values.name },
         { id: "delete", icon: "delete", label: "Delete " + row.record.values.name }]; },
@@ -69,7 +68,6 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
         forms.colorCell(td, row.record, self.color, function () { return !self.guard(); }); return true;
       } });
     root.appendChild(this.form.root); root.appendChild(this.color.root);
-    if (kind === "psi_install_types") this.buildDefaults();
   }
   Inventory.prototype.uses = function (td, record) {
     var self = this; if (!record.use_count) { if (td._uses) td._uses.root.hidden = true; return; }
@@ -109,42 +107,102 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     });
     return rows;
   }
+  /* The Model's installation defaults, as two action-bar controls: a choice list for the default Psi-Install
+     Type, applied on choosing, and a single-value bubble for the install depth, applied on Enter or leaving. */
+  var DEPTH = fields.with(fields.LENGTH_M, { label: "Default install depth", min: 0, allowBlank: false });
+  function settingControl(label) {
+    var trigger = ui.button(""), value = ui.element("span", "window-default-value");
+    trigger.className = "window-default-control";
+    trigger.replaceChildren(ui.element("span", "", label + ": "), value, ui.glyph("chevron"));
+    trigger.valueText = value; return trigger;
+  }
   Inventory.prototype.buildDefaults = function () {
-    var self = this; this.defaults = ui.element("section", "window-defaults");
-    this.defaults.appendChild(ui.element("h3", "", "Model installation defaults"));
-    this.defaultPsi = ui.element("select"); this.defaultPsi.setAttribute("aria-label", "Default Psi-Install Type");
-    this.depth = new unitFields.UnitField({ field: fields.with(fields.LENGTH_M,
-      { label: "Default install depth", min: 0, allowBlank: false }) });
-    var psiLabel = ui.element("label", "", "Default Psi-Install Type"); psiLabel.appendChild(this.defaultPsi);
-    var depthLabel = ui.element("label", "", "Default install depth"); depthLabel.appendChild(this.depth.root);
-    this.defaults.appendChild(psiLabel); this.defaults.appendChild(depthLabel);
-    this.defaultPsi.addEventListener("change", function () { self.captureSettings(); self.defaultDirty = true; });
-    this.depth.input.addEventListener("input", function () { self.captureSettings(); self.defaultDirty = true; });
-    this.depth.commit = function () { self.saveDefaults(); };
-    this.depth.onCancel = function () { self.defaultDirty = false; self.settingsExpected = null;
-      self.defaultPsi.value = self.settings ? self.settings.default_psi_install_id || "" : ""; };
-    this.defaults.appendChild(ui.actionRow(ui.button("Cancel defaults edit", function () { self.depth.cancel(); }),
-      ui.button("Apply defaults", function () { self.saveDefaults(); })));
-    this.defaultsError = ui.element("p", "cell-error"); this.defaultsError.setAttribute("role", "status");
-    this.defaults.appendChild(this.defaultsError); this.root.appendChild(this.defaults);
+    var self = this;
+    // Short visible labels keep the action bar on one line; the accessible names say "Default".
+    this.defaultPsi = new ui.Bubble(settingControl("Psi-Install"), "Default Psi-Install");
+    this.depthBubble = new ui.Bubble(settingControl("Depth"), "Default install depth", {
+      guard: function () { return self.depthBlocked(); } });
+    this.depth = new unitFields.UnitField({ field: DEPTH,
+      onCancel: function () { self.settingsExpected = null; self.closeDepth(true); } });
+    this.depth.input.setAttribute("aria-label", "Default install depth");
+    this.depth.input.addEventListener("input", function () { self.captureSettings(); });
+    // Enter returns focus to the trigger; leaving the field leaves focus where the user put it.
+    this.depth.commit = function () { self.commitDepth(true); };
+    this.depth.input.addEventListener("blur", function () {
+      if (self.depth.input.isConnected) self.commitDepth(false);
+    });
+    this.depthBubble.content.appendChild(this.depth.root);
+    this.defaults = [this.defaultPsi.root, this.depthBubble.root];
+  };
+  /* Leaving the bubble applies the draft; an invalid entry, or one still being applied, keeps it open. */
+  Inventory.prototype.depthBlocked = function () {
+    if (this.disposed || !this.enabled || !this.settings) return null;
+    if (this.depth.editing && !this.requests.busy()) this.commitDepth(false);
+    return this.depth.editing || this.requests.busy() ? "Wait for the install depth." : null;
+  };
+  Inventory.prototype.closeDepth = function (focus) {
+    if (!this.depthBubble.panel.hidden) this.depthBubble.close(focus);
+  };
+  Inventory.prototype.commitDepth = function (focus) {
+    var field = this.depth; if (this.disposed || this.requests.busy()) return;
+    if (!field.editing || field.input.value === field.seed) {
+      field.editing = false; field.repaint(); this.settingsExpected = null; this.closeDepth(focus); return;
+    }
+    var parsed = field.parse();
+    if (!parsed.ok) {
+      field.error.textContent = parsed.message; field.error.hidden = false;
+      field.input.setAttribute("aria-invalid", "true"); return;
+    }
+    if (parsed.value === this.settings.default_install_depth_m) {
+      field.editing = false; field.repaint(); this.settingsExpected = null; this.closeDepth(focus); return;
+    }
+    // Disabled until the outcome, so nothing typed during the round trip is lost to the repaint.
+    if (this.saveDefaults(this.settings.default_psi_install_id || null, parsed.value)) field.setDisabled(true);
+  };
+  Inventory.prototype.choosePsi = function (id) {
+    this.defaultPsi.close(true);
+    if (id !== (this.settings.default_psi_install_id || null)) {
+      this.saveDefaults(id, this.settings.default_install_depth_m);
+    }
+  };
+  Inventory.prototype.paintDefaults = function () {
+    var self = this, current = this.settings.default_psi_install_id || null, busy = this.requests.busy();
+    var chosen = this.records.filter(function (row) { return row.id === current; })[0];
+    var name = chosen ? chosen.values.name : "None", trigger = this.defaultPsi.trigger;
+    trigger.valueText.textContent = name; trigger.valueText.classList.toggle("muted", !chosen);
+    trigger.setAttribute("aria-label", "Default Psi-Install: " + name); trigger.title = name;
+    var choices = [[null, "None"]].concat(this.records.map(function (row) { return [row.id, row.values.name]; }));
+    var key = JSON.stringify([current, choices]);
+    if (key !== this.choicesKey) {
+      this.choicesKey = key;
+      this.defaultPsi.content.replaceChildren.apply(this.defaultPsi.content, choices.map(function (choice) {
+        var button = ui.button(choice[1], function () { self.choosePsi(choice[0]); });
+        button.className = "phc-setting-choice";
+        button.setAttribute("aria-pressed", String(choice[0] === current)); return button;
+      }));
+    }
+    var depth = this.settings.default_install_depth_m, text = units.format(depth, DEPTH, units.profile(DEPTH));
+    trigger = this.depthBubble.trigger; trigger.valueText.textContent = text;
+    trigger.setAttribute("aria-label", "Default install depth: " + text);
+    this.depth.setValue(depth); this.depth.setDisabled(busy);
   };
   Inventory.prototype.captureSettings = function () {
     if (!this.settingsExpected) this.settingsExpected = shared.clone(this.settings);
   };
-  Inventory.prototype.saveDefaults = function () {
+  Inventory.prototype.saveDefaults = function (psiId, depth) {
     if (this.disposed || !this.enabled || this.requests.busy() || !this.defaults || !this.settings) return false;
     this.captureSettings();
-    var parsed = this.depth.editing ? this.depth.parse() : { ok: true, value: this.depth.baseline };
-    if (!parsed.ok) { this.defaultsError.textContent = parsed.message; return false; }
-    var params = { values: { default_psi_install_id: this.defaultPsi.value || null,
-      default_install_depth_m: parsed.value }, expected_values: shared.clone(this.settingsExpected) };
-    return this.requests.run(shared.PREFIX + "settings.update", params);
+    return this.requests.run(shared.PREFIX + "settings.update", { values: { default_psi_install_id: psiId,
+      default_install_depth_m: depth }, expected_values: shared.clone(this.settingsExpected) });
   };
+  // The Library pane owns the "+ New" button and runs its guard before calling create.
+  Inventory.prototype.create = function () { this.form.open("create", null, this.records); };
+  Inventory.prototype.canCreate = function () { return Boolean(this.enabled) && !this.inventory.busy(); };
   Inventory.prototype.guard = function () {
     if (this.disposed) return null;
     if (!this.form.root.hidden || !this.color.root.hidden) return "Finish or cancel the product form.";
-    if (this.defaultDirty || this.depth && this.depth.editing) return "Apply or cancel the defaults draft.";
     if (this.requests.busy()) return "Wait for the defaults edit.";
+    if (this.depth && this.depth.editing) return "Correct the install depth or press Escape.";
     if (this.sidebar.guard()) return this.sidebar.guard();
     return this.inventory.guard();
   };
@@ -155,27 +213,32 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     var self = this;
     function renderInventory() {
       self.inventory.externalBusy = self.form.busy() || self.color.requests.busy() || self.requests.busy();
-      self.inventory.render(state); self.add.disabled = !self.enabled || self.inventory.busy();
+      self.inventory.render(state);
       self.sidebar.refresh(state, {}, self.enabled);
     }
     if (!this.defaults) { renderInventory(); return; }
     this.settings = snapshot.value(state, shared.PREFIX + "settings");
-    if (!payload || !this.settings) {
-      this.requests.reset(); this.defaultDirty = false; this.settingsExpected = null; this.depth.cancel();
-      this.defaults.hidden = true; renderInventory(); return;
+    var shown = Boolean(payload && this.settings);
+    this.defaultPsi.root.hidden = !shown; this.depthBubble.root.hidden = !shown;
+    if (!shown) {
+      this.requests.reset(); this.settingsExpected = null; this.depth.editing = false; this.depth.repaint();
+      this.defaultPsi.close(false); this.closeDepth(false); renderInventory(); return;
     }
-    this.defaults.hidden = false; var outcome = this.requests.consume(state);
-    if (outcome && outcome.status === "completed") {
-      this.defaultDirty = false; this.settingsExpected = null; this.depth.editing = false;
-    } else if (outcome) this.defaultsError.textContent = outcome.message || "The draft is retained.";
-    if (!this.defaultDirty) {
-      this.defaultPsi.replaceChildren(ui.option("", "None"));
-      this.records.forEach(function (row) { this.defaultPsi.appendChild(ui.option(row.id, row.values.name)); }, this);
-      this.defaultPsi.value = this.settings.default_psi_install_id || "";
-      this.depth.setValue(this.settings.default_install_depth_m);
+    var outcome = this.requests.consume(state);
+    if (outcome) this.settingsExpected = null;
+    var focus = document.activeElement, refused = outcome && outcome.status !== "completed";
+    var kept = refused && this.depth.editing;
+    if (outcome && !kept) {
+      // Return focus to the trigger unless the user has already moved it somewhere else.
+      this.depth.editing = false;
+      this.closeDepth(!focus || focus === document.body || this.depthBubble.panel.contains(focus));
     }
-    this.depth.setDisabled(this.requests.busy()); this.defaultPsi.disabled = this.requests.busy();
-    renderInventory();
+    if (kept) {
+      this.depth.error.textContent = snapshot.message(outcome, "The install depth was not applied.");
+      this.depth.error.hidden = false;
+    } else if (refused) panel.notify(snapshot.message(outcome, "The default was not applied."), "warning");
+    this.paintDefaults(); renderInventory();
+    if (kept) this.depth.input.focus();
   };
   Inventory.prototype.dispose = function () {
     this.disposed = true; this.enabled = false; this.requests.reset(); this.form.dispose(); this.inventory.dispose();

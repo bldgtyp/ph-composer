@@ -147,3 +147,24 @@ test("withdrawn Window Types disable held provider review and retained sidebar a
   sidebar.use(row); sidebar.add(row); sidebar.copy.apply("use_library");
   assert.strictEqual(o.sent.filter(function (item) { return item.type === "action.invoke"; }).length, 0);
 });
+test("the Library pane heading carries each Window product's New button and refuses it over an open form", function () {
+  var document = dom.buildDocument(""), context = { document: document, Intl: Intl, innerWidth: 1280,
+    setTimeout: setTimeout, clearTimeout: clearTimeout }; context.window = context; dom.attachEvents(context);
+  var sections = {}, notices = [], root = dom.element("div"), state = fixtures.state();
+  document.body.appendChild(root);
+  function paint() { sections.library(root, state, function () {}); }
+  source.start(context, ["library/section", "features/windows/section"], { panel: {
+    section: function (name, render) { sections[name] = render; }, repaint: paint, navigationGuard: function () {},
+    notify: function (message) { notices.push(message); }, navigate: function () {} } });
+  paint(); var view = root._view;
+  assert.strictEqual(view.surfaces.map(function (entry) { return entry.create.textContent; }).join(),
+    "+ New Frame,+ New Glazing,+ New Psi-Install Type");
+  assert.ok(view.surfaces.every(function (entry) { return entry.create.parentNode === view.headingRow; }));
+  assert.strictEqual(view.surfaces.map(function (entry) { return entry.create.hidden; }).join(), "false,true,true");
+  assert.ok(view.surfaces.every(function (entry) {
+    return entry.root.querySelectorAll("h2").every(function (title) { return title.closest("dialog, [role=dialog]"); });
+  }), "only a dialog carries a title inside a surface");
+  view.surface("glazings").create(); click(view.surfaces[0].create);
+  assert.deepStrictEqual(notices, ["Finish or cancel the product form."]);
+  assert.strictEqual(view.surface("frames").form.root.hidden, true);
+});

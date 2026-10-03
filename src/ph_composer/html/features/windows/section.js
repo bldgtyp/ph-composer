@@ -7,7 +7,7 @@ PhComposerUI.define("features/windows/section", ["panel", "features/windows/edit
     Object.keys(inventories.definitions).forEach(function (kind, index) {
       var definition = inventories.definitions[kind];
       library.registerSurface({ id: kind, recordKind: definition.recordKind, label: definition.title, order: 30 + index,
-        build: function (root, state, send) {
+        createLabel: "+ New " + definition.label, build: function (root, state, send) {
           return new inventories.Inventory(root, state.session, send, kind, panel.repaint);
         } });
     });

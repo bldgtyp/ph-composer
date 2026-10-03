@@ -427,3 +427,16 @@ test("an open library export form blocks a Library tab change", function () {
   assert.strictEqual(view.tabs.active, "materials");
   assert.ok(o.guards.library("assemblies"));
 });
+
+test("a feature's settings end the inventory action bar, and omitting them adds no group", function () {
+  var o = setup(), Inventory = o.modules.inventory.Inventory, setting = dom.element("button");
+  function build(settings) {
+    return new Inventory(dom.element("div"), "session", function () {}, function () {}, function () {}, {
+      section: "outside", action: "outside.update", label: "Outside", columns: [["name", "Name"]], editable: ["name"],
+      groups: [], settings: settings });
+  }
+  var view = build([setting]), controls = view.controls.root, group = controls.children[controls.children.length - 1];
+  assert.strictEqual(group, view.settingsRoot, "after every view control");
+  assert.strictEqual(group.className, "phc-inventory-settings"); assert.strictEqual(group.children[0], setting);
+  assert.strictEqual(build().controls.root.querySelector(".phc-inventory-settings"), null);
+});

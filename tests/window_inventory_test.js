@@ -23,23 +23,73 @@ test("used product deletion freezes the complete guard and requires replacement"
   assert.strictEqual(o.sent.length, 1); assert.strictEqual(o.sent[0].payload.params.replacement_id, "frm_b");
   assert.strictEqual(o.sent[0].payload.params.expected_values.name, "Timber frame");
 });
-test("default updates carry both settings and preserve unsigned depth; disposed callbacks refuse", function () {
-  var o = setup("psi_install_types"); o.view.defaultPsi.value = ""; o.view.saveDefaults();
-  assert.strictEqual(o.sent.length, 1); assert.strictEqual(o.sent[0].payload.name,
-    "ph_composer.windows.settings.update");
-  assert.strictEqual(o.sent[0].payload.params.values.default_psi_install_id, null);
-  assert.strictEqual(o.sent[0].payload.params.values.default_install_depth_m, 0.1);
-  o.view.dispose(); o.view.saveDefaults(); assert.strictEqual(o.sent.length, 1);
+function key(input, name) { input.listeners.keydown({ key: name, preventDefault: function () {} }); }
+function type(field, text) { field.input.value = text; field.input.listeners.input({}); }
+function complete(o, status, message) {
+  o.state.ui.actionResult = { session: "session", request_id: o.sent[o.sent.length - 1].payload.request_id,
+    outcome: { status: status, message: message } }; o.view.render(o.state);
+}
+test("choosing a default Psi-Install Type applies at once with both settings and their expected values", function () {
+  var o = setup("psi_install_types"), menu = o.view.defaultPsi;
+  assert.strictEqual(o.view.inventory.settingsRoot.children.length, 2, "both defaults sit in the action bar");
+  assert.strictEqual(menu.trigger.getAttribute("aria-label"), "Default Psi-Install: Insulated junction");
+  var choices = menu.content.children;
+  assert.strictEqual(choices.map(function (choice) {
+    return choice.textContent + "=" + choice.getAttribute("aria-pressed"); }).join(),
+    "None=false,Insulated junction=true");
+  menu.open(); choices[0].listeners.click({}); assert.strictEqual(menu.panel.hidden, true);
+  assert.strictEqual(o.sent.length, 1); var params = o.sent[0].payload.params;
+  assert.strictEqual(o.sent[0].payload.name, "ph_composer.windows.settings.update");
+  assert.strictEqual(params.values.default_psi_install_id, null);
+  assert.strictEqual(params.values.default_install_depth_m, 0.1);
+  assert.strictEqual(params.expected_values.default_psi_install_id, "psi_a");
+  assert.strictEqual(o.view.guard(), "Wait for the defaults edit.");
+  complete(o, "completed"); assert.strictEqual(o.view.guard(), null);
+  o.view.dispose(); o.view.saveDefaults(null, 0.1); assert.strictEqual(o.sent.length, 1);
 });
-test("withdrawn settings reset a pending defaults channel and retained Apply cannot dispatch", function () {
-  var o = setup("psi_install_types"); o.view.depth.input.value = "200 mm";
-  o.view.depth.input.listeners.input({}); o.view.saveDefaults(); assert.ok(o.view.requests.busy());
+test("install depth applies on Enter and on leaving, restores on Escape, keeps an invalid entry", function () {
+  var o = setup("psi_install_types"), bubble = o.view.depthBubble, field = o.view.depth;
+  bubble.open(); type(field, "abc"); key(field.input, "Enter");
+  assert.strictEqual(o.sent.length, 0); assert.ok(field.error.textContent);
+  bubble.close(false); assert.strictEqual(bubble.panel.hidden, false, "an invalid entry keeps the bubble open");
+  key(field.input, "Escape"); assert.strictEqual(bubble.panel.hidden, true);
+  assert.strictEqual(field.editing, false); assert.strictEqual(o.view.guard(), null);
+  bubble.open(); type(field, "200 mm"); key(field.input, "Enter");
+  assert.strictEqual(o.sent.length, 1);
+  assert.strictEqual(o.sent[0].payload.params.values.default_install_depth_m, 0.2);
+  assert.strictEqual(o.sent[0].payload.params.values.default_psi_install_id, "psi_a");
+  complete(o, "refused", "The settings changed."); assert.strictEqual(bubble.panel.hidden, false);
+  assert.strictEqual(field.error.textContent, "The settings changed."); assert.strictEqual(field.input.value, "200 mm");
+  field.input.listeners.blur({}); assert.strictEqual(o.sent.length, 2, "leaving the field applies the draft");
+  complete(o, "completed"); assert.strictEqual(bubble.panel.hidden, true); assert.strictEqual(o.view.guard(), null);
+});
+test("leaving an unchanged depth keeps the user's focus; Escape while pending closes on the outcome", function () {
+  var o = setup("psi_install_types"), bubble = o.view.depthBubble, field = o.view.depth, notices = [];
+  var elsewhere = o.view.root.ownerDocument.createElement("input"); o.view.root.appendChild(elsewhere);
+  o.modules.panel.notify = function (message, tone) { notices.push(tone + ": " + message); };
+  bubble.open(); type(field, "0.1"); elsewhere.focus(); field.input.listeners.blur({});
+  assert.strictEqual(bubble.panel.hidden, true); assert.strictEqual(o.view.root.ownerDocument.activeElement, elsewhere);
+  bubble.open(); type(field, "300 mm"); key(field.input, "Enter"); assert.strictEqual(field.input.disabled, true);
+  field.cancel(); assert.strictEqual(bubble.panel.hidden, false, "the pending request holds the bubble");
+  complete(o, "refused", "The settings changed."); assert.strictEqual(bubble.panel.hidden, true);
+  assert.deepStrictEqual(notices, ["warning: The settings changed."]); assert.strictEqual(field.input.disabled, false);
+});
+test("withdrawn settings close the depth bubble and reset a pending defaults channel", function () {
+  var o = setup("psi_install_types"), bubble = o.view.depthBubble;
+  bubble.open(); type(o.view.depth, "200 mm"); key(o.view.depth.input, "Enter"); assert.ok(o.view.requests.busy());
   delete o.state.sections["ph_composer.windows.settings"]; o.view.render(o.state);
-  assert.strictEqual(o.view.requests.busy(), false); assert.strictEqual(o.view.defaultDirty, false);
-  assert.strictEqual(o.view.guard(), null); o.view.saveDefaults(); assert.strictEqual(o.sent.length, 1);
+  assert.strictEqual(o.view.requests.busy(), false); assert.strictEqual(bubble.panel.hidden, true);
+  assert.strictEqual(bubble.root.hidden, true); assert.strictEqual(o.view.guard(), null);
+  o.view.saveDefaults(null, 0.1); assert.strictEqual(o.sent.length, 1);
+});
+test("the pane's New button is offered only while the inventory has a payload and is idle", function () {
+  var o = setup(); assert.strictEqual(o.view.canCreate(), true);
+  o.view.inventory.externalBusy = true; assert.strictEqual(o.view.canCreate(), false);
+  delete o.state.sections["ph_composer.windows.frames"]; o.view.render(o.state);
+  assert.strictEqual(o.view.canCreate(), false);
 });
 test("a refused creation keeps the form draft and permits retry after a new snapshot", function () {
-  var o = setup(); o.view.form.open("create", null, o.view.records); o.view.form.fields.name.value = "New Frame";
+  var o = setup(); o.view.create(); o.view.form.fields.name.value = "New Frame";
   o.view.form.submit(); o.state.ui.actionResult = { session: "session", request_id: o.sent[0].payload.request_id,
     outcome: { status: "refused", message: "The name is already used." } }; o.view.render(o.state);
   assert.strictEqual(o.view.form.fields.name.value, "New Frame");
@@ -47,7 +97,7 @@ test("a refused creation keeps the form draft and permits retry after a new snap
   o.view.form.fields.name.value = "Other Frame"; o.view.form.submit(); assert.strictEqual(o.sent.length, 2);
 });
 test("new Frame parses authored width and thermal quantities and completion releases the form", function () {
-  var o = setup(), form = o.view.form; form.open("create", null, o.view.records);
+  var o = setup(), form = o.view.form; o.view.create();
   form.fields.name.value = " New frame "; form.fields.manufacturer.value = " Synthetic maker ";
   form.fields.width_m.value = "80 mm"; form.fields.uf_w_m2k.value = "1.2"; form.fields.psi_g_w_mk.value = "0.03";
   form.submit(); assert.strictEqual(o.sent.length, 1);
@@ -59,7 +109,7 @@ test("new Frame parses authored width and thermal quantities and completion rele
   assert.ok(form.root.hidden); assert.strictEqual(o.view.guard(), null);
 });
 test("new Glazing rejects an out-of-range g-value and preserves the draft for corrected Apply", function () {
-  var o = setup("glazings"), form = o.view.form; form.open("create", null, o.view.records);
+  var o = setup("glazings"), form = o.view.form; o.view.create();
   form.fields.name.value = "New glazing"; form.fields.ug_w_m2k.value = "0.6"; form.fields.g_value.value = "1.2";
   form.submit(); assert.strictEqual(o.sent.length, 0); assert.ok(form.error.textContent);
   assert.strictEqual(form.fields.name.value, "New glazing"); assert.strictEqual(form.root.hidden, false);

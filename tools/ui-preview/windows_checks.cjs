@@ -71,7 +71,7 @@ const { chromium } = require("playwright");
     await form.getByRole("button", { name: "Create", exact: true }).click();
     await form.waitFor({ state: "hidden" });
     await page.getByRole("tab", { name: "Psi-Install Types", exact: true }).click();
-    await page.getByRole("combobox", { name: "Default Psi-Install Type", exact: true }).waitFor();
+    await page.getByRole("button", { name: /^Default Psi-Install: / }).waitFor();
     await page.getByRole("button", { name: "Export library", exact: true }).click();
     const libraryExport = page.getByRole("dialog", { name: "Export library", exact: true });
     assert.strictEqual(await libraryExport.getByRole("combobox", { name: "Definitions to export" }).inputValue(), "all");

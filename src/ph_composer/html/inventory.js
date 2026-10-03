@@ -68,6 +68,12 @@ function (request, snapshot, ui, tables, viewControls, RecordEdits, Grid, units,
     this.grid = new Grid({ edits: this.edits, scroll: this.scroll, toolbarParent: this.tools,
       hiddenColumns: function () { return {}; }, isBusy: function () { return self.busy(); }, notify: notice,
       submitBatch: function (changes) { self.ranges.submit(changes); } });
+    // A feature's tab settings (`config.settings`, nodes it owns) end the action bar after the view controls.
+    if (config.settings && config.settings.length) {
+      this.settingsRoot = ui.element("div", "phc-inventory-settings");
+      config.settings.forEach(function (node) { self.settingsRoot.appendChild(node); });
+      this.controls.root.appendChild(this.settingsRoot);
+    }
     root.appendChild(this.controls.root);
     root.appendChild(this.tools);
     root.appendChild(this.scroll);

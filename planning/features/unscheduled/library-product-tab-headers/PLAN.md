@@ -1,7 +1,8 @@
 # Library product tabs use the pane heading: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. Ed decided D1, D2 and the Window placement entry on 2026-10-02. Not yet authorized.
+STATUS: Implemented on branch `feat/library-product-tab-headers` 2026-10-02; host look passed 2026-10-03 (ledger `PTAB`); awaiting review and merge (PR #46). Ed authorized implementation through `implement-loop` on 2026-10-02, after deciding D1,
+D2 and the Window placement entry the same day.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/38
 
@@ -153,3 +154,69 @@ One branch, one commit per step, focused tests per step, `make ci` and `make ui-
   one Undo step. Record in `planning/native-acceptance/evidence/` and link it here.
 - Review: one Sonnet diff review with the UI polish and architecture rubrics; the seam in Step 2 is a
   kit contract, so the reviewer checks it against `context/EXTENSIBILITY.md`.
+
+## Implementation record
+
+Implemented on branch `feat/library-product-tab-headers`, 2026-10-02, one commit per step plus one review
+fix: Step 1 `fbdb9cd`, Step 2 `522bf6a`, Step 3 `4c45c68`, Step 4 `cc73de2`, review fixes `f7f3018`, host-look
+fix `fe80410`.
+
+- Step 1 to 4 as planned. The kit option is `settings` on the `Inventory` config; the group node it
+  builds is `inventory.settingsRoot`.
+- `planning/ui-baseline/README.md:151` needs no wording change: the install-depth Model default now sits
+  in the Psi-Install Types action bar, beside the default Psi-Install control.
+- The guard keeps "Wait for the defaults edit." while a request is pending and adds "Correct the install
+  depth or press Escape." while an invalid depth draft holds its bubble open, so a tab change cannot hide
+  an open bubble. Nothing else mentions a defaults draft.
+- A refused depth edit keeps its draft and message in the bubble; a refused Psi choice, or a refusal that
+  arrives after Escape, shows a warning notice.
+
+Verification:
+
+- `LANG=en_US.UTF-8 make ci` passes: 1383 Ruby runs, 377 JavaScript tests, 172 pytest, runtime and RBZ
+  verified. Without a UTF-8 locale six Ruby tests fail reading UTF-8 source as US-ASCII; that is the
+  shell, not this change.
+- `make ui-checks` passes with the updated Windows and Window library checks (Playwright from a scratch
+  `NODE_PATH`). One run of `windows_checks.cjs` at 280 px failed with a bare `Error` and passed on three
+  reruns; the cause is unknown.
+- Preview captures at 1280 and 420 px of the Psi-Install Types tab. The first build wrapped the defaults
+  to a second line at 1280 px with the Library sidebar open (view controls about 740 px, defaults about
+  424 px, 998 px available). The PR review resolved it as below.
+- Review: one Sonnet diff review with the architecture and UI polish rubrics. It found no crash or data
+  loss and judged the `settings` seam a clean public contract. Fixed: focus pulled back to the trigger
+  on an unchanged leave, typing lost during a pending request, a bubble left open after Escape while
+  pending, focus dropped by disabling triggers, and the kit property name. Not taken: a refusal notice
+  on a blocked close (the message is already in the bubble), a Cancel button (the skill rules it out),
+  throwing on a non-array `settings`, and the optional stale-expected and re-send cases.
+
+Host look, 2026-10-03: passed on build `a3d9f7be…aaeb`, recorded as ledger case `PTAB` in
+[the evidence summary](../../../native-acceptance/evidence/library-product-tab-headers-2026-10-03.md).
+A Frame created from the heading button and each default change undo as one native Undo step; the
+depth bubble keeps an invalid entry, applies on Enter and restores on a physical Escape. It found one
+defect, fixed in `fe80410`: the current choice in the Default Psi-Install list was unmarked at rest
+because the shared at-rest rule in `base.css` matched only dimension-format buttons. Setting lists
+now mark their choices `phc-setting-choice`, and the Window library browser check asserts it.
+
+Remaining before archive: Ed's review of PR #46, the 1280 px wrap decision above, and the merge.
+
+PR review, 2026-10-03 (Ed, comment review on PR #46):
+
+- P2: a long selected Psi-Install name clipped the control at 420 px (498.6 px wide in a 420 px panel)
+  while `scrollWidth` stayed 420. Fixed: the settings group, bubble anchor and trigger are bounded to
+  the available width and the name shrinks to an ellipsis (at most 11em), with the full name in the
+  tooltip and accessible label.
+- 1280 px wrap: resolved as the review recommended, one row with the sidebar open. The visible labels
+  are "Psi-Install: <name>" and "Depth: <value>"; the accessible names keep "Default Psi-Install" and
+  "Default install depth", as do the bubble titles. Psi-Install Types also drop the kit's Group by
+  control, which offered only "None" (`groups` undefined instead of empty).
+- `window_library_checks.cjs` now sets a 59-character name and asserts each control and its chevron
+  inside the panel at 1280, 900, 420 and 280 px, and the defaults on the filter's row at 1280 px. It
+  fails against the previous CSS at both 1280 and 420 px.
+- The review's third point, the SketchUp look, was already recorded above when the review was read.
+
+Follow-ups, not taken here:
+
+- Extract a kit single-value bubble from `features/windows/cards.js` `methods.editQuantity` and the depth
+  bubble here (the plan's recorded follow-up).
+- `.agents/skills/ph-composer-ui-polish/SKILL.md` rule 2 still lists "the primary New action" last in the
+  tab action bar; the Library pane puts it in the page heading.
