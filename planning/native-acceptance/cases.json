@@ -950,6 +950,26 @@
         "tools/examples/*"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "R11H",
+      "label": "Phase 2 review R11 carried host gate: library setup dialogs, export replace, paging, Window Type grid gestures, panel navigation, unreadable setup",
+      "mode": "mixed",
+      "authority": "planning/features/phase-02-envelope/refactor/R11-readability-and-lint.md",
+      "paths": [
+        "src/ph_composer/library/*",
+        "src/ph_composer/shell/native_approval.rb",
+        "src/ph_composer/shell/dispatch.rb",
+        "src/ph_composer/shell/commands.rb",
+        "src/ph_composer/html/panel.js",
+        "src/ph_composer/html/library/*",
+        "src/ph_composer/html/features/windows/*",
+        "src/ph_composer/features/windows/*",
+        "tests/library*",
+        "tests/window*",
+        "tests/file_export_test.rb"
+      ],
+      "native_control_required": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 # R11: formatting and small readability items the gates do not catch
 
 DATE: 2026-10-01
-STATUS: Merged to main 2026-10-02 (PR #30), items 3 to 20; dual-Ruby `make ci` and `make ui-checks` pass; carried host gate not run (needs Ed at the host)
+STATUS: Merged to main 2026-10-02 (PR #30), items 3 to 20; dual-Ruby `make ci` and `make ui-checks` pass; carried host gate passed 2026-10-02 (ledger case `R11H`)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft; review of PR #15, issue #14)
 CLASS: Optional improvement. Gate decision made 2026-10-01; see Decision.
@@ -240,9 +240,14 @@ resolved from a scratch install. New focused tests: `model_settings_test.rb` (6)
 `file_export_test.rb` (13), `window_editor_test.js` (17), `overview_panel_test.js` (19),
 `window_unit_restore_step_test.rb` (the review's unstamped pane).
 
-**Host gate: not run.** It needs native modal dialogs and Ed at the host, and is carried as written
-above. Item 13 has landed, so it can run now. Add to it: the setup dialog's unreadable state and
-Reset (write a corrupt `file_providers` default first).
+**Host gate: passed 2026-10-02**, with Ed at the host and main `cf18ede` installed. All seven
+checks passed: the library setup dialogs from the panel and the menu, export to an existing
+destination, paging past one page, the Window Type grid gestures, the three navigation controls, and
+the unreadable setup with Reset. Export over an existing file asks twice: macOS's replace sheet, then
+SketchUp's message box. Evidence:
+[r11-host-gate-2026-10-02](../../../native-acceptance/evidence/r11-host-gate-2026-10-02.md); ledger
+case `R11H`. Five UI findings, none a failure, are recorded in
+[host-gate-ui-findings](../../unscheduled/host-gate-ui-findings/README.md).
 
 **Follow-ups, not in this change.** Each is recorded where it will be done:
 
