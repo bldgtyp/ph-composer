@@ -1,7 +1,7 @@
 # Packet 5: Window Types frame
 
 DATE: 2026-10-03
-STATUS: Implemented; pull request open
+STATUS: Merged to main
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -82,7 +82,8 @@ change to what Place does in the viewport.
 
 ## Outcome, 2026-10-03
 
-Implemented on `feat/ui-window-types-frame`. `make ci` and `make ui-checks` pass.
+Implemented on `feat/ui-window-types-frame`, merged as pull request
+[#63](https://github.com/bldgtyp/ph-composer/pull/63). `make ci` and `make ui-checks` pass.
 
 What differs from the plan above:
 

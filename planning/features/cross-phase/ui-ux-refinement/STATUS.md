@@ -5,8 +5,8 @@ STATUS: In progress
 
 ## Where this stands
 
-Packets 1 to 4 and the Zones / Faces follow-up are merged to main (last merge: pull request #62).
-No branch is open and nothing is half-built. Packet 5 is next and has no plan yet. Ed gave a
+Packets 1 to 5 and the Zones / Faces follow-up are merged to main (last merge: pull request #63).
+No branch is open and nothing is half-built. Packet 6 is next and has no plan yet. Ed gave a
 standing go on 2026-10-03 to proceed through the remaining packets on the recorded
 recommendations, with his checks gathered into one verification pass at the end.
 
@@ -20,7 +20,8 @@ recommendations, with his checks gathered into one verification pass at the end.
 | Packet 3, Zones / Faces layout | Merged to main 2026-10-03: P3-1 [#57](https://github.com/bldgtyp/ph-composer/pull/57), P3-2 [#58](https://github.com/bldgtyp/ph-composer/pull/58), P3-3 [#59](https://github.com/bldgtyp/ph-composer/pull/59), P3-4 [#60](https://github.com/bldgtyp/ph-composer/pull/60) | [phases/phase-03-zones-faces-layout.md](phases/phase-03-zones-faces-layout.md) |
 | Packet 4, Installs editor (W4) | Merged to main 2026-10-03, [#61](https://github.com/bldgtyp/ph-composer/pull/61) | [phases/phase-04-installs-editor.md](phases/phase-04-installs-editor.md) |
 | Zones / Faces follow-up (D9, D10) | Merged to main 2026-10-03, [#62](https://github.com/bldgtyp/ph-composer/pull/62) | A chosen Zone row takes the inspector until the selection changes; the selection's Assembly control shows the shared Assembly. Host-checked for D9; D10's shared value is covered offline only (the fixture has no Assembly) |
-| Packets 5 to 8 | Requested | Order and coverage in FINDINGS.md, "Proposed packets" |
+| Packet 5, Window Types frame (W1, W2, W3, W5, K9) | Merged to main 2026-10-03, [#63](https://github.com/bldgtyp/ph-composer/pull/63) | [phases/phase-05-window-types-frame.md](phases/phase-05-window-types-frame.md) |
+| Packets 6 to 8 | Requested | Order and coverage in FINDINGS.md, "Proposed packets" |
 | Host capture of viewport surfaces (D7) | Not started | Was to follow packets 1 and 2; needs one SketchUp session with Ed present |
 | Design System artifact | Not started | After the kit-wide packets settle |
 
@@ -30,12 +31,10 @@ check sections say what was and was not covered.
 
 ## Next steps, in order
 
-1. **Write the packet 5 plan**: the Window Types frame. The Anchor control (W1), rail names (W2),
-   the two library sidebars (W3), the Empty element mark (W5), K9, and the Installs palette as a
-   pane inspector (P4-Q1, deferred to here).
-2. **Packets 6 to 8** as FINDINGS.md orders them: the Assembly Builder toolbars and inventory row
-   actions, the Library, then completeness (one vocabulary for "not finished", Export readiness,
-   empty states).
+1. **Write the packet 6 plan**: the Assembly Builder toolbars and inventory row actions (A1 to
+   A4).
+2. **Packets 7 and 8** as FINDINGS.md orders them: the Library (L1 to L3, K11), then completeness
+   (one vocabulary for "not finished", Export readiness, empty states).
 3. **The D7 host capture session** for the viewport tools, the real Colour-by legend and Export.
 4. **The Design System artifact**, once the kit-wide packets have settled.
 
@@ -49,6 +48,9 @@ Gathered here so they can be checked in one sitting, in SketchUp, by hand:
   instructions appear for the first time, in the panel's notice under the tab row. Say if any is
   unwanted or badly placed.
 - A notice that is only information no longer blocks a click on the control beneath it.
+- Window Types: the anchor bubble beside Place (a three by three grid in place of the Anchor
+  select), rail rows on hover and in manual order, and the restyled library sidebar on every screen
+  that has one. Decision P5-Q2 left the Installs palette where it is, not in a pane inspector.
 - Zones / Faces: click a Zone row while Faces are selected, then change the selection (D9).
 - The selection's Assembly control with Faces that share an Assembly, and with Faces that differ
   (D10).
@@ -67,6 +69,8 @@ Gathered here so they can be checked in one sitting, in SketchUp, by hand:
 - Locate from outside a Zone selects its Faces while the edit path is the Model, and the selection
   inspector does not recognise Faces selected that way ("0 Faces selected" in the snapshot). Seen in
   the host on 2026-10-03; it predates this work.
+- The library sidebar opens by default at exactly 900 wide while the Window Types rail collapses
+  there. After an anchor choice re-arms a placing tool, keyboard focus falls to the page.
 - A main tab click on a clean Installs session is refused with a notice, where a subtab click now
   leaves it. A shared Assembly that is no longer among the records reads "Choose Assembly" in the
   selection inspector while its table cell says it is missing.
