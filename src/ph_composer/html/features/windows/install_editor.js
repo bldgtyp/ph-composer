@@ -6,7 +6,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
   "use strict";
   var el = ui.element, clone = shared.clone, sides = shared.sides;
   // Drawing units an edge needs before its value is written beside it: along the edge, and across a line of text.
-  var VALUE_ROOM = 44, LINE_ROOM = 24;
+  var VALUE_ROOM = 44, LINE_ROOM = 40, INSIDE_ROOM = 96;
   function topology(record) {
     return JSON.stringify([record.rows_m, record.columns_m, record.elements.map(function (cell) {
       return [cell.kind, cell.row_span, cell.column_span];
@@ -32,7 +32,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     this.list = el("div", "window-install-list"); this.panel.appendChild(this.list);
     this.add = ui.button("+ New Psi-Install Type", function () { self.editProduct(); });
       this.panel.appendChild(this.add);
-    this.apply = ui.button("Apply to all edges", function () { self.applyAll(); });
+    this.apply = ui.button("Apply to perimeter edges", function () { self.applyAll(); });
       this.panel.appendChild(this.apply);
     this.copyButton = ui.button("Copy to other Window Types", function () { self.showCopy(); });
       this.panel.appendChild(this.copyButton);
@@ -59,7 +59,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     // where a repaint of the drawing or the list leaves focus.
     this.onKeydown = function (event) {
       if (event.defaultPrevented || event.key !== "Escape" || self.disposed || self.root.hidden ||
-        self.requests.busy() || !self.confirm.hidden) return;
+        self.requests.busy() || !self.confirm.hidden || self.sidebar.guard()) return;
       event.preventDefault(); self.escape();
     };
     this.root.addEventListener("keydown", this.onKeydown);
@@ -166,7 +166,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
         var id = "draft_" + (++Editor.sequence); self.creates[id] = { client_id: id, values: values };
         self.products.push({ id: id, values: values }); self.selected = id;
       }
-      self.dirty = true; self.dismissForm(); self.paint();
+      self.dirty = true; self.dismissForm(); self.paint(); (self.current || self.add).focus();
     };
     this.form.addEventListener("submit", this.form.onsubmit); name.focus();
   };
@@ -197,7 +197,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     choice(null, "Model default", defaultProduct && defaultProduct.values.psi_w_mk);
     this.products.forEach(function (row) { choice(row.id, row.values.name, row.values.psi_w_mk,
       row.libraryDraft ? null : row); });
-    this.apply.textContent = "Apply " + chosen + " to all edges";
+    this.apply.title = "Apply " + chosen + " to every perimeter edge";
     if (held && this.current) this.current.focus();
     this.sidebar.refresh(this.state, {}, true);
     this.paintDrawing(record);
@@ -255,11 +255,16 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
           if (side === "right" || side === "bottom") value(middleX, middleY + 4, "middle", "0");
         } else if (eligible) {
           var text = product ? shared.bare(product.values.psi_w_mk, fields.LINEAR_PSI) : "?";
-          // Outside the element it belongs to, and off the line an element's name is written on.
-          if (side === "top") value(middleX, y - 9, "middle", text);
-          else if (side === "bottom") value(middleX, y + h + 19, "middle", text);
-          else if (side === "left") value(x - 9, middleY - 14, "end", text);
-          else value(x + w + 9, middleY - 14, "start", text);
+          // Outside the Window Type where the edge is on its outline. An edge that faces an Empty element keeps
+          // its value inside its own element, so two facing values never share the Empty element between them.
+          var outer = { top: y < y0 + 1, bottom: y + h > y0 + height * scale - 1, left: x < x0 + 1,
+            right: x + w > x0 + width * scale - 1 }[side], out = outer ? 1 : -1;
+          if (!outer && (across ? h : w) < INSIDE_ROOM) return;
+          // Left and right values sit above the line an element's name is written on.
+          if (side === "top") value(middleX, y - (outer ? 9 : -19), "middle", text);
+          else if (side === "bottom") value(middleX, y + h + (outer ? 19 : -9), "middle", text);
+          else if (side === "left") value(x - 9 * out, middleY - 14, outer ? "end" : "start", text);
+          else value(x + w + 9 * out, middleY - 14, outer ? "start" : "end", text);
         }
       });
     });

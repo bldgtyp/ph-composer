@@ -16,9 +16,9 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.groupNames = this.page.groupNames || [""]; this.manual = Boolean(this.page.manual);
     this.active = this.page.active; this.collapsed = this.page.collapsed; this.entries = [];
     root.replaceChildren(); root.classList.add("window-workspace");
-    this.notice = ui.floatingNotice(root);
-    var noticeLayer = el("div", "phc-notice-layer"); noticeLayer.appendChild(this.notice);
-    root.appendChild(noticeLayer);
+    // The panel owns the one floating notice; a refused or failed request is already shown there by the panel.
+    this.notice = { show: function (text, options) { panel.notify(text, options && options.tone); },
+      clear: function () { panel.notify(""); } };
     this.layout = el("div", "window-layout"); this.audit = el("div", "window-audit");
     this.scheduleSurface = el("div");
     this.tabs = new Subtabs({ label: "Window Types sections", state: this.page, stateKey: "surface",
@@ -75,7 +75,9 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
   // A subtab chosen over an open Installs session ends it the way Cancel does, asking first when changes are staged.
   View.prototype.leaveInstalls = function (id) {
     var self = this, installs = this.installEditor;
-    if (installs.requests.busy()) { this.notice.show(installs.guard(), { tone: "warning" }); return; }
+    var open = installs.requests.busy() ? installs.guard() : !installs.form.hidden ?
+      "Accept or cancel the Psi-Install Type edit first." : installs.sidebar.guard();
+    if (open) { this.notice.show(open, { tone: "warning" }); return; }
     installs.cancelSession(false, function () { if (self.tabs.select(id)) self.tabs.buttons[id].focus(); });
   };
   View.prototype.request = function (action, params, done, allowDraft) {
@@ -83,7 +85,6 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     if (!allowDraft && this.guard()) { this.notice.show(this.guard()); return false; }
     var self = this;
     var result = this.requests.run(action, params || {}, { onDone: done, onFail: function (outcome) {
-      self.notice.show(outcome.message || "The edit was refused. The draft is retained.", { persistent: true });
       if (self.renameNodes) self.renameNodes.forEach(function (node) { node.disabled = false; });
       if (self.dimensionField) { self.dimensionField.error.textContent = outcome.message || "Review and retry.";
         self.dimensionField.error.hidden = false; }
@@ -400,7 +401,7 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     if (this.bubble) this.bubble.close(false);
     Object.keys(this.sidebars).forEach(function (kind) { this.sidebars[kind].dispose(); }, this);
     this.root.removeEventListener("keydown", this.onKeydown); document.removeEventListener("keydown", this.documentKey);
-    if (this.resize) this.resize.disconnect(); if (this.notice.dispose) this.notice.dispose();
+    if (this.resize) this.resize.disconnect();
   };
   Object.assign(View.prototype, typeList, cards, audit);
   return { View: View };

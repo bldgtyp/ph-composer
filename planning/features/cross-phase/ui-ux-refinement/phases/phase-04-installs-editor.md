@@ -1,12 +1,12 @@
 # Packet 4: Installs editor
 
 DATE: 2026-10-03
-STATUS: Plan; not authorized
+STATUS: Implemented; pull request open
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
-Covers finding W4 in [FINDINGS.md](../FINDINGS.md). Nothing here is built until Ed has read it
-and said go.
+Covers finding W4 in [FINDINGS.md](../FINDINGS.md). Ed accepted the four recommendations under
+"Open points" and said go on 2026-10-03.
 
 ## Outcome
 
@@ -122,3 +122,41 @@ the silent refusal is the kit's. Then `make panel-manifest` and the vendor manif
 
 W1 (Anchor placement), W2 (rail names), W3 (library sidebars), W5 (Empty element mark): packet 5.
 The Psi-Install form's fields (D5 keeps it a form). Any change to what Save writes.
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-installs-editor`. `make ci` passes (1390 Ruby runs, 406 JavaScript tests,
+172 Python tests) and `make ui-checks` passes at every width it covers.
+
+**The silent refusal was wider than W4 said.** The Window Types view built a floating notice and
+never attached it to the page, so every message that view raised was invisible: guard refusals,
+"Installs saved.", the eyedropper instructions. The view now sends them to the panel's one notice
+through `panel.notify`. Three request-failure messages the view repeated are removed, because the
+panel already shows every refused or failed result.
+
+What differs from the plan above:
+
+- Two kit additions, each with a test: `pageHeader.setTitle(text)`, and on `Subtabs` a
+  `reselected(id)` option with `refused(reason, nextId)` now naming the tab that was asked for.
+- A notice that is information and fades on the next interaction no longer takes the pointer
+  (`overlay.css`), so a confirmation never blocks the control under it. Its Dismiss button still
+  does. Warnings and errors are unchanged.
+- A subtab click is refused, with a warning, while a Psi-Install form or a library review is open
+  in the session, since Cancel would drop that work without asking.
+- A value on an edge that faces an Empty element is written inside its own element, not outside,
+  so two values never meet across a narrow Empty element. A partly shared edge shows no value; its
+  stroke and tooltip say why it cannot be painted.
+- The drawing does not shrink below 480 wide; it scrolls, as the skill asks of drawings.
+- The apply button reads "Apply to perimeter edges" and names the chosen type in its tooltip. With
+  the name in the label it was cut off at the palette's width.
+- Escape also works from the subtab row and the page body, through the view's own key handler.
+
+One Sonnet diff review ran against the architecture and ui-polish rubrics. Applied: a regression it
+found in the Library tab (the new second argument to `refused` reached `panel.notify` as a tone),
+duplicate failure notices, Escape closing the session under an open library review, the unguarded
+leave above, label collisions beside Empty elements, a faint focus mark on edges, and focus lost
+after accepting a Psi-Install form. Not taken: tests for every left and right label threshold.
+
+Seen and left alone: a main tab click on a clean Installs session is still refused with a notice
+where a subtab click now leaves; the Psi-Install library sidebar still wraps under the drawing at
+900 (W3, packet 5).

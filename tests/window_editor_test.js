@@ -392,12 +392,17 @@ test("Installs opens focused, with Save and Cancel in its header, and Escape unw
   installs.showCopy(); assert.strictEqual(installs.copyForm.hidden, false);
   escape(installs.root); assert.strictEqual(installs.copyForm.hidden, true);
     assert.strictEqual(installs.root.hidden, false);
+  installs.open(o.editor.rawRecord()); installs.selected = "psi_a"; installs.paintEdge("wel_a", "top");
+  escape(installs.root); assert.strictEqual(installs.confirm.hidden, false);
+  escape(installs.root); assert.strictEqual(installs.root.hidden, false, "the open confirmation owns its own Escape");
+  installs.confirm.closeModal(); installs.cancelSession(true); installs.open(o.editor.rawRecord());
   // The page body holds focus after a repaint; Escape still reaches the session.
   escape(o.document, o.document.body);
     assert.strictEqual(installs.root.hidden, true); assert.strictEqual(o.sent.length, 0);
 });
 test("a subtab chosen over Installs leaves a clean session and asks before discarding a staged one", function () {
-  var o = setup(), installs = o.editor.installEditor; installs.open(o.editor.rawRecord());
+  var o = setup(), installs = o.editor.installEditor, notices = []; installs.open(o.editor.rawRecord());
+  o.modules.panel.notify = function (message, tone) { notices.push((tone || "info") + ": " + message); };
   click(o.editor.tabs.buttons.audit);
   assert.ok(installs.root.hidden); assert.strictEqual(o.editor.tabs.active, "audit");
   click(o.editor.tabs.buttons.builder); installs.open(o.editor.rawRecord()); installs.selected = "psi_a";
@@ -412,20 +417,32 @@ test("a subtab chosen over Installs leaves a clean session and asks before disca
   installs.open(o.editor.rawRecord()); installs.paintEdge("wel_a", "top"); installs.saveAction();
   click(o.editor.tabs.buttons.audit);
   assert.strictEqual(installs.root.hidden, false, "a Save in flight keeps the session");
-  assert.ok(text(o.editor.notice).includes("Wait for Installs Save."));
-  assert.ok(o.editor.root.contains(o.editor.notice), "the notice is on the page");
+  assert.strictEqual(notices[notices.length - 1], "warning: Wait for Installs Save.",
+    "the refusal goes to the panel's notice");
+  // An open Psi-Install form is unaccepted work: the subtab is refused until it is accepted or cancelled.
+  var other = setup(), form = other.editor.installEditor, said = [];
+  other.modules.panel.notify = function (message, tone) { said.push(tone + ": " + message); };
+  form.open(other.editor.rawRecord()); assert.strictEqual(other.editor.placement.root.hidden, true,
+    "the Anchor row belongs to Place and is hidden during Installs");
+  form.editProduct(); click(other.editor.tabs.buttons.audit);
+  assert.strictEqual(form.root.hidden, false);
+  assert.deepStrictEqual(said, ["warning: Accept or cancel the Psi-Install Type edit first."]);
 });
 test("Installs writes each perimeter value outside its element and one zero on a shared edge", function () {
   var o = setup(), installs = o.editor.installEditor; installs.open(o.editor.rawRecord());
   var labels = installs.drawing.querySelectorAll(".window-install-edge-label");
   assert.ok(labels.length && labels.every(function (label) { return !/D ·/.test(label.textContent); }));
   var first = installs.drawing.querySelector("rect"), top = Number(first.getAttribute("y")),
-    left = Number(first.getAttribute("x")), bottom = top + Number(first.getAttribute("height"));
-  var outside = labels.filter(function (label) { return label.textContent !== "0"; });
-  assert.ok(outside.every(function (label) {
+    left = Number(first.getAttribute("x")), bottom = top + Number(first.getAttribute("height")),
+    right = left + Number(first.getAttribute("width"));
+  var values = labels.filter(function (label) { return label.textContent !== "0"; });
+  assert.ok(!values.some(function (label) {
     var x = Number(label.getAttribute("x")), y = Number(label.getAttribute("y"));
-    return y < top || y > bottom || x < left || label.getAttribute("text-anchor") === "start";
-  }), "no perimeter value sits inside the first element");
+    return x > left && x < right && y > top && y < bottom;
+  }), "no perimeter value sits inside the first element, whose edges are all on the outline or shared");
+  // Element 2's right edge faces the Empty element, so its value stays inside Element 2.
+  assert.strictEqual(values.filter(function (label) { return label.getAttribute("text-anchor") === "end"; }).length,
+    2, "one value left of the outline and one held inside the element that faces Empty");
   assert.strictEqual(labels.filter(function (label) { return label.textContent === "0"; }).length, 1);
   var target = installs.drawing.querySelectorAll("[data-install-side=top]").filter(function (node) {
     return node.getAttribute("data-install-element") === "wel_a"; })[0];

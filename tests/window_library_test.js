@@ -155,7 +155,8 @@ test("the Library pane heading carries each Window product's New button and refu
   function paint() { sections.library(root, state, function () {}); }
   source.start(context, ["library/section", "features/windows/section"], { panel: {
     section: function (name, render) { sections[name] = render; }, repaint: paint, navigationGuard: function () {},
-    notify: function (message) { notices.push(message); }, navigate: function () {} } });
+    notify: function (message, tone) {
+      notices.push(tone ? message + " / " + tone : message); }, navigate: function () {} } });
   paint(); var view = root._view;
   assert.strictEqual(view.surfaces.map(function (entry) { return entry.create.textContent; }).join(),
     "+ New Frame,+ New Glazing,+ New Psi-Install Type");
