@@ -1,9 +1,9 @@
 {
   "assets": {
     "html/base.css": {
-      "bytes": 9588,
+      "bytes": 9860,
       "mime": "text/css; charset=utf-8",
-      "sha256": "b9060f08f7c27336be46eeb0f52a3a1e80bc21129e79f3608b349983192cfba4"
+      "sha256": "85fcecacb485ae5e34bbdee40319be357101940d7493cc7691c6a60929dbaa08"
     },
     "html/dom.js": {
       "bytes": 4030,
@@ -106,9 +106,9 @@
       "sha256": "b6c95966094c0f40e850ac2b318bf91e795d09acae450e64c2ce73c96c5f8ead"
     },
     "html/features/windows/inventory.js": {
-      "bytes": 15480,
+      "bytes": 15529,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "6d9a2d557007d80183fe3c2b08410a7c97821133c660861b3f2dde5ce6de7a0b"
+      "sha256": "47dcf8222196dfd7701b76a95ca4f43f3523de0cdbda637bf633033acfbf0aa5"
     },
     "html/features/windows/library.js": {
       "bytes": 2831,

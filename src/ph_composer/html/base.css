@@ -125,10 +125,13 @@ html { height: 100%; }
   border-color: var(--interaction-highlight);
 }
 /* The current choice in a setting list reads like the active sidebar row: teal tint, teal text, at rest
-   and on hover. */
+   and on hover. A setting list marks its choices `phc-setting-choice`. */
 .phc-workspace button[data-dimension-format][aria-pressed="true"],
 .phc-workspace button[data-dimension-format][aria-pressed="true"]:hover:enabled,
-.phc-workspace button[data-dimension-format][aria-pressed="true"]:focus:enabled {
+.phc-workspace button[data-dimension-format][aria-pressed="true"]:focus:enabled,
+.phc-workspace button.phc-setting-choice[aria-pressed="true"],
+.phc-workspace button.phc-setting-choice[aria-pressed="true"]:hover:enabled,
+.phc-workspace button.phc-setting-choice[aria-pressed="true"]:focus:enabled {
   color: var(--interaction-highlight);
   background: var(--interaction-highlight-tint);
   border-color: var(--interaction-highlight);

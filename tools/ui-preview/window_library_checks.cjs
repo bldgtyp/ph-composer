@@ -71,6 +71,16 @@ const { chromium } = require("playwright");
       const tops = [await psiDefault.boundingBox(), await depthDefault.boundingBox()].map(box => Math.round(box.y));
       assert.strictEqual(tops[0], tops[1], "the two defaults share one row");
     }
+    await psiDefault.click();
+    const current = page.getByRole("dialog", { name: "Default Psi-Install", exact: true })
+      .locator("button[aria-pressed=true]");
+    await page.mouse.move(0, 0); await current.blur();
+    assert.strictEqual(await current.evaluate(node => getComputedStyle(node).color),
+      await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--interaction-highlight")
+        .trim()).then(hex => { const n = parseInt(hex.slice(1), 16);
+          return "rgb(" + [n >> 16, (n >> 8) & 255, n & 255].join(", ") + ")"; }),
+      "the current Psi-Install choice is marked teal at rest");
+    await psiDefault.click();
     await depthDefault.click();
     const depthBubble = page.getByRole("dialog", { name: "Default install depth", exact: true });
     await depthBubble.getByRole("textbox", { name: "Default install depth", exact: true }).waitFor();

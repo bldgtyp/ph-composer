@@ -174,6 +174,7 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
       this.choicesKey = key;
       this.defaultPsi.content.replaceChildren.apply(this.defaultPsi.content, choices.map(function (choice) {
         var button = ui.button(choice[1], function () { self.choosePsi(choice[0]); });
+        button.className = "phc-setting-choice";
         button.setAttribute("aria-pressed", String(choice[0] === current)); return button;
       }));
     }
