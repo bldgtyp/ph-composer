@@ -150,11 +150,12 @@ test("area headers and Zone and Face values follow the display profile together"
   }
 
   assert.ok(header().textContent.includes("Gross area ft²"));
-  assert.deepStrictEqual(areas(), ["43.06", "10.76", "32.29"]);
+  assert.deepStrictEqual(areas(), ["43.06", "10.76", "32.29", "86.11", "86.11"],
+    "the Zone, its two recorded Faces, then its unclassified Faces as a group and one by one");
   p.modules.unit_preferences.set("unit_system", "SI");
   p.panel.repaint();
   assert.ok(header().textContent.includes("Gross area m²"));
-  assert.deepStrictEqual(areas(), ["4", "1", "3"]);
+  assert.deepStrictEqual(areas(), ["4", "1", "3", "8", "8"]);
   assert.strictEqual(faces[0].area_m2, 1, "display changes leave the canonical snapshot alone");
 });
 
@@ -212,19 +213,54 @@ test("a Face chip sets one field, keeps the other, and guards on the values it p
   });
 });
 
-test("an unclassified Face is its Zone's count and its Suggest action, not a row of its own", function () {
+test("an unclassified Face is a row under its Zone's summary, and choosing a value classifies it", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   var section = p.query("[data-section='ph_composer.overview']");
 
-  assert.strictEqual(section.querySelectorAll("[data-row-key]").length, 2, "one Zone row and one Face row");
-  assert.strictEqual(section.querySelector(".phc-row-marker").textContent, "1");
-  assert.match(section.querySelector(".phc-row-marker").getAttribute("data-tooltip"), /1 unclassified Face/);
+  var names = section.querySelectorAll(".col-name").filter(function (node) { return node.tagName === "td"; })
+    .map(function (node) { return node.textContent; });
+  assert.deepStrictEqual(names, ["Zone 1", "Wall 1", "1 unclassified Face", "Face 2"]);
+  assert.strictEqual(section.querySelector(".phc-row-marker").textContent, "1", "the Zone still counts them");
 
-  suggest(section).listeners.click({});
+  var type = byLabel(section, "Set Face 2 type");
+  assert.strictEqual(byLabel(section, "Face 2 Assembly"), undefined, "no Assembly before there is a record");
+  type.value = "Floor";
+  type.listeners.change({});
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.classify");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), {
+    faces: [{ zone_id: "zon_a", zone_path: [100], entity_path: [102], entity_id: null }],
+    intent: { face_type: { mode: "set", value: "Floor" }, boundary_condition: { mode: "keep" } },
+    expected_values: {}
+  });
+
+  p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  suggest(p.query("[data-section='ph_composer.overview']")).listeners.click({});
   assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.auto_classify");
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { zone: { zone_id: "zon_a", zone_path: [100] } });
+});
+
+test("a long list of unclassified Faces waits to be opened and shows its first fifty", function () {
+  var p = page(), payload = snapshot();
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value.faces, index;
+  for (index = 0; index < 60; index += 1) {
+    faces.push({ reference: { zone_id: "zon_a", zone_path: [100], entity_path: [500 + index], entity_id: null },
+      zone_name: "Zone 1", area_m2: 1, state: "unclassified", values: {}, suggested: {} });
+  }
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  function count() { return section.querySelectorAll("[data-row-key]").length; }
+  assert.strictEqual(count(), 3, "the Zone, its Face and the summary: sixty-one rows are not painted unasked");
+  var chevron = section.querySelectorAll(".row-chevron").filter(function (node) {
+    return /unclassified/.test(node.getAttribute("aria-label"));
+  })[0];
+  chevron.listeners.click({});
+  assert.strictEqual(count(), 3 + 50 + 1, "fifty Faces and one row offering the rest");
+  var more = section.querySelectorAll(".row-target").filter(function (node) {
+    return node.textContent === "Show all";
+  })[0];
+  more.listeners.click({});
+  assert.strictEqual(count(), 3 + 61);
 });
 
 /* A copied Zone Group shares its original's dictionary until it is repaired, so two occurrences can
@@ -250,8 +286,8 @@ test("two Zone occurrences sharing one record id are two rows", function () {
 
   var names = section.querySelectorAll(".col-name").filter(function (node) { return node.tagName === "td"; })
     .map(function (node) { return node.textContent; });
-  assert.deepStrictEqual(names, ["Zone 1", "Wall 1", "Zone 1 copy", "Floor 1"],
-    "each occurrence keeps its own row and its own Face");
+  assert.deepStrictEqual(names, ["Zone 1", "Wall 1", "1 unclassified Face", "Face 2", "Zone 1 copy", "Floor 1"],
+    "each occurrence keeps its own row and its own Faces");
   assert.strictEqual(section.querySelectorAll(".phc-row-marker")[0].textContent, "shared identity",
     "and the panel says why, because an edit here names one of the two");
 });
@@ -275,7 +311,9 @@ test("classifying one Face leaves its neighbours' rows alone", function () {
   var after = section.querySelectorAll("[data-row-key]").map(function (node) {
     return node.getAttribute("data-row-key");
   });
-  assert.deepStrictEqual(after.slice(0, before.length), before, "the rows that were there keep their keys");
+  assert.ok(after.every(function (key) { return before.indexOf(key) >= 0; }),
+    "every row still there keeps its key, the newly classified Face included");
+  assert.strictEqual(after.length, before.length - 1, "only the emptied summary row goes");
   var names = section.querySelectorAll(".col-name").filter(function (node) { return node.tagName === "td"; })
     .map(function (node) { return node.textContent; });
   assert.deepStrictEqual(names, ["Zone 1", "Wall 1", "Floor 2"],
@@ -787,7 +825,8 @@ test("a missing value is flagged on its cell, a Face row has nothing to expand, 
   assert.strictEqual(boundary.parentNode.title, "Boundary not set");
   assert.strictEqual(section.querySelector(".col-state"), null);
   var chevrons = section.querySelectorAll(".row-chevron");
-  assert.deepStrictEqual(chevrons.map(function (node) { return node.classList.contains("is-leaf"); }), [false, true]);
+  assert.deepStrictEqual(chevrons.map(function (node) { return node.classList.contains("is-leaf"); }),
+    [false, true, false], "the Zone and its unclassified summary open; a recorded Face does not");
 
   // Filling the "?" rebuilds the control without it, and the focus stays on the cell.
   boundary.focus();
@@ -823,11 +862,9 @@ test("what the old State column said about a boundary is said on the boundary ce
   assert.match(cell.title, /Attached zone record is missing/);
 });
 
-test("a Zone with no recorded Faces offers nothing to expand", function () {
+test("a Zone with no Faces at all offers nothing to expand", function () {
   var p = page(), payload = snapshot();
-  payload.sections["ph_composer.zones.faces.faces"].value.faces.forEach(function (face) {
-    face.values = {}; face.state = "unclassified"; face.reference.entity_id = null;
-  });
+  payload.sections["ph_composer.zones.faces.faces"].value.faces = [];
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var chevrons = p.query("[data-section='ph_composer.overview']").querySelectorAll(".row-chevron");
   assert.deepStrictEqual(chevrons.map(function (node) { return node.classList.contains("is-leaf"); }), [true]);

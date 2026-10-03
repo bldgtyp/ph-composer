@@ -344,3 +344,26 @@ moment, and after the panel was reopened the first window id found was the close
 itself rendered correctly once the on-screen window was captured, the renderer was idle, and the
 same steps in the browser preview raise no error. Recorded so the blank image is not read as a
 product fault.
+
+## P3-4 outcome, 2026-10-03
+
+Ed authorized P3-4 on 2026-10-03, to start once #59 merged. Implemented on
+`feat/ui-unclassified-rows`. `make ci` passes (1390 Ruby runs, 400 JavaScript tests, 172 Python
+tests) and `make ui-checks` passes. This reverses the Phase 1 decision that an unclassified Face
+is not a row (D4).
+
+- Each Zone with unclassified Faces gets one summary row after its recorded Faces: "N unclassified
+  Faces", with their total area and a Locate action that selects them all.
+- Under it, each unclassified Face is a row: "Face N", amber "?" for Type and Boundary, its area,
+  Locate, and no Assembly cell until it has a record. Choosing a type or a boundary sends the same
+  `classify` the selection route uses, with the Face's reference and empty `expected_values`.
+- The summary opens by itself at ten Faces or fewer and is closed above that (P3-Q5). Once the
+  user opens or closes it, their choice stands.
+- Above fifty, the first fifty show with a last row, "Show all", naming how many more there are.
+- A Face keeps its row key when it is classified, so it moves from under the summary to among the
+  Zone's Faces without losing selection or focus. The Zone's amber count and Suggest
+  classification are unchanged.
+
+Scale, in the browser preview with 500 unclassified Faces added to one Zone: 27 ms to paint with
+fifty shown, 107 ms for "Show all" (510 rows), 25 ms for a repaint with all shown. Rows under a
+closed summary are not painted at all.

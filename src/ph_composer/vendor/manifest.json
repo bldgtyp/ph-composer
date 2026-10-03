@@ -171,9 +171,9 @@
       "sha256": "e30358e682526d9e31da90f715aef67e1685d95dffab89f2a8bca4383fd928fc"
     },
     "html/features/zones/overview.js": {
-      "bytes": 35795,
+      "bytes": 38032,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "6729cc6723394199b5729e70bd9d9a3d8ad55d1cb8d72c164d9803844aa1e3bc"
+      "sha256": "e594e7c2bba73fd63ad88f159fd1b9ae3dbbb87b6c098766d3c903128d11fe3c"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 2572,
