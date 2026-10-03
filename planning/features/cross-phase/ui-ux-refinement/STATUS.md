@@ -5,11 +5,10 @@ STATUS: In progress
 
 ## Where this stands
 
-All eight packets and the Zones / Faces follow-up are merged to main (last merge: pull request
-#66). No branch is open and nothing is half-built. What is left needs Ed: his verification pass
-below, the host capture session for the viewport tools (D7), and then the Design System artifact.
-Ed gave a standing go on 2026-10-03 to proceed through the packets on the recorded
-recommendations, with his checks gathered into one verification pass at the end.
+All eight packets, the Zones / Faces follow-up and the fixes from the verification pass are merged
+to main (last merge: pull request #67). No branch is open and nothing is half-built. The Design
+System artifact has its first version. What is left: the host capture session for the viewport
+tools (D7), and a completed export, which no check has run.
 
 | Step | State | Note |
 | --- | --- | --- |
@@ -26,7 +25,8 @@ recommendations, with his checks gathered into one verification pass at the end.
 | Packet 7, Library (L1 to L3, K11, D5) | Merged to main 2026-10-03, [#65](https://github.com/bldgtyp/ph-composer/pull/65) | [phases/phase-07-library.md](phases/phase-07-library.md) |
 | Packet 8, completeness (X1, F3, K10; ruling on F1) | Merged to main 2026-10-03, [#66](https://github.com/bldgtyp/ph-composer/pull/66) | [phases/phase-08-completeness.md](phases/phase-08-completeness.md) |
 | Host capture of viewport surfaces (D7) | Not started | Was to follow packets 1 and 2; needs one SketchUp session with Ed present |
-| Design System artifact | Not started | After the kit-wide packets settle |
+| Verification pass and its fixes | Done 2026-10-03, [#67](https://github.com/bldgtyp/ph-composer/pull/67) | Results and findings below |
+| Design System artifact | First version published 2026-10-03 | [PH-Composer Design System](https://claude.ai/artifact/77GLrkZxtkxo9TksTbvodL), private to Ed. Tokens, the brand book, a cover and six kit parts as static renditions, read from `main@8af813e` |
 
 Every merged packet passed `make ci` (both Ruby versions in CI), `make ui-checks`, at least one
 independent diff review, and a host check on SketchUp 26.1.188. Each plan's own outcome and host
@@ -34,12 +34,14 @@ check sections say what was and was not covered.
 
 ## Next steps, in order
 
-1. **Ed's verification pass**, below: one sitting in SketchUp with a real project Model.
+1. **A completed export** on a Model with no blocking causes. No host check has chosen a
+   destination and written a file since Export's page changed.
 2. **The D7 host capture session** for the viewport tools (Classify, Place, Paint in their active
-   states), the real Colour-by legend and a completed Export. It needs Ed present, and can share
-   the sitting with step 1. F4 (the viewport tools signal their active state differently) waits on
-   it.
-3. **The Design System artifact**, now that the kit-wide packets have settled.
+   states) and the real Colour-by legend. F4 waits on it. Computer use can drive the panel; the
+   viewport gestures are the part to plan for.
+3. **Grow the Design System** if Ed wants it to carry more: live components would need the kit's
+   scripts bundled, and the drawing styles of the two Builders are not in it yet. Re-sync it after
+   any kit change.
 4. **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
    taken" table), as small follow-up changes.
 
@@ -66,20 +68,22 @@ left it.
 | 14. Export: "Finish 6 things before exporting.", ten causes in two groups, Locate all selects ten Faces, Open Zones / Faces navigates | Pass, with the wording findings below |
 | 15. A completed export | Not run: the Model has six blocking causes |
 
-Found in the pass, not yet fixed:
+Found in the pass and fixed in [#67](https://github.com/bldgtyp/ph-composer/pull/67), each
+checked again in the host with real pointer input:
 
-- **The notice covers the subtabs.** "Installs saved." sits over U-Values and Schedule on the
-  Window Types tab until the next click. Clicks pass through it, but the labels are hidden.
-- **Zones / Faces at about 1150 wide with the inspector open:** the table is wider than its space
-  and the Type column slides under the sticky Name column, leaving a header that reads "e".
-- **No rail mark on a Window Type with no products.** "A New Type" has four blocking Export causes
-  and no amber mark in the rail. The mark follows the thermal findings, which were empty here.
-- **Export wording from the Model:** "Element: top: no Psi-Install Type resolves." names no Window
-  Type; "The Face face type RoofCeiling differs from its Assembly type Wall." shows honeybee's
-  stored word where the glossary says "Roof or ceiling"; "Face names incomplete Assembly" is hard
-  to read. These come from Ruby (P8-Q1).
-- **Locate all from Export does not fill the selection inspector**, the known limit for Faces
-  selected from outside their Zone.
+- **The notice covered the subtabs.** A notice is now as wide as its message, so "Installs saved."
+  sits clear of them.
+- **Zones / Faces beside the inspector.** The table's default column widths now fit at the panel's
+  usual width, so the Type column no longer slides under the sticky Name column.
+- **No rail mark on a Window Type with no products.** The mark now follows the record's own
+  findings, which include its elements', less the one piece of advice Export does not block on.
+- **Export wording.** At its Ruby source: "This Face has no Assembly.", "This Face's Assembly A Name
+  is not finished: ...", "This Face's type is Roof or ceiling; its Assembly's type is Wall.", and
+  Window findings that start with their Window Type ("A New Type, Element: The top edge has no
+  Psi-Install Type."). Codes, sections, `object_id` and `locate` are unchanged.
+
+Found and left: Locate all from Export does not fill the selection inspector, the known limit for
+Faces selected from outside their Zone.
 
 ## Follow-ups noted, not scheduled
 
