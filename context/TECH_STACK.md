@@ -562,6 +562,10 @@ this foundation when their feature lands.
 
 ### UI kit conventions carried over
 
+- `ui.pageHeader({ title, count, actions, primary })` for the header every pane opens with: title,
+  muted count, secondary actions, then the one filled primary action at the right, and no caption.
+  `--page-gutter` in `base.css` is the one horizontal inset; a screen does not style its own heading
+  or set its own page padding.
 - `ui.ViewControls` for filtering, ordering and grouping; filtering hides rows and never drops
   records, so drafts and expansion survive.
 - `ui.Bubble` for non-modal editors anchored to a control: shared surface and pointer, viewport
