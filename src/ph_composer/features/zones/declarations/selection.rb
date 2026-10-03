@@ -23,10 +23,12 @@ module PhComposer
       def install(feature)
         feature.query("#{FEATURE_ID}.selection",
                       :description => "Valid selected Zone occurrences and current values.",
+                      :refuses => Refuses::ZONE_TARGET + %w[selection.invalid],
                       :params => Shapes::NONE, :result => Shapes.object({ "zones" => Shapes.list(ROW) }),
                       :examples => [{}]) { |request| Selection.read(request) }
         feature.action("#{FEATURE_ID}.update_field",
                        :description => "Set one attribute on explicit Zone occurrences.",
+                       :refuses => Refuses::ZONE_TARGET,
                        :params => UPDATE, :result => Shapes.object({ "zone_ids" => Shapes.list(Shapes::ID) }),
                        :undo_name => "Edit Selected Zones",
                        :side_effects => "Updates each Zone and its membership stamps.",
@@ -45,6 +47,7 @@ module PhComposer
         prefix = Faces::PREFIX
         feature.query("#{prefix}.selection",
                       :description => "Validated selected Face occurrence references.",
+                      :refuses => Refuses::FACE_TARGET + %w[gesture.too_large selection.invalid],
                       :params => Shapes::NONE,
                       :result => Shapes.object({ "faces" => Shapes.list(Faces::FACE_REFERENCE),
                                                  "targets" => Shapes.list(Faces::AssemblyRegistration::TARGET) }),
@@ -57,11 +60,13 @@ module PhComposer
       def install_attached_assignment(feature, prefix)
         feature.query("#{prefix}.attached_assignment",
                       :description => "The pending native Face assignment handoff.",
+                      :refuses => [],
                       :params => Shapes::NONE, :result => ASSIGNMENT,
                       :examples => [{}]) { |request| Faces::Selection.handoff(request.session).snapshot }
         feature.snapshot_section("#{prefix}.selection_assignment", :query => "#{prefix}.attached_assignment")
         feature.view_command("#{prefix}.open_attached_assignment",
                              :description => "Review a new Attached zone assignment for explicit Faces.",
+                             :refuses => Refuses::FACE_TARGET + %w[assignment.pending gesture.too_large revision.stale],
                              :params => Shapes.object({
                                "faces" => Faces::Registration::FACES.merge("description" => "The Faces the new " \
                                                                                             "Attached zone would be " \
@@ -77,6 +82,7 @@ module PhComposer
         end
         feature.view_command("#{prefix}.close_attached_assignment",
                              :description => "Close the native assignment handoff.",
+                             :refuses => [],
                              :params => Shapes.object({
                                "token" => { "type" => "string", "description" => "The token open_attached_" \
                                                                                  "assignment returned; another one " \

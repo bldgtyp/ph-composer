@@ -2456,7 +2456,7 @@ Example params:
 
 One bounded page of assemblies, with display findings. Owner: `ph_composer.assemblies`.
 
-Refuses: only the `query` common set.
+Refuses: `query.cursor_expired`, `query.limit_invalid`, and the `query` common set.
 
 Params:
 
@@ -3621,7 +3621,7 @@ Example params:
 
 One bounded page of materials, with display findings. Owner: `ph_composer.assemblies`.
 
-Refuses: only the `query` common set.
+Refuses: `query.cursor_expired`, `query.limit_invalid`, and the `query` common set.
 
 Params:
 
@@ -9802,7 +9802,7 @@ Example params:
 
 Every Zone occurrence in one complete projection, for the panel. Scripts page ph_composer.zones.list instead. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -10053,7 +10053,7 @@ Example params:
 
 All-Zone export checks and adjacency repair. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -10175,7 +10175,7 @@ Example params:
 
 Every Face occurrence in authored Zones in one complete projection, for the panel. Scripts page ph_composer.zones.faces.list instead. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -10573,7 +10573,7 @@ Example params:
 
 Face counts and gross areas by Assembly. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -10825,7 +10825,7 @@ Example params:
 
 Face classification and Assembly checks. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -10947,7 +10947,7 @@ Example params:
 
 The reference and values of the Faces at explicit native paths, for a feature that hosts objects on Faces. Scans only each path, never the whole Model; Zone state is in ph_composer.zones.all. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -11126,7 +11126,7 @@ Example params:
 
 One page of path-qualified Face occurrences in authored Zones, filtered and projected. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -11462,7 +11462,7 @@ Example params:
 
 Validated selected Face occurrence references. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `gesture.too_large`, `record.unreadable`, `selection.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -11625,7 +11625,7 @@ Example params:
 
 One page of Zone occurrences, filtered and projected, and the Make Zone target. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -11933,7 +11933,7 @@ Example params:
 
 Valid selected Zone occurrences and current values. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, `selection.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -12032,7 +12032,7 @@ Example params:
 
 This Model's classification settings. Owner: `ph_composer.zones`.
 
-Refuses: only the `query` common set.
+Refuses: `record.unreadable`, and the `query` common set.
 
 Params:
 
@@ -12090,7 +12090,7 @@ Create one Assembly, with default authoring values. Owner: `ph_composer.assembli
 
 Undo step: Create Assembly. Creates one catalog record.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -12475,7 +12475,7 @@ Delete Assembly; remaining references refuse. Owner: `ph_composer.assemblies`.
 
 Undo step: Delete Assembly. Replacement or explicit clearing rewrites uses and deletes atomically.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -12900,7 +12900,7 @@ Duplicate one Assembly with independent identity. Owner: `ph_composer.assemblies
 
 Undo step: Duplicate Assembly. Creates one catalog record, preserving shared definition references.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -12952,7 +12952,7 @@ Add a Layer with one Layer-Segment of no Material. With no position it goes afte
 
 Undo step: Add Assembly Layer. Adds one Layer to this Assembly.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -13396,7 +13396,7 @@ Reverse the stored order of the Layers and keep the orientation, so the outside 
 
 Undo step: Flip Assembly Layers. Reverses the Layer order.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -13815,7 +13815,7 @@ Switch which end of the stored Layer order is the outside (first_layer_outside o
 
 Undo step: Flip Assembly Orientation. Changes only the orientation.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -14234,7 +14234,7 @@ Move one Layer one place outward or inward. A Layer already at that end stays. O
 
 Undo step: Move Assembly Layer. Swaps two neighbouring Layers.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -14670,7 +14670,7 @@ Remove one Layer. An Assembly keeps at least one Layer. Owner: `ph_composer.asse
 
 Undo step: Remove Assembly Layer. Removes the Layer and its Layer-Segments; clears the air barrier if it was on that Layer.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -15096,7 +15096,7 @@ Mark one face of one Layer as the Assembly's air barrier, or clear it. Owner: `p
 
 Undo step: Set Air Barrier. Replaces the Assembly's one air barrier.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -15534,7 +15534,7 @@ Set one Layer's thickness. Owner: `ph_composer.assemblies`.
 
 Undo step: Change Layer Thickness. Changes one Layer's thickness.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -15968,7 +15968,7 @@ Add a Layer-Segment of no Material to one Layer. A membrane Layer holds one Laye
 
 Undo step: Add Layer-Segment. Adds one Layer-Segment.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -16405,7 +16405,7 @@ Reverse the order of the Layer-Segments in every Layer of one Assembly. Owner: `
 
 Undo step: Mirror Layer-Segments. Reverses each Layer's Layer-Segment order.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -16824,7 +16824,7 @@ Remove one Layer-Segment. A Layer keeps at least one. Owner: `ph_composer.assemb
 
 Undo step: Remove Layer-Segment. Removes one Layer-Segment.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -17257,7 +17257,7 @@ Set or clear one Layer-Segment's Material. A membrane Material needs a Layer of 
 
 Undo step: Set Layer-Segment Material. Changes one Layer-Segment's Material and may reset a membrane Layer's thickness.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -17700,7 +17700,7 @@ Set one Layer-Segment's width, continuous-insulation flag or steel stud spacing.
 
 Undo step: Edit Layer-Segment. Changes one Layer-Segment's values.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -18161,7 +18161,7 @@ Edit one Assembly; changed expected values refuse. Owner: `ph_composer.assemblie
 
 Undo step: Edit Assembly. Updates values and optional metadata.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -18690,7 +18690,7 @@ Create one Material, with default authoring values. Owner: `ph_composer.assembli
 
 Undo step: Create Material. Creates one catalog record.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -18909,7 +18909,7 @@ Delete Material; remaining references refuse. Owner: `ph_composer.assemblies`.
 
 Undo step: Delete Material. Replacement or explicit clearing rewrites uses and deletes atomically.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -19164,7 +19164,7 @@ Duplicate one Material with independent identity. Owner: `ph_composer.assemblies
 
 Undo step: Duplicate Material. Creates one catalog record, preserving shared definition references.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -19225,7 +19225,7 @@ Edit one Material; changed expected values refuse. Owner: `ph_composer.assemblie
 
 Undo step: Edit Material. Updates values and optional metadata.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -33132,7 +33132,7 @@ Set or clear only the Assembly of explicit Faces. Owner: `ph_composer.zones`.
 
 Undo step: Assign Assembly. Changes only assembly_id on all targets.
 
-Refuses: only the `action` common set.
+Refuses: `gesture.too_large`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -33297,7 +33297,7 @@ Create one Attached zone and assign it to explicit Face occurrences. Owner: `ph_
 
 Undo step: Create and Assign Attached Zone. Creates one Attached zone and classifies its Faces in one Undo step.
 
-Refuses: only the `action` common set.
+Refuses: `adjacency.not_surface`, `adjacency.unresolved`, `gesture.retirement_conflict`, `gesture.too_large`, `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -33538,7 +33538,7 @@ Delete one Attached zone, moving every Face that names it in the same step. Owne
 
 Undo step: Delete Attached Zone. Reassigns or reclassifies referencing Faces and deletes the record.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `record.unreadable`, `reference.in_use`, `target.not_found`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -33629,7 +33629,7 @@ Copy Attached zones without reassigning any Face. Owner: `ph_composer.zones`.
 
 Undo step: Duplicate Attached Zone. Creates Attached zone records with fresh ids.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -33690,7 +33690,7 @@ Create or edit one Attached zone. Owner: `ph_composer.zones`.
 
 Undo step: Save Attached Zone. Writes one Attached zone record.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -33851,7 +33851,7 @@ Suggest a classification for every unrecorded Face in one Zone. Owner: `ph_compo
 
 Undo step: Suggest Classification. Writes suggested values to Faces that have no record yet.
 
-Refuses: only the `action` common set.
+Refuses: `geometry.invalid`, `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -33931,7 +33931,7 @@ Apply explicit keep, set or clear intent to Faces. Owner: `ph_composer.zones`.
 
 Undo step: Classify Faces. Writes face assignments and Zone stamps.
 
-Refuses: only the `action` common set.
+Refuses: `adjacency.not_surface`, `adjacency.unresolved`, `gesture.retirement_conflict`, `gesture.too_large`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -34216,7 +34216,7 @@ Reverse one Face and keep its assignment record. Owner: `ph_composer.zones`.
 
 Undo step: Reverse Face. Flips the Face normal; any Surface pair goes stale.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -34300,7 +34300,7 @@ Make one Zone from explicit entities in one edit context. Owner: `ph_composer.zo
 
 Undo step: Make Zone. Groups loose geometry when needed and writes a Zone record.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `target.ambiguous`, `target.edit_path_changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -34371,7 +34371,7 @@ Give one copied Zone occurrence an identity of its own. Owner: `ph_composer.zone
 
 Undo step: Repair Zone Identity. Reidentifies the named occurrence and its Faces; the original is left untouched.
 
-Refuses: only the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.identity_unique`, and the `action` common set.
 
 Params:
 
@@ -34434,7 +34434,7 @@ Repair copied Face identities after a native split. Owner: `ph_composer.zones`.
 
 Undo step: Repair Split Face Identity. Reidentifies split pieces and retires invalid Surface links.
 
-Refuses: only the `action` common set.
+Refuses: `adjacency.unresolved`, `copy.rule_missing`, `extension.invalid`, `face.identity_unique`, `identity.choice_conflicts`, `identity.choice_required`, `record.unreadable`, `reference.invalid`, `scope.incomplete`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -34685,7 +34685,7 @@ Regroup the stamped members of an exploded Zone, recovering only their stamp. Ow
 
 Undo step: Restore Zone. Groups stamped Faces in one parent context and writes a Zone record.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, `zone.identity_in_use`, `zone.restore_unsafe`, and the `action` common set.
 
 Params:
 
@@ -34758,7 +34758,7 @@ Retire one reciprocal Surface pair. Owner: `ph_composer.zones`.
 
 Undo step: Retire Zone Adjacency. Removes both endpoints and leaves their boundary condition unassigned.
 
-Refuses: only the `action` common set.
+Refuses: `adjacency.not_surface`, `adjacency.unresolved`, `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -34852,7 +34852,7 @@ Set this Model's classification settings. Owner: `ph_composer.zones`.
 
 Undo step: Change Zone Settings. Stores classification settings in this SKP in one Undo step.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `target.changed`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -34971,7 +34971,7 @@ Reconcile and pair shared Faces within an explicit Zone scope. Owner: `ph_compos
 
 Undo step: Solve Zone Adjacency. Retires old Surface pairs and writes current endpoints.
 
-Refuses: only the `action` common set.
+Refuses: `adjacency.stale`, `adjacency.unresolved`, `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `record.unreadable`, `reference.invalid`, `scope.incomplete`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.same_zone`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -35065,7 +35065,7 @@ Update one explicit Zone occurrence. Owner: `ph_composer.zones`.
 
 Undo step: Edit Zone. Updates Zone values and membership stamps.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -35213,7 +35213,7 @@ Set one attribute on explicit Zone occurrences. Owner: `ph_composer.zones`.
 
 Undo step: Edit Selected Zones. Updates each Zone and its membership stamps.
 
-Refuses: only the `action` common set.
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -35979,7 +35979,7 @@ Example params:
 
 Set one Classify palette field and give the tool the viewport. Owner: `ph_composer.zones`.
 
-Refuses: only the `view_command` common set.
+Refuses: `record.unreadable`, `reference.invalid`, and the `view_command` common set.
 
 Params:
 
@@ -36280,7 +36280,7 @@ Example params:
 
 Review a new Attached zone assignment for explicit Faces. Owner: `ph_composer.zones`.
 
-Refuses: only the `view_command` common set.
+Refuses: `assignment.pending`, `gesture.too_large`, `record.unreadable`, `revision.stale`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `view_command` common set.
 
 Params:
 

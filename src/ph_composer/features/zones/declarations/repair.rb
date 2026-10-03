@@ -45,6 +45,7 @@ module PhComposer
         SplitIdentityMenu.install(feature)
         feature.action("#{FEATURE_ID}.repair_split_face",
                        :description => "Repair copied Face identities after a native split.",
+                       :refuses => Refuses::REPAIR_SPLIT_FACE,
                        :params => SPLIT_REPAIR_PARAMS, :result => SPLIT_REPAIR_RESULT,
                        :examples => [{ "zone" => EXAMPLE_ZONE, "face_id" => "fac_Mn34Op56Qr78",
                                        "zones" => [EXAMPLE_ZONE] }],
@@ -59,6 +60,7 @@ module PhComposer
         end
         feature.action("#{FEATURE_ID}.repair_identity",
                        :description => "Give one copied Zone occurrence an identity of its own.",
+                       :refuses => Refuses::REPAIR_IDENTITY,
                        :params => REPAIR_PARAMS, :result => REPAIR_RESULT, :undo_name => "Repair Zone Identity",
                        :examples => [{ "zone_path" => [1401] }],
                        :side_effects => "Reidentifies the named occurrence and its Faces; the original is " \
@@ -67,6 +69,7 @@ module PhComposer
         end
         feature.action("#{FEATURE_ID}.restore",
                        :description => "Regroup the stamped members of an exploded Zone, recovering only their stamp.",
+                       :refuses => Refuses::RESTORE,
                        :params => RESTORE_PARAMS, :result => RESTORE_RESULT, :undo_name => "Restore Zone",
                        :examples => [{ "parent_path" => [], "zone_id" => "zon_Ab12Cd34Ef56" }],
                        :side_effects => "Groups stamped Faces in one parent context and writes a Zone " \

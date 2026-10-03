@@ -51,6 +51,7 @@ require_relative "declarations/adjacency"
 require_relative "declarations/repair"
 require_relative "declarations/selection"
 require_relative "codes"
+require_relative "refuses"
 
 module PhComposer
   module Zones

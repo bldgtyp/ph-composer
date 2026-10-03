@@ -49,6 +49,7 @@ module PhComposer
       def declare(feature, collection, row, categories: false, &read)
         prefix = "#{FEATURE_ID}.#{collection}"
         feature.query("#{prefix}.list", :description => "One bounded page of #{collection}, with display findings.",
+                                        :refuses => Refuses::PAGE,
                                         :params => Shapes.list_params,
                                         :result => result(row, :paged => true, :categories => categories),
                                         :examples => [{}, { "limit" => 20 }]) do |request|
@@ -56,6 +57,7 @@ module PhComposer
         end
         feature.query("#{prefix}.all",
                       :description => "The complete #{collection} inventory for the panel snapshot.",
+                      :refuses => [],
                       :params => Shapes::NONE, :result => result(row, :paged => false, :categories => categories),
                       :examples => [{}]) do |request|
           read.call(request, false)

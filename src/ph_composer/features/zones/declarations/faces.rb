@@ -200,11 +200,13 @@ module PhComposer
           feature.query("#{PREFIX}.list",
                         :description => "One page of path-qualified Face occurrences in authored Zones, filtered " \
                                         "and projected.",
+                        :refuses => Refuses::READ + Refuses::PAGE + %w[geometry.invalid],
                         :params => LIST_PARAMS, :result => LIST_RESULT,
                         :examples => [{}, LIST_EXAMPLE]) { |request| Faces.list(request) }
           feature.query("#{PREFIX}.all",
                         :description => "Every Face occurrence in authored Zones in one complete projection, for the " \
                                         "panel. Scripts page #{PREFIX}.list instead.",
+                        :refuses => Refuses::READ + %w[geometry.invalid],
                         :params => Shapes::NONE, :result => ALL_RESULT, :examples => [{}]) do |request|
             Faces.all(request)
           end
@@ -212,6 +214,7 @@ module PhComposer
                         :description => "The reference and values of the Faces at explicit native paths, for a " \
                                         "feature that hosts objects on Faces. Scans only each path, never the " \
                                         "whole Model; Zone state is in ph_composer.zones.all.",
+                        :refuses => %w[record.unreadable validation.failed],
                         :params => HOST_CONTEXT_PARAMS, :result => HOST_CONTEXT_RESULT,
                         :examples => [{ "paths" => [[1201, 1202]] }]) do |request|
             Faces.host_context(request, :paths => request.params.fetch("paths"))
@@ -229,6 +232,7 @@ module PhComposer
                                      "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } } }
           feature.action("#{PREFIX}.classify",
                          :description => "Apply explicit keep, set or clear intent to Faces.",
+                         :refuses => Refuses::CLASSIFY + %w[reference.invalid],
                          :params => CLASSIFY_PARAMS, :result => FACE_IDS_RESULT, :undo_name => "Classify Faces",
                          :examples => [classify,
                                        { "faces" => [EXAMPLE_FACE],
@@ -241,6 +245,7 @@ module PhComposer
           end
           feature.action("#{PREFIX}.auto_classify",
                          :description => "Suggest a classification for every unrecorded Face in one Zone.",
+                         :refuses => Refuses::FACE_TARGET + %w[geometry.invalid],
                          :params => AUTO_CLASSIFY_PARAMS, :result => AUTO_CLASSIFY_RESULT,
                          :undo_name => "Suggest Classification",
                          :examples => [{ "zone" => EXAMPLE_FACE.slice("zone_id", "zone_path") }],
@@ -250,6 +255,7 @@ module PhComposer
           end
           feature.action("#{PREFIX}.reverse",
                          :description => "Reverse one Face and keep its assignment record.",
+                         :refuses => Refuses::FACE_TARGET,
                          :params => REVERSE_PARAMS, :result => Shapes::NONE, :undo_name => "Reverse Face",
                          :examples => [{ "face" => EXAMPLE_FACE }],
                          :side_effects => "Flips the Face normal; any Surface pair goes stale.") do |request, proposal|
@@ -261,6 +267,7 @@ module PhComposer
         # and Locate. None of them writes a record, so none is an action.
         def declare_viewport(feature)
           feature.query("#{PREFIX}.classify_tool", :description => "The Classify tool's palette and whether it runs.",
+                                                   :refuses => [],
                                                    :params => Shapes::NONE, :result => TOOL_STATE,
                                                    :examples => [{}]) do |request|
             Faces.tool_state(request.session)
@@ -268,6 +275,7 @@ module PhComposer
           feature.snapshot_section("#{PREFIX}.palette", :query => "#{PREFIX}.classify_tool")
           feature.view_command("#{PREFIX}.choose",
                                :description => "Set one Classify palette field and give the tool the viewport.",
+                               :refuses => %w[record.unreadable reference.invalid],
                                :params => CHOOSE_PARAMS, :result => TOOL_STATE,
                                :examples => [{ "field" => "face_type", "value" => "Wall" },
                                              { "field" => "assembly_id", "value" => "asm_Ab12Cd34Ef56" }]) do |request|
@@ -280,12 +288,14 @@ module PhComposer
           end
           feature.view_command("#{PREFIX}.stop_classifying",
                                :description => "Give the viewport back to whatever tool the user had.",
+                               :refuses => [],
                                :params => Shapes::NONE, :result => TOOL_STATE, :examples => [{}]) do |request|
             Faces.classify_tool(request.session).stop
             Faces.tool_state(request.session)
           end
           feature.view_command("#{PREFIX}.locate",
                                :description => "Select an explicit set of Faces and bring them into view.",
+                               :refuses => [],
                                :params => LOCATE_PARAMS, :result => LOCATE_RESULT,
                                :examples => [{ "faces" => [EXAMPLE_FACE] }]) do |request|
             Faces.locate(request, :faces => request.params.fetch("faces"))
@@ -301,6 +311,7 @@ module PhComposer
                                                                     :params => { "kind" => AttachedZone::KIND_ID })
           feature.action("#{AttachedZone::KIND_ID}.save",
                          :description => "Create or edit one Attached zone.",
+                         :refuses => Refuses::RECORD_EDIT,
                          :params => ATTACHED_ZONE_SAVE_PARAMS, :result => ATTACHED_ZONE_ID_RESULT,
                          :undo_name => "Save Attached Zone", :examples => [{ "values" => EXAMPLE_ATTACHED }],
                          :side_effects => "Writes one Attached zone record.") do |request, proposal|
@@ -312,6 +323,7 @@ module PhComposer
           end
           feature.action("#{AttachedZone::KIND_ID}.create_and_assign",
                          :description => "Create one Attached zone and assign it to explicit Face occurrences.",
+                         :refuses => Refuses::CLASSIFY,
                          :params => ATTACHED_ZONE_CREATE_ASSIGN_PARAMS, :result => ATTACHED_ZONE_CREATE_ASSIGN_RESULT,
                          :undo_name => "Create and Assign Attached Zone",
                          :examples => [{ "faces" => [EXAMPLE_FACE], "values" => EXAMPLE_ATTACHED }],
@@ -327,6 +339,7 @@ module PhComposer
           end
           feature.action("#{AttachedZone::KIND_ID}.duplicate",
                          :description => "Copy Attached zones without reassigning any Face.",
+                         :refuses => Refuses::RECORD_COPY,
                          :params => ATTACHED_ZONE_DUPLICATE_PARAMS, :result => ATTACHED_ZONE_DUPLICATE_RESULT,
                          :undo_name => "Duplicate Attached Zone", :examples => [{ "ids" => ["atz_Ab12Cd34Ef56"] }],
                          :side_effects => "Creates Attached zone records with fresh ids.") do |request, proposal|
@@ -340,6 +353,7 @@ module PhComposer
                      "replacement" => { "mode" => "boundary_condition", "boundary_condition" => "Outdoors" } }
           feature.action("#{AttachedZone::KIND_ID}.delete",
                          :description => "Delete one Attached zone, moving every Face that names it in the same step.",
+                         :refuses => Refuses::RECORD_DELETE,
                          :params => ATTACHED_ZONE_DELETE_PARAMS, :result => ATTACHED_ZONE_DELETE_RESULT,
                          :undo_name => "Delete Attached Zone", :examples => [delete],
                          :side_effects => "Reassigns or reclassifies referencing Faces and deletes the " \

@@ -35,6 +35,7 @@ require_relative "declarations/layers"
 require_relative "declarations/segments"
 require_relative "library_kind"
 require_relative "codes"
+require_relative "refuses"
 
 module PhComposer
   module Assemblies

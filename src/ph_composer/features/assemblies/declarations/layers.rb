@@ -21,6 +21,7 @@ module PhComposer
                        "expected_values" => Shapes.expected(Assembly::Schema::KIND) }.merge(properties)
         feature.action("#{FEATURE_ID}.assemblies.layers.#{name}",
                        :description => description,
+                       :refuses => Refuses::EDIT,
                        :params => Shapes.object(properties, :optional => optional), :result => Shapes::RESULT,
                        :undo_name => undo_name, :side_effects => side_effects,
                        :examples => [example.merge("id" => Shapes::EXAMPLE_ID,
