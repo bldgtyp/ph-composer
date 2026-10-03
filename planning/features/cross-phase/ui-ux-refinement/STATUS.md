@@ -5,10 +5,11 @@ STATUS: In progress
 
 ## Where this stands
 
-All eight packets, the Zones / Faces follow-up and the fixes from the verification pass are merged
-to main (last merge: pull request #67). No branch is open and nothing is half-built. The Design
-System artifact has its first version. What is left: the host capture session for the viewport
-tools (D7), and a completed export, which no check has run.
+Everything this refinement set out to do is done and on main (last merge: pull request #67): the
+eight packets, the Zones / Faces follow-up, the verification pass and its fixes, a completed export
+in the host, the viewport capture session, and the Design System artifact's first version. No
+branch is open. What is left is a short list of small findings from the last two sessions, below,
+none of them built.
 
 | Step | State | Note |
 | --- | --- | --- |
@@ -24,7 +25,8 @@ tools (D7), and a completed export, which no check has run.
 | Packet 6, Assembly Builder toolbar and row actions (A1 to A4) | Merged to main 2026-10-03, [#64](https://github.com/bldgtyp/ph-composer/pull/64) | [phases/phase-06-assembly-builder.md](phases/phase-06-assembly-builder.md) |
 | Packet 7, Library (L1 to L3, K11, D5) | Merged to main 2026-10-03, [#65](https://github.com/bldgtyp/ph-composer/pull/65) | [phases/phase-07-library.md](phases/phase-07-library.md) |
 | Packet 8, completeness (X1, F3, K10; ruling on F1) | Merged to main 2026-10-03, [#66](https://github.com/bldgtyp/ph-composer/pull/66) | [phases/phase-08-completeness.md](phases/phase-08-completeness.md) |
-| Host capture of viewport surfaces (D7) | Not started | Was to follow packets 1 and 2; needs one SketchUp session with Ed present |
+| Host capture of viewport surfaces (D7) | Done 2026-10-03 | Run by computer use, with real clicks in the viewport; results below |
+| A completed export in the host | Done 2026-10-03 | Results below |
 | Verification pass and its fixes | Done 2026-10-03, [#67](https://github.com/bldgtyp/ph-composer/pull/67) | Results and findings below |
 | Design System artifact | First version published 2026-10-03 | [PH-Composer Design System](https://claude.ai/artifact/77GLrkZxtkxo9TksTbvodL), private to Ed. Tokens, the brand book, a cover and six kit parts as static renditions, read from `main@8af813e` |
 
@@ -34,16 +36,47 @@ check sections say what was and was not covered.
 
 ## Next steps, in order
 
-1. **A completed export** on a Model with no blocking causes. No host check has chosen a
-   destination and written a file since Export's page changed.
-2. **The D7 host capture session** for the viewport tools (Classify, Place, Paint in their active
-   states) and the real Colour-by legend. F4 waits on it. Computer use can drive the panel; the
-   viewport gestures are the part to plan for.
-3. **Grow the Design System** if Ed wants it to carry more: live components would need the kit's
+1. **Ed's ruling on the small findings** under "Export and viewport session" below. Each is a few
+   lines of change.
+2. **Grow the Design System** if Ed wants it to carry more: live components would need the kit's
    scripts bundled, and the drawing styles of the two Builders are not in it yet. Re-sync it after
    any kit change.
-4. **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
+3. **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
    taken" table), as small follow-up changes.
+
+## Export and viewport session, 2026-10-03
+
+SketchUp 26.1.188, merged main installed (`b236b88`), Model `ui-export-run.skp` copied fresh from
+the synthetic fixture. One complete Material and Assembly were made, and the Assembly assigned to
+all twelve Faces, through the public Ruby API. Everything after that was real pointer and key
+input through computer use, in the panel and in the viewport. Captures are native window pixels in
+the gitignored `_private/host/ui-viewport-evidence/` and `ui-export-evidence/`.
+
+| Check | Result |
+| --- | --- |
+| Export with nothing blocking | Pass: "Ready to export.", Choose destination enabled |
+| Choose destination, native save panel, Save | Pass: an HBJSON and an HTML report are written; the panel reads "HBJSON and Export report created. 2 Rooms · 12 Faces · 1 Surface pairs" and lists both files |
+| The HBJSON | Pass: 2 rooms, 12 faces, three face types, Outdoors and Surface boundaries, the Assembly on every face |
+| Colour by Face type | Pass: Faces are coloured in the viewport with a legend there, and the panel's inspector shows the same legend with counts |
+| Classify: toggle on, choose Floor, click a wall in the viewport | Pass: the Face is reclassified, the colour and both legends update, the status bar reads "Classified 1 Face." |
+| Escape in the viewport | Pass: Classify stops and SketchUp returns to Select. Also for Paint and Place |
+| Paint from an Assemblies row | Pass: the panel moves to Zones / Faces with the palette naming the Assembly and "Stop painting it"; a click paints |
+| Place: a click that would leave the host Face | Pass: refused, with the reason in the status bar and as a warning in the panel's notice |
+| Place: a click with room | Pass: the Window is placed and cut, and the Schedule lists it under its Zone and host Face |
+
+Found, not fixed:
+
+- **"1 Surface pairs"** after an export: the count line does not agree with one.
+- **The Classify inspector's heading wraps.** "Classify faces", its help button and "Stop
+  classifying" do not fit the inspector's width on one line.
+- **Painting an Assembly reports "Classified 1 Face."** in the status bar.
+- **Place shows no pressed state.** Its button is the same filled teal while the tool is on; only
+  the row above says it is placing. Classify's toggle does change. This is F4: the three viewport
+  tools signal their state in two different places (an inspector for Classify and Paint, a row for
+  Place).
+- **The Schedule's first column has no heading**, where other tables say "Actions".
+- **The Zones / Faces Assembly column cuts "Synthetic envelope"** at the default widths set in #67;
+  the column can be dragged wider.
 
 ## Verification pass, 2026-10-03
 
@@ -130,6 +163,10 @@ Faces selected from outside their Zone.
   fixture under `_private/host/`, and capture the panel by window id. Pick the window whose
   `kCGWindowIsOnscreen` is true: a blank capture has twice been a stale or off-screen window, not a
   fault. Browser checks need Playwright from a scratch directory on `NODE_PATH`.
-- Known capture gaps from the first critique still stand: populated U-Values and Schedule subtabs,
-  the Place and Paint tools in their active state, the Replace dialog, Export on a real Model, and
-  the real Colour-by legend.
+- Capture gaps that remain from the first critique: a populated U-Values subtab and the Replace
+  dialog. The Schedule, the three viewport tools, a completed export and the Colour-by legend were
+  captured on 2026-10-03.
+- Computer use drives the panel and the viewport with real input through the background `app_*`
+  tools. A native save panel's name field does not take a path: text set there becomes the file
+  name, with slashes turned to colons, in whatever folder the panel shows. Choose the folder in the
+  panel, or move the files afterwards.
