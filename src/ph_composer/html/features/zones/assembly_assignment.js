@@ -75,7 +75,12 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
       return target.expected_values.face_type;
     }));
     var selected = this.select.value;
-    options(this.select, records, "Choose Assembly", true);
+    var signature = records.map(function (record) { return record.id + ":" + record.name; }).join("|");
+    // Rebuilt only when the choices change: a snapshot follows every viewport click.
+    if (this.signature !== signature) {
+      options(this.select, records, "Choose Assembly", true);
+      this.signature = signature;
+    }
     this.select.value = selected;
     this.paint();
   };

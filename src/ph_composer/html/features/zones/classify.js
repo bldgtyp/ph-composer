@@ -216,8 +216,12 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
         return record.id === tool.palette.assembly_id;
       })[0];
       if (tool.palette.assembly_id) {
-        body.appendChild(field("Assembly", null,
-          ui.element("span", "phc-palette-value", painting ? painting.name : "Missing Assembly")));
+        var inHand = ui.element("div", "phc-chips");
+        var drop = ui.button("Stop painting it", function () { choose(screenState, "assembly_id", null); });
+        drop.disabled = screenState.view.busy();
+        inHand.appendChild(ui.element("span", "phc-palette-value", painting ? painting.name : "Missing Assembly"));
+        inHand.appendChild(drop);
+        body.appendChild(field("Assembly", null, inHand));
       }
       root.className = "phc-classify" + (tool.active ? " is-active" : "");
       root.replaceChildren(heading, body);
@@ -241,6 +245,8 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     if (!screenState.toggle || screenState.toggle.parentNode !== root) {
       screenState.toggle = ui.iconButton("Classify faces", "paint_bucket", function () {
         var pressed = screenState.wasActive || screenState.open;
+        var held = !pressed && panel.inspectorHeld(root.closest("[data-pane]").getAttribute("data-pane"));
+        if (held) { panel.notify("Save or cancel the draft in the inspector first.", "warning"); return; }
         if (screenState.wasActive) screenState.view.run("ph_composer.zones.faces.stop_classifying", {});
         screenState.open = !pressed;
         panel.repaint();

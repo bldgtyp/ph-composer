@@ -223,7 +223,7 @@ was Window Type, which says nothing about what is being classified. Filed for P3
 ## P3-2 outcome, 2026-10-03
 
 Ed authorized P3-2 on 2026-10-03. Implemented on `feat/ui-zones-inspector`. `make ci` passes (1390
-Ruby runs, 393 JavaScript tests, 172 Python tests) and `make ui-checks` passes.
+Ruby runs, 395 JavaScript tests, 172 Python tests) and `make ui-checks` passes.
 
 - **Zone details** are the inspector section `ph_composer.zones.details`, tier `record`. Save and
   Cancel show once a field changes, and the section holds the inspector while it has a draft, so
@@ -248,3 +248,25 @@ What differs from the plan:
 - The Assembly picker no longer freezes its targets at the moment of choosing, because choosing is
   now applying. The browser check's stale-target step went with it; the unit test covers the
   refusal message.
+
+One Sonnet diff review ran. It confirmed that no draft refusal is lost and that a multi-Face edit
+without `expected_values` matches the right-click and paint routes, with the revision check and
+the 250-Face ceiling still in force. Its valid findings are applied:
+
+- The palette's Assembly line has "Stop painting it", since the select that used to clear it is
+  gone and the host keeps the palette for the Model's life.
+- A value the tree shows as read only (a paired Surface, an Air boundary, an Attached zone) makes
+  that selection control read only too, so one click cannot un-pair a Surface.
+- "Mixed" and "Not set" cannot be chosen.
+- The Classify toggle refuses, with a notice, while Zone details hold the inspector
+  (`panel.inspectorHeld`), instead of starting a tool whose palette cannot show.
+- Focus moves to the Name field when Save or Cancel hide themselves; the Assembly picker no longer
+  rebuilds an open dropdown; the inspector's inputs are set before the tree paints.
+
+For Ed to judge in the host:
+
+- With Faces selected in the viewport, clicking a Zone row shows the Face selection, not Zone
+  details, because a selection outranks a record. Locate on a Zone row selects its Faces, so it
+  has the same effect. Deselecting in the viewport brings Zone details back.
+- The selection inspector's Assembly control shows "Choose Assembly", not the Assembly the
+  selection shares.

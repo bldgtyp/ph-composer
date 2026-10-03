@@ -231,3 +231,46 @@ test("selected Faces outrank a selected Zone in the inspector until the Zone has
   o.paint();
   assert.deepStrictEqual([selection.hidden, details.hidden, save.hidden], [true, false, false]);
 });
+
+test("selected Faces that disagree read Mixed; a value the tree keeps read only is read only here", function () {
+  var o = setup(), targets = o.state.sections[PREFIX + ".selected"].value.targets;
+  var second = JSON.parse(JSON.stringify(targets[0]));
+  second.reference.entity_path = [999];
+  second.expected_values = { face_type: "Floor", boundary_condition: "Surface" };
+  targets.push(second);
+  o.paint();
+  var type = byLabel(o.document.body, "Type for selected Faces");
+  var boundary = byLabel(o.document.body, "Boundary for selected Faces");
+  assert.deepStrictEqual([type.value, type.children[0].textContent, type.children[0].disabled], ["", "Mixed", true]);
+  assert.strictEqual(boundary.disabled, true, "one of them is a paired Surface");
+  type.value = "Wall";
+  type.listeners.change({});
+  var params = JSON.parse(JSON.stringify(o.sent[0].payload.params));
+  assert.strictEqual(params.faces.length, 2);
+  assert.strictEqual(params.expected_values, undefined, "several Faces share no one set of values to guard by");
+});
+
+test("a Zone draft refuses a Type choice and the Classify toggle, and the palette can drop its Assembly", function () {
+  var o = setup(), overview = o.query("[data-section='ph_composer.overview']");
+  click(overview.querySelector(".row-target"));
+  var name = byLabel(o.document.body, "Zone name");
+  name.value = "Draft"; name.listeners.input({});
+  o.paint();
+  var type = byLabel(o.document.body, "Type for selected Faces");
+  type.value = "Floor";
+  type.listeners.change({});
+  assert.strictEqual(o.sent.length, 0);
+  assert.strictEqual(type.value, o.face.values.face_type, "the control goes back to what the Faces have");
+  var toggle = o.query("[data-section='ph_composer.classify.toggle']").querySelector("button");
+  click(toggle);
+  assert.strictEqual(toggle.getAttribute("aria-pressed"), "false", "the draft keeps the inspector");
+  assert.strictEqual(o.sent.length, 0);
+
+  o = setup();
+  o.state.sections[PREFIX + ".palette"].value.palette.assembly_id = "asm_a";
+  o.paint();
+  click(o.query("[data-section='ph_composer.classify']").querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Stop painting it";
+  })[0]);
+  assert.deepStrictEqual(o.sent[0].payload.params, { field: "assembly_id", value: null });
+});

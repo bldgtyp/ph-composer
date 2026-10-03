@@ -342,9 +342,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     root.querySelector(".phc-heading-mount").replaceChildren(ui.pageHeader({ title: "Zones",
       count: zones.zones.length, actions: [solveButton(screenState, zones.zones), screenState.settings.bubble.root],
       primary: makeButton(screenState, zones.make_zone) }).root);
-    paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
+    // Set before the tree paints, so the inspector never works from an earlier pass if painting fails.
     screenState.rows = rows;
     screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
+    paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
   }
 
   /* The inspector's two sections. Both paint from what the tree's render just worked out, which the
@@ -386,7 +387,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       select.setAttribute("aria-label", label + " for selected Faces");
       select.addEventListener("change", function () {
         var reason = draftReason(state), chosen = select.value;
-        if (!chosen) return;
+        if (!chosen) { paint(); return; }
         if (reason) { paint(); refuse(reason); return; }
         var intent = { face_type: { mode: "keep" }, boundary_condition: { mode: "keep" } };
         var params = { faces: state.targets.map(function (target) { return target.reference; }), intent: intent };
@@ -410,23 +411,33 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         var offered = choices(state, field).filter(function (choice) { return choice !== "AttachedZone"; });
         var first = shared === null ? "Mixed" :
           shared && offered.indexOf(shared) < 0 ? chipLabel(field, shared) : "Not set";
+        // A value the tree shows as read only (a paired Surface, an Air boundary, an Attached zone) is
+        // read only here too: the Face's own row is where it can be changed.
+        var locked = state.targets.some(function (target) {
+          var stored = target.expected_values[field];
+          return Boolean(stored) && offered.indexOf(stored) < 0;
+        });
         var signature = first + "|" + offered.join(",");
         // Rebuilt only when what it offers changes: a snapshot follows every viewport click, and
         // rebuilding would close a dropdown the user has open.
         if (select._signature !== signature) {
-          select.replaceChildren(ui.option("", first));
+          var placeholder = ui.option("", first);
+          placeholder.disabled = true;
+          select.replaceChildren(placeholder);
           offered.forEach(function (choice) { select.appendChild(ui.option(choice, chipLabel(field, choice))); });
           select._signature = signature;
         }
         select.value = shared && offered.indexOf(shared) >= 0 ? shared : "";
-        select.disabled = state.edits.busy() || !offered.length;
+        select.disabled = state.edits.busy() || !offered.length || locked;
+        select.title = locked ? "Set on the Face's own row" : "";
       });
+      assembly.hidden = state.selectionAssignment.root.hidden;
     }
+    var assembly = ui.element("label", "phc-selection-field");
     heading.appendChild(title);
     root.appendChild(heading);
     control("face_type", "Type");
     control("boundary_condition", "Boundary");
-    var assembly = ui.element("label", "phc-selection-field");
     assembly.appendChild(ui.element("span", "", "Assembly"));
     assembly.appendChild(state.selectionAssignment.root);
     root.appendChild(assembly);
@@ -558,7 +569,11 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       editor.cancel(); panel.repaint();
     });
     // Save and Cancel belong to a draft, so they show once there is one.
-    function paintActions() { save.hidden = cancel.hidden = !(editor.dirty || editor.pending); }
+    function paintActions() {
+      var hide = !(editor.dirty || editor.pending), active = document.activeElement;
+      if (hide && (active === save || active === cancel)) name.focus();
+      save.hidden = cancel.hidden = hide;
+    }
     save.type = "submit";
     cancel.type = "button";
     card.appendChild(labelled("Name", name));
