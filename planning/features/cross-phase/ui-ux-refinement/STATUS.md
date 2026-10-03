@@ -5,10 +5,10 @@ STATUS: In progress
 
 ## Where this stands
 
-Packets 1, 2 and 3 are merged to main (last merge commit `6a3133d`, pull request #60). No branch
-is open and nothing is half-built. The packet 4 plan is written and waits for Ed's go. The five
-open points from packets 1 to 3 are ruled (D8 to D12 in FINDINGS.md); two of them change code and
-wait for the same go. No polish work is authorized beyond what is merged.
+Packets 1 to 4 and the Zones / Faces follow-up are merged to main (last merge: pull request #62).
+No branch is open and nothing is half-built. Packet 5 is next and has no plan yet. Ed gave a
+standing go on 2026-10-03 to proceed through the remaining packets on the recorded
+recommendations, with his checks gathered into one verification pass at the end.
 
 | Step | State | Note |
 | --- | --- | --- |
@@ -18,8 +18,8 @@ wait for the same go. No polish work is authorized beyond what is merged.
 | Packet 1, page frame | Merged to main 2026-10-03, [#55](https://github.com/bldgtyp/ph-composer/pull/55) | [phases/phase-01-page-frame.md](phases/phase-01-page-frame.md) |
 | Packet 2, table chrome | Merged to main 2026-10-03, [#56](https://github.com/bldgtyp/ph-composer/pull/56) | [phases/phase-02-table-chrome.md](phases/phase-02-table-chrome.md) |
 | Packet 3, Zones / Faces layout | Merged to main 2026-10-03: P3-1 [#57](https://github.com/bldgtyp/ph-composer/pull/57), P3-2 [#58](https://github.com/bldgtyp/ph-composer/pull/58), P3-3 [#59](https://github.com/bldgtyp/ph-composer/pull/59), P3-4 [#60](https://github.com/bldgtyp/ph-composer/pull/60) | [phases/phase-03-zones-faces-layout.md](phases/phase-03-zones-faces-layout.md) |
-| Packet 4, Installs editor (W4) | Plan written 2026-10-03; not authorized | [phases/phase-04-installs-editor.md](phases/phase-04-installs-editor.md) |
-| Zones / Faces follow-up (D9, D10) | Ruled 2026-10-03; not built | Small change, described under "Next steps" |
+| Packet 4, Installs editor (W4) | Merged to main 2026-10-03, [#61](https://github.com/bldgtyp/ph-composer/pull/61) | [phases/phase-04-installs-editor.md](phases/phase-04-installs-editor.md) |
+| Zones / Faces follow-up (D9, D10) | Merged to main 2026-10-03, [#62](https://github.com/bldgtyp/ph-composer/pull/62) | A chosen Zone row takes the inspector until the selection changes; the selection's Assembly control shows the shared Assembly. Host-checked for D9; D10's shared value is covered offline only (the fixture has no Assembly) |
 | Packets 5 to 8 | Requested | Order and coverage in FINDINGS.md, "Proposed packets" |
 | Host capture of viewport surfaces (D7) | Not started | Was to follow packets 1 and 2; needs one SketchUp session with Ed present |
 | Design System artifact | Not started | After the kit-wide packets settle |
@@ -30,22 +30,28 @@ check sections say what was and was not covered.
 
 ## Next steps, in order
 
-1. **Ed reads the packet 4 plan** and answers its four open points (P4-Q1 to P4-Q4).
-2. **Build packet 4** on his go.
-3. **Zones / Faces follow-up (D9, D10)**, one small pull request on his go, in
-   `features/zones/overview.js` and `assembly_assignment.js`:
-   - D9: a Zone row click records that Zone as the inspector's explicit subject, and
-     `ph_composer.zones.details` answers `"hold"` for it until the viewport selection changes.
-   - D10: the selection's `Picker` is given the shared Assembly id (or "Mixed") and shows it as its
-     resting value.
-   Each gets one focused test in `tests/overview_panel_test.js` or
-   `tests/assembly_assignment_panel_test.js`, then the usual gates and a short host check.
-4. **Packets 5 to 8** as FINDINGS.md orders them: the Window Types frame (Anchor control, rail
-   names, library sidebars, and the Installs palette as a pane inspector if P4-Q1 is accepted), the
-   Assembly Builder toolbars and inventory row actions, the Library, then completeness (one
-   vocabulary for "not finished", Export readiness, empty states).
-5. **The D7 host capture session** for the viewport tools, the real Colour-by legend and Export.
-6. **The Design System artifact**, once the kit-wide packets have settled.
+1. **Write the packet 5 plan**: the Window Types frame. The Anchor control (W1), rail names (W2),
+   the two library sidebars (W3), the Empty element mark (W5), K9, and the Installs palette as a
+   pane inspector (P4-Q1, deferred to here).
+2. **Packets 6 to 8** as FINDINGS.md orders them: the Assembly Builder toolbars and inventory row
+   actions, the Library, then completeness (one vocabulary for "not finished", Export readiness,
+   empty states).
+3. **The D7 host capture session** for the viewport tools, the real Colour-by legend and Export.
+4. **The Design System artifact**, once the kit-wide packets have settled.
+
+## For Ed's verification pass
+
+Gathered here so they can be checked in one sitting, in SketchUp, by hand:
+
+- Installs editor: Escape from the keyboard at each layer, and painting edges with the pointer.
+  Both were exercised offline and in the browser checks, not with native input.
+- Window Types now shows its messages. Notices such as "Installs saved." and the eyedropper
+  instructions appear for the first time, in the panel's notice under the tab row. Say if any is
+  unwanted or badly placed.
+- A notice that is only information no longer blocks a click on the control beneath it.
+- Zones / Faces: click a Zone row while Faces are selected, then change the selection (D9).
+- The selection's Assembly control with Faces that share an Assembly, and with Faces that differ
+  (D10).
 
 ## Follow-ups noted, not scheduled
 
@@ -58,6 +64,12 @@ check sections say what was and was not covered.
   kit `Inventory` shows no count.
 - An unclassified row sends no value guard; "Show all" drops focus to the page; Locate on more than
   250 Faces selects past the selection inspector's ceiling.
+- Locate from outside a Zone selects its Faces while the edit path is the Model, and the selection
+  inspector does not recognise Faces selected that way ("0 Faces selected" in the snapshot). Seen in
+  the host on 2026-10-03; it predates this work.
+- A main tab click on a clean Installs session is refused with a notice, where a subtab click now
+  leaves it. A shared Assembly that is no longer among the records reads "Choose Assembly" in the
+  selection inspector while its table cell says it is missing.
 - Export lists blocking findings by record id, one row per Face (finding X1, packet 8).
 - The capture scripts live only in the gitignored screens folder. Move `crawl.cjs` and `flows.cjs`
   beside `tools/ui-preview/*_checks.cjs` if before-and-after captures are wanted per packet.

@@ -1,7 +1,7 @@
 # Packet 4: Installs editor
 
 DATE: 2026-10-03
-STATUS: Implemented; pull request open
+STATUS: Merged to main
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -125,7 +125,8 @@ The Psi-Install form's fields (D5 keeps it a form). Any change to what Save writ
 
 ## Outcome, 2026-10-03
 
-Implemented on `feat/ui-installs-editor`. `make ci` passes (1390 Ruby runs, 406 JavaScript tests,
+Implemented on `feat/ui-installs-editor`, merged as pull request
+[#61](https://github.com/bldgtyp/ph-composer/pull/61). `make ci` passes (1390 Ruby runs, 406 JavaScript tests,
 172 Python tests) and `make ui-checks` passes at every width it covers.
 
 **The silent refusal was wider than W4 said.** The Window Types view built a floating notice and
