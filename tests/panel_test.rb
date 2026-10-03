@@ -372,29 +372,40 @@ class PanelTest < PhComposerTestCase
     assert_equal "Export cancelled. Nothing was written.", outcome.fetch("message")
   end
 
-  # Declining replacement preserves the pair and starts no runtime or task timers.
+  # Declining replacement preserves what exists and starts no runtime or task timers. On macOS the Save
+  # sheet asked about the HBJSON, so only a lone Export report is asked about; elsewhere the pair is.
   def test_declining_replacement_preserves_the_pair_and_starts_no_runtime
     dialog = open_panel
-    Dir.mktmpdir("phc-export-destination") do |directory|
-      destination = File.join(directory, "existing.hbjson")
-      File.write(destination, "prior export")
-      File.write(File.join(directory, "existing-export-report.html"), "prior report")
-      before = destination_contents(directory)
-      timers = UI.timer_count
-      UI.selected_save_path = destination
-      UI.messagebox_result = IDNO
+    [[:platform_osx, %w[report], "Replace the existing Export report beside this HBJSON?"],
+     [:platform_win, %w[hbjson report], "Replace the existing HBJSON and Export report beside it?"]]
+      .each_with_index do |(platform, existing, question), index|
+      Sketchup.platform_value = platform
+      Dir.mktmpdir("phc-export-destination") do |directory|
+        destination = File.join(directory, "existing.hbjson")
+        File.write(destination, "prior export") if existing.include?("hbjson")
+        File.write(File.join(directory, "existing-export-report.html"), "prior report")
+        before = destination_contents(directory)
+        timers = UI.timer_count
+        UI.selected_save_path = destination
+        UI.messagebox_result = IDNO
+        request_id = "export:decline:#{index}"
 
-      PhComposer::AssetServer.stub(:new, ->(*) { flunk "Export started the runtime server" }) do
-        with_ready_export { send_message(dialog, "export.start", "request_id" => "export:2", "session" => @session.id) }
+        PhComposer::AssetServer.stub(:new, ->(*) { flunk "Export started the runtime server" }) do
+          with_ready_export do
+            send_message(dialog, "export.start", "request_id" => request_id, "session" => @session.id)
+          end
+        end
+
+        outcome = messages(dialog, "export.result").last
+        assert_equal request_id, outcome.fetch("request_id")
+        assert_equal %w[cancelled export.cancelled none],
+                     outcome.fetch("outcome").values_at("status", "code", "effect")
+        assert_equal question, UI.messages.last
+        assert_equal before, destination_contents(directory)
+        assert_equal timers, UI.timer_count
       end
-
-      outcome = messages(dialog, "export.result").last
-      assert_equal "export:2", outcome.fetch("request_id")
-      assert_equal %w[cancelled export.cancelled none],
-                   outcome.fetch("outcome").values_at("status", "code", "effect")
-      assert_equal before, destination_contents(directory)
-      assert_equal timers, UI.timer_count
     end
+    assert_equal 2, UI.messages.length, "one question per case"
   end
 
   def test_blocking_preflight_stays_visible_and_opens_no_destination

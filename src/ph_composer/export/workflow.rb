@@ -48,11 +48,15 @@ module PhComposer
         destination = UI.savepanel(TITLE, directory, "#{default_name(model)}.hbjson")
         return nil if destination.nil?
 
-        replace = [destination, ArtifactPair.report_path(destination)].any? { |path| File.exist?(path) }
-        return nil if replace && UI.messagebox("Replace the existing HBJSON and Export report beside it?",
-                                               MB_YESNO) != IDYES
+        report = ArtifactPair.report_path(destination)
+        consented = NativeApproval.confirm_replace(destination,
+                                                   "Replace the existing HBJSON and Export report beside it?",
+                                                   :companions => {
+                                                     report => "Replace the existing Export report beside this HBJSON?"
+                                                   })
+        return nil unless consented
 
-        [destination, replace]
+        [destination, [destination, report].any? { |path| File.exist?(path) }]
       end
 
       # A native dialog may admit Model switches or changes, so the preflight's revision must still hold.

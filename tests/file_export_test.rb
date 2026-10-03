@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require "tmpdir"
 
 class FileExportTest < PhComposerTestCase
   API = PhComposer::API
@@ -75,6 +76,46 @@ class FileExportTest < PhComposerTestCase
     end
     assert_equal 1, seen.length
     assert_empty Sketchup.active_model.operations
+  end
+
+  # The macOS Save sheet already asked about the file it names, so replacing it asks nothing more.
+  def test_replacing_the_chosen_file_asks_nothing_more_on_macos_and_once_elsewhere
+    approval = PhComposer::Declarations::Approval.new(:kind => "save_file", :title => "Save synthetic",
+                                                      :default_name => "synthetic.json")
+    seen = []
+    PhComposer::Registry.install([feature(lambda { |request|
+      seen << request.approval.replace
+      { "written" => true }
+    }, :approval => approval)])
+    Dir.mktmpdir("phc-replace") do |directory|
+      UI.selected_save_path = File.join(directory, "synthetic.json")
+      File.write(File.join(directory, "synthetic.json"), "prior")
+      assert_equal "completed", PhComposer::NativeApproval.file_export(context, NAME, {})["status"]
+      assert_equal [[], [true]], [UI.messages.to_a, seen]
+      Sketchup.platform_value = :platform_win
+      assert_equal "completed", PhComposer::NativeApproval.file_export(context, NAME, {})["status"]
+      assert_equal [["Replace the existing file?"], [true, true]], [UI.messages, seen]
+    end
+  end
+
+  def test_a_companion_the_save_dialog_did_not_name_is_asked_about_on_its_own
+    Dir.mktmpdir("phc-replace") do |directory|
+      path = File.join(directory, "model.hbjson")
+      report = File.join(directory, "model-export-report.html")
+      ask = lambda do
+        PhComposer::NativeApproval.confirm_replace(path, "Replace both?", :companions => { report => "Report?" })
+      end
+      assert ask.call, "nothing exists"
+      File.write(report, "prior")
+      UI.messagebox_result = IDNO
+      refute ask.call, "the companion alone is asked about and declined"
+      File.write(path, "prior")
+      assert ask.call, "the sheet's consent covers the pair"
+      assert_equal ["Report?"], UI.messages
+      Sketchup.platform_value = :platform_win
+      refute ask.call
+      assert_equal ["Report?", "Replace both?"], UI.messages
+    end
   end
 
   def test_a_busy_session_or_invalid_params_refuse_before_the_native_dialog_opens

@@ -78,10 +78,23 @@ module PhComposer
       path = UI.savepanel(approval.title, directory, approval.default_name)
       return nil if path.nil?
 
-      replace = File.exist?(path)
-      return nil if replace && UI.messagebox("Replace the existing file?", MB_YESNO) != IDYES
+      return nil unless confirm_replace(path, "Replace the existing file?")
 
-      Granted.new(:path => path, :replace => replace)
+      Granted.new(:path => path, :replace => File.exist?(path))
+    end
+
+    # Whether the user agrees to replace what exists at `path`, chosen in the Save dialog, and at its
+    # `companions`, { path => question } for files written beside it that the dialog does not name. True
+    # when nothing exists. The macOS Save sheet has already asked about `path`, and that consent covers
+    # its companions; only a companion existing alone is asked about, once each. Elsewhere `question`
+    # asks about the whole set until the Windows Save dialog is checked.
+    def confirm_replace(path, question, companions: {})
+      existing = companions.select { |file, _| File.exist?(file) }
+      return true unless File.exist?(path) || existing.any?
+      return UI.messagebox(question, MB_YESNO) == IDYES unless Sketchup.platform == :platform_osx
+      return true if File.exist?(path)
+
+      existing.values.all? { |text| UI.messagebox(text, MB_YESNO) == IDYES }
     end
 
     def present(path)
