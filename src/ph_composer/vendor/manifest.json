@@ -206,9 +206,9 @@
       "sha256": "fdd71a979f2c7ce36dee7a6be264d0df8500f55330c665e57667973840830911"
     },
     "html/inventory.js": {
-      "bytes": 8477,
+      "bytes": 8852,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "1080071d17367a3588aa1218ac7a7b902328d808ec6456e362a20a989276a78e"
+      "sha256": "c78203a394bf3aab8c94b94e8e379806e135992222438f258387bec5278ab47b"
     },
     "html/inventory_forms.js": {
       "bytes": 17132,
@@ -246,9 +246,9 @@
       "sha256": "7907abe2ccda411bdf126a28a119f62c34b7198730f87f469b51a15602b813c4"
     },
     "html/library/library.css": {
-      "bytes": 8495,
+      "bytes": 8712,
       "mime": "text/css; charset=utf-8",
-      "sha256": "e574b5651bb171a5a3f8c1491641ea2e66ca23098b871dc19a7e7a06dde84892"
+      "sha256": "7419e9637a61a8f085153dca357143b4d1834899c14765a0b6da88dfa329e62a"
     },
     "html/library/rows.js": {
       "bytes": 6727,
