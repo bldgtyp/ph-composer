@@ -97,3 +97,22 @@ handle buried under the row actions in manual order, the anchor bubble left open
 choice, a hard-coded chevron colour. Not taken: collapsing the library sidebar at exactly 900 in
 step with the rail, which changes a default the Library's own check relies on; restoring focus
 after an anchor choice re-arms the tool (the old select lost it the same way).
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+this branch, Model `ui-wtframe-run.skp` (a copy of the packet 4 run model: the synthetic fixture
+plus one two-element Window Type). Panel steps were driven through development `eval` on the
+panel's dialog; captures are native window pixels taken by window id.
+
+| Check | Result |
+| --- | --- |
+| Builder at 1300 wide: no Anchor row, rail name whole, library sidebar inside the panel with its title, count and empty state | Pass |
+| Anchor icon opens the three by three bubble with Sill center tinted | Pass |
+| Choosing Head right, then Place: the tool starts in SketchUp and the placement row shows what is being placed, the hint and Stop placing | Pass (active tool `RubyTool`) |
+| Stop placing: the row goes and SketchUp returns to its Select tool | Pass |
+
+Not covered: a click in the viewport to place a Window (no host geometry was changed), the rail's
+hover overlay and manual-order handle (pointer states; covered in the browser at 1280), an Empty
+element in the host (covered offline and in the browser), SketchUp 2023, Windows. Evidence is in
+the gitignored `_private/host/ui-wtframe-evidence/`.
