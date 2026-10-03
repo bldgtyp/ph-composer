@@ -1,7 +1,7 @@
 # Packet 5: Window Types frame
 
 DATE: 2026-10-03
-STATUS: Plan; built under Ed's standing go of 2026-10-03
+STATUS: Implemented; pull request open
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -79,3 +79,21 @@ rail. Markup, names and behaviour are unchanged.
 
 The library sidebar's controls and copy-in affordance (packet 7). The Builder's toolbar. Any
 change to what Place does in the viewport.
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-window-types-frame`. `make ci` and `make ui-checks` pass.
+
+What differs from the plan above:
+
+- The Empty element carries the caption "Empty" and no hatch. A hatch read as a material.
+- The library sidebar's title folds the sidebar as before and now shows a small chevron, since
+  without a border nothing else marked it as a control.
+- In manual order the move handle joins the row's other action icons in the overlay. Left as a
+  separate handle it sat under them.
+
+One Sonnet diff review ran against the architecture and ui-polish rubrics. Applied: the move
+handle buried under the row actions in manual order, the anchor bubble left open after a refused
+choice, a hard-coded chevron colour. Not taken: collapsing the library sidebar at exactly 900 in
+step with the rail, which changes a default the Library's own check relies on; restoring focus
+after an anchor choice re-arms the tool (the old select lost it the same way).

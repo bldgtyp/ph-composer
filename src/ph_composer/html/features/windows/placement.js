@@ -30,8 +30,9 @@ PhComposerUI.define("features/windows/placement", ["request", "snapshot", "works
   // A new anchor re-arms a tool that is already placing, so the next click uses it.
   Controls.prototype.setAnchor = function (id) {
     if (this.disposed || !this.enabled) return;
+    this.anchorBubble.close(true);
     if (this.owner.guard()) { this.owner.notice.show(this.owner.guard()); return; }
-    this.anchorValue = id; this.owner.page.anchor = id; this.anchorBubble.close(true);
+    this.anchorValue = id; this.owner.page.anchor = id;
     if (this.tool.active) this.choose(this.tool.type_id); else this.paint();
   };
   Controls.prototype.available = function (typeId) {

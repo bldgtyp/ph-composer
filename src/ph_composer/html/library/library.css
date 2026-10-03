@@ -78,7 +78,7 @@
 .phc-workspace .library-sidebar-toggle { position: relative; }
 /* A chevron marks the title as the control that folds the sidebar away: it points at the list when open. */
 .library-sidebar-toggle::after { content: ""; position: absolute; top: 50%; right: 6px; width: 5px; height: 5px;
-  border-right: 1.5px solid #53676e; border-bottom: 1.5px solid #53676e; transform: translateY(-70%) rotate(45deg); }
+  border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: translateY(-70%) rotate(45deg); }
 .phc-workspace .library-sidebar-root.is-collapsed .library-sidebar-toggle { writing-mode: vertical-rl; padding: 12px 8px; }
 .library-sidebar-root.is-collapsed .library-sidebar-toggle::after { display: none; }
 .library-sidebar-content { display: flex; flex-direction: column; gap: 9px; }

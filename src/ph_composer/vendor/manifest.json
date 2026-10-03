@@ -121,9 +121,9 @@
       "sha256": "5ce705127d3681c675ba4dabf25adae44e96d656c627995dd1573c2245764542"
     },
     "html/features/windows/placement.js": {
-      "bytes": 5274,
+      "bytes": 5278,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "db7e2ffc0f762414f57cb58cfcb922a986d066c3e6d1c5408c9551f4de895c0e"
+      "sha256": "494398d0bf9b233360c50dfba23373cfeebbeaf35ab5d1b62659296cd6d6de47"
     },
     "html/features/windows/schedule.js": {
       "bytes": 14731,
@@ -136,14 +136,14 @@
       "sha256": "ee531d3054010598db7933aba381fe1f2ab67c17d473edcff60fda44e3b76929"
     },
     "html/features/windows/type_list.js": {
-      "bytes": 13124,
+      "bytes": 13128,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "3e9bdd455d18a4a6dc9c6a70deca17e778c57ad90332e6fe07ca5a631603f2f9"
+      "sha256": "f1ee8540028b9183e308cffad35a0225e6b4041b98626cb9dd74bfa54fb5d658"
     },
     "html/features/windows/windows.css": {
-      "bytes": 26404,
+      "bytes": 26190,
       "mime": "text/css; charset=utf-8",
-      "sha256": "13187e11ff02300a70ebe7cc17fd4daadcce3cd69218474984ea3e0ff63c5520"
+      "sha256": "368373b73c95f509a1b4d3f67c0e9d8393894d618b295d7a6b58c812a7257419"
     },
     "html/features/zones/assembly_assignment.js": {
       "bytes": 11819,
@@ -246,9 +246,9 @@
       "sha256": "7907abe2ccda411bdf126a28a119f62c34b7198730f87f469b51a15602b813c4"
     },
     "html/library/library.css": {
-      "bytes": 9468,
+      "bytes": 9478,
       "mime": "text/css; charset=utf-8",
-      "sha256": "1a061b896855bfe629c4113b6bb656909dc4d00bc0f8ee32152032ca72467df1"
+      "sha256": "8e411eeccc35f5688d0508c9accf7c508ae032d76c74522598fb9e319ed2c29d"
     },
     "html/library/rows.js": {
       "bytes": 6727,

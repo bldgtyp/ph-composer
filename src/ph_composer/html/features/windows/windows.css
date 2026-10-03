@@ -17,8 +17,7 @@
 .window-type-row + .window-type-row::before { top:0; }
 .phc-workspace .window-workspace .window-type-row>button,.phc-workspace .window-workspace .window-type-row>button:hover:enabled,.phc-workspace .window-workspace .window-type-row>button:focus { border:0; border-radius:0; background:transparent; outline:none; }
 .phc-workspace .window-workspace .window-type-row>button:first-child { flex:1; min-width:0; height:28px; min-height:28px; padding:2px 8px; font-size:12px; font-weight:400; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.phc-workspace .window-type-row>.window-type-move { flex:0 0 28px; width:28px; height:28px; min-height:28px; padding:2px; color:var(--muted); visibility:hidden; cursor:grab; }
-.window-type-row:hover>.window-type-move,.window-type-row:focus-within>.window-type-move { visibility:visible; }
+.phc-workspace .window-type-row-actions .window-type-move { cursor:grab; }
 .window-type-row:hover { outline:1px solid var(--interaction-highlight-outline); outline-offset:-1px; }
 /* A row's actions take no width at rest, so its name has the whole rail. On hover and focus they are laid over
    the end of the row, on the row's own background. */

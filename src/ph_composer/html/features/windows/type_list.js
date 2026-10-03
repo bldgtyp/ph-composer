@@ -191,7 +191,7 @@ function (shared, preferences, ui) {
                 if (i > 0) { self.order.splice(i, 1); self.order.splice(i - 1, 0, record.id); } self.manual = true;
                 self.paint(); }));
             });
-          }); organize.classList.add("window-type-move"); row.appendChild(organize);
+          }); organize.classList.add("window-type-move"); actions.appendChild(organize);
         }
         self.list.appendChild(row);
       });
