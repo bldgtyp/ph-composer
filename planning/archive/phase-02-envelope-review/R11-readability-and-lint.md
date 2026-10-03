@@ -254,7 +254,7 @@ case `R11H`. Five UI findings, none a failure, are recorded in
 - The third deep-freeze (`DeepCopy.frozen` beside `ModelSettings` and `Registry`):
   [planning/refactor/shared-deep-freeze.md](../../refactor/shared-deep-freeze.md).
 - The UI polish reference's stale Window placement entry: folded into
-  [library-product-tab-headers](../../features/unscheduled/library-product-tab-headers/README.md), the next
+  [library-product-tab-headers](../library-product-tab-headers/README.md), the next
   change that opens that reference.
 - `export_file`'s `expected_revision` checked only after the save dialog: folded into
   [agent-authorized-file-access](../../features/unscheduled/agent-authorized-file-access/README.md), which

@@ -1,6 +1,6 @@
 # Library product tabs, host look, 2026-10-03
 
-The host look owed by [library-product-tab-headers](../../features/unscheduled/library-product-tab-headers/PLAN.md),
+The host look owed by [library-product-tab-headers](../../archive/library-product-tab-headers/PLAN.md),
 issue #38, PR #46. Ledger case `PTAB`.
 
 ## Conditions

@@ -1,14 +1,14 @@
 # Library product tabs use the pane heading
 
 DATE: 2026-10-02
-STATUS: Implemented on branch `feat/library-product-tab-headers` 2026-10-02; host look passed 2026-10-03 (ledger `PTAB`); awaiting review and merge (PR #46). See [PLAN.md](PLAN.md) "Implementation record". Scoped and decided (D1, D2) 2026-10-02.
+STATUS: Merged to main 2026-10-03 (PR #46, `b2fa6bf`); host look passed (ledger `PTAB`); archived. Follow-ups #47 and #48. See [PLAN.md](PLAN.md) "Implementation record". Scoped and decided (D1, D2) 2026-10-02.
 A UI follow-up from the Phase 2 review's R10, which did not take it.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/38
 
 ## Why this packet exists
 
-R10 ([R10](../../../archive/phase-02-envelope-review/R10-ui-kit-organization.md)) made every Library
+R10 ([R10](../phase-02-envelope-review/R10-ui-kit-organization.md)) made every Library
 inventory a registered surface. A surface can name a `createLabel`, and the Library pane then shows
 that surface's "+ New" button in its own heading, beside "Export library". Materials and Attached
 zones do this. The three Windows products (Frames, Glazings, Psi-Install Types) still open their tab

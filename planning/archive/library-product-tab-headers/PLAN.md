@@ -1,7 +1,7 @@
 # Library product tabs use the pane heading: implementation plan
 
 DATE: 2026-10-02
-STATUS: Implemented on branch `feat/library-product-tab-headers` 2026-10-02; host look passed 2026-10-03 (ledger `PTAB`); awaiting review and merge (PR #46). Ed authorized implementation through `implement-loop` on 2026-10-02, after deciding D1,
+STATUS: Merged to main 2026-10-03 (PR #46, `b2fa6bf`); host look passed (ledger `PTAB`); archived. Follow-ups #47 and #48. Ed authorized implementation through `implement-loop` on 2026-10-02, after deciding D1,
 D2 and the Window placement entry the same day.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/38
@@ -190,14 +190,15 @@ Verification:
   throwing on a non-array `settings`, and the optional stale-expected and re-send cases.
 
 Host look, 2026-10-03: passed on build `a3d9f7be…aaeb`, recorded as ledger case `PTAB` in
-[the evidence summary](../../../native-acceptance/evidence/library-product-tab-headers-2026-10-03.md).
+[the evidence summary](../../native-acceptance/evidence/library-product-tab-headers-2026-10-03.md).
 A Frame created from the heading button and each default change undo as one native Undo step; the
 depth bubble keeps an invalid entry, applies on Enter and restores on a physical Escape. It found one
 defect, fixed in `fe80410`: the current choice in the Default Psi-Install list was unmarked at rest
 because the shared at-rest rule in `base.css` matched only dimension-format buttons. Setting lists
 now mark their choices `phc-setting-choice`, and the Window library browser check asserts it.
 
-Remaining before archive: Ed's review of PR #46, the 1280 px wrap decision above, and the merge.
+Merged to main as `b2fa6bf` on 2026-10-03 after the PR review fixes below; GitHub `make ci` passed on
+Ruby 2.7.2 and 3.2.2.
 
 PR review, 2026-10-03 (Ed, comment review on PR #46):
 
@@ -216,7 +217,7 @@ PR review, 2026-10-03 (Ed, comment review on PR #46):
 
 Follow-ups, not taken here:
 
-- Extract a kit single-value bubble from `features/windows/cards.js` `methods.editQuantity` and the depth
+- [#47](https://github.com/bldgtyp/ph-composer/issues/47): extract a kit single-value bubble from `features/windows/cards.js` `methods.editQuantity` and the depth
   bubble here (the plan's recorded follow-up).
-- `.agents/skills/ph-composer-ui-polish/SKILL.md` rule 2 still lists "the primary New action" last in the
+- [#48](https://github.com/bldgtyp/ph-composer/issues/48): `.agents/skills/ph-composer-ui-polish/SKILL.md` rule 2 still lists "the primary New action" last in the
   tab action bar; the Library pane puts it in the page heading.
