@@ -1,7 +1,7 @@
 # Packet 8: completeness
 
 DATE: 2026-10-03
-STATUS: Plan; built under Ed's standing go of 2026-10-03
+STATUS: Implemented; pull request open
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -72,3 +72,54 @@ Then the manifests.
 
 Export findings wording at the source (P8-Q1). The viewport tools' active states (F4), which wait
 for the D7 capture session.
+
+## Outcome, 2026-10-03
+
+Implemented on `feat/ui-completeness`. `make ci` and `make ui-checks` pass.
+
+What differs from the plan above:
+
+- F3 was misread in the findings. "· incomplete" on the Window Types rail was the name of a record
+  in the preview fixture, not a suffix the panel adds; the rail gave an incomplete Window Type no
+  mark at all. It now carries the amber alert glyph with what is missing in its tooltip, and the
+  fixture record is named "Two elements".
+- "Open <tab>" does not name features in the Export page. A feature registers the tab its records
+  are worked on with `panel.workedOn(prefix, tab)` and Export asks `panel.tabFor(section)`. This is
+  a new kit contract, written into `context/EXTENSIBILITY.md`. It is one tab per feature: a Material
+  gap reported by the Assemblies export opens Assemblies, not the Library.
+- One Locate carries at most 500 records and then reads "Locate first 500", because a viewport
+  command may refuse a longer list (the Windows locate does).
+- A finding's sentence keeps its full stop and any name the user typed. Only its own record id is
+  taken out: the finding's `object_id`, or a token shaped like one.
+- A failed preflight reads "The Model could not be checked." in place of a count.
+- With no Window Type the two product library sidebars are hidden; they come back with the first.
+- The inventory's empty text is "No Assembly records yet. Choose + New Assembly.", built from the
+  label the inventory already has.
+
+Because the diff adds a kit contract, the one review was a fresh-context Opus pass against the
+architecture and ui-polish rubrics. Applied: a blocking defect where Export counted findings it
+did not list once an earlier export was on record; Locate refused past 500 Windows; the id pattern
+eating names the user typed; a fallback on finding codes that never matched and a document that
+said it did; prefixes matching past a dot; ids missing from the tooltip for findings that carry
+them in `object_id`. Not taken: routes finer than one tab per feature, keeping the header's
+buttons across repaints so they keep focus, a `createLabel` passed to the inventory.
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+this branch, Model `ui-completeness-run.skp` copied fresh from the synthetic
+`ux-followups-integrated.skp` (two Zones, twelve classified Faces, no Assemblies). This is the
+Model on which X1 was first seen in the host. Panel steps were driven through development `eval`
+on the panel's dialog; captures are native window pixels taken by window id.
+
+| Check | Result |
+| --- | --- |
+| Export on twelve Faces with no Assembly | Pass: "Finish 1 thing before exporting.", then one row, "Face needs an authored Assembly." with "× 12", where there were twelve rows of record ids. Choose destination is disabled in the header. The adjacency repair checkbox is unchanged |
+| Locate all | Pass: twelve Faces are selected in the Model |
+| Open Zones / Faces | Pass: the panel shows the Zones / Faces tab |
+| Assemblies with no records | Pass: "No Assembly records yet. Choose + New Assembly." |
+
+Not covered: an export that completes (no destination was chosen and nothing was written), a group
+past 500 records, a Windows finding, the Window Types rail mark and empty prompt in the host
+(covered offline and in the browser), native pointer and keyboard gestures, SketchUp 2023, Windows.
+Evidence is in the gitignored `_private/host/ui-completeness-evidence/`.

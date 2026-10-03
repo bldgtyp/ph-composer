@@ -13,7 +13,7 @@ function setup(beforePaint) {
   function send(type, payload) { sent.push({ type: type, payload: payload }); }
   function paint() { Object.keys(sections).forEach(function (key) { sections[key](roots[key], state, send); }); }
   var panel = { section: function (name, render) { sections[name] = render; }, repaint: paint,
-    navigationGuard: function (name, guard) { guards[name] = guard; },
+    navigationGuard: function (name, guard) { guards[name] = guard; }, workedOn: function () {},
     notify: function (message) { notices.push(message); } };
   var context = { document: document, Intl: Intl, innerWidth: 1280, innerHeight: 800,
     setTimeout: setTimeout, clearTimeout: clearTimeout };
@@ -159,6 +159,21 @@ test("new Material converts IP entries and a refused create retains its fields",
   assert.strictEqual(form.fields.name.value, "New insulation");
   assert.strictEqual(form.fields.conductivity_w_mk.value, "0.04 W/(m K)");
   assert.strictEqual(form.cancel.disabled, false);
+});
+
+test("an inventory with no records names the next step; a filter that hides them all says so instead", function () {
+  var o = setup(), section = o.state.sections["ph_composer.assemblies.assemblies"], kept = section.value.records;
+  section.value.records = [];
+  o.paint();
+  assert.ok(text(o.roots.assemblies).includes("No Assembly records yet. Choose + New Assembly."));
+  section.value.records = kept;
+  o.paint();
+  var filter = o.roots.assemblies.querySelectorAll("input").filter(function (node) {
+    return node.type === "search" || /Name or notes/.test(node.placeholder || node.getAttribute("aria-label") || "");
+  })[0];
+  filter.value = "no such assembly"; filter.listeners.input({});
+  o.paint();
+  assert.ok(text(o.roots.assemblies).includes("No Assembly records match this view."));
 });
 
 test("New Assembly creates at once under a free name and opens the new record in the Builder", function () {

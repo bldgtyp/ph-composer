@@ -33,6 +33,9 @@
 .phc-workspace .window-row-editor .window-title-input { height:24px; min-height:24px; padding:0 5px; font-size:12px; font-weight:400; }
 .phc-workspace .window-row-editor .phc-icon-button { width:22px; height:22px; min-height:22px; padding:3px; }
 .window-type-row.selected { background:var(--interaction-highlight-tint); }
+.window-type-row>.window-type-flag { display:inline-flex; flex:none; margin-right:8px; color:#9a6b00; cursor:help; }
+.window-type-row>.window-type-flag svg { width:14px; height:14px; }
+.window-empty-prompt { margin:0; padding:24px 20px; }
 .phc-workspace .window-workspace .window-type-row>button:focus-visible:enabled { outline:2px solid var(--interaction-highlight); outline-offset:-2px; }
 .window-card.selected { border-color:var(--interaction-highlight); background:var(--interaction-highlight-tint); }
 .window-group { position:relative; padding:12px 8px 7px; color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }

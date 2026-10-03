@@ -149,5 +149,6 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
   panel.navigationGuard("assemblies", function (next) { return next === "assemblies" ?
     null : guard(current); }, panel.notify);
   panel.section("assemblies", render, { pane: "assemblies" });
+  panel.workedOn("ph_composer.assemblies", "assemblies");
   return { render: render };
 });
