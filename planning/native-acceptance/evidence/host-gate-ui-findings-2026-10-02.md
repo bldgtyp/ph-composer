@@ -1,6 +1,6 @@
 # Host gate UI findings, host check, 2026-10-02
 
-The host look owed by [host-gate-ui-findings](../../features/unscheduled/host-gate-ui-findings/PLAN.md),
+The host look owed by [host-gate-ui-findings](../../archive/host-gate-ui-findings/PLAN.md),
 issue #37, PR #40. Ledger case `HGUI`.
 
 ## Conditions

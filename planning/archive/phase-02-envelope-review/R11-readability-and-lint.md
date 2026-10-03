@@ -247,7 +247,7 @@ the unreadable setup with Reset. Export over an existing file asks twice: macOS'
 SketchUp's message box. Evidence:
 [r11-host-gate-2026-10-02](../../native-acceptance/evidence/r11-host-gate-2026-10-02.md); ledger
 case `R11H`. Five UI findings, none a failure, are recorded in
-[host-gate-ui-findings](../../features/unscheduled/host-gate-ui-findings/README.md).
+[host-gate-ui-findings](../host-gate-ui-findings/README.md).
 
 **Follow-ups, not in this change.** Each is recorded where it will be done:
 

@@ -1,9 +1,10 @@
 # UI findings from the R11 host gate: implementation plan
 
 DATE: 2026-10-02
-STATUS: Implemented on branch `feat/host-gate-ui-findings` 2026-10-02, all five items; `make ci` passes on
-Ruby 2.7.2 and 3.2.2; host check passed 2026-10-02 after an item 3 revision Ed agreed at the host
-([evidence](../../../native-acceptance/evidence/host-gate-ui-findings-2026-10-02.md)). In review, PR #40.
+STATUS: Complete. All five items merged to main 2026-10-02 (PR #40, merge commit `58b347c`); `make ci` passed
+on Ruby 2.7.2 and 3.2.2; host check passed 2026-10-02 after an item 3 revision Ed agreed at the host
+([evidence](../../native-acceptance/evidence/host-gate-ui-findings-2026-10-02.md)). Follow-ups filed as
+#41 to #44. Archived.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/37
 
@@ -24,7 +25,7 @@ Export report beside an HBJSON, when the report exists and the `.hbjson` does no
 exists, the sheet's consent covers the pair, because the report is documented as the HBJSON's
 companion and is always written with it. Other platforms keep today's message box until the Windows
 packet checks `UI.savepanel` there. This is the same rule as
-[agent-authorized-file-access PLAN.md](../agent-authorized-file-access/PLAN.md) D6; whichever packet
+[agent-authorized-file-access PLAN.md](../../features/unscheduled/agent-authorized-file-access/PLAN.md) D6; whichever packet
 lands first owns it, and the other reuses it.
 
 Alternative: keep asking whenever the companion exists, even when the sheet already asked about the
@@ -137,7 +138,7 @@ message hook is added for one caller.
 
 Note: a folder's label falls back to the folder name (`setup_commands.rb:120,125`), so the notice can
 show a folder name. That is the leak recorded as D4 in the
-[agent-authorized-file-access plan](../agent-authorized-file-access/PLAN.md); this item does not
+[agent-authorized-file-access plan](../../features/unscheduled/agent-authorized-file-access/PLAN.md); this item does not
 change labels.
 
 **Tests.** `tests/library_setup_commands_test.rb`: the add menu item with a stubbed picker notifies
@@ -207,7 +208,7 @@ except an intermittent `windows_checks.cjs:46` failure ("Element 1 glazed" detac
 `scrollIntoViewIfNeeded`), which `main` shows at the same rate (3 of 20 runs) and is left as a follow-up. Preview captures: Libraries dialog with an unreadable setup, Export library
 form with grouped omissions, Frame uses bubble at 1280 and 420 px.
 
-Host check, 2026-10-02 ([evidence](../../../native-acceptance/evidence/host-gate-ui-findings-2026-10-02.md),
+Host check, 2026-10-02 ([evidence](../../native-acceptance/evidence/host-gate-ui-findings-2026-10-02.md),
 ledger case `HGUI`): items 1, 2, 4 and 5 pass; item 3 passes for the library export, the HBJSON pair,
 the lone report and the name without `.hbjson`, the last two after the revision above.
 
@@ -218,4 +219,5 @@ source attribution is not exported". Not applied: asking about the report when t
 Follow-ups, not in scope: "Add library file…" carries the apply ✓ although it opens a picker; the uses
 bubble lists sides in stored order ("Bottom, left, right, top"); the HBJSON export result shows internal
 text and Material ids ("segment material id must be non-empty text", `mat_…`); the
-`windows_checks.cjs:46` flake.
+`windows_checks.cjs:46` flake. Filed as #41 (export result wording), #42 (side order), #43 (Libraries
+dialog actions) and #44 (flake).
