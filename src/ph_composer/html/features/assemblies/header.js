@@ -15,7 +15,9 @@ PhComposerUI.define("features/assemblies/header", ["features/assemblies/editor_s
     function header(record, row) {
       var self = this, values = record.values, display = record.display || {}, thermal = display.thermal || {};
       var root = el("header", "assembly-header"), identity = el("div", "assembly-identity");
-      var back = ui.button("Back to Assemblies", function () { self.close(); });
+      // A way back, not an action on the Assembly: a quiet link above the title, which starts at the gutter.
+      var back = ui.button("Assemblies", function () { self.close(); });
+      back.className = "assembly-back"; back.setAttribute("aria-label", "Back to Assemblies");
       back.setAttribute("data-editor-local", "");
       root.appendChild(back);
       var name = el("div", "assembly-name");

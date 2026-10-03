@@ -30,6 +30,8 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
         control.node.innerHTML = icons.svgIcon(item.icon, 16);
       }
       control.item = item;
+      // An action that starts a group (a contributor's, acting on something other than the record) is set apart.
+      control.node.classList.toggle("row-icon-starts", Boolean(item.starts));
       control.node.setAttribute("aria-label", item.label);
       control.node.setAttribute("data-tooltip", item.label);
       control.node.disabled = Boolean(cache.options.disabled || item.disabled);
