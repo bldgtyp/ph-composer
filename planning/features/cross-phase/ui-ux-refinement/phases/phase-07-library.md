@@ -99,3 +99,21 @@ record opening when another record arrives during the create, the dead end with 
 a refusal left on screen while the user edits the Material form, an unparsable entry shown in the
 hint tone, two owners for the required mark, the unreachable Psi default route, the ambiguous
 "extension". Not taken: returning focus to New Assembly after a refused create.
+
+## Host check, 2026-10-03
+
+SketchUp 26.1.188 (Ruby 3.2.2) on macOS, fresh process, build installed with `make install` from
+this branch, Model `ui-library-run.skp` copied fresh from the synthetic
+`ux-followups-integrated.skp`. Panel steps were driven through development `eval` on the panel's
+dialog; captures are native window pixels taken by window id; Model readbacks are the stored record
+dictionaries.
+
+| Check | Result |
+| --- | --- |
+| "+ New Assembly" | Pass: one Assembly record is written, the Builder opens on "Assembly 1" with the title selected, and the default Layer is drawn |
+| One SketchUp Undo | Pass: the record is gone, the Builder closes and the panel says "The open Assembly was removed." |
+| Library, Materials, no library set up | Pass: the sidebar reads "These records are in the table. Add a library with Library setup to copy records from it." with no repeated list |
+
+Not covered: a library provider in the host (the plus glyph and the "Choose a library" wording are
+covered offline and in the browser), the Material form in the host, native pointer and keyboard
+gestures, SketchUp 2023, Windows. Evidence is in the gitignored `_private/host/ui-library-evidence/`.
