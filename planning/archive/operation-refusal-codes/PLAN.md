@@ -1,7 +1,8 @@
 # Operations publish the codes they refuse with: implementation plan
 
 DATE: 2026-10-02
-STATUS: Implemented on branch `feat/operation-refusal-codes`, 2026-10-03, Phases 1 to 5. Ed decided
+STATUS: Merged to main 2026-10-03 ([PR #50](https://github.com/bldgtyp/ph-composer/pull/50), `0c651be`),
+Phases 1 to 5; archived. Ed decided
 D1 to D4 on 2026-10-02, each as recommended, and authorized all five phases in one PR on 2026-10-03.
 See "Implementation outcome".
 AUTHOR: Ed May, BLDGTYP, with Claude
@@ -40,7 +41,7 @@ Read [README.md](README.md) first for the required behavior. Facts below are fro
   outcome is not a refusal. Publishing an operation's finding codes (`reports:`) is out of scope.
 - Export task methods (`start_export` and the rest) are out. They are described by their own
   contract, raise `Export::Blocked` outside dispatch's declarations, and
-  [agent-authorized-file-access](../agent-authorized-file-access/PLAN.md) Phase 5 may reshape
+  [agent-authorized-file-access](../../features/unscheduled/agent-authorized-file-access/PLAN.md) Phase 5 may reshape
   `start_export`. Revisit after that lands.
 
 ## Decisions

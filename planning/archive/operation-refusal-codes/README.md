@@ -1,9 +1,10 @@
 # Operations publish the codes they refuse with
 
 DATE: 2026-10-02
-STATUS: Implemented on branch `feat/operation-refusal-codes`, 2026-10-03 ([PLAN.md](PLAN.md),
-"Implementation outcome"). Scoped 2026-10-02; Ed decided D1 to D4 the same day. Moved out of the
-Phase 2 review's R09 on 2026-10-02, which did not take it.
+STATUS: Merged to main 2026-10-03 ([PR #50](https://github.com/bldgtyp/ph-composer/pull/50),
+`0c651be`); archived. See [PLAN.md](PLAN.md), "Implementation outcome". Scoped 2026-10-02; Ed
+decided D1 to D4 the same day. Moved out of the Phase 2 review's R09 on 2026-10-02, which did not
+take it.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/39
 
@@ -12,7 +13,7 @@ ISSUE: https://github.com/bldgtyp/ph-composer/issues/39
 R04 made every feature declare its finding and refusal codes (`feature.code`). They appear only
 under "Feature codes" in `docs/API_REFERENCE.md`. `API.describe` does not say which codes one
 operation can answer, so an agent learns them by trying. R04 listed this as optional item 7, and
-R09 carried it as optional item 8 ([R09](../../../archive/phase-02-envelope-review/R09-definition-feature-pattern.md),
+R09 carried it as optional item 8 ([R09](../phase-02-envelope-review/R09-definition-feature-pattern.md),
 "Observed" item 8 and "Proposed correction" step 6). R09 left it out because it changes the shell,
 the registry and `API.describe`, which its per-kind split did not need.
 
