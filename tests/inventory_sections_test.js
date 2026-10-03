@@ -436,7 +436,7 @@ test("a feature's settings end the inventory action bar, and omitting them adds 
       groups: [], settings: settings });
   }
   var view = build([setting]), controls = view.controls.root, group = controls.children[controls.children.length - 1];
-  assert.strictEqual(group, view.settings, "after every view control");
+  assert.strictEqual(group, view.settingsRoot, "after every view control");
   assert.strictEqual(group.className, "phc-inventory-settings"); assert.strictEqual(group.children[0], setting);
   assert.strictEqual(build().controls.root.querySelector(".phc-inventory-settings"), null);
 });

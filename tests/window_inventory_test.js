@@ -31,7 +31,7 @@ function complete(o, status, message) {
 }
 test("choosing a default Psi-Install Type applies at once with both settings and their expected values", function () {
   var o = setup("psi_install_types"), menu = o.view.defaultPsi;
-  assert.strictEqual(o.view.inventory.settings.children.length, 2, "both defaults sit in the action bar");
+  assert.strictEqual(o.view.inventory.settingsRoot.children.length, 2, "both defaults sit in the action bar");
   assert.strictEqual(menu.trigger.getAttribute("aria-label"), "Default Psi-Install: Insulated junction");
   var choices = menu.content.children;
   assert.strictEqual(choices.map(function (choice) {
@@ -62,6 +62,17 @@ test("install depth applies on Enter and on leaving, restores on Escape, keeps a
   assert.strictEqual(field.error.textContent, "The settings changed."); assert.strictEqual(field.input.value, "200 mm");
   field.input.listeners.blur({}); assert.strictEqual(o.sent.length, 2, "leaving the field applies the draft");
   complete(o, "completed"); assert.strictEqual(bubble.panel.hidden, true); assert.strictEqual(o.view.guard(), null);
+});
+test("leaving an unchanged depth keeps the user's focus; Escape while pending closes on the outcome", function () {
+  var o = setup("psi_install_types"), bubble = o.view.depthBubble, field = o.view.depth, notices = [];
+  var elsewhere = o.view.root.ownerDocument.createElement("input"); o.view.root.appendChild(elsewhere);
+  o.modules.panel.notify = function (message, tone) { notices.push(tone + ": " + message); };
+  bubble.open(); type(field, "0.1"); elsewhere.focus(); field.input.listeners.blur({});
+  assert.strictEqual(bubble.panel.hidden, true); assert.strictEqual(o.view.root.ownerDocument.activeElement, elsewhere);
+  bubble.open(); type(field, "300 mm"); key(field.input, "Enter"); assert.strictEqual(field.input.disabled, true);
+  field.cancel(); assert.strictEqual(bubble.panel.hidden, false, "the pending request holds the bubble");
+  complete(o, "refused", "The settings changed."); assert.strictEqual(bubble.panel.hidden, true);
+  assert.deepStrictEqual(notices, ["warning: The settings changed."]); assert.strictEqual(field.input.disabled, false);
 });
 test("withdrawn settings close the depth bubble and reset a pending defaults channel", function () {
   var o = setup("psi_install_types"), bubble = o.view.depthBubble;
