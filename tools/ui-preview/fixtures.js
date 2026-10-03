@@ -216,6 +216,7 @@
   FIXTURES.libraries.libraryProviders = [{ id: "synthetic", provider_kind: "ph_composer.library.file",
     label: "Synthetic library", kinds: ["materials"] }, { id: "other", provider_kind: "example.provider",
     label: "Other provider", kinds: ["materials"] }];
+  FIXTURES.libraries.librarySetupState = "readable";
   FIXTURES.libraries.libraryCatalogs = { synthetic: [
     { library_id: "public.insulation", library_name: "Public insulation", record_id: "new", wire_schema_version: 1,
       snapshot: { id: "new", name: "Synthetic fiber", category: "insulation", conductivity_w_mk: 0.045,

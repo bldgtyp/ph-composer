@@ -26,6 +26,7 @@
     this.libraryProviders = JSON.parse(JSON.stringify(settings.libraryProviders || []));
     this.libraryCatalogs = JSON.parse(JSON.stringify(settings.libraryCatalogs || {}));
     this.libraryGenerations = {}; this.libraryFailures = {};
+    this.librarySetupState = settings.librarySetupState || "readable";
     this.windows = JSON.parse(JSON.stringify(settings.windows || {}));
     this.session = "preview-session";
     this.revision = 1;
@@ -60,6 +61,7 @@
       file_name: "preview.skp", edit_path: [], preferences: JSON.parse(JSON.stringify(this.preferences)),
       sections: {
         ["ph_composer.library.provider_catalogs"]: { status: "completed", value: this.libraryMetadata() },
+        ["ph_composer.library.provider_setup"]: { status: "completed", value: { state: this.librarySetupState } },
         [SETTINGS]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.zoneSettings)) },
         [PARTS]: { status: "completed", code: "ok", revision: this.revision,

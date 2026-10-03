@@ -258,6 +258,11 @@
   background: var(--interaction-highlight-hover);
   border-color: var(--interaction-highlight);
 }
+/* Outranks the fills above, which tie base.css's .primary:disabled and load after it. */
+.phc-workspace .phc-dialog-actions .primary:disabled,
+.phc-workspace .phc-dialog-actions .phc-action-delete:disabled {
+  color: #7b858c; background: #e9edef; border-color: var(--line);
+}
 /* Record forms open in the shared modal; fields wrap into two columns at the dialog width. */
 .phc-form-dialog h2 { margin: 0 0 16px; }
 .phc-form-dialog form, .phc-form-dialog .phc-form-fields {

@@ -95,6 +95,28 @@ async function writes(page) {
     assert.equal(action[0].payload.params.assignment.layer_id, "lyr_studs_0");
     assert.equal(action[0].payload.params.assignment.segment_id, "seg_stud_0");
     assert.ok(action[0].payload.params.assignment.expected_values.layers);
+    // A disabled primary or destructive dialog action reads as disabled, not as its enabled fill.
+    await page.locator("[data-tab='library']").click();
+    await page.evaluate(() => { previewHost.librarySetupState = "unreadable"; previewHost.snapshot(); });
+    const materials = page.locator("[data-section='library']").getByRole("tabpanel", { name: "Materials", exact: true });
+    await materials.getByRole("button", { name: "Library setup…", exact: true }).click();
+    const setup = materials.getByRole("dialog", { name: "Libraries", exact: true });
+    const file = setup.getByRole("button", { name: "Add library file…", exact: true });
+    const folder = setup.getByRole("button", { name: "Add library folder…", exact: true });
+    assert.equal(await file.isDisabled(), true); assert.equal(await folder.isDisabled(), true);
+    // Each fill is read with the button disabled, then enabled, in the apply and the destructive role.
+    const fills = (locator, role) => locator.evaluate((node, role) => {
+      node.classList.remove("phc-action-apply", "phc-action-delete"); node.classList.add(role);
+      const read = disabled => { node.disabled = disabled; return getComputedStyle(node).backgroundColor; };
+      const result = { disabled: read(true), enabled: read(false) }; node.disabled = true; return result;
+    }, role);
+    const apply = await fills(file, "phc-action-apply");
+    const destructive = await fills(file, "phc-action-delete");
+    assert.notEqual(apply.disabled, apply.enabled, "a disabled primary loses its accent fill");
+    assert.equal(destructive.enabled, "rgb(180, 35, 24)", "an enabled destructive action keeps its red fill");
+    assert.equal(destructive.disabled, apply.disabled, "a disabled destructive action loses its red fill");
+    await file.evaluate(node => node.classList.replace("phc-action-delete", "phc-action-apply"));
+    await page.screenshot({ path: path.join(output, "library-setup-unreadable.png"), fullPage: true });
     await page.close();
     console.log(`Library checks passed at 1280/900/420/280; evidence: ${output}`);
   } finally { await browser.close(); }
