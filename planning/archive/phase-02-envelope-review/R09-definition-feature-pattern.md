@@ -204,4 +204,4 @@ Recorded 2026-10-02 where each one will be worked:
 - One deterministic id allocator in core: [R11](R11-readability-and-lint.md) item 15.
 - Remove the `Assemblies::SchemaFields` alias: [R11](R11-readability-and-lint.md) item 16.
 - Item 8, `refuses:` on operations, optional: the unscheduled packet
-  [operation-refusal-codes](../../unscheduled/operation-refusal-codes/README.md).
+  [operation-refusal-codes](../../features/unscheduled/operation-refusal-codes/README.md).

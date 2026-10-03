@@ -955,7 +955,7 @@
       "id": "R11H",
       "label": "Phase 2 review R11 carried host gate: library setup dialogs, export replace, paging, Window Type grid gestures, panel navigation, unreadable setup",
       "mode": "mixed",
-      "authority": "planning/features/phase-02-envelope/refactor/R11-readability-and-lint.md",
+      "authority": "planning/archive/phase-02-envelope-review/R11-readability-and-lint.md",
       "paths": [
         "src/ph_composer/library/*",
         "src/ph_composer/shell/native_approval.rb",

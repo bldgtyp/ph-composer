@@ -1,8 +1,9 @@
 # Phase 2 envelope: review findings and refactor packet
 
 DATE: 2026-10-01
-STATUS: In progress. Review complete and Ed's eight decisions recorded on 2026-10-01. R01 is
-merged (PR #16); R02 is merged (PR #17) with its host gate passed; R03 is merged (PR #18); R04 is merged (PR #19); R05 is merged (PR #20) with its host gate passed; R06 is merged (PR #21) with its host gate passed; R07 is merged (PR #22); R08 is merged (PR #25) with its host gate run; R09 is merged (PR #26); R10 is merged (PR #28) with its asset-path host gate passed; R03's carried dialog checks move to R11's host gate; R11 is merged (PR #30) with its carried host gate passed on 2026-10-02; the formatting pull request is merged (PR #32). Every finding is done; the packet is ready to archive.
+STATUS: Complete, archived 2026-10-02. All eleven findings merged: R01 to R11 through PRs #16 to #30,
+the formatting-only RuboCop `Layout` pull request as PR #32, and R11's carried host gate passed
+(ledger case `R11H`, recorded in PR #33). Each finding file holds its own outcome and evidence.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft). Reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15), merged 2026-10-01 as `c687a73`, which closed [#14](https://github.com/bldgtyp/ph-composer/issues/14).
 
@@ -84,7 +85,7 @@ reproduced defect, evidenced contract violation, unverified risk, optional impro
 
 R05's four export-run follow-ups, one of them a live defect (a Zone with every Face omitted builds
 an empty Room that fails to reload), are not refactor items. They are recorded in
-[validation and export](../../cross-phase/validation-and-export/STATUS.md), "Owed from the Phase 2
+[validation and export](../../features/cross-phase/validation-and-export/STATUS.md), "Owed from the Phase 2
 review", for Phase 3's first export section.
 
 ## Sequencing
@@ -120,7 +121,7 @@ moved files are free now and should be done completely rather than staged.
 
    R05, R06 and R07 land before Phase 3's first stage.
 2. **Last: the formatting-only pull request** in
-   [planning/refactor/rubocop-layout.md](../../../refactor/rubocop-layout.md). Merged
+   [planning/refactor/rubocop-layout.md](../../refactor/rubocop-layout.md). Merged
    2026-10-02 as PR #32.
 3. **R11's carried host gate.** Passed 2026-10-02 (ledger case `R11H`). With the formatting pull
    request merged, the packet archives.
@@ -138,9 +139,9 @@ Ed answered all eight on 2026-10-01. The owning finding file holds the full reco
 | 2 | Namespace export result fields by section id? | Yes; makes cross-feature reads declarable | R05 | 2026-10-01: yes, as recommended. Cross-section reads are declared and checked at registration |
 | 3 | May a live entity cross a feature boundary through a reference target's `locate`? | Yes, for read and glue only | R06 | 2026-10-01: yes, as recommended. `locate` on the reference target; read and glue only, record writes stay with the owner |
 | 4 | Session and machine state commands: new verb and grant, or widen the documented `view` contract? | New verb and grant | R03 B | 2026-10-01: new verb and grant (working name `setup`), as recommended. `view` returns to viewport only |
-| 5 | Library export and setup for scripted callers: design authorized paths now, or document as dialog-only and refuse scripted calls cleanly? | Refuse cleanly now; design with the access grant | R03 A | 2026-10-01: refuse cleanly now, as recommended, on condition the later agent work is recorded. Recorded in [agent-authorized-file-access](../../unscheduled/agent-authorized-file-access/README.md) |
+| 5 | Library export and setup for scripted callers: design authorized paths now, or document as dialog-only and refuse scripted calls cleanly? | Refuse cleanly now; design with the access grant | R03 A | 2026-10-01: refuse cleanly now, as recommended, on condition the later agent work is recorded. Recorded in [agent-authorized-file-access](../../features/unscheduled/agent-authorized-file-access/README.md) |
 | 6 | Rename finding codes and unit-bearing display fields now? | Yes, before any release | R04, R09 | 2026-10-01: yes, both, in one pass before any release, as recommended |
-| 7 | Enable a minimal `Layout` cop set? | Yes | R11 | 2026-10-01: not as recommended. Ed chose the full `Layout` department, after PR #15 merges, on its own pull request once the other refactor work is done. Recorded in [planning/refactor/rubocop-layout.md](../../../refactor/rubocop-layout.md) |
+| 7 | Enable a minimal `Layout` cop set? | Yes | R11 | 2026-10-01: not as recommended. Ed chose the full `Layout` department, after PR #15 merges, on its own pull request once the other refactor work is done. Recorded in [planning/refactor/rubocop-layout.md](../../refactor/rubocop-layout.md) |
 | 8 | Merge PR #15 before or after the review findings? | Merge after R01 and the small reproduced defects; do R05, R06, R07 on a follow-up branch before Phase 3 | all | 2026-10-01: merge PR #15 now, as is. Every finding then lands on its own new branch. No fixes are added to the Phase 2 branch first |
 
 ## Evidence retained

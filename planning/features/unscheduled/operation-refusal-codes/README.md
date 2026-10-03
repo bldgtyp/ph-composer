@@ -10,7 +10,7 @@ ISSUE: none (local planning draft)
 R04 made every feature declare its finding and refusal codes (`feature.code`). They appear only
 under "Feature codes" in `docs/API_REFERENCE.md`. `API.describe` does not say which codes one
 operation can answer, so an agent learns them by trying. R04 listed this as optional item 7, and
-R09 carried it as optional item 8 ([R09](../../phase-02-envelope/refactor/R09-definition-feature-pattern.md),
+R09 carried it as optional item 8 ([R09](../../../archive/phase-02-envelope-review/R09-definition-feature-pattern.md),
 "Observed" item 8 and "Proposed correction" step 6). R09 left it out because it changes the shell,
 the registry and `API.describe`, which its per-kind split did not need.
 

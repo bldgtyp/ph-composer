@@ -110,7 +110,7 @@ frozen-string comment, `Style/Semicolon`, line length 120, method length 40, cla
 **Decided 2026-10-01 by Ed.** Enable RuboCop's full `Layout` department, not the minimal set this
 review recommended. Do it after PR #15 merges, on its own pull request, once the other refactor work
 is done, so formatting changes stay separate from feature changes. The work is recorded in
-[planning/refactor/rubocop-layout.md](../../../refactor/rubocop-layout.md) with a row in
+[planning/refactor/rubocop-layout.md](../../refactor/rubocop-layout.md) with a row in
 `planning/STATUS.md`. Items 1 and 2 above are therefore not fixed in this packet: the formatting
 pass fixes them. Do not hand-reformat files in the review refactors beyond the lines a change already
 touches.
@@ -245,20 +245,20 @@ checks passed: the library setup dialogs from the panel and the menu, export to 
 destination, paging past one page, the Window Type grid gestures, the three navigation controls, and
 the unreadable setup with Reset. Export over an existing file asks twice: macOS's replace sheet, then
 SketchUp's message box. Evidence:
-[r11-host-gate-2026-10-02](../../../native-acceptance/evidence/r11-host-gate-2026-10-02.md); ledger
+[r11-host-gate-2026-10-02](../../native-acceptance/evidence/r11-host-gate-2026-10-02.md); ledger
 case `R11H`. Five UI findings, none a failure, are recorded in
-[host-gate-ui-findings](../../unscheduled/host-gate-ui-findings/README.md).
+[host-gate-ui-findings](../../features/unscheduled/host-gate-ui-findings/README.md).
 
 **Follow-ups, not in this change.** Each is recorded where it will be done:
 
 - The third deep-freeze (`DeepCopy.frozen` beside `ModelSettings` and `Registry`):
-  [planning/refactor/shared-deep-freeze.md](../../../refactor/shared-deep-freeze.md).
+  [planning/refactor/shared-deep-freeze.md](../../refactor/shared-deep-freeze.md).
 - The UI polish reference's stale Window placement entry: folded into
-  [library-product-tab-headers](../../unscheduled/library-product-tab-headers/README.md), the next
+  [library-product-tab-headers](../../features/unscheduled/library-product-tab-headers/README.md), the next
   change that opens that reference.
 - `export_file`'s `expected_revision` checked only after the save dialog: folded into
-  [agent-authorized-file-access](../../unscheduled/agent-authorized-file-access/README.md), which
+  [agent-authorized-file-access](../../features/unscheduled/agent-authorized-file-access/README.md), which
   redesigns the export params.
 - The `runtime_page_test.js` flake seen in this branch's `make ci`:
-  [planning/bugs/runtime-probe-test-flake.md](../../../bugs/runtime-probe-test-flake.md).
+  [planning/bugs/runtime-probe-test-flake.md](../../bugs/runtime-probe-test-flake.md).
 - The carried host gate: step 3 of the packet README's Sequencing.

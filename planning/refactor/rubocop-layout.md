@@ -8,7 +8,7 @@ ISSUE: none (local planning draft)
 
 ## Decision
 
-The Phase 2 review ([R11](../features/phase-02-envelope/refactor/R11-readability-and-lint.md)) found
+The Phase 2 review ([R11](../archive/phase-02-envelope-review/R11-readability-and-lint.md)) found
 mechanically wrapped lines and two continuation styles in Ruby, all passing lint because
 `.rubocop.yml` enables five cops and no `Layout` cop. Offered a minimal layout set, Ed chose the full
 `Layout` department on 2026-10-01, with two conditions:

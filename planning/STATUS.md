@@ -19,7 +19,6 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
-| 2 | Phase 2 envelope: PR #15 review findings | refactor | In progress; eleven findings recorded, Ed's eight decisions answered 2026-10-01. PR #15 merged as is on 2026-10-01; one new branch per finding. R01 merged 2026-10-01 (PR #16); R02 merged (PR #17), host gate passed; R03 merged (PR #18); R04 merged (PR #19), with R09 item 5; R05 merged (PR #20), host gate passed; R06 merged (PR #21), host gate passed; R07 merged (PR #22); R08 merged (PR #25), host gate run; R09 merged (PR #26); R10 merged (PR #28), asset-path host gate passed, its follow-ups in R11 and one unscheduled packet; R11 merged (PR #30), items 3 to 20, its carried host gate passed 2026-10-02 (ledger `R11H`); the formatting pull request merged (PR #32). Every finding done; ready to archive | none (local planning draft); reviews [PR #15](https://github.com/bldgtyp/ph-composer/pull/15) | [features/phase-02-envelope/refactor/](features/phase-02-envelope/refactor/README.md) |
 | 3 | Spaces | feature | Scoped, interviewed | none (no remote) | [features/phase-03-rooms-and-junctions/spaces/](features/phase-03-rooms-and-junctions/spaces/README.md) |
 | 3 | Thermal bridges | feature | Requested, PRD drafted | none (no remote) | [features/phase-03-rooms-and-junctions/thermal-bridges/](features/phase-03-rooms-and-junctions/thermal-bridges/README.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
@@ -59,5 +58,6 @@ Phase 2 envelope is [accepted and archived](archive/phase-02-envelope/STATUS.md)
 [#14](https://github.com/bldgtyp/ph-composer/issues/14) closed. [PR #15](https://github.com/bldgtyp/ph-composer/pull/15)
 merged to main on 2026-10-01 as merge commit `c687a73`. E01–E15/E17 pass with stated provenance; E16 is
 Phase 5. The archive records acceptance, not release or platform support. The independent review's
-eleven findings are the Phase 2 refactor row above; each lands on its own branch. Phase 3 remains
+eleven findings were each merged on their own branch by 2026-10-02 and
+[archived](archive/phase-02-envelope-review/README.md). Phase 3 remains
 the next planned feature scope and requires its own implementation authorization.
