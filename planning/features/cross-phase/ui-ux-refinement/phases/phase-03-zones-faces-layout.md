@@ -270,3 +270,23 @@ For Ed to judge in the host:
   has the same effect. Deselecting in the viewport brings Zone details back.
 - The selection inspector's Assembly control shows "Choose Assembly", not the Assembly the
   selection shares.
+
+## P3-2 host check, 2026-10-03
+
+SketchUp 26.1.188, fresh process, build installed from the branch, Model
+`ui-zones-inspector-run.skp` copied fresh from the synthetic `uxk1-rerun.skp`. The SketchUp
+selection was set through development `eval` (enter the first Zone's Group, select two of its
+Faces); panel controls were changed by script on the panel's dialog; Face records and Undo were
+read back from SketchUp; captures are native window pixels by window id.
+
+| Check | Result |
+| --- | --- |
+| Two Faces selected in SketchUp (a Roof and a Floor, both Outdoors) | Pass: the inspector shows "2 Faces selected", Type "Mixed", Boundary "Outdoors", Assembly "Choose Assembly"; the tree does not move |
+| Boundary set to Ground from the selection inspector | Pass: both selected Faces' records read Ground, their types are kept, the third Face is untouched |
+| One Undo | Pass: both records read Outdoors again, so the edit was one Undo step |
+| Zone row selected with nothing selected in the viewport | Pass: Zone details show in the inspector with no Save or Cancel |
+| Zone name edited, then the Classify toggle pressed | Pass: Save and Cancel appear; the toggle refuses with "Save or cancel the draft in the inspector first." and SketchUp stays on the Select tool |
+| Cancel | Pass: the stored name returns and Save and Cancel go |
+
+Not covered: native pointer input, an Assembly assigned from the selection inspector (the fixture
+has no Assemblies; covered by the browser check), a selection over the 250-Face ceiling.
