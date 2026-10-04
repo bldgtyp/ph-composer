@@ -97,6 +97,17 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     this.disposed = true; this.enabled = false;
     this.requests.reset(); this.paint();
   };
+  /* An assigned chip takes its Assembly's colour, the swatch the Assemblies table shows; None and a
+     missing Assembly keep the neutral pill. A dark colour switches the name to white so it stays legible. */
+  function paintColor(chip, record) {
+    var hex = /^#([0-9a-f]{6})$/i.exec(record && record.color || "");
+    if (!hex) { chip.style.removeProperty("--category-fill"); chip.style.removeProperty("--category-ink"); return; }
+    var value = parseInt(hex[1], 16);
+    var luma = 0.299 * (value >> 16) + 0.587 * ((value >> 8) & 255) + 0.114 * (value & 255);
+    chip.style.setProperty("--category-fill", "#" + hex[1]);
+    if (luma < 140) chip.style.setProperty("--category-ink", "#fff");
+    else chip.style.removeProperty("--category-ink");
+  }
   function cell(td, row, state, guard, refused) {
     var face = row.record.face;
     if (!face) return false;
@@ -125,6 +136,7 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
       chip.appendChild(ui.option(chosen, "Missing Assembly · " + chosen));
     }
     chip.value = chosen || "";
+    paintColor(chip, records.filter(function (record) { return record.id === chosen; })[0]);
     chip.setAttribute("aria-label", row.record.name + " Assembly");
     chip.setAttribute("aria-invalid", String(face.assembly_state === "dangling" || face.assembly_state === "invalid"));
     chip.disabled = state.disposed || !state.assemblyEnabled || state.edits.busy();
