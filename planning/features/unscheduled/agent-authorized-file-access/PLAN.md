@@ -313,7 +313,7 @@ Branch `feature/agent-authorized-file-access`, one commit per phase.
 | Phase | State | Evidence |
 | ----- | ----- | -------- |
 | 1. Declared preconditions | Implemented on branch | `tests/file_export_test.rb`: a stale export refuses before the Save dialog and on direct dispatch; a non-callable precondition is refused at registration |
-| 2. Approved-locations store | Not started | |
+| 2. Approved-locations store | Implemented on branch | `tests/approved_locations_test.rb`: round trip and kind check, no path or file name in any public read or refusal, scripted approval refused with no dialog and no replacement question on approval, bounded tombstones, unreadable store refuses until reset. Registered as the `ph_composer.locations` foundation capability (`shell/location_commands.rb`); a standing `Approval` marks the approve commands |
 | 3. Dispatch resolves a location | Not started | |
 | 4. Replace consent bound to review | Not started | |
 | 5. HBJSON on the same mechanism | Not started | |

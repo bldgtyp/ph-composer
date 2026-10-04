@@ -5029,6 +5029,105 @@ Example params:
 {}
 ```
 
+### `ph_composer.locations.list`
+
+The locations the user approved on this machine, by id and label, and whether each is still there. Never carries a path or a file name. Owner: `ph_composer.locations`.
+
+Refuses: `location.setup_unavailable`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "state",
+    "locations"
+  ],
+  "properties": {
+    "state": {
+      "type": "string",
+      "enum": [
+        "readable",
+        "unreadable"
+      ],
+      "description": "unreadable when the stored approvals fail to parse; approving refuses until reset."
+    },
+    "locations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "use",
+          "approved_at",
+          "last_used_at",
+          "available"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "save_file",
+              "open_file",
+              "open_folder"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string",
+            "enum": [
+              "reusable",
+              "single"
+            ],
+            "description": "reusable until revoked, or single: used by one completed operation."
+          },
+          "approved_at": {
+            "type": "string"
+          },
+          "last_used_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "available": {
+            "type": "boolean",
+            "description": "Whether the location is still there as approved."
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.records.list`
 
 Stored records of one kind, in id order, a page at a time. Owner: `ph_composer.records`.
@@ -36895,6 +36994,559 @@ Example params:
 
 ```json
 {}
+```
+
+### `ph_composer.locations.approve_destination`
+
+Approve a save destination the user chooses in the native save dialog, so a caller with the export grant can export to it by location id until it is revoked. Owner: `ph_composer.locations`.
+
+Needs the user: the panel or menu asks for a destination file first; any other caller is refused with `access.user_required`.
+
+Refuses: `location.setup_unavailable`, `location.setup_unreadable`, and the `setup_command` and `approval` common sets.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "The name the user sees for this location. Defaults to Export destination, Library file or Library folder and a number; never the file name."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "use",
+    "approved_at",
+    "last_used_at",
+    "available"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "save_file",
+        "open_file",
+        "open_folder"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "use": {
+      "type": "string",
+      "enum": [
+        "reusable",
+        "single"
+      ],
+      "description": "reusable until revoked, or single: used by one completed operation."
+    },
+    "approved_at": {
+      "type": "string"
+    },
+    "last_used_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "available": {
+      "type": "boolean",
+      "description": "Whether the location is still there as approved."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "label": "Project library"
+}
+```
+
+### `ph_composer.locations.approve_file`
+
+Approve a library file the user chooses in a native picker, so a caller with the setup grant can add it once by location id. Owner: `ph_composer.locations`.
+
+Needs the user: the panel or menu asks for a file first; any other caller is refused with `access.user_required`.
+
+Refuses: `location.setup_unavailable`, `location.setup_unreadable`, and the `setup_command` and `approval` common sets.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "The name the user sees for this location. Defaults to Export destination, Library file or Library folder and a number; never the file name."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "use",
+    "approved_at",
+    "last_used_at",
+    "available"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "save_file",
+        "open_file",
+        "open_folder"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "use": {
+      "type": "string",
+      "enum": [
+        "reusable",
+        "single"
+      ],
+      "description": "reusable until revoked, or single: used by one completed operation."
+    },
+    "approved_at": {
+      "type": "string"
+    },
+    "last_used_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "available": {
+      "type": "boolean",
+      "description": "Whether the location is still there as approved."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "label": "Project library"
+}
+```
+
+### `ph_composer.locations.approve_folder`
+
+Approve a folder of library files the user chooses in a native picker, so a caller with the setup grant can add it once by location id. Owner: `ph_composer.locations`.
+
+Needs the user: the panel or menu asks for a folder first; any other caller is refused with `access.user_required`.
+
+Refuses: `location.setup_unavailable`, `location.setup_unreadable`, and the `setup_command` and `approval` common sets.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "The name the user sees for this location. Defaults to Export destination, Library file or Library folder and a number; never the file name."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "use",
+    "approved_at",
+    "last_used_at",
+    "available"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "save_file",
+        "open_file",
+        "open_folder"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "use": {
+      "type": "string",
+      "enum": [
+        "reusable",
+        "single"
+      ],
+      "description": "reusable until revoked, or single: used by one completed operation."
+    },
+    "approved_at": {
+      "type": "string"
+    },
+    "last_used_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "available": {
+      "type": "boolean",
+      "description": "Whether the location is still there as approved."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "label": "Project library"
+}
+```
+
+### `ph_composer.locations.rename`
+
+Rename an approved location. Owner: `ph_composer.locations`.
+
+Refuses: `location.revoked`, `location.setup_unavailable`, `location.setup_unreadable`, `location.unknown`, `location.used`, and the `setup_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "label"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The location id from list or an approve command."
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "The name the user sees for this location. Defaults to Export destination, Library file or Library folder and a number; never the file name."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "use",
+    "approved_at",
+    "last_used_at",
+    "available"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "save_file",
+        "open_file",
+        "open_folder"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "use": {
+      "type": "string",
+      "enum": [
+        "reusable",
+        "single"
+      ],
+      "description": "reusable until revoked, or single: used by one completed operation."
+    },
+    "approved_at": {
+      "type": "string"
+    },
+    "last_used_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "available": {
+      "type": "boolean",
+      "description": "Whether the location is still there as approved."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "id": "location_AAAAAAAAAAAA",
+  "label": "Project library"
+}
+```
+
+### `ph_composer.locations.reset`
+
+Clear this machine's approved locations when list reports them unreadable. A readable store is left unchanged. Owner: `ph_composer.locations`.
+
+Refuses: `location.setup_unavailable`, and the `setup_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "kind",
+      "label",
+      "use",
+      "approved_at",
+      "last_used_at",
+      "available"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "save_file",
+          "open_file",
+          "open_folder"
+        ]
+      },
+      "label": {
+        "type": "string"
+      },
+      "use": {
+        "type": "string",
+        "enum": [
+          "reusable",
+          "single"
+        ],
+        "description": "reusable until revoked, or single: used by one completed operation."
+      },
+      "approved_at": {
+        "type": "string"
+      },
+      "last_used_at": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "available": {
+        "type": "boolean",
+        "description": "Whether the location is still there as approved."
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.locations.revoke`
+
+Revoke an approved location. It stays refused as location.revoked. Owner: `ph_composer.locations`.
+
+Refuses: `location.revoked`, `location.setup_unavailable`, `location.setup_unreadable`, `location.unknown`, `location.used`, and the `setup_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The location id from list or an approve command."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "kind",
+      "label",
+      "use",
+      "approved_at",
+      "last_used_at",
+      "available"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "save_file",
+          "open_file",
+          "open_folder"
+        ]
+      },
+      "label": {
+        "type": "string"
+      },
+      "use": {
+        "type": "string",
+        "enum": [
+          "reusable",
+          "single"
+        ],
+        "description": "reusable until revoked, or single: used by one completed operation."
+      },
+      "approved_at": {
+        "type": "string"
+      },
+      "last_used_at": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "available": {
+        "type": "boolean",
+        "description": "Whether the location is still there as approved."
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "id": "location_AAAAAAAAAAAA"
+}
 ```
 
 ## File exports

@@ -15,14 +15,16 @@ module PhComposer
     # and codes"). Foundation and shared-noun codes are listed there instead.
     Code = Struct.new(:code, :owner, :description, keyword_init: true)
     # The nouns of the codes listed in context/CONTRACTS.md, which no feature may declare under.
-    FOUNDATION_CODE_NOUNS = %w[access copy dependency export extension geometry identity library object operation
-                               params payload proposal query record reference registration request revision runtime
-                               scope section selection session target task validation].freeze
+    FOUNDATION_CODE_NOUNS = %w[access copy dependency export extension geometry identity library location object
+                               operation params payload proposal query record reference registration request revision
+                               runtime scope section selection session target task validation].freeze
     # Every code that table lists, so registration can check an operation's `refuses:` list against it.
     # The table stays the readable authority; tests/outcome_codes_test.rb keeps the two equal.
     FOUNDATION_CODES = %w[
       request.malformed request.unknown_operation request.api_version request.capability_denied
       access.user_required request.cancelled
+      location.unknown location.revoked location.used location.kind_mismatch location.unavailable
+      location.setup_unreadable location.setup_unavailable
       request.pending request.sequence_conflict request.outcome_unavailable
       session.unknown session.busy session.closed session.changed session.inactive
       revision.stale proposal.changed record.unreadable
@@ -90,8 +92,10 @@ module PhComposer
     # the panel or a menu, has asked the user through the matching dialog and passes the answer to
     # dispatch; every other caller is refused with `access.user_required` and no dialog opens. The
     # handler reads the location from `request.approval`, never from params. `kind` is one of KINDS;
-    # `default_name` names a save destination and `filter` an opened file's pattern.
-    Approval = Struct.new(:kind, :title, :default_name, :filter, keyword_init: true) do
+    # `default_name` names a save destination and `filter` an opened file's pattern. `standing` marks a
+    # command whose answer is kept as an approved location (shell/approved_locations.rb) rather than
+    # used now: nothing is replaced, so no replacement question is asked.
+    Approval = Struct.new(:kind, :title, :default_name, :filter, :standing, keyword_init: true) do
       def to_h
         super.compact.transform_keys(&:to_s)
       end

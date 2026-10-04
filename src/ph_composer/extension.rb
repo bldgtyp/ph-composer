@@ -38,7 +38,7 @@ module PhComposer
   FEATURES = [Assemblies, Zones, Windows].freeze unless const_defined?(:FEATURES)
 
   # Capabilities the foundation itself provides, registered through the same interface as a feature.
-  FOUNDATION_FEATURES = [RecordQueries, ColourBy, Library].freeze unless const_defined?(:FOUNDATION_FEATURES)
+  FOUNDATION_FEATURES = [RecordQueries, LocationCommands, ColourBy, Library].freeze unless const_defined?(:FOUNDATION_FEATURES)
 
   # Registers the foundation and every listed feature. A registration problem fails loading here,
   # with every diagnostic in the message, rather than leaving a partly available extension.

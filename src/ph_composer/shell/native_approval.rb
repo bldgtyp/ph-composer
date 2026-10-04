@@ -42,13 +42,17 @@ module PhComposer
       end
     end
 
+    def noun(approval)
+      NOUNS.fetch(approval.kind)
+    end
+
     # Dispatch's check: a location only the user can choose arrives from a native client or not at all.
     def check!(declaration, approval)
       needed = declaration.respond_to?(:approval) && declaration.approval
       return unless needed && approval.nil?
 
       raise CodedError.new("access.user_required", "#{declaration.name} needs the user to choose a " \
-                                                   "#{NOUNS.fetch(needed.kind)} in SketchUp, from the " \
+                                                   "#{noun(needed)} in SketchUp, from the " \
                                                    "PH-Composer panel or menu. No dialog was opened.")
     end
 
@@ -84,7 +88,7 @@ module PhComposer
       path = UI.savepanel(approval.title, directory, approval.default_name)
       return nil if path.nil?
 
-      return nil unless confirm_replace(path, "Replace the existing file?")
+      return nil unless approval.standing || confirm_replace(path, "Replace the existing file?")
 
       Granted.new(:path => path, :replace => File.exist?(path))
     end
