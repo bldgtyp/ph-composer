@@ -8,8 +8,11 @@ module PhComposer
   # declaration without an approval runs as the public API would run it.
   module NativeApproval
     # The location the user chose and, for a save destination that already exists, whether they agreed
-    # to replace it. It never enters params, a result or a log.
-    Granted = Struct.new(:path, :replace, keyword_init: true) do
+    # to replace it. It never enters params, a result or a log. From an approved location
+    # (shell/approved_locations.rb) it also carries the location's id and label and `state`, the
+    # destination state the caller reviewed; from a native dialog those are nil, and the consent was
+    # given against the destination as it is now.
+    Granted = Struct.new(:path, :replace, :state, :label, :location_id, keyword_init: true) do
       def inspect
         "#<#{self.class.name}>"
       end
@@ -46,6 +49,25 @@ module PhComposer
       NOUNS.fetch(approval.kind)
     end
 
+    # Dispatch's answer to a declared location: the native client's Granted, which wins, or the one an
+    # approved location in params stands for, with `params` less that location, which the handler never
+    # sees. With neither, it refuses with access.user_required: a location only the user can choose
+    # arrives from them or not at all.
+    def admit(declaration, approval, params)
+      needed = declaration.respond_to?(:approval) && declaration.approval
+      return [approval, params] unless needed
+
+      location = params["location"]
+      params = params.reject { |key, _value| key == "location" }
+      return [approval, params] if approval
+      return [ApprovedLocations.grant(location, needed.kind), params] if location
+
+      raise CodedError.new("access.user_required", "#{declaration.name} needs the user to choose a " \
+                                                   "#{noun(needed)} in SketchUp, from the PH-Composer panel or " \
+                                                   "menu, or a location they approved, passed as location. No " \
+                                                   "dialog was opened.")
+    end
+
     # The dispatch outcome, or a cancellation when the user dismissed a dialog. An unknown name or a
     # closed session opens no dialog and is dispatch's to refuse. The grant, params and busy state are
     # checked through `refusal` before the dialog opens, and again by dispatch after it, since the
@@ -78,7 +100,7 @@ module PhComposer
       path = UI.savepanel(approval.title, directory, approval.default_name)
       return nil if path.nil?
 
-      return nil unless confirm_replace(path, "Replace the existing file?")
+      return nil unless approval.standing || confirm_replace(path, "Replace the existing file?")
 
       Granted.new(:path => path, :replace => File.exist?(path))
     end

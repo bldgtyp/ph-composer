@@ -178,9 +178,9 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
       var canonical = task.outcome.value.result.canonical_model;
       if (canonical) root.appendChild(element("p", "", counted(canonical.rooms, "Room") + " · " +
         counted(canonical.faces, "Face") + " · " + counted(canonical.surface_pairs, "Surface pair")));
-      (task.outcome.value.artifacts || []).forEach(function (path) {
-        root.appendChild(element("p", "", path.split(/[\\/]/).pop()));
-      });
+      if (task.outcome.value.location) {
+        root.appendChild(element("p", "", "Written to " + task.outcome.value.location.label + "."));
+      }
     }
     // What the last export reported and the checks above do not already say.
     var listed = Object.create(null);

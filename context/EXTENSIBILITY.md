@@ -319,11 +319,25 @@ the result is detached and validated against its declared schema. A destination 
 choose is declared, not asked for: `approval: Declarations::Approval.new(kind: "save_file", title:,
 default_name:)`. The handler then reads `request.approval.path` and `.replace`, opens no dialog, and
 refuses an existing destination the user did not agree to replace. A setup command takes the same
-`approval:` with kind `open_file` or `open_folder`. The panel and native menus obtain the answer
-through `NativeApproval`, a shell internal and not a supported API; any other caller is refused with
-`access.user_required`
-([AGENT_INTERFACE.md](AGENT_INTERFACE.md), "Locations only the user can choose"). Ruby contributors
-remain trusted code and own safe writes.
+`approval:` with kind `open_file` or `open_folder`. A check that can refuse before any location is
+chosen, such as a stale `expected_revision`, is declared as `precondition: ->(request) { }` raising a
+coded error; dispatch runs it before a native dialog opens and again before the handler. The panel
+and native menus obtain the answer through `NativeApproval`, a shell internal and not a supported
+API.
+
+Every other caller passes a location the user approved, and the declaration gets that for free:
+registration adds the optional `location` param to its params (a feature schema that declares or
+requires its own `location` is refused), dispatch resolves the id into the same `request.approval` and hands the
+handler params without it, and a call with neither answer is refused with `access.user_required`
+([AGENT_INTERFACE.md](AGENT_INTERFACE.md), "Locations only the user can choose"). From a location,
+`request.approval.state` is the destination state the caller reviewed and `.location_id` is set;
+from the native dialog both are nil. Dispatch refuses `replace` without `expected_destination`, so
+a location's consent always names a reviewed state; a save handler that can replace a file compares `state` with
+its own fingerprint of the destination, as `Library::ExportWorkflow` does with
+`Library::FileWriter.state`, and its preview reports that fingerprint through
+`ApprovedLocations.observe(id) { |path| ... }`. Test the location route offline by approving a
+temporary path with `ApprovedLocations.approve(kind:, path:)` and calling the public API with its id
+(`tests/approved_location_use_test.rb`). Ruby contributors remain trusted code and own safe writes.
 
 The library exporter uses reverse mappings from each registered kind and checks semantic equality
 after mapping the wire row back. Invalid or lossy reverse mappings refuse in `export_preview`, which
@@ -468,7 +482,8 @@ The handler takes the same `request` a query's does. It must not write a record,
 with no sequence and no expected revision; it refuses while the session is busy. Access is the
 `setup` capability, which `API.connect` never grants by default: changing what is configured on the
 user's machine is granted explicitly, as `export` is. The panel sends `setup.invoke` and settles
-the answer in its own result slot.
+the answer in its own result slot. A setup command takes the same optional `approval:` and
+`precondition:` a file export does (see "Registered file exports").
 
 ### Viewport tools
 

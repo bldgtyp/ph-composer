@@ -83,8 +83,9 @@ are clients of it.
 - `export_file(context:, name:, params:)`: a registered synchronous FileExport, with an explicit
   `export` grant. It has no mutation sequence and opens no Model operation. Its owner performs the
   guarded file write. A FileExport or setup command that declares an `approval` needs a location
-  only the user can choose; through this interface it is refused with `access.user_required`, and
-  only the panel and native menus, which ask the user first, can run it.
+  only the user can choose. Through this interface the caller passes `location`, the id of a
+  location the user approved (`ph_composer.locations.list`), or is refused with
+  `access.user_required`; the panel and native menus ask the user instead.
 - The export task methods (`export_preflight`, `start_export`, `export_status`, `cancel_export`,
   `latest_export`) are specified in AGENT_INTERFACE.md, "Implemented export task contract".
 
@@ -137,6 +138,7 @@ Codes are stable `noun.condition` strings, one per outcome:
 | --- | --- |
 | Envelope | `request.malformed`, `request.unknown_operation`, `request.api_version`, `request.capability_denied` |
 | Access | `access.user_required` (the operation needs a location only the user can choose), `request.cancelled` (the user dismissed that dialog) |
+| Approved locations | `location.unknown`, `location.revoked`, `location.used` (a single-use location already added its library), `location.kind_mismatch`, `location.unavailable` (no longer there as approved), `location.setup_unreadable`, `location.setup_unavailable` |
 | Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |
 | Session | `session.unknown` (closed, reopened or never issued), `session.busy`, `session.closed`, `session.changed` (a native menu built for another Model), `session.inactive` (panel client only: its Model is no longer shown) |
 | Preconditions | `revision.stale`, `proposal.changed`, `record.unreadable` |

@@ -1,8 +1,8 @@
 # Agent-authorized file access: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. Ed decided D1 to D6 on 2026-10-02, each as recommended. Not yet authorized for
-implementation.
+STATUS: Implemented on branch `feature/agent-authorized-file-access`, host gate passed 2026-10-03;
+in review as PR #70. Ed decided D1 to D6 on 2026-10-02 and authorized implementation on 2026-10-03.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/36
 
@@ -35,6 +35,44 @@ Read [README.md](README.md) first for the required behavior. This plan says how 
   every save destination.
 - `export_file`'s `expected_revision` is checked inside `ExportWorkflow.run` (line 19), after the
   native dialog. `Dispatch#admission_refusal` cannot see it (R11 item 13).
+
+## Review before implementation (2026-10-03, `main` at e93e88d)
+
+The starting point above still holds at e93e88d. Ed authorized implementation on 2026-10-03. The
+review found six gaps; each is absorbed by the phase named, and the phases below are read with these
+amendments.
+
+1. **The HBJSON outcome carries paths.** A completed task returns
+   `value.artifacts = [hbjson_path, report_path]` (`export/task.rb:135`) and the Export screen shows
+   their basenames. That breaks "no path out" for every caller, and D4 forbids the basename too.
+   Phase 5 drops `artifacts`. A task started from a location reports `location: { id, label }`; the
+   native one-shot route reports neither, so the Export screen stops listing the two file names.
+2. **A preview must inspect a location without seeing its path.** Phase 4's `export_preview` and
+   Phase 5's `export_preflight` report the destination's state, which needs the path. The store gains
+   `ApprovedLocations.inspect(id, kind:) { |path| state }`: it yields the path to the exporter's own
+   state function and returns `{ "exists", "state" }`. `resolve` stays the only method that returns a
+   path, called only by dispatch.
+3. **`state` is the fingerprint each writer already takes.** `Library::FileWriter` fingerprints with
+   SHA-256 of the bytes, not size and mtime; Phase 4 uses that function, made public, rather than a
+   second one. The HBJSON state is one SHA-256 over the pair's two fingerprints. Each exporter owns its
+   state function; the store never computes one.
+4. **Projection binding needs a param.** `export_file` takes no `projection_digest` today and the
+   panel sends only `expected_revision`. Phase 4 adds an optional `projection_digest`, checked whenever
+   it is supplied and required for a replace bound to a reviewed destination state. A mismatch refuses
+   with `revision.stale`, the code the export's revision check already uses: both say that what was
+   reviewed is not what would be written. The panel sends it.
+5. **The native route has no reviewed state.** The Save sheet's consent is given against the file as
+   it is at that moment, and the writer is built in the same synchronous call. A native `Granted`
+   therefore carries `state: nil`, meaning "as observed now"; the writer's own construction-to-rename
+   check still applies. Only a location carries a reviewed state, and `replace: true` on a location
+   requires `expected_destination`.
+6. **A consumed single-use handle needs its own answer.** Phase 3 refuses it as `location.used`, kept
+   in the same bounded tombstones as revoked ids, so a caller can tell "already added" from "revoked".
+
+Two smaller notes. `ArtifactPair.destination_problem` runs only in the native HBJSON consent today;
+Phase 5 runs it in `Export::Tasks#start` too, or an approved `.json` destination would reach the task.
+The new `location` code noun enters `Declarations::FOUNDATION_CODE_NOUNS`, `FOUNDATION_CODES`, the
+`context/CONTRACTS.md` codes table and the `Refusals` approval set in Phase 2 and 3.
 
 ## Decisions
 
@@ -267,3 +305,39 @@ Load `.agents/skills/ph-composer-ui-polish/SKILL.md` before this phase.
   `ph_composer.library.providers` to see whether the add happened, as for any setup command.
 - The `location` param is foundation-injected schema. If D2 goes the other way, Phase 3 changes the
   API signature instead, and the remaining phases are unaffected.
+
+## Delivery
+
+Branch `feature/agent-authorized-file-access`, one commit per phase.
+
+| Phase | State | Evidence |
+| ----- | ----- | -------- |
+| 1. Declared preconditions | Implemented on branch | `tests/file_export_test.rb`: a stale export refuses before the Save dialog and on direct dispatch; a non-callable precondition is refused at registration |
+| 2. Approved-locations store | Implemented on branch | `tests/approved_locations_test.rb`: round trip and kind check, no path or file name in any public read or refusal, scripted approval refused with no dialog and no replacement question on approval, bounded tombstones, unreadable store refuses until reset. Registered as the `ph_composer.locations` foundation capability (`shell/location_commands.rb`); a standing `Approval` marks the approve commands |
+| 3. Dispatch resolves a location | Implemented on branch | `tests/approved_location_use_test.rb`: a `setup` caller adds an approved folder with no picker and the id is then `location.used`; kind mismatch, unavailable, revoked, unknown, a `read`-only caller and `replace` on an open kind each refuse with nothing configured; registration composes `location` and refuses a feature that declares its own. A folder that is not one library is labelled "Library folder N" or its approval's label, never its name (`tests/library_setup_commands_test.rb`) |
+| 4. Replace consent bound to review | Implemented on branch | `tests/approved_location_use_test.rb`: through an approved destination, replacing with no consent, without `expected_destination`, without `projection_digest` and with a stale digest each refuse; a file changed after review refuses `library.destination_changed` and keeps its bytes; a fresh review is accepted. `export_preview` reports `destination` for a `location`; the panel sends `projection_digest` (`tests/library_export_form_test.js`) |
+| 5. HBJSON on the same mechanism | Implemented on branch | `tests/export_tasks_test.rb`: `start_export` takes `location`, a raw `destination:` keyword raises and fails the described schema; replacing an approved pair is bound to the state `export_preflight(location:)` reported; the completed outcome names the location, never a path; half a prior pair is refused at start on every route. `tests/api_client_test.rb` runs the updated `docs/API_QUICKSTART.md` section 8. The Export screen no longer lists the two file names |
+| 6. Panel and menu controls | Implemented on branch | The Libraries dialog gains an Approved locations group (`html/library/locations.js`): label, kind, approved and last-used dates, a missing warning, Rename in place, Revoke that asks once, Reset when unreadable, and the three approve buttons. `tests/library_setup_test.js`; `tests/approved_locations_test.rb` for the menu route; checked in the UI preview at 800 and 420 px; `make ui-checks` passes. **Deviation:** the Libraries menu gains Approve Export Destination…, Approve Library File… and Approve Library Folder…, which approve at once as the existing Add Library File… items do, instead of one Approved Locations… item opening the dialog: the dialog belongs to each library sidebar and no native route opens it today. Listing, renaming and revoking stay in the dialog |
+| 7. Documentation, walkthrough, acceptance | Implemented on branch; host gate passed 2026-10-03 ([evidence](evidence/host-gate-2026-10-03.md)) | `context/AGENT_INTERFACE.md` rewritten around approved locations, limitation paragraph and raw-destination sentence removed; `context/EXTENSIBILITY.md`, `context/CONTRACTS.md`, `docs/AGENT_ACCESS.md`, `docs/API_QUICKSTART.md` updated; `tools/examples/library/approved_location_walkthrough.rb` run as written by `tests/approved_location_walkthrough_test.rb` (export, overwrite and stale-review refusals, unknown id, folder add and read-back, used folder, revoked destination). `make ci` passes on Ruby 3.2.2 and the suite on 2.7.2 |
+
+### Review and remaining gate (2026-10-03)
+
+One fresh-context Opus review against the architecture-review rubric covered the combined diff.
+Fixed on the branch: a library export to an approved `.hbjson` destination overwrote it (now refused
+`library.destination_invalid` on every route); `replace` without `expected_destination` was accepted
+for a handler that does not compare state (now refused `params.invalid` at dispatch); a panel refresh
+during Rename discarded the typed name; HBJSON exports never recorded `last_used_at`; the revoke
+confirm stayed enabled while busy; default labels could repeat after a revoke; two comments overstated
+the store's invariant; `reset` did not refresh other sessions. Left as follow-ups: `list` checks each
+location on disk at every snapshot (could stall on an unmounted volume); an HBJSON task already running
+finishes after its location is revoked; the approve commands do not refuse a blank label before the
+dialog (the panel never sends one); the Libraries dialog rows use text buttons rather than hover icon
+buttons, matching its existing Remove button.
+
+Gates: `make ci` passes on Ruby 3.2.2 and the Ruby suite on 2.7.2; `make ui-checks` passes; the
+dialog was checked in the UI preview at 800 and 420 px. The Phase 7 host gate passed in SketchUp
+26.1.188 on 2026-10-03 ([evidence](evidence/host-gate-2026-10-03.md)). The PR #70 review then
+found four defects: an HBJSON write failure named the destination, a failed store write let a
+single-use location add twice, a refresh during Rename submitted the draft in Chrome, and a feature
+schema could require `location`. `c511f7e` fixes each with a regression test, and the affected host
+checks passed again on that build. The packet is archived once the pull request merges.

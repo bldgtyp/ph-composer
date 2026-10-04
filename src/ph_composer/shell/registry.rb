@@ -309,10 +309,13 @@ module PhComposer
 
       # One session- or machine-state command: it never touches the Model, so it takes no `undo_name`
       # and no sequence number, and it changes nothing the viewport shows unless a refresh follows.
-      def setup_command(name, description:, params:, result:, refuses: nil, examples: [], approval: nil, &handler)
+      def setup_command(name, description:, params:, result:, refuses: nil, examples: [], approval: nil,
+                        precondition: nil, &handler)
         declaration = Declarations::SetupCommand.new(
-          :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :refuses => refuses, :approval => approval, :handler => handler
+          :name => name, :owner => id, :description => description,
+          :params => ApprovedLocations.with_param(params, approval), :result => result,
+          :examples => examples, :refuses => refuses, :approval => approval, :precondition => precondition,
+          :handler => handler
         )
         @staging.add(:declared_setup_commands, id, name, declaration)
       end
@@ -322,10 +325,13 @@ module PhComposer
         @staging.add(:declared_snapshot_sections, id, name, declaration)
       end
 
-      def file_export(name, description:, params:, result:, refuses: nil, examples: [], approval: nil, &handler)
+      def file_export(name, description:, params:, result:, refuses: nil, examples: [], approval: nil,
+                      precondition: nil, &handler)
         declaration = Declarations::FileExport.new(
-          :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :refuses => refuses, :approval => approval, :handler => handler
+          :name => name, :owner => id, :description => description,
+          :params => ApprovedLocations.with_param(params, approval), :result => result,
+          :examples => examples, :refuses => refuses, :approval => approval, :precondition => precondition,
+          :handler => handler
         )
         @staging.add(:declared_file_exports, id, name, declaration)
       end

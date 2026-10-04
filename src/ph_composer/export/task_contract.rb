@@ -19,7 +19,8 @@ module PhComposer
           "message" => { "type" => "string" }, "effect" => { "type" => "string" },
           "revision" => { "type" => %w[integer null] },
           "value" => { "type" => %w[object null],
-                       "description" => "When completed: the compact result and the two artifact paths written." },
+                       "description" => "When completed: the compact result and, for a start from an approved " \
+                                        "location, that location's id and label. Never a path." },
           "affected" => { "type" => "array" }, "findings" => { "type" => "array" },
           "detail" => { "type" => %w[object null] }, "proposal_digest" => { "type" => %w[string null] }
         }
@@ -43,22 +44,34 @@ module PhComposer
 
       TASKS = {
         "export_preflight" => {
-          "capability" => "read", "params" => NO_PARAMS, "result" => PREFLIGHT_RESULT, "examples" => [{}],
+          "capability" => "read", "examples" => [{}, { "location" => "location_AAAAAAAAAAAA" }],
+          "params" => {
+            "type" => "object", "additionalProperties" => false, "properties" => {
+              "location" => { "type" => "string", "minLength" => 1,
+                              "description" => "An approved destination's id, to report what it holds now." }
+            }
+          },
+          "result" => PREFLIGHT_RESULT.merge("properties" => PREFLIGHT_RESULT.fetch("properties").merge(
+            "destination" => {
+              "type" => "object", "additionalProperties" => false, "required" => %w[exists state],
+              "description" => "With location: whether the pair exists and its state. Pass state as the " \
+                               "location's expected_destination to replace it.",
+              "properties" => { "exists" => { "type" => "boolean" }, "state" => { "type" => %w[string null] } }
+            }
+          )),
           "description" => "Every export contributor's findings and the repairs it offers, before starting."
         },
         "start_export" => {
           "capability" => "export",
-          "description" => "Start one export of the canonical HBJSON and its report to an explicit destination. " \
-                           "An existing pair is replaced only with replace true; one task runs per Model at a time.",
+          "description" => "Start one export of the canonical HBJSON and its report to a destination the user " \
+                           "approved (ph_composer.locations.approve_destination). An existing pair is replaced only " \
+                           "with replace and the expected_destination export_preflight reported; one task runs " \
+                           "per Model at a time.",
           "params" => {
-            "type" => "object", "additionalProperties" => false, "required" => ["destination"],
-            "properties" => {
-              "destination" => { "type" => "string", "minLength" => 1,
-                                 "description" => "The .hbjson path; the report is written beside it." },
-              "replace" => { "type" => "boolean", "description" => "Consent to replace an existing pair." }
-            }
+            "type" => "object", "additionalProperties" => false, "required" => ["location"],
+            "properties" => { "location" => ApprovedLocations.param("save_file") }
           },
-          "result" => STATUS, "examples" => [{ "destination" => "/path/to/model.hbjson", "replace" => false }]
+          "result" => STATUS, "examples" => [{ "location" => { "id" => "location_AAAAAAAAAAAA" } }]
         },
         "export_status" => {
           "capability" => "export", "params" => TASK_PARAMS, "result" => STATUS, "examples" => [EXAMPLE_TASK],

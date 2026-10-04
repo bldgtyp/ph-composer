@@ -22,7 +22,8 @@ module PhComposer
     end
 
     # File export has its own grant and never enters a Model mutation. Polling and cancellation
-    # use the same explicit session as starting the task, even when another Model is foreground.
+    # use the same explicit session as starting the task, even when another Model is foreground. A
+    # start names an approved location; only the native Export workflow passes its own `approval`.
     def export_task(context, operation, arguments)
       session, = resolve(context, "export", nil, nil)
       tasks = Export::Tasks.for(session)
@@ -42,9 +43,11 @@ module PhComposer
       unexpected_outcome(error, session, "export.#{operation}")
     end
 
-    def export_preflight(context)
+    # With `location`, an approved destination's id, the result also says what that destination holds.
+    def export_preflight(context, location = nil)
       session, = resolve(context, "read", nil, nil)
       value = { "findings" => [], "repairs" => [] }
+      value["destination"] = ApprovedLocations.observe(location) { |path| Export::ArtifactPair.state(path) } if location
       @registry.export_contributors.values.sort_by(&:name).each do |contributor|
         next unless contributor.preflight
 
@@ -96,9 +99,9 @@ module PhComposer
     end
 
     # The refusal `setup` or `file_export` would give before its handler runs (session, grant, params,
-    # busy), or nil when none applies. A native client asks before it opens a dialog, so the user never
-    # chooses a location for a call that was going to be refused anyway. Dispatch repeats every check
-    # after the dialog. No handler runs, so only common refusals arise and none is reported for audit.
+    # busy, the declared precondition), or nil when none applies. A native client asks before it opens
+    # a dialog, so the user never chooses a location for a call that was going to be refused anyway.
+    # Dispatch repeats every check after the dialog, and only that answer is reported for audit.
     def setup_refusal(context, name, params)
       admission_refusal(context, "setup", name, @registry.setup_commands, params)
     end
@@ -191,10 +194,13 @@ module PhComposer
     def answer(context, capability, name, declarations, params, approval: nil)
       session, _caller, declaration = resolve(context, capability, name, declarations)
       check_params!(declaration, params, session)
-      check_approval!(declaration, approval)
+      approval, params = NativeApproval.admit(declaration, approval, params)
       refuse_if_busy!(session)
-      value = declaration.handler.call(request_for(session, params, declaration, :approval => approval))
-      check_result!(declaration, value)
+      check_precondition!(session, params, declaration)
+      # A call that does not complete, even one whose result fails its schema after writing, keeps the
+      # location for a retry.
+      request = request_for(session, params, declaration, :approval => approval)
+      value = ApprovedLocations.consuming(approval) { check_result!(declaration, declaration.handler.call(request)) }
       Outcome.completed(:revision => session.revision, :value => value)
     rescue CodedError => error
       coded_outcome(error, session)
@@ -210,6 +216,7 @@ module PhComposer
       session, _caller, declaration = resolve(context, capability, name, declarations)
       check_params!(declaration, params, session)
       refuse_if_busy!(session)
+      check_precondition!(session, params, declaration)
       nil
     rescue CodedError => error
       coded_outcome(error, session)
@@ -297,14 +304,12 @@ module PhComposer
       raise CodedError.new("session.busy", reason, "reason" => reason) if reason
     end
 
-    # A location only the user can choose arrives from a native client or not at all.
-    def check_approval!(declaration, approval)
-      needed = declaration.respond_to?(:approval) && declaration.approval
-      return unless needed && approval.nil?
+    # A declared precondition sees the validated params, never the approval, so it can run before a
+    # native client opens a dialog as well as before the handler.
+    def check_precondition!(session, params, declaration)
+      return unless declaration.respond_to?(:precondition) && declaration.precondition
 
-      raise CodedError.new("access.user_required", "#{declaration.name} needs the user to choose a " \
-                                                   "#{NativeApproval.noun(needed)} in SketchUp, from the " \
-                                                   "PH-Composer panel or menu. No dialog was opened.")
+      declaration.precondition.call(request_for(session, params, declaration))
     end
 
     def check_params!(declaration, params, session)
@@ -321,9 +326,10 @@ module PhComposer
       raise CodedError.new("request.malformed", "Params must be a plain JSON object.", "revision" => session.revision)
     end
 
+    # `value`, once it is within the declared result schema.
     def check_result!(declaration, value)
       findings = JsonSchema.validate(value, declaration.result)
-      return if findings.empty? && JsonValue.problems(value).empty?
+      return value if findings.empty? && JsonValue.problems(value).empty?
 
       raise InternalError, "#{declaration.name} returned a result outside its schema: #{findings.first}"
     end

@@ -34,7 +34,8 @@ module PhComposer
         return revalidated unless revalidated["status"] == "completed"
 
         replace = [destination, ArtifactPair.report_path(destination)].any? { |path| File.exist?(path) }
-        API.start_export(:context => context, :destination => destination, :replace => replace)
+        Dispatch.new.export_task(context, :start,
+                                 :approval => NativeApproval::Granted.new(:path => destination, :replace => replace))
       end
 
       # The declared repairs the caller picked by id, or nil when it named one the preflight did not offer.

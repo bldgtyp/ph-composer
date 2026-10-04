@@ -72,6 +72,7 @@ PhComposerUI.define("library/export", ["record_form", "request", "workspace"], f
     if (!this.enabled || this.busy() || !this.projection || this.preview.busy() || this.root.hidden) return;
     var params = this.params(); params.identity = this.identity.value;
     params.expected_revision = this.projection.revision;
+    if (this.projection.projection_digest) params.projection_digest = this.projection.projection_digest;
     if (this.name.value.trim()) params.library_name = this.name.value.trim();
     this.submitButton.disabled = this.cancel.disabled = true;
     this.error.textContent = this.spec.pendingText;

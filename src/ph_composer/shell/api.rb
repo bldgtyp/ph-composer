@@ -135,12 +135,15 @@ module PhComposer
       Dispatch.new.outcome(context, request)
     end
 
-    def start_export(context:, destination:, replace: false)
-      Dispatch.new.export_task(context, :start, :destination => destination, :replace => replace)
+    # `location` is `{"id" => ..., "replace" => true, "expected_destination" => ...}`: a destination the
+    # user approved, never a path (ph_composer.locations.list).
+    def start_export(context:, location:)
+      Dispatch.new.export_task(context, :start, :location => location)
     end
 
-    def export_preflight(context:)
-      Dispatch.new.export_preflight(context)
+    # `location`, an approved destination's id, adds what that destination holds to the result.
+    def export_preflight(context:, location: nil)
+      Dispatch.new.export_preflight(context, location)
     end
 
     def export_status(context:, task_id:)

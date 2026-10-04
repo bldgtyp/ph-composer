@@ -1816,6 +1816,7 @@ Every operation answers the codes of its kind's set besides its own, and an oper
 | `setup_command` | `request.malformed`, `request.api_version`, `request.capability_denied`, `session.unknown`, `session.busy`, `params.invalid`, `operation.failed` |
 | `file_export` | `request.malformed`, `request.api_version`, `request.capability_denied`, `session.unknown`, `session.busy`, `params.invalid`, `operation.failed` |
 | `approval` | `access.user_required`, `request.cancelled` |
+| `location` | `location.unknown`, `location.revoked`, `location.used`, `location.kind_mismatch`, `location.unavailable`, `location.setup_unreadable`, `location.setup_unavailable` |
 
 ## Queries
 
@@ -4351,7 +4352,7 @@ Example params:
 
 Review local library export counts and omissions. Owner: `ph_composer.library`.
 
-Refuses: `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.kind_unavailable`, `record.unreadable`, `target.not_found`, and the `query` common set.
+Refuses: `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.destination_invalid`, `library.export_write_failed`, `library.kind_unavailable`, `location.kind_mismatch`, `location.revoked`, `location.setup_unavailable`, `location.setup_unreadable`, `location.unavailable`, `location.unknown`, `location.used`, `record.unreadable`, `target.not_found`, and the `query` common set.
 
 Params:
 
@@ -4400,6 +4401,11 @@ Params:
       },
       "minItems": 1,
       "description": "With scope selected: the records to export, each by record kind and id."
+    },
+    "location": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The id of an approved save destination, to report what it holds now."
     }
   }
 }
@@ -4491,6 +4497,26 @@ Result:
     "revision": {
       "type": "integer",
       "minimum": 0
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "state"
+      ],
+      "properties": {
+        "exists": {
+          "type": "boolean"
+        },
+        "state": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "description": "With location: whether the approved destination holds a file, and its state. Pass state as the location's expected_destination to replace it."
     }
   }
 }
@@ -5018,6 +5044,105 @@ Result:
         "unreadable"
       ],
       "description": "unreadable when the stored setup fails to parse or validate; nothing stored yet is readable."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.locations.list`
+
+The locations the user approved on this machine, by id and label, and whether each is still there. Never carries a path or a file name. Owner: `ph_composer.locations`.
+
+Refuses: `location.setup_unavailable`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "state",
+    "locations"
+  ],
+  "properties": {
+    "state": {
+      "type": "string",
+      "enum": [
+        "readable",
+        "unreadable"
+      ],
+      "description": "unreadable when the stored approvals fail to parse; approving refuses until reset."
+    },
+    "locations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "use",
+          "approved_at",
+          "last_used_at",
+          "available"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "save_file",
+              "open_file",
+              "open_folder"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string",
+            "enum": [
+              "reusable",
+              "single"
+            ],
+            "description": "reusable until revoked, or single: used by one completed operation."
+          },
+          "approved_at": {
+            "type": "string"
+          },
+          "last_used_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "available": {
+            "type": "boolean",
+            "description": "Whether the location is still there as approved."
+          }
+        }
+      }
     }
   }
 }
@@ -36683,9 +36808,9 @@ Example params:
 
 Add a library file the user chooses in a native picker to this machine's libraries. Owner: `ph_composer.library`.
 
-Needs the user: the panel or menu asks for a file first; any other caller is refused with `access.user_required`.
+Needs the user: the panel or menu asks for a file first. Any other caller passes `location`, the id of a location the user approved, or is refused with `access.user_required`.
 
-Refuses: `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.schema_unsupported`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` common sets.
+Refuses: `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.schema_unsupported`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` and `location` common sets.
 
 Params:
 
@@ -36694,7 +36819,23 @@ Params:
   "type": "object",
   "additionalProperties": false,
   "required": [],
-  "properties": {}
+  "properties": {
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The id of a location the user approved, from ph_composer.locations.list."
+        }
+      },
+      "description": "An approved location to use instead of asking the user. A native client asks instead."
+    }
+  }
 }
 ```
 
@@ -36736,9 +36877,9 @@ Example params:
 
 Add a folder of library files the user chooses in a native picker to this machine's libraries. Owner: `ph_composer.library`.
 
-Needs the user: the panel or menu asks for a folder first; any other caller is refused with `access.user_required`.
+Needs the user: the panel or menu asks for a folder first. Any other caller passes `location`, the id of a location the user approved, or is refused with `access.user_required`.
 
-Refuses: `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.file_too_large`, `library.file_unreadable`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` common sets.
+Refuses: `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.file_too_large`, `library.file_unreadable`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` and `location` common sets.
 
 Params:
 
@@ -36747,7 +36888,23 @@ Params:
   "type": "object",
   "additionalProperties": false,
   "required": [],
-  "properties": {}
+  "properties": {
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The id of a location the user approved, from ph_composer.locations.list."
+        }
+      },
+      "description": "An approved location to use instead of asking the user. A native client asks instead."
+    }
+  }
 }
 ```
 
@@ -36897,6 +37054,559 @@ Example params:
 {}
 ```
 
+### `ph_composer.locations.approve_destination`
+
+Approve a save destination the user chooses in the native save dialog, so a caller with the export grant can export to it by location id until it is revoked. Owner: `ph_composer.locations`.
+
+Needs the user: the panel or menu asks for a destination file and keeps it as an approved location; any other caller is refused with `access.user_required`.
+
+Refuses: `location.setup_unavailable`, `location.setup_unreadable`, and the `setup_command` and `approval` common sets.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "The name the user sees for this location. Defaults to Export destination, Library file or Library folder and a number; never the file name."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "use",
+    "approved_at",
+    "last_used_at",
+    "available"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "save_file",
+        "open_file",
+        "open_folder"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "use": {
+      "type": "string",
+      "enum": [
+        "reusable",
+        "single"
+      ],
+      "description": "reusable until revoked, or single: used by one completed operation."
+    },
+    "approved_at": {
+      "type": "string"
+    },
+    "last_used_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "available": {
+      "type": "boolean",
+      "description": "Whether the location is still there as approved."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "label": "Project library"
+}
+```
+
+### `ph_composer.locations.approve_file`
+
+Approve a library file the user chooses in a native picker, so a caller with the setup grant can add it once by location id. Owner: `ph_composer.locations`.
+
+Needs the user: the panel or menu asks for a file and keeps it as an approved location; any other caller is refused with `access.user_required`.
+
+Refuses: `location.setup_unavailable`, `location.setup_unreadable`, and the `setup_command` and `approval` common sets.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "The name the user sees for this location. Defaults to Export destination, Library file or Library folder and a number; never the file name."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "use",
+    "approved_at",
+    "last_used_at",
+    "available"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "save_file",
+        "open_file",
+        "open_folder"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "use": {
+      "type": "string",
+      "enum": [
+        "reusable",
+        "single"
+      ],
+      "description": "reusable until revoked, or single: used by one completed operation."
+    },
+    "approved_at": {
+      "type": "string"
+    },
+    "last_used_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "available": {
+      "type": "boolean",
+      "description": "Whether the location is still there as approved."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "label": "Project library"
+}
+```
+
+### `ph_composer.locations.approve_folder`
+
+Approve a folder of library files the user chooses in a native picker, so a caller with the setup grant can add it once by location id. Owner: `ph_composer.locations`.
+
+Needs the user: the panel or menu asks for a folder and keeps it as an approved location; any other caller is refused with `access.user_required`.
+
+Refuses: `location.setup_unavailable`, `location.setup_unreadable`, and the `setup_command` and `approval` common sets.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "The name the user sees for this location. Defaults to Export destination, Library file or Library folder and a number; never the file name."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "use",
+    "approved_at",
+    "last_used_at",
+    "available"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "save_file",
+        "open_file",
+        "open_folder"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "use": {
+      "type": "string",
+      "enum": [
+        "reusable",
+        "single"
+      ],
+      "description": "reusable until revoked, or single: used by one completed operation."
+    },
+    "approved_at": {
+      "type": "string"
+    },
+    "last_used_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "available": {
+      "type": "boolean",
+      "description": "Whether the location is still there as approved."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "label": "Project library"
+}
+```
+
+### `ph_composer.locations.rename`
+
+Rename an approved location. Owner: `ph_composer.locations`.
+
+Refuses: `location.revoked`, `location.setup_unavailable`, `location.setup_unreadable`, `location.unknown`, `location.used`, and the `setup_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "label"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The location id from list or an approve command."
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "The name the user sees for this location. Defaults to Export destination, Library file or Library folder and a number; never the file name."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "use",
+    "approved_at",
+    "last_used_at",
+    "available"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "save_file",
+        "open_file",
+        "open_folder"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "use": {
+      "type": "string",
+      "enum": [
+        "reusable",
+        "single"
+      ],
+      "description": "reusable until revoked, or single: used by one completed operation."
+    },
+    "approved_at": {
+      "type": "string"
+    },
+    "last_used_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "available": {
+      "type": "boolean",
+      "description": "Whether the location is still there as approved."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "id": "location_AAAAAAAAAAAA",
+  "label": "Project library"
+}
+```
+
+### `ph_composer.locations.reset`
+
+Clear this machine's approved locations when list reports them unreadable. A readable store is left unchanged. Owner: `ph_composer.locations`.
+
+Refuses: `location.setup_unavailable`, and the `setup_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "kind",
+      "label",
+      "use",
+      "approved_at",
+      "last_used_at",
+      "available"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "save_file",
+          "open_file",
+          "open_folder"
+        ]
+      },
+      "label": {
+        "type": "string"
+      },
+      "use": {
+        "type": "string",
+        "enum": [
+          "reusable",
+          "single"
+        ],
+        "description": "reusable until revoked, or single: used by one completed operation."
+      },
+      "approved_at": {
+        "type": "string"
+      },
+      "last_used_at": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "available": {
+        "type": "boolean",
+        "description": "Whether the location is still there as approved."
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.locations.revoke`
+
+Revoke an approved location. It stays refused as location.revoked. Owner: `ph_composer.locations`.
+
+Refuses: `location.revoked`, `location.setup_unavailable`, `location.setup_unreadable`, `location.unknown`, `location.used`, and the `setup_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The location id from list or an approve command."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "kind",
+      "label",
+      "use",
+      "approved_at",
+      "last_used_at",
+      "available"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "save_file",
+          "open_file",
+          "open_folder"
+        ]
+      },
+      "label": {
+        "type": "string"
+      },
+      "use": {
+        "type": "string",
+        "enum": [
+          "reusable",
+          "single"
+        ],
+        "description": "reusable until revoked, or single: used by one completed operation."
+      },
+      "approved_at": {
+        "type": "string"
+      },
+      "last_used_at": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "available": {
+        "type": "boolean",
+        "description": "Whether the location is still there as approved."
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "id": "location_AAAAAAAAAAAA"
+}
+```
+
 ## File exports
 
 Called with a context granted `export`.
@@ -36905,9 +37615,9 @@ Called with a context granted `export`.
 
 Write local definitions to a library file the user chooses in the native save dialog; export_preview shows what it will hold. Owner: `ph_composer.library`.
 
-Needs the user: the panel or menu asks for a destination file first; any other caller is refused with `access.user_required`.
+Needs the user: the panel or menu asks for a destination file first. Any other caller passes `location`, the id of a location the user approved, or is refused with `access.user_required`.
 
-Refuses: `export.replace_required`, `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.format_invalid`, `library.kind_unavailable`, `library.schema_unsupported`, `library.update_destination_invalid`, `library.update_destination_required`, `record.unreadable`, `revision.stale`, `target.not_found`, and the `file_export` and `approval` common sets.
+Refuses: `export.replace_required`, `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.format_invalid`, `library.kind_unavailable`, `library.schema_unsupported`, `library.update_destination_invalid`, `library.update_destination_required`, `record.unreadable`, `revision.stale`, `target.not_found`, and the `file_export` and `approval` and `location` common sets.
 
 Params:
 
@@ -36974,6 +37684,35 @@ Params:
       "type": "integer",
       "minimum": 0,
       "description": "The Model revision export_preview reported; refused if the Model changed since."
+    },
+    "projection_digest": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The projection_digest export_preview reported; refused if what would be written differs. Required to replace a file at an approved location."
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The id of a location the user approved, from ph_composer.locations.list."
+        },
+        "replace": {
+          "type": "boolean",
+          "description": "Consent to replace what the destination holds. Needs expected_destination."
+        },
+        "expected_destination": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The destination state a preview reported, so a destination that changed since is refused."
+        }
+      },
+      "description": "An approved location to use instead of asking the user. A native client asks instead."
     }
   }
 }
@@ -37117,7 +37856,13 @@ Keyword arguments besides context:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {}
+  "properties": {
+    "location": {
+      "type": "string",
+      "minLength": 1,
+      "description": "An approved destination's id, to report what it holds now."
+    }
+  }
 }
 ```
 
@@ -37215,6 +37960,26 @@ Result value:
           }
         }
       }
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "state"
+      ],
+      "description": "With location: whether the pair exists and its state. Pass state as the location's expected_destination to replace it.",
+      "properties": {
+        "exists": {
+          "type": "boolean"
+        },
+        "state": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     }
   }
 }
@@ -37226,9 +37991,17 @@ Example arguments:
 {}
 ```
 
+Example arguments:
+
+```json
+{
+  "location": "location_AAAAAAAAAAAA"
+}
+```
+
 ### `PhComposer::API.start_export`
 
-Start one export of the canonical HBJSON and its report to an explicit destination. An existing pair is replaced only with replace true; one task runs per Model at a time. Needs `export`.
+Start one export of the canonical HBJSON and its report to a destination the user approved (ph_composer.locations.approve_destination). An existing pair is replaced only with replace and the expected_destination export_preflight reported; one task runs per Model at a time. Needs `export`.
 
 Keyword arguments besides context:
 
@@ -37237,17 +38010,32 @@ Keyword arguments besides context:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "destination"
+    "location"
   ],
   "properties": {
-    "destination": {
-      "type": "string",
-      "minLength": 1,
-      "description": "The .hbjson path; the report is written beside it."
-    },
-    "replace": {
-      "type": "boolean",
-      "description": "Consent to replace an existing pair."
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The id of a location the user approved, from ph_composer.locations.list."
+        },
+        "replace": {
+          "type": "boolean",
+          "description": "Consent to replace what the destination holds. Needs expected_destination."
+        },
+        "expected_destination": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The destination state a preview reported, so a destination that changed since is refused."
+        }
+      },
+      "description": "An approved location to use instead of asking the user. A native client asks instead."
     }
   }
 }
@@ -37334,7 +38122,7 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and the two artifact paths written."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
         },
         "affected": {
           "type": "array"
@@ -37364,8 +38152,9 @@ Example arguments:
 
 ```json
 {
-  "destination": "/path/to/model.hbjson",
-  "replace": false
+  "location": {
+    "id": "location_AAAAAAAAAAAA"
+  }
 }
 ```
 
@@ -37472,7 +38261,7 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and the two artifact paths written."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
         },
         "affected": {
           "type": "array"
@@ -37609,7 +38398,7 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and the two artifact paths written."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
         },
         "affected": {
           "type": "array"
@@ -37741,7 +38530,7 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and the two artifact paths written."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
         },
         "affected": {
           "type": "array"

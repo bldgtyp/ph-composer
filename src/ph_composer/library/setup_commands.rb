@@ -40,7 +40,8 @@ module PhComposer
                                 :params => Library.object({}), :result => result, :examples => [{}],
                                 :approval => approval) do |request|
             kinds, adapters = kind_adapters(request.registry)
-            value = add_path(request.approval.path, :kinds => kinds, :adapters => adapters)
+            value = add_path(request.approval.path, :kinds => kinds, :adapters => adapters,
+                                                    :fallback => request.approval.label)
             refresh_sessions
             value
           end
@@ -120,15 +121,19 @@ module PhComposer
         [adapters.map(&:wire_kind), ->(kind) { adapters.find { |adapter| adapter.wire_kind == kind } }]
       end
 
-      def add_path(path, kinds:, adapters:)
-        label = public_label(path, :kinds => kinds, :adapters => adapters)
+      # `fallback` is the label of the approved location the path came from, if any.
+      def add_path(path, kinds:, adapters:, fallback: nil)
+        fallback ||= "Library folder #{Setup.load.length + 1}"
+        label = public_label(path, :kinds => kinds, :adapters => adapters, :fallback => fallback)
         Setup.add_file(:id => Records::Identity.mint("library"), :label => label, :path => path)
       rescue SystemCallError, IOError, EncodingError
         raise Error.new("library.file_unreadable",
                         "The selected library file or folder could not be read."), :cause => nil
       end
 
-      def public_label(path, kinds:, adapters:)
+      # A library file's own name, or for a folder that does not hold exactly one library, `fallback`:
+      # never the folder's name, which a public result must not carry.
+      def public_label(path, kinds:, adapters:, fallback:)
         if File.directory?(path)
           # FileProvider owns aggregate bounds and skips unrelated malformed candidate files.
           provider = FileProvider.new(:id => "validation", :label => "Library", :path => path,
@@ -138,12 +143,12 @@ module PhComposer
             File.extname(name).downcase == ".json" &&
               File.file?(File.join(path, name))
           }
-          return File.basename(path) unless files.length == 1
+          return fallback unless files.length == 1
 
           begin
             return file_label(File.join(path, files.first), adapters)
           rescue Error
-            return File.basename(path)
+            return fallback
           end
         end
         file_label(path, adapters)

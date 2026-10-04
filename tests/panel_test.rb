@@ -456,7 +456,7 @@ class PanelTest < PhComposerTestCase
       end
       PhComposer::API.stub(:export_preflight, ->(**) { preflights.shift }) do
         PhComposer::API.stub(:invoke, invoke) do
-          PhComposer::API.stub(:start_export, ->(**) { flunk "Task started despite post-Solve blocker" }) do
+          PhComposer::Export::Tasks.stub(:for, ->(*) { flunk "Task started despite post-Solve blocker" }) do
             send_message(dialog, "export.start", "request_id" => "repair", "session" => @session.id,
                                                  "repairs" => ["solve"])
           end

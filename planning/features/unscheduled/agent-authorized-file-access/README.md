@@ -1,9 +1,10 @@
 # Agent-authorized file access for library export and setup
 
 DATE: 2026-10-01
-STATUS: Scoped 2026-10-02: [PLAN.md](PLAN.md); Ed decided D1 to D6 the same day. Deferred from the
-Phase 2 review by Ed on 2026-10-01; must be delivered before any claim that users' agents can manage
-libraries.
+STATUS: Implemented on branch `feature/agent-authorized-file-access` 2026-10-03, Phases 1 to 7 per
+[PLAN.md](PLAN.md), "Delivery"; the real-host gate passed the same day
+([evidence](evidence/host-gate-2026-10-03.md)). In review as PR #70. Scoped 2026-10-02, Ed decided D1 to
+D6 the same day. Must be delivered before any claim that users' agents can manage libraries.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/36
 
@@ -68,5 +69,5 @@ in any result or log.
 The limitation paragraph added to `context/AGENT_INTERFACE.md` by R03 item A is removed in the same
 change.
 
-Next step: schedule and authorize implementation. Under D1 this packet no longer waits for the agent
-connection packet.
+Next step: review and merge PR #70, then archive this packet. Under D1 this packet no longer waits
+for the agent connection packet.

@@ -113,6 +113,10 @@ module PhComposer
           check_examples(operation)
           problem(operation, "needs a callable handler") unless operation.handler.respond_to?(:call)
           check_approval(operation) if operation.respond_to?(:approval)
+          if operation.respond_to?(:precondition) && !(operation.precondition.nil? ||
+                                                        operation.precondition.respond_to?(:call))
+            problem(operation, "precondition must be callable")
+          end
         end
         @staging.declared_file_exports.each do |operation|
           %i[params result].each do |part|
@@ -132,10 +136,18 @@ module PhComposer
       def check_approval(operation)
         approval = operation.approval
         return if approval.nil?
-        return if approval.is_a?(Declarations::Approval) && Declarations::Approval::KINDS.include?(approval.kind) &&
-                  text?(approval.title)
+        unless approval.is_a?(Declarations::Approval) && Declarations::Approval::KINDS.include?(approval.kind) &&
+               text?(approval.title)
+          return problem(operation, "approval must be a Declarations::Approval of a known kind with a title")
+        end
 
-        problem(operation, "approval must be a Declarations::Approval of a known kind with a title")
+        params = operation.params.is_a?(Hash) ? operation.params : {}
+        declared = params["properties"].is_a?(Hash) ? params["properties"]["location"] : nil
+        return if declared == (approval.standing ? nil : ApprovedLocations.param(approval.kind)) &&
+                  !Array(params["required"]).include?("location")
+
+        problem(operation, "params must be an object whose properties leave location to registration, which " \
+                           "adds it for an approval")
       end
 
       # Every example is plain JSON that its params accept. An operation whose params accept `{}` may

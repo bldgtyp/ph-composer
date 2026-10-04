@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "digest"
 require "json"
 require "securerandom"
 
@@ -273,6 +274,15 @@ module PhComposer
         Transaction.new(hbjson_path, :run_id => "check").incomplete_prior_pair? ? INCOMPLETE : nil
       rescue PairError => error
         error.message
+      end
+
+      # What the pair at `hbjson_path` holds now, as export_preflight reports it and a replacement
+      # consent names it: one SHA-256 over the HBJSON's and the report's, or nil when neither exists.
+      def state(hbjson_path)
+        digests = [hbjson_path, report_path(hbjson_path)].map do |path|
+          File.file?(path) ? Digest::SHA256.file(path).hexdigest : ""
+        end
+        digests.all?(&:empty?) ? nil : Digest::SHA256.hexdigest(digests.join(":"))
       end
 
       def report_path(hbjson_path)

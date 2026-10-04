@@ -5,8 +5,8 @@ module PhComposer
   # declares `refuses`, the codes its handler and the dependencies it calls can answer with an outcome
   # that is not `completed`. COMMON holds the codes dispatch answers for every operation of a kind,
   # whatever its handler does, so no operation repeats them. An operation that declares an `approval`
-  # also answers the "approval" set. `discover` publishes the sets once and `describe` names the sets
-  # one operation answers.
+  # also answers the "approval" set, and the "location" set when an approved location may answer it.
+  # `discover` publishes the sets once and `describe` names the sets one operation answers.
   module Refusals
     ANY_OPERATION = %w[request.malformed request.api_version request.capability_denied session.unknown session.busy
                        params.invalid operation.failed].freeze
@@ -17,7 +17,9 @@ module PhComposer
       "view_command" => ANY_OPERATION,
       "setup_command" => ANY_OPERATION,
       "file_export" => ANY_OPERATION,
-      "approval" => %w[access.user_required request.cancelled].freeze
+      "approval" => %w[access.user_required request.cancelled].freeze,
+      "location" => %w[location.unknown location.revoked location.used location.kind_mismatch location.unavailable
+                       location.setup_unreadable location.setup_unavailable].freeze
     }.freeze
     # Codes no handler raises: an unknown name never reaches one, and only dispatch or a native client
     # answers for an approval. An operation's `refuses` never lists them.
@@ -41,7 +43,9 @@ module PhComposer
     # The names of the COMMON sets one operation answers.
     def common_sets(declaration)
       sets = [Declarations::OPERATION_KINDS.fetch(declaration.class)]
-      sets << "approval" if declaration.respond_to?(:approval) && declaration.approval
+      approval = declaration.respond_to?(:approval) && declaration.approval
+      sets << "approval" if approval
+      sets << "location" if approval && !approval.standing
       sets
     end
 

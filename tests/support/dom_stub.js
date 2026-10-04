@@ -94,6 +94,7 @@ function element(tag, attributes) {
       this.dispatchEvent({ type: "blur", target: this });
     },
     select: function () { this.selectionStart = 0; this.selectionEnd = String(this.value).length; },
+    setSelectionRange: function (start, end) { this.selectionStart = start; this.selectionEnd = end; },
     dispatchEvent: dispatchEvent,
     addEventListener: addEventListener, removeEventListener: removeEventListener,
     /* A node has one parent: appending one that is already somewhere else moves it, as the DOM

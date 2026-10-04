@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "digest"
 require "securerandom"
 
 module PhComposer
@@ -8,19 +7,22 @@ module PhComposer
     # One read-only export, owned by its Model session rather than by a panel or caller connection.
     # Timer boundaries admit cancellation and recheck content generation; Python returns asynchronously.
     class Task
+      PAIR_FAILED = "The HBJSON and Export report could not be written. The destination was left as it was."
+
       attr_reader :id, :finished_at
 
-      def initialize(session, destination:, replace:, runtime_factory: nil)
+      # `approval` is the NativeApproval::Granted for the destination: from the native Save sheet, or
+      # resolved from an approved location, whose id and label the completed outcome names instead of
+      # a path.
+      def initialize(session, approval:, runtime_factory: nil)
         @session = session
         @id = "export_#{SecureRandom.hex(12)}"
-        @destination = File.expand_path(destination)
+        @destination = File.expand_path(approval.path)
+        @location = approval.location_id && { "id" => approval.location_id, "label" => approval.label }
         @pair = ArtifactPair::Transaction.new(@destination, :run_id => id)
-        @pair.recover
-        if !replace && [@destination, @pair.report_path].any? { |path| File.exist?(path) }
-          raise Blocked.new("export.replace_required", "Confirm replacement of the existing HBJSON/report pair.")
-        end
-
-        @prior = artifact_fingerprint
+        pair_step { @pair.recover }
+        @prior = ArtifactPair.state(@destination)
+        consent!(approval) if @prior
         @runtime_factory = runtime_factory || ->(&callback) {
           RuntimeHost.new(:session_id => session.id,
                           :on_message => callback)
@@ -122,17 +124,19 @@ module PhComposer
         return if terminal?
 
         coherent!
-        if artifact_fingerprint != @prior
+        if ArtifactPair.state(@destination) != @prior
           raise Blocked.new("export.destination_changed",
                             "The destination pair changed during export. Choose it again.")
         end
         html = Report.render(@result, :display_units => @units)
         coherent!
         @stage = "writing"
-        pair = @pair.commit(@result.fetch("canonical_model").fetch("hbjson"), html)
+        pair_step { @pair.commit(@result.fetch("canonical_model").fetch("hbjson"), html) }
+        ApprovedLocations.mark_used(@location.fetch("id")) if @location
+        value = { "result" => compact_result(@result) }
+        value["location"] = @location if @location
         finish(Outcome.build("completed", "export.complete", "HBJSON and Export report created.", "none",
-                             @session.revision, :value => { "result" => compact_result(@result),
-                                                            "artifacts" => [pair.hbjson_path, pair.report_path] }))
+                             @session.revision, :value => value))
       rescue StandardError => error
         failed(error)
       end
@@ -159,8 +163,33 @@ module PhComposer
         failed(error) unless terminal?
       end
 
-      def artifact_fingerprint
-        [@destination, @pair.report_path].map { |path| File.file?(path) ? Digest::SHA256.file(path).hexdigest : nil }
+      # A pair error can carry the filesystem's own message, which names the destination; the outcome
+      # says what failed in fixed words and the log keeps the error class. Half a prior pair keeps its
+      # own fixed message, since the user must act on it.
+      def pair_step
+        yield
+      rescue ArtifactPair::IncompletePriorPairError
+        raise
+      rescue ArtifactPair::PairError => error
+        Diagnostics.exception("export_pair", error)
+        raise Blocked.new("export.failed", PAIR_FAILED), :cause => nil
+      end
+
+      # Replacing a pair needs consent. The native Save sheet gives it against the pair as it is now; an
+      # approved location gives it against the state export_preflight reported.
+      def consent!(approval)
+        unless approval.replace
+          raise Blocked.new("export.replace_required", "Confirm replacement of the existing HBJSON/report pair.")
+        end
+        return unless approval.location_id
+
+        unless approval.state
+          raise Blocked.new("export.replace_required", "Replacing the pair at an approved location needs the " \
+                                                       "expected_destination export_preflight reported.")
+        end
+        return if approval.state == @prior
+
+        raise Blocked.new("export.destination_changed", "The destination pair changed after review. Preflight again.")
       end
 
       def failed(error)

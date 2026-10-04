@@ -15,19 +15,31 @@ module PhComposer
 
       module_function
 
-      def run(request)
+      # What can refuse before a destination is chosen (Declarations::FileExport): dispatch runs it
+      # before the native save dialog opens and again before `run`.
+      def precondition(request)
         if request.params.key?("expected_revision") && request.params["expected_revision"] != request.session.revision
           raise Error.new("revision.stale", "The Model changed since the library export was requested.")
         end
-        if request.params.key?("library_name") && request.params.fetch("library_name").strip.empty?
-          raise Error.new("params.invalid", "The library name must not be blank.")
+        return unless request.params.key?("library_name") && request.params.fetch("library_name").strip.empty?
+
+        raise Error.new("params.invalid", "The library name must not be blank.")
+      end
+
+      def run(request)
+        before = ExportProjection.build(request)
+        reviewed = request.params["projection_digest"]
+        if reviewed && reviewed != before.fetch("projection_digest")
+          raise Error.new("revision.stale", "What export_preview reviewed is not what would be written. Preview again.")
         end
 
-        before = ExportProjection.build(request)
-        writer = FileWriter.new(request.approval.path)
-        if writer.replaces? && !request.approval.replace
-          raise Error.new("export.replace_required", "The destination exists and was not approved for replacement.")
+        # Both routes can name any file; a library is only ever written to a .json one.
+        unless File.extname(request.approval.path.to_s).casecmp?(".json")
+          raise Error.new("library.destination_invalid", "Choose a .json library file destination.")
         end
+
+        writer = FileWriter.new(request.approval.path)
+        consent!(writer, request)
 
         identity = request.params.fetch("identity", "new")
         library = if identity == "update"
@@ -50,6 +62,27 @@ module PhComposer
                                                                  "identity" => identity, "written" => true)
       rescue SystemCallError, IOError, EncodingError
         raise Error.new("library.export_write_failed", "The library file could not be written."), :cause => nil
+      end
+
+      # Replacing a file needs consent. The native Save sheet gives it against the file as it is now; an
+      # approved location gives it against the destination state and projection export_preview reported,
+      # so a file or a Model that changed since the caller's review is refused.
+      def consent!(writer, request)
+        approval = request.approval
+        return unless writer.replaces?
+        unless approval.replace
+          raise Error.new("export.replace_required", "The destination exists and was not approved for replacement.")
+        end
+        return unless approval.location_id
+
+        unless approval.state && request.params.key?("projection_digest")
+          raise Error.new("export.replace_required", "Replacing an approved destination needs the " \
+                                                     "expected_destination and projection_digest export_preview " \
+                                                     "reported.")
+        end
+        return if approval.state == writer.prior_state
+
+        raise Error.new("library.destination_changed", "The destination changed after review. Preview again.")
       end
 
       def existing(writer, request)
@@ -82,7 +115,7 @@ module PhComposer
         false
       end
 
-      private_class_method :existing, :valid_rows?
+      private_class_method :consent!, :existing, :valid_rows?
     end
   end
 end

@@ -201,9 +201,9 @@
       "sha256": "7dcad4a4223ea65c1127cef7947db9a5be9d461b48e38f3ecb07554309ea9911"
     },
     "html/index.html": {
-      "bytes": 5875,
+      "bytes": 5924,
       "mime": "text/html; charset=utf-8",
-      "sha256": "c1ec7f16209e05bd68e9e6eb3e3c0f9a3fb88bc2f03826dbdd9121bc35c5f0d1"
+      "sha256": "abe43293443c1721c4d5285dc780c6c51375913d5a237fe7ca633a194815e34b"
     },
     "html/inventory.js": {
       "bytes": 9047,
@@ -241,14 +241,19 @@
       "sha256": "02f17bae01c81128e32eb085d2fb7d76e1a78263acd37bc47289ac2115ce276d"
     },
     "html/library/export.js": {
-      "bytes": 6420,
+      "bytes": 6525,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "7907abe2ccda411bdf126a28a119f62c34b7198730f87f469b51a15602b813c4"
+      "sha256": "13ef1a92e40fde9b77fc0f10f79a25896202759dba15734bd76b948c2205cdf2"
     },
     "html/library/library.css": {
-      "bytes": 9651,
+      "bytes": 10048,
       "mime": "text/css; charset=utf-8",
-      "sha256": "47cf41347cfc27b5c9ce60cebd02deda33f83a18cd9124e69cc023132eddb318"
+      "sha256": "795590840449ed9c69241cb1c3c724173928b801687f1bbc42c7ef814f5e8b03"
+    },
+    "html/library/locations.js": {
+      "bytes": 7485,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "30ed032d7b894d4697a2d05b612b605b34832aa3ea1b27725b96af92cc4b5890"
     },
     "html/library/rows.js": {
       "bytes": 7745,
@@ -261,9 +266,9 @@
       "sha256": "14ee1e986ace63fac42769fa48157889e12c8e6b5c7a2f75edf85b1b81e68c21"
     },
     "html/library/setup.js": {
-      "bytes": 4900,
+      "bytes": 5285,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "40ce604b3824fe871bec98f637b8d64b7958067aa241e96f181230857e7f1f86"
+      "sha256": "e39272a6a0c0d562c9bd78ee4ab39d34d2d6b3cbbbf9ba297d0f1229b026fb7f"
     },
     "html/library/sidebar.js": {
       "bytes": 9184,
@@ -333,7 +338,7 @@
     "html/sections/export.js": {
       "bytes": 11993,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "2d1a71526e7742a81c598275e84b088fb5982712b44fd05b8feca877be7d37e3"
+      "sha256": "b23478e154e4e4ec1d2542518d5fb4dd47fee88c851b515205782b881879e44e"
     },
     "html/sections/shell.js": {
       "bytes": 758,

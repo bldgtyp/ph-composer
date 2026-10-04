@@ -27,6 +27,11 @@
     this.libraryCatalogs = JSON.parse(JSON.stringify(settings.libraryCatalogs || {}));
     this.libraryGenerations = {}; this.libraryFailures = {};
     this.librarySetupState = settings.librarySetupState || "readable";
+    this.approvedLocations = JSON.parse(JSON.stringify(settings.approvedLocations || [
+      { id: "location_PreviewDest01", kind: "save_file", label: "Library export", use: "reusable",
+        approved_at: "2026-10-01T09:00:00Z", last_used_at: "2026-10-02T15:30:00Z", available: true },
+      { id: "location_PreviewFold01", kind: "open_folder", label: "Office library folder", use: "single",
+        approved_at: "2026-10-02T10:00:00Z", last_used_at: null, available: false }]));
     this.windows = JSON.parse(JSON.stringify(settings.windows || {}));
     this.session = "preview-session";
     this.revision = 1;
@@ -62,6 +67,8 @@
       sections: {
         ["ph_composer.library.provider_catalogs"]: { status: "completed", value: this.libraryMetadata() },
         ["ph_composer.library.provider_setup"]: { status: "completed", value: { state: this.librarySetupState } },
+        ["ph_composer.locations.approved"]: { status: "completed",
+          value: { state: "readable", locations: JSON.parse(JSON.stringify(this.approvedLocations)) } },
         [SETTINGS]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.zoneSettings)) },
         [PARTS]: { status: "completed", code: "ok", revision: this.revision,
@@ -703,7 +710,31 @@
         fields: ["source"], reason: "fields_not_in_wire_schema" };
     }));
   };
+  /* There is no native dialog here, so an approval adds a synthetic location under its default label. */
+  Host.prototype.approvedLocation = function (payload) {
+    var params = payload.params, verb = payload.name.split(".").pop(), value;
+    var kinds = { approve_destination: ["save_file", "Export destination"], approve_file: ["open_file", "Library file"],
+      approve_folder: ["open_folder", "Library folder"] };
+    if (kinds[verb]) {
+      value = { id: "location_Preview" + String(++this.sequence).padStart(5, "0"), kind: kinds[verb][0],
+        label: params.label || kinds[verb][1] + " " + (this.approvedLocations.length + 1),
+        use: verb === "approve_destination" ? "reusable" : "single", approved_at: new Date().toISOString(),
+        last_used_at: null, available: true };
+      this.approvedLocations.push(value);
+    }
+    this.approvedLocations.forEach(function (row) {
+      if (verb === "rename" && row.id === params.id) row.label = params.label;
+    });
+    if (verb === "revoke") {
+      this.approvedLocations = this.approvedLocations.filter(function (row) { return row.id !== params.id; });
+    }
+    this.snapshot();
+    this.publish("setup.result", { request_id: payload.request_id, session: payload.session, outcome: {
+      status: "completed", effect: "none", revision: this.revision, value: value || this.approvedLocations } });
+  };
+
   Host.prototype.librarySetup = function (payload) {
+    if (payload.name.indexOf("ph_composer.locations.") === 0) return this.approvedLocation(payload);
     var params = payload.params, verb = payload.name.split(".").pop();
     if (verb === "remove") this.libraryProviders = this.libraryProviders.filter(function (row) {
       return row.id !== params.provider_id;

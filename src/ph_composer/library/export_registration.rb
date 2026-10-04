@@ -25,8 +25,11 @@ module PhComposer
                                                     "library, or to the replaced file's name for update."),
           "expected_revision" => Library.described({ "type" => "integer", "minimum" => 0 },
                                                    "The Model revision export_preview reported; refused if the " \
-                                                   "Model changed since.")
-        }, :optional => %w[scope identity kinds records library_name expected_revision])
+                                                   "Model changed since."),
+          "projection_digest" => Library.described(text, "The projection_digest export_preview reported; refused " \
+                                                         "if what would be written differs. Required to replace a " \
+                                                         "file at an approved location.")
+        }, :optional => %w[scope identity kinds records library_name expected_revision projection_digest])
       end
 
       def summary_fields
@@ -51,6 +54,7 @@ module PhComposer
                                             "native save dialog; export_preview shows what it will hold.",
                             :refuses => Refuses::EXPORT_FILE,
                             :params => params, :result => shape, :approval => ExportWorkflow::APPROVAL,
+                            :precondition => ExportWorkflow.method(:precondition),
                             :examples => [{}, { "scope" => "selected", "records" => [
                                                                          { "record_kind" => "example_parts",
                                                                            "id" => "part_AAAAAAAAAAAA" }
@@ -58,20 +62,37 @@ module PhComposer
                                                 "identity" => "new" }]) do |request|
           ExportWorkflow.run(request)
         end
+        install_preview(feature)
+      end
+
+      def install_preview(feature)
+        destination = Library.described(
+          Library.object({ "exists" => { "type" => "boolean" }, "state" => { "type" => %w[string null] } }),
+          "With location: whether the approved destination holds a file, and its state. Pass state as the " \
+          "location's expected_destination to replace it."
+        )
         preview_shape = Library.object(summary_fields.merge("projection_digest" => Library::TEXT,
-                                                            "revision" => {
-                                                              "type" => "integer", "minimum" => 0
-                                                            }))
-        preview_params = Library.object(params.fetch("properties").slice("scope", "kinds", "records"),
-                                        :optional => %w[scope kinds records])
+                                                            "revision" => { "type" => "integer", "minimum" => 0 },
+                                                            "destination" => destination),
+                                       :optional => ["destination"])
+        location = Library.described({ "type" => "string", "minLength" => 1 },
+                                     "The id of an approved save destination, to report what it holds now.")
+        preview_params = Library.object(params.fetch("properties").slice("scope", "kinds", "records")
+                                              .merge("location" => location),
+                                        :optional => %w[scope kinds records location])
         feature.query("#{FEATURE_ID}.export_preview",
                       :description => "Review local library export counts and omissions.",
                       :refuses => Refuses::EXPORT_PREVIEW,
                       :params => preview_params, :result => preview_shape, :examples => [{}]) do |request|
           projection = ExportProjection.build(request)
           summary = ExportProjection.summary(projection, request.registry)
-          summary.merge("projection_digest" => projection.fetch("projection_digest"),
-                        "revision" => request.session.revision)
+          value = summary.merge("projection_digest" => projection.fetch("projection_digest"),
+                                "revision" => request.session.revision)
+          next value unless request.params.key?("location")
+
+          value.merge("destination" => ApprovedLocations.observe(request.params["location"]) do |path|
+            FileWriter.state(path)
+          end)
         end
       end
     end
