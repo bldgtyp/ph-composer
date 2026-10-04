@@ -1,7 +1,7 @@
 # UI and UX refinement: status
 
 DATE: 2026-10-03
-STATUS: In progress
+STATUS: Complete. Archived 2026-10-03
 
 ## Where this stands
 
@@ -33,13 +33,15 @@ Every merged packet passed `make ci` (both Ruby versions in CI), `make ui-checks
 independent diff review, and a host check on SketchUp 26.1.188. Each plan's own outcome and host
 check sections say what was and was not covered.
 
-## Next steps, in order
+## Closed out
 
-1. **Keep the Design System in step.** Re-sync it after any kit change. Still not in it: live
-   components (the kit's scripts are not bundled) and the drawing styles of the two Builders.
-   Registering it under Claude, Settings, Design systems is Ed's step.
-2. **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
-   taken" table), as small follow-up changes.
+- **The Design System stays in step through the ui-polish skill.** Its "Design System" section holds
+  the artifact's link and the rule to re-sync after a kit change. Still not in the artifact: live
+  components (the kit's scripts are not bundled) and the drawing styles of the two Builders.
+  Registering it under Claude, Settings, Design systems is Ed's step.
+- **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
+  taken" table) is a new small change, not a reason to reopen this packet.
+- **Leftovers that are work** moved out: see "Follow-ups" below.
 
 ## Export and viewport session, 2026-10-03
 
@@ -121,39 +123,40 @@ checked again in the host with real pointer input:
 Found and left: Locate all from Export does not fill the selection inspector, the known limit for
 Faces selected from outside their Zone.
 
-## Follow-ups noted, not scheduled
+## Follow-ups
 
-- `make ci` needs a UTF-8 locale; with `LANG` unset five Ruby tests that read source files raise an
-  encoding error. One `export` in the Makefile would fix it.
+Moved to their own documents on 2026-10-03:
+
+| Follow-up | Now in |
+| --- | --- |
+| `make ci` needs a UTF-8 locale | [bugs/ci-needs-utf8-locale.md](../../bugs/ci-needs-utf8-locale.md) |
+| Faces located from outside their Zone do not reach the selection inspector; Locate on more than 250 Faces passes its ceiling | [bugs/locate-outside-zone-selection.md](../../bugs/locate-outside-zone-selection.md) |
+| Keyboard focus lost on repaint (Export header, Assembly Builder, anchor re-arm, refused New Assembly, "Show all"); the sort toggle and non-`Inventory` Library counts unannounced | [features/unscheduled/panel-keyboard-focus/](../../features/unscheduled/panel-keyboard-focus/README.md) |
+
+Closed since they were noted: Export no longer lists findings by record id (packet 8, #66), and
+`.claude/launch.json` is tracked (`3eaddaa`).
+
+Left with this packet, unscheduled. Each is small; pick one up with the screen it belongs to:
+
 - Inspector regions are created on first use, not written into `index.html`; do the static markup
   when a second pane takes an inspector. The kit does not warn when a pane's tools are never placed.
 - Under 900 wide the inspector opens beneath a tall tree, out of view.
-- The sort toggle announces no state change to a screen reader. A Library surface that is not a
-  kit `Inventory` shows no count.
-- An unclassified row sends no value guard; "Show all" drops focus to the page; Locate on more than
-  250 Faces selects past the selection inspector's ceiling.
-- Locate from outside a Zone selects its Faces while the edit path is the Model, and the selection
-  inspector does not recognise Faces selected that way ("0 Faces selected" in the snapshot). Seen in
-  the host on 2026-10-03; it predates this work.
-- Export's header is rebuilt on every repaint, so Choose destination and Cancel export lose keyboard
-  focus. Export's findings are grouped in the panel; a summary sentence per cause from Ruby would be
+- An unclassified row sends no value guard.
+- Export's findings are grouped in the panel; a summary sentence per cause from Ruby would be
   cleaner but changes the findings contract (P8-Q1). Routes finer than one tab per feature.
 - The Psi-Install Types tab still lists its records in the sidebar, because that list also sets the
-  Model default. After a refused New Assembly, keyboard focus is not returned to the button.
-- The Assembly Builder rebuilds its work surface on every repaint, so keyboard focus falls to the
-  page after any toolbar action. At 420 wide its drawing is wider than the panel at the smallest
-  zoom step and scrolls.
+  Model default.
+- At 420 wide the Assembly Builder's drawing is wider than the panel at the smallest zoom step and
+  scrolls.
 - The library sidebar opens by default at exactly 900 wide while the Window Types rail collapses
-  there. After an anchor choice re-arms a placing tool, keyboard focus falls to the page.
+  there.
 - A main tab click on a clean Installs session is refused with a notice, where a subtab click now
   leaves it. A shared Assembly that is no longer among the records reads "Choose Assembly" in the
   selection inspector while its table cell says it is missing.
-- Export lists blocking findings by record id, one row per Face (finding X1, packet 8).
 - The capture scripts live only in the gitignored screens folder. Move `crawl.cjs` and `flows.cjs`
   beside `tools/ui-preview/*_checks.cjs` if before-and-after captures are wanted per packet.
-- `.claude/launch.json` (the preview server entry for the Claude app) is untracked.
 
-## Working notes for whoever resumes
+## Working notes for the next UI pass
 
 - The rubric is `.agents/skills/ph-composer-ui-polish/SKILL.md`; its `references/patterns.md` now
   records the page header, the control row, the enum cell, the pane regions and the Zones / Faces

@@ -1,7 +1,7 @@
 # UI and UX refinement
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -13,13 +13,19 @@ unit of review is the consultant's task, not the tab.
 
 1. [FINDINGS.md](FINDINGS.md): the critique, ranked, with the evidence for each finding and the
    decisions Ed owes.
-2. [STATUS.md](STATUS.md): where the work stands, the next steps in order, and the points still open for Ed. Read this first when resuming.
+2. [STATUS.md](STATUS.md): what was delivered, the host sessions and their results, and where the leftovers went.
 3. [phases/phase-01-page-frame.md](phases/phase-01-page-frame.md): the first polish packet's plan.
 4. [phases/phase-02-table-chrome.md](phases/phase-02-table-chrome.md): the second packet's plan.
 5. [phases/phase-03-zones-faces-layout.md](phases/phase-03-zones-faces-layout.md): the third packet's plan and its four stages.
+6. Packets 4 to 8, each a plan with its outcome and host check:
+   [Installs editor](phases/phase-04-installs-editor.md),
+   [Window Types frame](phases/phase-05-window-types-frame.md),
+   [Assembly Builder](phases/phase-06-assembly-builder.md),
+   [Library](phases/phase-07-library.md),
+   [completeness](phases/phase-08-completeness.md).
 
 The rubric is `.agents/skills/ph-composer-ui-polish/SKILL.md`. The predecessor rulings are in
-[`../../../ui-baseline/README.md`](../../../ui-baseline/README.md); where a finding here
+[`../../ui-baseline/README.md`](../../ui-baseline/README.md); where a finding here
 challenges one of them it says so and waits for Ed.
 
 ## Method
@@ -34,7 +40,7 @@ challenges one of them it says so and waits for Ed.
 5. Polish packets, kit-wide first, each run with the ui-polish skill and its host check.
 6. Publish the settled kit as a Design System artifact and point the ui-polish skill at it.
 
-Steps 1 to 4 are done for the panel. Step 5 is under way: STATUS.md says which packets are merged.
+All six steps are done. The ui-polish skill's "Design System" section carries the artifact's link and the rule for keeping it in step.
 
 ## Evidence
 

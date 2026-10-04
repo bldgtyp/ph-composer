@@ -1,7 +1,7 @@
 # UI and UX refinement: findings
 
 DATE: 2026-10-03
-STATUS: Scoped; D1 to D7 ruled 2026-10-03
+STATUS: Complete. D1 to D12 ruled 2026-10-03; every packet below is merged
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 

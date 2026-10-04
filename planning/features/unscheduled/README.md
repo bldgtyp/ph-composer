@@ -15,3 +15,4 @@ requests. A packet moves into a phase directory when it is scheduled.
 | [windows-support](windows-support/README.md) | host gate | Requested |
 | [legend-hover-highlight](legend-hover-highlight/README.md) | feature | Requested |
 | [zones-entry-points](zones-entry-points/README.md) | feature | Requested |
+| [panel-keyboard-focus](panel-keyboard-focus/README.md) | feature | Requested |

@@ -17,6 +17,12 @@ Geometry first, then action: the user selects geometry and then chooses what to 
 
 The UI kit is meant for reuse by other teams. A screen pattern that only works because of one feature's data shape is a defect in the kit, not a local convenience.
 
+## Design System
+
+The settled kit is published as the [PH-Composer Design System](https://claude.ai/artifact/77GLrkZxtkxo9TksTbvodL), a Claude artifact private to the owner: the colour tokens under the panel's CSS names, the type styles, spacing and radius, the brand book and static renditions of the kit parts. The stylesheets under `src/ph_composer/html/` remain the authority; the artifact is a reading aid and may lag them. It does not hold live components or the two Builders' drawing styles.
+
+After a change to the kit (a token, a type style, a shared part or its states), re-sync the artifact from `main` in the same piece of work and say in the report that it was done, or that it was not and why.
+
 ## Establish the baseline
 
 1. Read the repository `AGENTS.md`, the active feature plan or UI spec, and any local index or instructions file governing the paths in scope.
