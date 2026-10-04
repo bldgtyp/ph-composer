@@ -1,7 +1,7 @@
 /* The Builder's toolbar and the selected Layer-Segment's anchored property editor. */
 PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/editor_shared",
-  "features/assemblies/canvas", "unit_field", "workspace"],
-  function (shared, canvas, unitFields, ui) {
+  "features/assemblies/canvas", "fields", "unit_field", "workspace"],
+  function (shared, canvas, fields, unitFields, ui) {
     "use strict";
     var el = ui.element;
     function run(owner, label, action, params, consequence) {
@@ -125,6 +125,19 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
           nested: "steel_stud_spacing_mm" });
       bubble.content.appendChild(shared.field("Steel stud spacing", spacing.root));
       bubble.content.appendChild(el("small", "muted", "One steel stud spacing per Layer. Leave blank when absent."));
+      // The Material's own values, read only here; they are edited on the Material, for every use of it.
+      var facts = el("div", "assembly-material-facts");
+      facts.appendChild(el("small", "muted", material ? material.name : "No Material assigned"));
+      if (material) [["Conductivity", "conductivity_w_mk", fields.CONDUCTIVITY],
+        ["Density", "density_kg_m3", fields.DENSITY], ["Specific heat", "specific_heat_j_kgk", fields.SPECIFIC_HEAT],
+        ["Emissivity", "emissivity", fields.FRACTION]].forEach(function (item) {
+        var row = el("div", "phc-property-row");
+        row.appendChild(el("span", "", item[0]));
+        row.appendChild(el("span", "phc-property-value", ui.blank(material[item[1]]) ? "—" :
+          shared.format(material[item[1]], item[2])));
+        facts.appendChild(row);
+      });
+      bubble.content.appendChild(facts);
       bubble.content.appendChild(ui.button("Clear Material", function () {
         self.action("segments.set_material", { layer_id: selected.layer.id, segment_id: selected.segment.id,
           material_id: null });

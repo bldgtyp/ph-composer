@@ -45,6 +45,7 @@ class ApiTest < PhComposerTestCase
     read = records(:ids => [first])
 
     assert_equal %w[completed committed], [updated.fetch("status"), updated.fetch("effect")]
+    assert_equal "Done: Edit Test Parts.", updated.fetch("message"), "a confirmation names what completed"
     assert_equal [{ "kind" => PART, "id" => first, "change" => "updated" }], updated.fetch("affected")
     assert_equal updated.fetch("revision"), read.fetch("revision")
     assert_equal 950.0, read.dig("value", "records", 0, "values", "length_mm")

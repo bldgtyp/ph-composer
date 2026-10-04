@@ -86,9 +86,11 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
     }
     /* A value on the drawing that opens its single-value bubble: the button, then the bubble with the field.
        Enter or leaving the field applies; Escape restores the value, and Escape again closes the bubble. */
-    function dimensionBubble(owner, button, title, key, dimension, extra) {
-      var bubble = new ui.Bubble(button, title, { onOpen: function () {
-        // Reopened over a draft (after a repaint), the typing stays as it was; only a fresh open selects it.
+    function dimensionBubble(owner, button, title, key, dimension, extra, hover) {
+      var bubble = new ui.Bubble(button, title, { hover: Boolean(hover), onOpen: function (opened) {
+        // A hover or a repaint's reopen shows the bubble without taking the focus or the typing; a click
+        // focuses the field, and selects its text unless a draft is already there.
+        if (!opened.openedWithFocus) return;
         dimension.field.input.focus({ preventScroll: true });
         if (!dimension.field.editing) dimension.field.input.select();
       }, guard: function () { return owner.painting ? null : owner.settleDimension(key); }, refused: owner.notice });
@@ -140,7 +142,20 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
           owner.content.appendChild(choices);
           if (entry.isMembrane) owner.content.appendChild(el("p", "muted",
             "Membranes carry no thermal resistance and are excluded from total thickness."));
-        });
+          // The Layer's one destructive action, last, confirmed when it takes Material assignments with it.
+          var only = values.layers.length === 1;
+          var assigned = entry.layer.segments.some(function (segment) { return Boolean(segment.material_id); });
+          var remove = ui.button("Delete Layer", function () {
+            owner.close(false);
+            self.remove("layers.remove", { layer_id: entry.layer.id }, "Delete Layer", assigned ?
+              "Delete this Layer and all its Layer-Segments, including their Material assignments?" : null);
+          });
+          remove.className = "phc-danger-action";
+          remove.setAttribute("data-builder-action", "layers.remove");
+          remove.disabled = only;
+          if (only) remove.title = "An Assembly keeps at least one Layer";
+          owner.content.appendChild(remove);
+        }, true);
         cell.appendChild(bubble.root);
         dimensions.appendChild(cell);
       });

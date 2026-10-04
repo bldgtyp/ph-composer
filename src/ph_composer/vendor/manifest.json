@@ -16,9 +16,9 @@
       "sha256": "ee5f63dc1e8eac11b0c01454b186e2e2952abe64d788d3f26b2a37081794ea85"
     },
     "html/features/assemblies/assembly.css": {
-      "bytes": 7948,
+      "bytes": 8171,
       "mime": "text/css; charset=utf-8",
-      "sha256": "0d47c1568b98d92e495f07de2031c9e9776155a41ad85ed12b6267a44eb7b07c"
+      "sha256": "a87fe832741c31d3f444e9e8a78fb8f984497098c36e42aefe8c70e0ee8bbc26"
     },
     "html/features/assemblies/canvas.js": {
       "bytes": 9100,
@@ -41,14 +41,14 @@
       "sha256": "4a9dba6c74d4f6e3507032dc51a357dd81aa38a5bcb8d0757147e84e57e6c935"
     },
     "html/features/assemblies/header.js": {
-      "bytes": 3819,
+      "bytes": 5584,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "f76852bd6743c15a113dc7e68a93d0d2ef0b7e0522b25e9a769fee5aaae03a1a"
+      "sha256": "0b37934bb44979c39025a0b040137f5099b6a88f878ae53b582e81ccd3474c6b"
     },
     "html/features/assemblies/inspector.js": {
-      "bytes": 8248,
+      "bytes": 9138,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "4b110fc8a6ae515c5d6394ad9f640e2d2e44662e9498c1112e337996b58ae5fc"
+      "sha256": "fbf8962ff1d7573363da76627df10606a95cbca5463c906dbbe7697eb820ec7f"
     },
     "html/features/assemblies/material_form.js": {
       "bytes": 5642,
@@ -66,9 +66,9 @@
       "sha256": "90594517a600e0e3e0eefdea286c026e4ad953c8e1271f9b0ddc52b4b983e717"
     },
     "html/features/assemblies/stage.js": {
-      "bytes": 13541,
+      "bytes": 14570,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "3ba00bc67b41c08cc0b05a1bac1ba093c2bbafa1cfac9ca153d38a1b3bd16c41"
+      "sha256": "c87283fdaf52d58054fba0fff5b7b738344f8f30d2372493903848a29b3b2562"
     },
     "html/features/windows/audit.js": {
       "bytes": 3740,
@@ -196,9 +196,9 @@
       "sha256": "2660cb7dcce7b80171d3291e2d6e73f9e38d7d1491039985a27ea160be58e2dd"
     },
     "html/icons.js": {
-      "bytes": 9980,
+      "bytes": 10068,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "26789ae37063ec506400ee62f9677d608d6c205958ff637d8e26a2be0e8b9d52"
+      "sha256": "c62872080a2939d46dd98ee82a94d5746744d369576568432454d58d5366cd64"
     },
     "html/index.html": {
       "bytes": 5924,
@@ -246,9 +246,9 @@
       "sha256": "13ef1a92e40fde9b77fc0f10f79a25896202759dba15734bd76b948c2205cdf2"
     },
     "html/library/library.css": {
-      "bytes": 11480,
+      "bytes": 11674,
       "mime": "text/css; charset=utf-8",
-      "sha256": "5755cdf84474f533b09225eb7bc5eb239856a2d762ef9c04dada20002847e7d1"
+      "sha256": "fe0f259a60f139082e67a82ece439a06fd63f0914a41050bf4e92141f3f39eed"
     },
     "html/library/locations.js": {
       "bytes": 7573,
@@ -256,9 +256,9 @@
       "sha256": "c310f8c4ab9ad1c4e90e5bff130320ed47f0579751260965fc1ee1615adbfd6d"
     },
     "html/library/rows.js": {
-      "bytes": 8307,
+      "bytes": 9575,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "00db7768b1ca5f048222c8d24a1c26384f43f7eab0f50307993cf9124612127b"
+      "sha256": "f959ba9415a2761e639d2f5a90cbd5c5775e954c3d9c9820a99f3721599f293e"
     },
     "html/library/section.js": {
       "bytes": 6183,
@@ -271,9 +271,9 @@
       "sha256": "57f47ffa44dcf599603603c8a2198104bca9c9d0fff8b86de1ec1ec66d8d87bb"
     },
     "html/library/sidebar.js": {
-      "bytes": 9395,
+      "bytes": 10254,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d34fc00cc4317cb2bdfff7438339410505339e95c37f09f921146df6124f5a9a"
+      "sha256": "5d8532e56c45eb4ed5ecaf376652a9fbfdbe7e72a832a8b4e68ea734b8dc13da"
     },
     "html/library/store.js": {
       "bytes": 7485,
@@ -291,9 +291,9 @@
       "sha256": "531b327e08f193e0e5c0d63da6370e6c756c39f5256440351e95a81aaa3fb327"
     },
     "html/overlay.js": {
-      "bytes": 21149,
+      "bytes": 21304,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "7c8e0626caadc690b75159dcf95348bc71657cdc3eb971c23c5d7020f7f4b5fb"
+      "sha256": "cd9c2f39d0edc7316dc66f56f2958368ce8a301abbdbc4b19eab8b40ad0b597a"
     },
     "html/page_header.js": {
       "bytes": 1658,

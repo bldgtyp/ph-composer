@@ -32,16 +32,49 @@ function documentOf(node) {
    default, which is what they did before this box had the key at all. */
 var DEFAULT_RECT = { left: 0, top: 0, right: 0, bottom: 30, width: 0, height: 0, x: 0, y: 0 };
 
-/* Listener registry shared by elements, the document and the test window. */
-function addEventListener(name, callback) {
+/* Listener registry shared by elements, the document and the test window. `listeners[name]` fans an
+   event out to every listener on this node, which is how most tests fire one; `dispatch` below also
+   walks the tree, for a test about which listener runs first. */
+function addEventListener(name, callback, options) {
   var current = this; if (!current.listenerLists[name]) current.listenerLists[name] = [];
   current.listenerLists[name].push(callback); current.listeners[name] = function (event) {
     current.listenerLists[name].slice().forEach(function (listener) { listener(event || {}); });
   };
+  if (!current.capturing) current.capturing = [];
+  if (options === true || (options && options.capture)) current.capturing.push(callback);
 }
 function dispatchEvent(event) {
   if (this.listeners[event.type]) this.listeners[event.type](event);
   return true;
+}
+/* An event through the tree as a browser sends it: capture listeners on each ancestor from the top down,
+   then every listener on the target in the order they were added (the host floor's Chromium 88 does not
+   put a target's capture listeners first; later versions do), then, if it bubbles, the non-capture
+   listeners on each ancestor upward. stopPropagation ends the walk after the current node;
+   stopImmediatePropagation ends it at once. Returns the event. */
+function dispatch(target, event) {
+  var path = [], node, stopped = false, halted = false;
+  for (node = target.parentNode; node; node = node.parentNode) path.unshift(node);
+  var owner = documentOf(target);
+  if (owner && path[0] !== owner && owner !== target) path.unshift(owner);
+  event.target = target;
+  event.stopPropagation = function () { stopped = true; };
+  event.stopImmediatePropagation = function () { stopped = true; halted = true; };
+  event.preventDefault = function () { event.defaultPrevented = true; };
+  function run(current, keep) {
+    (current.listenerLists && current.listenerLists[event.type] || []).slice().forEach(function (listener) {
+      if (halted || !keep(listener, current)) return;
+      event.currentTarget = current; listener(event);
+    });
+  }
+  function capture(listener, current) { return (current.capturing || []).indexOf(listener) >= 0; }
+  function bubble(listener, current) { return !capture(listener, current); }
+  path.forEach(function (current) { if (!stopped) run(current, capture); });
+  if (!stopped) run(target, function () { return true; });
+  if (event.bubbles !== false) {
+    path.slice().reverse().forEach(function (current) { if (!stopped) run(current, bubble); });
+  }
+  return event;
 }
 function removeEventListener(name, callback) {
   this.listenerLists[name] = (this.listenerLists[name] || []).filter(function (listener) {
@@ -249,7 +282,8 @@ function ClipboardEvent(type, options) {
 }
 
 module.exports = {
-  element: element, attachEvents: attachEvents, walk: walk, matches: matches, descendants: descendants,
+  element: element, attachEvents: attachEvents, dispatch: dispatch, walk: walk, matches: matches,
+  descendants: descendants,
   parseAttributes: parseAttributes, buildDocument: buildDocument, getComputedStyle: getComputedStyle,
   ClipboardEvent: ClipboardEvent, DEFAULT_RECT: DEFAULT_RECT
 };

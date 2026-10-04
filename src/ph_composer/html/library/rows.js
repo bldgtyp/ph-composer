@@ -4,6 +4,24 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
   var el = ui.element;
   var OPEN_UP_TO = 20;
   var methods = {};
+  /* The category choice lists the categories the records in hand use, by their labels, and keeps the user's
+     choice while it still names one of them. */
+  methods.paintCategories = function (categories) {
+    var adapter = this.adapter, chosen = this.category.value, seen = Object.create(null);
+    this.records.forEach(function (row) { seen[adapter.category(row)] = true; });
+    var keys = Object.keys(seen).sort(function (a, b) { return adapter.compare(a, b); });
+    var signature = keys.join("\u0000");
+    if (this.categorySignature !== signature) {
+      this.categorySignature = signature;
+      this.category.replaceChildren(ui.option("", "All categories"));
+      keys.forEach(function (key) {
+        var info = categories.filter(function (entry) { return entry.id === key; })[0];
+        this.category.appendChild(ui.option(key, info ? info.label : (key || "Uncategorized")));
+      }, this);
+    }
+    this.category.value = keys.indexOf(chosen) >= 0 ? chosen : "";
+    this.narrowing.hidden = this.narrowing.hidden || !this.records.length;
+  };
   methods.renderList = function () {
     var self = this, adapter = this.adapter, query = this.search.value.trim().toLowerCase();
     var categories = adapter.categories(this.state), grouped = Object.create(null);
@@ -11,7 +29,7 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
     var scrollTop = this.list.scrollTop;
     this.list.replaceChildren();
     var repeats = this.besideTable && !(this.store && this.store.selected);
-    this.search.hidden = this.count.hidden = repeats;
+    this.search.hidden = this.count.hidden = this.narrowing.hidden = repeats;
     if (repeats) {
       // The source select offers a library only once one is set up.
       this.list.appendChild(el("p", "muted", "These records are in the table. " +
@@ -19,8 +37,11 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
           "Choose Add a library to copy records from one.")));
       return;
     }
-    this.records.filter(function (row) { return adapter.searchText(row).toLowerCase().includes(query); })
-      .sort(function (a, b) { return adapter.compare(adapter.name(a), adapter.name(b)); })
+    this.paintCategories(categories);
+    var only = this.category.value, sign = this.order.value === "desc" ? -1 : 1;
+    this.records.filter(function (row) {
+      return adapter.searchText(row).toLowerCase().includes(query) && (!only || adapter.category(row) === only);
+    }).sort(function (a, b) { return sign * adapter.compare(adapter.name(a), adapter.name(b)); })
       .forEach(function (row) {
         var category = adapter.category(row);
         (grouped[category] || (grouped[category] = [])).push(row);
@@ -33,7 +54,7 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
       return Object.prototype.hasOwnProperty.call(self.expanded, key) ? self.expanded[key] !== false :
         shown <= OPEN_UP_TO;
     }
-    Object.keys(grouped).sort(function (a, b) { return adapter.compare(a, b); }).forEach(function (key) {
+    Object.keys(grouped).sort(function (a, b) { return sign * adapter.compare(a, b); }).forEach(function (key) {
       var info = categories.filter(function (entry) { return entry.id === key; })[0];
       var group = el("section", "library-sidebar-group");
       var heading = ui.button(info ? info.label : (key || "Uncategorized"), function () {

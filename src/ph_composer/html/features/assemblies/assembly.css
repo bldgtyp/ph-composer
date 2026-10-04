@@ -96,3 +96,6 @@
   .assembly-header-metrics { gap: 12px; }
   .assembly-selection-tools strong.assembly-selection-label { display: none; }
 }
+.assembly-material-facts { display: grid; gap: 4px; margin: 10px 0; }
+.assembly-information { align-self: center; }
+.assembly-information-notes { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }

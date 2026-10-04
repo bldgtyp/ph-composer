@@ -42,6 +42,11 @@ ISSUE: none (local planning draft)
 
 ## Follow-ups noticed, not in scope
 
+Resolved on 2026-10-04 in the follow-up PR from `feature/polish-follow-ups`, except the Design System contract
+upgrade, which an artifact made from a type cannot take (the type's publisher owns its runtime): committed
+outcomes say "Done: <undo name>."; the four Builder items below are built; the Library sidebar has a category
+choice and name order; the DOM test stub models capture, target and bubble with `dom.dispatch`.
+
 - Reword the generic "Done." outcome message per operation (D1).
 - Builder: read-only Material properties at the Layer-Segment, an Assembly information bubble, hover-open thickness bubbles, delete-layer from the dimension bubble (parity gaps 11 to 14).
 - Library sidebar category filter and sort, if search proves insufficient (D6).

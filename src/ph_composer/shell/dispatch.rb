@@ -386,9 +386,11 @@ module PhComposer
         ModelOperation.perform(session.model, action.undo_name) { proposal.apply(session.model, engine) }
         true
       end
+      # The message names what completed, by the same words the Undo menu shows, so a confirmation reads
+      # "Done: Make Zone." rather than a bare "Done.".
       Outcome.completed(:revision => session.revision, :value => value, :effect => "committed",
                         :affected => proposal.affected, :findings => proposal.findings,
-                        :proposal_digest => proposal.digest)
+                        :proposal_digest => proposal.digest, :message => "Done: #{action.undo_name}.")
     rescue StandardError => error
       effect = verified_unchanged?(session.model, engine, proposal) ? "rolled_back" : "unknown"
       Diagnostics.log("operation_failed", "operation" => action.name, "status" => effect,

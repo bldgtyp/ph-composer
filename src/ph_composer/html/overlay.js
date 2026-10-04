@@ -71,6 +71,8 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     this.panel.hidden = false;
     this.trigger.setAttribute("aria-expanded", "true");
     this.position();
+    // An owner's onOpen can tell a deliberate open (click, keyboard) from a hover or a repaint's reopen.
+    this.openedWithFocus = focusInput !== false;
     if (this.options.onOpen) this.options.onOpen(this);
     var panel = this.panel;
     var content = this.content;
