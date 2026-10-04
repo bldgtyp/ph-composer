@@ -106,3 +106,49 @@ test("a refresh while renaming keeps the typed name, its focus and caret, and se
   assert.deepStrictEqual(plain([o.sent[0].payload.name, o.sent[0].payload.params]),
     ["ph_composer.locations.rename", { id: LOCATION.id, label: "Half typ" }]);
 });
+test("with no library yet the two ways to add one show at once and adding is the only primary job", function () {
+  var o = setup("readable");
+  assert.strictEqual(o.dialog.routes.hidden, false);
+  assert.strictEqual(o.dialog.add.hidden, true, "nothing to fold the choice behind yet");
+  assert.strictEqual(o.dialog.cancel.textContent, "Done");
+  assert.strictEqual(o.dialog.cancel.classList.contains("primary"), false);
+  assert.strictEqual(o.dialog.agentAccess.tagName, "details", "agent access is folded away beneath");
+});
+test("an added library is named and marked, its choice folds away, and Done becomes the next step", function () {
+  var o = setup("readable");
+  o.dialog.file.dispatchEvent({ type: "click" });
+  var request = o.sent[0].payload;
+  assert.strictEqual(request.name, "ph_composer.library.providers.add_file");
+  assert.ok(/window that opened/.test(o.dialog.error.textContent), "the picker is the host's; the dialog says so");
+  var added = { id: "lib_a", label: "Office library", provider_kind: "ph_composer.library.file" };
+  o.dialog.refresh({ session: "session", revision: 2, ui: { queryResults: {}, setupResults: (function () {
+    var results = {};
+    results[request.request_id] = { request_id: request.request_id, session: "session",
+      outcome: { status: "completed", value: [added] } };
+    return results;
+  }()) }, sections: {
+    "ph_composer.library.provider_catalogs": { status: "completed", value: [added] },
+    "ph_composer.library.provider_setup": { status: "completed", value: { state: "readable" } } } });
+  assert.ok(/^Added Office library\./.test(o.dialog.error.textContent));
+  assert.ok(o.dialog.list.querySelector(".is-added"), "the new library is marked in the list");
+  assert.deepStrictEqual([o.dialog.routes.hidden, o.dialog.add.hidden], [true, false]);
+  assert.strictEqual(o.dialog.cancel.classList.contains("primary"), true);
+  o.dialog.add.dispatchEvent({ type: "click" });
+  assert.strictEqual(o.dialog.routes.hidden, false, "Add a library… opens the choice again");
+});
+test("picking a library already in the list says so instead of saying nothing", function () {
+  var o = setup("readable"), lib = { id: "lib_a", label: "Office library", provider_kind: "ph_composer.library.file" };
+  var sections = {
+    "ph_composer.library.provider_catalogs": { status: "completed", value: [lib] },
+    "ph_composer.library.provider_setup": { status: "completed", value: { state: "readable" } } };
+  o.dialog.refresh({ session: "session", revision: 2, ui: { queryResults: {}, setupResults: {} }, sections: sections });
+  o.dialog.choosing = true; o.dialog.paint();
+  o.dialog.file.dispatchEvent({ type: "click" });
+  var request = o.sent[0].payload, results = {};
+  results[request.request_id] = { request_id: request.request_id, session: "session",
+    outcome: { status: "completed", value: [lib] } };
+  o.dialog.refresh({ session: "session", revision: 3, ui: { queryResults: {}, setupResults: results },
+    sections: sections });
+  assert.strictEqual(o.dialog.error.textContent, "That library is already in the list.");
+  assert.strictEqual(o.dialog.list.querySelector(".is-added"), null);
+});

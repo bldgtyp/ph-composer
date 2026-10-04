@@ -34,15 +34,12 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await writes(), baseline + 1);
     await page.keyboard.press("Escape");
     await editor.getByRole("button", { name: "Layer 2 thickness", exact: true }).click();
-    const thickness = editor.getByRole("dialog", { name: "Layer 2 properties", exact: true })
+    const thickness = editor.getByRole("dialog", { name: "Layer 2 thickness", exact: true })
       .getByRole("textbox", { name: "Layer 2 thickness", exact: true });
     await thickness.fill("160");
+    // A single-value bubble applies its draft when the user leaves it, in the units it was typed in: switching
+    // the display units is leaving it, and the value stays 160 mm.
     await page.getByRole("button", { name: "Set display units to IP", exact: true }).click();
-    assert.equal(await thickness.inputValue(), "160");
-    assert.equal(await writes(), baseline + 1, "unit switch sends no authoring action");
-    await editor.getByRole("button", { name: "Back to Assemblies", exact: true }).click();
-    assert(await editor.isVisible());
-    await thickness.press("Enter");
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].thickness_mm === 160);
     assert.equal(await writes(), baseline + 2);
     await page.getByRole("button", { name: "Set display units to SI", exact: true }).click();
@@ -74,8 +71,13 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await writes(), beforeInvalid, "outside drop writes nothing");
     await editor.locator("[data-builder-action='segments.add']").click();
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].segments.length === 3);
+    // What the insert made is selected; it has no Material, so deleting it needs no confirmation.
+    const added = await page.evaluate(() => window.previewHost.assemblies.records[0].values.layers[1].segments
+      .map(segment => segment.id));
+    await editor.locator(".assembly-hit-target[aria-pressed='true']").first().waitFor();
+    assert.equal(await editor.locator(".assembly-hit-target[aria-pressed='true']").getAttribute("data-segment-id"),
+      added[2], "the new Layer-Segment, right of the selection, is selected");
     await editor.locator("[data-builder-action='segments.remove']").click();
-    await editor.getByRole("dialog").getByRole("button", { name: "Delete segment", exact: true }).click();
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].segments.length === 2);
     const groups = await editor.locator(".assembly-toolbar > .assembly-tool-group").evaluateAll(nodes =>
       nodes.map(node => Math.round(node.getBoundingClientRect().top)));

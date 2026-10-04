@@ -1,17 +1,16 @@
-/* The one page header every pane opens with: the title, a muted count, then at the right the secondary
-   actions and the one primary action last. A screen never styles its own heading.
-   pageHeader({ title, count, actions: [node], primary: node }) returns
-   { root, setTitle(text), setCount(text), setActions(nodes), setPrimary(node) }; a blank count or a null primary
-   shows nothing. */
+/* The one page header every pane opens with: the title, then at the right the secondary actions and the
+   one primary action last. A screen never styles its own heading. A record count belongs to the control
+   row under it (view_controls.js), where it can say how many a filter shows.
+   pageHeader({ title, actions: [node], primary: node }) returns
+   { root, setTitle(text), setActions(nodes), setPrimary(node) }; a null primary shows nothing. */
 PhComposerUI.define("page_header", ["dom"], function (dom) {
   "use strict";
 
   function pageHeader(options) {
-    var root = dom.element("div", "phc-heading"), count = dom.element("span", "phc-heading-count");
+    var root = dom.element("div", "phc-heading");
     var actions = dom.element("div", "phc-heading-actions"), secondary = [], primary = null;
     var title = dom.element("h1", "", options.title);
     root.appendChild(title);
-    root.appendChild(count);
     root.appendChild(actions);
     function place() {
       actions.replaceChildren.apply(actions, primary ? secondary.concat([primary]) : secondary);
@@ -19,10 +18,6 @@ PhComposerUI.define("page_header", ["dom"], function (dom) {
     var header = {
       root: root,
       setTitle: function (text) { title.textContent = text; },
-      setCount: function (text) {
-        count.textContent = dom.blank(text) ? "" : String(text);
-        count.hidden = !count.textContent;
-      },
       setActions: function (nodes) { secondary = nodes.slice(); place(); },
       // Placing the same node again would drop its focus, so only a different node moves the DOM.
       setPrimary: function (node) {
@@ -33,7 +28,6 @@ PhComposerUI.define("page_header", ["dom"], function (dom) {
       }
     };
     secondary = (options.actions || []).slice();
-    header.setCount(options.count);
     if (options.primary) header.setPrimary(options.primary); else place();
     return header;
   }

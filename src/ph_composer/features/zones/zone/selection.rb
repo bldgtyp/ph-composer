@@ -150,7 +150,7 @@ module PhComposer
         end
 
         def show(result)
-          @session.notice(result.fetch("message"), :tone => result["status"] == "completed" ? :info : :warning)
+          @session.notice(result.fetch("message"), :tone => result["status"] == "completed" ? :success : :warning)
           Sketchup.status_text = result.fetch("message")
           result
         end

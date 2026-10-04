@@ -49,6 +49,8 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
       var current = chosen === value;
       chip.setAttribute("aria-pressed", String(current));
       chip.setAttribute("aria-label", word);
+      // The same colour the table's chip and the viewport give this value.
+      words.paintFill(chip, field, value);
       chip.disabled = state.view.busy();
       chip.addEventListener("click", function () { choose(state, field, current ? null : value); });
       row.appendChild(chip);
@@ -267,7 +269,9 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     screenState.toggle.disabled = !tool || screenState.view.busy();
   }
 
-  panel.section("ph_composer.classify.toggle", renderToggle, { region: "tools", order: 10 });
+  // An authoring tool: it changes the Model, so it sits in the page header's toolbar, apart from the view
+  // controls (Colour by) in the control row.
+  panel.section("ph_composer.classify.toggle", renderToggle, { region: "actions", order: 10 });
   panel.section("ph_composer.classify", render, { region: "inspector", tier: "tool",
     when: function () { return Boolean(screen && (screen.active || screen.open)); } });
 });

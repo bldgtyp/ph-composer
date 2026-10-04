@@ -13,8 +13,9 @@ PhComposerUI.define("library/locations", ["request", "snapshot", "workspace"], f
     this.root = el("div", "library-locations"); this.root.setAttribute("role", "group");
     this.root.setAttribute("aria-label", "Approved locations");
     this.root.appendChild(el("h3", "", "Approved locations"));
-    this.root.appendChild(el("p", "muted", "An agent can use these by id without asking again. They stay on this " +
-      "computer, for this version of SketchUp."));
+    this.root.appendChild(el("p", "muted", "An agent working with PH-Composer can open these by id without asking " +
+      "you again. Adding a library above needs no approval. Approvals stay on this computer, for this version " +
+      "of SketchUp."));
     this.list = el("div", "library-locations-list"); this.root.appendChild(this.list);
     this.unreadableNotice = el("div", "library-setup-unreadable");
     this.unreadableNotice.appendChild(el("p", "", "The approved locations stored on this machine cannot be read. " +

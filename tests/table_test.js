@@ -71,6 +71,19 @@ test("a tree paints one row per record, open by default, with its cells", functi
   assert.strictEqual(h.root.querySelector(".phc-empty").hidden, true);
 });
 
+test("a tree marks its table for group headings, and a chevron does not repeat the row's kind", function () {
+  var h = harness(), settings = options({ tree: true });
+  settings.rows[2].record.name = "Box 2";
+  h.tables.table(h.root, settings.rows.map(function (row) { return row.record; }), settings);
+  var chevrons = h.root.querySelectorAll(".row-chevron");
+
+  assert.ok(h.root.querySelector(".phc-table").classList.contains("is-tree"));
+  assert.deepStrictEqual([chevrons[0].getAttribute("aria-label"), chevrons[2].getAttribute("aria-label")],
+    ["Collapse Box First", "Collapse Box 2"]);
+  paint(h);
+  assert.strictEqual(h.root.querySelector(".phc-table").classList.contains("is-tree"), false);
+});
+
 test("an empty table says so, in the caller's words", function () {
   var h = harness();
   paint(h, { rows: [] });

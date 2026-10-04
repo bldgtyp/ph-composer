@@ -40,6 +40,10 @@
    through, and that same click fades the notice. Its Dismiss button still takes the pointer. */
 .phc-floating-notice[data-tone="info"][data-persistent="false"] { pointer-events: none; }
 .phc-floating-notice[data-tone="info"][data-persistent="false"] .phc-floating-notice-dismiss { pointer-events: auto; }
+/* A success confirmation looks like information and fades by itself; it takes the pointer, so hovering it
+   holds it open. */
+.phc-floating-notice[data-tone="success"] .phc-floating-notice-message::before { content: '✓'; margin-right: 8px;
+  color: var(--interaction-highlight); font-weight: 700; }
 .phc-workspace .phc-floating-notice-dismiss {
   position: absolute;
   top: 50%;
@@ -82,6 +86,9 @@
   background: #fff;
 }
 .phc-dialog::backdrop { background: rgba(20, 35, 40, .35); }
+.phc-workspace .phc-dialog-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px;
+  min-height: 30px; padding: 5px; border-color: transparent; background: transparent; color: var(--muted-strong); }
+.phc-blocked-reason-text { max-width: 280px; margin: 0; line-height: 1.45; }
 .phc-dialog h2 { margin: 0 32px 18px 0; font-size: 20px; }
 .phc-dialog h3 { margin: 16px 0 6px; font-size: 14px; }
 .phc-dialog p, .phc-dialog li { line-height: 1.5; }
@@ -270,7 +277,7 @@
   color: #7b858c; background: #e9edef; border-color: var(--line);
 }
 /* Record forms open in the shared modal; fields wrap into two columns at the dialog width. */
-.phc-form-dialog h2 { margin: 0 0 16px; }
+.phc-form-dialog h2 { margin: 0 36px 16px 0; }
 .phc-form-dialog form, .phc-form-dialog .phc-form-fields {
   display: flex; flex-wrap: wrap; gap: 12px 16px;
 }

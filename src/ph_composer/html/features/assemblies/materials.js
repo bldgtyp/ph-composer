@@ -89,7 +89,7 @@ function (panel, snapshot, ui, fields, RecordForm, inventories, forms, Sidebar, 
     workspace.appendChild(this.sidebar.root);
     root.appendChild(workspace);
     this.inventory = new inventories.Inventory(table, state.session, send, panel.notify, changed, {
-      section: MATERIALS, action: MATERIALS + ".update", label: "Material", columns: columns, count: "always",
+      section: MATERIALS, action: MATERIALS + ".update", label: "Material", columns: columns,
       editable: columns.map(function (entry) { return entry[0]; }).filter(function (field) {
         return field !== "color";
       }),

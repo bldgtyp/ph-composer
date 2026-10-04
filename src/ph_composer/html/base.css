@@ -28,6 +28,8 @@
   --muted-strong: #53676e;
   --interaction-highlight-outline: #07536040;
   --interaction-highlight-soft: #e5effb;
+  /* The row hover wash, laid over a cell's own background. */
+  --row-hover-wash: #0753600d;
   /* Opaque backing for sticky table columns (table.css). */
   --surface: #fff;
   /* The inset every pane's content shares with the tab row. */
@@ -193,8 +195,19 @@ html { height: 100%; }
 /* The page header (page_header.js): title, muted count, then the actions at the right. */
 .phc-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 52px; padding: 10px 0; }
 .phc-heading h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0; }
-.phc-heading-count { color: var(--muted); }
 .phc-heading-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+/* A group of related tools reads as one control: a shared outline around buttons that drop their own. An
+   empty group takes no room. */
+.phc-toolbar { display: inline-flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--line);
+  border-radius: 6px; background: #fff; }
+.phc-toolbar:empty { display: none; }
+.phc-workspace .phc-toolbar button { border-color: transparent; }
+.phc-toolbar-button { display: inline-flex; align-items: center; gap: 6px; }
+/* A choice between named states in a toolbar (a viewing side, a product kind) is the table's pill: compact,
+   neutral, with the native chevron. */
+.phc-workspace select.phc-choice-pill { height: 28px; min-height: 28px; padding: 0 6px 0 12px; border: 0;
+  border-radius: 14px; font-size: 12px; background-color: var(--category-fill, #edf1f2); }
+.phc-toolbar-button svg { flex: none; }
 .phc-footer {
   display: flex;
   flex-wrap: wrap;

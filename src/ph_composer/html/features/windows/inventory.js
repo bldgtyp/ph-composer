@@ -50,7 +50,7 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     this.color = new forms.ColorForm(session, send, shared.PREFIX + kind + ".update", changed);
     if (kind === "psi_install_types") this.buildDefaults();
     this.inventory = new inventories.Inventory(this.tableRoot, session, send, panel.notify, changed, {
-      section: shared.PREFIX + kind, action: shared.PREFIX + kind + ".update", label: spec.label, count: "always",
+      section: shared.PREFIX + kind, action: shared.PREFIX + kind + ".update", label: spec.label,
       columns: spec.columns, editable: spec.columns.map(function (column) { return column[0];
         }).filter(function (field) {
         return field !== "color";

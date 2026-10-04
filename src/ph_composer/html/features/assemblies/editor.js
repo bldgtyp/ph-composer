@@ -61,6 +61,8 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
         return self.action("segments.set_material", Object.assign({}, target, { material_id: row.id }));
       } });
     this.sidebar.dropHost = this.main;
+    // While a Material is dragged from the library, the edge insert control stays out of the way.
+    this.sidebar.onDragChange = function (dragging) { self.dragging = Boolean(dragging); };
     this.root.appendChild(this.main);
     this.root.appendChild(this.sidebar.root);
     this.root.appendChild(this.color.root);
@@ -127,6 +129,7 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
       onDone: function () {
         if (dimensionKey && self.dimensions[dimensionKey]) self.dimensions[dimensionKey].accepted = true;
       }, onFail: function (outcome) {
+        self.pendingInsert = null;
         var message = snapshot.message(outcome, "The Assembly change was not applied.");
         if (dimensionKey && self.dimensions[dimensionKey]) {
           self.dimensions[dimensionKey].requiresCancel = true;
@@ -155,18 +158,24 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
       entry.field.input.addEventListener("input", function () {
         if (!entry.expected) entry.expected = self.expected();
       });
-      // UnitField owns text, parsing and unit context. The owner keeps it editing until host acceptance.
-      entry.field.input.addEventListener("keydown", function (event) {
-        if (event.key !== "Enter") return;
+      // UnitField owns text, parsing and unit context. The owner keeps it editing until host acceptance, so
+      // Enter is the owner's: caught while it travels down to the input, before UnitField's own listener on
+      // the input runs (on the host floor's Chromium a capture listener on the target itself would not be).
+      entry.field.root.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter" || event.target !== entry.field.input) return;
         event.preventDefault();
-        event.stopImmediatePropagation();
+        event.stopPropagation();
         self.commitDimension(key);
       }, true);
+      // Leaving the field applies the draft, as Enter does. A blur during a repaint is the page moving the
+      // input, not the user leaving it, so it sends nothing.
+      // Switching to SketchUp mid-word blurs the input too; that is not leaving the field.
+      entry.field.input.addEventListener("blur", function () {
+        var windowActive = !document.hasFocus || document.hasFocus();
+        if (!self.painting && windowActive && entry.field.input.isConnected) self.commitDimension(key);
+      });
       entry.root = el("div", "assembly-dimension-editor");
       entry.root.appendChild(entry.field.root);
-      var cancel = ui.button("Cancel", function () { if (!self.busy()) entry.field.cancel(); });
-      var apply = ui.button("Apply", function () { self.commitDimension(key); });
-      entry.root.appendChild(ui.actionRow(cancel, apply));
     }
     entry.spec = spec;
     entry.live = true;
@@ -205,6 +214,49 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     if (entry.spec.nested) { params.values = {}; params.values[entry.spec.nested] = parsed.value; }
     else params[entry.spec.field] = parsed.value;
     return this.action(entry.spec.action, params, entry.expected || this.expected(), key);
+  };
+  /* Before a dimension's bubble closes: an unchanged or already sent draft lets it close, a changed one is
+     applied, and one that cannot be applied (invalid, or the Model moved) keeps the bubble open and says why. */
+  Editor.prototype.settleDimension = function (key) {
+    var entry = this.dimensions[key];
+    // A Builder being torn down closes whatever is open; nothing is sent and nothing is refused.
+    if (this.disposed || !this.enabled) return null;
+    if (!entry || !entry.field.editing || this.busy()) return null;
+    if (entry.field.input.value === entry.field.seed) { entry.field.cancel(); return null; }
+    if (entry.requiresCancel) return "Press Escape to restore " + entry.spec.label.toLowerCase() + ".";
+    // A retyped value equal to the stored one ends the draft without a request; that is settled too.
+    if (this.commitDimension(key) || this.busy() || !entry.field.editing) return null;
+    return entry.field.error.textContent || "Enter a valid value, or press Escape.";
+  };
+  /* An edge's insert: one action with a round default size, then what it made is selected, so the next step
+     (resize it, give it a Material) is right there. */
+  Editor.prototype.insert = function (target) {
+    var layers = this.record.values.layers || [];
+    var before = target.kind === "layer" ? layers.map(function (layer) { return layer.id; }) :
+      (layers.filter(function (layer) { return layer.id === target.params.layer_id; })[0] || { segments: [] })
+        .segments.map(function (segment) { return segment.id; });
+    // Set before sending: a host that answers at once settles it within the call.
+    this.pendingInsert = { kind: target.kind, layerId: target.params.layer_id, before: before };
+    if (this.action(target.action, target.params)) return true;
+    this.pendingInsert = null;
+    return false;
+  };
+  Editor.prototype.selectInserted = function (record) {
+    var pending = this.pendingInsert, layers = record.values.layers || [];
+    if (!pending || this.busy()) return;
+    this.pendingInsert = null;
+    if (pending.kind === "layer") {
+      var layer = layers.filter(function (candidate) { return pending.before.indexOf(candidate.id) < 0; })[0];
+      if (layer && layer.segments.length) this.selection = { layerId: layer.id, segmentId: layer.segments[0].id };
+      this.focusSelection = Boolean(layer && layer.segments.length);
+      return;
+    }
+    var host = layers.filter(function (candidate) { return candidate.id === pending.layerId; })[0];
+    var segment = host && host.segments.filter(function (candidate) {
+      return pending.before.indexOf(candidate.id) < 0;
+    })[0];
+    if (segment) this.selection = { layerId: host.id, segmentId: segment.id };
+    this.focusSelection = Boolean(segment);
   };
   Editor.prototype.paintPending = function () {
     var busy = this.busy();
@@ -254,6 +306,7 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     this.assemblyId = id;
     this.enabled = true;
     this.requests.consume(state);
+    this.selectInserted(record);
     var row = { key: id, record: record };
     this.edits.refresh([row], state);
     this.color.refresh(state, true, payload.records);
@@ -265,6 +318,11 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     var focusedHit = focus && focus.classList.contains("assembly-hit-target") ? {
       layerId: focus.getAttribute("data-layer-id"), segmentId: focus.getAttribute("data-segment-id") } : null;
     var bubbleTitle = ui.Bubble.activeTitle(this.main);
+    // A dimension's bubble reopens by its dimension, not its title: a Layer inserted above by Undo or another
+    // client renumbers the titles.
+    var openDimension = Array.prototype.filter.call(this.main.querySelectorAll(".phc-bubble"), function (panel) {
+      return !panel.hidden && panel.getAttribute("data-dimension-key");
+    }).map(function (panel) { return panel.getAttribute("data-dimension-key"); })[0];
     this.painting = true;
     ui.Bubble.closeActive(this.main);
     Object.keys(this.dimensions).forEach(function (key) { this.dimensions[key].live = false; }, this);
@@ -282,8 +340,17 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     var scroll = this.main.querySelector(".assembly-stage-scroll");
     if (scroll && position) { scroll.scrollTop = position.top; scroll.scrollLeft = position.left; }
     if (bubbleTitle) this.main.querySelectorAll(".phc-bubble").forEach(function (panel) {
-      if (panel.getAttribute("aria-label") === bubbleTitle) panel._bubble.open(false);
+      var dimension = panel.getAttribute("data-dimension-key");
+      var same = openDimension ? dimension === openDimension :
+        !dimension && panel.getAttribute("aria-label") === bubbleTitle;
+      if (same) panel._bubble.open(false);
     });
+    // After an insert the control that made it is gone; the new Layer-Segment takes the focus, so Escape and
+    // the keyboard still reach the Builder.
+    if (this.focusSelection && this.selection) {
+      this.focusSelection = false;
+      focusedHit = this.selection; focus = null;
+    }
     if (focus && this.root.contains(focus)) focus.focus({ preventScroll: true });
     else if (focusedHit) {
       var restored = Array.prototype.filter.call(this.main.querySelectorAll(".assembly-hit-target"), function (hit) {

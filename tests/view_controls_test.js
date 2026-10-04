@@ -164,12 +164,15 @@ test("the order choices are replaced only when they actually differ", function (
   assert.strictEqual(order.value, "size", "the selected field survives a relabelling");
 });
 
-test("a list whose page header counts nothing shows its total while unfiltered", function () {
-  var quiet = harness(), counted = harness({ count: "always" });
-  quiet.controls.project(RECORDS, config());
-  counted.controls.project(RECORDS, config());
-  assert.deepStrictEqual([quiet.controls.count.textContent, counted.controls.count.textContent], ["", "3 total"]);
-  counted.controls.filter.value = "cell";
-  counted.controls.project(RECORDS, config());
-  assert.strictEqual(counted.controls.count.textContent, "1 of 3");
+test("the control row counts the records, a filter's share of them, or the screen's own words", function () {
+  var plain = harness(), quiet = harness({ count: false });
+  var worded = harness({ count: function (shown, total, filtered) {
+    return (filtered ? shown + " of " : "") + total + " parts";
+  } });
+  [plain, quiet, worded].forEach(function (h) { h.controls.project(RECORDS, config()); });
+  assert.deepStrictEqual([plain, quiet, worded].map(function (h) { return h.controls.count.textContent; }),
+    ["3 total", "", "3 parts"]);
+  [plain, worded].forEach(function (h) { h.controls.filter.value = "cell"; h.controls.project(RECORDS, config()); });
+  assert.deepStrictEqual([plain.controls.count.textContent, worded.controls.count.textContent],
+    ["1 of 3", "1 of 3 parts"]);
 });

@@ -198,6 +198,11 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     return position + 1;
   }
   function rowLabel(row) { return row.record.name || row.record.display_name; }
+  /* "Zone Attic", but "Zone 1" rather than "Zone Zone 1" when the name already says what the row is. */
+  function rowTitle(row) {
+    var label = rowLabel(row) || "";
+    return label.indexOf(row.tier + " ") === 0 || label === row.tier ? label : (row.tier + " " + label).trim();
+  }
   function navigateRows(root, cache, expanded, entry, event) {
     if (ARROW_KEYS.indexOf(event.key) === -1) return;
     var targets = Array.prototype.slice.call(cache.body.querySelectorAll(".row-target"));
@@ -286,7 +291,7 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       var leaf = Boolean(options.expandable && !options.expandable(row));
       entry.chevron.classList.toggle("is-leaf", leaf);
       entry.chevron.disabled = leaf;
-      entry.chevron.setAttribute("aria-label", (isOpen ? "Collapse " : "Expand ") + row.tier + " " + rowLabel(row));
+      entry.chevron.setAttribute("aria-label", (isOpen ? "Collapse " : "Expand ") + rowTitle(row));
       entry.chevron.setAttribute("aria-expanded", String(isOpen));
     }
     if (entry.cells.hierarchy && options.marker) {
@@ -310,7 +315,8 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     for (var ancestor = focused; ancestor; ancestor = ancestor.parentNode) { if (ancestor.hidden) return; }
     focused.focus({ preventScroll: true });
   }
-  /* options: rows, columns, value(row, field) and empty are required; see the callers for the optional hooks. */
+  /* options: rows, columns, value(row, field) and empty are required; `tree: true` styles top-level rows as
+     group headings; see the callers for the other optional hooks. */
   function table(root, records, options) {
     var focused = document.activeElement, hadFocus = focused && root.contains(focused);
     var rows = options.rows, expanded = options.expanded || Object.create(null);
@@ -318,6 +324,8 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     var cache = root._table || buildCache(root, options.columns, options);
     var position = 0, actionCount = 2;
     cache.options = options; cache.records = records; cache.columns = options.columns;
+    // A tree's top-level rows head their groups (table.css).
+    cache.node.classList.toggle("is-tree", Boolean(options.tree));
     if (options.columnWidths) cache.columnWidths = options.columnWidths;
     paintHeaders(cache, options);
     cache.empty.hidden = (options.visibleCount === undefined ? rows.length : options.visibleCount) > 0;

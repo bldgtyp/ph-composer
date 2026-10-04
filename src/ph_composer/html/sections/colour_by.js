@@ -1,6 +1,6 @@
 /* The panel's Colour-by legend: the mode control, one row per colour with its label and count,
- * click a row to select and zoom to what it counts, and "Show only this" to set every other row
- * aside.
+ * click a row to select and zoom to what it counts, and Isolate to fade every other row in the
+ * viewport (the table is unchanged), with Show all beside the legend while one row stands alone.
  *
  * Nothing here names a mode, a face type or a Zone. The rows, their labels, their colours and their
  * counts all come from the shared service's legend, so a feature that registers a mode reaches this
@@ -54,12 +54,12 @@ function (panel, ui, requests, snapshot) {
   }
 
   /* The row itself is the Locate control: clicking it selects and zooms to what it
-     counts. "Show only this" is a separate toggle, because it changes the drawing rather than the
+     counts. Isolate is a separate toggle, because it changes the drawing rather than the
      selection, and pressing it again puts everything back. */
   function legendRow(state, row) {
     var node = ui.element("div", "phc-legend-row");
     var locate = ui.element("button", "phc-legend-locate");
-    var only = ui.element("button", "phc-legend-only", row.isolated ? "Show all" : "Show only this");
+    var only = ui.element("button", "phc-legend-only", row.isolated ? "Show all" : "Isolate");
     locate.appendChild(swatch(row.colour));
     locate.appendChild(ui.element("span", "phc-legend-label", row.label));
     locate.appendChild(ui.element("span", "phc-legend-count", String(row.count)));
@@ -70,6 +70,8 @@ function (panel, ui, requests, snapshot) {
     });
     only.setAttribute("aria-pressed", String(Boolean(row.isolated)));
     only.setAttribute("aria-label", row.isolated ? "Show every colour again" : "Show only " + row.label);
+    only.setAttribute("data-tooltip", row.isolated ? "Show every colour in the viewport again" :
+      "Fade everything else in the viewport, so only " + row.label + " stands out. The table is unchanged.");
     only.disabled = state.view.busy();
     only.addEventListener("click", function () {
       state.view.run("ph_composer.colour_by.isolate", row.isolated ? {} : { row: rowKey(row) });
@@ -77,6 +79,17 @@ function (panel, ui, requests, snapshot) {
     node.appendChild(locate);
     node.appendChild(only);
     return node;
+  }
+
+  function isolatedNotice(state, row) {
+    var note = ui.element("div", "phc-legend-isolated");
+    var reset = ui.element("button", "", "Show all");
+    note.appendChild(ui.element("span", "", "The viewport shows only " + row.label + "."));
+    reset.setAttribute("aria-label", "Show every colour again");
+    reset.disabled = state.view.busy();
+    reset.addEventListener("click", function () { state.view.run("ph_composer.colour_by.isolate", {}); });
+    note.appendChild(reset);
+    return note;
   }
 
   /* Repainted only when what it shows has changed. A snapshot follows every viewport command, and
@@ -93,11 +106,15 @@ function (panel, ui, requests, snapshot) {
     ui.memoPaint(root, "legend", [state.session, legend, screenState.view.busy()], function () {
       var heading = ui.element("div", "phc-zone-heading");
       var body = ui.element("div", "phc-legend");
+      var isolated = legend.rows.filter(function (row) { return row.isolated; })[0];
       heading.appendChild(ui.element("h2", "", "Colour by"));
       legend.rows.forEach(function (row) { body.appendChild(legendRow(screenState, row)); });
       if (!legend.rows.length) body.appendChild(ui.element("p", "phc-empty", "Nothing to colour yet."));
       root.className = "phc-colour-by";
-      root.replaceChildren(heading, body);
+      root.replaceChildren(heading, ui.element("p", "phc-legend-hint", "Choose a row to select and zoom to " +
+        "what it counts."), body);
+      // While one colour stands alone, say so where the eye already is, with the way back beside it.
+      if (isolated) root.insertBefore(isolatedNotice(screenState, isolated), body);
     });
   }
 

@@ -1,7 +1,7 @@
 "use strict";
 
-/* A pane's regions: `main`, an `inspector` that shows one section at a time, and `tools` the work
-   surface places in its own control row. */
+/* A pane's regions: `main`, an `inspector` that shows one section at a time, `tools` the work surface
+   places in its own control row and `actions` its page header places in the authoring toolbar. */
 
 var assert = require("assert");
 var test = require("node:test");
@@ -71,6 +71,21 @@ test("tools lead the main region until the work surface places them", function (
   assert.strictEqual(p.query("[data-section='example.toggle']").parentNode, tools);
   assert.strictEqual(tools.parentNode.parentNode, p.query("[data-section='example.work']"));
   assert.strictEqual(p.panel.region("overview", "tools"), tools, "asking again returns the same node");
+});
+
+test("authoring actions are a region of their own that the page header places, apart from tools", function () {
+  var p = page();
+  p.panel.section("example.work", function (root) {
+    if (root.firstChild) return;
+    root.appendChild(dom.element("div"));
+    root.firstChild.appendChild(p.panel.region("overview", "actions"));
+  }, { order: 10 });
+  p.panel.section("example.author", paint("author"), { region: "actions" });
+  p.snapshot();
+  var actions = p.query("[data-phc-region='actions']");
+  assert.ok(actions.classList.contains("phc-pane-actions"));
+  assert.ok(p.query("[data-section='example.author']").parentNode === actions);
+  assert.ok(p.query("[data-phc-region='tools']") === null, "no tools region until a section asks for one");
 });
 
 test("a section that holds keeps the inspector over a higher tier, and focus follows what is shown", function () {

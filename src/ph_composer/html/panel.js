@@ -165,10 +165,12 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
 
   /* A pane's regions. `main` is the work surface and every section that names no region. `inspector` is
      a column beside it that shows one section at a time. `tools` is a group of small controls the work
-     surface places in its own control row (`region(pane, "tools")`); a pane that offers tools must place
-     them, and until it does they lead the main region. A pane with only `main` sections is laid out
-     exactly as before. The regions are marked `data-phc-region`, a name no section's content uses. */
-  var REGIONS = ["main", "inspector", "tools"];
+     surface places in its own control row (`region(pane, "tools")`): view controls such as Colour by.
+     `actions` is the same for the page header's authoring toolbar (`region(pane, "actions")`): tools that
+     change the Model, such as Classify faces. A pane that offers either must place it, and until it does
+     it leads the main region. A pane with only `main` sections is laid out exactly as before. The regions
+     are marked `data-phc-region`, a name no section's content uses. */
+  var REGIONS = ["main", "inspector", "tools", "actions"];
   /* Which inspector section shows when several want to: a tool in use, then what is selected, then the
      record in hand, then ambient reference. `order` breaks a tie inside a tier. */
   var TIERS = ["tool", "selection", "record", "ambient"];
@@ -189,7 +191,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
       pane.appendChild(main);
     }
     if (name === "main") return main;
-    node = name === "inspector" ? ui.element("aside", "phc-pane-inspector") : ui.element("div", "phc-pane-tools");
+    node = name === "inspector" ? ui.element("aside", "phc-pane-inspector") :
+      ui.element("div", name === "actions" ? "phc-pane-actions" : "phc-pane-tools");
     node.setAttribute("data-phc-region", name);
     if (name === "inspector") {
       node.hidden = true;
@@ -281,7 +284,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   }
 
   /* One floating notice above the panes, so a late message never reflows the page. Warnings and errors stay
-     until dismissed; information fades on the next interaction. */
+     until dismissed; information fades on the next interaction; a success confirmation also fades by itself. */
   function renderNotice() {
     var layer = document.querySelector("[data-notice-layer]");
     var current = state.ui.notice;
@@ -293,7 +296,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     if (current === shownNotice) return;
     shownNotice = current;
     if (!current) { notice.clear(); return; }
-    notice.show(current.message, { tone: current.tone, persistent: current.tone !== "info" });
+    notice.show(current.message, { tone: current.tone,
+      persistent: current.tone === "warning" || current.tone === "error" });
   }
 
   function applyTab() {
@@ -343,7 +347,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
      order they registered. A pane holds the screen's work surface first and its secondary controls
      after it, and load order is decided by the module graph, so a section that cares says so.
      `options.onNavigate(root, intent)` receives the intent of a `navigate` to its pane.
-     `options.region` places it in the pane's `inspector` or `tools` region instead of `main`. An
+     `options.region` places it in the pane's `inspector`, `tools` or `actions` region instead of `main`. An
      inspector section names its `options.tier` and may give `options.when(state)`; see showInspectors. */
   function section(name, renderFunction, options) {
     var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview",

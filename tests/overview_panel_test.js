@@ -332,7 +332,8 @@ test("a Face the chips cannot set keeps its value and stays read only", function
 
   assert.strictEqual(byLabel(section, "Air boundary 1 type"), undefined, "no chip offers Air boundary");
   var cells = section.querySelectorAll(".col-face_type").filter(function (node) { return node.tagName === "td"; });
-  assert.strictEqual(cells[1].textContent, "Air boundary", "the cell says what the Face is");
+  assert.strictEqual(cells[1].querySelector(".phc-enum-pill").textContent, "Air boundary",
+    "the cell says what the Face is, as a read-only pill");
 });
 
 test("Locate goes to the viewport channel and never to an action", function () {
@@ -851,7 +852,7 @@ test("what the old State column said about a boundary is said on the boundary ce
   var cell = section.querySelectorAll("td").filter(function (td) {
     return /col-boundary_condition/.test(td.className);
   })[1];
-  assert.strictEqual(cell.textContent, "Surface", "a paired Face stays read only");
+  assert.strictEqual(cell.querySelector(".phc-enum-pill").textContent, "Surface", "a paired Face stays read only");
   assert.ok(cell.classList.contains("is-flagged"));
   assert.match(cell.title, /out of date/);
 
@@ -876,7 +877,14 @@ test("a blocked Make Zone says why beside it", function () {
   payload.sections["ph_composer.zones.overview"].value.make_zone = null;
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var reason = p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason");
-  assert.ok(/needs one Group, or loose Faces and Edges/.test(reason.getAttribute("aria-label")));
+  assert.strictEqual(reason.getAttribute("aria-label"), "Why Make Zone is unavailable");
+  reason.listeners.click({});
+  var bubble = reason.parentNode.querySelector(".phc-bubble");
+  assert.strictEqual(bubble.hidden, false, "the reason opens beside the action, not as a page notice");
+  assert.ok(/needs one Group, or loose Faces and Edges/.test(bubble.querySelector(".phc-blocked-reason-text")
+    .textContent));
+  var notice = p.query(".phc-floating-notice");
+  assert.ok(!notice || notice.hidden, "and raises no page notice");
   payload.sections["ph_composer.zones.overview"].value.make_zone = { entity_path: [1] };
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   assert.strictEqual(p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason"), null);
@@ -935,4 +943,45 @@ test("Expand all and Collapse all reach the unclassified summary, and the filter
   filter.value = "unclassified";
   filter.listeners.input({});
   assert.strictEqual(count(), 4, "a Zone with unclassified Faces matches the word");
+});
+
+test("Order by and its direction order a Zone's Faces too, so one Zone still answers them", function () {
+  var p = page(), payload = snapshot(), faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
+  faces.push({ reference: { zone_id: "zon_a", zone_path: [100], entity_path: [103], entity_id: "fac_c" },
+    zone_name: "Zone 1", area_m2: 30, state: "classified", values: { face_type: "Floor", boundary_condition: "Ground" },
+    suggested: {} });
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  function names() {
+    return section.querySelectorAll("td").filter(function (td) { return /col-name/.test(td.className); })
+      .map(function (td) { return td.textContent; });
+  }
+  // By name, Faces keep their place numbers in order, so choosing a type never moves a row; the
+  // unclassified summary stays last.
+  assert.deepStrictEqual(names(), ["Zone 1", "Wall 1", "Floor 3", "1 unclassified Face", "Face 2"]);
+  byLabel(section, "Sort descending").listeners.click({});
+  assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"]);
+  var order = byLabel(section, "Order by");
+  order.value = "area_m2";
+  order.listeners.change({});
+  assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"],
+    "largest first");
+  byLabel(section, "Sort ascending").listeners.click({});
+  assert.deepStrictEqual(names(), ["Zone 1", "Wall 1", "Floor 3", "1 unclassified Face", "Face 2"]);
+});
+
+test("the header groups the authoring tools apart from Colour by, and the inspector column always stands", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var toolbar = section.querySelector("[role='toolbar']");
+  assert.strictEqual(toolbar.getAttribute("aria-label"), "Zone and Face tools");
+  assert.ok(byLabel(section, "Solve adjacencies for all Zones in this Model").parentNode === toolbar);
+  var inspector = p.query("[data-phc-region='inspector']");
+  assert.strictEqual(inspector.hidden, false,
+    "with nothing selected the column still stands, so the tree keeps its width");
+  assert.strictEqual(p.query("[data-section='ph_composer.zones.hint']").hidden, false);
+  var header = section.querySelector(".phc-heading");
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  assert.ok(section.querySelector(".phc-heading") === header, "the header is repainted in place, not rebuilt");
 });

@@ -89,7 +89,7 @@ function (panel, ui, RecordForm, inventories, forms, library, attachedFields) {
     this.deleteAttached = new AttachedDelete(state.session, send, changed);
     this.forms = [this.newAttached, this.deleteAttached];
     this.inventory = new inventories.Inventory(root, state.session, send, panel.notify, changed, {
-      section: ATTACHED + ".list", action: ATTACHED + ".save", label: "Attached zone", count: "always",
+      section: ATTACHED + ".list", action: ATTACHED + ".save", label: "Attached zone",
       columns: [["name", "Name"], ["kind", "Kind"], ["temperature_reduction_factor", "Temperature reduction factor"]],
       editable: ["name", "kind", "temperature_reduction_factor"], selectFields: { kind: attachedFields.KINDS },
       quantities: { temperature_reduction_factor: attachedFields.FACTOR },

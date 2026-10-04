@@ -143,7 +143,6 @@ function (panel, snapshot, ui, AssemblyForm, forms, inventories, units, preferen
       if (title) { title.focus(); title.select(); }
     }
     if (view.editor) view.editor.refresh(state, view.editor.assemblyId);
-    view.header.setCount(view.inventory.records.length);
     view.create.disabled = !payload || view.inventory.busy();
   }
   panel.navigationGuard("assemblies", function (next) { return next === "assemblies" ?

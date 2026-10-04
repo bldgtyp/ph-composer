@@ -1,6 +1,7 @@
 /* Drawing facts and record lookup only. Canonical thermal results come from the Assembly snapshot. */
-PhComposerUI.define("features/assemblies/editor_shared", ["fields", "snapshot", "units", "workspace"],
-  function (fields, snapshot, units, ui) {
+PhComposerUI.define("features/assemblies/editor_shared", ["fields", "snapshot", "units", "unit_preferences",
+  "workspace"],
+  function (fields, snapshot, units, preferences, ui) {
     "use strict";
     var DIMENSION = fields.with(fields.LENGTH_MM, { builder: "assemblies", label: "Dimension",
       allowBlank: false, allowZero: false });
@@ -39,7 +40,13 @@ PhComposerUI.define("features/assemblies/editor_shared", ["fields", "snapshot", 
       return root;
     }
     function clone(value) { return JSON.parse(JSON.stringify(value)); }
+    /* A new Layer or Layer-Segment starts at a round size in the units on screen (100 mm or 4 in thick,
+       500 mm or 20 in wide), so it draws at once; the user resizes it afterwards. */
+    function newSize(kind) {
+      var ip = preferences.current().unitSystem === "IP";
+      return kind === "layer" ? (ip ? 101.6 : 100) : (ip ? 508 : 500);
+    }
     return { DIMENSION: DIMENSION, OPTIONAL_DIMENSION: OPTIONAL_DIMENSION, U_VALUE: fields.U_VALUE,
       R_VALUE: fields.R_VALUE, lookup: lookup, selected: selected, reason: reason, format: format,
-      field: field, clone: clone };
+      field: field, clone: clone, newSize: newSize };
   });

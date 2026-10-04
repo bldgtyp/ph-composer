@@ -283,3 +283,12 @@ test("insertBefore moves a node rather than duplicating it", function () {
   assert.deepStrictEqual(parent.children, [second, first]);
   assert.strictEqual(second.parentNode, parent);
 });
+
+/* A log line or util.inspect stays short. Node's assertion printer ignores this hook, which is why the
+   Makefile runs these tests under tools/js_test_guard.js: never assert equality on a stub node itself. */
+test("a node and a document print as one line", function () {
+  var util = require("util"), parts = tree();
+  assert.strictEqual(util.inspect(parts.pane), "<div>");
+  assert.strictEqual(util.inspect(parts.button), "<button class=\"row-target primary\">");
+  assert.strictEqual(util.inspect(parts.document), "<document>");
+});

@@ -76,7 +76,7 @@ module PhComposer
 
         next session.notice(outcome["message"], :tone => :warning) unless outcome["status"] == "completed"
 
-        session.notice("Approved #{outcome.dig('value', 'label')}. An agent can now use it by id.", :tone => :info)
+        session.notice("Approved #{outcome.dig('value', 'label')}. An agent can now use it by id.", :tone => :success)
       end
     end
 

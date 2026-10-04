@@ -55,7 +55,8 @@ module PhComposer
             outcome = NativeApproval.setup(menu_context(session), "#{PREFIX}.#{verb}", {})
             next if outcome["status"] == "cancelled"
 
-            session.notice(menu_message(outcome, before), :tone => outcome["status"] == "completed" ? :info : :warning)
+            tone = outcome["status"] == "completed" ? :success : :warning
+            session.notice(menu_message(outcome, before), :tone => tone)
           end
         end
         install_reset(feature, result)

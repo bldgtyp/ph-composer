@@ -107,3 +107,24 @@ test("a library's row says its click adds it; beside a table the local list give
   assert.ok(o.sidebar.list.children[0].textContent.indexOf("These records are in the table") === 0);
   assert.strictEqual(o.sidebar.list.querySelectorAll("button").length, 0);
 });
+test("a long list starts with its groups folded, a search opens them, and a fold the user chose stays", function () {
+  var o = setup(), template = JSON.stringify(o.sidebar.records[0]);
+  o.sidebar.records = [];
+  for (var i = 0; i < 25; i += 1) {
+    var row = JSON.parse(template);
+    row.id = "row" + i; row.values.name = "Part " + i;
+    o.sidebar.records.push(row);
+  }
+  o.sidebar.renderList();
+  var heading = o.sidebar.list.querySelector(".library-sidebar-group-heading");
+  assert.strictEqual(heading.getAttribute("aria-expanded"), "false", "25 records start folded");
+  assert.strictEqual(o.sidebar.list.querySelectorAll(".library-sidebar-row-button").length, 0);
+  o.sidebar.search.value = "Part 1";
+  o.sidebar.renderList();
+  assert.ok(o.sidebar.list.querySelectorAll(".library-sidebar-row-button").length > 0, "a search opens what it finds");
+  o.sidebar.search.value = "";
+  o.sidebar.renderList();
+  o.sidebar.list.querySelector(".library-sidebar-group-heading").dispatchEvent({ type: "click" });
+  assert.strictEqual(o.sidebar.list.querySelector(".library-sidebar-group-heading").getAttribute("aria-expanded"),
+    "true", "the user's choice outlasts the default");
+});

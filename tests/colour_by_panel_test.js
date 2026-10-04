@@ -120,12 +120,12 @@ test("the unclassified row is a row of the legend like any other", function () {
     { row: { value: null, state: "unclassified" } });
 });
 
-test("Show only this sets a row apart, and the same control puts everything back", function () {
+test("Isolate sets a row apart, and the same control puts everything back", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
   var only = p.section().querySelectorAll(".phc-legend-only")[0];
 
-  assert.strictEqual(only.textContent, "Show only this");
+  assert.strictEqual(only.textContent, "Isolate");
   assert.strictEqual(only.getAttribute("aria-pressed"), "false");
   only.listeners.click({});
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
@@ -137,6 +137,10 @@ test("Show only this sets a row apart, and the same control puts everything back
     payload: snapshot(on({ value: "inside", state: "classified" })) });
   var pressed = p.section().querySelectorAll(".phc-legend-only")[0];
   assert.strictEqual(pressed.textContent, "Show all");
+  var note = p.section().querySelector(".phc-legend-isolated");
+  assert.ok(note, "while one row stands alone the legend says so, with the way back beside it");
+  note.querySelector("button").listeners.click({});
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[p.sent.length - 1].payload.params)), {});
   assert.strictEqual(pressed.getAttribute("aria-pressed"), "true");
 
   pressed.listeners.click({});
