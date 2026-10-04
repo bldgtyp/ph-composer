@@ -937,3 +937,28 @@ test("Expand all and Collapse all reach the unclassified summary, and the filter
   filter.listeners.input({});
   assert.strictEqual(count(), 4, "a Zone with unclassified Faces matches the word");
 });
+
+test("Order by and its direction order a Zone's Faces too, so one Zone still answers them", function () {
+  var p = page(), payload = snapshot(), faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
+  faces.push({ reference: { zone_id: "zon_a", zone_path: [100], entity_path: [103], entity_id: "fac_c" },
+    zone_name: "Zone 1", area_m2: 30, state: "classified", values: { face_type: "Floor", boundary_condition: "Ground" },
+    suggested: {} });
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  function names() {
+    return section.querySelectorAll("td").filter(function (td) { return /col-name/.test(td.className); })
+      .map(function (td) { return td.textContent; });
+  }
+  // By name, Faces keep their place numbers in order, so choosing a type never moves a row; the
+  // unclassified summary stays last.
+  assert.deepStrictEqual(names(), ["Zone 1", "Wall 1", "Floor 3", "1 unclassified Face", "Face 2"]);
+  byLabel(section, "Sort descending").listeners.click({});
+  assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"]);
+  var order = byLabel(section, "Order by");
+  order.value = "area_m2";
+  order.listeners.change({});
+  assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"],
+    "largest first");
+  byLabel(section, "Sort ascending").listeners.click({});
+  assert.deepStrictEqual(names(), ["Zone 1", "Wall 1", "Floor 3", "1 unclassified Face", "Face 2"]);
+});

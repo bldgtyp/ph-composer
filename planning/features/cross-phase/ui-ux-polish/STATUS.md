@@ -17,7 +17,7 @@ ISSUE: none (local planning draft)
 | P4 Zones / Faces workspace | Proposed | |
 | P5 Assembly Builder | Audit done, not built | |
 | P6 Windows toolbar | Proposed | |
-| P7 sorting | Diagnosed | Not a defect at its scope: Order by sorts Zones only, so with one Zone it changes nothing. D8 extends it to Faces within each Zone |
+| P7 sorting | Implemented on branch | Not a defect at its scope: Order by sorted Zones only, so with one Zone it changed nothing. D8 now orders Faces within each Zone; `overview_panel_test.js` covers Name, Area and both directions |
 | Skill/pattern changes | Updated per slice | P1: editable-table rule, page header, control-row count, enum pill |
 | Design System sync | Pending merge | Re-sync the artifact from main after merge |
 | Host acceptance | Not run | One native SketchUp pass at the end of the branch |
@@ -35,4 +35,4 @@ ISSUE: none (local planning draft)
 
 ## Next action
 
-Continue the loop: P7, then P2, P3, P4, P5, P6, then one native host pass.
+Continue the loop: P2, P3, P4, P5, P6, then one native host pass.

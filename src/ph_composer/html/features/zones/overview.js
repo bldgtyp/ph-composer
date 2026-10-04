@@ -134,7 +134,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       function faceRow(face, parent, depth) {
         return { key: JSON.stringify(["Face", zone.reference.zone_path, face.reference.entity_path]),
           parent: parent, tier: "Face", depth: depth,
-          record: { id: face.reference.entity_id, name: faceName(face, own), face: face } };
+          record: { id: face.reference.entity_id, name: faceName(face, own), place: own.indexOf(face) + 1,
+            face: face } };
       }
       recorded.forEach(function (face) { rows.push(faceRow(face, key, 1)); });
       var waiting = own.filter(function (face) { return face.state === "unclassified"; });
@@ -577,9 +578,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   /* The view controls order and filter Zones, because a Zone is what the tree is built from; its Faces
-     follow it in their own order. They project the Zone records, and `rows` tells them how a Face row
-     traces back to the Zone that decides whether it shows. Filtering reads a Zone's Faces too, so a
-     search for "Ground" keeps the Zone that has one. */
+     follow it, ordered among themselves by the same field. They project the Zone records, and `rows`
+     tells them how a Face row traces back to the Zone that decides whether it shows. Filtering reads a
+     Zone's Faces too, so a search for "Ground" keeps the Zone that has one. */
   function paintTable(mount, rows, state, profile) {
     var zoneRows = rows.filter(depth(0));
     var byId = Object.create(null);
@@ -596,7 +597,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       // Sized so the whole table shows beside the inspector at the panel's usual width; the user can still
       // drag any column wider.
       defaultWidths: { name: 142, face_type: 126, boundary_condition: 110, area_m2: 92, assembly_id: 156 },
-      tree: true, rows: ordered(projection.records, byId, rows), columns: columns(profile), expanded: state.expanded,
+      tree: true, rows: ordered(projection.records, byId, rows, state.controls), columns: columns(profile),
+      expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
       decorate: function (td, row, field) { flag(td, problem(row.record.face, field)); },
       columnWidths: state.columnWidths, visibleCount: projection.visibleCount, disabled: state.edits.busy(),
@@ -637,14 +639,29 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     })).join(" ");
   }
 
-  /* The Zone order the controls settled on, each Zone followed by its own Face rows. */
-  function ordered(records, byId, rows) {
-    var children = Object.create(null);
+  /* The Zone order the controls settled on, each Zone followed by its own Face rows in the same order:
+     Order by and its direction apply within a Zone too, so they change something even when the Model has
+     one Zone. A Face's name orders by its place number, not its text: the text starts with the Face's type,
+     and choosing a type in a chip must not move the row out from under the user. A summary row
+     ("N unclassified Faces") and "Show all" keep their place after the Faces. */
+  function ordered(records, byId, rows, controls) {
+    var children = Object.create(null), field = controls.orderBy.value;
+    var sign = controls.direction.value === "desc" ? -1 : 1;
     rows.forEach(function (row) {
       if (row.parent) (children[row.parent] = children[row.parent] || []).push(row);
     });
+    function faceValue(row) { return field === "area_m2" ? row.record.face.area_m2 : row.record.place; }
+    function byFace(a, b) {
+      return (faceValue(a) - faceValue(b)) * sign || a.record.place - b.record.place;
+    }
+    function sorted(list) {
+      var faces = list.filter(function (row) { return row.record.face; }).sort(byFace);
+      return faces.concat(list.filter(function (row) { return !row.record.face; }));
+    }
     function withChildren(row) {
-      return (children[row.key] || []).reduce(function (all, child) { return all.concat(withChildren(child)); }, [row]);
+      return sorted(children[row.key] || []).reduce(function (all, child) {
+        return all.concat(withChildren(child));
+      }, [row]);
     }
     return records.reduce(function (all, record) { return all.concat(withChildren(byId[record.id])); }, []);
   }
