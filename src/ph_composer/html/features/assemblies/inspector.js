@@ -33,7 +33,11 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
       view.appendChild(unitFields.DimensionFormatControl("assemblies", this.chooseDimensionFormat).root);
       root.appendChild(view);
       var tools = el("div", "assembly-tool-group");
-      control(this, tools, "Add Layer", "layers.add", {}, false, null, "add");
+      var addLayer = ui.iconButton("Add Layer", "add", function () {
+        self.insert({ kind: "layer", action: "layers.add", params: { thickness_mm: shared.newSize("layer") } });
+      });
+      addLayer.setAttribute("data-builder-action", "layers.add");
+      tools.appendChild(addLayer);
       var more = new ui.ActionMenu("More drawing actions");
       [["Mirror segments", "segments.mirror"], ["Flip Layers", "layers.flip"],
         ["Flip orientation", "layers.flip_orientation"]].forEach(function (item) {
@@ -54,6 +58,11 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
         self.sidebar.reveal(material && material.id);
       });
       choose.className = "assembly-material-chip";
+      if (material) {
+        var swatch = el("span", "library-sidebar-swatch");
+        swatch.style.backgroundColor = material.color || "#ffffff";
+        choose.insertBefore(swatch, choose.firstChild);
+      }
       choose.title = material ? "Show " + material.name + " in the Material Library" :
         "Choose from the Material Library";
       choose.setAttribute("data-editor-local", "");
@@ -62,8 +71,14 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
         return entry.layer.id === selected.layer.id;
       })[0].isMembrane;
       var only = selected.layer.segments.length === 1;
-      var add = control(this, selection, "Add segment", "segments.add", { layer_id: selected.layer.id }, membrane,
-        null, "split");
+      // Beside the selection, like the edge control, and what it makes is selected.
+      var add = ui.iconButton("Insert Layer-Segment right", "split", function () {
+        self.insert({ kind: "segment", action: "segments.add", params: { layer_id: selected.layer.id,
+          index: selected.segmentIndex + 1, width_mm: shared.newSize("segment") } });
+      });
+      add.disabled = membrane;
+      add.setAttribute("data-builder-action", "segments.add");
+      selection.appendChild(add);
       var remove = control(this, selection, "Delete segment", "segments.remove",
         { layer_id: selected.layer.id, segment_id: selected.segment.id }, only,
         selected.segment.material_id ? "Delete this Layer-Segment and its Material assignment?" : null, "delete");
@@ -72,10 +87,15 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
       if (only) remove.title = "A Layer keeps at least one Layer-Segment";
       var layerTrigger = ui.button("Layer tools");
       var layerMenu = new ui.Bubble(layerTrigger, "Layer tools");
-      control(this, layerMenu.content, "Add outside", "layers.add",
-        { anchor_layer_id: selected.layer.id, side: "outside" });
-      control(this, layerMenu.content, "Add inside", "layers.add",
-        { anchor_layer_id: selected.layer.id, side: "inside" });
+      [["Add outside", "outside"], ["Add inside", "inside"]].forEach(function (item) {
+        var button = ui.button(item[0], function () {
+          layerMenu.close(false);
+          self.insert({ kind: "layer", action: "layers.add", params: { anchor_layer_id: selected.layer.id,
+            side: item[1], thickness_mm: shared.newSize("layer") } });
+        });
+        button.setAttribute("data-builder-action", "layers.add");
+        layerMenu.content.appendChild(button);
+      });
       control(this, layerMenu.content, "Move outward", "layers.move",
         { layer_id: selected.layer.id, direction: "outward" });
       control(this, layerMenu.content, "Move inward", "layers.move",
@@ -86,8 +106,9 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
         }) ? "Delete this Layer and all its Layer-Segments, including their Material assignments?" : null);
       selection.appendChild(layerMenu.root);
       var trigger = ui.iconButton("Segment properties", "settings");
+      var spacingKey = "spacing:" + selected.layer.id + ":" + selected.segment.id;
       var bubble = new ui.Bubble(trigger, "Layer-Segment properties", { guard: function () {
-        return !self.painting && self.hasDimensionDraft() ? "Apply or cancel the dimension draft." : null;
+        return self.painting ? null : self.settleDimension(spacingKey);
       }, refused: self.notice });
       var continuous = el("input");
       continuous.type = "checkbox";
@@ -98,7 +119,7 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
           values: { is_continuous_insulation: continuous.checked } });
       });
       bubble.content.appendChild(shared.field("Continuous insulation", continuous));
-      var spacing = this.dimension("spacing:" + selected.layer.id + ":" + selected.segment.id,
+      var spacing = this.dimension(spacingKey,
         { value: selected.segment.steel_stud_spacing_mm, label: "Steel stud spacing", optional: true,
           action: "segments.update", params: { layer_id: selected.layer.id, segment_id: selected.segment.id },
           nested: "steel_stud_spacing_mm" });

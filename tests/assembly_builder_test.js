@@ -191,19 +191,83 @@ test("pointer drops reject outside/removed targets and dispatch exactly one acce
   assert.strictEqual(hit.classList.contains("is-drop-target"), false);
   assert.strictEqual(drag.entry, null);
 });
-test("a dimension blur and sidebar toggle retain typing without writes; a completed snapshot settles it", function () {
+test("leaving a dimension field applies it once; a sidebar toggle alone sends nothing", function () {
   var o = setup(), field = o.editor.dimensions["thickness:layer_studs"].field;
   typed(field, "160");
-  field.input.blur();
   o.editor.sidebar.toggle();
-  assert.strictEqual(o.sent.length, 0);
-  assert.strictEqual(field.input.value, "160");
-  o.editor.commitDimension("thickness:layer_studs");
+  assert.strictEqual(o.sent.length, 0, "folding the library is not leaving the field");
+  field.input.listeners.blur({});
+  assert.strictEqual(o.sent.length, 1);
+  assert.strictEqual(o.sent[0].payload.params.thickness_mm, 160);
   o.record.values.layers[1].thickness_mm = 160;
   result(o);
   assert.strictEqual(field.editing, false);
   assert.strictEqual(field.input.disabled, false);
   assert.strictEqual(o.editor.guard(), null);
+});
+test("a dimension bubble applies a changed draft as it closes and stays open on one it cannot apply", function () {
+  var o = setup(), field = o.editor.dimensions["thickness:layer_studs"].field;
+  typed(field, "abc");
+  assert.ok(o.editor.settleDimension("thickness:layer_studs"), "an invalid draft keeps the bubble open");
+  assert.strictEqual(o.sent.length, 0);
+  typed(field, "150");
+  assert.strictEqual(o.editor.settleDimension("thickness:layer_studs"), null);
+  assert.strictEqual(o.sent[0].payload.params.thickness_mm, 150);
+});
+function hover(o, layerId, segmentId, x, y) {
+  var hit = o.editor.root.querySelectorAll(".assembly-hit-target").filter(function (node) {
+    return node.getAttribute("data-layer-id") === layerId && node.getAttribute("data-segment-id") === segmentId;
+  })[0];
+  hit.rect = { left: 0, top: 0, right: 200, bottom: 100, width: 200, height: 100 };
+  hit.closest = function () { return hit; };
+  o.editor.root.querySelector(".assembly-drawing").listeners.mousemove({ target: hit, clientX: x, clientY: y });
+  return o.editor.root.querySelector(".assembly-insert");
+}
+test("an edge insert shows one control near the edge, named by its result, and selects what it made", function () {
+  var o = setup();
+  var control = hover(o, "layer_studs", "seg_wool", 100, 50);
+  assert.strictEqual(control.hidden, true, "nothing in the middle of a Layer-Segment");
+  control = hover(o, "layer_studs", "seg_wool", 198, 50);
+  assert.deepStrictEqual([control.hidden, control.getAttribute("aria-label")], [false, "Insert Layer-Segment right"]);
+  control = hover(o, "layer_studs", "seg_wool", 100, 2);
+  assert.strictEqual(control.getAttribute("aria-label"), "Insert layer above");
+  click(control);
+  var params = o.sent[0].payload.params;
+  assert.strictEqual(o.sent[0].payload.name, ASSEMBLIES + ".layers.add");
+  assert.deepStrictEqual([params.anchor_layer_id, params.side, params.thickness_mm], ["layer_studs", "outside", 100],
+    "the top of a first-Layer-outside Assembly is the exterior side, at a round default");
+  o.record.values.layers.splice(1, 0, { id: "layer_new", thickness_mm: 100, segments: [{ id: "seg_new",
+    width_mm: 600, material_id: null }] });
+  result(o);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.editor.selection)),
+    { layerId: "layer_new", segmentId: "seg_new" });
+});
+test("a membrane's side edges explain why they add nothing, and a second click lets a selection go", function () {
+  var o = setup();
+  o.state.sections[MATERIALS].value.records.forEach(function (record) {
+    if (record.id === "mat_b") record.values.category = "Membrane";
+  });
+  o.editor.refresh(o.state, o.record.id);
+  var control = hover(o, "layer_board", "seg_board", 2, 50);
+  assert.ok(control.classList.contains("is-blocked"));
+  click(control);
+  assert.strictEqual(o.sent.length, 0);
+  assert.ok(/membrane/i.test(o.notices[o.notices.length - 1]));
+  o.editor.select({ layerId: "layer_studs", segmentId: "seg_wool" });
+  var hit = o.editor.root.querySelectorAll(".assembly-hit-target").filter(function (node) {
+    return node.getAttribute("data-segment-id") === "seg_wool";
+  })[0];
+  click(hit);
+  assert.strictEqual(o.editor.selection, null);
+});
+test("the selected Layer-Segment's width is a dimension line under exactly that segment", function () {
+  var o = setup();
+  o.editor.select({ layerId: "layer_studs", segmentId: "seg_steel" });
+  var line = o.editor.root.querySelector(".assembly-width-dimension");
+  assert.strictEqual(line.style.left, 560 * o.editor.zoom + "px");
+  assert.strictEqual(line.style.width, 40 * o.editor.zoom + "px");
+  assert.ok(line.classList.contains("is-narrow"), "a narrow segment puts its label beside the line");
+  assert.ok(o.editor.root.querySelector("[data-segment-width='seg_steel']"));
 });
 test("withdrawal resets a pending Builder and retained toolbar/sidebar callbacks cannot write", function () {
   var o = setup(), add = o.editor.root.querySelector("[data-builder-action='layers.add']");
@@ -280,7 +344,7 @@ test("the toolbar shows a selection's tools only while a Layer-Segment is select
   });
   o.editor.select({ layerId: "layer_studs", segmentId: "seg_steel" });
   bar = o.editor.root.querySelector(".assembly-toolbar");
-  ["Add segment", "Delete segment", "Segment properties"].forEach(function (label) {
+  ["Insert Layer-Segment right", "Delete segment", "Segment properties"].forEach(function (label) {
     assert.ok(bar.querySelectorAll("button").some(function (node) {
       return node.getAttribute("aria-label") === label; }), label + " is an icon named for what it does");
   });

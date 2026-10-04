@@ -1,7 +1,7 @@
 # Assembly Builder parity matrix: predecessor vs Composer
 
 DATE: 2026-10-04
-STATUS: audit draft (static source read only; no host run, no hover or pixel checks)
+STATUS: audit complete; gaps 1 to 5, 8, 9 and 10 fixed on feature/ui-ux-polish (see DECISIONS D9); 6 and 7 decided otherwise (D6); 11 to 14 are follow-ups
 
 Scope: UX-014 to UX-018 in `../REQUESTS.md`. designPH push, adoption and usage-scan affordances are an intentional exclusion (retired).
 

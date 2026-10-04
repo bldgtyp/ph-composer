@@ -61,6 +61,8 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
         return self.action("segments.set_material", Object.assign({}, target, { material_id: row.id }));
       } });
     this.sidebar.dropHost = this.main;
+    // While a Material is dragged from the library, the edge insert control stays out of the way.
+    this.sidebar.onDragChange = function (dragging) { self.dragging = Boolean(dragging); };
     this.root.appendChild(this.main);
     this.root.appendChild(this.sidebar.root);
     this.root.appendChild(this.color.root);
@@ -127,6 +129,7 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
       onDone: function () {
         if (dimensionKey && self.dimensions[dimensionKey]) self.dimensions[dimensionKey].accepted = true;
       }, onFail: function (outcome) {
+        self.pendingInsert = null;
         var message = snapshot.message(outcome, "The Assembly change was not applied.");
         if (dimensionKey && self.dimensions[dimensionKey]) {
           self.dimensions[dimensionKey].requiresCancel = true;
@@ -162,11 +165,13 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
         event.stopImmediatePropagation();
         self.commitDimension(key);
       }, true);
+      // Leaving the field applies the draft, as Enter does. A blur during a repaint is the page moving the
+      // input, not the user leaving it, so it sends nothing.
+      entry.field.input.addEventListener("blur", function () {
+        if (!self.painting && entry.field.input.isConnected) self.commitDimension(key);
+      });
       entry.root = el("div", "assembly-dimension-editor");
       entry.root.appendChild(entry.field.root);
-      var cancel = ui.button("Cancel", function () { if (!self.busy()) entry.field.cancel(); });
-      var apply = ui.button("Apply", function () { self.commitDimension(key); });
-      entry.root.appendChild(ui.actionRow(cancel, apply));
     }
     entry.spec = spec;
     entry.live = true;
@@ -205,6 +210,42 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     if (entry.spec.nested) { params.values = {}; params.values[entry.spec.nested] = parsed.value; }
     else params[entry.spec.field] = parsed.value;
     return this.action(entry.spec.action, params, entry.expected || this.expected(), key);
+  };
+  /* Before a dimension's bubble closes: an unchanged or already sent draft lets it close, a changed one is
+     applied, and one that cannot be applied (invalid, or the Model moved) keeps the bubble open and says why. */
+  Editor.prototype.settleDimension = function (key) {
+    var entry = this.dimensions[key];
+    if (!entry || !entry.field.editing || this.busy()) return null;
+    if (entry.field.input.value === entry.field.seed) { entry.field.cancel(); return null; }
+    if (entry.requiresCancel) return "Press Escape to restore " + entry.spec.label.toLowerCase() + ".";
+    if (this.commitDimension(key) || this.busy()) return null;
+    return entry.field.error.textContent || "Enter a valid value, or press Escape.";
+  };
+  /* An edge's insert: one action with a round default size, then what it made is selected, so the next step
+     (resize it, give it a Material) is right there. */
+  Editor.prototype.insert = function (target) {
+    var layers = this.record.values.layers || [];
+    var before = target.kind === "layer" ? layers.map(function (layer) { return layer.id; }) :
+      (layers.filter(function (layer) { return layer.id === target.params.layer_id; })[0] || { segments: [] })
+        .segments.map(function (segment) { return segment.id; });
+    if (!this.action(target.action, target.params)) return false;
+    this.pendingInsert = { kind: target.kind, layerId: target.params.layer_id, before: before };
+    return true;
+  };
+  Editor.prototype.selectInserted = function (record) {
+    var pending = this.pendingInsert, layers = record.values.layers || [];
+    if (!pending || this.busy()) return;
+    this.pendingInsert = null;
+    if (pending.kind === "layer") {
+      var layer = layers.filter(function (candidate) { return pending.before.indexOf(candidate.id) < 0; })[0];
+      if (layer && layer.segments.length) this.selection = { layerId: layer.id, segmentId: layer.segments[0].id };
+      return;
+    }
+    var host = layers.filter(function (candidate) { return candidate.id === pending.layerId; })[0];
+    var segment = host && host.segments.filter(function (candidate) {
+      return pending.before.indexOf(candidate.id) < 0;
+    })[0];
+    if (segment) this.selection = { layerId: host.id, segmentId: segment.id };
   };
   Editor.prototype.paintPending = function () {
     var busy = this.busy();
@@ -254,6 +295,7 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     this.assemblyId = id;
     this.enabled = true;
     this.requests.consume(state);
+    this.selectInserted(record);
     var row = { key: id, record: record };
     this.edits.refresh([row], state);
     this.color.refresh(state, true, payload.records);
