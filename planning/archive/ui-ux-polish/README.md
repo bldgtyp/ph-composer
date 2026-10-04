@@ -1,7 +1,7 @@
 # UI and UX polish
 
 DATE: 2026-10-04
-STATUS: Scoped; planning checkpoint prepared, implementation not authorized.
+STATUS: Complete. Merged to main through PR #71 on 2026-10-04; archived.
 ISSUE: none (local planning draft)
 
 This packet organizes Ed's 22 requests from the Zones / Faces, Assemblies and Windows review.
@@ -23,8 +23,8 @@ disclosure for secondary tools and information, while keeping active state and r
 Ed authorizes thoughtful disagreement with his suggested solutions. Recommendations are not
 accepted decisions merely because they appear in this packet.
 
-The [UI polish skill](../../../../.agents/skills/ph-composer-ui-polish/SKILL.md), its linked
-patterns and the [UI baseline](../../../ui-baseline/README.md) govern the work. Source remains
+The [UI polish skill](../../../.agents/skills/ph-composer-ui-polish/SKILL.md), its linked
+patterns and the [UI baseline](../../ui-baseline/README.md) govern the work. Source remains
 behavioral authority. Shared kit changes must be reflected in the skill and the private Design
 System once accepted and merged. Screenshots remain outside tracked files.
 
@@ -37,5 +37,5 @@ Out of scope: new Spaces, Thermal Bridges or Systems features, designPH integrat
 provider privilege, stored-data migrations, exporter changes, release and platform claims.
 If investigation reveals a contract or model change is necessary, identify it explicitly and
 resolve the scope before implementation. Existing keyboard-focus work remains separately owned
-by [panel-keyboard-focus](../../unscheduled/panel-keyboard-focus/README.md); coordinate overlapping
+by [panel-keyboard-focus](../../features/unscheduled/panel-keyboard-focus/README.md); coordinate overlapping
 fixes rather than duplicate or silently close that packet.

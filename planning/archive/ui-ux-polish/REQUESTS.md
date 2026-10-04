@@ -1,7 +1,7 @@
 # UI and UX polish: request register
 
 DATE: 2026-10-04
-STATUS: Initial intake organized for planning; implementation not yet authorized.
+STATUS: Complete. Every request implemented or decided; see DECISIONS and STATUS.
 ISSUE: none (local planning draft)
 
 The delivery sequence is in [PLAN.md](PLAN.md), open choices in [DECISIONS.md](DECISIONS.md)
@@ -235,10 +235,10 @@ S8 = 1.29.42 PM (Libraries modal). Same attachment naming convention as batch 1.
 #### UX-016: Detailed predecessor Assembly Builder parity audit (owner item 4)
 
 - Request: carefully review
-  `../../../../../ph-navigator-sketchup/src/ph_navigator_sketchup/features/assemblies/` for feature parity,
+  `../../../../ph-navigator-sketchup/src/ph_navigator_sketchup/features/assemblies/` for feature parity,
   especially add layer/segment, dimensions, resize, delete layer/segment and other affordances.
 - Scope: inspect the Ruby command/model behavior together with the predecessor UI under
-  `../../../../../ph-navigator-sketchup/src/ph_navigator_sketchup/html/`: `assembly_canvas.js`,
+  `../../../../ph-navigator-sketchup/src/ph_navigator_sketchup/html/`: `assembly_canvas.js`,
   `assembly_editor.js`, `assembly_editor_shared.js`, `assembly_stage.js`,
   `assembly_inspector.js`, `assembly_header.js`, `assembly.css` and related modules/tests.
   Ruby insertion/deletion owners include `features/assemblies/commands/layers.rb` and
@@ -372,8 +372,8 @@ consumers; a confirmed sorting defect may be kept as a small independent fix.
 
 ## Design System and skill updates
 
-The [PH-Composer UI polish skill](../../../../.agents/skills/ph-composer-ui-polish/SKILL.md) and its
-[patterns](../../../../.agents/skills/ph-composer-ui-polish/references/patterns.md) govern this review.
+The [PH-Composer UI polish skill](../../../.agents/skills/ph-composer-ui-polish/SKILL.md) and its
+[patterns](../../../.agents/skills/ph-composer-ui-polish/references/patterns.md) govern this review.
 The [Design System](https://claude.ai/artifact/77GLrkZxtkxo9TksTbvodL) is the private Claude
 artifact identified by the skill; current access and artifact contents have not been checked.
 Shipping stylesheets remain authoritative. Track synchronization as an explicit deliverable,

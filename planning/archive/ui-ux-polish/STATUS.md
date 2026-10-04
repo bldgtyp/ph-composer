@@ -1,7 +1,7 @@
 # UI and UX polish: status
 
 DATE: 2026-10-04
-STATUS: All slices implemented on branch `feature/ui-ux-polish`; native acceptance and Design System sync outstanding.
+STATUS: Complete. Merged to main through PR #71 (merge commit 82a1ca5) on 2026-10-04; archived.
 ISSUE: none (local planning draft)
 
 ## Delivery ledger
@@ -19,10 +19,11 @@ ISSUE: none (local planning draft)
 | P6 Windows toolbar | Implemented on branch | UX-022; grouping recorded under P6 in DECISIONS |
 | P7 sorting | Implemented on branch | Not a defect at its scope: Order by sorted Zones only, so with one Zone it changed nothing. D8 now orders Faces within each Zone; `overview_panel_test.js` covers Name, Area and both directions |
 | Skill/pattern changes | Updated per slice | P1: editable-table rule, page header, control-row count, enum pill. P2: success tone, reason button, dialog close and focus return |
-| Design System sync | Pending merge | Re-sync the artifact from main after merge |
+| Design System sync | Complete | Artifact re-synced from main@82a1ca5 on 2026-10-04 (version 5): README, tokens (row hover wash, nine chip tints, row height), Table, Notice, PageHeader, Toolbar, RecordForm, LibrarySidebar and Inspector cards, bundle.css rebuilt from the seven panel stylesheets |
 | Reviews | Complete | P1 to P3: one Sonnet review, no high-severity defect, material findings fixed in the P4 commit. P4 to P6: fresh-context Opus review (high assurance for P5), no double-send path; two confirmed and ten traced or plausible findings fixed (dispose with an open draft, equal retype, live bubble close, draft kept on reopen, reopen by dimension key, focus after insert, header focus, Enter order on Chromium 88, pendingInsert timing, window-blur partial apply, membrane insert reach, notice hover hold) |
 | Verification | Complete offline | `make ci` and `make ui-checks` (1280/900/420/280) pass on the final branch; JS suite under tools/js_test_guard.js peaks near 750 MB |
-| Host acceptance | Not run | Branch build installed with `make install` for Ed's look on 2026-10-04; the native acceptance pass in ACCEPTANCE is still owed |
+| Host acceptance | Accepted by Ed | Branch build installed with `make install` on 2026-10-04; Ed checked it in SketchUp 2026 and approved. No agent-driven native walkthrough was run, and the final review fixes (commit 516cbeb) landed after the installed build |
+| Merge | Complete | [PR #71](https://github.com/bldgtyp/ph-composer/pull/71), CI `make ci` on Ruby 2.7.2 and 3.2.2 passed |
 
 ## P0 findings
 
@@ -48,4 +49,4 @@ ISSUE: none (local planning draft)
 
 ## Next action
 
-Native SketchUp acceptance per ACCEPTANCE (needs Ed's go for computer use on SketchUp), then Design System sync from main and archive.
+None. Archived 2026-10-04. Follow-ups above remain open for later packets.

@@ -1,7 +1,7 @@
 # UI and UX polish: decisions
 
 DATE: 2026-10-04
-STATUS: Decisions taken on Ed's behalf during implementation, 2026-10-04; open to veto.
+STATUS: Complete. Decisions taken on Ed's behalf during implementation, 2026-10-04; merged through PR #71.
 ISSUE: none (local planning draft)
 
 ## Settled direction

@@ -1,7 +1,7 @@
 # UI and UX polish: acceptance
 
 DATE: 2026-10-04
-STATUS: Planning checks only; implementation and host checks NOT RUN.
+STATUS: Complete. Offline gates and browser checks passed; Ed checked the branch build in SketchUp 2026 on 2026-10-04; merged through PR #71.
 ISSUE: none (local planning draft)
 
 ## Planning checkpoint
