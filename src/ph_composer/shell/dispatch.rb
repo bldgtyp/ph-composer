@@ -96,9 +96,9 @@ module PhComposer
     end
 
     # The refusal `setup` or `file_export` would give before its handler runs (session, grant, params,
-    # busy), or nil when none applies. A native client asks before it opens a dialog, so the user never
-    # chooses a location for a call that was going to be refused anyway. Dispatch repeats every check
-    # after the dialog. No handler runs, so only common refusals arise and none is reported for audit.
+    # busy, the declared precondition), or nil when none applies. A native client asks before it opens
+    # a dialog, so the user never chooses a location for a call that was going to be refused anyway.
+    # Dispatch repeats every check after the dialog, and only that answer is reported for audit.
     def setup_refusal(context, name, params)
       admission_refusal(context, "setup", name, @registry.setup_commands, params)
     end
@@ -191,8 +191,9 @@ module PhComposer
     def answer(context, capability, name, declarations, params, approval: nil)
       session, _caller, declaration = resolve(context, capability, name, declarations)
       check_params!(declaration, params, session)
-      check_approval!(declaration, approval)
+      NativeApproval.check!(declaration, approval)
       refuse_if_busy!(session)
+      check_precondition!(session, params, declaration)
       value = declaration.handler.call(request_for(session, params, declaration, :approval => approval))
       check_result!(declaration, value)
       Outcome.completed(:revision => session.revision, :value => value)
@@ -210,6 +211,7 @@ module PhComposer
       session, _caller, declaration = resolve(context, capability, name, declarations)
       check_params!(declaration, params, session)
       refuse_if_busy!(session)
+      check_precondition!(session, params, declaration)
       nil
     rescue CodedError => error
       coded_outcome(error, session)
@@ -297,14 +299,12 @@ module PhComposer
       raise CodedError.new("session.busy", reason, "reason" => reason) if reason
     end
 
-    # A location only the user can choose arrives from a native client or not at all.
-    def check_approval!(declaration, approval)
-      needed = declaration.respond_to?(:approval) && declaration.approval
-      return unless needed && approval.nil?
+    # A declared precondition sees the validated params, never the approval, so it can run before a
+    # native client opens a dialog as well as before the handler.
+    def check_precondition!(session, params, declaration)
+      return unless declaration.respond_to?(:precondition) && declaration.precondition
 
-      raise CodedError.new("access.user_required", "#{declaration.name} needs the user to choose a " \
-                                                   "#{NativeApproval.noun(needed)} in SketchUp, from the " \
-                                                   "PH-Composer panel or menu. No dialog was opened.")
+      declaration.precondition.call(request_for(session, params, declaration))
     end
 
     def check_params!(declaration, params, session)

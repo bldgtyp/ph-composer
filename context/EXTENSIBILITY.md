@@ -319,7 +319,9 @@ the result is detached and validated against its declared schema. A destination 
 choose is declared, not asked for: `approval: Declarations::Approval.new(kind: "save_file", title:,
 default_name:)`. The handler then reads `request.approval.path` and `.replace`, opens no dialog, and
 refuses an existing destination the user did not agree to replace. A setup command takes the same
-`approval:` with kind `open_file` or `open_folder`. The panel and native menus obtain the answer
+`approval:` with kind `open_file` or `open_folder`. A check that can refuse before any location is
+chosen, such as a stale `expected_revision`, is declared as `precondition: ->(request) { }` raising a
+coded error; dispatch runs it before a native dialog opens and again before the handler. The panel and native menus obtain the answer
 through `NativeApproval`, a shell internal and not a supported API; any other caller is refused with
 `access.user_required`
 ([AGENT_INTERFACE.md](AGENT_INTERFACE.md), "Locations only the user can choose"). Ruby contributors
@@ -468,7 +470,8 @@ The handler takes the same `request` a query's does. It must not write a record,
 with no sequence and no expected revision; it refuses while the session is busy. Access is the
 `setup` capability, which `API.connect` never grants by default: changing what is configured on the
 user's machine is granted explicitly, as `export` is. The panel sends `setup.invoke` and settles
-the answer in its own result slot.
+the answer in its own result slot. A setup command takes the same optional `approval:` and
+`precondition:` a file export does (see "Registered file exports").
 
 ### Viewport tools
 

@@ -103,15 +103,18 @@ module PhComposer
     # `->(request) { value }`, as a view command's is. It writes no record, opens no Model operation
     # and leaves no Undo entry; it is granted apart from `view`, because a view command changes only
     # what the host shows (context/EXTENSIBILITY.md, "Setup commands"). `approval` is an optional
-    # Approval.
+    # Approval. `precondition` is an optional `->(request) { }` that raises a CodedError to refuse; it
+    # sees the validated params and the session, never the approval, so dispatch runs it before a
+    # native client opens any dialog and again before the handler.
     SetupCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :approval,
-                              :handler, keyword_init: true)
+                              :precondition, :handler, keyword_init: true)
 
     # A local file write under the explicit export grant. Its handler validates and writes the file;
     # dispatch opens no Model transaction and consumes no action sequence. A destination the user
     # chooses is declared as an Approval and stays private to the handler, outside its JSON result.
-    FileExport = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :approval, :handler,
-                            keyword_init: true)
+    # `precondition` is as a setup command's.
+    FileExport = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :approval,
+                            :precondition, :handler, keyword_init: true)
 
     # The kind each operation is published as, by `describe` and in Refusals::COMMON.
     OPERATION_KINDS = { Query => "query", Action => "action", ViewCommand => "view_command",

@@ -305,3 +305,17 @@ Load `.agents/skills/ph-composer-ui-polish/SKILL.md` before this phase.
   `ph_composer.library.providers` to see whether the add happened, as for any setup command.
 - The `location` param is foundation-injected schema. If D2 goes the other way, Phase 3 changes the
   API signature instead, and the remaining phases are unaffected.
+
+## Delivery
+
+Branch `feature/agent-authorized-file-access`, one commit per phase.
+
+| Phase | State | Evidence |
+| ----- | ----- | -------- |
+| 1. Declared preconditions | Implemented on branch | `tests/file_export_test.rb`: a stale export refuses before the Save dialog and on direct dispatch; a non-callable precondition is refused at registration |
+| 2. Approved-locations store | Not started | |
+| 3. Dispatch resolves a location | Not started | |
+| 4. Replace consent bound to review | Not started | |
+| 5. HBJSON on the same mechanism | Not started | |
+| 6. Panel and menu controls | Not started | |
+| 7. Documentation, walkthrough, acceptance | Not started | |

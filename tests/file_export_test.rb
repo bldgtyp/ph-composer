@@ -111,6 +111,33 @@ class FileExportTest < PhComposerTestCase
     end
   end
 
+  # A stale library export refuses before the user is asked for a destination, and a direct call with
+  # the same params is refused by the same declared precondition.
+  def test_a_declared_precondition_refuses_before_the_save_dialog_and_on_direct_dispatch
+    session = PhComposer::Sessions.for(Sketchup.active_model)
+    name = "ph_composer.library.export_file"
+    stale = { "expected_revision" => session.revision + 1 }
+    UI.stub(:savepanel, ->(*) { flunk "A stale export must not open the save dialog." }) do
+      assert_equal "revision.stale", PhComposer::NativeApproval.file_export(context, name, stale)["code"]
+    end
+    granted = PhComposer::NativeApproval::Granted.new(:path => "/never/written.json", :replace => false)
+    direct = PhComposer::Dispatch.new.file_export(context, name, stale, :approval => granted)
+    assert_equal %w[refused revision.stale none], direct.values_at("status", "code", "effect")
+  end
+
+  def test_a_precondition_that_cannot_be_called_is_refused_at_registration
+    item = feature
+    item.define_singleton_method(:install) do |registry|
+      closed = { "type" => "object", "properties" => {}, "additionalProperties" => false }
+      registry.feature("test.files", :contract_version => 1).file_export(
+        NAME, :description => "Write a synthetic file.", :params => closed, :result => SHAPE, :refuses => [],
+              :precondition => "stale?"
+      ) { |_request| { "written" => true } }
+    end
+    error = assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([item]) }
+    assert_includes error.message, "precondition must be callable"
+  end
+
   def test_an_approval_of_an_unknown_kind_is_refused_at_registration
     approval = PhComposer::Declarations::Approval.new(:kind => "print", :title => "Print")
     error = assert_raises(PhComposer::RegistrationError) do

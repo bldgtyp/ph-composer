@@ -15,14 +15,18 @@ module PhComposer
 
       module_function
 
-      def run(request)
+      # What can refuse before a destination is chosen (Declarations::FileExport): dispatch runs it
+      # before the native save dialog opens and again before `run`.
+      def precondition(request)
         if request.params.key?("expected_revision") && request.params["expected_revision"] != request.session.revision
           raise Error.new("revision.stale", "The Model changed since the library export was requested.")
         end
-        if request.params.key?("library_name") && request.params.fetch("library_name").strip.empty?
-          raise Error.new("params.invalid", "The library name must not be blank.")
-        end
+        return unless request.params.key?("library_name") && request.params.fetch("library_name").strip.empty?
 
+        raise Error.new("params.invalid", "The library name must not be blank.")
+      end
+
+      def run(request)
         before = ExportProjection.build(request)
         writer = FileWriter.new(request.approval.path)
         if writer.replaces? && !request.approval.replace

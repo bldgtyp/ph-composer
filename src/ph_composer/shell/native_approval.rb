@@ -42,8 +42,14 @@ module PhComposer
       end
     end
 
-    def noun(approval)
-      NOUNS.fetch(approval.kind)
+    # Dispatch's check: a location only the user can choose arrives from a native client or not at all.
+    def check!(declaration, approval)
+      needed = declaration.respond_to?(:approval) && declaration.approval
+      return unless needed && approval.nil?
+
+      raise CodedError.new("access.user_required", "#{declaration.name} needs the user to choose a " \
+                                                   "#{NOUNS.fetch(needed.kind)} in SketchUp, from the " \
+                                                   "PH-Composer panel or menu. No dialog was opened.")
     end
 
     # The dispatch outcome, or a cancellation when the user dismissed a dialog. An unknown name or a

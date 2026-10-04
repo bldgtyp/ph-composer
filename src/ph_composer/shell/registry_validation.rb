@@ -113,6 +113,10 @@ module PhComposer
           check_examples(operation)
           problem(operation, "needs a callable handler") unless operation.handler.respond_to?(:call)
           check_approval(operation) if operation.respond_to?(:approval)
+          if operation.respond_to?(:precondition) && !(operation.precondition.nil? ||
+                                                        operation.precondition.respond_to?(:call))
+            problem(operation, "precondition must be callable")
+          end
         end
         @staging.declared_file_exports.each do |operation|
           %i[params result].each do |part|

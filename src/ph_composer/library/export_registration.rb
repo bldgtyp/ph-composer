@@ -51,6 +51,7 @@ module PhComposer
                                             "native save dialog; export_preview shows what it will hold.",
                             :refuses => Refuses::EXPORT_FILE,
                             :params => params, :result => shape, :approval => ExportWorkflow::APPROVAL,
+                            :precondition => ExportWorkflow.method(:precondition),
                             :examples => [{}, { "scope" => "selected", "records" => [
                                                                          { "record_kind" => "example_parts",
                                                                            "id" => "part_AAAAAAAAAAAA" }
