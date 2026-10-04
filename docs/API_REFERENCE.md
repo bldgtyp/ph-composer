@@ -1816,6 +1816,7 @@ Every operation answers the codes of its kind's set besides its own, and an oper
 | `setup_command` | `request.malformed`, `request.api_version`, `request.capability_denied`, `session.unknown`, `session.busy`, `params.invalid`, `operation.failed` |
 | `file_export` | `request.malformed`, `request.api_version`, `request.capability_denied`, `session.unknown`, `session.busy`, `params.invalid`, `operation.failed` |
 | `approval` | `access.user_required`, `request.cancelled` |
+| `location` | `location.unknown`, `location.revoked`, `location.used`, `location.kind_mismatch`, `location.unavailable`, `location.setup_unreadable`, `location.setup_unavailable` |
 
 ## Queries
 
@@ -36782,9 +36783,9 @@ Example params:
 
 Add a library file the user chooses in a native picker to this machine's libraries. Owner: `ph_composer.library`.
 
-Needs the user: the panel or menu asks for a file first; any other caller is refused with `access.user_required`.
+Needs the user: the panel or menu asks for a file first. Any other caller passes `location`, the id of a location the user approved, or is refused with `access.user_required`.
 
-Refuses: `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.schema_unsupported`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` common sets.
+Refuses: `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.schema_unsupported`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` and `location` common sets.
 
 Params:
 
@@ -36793,7 +36794,23 @@ Params:
   "type": "object",
   "additionalProperties": false,
   "required": [],
-  "properties": {}
+  "properties": {
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The id of a location the user approved, from ph_composer.locations.list."
+        }
+      },
+      "description": "An approved location to use instead of asking the user. A native client asks instead."
+    }
+  }
 }
 ```
 
@@ -36835,9 +36852,9 @@ Example params:
 
 Add a folder of library files the user chooses in a native picker to this machine's libraries. Owner: `ph_composer.library`.
 
-Needs the user: the panel or menu asks for a folder first; any other caller is refused with `access.user_required`.
+Needs the user: the panel or menu asks for a folder first. Any other caller passes `location`, the id of a location the user approved, or is refused with `access.user_required`.
 
-Refuses: `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.file_too_large`, `library.file_unreadable`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` common sets.
+Refuses: `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.file_too_large`, `library.file_unreadable`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, and the `setup_command` and `approval` and `location` common sets.
 
 Params:
 
@@ -36846,7 +36863,23 @@ Params:
   "type": "object",
   "additionalProperties": false,
   "required": [],
-  "properties": {}
+  "properties": {
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The id of a location the user approved, from ph_composer.locations.list."
+        }
+      },
+      "description": "An approved location to use instead of asking the user. A native client asks instead."
+    }
+  }
 }
 ```
 
@@ -37000,7 +37033,7 @@ Example params:
 
 Approve a save destination the user chooses in the native save dialog, so a caller with the export grant can export to it by location id until it is revoked. Owner: `ph_composer.locations`.
 
-Needs the user: the panel or menu asks for a destination file first; any other caller is refused with `access.user_required`.
+Needs the user: the panel or menu asks for a destination file and keeps it as an approved location; any other caller is refused with `access.user_required`.
 
 Refuses: `location.setup_unavailable`, `location.setup_unreadable`, and the `setup_command` and `approval` common sets.
 
@@ -37095,7 +37128,7 @@ Example params:
 
 Approve a library file the user chooses in a native picker, so a caller with the setup grant can add it once by location id. Owner: `ph_composer.locations`.
 
-Needs the user: the panel or menu asks for a file first; any other caller is refused with `access.user_required`.
+Needs the user: the panel or menu asks for a file and keeps it as an approved location; any other caller is refused with `access.user_required`.
 
 Refuses: `location.setup_unavailable`, `location.setup_unreadable`, and the `setup_command` and `approval` common sets.
 
@@ -37190,7 +37223,7 @@ Example params:
 
 Approve a folder of library files the user chooses in a native picker, so a caller with the setup grant can add it once by location id. Owner: `ph_composer.locations`.
 
-Needs the user: the panel or menu asks for a folder first; any other caller is refused with `access.user_required`.
+Needs the user: the panel or menu asks for a folder and keeps it as an approved location; any other caller is refused with `access.user_required`.
 
 Refuses: `location.setup_unavailable`, `location.setup_unreadable`, and the `setup_command` and `approval` common sets.
 
@@ -37557,9 +37590,9 @@ Called with a context granted `export`.
 
 Write local definitions to a library file the user chooses in the native save dialog; export_preview shows what it will hold. Owner: `ph_composer.library`.
 
-Needs the user: the panel or menu asks for a destination file first; any other caller is refused with `access.user_required`.
+Needs the user: the panel or menu asks for a destination file first. Any other caller passes `location`, the id of a location the user approved, or is refused with `access.user_required`.
 
-Refuses: `export.replace_required`, `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.format_invalid`, `library.kind_unavailable`, `library.schema_unsupported`, `library.update_destination_invalid`, `library.update_destination_required`, `record.unreadable`, `revision.stale`, `target.not_found`, and the `file_export` and `approval` common sets.
+Refuses: `export.replace_required`, `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.format_invalid`, `library.kind_unavailable`, `library.schema_unsupported`, `library.update_destination_invalid`, `library.update_destination_required`, `record.unreadable`, `revision.stale`, `target.not_found`, and the `file_export` and `approval` and `location` common sets.
 
 Params:
 
@@ -37626,6 +37659,30 @@ Params:
       "type": "integer",
       "minimum": 0,
       "description": "The Model revision export_preview reported; refused if the Model changed since."
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The id of a location the user approved, from ph_composer.locations.list."
+        },
+        "replace": {
+          "type": "boolean",
+          "description": "Consent to replace what the destination holds. Needs expected_destination."
+        },
+        "expected_destination": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The destination state a preview reported, so a destination that changed since is refused."
+        }
+      },
+      "description": "An approved location to use instead of asking the user. A native client asks instead."
     }
   }
 }

@@ -312,7 +312,8 @@ module PhComposer
       def setup_command(name, description:, params:, result:, refuses: nil, examples: [], approval: nil,
                         precondition: nil, &handler)
         declaration = Declarations::SetupCommand.new(
-          :name => name, :owner => id, :description => description, :params => params, :result => result,
+          :name => name, :owner => id, :description => description,
+          :params => ApprovedLocations.with_param(params, approval), :result => result,
           :examples => examples, :refuses => refuses, :approval => approval, :precondition => precondition,
           :handler => handler
         )
@@ -327,7 +328,8 @@ module PhComposer
       def file_export(name, description:, params:, result:, refuses: nil, examples: [], approval: nil,
                       precondition: nil, &handler)
         declaration = Declarations::FileExport.new(
-          :name => name, :owner => id, :description => description, :params => params, :result => result,
+          :name => name, :owner => id, :description => description,
+          :params => ApprovedLocations.with_param(params, approval), :result => result,
           :examples => examples, :refuses => refuses, :approval => approval, :precondition => precondition,
           :handler => handler
         )

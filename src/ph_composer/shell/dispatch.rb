@@ -191,11 +191,14 @@ module PhComposer
     def answer(context, capability, name, declarations, params, approval: nil)
       session, _caller, declaration = resolve(context, capability, name, declarations)
       check_params!(declaration, params, session)
-      NativeApproval.check!(declaration, approval)
+      approval, params = NativeApproval.admit(declaration, approval, params)
       refuse_if_busy!(session)
       check_precondition!(session, params, declaration)
       value = declaration.handler.call(request_for(session, params, declaration, :approval => approval))
       check_result!(declaration, value)
+      # Recorded only once the result is accepted: a call that failed, even after writing, keeps the
+      # location for a retry.
+      ApprovedLocations.mark_used(approval.location_id) if approval&.location_id
       Outcome.completed(:revision => session.revision, :value => value)
     rescue CodedError => error
       coded_outcome(error, session)

@@ -69,7 +69,7 @@ class ApiReferenceTest < PhComposerTestCase
 
     assert_equal PhComposer::Refusals::COMMON, API.discover.fetch("common_refusals")
     assert_equal ["action"], type_update.fetch("common_refusal_sets")
-    assert_equal %w[file_export approval], file_export.fetch("common_refusal_sets")
+    assert_equal %w[file_export approval location], file_export.fetch("common_refusal_sets")
     assert_includes type_update.fetch("refuses"),
                     { "code" => "window.overlap", "owner" => "ph_composer.windows",
                       "description" => PhComposer::Registry.current.codes.fetch("window.overlap").description }

@@ -78,7 +78,7 @@ class LibrarySetupCommandsTest < PhComposerTestCase
       write_library(File.join(folder, "one.json"))
       File.write(File.join(folder, "unrelated.json"), "not a library")
       result = Commands.add_path(folder, :adapters => adapters.method(:[]), :kinds => adapters.keys)
-      assert_equal File.basename(folder), result.first.fetch("label")
+      assert_equal "Library folder 1", result.first.fetch("label")
       assert_empty Sketchup.active_model.operations
     end
   end

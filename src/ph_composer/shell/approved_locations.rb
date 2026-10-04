@@ -33,6 +33,41 @@ module PhComposer
 
     module_function
 
+    # The `location` param registration adds to every operation whose Approval a location may answer
+    # (every Approval that is not standing), so a feature's own schema never declares it.
+    def param(kind)
+      id = { "type" => "string", "minLength" => 1,
+             "description" => "The id of a location the user approved, from ph_composer.locations.list." }
+      properties = { "id" => id }
+      if kind == "save_file"
+        properties["replace"] = { "type" => "boolean", "description" => "Consent to replace what the destination " \
+                                                                        "holds. Needs expected_destination." }
+        properties["expected_destination"] = {
+          "type" => "string", "minLength" => 1,
+          "description" => "The destination state a preview reported, so a destination that changed since is refused."
+        }
+      end
+      { "type" => "object", "additionalProperties" => false, "required" => ["id"], "properties" => properties,
+        "description" => "An approved location to use instead of asking the user. A native client asks instead." }
+    end
+
+    # `params` with the `location` param composed in, unless the declaration already names one, which
+    # registration then refuses.
+    def with_param(params, approval)
+      return params unless approval.is_a?(Declarations::Approval) && !approval.standing && params.is_a?(Hash) &&
+                           params["properties"].is_a?(Hash) && !params["properties"].key?("location")
+
+      params.merge("properties" => params["properties"].merge("location" => param(approval.kind)))
+    end
+
+    # The NativeApproval::Granted a `location` param stands for, with `params` less the location.
+    def grant(location, kind)
+      row = available(location.fetch("id"), kind)
+      NativeApproval::Granted.new(:path => row.fetch("path"), :replace => location["replace"] == true,
+                                  :state => location["expected_destination"], :label => row.fetch("label"),
+                                  :location_id => row.fetch("id")).freeze
+    end
+
     # "readable" (including nothing stored yet) or "unreadable".
     def state
       stored.last
@@ -79,13 +114,7 @@ module PhComposer
     # The path behind `id` for an operation that declared an approval of `kind`. Dispatch is the only
     # caller: it turns the path into the NativeApproval::Granted every handler already reads.
     def resolve(id, kind:)
-      row = usable(id, kind)
-      unless available?(row)
-        raise CodedError.new("location.unavailable", "The approved location #{row.fetch('label')} is no longer " \
-                                                     "there as approved. Approve it again in the Libraries dialog.")
-      end
-
-      row.fetch("path")
+      available(id, kind).fetch("path")
     end
 
     # Whether something is at the save destination `id` names, and its state by the exporter's own
@@ -114,6 +143,14 @@ module PhComposer
 
     def public_row(row)
       row.slice(*PUBLIC_KEYS).merge("available" => available?(row))
+    end
+
+    def available(id, kind)
+      row = usable(id, kind)
+      return row if available?(row)
+
+      raise CodedError.new("location.unavailable", "The approved location #{row.fetch('label')} is no longer " \
+                                                   "there as approved. Approve it again in the Libraries dialog.")
     end
 
     def usable(id, kind)
@@ -239,7 +276,7 @@ module PhComposer
         %w[label path approved_at].all? { |key| row[key].is_a?(String) && !row[key].empty? } &&
         row["use"] == USES[row["kind"]] && (row["last_used_at"].nil? || row["last_used_at"].is_a?(String))
     end
-    private_class_method :public_row, :usable, :find!, :noun, :available?, :default_label, :checked_label,
+    private_class_method :public_row, :available, :usable, :find!, :noun, :available?, :default_label, :checked_label,
                          :retire, :now, :rows, :writable, :stored, :save, :write, :valid?, :valid_row?
   end
 end

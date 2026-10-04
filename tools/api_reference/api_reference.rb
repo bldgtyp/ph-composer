@@ -129,8 +129,14 @@ module PhComposerTools
       end
       if declaration.respond_to?(:approval) && declaration.approval
         noun = PhComposer::NativeApproval.noun(declaration.approval)
-        lines << "Needs the user: the panel or menu asks for a #{noun} first; any other caller is refused " \
-                 "with `access.user_required`."
+        lines << if declaration.approval.standing
+                   "Needs the user: the panel or menu asks for a #{noun} and keeps it as an approved location; " \
+                     "any other caller is refused with `access.user_required`."
+                 else
+                   "Needs the user: the panel or menu asks for a #{noun} first. Any other caller passes " \
+                     "`location`, the id of a location the user approved, or is refused with " \
+                     "`access.user_required`."
+                 end
         lines << ""
       end
       lines << refuses_line(declaration)

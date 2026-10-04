@@ -136,10 +136,16 @@ module PhComposer
       def check_approval(operation)
         approval = operation.approval
         return if approval.nil?
-        return if approval.is_a?(Declarations::Approval) && Declarations::Approval::KINDS.include?(approval.kind) &&
-                  text?(approval.title)
+        unless approval.is_a?(Declarations::Approval) && Declarations::Approval::KINDS.include?(approval.kind) &&
+               text?(approval.title)
+          return problem(operation, "approval must be a Declarations::Approval of a known kind with a title")
+        end
 
-        problem(operation, "approval must be a Declarations::Approval of a known kind with a title")
+        properties = operation.params.is_a?(Hash) && operation.params["properties"]
+        declared = properties.is_a?(Hash) ? properties["location"] : nil
+        return if declared == (approval.standing ? nil : ApprovedLocations.param(approval.kind))
+
+        problem(operation, "params declare location, which registration adds for an approval")
       end
 
       # Every example is plain JSON that its params accept. An operation whose params accept `{}` may
