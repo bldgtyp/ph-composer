@@ -155,7 +155,7 @@ Measured in PH-Composer on 26.1.188, 2026-09-20
 ## Window-edit measurements on the current host
 
 Measured in a fresh SketchUp 2026 process on 2026-10-01. The
-[owning investigation](../planning/features/phase-02-envelope/evidence/p2-12-window-host.md)
+[owning investigation](../planning/archive/phase-02-envelope/evidence/p2-12-window-host.md)
 distinguishes native gestures from API preparation, including Ed's native Option Move-copy continuation.
 
 | Fact | Consequence |

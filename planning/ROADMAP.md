@@ -1,7 +1,7 @@
 # Roadmap
 
 DATE: 2026-10-01
-STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 merged to main through PR #15 on 2026-10-01 and archived; its review refactors are open.
+STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 merged to main through PR #15 on 2026-10-01 and archived; its eleven review refactors merged by 2026-10-02 and are archived.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 

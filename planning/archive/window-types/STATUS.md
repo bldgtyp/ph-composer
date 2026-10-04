@@ -1,7 +1,7 @@
 # window-types: final Phase 2 status
 
 DATE: 2026-10-01
-STATUS: Complete for Phase 2 on branch. Not merged or released.
+STATUS: Complete for Phase 2. Merged to main through PR #15 on 2026-10-01 (merge commit `c687a73`). Not released.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/14
 

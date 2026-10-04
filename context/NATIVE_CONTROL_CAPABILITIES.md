@@ -39,7 +39,7 @@ with a harmless synthetic case and update this reference. Do not require human h
 After development provider/fault overrides, restart the normal installed extension, verify no
 helper override/live runtime remains, and record the normal build's expected behavior.
 
-Sources: [Phase 2 groundwork observations](../planning/features/phase-02-envelope/evidence/p2-01-groundwork.md),
+Sources: [Phase 2 groundwork observations](../planning/archive/phase-02-envelope/evidence/p2-01-groundwork.md),
 [Colour-by toggle continuation](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-colour-by-continuation.md),
 [held gesture/context continuation](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-keyboard-context.md),
 [export lifecycle and restoration](../planning/archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md),
