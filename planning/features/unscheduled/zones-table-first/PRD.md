@@ -1,7 +1,7 @@
 # Zones / Faces: table-first layout
 
 DATE: 2026-10-04
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -114,6 +114,8 @@ legend, and the ambient hint (its text moves to a help button in the control row
   with this packet.
 
 ## Open decisions
+
+Settled on 2026-10-04 as D1 to D9 in [PLAN.md](PLAN.md); the questions are kept as asked.
 
 - Q1. Registered modes with no column here. The mode registry is open: Spaces, Thermal bridges and
   contributors will add modes. If the Colour by select goes, a mode with no bound column has no

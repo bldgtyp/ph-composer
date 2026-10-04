@@ -1,11 +1,12 @@
 # Zones / Faces: table-first layout
 
-Scoped. The Zones / Faces screen becomes one full-width table with no inspector column. Zone fields
+In progress. The Zones / Faces screen becomes one full-width table with no inspector column. Zone fields
 become columns, Colour by moves into the column headers, sort and filter move into column menus,
 Select becomes a checkbox set separate from Locate, and a floating bar over the table edits that
 set and holds the Classify palette.
 
-Read [PRD.md](PRD.md), then [STATUS.md](STATUS.md). [mockup.png](mockup.png) is the static mockup
+Read [PRD.md](PRD.md), then [PLAN.md](PLAN.md) (decisions and stages, with one document per stage in
+`phases/`), then [STATUS.md](STATUS.md). [mockup.png](mockup.png) is the static mockup
 Ed accepted on 2026-10-04, with one refinement: the header icons appear only on hover (PRD,
 "Column header actions").
 
