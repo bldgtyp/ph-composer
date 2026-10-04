@@ -125,7 +125,9 @@ section names a `tier`, one of `tool`, `selection`, `record` or `ambient`, and m
 `when(state)`, which answers false, true or `"hold"`. The section shown is the first that holds,
 or else the first that answers true, by tier in that order and then by `order`. A section holds
 while it carries a draft the user must not lose sight of, so a tool started from the viewport
-cannot hide it. With nothing to show the column is away. If the section that had the focus is
+cannot hide it. With nothing to show the column is away, unless the pane keeps an always-wanted
+`ambient` hint ranked last (Zones / Faces does, at `order: 1000`) so its work surface never changes
+width. If the section that had the focus is
 hidden, the focus moves to the one now shown. A control that would open another inspector
 section asks `panel.inspectorHeld(pane)` first and says why it cannot.
 
@@ -133,11 +135,14 @@ The kit owns visibility, here as with tabs: every section renders on every snaps
 not it is shown, because rendering is how a section consumes its results. `when` runs after the
 render pass, so it may read what its section's render just worked out.
 
-`tools` holds small controls for the work surface's control row. The work surface places them
-with `panel.region(pane, "tools")`, taking the pane from its own root. A pane that offers tools
-must place them; until it does they lead the main region. A feature adds an inspector section or a tool to a pane
-it does not own without naming that pane's owner, which is how Colour by and the Classify palette
-share the Zones / Faces pane. A pane whose sections all use `main` is laid out as before.
+`tools` holds view controls for the work surface's control row. The work surface places them
+with `panel.region(pane, "tools")`, taking the pane from its own root. `actions` holds authoring
+tools, the ones that change the Model, for the page header's toolbar; the work surface places them
+with `panel.region(pane, "actions")`. A pane that offers either must place it; until it does it
+leads the main region. A feature adds an inspector section, a tool or an action to a pane it does
+not own without naming that pane's owner, which is how Colour by (a tool) and Classify faces (an
+action, with its palette in the inspector) share the Zones / Faces pane. A pane whose sections all
+use `main` is laid out as before.
 
 A feature that owns a tab says so once with `panel.workedOn(prefix, tab)`, where `prefix` is its
 feature id, which every section it owns starts with. A foundation screen then asks
