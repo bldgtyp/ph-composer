@@ -83,8 +83,9 @@ are clients of it.
 - `export_file(context:, name:, params:)`: a registered synchronous FileExport, with an explicit
   `export` grant. It has no mutation sequence and opens no Model operation. Its owner performs the
   guarded file write. A FileExport or setup command that declares an `approval` needs a location
-  only the user can choose; through this interface it is refused with `access.user_required`, and
-  only the panel and native menus, which ask the user first, can run it.
+  only the user can choose. Through this interface the caller passes `location`, the id of a
+  location the user approved (`ph_composer.locations.list`), or is refused with
+  `access.user_required`; the panel and native menus ask the user instead.
 - The export task methods (`export_preflight`, `start_export`, `export_status`, `cancel_export`,
   `latest_export`) are specified in AGENT_INTERFACE.md, "Implemented export task contract".
 

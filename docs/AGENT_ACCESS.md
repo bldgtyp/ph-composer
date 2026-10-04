@@ -26,9 +26,11 @@ conflict check, and run, poll and cancel an export, all with the panel closed. T
 [API quickstart](API_QUICKSTART.md) walks one session from discovery to a verified edit and runs as
 an automated test; the [API reference](API_REFERENCE.md) is generated from the registered
 operations. A caller connects with only the grants it needs: `read`, `view`, `model_write`, `setup`
-and `export`. Adding a library file or folder and exporting a library file need a location only the
-user can choose, so they run from the panel or the Libraries menu; a script is refused with
-`access.user_required`.
+and `export`. Exporting a library file or an HBJSON model and adding a library file or folder need
+a location only the user can choose. The user approves it once in the Libraries dialog or the
+Libraries menu, and a script then names it by id; a path never passes through the interface. The
+user sees, renames and revokes approved locations in the same dialog. A script that names no
+approved location is refused with `access.user_required`.
 
 ## Not yet available
 

@@ -151,25 +151,55 @@ scope and identity choices; `export_preview` returns the counts and omissions th
 
 A setup command or FileExport may declare an approval: a file to open, a folder or a save
 destination that only the user can choose. `describe` returns it as `approval` (`kind`, `title`).
-Dispatch runs such an operation only with the user's answer, which a native client obtains:
-`shell/native_approval.rb` first asks dispatch whether the call would be refused (grant, params, a
-busy session) and opens no dialog if so; otherwise it opens the matching SketchUp dialog for the panel
-and the native menus, obtains consent before replacing an existing file, and passes the chosen location
-to the handler outside params. `NativeApproval.confirm_replace` owns that rule: on macOS the Save sheet's
-own question is the consent, and other platforms ask once more. The HBJSON export first refuses a
-destination its artifact pair would refuse (`Export::ArtifactPair.destination_problem`: no `.hbjson`
-extension, or only one of the HBJSON and its Export report exists), so no question precedes a refusal.
-Dispatch repeats every check after the dialog closes.
-The path never appears in params, a result, an outcome or a log. Every other caller, including a
-script calling `PhComposer::API`, is refused at once with `access.user_required`, effect `none`, and
-no dialog opens, so an unattended call cannot block SketchUp. A dismissed dialog returns
-`cancelled` with code `request.cancelled` and changes nothing.
+The user answers it in one of two ways, and a path never travels through the API either way.
 
-Three operations declare one today: `ph_composer.library.export_file`,
-`ph_composer.library.providers.add_file` and `.providers.add_folder`. An agent cannot export or add
-a library until user-approved file access lands; that work is recorded in
-[agent-authorized-file-access](../planning/features/unscheduled/agent-authorized-file-access/README.md).
-The HBJSON export task below predates this and still accepts a destination from a scripted caller.
+**Now, in a native dialog.** The panel and the native menus run the operation through
+`shell/native_approval.rb`. It first asks dispatch whether the call would be refused (grant, params,
+a busy session, the operation's declared precondition such as a stale `expected_revision`) and opens
+no dialog if so; otherwise it opens the matching SketchUp dialog, obtains consent before replacing an
+existing file, and passes the chosen location to the handler outside params.
+`NativeApproval.confirm_replace` owns that rule: on macOS the Save sheet's own question is the
+consent, and other platforms ask once more. The HBJSON export first refuses a destination its
+artifact pair would refuse (`Export::ArtifactPair.destination_problem`: no `.hbjson` extension, or
+only one of the HBJSON and its Export report exists), so no question precedes a refusal. Dispatch
+repeats every check after the dialog closes. A dismissed dialog returns `cancelled` with code
+`request.cancelled` and changes nothing.
+
+**Once, as an approved location.** The user approves a save destination, a library file or a library
+folder in the Libraries dialog or the Libraries menu (`ph_composer.locations.approve_destination`,
+`.approve_file`, `.approve_folder`, which only those native clients can run). The store
+(`shell/approved_locations.rb`) keeps the path on this machine, in SketchUp's own defaults, behind an
+opaque id. `ph_composer.locations.list` (`read`) returns each location's id, label, kind, dates and
+whether it is still there; never a path or a file name. A label is the user's, or "Export
+destination", "Library file" or "Library folder" and a number. `.rename` and `.revoke` need `setup`
+and no dialog; revoking only takes access away. Approvals belong to this machine and this SketchUp
+version.
+
+Registration adds an optional `location` param to every operation whose approval is not itself an
+approve command: `{ "id" }`, and for a save destination also `replace` and `expected_destination`.
+Any caller holding the operation's grant (`export` for a file export, `setup` for a setup command)
+passes the id; dispatch resolves it into the same answer a native dialog gives, and the handler
+never sees the param. A save destination is reused until revoked. An approved file or folder is used
+by one completed add, after which the configured library holds it and the id answers
+`location.used`. Each failure refuses with effect `none` and changes nothing: `location.unknown`,
+`location.revoked`, `location.used`, `location.kind_mismatch`, `location.unavailable` (no longer
+there as approved), `location.setup_unreadable`, `location.setup_unavailable`. A caller that passes
+neither a native answer nor a location is refused at once with `access.user_required`, and no
+dialog opens, so an unattended call cannot block SketchUp.
+
+Replacing what an approved destination holds is consent to what the caller reviewed. The preview
+(`ph_composer.library.export_preview` or `API.export_preflight`, each with `location`) reports
+`destination: { exists, state }`. A replacement needs `replace: true`, that `state` as
+`expected_destination` and, for a library export, the preview's `projection_digest`. A destination
+that changed since refuses with `library.destination_changed` or `export.destination_changed`; a
+replacement without consent refuses with `export.replace_required`. The native Save sheet's consent
+is given against the file as it is when the user answers.
+
+Three operations take a location today: `ph_composer.library.export_file`,
+`ph_composer.library.providers.add_file` and `.providers.add_folder`; the HBJSON export task takes
+one too. The path never appears in params, a result, an outcome or a log. Binding an approval to a
+named external connection waits for the connection and access-grant work; until then an approved
+location is usable by any caller holding the operation's grant.
 
 Panel clients correlate
 `file_export.invoke` and `file_export.result` by request id and Model session in a separate result
@@ -178,14 +208,15 @@ slot. This operation is separate from the longer-lived HBJSON runtime task below
 `API.export_preflight` requires `read` and returns feature-owned findings and explicit repair actions.
 A caller invokes selected repairs through the ordinary `model_write` contract, then revalidates.
 `API.start_export`, `export_status`, `cancel_export` and `latest_export` require the separate `export`
-grant. A scripted start supplies an authorized destination and explicit replacement consent.
-The native panel obtains these through its destination and replacement dialogs. `API.describe`
+grant. A scripted start names an approved save destination as `location` and, to replace a pair,
+the state `export_preflight(location:)` reported (see "Locations only the user can choose").
+The native panel obtains the destination and consent through its Save sheet instead. `API.describe`
 answers each task method with its grant, keyword params, result schema and an example
 (`export/task_contract.rb`), so a client needs no hand-written signature.
 
 One task may run per Model session. Status is detached, carries counts and diagnostics, and omits
-canonical HBJSON bytes. Successful results name the approved files and the run; retrieve their
-contents explicitly. A lost reply or timeout does not cancel a task. Poll or use `latest_export`
+canonical HBJSON bytes. A successful result names the approved location, by id and label, and the
+run; never a path. Read the files where the user approved them. A lost reply or timeout does not cancel a task. Poll or use `latest_export`
 before deciding whether to retry. Polling never repeats a write. The latest 20 terminal tasks are
 retained for at most 30 minutes using a monotonic clock. Model close releases the task and runtime;
 panel or client loss does not. Reopen and host restart expire old handles. File-journal recovery
@@ -280,10 +311,11 @@ Phase 2 features, programmatic reads and writes. Each has a panel-closed walkthr
   both under the `setup` grant. When `providers.setup_state` reports this machine's stored setup
   `unreadable`, adding or removing a provider refuses with `library.setup_unreadable` until
   `providers.reset` clears it. Adding a provider (`providers.add_file`, `providers.add_folder`) and `export_file`
-  need a location only the user can choose: the panel and the Libraries menu ask for it, and a
-  scripted caller is refused with `access.user_required` (see "Locations only the user can
-  choose").
-  [Walkthrough](../tools/examples/library/materials_walkthrough.rb).
+  need a location only the user can choose: the panel and the Libraries menu ask for it, and any
+  other caller passes the id of a location the user approved (see "Locations only the user can
+  choose"). `export_preview` with `location` reports what that destination holds.
+  [Walkthrough](../tools/examples/library/materials_walkthrough.rb),
+  [approved locations](../tools/examples/library/approved_location_walkthrough.rb).
 
 Discovery also lists read-only `reference_targets`; description returns their descriptor: ID, owner,
 label, schema version, values schema, occurrence-reference schema and declared core references.

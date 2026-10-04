@@ -321,11 +321,22 @@ default_name:)`. The handler then reads `request.approval.path` and `.replace`, 
 refuses an existing destination the user did not agree to replace. A setup command takes the same
 `approval:` with kind `open_file` or `open_folder`. A check that can refuse before any location is
 chosen, such as a stale `expected_revision`, is declared as `precondition: ->(request) { }` raising a
-coded error; dispatch runs it before a native dialog opens and again before the handler. The panel and native menus obtain the answer
-through `NativeApproval`, a shell internal and not a supported API; any other caller is refused with
-`access.user_required`
-([AGENT_INTERFACE.md](AGENT_INTERFACE.md), "Locations only the user can choose"). Ruby contributors
-remain trusted code and own safe writes.
+coded error; dispatch runs it before a native dialog opens and again before the handler. The panel
+and native menus obtain the answer through `NativeApproval`, a shell internal and not a supported
+API.
+
+Every other caller passes a location the user approved, and the declaration gets that for free:
+registration adds the `location` param to its params (a feature schema that declares its own
+`location` is refused), dispatch resolves the id into the same `request.approval` and hands the
+handler params without it, and a call with neither answer is refused with `access.user_required`
+([AGENT_INTERFACE.md](AGENT_INTERFACE.md), "Locations only the user can choose"). From a location,
+`request.approval.state` is the destination state the caller reviewed and `.location_id` is set;
+from the native dialog both are nil. A save handler that can replace a file compares `state` with
+its own fingerprint of the destination, as `Library::ExportWorkflow` does with
+`Library::FileWriter.state`, and its preview reports that fingerprint through
+`ApprovedLocations.observe(id) { |path| ... }`. Test the location route offline by approving a
+temporary path with `ApprovedLocations.approve(kind:, path:)` and calling the public API with its id
+(`tests/approved_location_use_test.rb`). Ruby contributors remain trusted code and own safe writes.
 
 The library exporter uses reverse mappings from each registered kind and checks semantic equality
 after mapping the wire row back. Invalid or lossy reverse mappings refuse in `export_preview`, which
