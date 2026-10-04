@@ -114,6 +114,51 @@ test("a warning notice stays until dismissed; an information notice fades on the
   notice.dispose();
 });
 
+test("a success notice fades by itself, unless the pointer holds it, and a newer message replaces it", function () {
+  var owner = dom.element("div"), timers = [], saved = [context.setTimeout, context.clearTimeout];
+  dom.attachEvents(owner);
+  context.setTimeout = function (callback, delay) {
+    timers.push({ callback: callback, delay: delay });
+    return timers.length;
+  };
+  context.clearTimeout = function (id) { if (timers[id - 1]) timers[id - 1].cleared = true; };
+  var notice = ui.floatingNotice(owner);
+  function due() { return timers.filter(function (timer) { return !timer.cleared && timer.delay === 3000; }); }
+  try {
+    notice.show("Zone made.", { tone: "success" });
+    assert.strictEqual(due().length, 1, "a success confirmation starts its own clock");
+    notice.listeners.mouseenter({});
+    assert.strictEqual(due().length, 0, "hovering holds it");
+    notice.listeners.mouseleave({});
+    assert.strictEqual(due().length, 1);
+    notice.show("Make Zone needs a selection.", { tone: "warning", persistent: true });
+    assert.strictEqual(due().length, 0, "a newer message stops the old clock; a warning has none");
+    notice.show("Zone made.", { tone: "success" });
+    due().slice(-1)[0].callback();
+    assert.strictEqual(notice.classList.contains("is-dismissing"), true);
+  } finally {
+    context.setTimeout = saved[0]; context.clearTimeout = saved[1];
+    notice.dispose();
+  }
+});
+
+test("a dialog's top-right close is its Cancel, comes back after its owner replaces the content, and closing " +
+  "returns focus", function () {
+  var cancelled = 0, dialog = ui.formDialog("", function () { cancelled += 1; dialog.closeModal(); });
+  var opener = dom.element("button");
+  context.document.body.appendChild(opener); context.document.body.appendChild(dialog);
+  opener.focus();
+  dialog.openModal();
+  var close = dialog.querySelector(".phc-dialog-close");
+  assert.strictEqual(close.getAttribute("aria-label"), "Close");
+  close.listeners.click({});
+  assert.strictEqual(cancelled, 1);
+  assert.ok(context.document.activeElement === opener, "focus returns to what opened the dialog");
+  dialog.replaceChildren(dom.element("h2"));
+  dialog.openModal();
+  assert.ok(dialog.children[0] === close, "the close control is back, first");
+});
+
 test("a record form sends once, keeps Cancel disabled while pending and shows a refusal until closed", function () {
   var sent = [], changes = [];
   var form = new modules.record_form(

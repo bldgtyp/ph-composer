@@ -189,10 +189,26 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
   if (window.addEventListener) window.addEventListener("resize", function () {
     if (activeBubble) activeBubble.position();
   });
+  /* One notice at a time; a newer message replaces an older one. Tones: `success` is a disposable
+     confirmation that fades by itself after SUCCESS_MS, held while the pointer or focus is on it; `info`
+     (instructions, tool directions) fades on the next interaction unless persistent; `warning` and `error`
+     stay until dismissed. */
+  var SUCCESS_MS = 3000;
   function floatingNotice(owner) {
     var root = element("div", "phc-notice phc-floating-notice"),
       message = element("span", "phc-floating-notice-message");
-    var revision = 0, persistent = false;
+    var revision = 0, persistent = false, timer = null, held = false;
+    function stopTimer() { if (timer !== null && window.clearTimeout) window.clearTimeout(timer); timer = null; }
+    function startTimer() {
+      stopTimer();
+      if (root.getAttribute("data-tone") !== "success" || root.hidden || held || !window.setTimeout) return;
+      var current = revision;
+      timer = window.setTimeout(function () { timer = null; if (current === revision) root.fade(); }, SUCCESS_MS);
+    }
+    function hold() { held = true; stopTimer(); }
+    function release() { held = false; startTimer(); }
+    root.addEventListener("mouseenter", hold); root.addEventListener("mouseleave", release);
+    root.addEventListener("focusin", hold); root.addEventListener("focusout", release);
     message.setAttribute("role", "status");
     message.setAttribute("aria-live", "polite");
     message.setAttribute("aria-atomic", "true");
@@ -209,9 +225,11 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
       root.setAttribute("data-persistent", String(persistent));
       // Information and instructions are neutral; yellow is kept for warnings and red for errors.
       root.setAttribute("data-tone", (options && options.tone) || "info");
+      startTimer();
     };
     root.clear = function () {
       revision += 1;
+      stopTimer();
       persistent = false;
       root.classList.remove("is-dismissing");
       message.textContent = "";
@@ -233,6 +251,7 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     }
     root.dispose = function () {
       revision += 1;
+      stopTimer();
       if (owner) {
         owner.removeEventListener("pointerdown", pointerdown, true);
         owner.removeEventListener("keydown", keydown, true);
@@ -262,11 +281,21 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
   /* Record forms open above a stationary page. The hidden flag mirrors the open state, so owners keep one flag;
      Escape runs the owner's cancel, which may refuse while a request is pending. */
   var dialogSequence = 0;
+  /* Every dialog carries the same top-right close control, and it does what Escape and the dialog's own
+     Cancel (or Close) do: onCancel, which may refuse while a request is pending. It is put back on every
+     open, because an owner may replace the dialog's children between uses. */
   function formDialog(className, onCancel) {
     var node = element("dialog", "phc-dialog phc-form-dialog" + (className ? " " + className : ""));
+    var close = iconButton("Close", "clear", function () { onCancel(); });
+    close.classList.add("phc-dialog-close");
     node.hidden = true;
+    node.closeButton = close;
     node.addEventListener("cancel", function (event) { event.preventDefault(); onCancel(); });
+    var opener = null;
     node.openModal = function () {
+      if (close.parentNode !== node) node.insertBefore(close, node.firstChild || null);
+      // Focus goes back where it came from when the dialog closes; the host's Chromium does not do it.
+      if (node.hidden) opener = document.activeElement;
       var heading = node.querySelector("h2");
       if (heading) {
         if (!heading.id) heading.id = "phc-form-dialog-" + (++dialogSequence);
@@ -274,8 +303,27 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
       }
       node.hidden = false; if (!node.open && node.showModal) node.showModal();
     };
-    node.closeModal = function () { node.hidden = true; if (node.open && node.close) node.close(); };
+    node.closeModal = function () {
+      var wasOpen = !node.hidden;
+      node.hidden = true; if (node.open && node.close) node.close();
+      if (wasOpen && opener && opener.isConnected && opener.focus && !node.contains(document.activeElement)) {
+        opener.focus({ preventScroll: true });
+      }
+      opener = null;
+    };
     return node;
+  }
+  /* Why an action is not available, beside that action: an alert icon that opens the reason in a bubble
+     anchored to it. A general hint belongs in a help button instead; a blocking reason stays where the
+     blocked action is, so the user never hunts for it. */
+  function reasonButton(action, reason) {
+    var trigger = iconButton("Why " + action + " is unavailable", "alert");
+    var bubble = new Bubble(trigger, "Why " + action + " is unavailable");
+    trigger.classList.add("phc-blocked-reason");
+    bubble.root.classList.add("phc-blocked-reason-anchor");
+    bubble.content.appendChild(element("p", "phc-blocked-reason-text", reason));
+    trigger.setAttribute("data-tooltip", reason);
+    return bubble.root;
   }
   function helpButton(label, explanation) {
     var help = button("?"); help.className = "phc-help";
@@ -314,6 +362,6 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
   }
 
   return { Bubble: Bubble, ActionMenu: ActionMenu, floatingNotice: floatingNotice, actionRow: actionRow,
-    formDialog: formDialog, helpButton: helpButton, attachTooltip: attachTooltip, placeNear: placeNear,
-    BUBBLE: BUBBLE };
+    formDialog: formDialog, helpButton: helpButton, reasonButton: reasonButton, attachTooltip: attachTooltip,
+    placeNear: placeNear, BUBBLE: BUBBLE, SUCCESS_MS: SUCCESS_MS };
 });

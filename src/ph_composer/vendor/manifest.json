@@ -171,9 +171,9 @@
       "sha256": "9e393b83db6ff4245dd5ad4d354986dd2f5b29de7cc293c63e7e843b944522ed"
     },
     "html/features/zones/overview.js": {
-      "bytes": 42093,
+      "bytes": 41924,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "5c37243857190a7d3fb6c713f6205305fba374667756747cb1de0ff122c9be97"
+      "sha256": "b88b1d2278cf90824353a1390b61df5a7c882fb4d022cd79a8691fa191754d84"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 2572,
@@ -286,14 +286,14 @@
       "sha256": "884ea2b3e0312b660d13517ae33cb7cb5cf6c60fd602f7dee624543bfac9cde2"
     },
     "html/overlay.css": {
-      "bytes": 10518,
+      "bytes": 11125,
       "mime": "text/css; charset=utf-8",
-      "sha256": "810669bdaa056a7dbc6d3188c4921de81da635579780a00637b152b93e5dfab4"
+      "sha256": "531b327e08f193e0e5c0d63da6370e6c756c39f5256440351e95a81aaa3fb327"
     },
     "html/overlay.js": {
-      "bytes": 17684,
+      "bytes": 20568,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "8c9b14e5d2aada4e53f401f8313fe8601f2f33f7f028b0abd044e67664119478"
+      "sha256": "aa1fe63d32865dcd3af3b06859d17e233d676aafc85d971644ae650721ddec4a"
     },
     "html/page_header.js": {
       "bytes": 1658,
@@ -301,9 +301,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 21708,
+      "bytes": 21790,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "ee4e81fb4e8649bb71f1df666bb3ea605974cdacb8f11dafc1856c3cc7f6b823"
+      "sha256": "535cedd151018857646fc5ed75482dd5f35bfa773d5504bf26a31070b97c9af1"
     },
     "html/record_edits.js": {
       "bytes": 15834,
@@ -406,9 +406,9 @@
       "sha256": "4b234a82ce48f29ded44f039db2e3626afc8f5c88ad90bbd1985099454c10306"
     },
     "html/workspace.js": {
-      "bytes": 1292,
+      "bytes": 1332,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "da6bd8a36cc2828d2666d8d4f1fab7dd66aae4e70ce9468a862ca95945314045"
+      "sha256": "5f77d48ab2784cefea1ff6d01a8f0d3e2d113a810dd2e1d2a0d80fb29912b360"
     },
     "python/ph_composer_translation/__init__.py": {
       "bytes": 1234,

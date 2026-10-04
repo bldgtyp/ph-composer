@@ -386,13 +386,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function makeZoneReason() {
-    var reason = "Make Zone needs one Group, or loose Faces and Edges, selected in SketchUp and not " +
-      "already part of a Zone.";
-    var node = ui.iconButton("Why Make Zone is unavailable: " + reason, "alert", function () {
-      panel.notify(reason);
-    });
-    node.className += " phc-blocked-reason";
-    return node;
+    return ui.reasonButton("Make Zone", "Make Zone needs one Group, or loose Faces and Edges, selected in " +
+      "SketchUp and not already part of a Zone.");
   }
 
   function solveButton(state, zones) {

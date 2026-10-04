@@ -113,7 +113,7 @@ class LibrarySetupCommandsTest < PhComposerTestCase
       run.call(invalid)
       run.call(nil)
     end
-    assert_equal [["Added library Synthetic library.", :info],
+    assert_equal [["Added library Synthetic library.", :success],
                   ["The library file is not readable JSON.", :warning]], notices
   end
 

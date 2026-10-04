@@ -224,13 +224,14 @@ test("assigned removal confirms consequences, Cancel writes nothing, and confirm
   assert.strictEqual(o.sent.length, 0);
   assert.strictEqual(o.editor.removal.hidden, false);
   assert.ok(text(o.editor.removal).includes("Material assignment"));
-  click(o.editor.removal.querySelectorAll("button")[0]);
+  // The dialog's top-right close does what Cancel does.
+  click(o.editor.removal.querySelector(".phc-dialog-close"));
   assert.strictEqual(o.editor.removal.hidden, true);
   assert.strictEqual(o.sent.length, 0);
   click(o.editor.root.querySelector("[data-builder-action='layers.remove']"));
   var expected = JSON.parse(JSON.stringify(o.record.values.layers));
   o.record.values.layers[1].thickness_mm = 180;
-  click(o.editor.removal.querySelectorAll("button")[1]);
+  click(o.editor.removal.querySelector(".primary"));
   assert.strictEqual(o.sent.length, 1);
   assert.strictEqual(o.sent[0].payload.name, ASSEMBLIES + ".layers.remove");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params.expected_values.layers)), expected);

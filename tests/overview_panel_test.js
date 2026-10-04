@@ -877,7 +877,13 @@ test("a blocked Make Zone says why beside it", function () {
   payload.sections["ph_composer.zones.overview"].value.make_zone = null;
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var reason = p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason");
-  assert.ok(/needs one Group, or loose Faces and Edges/.test(reason.getAttribute("aria-label")));
+  assert.strictEqual(reason.getAttribute("aria-label"), "Why Make Zone is unavailable");
+  assert.ok(/needs one Group, or loose Faces and Edges/.test(reason.getAttribute("data-tooltip")));
+  reason.listeners.click({});
+  var bubble = reason.parentNode.querySelector(".phc-bubble");
+  assert.strictEqual(bubble.hidden, false, "the reason opens beside the action, not as a page notice");
+  var notice = p.query(".phc-floating-notice");
+  assert.ok(!notice || notice.hidden, "and raises no page notice");
   payload.sections["ph_composer.zones.overview"].value.make_zone = { entity_path: [1] };
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   assert.strictEqual(p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason"), null);

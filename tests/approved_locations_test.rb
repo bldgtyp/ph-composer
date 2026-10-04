@@ -90,7 +90,7 @@ class ApprovedLocationsTest < PhComposerTestCase
       UI.stub(:select_directory, @directory) { menu.handler.call(@session) }
       UI.stub(:select_directory, nil) { menu.handler.call(@session) }
     end
-    assert_equal [["Approved Library folder 1. An agent can now use it by id.", :info]], notices
+    assert_equal [["Approved Library folder 1. An agent can now use it by id.", :success]], notices
     refute menu.available.call(@session)
     assert_equal "Libraries", menu.menu
   end

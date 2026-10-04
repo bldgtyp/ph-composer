@@ -281,7 +281,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   }
 
   /* One floating notice above the panes, so a late message never reflows the page. Warnings and errors stay
-     until dismissed; information fades on the next interaction. */
+     until dismissed; information fades on the next interaction; a success confirmation also fades by itself. */
   function renderNotice() {
     var layer = document.querySelector("[data-notice-layer]");
     var current = state.ui.notice;
@@ -293,7 +293,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     if (current === shownNotice) return;
     shownNotice = current;
     if (!current) { notice.clear(); return; }
-    notice.show(current.message, { tone: current.tone, persistent: current.tone !== "info" });
+    notice.show(current.message, { tone: current.tone,
+      persistent: current.tone === "warning" || current.tone === "error" });
   }
 
   function applyTab() {
