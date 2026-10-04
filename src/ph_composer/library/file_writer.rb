@@ -8,11 +8,23 @@ module PhComposer
     # One file, one rename commit. The destination and stage remain private to this object. Every
     # pre-commit failure leaves prior destination bytes intact and removes only this writer's stage.
     class FileWriter
-      def initialize(destination)
-        @destination = destination.to_s.dup.freeze
-        @prior = fingerprint
+      # What `destination` holds now, as export_preview reports it and a replacement consent names it:
+      # the SHA-256 of its bytes, or nil when nothing is there.
+      def self.state(destination)
+        path = destination.to_s
+        return nil unless File.exist?(path) || File.symlink?(path)
+        unless File.file?(path) && !File.symlink?(path)
+          raise Error.new("library.destination_invalid", "Choose a regular library file destination.")
+        end
+
+        Digest::SHA256.file(path).hexdigest
       rescue SystemCallError, IOError
         raise Error.new("library.export_write_failed", "The library destination could not be inspected."), :cause => nil
+      end
+
+      def initialize(destination)
+        @destination = destination.to_s.dup.freeze
+        @prior = self.class.state(@destination)
       end
 
       def inspect
@@ -22,6 +34,11 @@ module PhComposer
       # Whether the destination held a file when this writer was made.
       def replaces?
         !@prior.nil?
+      end
+
+      # The destination's state when this writer was made (FileWriter.state).
+      def prior_state
+        @prior
       end
 
       def prior_bytes
@@ -65,20 +82,9 @@ module PhComposer
       end
 
       def verify_unchanged!
-        return if fingerprint == @prior
+        return if self.class.state(@destination) == @prior
 
         raise Error.new("library.destination_changed", "The destination changed after review. Try again.")
-      end
-
-      private
-
-      def fingerprint
-        return nil unless File.exist?(@destination) || File.symlink?(@destination)
-        unless File.file?(@destination) && !File.symlink?(@destination)
-          raise Error.new("library.destination_invalid", "Choose a regular library file destination.")
-        end
-
-        Digest::SHA256.file(@destination).hexdigest
       end
     end
   end

@@ -66,6 +66,45 @@ class ApprovedLocationUseTest < PhComposerTestCase
     assert_equal [usable], Locations.list.select { |row| row.fetch("available") }.map { |row| row.fetch("id") }
   end
 
+  # Replacing what an approved destination holds is consent to the state and projection the caller
+  # reviewed: a file or a Model that changed since is refused, and nothing is replaced.
+  def test_replacing_an_approved_destination_is_bound_to_the_reviewed_state_and_projection
+    path = File.join(@directory, "library.json")
+    id = Locations.approve(:kind => "save_file", :path => path).fetch("id")
+    context = PhComposer::API.connect(:session_id => @session.id, :capabilities => %w[read export])
+    preview = lambda do
+      PhComposer::API.query(:context => context, :name => "ph_composer.library.export_preview",
+                            :params => { "location" => id }).fetch("value")
+    end
+    export = lambda do |location, digest = nil|
+      params = { "location" => location.merge("id" => id) }
+      params["projection_digest"] = digest if digest
+      PhComposer::API.export_file(:context => context, :name => "ph_composer.library.export_file", :params => params)
+    end
+    assert_equal({ "exists" => false, "state" => nil }, preview.call.fetch("destination"))
+    assert_equal "completed", export.call({}).fetch("status")
+    written = File.read(path)
+    reviewed = preview.call
+    digest = reviewed.fetch("projection_digest")
+    state = reviewed.dig("destination", "state")
+    consented = { "replace" => true, "expected_destination" => state }
+    refusals = [export.call({}, digest), export.call({ "replace" => true }, digest), export.call(consented),
+                export.call(consented, "stale")]
+    assert_equal %w[export.replace_required export.replace_required export.replace_required revision.stale],
+                 refusals.map { |outcome| outcome.fetch("code") }
+    File.write(path, "#{written} ")
+    assert_equal "library.destination_changed", export.call(consented, digest).fetch("code")
+    assert_equal "#{written} ", File.read(path)
+    again = preview.call
+    accepted = export.call({ "replace" => true, "expected_destination" => again.dig("destination", "state") },
+                           again.fetch("projection_digest"))
+    assert_equal "completed", accepted.fetch("status"), accepted.inspect
+    refute_equal "#{written} ", File.read(path)
+    assert_equal [id], Locations.list.map { |row| row.fetch("id") }
+    refute_nil Locations.list.first.fetch("last_used_at")
+    refute_includes JSON.generate([again, accepted]), @directory
+  end
+
   # An approved location answers only operations that would otherwise ask, and registration adds its
   # param: a feature declaring its own is refused, and an approve command takes none.
   def test_registration_adds_the_location_param_and_refuses_a_feature_that_declares_one

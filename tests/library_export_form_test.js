@@ -17,8 +17,8 @@ function answer(o, message, value, status) {
   o.form.refresh(o.state);
 }
 function projection(revision) {
-  return { revision: revision, kinds: [{ kind: "materials", record_kind_label: "Material", count: 2 }],
-    omissions: [] };
+  return { revision: revision, projection_digest: "digest-" + revision,
+    kinds: [{ kind: "materials", record_kind_label: "Material", count: 2 }], omissions: [] };
 }
 test("export defaults to all even with selected rows and sends no filter or action mutation", function () {
   var o = setup(); o.form.open([{ record_kind: "material", id: "mat_a" }]);
@@ -27,7 +27,7 @@ test("export defaults to all even with selected rows and sends no filter or acti
   answer(o, o.sent[0], projection(4)); o.form.submit(); o.form.submit();
   assert.strictEqual(o.sent.length, 2); assert.strictEqual(o.sent[1].type, "file_export.invoke");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[1].payload.params)),
-    { scope: "all", identity: "new", expected_revision: 4 });
+    { scope: "all", identity: "new", expected_revision: 4, projection_digest: "digest-4" });
 });
 test("selection is frozen explicitly and scope changes reject late preview answers", function () {
   var o = setup(), selected = [{ record_kind: "material", id: "mat_a" }]; o.form.open(selected);

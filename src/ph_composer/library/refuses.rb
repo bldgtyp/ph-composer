@@ -18,13 +18,16 @@ module PhComposer
                         reference.invalid target.ambiguous target.changed target.locked target.not_found
                         target.shared_definition target.wrong_hierarchy target.wrong_kind target.wrong_zone
                         validation.failed]).freeze
-      EXPORT_PREVIEW = %w[library.adapter_invalid library.catalog_too_many_rows library.kind_unavailable
-                          record.unreadable target.not_found].freeze
-      EXPORT_FILE = (EXPORT_PREVIEW + %w[export.replace_required library.destination_changed
-                                         library.destination_invalid library.export_write_failed
-                                         library.file_malformed library.file_too_large library.format_invalid
-                                         library.schema_unsupported library.update_destination_invalid
-                                         library.update_destination_required revision.stale]).freeze
+      EXPORTABLE = %w[library.adapter_invalid library.catalog_too_many_rows library.kind_unavailable
+                      record.unreadable target.not_found].freeze
+      EXPORT_PREVIEW = (EXPORTABLE + %w[library.destination_invalid library.export_write_failed location.kind_mismatch
+                                        location.revoked location.setup_unavailable location.setup_unreadable
+                                        location.unavailable location.unknown location.used]).freeze
+      EXPORT_FILE = (EXPORTABLE + %w[export.replace_required library.destination_changed
+                                     library.destination_invalid library.export_write_failed
+                                     library.file_malformed library.file_too_large library.format_invalid
+                                     library.schema_unsupported library.update_destination_invalid
+                                     library.update_destination_required revision.stale]).freeze
     end
   end
 end

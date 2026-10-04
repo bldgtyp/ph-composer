@@ -241,9 +241,9 @@
       "sha256": "02f17bae01c81128e32eb085d2fb7d76e1a78263acd37bc47289ac2115ce276d"
     },
     "html/library/export.js": {
-      "bytes": 6420,
+      "bytes": 6525,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "7907abe2ccda411bdf126a28a119f62c34b7198730f87f469b51a15602b813c4"
+      "sha256": "13ef1a92e40fde9b77fc0f10f79a25896202759dba15734bd76b948c2205cdf2"
     },
     "html/library/library.css": {
       "bytes": 9651,

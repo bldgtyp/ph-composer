@@ -4352,7 +4352,7 @@ Example params:
 
 Review local library export counts and omissions. Owner: `ph_composer.library`.
 
-Refuses: `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.kind_unavailable`, `record.unreadable`, `target.not_found`, and the `query` common set.
+Refuses: `library.adapter_invalid`, `library.catalog_too_many_rows`, `library.destination_invalid`, `library.export_write_failed`, `library.kind_unavailable`, `location.kind_mismatch`, `location.revoked`, `location.setup_unavailable`, `location.setup_unreadable`, `location.unavailable`, `location.unknown`, `location.used`, `record.unreadable`, `target.not_found`, and the `query` common set.
 
 Params:
 
@@ -4401,6 +4401,11 @@ Params:
       },
       "minItems": 1,
       "description": "With scope selected: the records to export, each by record kind and id."
+    },
+    "location": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The id of an approved save destination, to report what it holds now."
     }
   }
 }
@@ -4492,6 +4497,26 @@ Result:
     "revision": {
       "type": "integer",
       "minimum": 0
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "state"
+      ],
+      "properties": {
+        "exists": {
+          "type": "boolean"
+        },
+        "state": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "description": "With location: whether the approved destination holds a file, and its state. Pass state as the location's expected_destination to replace it."
     }
   }
 }
@@ -37659,6 +37684,11 @@ Params:
       "type": "integer",
       "minimum": 0,
       "description": "The Model revision export_preview reported; refused if the Model changed since."
+    },
+    "projection_digest": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The projection_digest export_preview reported; refused if what would be written differs. Required to replace a file at an approved location."
     },
     "location": {
       "type": "object",
