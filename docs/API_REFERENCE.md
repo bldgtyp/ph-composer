@@ -4082,7 +4082,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "Every registered mode: name, label and entity kind."
+      "description": "Every registered mode: name, label, entity kind and group (null when none)."
     },
     "rows": {
       "type": "array",
@@ -35549,7 +35549,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "Every registered mode: name, label and entity kind."
+      "description": "Every registered mode: name, label, entity kind and group (null when none)."
     },
     "rows": {
       "type": "array",
@@ -35648,7 +35648,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "Every registered mode: name, label and entity kind."
+      "description": "Every registered mode: name, label, entity kind and group (null when none)."
     },
     "rows": {
       "type": "array",

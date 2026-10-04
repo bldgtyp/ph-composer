@@ -176,9 +176,9 @@
       "sha256": "a18cb40575db597b98349228cd215aeb7f8e8f6321e829f7a5eba7c622ed1945"
     },
     "html/features/zones/overview.js": {
-      "bytes": 41735,
+      "bytes": 44506,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "57de88300dc9c4f1b1726e7d136f37c6b558f287efd15aaf96e565b753d85195"
+      "sha256": "4e5e39a5fbfe8a41b95a89c506d0f6a73e486d5b69d9e33b2d882cf273c30278"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 2572,
@@ -196,9 +196,9 @@
       "sha256": "6f0aa9838900a0674a1b1a7666e66554518cd63282d69c947e795824a8a748bc"
     },
     "html/features/zones/zones.css": {
-      "bytes": 4722,
+      "bytes": 5137,
       "mime": "text/css; charset=utf-8",
-      "sha256": "4cd9ba7ba18072590192a6b0b034cd42db74eb76ce01983f515e126abfdbfa5c"
+      "sha256": "8d7583a49a2da767d095e40015edbcb22325e101d3ac7fa4743113d93b50c087"
     },
     "html/fields.js": {
       "bytes": 1756,
@@ -213,7 +213,7 @@
     "html/index.html": {
       "bytes": 6024,
       "mime": "text/html; charset=utf-8",
-      "sha256": "753c26f9464fcd0658d9a41eb5947563cc3772026926a530534d84d121bf58be"
+      "sha256": "601585a67841cbd0f5bc00541ab7b1ebe7286d9faf77bee59d0db44103942760"
     },
     "html/inventory.js": {
       "bytes": 9047,
@@ -341,9 +341,9 @@
       "sha256": "d0ecc88e9f68278dcc73a66652093c4e218b6f860e008dde53d117c680f95b4f"
     },
     "html/sections/colour_by.js": {
-      "bytes": 6770,
+      "bytes": 8446,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d94015d8e3a40ae56fb06bed6203531ec68f08480cb39e761df194a0cc1bfefa"
+      "sha256": "e531af8ec85bc0657df12c90afaedb28547503eece8a407798c3e5e40978debe"
     },
     "html/sections/export.js": {
       "bytes": 11993,

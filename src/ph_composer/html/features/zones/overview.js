@@ -10,10 +10,11 @@
  * carries their count and the Suggest classification action that gives them all a record.
  */
 PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request", "snapshot", "units",
-  "unit_preferences", "table", "view_controls", "column_menu", "fields", "face_words",
+  "unit_preferences", "table", "view_controls", "column_menu", "sections/colour_by", "fields", "face_words",
   "features/zones/attached_zone_assignment", "features/zones/zone_settings", "features/zones/selection_assignment",
   "features/zones/assembly_assignment", "features/zones/zone_cells"],
-function (panel, ui, requests, snapshot, units, preferences, tables, viewControls, columnMenus, fields, words,
+function (panel, ui, requests, snapshot, units, preferences, tables, viewControls, columnMenus, colourBy, fields,
+          words,
           attachedAssignment, ZoneSettings, SelectionAssignment, assemblies, ZoneCells) {
   "use strict";
   var AREA = fields.AREA_M2;
@@ -45,10 +46,11 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (screen && screen.settings) screen.settings.dispose();
     if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
     screen = { session: session, expanded: Object.create(null), showAll: Object.create(null),
-      columnWidths: {}, menus: Object.create(null),
+      columnWidths: {}, menus: Object.create(null), toggles: Object.create(null), hiddenColumns: {},
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
     screen.zoneCells = new ZoneCells(session, send, refuse);
+    screen.options = tableOptions(screen);
     screen.settings = new ZoneSettings(session, send, function () { return draftReason(screen); }, refuse);
     screen.selectionAssignment = new SelectionAssignment(session, send, function () {
       return draftReason(screen);
@@ -147,10 +149,55 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       .sort(function (a, b) { return Number(!a.value) - Number(!b.value) || ui.compareText(a.label, b.label); });
   }
 
+  /* The Colour-by mode each column shows the values of. These are this feature's own modes; Assembly binds to
+     the "construction" group, so Window Type reaches this column without Zones naming it. */
+  var COLOUR_BY = { name: { mode: "ph_composer.zones.by_zone" },
+    building_segment: { mode: "ph_composer.zones.by_building_segment" }, level: { mode: "ph_composer.zones.by_level" },
+    face_type: { mode: "ph_composer.zones.faces.by_face_type" },
+    boundary_condition: { mode: "ph_composer.zones.faces.by_boundary_condition" },
+    assembly_id: { group: "construction" } };
+
   function headerActions(state, field, label) {
-    if (SORTED.indexOf(field) < 0) return [];
+    var actions = [];
+    if (COLOUR_BY[field] && !state.hiddenColumns[field]) {
+      var toggle = state.toggles[field] || (state.toggles[field] = new colourBy.HeaderToggle(COLOUR_BY[field]));
+      if (toggle.paint(state.snapshot)) actions.push({ node: toggle.node, persistent: toggle.pressed });
+    }
+    if (SORTED.indexOf(field) < 0) return actions;
     var menu = columnMenu(state, field, label);
-    return [{ node: menu.root, persistent: menu.filtered() }];
+    return actions.concat([{ node: menu.root, persistent: menu.filtered() }]);
+  }
+
+  /* A mode a visible column offers; every other registered mode is offered in Table options. */
+  function boundToColumn(state, mode) {
+    return Object.keys(COLOUR_BY).some(function (field) {
+      var binding = COLOUR_BY[field];
+      return !state.hiddenColumns[field] && (binding.mode ? binding.mode === mode.name : binding.group === mode.group);
+    });
+  }
+
+  /* Table options: show or hide Ground depth, and Colour by for a mode no visible column offers. */
+  function tableOptions(state) {
+    var menu = new ui.ActionMenu("Table options", { onOpen: function () { fill(); } });
+    function toggle(text, pressed, handler) {
+      var item = menu.add(text, handler);
+      item.setAttribute("aria-pressed", String(pressed));
+    }
+    function fill() {
+      var legend = snapshot.value(panel.state, "ph_composer.colour_by.legend") || { mode: null };
+      menu.content.replaceChildren();
+      toggle("Ground depth column", !state.hiddenColumns.ground_depth_mm, function () {
+        state.hiddenColumns.ground_depth_mm = !state.hiddenColumns.ground_depth_mm;
+        panel.repaint();
+      });
+      colourBy.modes(panel.state).filter(function (mode) { return !boundToColumn(state, mode); })
+        .forEach(function (mode) {
+          var on = legend.mode === mode.name;
+          toggle("Colour by " + mode.label, on, function () { colourBy.activate(panel.state, on ? null : mode.name); });
+        });
+    }
+    menu.root.classList.add("phc-table-options");
+    return menu;
   }
 
   /* Collapse all and Expand all act on the tree, because this screen groups by the tree rather than
@@ -550,6 +597,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       root.insertBefore(screenState.controls.root, row);
       root.removeChild(row);
     }
+    if (screenState.options.root.parentNode !== screenState.controls.root) {
+      screenState.controls.root.insertBefore(screenState.options.root, screenState.controls.count.nextSibling);
+    }
     if (tools.parentNode !== screenState.controls.root) screenState.controls.root.appendChild(tools);
     var heading = paintHeader(screenState, root.closest("[data-pane]").getAttribute("data-pane"), zones);
     var headingMount = root.querySelector(".phc-heading-mount");
@@ -705,7 +755,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       empty: zoneRows.length ? "No Zones match this filter." : "No Zones yet. Select geometry and choose Make Zone.",
       value: function (row, field) { return value(row, field, profile); },
       cell: function (td, row, field, text) { return cell(td, row, field, text, state); },
-      marker: marker, actions: actions, rowHidden: projection.hidden,
+      marker: marker, actions: actions, rowHidden: projection.hidden, hiddenColumns: state.hiddenColumns,
       headerActions: function (field) { return headerActions(state, field, labels[field]); },
       inspect: function (row) {
         if (row.record.more) { state.showAll[row.record.more] = true; panel.repaint(); }

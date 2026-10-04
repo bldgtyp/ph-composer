@@ -1,7 +1,7 @@
 # ZT-03: Colour by in the column headers
 
 DATE: 2026-10-04
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -35,3 +35,16 @@ ISSUE: none (local planning draft)
 
 `make ci` passes. Every Colour-by mode is reachable on Zones / Faces; no mode id from another feature
 appears in `features/zones/`.
+
+## Outcome
+
+Implemented 2026-10-04. `Registry#colour_mode` takes `group:`; validation refuses a blank one; the legend's
+`modes` carry `group` (null when none); Assembly and Window Type declare `"construction"`.
+`sections/colour_by.js` now exports `HeaderToggle(binding)`, `modes(state)` and `activate(state, name)`,
+and registers only the legend strip, as section `ph_composer.colour_by` in the `tools` region; the
+`ph_composer.colour_by.mode` select and the inspector legend are gone. The legend chip's isolate control
+is an eye icon shown on hover or focus. Zones / Faces binds six columns (`COLOUR_BY` in `overview.js`)
+and adds a Table options menu after the count, holding the Ground depth column toggle and any mode no
+visible column offers. Legend styles moved to a strip in `zones.css`. Tests in
+`tests/colour_by_panel_test.js` (rewritten), `tests/colour_by_test.rb` and `tests/overview_panel_test.js`.
+`make ci` passes.

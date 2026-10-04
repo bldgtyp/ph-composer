@@ -154,8 +154,11 @@
     }
     return { mode: this.colourBy.mode, label: this.colourBy.mode ? "Face type" : null,
       entity_kind: this.colourBy.mode ? "face" : null, isolated: isolated, rows: rows,
-      modes: [{ name: "ph_composer.zones.faces.by_face_type", label: "Face type", entity_kind: "face" },
-        { name: "ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone" }] };
+      modes: [{ name: "ph_composer.zones.faces.by_face_type", label: "Face type", entity_kind: "face", group: null },
+        { name: "ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone", group: null },
+        { name: "ph_composer.zones.faces.by_assembly", label: "Assembly", entity_kind: "face", group: "construction" },
+        { name: "ph_composer.windows.by_type", label: "Window Type", entity_kind: "window_unit",
+          group: "construction" }] };
   };
 
   Host.prototype.receive = function (message) {

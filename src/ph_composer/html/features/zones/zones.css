@@ -23,24 +23,29 @@
 .phc-palette-value { font-weight: 600; }
 .phc-empty { margin: 0; padding: 12px; color: var(--muted); }
 
-/* The Colour-by legend. One row per colour: the row itself selects and zooms to what it counts,
-   and the control beside it sets every other row aside. */
-.phc-colour-by { display: grid; gap: 12px; }
-.phc-legend { display: grid; gap: 2px; }
-.phc-legend-row { display: flex; align-items: center; gap: 8px; }
-.phc-legend-locate { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 4px 8px;
-  border: 1px solid transparent; background: transparent; text-align: left; }
-.phc-legend-locate:hover:enabled { border-color: var(--line); background: var(--interaction-highlight-tint); }
-.phc-legend-swatch { flex: 0 0 14px; width: 14px; height: 14px; border: 1px solid #0003; border-radius: 3px; }
-.phc-legend-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The Colour-by legend strip at the end of the control row: the mode's name, then one chip per colour.
+   It stays on one line and scrolls sideways rather than wrapping, so the table below never moves. A chip
+   selects and zooms to what it counts; its eye, shown on hover or focus, sets every other colour aside. */
+.phc-pane-tools { min-width: 0; flex: 1 1 0; justify-content: flex-end; }
+.phc-legend-strip { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-x: auto; white-space: nowrap;
+  scrollbar-width: thin; }
+.phc-legend-title { flex: 0 0 auto; font-weight: 600; font-size: 12px; }
+.phc-legend-chip { position: relative; display: inline-flex; align-items: center; flex: 0 0 auto; border-radius: 13px;
+  background: #edf1f2; }
+.phc-legend-chip.is-isolated { box-shadow: inset 0 0 0 1px var(--interaction-highlight); }
+.phc-workspace .phc-legend-locate { display: inline-flex; align-items: center; gap: 6px; min-height: 26px;
+  padding: 2px 4px 2px 8px; border: 0; border-radius: 13px; background: transparent; font-size: 12px; }
+.phc-legend-swatch { flex: 0 0 12px; width: 12px; height: 12px; border: 1px solid #0003; border-radius: 3px; }
 .phc-legend-count { color: var(--muted); font-variant-numeric: tabular-nums; }
-.phc-legend-only { flex: 0 0 auto; font-size: 11px; }
-.phc-legend-hint { margin: -6px 0 0; color: var(--muted); font-size: 11px; }
-.phc-legend-isolated { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px;
-  border-radius: 6px; background: var(--interaction-highlight-tint); color: var(--interaction-highlight); font-size: 12px; }
+.phc-workspace .phc-legend-only { width: 22px; height: 22px; min-height: 22px; padding: 3px; margin-right: 2px;
+  border-color: transparent; background: transparent; opacity: 0; }
+.phc-legend-only svg { width: 14px; height: 14px; }
+.phc-legend-chip:hover .phc-legend-only, .phc-legend-chip:focus-within .phc-legend-only,
+.phc-legend-only[aria-pressed="true"] { opacity: 1; }
+.phc-workspace .phc-legend-only[aria-pressed="true"] { color: var(--interaction-highlight); }
+.phc-legend-empty { color: var(--muted); font-size: 12px; }
+.phc-workspace .phc-legend-show-all { flex: 0 0 auto; min-height: 26px; font-size: 12px; }
 .phc-inspector-hint .phc-empty { padding: 4px 0; font-size: 12px; line-height: 1.45; }
-.phc-legend-only[aria-pressed="true"] { border-color: var(--interaction-highlight);
-  background: var(--interaction-highlight-tint); color: var(--interaction-highlight); }
 
 /* The Classify tool's palette. Chips read as choices, and the chosen one is marked the way an
    active row is; a chip the palette cannot set says why on itself. */

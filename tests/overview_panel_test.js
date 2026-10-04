@@ -831,3 +831,41 @@ test("the header groups the authoring tools apart from Colour by, and the inspec
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   assert.ok(section.querySelector(".phc-heading") === header, "the header is repainted in place, not rebuilt");
 });
+
+test("Colour by lives in the column headers, Window Type in the Assembly's, the rest in Table options", function () {
+  var p = page(), payload = snapshot();
+  payload.sections["ph_composer.colour_by.legend"] = { status: "completed", value: {
+    mode: "ph_composer.zones.faces.by_boundary_condition", label: "Boundary condition", rows: [], modes: [
+      { name: "ph_composer.zones.by_zone", label: "Zone", group: null },
+      { name: "ph_composer.zones.by_building_segment", label: "Building-Segment", group: null },
+      { name: "ph_composer.zones.by_level", label: "Level", group: null },
+      { name: "ph_composer.zones.faces.by_face_type", label: "Face type", group: null },
+      { name: "ph_composer.zones.faces.by_boundary_condition", label: "Boundary condition", group: null },
+      { name: "ph_composer.zones.faces.by_assembly", label: "Assembly", group: "construction" },
+      { name: "ph_composer.windows.by_type", label: "Window Type", group: "construction" },
+      { name: "outside.probe.by_side", label: "Side", group: null }] } };
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var toggles = section.querySelectorAll(".phc-colour-toggle");
+  assert.strictEqual(toggles.length, 6, "Name, Building-Segment, Level, Type, Boundary and Assembly");
+  var boundary = byLabel(section, "Colour by Boundary condition");
+  assert.strictEqual(boundary.getAttribute("aria-pressed"), "true");
+  assert.strictEqual(boundary.parentNode.classList.contains("is-persistent"), true, "a pressed toggle stays at rest");
+  var assembly = byLabel(section, "Colour by Assembly or Window Type");
+  click(assembly);
+  assert.deepStrictEqual(assembly.parentNode.querySelectorAll(".phc-action-menu-item").map(function (node) {
+    return node.textContent;
+  }), ["Assembly", "Window Type"]);
+  var options = byLabel(section, "Table options");
+  click(options);
+  var items = options.parentNode.querySelectorAll(".phc-action-menu-item");
+  assert.deepStrictEqual(items.map(function (node) { return node.textContent; }),
+    ["Ground depth column", "Colour by Side"], "only a mode no column offers is listed");
+  click(items[1]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), { mode: "outside.probe.by_side" });
+  click(options);
+  click(options.parentNode.querySelectorAll(".phc-action-menu-item")[0]);
+  assert.strictEqual(section.querySelectorAll(".col-ground_depth_mm").filter(function (node) {
+    return node.tagName === "th";
+  })[0].hidden, true, "Ground depth hides from Table options");
+});
