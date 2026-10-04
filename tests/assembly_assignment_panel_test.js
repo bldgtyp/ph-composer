@@ -71,6 +71,20 @@ test("table Assembly chip names dangling references and clears only the guarded 
   assert.deepStrictEqual(o.sent[0].payload.params, { targets: [{ reference: o.face.reference,
     expected_values: o.face.values }], assembly_id: null });
 });
+test("the table Assembly chip takes its Assembly's colour and follows it; None stays neutral", function () {
+  var o = setup(), chip = byLabel(o.document.body, "Wall 1 Assembly");
+  assert.strictEqual(chip.style["--category-fill"], undefined, "a missing Assembly keeps the neutral pill");
+  o.face.values.assembly_id = "asm_a";
+  o.paint();
+  assert.strictEqual(chip.style["--category-fill"], "#c5e1a5");
+  assert.strictEqual(chip.style["--category-ink"], undefined);
+  o.state.sections[PREFIX + ".assemblies"].value.assemblies[1].color = "#263238";
+  o.paint();
+  assert.deepStrictEqual([chip.style["--category-fill"], chip.style["--category-ink"]], ["#263238", "#fff"]);
+  o.face.values.assembly_id = null;
+  o.paint();
+  assert.deepStrictEqual([chip.style["--category-fill"], chip.style["--category-ink"]], [undefined, undefined]);
+});
 test("the Classify palette offers no Assembly choice and names the one being painted", function () {
   var o = setup(), palette = o.query("[data-section='ph_composer.classify']");
   assert.strictEqual(byLabel(o.document.body, "Classify Assembly"), undefined);
