@@ -221,15 +221,17 @@ test("duplicate Material copies datasheet links only through the explicit checkb
 test("Assembly hint selects store honeybee words and clear with a null patch", function () {
   var o = setup(), cell = o.roots.assemblies._view.edits.cells["asm_a:type"];
   assert.ok(cell.input.classList.contains("phc-enum-cell"), "every select cell is the kit's enum cell");
-  assert.strictEqual(materials(o).inventory.controls.options.count, "always", "a Library tab counts its own records");
   cell.input.value = "RoofCeiling";
   cell.input.listeners.change({});
   assert.strictEqual(o.sent[0].payload.params.values.type, "RoofCeiling");
   o.state.sections["ph_composer.assemblies.assemblies"].value.records[0].values.type = "RoofCeiling";
   result(o, 0, "completed");
+  assert.strictEqual(cell.input.style["--category-fill"], "rgb(222, 194, 194)",
+    "the chip takes its value's colour, the one the viewport draws");
   cell.input.value = "";
   cell.input.listeners.change({});
   assert.strictEqual(o.sent[1].payload.params.values.type, null);
+  assert.strictEqual(cell.input.style["--category-fill"], undefined, "None takes the neutral pill");
   assert.strictEqual(o.sent[1].payload.params.expected_values.type, "RoofCeiling");
 });
 
@@ -442,7 +444,7 @@ test("Library surfaces come from registrations in order, and the active one owns
     "true,false,false");
   view.tabs.select("outside");
   o.paint();
-  assert.strictEqual(view.header.root.querySelector(".phc-heading-count").textContent, "",
+  assert.strictEqual(view.header.root.children.length, 2,
     "a tab counts its own records in its action bar, not in the page header");
   assert.strictEqual(view.surfaces[1].create.parentNode, view.header.root.querySelector(".phc-heading-actions"));
   view.surfaces[1].create.listeners.click({});

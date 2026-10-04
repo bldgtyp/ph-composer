@@ -1,12 +1,15 @@
 /* New Assembly, and the type and exterior choices the Assemblies table and the Builder share. */
-PhComposerUI.define("features/assemblies/form", ["request", "snapshot"], function (request, snapshot) {
+PhComposerUI.define("features/assemblies/form", ["request", "snapshot", "face_words"],
+function (request, snapshot, words) {
   "use strict";
   var SECTION = "ph_composer.assemblies.assemblies";
-  var types = [{ value: "", label: "None" }, { value: "Wall", label: "Wall" },
-    { value: "RoofCeiling", label: "Roof" }, { value: "Floor", label: "Floor" }];
-  var exteriors = [{ value: "", label: "None" }, { value: "Outdoors", label: "Outdoors" },
-    { value: "Ground", label: "Ground" }, { value: "AttachedZone", label: "Attached zone" },
-    { value: "Adiabatic", label: "To neighbour" }];
+  // Each choice carries the chip fill its value has on every screen and in the viewport.
+  function choice(field, value, label) { return { value: value, label: label, fill: words.fill(field, value) }; }
+  var types = [choice("face_type", "", "None"), choice("face_type", "Wall", "Wall"),
+    choice("face_type", "RoofCeiling", "Roof"), choice("face_type", "Floor", "Floor")];
+  var exteriors = [choice("boundary_condition", "", "None"), choice("boundary_condition", "Outdoors", "Outdoors"),
+    choice("boundary_condition", "Ground", "Ground"), choice("boundary_condition", "AttachedZone", "Attached zone"),
+    choice("boundary_condition", "Adiabatic", "To neighbour")];
   /* New Assembly acts at once: one create under a free default name. The Builder is where its type, exterior
      and Layers are set, so there is no form to fill first. */
   function Form(session, send, changed) {

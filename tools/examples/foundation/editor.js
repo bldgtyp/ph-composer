@@ -87,7 +87,7 @@
         }).root);
         actions.appendChild(create);
         view.header.replaceChildren(
-          ui.element("h2", "", "Example parts"), ui.element("span", "phc-heading-count", "Development only"), actions);
+          ui.element("h2", "", "Example parts"), ui.element("span", "phc-view-count", "Development only"), actions);
       });
   }
 

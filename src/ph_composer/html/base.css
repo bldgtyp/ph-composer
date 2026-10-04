@@ -28,6 +28,8 @@
   --muted-strong: #53676e;
   --interaction-highlight-outline: #07536040;
   --interaction-highlight-soft: #e5effb;
+  /* The row hover wash, laid over a cell's own background. */
+  --row-hover-wash: #0753600d;
   /* Opaque backing for sticky table columns (table.css). */
   --surface: #fff;
   /* The inset every pane's content shares with the tab row. */
@@ -193,7 +195,6 @@ html { height: 100%; }
 /* The page header (page_header.js): title, muted count, then the actions at the right. */
 .phc-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 52px; padding: 10px 0; }
 .phc-heading h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0; }
-.phc-heading-count { color: var(--muted); }
 .phc-heading-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .phc-footer {
   display: flex;

@@ -6,8 +6,10 @@
 .live-panel .phc-table .host-selected td { background: #edf6f7; }
 .live-panel .phc-table td { overflow: hidden; text-overflow: ellipsis; }
 .phc-table { --col-actions-width: var(--row-actions-width, 80px); --col-hierarchy-width: 110px; --col-name-width: 220px; border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
-.phc-table th, .phc-table td { height: 36px; padding: 3px 8px; border-bottom: 1px solid #e8edef; border-right: 1px solid #edf0f2; text-align: right; white-space: nowrap; }
-.phc-table th { position: sticky; top: 0; z-index: 3; background: #f7f9fa; font-weight: 500; white-space: normal; height: 44px; }
+/* A quiet grid: a hairline under each row, and column separators only in the header, where they are
+   the resize handles' place. */
+.phc-table th, .phc-table td { height: 34px; padding: 3px 8px; border-bottom: 1px solid #eef1f3; text-align: right; white-space: nowrap; }
+.phc-table th { position: sticky; top: 0; z-index: 3; background: #f7f9fa; border-bottom-color: #dfe5e8; border-right: 1px solid #e8edef; font-weight: 500; white-space: normal; height: 40px; }
 .phc-table td { background: #fff; }
 .phc-table .col-hierarchy { width: var(--col-hierarchy-width); text-align: left; }
 .phc-table .col-name { width: var(--col-name-width); text-align: left; }
@@ -30,7 +32,9 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table input { width: 100%; min-width: 0; min-height: 28px; padding: 3px 6px; }
 .phc-table td.phc-editable-cell { padding: 0; }
 .phc-table .phc-cell-input { min-height: 35px; padding: 6px 8px; border-color: transparent; border-radius: 0; background: transparent; box-shadow: none; }
-.phc-table .phc-editable-cell:hover { background: var(--interaction-highlight-tint); }
+/* Hover marks the whole row with a wash laid over whatever the cell already shows (white, a flag, a
+   selection), so it never borrows a chip's colour or hides a state. The focused cell keeps its ring. */
+.phc-table tbody tr:hover > td { background-image: linear-gradient(var(--row-hover-wash), var(--row-hover-wash)); }
 .phc-table .phc-editable-cell:focus-within { background: #fff; box-shadow: inset 0 0 0 2px var(--interaction-highlight); }
 .phc-workspace .phc-table .phc-cell-input:focus-visible { outline: 0; }
 .phc-table .phc-cell-input[aria-invalid="true"] { box-shadow: inset 0 -2px var(--red); }
@@ -50,7 +54,10 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table .row-icon:last-child { margin-right: 0; }
 /* The hairline sits in the gap the icons already have, so a group costs the column no width. */
 .phc-table .row-icon.row-icon-starts { box-shadow: -3px 0 0 -2px var(--line); }
-.phc-table .row-chevron { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: 20px; height: 26px; padding: 0; }
+/* A disclosure chevron is a glyph, not a box: no resting border or fill, the row's height as its target,
+   and the shared focus ring. */
+.phc-workspace .phc-table .row-chevron { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: 22px; height: 28px; min-height: 28px; padding: 0; border: 0; background: transparent; color: var(--muted-strong); }
+.phc-workspace .phc-table .row-chevron:hover:enabled { background: transparent; color: var(--interaction-highlight); }
 .phc-table .row-chevron svg { display: block; }
 .phc-table .row-chevron.is-leaf { visibility: hidden; }
 /* A cell that still needs something from the user: amber, with the reason in its tooltip. A value not
@@ -62,8 +69,14 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-view-control { display: flex; align-items: center; gap: 6px; color: var(--muted); }
 /* An enum cell is a pill with a chevron on every screen. A value with a colour of its own sets
    --category-fill on the cell; the rest take the neutral fill. */
-.phc-table select.phc-enum-cell { width: 100%; min-height: 28px; border-radius: 14px; font: inherit;
+.phc-table select.phc-enum-cell { width: calc(100% - 8px); height: 24px; min-height: 24px; margin: 0 4px;
+  padding: 0 6px 0 10px; border: 0; border-radius: 12px; font: inherit; font-size: 12px;
   background-color: var(--category-fill, #edf1f2); }
+/* The same pill, read only: a value set elsewhere (a paired Surface). */
+.phc-table .phc-enum-pill { display: inline-block; max-width: 100%; height: 22px; padding: 0 10px; overflow: hidden;
+  border-radius: 11px; font-size: 12px; line-height: 22px; text-overflow: ellipsis; vertical-align: middle;
+  background: var(--category-fill, #edf1f2); }
+.phc-table td.phc-pill-cell { padding: 0 4px; text-align: left; }
 /* The pill covers its cell, so it carries the focus ring and the locked look itself. */
 .phc-workspace .phc-table select.phc-enum-cell:focus-visible { outline: 2px solid var(--interaction-highlight); outline-offset: -2px; }
 .phc-table select.phc-enum-cell:disabled { opacity: .6; }
@@ -76,3 +89,8 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-inventory-controls input { width: 190px; }
 .phc-view-count { color: var(--muted); font-size: 12px; }
 .phc-group-label { font-weight: 600; }
+/* A tree table (`tree: true`): each top-level row heads its group, so it reads as a heading over the
+   quieter rows beneath it, with a firmer rule between groups. */
+.phc-table.is-tree tr.tier-0 > td { background-color: #f5f8f9; font-weight: 600; }
+.phc-table.is-tree tbody tr.tier-0:not(:first-child) > td { border-top: 1px solid #d3dce0; }
+.live-panel .phc-table.is-tree .host-selected td, .phc-table.is-tree tr.tier-0:focus-within > td { background-color: #e6f1f3; }

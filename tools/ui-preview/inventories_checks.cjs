@@ -94,7 +94,7 @@ fs.mkdirSync(output, { recursive: true });
     await page.locator("[data-tab='assemblies']").click();
     const assemblies = page.locator("[data-section='assemblies']");
     await assemblies.getByRole("heading", { name: "Assemblies", exact: true }).waitFor();
-    await assemblies.locator(".phc-heading-count").getByText("2", { exact: true }).waitFor();
+    await assemblies.locator(".phc-view-count").getByText("2 total", { exact: true }).waitFor();
     assert((await assemblies.locator("[data-u-withheld]").getAttribute("aria-label")).includes("Choose a Material"));
     await assemblies.getByRole("button", { name: "Open Wall", exact: true }).click();
     await assemblies.getByRole("button", { name: "Back to Assemblies", exact: true }).click();

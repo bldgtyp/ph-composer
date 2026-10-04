@@ -55,7 +55,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     }, refuse);
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone, type or boundary", fields: ORDER_FIELDS, initialOrder: "name",
-      expansion: expansion(screen), guard: function () { return draftReason(screen); }, refused: refuse
+      count: zoneCount, expansion: expansion(screen), guard: function () { return draftReason(screen); },
+      refused: refuse
     }, function () { panel.repaint(); });
     return screen;
   }
@@ -76,6 +77,12 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function refuse(reason) {
     panel.notify(reason, "warning");
     if (screen && screen.zoneEditor) screen.zoneEditor.focus();
+  }
+
+  /* The control row's count: Zones, and how many a filter leaves. */
+  function zoneCount(shown, total, filtered) {
+    var noun = total === 1 ? " Zone" : " Zones";
+    return filtered ? shown + " of " + total + noun : total + noun;
   }
 
   /* Collapse all and Expand all act on the tree, because this screen groups by the tree rather than
@@ -240,11 +247,23 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     if (issue) td.title = issue;
   }
 
-  /* A cell that shows its value as text: an earlier control, if it had one, is forgotten. */
-  function readOnly(td, field) {
-    if (td._chip || td._attachedChip) td.className = "col-" + field;
+  /* A value a chip cannot set here (a paired Surface, an Air boundary) shows as the same pill, read only,
+     with what sets it in its tooltip. An earlier control, if the cell had one, is forgotten. */
+  function readOnly(td, field, face) {
+    var stored = face.values[field];
+    td.className = "col-" + field + (stored ? " phc-pill-cell" : "");
     td._chip = td._attachedChip = td._chipValues = null;
-    return false;
+    if (!stored) return false;
+    var pill = td._pill;
+    if (!pill || pill.parentNode !== td) {
+      pill = td._pill = ui.element("span", "phc-enum-pill");
+      td.replaceChildren(pill);
+    }
+    pill.textContent = chipLabel(field, stored);
+    words.paintFill(pill, field, stored);
+    td.title = words.UNCHOOSABLE[stored] ? pill.textContent + ": " + words.UNCHOOSABLE[stored] : pill.textContent;
+    flag(td, problem(face, field));
+    return true;
   }
 
   /* Type and boundary are editable chips; area is read only. An edit sends the values the row was
@@ -273,8 +292,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     }
     td._attachedChip = null;
     offered = choices(state, field);
-    if (!offered.length) return readOnly(td, field);
-    if (face.values[field] && offered.indexOf(face.values[field]) < 0) return readOnly(td, field);
+    if (!offered.length) return readOnly(td, field, face);
+    if (face.values[field] && offered.indexOf(face.values[field]) < 0) return readOnly(td, field, face);
     chip = td._chip;
     // A Face with no value here yet reads "?": the flag sits on the cell that needs it.
     var missing = !face.values[field], signature = (missing ? "?," : "") + offered.join(",");
@@ -307,6 +326,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     td._state = state;
     td._face = face;
     chip.value = face.values[field] || "";
+    words.paintFill(chip, field, face.values[field]);
     chip.disabled = state.edits.busy();
     chip.setAttribute("aria-label", (missing ? "Set " : "") + row.record.name +
       (field === "face_type" ? " type" : " boundary"));
@@ -435,8 +455,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var headerActions = [solveButton(screenState, zones.zones), screenState.settings.bubble.root];
     // Why the primary action is not available, beside it.
     if (!zones.make_zone) headerActions.push(makeZoneReason());
-    root.querySelector(".phc-heading-mount").replaceChildren(ui.pageHeader({ title: "Zones",
-      count: zones.zones.length, actions: headerActions,
+    root.querySelector(".phc-heading-mount").replaceChildren(ui.pageHeader({ title: "Zones", actions: headerActions,
       primary: makeButton(screenState, zones.make_zone) }).root);
     // Set before the tree paints, so the inspector never works from an earlier pass if painting fails.
     screenState.rows = rows;
@@ -577,7 +596,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       // Sized so the whole table shows beside the inspector at the panel's usual width; the user can still
       // drag any column wider.
       defaultWidths: { name: 142, face_type: 126, boundary_condition: 110, area_m2: 92, assembly_id: 156 },
-      rows: ordered(projection.records, byId, rows), columns: columns(profile), expanded: state.expanded,
+      tree: true, rows: ordered(projection.records, byId, rows), columns: columns(profile), expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
       decorate: function (td, row, field) { flag(td, problem(row.record.face, field)); },
       columnWidths: state.columnWidths, visibleCount: projection.visibleCount, disabled: state.edits.busy(),

@@ -63,7 +63,7 @@ function element(tag, attributes) {
     hidden: false, disabled: false, readOnly: false, checked: false, children: [], parentNode: null,
     listeners: {}, listenerLists: {}, style: { setProperty: function (name, value) {
       this[name] = value;
-    } }, dataset: {},
+    }, removeProperty: function (name) { delete this[name]; } }, dataset: {},
     getAttribute: function (name) {
       return Object.prototype.hasOwnProperty.call(this.attributes, name) ? this.attributes[name] : null;
     },

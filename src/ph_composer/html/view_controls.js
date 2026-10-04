@@ -159,9 +159,12 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     this.expandAll.disabled = expansion ? !expansion.canExpand(projection) :
       this.groups.every(function (entry) { return !entry.collapsed; });
     this.clear.hidden = !query;
-    // `count: "always"` shows the total while unfiltered too, for a list whose page header counts nothing.
-    this.count.textContent = this.options.count === false ? "" :
-      (query ? count + " of " + records.length : this.options.count === "always" ? records.length + " total" : "");
+    // The row says how many records there are, and how many a filter leaves; the page header counts nothing.
+    // `count` may be false (no count) or a function (shown, total, filtered) giving the screen's own words.
+    var counted = this.options.count;
+    this.count.textContent = counted === false ? "" : typeof counted === "function" ?
+      counted(count, records.length, Boolean(query)) :
+      (query ? count + " of " + records.length : records.length + " total");
     return projection;
   };
   return { ViewControls: ViewControls, groupToggle: groupToggle, paintGroupToggle: paintGroupToggle };

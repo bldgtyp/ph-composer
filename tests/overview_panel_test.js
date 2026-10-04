@@ -332,7 +332,8 @@ test("a Face the chips cannot set keeps its value and stays read only", function
 
   assert.strictEqual(byLabel(section, "Air boundary 1 type"), undefined, "no chip offers Air boundary");
   var cells = section.querySelectorAll(".col-face_type").filter(function (node) { return node.tagName === "td"; });
-  assert.strictEqual(cells[1].textContent, "Air boundary", "the cell says what the Face is");
+  assert.strictEqual(cells[1].querySelector(".phc-enum-pill").textContent, "Air boundary",
+    "the cell says what the Face is, as a read-only pill");
 });
 
 test("Locate goes to the viewport channel and never to an action", function () {
@@ -851,7 +852,7 @@ test("what the old State column said about a boundary is said on the boundary ce
   var cell = section.querySelectorAll("td").filter(function (td) {
     return /col-boundary_condition/.test(td.className);
   })[1];
-  assert.strictEqual(cell.textContent, "Surface", "a paired Face stays read only");
+  assert.strictEqual(cell.querySelector(".phc-enum-pill").textContent, "Surface", "a paired Face stays read only");
   assert.ok(cell.classList.contains("is-flagged"));
   assert.match(cell.title, /out of date/);
 

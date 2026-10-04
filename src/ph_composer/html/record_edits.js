@@ -2,7 +2,8 @@
    outcome and authoritative snapshot agree. Refusals retain typed text until the user cancels.
    Required options: action, fields. Catalog rows are { key, record: { id, values } } by default.
    Optional: params, rawValue(row, field), eligible(row, field), enabled(state), readOnly(cell),
-   quantities, numericFields, requiredFields, selectFields, validate(field, value), normalize(field, text),
+   quantities, numericFields, requiredFields, selectFields ({ value, label, fill? } or strings), validate(field, value),
+   normalize(field, text),
    send(cell) -> { action, params }, label(row, field, cell), recordLabel, fieldAttribute,
    presentation ("overlay" or "inline"), statusText(cell), textInputs, navigateOnCommit.
    The default action params are { id, values, expected_values }; custom send owns its public action shape. */
@@ -65,6 +66,15 @@ PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", 
       });
       cell.input.value = value;
     }
+    /* A choice may carry a `fill`, the colour its value has across the app (a boundary condition's hue);
+       the shared enum pill reads it from --category-fill. */
+    function paintFill(cell) {
+      var chosen = cell.owner.selectFields[cell.field].filter(function (entry) {
+        return typeof entry !== "string" && entry.value === cell.input.value;
+      })[0];
+      if (chosen && chosen.fill) cell.input.style.setProperty("--category-fill", chosen.fill);
+      else cell.input.style.removeProperty("--category-fill");
+    }
     Controller.prototype.profile = function (field, supplied) {
       return units.profile(this.quantities[field] || {}, supplied);
     };
@@ -122,6 +132,7 @@ PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", 
       cell.input.setAttribute("aria-invalid", String(cell.status === "error"));
       if (isSelect(owner, cell.field)) {
         cell.input.disabled = cell.input.disabled || busy(cell) || owner.isReadOnly(cell);
+        paintFill(cell);
       }
       cell.error.textContent = cell.message || (owner.inline && owner.statusText ? owner.statusText(cell) : "");
       cell.error.hidden = !cell.error.textContent;

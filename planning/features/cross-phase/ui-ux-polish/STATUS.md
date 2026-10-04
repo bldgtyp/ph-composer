@@ -1,7 +1,7 @@
 # UI and UX polish: status
 
 DATE: 2026-10-04
-STATUS: Scoped; planning checkpoint complete, implementation pending authorization.
+STATUS: Implementing on branch `feature/ui-ux-polish`; not merged, no host acceptance yet.
 ISSUE: none (local planning draft)
 
 ## Delivery ledger
@@ -10,20 +10,29 @@ ISSUE: none (local planning draft)
 | --- | --- | --- |
 | Initial intake | Complete | UX-001 through UX-022 and nine attachment references in REQUESTS |
 | Planning organization | Complete | PLAN, DECISIONS and ACCEPTANCE; local document checks |
-| P0 investigations/design choices | Not started | Reproduction, parity matrix, current contracts and visual comparisons |
-| P1 shared tables | Proposed | No code or acceptance run |
-| P2 shared feedback/dialogs | Proposed | No code or acceptance run |
-| P3 Library flows/surfaces | Proposed | No code or acceptance run |
-| P4 Zones / Faces workspace | Proposed | No code or acceptance run |
-| P5 Assembly Builder | Proposed | No parity audit or code yet |
-| P6 Windows toolbar | Proposed | No code or acceptance run |
-| P7 sorting | Investigation required | Owner report; not reproduced |
-| Skill/pattern changes | Pending accepted solutions | No edits made |
-| Design System sync | Pending merged kit changes | Private artifact access/content not checked |
-| External issues, PRs, implementation chat | Not created | Local planning only |
+| P0 investigations | In progress, per slice | UX-007 reproduced in preview (below); UX-016 audit in [evidence/ASSEMBLY_PARITY.md](evidence/ASSEMBLY_PARITY.md); Colour by "Show only this" is a viewport isolate, no table filter (`colour_by/service.rb#isolate`) |
+| P1 shared tables | Implemented on branch | UX-003, 004, 005, 011, 012, 013; D3, D4 taken. `make ci` and `make ui-checks` pass |
+| P2 shared feedback/dialogs | Proposed | |
+| P3 Library flows/surfaces | Proposed | |
+| P4 Zones / Faces workspace | Proposed | |
+| P5 Assembly Builder | Audit done, not built | |
+| P6 Windows toolbar | Proposed | |
+| P7 sorting | Diagnosed | Not a defect at its scope: Order by sorts Zones only, so with one Zone it changes nothing. D8 extends it to Faces within each Zone |
+| Skill/pattern changes | Updated per slice | P1: editable-table rule, page header, control-row count, enum pill |
+| Design System sync | Pending merge | Re-sync the artifact from main after merge |
+| Host acceptance | Not run | One native SketchUp pass at the end of the branch |
+
+## P0 findings
+
+- UX-007 (2026-10-04, `?fixture=authoring`, 1280 px): Order by Name and Area, and the direction toggle,
+  reorder the two Zones as intended. Faces never move: `overview.js` `ordered()` keeps each Zone's Faces
+  in projection order. A Model with one Zone (Ed's screenshots S2 to S5) therefore shows no change.
+
+## For Ed's verification pass
+
+- Chip tints: Wall's pale amber sits near the "?" flag's amber. Accept honeybee's hue, or choose another.
+- Counts moved from page headers to control rows app-wide (D4).
 
 ## Next action
 
-On implementation authorization, begin P0 for the first affected slice and resolve its decisions.
-Do not infer approval of recommended solutions from approval to commit this planning checkpoint.
-Retain request IDs as investigation results and acceptance evidence are added.
+Continue the loop: P7, then P2, P3, P4, P5, P6, then one native host pass.
