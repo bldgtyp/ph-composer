@@ -5,7 +5,7 @@ STATUS: In progress
 
 ## Where this stands
 
-Everything this refinement set out to do is done and on main (last merge: pull request #68): the
+Everything this refinement set out to do is done and on main (last merge: pull request #69): the
 eight packets, the Zones / Faces follow-up, the verification pass and its fixes, a completed export
 in the host, the viewport capture session and its fixes, and the Design System artifact's first
 version. No branch is open and nothing is half-built.
@@ -35,12 +35,10 @@ check sections say what was and was not covered.
 
 ## Next steps, in order
 
-1. **One more small finding**, below: the Classify tool's status bar guidance names a painted
-   Assembly by its record id.
-2. **Grow the Design System** if Ed wants it to carry more: live components would need the kit's
+1. **Grow the Design System** if Ed wants it to carry more: live components would need the kit's
    scripts bundled, and the drawing styles of the two Builders are not in it yet. Re-sync it after
    any kit change.
-3. **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
+2. **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
    taken" table), as small follow-up changes.
 
 ## Export and viewport session, 2026-10-03
@@ -77,10 +75,11 @@ test, since the scratch Model by then had an unfinished Window Type blocking exp
 - The Schedule's first two columns are headed "Actions" and "Hierarchy".
 - Zones / Faces default column widths leave room for an Assembly's name beside the inspector.
 
-Found while checking those, not fixed: while the Paint tool is on, the SketchUp status bar reads
-"Classify: assembly id asm_4c66lVqiw8XD. Click or drag over Faces...". It should name the
-Assembly. The line is built in `classify_tool.rb`, whose class is at its length limit, so the fix
-wants a small extraction.
+Found while checking those and fixed in [#69](https://github.com/bldgtyp/ph-composer/pull/69):
+while the Paint tool was on, the status bar read "Classify: assembly id asm_4c66lVqiw8XD ...". A
+helper beside the tool, `ClassifyGuidance`, now gives the glossary's labels and a record's name:
+"Classify: Assembly Synthetic envelope, face type Roof or ceiling. Click or drag over Faces;
+Shift-click takes a whole plane." Checked in the host with real pointer input.
 
 ## Verification pass, 2026-10-03
 
