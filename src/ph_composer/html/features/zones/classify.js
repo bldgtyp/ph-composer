@@ -176,9 +176,11 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   /* Offered only while the tool has the viewport. A permanently mounted control that is almost always
      disabled is furniture, not an affordance; choosing a chip is what starts the tool. */
   function stopButton(state) {
-    var stop = ui.element("button", "", "Stop classifying");
+    // "Stop" beside the heading "Classify faces": the full phrase did not fit the inspector on one line.
+    var stop = ui.element("button", "", "Stop");
     stop.disabled = state.view.busy();
-    stop.setAttribute("aria-label", "Give the viewport back to the previous tool");
+    stop.title = "Stop classifying";
+    stop.setAttribute("aria-label", "Stop classifying and give the viewport back to the previous tool");
     stop.addEventListener("click", function () {
       state.view.run("ph_composer.zones.faces.stop_classifying", {});
     });

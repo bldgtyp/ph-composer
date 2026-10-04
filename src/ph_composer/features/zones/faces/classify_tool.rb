@@ -329,12 +329,13 @@ module PhComposer
           outcome = API.invoke(:context => context, :name => CLASSIFY,
                                :params => { "faces" => references, "intent" => intent, "expected_values" => {} },
                                :request => { "sequence" => next_sequence, "expected_revision" => revision })
-          report(outcome, references.length)
+          # The palette holds only what was chosen. An Assembly alone paints Faces; it does not classify them.
+          report(outcome, references.length, intent.keys == ["assembly_id"] ? "Painted" : "Classified")
         end
 
-        def report(outcome, count)
+        def report(outcome, count, verb)
           if outcome.fetch("status") == "completed"
-            announce("Classified #{count} #{count == 1 ? 'Face' : 'Faces'}.")
+            announce("#{verb} #{count} #{count == 1 ? 'Face' : 'Faces'}.")
           else
             announce(outcome.fetch("message"), outcome.fetch("status") == "refused" ? :warning : :error)
           end

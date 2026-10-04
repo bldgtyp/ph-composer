@@ -111,6 +111,7 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
   }
   // Where a finding is looked into: the tab the feature that reported it said its records are worked on.
   function tabFor(group) { return panel.tabFor(group.findings[0].section); }
+  function counted(count, noun) { return String(count) + " " + noun + (Number(count) === 1 ? "" : "s"); }
   function findingList(title, rows) {
     var block = element("section", "phc-export-group");
     block.appendChild(element("h2", "", title));
@@ -175,8 +176,8 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
     root.appendChild(status);
     if (task && task.outcome && task.outcome.value && task.outcome.value.result) {
       var canonical = task.outcome.value.result.canonical_model;
-      if (canonical) root.appendChild(element("p", "", String(canonical.rooms) + " Rooms · " +
-        String(canonical.faces) + " Faces · " + String(canonical.surface_pairs) + " Surface pairs"));
+      if (canonical) root.appendChild(element("p", "", counted(canonical.rooms, "Room") + " · " +
+        counted(canonical.faces, "Face") + " · " + counted(canonical.surface_pairs, "Surface pair")));
       (task.outcome.value.artifacts || []).forEach(function (path) {
         root.appendChild(element("p", "", path.split(/[\\/]/).pop()));
       });

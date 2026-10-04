@@ -34,6 +34,7 @@ class ClassifyToolTest < PhComposerTestCase
     click([10, 10])
 
     assert_equal ["Wall"], values("face_type").compact
+    assert_equal "Classified 1 Face.", Sketchup.status_texts.last
     @model.undo
 
     assert_empty values("face_type").compact
