@@ -39,7 +39,7 @@ module PhComposer
 
   # Capabilities the foundation itself provides, registered through the same interface as a feature.
   unless const_defined?(:FOUNDATION_FEATURES)
-    FOUNDATION_FEATURES = [RecordQueries, LocationCommands, ColourBy, Library].freeze
+    FOUNDATION_FEATURES = [RecordQueries, ColourBy, Library, LocationCommands].freeze
   end
 
   # Registers the foundation and every listed feature. A registration problem fails loading here,

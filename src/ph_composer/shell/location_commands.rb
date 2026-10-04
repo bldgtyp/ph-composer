@@ -28,6 +28,8 @@ module PhComposer
                           "with the setup grant can add it once by location id."
     }.freeze
     STORE_REFUSES = %w[location.setup_unavailable location.setup_unreadable].freeze
+    MENU_LABELS = { "approve_destination" => "Approve Export Destination…", "approve_file" => "Approve Library File…",
+                    "approve_folder" => "Approve Library Folder…" }.freeze
 
     extend SchemaShapes
 
@@ -57,6 +59,31 @@ module PhComposer
           ApprovedLocations.approve(:kind => approval.kind, :path => request.approval.path,
                                     :label => request.params["label"])
         end
+        install_menu(feature, verb)
+      end
+    end
+
+    # The native route to an approval, beside the Libraries menu's own adds. Listing, renaming and
+    # revoking are in the Libraries dialog.
+    def install_menu(feature, verb)
+      feature.menu_item("#{PREFIX}.#{verb}_menu", :label => MENU_LABELS.fetch(verb), :menu => "Libraries",
+                                                  :available => ->(_read) { false }) do |session|
+        # The dialog would only lead to the same refusal; say so before it opens.
+        next session.notice(ApprovedLocations::UNREADABLE, :tone => :warning) if ApprovedLocations.state == "unreadable"
+
+        outcome = NativeApproval.setup(menu_context(session), "#{PREFIX}.#{verb}", {})
+        next if outcome["status"] == "cancelled"
+
+        next session.notice(outcome["message"], :tone => :warning) unless outcome["status"] == "completed"
+
+        session.notice("Approved #{outcome.dig('value', 'label')}. An agent can now use it by id.", :tone => :info)
+      end
+    end
+
+    # The native menu is one client per session, as the panel is.
+    def menu_context(session)
+      session.feature_state(:locations_menu_context) do
+        API.connect(:session_id => session.id, :capabilities => %w[read setup])
       end
     end
 

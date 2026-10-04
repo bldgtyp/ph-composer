@@ -29,3 +29,60 @@ test("a readable setup hides the reset notice and allows adding", function () {
   assert.strictEqual(o.dialog.unreadableNotice.hidden, true);
   assert.ok(!o.dialog.file.disabled && !o.dialog.folder.disabled);
 });
+function withLocations(locations, listingState) {
+  var o = setup("readable");
+  o.state = { session: "session", revision: 1, ui: { queryResults: {}, setupResults: {} }, sections: {
+    "ph_composer.library.provider_catalogs": { status: "completed", value: [] },
+    "ph_composer.library.provider_setup": { status: "completed", value: { state: "readable" } },
+    "ph_composer.locations.approved": { status: "completed",
+      value: { state: listingState || "readable", locations: locations } } } };
+  o.dialog.refresh(o.state);
+  return o;
+}
+var LOCATION = { id: "location_AAAAAAAAAAAA", kind: "save_file", label: "Library export", use: "reusable",
+  approved_at: "2026-10-03T12:00:00Z", last_used_at: null, available: false };
+function allText(node) {
+  var text = [node.textContent];
+  dom.walk(node, function (child) { if (child !== node) text.push(child.textContent); });
+  return text.join(" ");
+}
+function plain(value) { return JSON.parse(JSON.stringify(value)); }
+function named(root, label) {
+  return root.querySelectorAll("button").find(function (button) {
+    return button.getAttribute("aria-label") === label || button.textContent === label;
+  });
+}
+test("approved locations list by label with kind and state, never a path, and approve through the host", function () {
+  var o = withLocations([LOCATION]);
+  var text = allText(o.dialog.locations.list);
+  assert.ok(text.includes("Library export") && text.includes("Export destination") && text.includes("not used yet"));
+  assert.ok(text.includes("No longer there as approved"));
+  named(o.dialog.locations.root, "Approve folder…").dispatchEvent({ type: "click" });
+  var sent = o.sent.map(function (item) { return [item.type, item.payload.name, item.payload.params]; });
+  assert.deepStrictEqual(plain(sent), [["setup.invoke", "ph_composer.locations.approve_folder", {}]]);
+  assert.ok(o.dialog.cancel.disabled);
+});
+test("rename applies on Enter and revoke asks once before it sends", function () {
+  var o = withLocations([LOCATION]);
+  named(o.dialog.locations.root, "Rename Library export").dispatchEvent({ type: "click" });
+  var input = o.dialog.locations.list.querySelector("input");
+  input.value = "Project export";
+  input.dispatchEvent({ type: "keydown", key: "Enter", preventDefault: function () {} });
+  assert.deepStrictEqual(plain(o.sent[0].payload), { request_id: o.sent[0].payload.request_id, session: "session",
+    name: "ph_composer.locations.rename", params: { id: LOCATION.id, label: "Project export" } });
+  o.state.ui.setupResults[o.sent[0].payload.request_id] = { request_id: o.sent[0].payload.request_id,
+    session: "session", outcome: { status: "completed", value: LOCATION } };
+  o.dialog.refresh(o.state);
+  named(o.dialog.locations.root, "Revoke Library export").dispatchEvent({ type: "click" });
+  assert.strictEqual(o.sent.length, 1);
+  named(o.dialog.locations.root, "Confirm revoke Library export").dispatchEvent({ type: "click" });
+  assert.deepStrictEqual(plain([o.sent[1].payload.name, o.sent[1].payload.params]),
+    ["ph_composer.locations.revoke", { id: LOCATION.id }]);
+});
+test("an unreadable store offers only Reset approved locations", function () {
+  var o = withLocations([], "unreadable");
+  assert.strictEqual(o.dialog.locations.unreadableNotice.hidden, false);
+  assert.ok(o.dialog.locations.approvals.every(function (button) { return button.disabled; }));
+  o.dialog.locations.reset.dispatchEvent({ type: "click" });
+  assert.strictEqual(o.sent[0].payload.name, "ph_composer.locations.reset");
+});

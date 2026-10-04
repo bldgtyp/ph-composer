@@ -1,5 +1,6 @@
 /* Machine-level library setup. Native pickers own addresses; this dialog only sees provider ids and labels. */
-PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], function (request, snapshot, ui) {
+PhComposerUI.define("library/setup", ["library/locations", "request", "snapshot", "workspace"],
+  function (Locations, request, snapshot, ui) {
   "use strict";
   var PREFIX = "ph_composer.library.providers", SECTION = "ph_composer.library.provider_catalogs",
     SETUP_SECTION = "ph_composer.library.provider_setup", el = ui.element;
@@ -17,6 +18,9 @@ PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], funct
     this.reset = ui.button("Reset library setup", function () { self.run("reset", {}); });
     this.unreadableNotice.appendChild(this.reset); this.root.appendChild(this.unreadableNotice);
     this.error = el("p", "cell-error"); this.error.setAttribute("role", "status"); this.root.appendChild(this.error);
+    // Close waits for a pending approval too, so a location request repaints this dialog as well.
+    this.locations = new Locations(session, send, function () { self.paint(); changed(); });
+    this.root.appendChild(this.locations.root);
     this.file = ui.button("Add library file…", function () { self.run("add_file", {}); });
     this.folder = ui.button("Add library folder…", function () { self.run("add_folder", {}); });
     this.cancel = ui.button("Close", function () { self.close(); });
@@ -37,6 +41,7 @@ PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], funct
     if (!this.enabled) { this.requests.reset(); this.root.closeModal(); }
     var outcome = this.requests.consume(state);
     if (outcome) this.error.textContent = ["completed", "cancelled"].includes(outcome.status) ? "" : outcome.message;
+    this.locations.refresh(state);
     this.paint();
   };
   Setup.prototype.paint = function () {
@@ -54,7 +59,7 @@ PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], funct
     if (!this.providers.length && !this.unreadable) this.list.appendChild(el("p", "muted", "No libraries configured."));
     this.unreadableNotice.hidden = !this.unreadable; this.reset.disabled = busy || !this.enabled;
     this.file.disabled = busy || !this.enabled || this.unreadable; this.folder.disabled = this.file.disabled;
-    this.cancel.disabled = busy;
+    this.cancel.disabled = busy || this.locations.busy();
   };
   Setup.prototype.open = function () {
     if (this.disposed || !this.enabled || this.requests.busy()) return;
@@ -66,11 +71,11 @@ PhComposerUI.define("library/setup", ["request", "snapshot", "workspace"], funct
     this.paint(); this.changed(); return true;
   };
   Setup.prototype.close = function () {
-    if (this.requests.busy()) return;
+    if (this.requests.busy() || this.locations.busy()) return;
     this.root.closeModal(); this.changed();
   };
   Setup.prototype.dispose = function () {
-    this.disposed = true; this.enabled = false; this.requests.reset(); this.root.closeModal();
+    this.disposed = true; this.enabled = false; this.requests.reset(); this.locations.dispose(); this.root.closeModal();
   };
   return Setup;
 });

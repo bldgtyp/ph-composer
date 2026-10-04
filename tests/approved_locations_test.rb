@@ -76,6 +76,20 @@ class ApprovedLocationsTest < PhComposerTestCase
     assert_equal [@session.revision, []], [@session.revision, Sketchup.active_model.operations.to_a]
   end
 
+  # The Libraries menu approves through the same native dialog and names what it approved; a dismissed
+  # dialog says nothing, and the items stay off the viewport context menu.
+  def test_the_libraries_menu_approves_and_names_the_location
+    menu = PhComposer::Registry.current.menu_items.fetch("#{PREFIX}.approve_folder_menu")
+    notices = []
+    @session.stub(:notice, ->(message, tone:) { notices << [message, tone] }) do
+      UI.stub(:select_directory, @directory) { menu.handler.call(@session) }
+      UI.stub(:select_directory, nil) { menu.handler.call(@session) }
+    end
+    assert_equal [["Approved Library folder 1. An agent can now use it by id.", :info]], notices
+    refute menu.available.call(@session)
+    assert_equal "Libraries", menu.menu
+  end
+
   # A revoked id says so rather than reading as unknown, and the tombstones it leaves are bounded.
   def test_revoke_leaves_a_bounded_tombstone
     first = Locations.approve(:kind => "open_folder", :path => @directory).fetch("id")
