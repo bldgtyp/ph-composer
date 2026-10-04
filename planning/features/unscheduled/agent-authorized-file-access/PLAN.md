@@ -336,5 +336,8 @@ buttons, matching its existing Remove button.
 
 Gates: `make ci` passes on Ruby 3.2.2 and the Ruby suite on 2.7.2; `make ui-checks` passes; the
 dialog was checked in the UI preview at 800 and 420 px. The Phase 7 host gate passed in SketchUp
-26.1.188 on 2026-10-03 ([evidence](evidence/host-gate-2026-10-03.md)). The packet is archived once
-the pull request merges.
+26.1.188 on 2026-10-03 ([evidence](evidence/host-gate-2026-10-03.md)). The PR #70 review then
+found four defects: an HBJSON write failure named the destination, a failed store write let a
+single-use location add twice, a refresh during Rename submitted the draft in Chrome, and a feature
+schema could require `location`. `c511f7e` fixes each with a regression test, and the affected host
+checks passed again on that build. The packet is archived once the pull request merges.
