@@ -108,7 +108,7 @@ const { chromium } = require("playwright");
     await page.screenshot({ path: path.join(directory, "library-export-" + width + ".png"), fullPage: true });
     await libraryExport.locator("button[type=submit]").click();
     await libraryExport.getByText("File writes are unavailable in this browser preview.").waitFor();
-    await libraryExport.locator("button[type=button]").click();
+    await libraryExport.locator("button.phc-action-cancel").click();
     assert.strictEqual(await page.evaluate(() => previewHost.sent.filter(message =>
       message.type === "action.invoke").length), before + 2, "library export adds no Model action");
     assert.strictEqual(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);

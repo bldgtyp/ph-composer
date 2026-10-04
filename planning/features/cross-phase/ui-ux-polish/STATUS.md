@@ -13,7 +13,7 @@ ISSUE: none (local planning draft)
 | P0 investigations | In progress, per slice | UX-007 reproduced in preview (below); UX-016 audit in [evidence/ASSEMBLY_PARITY.md](evidence/ASSEMBLY_PARITY.md); Colour by "Show only this" is a viewport isolate, no table filter (`colour_by/service.rb#isolate`) |
 | P1 shared tables | Implemented on branch | UX-003, 004, 005, 011, 012, 013; D3, D4 taken. `make ci` and `make ui-checks` pass |
 | P2 shared feedback/dialogs | Implemented on branch | UX-002, 010, 020 (shared contract); D1, D5, D7 taken. `make ci` passes |
-| P3 Library flows/surfaces | Proposed | |
+| P3 Library flows/surfaces | Implemented on branch | UX-018, 019, 020 (Library), 021; D6, D7 taken. Shared sidebar and setup serve both Builders |
 | P4 Zones / Faces workspace | Proposed | |
 | P5 Assembly Builder | Audit done, not built | |
 | P6 Windows toolbar | Proposed | |
@@ -33,7 +33,8 @@ ISSUE: none (local planning draft)
 - Chip tints: Wall's pale amber sits near the "?" flag's amber. Accept honeybee's hue, or choose another.
 - Counts moved from page headers to control rows app-wide (D4).
 - No footer help strip (D5): blocked reasons open beside their action instead.
+- Library rail stays right in both Builders (D6), against the predecessor's left rail.
 
 ## Next action
 
-Continue the loop: P3, P4, P5, P6, then one native host pass.
+Continue the loop: P4, P5, P6, then one native host pass.

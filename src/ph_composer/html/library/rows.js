@@ -2,6 +2,7 @@
 PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui) {
   "use strict";
   var el = ui.element;
+  var OPEN_UP_TO = 20;
   var methods = {};
   methods.renderList = function () {
     var self = this, adapter = this.adapter, query = this.search.value.trim().toLowerCase();
@@ -15,7 +16,7 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
       // The source select offers a library only once one is set up.
       this.list.appendChild(el("p", "muted", "These records are in the table. " +
         (this.source.children.length > 1 ? "Choose a library above to copy records from it." :
-          "Add a library with Library setup to copy records from it.")));
+          "Choose Add a library to copy records from one.")));
       return;
     }
     this.records.filter(function (row) { return adapter.searchText(row).toLowerCase().includes(query); })
@@ -24,17 +25,26 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
         var category = adapter.category(row);
         (grouped[category] || (grouped[category] = [])).push(row);
       });
+    // A short list opens every group; a long one starts folded, so its categories read as a table of contents.
+    // A search opens whatever it found. A group the user folded or opened stays that way.
+    var shown = Object.keys(grouped).reduce(function (total, key) { return total + grouped[key].length; }, 0);
+    function open(key) {
+      if (query) return true;
+      return Object.prototype.hasOwnProperty.call(self.expanded, key) ? self.expanded[key] !== false :
+        shown <= OPEN_UP_TO;
+    }
     Object.keys(grouped).sort(function (a, b) { return adapter.compare(a, b); }).forEach(function (key) {
       var info = categories.filter(function (entry) { return entry.id === key; })[0];
       var group = el("section", "library-sidebar-group");
       var heading = ui.button(info ? info.label : (key || "Uncategorized"), function () {
-        self.expanded[key] = self.expanded[key] === false;
+        self.expanded[key] = !open(key);
         self.renderList();
       });
       heading.className = "library-sidebar-group-heading";
-      heading.setAttribute("aria-expanded", String(self.expanded[key] !== false));
+      heading.setAttribute("aria-expanded", String(open(key)));
+      heading.appendChild(el("span", "library-sidebar-group-count", String(grouped[key].length)));
       group.appendChild(heading);
-      if (self.expanded[key] !== false) grouped[key].forEach(function (row) {
+      if (open(key)) grouped[key].forEach(function (row) {
         var entry = self.entries[row.id];
         if (!entry) entry = self.entries[row.id] = self.makeRow(row);
         entry.row = row;

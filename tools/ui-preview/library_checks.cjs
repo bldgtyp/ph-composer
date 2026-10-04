@@ -69,7 +69,9 @@ async function writes(page) {
       const setup = sidebar.getByRole("dialog", { name: "Libraries", exact: true });
       await setup.getByText("Synthetic library", { exact: true }).waitFor();
       assert.equal(await setup.innerText().then(text => text.includes("/Users/")), false);
-      await setup.getByRole("button", { name: "Close", exact: true }).click();
+      // Agent access waits folded beneath the libraries until someone opens it.
+      assert.equal(await setup.getByRole("button", { name: /^Approve/ }).first().isVisible(), false);
+      await setup.getByRole("button", { name: "Done", exact: true }).click();
       assert.equal(await writes(page), 2, "Refresh and setup do not author records");
       await page.screenshot({ path: path.join(output, `library-${width}.png`), fullPage: true });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true,
@@ -101,9 +103,10 @@ async function writes(page) {
     const materials = page.locator("[data-section='library']").getByRole("tabpanel", { name: "Materials", exact: true });
     await materials.getByRole("button", { name: "Library setup…", exact: true }).click();
     const setup = materials.getByRole("dialog", { name: "Libraries", exact: true });
-    const file = setup.getByRole("button", { name: "Add library file…", exact: true });
-    const folder = setup.getByRole("button", { name: "Add library folder…", exact: true });
-    assert.equal(await file.isDisabled(), true); assert.equal(await folder.isDisabled(), true);
+    // An unreadable setup offers only Reset: the ways to add a library stay out of sight.
+    assert.equal(await setup.locator(".library-setup-routes").isVisible(), false);
+    assert.equal(await setup.getByRole("button", { name: "Add a library…", exact: true }).isVisible(), false);
+    const file = setup.getByRole("button", { name: "Done", exact: true });
     // Each fill is read with the button disabled, then enabled, in the apply and the destructive role.
     const fills = (locator, role) => locator.evaluate((node, role) => {
       node.classList.remove("phc-action-apply", "phc-action-delete"); node.classList.add(role);
@@ -119,6 +122,7 @@ async function writes(page) {
     await page.screenshot({ path: path.join(output, "library-setup-unreadable.png"), fullPage: true });
     // A snapshot refresh while an approved location is renamed keeps the draft, its focus and caret, and
     // sends nothing: the browser blurs the field while the list is rebuilt.
+    await setup.getByText("Agent access", { exact: true }).click();
     await setup.getByRole("button", { name: "Rename Library export", exact: true }).click();
     const name = setup.getByLabel("Location name", { exact: true });
     await name.fill("Half typed"); await name.press("End");

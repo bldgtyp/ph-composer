@@ -134,3 +134,21 @@
 .library-location-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
 .library-location-actions { display: flex; gap: 6px; flex: none; }
 .library-location-missing { color: var(--warning-ink); }
+/* Library setup: the two ways to add a library as choices, the configured list, and agent access folded
+   beneath them. */
+.library-setup-routes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;
+  margin: 14px 0; }
+.phc-workspace .library-setup-route { display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 12px 14px; text-align: left; white-space: normal; }
+.library-setup-route small { font-weight: 400; line-height: 1.4; }
+.library-setup-row.is-added { margin: 8px -8px; padding: 4px 8px; border-radius: 6px;
+  background: var(--interaction-highlight-tint); }
+.library-setup-success { margin: 8px 0 0; color: var(--interaction-highlight); }
+.library-setup-waiting { color: var(--muted); }
+.library-agent-access { margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--line); }
+.library-agent-access summary { cursor: pointer; color: var(--muted-strong); font-weight: 600; }
+.library-agent-access .library-locations { margin-top: 8px; padding-top: 0; border-top: 0; }
+.library-sidebar-group-count { margin-left: 6px; color: var(--muted); font-weight: 400; }
+.phc-workspace .library-setup-remove { width: 30px; height: 30px; min-height: 30px; padding: 5px; border-color: transparent;
+  background: transparent; color: var(--muted-strong); }
+.phc-workspace .library-setup-remove:hover:enabled { color: var(--red); background: var(--error-surface); }

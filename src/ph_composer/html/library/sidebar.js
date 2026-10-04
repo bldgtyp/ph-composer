@@ -149,6 +149,9 @@ PhComposerUI.define("library/sidebar", ["library/adapters", "library/drag", "lib
       this.refreshButton.hidden = !this.store || !this.store.selected;
       this.refreshButton.disabled = this.busy() || Boolean(this.store && this.store.busy());
       this.setupButton.disabled = !this.setup || !this.setup.enabled || this.busy();
+      // Before any library is set up, the button says what the user came to do.
+      this.setupButton.textContent = this.store && this.store.providers.length ? "Library setup…" :
+        "Add a library…";
       this.more.hidden = !this.store || !this.store.page || !this.store.page.next_cursor;
       this.more.disabled = this.busy() || Boolean(this.store && this.store.busy());
       var page = this.store && this.store.selected && this.store.page;
