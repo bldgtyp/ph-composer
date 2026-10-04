@@ -116,7 +116,11 @@ class ApiClientTest < PhComposerTestCase
 
     assert_equal "completed", API.export_preflight(:context => context)["status"]
     Dir.mktmpdir("phc-quickstart-") do |directory|
-      task = API.start_export(:context => context, :destination => File.join(directory, "model.hbjson"))["value"]
+      # The user approves the destination once, in the Libraries dialog; the client reads its id.
+      PhComposer::ApprovedLocations.approve(:kind => "save_file", :path => File.join(directory, "model.hbjson"))
+      location = API.query(:context => context, :name => "ph_composer.locations.list")["value"]["locations"]
+                    .find { |row| row["kind"] == "save_file" }
+      task = API.start_export(:context => context, :location => { "id" => location["id"] })["value"]
       assert_nil API.export_status(:context => context, :task_id => task["task_id"])["value"]["outcome"]
       API.cancel_export(:context => context, :task_id => task["task_id"])
       assert_equal task["task_id"], API.latest_export(:context => context)["value"]["task_id"]

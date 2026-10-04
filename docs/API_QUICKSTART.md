@@ -158,13 +158,17 @@ page["value"]["faces"]        # reference and the two values, nothing else
 page["value"]["next_cursor"]  # nil on the last page
 ```
 
-Export is a task, not a Model change. Preflight shows what blocks it; start writes to an explicit
-destination and never replaces an existing pair unless you pass `replace: true`; poll until the
-status carries an outcome.
+Export is a task, not a Model change. It writes only to a destination the user approved once in the
+Libraries dialog, never to a path you pass. Read the approved destinations, preflight to see what
+blocks the export, then start it with the destination's id and poll until the status carries an
+outcome. An existing pair is replaced only with `replace: true` and the `expected_destination` that
+`export_preflight` reported for that location.
 
 ```ruby
+locations = PhComposer::API.query(context: context, name: "ph_composer.locations.list")["value"]["locations"]
+location = locations.find { |row| row["kind"] == "save_file" }
 PhComposer::API.export_preflight(context: context)["value"]["findings"]
-task = PhComposer::API.start_export(context: context, destination: "/path/to/model.hbjson")["value"]
+task = PhComposer::API.start_export(context: context, location: { "id" => location["id"] })["value"]
 status = PhComposer::API.export_status(context: context, task_id: task["task_id"])["value"]
 status["outcome"]             # nil while running; then completed, refused, failed or cancelled
 PhComposer::API.latest_export(context: context)

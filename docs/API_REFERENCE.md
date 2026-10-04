@@ -37856,7 +37856,13 @@ Keyword arguments besides context:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {}
+  "properties": {
+    "location": {
+      "type": "string",
+      "minLength": 1,
+      "description": "An approved destination's id, to report what it holds now."
+    }
+  }
 }
 ```
 
@@ -37954,6 +37960,26 @@ Result value:
           }
         }
       }
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "state"
+      ],
+      "description": "With location: whether the pair exists and its state. Pass state as the location's expected_destination to replace it.",
+      "properties": {
+        "exists": {
+          "type": "boolean"
+        },
+        "state": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     }
   }
 }
@@ -37965,9 +37991,17 @@ Example arguments:
 {}
 ```
 
+Example arguments:
+
+```json
+{
+  "location": "location_AAAAAAAAAAAA"
+}
+```
+
 ### `PhComposer::API.start_export`
 
-Start one export of the canonical HBJSON and its report to an explicit destination. An existing pair is replaced only with replace true; one task runs per Model at a time. Needs `export`.
+Start one export of the canonical HBJSON and its report to a destination the user approved (ph_composer.locations.approve_destination). An existing pair is replaced only with replace and the expected_destination export_preflight reported; one task runs per Model at a time. Needs `export`.
 
 Keyword arguments besides context:
 
@@ -37976,17 +38010,32 @@ Keyword arguments besides context:
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "destination"
+    "location"
   ],
   "properties": {
-    "destination": {
-      "type": "string",
-      "minLength": 1,
-      "description": "The .hbjson path; the report is written beside it."
-    },
-    "replace": {
-      "type": "boolean",
-      "description": "Consent to replace an existing pair."
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The id of a location the user approved, from ph_composer.locations.list."
+        },
+        "replace": {
+          "type": "boolean",
+          "description": "Consent to replace what the destination holds. Needs expected_destination."
+        },
+        "expected_destination": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The destination state a preview reported, so a destination that changed since is refused."
+        }
+      },
+      "description": "An approved location to use instead of asking the user. A native client asks instead."
     }
   }
 }
@@ -38073,7 +38122,7 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and the two artifact paths written."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
         },
         "affected": {
           "type": "array"
@@ -38103,8 +38152,9 @@ Example arguments:
 
 ```json
 {
-  "destination": "/path/to/model.hbjson",
-  "replace": false
+  "location": {
+    "id": "location_AAAAAAAAAAAA"
+  }
 }
 ```
 
@@ -38211,7 +38261,7 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and the two artifact paths written."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
         },
         "affected": {
           "type": "array"
@@ -38348,7 +38398,7 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and the two artifact paths written."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
         },
         "affected": {
           "type": "array"
@@ -38480,7 +38530,7 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and the two artifact paths written."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
         },
         "affected": {
           "type": "array"

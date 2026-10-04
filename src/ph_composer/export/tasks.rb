@@ -16,23 +16,23 @@ module PhComposer
         @tasks = {}
       end
 
-      def start(destination:, replace: false, runtime_factory: nil)
+      # The destination is an approved `location` param, or the native Export workflow's own `approval`,
+      # a NativeApproval::Granted (Task). A destination the pair would refuse is refused here, before any
+      # task exists, whichever route chose it.
+      def start(location: nil, approval: nil, runtime_factory: nil)
+        approval ||= ApprovedLocations.grant_param(location, "save_file")
         prune
         if @tasks.values.any? { |task| !task.terminal? }
           raise Blocked.new("export.busy", "An export is already running for this Model.")
         end
-        unless destination.is_a?(String) && !destination.empty?
-          raise Blocked.new("params.invalid", "Choose an explicit HBJSON destination.")
-        end
-        unless replace == true || replace == false
-          raise Blocked.new("params.invalid", "Replacement consent must be true or false.")
+        if (problem = ArtifactPair.destination_problem(approval.path))
+          raise Blocked.new("export.refused", problem)
         end
         if @session.busy_reason
           raise Blocked.new("session.busy", @session.busy_reason)
         end
 
-        task = Task.new(@session, :destination => destination, :replace => replace,
-                                  :runtime_factory => runtime_factory)
+        task = Task.new(@session, :approval => approval, :runtime_factory => runtime_factory)
         task.start
         @tasks[task.id] = task
         task.snapshot

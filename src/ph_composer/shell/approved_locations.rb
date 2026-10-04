@@ -68,6 +68,17 @@ module PhComposer
                                   :location_id => row.fetch("id")).freeze
     end
 
+    # As `grant`, for a `location` that has not been through an operation's params schema.
+    def grant_param(location, kind)
+      findings = location.is_a?(Hash) ? JsonValue.problems(location) : []
+      findings = JsonSchema.validate(location, param(kind)) if findings.empty?
+      unless findings.empty?
+        raise CodedError.new("params.invalid", "The location is not valid: #{findings.first}.", "findings" => findings)
+      end
+
+      grant(location, kind)
+    end
+
     # "readable" (including nothing stored yet) or "unreadable".
     def state
       stored.last

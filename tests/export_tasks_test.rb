@@ -150,12 +150,16 @@ class ExportTasksTest < PhComposerTestCase
     assert_empty Dir.children(@directory)
   end
 
+  # Half a prior pair is refused whatever the consent; a whole one needs consent to replace it.
   def test_destination_replacement_and_one_active_task_are_explicit
     File.write(@destination, "prior")
+    assert_equal "export.refused", assert_raises(PhComposer::CodedError) { start(:replace => true) }.code
+    File.write(PhComposer::Export::ArtifactPair.report_path(@destination), "prior report")
     error = assert_raises(PhComposer::CodedError) { start }
     assert_equal "export.replace_required", error.code
     assert_equal "prior", File.read(@destination)
     File.delete(@destination)
+    File.delete(PhComposer::Export::ArtifactPair.report_path(@destination))
     start
     error = assert_raises(PhComposer::CodedError) { start }
     assert_equal "export.busy", error.code
@@ -209,10 +213,12 @@ class ExportTasksTest < PhComposerTestCase
   def test_public_tasks_require_export_access_and_old_or_cross_model_handles_expire
     api = PhComposer::API
     read = api.connect(:session_id => @session.id, :capabilities => ["read", "model_write"])
-    refused = api.start_export(:context => read, :destination => @destination)
+    location = { "id" => approved_destination }
+    refused = api.start_export(:context => read, :location => location)
     assert_equal "request.capability_denied", refused.fetch("code")
     context = api.connect(:session_id => @session.id, :capabilities => ["export"])
-    started = api.start_export(:context => context, :destination => @destination)
+    assert_raises(ArgumentError) { api.start_export(:context => context, :destination => @destination) }
+    started = api.start_export(:context => context, :location => location)
     id = started.dig("value", "task_id")
     assert_equal "completed", started.fetch("status")
     assert_equal started.fetch("value"), api.export_status(:context => context, :task_id => id).fetch("value")
@@ -244,7 +250,8 @@ class ExportTasksTest < PhComposerTestCase
 
     assert_equal %w[task task task task task], names.map { |name| api.describe(:name => name).fetch("kind") }
     assert_equal "completed", call.call(names[0], {}).fetch("status")
-    started = call.call(names[1], "destination" => @destination)
+    location = { "id" => approved_destination }
+    started = call.call(names[1], "location" => location)
     id = started.dig("value", "task_id")
     call.call(names[2], "task_id" => id)
     cancelled = call.call(names[3], "task_id" => id)
@@ -254,7 +261,36 @@ class ExportTasksTest < PhComposerTestCase
     assert_equal id, latest.dig("value", "task_id")
     refute_includes JSON.generate(latest.fetch("value")), "hbjson"
     File.write(@destination, "{}")
-    assert_equal "export.replace_required", call.call(names[1], "destination" => @destination).fetch("code")
+    File.write(PhComposer::Export::ArtifactPair.report_path(@destination), "<html></html>")
+    assert_equal "export.replace_required", call.call(names[1], "location" => location).fetch("code")
+    refute PhComposer::JsonSchema.validate({ "destination" => @destination }, api.describe(:name => names[1])
+                                                                                 .fetch("params")).empty?
+  end
+
+  # Replacing the pair at an approved destination is consent to the state export_preflight reported;
+  # a pair that changed since is refused, and the completed outcome names the location, never a path.
+  def test_replacing_an_approved_pair_is_bound_to_the_reviewed_state
+    api = PhComposer::API
+    context = api.connect(:session_id => @session.id, :capabilities => %w[read export])
+    id = approved_destination
+    File.write(@destination, "{}")
+    File.write(PhComposer::Export::ArtifactPair.report_path(@destination), "<html></html>")
+    reviewed = api.export_preflight(:context => context, :location => id).dig("value", "destination")
+    assert_equal true, reviewed.fetch("exists")
+    stale = { "id" => id, "replace" => true, "expected_destination" => "0" * 64 }
+    assert_equal "export.destination_changed", api.start_export(:context => context, :location => stale)["code"]
+    no_state = api.start_export(:context => context, :location => { "id" => id, "replace" => true })
+    assert_equal "export.replace_required", no_state["code"]
+    consented = { "id" => id, "replace" => true, "expected_destination" => reviewed.fetch("state") }
+    # What start_export runs, with this test's runtime in place of the translation runtime.
+    task = @tasks.start(:location => consented, :runtime_factory => @factory)
+    drain
+    @runtime.success
+    drain
+    value = @tasks.status(task.fetch("task_id")).dig("outcome", "value")
+    assert_equal({ "id" => id, "label" => "Export destination 1" }, value.fetch("location"))
+    refute_includes JSON.generate(value), @directory
+    refute_equal "{}", File.read(@destination)
   end
 
   def test_task_retention_is_bounded_and_old_handles_never_restart_a_write
@@ -295,7 +331,12 @@ class ExportTasksTest < PhComposerTestCase
     flunk "Collection did not settle within 100 timer slices"
   end
 
-  def start
-    @tasks.start(:destination => @destination, :runtime_factory => @factory)
+  def start(replace: false)
+    approval = PhComposer::NativeApproval::Granted.new(:path => @destination, :replace => replace)
+    @tasks.start(:approval => approval, :runtime_factory => @factory)
+  end
+
+  def approved_destination
+    PhComposer::ApprovedLocations.approve(:kind => "save_file", :path => @destination).fetch("id")
   end
 end

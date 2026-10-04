@@ -22,7 +22,8 @@ module PhComposer
     end
 
     # File export has its own grant and never enters a Model mutation. Polling and cancellation
-    # use the same explicit session as starting the task, even when another Model is foreground.
+    # use the same explicit session as starting the task, even when another Model is foreground. A
+    # start names an approved location; only the native Export workflow passes its own `approval`.
     def export_task(context, operation, arguments)
       session, = resolve(context, "export", nil, nil)
       tasks = Export::Tasks.for(session)
@@ -42,9 +43,11 @@ module PhComposer
       unexpected_outcome(error, session, "export.#{operation}")
     end
 
-    def export_preflight(context)
+    # With `location`, an approved destination's id, the result also says what that destination holds.
+    def export_preflight(context, location = nil)
       session, = resolve(context, "read", nil, nil)
       value = { "findings" => [], "repairs" => [] }
+      value["destination"] = ApprovedLocations.observe(location) { |path| Export::ArtifactPair.state(path) } if location
       @registry.export_contributors.values.sort_by(&:name).each do |contributor|
         next unless contributor.preflight
 
