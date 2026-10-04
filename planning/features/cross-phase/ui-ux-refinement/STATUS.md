@@ -27,7 +27,7 @@ version. No branch is open and nothing is half-built.
 | Host capture of viewport surfaces (D7) | Done 2026-10-03 | Run by computer use, with real clicks in the viewport; results below |
 | A completed export in the host | Done 2026-10-03 | Results below |
 | Verification pass and its fixes | Done 2026-10-03, [#67](https://github.com/bldgtyp/ph-composer/pull/67) | Results and findings below |
-| Design System artifact | First version published 2026-10-03 | [PH-Composer Design System](https://claude.ai/artifact/77GLrkZxtkxo9TksTbvodL), private to Ed. Tokens, the brand book, a cover and six kit parts as static renditions, read from `main@8af813e` |
+| Design System artifact | Reviewed with Ed and extended 2026-10-03 | [PH-Composer Design System](https://claude.ai/artifact/77GLrkZxtkxo9TksTbvodL), private to Ed. 20 colour tokens under the panel's own CSS names, seven type styles, spacing and radius (values other than `page-gutter` are read from the stylesheets and marked so), the brand book, a cover and ten kit parts as static renditions, read from `main@a946bb5` |
 
 Every merged packet passed `make ci` (both Ruby versions in CI), `make ui-checks`, at least one
 independent diff review, and a host check on SketchUp 26.1.188. Each plan's own outcome and host
@@ -35,9 +35,9 @@ check sections say what was and was not covered.
 
 ## Next steps, in order
 
-1. **Grow the Design System** if Ed wants it to carry more: live components would need the kit's
-   scripts bundled, and the drawing styles of the two Builders are not in it yet. Re-sync it after
-   any kit change.
+1. **Keep the Design System in step.** Re-sync it after any kit change. Still not in it: live
+   components (the kit's scripts are not bundled) and the drawing styles of the two Builders.
+   Registering it under Claude, Settings, Design systems is Ed's step.
 2. **Anything Ed overturns** from the decisions taken (D8 to D12, and each packet's "Decisions
    taken" table), as small follow-up changes.
 
