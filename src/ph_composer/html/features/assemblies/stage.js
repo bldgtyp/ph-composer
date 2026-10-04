@@ -59,7 +59,9 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         })[0];
         if (!entry) { hide(); return; }
         var box = hit.getBoundingClientRect(), x = event.clientX - box.left, y = event.clientY - box.top;
-        var reach = { top: Math.min(EDGE_PX.layer, box.height / 4), bottom: Math.min(EDGE_PX.layer, box.height / 4),
+        // A thin band (a membrane) still gives its top and bottom a few pixels of reach.
+        var band = Math.max(4, Math.min(EDGE_PX.layer, box.height / 4));
+        var reach = { top: band, bottom: band,
           left: Math.min(EDGE_PX.segment, box.width / 4), right: Math.min(EDGE_PX.segment, box.width / 4) };
         var distance = { top: y, bottom: box.height - y, left: x, right: box.width - x };
         var edge = Object.keys(distance).filter(function (key) { return distance[key] <= reach[key]; })
@@ -83,12 +85,16 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
       return control;
     }
     /* A value on the drawing that opens its single-value bubble: the button, then the bubble with the field.
-       Enter or leaving the field applies; Escape restores and closes. */
+       Enter or leaving the field applies; Escape restores the value, and Escape again closes the bubble. */
     function dimensionBubble(owner, button, title, key, dimension, extra) {
       var bubble = new ui.Bubble(button, title, { onOpen: function () {
+        // Reopened over a draft (after a repaint), the typing stays as it was; only a fresh open selects it.
         dimension.field.input.focus({ preventScroll: true });
-        dimension.field.input.select();
+        if (!dimension.field.editing) dimension.field.input.select();
       }, guard: function () { return owner.painting ? null : owner.settleDimension(key); }, refused: owner.notice });
+      bubble.panel.setAttribute("data-dimension-key", key);
+      // Its close stays live while the draft it applied is pending, so the click that applied it also closes it.
+      bubble.closeButton.setAttribute("data-editor-local", "");
       bubble.content.appendChild(dimension.root);
       if (extra) extra(bubble);
       return bubble;

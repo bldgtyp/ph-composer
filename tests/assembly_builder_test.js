@@ -350,3 +350,25 @@ test("the toolbar shows a selection's tools only while a Layer-Segment is select
   });
   assert.strictEqual(o.editor.root.querySelector(".assembly-back").getAttribute("aria-label"), "Back to Assemblies");
 });
+
+test("closing a dimension bubble settles an equal retype and never refuses a Builder being torn down", function () {
+  var o = setup(), field = o.editor.dimensions["thickness:layer_studs"].field;
+  typed(field, "140.0");
+  assert.strictEqual(o.editor.settleDimension("thickness:layer_studs"), null,
+    "an equal value is settled, not refused");
+  assert.strictEqual(o.sent.length, 0);
+  typed(field, "abc");
+  o.editor.dispose();
+  assert.strictEqual(o.editor.settleDimension("thickness:layer_studs"), null, "teardown closes whatever is open");
+});
+test("a turned Assembly inserts toward its interior above, and a refused insert selects nothing later", function () {
+  var o = setup();
+  o.record.values.orientation = "last_layer_outside";
+  o.editor.refresh(o.state, o.record.id);
+  click(hover(o, "layer_studs", "seg_wool", 100, 2));
+  assert.strictEqual(o.sent[0].payload.params.side, "inside");
+  result(o, "refused");
+  assert.strictEqual(o.editor.pendingInsert, null);
+  click(hover(o, "layer_studs", "seg_steel", 2, 50));
+  assert.strictEqual(o.sent[1].payload.params.index, 1, "the left edge inserts before the Layer-Segment");
+});

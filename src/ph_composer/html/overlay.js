@@ -226,7 +226,7 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     root.show = function (text, options) {
       revision += 1; persistent = Boolean(options && options.persistent); root.classList.remove("is-dismissing");
       // A hold belongs to the notice under the pointer or focus now; a hidden notice never sent its leave.
-      held = root.contains(document.activeElement);
+      held = root.contains(document.activeElement) || Boolean(root.matches && root.matches(":hover"));
       message.textContent = text || "";
       root.hidden = !message.textContent;
       root.setAttribute("data-persistent", String(persistent));

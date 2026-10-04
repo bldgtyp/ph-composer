@@ -407,7 +407,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     parts.toolbar.setAttribute("aria-label", "Zone and Face tools");
     parts.toolbar.appendChild(panel.region(pane, "actions"));
     parts.toolbar.appendChild(parts.solve);
-    parts.page = ui.pageHeader({ title: "Zones", primary: parts.make });
+    parts.page = ui.pageHeader({ title: "Zones", actions: [parts.toolbar, state.settings.bubble.root],
+      primary: parts.make });
+    parts.actions = parts.page.root.querySelector(".phc-heading-actions");
     state.header = parts;
     return parts;
   }
@@ -421,11 +423,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     parts.make.setAttribute("aria-label", target ? "Make Zone from the current selection" :
       "Select one Group or loose geometry to make a Zone");
     parts.solve.disabled = busy || !zones.zones.length;
-    // Placed again only when the reason comes or goes, so a repaint never moves a focused control.
-    if (parts.reasonShown !== !target) {
-      parts.reasonShown = !target;
-      parts.page.setActions([parts.toolbar, state.settings.bubble.root].concat(target ? [] : [parts.reason]));
-    }
+    // The reason alone comes and goes, just before Make Zone, so no other control is moved or loses focus.
+    if (!target && parts.reason.parentNode !== parts.actions) parts.actions.insertBefore(parts.reason, parts.make);
+    if (target && parts.reason.parentNode === parts.actions) parts.actions.removeChild(parts.reason);
     return parts.page.root;
   }
 
