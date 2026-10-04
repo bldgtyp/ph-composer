@@ -1,8 +1,8 @@
 # Agent-authorized file access: implementation plan
 
 DATE: 2026-10-02
-STATUS: Scoped. Ed decided D1 to D6 on 2026-10-02, each as recommended. Not yet authorized for
-implementation.
+STATUS: In progress on branch `feature/agent-authorized-file-access`. Ed decided D1 to D6 on
+2026-10-02, each as recommended, and authorized implementation on 2026-10-03.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/36
 
@@ -35,6 +35,44 @@ Read [README.md](README.md) first for the required behavior. This plan says how 
   every save destination.
 - `export_file`'s `expected_revision` is checked inside `ExportWorkflow.run` (line 19), after the
   native dialog. `Dispatch#admission_refusal` cannot see it (R11 item 13).
+
+## Review before implementation (2026-10-03, `main` at e93e88d)
+
+The starting point above still holds at e93e88d. Ed authorized implementation on 2026-10-03. The
+review found six gaps; each is absorbed by the phase named, and the phases below are read with these
+amendments.
+
+1. **The HBJSON outcome carries paths.** A completed task returns
+   `value.artifacts = [hbjson_path, report_path]` (`export/task.rb:135`) and the Export screen shows
+   their basenames. That breaks "no path out" for every caller, and D4 forbids the basename too.
+   Phase 5 drops `artifacts`. A task started from a location reports `location: { id, label }`; the
+   native one-shot route reports neither, so the Export screen stops listing the two file names.
+2. **A preview must inspect a location without seeing its path.** Phase 4's `export_preview` and
+   Phase 5's `export_preflight` report the destination's state, which needs the path. The store gains
+   `ApprovedLocations.inspect(id, kind:) { |path| state }`: it yields the path to the exporter's own
+   state function and returns `{ "exists", "state" }`. `resolve` stays the only method that returns a
+   path, called only by dispatch.
+3. **`state` is the fingerprint each writer already takes.** `Library::FileWriter` fingerprints with
+   SHA-256 of the bytes, not size and mtime; Phase 4 uses that function, made public, rather than a
+   second one. The HBJSON state is one SHA-256 over the pair's two fingerprints. Each exporter owns its
+   state function; the store never computes one.
+4. **Projection binding needs a param.** `export_file` takes no `projection_digest` today and the
+   panel sends only `expected_revision`. Phase 4 adds an optional `projection_digest`, checked whenever
+   it is supplied and required for a replace bound to a reviewed destination state. A mismatch refuses
+   with `revision.stale`, the code the export's revision check already uses: both say that what was
+   reviewed is not what would be written. The panel sends it.
+5. **The native route has no reviewed state.** The Save sheet's consent is given against the file as
+   it is at that moment, and the writer is built in the same synchronous call. A native `Granted`
+   therefore carries `state: nil`, meaning "as observed now"; the writer's own construction-to-rename
+   check still applies. Only a location carries a reviewed state, and `replace: true` on a location
+   requires `expected_destination`.
+6. **A consumed single-use handle needs its own answer.** Phase 3 refuses it as `location.used`, kept
+   in the same bounded tombstones as revoked ids, so a caller can tell "already added" from "revoked".
+
+Two smaller notes. `ArtifactPair.destination_problem` runs only in the native HBJSON consent today;
+Phase 5 runs it in `Export::Tasks#start` too, or an approved `.json` destination would reach the task.
+The new `location` code noun enters `Declarations::FOUNDATION_CODE_NOUNS`, `FOUNDATION_CODES`, the
+`context/CONTRACTS.md` codes table and the `Refusals` approval set in Phase 2 and 3.
 
 ## Decisions
 
