@@ -198,6 +198,23 @@ class ExportTasksTest < PhComposerTestCase
     assert @runtime.stopped
   end
 
+  # A write the filesystem refuses fails in fixed words: neither the status nor the latest task names
+  # the destination folder or file.
+  def test_a_failed_pair_write_names_no_path
+    task = start
+    drain
+    @runtime.success
+    File.chmod(0o555, @directory)
+    drain
+    [@tasks.status(task.fetch("task_id")), @tasks.latest].each do |status|
+      assert_equal %w[failed export.failed], status.fetch("outcome").values_at("status", "code")
+      assert_equal PhComposer::Export::Task::PAIR_FAILED, status.dig("outcome", "message")
+      ["test.hbjson", @directory].each { |secret| refute_includes JSON.generate(status), secret }
+    end
+  ensure
+    File.chmod(0o755, @directory)
+  end
+
   def test_content_and_destination_changes_after_translation_prevent_commit
     task = start
     drain

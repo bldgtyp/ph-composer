@@ -49,6 +49,26 @@ class ApprovedLocationUseTest < PhComposerTestCase
     assert_empty Sketchup.active_model.operations
   end
 
+  # The use is recorded before the add, so a store that cannot record it refuses with nothing
+  # configured, a refused add puts the location back, and one completed add is the only one.
+  def test_a_single_use_location_adds_one_library_even_when_its_store_cannot_be_written
+    id = Locations.approve(:kind => "open_folder", :path => folder("shared")).fetch("id")
+    write = Sketchup.method(:write_default)
+    failing = ->(section, key, value) { section == Locations::SECTION ? false : write.call(section, key, value) }
+    refused = Sketchup.stub(:write_default, failing) { add(ADD_FOLDER, { "id" => id }) }
+    assert_equal %w[refused location.setup_unavailable none], refused.values_at("status", "code", "effect")
+    assert_empty Setup.load
+    assert_equal [id], Locations.list.map { |row| row.fetch("id") }
+    malformed = File.join(@directory, "malformed.json")
+    File.write(malformed, "not a library")
+    file = Locations.approve(:kind => "open_file", :path => malformed).fetch("id")
+    assert_equal "library.file_malformed", add(ADD_FILE, { "id" => file }).fetch("code")
+    assert_includes Locations.list.map { |row| row.fetch("id") }, file
+    assert_equal "completed", add(ADD_FOLDER, { "id" => id }).fetch("status")
+    assert_equal "location.used", add(ADD_FOLDER, { "id" => id }).fetch("code")
+    assert_equal 1, Setup.load.length
+  end
+
   def test_every_unusable_location_refuses_before_anything_is_configured
     file = Locations.approve(:kind => "open_file", :path => File.join(@directory, "missing.json")).fetch("id")
     gone = Locations.approve(:kind => "open_folder", :path => File.join(@directory, "gone")).fetch("id")
@@ -132,18 +152,27 @@ class ApprovedLocationUseTest < PhComposerTestCase
                                 .dig("params", "properties", "location", "properties").keys
     refute PhComposer::API.describe(:name => "ph_composer.locations.approve_folder")
                           .dig("params", "properties").key?("location")
-    feature = Object.new
-    feature.define_singleton_method(:name) { "TestFiles" }
-    feature.define_singleton_method(:install) do |registry|
-      approval = PhComposer::Declarations::Approval.new(:kind => "open_folder", :title => "Pick")
-      params = { "type" => "object", "additionalProperties" => false,
+    declared = { "type" => "object", "additionalProperties" => false,
                  "properties" => { "location" => { "type" => "string", "description" => "A path." } } }
-      registry.feature("test.files", :contract_version => 1).setup_command(
-        "test.files.pick", :description => "Pick a folder.", :params => params, :refuses => [], :approval => approval,
-                           :result => { "type" => "object" }
-      ) { |_request| {} }
+    required = { "type" => "object", "additionalProperties" => false, "required" => ["location"], "properties" => {} }
+    [declared, required].each do |params|
+      error = assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([picking(params)]) }
+      assert_includes error.message, "leave location to registration"
     end
-    error = assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([feature]) }
-    assert_includes error.message, "leave location to registration"
+  end
+
+  # A feature asking for a folder, whose params are `params`.
+  def picking(params)
+    Object.new.tap do |feature|
+      feature.define_singleton_method(:name) { "TestFiles" }
+      feature.define_singleton_method(:install) do |registry|
+        approval = PhComposer::Declarations::Approval.new(:kind => "open_folder", :title => "Pick")
+        registry.feature("test.files", :contract_version => 1).setup_command(
+          "test.files.pick", :description => "Pick a folder.", :params => params, :refuses => [],
+                             :approval => approval, :result => { "type" => "object" },
+                             :examples => [{ "location" => { "id" => "location_AAAAAAAAAAAA" } }]
+        ) { |_request| {} }
+      end
+    end
   end
 end

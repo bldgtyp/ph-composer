@@ -197,11 +197,10 @@ module PhComposer
       approval, params = NativeApproval.admit(declaration, approval, params)
       refuse_if_busy!(session)
       check_precondition!(session, params, declaration)
-      value = declaration.handler.call(request_for(session, params, declaration, :approval => approval))
-      check_result!(declaration, value)
-      # Recorded only once the result is accepted: a call that failed, even after writing, keeps the
+      # A call that does not complete, even one whose result fails its schema after writing, keeps the
       # location for a retry.
-      ApprovedLocations.mark_used(approval.location_id) if approval&.location_id
+      request = request_for(session, params, declaration, :approval => approval)
+      value = ApprovedLocations.consuming(approval) { check_result!(declaration, declaration.handler.call(request)) }
       Outcome.completed(:revision => session.revision, :value => value)
     rescue CodedError => error
       coded_outcome(error, session)
@@ -327,9 +326,10 @@ module PhComposer
       raise CodedError.new("request.malformed", "Params must be a plain JSON object.", "revision" => session.revision)
     end
 
+    # `value`, once it is within the declared result schema.
     def check_result!(declaration, value)
       findings = JsonSchema.validate(value, declaration.result)
-      return if findings.empty? && JsonValue.problems(value).empty?
+      return value if findings.empty? && JsonValue.problems(value).empty?
 
       raise InternalError, "#{declaration.name} returned a result outside its schema: #{findings.first}"
     end

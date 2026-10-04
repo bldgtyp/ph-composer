@@ -181,7 +181,8 @@ Any caller holding the operation's grant (`export` for a file export, `setup` fo
 passes the id; dispatch resolves it into the same answer a native dialog gives, and the handler
 never sees the param. A save destination is reused until revoked. An approved file or folder is used
 by one completed add, after which the configured library holds it and the id answers
-`location.used`. Each failure refuses with effect `none` and changes nothing: `location.unknown`,
+`location.used`. The use is recorded before the add runs and undone if the add does not complete, so
+a store that cannot record it refuses with `location.setup_unavailable` and nothing is configured. Each failure refuses with effect `none` and changes nothing: `location.unknown`,
 `location.revoked`, `location.used`, `location.kind_mismatch`, `location.unavailable` (no longer
 there as approved), `location.setup_unreadable`, `location.setup_unavailable`. A caller that passes
 neither a native answer nor a location is refused at once with `access.user_required`, and no
@@ -200,7 +201,8 @@ is given against the file as it is when the user answers.
 
 Three operations take a location today: `ph_composer.library.export_file`,
 `ph_composer.library.providers.add_file` and `.providers.add_folder`; the HBJSON export task takes
-one too. The path never appears in params, a result, an outcome or a log. Binding an approval to a
+one too. The path never appears in params, a result, an outcome or a log; an HBJSON write the filesystem
+refuses fails as `export.failed` in fixed words. Binding an approval to a
 named external connection waits for the connection and access-grant work; until then an approved
 location is usable by any caller holding the operation's grant.
 

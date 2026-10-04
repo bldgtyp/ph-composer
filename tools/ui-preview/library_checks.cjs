@@ -117,6 +117,20 @@ async function writes(page) {
     assert.equal(destructive.disabled, apply.disabled, "a disabled destructive action loses its red fill");
     await file.evaluate(node => node.classList.replace("phc-action-delete", "phc-action-apply"));
     await page.screenshot({ path: path.join(output, "library-setup-unreadable.png"), fullPage: true });
+    // A snapshot refresh while an approved location is renamed keeps the draft, its focus and caret, and
+    // sends nothing: the browser blurs the field while the list is rebuilt.
+    await setup.getByRole("button", { name: "Rename Library export", exact: true }).click();
+    const name = setup.getByLabel("Location name", { exact: true });
+    await name.fill("Half typed"); await name.press("End");
+    await page.evaluate(() => previewHost.snapshot());
+    const renames = () => page.evaluate(() => previewHost.sent.filter(row => row.type === "setup.invoke" &&
+      row.payload.name === "ph_composer.locations.rename").length);
+    assert.equal(await renames(), 0, "a refresh does not submit a rename");
+    assert.equal(await name.inputValue(), "Half typed");
+    assert.equal(await name.evaluate(node => document.activeElement === node), true, "the draft keeps focus");
+    await page.keyboard.type(" name"); await name.press("Enter");
+    assert.equal(await renames(), 1);
+    await setup.getByText("Half typed name", { exact: true }).waitFor();
     await page.close();
     console.log(`Library checks passed at 1280/900/420/280; evidence: ${output}`);
   } finally { await browser.close(); }

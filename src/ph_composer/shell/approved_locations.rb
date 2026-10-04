@@ -52,11 +52,12 @@ module PhComposer
         "description" => "An approved location to use instead of asking the user. A native client asks instead." }
     end
 
-    # `params` with the `location` param composed in, unless the declaration already names one, which
-    # registration then refuses.
+    # `params` with the optional `location` param composed in, unless the declaration already names
+    # one as a property or a requirement, which registration then refuses.
     def with_param(params, approval)
       return params unless approval.is_a?(Declarations::Approval) && !approval.standing && params.is_a?(Hash) &&
-                           params["properties"].is_a?(Hash) && !params["properties"].key?("location")
+                           params["properties"].is_a?(Hash) && !params["properties"].key?("location") &&
+                           !Array(params["required"]).include?("location")
 
       params.merge("properties" => params["properties"].merge("location" => param(approval.kind)))
     end
@@ -144,18 +145,49 @@ module PhComposer
       { "exists" => !state.nil?, "state" => state }
     end
 
-    # Records a completed use: the time for a reusable location, retirement for a single-use one.
-    # A store that cannot be written now leaves the use unrecorded; the operation has already completed.
+    # Runs the operation an approved location answers, which is the block, and records the use. A
+    # single-use location is retired before the block runs, so a store that cannot record that refuses
+    # before anything changes, and a second call cannot use it while the first runs; it is put back if
+    # the block does not complete. A reusable location records the time once the block completes, best
+    # effort: the operation has already completed.
+    def consuming(approval)
+      id = approval.respond_to?(:location_id) && approval.location_id
+      return yield unless id
+
+      reserved = reserve(id)
+      result = yield
+      mark_used(id) unless reserved
+      result
+    rescue StandardError
+      restore(reserved) if reserved
+      raise
+    end
+
+    # The time of a completed use of a reusable location, best effort.
     def mark_used(id)
       current, retired = writable
-      row = current.find { |item| item.fetch("id") == id }
-      return unless row
+      return unless current.any? { |item| item.fetch("id") == id && item.fetch("use") == "reusable" }
 
-      if row.fetch("use") == "single"
-        save(current.reject { |item| item.equal?(row) }, retire(retired, id, "used"))
-      else
-        save(current.map { |item| item.equal?(row) ? item.merge("last_used_at" => now) : item }, retired)
-      end
+      save(current.map { |item| item.fetch("id") == id ? item.merge("last_used_at" => now) : item }, retired)
+    rescue CodedError
+      nil
+    end
+
+    # Retires a single-use location as used and returns its row, or nil for a reusable one.
+    def reserve(id)
+      current, retired = writable
+      row = current.find { |item| item.fetch("id") == id }
+      return nil unless row&.fetch("use") == "single"
+
+      save(current.reject { |item| item.equal?(row) }, retire(retired, id, "used"))
+      row
+    end
+
+    # Puts back a reserved location whose operation did not complete. If the store cannot be written
+    # now the location stays used, which only asks the user to approve it again.
+    def restore(row)
+      current, retired = writable
+      save(current + [row], retired.reject { |item| item.fetch("id") == row.fetch("id") })
     rescue CodedError
       nil
     end
@@ -298,7 +330,8 @@ module PhComposer
         %w[label path approved_at].all? { |key| row[key].is_a?(String) && !row[key].empty? } &&
         row["use"] == USES[row["kind"]] && (row["last_used_at"].nil? || row["last_used_at"].is_a?(String))
     end
-    private_class_method :public_row, :available, :usable, :find!, :noun, :available?, :default_label, :checked_label,
-                         :retire, :now, :rows, :writable, :stored, :save, :write, :valid?, :valid_row?
+    private_class_method :reserve, :restore, :public_row, :available, :usable, :find!, :noun, :available?,
+                         :default_label, :checked_label, :retire, :now, :rows, :writable, :stored, :save, :write,
+                         :valid?, :valid_row?
   end
 end

@@ -326,8 +326,8 @@ and native menus obtain the answer through `NativeApproval`, a shell internal an
 API.
 
 Every other caller passes a location the user approved, and the declaration gets that for free:
-registration adds the `location` param to its params (a feature schema that declares its own
-`location` is refused), dispatch resolves the id into the same `request.approval` and hands the
+registration adds the optional `location` param to its params (a feature schema that declares or
+requires its own `location` is refused), dispatch resolves the id into the same `request.approval` and hands the
 handler params without it, and a call with neither answer is refused with `access.user_required`
 ([AGENT_INTERFACE.md](AGENT_INTERFACE.md), "Locations only the user can choose"). From a location,
 `request.approval.state` is the destination state the caller reviewed and `.location_id` is set;

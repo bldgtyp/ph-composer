@@ -141,9 +141,10 @@ module PhComposer
           return problem(operation, "approval must be a Declarations::Approval of a known kind with a title")
         end
 
-        properties = operation.params.is_a?(Hash) && operation.params["properties"]
-        declared = properties.is_a?(Hash) ? properties["location"] : nil
-        return if declared == (approval.standing ? nil : ApprovedLocations.param(approval.kind))
+        params = operation.params.is_a?(Hash) ? operation.params : {}
+        declared = params["properties"].is_a?(Hash) ? params["properties"]["location"] : nil
+        return if declared == (approval.standing ? nil : ApprovedLocations.param(approval.kind)) &&
+                  !Array(params["required"]).include?("location")
 
         problem(operation, "params must be an object whose properties leave location to registration, which " \
                            "adds it for an approval")

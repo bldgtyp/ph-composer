@@ -86,14 +86,23 @@ test("an unreadable store offers only Reset approved locations", function () {
   o.dialog.locations.reset.dispatchEvent({ type: "click" });
   assert.strictEqual(o.sent[0].payload.name, "ph_composer.locations.reset");
 });
-test("a refresh while renaming keeps the typed name", function () {
-  var o = withLocations([LOCATION]);
+test("a refresh while renaming keeps the typed name, its focus and caret, and sends nothing", function () {
+  var o = withLocations([LOCATION]), list = o.dialog.locations.list, rebuild = list.replaceChildren;
+  // Chrome blurs the focused field while the list it sits in is rebuilt, before the field is detached.
+  list.replaceChildren = function () {
+    var input = list.querySelector("input");
+    if (input && input.isConnected) input.dispatchEvent({ type: "blur", target: input });
+    return rebuild.apply(this, arguments);
+  };
   named(o.dialog.locations.root, "Rename Library export").dispatchEvent({ type: "click" });
-  var input = o.dialog.locations.list.querySelector("input");
-  input.value = "Half typ"; input.dispatchEvent({ type: "input" });
+  var input = list.querySelector("input");
+  input.value = "Half typ"; input.setSelectionRange(8, 8);
   o.dialog.refresh(o.state);
-  var again = o.dialog.locations.list.querySelector("input");
-  assert.strictEqual(again.value, "Half typ");
-  input.dispatchEvent({ type: "blur" });
+  var again = list.querySelector("input");
+  assert.strictEqual(again, input);
+  assert.deepStrictEqual([again.value, again.selectionStart, again.selectionEnd], ["Half typ", 8, 8]);
   assert.strictEqual(o.sent.length, 0);
+  again.dispatchEvent({ type: "keydown", key: "Enter", preventDefault: function () {} });
+  assert.deepStrictEqual(plain([o.sent[0].payload.name, o.sent[0].payload.params]),
+    ["ph_composer.locations.rename", { id: LOCATION.id, label: "Half typ" }]);
 });

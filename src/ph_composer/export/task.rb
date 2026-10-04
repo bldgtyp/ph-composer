@@ -7,6 +7,8 @@ module PhComposer
     # One read-only export, owned by its Model session rather than by a panel or caller connection.
     # Timer boundaries admit cancellation and recheck content generation; Python returns asynchronously.
     class Task
+      PAIR_FAILED = "The HBJSON and Export report could not be written. The destination was left as it was."
+
       attr_reader :id, :finished_at
 
       # `approval` is the NativeApproval::Granted for the destination: from the native Save sheet, or
@@ -18,7 +20,7 @@ module PhComposer
         @destination = File.expand_path(approval.path)
         @location = approval.location_id && { "id" => approval.location_id, "label" => approval.label }
         @pair = ArtifactPair::Transaction.new(@destination, :run_id => id)
-        @pair.recover
+        pair_step { @pair.recover }
         @prior = ArtifactPair.state(@destination)
         consent!(approval) if @prior
         @runtime_factory = runtime_factory || ->(&callback) {
@@ -129,7 +131,7 @@ module PhComposer
         html = Report.render(@result, :display_units => @units)
         coherent!
         @stage = "writing"
-        @pair.commit(@result.fetch("canonical_model").fetch("hbjson"), html)
+        pair_step { @pair.commit(@result.fetch("canonical_model").fetch("hbjson"), html) }
         ApprovedLocations.mark_used(@location.fetch("id")) if @location
         value = { "result" => compact_result(@result) }
         value["location"] = @location if @location
@@ -159,6 +161,18 @@ module PhComposer
         coherent! unless terminal?
       rescue StandardError => error
         failed(error) unless terminal?
+      end
+
+      # A pair error can carry the filesystem's own message, which names the destination; the outcome
+      # says what failed in fixed words and the log keeps the error class. Half a prior pair keeps its
+      # own fixed message, since the user must act on it.
+      def pair_step
+        yield
+      rescue ArtifactPair::IncompletePriorPairError
+        raise
+      rescue ArtifactPair::PairError => error
+        Diagnostics.exception("export_pair", error)
+        raise Blocked.new("export.failed", PAIR_FAILED), :cause => nil
       end
 
       # Replacing a pair needs consent. The native Save sheet gives it against the pair as it is now; an
