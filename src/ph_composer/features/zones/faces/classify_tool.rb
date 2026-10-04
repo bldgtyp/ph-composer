@@ -395,7 +395,7 @@ module PhComposer
         end
 
         def instructions
-          chosen = @palette.map { |field, operation| "#{field.tr('_', ' ')} #{operation.fetch('value')}" }
+          chosen = ClassifyGuidance.describe(context, @palette)
           return NOTHING_CHOSEN if chosen.empty?
 
           "Classify: #{chosen.join(', ')}. Click or drag over Faces; Shift-click takes a whole plane."

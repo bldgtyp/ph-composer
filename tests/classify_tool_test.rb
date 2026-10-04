@@ -50,6 +50,16 @@ class ClassifyToolTest < PhComposerTestCase
     assert_includes Sketchup.status_texts.last, "Outdoors"
   end
 
+  def test_guidance_uses_the_glossarys_words_and_never_a_record_id
+    guidance = PhComposer::Zones::Faces::ClassifyGuidance
+    palette = { "face_type" => { "mode" => "set", "value" => "RoofCeiling" },
+                "boundary_condition" => { "mode" => "set", "value" => "Adiabatic" },
+                "assembly_id" => { "mode" => "set", "value" => "asm_Missing00001" } }
+
+    assert_equal ["face type Roof or ceiling", "boundary condition To neighbour", "Assembly not found"],
+                 guidance.describe(@context, palette)
+  end
+
   def test_classify_cursor_is_loaded_once_and_reused_across_model_sessions
     # A fresh tool class gives this assertion its own cache without changing the production cache.
     tool_class = Class.new(PhComposer::Zones::Faces::ClassifyTool)
