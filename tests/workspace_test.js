@@ -123,7 +123,7 @@ test("a success notice fades by itself, unless the pointer holds it, and a newer
   };
   context.clearTimeout = function (id) { if (timers[id - 1]) timers[id - 1].cleared = true; };
   var notice = ui.floatingNotice(owner);
-  function due() { return timers.filter(function (timer) { return !timer.cleared && timer.delay === 3000; }); }
+  function due() { return timers.filter(function (timer) { return !timer.cleared && timer.delay >= 3000; }); }
   try {
     notice.show("Zone made.", { tone: "success" });
     assert.strictEqual(due().length, 1, "a success confirmation starts its own clock");
@@ -136,6 +136,16 @@ test("a success notice fades by itself, unless the pointer holds it, and a newer
     notice.show("Zone made.", { tone: "success" });
     due().slice(-1)[0].callback();
     assert.strictEqual(notice.classList.contains("is-dismissing"), true);
+    // Dismissed while held: a hidden notice never sends its leave, so the hold must not outlive it.
+    notice.show("Zone made.", { tone: "success" });
+    notice.listeners.mouseenter({});
+    notice.dismissButton.listeners.click({});
+    var mark = timers.length;
+    notice.show("Zone made again.", { tone: "success" });
+    assert.strictEqual(timers.slice(mark).filter(function (timer) { return timer.delay >= 3000; }).length, 1,
+      "the next confirmation still fades");
+    notice.show(new Array(30).join("A longer confirmation. "), { tone: "success" });
+    assert.ok(timers.slice(-1)[0].delay > 3000, "a long message stays longer");
   } finally {
     context.setTimeout = saved[0]; context.clearTimeout = saved[1];
     notice.dispose();

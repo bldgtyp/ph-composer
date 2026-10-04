@@ -190,10 +190,14 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     if (activeBubble) activeBubble.position();
   });
   /* One notice at a time; a newer message replaces an older one. Tones: `success` is a disposable
-     confirmation that fades by itself after SUCCESS_MS, held while the pointer or focus is on it; `info`
+     confirmation that fades by itself after SUCCESS_MS (longer for a long message, up to SUCCESS_MAX_MS),
+     held while the pointer or focus is on it, and also on the next interaction elsewhere; `info`
      (instructions, tool directions) fades on the next interaction unless persistent; `warning` and `error`
      stay until dismissed. */
-  var SUCCESS_MS = 3000;
+  var SUCCESS_MS = 3000, SUCCESS_MAX_MS = 8000;
+  function successDelay(text) {
+    return Math.min(SUCCESS_MAX_MS, SUCCESS_MS + Math.max(0, String(text).length - 40) * 50);
+  }
   function floatingNotice(owner) {
     var root = element("div", "phc-notice phc-floating-notice"),
       message = element("span", "phc-floating-notice-message");
@@ -203,7 +207,8 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
       stopTimer();
       if (root.getAttribute("data-tone") !== "success" || root.hidden || held || !window.setTimeout) return;
       var current = revision;
-      timer = window.setTimeout(function () { timer = null; if (current === revision) root.fade(); }, SUCCESS_MS);
+      timer = window.setTimeout(function () { timer = null; if (current === revision) root.fade(); },
+        successDelay(message.textContent));
     }
     function hold() { held = true; stopTimer(); }
     function release() { held = false; startTimer(); }
@@ -220,6 +225,8 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     root.message = message; root.dismissButton = dismiss;
     root.show = function (text, options) {
       revision += 1; persistent = Boolean(options && options.persistent); root.classList.remove("is-dismissing");
+      // A hold belongs to the notice under the pointer or focus now; a hidden notice never sent its leave.
+      held = root.contains(document.activeElement);
       message.textContent = text || "";
       root.hidden = !message.textContent;
       root.setAttribute("data-persistent", String(persistent));
@@ -230,7 +237,7 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     root.clear = function () {
       revision += 1;
       stopTimer();
-      persistent = false;
+      persistent = false; held = false;
       root.classList.remove("is-dismissing");
       message.textContent = "";
       root.hidden = true;
@@ -282,8 +289,9 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
      Escape runs the owner's cancel, which may refuse while a request is pending. */
   var dialogSequence = 0;
   /* Every dialog carries the same top-right close control, and it does what Escape and the dialog's own
-     Cancel (or Close) do: onCancel, which may refuse while a request is pending. It is put back on every
-     open, because an owner may replace the dialog's children between uses. */
+     Cancel (or Done) do: onCancel, which may refuse while a request is pending; an owner that disables its
+     Cancel disables `closeButton` too. It is put back on every open, because an owner may replace the
+     dialog's children between uses; an owner does not replace them while the dialog is open. */
   function formDialog(className, onCancel) {
     var node = element("dialog", "phc-dialog phc-form-dialog" + (className ? " " + className : ""));
     var close = iconButton("Close", "clear", function () { onCancel(); });
@@ -322,7 +330,6 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     trigger.classList.add("phc-blocked-reason");
     bubble.root.classList.add("phc-blocked-reason-anchor");
     bubble.content.appendChild(element("p", "phc-blocked-reason-text", reason));
-    trigger.setAttribute("data-tooltip", reason);
     return bubble.root;
   }
   function helpButton(label, explanation) {

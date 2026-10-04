@@ -878,10 +878,11 @@ test("a blocked Make Zone says why beside it", function () {
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var reason = p.query("[data-section='ph_composer.overview']").querySelector(".phc-blocked-reason");
   assert.strictEqual(reason.getAttribute("aria-label"), "Why Make Zone is unavailable");
-  assert.ok(/needs one Group, or loose Faces and Edges/.test(reason.getAttribute("data-tooltip")));
   reason.listeners.click({});
   var bubble = reason.parentNode.querySelector(".phc-bubble");
   assert.strictEqual(bubble.hidden, false, "the reason opens beside the action, not as a page notice");
+  assert.ok(/needs one Group, or loose Faces and Edges/.test(bubble.querySelector(".phc-blocked-reason-text")
+    .textContent));
   var notice = p.query(".phc-floating-notice");
   assert.ok(!notice || notice.hidden, "and raises no page notice");
   payload.sections["ph_composer.zones.overview"].value.make_zone = { entity_path: [1] };
@@ -967,4 +968,20 @@ test("Order by and its direction order a Zone's Faces too, so one Zone still ans
     "largest first");
   byLabel(section, "Sort ascending").listeners.click({});
   assert.deepStrictEqual(names(), ["Zone 1", "Wall 1", "Floor 3", "1 unclassified Face", "Face 2"]);
+});
+
+test("the header groups the authoring tools apart from Colour by, and the inspector column always stands", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var toolbar = section.querySelector("[role='toolbar']");
+  assert.strictEqual(toolbar.getAttribute("aria-label"), "Zone and Face tools");
+  assert.ok(byLabel(section, "Solve adjacencies for all Zones in this Model").parentNode === toolbar);
+  var inspector = p.query("[data-phc-region='inspector']");
+  assert.strictEqual(inspector.hidden, false,
+    "with nothing selected the column still stands, so the tree keeps its width");
+  assert.strictEqual(p.query("[data-section='ph_composer.zones.hint']").hidden, false);
+  var header = section.querySelector(".phc-heading");
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  assert.ok(section.querySelector(".phc-heading") === header, "the header is repainted in place, not rebuilt");
 });

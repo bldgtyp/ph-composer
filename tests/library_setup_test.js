@@ -136,3 +136,19 @@ test("an added library is named and marked, its choice folds away, and Done beco
   o.dialog.add.dispatchEvent({ type: "click" });
   assert.strictEqual(o.dialog.routes.hidden, false, "Add a library… opens the choice again");
 });
+test("picking a library already in the list says so instead of saying nothing", function () {
+  var o = setup("readable"), lib = { id: "lib_a", label: "Office library", provider_kind: "ph_composer.library.file" };
+  var sections = {
+    "ph_composer.library.provider_catalogs": { status: "completed", value: [lib] },
+    "ph_composer.library.provider_setup": { status: "completed", value: { state: "readable" } } };
+  o.dialog.refresh({ session: "session", revision: 2, ui: { queryResults: {}, setupResults: {} }, sections: sections });
+  o.dialog.choosing = true; o.dialog.paint();
+  o.dialog.file.dispatchEvent({ type: "click" });
+  var request = o.sent[0].payload, results = {};
+  results[request.request_id] = { request_id: request.request_id, session: "session",
+    outcome: { status: "completed", value: [lib] } };
+  o.dialog.refresh({ session: "session", revision: 3, ui: { queryResults: {}, setupResults: results },
+    sections: sections });
+  assert.strictEqual(o.dialog.error.textContent, "That library is already in the list.");
+  assert.strictEqual(o.dialog.list.querySelector(".is-added"), null);
+});

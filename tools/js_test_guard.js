@@ -37,20 +37,36 @@ function treeRssKb(root) {
   return { kb: total, pids: pids };
 }
 
+/* Every process of the command: its own process group (it starts detached, so a test that spawns more is
+   still in it) and anything the tree walk finds, in case one left the group. */
+function killAll(child) {
+  var pids = treeRssKb(child.pid).pids;
+  try { process.kill(-child.pid, "SIGKILL"); } catch (error) { /* group gone */ }
+  pids.forEach(function (pid) { try { process.kill(Number(pid), "SIGKILL"); } catch (error) { /* gone */ } });
+}
+
 function main(argv) {
   if (!argv.length) {
     process.stderr.write("usage: node tools/js_test_guard.js <command> [args...]\n");
     return process.exit(2);
   }
-  var child = childProcess.spawn(argv[0], argv.slice(1), { stdio: "inherit" });
+  var child = childProcess.spawn(argv[0], argv.slice(1), { stdio: "inherit", detached: true });
   var killed = false;
+  child.on("error", function (error) {
+    process.stderr.write("js_test_guard: could not start " + argv[0] + ": " + error.message + "\n");
+    process.exit(2);
+  });
+  // The command runs in its own group, so the terminal's Ctrl-C reaches only this process: pass it on as a kill
+  // of the whole tree, and the same for a parent's timeout or hang-up.
+  ["SIGINT", "SIGTERM", "SIGHUP", "SIGALRM"].forEach(function (signal) {
+    process.on(signal, function () { killAll(child); process.exit(1); });
+  });
   var timer = timers.setInterval(function () {
     var tree = treeRssKb(child.pid);
     if (tree.kb / 1024 <= LIMIT_MB) return;
     killed = true;
     timers.clearInterval(timer);
-    // Deepest first is not needed: SIGKILL cannot be caught, so every process in the list goes.
-    tree.pids.forEach(function (pid) { try { process.kill(Number(pid), "SIGKILL"); } catch (error) { /* gone */ } });
+    killAll(child);
     process.stderr.write("js_test_guard: stopped " + argv.join(" ").slice(0, 120) + " at " +
       Math.round(tree.kb / 1024) + " MB, over the " + LIMIT_MB + " MB ceiling (JS_TEST_MAX_RSS_MB). A test " +
       "is probably printing a stub DOM node in a failed assertion; assert on a property instead.\n");

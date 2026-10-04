@@ -254,7 +254,12 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     var stored = face.values[field];
     td.className = "col-" + field + (stored ? " phc-pill-cell" : "");
     td._chip = td._attachedChip = td._chipValues = null;
-    if (!stored) return false;
+    if (!stored) {
+      // The table paints the text; a pill this cell held before goes with it.
+      if (td._pill && td._pill.parentNode === td) td.removeChild(td._pill);
+      td._pill = null;
+      return false;
+    }
     var pill = td._pill;
     if (!pill || pill.parentNode !== td) {
       pill = td._pill = ui.element("span", "phc-enum-pill");
@@ -312,9 +317,11 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         chip.appendChild(option);
       });
       chip.addEventListener("change", function () {
+        words.paintFill(chip, field, chip.value);
         if (field === "boundary_condition" && chip.value === "AttachedZone") {
           openAttached(td._state, td._face, chip);
           chip.value = td._face.values[field] || "";
+          words.paintFill(chip, field, chip.value);
         } else apply(td._state, td._face, field, chip.value);
       });
       td.className = "col-" + field + " phc-editable-cell";
@@ -374,34 +381,57 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     state.edits.run("ph_composer.zones.faces.auto_classify", { zone: row.record.zone.reference });
   }
 
-  function makeButton(state, target) {
-    var make = ui.element("button", "primary", state.edits.busy() ? "Making Zone…" : "Make Zone");
-    make.disabled = state.edits.busy() || !target;
-    make.setAttribute("aria-label", target ? "Make Zone from the current selection" :
-      "Select one Group or loose geometry to make a Zone");
-    make.addEventListener("click", function () {
-      if (target) state.edits.run("ph_composer.zones.make", target);
+  /* The page header is built once a session and repainted in place, so a press on any of its controls
+     (Classify faces, the gear, Make Zone) keeps its focus through the snapshot that follows. It holds the
+     authoring toolbar (the pane's `actions`, then Solve adjacencies), the settings gear, the reason Make Zone
+     is unavailable when it is, and Make Zone last. View controls stay in the control row. */
+  function header(state, pane) {
+    if (state.header) return state.header;
+    var parts = { make: ui.element("button", "primary", "Make Zone"), solve: ui.element("button", "phc-toolbar-button"),
+      toolbar: ui.element("div", "phc-toolbar"), reason: makeZoneReason() };
+    parts.make.addEventListener("click", function () {
+      if (state.makeTarget) state.edits.run("ph_composer.zones.make", state.makeTarget);
     });
-    return make;
+    parts.solve.innerHTML = ui.svgIcon("link", 16);
+    parts.solve.appendChild(ui.element("span", "", "Solve adjacencies"));
+    parts.solve.setAttribute("data-tooltip", "Pair Faces that touch across Zones, so they read as Surface");
+    parts.solve.setAttribute("aria-label", "Solve adjacencies for all Zones in this Model");
+    parts.solve.addEventListener("click", function () {
+      var reason = draftReason(state);
+      if (reason) return refuse(reason);
+      state.edits.run("ph_composer.zones.solve_adjacency", {
+        zones: state.zoneRecords.map(function (zone) { return zone.reference; })
+      });
+    });
+    parts.toolbar.setAttribute("role", "toolbar");
+    parts.toolbar.setAttribute("aria-label", "Zone and Face tools");
+    parts.toolbar.appendChild(panel.region(pane, "actions"));
+    parts.toolbar.appendChild(parts.solve);
+    parts.page = ui.pageHeader({ title: "Zones", primary: parts.make });
+    state.header = parts;
+    return parts;
+  }
+
+  function paintHeader(state, pane, zones) {
+    var parts = header(state, pane), busy = state.edits.busy(), target = zones.make_zone;
+    state.makeTarget = target;
+    state.zoneRecords = zones.zones;
+    parts.make.textContent = busy ? "Making Zone…" : "Make Zone";
+    parts.make.disabled = busy || !target;
+    parts.make.setAttribute("aria-label", target ? "Make Zone from the current selection" :
+      "Select one Group or loose geometry to make a Zone");
+    parts.solve.disabled = busy || !zones.zones.length;
+    // Placed again only when the reason comes or goes, so a repaint never moves a focused control.
+    if (parts.reasonShown !== !target) {
+      parts.reasonShown = !target;
+      parts.page.setActions([parts.toolbar, state.settings.bubble.root].concat(target ? [] : [parts.reason]));
+    }
+    return parts.page.root;
   }
 
   function makeZoneReason() {
     return ui.reasonButton("Make Zone", "Make Zone needs one Group, or loose Faces and Edges, selected in " +
       "SketchUp and not already part of a Zone.");
-  }
-
-  function solveButton(state, zones) {
-    var button = ui.element("button", "", "Solve adjacencies");
-    button.disabled = state.edits.busy() || !zones.length;
-    button.setAttribute("aria-label", "Solve adjacencies for all Zones in this Model");
-    button.addEventListener("click", function () {
-      var reason = draftReason(state);
-      if (reason) return refuse(reason);
-      state.edits.run("ph_composer.zones.solve_adjacency", {
-        zones: zones.map(function (zone) { return zone.reference; })
-      });
-    });
-    return button;
   }
 
   function render(root, state, send) {
@@ -448,11 +478,9 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       root.removeChild(row);
     }
     if (tools.parentNode !== screenState.controls.root) screenState.controls.root.appendChild(tools);
-    var headerActions = [solveButton(screenState, zones.zones), screenState.settings.bubble.root];
-    // Why the primary action is not available, beside it.
-    if (!zones.make_zone) headerActions.push(makeZoneReason());
-    root.querySelector(".phc-heading-mount").replaceChildren(ui.pageHeader({ title: "Zones", actions: headerActions,
-      primary: makeButton(screenState, zones.make_zone) }).root);
+    var heading = paintHeader(screenState, root.closest("[data-pane]").getAttribute("data-pane"), zones);
+    var headingMount = root.querySelector(".phc-heading-mount");
+    if (heading.parentNode !== headingMount) headingMount.replaceChildren(heading);
     // Set before the tree paints, so the inspector never works from an earlier pass if painting fails.
     screenState.rows = rows;
     screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
@@ -468,6 +496,13 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function renderDetails(root, state) {
     if (!screen || screen.session !== state.session || !screen.rows) { root.replaceChildren(); return; }
     paintDetails(root, screen.rows, screen);
+  }
+
+  function renderHint(root) {
+    if (root.children.length) return;
+    root.className = "phc-inspector-hint";
+    root.appendChild(ui.element("p", "phc-empty", "Select Faces in SketchUp, or a Zone in the table, to " +
+      "edit them here. Colour by and Classify faces open here too."));
   }
 
   function detailsWanted() {
@@ -645,7 +680,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     rows.forEach(function (row) {
       if (row.parent) (children[row.parent] = children[row.parent] || []).push(row);
     });
-    function faceValue(row) { return field === "area_m2" ? row.record.face.area_m2 : row.record.place; }
+    function faceValue(row) { return field === "area_m2" ? Number(row.record.face.area_m2) || 0 : row.record.place; }
     function byFace(a, b) {
       return (faceValue(a) - faceValue(b)) * sign || a.record.place - b.record.place;
     }
@@ -825,4 +860,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     order: 11, when: selectionWanted });
   panel.section("ph_composer.zones.details", renderDetails, { region: "inspector", tier: "record",
     order: 12, when: detailsWanted });
+  // Last in line and always wanted, so the inspector column is always there: the tree keeps its width
+  // whether the user selects something, opens Colour by or starts Classify faces.
+  panel.section("ph_composer.zones.hint", renderHint, { region: "inspector", tier: "ambient", order: 1000,
+    when: function () { return true; } });
 });

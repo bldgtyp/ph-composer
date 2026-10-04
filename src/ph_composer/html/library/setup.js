@@ -72,7 +72,7 @@ PhComposerUI.define("library/setup", ["library/locations", "request", "snapshot"
      result and the next step (Done) are plain. A cancelled picker changes nothing. */
   Setup.prototype.settle = function (outcome) {
     var before = this.pendingIds || [];
-    this.pendingIds = null;
+    this.pendingIds = null; this.added = null;
     this.error.className = "cell-error";
     if (outcome.status === "cancelled") { this.error.textContent = ""; return; }
     if (outcome.status !== "completed") { this.error.textContent = outcome.message; return; }
@@ -82,8 +82,10 @@ PhComposerUI.define("library/setup", ["library/locations", "request", "snapshot"
     this.added = added ? added.id : null;
     if (added) this.choosing = false;
     this.error.className = "library-setup-success";
+    // A completed add that brings nothing new picked a library already in the list.
     this.error.textContent = added ? "Added " + added.label + ". Choose it under the library list in the " +
-      "Library sidebar to copy its records into this file." : "";
+      "Library sidebar to copy its records into this file." : before.length && Array.isArray(outcome.value) &&
+      outcome.value.length === before.length ? "That library is already in the list." : "";
   };
   Setup.prototype.paint = function () {
     var self = this, busy = this.requests.busy(), empty = !this.providers.length;
@@ -111,7 +113,18 @@ PhComposerUI.define("library/setup", ["library/locations", "request", "snapshot"
     this.add.setAttribute("aria-expanded", String(!this.routes.hidden));
     this.cancel.classList.toggle("primary", !empty);
     this.cancel.disabled = busy || this.locations.busy();
+    this.root.closeButton.disabled = this.cancel.disabled;
+    // A control that just went away (a folded choice, a removed row) leaves the focus on Done.
+    var active = document.activeElement;
+    if (active && this.root.contains && !this.root.hidden && active !== document.body &&
+        (!active.isConnected || hiddenWithin(active, this.root))) this.cancel.focus();
   };
+  function hiddenWithin(node, root) {
+    for (var current = node; current && current !== root; current = current.parentNode) {
+      if (current.hidden) return true;
+    }
+    return false;
+  }
   Setup.prototype.open = function () {
     if (this.disposed || !this.enabled || this.requests.busy()) return;
     this.error.textContent = ""; this.added = null; this.choosing = false;
@@ -122,7 +135,7 @@ PhComposerUI.define("library/setup", ["library/locations", "request", "snapshot"
   };
   Setup.prototype.run = function (verb, params) {
     if (this.disposed || !this.enabled || this.requests.busy()) return false;
-    this.pendingIds = this.providers.map(function (row) { return row.id; });
+    this.pendingIds = this.providers.map(function (row) { return row.id; }); this.added = null;
     this.requests.run(PREFIX + "." + verb, params);
     this.error.className = "cell-error library-setup-waiting";
     this.error.textContent = /^add_/.test(verb) ? "Choose the library in the window that opened…" :

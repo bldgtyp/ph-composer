@@ -196,6 +196,14 @@ html { height: 100%; }
 .phc-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 52px; padding: 10px 0; }
 .phc-heading h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0; }
 .phc-heading-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+/* A group of related tools reads as one control: a shared outline around buttons that drop their own. An
+   empty group takes no room. */
+.phc-toolbar { display: inline-flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--line);
+  border-radius: 6px; background: #fff; }
+.phc-toolbar:empty { display: none; }
+.phc-workspace .phc-toolbar button { border-color: transparent; }
+.phc-toolbar-button { display: inline-flex; align-items: center; gap: 6px; }
+.phc-toolbar-button svg { flex: none; }
 .phc-footer {
   display: flex;
   flex-wrap: wrap;
