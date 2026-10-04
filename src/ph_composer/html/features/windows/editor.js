@@ -188,10 +188,13 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
 
   View.prototype.buildWorkspace = function () {
     var self = this;
+    // Grouped by job, each group one outlined control: how the drawing is viewed; edits to the whole Window
+    // Type; which product the library assigns (buildSidebar); and, while elements are selected, edits to them.
     this.tools = el("div", "window-toolbar"); this.main.appendChild(this.tools);
-    var viewTools = el("div", "window-tool-group"); this.tools.appendChild(viewTools);
-    // The viewing side is a choice between named states, so it uses the same chip as Assembly Builder's enums.
-    this.viewSide = el("select"); this.viewSide.setAttribute("aria-label", "Viewing side");
+    var viewTools = el("div", "window-tool-group window-view-tools"); this.tools.appendChild(viewTools);
+    viewTools.setAttribute("role", "group"); viewTools.setAttribute("aria-label", "View");
+    // The viewing side is a choice between named states, so it is the shared choice pill.
+    this.viewSide = el("select", "phc-choice-pill"); this.viewSide.setAttribute("aria-label", "Viewing side");
     this.viewSide.addEventListener("change", function () { self.interior = self.viewSide.value === "interior";
       self.paint(); }); viewTools.appendChild(this.viewSide);
     viewTools.appendChild(ui.iconButton("Zoom out", "zoom_out", function () { self.zoom = Math.max(0.5,
@@ -202,6 +205,8 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
       0.25); self.paint(); }));
     this.selectionTools = el("div", "window-tool-group window-selection-tools");
       this.tools.appendChild(this.selectionTools);
+    this.selectionTools.setAttribute("role", "group");
+    this.selectionTools.setAttribute("aria-label", "Selected elements");
     this.selectionTools.appendChild(ui.iconButton("Clear element selection", "clear", function () {
       self.select(null); }));
     // Single Undo steps with a visible result apply at once; only Empty, which clears products, asks first.
@@ -214,7 +219,8 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.kindButton = ui.iconButton("Set selected elements to Empty", "empty", function () {
       self.setKind(self.kindTarget, self.kindButton); }); this.selectionTools.appendChild(this.kindButton);
     var definitionTools = el("div", "window-tool-group window-definition-tools");
-      this.tools.appendChild(definitionTools);
+      this.tools.insertBefore(definitionTools, this.selectionTools);
+    definitionTools.setAttribute("role", "group"); definitionTools.setAttribute("aria-label", "Window Type");
     this.flip = ui.iconButton("Flip Window Type left to right", "mirror", function () { self.change("flip", {}); });
       this.flip.setAttribute("data-window-action", "flip"); definitionTools.appendChild(this.flip);
     this.pick = ui.iconButton("Copy element properties with eyedropper", "eyedropper", function () {
@@ -255,16 +261,24 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
       self.sidebars[kind] = sidebar; self.layout.appendChild(sidebar.root);
       sidebar.dropHost = self.cardStack;
     });
-    this.sidebarChoice = el("select"); this.sidebarChoice.setAttribute("aria-label", "Product Library");
+    this.sidebarChoice = el("select", "phc-choice-pill");
+    this.sidebarChoice.setAttribute("aria-label", "Product Library");
     this.sidebarChoice.appendChild(ui.option("frames", "Frames"));
       this.sidebarChoice.appendChild(ui.option("glazings", "Glazings"));
     this.sidebarChoice.addEventListener("change", function () {
       if (self.guard()) { self.sidebarChoice.value = self.sidebarKind; self.notice.show(self.guard()); return; }
       self.sidebarKind = self.sidebarChoice.value;
       self.paint(); });
-    this.frameSide = el("select"); this.frameSide.setAttribute("aria-label", "Frame side to assign");
+    this.frameSide = el("select", "phc-choice-pill");
+    this.frameSide.setAttribute("aria-label", "Frame side to assign");
     shared.sides.forEach(function (side) { self.frameSide.appendChild(ui.option(side, ui.titleCase(side))); });
-    this.tools.appendChild(this.sidebarChoice); this.tools.appendChild(this.frameSide);
+    // The library's settings sit together, named by what they do, before the selection's edits; the frame side
+    // shows only while frames are assigned.
+    var libraryTools = el("div", "window-tool-group window-library-tools");
+    libraryTools.setAttribute("role", "group"); libraryTools.setAttribute("aria-label", "Assign from library");
+    libraryTools.appendChild(el("small", "window-tool-caption", "Assign"));
+    libraryTools.appendChild(this.sidebarChoice); libraryTools.appendChild(this.frameSide);
+    this.tools.insertBefore(libraryTools, this.selectionTools);
   };
   View.prototype.buildKeyboard = function () {
     var self = this;

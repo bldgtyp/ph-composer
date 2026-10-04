@@ -16,7 +16,7 @@ ISSUE: none (local planning draft)
 | P3 Library flows/surfaces | Implemented on branch | UX-018, 019, 020 (Library), 021; D6, D7 taken. Shared sidebar and setup serve both Builders |
 | P4 Zones / Faces workspace | Implemented on branch | UX-001, 006, 008, 009; D2 taken. Table width measured constant (960 px at 1280) across rest, Colour by and Classify |
 | P5 Assembly Builder | Implemented on branch | UX-014, 015, 016, 017; D9 taken; audit in evidence/ASSEMBLY_PARITY.md. High-assurance review pending with P6 |
-| P6 Windows toolbar | Proposed | |
+| P6 Windows toolbar | Implemented on branch | UX-022; grouping recorded under P6 in DECISIONS |
 | P7 sorting | Implemented on branch | Not a defect at its scope: Order by sorted Zones only, so with one Zone it changed nothing. D8 now orders Faces within each Zone; `overview_panel_test.js` covers Name, Area and both directions |
 | Skill/pattern changes | Updated per slice | P1: editable-table rule, page header, control-row count, enum pill. P2: success tone, reason button, dialog close and focus return |
 | Design System sync | Pending merge | Re-sync the artifact from main after merge |
@@ -39,4 +39,4 @@ ISSUE: none (local planning draft)
 
 ## Next action
 
-Continue the loop: P5, P6, then one native host pass.
+Final independent review of P4 to P6, then one native SketchUp pass (needs Ed's go: computer use on SketchUp), push and PR.

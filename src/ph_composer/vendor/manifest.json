@@ -1,9 +1,9 @@
 {
   "assets": {
     "html/base.css": {
-      "bytes": 10976,
+      "bytes": 11322,
       "mime": "text/css; charset=utf-8",
-      "sha256": "e3d8c86b3205d6019ee07596cfb7f5dd3fdc96ec325ccf2cb03c9b256b6d2c9c"
+      "sha256": "f2b382b032ec61fad980a31ed7ebd95cf580bfa30b78f954a29728370a323a5a"
     },
     "html/dom.js": {
       "bytes": 4030,
@@ -86,9 +86,9 @@
       "sha256": "8d9c8f38e3317d02717e7d8c8596bf01efc22c5cdea6291d7f6749a20a4c8a75"
     },
     "html/features/windows/editor.js": {
-      "bytes": 28221,
+      "bytes": 29344,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "6642e7a537d41e89f8b537258b65a2b9675393cb662eccde4d4b10d75cf3b503"
+      "sha256": "cb944b0b84bde517e75c12aca5a31219491bb81f2fe4a461a2acbfc4cc5bcb0a"
     },
     "html/features/windows/editor_shared.js": {
       "bytes": 2972,
@@ -141,9 +141,9 @@
       "sha256": "a9979be21a716ee09111e478eb156b1492c012c0666b6e36fa267250def130b7"
     },
     "html/features/windows/windows.css": {
-      "bytes": 26738,
+      "bytes": 27076,
       "mime": "text/css; charset=utf-8",
-      "sha256": "21526cfad60ac10f8bfb08d5cbe86df38fa8c40d471b4ad19d81fdf24a925ce1"
+      "sha256": "6420e3420bd64f2569447bfa6aed0ec5a8bf5039a388e2a05ca6232695b6e138"
     },
     "html/features/zones/assembly_assignment.js": {
       "bytes": 11934,

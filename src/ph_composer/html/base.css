@@ -203,6 +203,10 @@ html { height: 100%; }
 .phc-toolbar:empty { display: none; }
 .phc-workspace .phc-toolbar button { border-color: transparent; }
 .phc-toolbar-button { display: inline-flex; align-items: center; gap: 6px; }
+/* A choice between named states in a toolbar (a viewing side, a product kind) is the table's pill: compact,
+   neutral, with the native chevron. */
+.phc-workspace select.phc-choice-pill { height: 28px; min-height: 28px; padding: 0 6px 0 12px; border: 0;
+  border-radius: 14px; font-size: 12px; background-color: var(--category-fill, #edf1f2); }
 .phc-toolbar-button svg { flex: none; }
 .phc-footer {
   display: flex;
