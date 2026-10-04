@@ -168,6 +168,12 @@ function element(tag, attributes) {
       return on;
     }
   };
+  /* How util.inspect and console.log print a node: one line rather than its whole linked graph. Node's
+     assertion printer ignores this hook, so a test never asserts equality on a node itself (see
+     tools/js_test_guard.js). */
+  node[Symbol.for("nodejs.util.inspect.custom")] = function () {
+    return "<" + node.tagName + (node.className ? " class=\"" + node.className + "\"" : "") + ">";
+  };
   node.closest = function (selector) {
     var current = node;
     while (current) { if (matches(current, selector)) return current; current = current.parentNode; } return null;
@@ -210,6 +216,7 @@ function buildDocument(source) {
     querySelectorAll: function (selector) { return descendants(body, selector); },
     querySelector: function (selector) { return this.querySelectorAll(selector)[0] || null; } };
   attachEvents(built);
+  built[Symbol.for("nodejs.util.inspect.custom")] = function () { return "<document>"; };
   built.elementFromPoint = function () { return null; };
   /* Settable by a test; `:hover` reads it. Nothing here tracks pointers. */
   built.hoverTarget = null;

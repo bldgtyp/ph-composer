@@ -25,11 +25,20 @@ syntax:
 	@for file in $(RB_FILES); do $(RUBY) -c "$$file" >/dev/null || exit 1; done
 	@echo "Ruby syntax: $(words $(RB_FILES)) files OK"
 
+# JavaScript tests run under tools/js_test_guard.js, which kills the test process tree once its resident
+# memory passes JS_TEST_MAX_RSS_MB, and each test has a time limit. A failing assertion that printed a stub
+# DOM node once grew three processes past 100 GB each and stalled the machine; a Node heap flag does not
+# stop that, because the memory is not the JS heap.
+JS_TEST_MAX_RSS_MB ?= 4096
+NODE_TEST_TIMEOUT_MS ?= 60000
+export JS_TEST_MAX_RSS_MB
+
 # One run reports every language's failures instead of stopping at the first. The JavaScript files
 # are found by glob, so a new `tests/*_test.js` needs no Makefile line.
 test:
 	@$(RUBY) -Itests tests/all_tests.rb; ruby_status=$$?; \
-	 if [ -n "$(JS_TESTS)" ]; then node --test $(JS_TESTS); js_status=$$?; \
+	 if [ -n "$(JS_TESTS)" ]; then \
+	   node tools/js_test_guard.js node --test --test-timeout=$(NODE_TEST_TIMEOUT_MS) $(JS_TESTS); js_status=$$?; \
 	 else echo "JavaScript suite: no tests found"; js_status=1; fi; \
 	 uv run pytest; py_status=$$?; \
 	 exit $$((ruby_status | js_status | py_status))
@@ -98,7 +107,7 @@ PYTHON_COVERAGE_MIN ?= 92
 
 coverage:
 	@$(RUBY) tools/coverage_ruby.rb $(RUBY_COVERAGE_MIN)
-	@node tools/coverage_js.js $(JS_COVERAGE_MIN)
+	@NODE_TEST_TIMEOUT_MS=$(NODE_TEST_TIMEOUT_MS) node tools/coverage_js.js $(JS_COVERAGE_MIN)
 	@uv run pytest -q --cov=src/ph_composer/python --cov-report=term --cov-fail-under=$(PYTHON_COVERAGE_MIN) tests/python
 
 # Development-only P1-C proof of the two-Zone translation, run with the synthetic construction

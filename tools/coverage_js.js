@@ -20,11 +20,15 @@ function runTests(output) {
     .filter(function (name) { return /_test\.js$/.test(name); })
     .sort()
     .forEach(function (name) {
-      var result = child_process.spawnSync(process.execPath, [path.join(root, "tests", name)], {
-        cwd: root,
-        env: Object.assign({}, process.env, { NODE_V8_COVERAGE: output }),
-        stdio: ["ignore", "ignore", "pipe"]
-      });
+      // Under the same memory ceiling as `make test` (tools/js_test_guard.js), and a time limit, so a runaway
+      // test fails instead of exhausting memory.
+      var result = child_process.spawnSync(process.execPath,
+        [path.join(root, "tools", "js_test_guard.js"), process.execPath, path.join(root, "tests", name)], {
+          cwd: root,
+          env: Object.assign({}, process.env, { NODE_V8_COVERAGE: output }),
+          stdio: ["ignore", "ignore", "pipe"],
+          timeout: Number(process.env.NODE_TEST_TIMEOUT_MS || 60000) * 2
+        });
       if (result.status !== 0) {
         process.stderr.write("coverage run failed in tests/" + name + "\n" + result.stderr);
         process.exit(1);
