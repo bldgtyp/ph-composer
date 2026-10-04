@@ -5,11 +5,10 @@ STATUS: In progress
 
 ## Where this stands
 
-Everything this refinement set out to do is done and on main (last merge: pull request #67): the
+Everything this refinement set out to do is done and on main (last merge: pull request #68): the
 eight packets, the Zones / Faces follow-up, the verification pass and its fixes, a completed export
-in the host, the viewport capture session, and the Design System artifact's first version. No
-branch is open. What is left is a short list of small findings from the last two sessions, below,
-none of them built.
+in the host, the viewport capture session and its fixes, and the Design System artifact's first
+version. No branch is open and nothing is half-built.
 
 | Step | State | Note |
 | --- | --- | --- |
@@ -36,8 +35,8 @@ check sections say what was and was not covered.
 
 ## Next steps, in order
 
-1. **Ed's ruling on the small findings** under "Export and viewport session" below. Each is a few
-   lines of change.
+1. **One more small finding**, below: the Classify tool's status bar guidance names a painted
+   Assembly by its record id.
 2. **Grow the Design System** if Ed wants it to carry more: live components would need the kit's
    scripts bundled, and the drawing styles of the two Builders are not in it yet. Re-sync it after
    any kit change.
@@ -64,19 +63,24 @@ the gitignored `_private/host/ui-viewport-evidence/` and `ui-export-evidence/`.
 | Place: a click that would leave the host Face | Pass: refused, with the reason in the status bar and as a warning in the panel's notice |
 | Place: a click with room | Pass: the Window is placed and cut, and the Schedule lists it under its Zone and host Face |
 
-Found, not fixed:
+Found in the session and fixed in [#68](https://github.com/bldgtyp/ph-composer/pull/68). All but
+the first were checked again in the host with real pointer input; the first is covered by its
+test, since the scratch Model by then had an unfinished Window Type blocking export:
 
-- **"1 Surface pairs"** after an export: the count line does not agree with one.
-- **The Classify inspector's heading wraps.** "Classify faces", its help button and "Stop
-  classifying" do not fit the inspector's width on one line.
-- **Painting an Assembly reports "Classified 1 Face."** in the status bar.
-- **Place shows no pressed state.** Its button is the same filled teal while the tool is on; only
-  the row above says it is placing. Classify's toggle does change. This is F4: the three viewport
-  tools signal their state in two different places (an inspector for Classify and Paint, a row for
-  Place).
-- **The Schedule's first column has no heading**, where other tables say "Actions".
-- **The Zones / Faces Assembly column cuts "Synthetic envelope"** at the default widths set in #67;
-  the column can be dragged wider.
+- The export's count line agrees with its counts ("1 Surface pair").
+- The Classify inspector's heading fits one line: its button reads "Stop", with "Stop classifying"
+  as its tooltip and accessible name.
+- A gesture that only sets an Assembly reports "Painted 1 Face." in the status bar.
+- Place shows a pressed state while its tool is on: a ring inside the fill and the darker teal.
+  The placement row stays. Classify and Paint still signal in the inspector and Place in its row;
+  that difference (F4) is left as it is.
+- The Schedule's first two columns are headed "Actions" and "Hierarchy".
+- Zones / Faces default column widths leave room for an Assembly's name beside the inspector.
+
+Found while checking those, not fixed: while the Paint tool is on, the SketchUp status bar reads
+"Classify: assembly id asm_4c66lVqiw8XD. Click or drag over Faces...". It should name the
+Assembly. The line is built in `classify_tool.rb`, whose class is at its length limit, so the fix
+wants a small extraction.
 
 ## Verification pass, 2026-10-03
 
