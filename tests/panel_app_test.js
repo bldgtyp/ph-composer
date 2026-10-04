@@ -328,6 +328,22 @@ test("Export lists what its line counts after an earlier export, keeps a typed n
     "Ready to export.");
 });
 
+test("a finished export counts what it wrote in words that agree with the count", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  p.panel.showTab("export");
+  var requests = p.sent.slice(-2);
+  p.receive("export.result", { request_id: requests[0].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { findings: [], repairs: [] } } });
+  p.receive("export.result", { request_id: requests[1].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { task_id: "task-done", stage: "finished", cancellable: false,
+      outcome: { status: "completed", message: "HBJSON and Export report created.", value: { artifacts: [],
+        result: { findings: [], canonical_model: { rooms: 2, faces: 12, surface_pairs: 1 } } } } } } });
+  var texts = p.query("[data-section='export']").querySelectorAll("p").map(function (node) {
+    return node.textContent; });
+  assert.ok(texts.indexOf("2 Rooms · 12 Faces · 1 Surface pair") >= 0, texts.join(" | "));
+});
+
 test("running Export remains visible until cancelled and a Model switch drops its handle", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 1));

@@ -5,6 +5,9 @@
 .phc-overview > .phc-inventory-controls { margin-right: 0; }
 .phc-zone-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .phc-zone-heading h2 { margin: 0; font-size: 17px; }
+.phc-classify .phc-zone-heading { justify-content: flex-start; gap: 8px; }
+.phc-classify .phc-zone-heading h2 { white-space: nowrap; }
+.phc-workspace .phc-classify .phc-zone-heading > button:last-child:not(.phc-help) { width: auto; margin-left: auto; }
 .phc-zone-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0; }
 .phc-zone-setting input[type="number"] { width: 72px; }
 /* The tree is the pane's work surface, so it takes the height the shell, the header and the control row leave. */

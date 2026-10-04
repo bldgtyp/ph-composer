@@ -576,7 +576,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     tables.table(mount, rows, {
       // Sized so the whole table shows beside the inspector at the panel's usual width; the user can still
       // drag any column wider.
-      defaultWidths: { name: 154, face_type: 126, boundary_condition: 118, area_m2: 100, assembly_id: 126 },
+      defaultWidths: { name: 142, face_type: 126, boundary_condition: 110, area_m2: 92, assembly_id: 156 },
       rows: ordered(projection.records, byId, rows), columns: columns(profile), expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
       decorate: function (td, row, field) { flag(td, problem(row.record.face, field)); },

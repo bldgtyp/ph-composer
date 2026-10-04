@@ -145,12 +145,12 @@ test("Stop classifying appears only while the tool has the viewport", function (
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
 
   assert.strictEqual(p.section().querySelectorAll("button").filter(function (node) {
-    return node.textContent === "Stop classifying";
+    return node.title === "Stop classifying";
   }).length, 0, "nothing to stop, so no control for it");
 
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
   var running = p.section().querySelectorAll("button").filter(function (node) {
-    return node.textContent === "Stop classifying";
+    return node.title === "Stop classifying";
   })[0];
   assert.ok(running);
   running.listeners.click({});
