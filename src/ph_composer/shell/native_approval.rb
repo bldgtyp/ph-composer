@@ -51,7 +51,8 @@ module PhComposer
 
     # Dispatch's answer to a declared location: the native client's Granted, which wins, or the one an
     # approved location in params stands for, with `params` less that location, which the handler never
-    # sees. Neither refuses: a location only the user can choose arrives from them or not at all.
+    # sees. With neither, it refuses with access.user_required: a location only the user can choose
+    # arrives from them or not at all.
     def admit(declaration, approval, params)
       needed = declaration.respond_to?(:approval) && declaration.approval
       return [approval, params] unless needed

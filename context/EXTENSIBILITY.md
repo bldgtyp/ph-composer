@@ -331,7 +331,8 @@ registration adds the `location` param to its params (a feature schema that decl
 handler params without it, and a call with neither answer is refused with `access.user_required`
 ([AGENT_INTERFACE.md](AGENT_INTERFACE.md), "Locations only the user can choose"). From a location,
 `request.approval.state` is the destination state the caller reviewed and `.location_id` is set;
-from the native dialog both are nil. A save handler that can replace a file compares `state` with
+from the native dialog both are nil. Dispatch refuses `replace` without `expected_destination`, so
+a location's consent always names a reviewed state; a save handler that can replace a file compares `state` with
 its own fingerprint of the destination, as `Library::ExportWorkflow` does with
 `Library::FileWriter.state`, and its preview reports that fingerprint through
 `ApprovedLocations.observe(id) { |path| ... }`. Test the location route offline by approving a

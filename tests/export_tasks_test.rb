@@ -280,7 +280,7 @@ class ExportTasksTest < PhComposerTestCase
     stale = { "id" => id, "replace" => true, "expected_destination" => "0" * 64 }
     assert_equal "export.destination_changed", api.start_export(:context => context, :location => stale)["code"]
     no_state = api.start_export(:context => context, :location => { "id" => id, "replace" => true })
-    assert_equal "export.replace_required", no_state["code"]
+    assert_equal "params.invalid", no_state["code"]
     consented = { "id" => id, "replace" => true, "expected_destination" => reviewed.fetch("state") }
     # What start_export runs, with this test's runtime in place of the translation runtime.
     task = @tasks.start(:location => consented, :runtime_factory => @factory)
@@ -291,6 +291,7 @@ class ExportTasksTest < PhComposerTestCase
     assert_equal({ "id" => id, "label" => "Export destination 1" }, value.fetch("location"))
     refute_includes JSON.generate(value), @directory
     refute_equal "{}", File.read(@destination)
+    refute_nil PhComposer::ApprovedLocations.list.first.fetch("last_used_at")
   end
 
   def test_task_retention_is_bounded_and_old_handles_never_restart_a_write

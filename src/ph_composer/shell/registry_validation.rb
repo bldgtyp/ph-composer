@@ -145,7 +145,8 @@ module PhComposer
         declared = properties.is_a?(Hash) ? properties["location"] : nil
         return if declared == (approval.standing ? nil : ApprovedLocations.param(approval.kind))
 
-        problem(operation, "params declare location, which registration adds for an approval")
+        problem(operation, "params must be an object whose properties leave location to registration, which " \
+                           "adds it for an approval")
       end
 
       # Every example is plain JSON that its params accept. An operation whose params accept `{}` may

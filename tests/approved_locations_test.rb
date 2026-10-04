@@ -39,7 +39,12 @@ class ApprovedLocationsTest < PhComposerTestCase
     assert_equal [row], listed.fetch("locations")
     Locations.mark_used(row.fetch("id"))
     refute_nil Locations.list.first.fetch("last_used_at")
-    assert_equal "Library folder 1", Locations.approve(:kind => "open_folder", :path => @directory).fetch("label")
+    first = Locations.approve(:kind => "open_folder", :path => @directory)
+    second = Locations.approve(:kind => "open_folder", :path => @directory)
+    Locations.revoke(first.fetch("id"))
+    third = Locations.approve(:kind => "open_folder", :path => @directory)
+    assert_equal ["Library folder 1", "Library folder 2", "Library folder 3"],
+                 [first, second, third].map { |item| item.fetch("label") }
   end
 
   # The distinctive fixture name stands in for a client's: neither it nor any part of the path may leave.

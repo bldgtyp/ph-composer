@@ -319,3 +319,24 @@ Branch `feature/agent-authorized-file-access`, one commit per phase.
 | 5. HBJSON on the same mechanism | Implemented on branch | `tests/export_tasks_test.rb`: `start_export` takes `location`, a raw `destination:` keyword raises and fails the described schema; replacing an approved pair is bound to the state `export_preflight(location:)` reported; the completed outcome names the location, never a path; half a prior pair is refused at start on every route. `tests/api_client_test.rb` runs the updated `docs/API_QUICKSTART.md` section 8. The Export screen no longer lists the two file names |
 | 6. Panel and menu controls | Implemented on branch | The Libraries dialog gains an Approved locations group (`html/library/locations.js`): label, kind, approved and last-used dates, a missing warning, Rename in place, Revoke that asks once, Reset when unreadable, and the three approve buttons. `tests/library_setup_test.js`; `tests/approved_locations_test.rb` for the menu route; checked in the UI preview at 800 and 420 px; `make ui-checks` passes. **Deviation:** the Libraries menu gains Approve Export Destination…, Approve Library File… and Approve Library Folder…, which approve at once as the existing Add Library File… items do, instead of one Approved Locations… item opening the dialog: the dialog belongs to each library sidebar and no native route opens it today. Listing, renaming and revoking stay in the dialog |
 | 7. Documentation, walkthrough, acceptance | Docs and walkthrough implemented on branch; host gate outstanding | `context/AGENT_INTERFACE.md` rewritten around approved locations, limitation paragraph and raw-destination sentence removed; `context/EXTENSIBILITY.md`, `context/CONTRACTS.md`, `docs/AGENT_ACCESS.md`, `docs/API_QUICKSTART.md` updated; `tools/examples/library/approved_location_walkthrough.rb` run as written by `tests/approved_location_walkthrough_test.rb` (export, overwrite and stale-review refusals, unknown id, folder add and read-back, used folder, revoked destination). `make ci` passes on Ruby 3.2.2 and the suite on 2.7.2 |
+
+### Review and remaining gate (2026-10-03)
+
+One fresh-context Opus review against the architecture-review rubric covered the combined diff.
+Fixed on the branch: a library export to an approved `.hbjson` destination overwrote it (now refused
+`library.destination_invalid` on every route); `replace` without `expected_destination` was accepted
+for a handler that does not compare state (now refused `params.invalid` at dispatch); a panel refresh
+during Rename discarded the typed name; HBJSON exports never recorded `last_used_at`; the revoke
+confirm stayed enabled while busy; default labels could repeat after a revoke; two comments overstated
+the store's invariant; `reset` did not refresh other sessions. Left as follow-ups: `list` checks each
+location on disk at every snapshot (could stall on an unmounted volume); an HBJSON task already running
+finishes after its location is revoked; the approve commands do not refuse a blank label before the
+dialog (the panel never sends one); the Libraries dialog rows use text buttons rather than hover icon
+buttons, matching its existing Remove button.
+
+Gates: `make ci` passes on Ruby 3.2.2 and the Ruby suite on 2.7.2; `make ui-checks` passes; the
+dialog was checked in the UI preview at 800 and 420 px. **Outstanding:** the Phase 7 host gate in real
+SketchUp (approve a destination and a folder, close the panel, run
+`tools/examples/library/approved_location_walkthrough.rb` through the bridge, revoke in the panel,
+rerun to `location.revoked`, grep the Ruby console and logs for the fixture path, confirm one Save
+sheet replace prompt). The packet stays in `unscheduled/` until it passes.

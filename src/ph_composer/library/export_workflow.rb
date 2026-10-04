@@ -33,6 +33,11 @@ module PhComposer
           raise Error.new("revision.stale", "What export_preview reviewed is not what would be written. Preview again.")
         end
 
+        # Both routes can name any file; a library is only ever written to a .json one.
+        unless File.extname(request.approval.path.to_s).casecmp?(".json")
+          raise Error.new("library.destination_invalid", "Choose a .json library file destination.")
+        end
+
         writer = FileWriter.new(request.approval.path)
         consent!(writer, request)
 

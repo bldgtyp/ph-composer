@@ -251,9 +251,9 @@
       "sha256": "795590840449ed9c69241cb1c3c724173928b801687f1bbc42c7ef814f5e8b03"
     },
     "html/library/locations.js": {
-      "bytes": 6640,
+      "bytes": 7161,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "f39c9936dcf36391e95ec405b3dbcb16489ad122228c2c8abf7134d6f1bd30df"
+      "sha256": "d0e8eccb3222427e4e8d551e7d8763baa573b13b5449a05f4874158ffa206217"
     },
     "html/library/rows.js": {
       "bytes": 7745,

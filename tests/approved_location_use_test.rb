@@ -90,7 +90,7 @@ class ApprovedLocationUseTest < PhComposerTestCase
     consented = { "replace" => true, "expected_destination" => state }
     refusals = [export.call({}, digest), export.call({ "replace" => true }, digest), export.call(consented),
                 export.call(consented, "stale")]
-    assert_equal %w[export.replace_required export.replace_required export.replace_required revision.stale],
+    assert_equal %w[export.replace_required params.invalid export.replace_required revision.stale],
                  refusals.map { |outcome| outcome.fetch("code") }
     File.write(path, "#{written} ")
     assert_equal "library.destination_changed", export.call(consented, digest).fetch("code")
@@ -103,6 +103,23 @@ class ApprovedLocationUseTest < PhComposerTestCase
     assert_equal [id], Locations.list.map { |row| row.fetch("id") }
     refute_nil Locations.list.first.fetch("last_used_at")
     refute_includes JSON.generate([again, accepted]), @directory
+  end
+
+  # A library is written only to a .json file, whichever route chose the destination: an approved
+  # HBJSON destination is never overwritten with library JSON.
+  def test_a_library_export_refuses_a_destination_that_is_not_json
+    path = File.join(@directory, "model.hbjson")
+    File.write(path, "{}")
+    id = Locations.approve(:kind => "save_file", :path => path).fetch("id")
+    context = PhComposer::API.connect(:session_id => @session.id, :capabilities => %w[read export])
+    reviewed = PhComposer::API.query(:context => context, :name => "ph_composer.library.export_preview",
+                                     :params => { "location" => id }).fetch("value")
+    location = { "id" => id, "replace" => true, "expected_destination" => reviewed.dig("destination", "state") }
+    outcome = PhComposer::API.export_file(:context => context, :name => "ph_composer.library.export_file",
+                                          :params => { "location" => location,
+                                                       "projection_digest" => reviewed.fetch("projection_digest") })
+    assert_equal "library.destination_invalid", outcome.fetch("code")
+    assert_equal "{}", File.read(path)
   end
 
   # An approved location answers only operations that would otherwise ask, and registration adds its
@@ -127,6 +144,6 @@ class ApprovedLocationUseTest < PhComposerTestCase
       ) { |_request| {} }
     end
     error = assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([feature]) }
-    assert_includes error.message, "params declare location"
+    assert_includes error.message, "leave location to registration"
   end
 end

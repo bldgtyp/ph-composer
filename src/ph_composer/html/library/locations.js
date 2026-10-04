@@ -8,7 +8,8 @@ PhComposerUI.define("library/locations", ["request", "snapshot", "workspace"], f
   function Locations(session, send, changed) {
     var self = this;
     this.changed = changed; this.rows = []; this.enabled = false; this.unreadable = false;
-    this.renaming = null; this.revoking = null;
+    // The row being renamed keeps its typed draft through repaints; `focusRename` focuses it once.
+    this.renaming = null; this.draft = ""; this.focusRename = false; this.revoking = null;
     this.requests = request.channel(session, send, "approved-locations", "setup.invoke");
     this.root = el("div", "library-locations"); this.root.setAttribute("role", "group");
     this.root.setAttribute("aria-label", "Approved locations");
@@ -44,13 +45,16 @@ PhComposerUI.define("library/locations", ["request", "snapshot", "workspace"], f
     var self = this, busy = this.busy() || !this.enabled, row = el("div", "library-setup-row library-location-row");
     var text = el("div", "library-location-text");
     if (this.renaming === location.id) {
-      var input = el("input"); input.value = location.label; input.setAttribute("aria-label", "Location name");
-      var done = false, finish = function (apply) {
-        if (done) return; done = true; self.renaming = null;
+      var input = el("input"); input.value = this.draft; input.setAttribute("aria-label", "Location name");
+      // A repaint replaces this input; only the one still on the page may finish the rename.
+      var finish = function (apply) {
+        if (!input.isConnected || self.renaming !== location.id) return;
+        self.renaming = null;
         var label = input.value.trim();
         if (apply && label && label !== location.label) self.run("rename", { id: location.id, label: label });
         else self.paint();
       };
+      input.addEventListener("input", function () { self.draft = input.value; });
       input.addEventListener("keydown", function (event) {
         if (event.key === "Enter") { event.preventDefault(); finish(true); }
         if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); finish(false); }
@@ -65,12 +69,15 @@ PhComposerUI.define("library/locations", ["request", "snapshot", "workspace"], f
     row.appendChild(text);
     var actions = el("div", "library-location-actions");
     if (this.revoking === location.id) {
-      actions.appendChild(ui.button("Keep", function () { self.revoking = null; self.paint(); }));
+      var keep = ui.button("Keep", function () { self.revoking = null; self.paint(); });
       var confirm = ui.button("Revoke", function () { self.revoking = null; self.run("revoke", { id: location.id }); });
       confirm.className += " phc-action-delete"; confirm.setAttribute("aria-label", "Confirm revoke " + location.label);
-      actions.appendChild(confirm);
+      keep.disabled = confirm.disabled = busy;
+      actions.appendChild(keep); actions.appendChild(confirm);
     } else {
-      var rename = ui.button("Rename", function () { self.renaming = location.id; self.paint(); });
+      var rename = ui.button("Rename", function () {
+        self.renaming = location.id; self.draft = location.label; self.focusRename = true; self.paint();
+      });
       var revoke = ui.button("Revoke", function () { self.revoking = location.id; self.paint(); });
       rename.setAttribute("aria-label", "Rename " + location.label);
       revoke.setAttribute("aria-label", "Revoke " + location.label);
@@ -90,7 +97,7 @@ PhComposerUI.define("library/locations", ["request", "snapshot", "workspace"], f
     if (!this.rows.length && !this.unreadable) this.list.appendChild(el("p", "muted", "No approved locations."));
     this.unreadableNotice.hidden = !this.unreadable; this.reset.disabled = this.busy() || !this.enabled;
     this.approvals.forEach(function (button) { button.disabled = self.busy() || !self.enabled || self.unreadable; });
-    if (focus) { focus.focus(); focus.select(); }
+    if (focus && this.focusRename) { this.focusRename = false; focus.focus(); focus.select(); }
   };
   Locations.prototype.run = function (verb, params) {
     if (!this.enabled || this.busy()) return false;

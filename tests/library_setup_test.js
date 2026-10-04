@@ -86,3 +86,14 @@ test("an unreadable store offers only Reset approved locations", function () {
   o.dialog.locations.reset.dispatchEvent({ type: "click" });
   assert.strictEqual(o.sent[0].payload.name, "ph_composer.locations.reset");
 });
+test("a refresh while renaming keeps the typed name", function () {
+  var o = withLocations([LOCATION]);
+  named(o.dialog.locations.root, "Rename Library export").dispatchEvent({ type: "click" });
+  var input = o.dialog.locations.list.querySelector("input");
+  input.value = "Half typ"; input.dispatchEvent({ type: "input" });
+  o.dialog.refresh(o.state);
+  var again = o.dialog.locations.list.querySelector("input");
+  assert.strictEqual(again.value, "Half typ");
+  input.dispatchEvent({ type: "blur" });
+  assert.strictEqual(o.sent.length, 0);
+});

@@ -7,10 +7,11 @@ require_relative "declarations"
 module PhComposer
   # Files and folders the user approved once on this machine, so a caller holding the grant an
   # operation needs can name one by id instead of asking the user again (context/AGENT_INTERFACE.md,
-  # "Locations only the user can choose"). The path stays in this store. `resolve` is the one method
-  # that returns it, and only dispatch calls it; `observe` lends it to an exporter's state function
-  # without returning it. Every public row carries the id and the label the user gave, never a path or
-  # a file name.
+  # "Locations only the user can choose"). The path stays in this store and leaves it only toward a
+  # handler: `grant` and `grant_param` wrap it in the NativeApproval::Granted dispatch and the export
+  # task hand their handler, `resolve` returns it, and `observe` lends it to an exporter's state
+  # function. Every public row carries the id and the label the user gave, never a path or a file
+  # name.
   #
   # The store is machine state read on every call, as Library::Setup is, so it keeps nothing in memory.
   # A save destination is reused until revoked; an approved file or folder is used once, because the
@@ -61,7 +62,14 @@ module PhComposer
     end
 
     # The NativeApproval::Granted a `location` param stands for, with `params` less the location.
+    # Consent to replace is consent to a reviewed state, so `replace` without `expected_destination`
+    # is refused here for every handler, whether or not it compares the state itself.
     def grant(location, kind)
+      if location["replace"] == true && !location.key?("expected_destination")
+        raise CodedError.new("params.invalid", "Replacing what an approved location holds needs the " \
+                                               "expected_destination its preview reported.")
+      end
+
       row = available(location.fetch("id"), kind)
       NativeApproval::Granted.new(:path => row.fetch("path"), :replace => location["replace"] == true,
                                   :state => location["expected_destination"], :label => row.fetch("label"),
@@ -118,7 +126,7 @@ module PhComposer
 
     # Replaces an unreadable store with an empty one; a readable store is left as it is.
     def reset
-      write([], []) if state == "unreadable"
+      save([], []) if state == "unreadable"
       list
     end
 
@@ -206,8 +214,11 @@ module PhComposer
       end
     end
 
+    # The next number after the highest default label of this kind still listed.
     def default_label(current, kind)
-      "#{DEFAULT_LABELS.fetch(kind)} #{current.count { |row| row.fetch('kind') == kind } + 1}"
+      base = DEFAULT_LABELS.fetch(kind)
+      numbers = current.map { |row| row.fetch("label")[/\A#{Regexp.escape(base)} (\d+)\z/, 1].to_i }
+      "#{base} #{(numbers.max || 0) + 1}"
     end
 
     def checked_label(label)

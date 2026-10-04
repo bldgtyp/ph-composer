@@ -130,6 +130,7 @@ module PhComposer
         coherent!
         @stage = "writing"
         @pair.commit(@result.fetch("canonical_model").fetch("hbjson"), html)
+        ApprovedLocations.mark_used(@location.fetch("id")) if @location
         value = { "result" => compact_result(@result) }
         value["location"] = @location if @location
         finish(Outcome.build("completed", "export.complete", "HBJSON and Export report created.", "none",

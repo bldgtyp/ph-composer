@@ -189,8 +189,11 @@ dialog opens, so an unattended call cannot block SketchUp.
 
 Replacing what an approved destination holds is consent to what the caller reviewed. The preview
 (`ph_composer.library.export_preview` or `API.export_preflight`, each with `location`) reports
-`destination: { exists, state }`. A replacement needs `replace: true`, that `state` as
-`expected_destination` and, for a library export, the preview's `projection_digest`. A destination
+`destination: { exists, state }`; `state` is a SHA-256 of what is there, so a `read` caller learns
+whether it changed but never its contents. A replacement needs `replace: true`, that `state` as
+`expected_destination` (dispatch refuses `replace` without it as `params.invalid`) and, for a library
+export, the preview's `projection_digest`. A library export writes only a `.json` file, so an
+approved HBJSON destination refuses it with `library.destination_invalid`. A destination
 that changed since refuses with `library.destination_changed` or `export.destination_changed`; a
 replacement without consent refuses with `export.replace_required`. The native Save sheet's consent
 is given against the file as it is when the user answers.
