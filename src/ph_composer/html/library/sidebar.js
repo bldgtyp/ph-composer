@@ -45,9 +45,20 @@ PhComposerUI.define("library/sidebar", ["library/adapters", "library/drag", "lib
       this.search.placeholder = "Search name, category or notes";
       this.search.setAttribute("aria-label", "Search " + this.adapter.title.toLowerCase());
       this.search.addEventListener("input", function () { self.renderList(); });
+      // Narrowing beside search: one category, or all, and the name order. Both are view state only.
+      this.category = el("select", "phc-choice-pill library-sidebar-category");
+      this.category.setAttribute("aria-label", "Show category");
+      this.category.addEventListener("change", function () { self.renderList(); });
+      this.order = el("select", "phc-choice-pill library-sidebar-order");
+      this.order.setAttribute("aria-label", "Order by name");
+      this.order.appendChild(ui.option("asc", "A to Z")); this.order.appendChild(ui.option("desc", "Z to A"));
+      this.order.addEventListener("change", function () { self.renderList(); });
+      this.narrowing = el("div", "library-sidebar-narrowing");
+      this.narrowing.appendChild(this.category); this.narrowing.appendChild(this.order);
       this.count = el("small", "muted");
       this.list = el("div", "library-sidebar-list");
       this.content.appendChild(this.search);
+      this.content.appendChild(this.narrowing);
       this.content.appendChild(this.count);
       this.content.appendChild(this.list);
       this.root.appendChild(this.toggleButton);

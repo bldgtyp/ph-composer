@@ -372,3 +372,46 @@ test("a turned Assembly inserts toward its interior above, and a refused insert 
   click(hover(o, "layer_studs", "seg_steel", 2, 50));
   assert.strictEqual(o.sent[1].payload.params.index, 1, "the left edge inserts before the Layer-Segment");
 });
+test("Enter in a dimension, sent through the tree, is the Builder's and sends one action", function () {
+  var o = setup(), entry = o.editor.dimensions["thickness:layer_studs"];
+  typed(entry.field, "150");
+  var event = dom.dispatch(entry.field.input, { type: "keydown", key: "Enter" });
+  assert.strictEqual(event.defaultPrevented, true);
+  assert.strictEqual(o.sent.length, 1);
+  assert.strictEqual(o.sent[0].payload.params.thickness_mm, 150);
+  assert.strictEqual(entry.field.editing, true, "UnitField's own Enter never ran, so the draft waits for the Model");
+});
+test("the thickness bubble offers Delete Layer last and confirms assigned Materials", function () {
+  var o = setup(), removes = o.editor.root.querySelectorAll("[data-builder-action='layers.remove']");
+  var board = removes.filter(function (node) { return node.className === "phc-danger-action"; })[0];
+  assert.ok(board, "each Layer's thickness bubble ends with its delete");
+  click(board);
+  assert.strictEqual(o.sent.length, 0, "a Layer holding a Material asks first");
+  assert.strictEqual(o.editor.removal.hidden, false);
+  click(o.editor.removal.querySelector(".primary"));
+  assert.strictEqual(o.sent[0].payload.name, ASSEMBLIES + ".layers.remove");
+  assert.strictEqual(o.sent[0].payload.params.layer_id, "layer_board");
+});
+test("the segment bubble shows its Material's values read only, and the header explains the U-value", function () {
+  var o = setup();
+  o.editor.select({ layerId: "layer_studs", segmentId: "seg_wool" });
+  var facts = o.editor.root.querySelector(".assembly-material-facts");
+  assert.ok(facts.querySelectorAll(".phc-property-row").length === 4,
+    "conductivity, density, specific heat, emissivity");
+  assert.strictEqual(facts.querySelectorAll("input").length, 0, "nothing there is editable");
+  var about = o.editor.root.querySelector(".assembly-information");
+  assert.ok(text(about).includes("Surface films (ISO 6946)"));
+  assert.ok(text(about).includes("Rse"));
+});
+test("a thickness bubble opened by hover leaves the focus alone; opened by a click it focuses its field", function () {
+  var o = setup(), field = o.editor.dimensions["thickness:layer_studs"].field;
+  var panel = o.editor.root.querySelectorAll(".phc-bubble").filter(function (node) {
+    return node.getAttribute("data-dimension-key") === "thickness:layer_studs";
+  })[0];
+  assert.strictEqual(panel._bubble.options.hover, true, "thickness opens on hover, as it did before");
+  panel._bubble.open(false);
+  assert.ok(o.document.activeElement !== field.input, "a hover open takes no focus");
+  panel._bubble.close(false);
+  panel._bubble.open();
+  assert.ok(o.document.activeElement === field.input);
+});

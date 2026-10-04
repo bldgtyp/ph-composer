@@ -128,3 +128,22 @@ test("a long list starts with its groups folded, a search opens them, and a fold
   assert.strictEqual(o.sidebar.list.querySelector(".library-sidebar-group-heading").getAttribute("aria-expanded"),
     "true", "the user's choice outlasts the default");
 });
+test("the sidebar narrows to one category and orders names either way, and the choice survives a repaint", function () {
+  var o = setup(), template = JSON.stringify(o.sidebar.records[0]);
+  o.sidebar.records = [["Board", "wood"], ["Fiber", "insulation"], ["Wool", "insulation"]].map(function (pair, i) {
+    var row = JSON.parse(template);
+    row.id = "row" + i; row.values.name = pair[0]; row.values.category = pair[1];
+    return row;
+  });
+  o.sidebar.renderList();
+  assert.strictEqual(o.sidebar.category.children.map(function (node) { return node.value; }).join(),
+    ",insulation,wood");
+  o.sidebar.category.value = "insulation";
+  o.sidebar.category.listeners.change({});
+  assert.strictEqual(o.sidebar.visible.length, 2);
+  o.sidebar.order.value = "desc";
+  o.sidebar.order.listeners.change({});
+  assert.strictEqual(o.sidebar.visible.map(function (entry) { return entry.row.values.name; }).join(), "Wool,Fiber");
+  o.sidebar.renderList();
+  assert.strictEqual(o.sidebar.category.value, "insulation", "a repaint keeps the category chosen");
+});

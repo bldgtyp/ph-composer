@@ -152,3 +152,6 @@
 .phc-workspace .library-setup-remove { width: 30px; height: 30px; min-height: 30px; padding: 5px; border-color: transparent;
   background: transparent; color: var(--muted-strong); }
 .phc-workspace .library-setup-remove:hover:enabled { color: var(--red); background: var(--error-surface); }
+.library-sidebar-narrowing { display: flex; gap: 6px; margin: 6px 0 2px; }
+.library-sidebar-narrowing[hidden] { display: none; }
+.library-sidebar-narrowing select { flex: 1 1 0; min-width: 0; }

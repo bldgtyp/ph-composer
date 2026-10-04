@@ -1,6 +1,7 @@
 /* Identity, typed hints and the two canonical Ruby thermal results. */
-PhComposerUI.define("features/assemblies/header", ["features/assemblies/editor_shared", "unit_field", "workspace"],
-  function (shared, unitFields, ui) {
+PhComposerUI.define("features/assemblies/header", ["features/assemblies/editor_shared", "snapshot", "unit_field",
+  "workspace"],
+  function (shared, snapshot, unitFields, ui) {
     "use strict";
     var el = ui.element;
     function metric(label, value, field, withheld) {
@@ -11,6 +12,35 @@ PhComposerUI.define("features/assemblies/header", ["features/assemblies/editor_s
         shown.setAttribute("aria-label", label + " withheld. " + withheld); }
       root.appendChild(shown);
       return root;
+    }
+    /* How the U-values were reached, on request: the surface films used, the two results, and anything the
+       calculation reported. Nothing here is editable. */
+    function information(record, thermal, withheld) {
+      var trigger = ui.iconButton("About this Assembly's U-value", "info");
+      var bubble = new ui.Bubble(trigger, "About this Assembly's U-value");
+      var films = el("p", "", "Surface films (ISO 6946): Rsi " + shared.format(thermal.rsi_m2k_w, shared.R_VALUE) +
+        " · Rse " + shared.format(thermal.rse_m2k_w, shared.R_VALUE) +
+        (thermal.direction ? " · " + thermal.direction + " heat flow" : "") + ".");
+      bubble.content.appendChild(films);
+      [["U-value with films", thermal.u_effective_w_m2k], ["U-value construction only", thermal.u_construction_w_m2k]]
+        .forEach(function (item) {
+          var row = el("div", "phc-property-row");
+          row.appendChild(el("span", "", item[0]));
+          row.appendChild(el("span", "phc-property-value", withheld || ui.blank(item[1]) ? "—" :
+            shared.format(item[1], shared.U_VALUE)));
+          bubble.content.appendChild(row);
+        });
+      var notes = (thermal.warnings || []).concat((record.findings || []).map(function (finding) {
+        return snapshot.message(finding, "");
+      })).filter(Boolean);
+      if (withheld) notes.unshift(withheld);
+      if (notes.length) {
+        var list = el("ul", "assembly-information-notes");
+        notes.forEach(function (note) { list.appendChild(el("li", "", note)); });
+        bubble.content.appendChild(list);
+      }
+      bubble.root.classList.add("assembly-information");
+      return bubble.root;
     }
     function header(record, row) {
       var self = this, values = record.values, display = record.display || {}, thermal = display.thermal || {};
@@ -62,6 +92,7 @@ PhComposerUI.define("features/assemblies/header", ["features/assemblies/editor_s
         withheld || (ui.blank(thermal.u_effective_w_m2k) ? shared.reason(record) : null)));
       metrics.appendChild(metric("U-value construction only", thermal.u_construction_w_m2k, shared.U_VALUE,
         withheld || (ui.blank(thermal.u_construction_w_m2k) ? shared.reason(record) : null)));
+      metrics.appendChild(information(record, thermal, withheld));
       root.appendChild(metrics);
       if (withheld) root.appendChild(el("p", "assembly-incomplete", withheld));
       return root;

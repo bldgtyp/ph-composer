@@ -292,3 +292,18 @@ test("a node and a document print as one line", function () {
   assert.strictEqual(util.inspect(parts.button), "<button class=\"row-target primary\">");
   assert.strictEqual(util.inspect(parts.document), "<document>");
 });
+test("dispatch walks capture, target and bubble as Chromium 88 does, and stopPropagation ends the walk", function () {
+  var document = dom.buildDocument("<div></div>"), outer = document.body.children[0], inner = dom.element("button");
+  var order = [];
+  outer.appendChild(inner);
+  outer.addEventListener("keydown", function () { order.push("outer capture"); }, true);
+  outer.addEventListener("keydown", function () { order.push("outer bubble"); });
+  inner.addEventListener("keydown", function () { order.push("target first"); });
+  inner.addEventListener("keydown", function () { order.push("target capture, added second"); }, true);
+  dom.dispatch(inner, { type: "keydown" });
+  assert.deepStrictEqual(order, ["outer capture", "target first", "target capture, added second", "outer bubble"]);
+  order = [];
+  outer.addEventListener("keydown", function (event) { event.stopPropagation(); }, true);
+  dom.dispatch(inner, { type: "keydown" });
+  assert.deepStrictEqual(order, ["outer capture"], "a capture listener that stops propagation keeps the target out");
+});
