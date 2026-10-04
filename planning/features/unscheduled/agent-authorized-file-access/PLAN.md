@@ -1,8 +1,8 @@
 # Agent-authorized file access: implementation plan
 
 DATE: 2026-10-02
-STATUS: In progress on branch `feature/agent-authorized-file-access`. Ed decided D1 to D6 on
-2026-10-02, each as recommended, and authorized implementation on 2026-10-03.
+STATUS: Implemented on branch `feature/agent-authorized-file-access`, host gate passed 2026-10-03;
+in review as PR #70. Ed decided D1 to D6 on 2026-10-02 and authorized implementation on 2026-10-03.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/36
 
@@ -318,7 +318,7 @@ Branch `feature/agent-authorized-file-access`, one commit per phase.
 | 4. Replace consent bound to review | Implemented on branch | `tests/approved_location_use_test.rb`: through an approved destination, replacing with no consent, without `expected_destination`, without `projection_digest` and with a stale digest each refuse; a file changed after review refuses `library.destination_changed` and keeps its bytes; a fresh review is accepted. `export_preview` reports `destination` for a `location`; the panel sends `projection_digest` (`tests/library_export_form_test.js`) |
 | 5. HBJSON on the same mechanism | Implemented on branch | `tests/export_tasks_test.rb`: `start_export` takes `location`, a raw `destination:` keyword raises and fails the described schema; replacing an approved pair is bound to the state `export_preflight(location:)` reported; the completed outcome names the location, never a path; half a prior pair is refused at start on every route. `tests/api_client_test.rb` runs the updated `docs/API_QUICKSTART.md` section 8. The Export screen no longer lists the two file names |
 | 6. Panel and menu controls | Implemented on branch | The Libraries dialog gains an Approved locations group (`html/library/locations.js`): label, kind, approved and last-used dates, a missing warning, Rename in place, Revoke that asks once, Reset when unreadable, and the three approve buttons. `tests/library_setup_test.js`; `tests/approved_locations_test.rb` for the menu route; checked in the UI preview at 800 and 420 px; `make ui-checks` passes. **Deviation:** the Libraries menu gains Approve Export Destination…, Approve Library File… and Approve Library Folder…, which approve at once as the existing Add Library File… items do, instead of one Approved Locations… item opening the dialog: the dialog belongs to each library sidebar and no native route opens it today. Listing, renaming and revoking stay in the dialog |
-| 7. Documentation, walkthrough, acceptance | Docs and walkthrough implemented on branch; host gate outstanding | `context/AGENT_INTERFACE.md` rewritten around approved locations, limitation paragraph and raw-destination sentence removed; `context/EXTENSIBILITY.md`, `context/CONTRACTS.md`, `docs/AGENT_ACCESS.md`, `docs/API_QUICKSTART.md` updated; `tools/examples/library/approved_location_walkthrough.rb` run as written by `tests/approved_location_walkthrough_test.rb` (export, overwrite and stale-review refusals, unknown id, folder add and read-back, used folder, revoked destination). `make ci` passes on Ruby 3.2.2 and the suite on 2.7.2 |
+| 7. Documentation, walkthrough, acceptance | Implemented on branch; host gate passed 2026-10-03 ([evidence](evidence/host-gate-2026-10-03.md)) | `context/AGENT_INTERFACE.md` rewritten around approved locations, limitation paragraph and raw-destination sentence removed; `context/EXTENSIBILITY.md`, `context/CONTRACTS.md`, `docs/AGENT_ACCESS.md`, `docs/API_QUICKSTART.md` updated; `tools/examples/library/approved_location_walkthrough.rb` run as written by `tests/approved_location_walkthrough_test.rb` (export, overwrite and stale-review refusals, unknown id, folder add and read-back, used folder, revoked destination). `make ci` passes on Ruby 3.2.2 and the suite on 2.7.2 |
 
 ### Review and remaining gate (2026-10-03)
 
@@ -335,8 +335,6 @@ dialog (the panel never sends one); the Libraries dialog rows use text buttons r
 buttons, matching its existing Remove button.
 
 Gates: `make ci` passes on Ruby 3.2.2 and the Ruby suite on 2.7.2; `make ui-checks` passes; the
-dialog was checked in the UI preview at 800 and 420 px. **Outstanding:** the Phase 7 host gate in real
-SketchUp (approve a destination and a folder, close the panel, run
-`tools/examples/library/approved_location_walkthrough.rb` through the bridge, revoke in the panel,
-rerun to `location.revoked`, grep the Ruby console and logs for the fixture path, confirm one Save
-sheet replace prompt). The packet stays in `unscheduled/` until it passes.
+dialog was checked in the UI preview at 800 and 420 px. The Phase 7 host gate passed in SketchUp
+26.1.188 on 2026-10-03 ([evidence](evidence/host-gate-2026-10-03.md)). The packet is archived once
+the pull request merges.
