@@ -1,4 +1,4 @@
-/* The Overview screen: its heading row, the tree table's mounts and the Zone details form. The table
+/* The Overview screen: its heading row and the tree table's mounts. The table
    itself is styled by table.css, which names no screen. */
 .phc-overview { display: grid; gap: 12px; padding-bottom: 24px; }
 /* The control row spans the work surface, so the pane's tools sit at its far end. */
@@ -15,12 +15,10 @@
 .phc-workspace .phc-blocked-reason { color: var(--warning-ink); border-color: transparent; background: transparent; }
 .phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
   color: var(--warning-ink); background: var(--warning-surface); }
-/* Zone details and the Face selection are the inspector's: one field to a line, the label above it. */
-.phc-zone-card { display: grid; gap: 10px; }
-.phc-zone-card label, .phc-selection-field { display: grid; gap: 4px; color: var(--muted); font-size: 11px; }
-.phc-zone-card input, .phc-selection-field select { min-width: 0; width: 100%; color: var(--ink); }
+/* The Face selection is the inspector's: one field to a line, the label above it. */
+.phc-selection-field { display: grid; gap: 4px; color: var(--muted); font-size: 11px; }
+.phc-selection-field select { min-width: 0; width: 100%; color: var(--ink); }
 .phc-selection-controls { display: grid; gap: 10px; }
-.phc-zone-details { display: grid; gap: 10px; }
 .phc-selection-assembly { display: grid; gap: 4px; }
 .phc-palette-value { font-weight: 600; }
 .phc-empty { margin: 0; padding: 12px; color: var(--muted); }

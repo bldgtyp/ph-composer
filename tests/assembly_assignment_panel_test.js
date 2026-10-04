@@ -214,47 +214,6 @@ test("the selection inspector sets Type and Boundary on every selected Face, one
   assert.strictEqual(section.hidden, true, "no selection, no selection inspector");
 });
 
-test("Assembly selection and table refusals preserve the dirty Zone and return focus to Save", function () {
-  ["Assembly for selected Faces", "Wall 1 Assembly"].forEach(function (label) {
-    var o = setup(), overview = o.query("[data-section='ph_composer.overview']");
-    click(overview.querySelector(".row-target"));
-    var name = byLabel(o.document.body, "Zone name");
-    name.value = "Unsaved Zone draft"; name.listeners.input({});
-    var select = byLabel(o.document.body, label);
-    select.focus(); select.value = "asm_b"; select.listeners.change({});
-    var save = o.document.body.querySelectorAll("button").filter(function (node) {
-      return node.textContent === "Save";
-    })[0];
-    assert.strictEqual(name.value, "Unsaved Zone draft");
-    assert.ok(o.document.activeElement === save, label + " returns to the active draft");
-    assert.strictEqual(o.sent.length, 0);
-    assert.strictEqual(select.value, label === "Wall 1 Assembly" ? "asm_missing" : "");
-  });
-});
-
-test("selected Faces hold the inspector until a Zone row is chosen; a new selection takes it back", function () {
-  var o = setup(), overview = o.query("[data-section='ph_composer.overview']");
-  var selection = o.query("[data-section='ph_composer.zones.selection']");
-  var details = o.query("[data-section='ph_composer.zones.details']");
-  assert.deepStrictEqual([selection.hidden, details.hidden], [false, true]);
-  click(overview.querySelector(".row-target"));
-  assert.deepStrictEqual([selection.hidden, details.hidden], [true, false], "the chosen Zone outranks the selection");
-  o.paint();
-  assert.strictEqual(details.hidden, false, "and keeps the inspector while the selection stands");
-  var save = details.querySelectorAll("button").filter(function (node) { return node.textContent === "Save"; })[0];
-  assert.strictEqual(save.hidden, true, "Save belongs to a draft");
-  var targets = o.state.sections[PREFIX + ".selected"].value.targets;
-  var second = JSON.parse(JSON.stringify(targets[0]));
-  second.reference.entity_path = [999];
-  targets.push(second);
-  o.paint();
-  assert.deepStrictEqual([selection.hidden, details.hidden], [false, true], "a changed selection takes it back");
-  var name = byLabel(details, "Zone name");
-  name.value = "Draft"; name.listeners.input({});
-  o.paint();
-  assert.deepStrictEqual([selection.hidden, details.hidden, save.hidden], [true, false, false], "a draft holds it");
-});
-
 test("the selection's Assembly rests on what the Faces share, and reads Mixed when they differ", function () {
   var o = setup(), targets = o.state.sections[PREFIX + ".selected"].value.targets;
   var picker = byLabel(o.document.body, "Assembly for selected Faces");
@@ -291,23 +250,8 @@ test("selected Faces that disagree read Mixed; a value the tree keeps read only 
   assert.strictEqual(params.expected_values, undefined, "several Faces share no one set of values to guard by");
 });
 
-test("a Zone draft refuses a Type choice and the Classify toggle, and the palette can drop its Assembly", function () {
-  var o = setup(), overview = o.query("[data-section='ph_composer.overview']");
-  click(overview.querySelector(".row-target"));
-  var name = byLabel(o.document.body, "Zone name");
-  name.value = "Draft"; name.listeners.input({});
-  o.paint();
-  var type = byLabel(o.document.body, "Type for selected Faces");
-  type.value = "Floor";
-  type.listeners.change({});
-  assert.strictEqual(o.sent.length, 0);
-  assert.strictEqual(type.value, o.face.values.face_type, "the control goes back to what the Faces have");
-  var toggle = o.query("[data-section='ph_composer.classify.toggle']").querySelector("button");
-  click(toggle);
-  assert.strictEqual(toggle.getAttribute("aria-pressed"), "false", "the draft keeps the inspector");
-  assert.strictEqual(o.sent.length, 0);
-
-  o = setup();
+test("the palette can drop the Assembly it is painting", function () {
+  var o = setup();
   o.state.sections[PREFIX + ".palette"].value.palette.assembly_id = "asm_a";
   o.paint();
   click(o.query("[data-section='ph_composer.classify']").querySelectorAll("button").filter(function (node) {

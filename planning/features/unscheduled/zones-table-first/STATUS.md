@@ -12,7 +12,7 @@ In progress on `feature/zones-table-first`. Ed accepted the proposed answers to 
 
 | Stage | State |
 | --- | --- |
-| ZT-01 Zone columns | Scoped |
+| ZT-01 Zone columns | Implemented on branch; `make ci` passes |
 | ZT-02 Header actions and column menus | Scoped |
 | ZT-03 Colour by in headers | Scoped |
 | ZT-04 Checked set and Locate | Scoped |
@@ -22,7 +22,7 @@ In progress on `feature/zones-table-first`. Ed accepted the proposed answers to 
 
 ## Next step
 
-ZT-01, [phases/phase-01-zone-columns.md](phases/phase-01-zone-columns.md).
+ZT-02, [phases/phase-02-header-actions-and-column-menus.md](phases/phase-02-header-actions-and-column-menus.md).
 
 ## Blockers
 

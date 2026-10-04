@@ -1,7 +1,7 @@
 # ZT-01: Zone columns in place
 
 DATE: 2026-10-04
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -33,3 +33,12 @@ Paths are relative to `src/ph_composer/html/`. Decisions are in [PLAN](../PLAN.m
 ## Acceptance
 
 `make ci` passes. The Zone fields are visible and editable without selecting anything.
+
+## Outcome
+
+Implemented 2026-10-04. `features/zones/zone_cells.js` wraps the shared `record_edits` controller with a
+custom `send` that targets `ph_composer.zones.update` with the one edited value and the full painted
+values as `expected_values`. The Ground depth dimension scope is now `ph_composer.zones.ground_depth`.
+The Zone row's activation no longer chooses an inspector record; it keeps keyboard navigation and the
+"Show all" row. Focused tests in `tests/overview_panel_test.js`; the Zone-draft tests in it and in
+`tests/assembly_assignment_panel_test.js` were removed with the form. `make ci` passes.
