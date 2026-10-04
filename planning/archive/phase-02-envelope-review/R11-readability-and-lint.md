@@ -257,7 +257,7 @@ case `R11H`. Five UI findings, none a failure, are recorded in
   [library-product-tab-headers](../library-product-tab-headers/README.md), the next
   change that opens that reference.
 - `export_file`'s `expected_revision` checked only after the save dialog: folded into
-  [agent-authorized-file-access](../../features/unscheduled/agent-authorized-file-access/README.md), which
+  [agent-authorized-file-access](../agent-authorized-file-access/README.md), which
   redesigns the export params.
 - The `runtime_page_test.js` flake seen in this branch's `make ci`:
   [planning/bugs/runtime-probe-test-flake.md](../../bugs/runtime-probe-test-flake.md).

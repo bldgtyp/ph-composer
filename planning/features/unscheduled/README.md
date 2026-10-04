@@ -15,4 +15,3 @@ requests. A packet moves into a phase directory when it is scheduled.
 | [windows-support](windows-support/README.md) | host gate | Requested |
 | [legend-hover-highlight](legend-hover-highlight/README.md) | feature | Requested |
 | [zones-entry-points](zones-entry-points/README.md) | feature | Requested |
-| [agent-authorized-file-access](agent-authorized-file-access/README.md) | feature | Scoped 2026-10-02 ([plan](agent-authorized-file-access/PLAN.md)), decisions made; deferred from the Phase 2 review on 2026-10-01. Lets agents export and configure libraries through user-approved handles |

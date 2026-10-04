@@ -1,10 +1,8 @@
 # Agent-authorized file access for library export and setup
 
 DATE: 2026-10-01
-STATUS: Implemented on branch `feature/agent-authorized-file-access` 2026-10-03, Phases 1 to 7 per
-[PLAN.md](PLAN.md), "Delivery"; the real-host gate passed the same day
-([evidence](evidence/host-gate-2026-10-03.md)). In review as PR #70. Scoped 2026-10-02, Ed decided D1 to
-D6 the same day. Must be delivered before any claim that users' agents can manage libraries.
+STATUS: Complete. Merged to main 2026-10-03 through PR #70 (merge commit `e0b61f3`); host gate
+passed ([evidence](evidence/host-gate-2026-10-03.md)); issue #36 closed. Archived.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/36
 
@@ -14,7 +12,7 @@ Three library operations need a file location that the user approves: exporting 
 (`ph_composer.library.export_file`), adding a library file (`providers.add_file`) and adding a library
 folder (`providers.add_folder`). Phase 2 shipped them with the native dialogs inside the operation,
 so a scripted or agent caller blocks SketchUp on a dialog nobody answers. See
-[R03 item A](../../../archive/phase-02-envelope-review/R03-agent-access.md).
+[R03 item A](../phase-02-envelope-review/R03-agent-access.md).
 
 Ed decided on 2026-10-01 to do this in two parts:
 
@@ -69,5 +67,5 @@ in any result or log.
 The limitation paragraph added to `context/AGENT_INTERFACE.md` by R03 item A is removed in the same
 change.
 
-Next step: review and merge PR #70, then archive this packet. Under D1 this packet no longer waits
-for the agent connection packet.
+Delivered. Binding an approval to a named connection (D1 = B) waits for the agent connection and
+access-grant packet, which does not exist yet.

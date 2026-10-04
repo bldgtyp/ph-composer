@@ -25,7 +25,7 @@ Export report beside an HBJSON, when the report exists and the `.hbjson` does no
 exists, the sheet's consent covers the pair, because the report is documented as the HBJSON's
 companion and is always written with it. Other platforms keep today's message box until the Windows
 packet checks `UI.savepanel` there. This is the same rule as
-[agent-authorized-file-access PLAN.md](../../features/unscheduled/agent-authorized-file-access/PLAN.md) D6; whichever packet
+[agent-authorized-file-access PLAN.md](../agent-authorized-file-access/PLAN.md) D6; whichever packet
 lands first owns it, and the other reuses it.
 
 Alternative: keep asking whenever the companion exists, even when the sheet already asked about the
@@ -138,7 +138,7 @@ message hook is added for one caller.
 
 Note: a folder's label falls back to the folder name (`setup_commands.rb:120,125`), so the notice can
 show a folder name. That is the leak recorded as D4 in the
-[agent-authorized-file-access plan](../../features/unscheduled/agent-authorized-file-access/PLAN.md); this item does not
+[agent-authorized-file-access plan](../agent-authorized-file-access/PLAN.md); this item does not
 change labels.
 
 **Tests.** `tests/library_setup_commands_test.rb`: the add menu item with a stubbed picker notifies

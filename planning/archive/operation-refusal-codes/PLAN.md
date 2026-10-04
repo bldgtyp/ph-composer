@@ -41,7 +41,7 @@ Read [README.md](README.md) first for the required behavior. Facts below are fro
   outcome is not a refusal. Publishing an operation's finding codes (`reports:`) is out of scope.
 - Export task methods (`start_export` and the rest) are out. They are described by their own
   contract, raise `Export::Blocked` outside dispatch's declarations, and
-  [agent-authorized-file-access](../../features/unscheduled/agent-authorized-file-access/PLAN.md) Phase 5 may reshape
+  [agent-authorized-file-access](../agent-authorized-file-access/PLAN.md) Phase 5 may reshape
   `start_export`. Revisit after that lands.
 
 ## Decisions

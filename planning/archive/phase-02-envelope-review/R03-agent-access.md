@@ -61,7 +61,7 @@ Now, in this refactor:
    name `access.user_required`) and a message naming the step that needs the user. No dialog opens.
 3. State the limitation in `context/AGENT_INTERFACE.md`, with a pointer to the packet below.
 
-Later: [agent-authorized-file-access](../../features/unscheduled/agent-authorized-file-access/README.md)
+Later: [agent-authorized-file-access](../agent-authorized-file-access/README.md)
 records the owed behavior (user-approved opaque handles, no path through the API) and has rows in
 `planning/STATUS.md` and the unscheduled index. It depends on the agent connection and access-grant
 packet that `AGENT_INTERFACE.md` describes and that does not exist yet.
