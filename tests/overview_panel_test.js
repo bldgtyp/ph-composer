@@ -150,12 +150,12 @@ test("area headers and Zone and Face values follow the display profile together"
     return section.querySelectorAll(".col-area_m2").filter(function (node) { return node.tagName === "th"; })[0];
   }
 
-  assert.ok(header().textContent.includes("Gross area ft²"));
+  assert.ok(header().querySelector(".phc-th-label").textContent.includes("Gross area ft²"));
   assert.deepStrictEqual(areas(), ["129.17", "10.76", "32.29", "86.11", "86.11"],
     "the Zone over every Face it has, its two recorded Faces, then the unclassified as a group and one by one");
   p.modules.unit_preferences.set("unit_system", "SI");
   p.panel.repaint();
-  assert.ok(header().textContent.includes("Gross area m²"));
+  assert.ok(header().querySelector(".phc-th-label").textContent.includes("Gross area m²"));
   assert.deepStrictEqual(areas(), ["12", "1", "3", "8", "8"]);
   assert.strictEqual(faces[0].area_m2, 1, "display changes leave the canonical snapshot alone");
 });
@@ -381,7 +381,9 @@ test("a Zone's Ground depth follows display units and sends canonical millimetre
   p.modules.unit_preferences.set("unit_system", "IP");
   p.panel.repaint();
   var section = p.query("[data-section='ph_composer.overview']");
-  assert.ok(section.querySelectorAll("th").some(function (th) { return /^Ground depth in/.test(th.textContent); }));
+  assert.ok(section.querySelectorAll(".phc-th-label").some(function (label) {
+    return /^Ground depth in/.test(label.textContent);
+  }));
   enter(byLabel(section, "Zone 1 ground depth"), "1 ft");
   assert.strictEqual(p.sent[0].payload.params.values.ground_depth_mm, 304.8);
 });
@@ -748,7 +750,7 @@ test("Expand all and Collapse all reach the unclassified summary, and the filter
   assert.strictEqual(count(), 4, "a Zone with unclassified Faces matches the word");
 });
 
-test("Order by and its direction order a Zone's Faces too, so one Zone still answers them", function () {
+test("column menus sort: a Zone field orders Zones, a Face field orders Faces within their Zone", function () {
   var p = page(), payload = snapshot(), faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
   faces.push({ reference: { zone_id: "zon_a", zone_path: [100], entity_path: [103], entity_id: "fac_c" },
     zone_name: "Zone 1", area_m2: 30, state: "classified", values: { face_type: "Floor", boundary_condition: "Ground" },
@@ -759,19 +761,60 @@ test("Order by and its direction order a Zone's Faces too, so one Zone still ans
     return section.querySelectorAll("td").filter(function (td) { return /col-name/.test(td.className); })
       .map(nameText);
   }
+  assert.strictEqual(byLabel(section, "Order by").parentNode.hidden, true, "Order by moves into the column menus");
+  assert.strictEqual(byLabel(section, "Sort descending").hidden, true);
   // By name, Faces keep their place numbers in order, so choosing a type never moves a row; the
   // unclassified summary stays last.
   assert.deepStrictEqual(names(), ["Zone 1", "Wall 1", "Floor 3", "1 unclassified Face", "Face 2"]);
-  byLabel(section, "Sort descending").listeners.click({});
+  menuItem(section, "Name column menu", "Sort Z to A");
   assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"]);
-  var order = byLabel(section, "Order by");
-  order.value = "area_m2";
-  order.listeners.change({});
+  menuItem(section, "Gross area m² column menu", "Sort Z to A");
+  assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"], "largest first");
+  menuItem(section, "Type column menu", "Sort A to Z");
   assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"],
-    "largest first");
-  byLabel(section, "Sort ascending").listeners.click({});
-  assert.deepStrictEqual(names(), ["Zone 1", "Wall 1", "Floor 3", "1 unclassified Face", "Face 2"]);
+    "Floor before Wall, within the Zone");
+  var sorted = menuItem(section, "Type column menu");
+  assert.strictEqual(sorted.filter(function (node) { return node.textContent === "Sort A to Z"; })[0]
+    .getAttribute("aria-pressed"), "true", "the menu marks the sort in force");
 });
+
+test("a column's value filter hides rows, counts in the control row and shows its glyph at rest", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var trigger = byLabel(section, "Type column menu");
+  assert.strictEqual(trigger.classList.contains("is-persistent"), false, "an idle menu shows only on hover");
+  click(trigger);
+  var boxes = trigger.parentNode.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; });
+  assert.deepStrictEqual(boxes.map(function (box) { return box.parentNode.children[1].textContent; }),
+    ["Wall", "Unclassified"], "the values present, with Unclassified last");
+  boxes[0].checked = false;
+  boxes[0].listeners.change({});
+  var visible = section.querySelectorAll("[data-row-key]").filter(function (node) { return !node.hidden; })
+    .map(function (node) { return JSON.parse(node.getAttribute("data-row-key"))[0]; });
+  assert.deepStrictEqual(visible, ["Zone", "Unclassified", "Face"], "Wall 1 is hidden, the unclassified Face shows");
+  assert.strictEqual(section.querySelector(".phc-view-count").textContent, "1 Zone · 1 filter");
+  var filtered = byLabel(section, "Type: filtered. Column menu");
+  assert.ok(filtered, "the trigger says the column is filtered");
+  assert.strictEqual(filtered.parentNode.classList.contains("is-persistent"), true, "and stays visible at rest");
+  click(filtered);
+  click(filtered.parentNode.querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Clear filter";
+  })[0]);
+  assert.strictEqual(section.querySelector(".phc-view-count").textContent, "1 Zone");
+  assert.strictEqual(p.sent.length, 0, "filtering and sorting never reach the host");
+});
+
+function click(node) { node.listeners.click({ preventDefault: function () {} }); }
+
+/* Opens a column's menu and, given an item's text, presses it; answers the menu's buttons. */
+function menuItem(section, menu, text) {
+  var trigger = byLabel(section, menu);
+  click(trigger);
+  var items = trigger.parentNode.querySelectorAll("button");
+  if (text) click(items.filter(function (node) { return node.textContent === text; })[0]);
+  return items;
+}
 
 test("the header groups the authoring tools apart from Colour by, and the inspector column always stands", function () {
   var p = page();

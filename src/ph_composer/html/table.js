@@ -137,8 +137,10 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     var headers = Object.create(null), columnElements = Object.create(null);
     tableColumns.forEach(function (column) {
       var columnElement = element("col", "col-" + column[0]);
-      var th = element("th", "col-" + column[0], column[1]);
+      var th = element("th", "col-" + column[0]);
+      th._label = element("span", "phc-th-label", column[1]);
       th._labelText = column[1];
+      th.appendChild(th._label);
       columnElements[column[0]] = columnElement; columnGroup.appendChild(columnElement);
       th.scope = "col"; headers[column[0]] = th; header.appendChild(th);
     });
@@ -167,8 +169,9 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
   function paintHeaders(cache, options) {
     cache.columns.forEach(function (column) {
       var field = column[0], th = cache.headers[field];
-      if (th._labelText !== column[1]) { th.textContent = column[1]; th._labelText = column[1]; }
+      if (th._labelText !== column[1]) { th._label.textContent = column[1]; th._labelText = column[1]; }
       if (options.header) options.header(th, field);
+      paintHeaderActions(th, options.headerActions ? options.headerActions(field) || [] : []);
       var hidden = Boolean(options.hiddenColumns && options.hiddenColumns[field]);
       th.hidden = hidden; cache.columnElements[field].hidden = hidden;
       cache.columnElements[field].style.display = hidden ? "none" : "";
@@ -179,6 +182,26 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
         paintColumnWidth(cache, field);
       }
     });
+  }
+  /* A column's header actions: `options.headerActions(field)` answers `[{ node, persistent }]`, nodes the caller
+     built and repaints (a menu, a toggle). The table keeps them in order after the label, shows them only
+     while the pointer is over the header or focus is inside it, and keeps a `persistent` one (a pressed
+     toggle, an active filter) visible at rest (table.css). It names no action. */
+  function paintHeaderActions(th, actions) {
+    if (!actions.length && !th._actions) return;
+    if (!th._actions) {
+      th._actions = element("span", "phc-header-actions");
+      th.insertBefore(th._actions, th._label.nextSibling);
+    }
+    actions.forEach(function (action, index) {
+      action.node.classList.add("phc-header-action");
+      action.node.classList.toggle("is-persistent", Boolean(action.persistent));
+      if (th._actions.children[index] !== action.node) {
+        th._actions.insertBefore(action.node, th._actions.children[index] || null);
+      }
+    });
+    while (th._actions.children.length > actions.length) th._actions.removeChild(th._actions.lastChild);
+    th.classList.toggle("has-header-actions", actions.length > 0);
   }
   /* Places the heading for row's group once, before its first row; returns the next body position. */
   function paintGroups(cache, group, retainedGroups, position) {

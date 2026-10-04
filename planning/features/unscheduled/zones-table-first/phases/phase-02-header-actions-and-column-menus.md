@@ -1,7 +1,7 @@
 # ZT-02: header actions and column menus
 
 DATE: 2026-10-04
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -36,3 +36,15 @@ Paths are relative to `src/ph_composer/html/`.
 
 `make ci` passes. Order by and the direction toggle are gone from Zones / Faces and unchanged on the
 other screens.
+
+## Outcome
+
+Implemented 2026-10-04. The header-action contract is `options.headerActions(field) -> [{ node, persistent }]`:
+the caller builds and repaints its nodes, the table places them after a `.phc-th-label` span and marks
+persistent ones. `column_menu.js` is the kit part (`ColumnMenu`); a column with every value checked is
+unfiltered. `ViewControls` gained `columnSort`, `sortBy`, `sortField`, `sortDirection`,
+`columnDirection`, `filterColumn`, `columnFilter`, `filterCount`, and `project` takes `columnMatch` and
+`rowMatch`; the count callback receives the filter count as a fourth argument. Zone fields filter on
+Building-Segment and Level; Face fields on Type, Boundary and Assembly. Icons `filter`, `palette` and
+`eye` (Lucide) joined the registry. Tests in `tests/table_test.js`, `tests/view_controls_test.js` and
+`tests/overview_panel_test.js`. `make ci` passes.

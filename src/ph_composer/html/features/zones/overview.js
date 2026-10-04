@@ -10,10 +10,10 @@
  * carries their count and the Suggest classification action that gives them all a record.
  */
 PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request", "snapshot", "units",
-  "unit_preferences", "table", "view_controls", "fields", "face_words",
+  "unit_preferences", "table", "view_controls", "column_menu", "fields", "face_words",
   "features/zones/attached_zone_assignment", "features/zones/zone_settings", "features/zones/selection_assignment",
   "features/zones/assembly_assignment", "features/zones/zone_cells"],
-function (panel, ui, requests, snapshot, units, preferences, tables, viewControls, fields, words,
+function (panel, ui, requests, snapshot, units, preferences, tables, viewControls, columnMenus, fields, words,
           attachedAssignment, ZoneSettings, SelectionAssignment, assemblies, ZoneCells) {
   "use strict";
   var AREA = fields.AREA_M2;
@@ -45,7 +45,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (screen && screen.settings) screen.settings.dispose();
     if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
     screen = { session: session, expanded: Object.create(null), showAll: Object.create(null),
-      columnWidths: {},
+      columnWidths: {}, menus: Object.create(null),
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
     screen.zoneCells = new ZoneCells(session, send, refuse);
@@ -55,6 +55,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     }, refuse);
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone, type or boundary", fields: ORDER_FIELDS, initialOrder: "name",
+      columnSort: true,
       count: zoneCount, expansion: expansion(screen), guard: function () { return draftReason(screen); },
       refused: refuse
     }, function () { panel.repaint(); });
@@ -75,10 +76,81 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     panel.notify(reason, "warning");
   }
 
-  /* The control row's count: Zones, and how many a filter leaves. */
-  function zoneCount(shown, total, filtered) {
+  /* The control row's count: Zones, how many a filter leaves, and how many column filters apply. */
+  function zoneCount(shown, total, filtered, columnFilters) {
     var noun = total === 1 ? " Zone" : " Zones";
-    return filtered ? shown + " of " + total + noun : total + noun;
+    var text = filtered && shown !== total ? shown + " of " + total + noun : total + noun;
+    return columnFilters ? text + " · " + columnFilters + (columnFilters === 1 ? " filter" : " filters") : text;
+  }
+
+  /* What each column's menu offers. A Zone field orders the Zones and a Face field orders the Faces
+     within each Zone; the fields with a value filter are listed with the tier the value is read from. */
+  var SORTED = ["name", "building_segment", "level", "ground_depth_mm", "face_type", "boundary_condition",
+    "area_m2", "assembly_id"];
+  var FILTERED = { building_segment: "zone", level: "zone", face_type: "face", boundary_condition: "face",
+    assembly_id: "face" };
+  var FACE_FIELDS = { face_type: true, boundary_condition: true, assembly_id: true };
+
+  /* A Zone record and a Face both keep their stored values in `values`. */
+  function filterValue(record, field) {
+    var value = record.values[field];
+    return value === null || value === undefined ? "" : String(value);
+  }
+
+  /* A value's words in a filter: a Face with no type or boundary is Unclassified. */
+  function filterLabel(state, field, value) {
+    if (field === "face_type" || field === "boundary_condition") {
+      return value ? chipLabel(field, value) : "Unclassified";
+    }
+    if (field === "assembly_id") {
+      if (!value) return "None";
+      var record = assemblies.choices(state.snapshot, []).filter(function (entry) { return entry.id === value; })[0];
+      return record ? record.name : "Missing Assembly";
+    }
+    return value || "Not set";
+  }
+
+  function faceMatches(face, filters) {
+    return Object.keys(FACE_FIELDS).every(function (field) {
+      return !filters[field] || filters[field].indexOf(filterValue(face, field)) >= 0;
+    });
+  }
+
+  function hasFaceFilter(filters) {
+    return Object.keys(FACE_FIELDS).some(function (field) { return Boolean(filters[field]); });
+  }
+
+  function columnMenu(state, field, label) {
+    var menu = state.menus[field];
+    if (!menu) {
+      menu = state.menus[field] = new columnMenus.ColumnMenu({ label: label,
+        sort: { current: function () { return state.controls.columnDirection(field); },
+          choose: function (direction) { state.controls.sortBy(field, direction); } },
+        filter: FILTERED[field] ? { values: function () { return filterValues(state, field); },
+          shown: function () { return state.controls.columnFilter(field); },
+          set: function (values) { state.controls.filterColumn(field, values); } } : null });
+    }
+    menu.paint();
+    return menu;
+  }
+
+  /* The values present in a column, in reading order, with the blank last. */
+  function filterValues(state, field) {
+    var seen = Object.create(null), values = [];
+    var records = FILTERED[field] === "zone" ? state.zoneRecords :
+      (state.rows || []).map(function (row) { return row.record.face; }).filter(Boolean);
+    (records || []).forEach(function (record) {
+      var value = filterValue(record, field);
+      if (!seen[value]) { seen[value] = true; values.push(value); }
+    });
+    return values.map(function (value) { return { value: value, label: filterLabel(state, field, value) }; })
+      .sort(function (a, b) { return Number(!a.value) - Number(!b.value) || ui.compareText(a.label, b.label); });
+  }
+
+  function headerActions(state, field, label) {
+    if (SORTED.indexOf(field) < 0) return [];
+    var menu = columnMenu(state, field, label);
+    return [{ node: menu.root, persistent: menu.filtered() }];
   }
 
   /* Collapse all and Expand all act on the tree, because this screen groups by the tree rather than
@@ -594,10 +666,30 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     zoneRows.forEach(function (row) { byId[row.record.id] = row; });
     var projection = state.controls.project(zoneRows.map(function (row) { return row.record; }), {
       id: function (record) { return record.id; },
-      value: function (record, field) { return field === "area_m2" ? totalArea(record.every) : record.name; },
+      value: function (record, field) {
+        if (field === "area_m2") return totalArea(record.every);
+        if (field === "name") return record.name;
+        return FACE_FIELDS[field] ? null : record.zone.values[field];
+      },
       search: function (record) { return searchText(record, state); },
+      // A Zone shows while its own values pass the Zone filters and, under a Face filter, while one of its
+      // Faces passes; a Face row shows while it passes, and a summary row while one of its Faces does.
+      columnMatch: function (record, filters) {
+        var own = Object.keys(filters).every(function (field) {
+          return FACE_FIELDS[field] || filters[field].indexOf(filterValue(record.zone, field)) >= 0;
+        });
+        return own && (!hasFaceFilter(filters) || record.every.some(function (face) {
+          return faceMatches(face, filters);
+        }));
+      },
+      rowMatch: function (row, filters) {
+        if (row.record.face) return faceMatches(row.record.face, filters);
+        return row.record.more ? true : row.record.faces.some(function (face) { return faceMatches(face, filters); });
+      },
       rows: function () { return rows; }
     });
+    var labels = Object.create(null);
+    columns(profile).forEach(function (column) { labels[column[0]] = column[1]; });
     var parents = Object.create(null);
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     tables.table(mount, rows, {
@@ -605,7 +697,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       // drag any column wider.
       defaultWidths: { name: 142, building_segment: 120, level: 84, ground_depth_mm: 104, face_type: 126,
         boundary_condition: 110, area_m2: 92, assembly_id: 156 },
-      tree: true, rows: ordered(projection.records, byId, rows, state.controls), columns: columns(profile),
+      tree: true, rows: ordered(projection.records, byId, rows, state.controls, state), columns: columns(profile),
       expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
       decorate: function (td, row, field) { flag(td, problem(row.record.face, field)); },
@@ -614,6 +706,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       value: function (row, field) { return value(row, field, profile); },
       cell: function (td, row, field, text) { return cell(td, row, field, text, state); },
       marker: marker, actions: actions, rowHidden: projection.hidden,
+      headerActions: function (field) { return headerActions(state, field, labels[field]); },
       inspect: function (row) {
         if (row.record.more) { state.showAll[row.record.more] = true; panel.repaint(); }
       },
@@ -641,20 +734,27 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     })).join(" ");
   }
 
-  /* The Zone order the controls settled on, each Zone followed by its own Face rows in the same order:
-     Order by and its direction apply within a Zone too, so they change something even when the Model has
-     one Zone. A Face's name orders by its place number, not its text: the text starts with the Face's type,
-     and choosing a type in a chip must not move the row out from under the user. A summary row
+  /* The Zone order the controls settled on, each Zone followed by its own Face rows. The sorted column
+     orders a Zone's Faces too where a Face has that value (its area, its type, boundary or Assembly), so a
+     sort changes something even when the Model has one Zone; a Zone field leaves the Faces in place order.
+     A Face's name orders by its place number, not its text: the text starts with the Face's type, and
+     choosing a type in a chip must not move the row out from under the user. A summary row
      ("N unclassified Faces") and "Show all" keep their place after the Faces. */
-  function ordered(records, byId, rows, controls) {
-    var children = Object.create(null), field = controls.orderBy.value;
-    var sign = controls.direction.value === "desc" ? -1 : 1;
+  function ordered(records, byId, rows, controls, state) {
+    var children = Object.create(null), field = controls.sortField();
+    var sign = controls.sortDirection() === "desc" ? -1 : 1;
     rows.forEach(function (row) {
       if (row.parent) (children[row.parent] = children[row.parent] || []).push(row);
     });
-    function faceValue(row) { return field === "area_m2" ? Number(row.record.face.area_m2) || 0 : row.record.place; }
+    function faceValue(row) {
+      var face = row.record.face;
+      if (field === "area_m2") return Number(face.area_m2) || 0;
+      return FACE_FIELDS[field] ? filterLabel(state, field, filterValue(face, field)) : row.record.place;
+    }
     function byFace(a, b) {
-      return (faceValue(a) - faceValue(b)) * sign || a.record.place - b.record.place;
+      var left = faceValue(a), right = faceValue(b);
+      var difference = typeof left === "number" ? left - right : ui.compareText(left, right);
+      return difference * sign || a.record.place - b.record.place;
     }
     function sorted(list) {
       var faces = list.filter(function (row) { return row.record.face; }).sort(byFace);
