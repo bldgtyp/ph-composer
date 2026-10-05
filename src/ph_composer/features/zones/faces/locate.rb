@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../../../core/view_framing"
+
 module PhComposer
   module Zones
     module Faces
@@ -50,56 +52,18 @@ module PhComposer
           end
         end
 
-        # Frames the Faces by their world bounds, keeping the camera's direction. `View#zoom` with a Face
-        # inside a closed Group frames the Face's bounds in its own Group's coordinates, which leaves a Zone
-        # placed away from the origin off screen (context/SKETCHUP_HOST_BEHAVIOR.md); a view without a
-        # camera (the offline stub) still gets `zoom`.
+        # Frames the Faces by their world bounds: each Face's vertices through its occurrence transform.
         def zoom(model, found)
           return if found.empty?
 
           view = model.respond_to?(:active_view) ? model.active_view : nil
-          return unless view
-
-          camera = view.respond_to?(:camera) ? view.camera : nil
-          return view.zoom(found.map(&:entity)) if !camera.respond_to?(:set) && view.respond_to?(:zoom)
-
-          frame(view, camera, world_bounds(found))
-        end
-
-        def world_bounds(found)
-          found.each_with_object(Geom::BoundingBox.new) do |face, box|
-            face.entity.vertices.each { |vertex| box.add(vertex.position.transform(face.transform)) }
+          points = found.flat_map do |face|
+            face.entity.vertices.map { |vertex| vertex.position.transform(face.transform) }
           end
+          ViewFraming.call(view, points, found.map(&:entity))
         end
 
-        FRAME_MARGIN = 1.2
-
-        def frame(view, camera, box)
-          center = box.center
-          radius = [box.diagonal.to_f / 2.0, 1.0].max * FRAME_MARGIN
-          direction = camera.direction
-          aspect = view.vpwidth.to_f / [view.vpheight.to_f, 1.0].max
-          if camera.perspective?
-            eye = center.offset(direction.reverse, radius / Math.sin(narrowest_angle(camera, aspect) / 2.0))
-            camera.set(eye, center, camera.up)
-          else
-            camera.set(center.offset(direction.reverse, radius * 4.0), center, camera.up)
-            camera.height = radius * 2.0 / [aspect, 1.0].min
-          end
-          view.invalidate
-        end
-
-        # The smaller of the view's two angles. `fov` is the vertical angle unless the camera says it is the
-        # horizontal one (`fov_is_height?` false), a per-camera setting.
-        def narrowest_angle(camera, aspect)
-          angle = camera.fov.to_f * Math::PI / 180.0
-          height = !camera.respond_to?(:fov_is_height?) || camera.fov_is_height?
-          half = Math.tan(angle / 2.0)
-          other = 2.0 * Math.atan(height ? half * aspect : half / aspect)
-          [angle, other].min
-        end
-
-        private_class_method :resolve, :zoom, :world_bounds, :frame, :narrowest_angle
+        private_class_method :resolve, :zoom
       end
     end
   end
