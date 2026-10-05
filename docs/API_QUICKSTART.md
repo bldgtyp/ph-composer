@@ -72,7 +72,7 @@ classified["affected"].first["reference"]  # the Face occurrence, now with its r
 ```ruby
 zone = PhComposer::API.query(context: context, name: "ph_composer.zones.list")["value"]["zones"].first
 edit = { "reference" => zone["reference"], "expected_values" => zone["values"],
-         "values" => zone["values"].merge("level" => "L1") }
+         "values" => zone["values"].merge("name" => "North Zone") }
 preview = PhComposer::API.preview(context: context, name: "ph_composer.zones.update", params: edit)
 updated = PhComposer::API.invoke(context: context, name: "ph_composer.zones.update", params: edit,
                                  request: { "sequence" => 3, "expected_revision" => classified["revision"],
@@ -80,7 +80,10 @@ updated = PhComposer::API.invoke(context: context, name: "ph_composer.zones.upda
 ```
 
 Read the Zone again and compare its `values` with what you sent; `updated["affected"]` names the
-Zone.
+Zone. A managed Zone's Building Segment and Level values are stable option IDs. Read
+`ph_composer.zones.options.all` for choices; use `options.create` to define a choice before assigning
+its ID. Arbitrary category text does not create options. Older Models require explicit
+`options.adoption_preview` / `options.adopt` before category edits.
 
 ## 5. Recover from a stale revision
 

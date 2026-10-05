@@ -723,6 +723,15 @@ class ColourByTest < PhComposerTestCase
 
   def test_public_make_zone_refreshes_an_active_overlay_after_the_revision_advances
     zone_group(1_250, [nil])
+    context = PhComposer::API.connect(:session_id => @session.id)
+    sources = PhComposer::API.query(:context => context, :name => "ph_composer.zones.options.adoption_preview")
+                             .dig("value", "sources")
+    adopted = PhComposer::API.invoke(:context => context, :name => "ph_composer.zones.options.adopt",
+                                     :params => { "mappings" => sources.map { |source|
+                                       { "source" => source.fetch("key"), "target_id" => nil,
+                                         "name" => source.fetch("name"), "colour" => source.fetch("colour") }
+                                     } }, :request => { "sequence" => 1, "expected_revision" => @session.revision })
+    assert_equal "completed", adopted.fetch("status"), adopted.inspect
     loose_face = Sketchup::Face.new(1_261, {}, :points => [point(0, 0, 0), point(24, 0, 0),
                                                            point(24, 24, 0)])
     loose_group = Sketchup::Group.new(1_260, Sketchup::Entities.new([loose_face]))

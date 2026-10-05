@@ -137,11 +137,15 @@ module PhComposer
 
       def orphan_group(zone_id, entries)
         contexts = entries.group_by { |entry| entry.fetch(:parent_path) }
-        stamps = entries.map { |entry| entry.fetch(:stamp).values_at("building_segment", "level") }.uniq
+        stamps = entries.map { |entry|
+          entry.fetch(:stamp).slice("schema_version", "building_segment", "level",
+                                    "building_segment_id", "level_id", "choice_evidence")
+        }.uniq
         first = entries.first.fetch(:stamp)
-        {
+        offer = {
           "zone_id" => zone_id,
-          "building_segment" => first["building_segment"], "level" => first["level"],
+          "building_segment" => first["building_segment"] || first.dig("choice_evidence", "building_segment", "name"),
+          "level" => first["level"] || first.dig("choice_evidence", "level", "name"),
           "parent_path" => entries.first.fetch(:parent_path),
           # Always every remembered member, so the count and the ids cannot disagree. A refused
           # offer never reaches a write, and a reader comparing the two should not be misled.
@@ -152,6 +156,8 @@ module PhComposer
           # Group itself carried went with it, and saying so is part of the offer.
           "unrecoverable" => %w[name user_data extension_data ground_depth_mm]
         }
+        offer["choice_record"] = first if first.fetch("schema_version") == 2
+        offer
       end
 
       def orphan_refusal(contexts, stamps, entries)
@@ -196,6 +202,10 @@ module PhComposer
           "building_segment" => offer["building_segment"] || Occurrences.default_segment(model),
           "level" => offer["level"], "ground_depth_mm" => 0.0, "user_data" => {}, "extension_data" => {}
         }
+        if offer["choice_record"]
+          record = record.reject { |key, _| %w[building_segment level].include?(key) }
+                         .merge(offer.fetch("choice_record").reject { |key, _| key == "zone_id" })
+        end
         Schema.validate!(record)
         [record, offer]
       end

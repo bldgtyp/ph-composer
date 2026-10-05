@@ -1601,6 +1601,39 @@ Values:
 }
 ```
 
+### `ph_composer.zones.building_segment`
+
+Building Segment, a catalog kind owned by `ph_composer.zones`, schema version 1.
+
+Values:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "colour",
+    "export_identifier"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "colour": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "export_identifier": {
+      "type": "string",
+      "pattern": "^bseg_[a-zA-Z0-9_]+$",
+      "maxLength": 100
+    }
+  }
+}
+```
+
 ### `ph_composer.zones.faces.attached_zone`
 
 Attached zone, a catalog kind owned by `ph_composer.zones`, schema version 1.
@@ -1741,9 +1774,9 @@ Occurrence reference:
 }
 ```
 
-### `ph_composer.zones.zone`
+### `ph_composer.zones.level`
 
-Zone, a entity kind owned by `ph_composer.zones`, schema version 1.
+Level, a catalog kind owned by `ph_composer.zones`, schema version 1.
 
 Values:
 
@@ -1753,8 +1786,78 @@ Values:
   "additionalProperties": false,
   "required": [
     "name",
-    "building_segment",
-    "level",
+    "colour"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "colour": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    }
+  }
+}
+```
+
+### `ph_composer.zones.membership_stamp`
+
+Zone membership stamp, a entity kind owned by `ph_composer.zones`, schema version nil.
+
+References: `building_segment_id` names one `ph_composer.zones.building_segment`; `level_id` names one `ph_composer.zones.level`.
+
+Values:
+
+```json
+{
+  "type": "object"
+}
+```
+
+### `ph_composer.zones.option_settings`
+
+Zone option settings, a catalog kind owned by `ph_composer.zones`, schema version 1.
+
+References: `default_segment_id` names one `ph_composer.zones.building_segment`.
+
+Values:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "default_segment_id",
+    "source_model_id"
+  ],
+  "properties": {
+    "default_segment_id": {
+      "type": "string",
+      "description": "Id of a ph_composer.zones.building_segment record."
+    },
+    "source_model_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
+```
+
+### `ph_composer.zones.zone`
+
+Zone, a entity kind owned by `ph_composer.zones`, schema version 2.
+
+References: `building_segment_id` names one `ph_composer.zones.building_segment`; `level_id` names one `ph_composer.zones.level`.
+
+Values:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
     "ground_depth_mm"
   ],
   "properties": {
@@ -1775,6 +1878,16 @@ Values:
     "ground_depth_mm": {
       "type": "number",
       "x-unit": "mm"
+    },
+    "building_segment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "level_id": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   }
 }
@@ -9980,6 +10093,7 @@ Result:
           "values",
           "user_data",
           "extension_data",
+          "display",
           "reference",
           "state",
           "face_count"
@@ -9996,8 +10110,6 @@ Result:
             "additionalProperties": false,
             "required": [
               "name",
-              "building_segment",
-              "level",
               "ground_depth_mm"
             ],
             "properties": {
@@ -10018,6 +10130,16 @@ Result:
               "ground_depth_mm": {
                 "type": "number",
                 "x-unit": "mm"
+              },
+              "building_segment_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "level_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           },
@@ -10028,6 +10150,37 @@ Result:
           "extension_data": {
             "type": "object",
             "description": "Versioned payloads registered extensions own."
+          },
+          "display": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [],
+            "properties": {
+              "building_segment": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "building_segment_colour": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "level_colour": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
           },
           "reference": {
             "type": "object",
@@ -10154,6 +10307,9 @@ Result:
             ],
             "description": "Why Restore would refuse, or null when it can run."
           },
+          "choice_record": {
+            "type": "object"
+          },
           "unrecoverable": {
             "type": "array",
             "items": {
@@ -10194,7 +10350,7 @@ Example params:
 
 All-Zone export checks and adjacency repair. Owner: `ph_composer.zones`.
 
-Refuses: `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `query` common set.
 
 Params:
 
@@ -11851,7 +12007,9 @@ Params:
           "name",
           "building_segment",
           "level",
-          "ground_depth_mm"
+          "ground_depth_mm",
+          "building_segment_id",
+          "level_id"
         ]
       },
       "description": "Project each row to these values; the whole row when absent."
@@ -11922,6 +12080,16 @@ Result:
               "ground_depth_mm": {
                 "type": "number",
                 "x-unit": "mm"
+              },
+              "building_segment_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "level_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           },
@@ -11932,6 +12100,37 @@ Result:
           "extension_data": {
             "type": "object",
             "description": "Versioned payloads registered extensions own."
+          },
+          "display": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [],
+            "properties": {
+              "building_segment": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "building_segment_colour": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "level_colour": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
           },
           "reference": {
             "type": "object",
@@ -12059,6 +12258,9 @@ Result:
             ],
             "description": "Why Restore would refuse, or null when it can run."
           },
+          "choice_record": {
+            "type": "object"
+          },
           "unrecoverable": {
             "type": "array",
             "items": {
@@ -12115,6 +12317,673 @@ Example params:
     "name"
   ],
   "limit": 20
+}
+```
+
+### `ph_composer.zones.options.adoption_preview`
+
+Read-only legacy/copied choice inventory. Owner: `ph_composer.zones`.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "required",
+    "sources",
+    "suggested_segment",
+    "collision_clusters"
+  ],
+  "properties": {
+    "required": {
+      "type": "boolean"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "collection",
+          "name",
+          "colour",
+          "export_identifier",
+          "source_id",
+          "live",
+          "recoverable"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "collection": {
+            "type": "string",
+            "enum": [
+              "building_segment",
+              "level"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "colour": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "export_identifier": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "live": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "recoverable": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "suggested_segment": {
+      "type": "string"
+    },
+    "collision_clusters": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.options.all`
+
+Model-owned Segment/Level choices and adoption preview. Owner: `ph_composer.zones`.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "building_segments",
+    "levels",
+    "default_segment_id",
+    "adoption"
+  ],
+  "properties": {
+    "building_segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema_version",
+          "values",
+          "user_data",
+          "extension_data",
+          "usage"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "colour",
+              "export_identifier"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "colour": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              "export_identifier": {
+                "type": "string",
+                "pattern": "^bseg_[a-zA-Z0-9_]+$",
+                "maxLength": 100
+              }
+            }
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "usage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "live",
+              "recoverable"
+            ],
+            "properties": {
+              "live": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "recoverable": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema_version",
+          "values",
+          "user_data",
+          "extension_data",
+          "usage"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "colour"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "colour": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              }
+            }
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "usage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "live",
+              "recoverable"
+            ],
+            "properties": {
+              "live": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "recoverable": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "default_segment_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "adoption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "sources",
+        "suggested_segment",
+        "collision_clusters"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "collection",
+              "name",
+              "colour",
+              "export_identifier",
+              "source_id",
+              "live",
+              "recoverable"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "collection": {
+                "type": "string",
+                "enum": [
+                  "building_segment",
+                  "level"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "colour": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              "export_identifier": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "live": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "recoverable": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "suggested_segment": {
+          "type": "string"
+        },
+        "collision_clusters": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.options.detail`
+
+One option's values, metadata and usage. Owner: `ph_composer.zones`.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection",
+    "id"
+  ],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "enum": [
+        "building_segment",
+        "level"
+      ],
+      "description": "Building Segment or Level collection to read or edit."
+    },
+    "id": {
+      "type": "string",
+      "description": "The stable option ID to read or edit."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schema_version",
+    "values",
+    "user_data",
+    "extension_data",
+    "usage"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "integer"
+    },
+    "values": {
+      "type": "object"
+    },
+    "user_data": {
+      "type": "object",
+      "description": "Contributor metadata, preserved as written."
+    },
+    "extension_data": {
+      "type": "object",
+      "description": "Versioned payloads registered extensions own."
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "live",
+        "recoverable"
+      ],
+      "properties": {
+        "live": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recoverable": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "collection": "level",
+  "id": "lvl_Ab12Cd34Ef56"
+}
+```
+
+### `ph_composer.zones.options.list`
+
+One page of model-owned option definitions. Owner: `ph_composer.zones`.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection"
+  ],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "enum": [
+        "building_segment",
+        "level"
+      ],
+      "description": "Building Segment or Level collection to read or edit."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "options",
+    "next_cursor",
+    "total"
+  ],
+  "properties": {
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema_version",
+          "values",
+          "user_data",
+          "extension_data",
+          "usage"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object"
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "usage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "live",
+              "recoverable"
+            ],
+            "properties": {
+              "live": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "recoverable": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "collection": "level"
+}
+```
+
+### `ph_composer.zones.options.usage`
+
+Live and recoverable Zone usage of one option. Owner: `ph_composer.zones`.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection",
+    "id"
+  ],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "enum": [
+        "building_segment",
+        "level"
+      ],
+      "description": "Building Segment or Level collection to read or edit."
+    },
+    "id": {
+      "type": "string",
+      "description": "The stable option ID to read or edit."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "live",
+    "recoverable"
+  ],
+  "properties": {
+    "live": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "recoverable": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "collection": "level",
+  "id": "lvl_Ab12Cd34Ef56"
 }
 ```
 
@@ -12179,8 +13048,6 @@ Result:
             "additionalProperties": false,
             "required": [
               "name",
-              "building_segment",
-              "level",
               "ground_depth_mm"
             ],
             "properties": {
@@ -12201,6 +13068,16 @@ Result:
               "ground_depth_mm": {
                 "type": "number",
                 "x-unit": "mm"
+              },
+              "building_segment_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "level_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           }
@@ -34489,7 +35366,7 @@ Make one Zone from explicit entities in one edit context. Owner: `ph_composer.zo
 
 Undo step: Make Zone. Groups loose geometry when needed and writes a Zone record.
 
-Refuses: `record.unreadable`, `target.ambiguous`, `target.edit_path_changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.edit_path_changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `action` common set.
 
 Params:
 
@@ -34551,6 +35428,624 @@ Example params:
   "entity_ids": [
     1201
   ]
+}
+```
+
+### `ph_composer.zones.options.adopt`
+
+Explicitly adopt legacy/copied Zone and stamp choices. Owner: `ph_composer.zones`.
+
+Undo step: Adopt Zone Options. Converts choices and stamps atomically.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mappings"
+  ],
+  "properties": {
+    "mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "target_id",
+          "name",
+          "colour"
+        ],
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "target_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "colour": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "target_source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "description": "One explicit destination/survivor mapping for every adoption source."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "created_ids",
+    "replacement_ids"
+  ],
+  "properties": {
+    "created_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "replacement_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "mappings": []
+}
+```
+
+### `ph_composer.zones.options.create`
+
+Create a managed Zone option atomically. Owner: `ph_composer.zones`.
+
+Undo step: Manage Zone Options. Writes choices and references atomically.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection",
+    "values"
+  ],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "enum": [
+        "building_segment",
+        "level"
+      ],
+      "description": "Building Segment or Level collection to read or edit."
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "colour"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        }
+      },
+      "description": "The option's name and colour."
+    },
+    "user_data": {
+      "type": "object",
+      "description": "JSON-compatible contributor metadata preserved locally."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "collection": "level",
+  "values": {
+    "name": "Level 1",
+    "colour": "#268589"
+  }
+}
+```
+
+### `ph_composer.zones.options.manage`
+
+Save one complete guarded collection draft atomically. Owner: `ph_composer.zones`.
+
+Undo step: Manage Zone Options. Writes choices and all references atomically.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection",
+    "options",
+    "expected_options",
+    "default_segment_id",
+    "expected_default_segment_id",
+    "replacements"
+  ],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "enum": [
+        "building_segment",
+        "level"
+      ],
+      "description": "Building Segment or Level collection to read or edit."
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "colour"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "colour": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          }
+        }
+      },
+      "description": "Complete final collection; additions have temporary new: IDs."
+    },
+    "expected_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "colour"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "colour": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          }
+        }
+      },
+      "description": "Complete collection last read; a change refuses."
+    },
+    "default_segment_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The final default Segment; temporary IDs are resolved in the batch."
+    },
+    "expected_default_segment_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The default Segment last read."
+    },
+    "replacements": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "description": "Removed option IDs mapped to survivors, or null for explicit Level clearing."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "created_ids",
+    "replacement_ids"
+  ],
+  "properties": {
+    "created_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "replacement_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "collection": "level",
+  "options": [],
+  "expected_options": [],
+  "default_segment_id": null,
+  "expected_default_segment_id": null,
+  "replacements": {}
+}
+```
+
+### `ph_composer.zones.options.merge`
+
+Merge a managed Zone option atomically. Owner: `ph_composer.zones`.
+
+Undo step: Manage Zone Options. Writes choices and references atomically.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection",
+    "id",
+    "target_id"
+  ],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "enum": [
+        "building_segment",
+        "level"
+      ],
+      "description": "Building Segment or Level collection to read or edit."
+    },
+    "id": {
+      "type": "string",
+      "description": "The stable option ID to read or edit."
+    },
+    "target_id": {
+      "type": "string",
+      "description": "The surviving option receiving all source references."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "created_ids",
+    "replacement_ids"
+  ],
+  "properties": {
+    "created_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "replacement_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "collection": "level",
+  "id": "lvl_Ab12Cd34Ef56",
+  "target_id": "lvl_Zz12Cd34Ef56"
+}
+```
+
+### `ph_composer.zones.options.remove`
+
+Remove a managed Zone option atomically. Owner: `ph_composer.zones`.
+
+Undo step: Manage Zone Options. Writes choices and references atomically.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection",
+    "id"
+  ],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "enum": [
+        "building_segment",
+        "level"
+      ],
+      "description": "Building Segment or Level collection to read or edit."
+    },
+    "id": {
+      "type": "string",
+      "description": "The stable option ID to read or edit."
+    },
+    "replacement_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "A surviving replacement; null explicitly clears a Level."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "created_ids",
+    "replacement_ids"
+  ],
+  "properties": {
+    "created_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "replacement_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "collection": "level",
+  "id": "lvl_Ab12Cd34Ef56"
+}
+```
+
+### `ph_composer.zones.options.update`
+
+Update a managed Zone option atomically. Owner: `ph_composer.zones`.
+
+Undo step: Manage Zone Options. Writes choices and references atomically.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection",
+    "id",
+    "values",
+    "expected_values"
+  ],
+  "properties": {
+    "collection": {
+      "type": "string",
+      "enum": [
+        "building_segment",
+        "level"
+      ],
+      "description": "Building Segment or Level collection to read or edit."
+    },
+    "id": {
+      "type": "string",
+      "description": "The stable option ID to read or edit."
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "colour"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        }
+      },
+      "description": "The option's name and colour."
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "colour"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        }
+      },
+      "description": "The name and colour last read; a change refuses."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "collection": "level",
+  "id": "lvl_Ab12Cd34Ef56",
+  "values": {
+    "name": "Level 1",
+    "colour": "#268589"
+  },
+  "expected_values": {
+    "name": "Level 1",
+    "colour": "#268589"
+  }
 }
 ```
 
@@ -34874,7 +36369,7 @@ Regroup the stamped members of an exploded Zone, recovering only their stamp. Ow
 
 Undo step: Restore Zone. Groups stamped Faces in one parent context and writes a Zone record.
 
-Refuses: `record.unreadable`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, `zone.identity_in_use`, `zone.restore_unsafe`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, `zone.identity_in_use`, `zone.options_adoption_required`, `zone.restore_unsafe`, and the `action` common set.
 
 Params:
 
@@ -35254,7 +36749,7 @@ Update one explicit Zone occurrence. Owner: `ph_composer.zones`.
 
 Undo step: Edit Zone. Updates Zone values and membership stamps.
 
-Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `action` common set.
 
 Params:
 
@@ -35293,8 +36788,6 @@ Params:
       "additionalProperties": false,
       "required": [
         "name",
-        "building_segment",
-        "level",
         "ground_depth_mm"
       ],
       "properties": {
@@ -35315,6 +36808,16 @@ Params:
         "ground_depth_mm": {
           "type": "number",
           "x-unit": "mm"
+        },
+        "building_segment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "level_id": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "description": "The Zone's complete new values."
@@ -35324,8 +36827,6 @@ Params:
       "additionalProperties": false,
       "required": [
         "name",
-        "building_segment",
-        "level",
         "ground_depth_mm"
       ],
       "properties": {
@@ -35346,6 +36847,16 @@ Params:
         "ground_depth_mm": {
           "type": "number",
           "x-unit": "mm"
+        },
+        "building_segment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "level_id": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "description": "The values last read; a change refuses."
@@ -35402,7 +36913,7 @@ Set one attribute on explicit Zone occurrences. Owner: `ph_composer.zones`.
 
 Undo step: Edit Selected Zones. Updates each Zone and its membership stamps.
 
-Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `action` common set.
 
 Params:
 
@@ -35450,8 +36961,6 @@ Params:
             "additionalProperties": false,
             "required": [
               "name",
-              "building_segment",
-              "level",
               "ground_depth_mm"
             ],
             "properties": {
@@ -35472,6 +36981,16 @@ Params:
               "ground_depth_mm": {
                 "type": "number",
                 "x-unit": "mm"
+              },
+              "building_segment_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "level_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           }
@@ -39042,5 +40561,9 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `zone.identity_in_use` | The Zone being restored is already in the Model. |
 | `zone.identity_unique` | The Zone's identity is already unique; there is nothing to repair. |
 | `zone.none` | The Model has no Zone to export. |
+| `zone.option_duplicate` | An equivalent managed option name already exists. |
+| `zone.option_export_conflict` | Distinct Building Segments share one export identifier; map to a survivor. |
+| `zone.options_adoption_required` | Adopt the legacy or copied choices before editing categories. |
+| `zone.options_conflict` | Recovery or shared-storage choice evidence conflicts; explicit repair is required. |
 | `zone.restore_is_limited` | Restore recovers the Zone id, Building-Segment and Level only. |
 | `zone.restore_unsafe` | The Zone cannot be restored from what remains. |

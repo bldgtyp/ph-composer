@@ -16,11 +16,11 @@ PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request",
   "unit_preferences", "table", "view_controls", "column_menu", "sections/colour_by", "fields", "face_words",
   "features/zones/attached_zone_assignment", "features/zones/zone_settings", "features/zones/selection_assignment",
   "features/zones/assembly_assignment", "features/zones/zone_cells", "features/zones/checked_faces",
-  "features/zones/classify", "selection_bar"],
+  "features/zones/classify", "selection_bar", "features/zones/zone_options", "features/zones/option_dialog"],
 function (panel, ui, requests, snapshot, units, preferences, tables, viewControls, columnMenus, colourBy, fields,
           words,
           attachedAssignment, ZoneSettings, SelectionAssignment, assemblies, ZoneCells, CheckedFaces, classify,
-          selectionBars) {
+          selectionBars, zoneOptions, OptionDialog) {
   "use strict";
   var AREA = fields.AREA_M2;
   // What a chip offers comes from the host, through the same read the Classify palette uses, so this
@@ -48,6 +48,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   function forSession(session, send) {
     if (screen && screen.session === session) return screen;
     if (screen) { screen.disposed = true; screen.edits.reset(); screen.look.reset(); }
+    if (screen && screen.optionDialog) screen.optionDialog.dispose();
     if (screen && screen.zoneCells) screen.zoneCells.dispose();
     if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
     if (screen && screen.settings) screen.settings.dispose();
@@ -58,7 +59,12 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       checked: new CheckedFaces(), locating: false,
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
-    screen.zoneCells = new ZoneCells(session, send, refuse);
+    screen.zoneCells = new ZoneCells(session, send, refuse, function (field) { screen.optionDialog.open(field); },
+      function () { return draftReason(screen, true); });
+    screen.optionDialog = new OptionDialog(session, send, function () { return draftReason(screen); },
+      function (message, tone) { panel.notify(message, tone); }, function (collection, result) {
+        reconcileOptionFilters(screen, collection, result);
+      });
     screen.options = tableOptions(screen);
     screen.help = ui.helpButton("Zones / Faces", HELP);
     screen.settings = new ZoneSettings(session, send, function () { return draftReason(screen); }, refuse);
@@ -75,7 +81,11 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   }
 
   /* Work in hand that a filter, a tab change or another assignment must not hide or race. */
-  function draftReason(state) {
+  function draftReason(state, skipCells) {
+    if (state && state.optionDialog && state.optionDialog.active()) return "Finish the managed options draft first.";
+    if (!skipCells && state && state.zoneCells && state.zoneCells.active()) {
+      return "Finish or cancel the Zone edit first.";
+    }
     if (state && state.attachedDraft) return "Finish the Attached zone assignment first.";
     if (state && state.selectionAssignment && state.selectionAssignment.active()) {
       return "Finish the selected Faces assignment first.";
@@ -86,6 +96,21 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
 
   function refuse(reason) {
     panel.notify(reason, "warning");
+  }
+
+  /* Held category filters follow explicit merge/removal results; rename keeps the same ID. */
+  function reconcileOptionFilters(state, collection, result) {
+    var replacements = result.replacement_ids || {};
+    if (state.optionDialog.adopting) {
+      delete state.controls.columnFilters.building_segment; delete state.controls.columnFilters.level; return;
+    }
+    var held = state.controls.columnFilters[collection]; if (!held) return;
+    var mapped = held.map(function (id) {
+      if (!Object.prototype.hasOwnProperty.call(replacements, id)) return id;
+      return replacements[id] || (collection === "level" ? "" : null);
+    }).filter(function (id, index, every) { return id !== null && every.indexOf(id) === index; });
+    if (mapped.length) state.controls.columnFilters[collection] = mapped;
+    else delete state.controls.columnFilters[collection];
   }
 
   /* The control row's count: Zones, how many a filter leaves, and how many column filters apply. */
@@ -105,7 +130,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
 
   /* A Zone record and a Face both keep their stored values in `values`. */
   function filterValue(record, field) {
-    var value = record.values[field];
+    var value = zoneOptions.value(record, field);
     return value === null || value === undefined ? "" : String(value);
   }
 
@@ -118,6 +143,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       if (!value) return "None";
       var record = assemblies.choices(state.snapshot, []).filter(function (entry) { return entry.id === value; })[0];
       return record ? record.name : "Missing Assembly";
+    }
+    if (field === "building_segment" || field === "level") {
+      var choice = zoneOptions.find(zoneOptions.read(state.snapshot), field, value);
+      if (choice) return choice.values.name;
+      var source = (state.zoneRecords || []).filter(function (zone) { return filterValue(zone, field) === value; })[0];
+      return source ? zoneOptions.label(zoneOptions.read(state.snapshot), source,
+        field) : value ? "Choose a replacement" : "Not set";
     }
     return value || "Not set";
   }
@@ -137,7 +169,15 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (!menu) {
       menu = state.menus[field] = new columnMenus.ColumnMenu({ label: label,
         valueAction: function (entry) { return classify.paint(field, entry.value, entry.label); },
-        extra: function (root, anchor, close, reopen) { classify.extra(field, root, anchor, close, reopen); },
+        extra: function (root, anchor, close, reopen) {
+          classify.extra(field, root, anchor, close, reopen);
+          if (field === "building_segment" || field === "level") {
+            var manage = ui.button("Manage " + zoneOptions.title(field) + "…", function () {
+              close(); anchor.focus(); state.optionDialog.open(field);
+            });
+            manage.className = "phc-action-menu-item"; root.appendChild(manage);
+          }
+        },
         sort: { current: function () { return state.controls.columnDirection(field); },
           choose: function (direction) { state.controls.sortBy(field, direction); } },
         filter: FILTERED[field] ? { values: function () { return filterValues(state, field); },
@@ -159,12 +199,23 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       var value = filterValue(record, field);
       if (!seen[value]) { seen[value] = true; values.push(value); }
     });
+    zoneOptions.list(zoneOptions.read(state.snapshot), field).forEach(function (choice) {
+      if (!seen[choice.id]) { seen[choice.id] = true; values.push(choice.id); }
+    });
     classify.values(field).forEach(function (entry) {
       if (!seen[entry.value]) { seen[entry.value] = true; values.push(entry.value); }
     });
     return values.map(function (value) { return { value: value, label: filterLabel(state, field, value),
-      colour: colourBy.colour(state.snapshot, COLOUR_BY[field], value) }; })
+      colour: filterColour(state, field, value) }; })
       .sort(function (a, b) { return Number(!a.value) - Number(!b.value) || ui.compareText(a.label, b.label); });
+  }
+
+  function filterColour(state, field, value) {
+    var choice = zoneOptions.find(zoneOptions.read(state.snapshot), field, value);
+    if (choice && /^#[0-9a-f]{6}$/i.test(choice.values.colour)) {
+      return [1, 3, 5].map(function (start) { return parseInt(choice.values.colour.slice(start, start + 2), 16); });
+    }
+    return colourBy.colour(state.snapshot, COLOUR_BY[field], value);
   }
 
   /* The Colour-by mode each column shows the values of. These are this feature's own modes; Assembly binds to
@@ -598,6 +649,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     screenState.assemblyEnabled = Boolean(snapshot.value(state, "ph_composer.zones.faces.assemblies") &&
       snapshot.value(state, "ph_composer.zones.faces.faces"));
     screenState.revision = state.revision;
+    screenState.optionDialog.consume(state, zoneOptions.read(state));
     screenState.attachedRecords = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") ||
       { records: [] }).records;
     if (screenState.attachedDraft) screenState.attachedDraft.consume(state);
@@ -816,7 +868,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       value: function (record, field) {
         if (field === "area_m2") return totalArea(record.every);
         if (field === "name") return record.name;
-        return FACE_FIELDS[field] ? null : record.zone.values[field];
+        return FACE_FIELDS[field] ? null : field === "building_segment" || field === "level" ?
+          zoneOptions.label(zoneOptions.read(state.snapshot), record.zone, field) : record.zone.values[field];
       },
       search: function (record) { return searchText(record, state); },
       // A Zone shows while its own values pass the Zone filters and, under a Face filter, while one of its
@@ -904,8 +957,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   }
 
   function searchText(record, state) {
-    var zone = record.zone.values;
-    var own = [record.name, zone.building_segment || "", zone.level || "", record.unclassified ? "unclassified" : ""];
+    var own = [record.name, zoneOptions.label(zoneOptions.read(state.snapshot), record.zone, "building_segment"),
+      zoneOptions.label(zoneOptions.read(state.snapshot), record.zone, "level"),
+        record.unclassified ? "unclassified" : ""];
     return own.concat(record.faces.map(function (face) {
       var assigned = assemblies.choices(state.snapshot, []).filter(function (record) {
         return record.id === face.values.assembly_id;

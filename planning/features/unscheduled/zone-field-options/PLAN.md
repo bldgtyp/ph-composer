@@ -1,7 +1,7 @@
 # Managed Zone options: implementation plan
 
 DATE: 2026-10-05
-STATUS: Proposed; implementation not started
+STATUS: In progress; step 1 accepted; steps 2–3 implemented; step 4 verification in progress
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 
@@ -24,3 +24,7 @@ ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 First bounded implementation checkpoint: approved schemas and public operation contracts, a synthetic
 legacy adoption preview/apply/Undo proof, and reference/copy strategy. Do not ship select-only UI ahead
 of its managed-value authority or accept identity migration based only on aggregate record counts.
+
+Step 1 proposal and interaction study: [DESIGN.md](DESIGN.md). Ed accepted the owner decisions and implementation on 2026-10-05. Identity, migration, presentation
+and export code are implemented locally; final offline and native gates are in progress. See STATUS.md for the
+current receipt and evidence.

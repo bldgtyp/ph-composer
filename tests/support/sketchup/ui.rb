@@ -167,8 +167,9 @@ module UI
       (@menus ||= {})[name] ||= Menu.new(name)
     end
 
-    def inputbox(prompts, defaults, title)
-      (@inputboxes ||= []) << [prompts, defaults, title]
+    def inputbox(prompts, defaults, lists_or_title, title = nil)
+      args = title ? [prompts, defaults, lists_or_title, title] : [prompts, defaults, lists_or_title]
+      (@inputboxes ||= []) << args
       @inputbox_result
     end
 

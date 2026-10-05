@@ -1,7 +1,7 @@
-# Managed Zone options: acceptance draft
+# Managed Zone options: acceptance
 
 DATE: 2026-10-05
-STATUS: NOT RUN; feature unimplemented
+STATUS: Offline checks passed; required native cases NOT RUN
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 

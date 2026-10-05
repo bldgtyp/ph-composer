@@ -781,6 +781,24 @@
       return { kind: kind, library_id: "synthetic.windows", library_name: "Synthetic Window products",
         record_id: kind + "_library", wire_schema_version: 1, snapshot: values };
     }) };
+  // Managed choices are separate from the supported legacy authoring fixture.
+  FIXTURES.zoneoptions = JSON.parse(JSON.stringify(FIXTURES.authoring));
+  FIXTURES.zoneoptions.zoneOptions = {
+    building_segments: [{ id: "bsg_house", schema_version: 1, values: {
+      name: "House", colour: "#268589", export_identifier: "segment_house" }, usage: { live: 2, recoverable: 1 } },
+      { id: "bsg_annex", schema_version: 1, values: { name: "Annex", colour: "#5588BB",
+        export_identifier: "segment_annex" }, usage: { live: 0, recoverable: 0 } }],
+    levels: [{ id: "lvl_ground", schema_version: 1, values: { name: "Ground", colour: "#9977AA" },
+      usage: { live: 1, recoverable: 1 } },
+      { id: "lvl_upper", schema_version: 1, values: { name: "Upper", colour: "#CB7854" },
+        usage: { live: 1, recoverable: 0 } }],
+    default_segment_id: "bsg_house", adoption: { required: false, sources: [] }
+  };
+  FIXTURES.zoneoptions.zones.forEach(function (entry) {
+    entry.schema_version = 2;
+    entry.values = { name: entry.values.name, ground_depth_mm: entry.values.ground_depth_mm,
+      building_segment_id: "bsg_house", level_id: entry.values.level === "Ground" ? "lvl_ground" : "lvl_upper" };
+  });
   global.PhComposerPreviewFixtures = {
     names: Object.keys(FIXTURES),
     fromQuery: function (search) {

@@ -11,7 +11,7 @@ module PhComposer
 
       def install(feature)
         feature.export_contributor(
-          SECTION, :section_version => 1,
+          SECTION, :section_version => 2,
                    :preflight => "#{FEATURE_ID}.export_preflight",
                    # What the Zone translation writes on each Room (python/ph_composer_translation/model_sections.py).
                    :user_data_keys => %w[ph_composer.level ph_composer.building_segment],
@@ -21,7 +21,7 @@ module PhComposer
                    :requires => [CONSTRUCTIONS], :report => method(:report)
         ) { |reader| records(reader) }
         feature.query("#{FEATURE_ID}.export_preflight", :description => "All-Zone export checks and adjacency repair.",
-                                                        :refuses => Refuses::READ,
+                                                        :refuses => Options::Registration::REFUSALS,
                                                         :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
                                                         :examples => [{}]) { |request| preflight(request) }
       end
@@ -37,6 +37,12 @@ module PhComposer
         zones.each do |zone|
           begin
             Schema.validate!(zone.record)
+            if zone.record.fetch("schema_version") == 2
+              if Options::Adoption.needs_adoption?(request.engine, zone.record)
+                Options.refuse("zone.options_adoption_required", "Adopt copied choices before export")
+              end
+              Options.resolve(request.engine, zone.record)
+            end
             Occurrences.resolve_zone(request.model, zone.reference, :mutable => true, :index => index)
           rescue CodedError => error
             findings << { "code" => error.code, "section" => SECTION, "object_id" => zone.record["id"],
@@ -78,6 +84,15 @@ module PhComposer
         matches.first
       end
 
+      def export_choice(reader, choices, kind, id)
+        record = choices.fetch(kind.id)[id]
+        unless record && kind.problems(record).empty?
+          raise Export::Blocked.new("reference.invalid", "Choose a valid #{kind.label} before export.")
+        end
+
+        reader.entity_record(record, :fields => %w[name colour export_identifier])
+      end
+
       def records(reader)
         zones = reader.snapshot.records(ZONE_DICTIONARY, :kind => "group")
         zones.map do |entry, record|
@@ -91,7 +106,21 @@ module PhComposer
                                       "Zone #{record.fetch('id')} has #{missing.length} unclassified Faces.")
           end
           ids = assigned.map { |_face, assignment| assignment.fetch("id") }.sort
-          reader.entity_record(record, :fields => %w[name building_segment level]).merge("face_ids" => ids)
+          exported = reader.entity_record(record, :fields => %w[name building_segment level])
+          if record.fetch("schema_version") == 2
+            choices = reader.projection(:zone_option_definitions) do
+              [Options::SEGMENTS, Options::LEVELS].to_h do |kind|
+                dictionary = reader.snapshot.model_dictionaries.fetch(kind.store.dictionary, {})
+                [kind.id, dictionary.to_h { |id, text| [id, JSON.parse(text)] }]
+              end
+            end
+            segment = export_choice(reader, choices, Options::SEGMENTS, record.fetch("building_segment_id"))
+            level = record["level_id"] && export_choice(reader, choices, Options::LEVELS, record.fetch("level_id"))
+            exported.merge!("building_segment_id" => segment.fetch("id"),
+                            "building_segment_export_identifier" => segment.fetch("export_identifier"),
+                            "building_segment" => segment.fetch("name"), "level" => level&.fetch("name"))
+          end
+          exported.merge("face_ids" => ids)
         end.sort_by { |record| record.fetch("id") }
       end
     end

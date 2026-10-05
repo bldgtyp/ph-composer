@@ -436,12 +436,11 @@ class ZoneRepairTest < PhComposerTestCase
     group = box_group(600, 3)
     @model.entities << group
     make_zone(group)
-    invoke("ph_composer.zones.update", {
-      "reference" => zones_value.dig("zones", 0, "reference"),
-      "values" => { "name" => "Loft", "building_segment" => "Attic", "level" => "L2",
-                    "ground_depth_mm" => 0.0 },
-      "expected_values" => zones_value.dig("zones", 0, "values")
-    })
+    # This fixture specifically proves the supported legacy Restore path. Managed Restore has its own cases.
+    record = ZONE_STORE.read(group)
+    legacy = record.reject { |key, _| %w[building_segment_id level_id choice_evidence].include?(key) }
+                   .merge("schema_version" => 1, "name" => "Loft", "building_segment" => "Attic", "level" => "L2")
+    ZONE_STORE.write(group, legacy)
     classify_all
     zone_id = ZONE_STORE.read(group).fetch("id")
     members = group.entities.to_a

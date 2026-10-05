@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require_relative "support/zone_options"
 
 class ZoneNamesTest < PhComposerTestCase
+  include ZoneOptionsSupport
   API = PhComposer::API
   ZONES = PhComposer::Zones
 
@@ -63,11 +65,12 @@ class ZoneNamesTest < PhComposerTestCase
     values = row.fetch("values")
 
     result = invoke("ph_composer.zones.update", "reference" => row.fetch("reference"),
-                                                "expected_values" => values, "values" => values.merge("level" => "L1"))
+                                                "expected_values" => values,
+                                                "values" => values.merge("ground_depth_mm" => 15.0))
 
     assert_equal "completed", result.fetch("status")
     stored = ZONES::ZONE_STORE.read(@group)
-    assert_equal ["North", "L1"], stored.values_at("name", "level")
+    assert_equal ["North", 15.0], stored.values_at("name", "ground_depth_mm")
     assert_equal({ "firm.note" => "keep" }, stored.fetch("user_data"))
     assert_equal({ "test.opaque" => { "schema_version" => 1, "payload" => { "keep" => true } } },
                  stored.fetch("extension_data"))
@@ -88,6 +91,7 @@ class ZoneNamesTest < PhComposerTestCase
   end
 
   def test_default_make_name_checks_native_names
+    adopt_zone_options
     native_rename("Zone 1")
     second = Sketchup::Group.new(200)
     @model.entities << second

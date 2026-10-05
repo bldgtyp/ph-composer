@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require_relative "support/zone_options"
 
 class ZoneFaceTest < PhComposerTestCase
+  include ZoneOptionsSupport
   API = PhComposer::API
 
   def setup
@@ -27,7 +29,7 @@ class ZoneFaceTest < PhComposerTestCase
     made = invoke("ph_composer.zones.make", overview.fetch("make_zone"), preview.fetch("proposal_digest"))
 
     assert_equal %w[completed committed], made.values_at("status", "effect")
-    assert_equal "grouped", made.dig("affected", 0, "change")
+    assert_includes made.fetch("affected").map { |row| row.fetch("change") }, "grouped"
     zone = query("ph_composer.zones.list").dig("value", "zones", 0)
     assert_equal [100], zone.dig("reference", "zone_path")
     assert_equal "Zone 1", zone.dig("values", "name")
@@ -88,8 +90,9 @@ class ZoneFaceTest < PhComposerTestCase
     stored = PhComposer::Zones::ZONE_STORE.read(group)
     stored["user_data"] = { "firm.note" => "keep" }
     PhComposer::Zones::ZONE_STORE.write(group, stored)
+    level_id = create_zone_option("level", "L1")
     before = zone.fetch("values")
-    after = before.merge("name" => "North Zone", "building_segment" => "House", "level" => "L1",
+    after = before.merge("name" => "North Zone", "level_id" => level_id,
                          "ground_depth_mm" => 250.0)
 
     result = invoke("ph_composer.zones.update", {
@@ -99,7 +102,7 @@ class ZoneFaceTest < PhComposerTestCase
     assert_equal "completed", result.fetch("status")
     assert_equal({ "firm.note" => "keep" }, PhComposer::Zones::ZONE_STORE.read(group).fetch("user_data"))
     stamp = PhComposer::Zones::STAMP_STORE.read(group.entities.to_a.first)
-    assert_equal ["House", "L1"], stamp.values_at("building_segment", "level")
+    assert_equal [after.fetch("building_segment_id"), level_id], stamp.values_at("building_segment_id", "level_id")
   end
 
   def test_existing_zone_selection_is_not_offered_as_a_make_target
