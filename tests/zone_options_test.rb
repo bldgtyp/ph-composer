@@ -76,6 +76,52 @@ class ZoneOptionsTest < PhComposerTestCase
     before.nil? ? assert_nil(@model.attribute_dictionaries) : assert_equal(before, @model.attribute_dictionaries.to_a)
   end
 
+  def test_managed_export_preflight_requires_adoption_for_pasted_legacy_zones
+    add_zone
+    assert_empty query("#{Z::FEATURE_ID}.export_preflight").fetch("findings")
+    adopt
+    pasted, = add_zone(200, legacy("zon_BBBBBBBBBBBB"))
+    other, = add_zone(300, legacy("zon_CCCCCCCCCCCC", "Annex", nil))
+    before = [Z::ZONE_STORE.read(pasted), Z::ZONE_STORE.read(other)]
+    revision = @session.revision
+
+    assert query.dig("adoption", "required")
+    findings = query("#{Z::FEATURE_ID}.export_preflight").fetch("findings")
+    assert_equal %w[zon_BBBBBBBBBBBB zon_CCCCCCCCCCCC], findings.map { |row| row.fetch("object_id") }.sort
+    assert findings.all? { |row| row.fetch("code") == "zone.options_adoption_required" && row.fetch("blocks_export") }
+    assert findings.all? { |row| row.fetch("message").include?("Adopt") }
+    outcome = API.export_preflight(:context => @context)
+    assert_equal "completed", outcome.fetch("status"), outcome.inspect
+    blockers = outcome.dig("value", "findings").select { |row| row.fetch("code") == "zone.options_adoption_required" }
+    assert_equal findings.map { |row| row.fetch("object_id") }.sort, blockers.map { |row| row.fetch("object_id") }.sort
+    assert_equal revision, @session.revision
+    assert_equal before, [Z::ZONE_STORE.read(pasted), Z::ZONE_STORE.read(other)]
+
+    snapshot = query
+    choices = mappings.map do |choice|
+      source = snapshot.dig("adoption", "sources").find { |row| row.fetch("key") == choice.fetch("source") }
+      collection = source.fetch("collection") == "level" ? "levels" : "building_segments"
+      existing = snapshot.fetch(collection).find { |row| row.dig("values", "name") == source.fetch("name") }
+      choice.merge("target_id" => existing && existing.fetch("id"))
+    end
+    result = invoke("#{O::PREFIX}.adopt", "mappings" => choices)
+    assert_equal "completed", result.fetch("status"), result.inspect
+    assert_empty query("#{Z::FEATURE_ID}.export_preflight").fetch("findings")
+  end
+
+  def test_fresh_managed_default_also_blocks_pasted_legacy_export
+    group = Sketchup::Group.new(100)
+    @model.entities << group
+    result = invoke("#{Z::FEATURE_ID}.make", "parent_path" => [], "entity_ids" => [100])
+    assert_equal "completed", result.fetch("status"), result.inspect
+    segment = query.fetch("building_segments").first
+    add_zone(200, legacy("zon_BBBBBBBBBBBB", segment.dig("values", "name"), nil))
+
+    findings = query("#{Z::FEATURE_ID}.export_preflight").fetch("findings")
+    assert_equal ["zone.options_adoption_required"], findings.map { |row| row.fetch("code") }
+    assert_equal ["zon_BBBBBBBBBBBB"], findings.map { |row| row.fetch("object_id") }
+  end
+
   def test_first_make_seeds_default_and_nullable_level_in_one_undo
     group = Sketchup::Group.new(100)
     @model.entities << group

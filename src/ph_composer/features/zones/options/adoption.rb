@@ -94,11 +94,11 @@ module PhComposer
           KINDS.each do |collection, kind|
             Options.validate_collection!(Options.records(request.engine, kind.id, proposal), collection)
           end
-          default_id = Options.settings(request.engine)&.fetch("default_segment_id") ||
-                       mapping.fetch(entries.find { |entry|
-                                       entry.fetch("collection") == "building_segment"
-                                     }.fetch("key"))
-          Options.set_settings(request, proposal, default_id)
+          current_default = Options.settings(request.engine)&.fetch("default_segment_id")
+          default_id = current_default || mapping.fetch(entries.find { |entry|
+                                                          entry.fetch("collection") == "building_segment"
+                                                        }.fetch("key"))
+          Options.set_settings(request, proposal, default_id) unless default_id == current_default
           writes = []
           final_records = []
           inventory.each do |row|

@@ -1267,6 +1267,31 @@ test("managed chip updates send complete v2 values and expected values, with cus
     payload.sections["ph_composer.zones.overview"].value.zones[0].values);
 });
 
+test("managed choice error descriptions remain unique after removing and adding Zone rows", function () {
+  var p = page(), payload = managedSnapshot(), zones = payload.sections["ph_composer.zones.overview"].value.zones;
+  function another(id, name, path) {
+    var zone = JSON.parse(JSON.stringify(zones[0]));
+    zone.id = id; zone.values.name = name; zone.reference = { zone_id: id, zone_path: [path] };
+    return zone;
+  }
+  zones.push(another("zon_b", "Zone 2", 200));
+  payload.sections["ph_composer.zones.faces.faces"].value.faces = [];
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  zones.splice(0, 1); zones.push(another("zon_c", "Zone 3", 300));
+  payload.revision++;
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var ids = ["Zone 2", "Zone 3"].flatMap(function (name) {
+    return ["Building-Segment", "Level"].map(function (field) {
+      var id = byLabel(section, name + " " + field).getAttribute("aria-describedby");
+      assert.strictEqual(section.querySelectorAll("small").filter(function (node) { return node.id === id; }).length,
+        1, name + " " + field + " describes its own error status");
+      return id;
+    });
+  });
+  assert.strictEqual(new Set(ids).size, 4);
+});
+
 test("managed category filters retain IDs through rename and use current display text", function () {
   var p = page(), payload = managedSnapshot(); p.panel.receive({ type: "panel.snapshot", payload: payload });
   p.section = p.query("[data-section='ph_composer.overview']");

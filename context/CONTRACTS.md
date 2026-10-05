@@ -369,7 +369,7 @@ Zone schema 2 stores `building_segment_id` and nullable `level_id`. Version 1 re
 Unknown versions refuse. The `choice_evidence` capsule on Zones and membership stamps carries
 versioned option definitions and source identity for native clipboard recovery; it is detached
 recovery evidence, not assignment authority. V2 read rows expose resolved presentation names/colours
-separately as `display`. Missing/foreign choices require explicit destination adoption.
+separately as `display`. Missing/foreign choices require explicit destination adoption. In a managed Model, export preflight also blocks legacy Zones pending adoption. A wholly legacy Model retains its compatible export path.
 
 The `ph_composer.zones.options.*` operations publish collection reads, usage, guarded definition
 writes, complete-draft management, read-only adoption preview and atomic adoption. Management validates the

@@ -14,9 +14,9 @@ Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkp
 - Scope: model-owned choices/default, versioned Zone/stamp compatibility, explicit adoption,
   portable recovery, atomic management/reference retargeting, chip/dialog presentation, ID filters,
   custom colours and stable export identities are implemented and verified.
-- Verification: final `make ci` passed: 1,449 Ruby cases / 14,715 assertions, 474 JS cases and
+- Verification: final `make ci` passed: 1,451 Ruby cases / 14,745 assertions, 475 JS cases and
   191 Python cases, with lint, typing, fixtures, manifests, runtime pins, hostkit and RBZ checks.
-  Coverage: Ruby 97.0%, JS 96.3%, Python 95.59%. Ruby 2.7 focused and Chromium 88 runtime checks pass.
+  Implementation-checkpoint coverage: Ruby 97.0%, JS 96.3%, Python 95.59%. Ruby 2.7 focused and Chromium 88 runtime checks pass.
   Real Chrome panel previews at 1280/900/420/280 px pass.
 - Review: the coherent stronger independent architecture/UI `simplify` review is closed, including
   independently reproduced corrections to portable typed-reference validation and adoption-survivor
@@ -32,7 +32,7 @@ Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkp
   new sessions, no fixture helper/test styles and no Model writes from reads/opening. The normal
   source Model and panel are left open.
 - Delivery: Ed requested a PR on 2026-10-05. Branch pushed and [PR #80](https://github.com/bldgtyp/ph-composer/pull/80)
-  opened against main; final visual hold closed by Ed. Merge and release are not authorized. Shared Design System synchronization
+  opened against main; final visual hold closed by Ed. Ed subsequently authorized addressing the inline review and merging once resolved; release is not authorized. Shared Design System synchronization
   from main is deferred until merge. Native SketchUp 2023 and Windows proof
   remain separate repository gates. No task memory was changed.
 
@@ -42,3 +42,7 @@ colours, closing the final normal-panel visual observation. Earlier automated wh
 recorded as unsuccessful observations; no product rendering defect or shipping fix is asserted.
 Ed also reports successful testing in multiple files, without a separate assertion-level matrix.
 The completed packet is archived. Merge/release and post-merge synchronization remain separate.
+
+PR #80 review corrections: [receipt](evidence/pr80-review-corrections.md). All four findings are addressed;
+local full gate and current-host public preflight probe pass. Required remote dual-Ruby checks and
+verified merge are pending. Historical native/package evidence above is retained for its original build.

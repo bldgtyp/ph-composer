@@ -29,6 +29,7 @@ module PhComposer
       def preflight(request)
         index = Index.new(request.model)
         zones = Occurrences.zones(request.model, :index => index)
+        managed = !Options.settings(request.engine).nil?
         findings = []
         if zones.empty?
           findings << { "code" => "zone.none", "section" => SECTION, "object_id" => nil,
@@ -37,12 +38,11 @@ module PhComposer
         zones.each do |zone|
           begin
             Schema.validate!(zone.record)
-            if zone.record.fetch("schema_version") == 2
-              if Options::Adoption.needs_adoption?(request.engine, zone.record)
-                Options.refuse("zone.options_adoption_required", "Adopt copied choices before export")
-              end
-              Options.resolve(request.engine, zone.record)
+            if (managed || zone.record.fetch("schema_version") == 2) &&
+               Options::Adoption.needs_adoption?(request.engine, zone.record)
+              Options.refuse("zone.options_adoption_required", "Adopt legacy or copied choices before export")
             end
+            Options.resolve(request.engine, zone.record) if zone.record.fetch("schema_version") == 2
             Occurrences.resolve_zone(request.model, zone.reference, :mutable => true, :index => index)
           rescue CodedError => error
             findings << { "code" => error.code, "section" => SECTION, "object_id" => zone.record["id"],

@@ -9,7 +9,7 @@ PhComposerUI.define("features/zones/zone_cells", ["record_edits", "fields", "uni
   function same(left, right) { return JSON.stringify(left) === JSON.stringify(right); }
   function ZoneCells(session, send, notice, manage, guard) {
     var self = this;
-    this.manage = manage; this.guard = guard; this.notice = notice; this.cells = {};
+    this.manage = manage; this.guard = guard; this.notice = notice; this.cells = {}; this.statusSerial = 0;
     this.channel = requests.channel(session, function (type, payload) {
       send(type, Object.assign({}, payload, { expected_revision: self.revision }));
     }, "zone_assignment");
@@ -82,7 +82,7 @@ PhComposerUI.define("features/zones/zone_cells", ["record_edits", "fields", "uni
     if (!cell) {
       cell = this.cells[key] = { row: row, field: field, input: ui.element("select", "phc-enum-cell phc-cell-input"),
         status: ui.element("small", "cell-error"), error: "" };
-      cell.status.id = "zone-choice-" + Object.keys(this.cells).length + "-" + this.channel.session;
+      cell.status.id = "zone-choice-" + (++this.statusSerial) + "-" + this.channel.session;
       cell.status.setAttribute("role", "alert"); cell.input.setAttribute("aria-describedby", cell.status.id);
       cell.input.addEventListener("change", function () { self.assign(cell); });
       cell.input.addEventListener("keydown", function (event) {

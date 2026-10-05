@@ -47,7 +47,8 @@ module PhComposer
         ids = engine.ids(kind)
         ids += proposal.writes.select { |write| write.kind == kind && write.after }.map(&:id) if proposal
         ids.uniq.sort.filter_map do |id|
-          next if proposal&.find(kind, id)&.after.nil? && proposal&.find(kind, id)
+          change = proposal&.find(kind, id)
+          next if change && change.after.nil?
 
           engine.find(kind, id, :change_set => proposal&.record_changes)
         end

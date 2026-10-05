@@ -196,9 +196,9 @@
       "sha256": "041feddeda18a5220cc780298f5c5c2795b4168711adba65509243edbf432534"
     },
     "html/features/zones/zone_cells.js": {
-      "bytes": 7889,
+      "bytes": 7903,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "fbf644bcc54b3207776da41eadc2ff42928e3c57d4940ef9489d2a8257c4ec45"
+      "sha256": "b60dcba2eec618c8ebdf01dc0c6b12af06338376f2f7da18275d37bb9f3c5580"
     },
     "html/features/zones/zone_options.js": {
       "bytes": 2535,
