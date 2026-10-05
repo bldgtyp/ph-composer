@@ -4055,7 +4055,8 @@ Result:
   "required": [
     "mode",
     "modes",
-    "rows"
+    "rows",
+    "filter_paths"
   ],
   "properties": {
     "mode": {
@@ -4076,6 +4077,21 @@ Result:
         "string",
         "null"
       ]
+    },
+    "filter_paths": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Occurrence paths to colour; null colours all, and an empty array mutes all.",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     },
     "modes": {
       "type": "array",
@@ -35570,7 +35586,8 @@ Result:
   "required": [
     "mode",
     "modes",
-    "rows"
+    "rows",
+    "filter_paths"
   ],
   "properties": {
     "mode": {
@@ -35591,6 +35608,21 @@ Result:
         "string",
         "null"
       ]
+    },
+    "filter_paths": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Occurrence paths to colour; null colours all, and an empty array mutes all.",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     },
     "modes": {
       "type": "array",
@@ -35615,6 +35647,134 @@ Example params:
 ```json
 {
   "mode": null
+}
+```
+
+### `ph_composer.colour_by.filter`
+
+Colour only matching occurrence paths and mute the remaining geometry. Owner: `ph_composer.colour_by`.
+
+Refuses: only the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "paths"
+  ],
+  "properties": {
+    "paths": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Full root-to-entity persistent-ID occurrence paths to colour, including their descendants; null colours all, and an empty array mutes all. Retained while off.",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "required": [
+    "mode",
+    "modes",
+    "rows",
+    "filter_paths"
+  ],
+  "properties": {
+    "mode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The active mode's name, or null when off."
+    },
+    "label": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "entity_kind": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "filter_paths": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Occurrence paths to colour; null colours all, and an empty array mutes all.",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "modes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Every registered mode: name, label, entity kind and group (null when none)."
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "The active mode's legend: value, label, colour, count and state."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "paths": null
+}
+```
+
+Example params:
+
+```json
+{
+  "paths": []
+}
+```
+
+Example params:
+
+```json
+{
+  "paths": [
+    [
+      101,
+      102
+    ]
+  ]
 }
 ```
 
@@ -35669,7 +35829,8 @@ Result:
   "required": [
     "mode",
     "modes",
-    "rows"
+    "rows",
+    "filter_paths"
   ],
   "properties": {
     "mode": {
@@ -35690,6 +35851,21 @@ Result:
         "string",
         "null"
       ]
+    },
+    "filter_paths": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Occurrence paths to colour; null colours all, and an empty array mutes all.",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     },
     "modes": {
       "type": "array",
