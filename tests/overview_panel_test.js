@@ -960,3 +960,54 @@ test("another tab can open Zones / Faces with Faces checked", function () {
     .value.faces[1].reference] }), true);
   assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2")], ["false", "true"]);
 });
+
+function bar(p) {
+  return p.query("[data-section='ph_composer.zones.selection_bar']").querySelector(".phc-selection-bar");
+}
+
+test("the bar edits every checked Face in one request, and says how many a filter hides", function () {
+  var p = checkPage();
+  assert.strictEqual(bar(p).hidden, true, "nothing checked, no bar");
+  click(p.box("Wall 1"));
+  click(p.box("Face 3"));
+  assert.strictEqual(bar(p).hidden, false);
+  click(byLabel(p.section, "Type column menu"));
+  var wall = byLabel(p.section, "Type column menu").parentNode.querySelectorAll("input")[0];
+  wall.checked = false; wall.listeners.change({});
+  assert.strictEqual(bar(p).querySelector(".phc-selection-bar-count").textContent, "2 Faces selected, 1 hidden");
+  var boundary = byLabel(bar(p), "Boundary for selected Faces");
+  boundary.value = "Ground"; boundary.listeners.change({});
+  var sent = JSON.parse(JSON.stringify(p.sent[0].payload));
+  assert.strictEqual(sent.name, "ph_composer.zones.faces.classify");
+  assert.deepStrictEqual(sent.params.faces.map(function (face) { return face.entity_path[0]; }), [101, 102],
+    "the hidden Face too, as one Undo step");
+  assert.strictEqual(sent.params.expected_values, undefined);
+  click(bar(p).querySelector(".phc-selection-bar-clear"));
+  assert.deepStrictEqual([bar(p).hidden, p.state("Zone 1")], [true, "false"], "clear unchecks every Face");
+});
+
+test("more Faces than one gesture may change disables the bar's controls and says why", function () {
+  var p = checkPage();
+  p.payload.sections["ph_composer.zones.faces.palette"].value.gesture_face_limit = 1;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  click(p.box("Wall 1"));
+  assert.strictEqual(byLabel(bar(p), "Type for selected Faces").disabled, false);
+  click(p.box("Wall 2"));
+  assert.strictEqual(byLabel(bar(p), "Type for selected Faces").disabled, true);
+  assert.ok(byLabel(bar(p), "Why Assign is unavailable"), "the limit is the reason, beside the controls");
+});
+
+test("while the Classify tool is on, the bar holds its palette instead", function () {
+  var p = checkPage([0]);
+  p.payload.sections["ph_composer.zones.faces.palette"].value.active = true;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  var palette = p.query("[data-section='ph_composer.classify']");
+  assert.ok(bar(p).contains(palette), "the palette sits in the bar");
+  assert.deepStrictEqual([bar(p).hidden, palette.hidden, bar(p).querySelector(".phc-selection-controls").hidden],
+    [false, false, true]);
+  assert.strictEqual(p.query("[data-phc-region='inspector'] [data-section='ph_composer.classify']"), null);
+  p.payload.sections["ph_composer.zones.faces.palette"].value.active = false;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.deepStrictEqual([palette.hidden, bar(p).querySelector(".phc-selection-bar-count").textContent],
+    [true, "1 Face selected"], "and gives it back to the checked Faces when the tool ends");
+});

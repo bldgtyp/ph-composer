@@ -15,10 +15,20 @@
 .phc-workspace .phc-blocked-reason { color: var(--warning-ink); border-color: transparent; background: transparent; }
 .phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
   color: var(--warning-ink); background: var(--warning-surface); }
-/* The Face selection is the inspector's: one field to a line, the label above it. */
-.phc-selection-field { display: grid; gap: 4px; color: var(--muted); font-size: 11px; }
-.phc-selection-field select { min-width: 0; width: 100%; color: var(--ink); }
-.phc-selection-controls { display: grid; gap: 10px; }
+/* The selection bar floats over the bottom of the table, in a zero-height layer after it, so it never
+   moves a row. The checked Faces' controls read along one line, each label before its control; the Classify
+   palette takes the same line while that tool is on. */
+[data-pane='overview'] .phc-pane-main { position: relative; }
+.phc-selection-bar-layer { height: 0; }
+.phc-selection-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.phc-selection-controls[hidden] { display: none; }
+.phc-selection-field { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+.phc-selection-field select { min-width: 120px; max-width: 200px; color: var(--ink); }
+.phc-selection-bar .phc-classify { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.phc-selection-bar .phc-classify[hidden] { display: none; }
+.phc-selection-bar .phc-palette { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.phc-selection-bar .phc-palette-field { display: inline-flex; align-items: center; gap: 6px; }
+.phc-selection-bar .phc-palette-field h3 { margin: 0; color: var(--muted); font-weight: 500; }
 .phc-selection-assembly { display: grid; gap: 4px; }
 .phc-palette-value { font-weight: 600; }
 .phc-empty { margin: 0; padding: 12px; color: var(--muted); }

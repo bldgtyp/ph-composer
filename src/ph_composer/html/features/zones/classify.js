@@ -237,14 +237,18 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
       root.className = "phc-classify" + (tool.active ? " is-active" : "");
       root.replaceChildren(heading, body);
     });
+    root.hidden = !showing();
     if (screenState.returnFocus) {
       screenState.returnFocus = false;
       screenState.createButton.focus();
     }
   }
 
-  /* The palette is the inspector's while the tool has the viewport or the user has opened it, and the
-     toggle is pressed while either holds. Pressing it during painting gives the viewport back. When the
+  /* Whether the palette shows: while the tool has the viewport or the user has opened it. */
+  function showing() { return Boolean(screen && (screen.active || screen.open)); }
+
+  /* The palette holds the Zones / Faces selection bar while the tool has the viewport or the user has opened
+     it, and the toggle is pressed while either holds. Pressing it during painting gives the viewport back. When the
      tool ends any other way (Escape, Stop, another tool) the palette closes with it. The button is built
      once a session and repainted, so pressing it never drops the focus it holds. */
   function renderToggle(root, state, send) {
@@ -256,8 +260,6 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     if (!screenState.toggle || screenState.toggle.parentNode !== root) {
       screenState.toggle = ui.iconButton("Classify faces", "paint_bucket", function () {
         var pressed = screenState.wasActive || screenState.open;
-        var held = !pressed && panel.inspectorHeld(root.closest("[data-pane]").getAttribute("data-pane"));
-        if (held) { panel.notify("Save or cancel the draft in the inspector first.", "warning"); return; }
         if (screenState.wasActive) screenState.view.run("ph_composer.zones.faces.stop_classifying", {});
         screenState.open = !pressed;
         panel.repaint();
@@ -272,6 +274,7 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   // An authoring tool: it changes the Model, so it sits in the page header's toolbar, apart from the view
   // controls (Colour by) in the control row.
   panel.section("ph_composer.classify.toggle", renderToggle, { region: "actions", order: 10 });
-  panel.section("ph_composer.classify", render, { region: "inspector", tier: "tool",
-    when: function () { return Boolean(screen && (screen.active || screen.open)); } });
+  // The overview places the palette in its selection bar (features/zones/overview.js).
+  panel.section("ph_composer.classify", render, { order: 20 });
+  return { showing: showing };
 });

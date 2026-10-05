@@ -10907,7 +10907,8 @@ Result:
     "active",
     "palette",
     "face_types",
-    "boundary_conditions"
+    "boundary_conditions",
+    "gesture_face_limit"
   ],
   "properties": {
     "active": {
@@ -10935,6 +10936,11 @@ Result:
       "items": {
         "type": "string"
       }
+    },
+    "gesture_face_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The most Faces one gesture or one bulk assignment may change."
     }
   }
 }
@@ -36152,7 +36158,8 @@ Result:
     "active",
     "palette",
     "face_types",
-    "boundary_conditions"
+    "boundary_conditions",
+    "gesture_face_limit"
   ],
   "properties": {
     "active": {
@@ -36180,6 +36187,11 @@ Result:
       "items": {
         "type": "string"
       }
+    },
+    "gesture_face_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The most Faces one gesture or one bulk assignment may change."
     }
   }
 }
@@ -36711,7 +36723,8 @@ Result:
     "active",
     "palette",
     "face_types",
-    "boundary_conditions"
+    "boundary_conditions",
+    "gesture_face_limit"
   ],
   "properties": {
     "active": {
@@ -36739,6 +36752,11 @@ Result:
       "items": {
         "type": "string"
       }
+    },
+    "gesture_face_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The most Faces one gesture or one bulk assignment may change."
     }
   }
 }

@@ -171,7 +171,7 @@ test("withdrawal forgets a pending selection request and restores navigation wit
   picker.value = "asm_a"; picker.listeners.change({});
   o.panel.showTab("assemblies");
   assert.strictEqual(o.panel.state.ui.activeTab, "overview", "a request in flight holds the tab");
-  delete o.state.sections[PREFIX + ".selected"]; o.paint();
+  delete o.state.sections[PREFIX + ".assemblies"]; o.paint();
   o.panel.showTab("assemblies");
   assert.strictEqual(o.panel.state.ui.activeTab, "assemblies");
   assert.ok(picker.disabled);
@@ -201,7 +201,19 @@ test("contributed actions respect inventory drafts and withdrawn replacement con
 });
 
 
-test("the selection inspector sets Type and Boundary on every selected Face, one attribute at a time", function () {
+/* A second Face in the Faces read, checked through SketchUp's selection like the first. */
+function addFace(o, entityPath, values) {
+  var face = JSON.parse(JSON.stringify(o.face));
+  face.reference.entity_path = [entityPath];
+  face.reference.entity_id = "fac_" + entityPath;
+  face.values = values;
+  o.state.sections[PREFIX + ".faces"].value.faces.push(face);
+  o.state.sections[PREFIX + ".selected"].value.targets.push({ reference: face.reference, expected_values: values });
+  o.paint();
+  return face;
+}
+
+test("the selection bar sets Type and Boundary on every checked Face, one attribute at a time", function () {
   var o = setup(), type = byLabel(o.document.body, "Type for selected Faces");
   var boundary = byLabel(o.document.body, "Boundary for selected Faces");
   assert.strictEqual(type.value, o.face.values.face_type, "what the selection shares is shown");
@@ -213,38 +225,33 @@ test("the selection inspector sets Type and Boundary on every selected Face, one
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params)), { faces: [o.face.reference],
     intent: { face_type: { mode: "keep" }, boundary_condition: { mode: "set", value: "Ground" } },
     expected_values: o.face.values });
-  var section = o.query("[data-section='ph_composer.zones.selection']");
-  assert.strictEqual(section.hidden, false);
-  assert.strictEqual(section.parentNode.getAttribute("data-phc-region"), "inspector");
+  var bar = o.query("[data-section='ph_composer.zones.selection_bar']").querySelector(".phc-selection-bar");
+  assert.strictEqual(bar.hidden, false);
+  assert.strictEqual(bar.querySelector(".phc-selection-bar-count").textContent, "1 Face selected");
   o.state.sections[PREFIX + ".selected"].value.targets = []; o.paint();
-  assert.strictEqual(section.hidden, true, "no selection, no selection inspector");
+  assert.strictEqual(bar.hidden, true, "nothing checked, no bar");
 });
 
-test("the selection's Assembly rests on what the Faces share, and reads Mixed when they differ", function () {
-  var o = setup(), targets = o.state.sections[PREFIX + ".selected"].value.targets;
+test("the bar's Assembly rests on what the checked Faces share, and reads Mixed when they differ", function () {
+  var o = setup();
   var picker = byLabel(o.document.body, "Assembly for selected Faces");
-  targets[0].expected_values.assembly_id = "asm_a";
+  o.face.values.assembly_id = "asm_a";
   o.paint();
   assert.deepStrictEqual([picker.value, picker.children[0].textContent], ["asm_a", "Choose Assembly"]);
   picker.listeners.change({});
   assert.strictEqual(o.sent.length, 0, "choosing what is already assigned sends nothing");
   picker.value = ""; picker.listeners.change({});
   assert.deepStrictEqual([picker.value, o.sent.length], ["asm_a", 0], "the label is not a choice");
-  var second = JSON.parse(JSON.stringify(targets[0]));
-  second.reference.entity_path = [999];
-  second.expected_values.assembly_id = null;
-  targets.push(second);
-  o.paint();
+  addFace(o, 999, { face_type: "Wall", boundary_condition: "Outdoors", assembly_id: null });
   assert.deepStrictEqual([picker.value, picker.children[0].textContent], ["", "Mixed"]);
+  addFace(o, 998, {});
+  assert.strictEqual(picker.disabled, true, "an unclassified Face cannot hold an Assembly yet");
+  assert.match(picker.title, /Classify every checked Face/);
 });
 
-test("selected Faces that disagree read Mixed; a value the tree keeps read only is read only here", function () {
-  var o = setup(), targets = o.state.sections[PREFIX + ".selected"].value.targets;
-  var second = JSON.parse(JSON.stringify(targets[0]));
-  second.reference.entity_path = [999];
-  second.expected_values = { face_type: "Floor", boundary_condition: "Surface" };
-  targets.push(second);
-  o.paint();
+test("checked Faces that disagree read Mixed; a value the tree keeps read only is read only here", function () {
+  var o = setup();
+  addFace(o, 999, { face_type: "Floor", boundary_condition: "Surface" });
   var type = byLabel(o.document.body, "Type for selected Faces");
   var boundary = byLabel(o.document.body, "Boundary for selected Faces");
   assert.deepStrictEqual([type.value, type.children[0].textContent, type.children[0].disabled], ["", "Mixed", true]);

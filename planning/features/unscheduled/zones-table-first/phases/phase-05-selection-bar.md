@@ -1,7 +1,7 @@
 # ZT-05: the floating selection bar
 
 DATE: 2026-10-04
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -30,3 +30,17 @@ ISSUE: none (local planning draft)
 ## Acceptance
 
 `make ci` passes. A checked set across two Zones is edited from the bar in one Undo step.
+
+## Outcome
+
+Implemented 2026-10-04. `selection_bar.js` is the kit part (`SelectionBar(label, onClear)`, `show(text,
+clearable)`, `hide()`, `reserve(scroll)`), styled in `overlay.css`. Zones / Faces places it in a section of
+its own, `ph_composer.zones.selection_bar`, ordered last so it reads what the tree and the palette just
+painted; the bar's layer is a zero-height sibling of the table inside the pane's positioned main region.
+The inspector's Face-selection section is gone: its controls moved into the bar and act on the checked
+set (`barTargets`). The Classify palette is now a `main`-region section the bar adopts while
+`classify.showing()`; the toggle no longer asks `panel.inspectorHeld`. The palette read publishes
+`gesture_face_limit`, and past it the bar's controls are disabled with a `reasonButton`. The Assembly
+`Picker` takes an optional `targets()` and refuses, with its reason in the tooltip, while an
+unclassified Face is checked. Tests in `tests/overview_panel_test.js` and
+`tests/assembly_assignment_panel_test.js`. `make ci` passes. Visual check of the bar is with ZT-06.

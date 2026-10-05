@@ -12,10 +12,12 @@
 PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request", "snapshot", "units",
   "unit_preferences", "table", "view_controls", "column_menu", "sections/colour_by", "fields", "face_words",
   "features/zones/attached_zone_assignment", "features/zones/zone_settings", "features/zones/selection_assignment",
-  "features/zones/assembly_assignment", "features/zones/zone_cells", "features/zones/checked_faces"],
+  "features/zones/assembly_assignment", "features/zones/zone_cells", "features/zones/checked_faces",
+  "features/zones/classify", "selection_bar"],
 function (panel, ui, requests, snapshot, units, preferences, tables, viewControls, columnMenus, colourBy, fields,
           words,
-          attachedAssignment, ZoneSettings, SelectionAssignment, assemblies, ZoneCells, CheckedFaces) {
+          attachedAssignment, ZoneSettings, SelectionAssignment, assemblies, ZoneCells, CheckedFaces, classify,
+          selectionBars) {
   "use strict";
   var AREA = fields.AREA_M2;
   // What a chip offers comes from the host, through the same read the Classify palette uses, so this
@@ -55,7 +57,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     screen.settings = new ZoneSettings(session, send, function () { return draftReason(screen); }, refuse);
     screen.selectionAssignment = new SelectionAssignment(session, send, function () {
       return draftReason(screen);
-    }, refuse);
+    }, refuse, function () { return screen.barTargets || []; });
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone, type or boundary", fields: ORDER_FIELDS, initialOrder: "name",
       columnSort: true,
@@ -606,6 +608,14 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     screenState.attachedRecords = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") ||
       { records: [] }).records;
     if (screenState.attachedDraft) screenState.attachedDraft.consume(state);
+    // A new SketchUp selection replaces the checked set, and the host has already cleared Locate's outline.
+    screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
+    if (screenState.checked.sync(screenState.targets)) screenState.locating = false;
+    screenState.faces = faces;
+    screenState.barTargets = screenState.checked.among(faces).map(function (face) {
+      return { reference: face.reference, expected_values: face.values };
+    });
+    screenState.limit = tool.gesture_face_limit || Infinity;
     screenState.selectionAssignment.consume(state, screenState.attachedRecords);
     screenState.faceTypes = tool.face_types || [];
     screenState.boundaries = tool.boundary_conditions || [];
@@ -645,11 +655,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (heading.parentNode !== headingMount) headingMount.replaceChildren(heading);
     // Set before the tree paints, so the inspector never works from an earlier pass if painting fails.
     screenState.rows = rows;
-    screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
     screenState.zoneCells.refresh(rows.filter(depth(0)), state);
-    // A new SketchUp selection replaces the checked set, and the host has already cleared Locate's outline.
-    if (screenState.checked.sync(screenState.targets)) screenState.locating = false;
-    screenState.faces = faces;
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
   }
 
@@ -660,26 +666,46 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       "Classify faces open here too."));
   }
 
-  function renderSelection(root, state) {
+  /* The selection bar over the table: the checked Faces' Type, Boundary and Assembly while any is checked, and
+     the Classify palette instead while that tool is in use. It renders after every other section, so it reads
+     what the tree and the palette just worked out. Clearing it unchecks every Face. */
+  function renderBar(root, state) {
     if (!screen || screen.session !== state.session) { root.replaceChildren(); return; }
-    var controls = screen.selectionControls || (screen.selectionControls = selectionControls(screen));
-    if (controls.root.parentNode !== root) { root.className = "phc-selection"; root.replaceChildren(controls.root); }
-    controls.paint();
+    var bar = screen.bar;
+    if (!bar) {
+      bar = screen.bar = new selectionBars.SelectionBar("Checked Faces", function () {
+        screen.checked.clear(); panel.repaint();
+      });
+      screen.selectionControls = selectionControls(screen);
+      bar.controls.appendChild(screen.selectionControls.root);
+    }
+    if (bar.root.parentNode !== root) { root.className = "phc-selection-bar-layer"; root.replaceChildren(bar.root); }
+    // The palette is the Classify section's own root; it moves into the bar once and stays in the page.
+    var palette = document.querySelector("[data-section='ph_composer.classify']");
+    if (palette && palette.parentNode !== bar.controls) bar.controls.appendChild(palette);
+    var count = screen.barTargets.length, tool = classify.showing();
+    screen.selectionControls.root.hidden = tool;
+    if (palette) palette.hidden = !tool;
+    if (tool) bar.show("", false);
+    else if (count) {
+      bar.show(count + (count === 1 ? " Face selected" : " Faces selected") +
+        (screen.hiddenChecked ? ", " + screen.hiddenChecked + " hidden" : ""), true);
+      screen.selectionControls.paint();
+    } else bar.hide();
+    var mount = document.querySelector("[data-section='ph_composer.overview'] .phc-table-mount");
+    if (mount) bar.reserve(mount);
   }
 
-  function selectionWanted() {
-    return Boolean(screen && screen.targets && screen.targets.length);
-  }
-
-  /* What the selected Faces share, one attribute at a time: each choice applies at once to every Face
-     selected, as one Undo step. A value they do not share reads "Mixed". Attached zone needs a record,
-     so it is offered where a record can be chosen: a Face's own row and the right-click menu. */
+  /* What the checked Faces share, one attribute at a time: each choice applies at once to every Face
+     checked, hidden by a filter or not, as one Undo step. A value they do not share reads "Mixed". Attached
+     zone needs a record, so it is offered where a record can be chosen: a Face's own row and the right-click
+     menu. More Faces than one gesture may change disables the controls, with the limit as the reason. */
   function selectionControls(state) {
-    var root = ui.element("div", "phc-selection-controls"), title = ui.element("h2");
-    var heading = ui.element("div", "phc-zone-heading");
+    var root = ui.element("div", "phc-selection-controls");
     var fields = {};
+    var over = ui.element("span", "phc-selection-limit");
     function common(field) {
-      var values = state.targets.map(function (target) { return target.expected_values[field] || ""; });
+      var values = state.barTargets.map(function (target) { return target.expected_values[field] || ""; });
       return values.every(function (value) { return value === values[0]; }) ? values[0] : null;
     }
     function control(field, label) {
@@ -690,11 +716,11 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         if (!chosen) { paint(); return; }
         if (reason) { paint(); refuse(reason); return; }
         var intent = { face_type: { mode: "keep" }, boundary_condition: { mode: "keep" } };
-        var params = { faces: state.targets.map(function (target) { return target.reference; }), intent: intent };
+        var params = { faces: state.barTargets.map(function (target) { return target.reference; }), intent: intent };
         intent[field] = { mode: "set", value: chosen };
         // One Face is guarded by the values it was read with; several rarely share them, so the Model's
         // own checks stand alone.
-        if (state.targets.length === 1) params.expected_values = state.targets[0].expected_values;
+        if (state.barTargets.length === 1) params.expected_values = state.barTargets[0].expected_values;
         state.edits.run("ph_composer.zones.faces.classify", params);
         paint();
       });
@@ -704,8 +730,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       fields[field] = select;
     }
     function paint() {
-      var count = state.targets.length;
-      title.textContent = count + (count === 1 ? " Face selected" : " Faces selected");
+      var tooMany = state.barTargets.length > state.limit;
+      over.hidden = !tooMany;
+      if (tooMany && over._limit !== state.limit) {
+        over._limit = state.limit;
+        over.replaceChildren(ui.reasonButton("Assign", "Check at most " + state.limit +
+          " Faces to assign them together."));
+      }
       Object.keys(fields).forEach(function (field) {
         var select = fields[field], shared = common(field);
         var offered = choices(state, field).filter(function (choice) { return choice !== "AttachedZone"; });
@@ -713,7 +744,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
           shared && offered.indexOf(shared) < 0 ? chipLabel(field, shared) : "Not set";
         // A value the tree shows as read only (a paired Surface, an Air boundary, an Attached zone) is
         // read only here too: the Face's own row is where it can be changed.
-        var locked = state.targets.some(function (target) {
+        var locked = state.barTargets.some(function (target) {
           var stored = target.expected_values[field];
           return Boolean(stored) && offered.indexOf(stored) < 0;
         });
@@ -728,19 +759,19 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
           select._signature = signature;
         }
         select.value = shared && offered.indexOf(shared) >= 0 ? shared : "";
-        select.disabled = state.edits.busy() || !offered.length || locked;
+        select.disabled = state.edits.busy() || !offered.length || locked || tooMany;
         select.title = locked ? "Set on the Face's own row" : "";
       });
       assembly.hidden = state.selectionAssignment.root.hidden;
+      state.selectionAssignment.assembly.limit(tooMany);
     }
     var assembly = ui.element("label", "phc-selection-field");
-    heading.appendChild(title);
-    root.appendChild(heading);
     control("face_type", "Type");
     control("boundary_condition", "Boundary");
     assembly.appendChild(ui.element("span", "", "Assembly"));
     assembly.appendChild(state.selectionAssignment.root);
     root.appendChild(assembly);
+    root.appendChild(over);
     return { root: root, paint: paint };
   }
 
@@ -785,6 +816,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var shown = ordered(projection.records, byId, rows, state.controls, state);
     var visible = shown.filter(function (row) { return !projection.hidden(row); });
     var visibleFaces = visible.map(function (row) { return row.record.face; }).filter(Boolean);
+    state.hiddenChecked = state.checked.among(state.faces || []).length - state.checked.among(visibleFaces).length;
     var parents = Object.create(null);
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     tables.table(mount, rows, {
@@ -881,8 +913,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     panel.repaint();
   } });
   panel.workedOn("ph_composer.zones", "overview");
-  panel.section("ph_composer.zones.selection", renderSelection, { region: "inspector", tier: "selection",
-    order: 11, when: selectionWanted });
+  panel.section("ph_composer.zones.selection_bar", renderBar, { order: 1000 });
   // Last in line and always wanted, so the inspector column is always there: the tree keeps its width
   // whether the user selects something, opens Colour by or starts Classify faces.
   panel.section("ph_composer.zones.hint", renderHint, { region: "inspector", tier: "ambient", order: 1000,

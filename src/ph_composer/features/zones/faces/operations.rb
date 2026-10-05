@@ -20,7 +20,8 @@ module PhComposer
           "active" => tool.active?,
           "palette" => tool.palette.each_with_object({}) { |(field, intent), chosen| chosen[field] = intent["value"] },
           "face_types" => ASSIGNABLE_FACE_TYPES,
-          "boundary_conditions" => PALETTE_BOUNDARIES
+          "boundary_conditions" => PALETTE_BOUNDARIES,
+          "gesture_face_limit" => gesture_face_limit
         }
       end
 

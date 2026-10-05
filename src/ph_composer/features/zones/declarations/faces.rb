@@ -138,7 +138,9 @@ module PhComposer
           "palette" => { "type" => "object", "additionalProperties" => { "type" => %w[string null] },
                          "description" => "The chosen value per field; a field absent is kept." },
           "face_types" => Shapes.list({ "type" => "string" }),
-          "boundary_conditions" => Shapes.list({ "type" => "string" })
+          "boundary_conditions" => Shapes.list({ "type" => "string" }),
+          "gesture_face_limit" => Shapes::COUNT.merge("description" => "The most Faces one gesture or one bulk " \
+                                                                       "assignment may change.")
         }).freeze
         LOCATE_PARAMS = Shapes.object({
           "faces" => FACES.merge("description" => "The Face occurrences to bring into view and outline.")
