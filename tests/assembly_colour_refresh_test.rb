@@ -65,6 +65,24 @@ class AssemblyColourRefreshTest < PhComposerTestCase
     unsubscribe&.call
   end
 
+  # A legend row goes back to the service as it came out, so its value is the Assembly id: the legend's
+  # select and isolate commands take a string or null, never the colour that came with it.
+  def test_an_assembly_legend_row_selects_and_isolates_through_the_view_commands
+    legend = API.query(:context => @context, :name => "#{PhComposer::ColourBy::FEATURE_ID}.state").fetch("value")
+    row = legend.fetch("rows").find { |candidate| candidate.fetch("state") == "classified" }
+    key = { "value" => row.fetch("value"), "state" => row.fetch("state") }
+
+    assert_equal @assembly_id, row.fetch("value")
+    assert_equal [18, 52, 86], row.fetch("colour"), "the colour still comes from the Assembly record"
+    selected = API.view(:context => @context, :name => "#{PhComposer::ColourBy::FEATURE_ID}.select_row",
+                        :params => { "row" => key })
+    isolated = API.view(:context => @context, :name => "#{PhComposer::ColourBy::FEATURE_ID}.isolate",
+                        :params => { "row" => key })
+
+    assert_equal %w[completed completed], [selected.fetch("status"), isolated.fetch("status")]
+    assert_equal assignment_faces.length, @model.selection.to_a.length
+  end
+
   private
 
   def colour_edit
