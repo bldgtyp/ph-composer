@@ -1,6 +1,6 @@
 # Zones / Faces: table-first layout
 
-Implemented on branch `feature/zones-table-first`; host acceptance passed 2026-10-04, awaiting merge. The Zones / Faces screen becomes one full-width table with no inspector column. Zone fields
+Complete; merged through PR #73 on 2026-10-04 and archived. The Zones / Faces screen becomes one full-width table with no inspector column. Zone fields
 become columns, Colour by moves into the column headers, sort and filter move into column menus,
 Select becomes a checkbox set separate from Locate, and a floating bar over the table edits that
 set and holds the Classify palette.
@@ -15,7 +15,7 @@ contract for sort and value filter; moving the Colour-by mode control and legend
 a checkbox selection set split from Locate, with one-way sync from SketchUp's selection; a
 floating selection bar in the overlay layer; row and header icons hidden until hover.
 Out: the Assemblies, Window Types and Library screens (they keep their layouts); new Colour-by modes;
-legend hover-to-highlight ([its own packet](../legend-hover-highlight/README.md)).
+legend hover-to-highlight ([its own packet](../../features/unscheduled/legend-hover-highlight/README.md)).
 
 Came from the Zones / Faces polish session on branch `feature/zones-faces-polish`. That branch's
 first note (the Assembly chip takes its Assembly's colour, commit `d0b07ea`) is independent of

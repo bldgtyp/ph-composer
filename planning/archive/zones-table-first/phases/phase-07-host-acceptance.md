@@ -1,7 +1,7 @@
 # ZT-07: host acceptance
 
 DATE: 2026-10-04
-STATUS: Implemented on branch; host acceptance passed 2026-10-04
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -37,5 +37,5 @@ controls cannot reach is reported as outstanding and the packet stays `Implement
 Run 2026-10-04; every case passes on the final installed build. Evidence:
 [evidence/zt-07-host-walkthrough.md](../evidence/zt-07-host-walkthrough.md). Three defects found on the host
 were fixed during the run (Locate framing, the Zone update shape, narrow and header layout) and rechecked in
-a fresh process. The packet stays `Implemented on branch` until it merges; the close list above (archive,
-bug Superseded, R05 retired) runs then.
+a fresh process. The close list ran after PR #73 merged on 2026-10-04: the packet is archived, the locate bug is Superseded,
+and R05 is marked superseded in its case-ledger label, not rerun (the ledger has no retired state).

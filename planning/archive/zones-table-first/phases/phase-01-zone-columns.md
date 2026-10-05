@@ -1,7 +1,7 @@
 # ZT-01: Zone columns in place
 
 DATE: 2026-10-04
-STATUS: Implemented on branch
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 

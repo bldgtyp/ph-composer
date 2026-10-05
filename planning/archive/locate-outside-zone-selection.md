@@ -1,9 +1,7 @@
 # Faces located from outside their Zone do not reach the selection inspector
 
 DATE: 2026-10-03
-STATUS: Requested. Seen in the host twice on 2026-10-03; not root-caused. Expected to be superseded by
-[zones-table-first](../features/unscheduled/zones-table-first/README.md), where Locate no longer selects and
-there is no selection inspector; close it when that packet's host gate (ZT-07) confirms.
+STATUS: Superseded on 2026-10-04 by [zones-table-first](zones-table-first/README.md) (PR #73).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -22,7 +20,7 @@ behavior predates the UI and UX refinement work, which recorded it and left it.
 
 The archived packet's status, under "Verification pass" (item 14 and "Found and left") and
 "Follow-ups left with this packet":
-[archive/ui-ux-refinement/STATUS.md](../archive/ui-ux-refinement/STATUS.md).
+[archive/ui-ux-refinement/STATUS.md](ui-ux-refinement/STATUS.md).
 
 ## Not yet known
 
@@ -39,3 +37,15 @@ Locate on more than 250 Faces selects past the selection inspector's ceiling. De
 
 Reproduce on a fresh copy of the synthetic fixture through the development bridge, write the
 failing test, then fix.
+
+## Disposition
+
+Superseded, not fixed. Zones / Faces no longer has a selection inspector, and Locate, from a row or from
+Export, frames and outlines Faces without changing the selection, so the symptom cannot occur. The ZT-07
+host walkthrough confirmed Locate leaves the selection alone
+([evidence](zones-table-first/evidence/zt-07-host-walkthrough.md), case 3). What remains is a known limit,
+not this bug: the Faces selection read takes only Faces in the open edit context, so a SketchUp selection
+spanning Zones checks nothing in the table. The 250-Face ceiling half goes the same way: Locate no longer
+selects, so it cannot push a selection past the ceiling; a SketchUp selection above it makes the selection
+read refuse, which clears the checked set, and the bar applies the same ceiling to the checked set. Both
+limits are recorded in that evidence.

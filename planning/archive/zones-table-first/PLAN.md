@@ -1,7 +1,7 @@
 # Zones / Faces: table-first layout: plan
 
 DATE: 2026-10-04
-STATUS: Implemented on branch
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 

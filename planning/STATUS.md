@@ -34,13 +34,11 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 | none | SketchUp 2023 floor verification | feature, host gate | Requested | none (local planning draft) | [features/unscheduled/sketchup-2023-floor/](features/unscheduled/sketchup-2023-floor/README.md); no 2023 host run yet |
 | none | Windows support verification | feature, host gate | Requested | none (local planning draft) | [features/unscheduled/windows-support/](features/unscheduled/windows-support/README.md); first release candidate is macOS-only |
 | none | Legend hover-to-highlight | feature | Requested | none (local planning draft) | [features/unscheduled/legend-hover-highlight/](features/unscheduled/legend-hover-highlight/README.md); fourth Q18 legend affordance, deferred from Phase 1 D7 on cost |
-| none | Zones / Faces table-first layout | feature | Implemented on branch `feature/zones-table-first` (ZT-01 to ZT-07, 2026-10-04); host acceptance passed, awaiting merge | none (local planning draft) | [features/unscheduled/zones-table-first/](features/unscheduled/zones-table-first/README.md); Colour by in column headers, Zone fields as columns, Select split from Locate, floating selection bar, no inspector |
 | none | Panel keyboard focus and announcements | feature | Requested; seven items carried from the UI and UX refinement on 2026-10-03 | none (local planning draft) | [features/unscheduled/panel-keyboard-focus/](features/unscheduled/panel-keyboard-focus/README.md) |
 | n/a | RuboCop `Layout` department | refactor | Merged to main 2026-10-02 (PR #32); dual-Ruby `make ci` passes; six methods split by Ed's decision | none (local planning draft) | [refactor/rubocop-layout.md](refactor/rubocop-layout.md) |
 | n/a | One shared deep-freeze helper | refactor | Requested; a follow-up from R11 on 2026-10-02 | none (local planning draft) | [refactor/shared-deep-freeze.md](refactor/shared-deep-freeze.md); after the `Layout` pull request |
 | n/a | Runtime page test fails under CPU load | bug | Requested; reproduced and root-caused 2026-10-02 (a fixed 5 ms wait) | none (local planning draft) | [bugs/runtime-probe-test-flake.md](bugs/runtime-probe-test-flake.md) |
 | n/a | The Ruby suite errors without a UTF-8 locale | bug | Requested; reproduced 2026-10-03 (five tests read source with no encoding) | none (local planning draft) | [bugs/ci-needs-utf8-locale.md](bugs/ci-needs-utf8-locale.md) |
-| n/a | Faces located from outside their Zone do not reach the selection inspector | bug | Requested; seen in the host twice on 2026-10-03, not root-caused | none (local planning draft) | [bugs/locate-outside-zone-selection.md](bugs/locate-outside-zone-selection.md) |
 | n/a | `rubocop-ast` deprecation trace in `make lint-ruby` | tooling | Requested; seen 2026-10-02 with the `Layout` department on. The locked `rubocop-ast` is newer than RuboCop 1.50.2 expects; upgrade RuboCop on its own change | none (local planning draft) | [refactor/rubocop-layout.md](refactor/rubocop-layout.md), "Follow-up" |
 | n/a | Native acceptance tooling | workflow | Implemented; historical evidence indexed, observed-result validation and dependency screening | none (local tooling work) | [native-acceptance/](native-acceptance/README.md); tools and skills remain development-only |
 | n/a | UI baseline from the predecessor's six screens | reference | Scoped | none (no remote) | [ui-baseline/](ui-baseline/README.md) |
@@ -53,6 +51,11 @@ States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·
 
 
 ## Recently merged
+
+Zones / Faces table-first layout merged to main on 2026-10-04 through
+[PR #73](https://github.com/bldgtyp/ph-composer/pull/73) (merge commit `5ef2d7d`), host-accepted and
+[archived](archive/zones-table-first/README.md); the bug it superseded is
+[archived](archive/locate-outside-zone-selection.md). Its follow-ups merged the same day: PR #74, PR #75 and PR #76.
 
 Agent-authorized file access merged to main on 2026-10-03 through
 [PR #70](https://github.com/bldgtyp/ph-composer/pull/70) (merge commit `e0b61f3`), issue

@@ -49,6 +49,10 @@ added feature dependencies and change the catalog when its coverage is incomplet
 fingerprints include tracked and nonignored new files matching the case, with names and contents.
 Only affected cases need targeted repeats; the packet's required final gates still apply.
 
+The catalog has no retired state, an indexed result keeps its case, and `deferred` refuses a case that
+has results. A case whose feature is gone therefore stays in the catalog with its history, its label
+naming what superseded it, and is not rerun: R05, the Zone details draft, since 2026-10-04.
+
 | Change or condition | Checks to reconsider |
 | --- | --- |
 | Geometry, identity, records, operations or observer/session contracts | Dependent authoring/reference/export cases; relevant rollback, native Undo/Redo and reopen |

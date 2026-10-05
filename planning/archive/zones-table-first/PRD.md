@@ -1,7 +1,7 @@
 # Zones / Faces: table-first layout
 
 DATE: 2026-10-04
-STATUS: Implemented on branch
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -141,7 +141,7 @@ Settled on 2026-10-04 as D1 to D9 in [PLAN.md](PLAN.md); the questions are kept 
 - Q9. The Assemblies tab's "Select faces using <Assembly>" action calls Locate today. Under this
   split it could check those Faces in the Zones table, frame them, or both.
 
-The open bug [locate-outside-zone-selection](../../../bugs/locate-outside-zone-selection.md) is
+The open bug [locate-outside-zone-selection](../locate-outside-zone-selection.md) is
 about Locate's selection reaching the inspector. If Locate stops selecting, that bug's symptom goes
 away with this packet; settle it here or close it as superseded when this lands.
 
