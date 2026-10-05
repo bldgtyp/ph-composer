@@ -88,7 +88,7 @@ PhComposerUI.define("features/windows/cards", ["panel", "unit_field", "units", "
     var profile = units.profile(U_VALUE);
     value.unit.textContent = " (" + units.displayUnit(U_VALUE, profile) + ")";
     value.textContent = number == null ? "—" : units.format(number, U_VALUE, profile, { showUnit: false });
-    value.title = number == null ? missing : "";
+    ui.tooltip(value, number == null ? missing : "");
   };
   /* One value, applied like an Assembly Builder layer thickness: Enter or leaving the field applies, Escape restores.
     // */
@@ -330,14 +330,14 @@ PhComposerUI.define("features/windows/cards", ["panel", "unit_field", "units", "
     card.name.disabled = readOnly; card.operation.disabled = readOnly;
     Object.keys(card.directions).forEach(function (direction) { card.directions[direction].disabled = readOnly; });
     card.uw.textContent = bare(detail.uw_w_m2k, U_VALUE);
-    card.value.title = detail.uw_w_m2k == null ? "" : format(detail.uw_w_m2k, U_VALUE);
+    ui.tooltip(card.value, detail.uw_w_m2k == null ? "" : format(detail.uw_w_m2k, U_VALUE));
     card.units.forEach(function (unit, index) { var field = CARD_COLUMNS[index][1]; unit.textContent = field ? "[" +
       units.displayUnit(field, units.profile(field)) + "]" : ""; });
     var needs = cell.kind === "empty" ? {} : this.elementFindings(cell, detail);
     function flag(row, node, items) {
       row.classList.toggle("is-incomplete", Boolean(items && items.length)); node.hidden = !(items && items.length);
-      node.title = items && items.length ? "Missing: " + items.join(", ") : ""; node.setAttribute("aria-label",
-        node.title);
+      var tooltip = items && items.length ? "Missing: " + items.join(", ") : "";
+      ui.tooltip(node, tooltip); node.setAttribute("aria-label", tooltip);
     }
     Object.keys(card.rows).forEach(function (key) {
       var row = card.rows[key]; row.button.disabled = readOnly;
@@ -350,15 +350,15 @@ PhComposerUI.define("features/windows/cards", ["panel", "unit_field", "units", "
       row.button.textContent = product ? product.name : id ? "Missing product" : "Choose product";
         row.button.classList.toggle("is-unset", !product);
       // The record id stays reachable for diagnosis without becoming the visible label.
-      row.button.title = product ? product.name : id ? "The assigned record " + id +
-        " is no longer in this model. Choose a replacement." : "";
+      ui.tooltip(row.button, product ? product.name : id ? "The assigned record " + id +
+        " is no longer in this model. Choose a replacement." : "");
       var edge = (detail.edges || []).filter(function (e) { return e.side === key; })[0], source = edge &&
         INSTALL_SOURCES[edge.install.source];
       var values = glazing ? [bare(product && product.ug_w_m2k, U_VALUE), "—", bare(product && product.g_value),
         "—"] : [bare(product && product.uf_w_m2k, U_VALUE), bare(product && product.width_m, WINDOW_DIMENSION), "—",
         bare(edge && edge.install.psi_w_mk, LINEAR_PSI)];
       row.cells.forEach(function (node, index) { node.textContent = values[index]; });
-      row.cells[3].classList.toggle("is-muted", Boolean(source)); row.cells[3].title = source || "";
+      row.cells[3].classList.toggle("is-muted", Boolean(source)); ui.tooltip(row.cells[3], source || "");
       flag(row.row, row.flag, needs[key]);
     });
     flag(card.operationRow, card.operationFlag, needs.operation);

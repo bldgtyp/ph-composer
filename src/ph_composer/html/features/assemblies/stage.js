@@ -78,7 +78,7 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         control.classList.toggle("is-blocked", Boolean(target.blocked));
         control.setAttribute("aria-label", target.blocked ? target.label + ". " + target.blocked : target.label);
         control.setAttribute("data-insert-edge", edge);
-        control.title = target.blocked || target.label;
+        ui.tooltip(control, target.blocked || target.label);
         control.hidden = false;
       });
       drawing.addEventListener("mouseleave", hide);
@@ -153,7 +153,7 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
           remove.className = "phc-danger-action";
           remove.setAttribute("data-builder-action", "layers.remove");
           remove.disabled = only;
-          if (only) remove.title = "An Assembly keeps at least one Layer";
+          ui.tooltip(remove, only ? "An Assembly keeps at least one Layer" : "");
           owner.content.appendChild(remove);
         }, true);
         cell.appendChild(bubble.root);

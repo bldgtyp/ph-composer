@@ -34,15 +34,31 @@ module PhComposer
 
     STATE_RESULT = {
       "type" => "object",
-      "required" => %w[mode modes rows],
+      "required" => %w[mode modes rows filter_paths],
       "properties" => {
         "mode" => { "type" => %w[string null], "description" => "The active mode's name, or null when off." },
         "label" => { "type" => %w[string null] },
         "entity_kind" => { "type" => %w[string null] },
+        "filter_paths" => {
+          "type" => %w[array null],
+          "description" => "Occurrence paths to colour; null colours all, and an empty array mutes all.",
+          "items" => { "type" => "array", "minItems" => 1,
+                       "items" => { "type" => "integer", "minimum" => 1 } }
+        },
         "modes" => { "type" => "array", "items" => { "type" => "object" },
                      "description" => "Every registered mode: name, label, entity kind and group (null when none)." },
         "rows" => { "type" => "array", "items" => { "type" => "object" },
                     "description" => "The active mode's legend: value, label, colour, count and state." }
+      }
+    }.freeze
+
+    FILTER_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => ["paths"],
+      "properties" => {
+        "paths" => STATE_RESULT.fetch("properties").fetch("filter_paths").merge(
+          "description" => "Full root-to-entity persistent-ID occurrence paths to colour, including their " \
+                           "descendants; null colours all, and an empty array mutes all. Retained while off."
+        )
       }
     }.freeze
 
@@ -110,12 +126,25 @@ module PhComposer
         self.for(request.session).isolate(row && [row.fetch("value"), row.fetch("state")])
         state(request.session)
       end
+      feature.view_command("#{FEATURE_ID}.filter",
+                           :description => "Colour only matching occurrence paths and mute the remaining geometry.",
+                           :refuses => [], :params => FILTER_PARAMS, :result => STATE_RESULT,
+                           :examples => [{ "paths" => nil }, { "paths" => [] },
+                                         { "paths" => [[101, 102]] }]) do |request|
+        self.for(request.session).filter(request.params.fetch("paths"))
+        state(request.session)
+      end
       feature.snapshot_section("#{FEATURE_ID}.legend", :query => STATE)
+      subscribe_to_invalidation(feature)
+    end
+
+    def subscribe_to_invalidation(feature)
       INVALIDATING_EVENTS.each do |kind|
         feature.on_host_event(kind) { |session| self.for(session).invalidate! }
       end
       feature.on_host_event(:tags_changed) { |session| self.for(session).invalidate!(:force => true) }
     end
+    private_class_method :subscribe_to_invalidation
 
     # This Model's Colour-by state, created inert on first reach. Nothing draws until a mode is on.
     def for(session)

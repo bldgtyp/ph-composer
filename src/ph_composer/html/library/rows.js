@@ -78,8 +78,8 @@ PhComposerUI.define("library/rows", ["units", "workspace"], function (units, ui)
         var known = Boolean(row.resolution && row.resolution.candidates.length);
         if (row.library && !entry.addGlyph) entry.button.appendChild(entry.addGlyph = ui.glyph("add"));
         if (entry.addGlyph) entry.addGlyph.hidden = !row.library || known;
-        entry.button.title = !row.library ? "" : known ? adapter.name(row) + " is already in this file" :
-          "Add " + adapter.name(row) + " to this file";
+        ui.tooltip(entry.button, !row.library ? "" : known ? adapter.name(row) + " is already in this file" :
+          "Add " + adapter.name(row) + " to this file");
         entry.bubble.panel.setAttribute("aria-label", adapter.name(row));
         entry.bubble.heading.querySelector("strong").textContent = adapter.name(row);
         entry.bubble.closeButton.setAttribute("aria-label", "Close " + adapter.name(row));

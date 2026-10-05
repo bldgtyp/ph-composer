@@ -14,7 +14,9 @@ module PhComposer
     # `colour`, when supplied, is the entry's own `[r, g, b]`, for a mode whose colour is a property of the
     # record it groups by (an Assembly's colour) rather than a function of the value. `value` then stays a
     # plain legend key: the legend's select and isolate commands take a string or null.
-    Entry = Struct.new(:entity, :transform, :value, :label, :state, :path, :colour, keyword_init: true)
+    # `hatch_outline: false` keeps the unclassified hatch but leaves its boundary edges native.
+    # Omission preserves the solid unclassified boundary used by other modes.
+    Entry = Struct.new(:entity, :transform, :value, :label, :state, :path, :colour, :hatch_outline, keyword_init: true)
 
     # One legend row: a colour, what it means, how many entities carry it, and which of the three
     # states it is in (`classified`, `incomplete` or `unclassified`).
@@ -35,6 +37,7 @@ module PhComposer
     class Service
       attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines, :unclassified_hatch, :isolated
       attr_reader :wash_triangles
+      attr_reader :filter_paths
       # How many times the drawing has been rebuilt for this Model. The host walkthrough reads it to
       # tell an invalidating event that fired from one that did not.
       attr_reader :rebuilds
@@ -42,6 +45,7 @@ module PhComposer
       def initialize(session)
         @session = session
         @rebuilds = 0
+        @filter_paths = nil
         clear
         # An extension action can receive SketchUp's commit callback before ModelSession#mutate
         # advances the revision. Its later change publication is the first safe rebuild point.
@@ -62,7 +66,7 @@ module PhComposer
       # Turns a mode on, remembering it as the one the user last chose. Nothing about the Model
       # changes: no record is written, no material is assigned and no operation opens.
       #
-      # `remember: false` turns a mode on without recording the choice. The Classify tool forces
+      # `remember: false` turns a mode on without recording the choice. The Classify tool's empty-palette fallback forces
       # Colour-by on while it is active, and what the tool forced is not what the user chose, so it
       # must not displace the remembered mode when the tool ends.
       def activate(name, remember: true)
@@ -110,6 +114,7 @@ module PhComposer
         {
           "mode" => @mode_name, "label" => mode&.label, "entity_kind" => mode&.entity_kind,
           "isolated" => @isolated && { "value" => @isolated.first, "state" => @isolated.last.to_s },
+          "filter_paths" => @filter_paths && @filter_paths.map(&:dup),
           "rows" => rows.map do |row|
             { "value" => row.value, "label" => row.label, "colour" => row.colour.dup,
               "count" => row.count, "state" => row.state.to_s,
@@ -150,6 +155,21 @@ module PhComposer
 
         @isolated = row && [row.first, row.last.to_sym]
         rebuild
+        self
+      end
+
+      # An occurrence mask belongs to the session, independently of the mode. Tables can change it
+      # while Colour by is off, and a mode switch keeps it. Prefix indexes distinguish shared
+      # occurrences without comparing every drawn Face with every requested path.
+      def filter(paths)
+        @isolated = nil
+        @filter_paths = paths && paths.map { |path| path.dup.freeze }.uniq.freeze
+        @filter_roots = (@filter_paths || []).to_h { |path| [path, true] }
+        @filter_ancestors = {}
+        @filter_roots.each_key do |path|
+          path.each_index { |index| @filter_ancestors[path[0..index]] = true }
+        end
+        rebuild if active?
         self
       end
 
@@ -229,22 +249,36 @@ module PhComposer
         entities[[entry.value, state]] << [entry.entity, entry.transform]
         return unless @visibility.visible?(entry.path, entry.entity)
 
-        triangles, segments = Tessellation.call(entry.entity, entry.transform)
         # Set-aside geometry has its own wash pass, with no mode outline. A grey mode value and
         # the unclassified hatch therefore keep their meaning during isolation.
         if set_aside?(entry.value, state)
-          wash.concat(triangles)
-        elsif state == :unclassified
-          unclassified.concat(segments)
+          wash.concat(Tessellation.call(entry.entity, entry.transform).first)
+          return
+        end
+
+        triangles, segments, muted = Tessellation.partition(entry.entity, entry.transform, entry.path) do |path|
+          matches_filter?(path)
+        end
+        wash.concat(muted)
+        if state == :unclassified
+          unclassified.concat(segments) unless entry.hatch_outline == false
           unclassified_triangles.concat(triangles)
         else
-          fills[colour].concat(triangles)
-          outlines[colour].concat(segments)
+          fills[colour].concat(triangles) unless triangles.empty?
+          outlines[colour].concat(segments) unless segments.empty?
         end
       end
 
       def set_aside?(value, state)
         !@isolated.nil? && @isolated != [value, state]
+      end
+
+      def matches_filter?(path)
+        return true if @filter_paths.nil?
+        return false if path.nil?
+        return true if @filter_ancestors.key?(path)
+
+        path.each_index.any? { |index| @filter_roots.key?(path[0..index]) }
       end
 
       # The three states every mode shares: no record at all, a record this mode cannot finish

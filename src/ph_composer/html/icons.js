@@ -93,7 +93,8 @@ PhComposerUI.define("icons", ["dom"], function (dom) {
     return paintIconButton(node, label, icon);
   }
   function paintIconButton(node, label, icon) {
-    node.title = label; node.setAttribute("aria-label", label); node.setAttribute("data-tooltip", label);
+    dom.tooltip(node, label);
+    node.setAttribute("aria-label", label);
     if (icon && node.getAttribute("data-icon") !== icon) {
       node.setAttribute("data-icon", icon);
       node.innerHTML = svgIcon(icon, 18);

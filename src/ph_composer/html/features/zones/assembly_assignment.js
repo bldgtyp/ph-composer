@@ -56,7 +56,7 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     this.root.hidden = !this.enabled || !this.currentTargets.length;
     this.select.disabled = this.disposed || !this.enabled || this.requests.busy() || !this.currentTargets.length ||
       unclassified || this.overLimit;
-    this.select.title = unclassified ? "Classify every checked Face before choosing its Assembly" : "";
+    ui.tooltip(this.select, unclassified ? "Classify every checked Face before choosing its Assembly" : "");
   };
   /* Disables the control while the set is larger than one assignment may change; the owner says why. */
   Picker.prototype.limit = function (over) {
@@ -113,11 +113,15 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
      missing Assembly keep the neutral pill. A dark colour switches the name to white so it stays legible. */
   function paintColor(chip, record) {
     var hex = /^#([0-9a-f]{6})$/i.exec(record && record.color || "");
+    chip.style.removeProperty("--choice-chevron");
     if (!hex) { chip.style.removeProperty("--category-fill"); chip.style.removeProperty("--category-ink"); return; }
     var value = parseInt(hex[1], 16);
     var luma = 0.299 * (value >> 16) + 0.587 * ((value >> 8) & 255) + 0.114 * (value & 255);
     chip.style.setProperty("--category-fill", "#" + hex[1]);
-    if (luma < 140) chip.style.setProperty("--category-ink", "#fff");
+    if (luma < 140) {
+      chip.style.setProperty("--category-ink", "#fff");
+      chip.style.setProperty("--choice-chevron", "var(--choice-chevron-light)");
+    }
     else chip.style.removeProperty("--category-ink");
   }
   function cell(td, row, state, guard, refused) {

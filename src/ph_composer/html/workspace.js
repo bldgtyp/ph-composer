@@ -7,7 +7,7 @@ PhComposerUI.define("workspace", ["dom", "icons", "overlay", "table_contribution
   return {
     element: dom.element, svg: dom.svg, button: dom.button, option: dom.option, titleCase: dom.titleCase,
     number: dom.number, blank: dom.blank, compareText: dom.compareText, propertyRow: dom.propertyRow,
-    memoPaint: dom.memoPaint, pulse: dom.pulse,
+    memoPaint: dom.memoPaint, pulse: dom.pulse, tooltip: dom.tooltip,
     svgIcon: icons.svgIcon, glyph: icons.glyph, iconButton: icons.iconButton, paintIconButton: icons.paintIconButton,
     Bubble: overlay.Bubble, ActionMenu: overlay.ActionMenu, floatingNotice: overlay.floatingNotice,
     actionRow: overlay.actionRow, formDialog: overlay.formDialog, helpButton: overlay.helpButton,

@@ -291,7 +291,7 @@ test("Export states each cause once, without record ids, with one Locate and a w
   assert.strictEqual(rows.length, 1, "three Faces with one cause are one row");
   assert.strictEqual(rows[0].querySelector(".phc-export-finding").textContent, "Face needs an authored Assembly.");
   assert.strictEqual(rows[0].querySelector(".phc-export-count").getAttribute("aria-label"), "3 findings");
-  assert.ok(rows[0].querySelector(".phc-export-finding").title.indexOf("fac_c3d5e3f176e1") === 0,
+  assert.ok(rows[0].querySelector(".phc-export-finding").getAttribute("data-tooltip").indexOf("fac_c3d5e3f176e1") === 0,
     "the ids stay in the tooltip");
   assert.strictEqual(pane.querySelector(".phc-export-readiness").textContent, "Finish 1 thing before exporting.");
   var buttons = rows[0].querySelectorAll("button");

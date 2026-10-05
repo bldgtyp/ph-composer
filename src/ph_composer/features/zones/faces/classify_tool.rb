@@ -54,11 +54,11 @@ module PhComposer
         def choose(field, value, reset: false)
           @palette = {} if reset
           set(field, value)
-          set("boundary_condition", "AttachedZone") if field == "attached_zone_id" && value
-          if field == "attached_zone_id" && value.nil? && chosen("boundary_condition") == "AttachedZone"
-            set("boundary_condition", nil)
-          end
+          attached = field == "attached_zone_id"
+          set("boundary_condition", "AttachedZone") if attached && value
+          set("boundary_condition", nil) if attached && value.nil? && chosen("boundary_condition") == "AttachedZone"
           set("attached_zone_id", nil) if field == "boundary_condition" && value != "AttachedZone"
+          @forced_colour_by = nil if value && ColourModes.activate_paint(@session, field)
           start
           show_instructions
           @session.request_refresh

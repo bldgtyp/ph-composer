@@ -181,6 +181,174 @@ class ColourByTest < PhComposerTestCase
     assert_equal %w[refused validation.failed], outcome.values_at("status", "code")
   end
 
+  def test_a_client_can_set_an_occurrence_filter_while_off_without_writing_or_opening_undo
+    context = PhComposer::API.connect(:session_id => @session.id)
+    revision = @session.revision
+    paths = [[101, 102], [201, 202]]
+
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.filter",
+                                   :params => { "paths" => paths })
+
+    assert_equal "completed", outcome.fetch("status")
+    assert_equal paths, outcome.dig("value", "filter_paths")
+    assert_nil outcome.dig("value", "mode")
+    query = PhComposer::API.query(:context => context, :name => ColourBy::STATE, :params => {})
+    assert_equal paths, query.dig("value", "filter_paths")
+    assert_equal revision, @session.revision
+    refute @model.modified?
+    assert_empty @model.operations
+    assert_empty @model.overlays.to_a
+  end
+
+  def test_the_filter_command_validates_full_nonempty_positive_integer_paths
+    context = PhComposer::API.connect(:session_id => @session.id)
+    invalid = [{}, { "paths" => "all" }, { "paths" => [nil] }, { "paths" => [[]] },
+               { "paths" => [[0]] }, { "paths" => [[-1]] }, { "paths" => [[1.5]] },
+               { "paths" => [["1"]] }, { "paths" => nil, "extra" => true }]
+
+    invalid.each do |params|
+      outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.filter", :params => params)
+
+      assert_equal "refused", outcome.fetch("status"), params.inspect
+      assert_nil ColourBy.for(@session).filter_paths
+    end
+  end
+
+  def test_an_empty_occurrence_filter_mutes_all_and_null_restores_all
+    zone_group(2_100, ["Wall", nil])
+    service = activate("ph_composer.zones.faces.by_face_type")
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.filter",
+                                   :params => { "paths" => [] })
+
+    assert_equal [], outcome.dig("value", "filter_paths")
+    assert_equal 2, service.rows.sum(&:count)
+    assert_empty service.fills
+    assert_empty service.outlines
+    assert_empty service.unclassified_outlines
+    assert_empty service.unclassified_hatch
+    assert_equal 6, service.wash_triangles.length
+
+    restored = PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.filter",
+                                    :params => { "paths" => nil })
+
+    assert_nil restored.dig("value", "filter_paths")
+    assert_equal 3, service.fills.values.flatten.length
+    refute_empty service.unclassified_outlines
+    assert_empty service.wash_triangles
+  end
+
+  def test_combined_face_paths_partition_nested_zone_geometry_in_every_zone_mode
+    first = zone_group(2_200, %w[Wall Floor])
+    nested = first.entities.add_group([first.entities.to_a.last])
+    second = zone_group(2_210, %w[Wall Floor])
+    paths = [[first.persistent_id, nested.persistent_id, nested.entities.to_a.first.persistent_id],
+             [second.persistent_id, second.entities.to_a.first.persistent_id]]
+    service = ColourBy.for(@session).filter(paths)
+
+    %w[ph_composer.zones.faces.by_face_type ph_composer.zones.by_zone
+       ph_composer.zones.by_level ph_composer.zones.by_building_segment].each do |name|
+      service.activate(name)
+
+      assert_equal 6, service.fills.values.flatten.length, name
+      assert_equal 6, service.wash_triangles.length, name
+      assert_equal paths, service.filter_paths, name
+      assert_equal [0.0, 1.0], service.fills.values.flatten.map(&:z).uniq.sort, name
+    end
+  end
+
+  def test_occurrence_filter_distinguishes_shared_faces_and_preserves_the_selected_transform
+    group = zone_group(2_300, %w[Wall Floor])
+    wrapper = @model.entities.add_group([group])
+    @model.entities.delete(wrapper)
+    first = Sketchup::ComponentInstance.new(2_310, wrapper.definition)
+    second = Sketchup::ComponentInstance.new(2_320, wrapper.definition,
+                                             :transformation => Geom::Transformation.translation([20, 0, 0]))
+    @model.entities << first << second
+    face = group.entities.to_a.first
+    path = [second.persistent_id, group.persistent_id, face.persistent_id]
+    service = ColourBy.for(@session).filter([path, path])
+
+    %w[ph_composer.zones.faces.by_face_type ph_composer.zones.by_zone].each do |name|
+      service.activate(name)
+
+      assert_equal 3, service.fills.values.flatten.length, name
+      assert_equal 9, service.wash_triangles.length, name
+      assert service.fills.values.flatten.all? { |point| point.x >= 20 }, name
+      assert_equal [path], service.filter_paths
+    end
+  end
+
+  def test_ancestor_masks_include_descendant_faces_and_survive_off_on
+    first = zone_group(2_400, %w[Wall Floor])
+    zone_group(2_410, ["Wall"])
+    outer = @model.entities.add_group([first])
+    paths = [[outer.persistent_id]]
+    service = ColourBy.for(@session).filter(paths)
+    paths.first << 999
+    service.activate("ph_composer.zones.faces.by_face_type")
+
+    assert_equal 6, service.fills.values.flatten.length
+    assert_equal 3, service.wash_triangles.length
+    service.deactivate
+    assert_equal [[outer.persistent_id]], service.legend.fetch("filter_paths")
+    service.activate("ph_composer.zones.by_zone")
+    assert_equal 6, service.fills.values.flatten.length
+    assert_equal 3, service.wash_triangles.length
+  end
+
+  def test_a_filter_command_replaces_legacy_isolation_and_isolate_remains_available
+    zone = zone_group(2_500, %w[Wall Floor])
+    service = activate("ph_composer.zones.faces.by_face_type")
+    service.isolate(["Wall", "classified"])
+    floor_path = [zone.persistent_id, zone.entities.to_a.last.persistent_id]
+
+    service.filter([floor_path])
+
+    assert_nil service.isolated
+    assert_equal [[128, 128, 128]], service.fills.keys, "only the selected Floor is coloured"
+    service.isolate(["Wall", "classified"])
+    assert_empty service.fills, "isolation still combines with an existing occurrence filter"
+    assert_equal 6, service.wash_triangles.length
+    service.filter(nil)
+    assert_nil service.isolated
+    assert_empty service.wash_triangles
+    assert_equal 6, service.fills.values.flatten.length
+  end
+
+  def test_invalidation_rebuilds_filtered_geometry_without_repairing_or_clearing_the_mask
+    zone = zone_group(2_600, %w[Wall Floor])
+    face = zone.entities.to_a.first
+    path = [zone.persistent_id, face.persistent_id]
+    service = ColourBy.for(@session).filter([path]).activate("ph_composer.zones.faces.by_face_type")
+    face.hidden = true
+    PhComposer::Sessions.notify_host_event(@session, :tags_changed)
+
+    assert_empty service.fills
+    assert_equal 3, service.wash_triangles.length
+    assert_equal [path], service.filter_paths
+    rebuilds = service.rebuilds
+    ColourBy.state(@session)
+    assert_equal rebuilds, service.rebuilds, "a read does not rebuild the overlay"
+    face.hidden = false
+    @session.host_event(:transaction_committed)
+    assert_equal 3, service.fills.values.flatten.length
+    assert_equal [path], service.filter_paths
+  end
+
+  def test_entries_without_occurrence_paths_are_muted_only_when_an_explicit_mask_is_active
+    install_synthetic_mode
+    service = activate("outside.probe.by_side")
+    refute_empty service.fills
+
+    service.filter([[9001]])
+
+    assert_empty service.fills, "shared occurrences cannot be guessed from a bare entity"
+    service.filter(nil)
+    refute_empty service.fills
+  end
+
   def test_a_mode_missing_its_colour_function_refuses_the_whole_batch
     probe = Module.new do
       define_singleton_method(:name) { "Probe" }
@@ -288,6 +456,24 @@ class ColourByTest < PhComposerTestCase
     assert_equal [GL_LINES, GL_LINES], modes
     assert_equal [2, 1], @model.active_view.draws.map(&:last)
     refute @model.modified?
+  end
+
+  def test_assembly_none_keeps_the_hatch_without_drawing_over_native_boundary_edges
+    zone = zone_group(605, [nil, "Wall"])
+    zone.transformation = Geom::Transformation.scaling(24)
+    service = activate("ph_composer.zones.faces.by_assembly")
+
+    assert_empty service.unclassified_outlines, "None leaves the native selection edges visible"
+    refute_empty service.unclassified_hatch
+    assert_empty service.fills
+    @model.overlays.to_a.first.draw(@model.active_view)
+    assert_equal [GL_LINES], @model.active_view.draws.map(&:first), "only the hatch is drawn"
+    assert_equal [1], @model.active_view.draws.map(&:last), "no solid two-pixel boundary pass"
+    refute @model.modified?
+
+    service.activate("ph_composer.zones.faces.by_face_type")
+    refute_empty service.unclassified_outlines, "other modes retain their unclassified treatment"
+    refute_empty service.fills, "the classified colour fill still paints"
   end
 
   def test_unclassified_hatch_follows_isolation_and_visibility

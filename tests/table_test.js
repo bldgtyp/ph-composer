@@ -329,6 +329,8 @@ test("header actions are the caller's nodes, kept in place, with persistent ones
   var settings = { headerActions: function (field) { return actions[field] || []; } };
   paint(h, settings);
   var th = tagged(h, "col-name", "th")[0];
+  assert.strictEqual(h.root.querySelector("table").classList.contains("has-header-action-row"), true);
+  assert.strictEqual(th.querySelector(".phc-header-label-row").contains(toggle), false);
   assert.deepStrictEqual(th.querySelector(".phc-header-actions").children, [toggle, menu]);
   assert.strictEqual(th.querySelector(".phc-th-label").textContent, "Name");
   assert.deepStrictEqual([toggle.classList.contains("is-persistent"), menu.classList.contains("is-persistent")],
@@ -337,5 +339,9 @@ test("header actions are the caller's nodes, kept in place, with persistent ones
   paint(h, settings);
   assert.deepStrictEqual(th.querySelector(".phc-header-actions").children, [menu], "a withdrawn action goes");
   assert.strictEqual(menu.classList.contains("is-persistent"), true);
-  assert.strictEqual(tagged(h, "col-size", "th")[0].querySelector(".phc-header-actions"), null);
+  assert.strictEqual(tagged(h, "col-size", "th")[0].querySelector(".phc-header-actions").children.length, 0,
+    "columns without actions reserve the same lower band");
+  paint(h);
+  assert.strictEqual(h.root.querySelector("table").classList.contains("has-header-action-row"), false,
+    "a table without column actions retains its compact header");
 });

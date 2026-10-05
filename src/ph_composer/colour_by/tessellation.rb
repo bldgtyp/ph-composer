@@ -54,33 +54,42 @@ module PhComposer
       module_function
 
       def call(entity, transform)
-        triangles = []
-        segments = []
-        transform ||= Geom::Transformation.new
-        return [triangles, segments] if skipped?(entity)
-
-        if entity.is_a?(Sketchup::Face)
-          add_face(entity, transform, triangles, segments)
-        else
-          child_entities(entity)&.each { |child| collect(child, transform, triangles, segments) }
-        end
-        [triangles, segments]
+        partition(entity, transform, nil) { true }.first(2)
       end
 
-      # `transform` here is the parent's content transform, so a container multiplies in its own.
-      def collect(entity, transform, triangles, segments)
-        return if skipped?(entity)
+      # Partition at each Face, not at the projected container: one Group may contain both matching
+      # and muted geometry. Paths and transforms follow the particular occurrence throughout.
+      # Legacy projections without a path keep nil; their full occurrence cannot be inferred here.
+      def partition(entity, transform, path)
+        triangles = []
+        segments = []
+        muted = []
+        transform ||= Geom::Transformation.new
+        return [triangles, segments, muted] if skipped?(entity)
 
+        each_face(entity, transform, path) do |face, world, leaf_path|
+          if yield(leaf_path)
+            add_face(face, world, triangles, segments)
+          else
+            add_face(face, world, muted, [])
+          end
+        end
+        [triangles, segments, muted]
+      end
+
+      # `transform` maps this entity's contents to world; a child container multiplies in its own.
+      def each_face(entity, transform, path, &block)
         if entity.is_a?(Sketchup::Face)
-          add_face(entity, transform, triangles, segments)
+          block.call(entity, transform, path)
         else
-          # Edges and other drawing entities are not instances and have no transformation.
-          # Resolve the children before reading a container's instance transform.
-          children = child_entities(entity)
-          return unless children
+          child_entities(entity)&.each do |child|
+            next if skipped?(child)
 
-          inner = transform * entity.transformation
-          children.each { |child| collect(child, inner, triangles, segments) }
+            child_path = path && path + [child.persistent_id]
+            # Edges have no transformation and contribute no Face geometry.
+            inner = child_entities(child) ? transform * child.transformation : transform
+            each_face(child, inner, child_path, &block)
+          end
         end
       end
 
@@ -270,7 +279,7 @@ module PhComposer
         end
       end
 
-      private_class_method :collect, :add_face, :stripe_range, :stripe_count, :zero_length_extremum?,
+      private_class_method :each_face, :add_face, :stripe_range, :stripe_count, :zero_length_extremum?,
                            :hatch_at_spacing, :hatch_across, :projected_axis, :dot, :squared_distance
     end
   end

@@ -129,7 +129,7 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
       var ids = group.findings.map(function (finding) {
         return finding.object_id || (String(finding.message || "").match(RECORD_ID) || [""])[0].trim();
       }).filter(function (id, index, all) { return id && all.indexOf(id) === index; });
-      if (ids.length) text.title = ids.slice(0, 20).join(", ") + (ids.length > 20 ? " and more" : "");
+      if (ids.length) ui.tooltip(text, ids.slice(0, 20).join(", ") + (ids.length > 20 ? " and more" : ""));
       if (locate) row.appendChild(ui.button(locate.capped ? "Locate first " + LOCATE_LIMIT :
         count > 1 ? "Locate all" : "Locate", function () {
         last.send("view.invoke", { request_id: "export-locate:" + String(sequence += 1), session: session,

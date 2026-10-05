@@ -172,7 +172,7 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     var chosen = this.records.filter(function (row) { return row.id === current; })[0];
     var name = chosen ? chosen.values.name : "None", trigger = this.defaultPsi.trigger;
     trigger.valueText.textContent = name; trigger.valueText.classList.toggle("muted", !chosen);
-    trigger.setAttribute("aria-label", "Default Psi-Install: " + name); trigger.title = name;
+    trigger.setAttribute("aria-label", "Default Psi-Install: " + name); ui.tooltip(trigger, name);
     var choices = [[null, "None"]].concat(this.records.map(function (row) { return [row.id, row.values.name]; }));
     var key = JSON.stringify([current, choices]);
     if (key !== this.choicesKey) {

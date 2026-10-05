@@ -4,10 +4,6 @@
  *   binding names one mode (`{ mode }`) or a group of modes (`{ group }`), which a mode declares when it
  *   registers. One mode is on at a time: pressing an unpressed toggle turns its mode on and releases any
  *   other, and pressing the pressed one turns Colour by Off. A group with several modes opens a menu of them.
- * - The legend strip, in the pane's `tools` region (the end of the work surface's control row): the mode's
- *   name, then one chip per colour with its count. A chip selects and zooms to what it counts; the eye on it
- *   fades every other colour in the viewport (the table is unchanged), and Show all puts them back. The strip
- *   is empty while Colour by is off, and its slot keeps its place, so the table never moves.
  * - `modes(state)` and `activate(state, name)`, so a screen can offer a mode no column binds (an options
  *   menu) through the same command.
  *
@@ -23,7 +19,8 @@ function (panel, ui, requests, snapshot) {
 
   function forSession(session) {
     if (screen && screen.session === session) return screen;
-    screen = { session: session, view: requests.channel(session, panel.send, "colour_by", "view.invoke") };
+    screen = { session: session, view: requests.channel(session, panel.send, "colour_by", "view.invoke"),
+      filter: requests.channel(session, panel.send, "colour_by_filter", "view.invoke") };
     return screen;
   }
 
@@ -104,66 +101,44 @@ function (panel, ui, requests, snapshot) {
     if (this.pressed) item("Off", null);
   };
 
-  function rowKey(row) {
-    return { value: row.value === undefined ? null : row.value, state: row.state };
-  }
-
-  function swatch(colour) {
-    var node = ui.element("span", "phc-legend-swatch");
-    node.style.background = "rgb(" + colour.join(",") + ")";
-    node.setAttribute("aria-hidden", "true");
-    return node;
-  }
-
-  /* The chip itself selects and zooms to what it counts. The eye is a separate toggle, because it changes the
-     drawing rather than the selection, and pressing it again puts everything back. */
-  function chip(owner, row) {
-    var node = ui.element("span", "phc-legend-chip" + (row.isolated ? " is-isolated" : ""));
-    var locate = ui.element("button", "phc-legend-locate");
-    locate.appendChild(swatch(row.colour));
-    locate.appendChild(ui.element("span", "phc-legend-label", row.label));
-    locate.appendChild(ui.element("span", "phc-legend-count", String(row.count)));
-    locate.setAttribute("aria-label", "Select and zoom to " + row.count + " " + row.label);
-    locate.disabled = owner.view.busy();
-    locate.addEventListener("click", function () {
-      owner.view.run("ph_composer.colour_by.select_row", { row: rowKey(row) });
+  /* The active mode's key, disclosed alongside a matching column's Show choices. */
+  function colour(state, binding, value) {
+    if (!binding) return null;
+    var legend = legendOf(state), active = legend.modes.some(function (mode) {
+      return mode.name === legend.mode && (binding.mode ? mode.name === binding.mode : mode.group === binding.group);
     });
-    var only = ui.iconButton(row.isolated ? "Show every colour again" : "Show only " + row.label + " in the viewport",
-      "eye", function () {
-        owner.view.run("ph_composer.colour_by.isolate", row.isolated ? {} : { row: rowKey(row) });
-      });
-    only.classList.add("phc-legend-only");
-    only.setAttribute("aria-pressed", String(Boolean(row.isolated)));
-    only.disabled = owner.view.busy();
-    node.appendChild(locate);
-    node.appendChild(only);
-    return node;
+    if (!active) return null;
+    var rows = legend.rows.filter(function (entry) {
+      return String(entry.value === null || entry.value === undefined ? "" : entry.value) === value;
+    });
+    // One value can have classified and incomplete rows. A single swatch must not imply one hue
+    // when the viewport paints several; omit it until the value has a consistent colour.
+    if (!rows.length || rows.some(function (row) {
+      return JSON.stringify(row.colour) !== JSON.stringify(rows[0].colour);
+    })) return null;
+    return rows[0].colour;
   }
 
-  /* Repainted only when what it shows has changed. A snapshot follows every viewport command, and rebuilding
-     these controls each time would take the focus out of whatever the user was pressing. */
-  function renderStrip(root, state) {
-    var legend = legendOf(state), owner = forSession(state.session);
-    owner.view.consume(state);
-    ui.memoPaint(root, "legend", [state.session, legend, owner.view.busy()], function () {
-      root.className = "phc-legend-strip";
-      root.replaceChildren();
-      if (!legend.mode) { root.removeAttribute("aria-label"); root.removeAttribute("role"); return; }
-      root.setAttribute("aria-label", "Colour by " + legend.label);
-      root.setAttribute("role", "group");
-      root.appendChild(ui.element("span", "phc-legend-title", legend.label));
-      legend.rows.forEach(function (row) { root.appendChild(chip(owner, row)); });
-      if (!legend.rows.length) root.appendChild(ui.element("span", "phc-legend-empty", "Nothing to colour yet."));
-      if (legend.rows.some(function (row) { return row.isolated; })) {
-        var reset = ui.button("Show all", function () { owner.view.run("ph_composer.colour_by.isolate", {}); });
-        reset.className = "phc-legend-show-all";
-        reset.setAttribute("aria-label", "Show every colour again");
-        reset.disabled = owner.view.busy();
-        root.appendChild(reset);
+  /* A screen supplies matching occurrence paths, independent of the active colour mode. Coalesce rapid
+     filter edits: settle the in-flight request, then send the latest scope. Never replay a refused scope
+     on every repaint; a new scope can retry and the user receives the failure notice. */
+  function filter(state, paths) {
+    var owner = forSession(state.session);
+    if (owner.appliedFilter === undefined) {
+      owner.appliedFilter = legendOf(state).isolated ? "isolated" :
+        JSON.stringify(legendOf(state).filter_paths || null);
+    }
+    owner.filter.consume(state);
+    var signature = JSON.stringify(paths);
+    if (owner.filter.busy() || owner.appliedFilter === signature) return;
+    owner.filter.run("ph_composer.colour_by.filter", { paths: paths }, {
+      onDone: function () { owner.appliedFilter = signature; },
+      onFail: function (outcome) {
+        owner.appliedFilter = signature;
+        panel.notify(outcome.message || "The viewport filter could not be applied.", "warning");
       }
     });
   }
 
-  panel.section("ph_composer.colour_by", renderStrip, { region: "tools", order: 20 });
-  return { HeaderToggle: HeaderToggle, modes: modes, activate: activate };
+  return { HeaderToggle: HeaderToggle, modes: modes, activate: activate, colour: colour, filter: filter };
 });

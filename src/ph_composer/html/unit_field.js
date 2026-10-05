@@ -132,7 +132,7 @@ PhComposerUI.define("unit_field", ["unit_preferences", "units", "workspace"], fu
     // Given a "…" menu the control is a submenu row; otherwise a toolbar icon.
     var trigger = menu ? ui.button("") : ui.iconButton(label, "ruler");
     if (menu) {
-      trigger.className = "phc-action-menu-item"; trigger.title = label; trigger.setAttribute("aria-label", label);
+      trigger.className = "phc-action-menu-item"; ui.tooltip(trigger, label); trigger.setAttribute("aria-label", label);
       trigger.replaceChildren(ui.glyph("ruler"), ui.element("span", "", "Dimension format"),
         ui.element("small", "phc-menu-state", selected.id));
       menu.trigger.setAttribute("data-dimension-format-menu", scope);

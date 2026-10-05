@@ -5,7 +5,9 @@
 
    options: label (the column's name), sort { current() -> "asc" | "desc" | null, choose(direction) },
    filter { values() -> [{ value, label }], shown() -> [value] or null for every value, set([value] or null),
-   answering false when the change was refused }. */
+   answering false when the change was refused },
+   valueAction(entry) -> { label, icon, disabled, pressed, run(anchor) } or null,
+   extra(root, anchor, close, reopen) renders optional additional controls. */
 PhComposerUI.define("column_menu", ["dom", "icons", "overlay"], function (dom, icons, overlay) {
   "use strict";
   var element = dom.element, button = dom.button;
@@ -65,14 +67,35 @@ PhComposerUI.define("column_menu", ["dom", "icons", "overlay"], function (dom, i
       box.type = "checkbox"; box.setAttribute("type", "checkbox");
       box.checked = !shown || shown.indexOf(entry.value) >= 0;
       box.addEventListener("change", function () { self.toggle(entry.value, box.checked); });
-      label.appendChild(box); label.appendChild(element("span", "", entry.label));
-      group.appendChild(label);
+      label.appendChild(box);
+      if (entry.colour) {
+        var swatch = element("span", "phc-column-filter-swatch");
+        swatch.style.background = "rgb(" + entry.colour.join(",") + ")";
+        swatch.setAttribute("aria-hidden", "true");
+        label.appendChild(swatch);
+      }
+      label.appendChild(element("span", "", entry.label));
+      var row = element("div", "phc-column-value-row");
+      row.appendChild(label);
+      var action = options.valueAction && options.valueAction(entry);
+      if (action) {
+        var trigger = icons.iconButton(action.label, action.icon, function () {
+          if (!trigger.disabled) action.run(self.trigger);
+        });
+        trigger.disabled = Boolean(action.disabled);
+        trigger.setAttribute("aria-pressed", String(Boolean(action.pressed)));
+        row.appendChild(trigger);
+      }
+      group.appendChild(row);
     });
     content.appendChild(group);
     var clear = button("Clear filter", function () { options.filter.set(null); self.paint(); self.fill(); });
     clear.className = "phc-column-filter-clear";
     clear.disabled = !shown;
+    this.clear = clear;
     content.appendChild(clear);
+    if (options.extra) options.extra(content, self.trigger,
+      function () { self.bubble.close(false); }, function () { self.bubble.open(); });
   };
 
   /* Every value checked is no filter at all, so a column never reads filtered while it hides nothing. */
@@ -82,6 +105,7 @@ PhComposerUI.define("column_menu", ["dom", "icons", "overlay"], function (dom, i
     if (show) shown.push(value);
     var applied = filter.set(every.every(function (entry) { return shown.indexOf(entry) >= 0; }) ? null : shown);
     this.paint();
+    this.clear.disabled = !filter.shown();
     // A refused change (the screen's guard) leaves the boxes as they were, so the menu shows them again.
     if (applied === false) this.fill();
   };

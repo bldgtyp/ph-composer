@@ -154,6 +154,7 @@
     }
     return { mode: this.colourBy.mode, label: this.colourBy.mode ? "Face type" : null,
       entity_kind: this.colourBy.mode ? "face" : null, isolated: isolated, rows: rows,
+      filter_paths: this.colourBy.filter_paths || null,
       modes: [{ name: "ph_composer.zones.faces.by_face_type", label: "Face type", entity_kind: "face", group: null },
         { name: "ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone", group: null },
         { name: "ph_composer.zones.faces.by_assembly", label: "Assembly", entity_kind: "face", group: "construction" },
@@ -201,12 +202,33 @@
       if (payload.name === "ph_composer.colour_by.activate") {
         this.colourBy = { mode: payload.params.mode, isolated: null };
       }
+      if (payload.name === "ph_composer.colour_by.filter") {
+        this.colourBy.filter_paths = JSON.parse(JSON.stringify(payload.params.paths));
+        this.colourBy.isolated = null;
+      }
       if (payload.name === "ph_composer.colour_by.isolate") this.colourBy.isolated = payload.params.row || null;
       if (payload.name === "ph_composer.zones.faces.choose") {
         this.palette.active = true;
+        if (payload.params.value) {
+          var paintModes = { face_type: "ph_composer.zones.faces.by_face_type",
+            boundary_condition: "ph_composer.zones.faces.by_boundary_condition",
+            attached_zone_id: "ph_composer.zones.faces.by_boundary_condition",
+            assembly_id: "ph_composer.zones.faces.by_assembly" };
+          this.colourBy.mode = paintModes[payload.params.field];
+          this.colourBy.isolated = null;
+        }
         if (payload.params.reset) this.palette.palette = {};
         if (payload.params.value === null) delete this.palette.palette[payload.params.field];
         else this.palette.palette[payload.params.field] = payload.params.value;
+        if (payload.params.field === "attached_zone_id") {
+          if (payload.params.value) this.palette.palette.boundary_condition = "AttachedZone";
+          else if (this.palette.palette.boundary_condition === "AttachedZone") {
+            delete this.palette.palette.boundary_condition;
+          }
+        }
+        if (payload.params.field === "boundary_condition" && payload.params.value !== "AttachedZone") {
+          delete this.palette.palette.attached_zone_id;
+        }
       }
       if (payload.name === "ph_composer.zones.faces.select") this.selectedFaces = payload.params.faces;
       if (payload.name === "ph_composer.zones.faces.stop_classifying") this.palette.active = false;

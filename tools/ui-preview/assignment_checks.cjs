@@ -59,10 +59,9 @@ fs.mkdirSync(output, { recursive: true });
     const beforePaint = await writes();
     await page.locator("[data-tab='assemblies']").click();
     await row.getByRole("button", { name: "Paint Incomplete roof onto faces", exact: true }).click();
-    // Painting takes the bar: the palette replaces the checked Faces' controls and names the Assembly in hand.
-    await bar.getByRole("heading", { name: "Classify faces", exact: true }).waitFor();
-    await bar.locator(".phc-palette-value").getByText("Incomplete roof", { exact: true }).waitFor();
-    assert.equal(await picker.isVisible(), false);
+    // Painting keeps checked controls and names its Assembly on the column header.
+    await page.getByRole("button", { name: "Paint Assembly: Incomplete roof. Click to stop painting", exact: true }).waitFor();
+    assert.equal(await picker.isVisible(), true);
     assert.deepEqual(await page.evaluate(() => window.previewHost.palette.palette), { assembly_id: "asm_b" });
     assert.equal(await writes(), beforePaint);
     await page.locator("[data-tab='assemblies']").click();

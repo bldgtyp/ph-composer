@@ -108,31 +108,33 @@ fs.mkdirSync(output, { recursive: true });
   await shot("zone-settings-narrow");
   await page.keyboard.press("Escape");
 
-  // No inspector: the table spans the pane at every width, and the Classify palette opens in the selection bar
-  // floating over the table, so opening it neither narrows the table nor moves it down. At a narrow width the
-  // table scrolls sideways inside its mount with the identity columns held, never the page.
+  // Column paint choices float over the table without narrowing or shifting it.
+  // At narrow widths the table scrolls inside its mount with identity columns held.
   await page.goto(`${BASE}?fixture=authoring`);
   await page.getByRole("heading", { name: "Zones" }).waitFor();
   for (const width of [1280, 900, 420]) {
     await page.setViewportSize({ width, height: 800 });
-    const table = page.locator("[data-pane=overview] .phc-table-mount"), bar = page.locator(".phc-selection-bar");
+    const table = page.locator("[data-pane=overview] .phc-table-mount");
     assert.equal(await page.locator("[data-pane=overview] [data-phc-region=inspector]").count(), 0, `no inspector at ${width}`);
     const before = await table.boundingBox(), pane = await page.locator("[data-pane=overview]").boundingBox();
     assert(before.width >= pane.width - 2 * 24, `the table spans the pane at ${width}`);
-    await page.getByRole("button", { name: "Classify faces", exact: true }).click();
-    await bar.getByRole("heading", { name: "Classify faces" }).waitFor();
-    const after = await table.boundingBox(), floating = await bar.boundingBox();
+    const paintMenu = page.getByRole("button", { name: "Type column menu", exact: true });
+    await paintMenu.focus();
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await paintMenu.press("Enter");
+    await page.getByRole("dialog", { name: "Type", exact: true }).waitFor();
+    assert.equal(await page.getByRole("button", { name: "Paint faces…", exact: true }).count(), 0);
+    const after = await table.boundingBox();
     assert.equal(after.y, before.y, `the table stays put at ${width}`);
     assert.equal(after.width, before.width, `the table keeps its width at ${width}`);
-    assert(floating.y + floating.height <= after.y + after.height + 40, `the bar floats over the table at ${width}`);
     assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), `no page scroll at ${width}`);
     // At every narrow width Name stays at the left (zones.css); below 500 only Hierarchy scrolls away.
     if (width <= 900) {
       assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector(
         "[data-pane=overview] td.col-name")).position), "sticky", `Name stays at the left at ${width}`);
     }
-    await shot(`bar-classify-${width}`);
-    await page.getByRole("button", { name: "Classify faces", exact: true }).click();
+    await shot(`column-show-paint-${width}`);
+    await page.keyboard.press("Escape");
   }
 
   assert.deepEqual(errors, []);

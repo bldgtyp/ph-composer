@@ -143,7 +143,9 @@ test.describe("render", function () {
       return shape.getAttribute("data-phc-canvas-key") === "air-barrier";
     })[0];
     assert.strictEqual(air.getAttribute("y1"), "12");
-    assert.strictEqual(air.querySelector("title").textContent, "Air barrier, interior face");
+    assert.strictEqual(air.getAttribute("data-tooltip"), "Air barrier, interior face");
+    assert.strictEqual(air.getAttribute("aria-label"), "Air barrier, interior face");
+    assert.strictEqual(air.querySelector("title"), null);
   });
 
   test("the air barrier stays on top when a segment is added after it", function () {

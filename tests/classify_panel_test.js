@@ -1,8 +1,6 @@
 "use strict";
 
-/* The Classify tool's palette in the panel: the chips, what they send, the Attached zone picker and
-   its inline New route, and the control that gives the viewport back. */
-
+/* Column-scoped paint choices use the public viewport commands and preserve Attached zone drafts. */
 var assert = require("assert");
 var test = require("node:test");
 var dom = require("./support/dom_stub");
@@ -15,223 +13,183 @@ function page() {
     innerWidth: 1280, innerHeight: 800, setTimeout: setTimeout, clearTimeout: clearTimeout,
     sketchup: { ph_composer_message: function (message) { sent.push(JSON.parse(message)); } }
   };
-  context.window = context;
-  dom.attachEvents(context);
+  context.window = context; dom.attachEvents(context);
   var modules = panelSource.start(context, ["features/zones/classify"]);
-  return { context: context, panel: modules.panel, sent: sent,
-    section: function () { return context.document.querySelector("[data-section='ph_composer.classify']"); } };
+  var classify = modules["features/zones/classify"];
+  modules.panel.section("test.paint", function (root, state, send) { classify.refresh(state, send); });
+  return { context: context, panel: modules.panel, sent: sent, classify: classify,
+    section: function () { return this.menu && !this.menu.hidden ? this.menu : undefined; } };
 }
 
 function snapshot(tool, records) {
-  return {
-    product: "PH-Composer", version: "0.1.0-dev", session: "session-a", revision: 4,
+  return { product: "PH-Composer", version: "0.1.0-dev", session: "session-a", revision: 4,
     file_name: "house.skp", edit_path: [], preferences: {
       unit_system: "SI", dimension_formats: {}, number_format: { decimal: ".", locale: "en-US" }
-    },
-    sections: {
+    }, sections: {
       "ph_composer.zones.faces.palette": { status: "completed", value: tool },
-      "ph_composer.zones.faces.attached_zone.list": { status: "completed",
-        value: { records: records || [] } }
-    }
-  };
+      "ph_composer.zones.faces.attached_zone.list": { status: "completed", value: { records: records || [] } },
+      "ph_composer.zones.faces.assemblies": { status: "completed", value: { assemblies: [
+        { id: "asy_wall", name: "Wall assembly", type: "Wall" },
+        { id: "asy_roof", name: "Roof assembly", type: "RoofCeiling" }
+      ] } }
+    } };
 }
-
 function palette(chosen, active) {
-  return { active: Boolean(active), palette: chosen || {},
-    face_types: ["Wall", "RoofCeiling", "Floor"],
+  return { active: Boolean(active), palette: chosen || {}, face_types: ["Wall", "RoofCeiling", "Floor"],
     boundary_conditions: ["Outdoors", "Ground", "Adiabatic", "AttachedZone", "Surface"] };
 }
-
-function chips(p) {
-  return p.section().querySelectorAll(".phc-chip");
+function receive(p, state) { p.panel.receive({ type: "panel.snapshot", payload: state }); }
+function label(field) { return { face_type: "Type", boundary_condition: "Boundary", assembly_id: "Assembly" }[field]; }
+function glyph(p, field) {
+  var descriptor = p.classify.header(field, label(field));
+  if (!descriptor.node.isConnected) p.context.document.body.appendChild(descriptor.node);
+  return descriptor.node;
 }
-
-function chip(p, label) {
-  return chips(p).filter(function (node) { return node.getAttribute("aria-label") === label; })[0];
+function open(p, field) {
+  glyph(p, field);
+  if (!p.anchor) { p.anchor = p.context.document.createElement("button");
+    p.context.document.body.appendChild(p.anchor); }
+  if (!p.menu) { p.menu = p.context.document.createElement("div"); p.context.document.body.appendChild(p.menu); }
+  p.menu.hidden = false; p.menu.replaceChildren();
+  p.close = function (focus) { p.menu.hidden = true; p.closedWithFocus = focus; if (focus) p.anchor.focus(); };
+  p.reopen = function () { open(p, field); };
+  p.classify.extra(field, p.menu, p.anchor, p.close, p.reopen);
+  return p.anchor;
 }
-
-test("the chips show the glossary words, not the stored ones", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-
-  assert.deepStrictEqual(chips(p).slice(0, 3).map(function (node) { return node.textContent; }),
-    ["Wall", "Roof or ceiling", "Floor"]);
-  assert.strictEqual(chip(p, "To neighbour").textContent, "To neighbour");
-});
-
-test("choosing a chip sets one field and gives the tool the viewport", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-
-  chip(p, "Roof or ceiling").listeners.click({});
-
-  assert.strictEqual(p.sent[0].type, "view.invoke");
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.choose");
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { field: "face_type", value: "RoofCeiling" });
-});
-
-test("pressing the chosen chip again goes back to keeping what each Face has", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" })) });
-  var wall = chip(p, "Wall");
-
-  assert.strictEqual(wall.getAttribute("aria-pressed"), "true");
-  wall.listeners.click({});
-
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { field: "face_type", value: null });
-});
-
-test("the palette offers only what a chip can set, and its help explains the rest once", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-
-  assert.deepStrictEqual(chips(p).map(function (node) { return node.textContent; }),
-    ["Wall", "Roof or ceiling", "Floor", "Outdoors", "Ground", "To neighbour"]);
-  assert.ok(chips(p).every(function (node) { return !node.disabled; }), "no chip is there only to explain");
-  var help = p.section().querySelector(".phc-help").getAttribute("aria-label");
-  assert.ok(/keeps what each Face has/.test(help) && /Solve adjacencies/.test(help) && /Attached zone/.test(help));
-  assert.strictEqual(p.section().querySelector(".phc-palette-hint"), null, "the hint is not repeated per field");
-});
-
-test("the picker lists the Attached zones and choosing one names it", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette(),
-    [{ kind: "ph_composer.zones.faces.attached_zone", id: "atz_1", values: { name: "Garage" } }]) });
-  var picker = p.section().querySelector("select");
-
-  assert.deepStrictEqual(picker.children.map(function (node) { return node.textContent; }),
-    ["None", "Garage"]);
-  picker.value = "atz_1";
-  picker.listeners.change({});
-
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { field: "attached_zone_id", value: "atz_1" });
-});
-
-test("New attached zone waits for form submit, then creates and chooses it", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette(),
-    [{ kind: "ph_composer.zones.faces.attached_zone", id: "atz_1", values: { name: "Garage" } }]) });
-  var create = p.section().querySelectorAll("button").filter(function (node) {
-    return node.textContent === "New attached zone";
-  })[0];
-
-  create.listeners.click({});
-
-  assert.strictEqual(p.sent.length, 0, "opening the form writes nothing");
-  var dialog = p.context.document.querySelector("dialog");
-  dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
-
-  assert.strictEqual(p.sent[0].type, "action.invoke", "a record is a Model change, unlike the palette");
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.attached_zone.save");
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { values: { name: "Attached zone 1", kind: "other", temperature_reduction_factor: 0.95 } },
-    "the first name nothing is called yet, so a delete does not make two records share one");
-
-  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
-    session: "session-a", outcome: { status: "completed", value: { id: "atz_2" } } } });
-
-  assert.strictEqual(p.context.document.querySelector("dialog"), null);
-  assert.strictEqual(p.context.document.activeElement.textContent, "New attached zone");
-  assert.strictEqual(p.context.document.activeElement.isConnected, true);
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[1].payload.params)),
-    { field: "attached_zone_id", value: "atz_2" });
-});
-
-test("Stop classifying appears only while the tool has the viewport", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-
-  assert.strictEqual(p.section().querySelectorAll("button").filter(function (node) {
-    return node.title === "Stop classifying";
-  }).length, 0, "nothing to stop, so no control for it");
-
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
-  var running = p.section().querySelectorAll("button").filter(function (node) {
-    return node.title === "Stop classifying";
-  })[0];
-  assert.ok(running);
-  running.listeners.click({});
-
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
-});
-
+function paint(p, field, value, word) {
+  var descriptor = p.classify.paint(field, value, word);
+  descriptor.run(p.anchor, p.close, p.reopen);
+  return descriptor;
+}
+function params(p, index) { return JSON.parse(JSON.stringify(p.sent[index || 0].payload.params)); }
 function escape(p, handled) {
   var event = { key: "Escape", defaultPrevented: Boolean(handled),
     preventDefault: function () { this.defaultPrevented = true; } };
-  p.context.document.listeners.keydown(event);
-  return event;
+  p.context.document.listeners.keydown(event); return event;
 }
-
-test("panel Escape stops the active tool once through its public view command", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
-  assert.strictEqual(escape(p).defaultPrevented, true);
-  escape(p);
-  assert.strictEqual(p.sent.length, 1, "a pending stop is not submitted twice");
-  assert.strictEqual(p.sent[0].type, "view.invoke");
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
-});
-
-test("panel Escape respects an editor's consumed press and an inactive tool", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({}, true)) });
-  escape(p, true);
-  assert.strictEqual(p.sent.length, 0);
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({}, false)) });
-  assert.strictEqual(escape(p).defaultPrevented, false);
-  assert.strictEqual(p.sent.length, 0);
-});
-
-test("a modal gets Escape before Classify, then the next press stops the tool", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({}, true)) });
-  p.section().querySelectorAll("button").filter(function (node) {
-    return node.textContent === "New attached zone";
-  })[0].listeners.click({});
-  var dialog = p.context.document.querySelector("dialog");
-  assert.strictEqual(escape(p).defaultPrevented, false);
-  assert.strictEqual(p.sent.length, 0);
-  dialog.listeners.cancel({ preventDefault: function () {} });
-  assert.strictEqual(p.context.document.querySelector("dialog"), null);
-  escape(p);
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
-});
-
-test("Escape targets the currently displayed Model session", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({}, true)) });
-  var next = snapshot(palette({}, true));
-  next.session = "session-b";
-  p.panel.receive({ type: "panel.snapshot", payload: next });
-  escape(p);
-  assert.strictEqual(p.sent[0].payload.session, "session-b");
-});
-
-/* A snapshot arrives after every Face the user paints; the palette must not be rebuilt under them. */
-test("an unchanged snapshot leaves the controls exactly where they were", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-  var before = chip(p, "Wall");
-
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-
-  assert.strictEqual(chip(p, "Wall"), before, "the same control, not a replacement");
-
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" })) });
-  assert.notStrictEqual(chip(p, "Wall"), before, "and repainted once the palette really changes");
-});
-
 function openNew(p) {
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
+  receive(p, snapshot(palette())); open(p, "boundary_condition");
   var trigger = p.section().querySelectorAll("button").filter(function (node) {
     return node.textContent === "New attached zone";
   })[0];
   trigger.listeners.click({});
   return { trigger: trigger, dialog: p.context.document.querySelector("dialog") };
 }
+
+test("paint values include every declared choice and local Assembly with glossary labels", function () {
+  var p = page(); receive(p, snapshot(palette()));
+  function entries(field) { return JSON.parse(JSON.stringify(p.classify.values(field))); }
+  assert.deepStrictEqual(entries("face_type"), [
+    { value: "Wall", label: "Wall" }, { value: "RoofCeiling", label: "Roof or ceiling" },
+    { value: "Floor", label: "Floor" }
+  ]);
+  assert.ok(entries("boundary_condition").some(function (entry) { return entry.value === "Surface"; }));
+  assert.ok(entries("boundary_condition").some(function (entry) {
+    return entry.value === "Adiabatic" && entry.label === "To neighbour";
+  }));
+  assert.ok(entries("assembly_id").some(function (entry) { return entry.value === "asy_roof"; }));
+  assert.strictEqual(p.classify.header("face_type", "Type").node.hidden, true);
+  assert.strictEqual(p.context.document.querySelector("[data-section='ph_composer.classify']"), null);
+  assert.strictEqual(p.context.document.querySelector("[data-section='ph_composer.classify.toggle']"), null);
+  assert.strictEqual(p.classify.action, undefined, "there is no separate paint action or picker");
+});
+
+test("a value's paint action sends one explicit field intent and closes its column menu", function () {
+  [ ["face_type", "RoofCeiling", "Roof or ceiling"], ["boundary_condition", "Adiabatic", "To neighbour"],
+    ["assembly_id", "asy_wall", "Wall assembly"] ].forEach(function (entry) {
+    var p = page(); receive(p, snapshot(palette())); open(p, entry[0]);
+    var action = paint(p, entry[0], entry[1], entry[2]);
+    assert.strictEqual(action.label, "Paint " + entry[2]); assert.strictEqual(action.icon, "paint_bucket");
+    assert.strictEqual(action.disabled, false); assert.strictEqual(action.pressed, false);
+    assert.strictEqual(p.sent[0].type, "view.invoke");
+    assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.choose");
+    assert.deepStrictEqual(params(p), { field: entry[0], value: entry[1], reset: true });
+    assert.strictEqual(p.menu.hidden, true);
+    assert.strictEqual(p.context.document.activeElement, p.anchor);
+  });
+});
+
+test("Surface, Attached zone and None have no row paint action", function () {
+  var p = page(); receive(p, snapshot(palette()));
+  assert.strictEqual(p.classify.paint("boundary_condition", "Surface", "Surface"), null);
+  assert.strictEqual(p.classify.paint("boundary_condition", "AttachedZone", "Attached zone"), null);
+  assert.strictEqual(p.classify.paint("assembly_id", null, "None"), null);
+  assert.strictEqual(p.classify.paint("assembly_id", "", "None"), null);
+});
+
+test("Boundary adds its Attached zone select, New route and Surface explanation inline", function () {
+  var p = page(); receive(p, snapshot(palette(), [{ id: "atz_1", values: { name: "Garage" } }]));
+  open(p, "boundary_condition");
+  var picker = p.section().querySelector("select");
+  assert.ok(picker.children.some(function (node) { return node.textContent === "Garage"; }));
+  assert.ok(p.section().querySelectorAll("p").some(function (node) {
+    return node.textContent === "Surface is set by Solve adjacencies.";
+  }));
+  picker.value = "atz_1"; picker.listeners.change({});
+  assert.deepStrictEqual(params(p), { field: "attached_zone_id", value: "atz_1", reset: true });
+  assert.strictEqual(p.menu.hidden, true);
+  var type = page(); receive(type, snapshot(palette())); open(type, "face_type");
+  assert.strictEqual(type.section().children.length, 0, "other columns add no Attached zone controls");
+});
+
+test("active fields have persistent stop-only glyphs, including external multi-field intent", function () {
+  var p = page(); receive(p, snapshot(palette({ face_type: "Wall", boundary_condition: "Ground",
+    assembly_id: "asy_wall" }, true)));
+  ["face_type", "boundary_condition", "assembly_id"].forEach(function (field) {
+    var header = p.classify.header(field, label(field));
+    assert.strictEqual(header.persistent, true); assert.strictEqual(header.node.hidden, false);
+    assert.strictEqual(header.node.tagName, "button", "a bare glyph has no nested picker");
+  });
+  assert.strictEqual(p.classify.paint("face_type", "Wall", "Wall").pressed, true);
+  assert.strictEqual(p.classify.paint("face_type", "Floor", "Floor").pressed, false);
+  glyph(p, "face_type").listeners.click({});
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
+  assert.strictEqual(p.context.document.querySelector(".phc-bubble"), null);
+});
+
+test("idle glyphs are hidden and Escape stops active painting once through its public command", function () {
+  var p = page(); receive(p, snapshot(palette()));
+  assert.strictEqual(glyph(p, "face_type").hidden, true);
+  assert.strictEqual(escape(p).defaultPrevented, false);
+  receive(p, snapshot(palette({ face_type: "Wall" }, true)));
+  escape(p, true); assert.strictEqual(p.sent.length, 0);
+  assert.strictEqual(escape(p).defaultPrevented, true); escape(p);
+  assert.strictEqual(p.sent.length, 1); assert.strictEqual(p.sent[0].type, "view.invoke");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
+});
+
+test("a modal receives Escape before the active paint tool", function () {
+  var p = page(), opened = openNew(p);
+  receive(p, snapshot(palette({ face_type: "Wall" }, true)));
+  assert.strictEqual(escape(p).defaultPrevented, false); assert.strictEqual(p.sent.length, 0);
+  opened.dialog.listeners.cancel({ preventDefault: function () {} });
+  assert.strictEqual(p.context.document.querySelector("dialog"), null);
+  escape(p); assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
+});
+
+test("missing palette or Assembly reads withdraw their paint actions", function () {
+  var p = page(), state = snapshot(palette()); delete state.sections["ph_composer.zones.faces.assemblies"];
+  receive(p, state); assert.strictEqual(p.classify.paint("assembly_id", "asy_wall", "Wall assembly"), null);
+  assert.strictEqual(p.classify.paint("face_type", "Wall", "Wall").disabled, false);
+  delete state.sections["ph_composer.zones.faces.palette"]; receive(p, state);
+  assert.strictEqual(p.classify.paint("face_type", "Wall", "Wall"), null);
+});
+
+test("New attached zone creates a Model record, then paints it with a reset", function () {
+  var p = page(), opened = openNew(p);
+  assert.strictEqual(p.sent.length, 0); assert.strictEqual(p.menu.hidden, true);
+  opened.dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  assert.strictEqual(p.sent[0].type, "action.invoke");
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.faces.attached_zone.save");
+  assert.deepStrictEqual(params(p), { values: {
+    name: "Attached zone 1", kind: "other", temperature_reduction_factor: 0.95
+  } });
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
+    session: "session-a", outcome: { status: "completed", value: { id: "atz_2" } } } });
+  assert.strictEqual(p.context.document.querySelector("dialog"), null);
+  assert.deepStrictEqual(params(p, 1), { field: "attached_zone_id", value: "atz_2", reset: true });
+  assert.strictEqual(p.menu.hidden, true);
+});
 
 test("Cancel and Escape discard the draft without changing the Model or palette", function () {
   ["button", "escape"].forEach(function (route) {
@@ -243,7 +201,9 @@ test("Cancel and Escape discard the draft without changing the Model or palette"
     })[0].listeners.click({});
     assert.strictEqual(p.sent.length, 0);
     assert.strictEqual(p.context.document.querySelector("dialog"), null);
-    assert.strictEqual(p.context.document.activeElement, opened.trigger);
+    assert.strictEqual(p.menu.hidden, false, "Cancel reopens the same column menu");
+    assert.strictEqual(p.context.document.activeElement.textContent, "New attached zone");
+    assert.strictEqual(p.context.document.activeElement.isConnected, true);
   });
 });
 
@@ -290,42 +250,41 @@ test("changing Model session discards an unsaved Attached zone draft", function 
   assert.strictEqual(p.sent.length, 0);
 });
 
-function toggle(p) {
-  return p.context.document.querySelector("[data-section='ph_composer.classify.toggle']").querySelector("button");
-}
 
-test("the toggle opens the palette in the inspector, keeps its focus, and closes it again", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-  var button = toggle(p);
-  assert.deepStrictEqual([p.section().hidden, button.getAttribute("aria-pressed")], [true, "false"]);
-  button.focus();
-  button.listeners.click({});
-  assert.deepStrictEqual([p.section().hidden, button.getAttribute("aria-pressed")], [false, "true"]);
-  assert.strictEqual(toggle(p), button, "the same button, so the focus it holds survives the press");
-  assert.strictEqual(p.context.document.activeElement, button);
-  assert.strictEqual(button.getAttribute("aria-label"), "Classify faces", "a pressed toggle keeps its name");
-  button.listeners.click({});
-  assert.strictEqual(p.section().hidden, true);
-  assert.strictEqual(p.sent.length, 0, "opening and closing the palette sends nothing");
+test("a created Attached zone waits for the viewport channel, then focuses its active glyph", function () {
+  var p = page(), opened = openNew(p);
+  receive(p, snapshot(palette({ face_type: "Wall" }, true)));
+  glyph(p, "face_type").listeners.click({});
+  opened.dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  var stop = p.sent[0], create = p.sent[1];
+  p.panel.receive({ type: "action.result", payload: { request_id: create.payload.request_id,
+    session: "session-a", outcome: { status: "completed", value: { id: "atz_new" } } } });
+  assert.strictEqual(p.sent.length, 2, "the new record waits for the pending viewport command");
+  p.panel.receive({ type: "view.result", payload: { request_id: stop.payload.request_id,
+    session: "session-a", outcome: { status: "completed" } } });
+  assert.strictEqual(p.sent.length, 3);
+  assert.deepStrictEqual(params(p, 2), { field: "attached_zone_id", value: "atz_new", reset: true });
+  var chosen = snapshot(palette({ attached_zone_id: "atz_new", boundary_condition: "AttachedZone" }, true),
+    [{ id: "atz_new", values: { name: "Garage" } }]);
+  receive(p, chosen);
+  p.panel.receive({ type: "view.result", payload: { request_id: p.sent[2].payload.request_id,
+    session: "session-a", outcome: { status: "completed" } } });
+  assert.strictEqual(p.context.document.activeElement,
+    glyph(p, "boundary_condition"));
 });
 
-test("an active tool shows the palette; pressing the toggle stops it, and so does the tool ending", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette()) });
-  toggle(p).listeners.click({});
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
-  assert.deepStrictEqual([p.section().hidden, toggle(p).getAttribute("aria-pressed")], [false, "true"]);
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, false)) });
-  assert.strictEqual(p.section().hidden, true, "Escape or Stop closes the palette however it was opened");
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(palette({ face_type: "Wall" }, true)) });
-  toggle(p).listeners.click({});
-  assert.strictEqual(p.sent[p.sent.length - 1].payload.name, "ph_composer.zones.faces.stop_classifying");
-});
+test("old callbacks or create results cannot paint after a Model switch", function () {
+  var p = page(); receive(p, snapshot(palette())); open(p, "face_type");
+  var oldAction = p.classify.paint("face_type", "Wall", "Wall");
+  var next = snapshot(palette({}, true)); next.session = "session-b"; receive(p, next);
+  oldAction.run(p.anchor, p.close, p.reopen);
+  assert.strictEqual(p.sent.length, 0);
+  escape(p); assert.strictEqual(p.sent[0].payload.session, "session-b");
 
-test("with no palette to show the toggle refuses", function () {
-  var p = page(), empty = snapshot(palette());
-  delete empty.sections["ph_composer.zones.faces.palette"];
-  p.panel.receive({ type: "panel.snapshot", payload: empty });
-  assert.strictEqual(toggle(p).disabled, true);
+  p = page(); var opened = openNew(p);
+  opened.dialog.querySelector("form").listeners.submit({ preventDefault: function () {} });
+  next = snapshot(palette()); next.session = "session-b"; receive(p, next);
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
+    session: "session-a", outcome: { status: "completed", value: { id: "atz_old" } } } });
+  assert.strictEqual(p.sent.length, 1); assert.strictEqual(p.context.document.querySelector("dialog"), null);
 });

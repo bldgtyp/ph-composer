@@ -205,15 +205,16 @@ test("Schedule shows distinct occurrence words, friendly Face labels and identit
   assert.strictEqual(first.cells.name.textContent, "Window 1");
   assert.strictEqual(second.cells.name.textContent, "Window 2");
   assert.strictEqual(first.cells.host.textContent, "Roof or ceiling 1");
-  assert.ok(first.cells.name.title.includes("wun_a")); assert.ok(first.cells.name.title.includes("10 / 30"));
-  assert.ok(second.cells.name.title.includes("10 / 31"));
+  assert.ok(first.cells.name.getAttribute("data-tooltip").includes("wun_a"));
+  assert.ok(first.cells.name.getAttribute("data-tooltip").includes("10 / 30"));
+  assert.ok(second.cells.name.getAttribute("data-tooltip").includes("10 / 31"));
   assert.ok(!text(o.editor.schedule.root).includes("wun_a"));
   assert.ok(!text(o.editor.schedule.root).includes("RoofCeiling"));
   o.state.sections["ph_composer.windows.units"].value.units[0].values.window_type_id = "wnt_missing";
   o.editor.render(o.state);
   var missing = o.editor.schedule.mount._table.rows["type:wnt_missing"];
   assert.strictEqual(missing.cells.name.textContent, "Unknown Type");
-  assert.ok(missing.cells.name.title.includes("wnt_missing"));
+  assert.ok(missing.cells.name.getAttribute("data-tooltip").includes("wnt_missing"));
   assert.ok(!text(o.editor.schedule.root).includes("wnt_missing"));
   click(first.controls.locate.node);
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params.units[0])),

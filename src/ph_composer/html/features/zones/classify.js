@@ -1,69 +1,39 @@
-/* The Classify tool's palette in the panel: face type chips, boundary condition chips, the Attached
- * zone picker with its inline New route, and the control that gives the viewport back.
- *
- * A chip with nothing chosen means keep what each Face has, so the tool can set only the boundary
- * condition on already-typed Faces, or only the type. Choosing any chip also gives the tool the
- * viewport, which is what the native Classify menu does.
- *
- * Surface and Attached zone are not chips: Solve adjacencies writes the first, and the second is
- * chosen as a record from its list. The palette's help says so once.
- */
+/* Column-scoped configuration for the native Face paint tool. Choosing a value resets hidden intent. */
 PhComposerUI.define("features/zones/classify", ["panel", "workspace", "request", "snapshot",
   "face_words", "features/zones/attached_zone_fields", "features/zones/assembly_assignment"],
 function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   "use strict";
   var KEEP = "";
   var screen = null;
-  var HELP = "Choose what to set, then click or drag over Faces. Anything you leave unchosen keeps what each " +
-    "Face has. Surface is set by Solve adjacencies. An Attached zone is chosen from its list.";
-
   // Editors and bubbles consume their own Escape first. A modal dialog receives the native
   // cancel event after keydown, so leave that press to it even before it marks the event handled.
   // Otherwise panel focus must not trap the viewport's Classify tool.
-  // An open palette whose tool is idle is a layer too: Escape closes it.
+  // Column menus consume Escape before it reaches the native tool.
   document.addEventListener("keydown", function (event) {
-    if (event.key !== "Escape" || event.defaultPrevented || !screen || !(screen.active || screen.open) ||
+    if (event.key !== "Escape" || event.defaultPrevented || !screen || !showing() ||
         screen.view.busy()) return;
     if (Array.from(document.querySelectorAll("dialog")).some(function (dialog) { return dialog.open; })) return;
     event.preventDefault();
     if (screen.active) screen.view.run("ph_composer.zones.faces.stop_classifying", {});
-    else { screen.open = false; panel.repaint(); }
   });
 
   function forSession(session, send) {
     if (screen && screen.session === session) return screen;
-    if (screen) { screen.disposed = true; screen.view.reset(); screen.edits.reset(); }
+    if (screen) { screen.disposed = true; screen.view.reset(); screen.edits.reset(); closeMenus(screen); }
     if (screen && screen.draft) screen.draft.close();
-    screen = { session: session, chooseWhenFree: null, draft: null,
+    screen = { session: session, chooseWhenFree: null, draft: null, headers: {}, contexts: {},
       view: requests.channel(session, send, "palette", "view.invoke"),
       edits: requests.channel(session, send, "attached_zone") };
     return screen;
   }
 
-  /* One row of chips for one palette field. The chosen chip is marked the way an active sidebar row
-     is, and pressing it again clears the field back to keeping what the Face has. */
-  function chips(state, field, values, chosen, table) {
-    var row = ui.element("div", "phc-chips");
-    // Only what a chip can set. Surface and Attached zone are explained once, in the palette's help.
-    values.filter(function (value) { return !words.UNCHOOSABLE[value]; }).forEach(function (value) {
-      var word = table[value] || value;
-      var chip = ui.element("button", "phc-chip", word);
-      var current = chosen === value;
-      chip.setAttribute("aria-pressed", String(current));
-      chip.setAttribute("aria-label", word);
-      // The same colour the table's chip and the viewport give this value.
-      words.paintFill(chip, field, value);
-      chip.disabled = state.view.busy();
-      chip.addEventListener("click", function () { choose(state, field, current ? null : value); });
-      row.appendChild(chip);
-    });
-    return row;
-  }
-
   function choose(state, field, value) {
     if (state !== screen || state.disposed || !state.available ||
         (field === "assembly_id" && !snapshot.value(state.snapshot, "ph_composer.zones.faces.assemblies"))) return;
-    state.view.run("ph_composer.zones.faces.choose", { field: field, value: value });
+    if (!value || state.view.busy()) return;
+    closeMenus(state);
+    if (state.focusTarget && state.focusTarget.isConnected) state.focusTarget.focus();
+    state.view.run("ph_composer.zones.faces.choose", { field: field, value: value, reset: true });
   }
 
   function field(title, body) {
@@ -79,7 +49,7 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   function attachedZones(state, palette, records) {
     var body = ui.element("div", "phc-chips");
     var picker = ui.element("select");
-    var none = ui.element("option", "", "None");
+    var none = ui.element("option", "", "Choose Attached zone");
     none.value = KEEP;
     picker.appendChild(none);
     records.forEach(function (record) {
@@ -110,6 +80,7 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
 
   function openAttachedZone(state, records) {
     if (state.draft) return;
+    closeMenus(state);
     var dialog = ui.formDialog("", cancel);
     var form = ui.element("form");
     var inputs = attachedFields.build(form, records, submit);
@@ -165,7 +136,11 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
       if (dialog.parentNode) dialog.parentNode.removeChild(dialog);
       inputs.dispose();
       state.draft = null;
-      if (state.createButton && state.createButton.isConnected) state.createButton.focus();
+      if (!afterRender && state === screen && !state.disposed) {
+        var context = state.contexts.boundary_condition;
+        if (context) context.reopen();
+        if (state.createButton && state.createButton.isConnected) state.createButton.focus();
+      }
     }
   }
 
@@ -177,106 +152,116 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     choose(state, "attached_zone_id", id);
   }
 
-  /* Offered only while the tool has the viewport. A permanently mounted control that is almost always
-     disabled is furniture, not an affordance; choosing a chip is what starts the tool. */
-  function stopButton(state) {
-    // "Stop" beside the heading "Classify faces": the full phrase "Stop classifying" is its accessible name.
-    var stop = ui.element("button", "", "Stop");
-    stop.disabled = state.view.busy();
-    stop.title = "Stop classifying";
-    stop.setAttribute("aria-label", "Stop classifying and give the viewport back to the previous tool");
-    stop.addEventListener("click", function () {
-      state.view.run("ph_composer.zones.faces.stop_classifying", {});
-    });
-    return stop;
+  function closeMenus(state) {
+    Object.keys(state.contexts).forEach(function (field) { state.contexts[field].close(); });
   }
 
-  function render(root, state, send) {
-    var tool = snapshot.value(state, "ph_composer.zones.faces.palette") ||
+  function refresh(state, send) {
+    var current = forSession(state.session, send);
+    current.snapshot = state;
+    current.tool = snapshot.value(state, "ph_composer.zones.faces.palette") ||
       { active: false, palette: {}, face_types: [], boundary_conditions: [] };
-    var records = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") ||
-      { records: [] }).records;
-    var screenState = forSession(state.session, send);
-    screenState.active = Boolean(tool.active);
-    screenState.available = Boolean(snapshot.value(state, "ph_composer.zones.faces.palette"));
-    screenState.snapshot = state;
-    screenState.view.consume(state);
-    screenState.edits.consume(state);
-    sendPending(screenState);
-    // Repainted only when the palette, the records or a pending request have changed. A snapshot
-    // follows every Face the user paints, and rebuilding the chips each time would take the focus
-    // out from under them mid-gesture.
-    ui.memoPaint(root, "palette", [state.session, tool, records,
-      snapshot.value(state, "ph_composer.zones.faces.assemblies"), screenState.view.busy(),
-      screenState.edits.busy()], function () {
-      var heading = ui.element("div", "phc-zone-heading");
-      var body = ui.element("div", "phc-palette");
-      var help = ui.helpButton("Classify faces", HELP);
-      help.classList.add("phc-icon-button");
-      help.setAttribute("data-tooltip", HELP);
-      help.title = "";
-      heading.appendChild(ui.element("h2", "", "Classify faces"));
-      heading.appendChild(help);
-      if (tool.active) heading.appendChild(stopButton(screenState));
-      body.appendChild(field("Face type",
-        chips(screenState, "face_type", tool.face_types, tool.palette.face_type, words.FACE_TYPES)));
-      body.appendChild(field("Boundary condition",
-        chips(screenState, "boundary_condition", tool.boundary_conditions,
-          tool.palette.boundary_condition, words.BOUNDARIES)));
-      body.appendChild(field("Attached zone", attachedZones(screenState, tool.palette, records)));
-      // Painting an Assembly starts from that Assembly's own row; the palette only says which one it is.
-      var painting = assemblies.choices(state, []).filter(function (record) {
-        return record.id === tool.palette.assembly_id;
-      })[0];
-      if (tool.palette.assembly_id) {
-        var inHand = ui.element("div", "phc-chips");
-        var drop = ui.button("Stop painting it", function () { choose(screenState, "assembly_id", null); });
-        drop.disabled = screenState.view.busy();
-        inHand.appendChild(ui.element("span", "phc-palette-value", painting ? painting.name : "Missing Assembly"));
-        inHand.appendChild(drop);
-        body.appendChild(field("Assembly", inHand));
+    current.records = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") || { records: [] }).records;
+    current.active = Boolean(current.tool.active);
+    current.available = Boolean(snapshot.value(state, "ph_composer.zones.faces.palette"));
+    current.view.consume(state); current.edits.consume(state); sendPending(current);
+    if (state.ui.activeTab !== "overview") closeMenus(current);
+    if (current.returnFocus && !current.view.busy()) {
+      current.returnFocus = false;
+      var boundary = current.headers.boundary_condition;
+      if (boundary && current.active && valueLabel(current, "boundary_condition")) {
+        boundary.hidden = false;
+        boundary.disabled = false;
+        boundary.focus();
+      } else if (current.focusTarget && current.focusTarget.isConnected) current.focusTarget.focus();
+    }
+
+  }
+
+  function supported(field) {
+    return ["face_type", "boundary_condition", "assembly_id"].indexOf(field) >= 0;
+  }
+
+  function valueLabel(state, field) {
+    var palette = state.tool.palette;
+    if (field === "face_type") return words.FACE_TYPES[palette[field]] || palette[field];
+    if (field === "boundary_condition") {
+      if (palette.attached_zone_id) {
+        var record = state.records.filter(function (item) { return item.id === palette.attached_zone_id; })[0];
+        return "Attached zone: " + (record ? record.values.name : "Missing Attached zone");
       }
-      root.className = "phc-classify" + (tool.active ? " is-active" : "");
-      root.replaceChildren(heading, body);
-    });
-    root.hidden = !showing();
-    if (screenState.returnFocus) {
-      screenState.returnFocus = false;
-      screenState.createButton.focus();
+      return words.BOUNDARIES[palette[field]] || palette[field];
     }
+    var assembly = assemblies.choices(state.snapshot, []).filter(function (item) {
+      return item.id === palette[field];
+    })[0];
+    return palette[field] ? assembly ? assembly.name : "Missing Assembly" : null;
   }
 
-  /* Whether the palette shows: while the tool has the viewport or the user has opened it. */
-  function showing() { return Boolean(screen && (screen.active || screen.open)); }
-
-  /* The palette holds the Zones / Faces selection bar while the tool has the viewport or the user has opened
-     it, and the toggle is pressed while either holds. Pressing it during painting gives the viewport back. When the
-     tool ends any other way (Escape, Stop, another tool) the palette closes with it. The button is built
-     once a session and repainted, so pressing it never drops the focus it holds. */
-  function renderToggle(root, state, send) {
-    var tool = snapshot.value(state, "ph_composer.zones.faces.palette");
-    var screenState = forSession(state.session, send), active = Boolean(tool && tool.active);
-    screenState.view.consume(state);
-    if (screenState.wasActive && !active) screenState.open = false;
-    screenState.wasActive = active;
-    if (!screenState.toggle || screenState.toggle.parentNode !== root) {
-      screenState.toggle = ui.iconButton("Classify faces", "paint_bucket", function () {
-        var pressed = screenState.wasActive || screenState.open;
-        if (screenState.wasActive) screenState.view.run("ph_composer.zones.faces.stop_classifying", {});
-        screenState.open = !pressed;
-        panel.repaint();
+  /* The union of declared choices and current values lets an unused value be painted too. */
+  function values(fieldName) {
+    if (!screen || !supported(fieldName)) return [];
+    if (fieldName === "assembly_id") {
+      return assemblies.choices(screen.snapshot, []).map(function (record) {
+        return { value: record.id, label: record.name };
       });
-      root.className = "phc-classify-toggle";
-      root.replaceChildren(screenState.toggle);
     }
-    screenState.toggle.setAttribute("aria-pressed", String(active || Boolean(screenState.open)));
-    screenState.toggle.disabled = !tool || screenState.view.busy();
+    var type = fieldName === "face_type", table = type ? words.FACE_TYPES : words.BOUNDARIES;
+    return (type ? screen.tool.face_types : screen.tool.boundary_conditions).map(function (value) {
+      return { value: value, label: table[value] || value };
+    });
   }
 
-  // An authoring tool: it changes the Model, so it sits in the page header's toolbar, apart from the view
-  // controls (Colour by) in the control row.
-  panel.section("ph_composer.classify.toggle", renderToggle, { region: "actions", order: 10 });
-  // The overview places the palette in its selection bar (features/zones/overview.js).
-  panel.section("ph_composer.classify", render, { order: 20 });
-  return { showing: showing };
+  /* A secondary row action, independent of the row's visibility checkbox. */
+  function paint(fieldName, value, label) {
+    if (!screen || !value || words.UNCHOOSABLE[value] ||
+        !values(fieldName).some(function (entry) { return entry.value === value; })) return null;
+    var state = screen;
+    return { label: "Paint " + label, icon: "paint_bucket", pressed: Boolean(state.active &&
+      state.tool.palette[fieldName] === value), disabled: !state.available || state.view.busy(),
+      run: function (anchor) {
+        state.focusTarget = anchor;
+        choose(state, fieldName, value);
+      } };
+  }
+
+  /* Attached zone needs a reference rather than one enum. Its controls sit in the same column menu. */
+  function extra(fieldName, root, anchor, close, reopen) {
+    if (!screen || !supported(fieldName)) return;
+    screen.contexts[fieldName] = { anchor: anchor, close: close, reopen: reopen };
+    if (fieldName !== "boundary_condition") return;
+    var state = screen;
+    var body = attachedZones(state, state.tool.palette, state.records);
+    state.focusTarget = anchor;
+    root.appendChild(field("Paint Attached zone", body));
+    root.appendChild(ui.element("p", "phc-paint-help", "Surface is set by Solve adjacencies."));
+  }
+
+  function header(fieldName, label) {
+    if (!supported(fieldName) || !screen) return null;
+    var state = screen, node = state.headers[fieldName];
+    if (!node) {
+      node = state.headers[fieldName] = ui.iconButton("Paint " + label, "paint_bucket", function () {
+        if (state !== screen || state.disposed || !state.active || state.view.busy()) return;
+        closeMenus(state);
+        state.view.run("ph_composer.zones.faces.stop_classifying", {});
+      });
+    }
+    var value = valueLabel(state, fieldName), active = Boolean(state.active && value);
+    ui.paintIconButton(node, "Paint " + label + (active ? ": " + value + ". Click to stop painting" : ""),
+      "paint_bucket");
+    node.setAttribute("aria-pressed", String(active));
+    node.disabled = !state.available || state.view.busy();
+    node.hidden = !active;
+    return { node: node, persistent: active };
+  }
+
+  function showing() {
+    return Boolean(screen && (screen.active || screen.draft));
+  }
+
+  panel.navigationGuard("ph_composer.zones.paint", function (tab) {
+    return screen && screen.draft && tab !== "overview" ? "Save or cancel the Attached zone first." : null;
+  });
+  return { refresh: refresh, values: values, paint: paint, extra: extra, header: header, showing: showing };
 });

@@ -276,11 +276,13 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   }
 
   function render() {
+    ui.attachTooltip(document.body);
     api.state = state;
     renderNotice();
     renderUnitToggle();
     applyTab();
     if (state.session !== null) { sections.forEach(renderSection); showInspectors(); }
+    document.body._checkTooltip();
   }
 
   /* One floating notice above the panes, so a late message never reflows the page. Warnings and errors stay
