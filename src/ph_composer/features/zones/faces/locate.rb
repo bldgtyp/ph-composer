@@ -78,20 +78,28 @@ module PhComposer
           center = box.center
           radius = [box.diagonal.to_f / 2.0, 1.0].max * FRAME_MARGIN
           direction = camera.direction
+          aspect = view.vpwidth.to_f / [view.vpheight.to_f, 1.0].max
           if camera.perspective?
-            vertical = camera.fov.to_f * Math::PI / 180.0
-            aspect = view.vpwidth.to_f / [view.vpheight.to_f, 1.0].max
-            narrowest = [vertical, 2.0 * Math.atan(Math.tan(vertical / 2.0) * aspect)].min
-            eye = center.offset(direction.reverse, radius / Math.sin(narrowest / 2.0))
+            eye = center.offset(direction.reverse, radius / Math.sin(narrowest_angle(camera, aspect) / 2.0))
             camera.set(eye, center, camera.up)
           else
             camera.set(center.offset(direction.reverse, radius * 4.0), center, camera.up)
-            camera.height = radius * 2.0
+            camera.height = radius * 2.0 / [aspect, 1.0].min
           end
           view.invalidate
         end
 
-        private_class_method :resolve, :zoom, :world_bounds, :frame
+        # The smaller of the view's two angles. `fov` is the vertical angle unless the camera says it is the
+        # horizontal one (`fov_is_height?` false), a per-camera setting.
+        def narrowest_angle(camera, aspect)
+          angle = camera.fov.to_f * Math::PI / 180.0
+          height = !camera.respond_to?(:fov_is_height?) || camera.fov_is_height?
+          half = Math.tan(angle / 2.0)
+          other = 2.0 * Math.atan(height ? half * aspect : half / aspect)
+          [angle, other].min
+        end
+
+        private_class_method :resolve, :zoom, :world_bounds, :frame, :narrowest_angle
       end
     end
   end

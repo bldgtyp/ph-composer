@@ -20,12 +20,14 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   // Editors and bubbles consume their own Escape first. A modal dialog receives the native
   // cancel event after keydown, so leave that press to it even before it marks the event handled.
   // Otherwise panel focus must not trap the viewport's Classify tool.
+  // An open palette whose tool is idle is a layer too: Escape closes it.
   document.addEventListener("keydown", function (event) {
-    if (event.key !== "Escape" || event.defaultPrevented || !screen || !screen.active ||
+    if (event.key !== "Escape" || event.defaultPrevented || !screen || !(screen.active || screen.open) ||
         screen.view.busy()) return;
     if (Array.from(document.querySelectorAll("dialog")).some(function (dialog) { return dialog.open; })) return;
     event.preventDefault();
-    screen.view.run("ph_composer.zones.faces.stop_classifying", {});
+    if (screen.active) screen.view.run("ph_composer.zones.faces.stop_classifying", {});
+    else { screen.open = false; panel.repaint(); }
   });
 
   function forSession(session, send) {

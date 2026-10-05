@@ -509,10 +509,14 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       : (row.record.every || row.record.faces).map(function (face) { return face.reference; }));
   }
 
+  /* A Locate is never dropped: while the channel waits on an earlier command (a clear the same click's press
+     sent), it goes untracked; the host answers in order. */
   function locateFaces(state, references) {
-    if (references.length && state.look.run("ph_composer.zones.faces.locate", { faces: references })) {
-      state.locating = true;
-    }
+    if (!references.length) return;
+    var params = { faces: references };
+    if (state.look.busy()) state.look.send("ph_composer.zones.faces.locate", params);
+    else state.look.run("ph_composer.zones.faces.locate", params);
+    state.locating = true;
   }
 
   /* Locate's outline lasts until the next pointer press in the panel outside a Locate control, Escape, the

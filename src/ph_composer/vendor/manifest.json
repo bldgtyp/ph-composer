@@ -176,14 +176,14 @@
       "sha256": "cb5d6a0b9d52f64d04ad74be5491f121e0958eba0a1f55404313a32cf61974aa"
     },
     "html/features/zones/classify.js": {
-      "bytes": 13638,
+      "bytes": 13799,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "499a6f1fc780e5db0d8246105b1e0890e411f6ee4e81519945b96f54d5a7c2fa"
+      "sha256": "a4b10771d6112e3c21d45581d007043fa1475060d4ea5b89e7b87728ee662114"
     },
     "html/features/zones/overview.js": {
-      "bytes": 51468,
+      "bytes": 51756,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "feccd78c6bbd804c17bbad3afbf8f3d704c2763e01a8b608079834ef12e6d662"
+      "sha256": "e347c235c9381a7537f2c34135c85975221fcb8ec67b71878f28cd087e4b8f4b"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 2727,

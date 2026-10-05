@@ -26,7 +26,15 @@ The committed head `19d1bf6` differs from the last installed tree only by a comm
 runtime manifest; its RBZ `a662688a773569037ba6dbe0f6e15ce92700d8ffa018715b6c4b8f43d5a02f73` was installed
 afterwards (package comparison `matches: true`) and no case was rerun on it. After that, `Locate.frame`
 gained an offline test, and its field-of-view conversion changed from SketchUp's `Numeric#degrees` to the
-equivalent `* Math::PI / 180`; that change has not run on the host. The walkthrough ran outside
+equivalent `* Math::PI / 180`.
+
+4. Recheck after a bounded review of the post-review delta: RBZ
+   `063c86d4d9202f091cb2b8b231f50bdd4572ff0afbac695a9918e02570fa2d28` in a fresh process, package comparison
+   `matches: true`, same fixture hash. The framing now honours `fov_is_height?` (true on this host, fov
+   35 degrees, 2028 by 963 viewport) and the parallel-camera aspect; Locate on the east Zone's Wall 5 drew
+   its outline at screen points (818, 785), (1155, 649), (1159, 257), (810, 239), inside the viewport, with
+   the selection empty. A Locate while the channel waits is now sent untracked instead of dropped. Escape on
+   an open, idle Classify palette closed it (the toggle released) with no host command. The walkthrough ran outside
 `tools/hostkit/acceptance_run.py` (no recipe, baseline or receipt), because these cases are not in the case
 ledger; nothing was appended to `planning/native-acceptance/results.jsonl`. Raw captures are in
 `_private/host/ztf/evidence/`.

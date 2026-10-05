@@ -1026,11 +1026,17 @@ test("a Model switch takes the old Model's selection bar with it", function () {
   assert.ok(p.query("[data-section='ph_composer.classify']"), "the palette stays in the page");
 });
 
-test("Escape leaves the checked set alone while the Classify palette is open", function () {
+test("Escape closes an open, idle Classify palette before it clears the checked set", function () {
   var p = checkPage([0]);
-  click(p.query("[data-section='ph_composer.classify.toggle']").querySelector("button"));
+  var toggle = p.query("[data-section='ph_composer.classify.toggle']").querySelector("button");
+  click(toggle);
+  assert.strictEqual(toggle.getAttribute("aria-pressed"), "true");
   dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
-  assert.strictEqual(p.state("Wall 1"), "true", "the palette is the layer above the checked set");
+  assert.deepStrictEqual([toggle.getAttribute("aria-pressed"), p.state("Wall 1")], ["false", "true"],
+    "the palette is the layer above the checked set");
+  dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+  assert.strictEqual(p.state("Wall 1"), "false");
+  assert.strictEqual(p.sent.length, 0, "an idle palette closes without a host command");
 });
 
 test("past fifty unclassified Faces the header box and the hidden count read every Face the filter shows", function () {
