@@ -523,9 +523,12 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
      next Locate or a new selection; the host clears it on the last two, and this sends one clear for the
      others, only while one is showing. */
   function clearLocate(state) {
-    if (!state || !state.locating || state.look.busy()) return;
+    if (!state || !state.locating) return;
     state.locating = false;
-    state.look.run("ph_composer.zones.faces.clear_locate", {});
+    // While the Locate is still in flight the clear goes after it, untracked, rather than being dropped; the
+    // host answers in order, so the outline that Locate draws is the one this clears.
+    if (state.look.busy()) state.look.send("ph_composer.zones.faces.clear_locate", {});
+    else state.look.run("ph_composer.zones.faces.clear_locate", {});
   }
 
   document.addEventListener("pointerdown", function (event) {
@@ -627,7 +630,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (screenState.attachedDraft) screenState.attachedDraft.consume(state);
     // A new SketchUp selection replaces the checked set, and the host has already cleared Locate's outline.
     screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
-    if (screenState.checked.sync(screenState.targets)) screenState.locating = false;
+    var change = snapshot.value(state, "ph_composer.zones.faces.selection_change");
+    if (screenState.checked.sync(screenState.targets, change && change.generation)) screenState.locating = false;
     screenState.faces = faces;
     screenState.barTargets = screenState.checked.among(faces).map(function (face) {
       return { reference: face.reference, expected_values: face.values };

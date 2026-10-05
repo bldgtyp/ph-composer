@@ -3,7 +3,9 @@
  * The set belongs to the panel. It can span Zones, and checking a row never changes SketchUp's selection,
  * because SketchUp's selection holds only entities in the open edit context, so a mirrored set could not
  * span Zones (context/SKETCHUP_HOST_BEHAVIOR.md). The sync runs one way: when SketchUp's selection changes,
- * the set is replaced by the Faces now selected there, and an empty selection clears it.
+ * the set is replaced by the Faces now selected there, and a selection with no Faces in it (nothing, or a
+ * Group) clears it. The host counts selection changes, because the Faces alone cannot tell a change from no
+ * change: a Group selected and then nothing reads as no Faces both times.
  *
  * A Face is keyed by its occurrence (its Zone's path and its own), not its record id: a Face gains a record
  * when it is first classified, which must not uncheck it.
@@ -79,11 +81,12 @@ PhComposerUI.define("features/zones/checked_faces", [], function () {
   /* The checked Faces among `faces`, so a Face the Model no longer has is never counted or assigned. */
   CheckedFaces.prototype.among = function (faces) { return faces.filter(this.has, this); };
 
-  /* Replaces the set when SketchUp's selection differs from the last one seen, whatever order the host lists
-     it in. Answers whether it did. */
-  CheckedFaces.prototype.sync = function (targets) {
+  /* Replaces the set when SketchUp's selection has changed since the last time: `generation` is the host's count
+     of selection changes. Without one (a host that does not publish it), a different set of selected Faces,
+     in whatever order the host lists them, is the change. Answers whether it replaced the set. */
+  CheckedFaces.prototype.sync = function (targets, generation) {
     var references = targets.map(function (target) { return target.reference || {}; });
-    var signature = references.map(key).sort().join("|");
+    var signature = typeof generation === "number" ? "generation:" + generation : references.map(key).sort().join("|");
     if (signature === this.synced) return false;
     this.synced = signature;
     this.replace(references);

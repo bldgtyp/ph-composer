@@ -54,6 +54,25 @@ module PhComposer
           false
         end
 
+        # How many times SketchUp's selection has changed in this session. The panel's checked set follows
+        # the selection one way, and the Faces a selection holds cannot tell a change from no change: a
+        # Group selected and then nothing reads as no Faces both times. The count can.
+        class Generation
+          attr_reader :value
+
+          def initialize
+            @value = 0
+          end
+
+          def advance
+            @value += 1
+          end
+        end
+
+        def generation(session)
+          session.feature_state(:faces_selection_generation) { Generation.new }
+        end
+
         def handoff(session)
           session.feature_state(:faces_selection_assignment) { AssignmentState.new }
         end

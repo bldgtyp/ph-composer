@@ -11752,6 +11752,48 @@ Example params:
 {}
 ```
 
+### `ph_composer.zones.faces.selection_generation`
+
+How many times SketchUp's selection has changed in this session. Owner: `ph_composer.zones`.
+
+Refuses: only the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generation"
+  ],
+  "properties": {
+    "generation": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Advances on every native selection change, whatever it selects."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.zones.list`
 
 One page of Zone occurrences, filtered and projected, and the Make Zone target. Owner: `ph_composer.zones`.
