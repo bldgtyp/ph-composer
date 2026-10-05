@@ -62,7 +62,8 @@ class AssemblyAssignmentReadsTest < PhComposerTestCase
     declaration = PhComposer::Registry.current.colour_modes.fetch("#{FACE_PREFIX}.by_assembly")
     entries = declaration.projection.call(read(declaration))
     assert_equal "Colour", entries.first.label
-    assert_equal [18, 52, 86], declaration.colours.call(entries.first.value)
+    assert_equal [18, 52, 86], entries.first.colour
+    assert_equal id, entries.first.value, "the legend's key is the Assembly id"
     assert_nil entries[1].value
     assert_nil entries[1].state
     assert_equal :incomplete, entries.last.state

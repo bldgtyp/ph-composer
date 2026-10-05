@@ -375,6 +375,12 @@ entry's `transform` maps that entity's own contents to world. A value of nil is 
 a projection that knows a record is only half filled in says `state: :incomplete`; the service
 owns the appearance of both, so those two states look the same in every mode.
 
+An entry's `value` is the legend's key, a string, and the legend's select and isolate commands send
+it back unchanged. When the colour is a property of the record a value names rather than a function
+of the value (an Assembly's own colour), the entry supplies `colour: [r, g, b]` and the service uses
+it ahead of the mode's colour function; Zones' Assembly mode does this, with a colour function that
+answers nil.
+
 An entry may supply `path`, the full root-to-entity array of persistent IDs. Supply it when
 the entity belongs to an occurrence inside Groups or Components: the shared renderer then
 checks hidden and tag visibility along that occurrence's entire path. Supplied paths with missing
