@@ -4082,7 +4082,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "Every registered mode: name, label and entity kind."
+      "description": "Every registered mode: name, label, entity kind and group (null when none)."
     },
     "rows": {
       "type": "array",
@@ -10907,7 +10907,8 @@ Result:
     "active",
     "palette",
     "face_types",
-    "boundary_conditions"
+    "boundary_conditions",
+    "gesture_face_limit"
   ],
   "properties": {
     "active": {
@@ -10935,6 +10936,11 @@ Result:
       "items": {
         "type": "string"
       }
+    },
+    "gesture_face_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The most Faces one gesture or one bulk assignment may change."
     }
   }
 }
@@ -11735,6 +11741,48 @@ Result:
           }
         }
       }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.zones.faces.selection_generation`
+
+How many times SketchUp's selection has changed in this session. Owner: `ph_composer.zones`.
+
+Refuses: only the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generation"
+  ],
+  "properties": {
+    "generation": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Advances on every native selection change, whatever it selects."
     }
   }
 }
@@ -35549,7 +35597,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "Every registered mode: name, label and entity kind."
+      "description": "Every registered mode: name, label, entity kind and group (null when none)."
     },
     "rows": {
       "type": "array",
@@ -35648,7 +35696,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "Every registered mode: name, label and entity kind."
+      "description": "Every registered mode: name, label, entity kind and group (null when none)."
     },
     "rows": {
       "type": "array",
@@ -36152,7 +36200,8 @@ Result:
     "active",
     "palette",
     "face_types",
-    "boundary_conditions"
+    "boundary_conditions",
+    "gesture_face_limit"
   ],
   "properties": {
     "active": {
@@ -36180,6 +36229,11 @@ Result:
       "items": {
         "type": "string"
       }
+    },
+    "gesture_face_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The most Faces one gesture or one bulk assignment may change."
     }
   }
 }
@@ -36201,6 +36255,40 @@ Example params:
   "field": "assembly_id",
   "value": "asm_Ab12Cd34Ef56"
 }
+```
+
+### `ph_composer.zones.faces.clear_locate`
+
+Remove the outline the last Locate left in the viewport. Owner: `ph_composer.zones`.
+
+Refuses: only the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Example params:
+
+```json
+{}
 ```
 
 ### `ph_composer.zones.faces.close_attached_assignment`
@@ -36301,7 +36389,7 @@ Example params:
 
 ### `ph_composer.zones.faces.locate`
 
-Select an explicit set of Faces and bring them into view. Owner: `ph_composer.zones`.
+Bring an explicit set of Faces into view and outline them, leaving the selection alone. Owner: `ph_composer.zones`.
 
 Refuses: only the `view_command` common set.
 
@@ -36351,7 +36439,7 @@ Params:
         }
       },
       "minItems": 1,
-      "description": "The Face occurrences to select and bring into view."
+      "description": "The Face occurrences to bring into view and outline."
     }
   }
 }
@@ -36548,6 +36636,108 @@ Example params:
 }
 ```
 
+### `ph_composer.zones.faces.select`
+
+Select an explicit set of Faces and bring them into view. Owner: `ph_composer.zones`.
+
+Refuses: only the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "faces"
+  ],
+  "properties": {
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "minItems": 1,
+      "description": "The Face occurrences to select and bring into view."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "found",
+    "missing"
+  ],
+  "properties": {
+    "found": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many references still resolved."
+    },
+    "missing": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many did not, and were skipped."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "faces": [
+    {
+      "zone_id": "zon_Ab12Cd34Ef56",
+      "zone_path": [
+        1201
+      ],
+      "entity_path": [
+        1202
+      ],
+      "entity_id": null
+    }
+  ]
+}
+```
+
 ### `ph_composer.zones.faces.stop_classifying`
 
 Give the viewport back to whatever tool the user had. Owner: `ph_composer.zones`.
@@ -36575,7 +36765,8 @@ Result:
     "active",
     "palette",
     "face_types",
-    "boundary_conditions"
+    "boundary_conditions",
+    "gesture_face_limit"
   ],
   "properties": {
     "active": {
@@ -36603,6 +36794,11 @@ Result:
       "items": {
         "type": "string"
       }
+    },
+    "gesture_face_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The most Faces one gesture or one bulk assignment may change."
     }
   }
 }

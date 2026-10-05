@@ -394,6 +394,11 @@ module Sketchup
       @edges.each { |edge| edge.attach_face(self) }
     end
 
+    # Every vertex of every loop, as the host's `Face#vertices` lists them.
+    def vertices
+      @loops.flat_map(&:vertices).uniq
+    end
+
     # Membership and glue only: the stub does not simulate native opening-cut geometry.
     def get_glued_instances
       return [] unless parent_entities

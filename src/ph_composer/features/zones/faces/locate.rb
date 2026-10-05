@@ -3,48 +3,103 @@
 module PhComposer
   module Zones
     module Faces
-      # Locate: select an explicit set of Face references and bring them into view. Other features use
-      # it. It changes the selection and the camera and nothing else, so it writes no record, opens no
-      # Model operation and leaves no Undo entry.
+      # Locate and Select, the two ways a caller reaches an explicit set of Face references in the
+      # viewport. Other features use both.
       #
-      # That is also why it is not a registered action: registering it as one would manufacture an Undo
-      # entry for a read. It is a view command instead (Declarations::ViewCommand), registered as
-      # `ph_composer.zones.faces.locate`, so the faces table, a script and any client with `view`
-      # access reach it the same way. That seam is the write channel for viewport state.
+      # Locate brings the Faces into view and outlines them (LocateHighlight). It leaves SketchUp's
+      # selection alone, so a set the panel has checked, or a selection the user made, survives it.
+      # Select replaces the selection with the Faces and brings them into view, for a caller that wants
+      # the native selection itself (an agent handing the user a set to act on).
+      #
+      # Neither writes a record, opens a Model operation or leaves an Undo entry, which is why they are
+      # view commands (Declarations::ViewCommand), `ph_composer.zones.faces.locate` and `.select`,
+      # rather than registered actions: an action would manufacture an Undo entry for a read.
       module Locate
         module_function
 
-        # Answers the references it could resolve. A reference that no longer resolves is skipped
+        # Answers the occurrences it could resolve. A reference that no longer resolves is skipped
         # rather than refusing the rest: Locate is a way of finding things, and the caller's list may
         # be as old as the last read it came from.
         def call(session, references)
-          model = session.model
-          index = Zones::Index.new(model)
-          found = Array(references).filter_map do |reference|
-            Zones::Occurrences.resolve_face(model, reference, :allow_unassigned => true, :index => index)
-          rescue CodedError
-            nil
-          end
-          select(model, found.map(&:entity))
+          found = resolve(session.model, references)
+          zoom(session.model, found)
+          Faces.locate_highlight(session).show(found)
           found
         end
 
         # Whether SketchUp shows a selection made outside the active edit context is not measured, and
-        # the host gate asks it (tools/examples/authoring/classify_tool_walkthrough.rb). Locate does
+        # the host gate asks it (tools/examples/authoring/classify_tool_walkthrough.rb). Select does
         # not open the context itself: changing `active_path` advances the session revision
         # (context/CONTRACTS.md, "Revisions, transactions and host execution") and would cancel a
         # pending gesture, which is too much for a read.
-        def select(model, entities)
-          selection = model.selection
+        def select(session, references)
+          found = resolve(session.model, references)
+          selection = session.model.selection
           selection.clear
-          return if entities.empty?
-
-          selection.add(entities)
-          view = model.respond_to?(:active_view) ? model.active_view : nil
-          view.zoom(entities) if view.respond_to?(:zoom)
+          selection.add(found.map(&:entity)) unless found.empty?
+          zoom(session.model, found)
+          found
         end
 
-        private_class_method :select
+        def resolve(model, references)
+          index = Zones::Index.new(model)
+          Array(references).filter_map do |reference|
+            Zones::Occurrences.resolve_face(model, reference, :allow_unassigned => true, :index => index)
+          rescue CodedError
+            nil
+          end
+        end
+
+        # Frames the Faces by their world bounds, keeping the camera's direction. `View#zoom` with a Face
+        # inside a closed Group frames the Face's bounds in its own Group's coordinates, which leaves a Zone
+        # placed away from the origin off screen (context/SKETCHUP_HOST_BEHAVIOR.md); a view without a
+        # camera (the offline stub) still gets `zoom`.
+        def zoom(model, found)
+          return if found.empty?
+
+          view = model.respond_to?(:active_view) ? model.active_view : nil
+          return unless view
+
+          camera = view.respond_to?(:camera) ? view.camera : nil
+          return view.zoom(found.map(&:entity)) if !camera.respond_to?(:set) && view.respond_to?(:zoom)
+
+          frame(view, camera, world_bounds(found))
+        end
+
+        def world_bounds(found)
+          found.each_with_object(Geom::BoundingBox.new) do |face, box|
+            face.entity.vertices.each { |vertex| box.add(vertex.position.transform(face.transform)) }
+          end
+        end
+
+        FRAME_MARGIN = 1.2
+
+        def frame(view, camera, box)
+          center = box.center
+          radius = [box.diagonal.to_f / 2.0, 1.0].max * FRAME_MARGIN
+          direction = camera.direction
+          aspect = view.vpwidth.to_f / [view.vpheight.to_f, 1.0].max
+          if camera.perspective?
+            eye = center.offset(direction.reverse, radius / Math.sin(narrowest_angle(camera, aspect) / 2.0))
+            camera.set(eye, center, camera.up)
+          else
+            camera.set(center.offset(direction.reverse, radius * 4.0), center, camera.up)
+            camera.height = radius * 2.0 / [aspect, 1.0].min
+          end
+          view.invalidate
+        end
+
+        # The smaller of the view's two angles. `fov` is the vertical angle unless the camera says it is the
+        # horizontal one (`fov_is_height?` false), a per-camera setting.
+        def narrowest_angle(camera, aspect)
+          angle = camera.fov.to_f * Math::PI / 180.0
+          height = !camera.respond_to?(:fov_is_height?) || camera.fov_is_height?
+          half = Math.tan(angle / 2.0)
+          other = 2.0 * Math.atan(height ? half * aspect : half / aspect)
+          [angle, other].min
+        end
+
+        private_class_method :resolve, :zoom, :world_bounds, :frame, :narrowest_angle
       end
     end
   end

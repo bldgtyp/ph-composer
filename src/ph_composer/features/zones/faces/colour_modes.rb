@@ -37,7 +37,7 @@ module PhComposer
                                                      :colours => ColourBy::Palette.fixed(BOUNDARY_COLOURS)) do |read|
             entries(read.model, "boundary_condition", BOUNDARY_LABELS)
           end
-          feature.colour_mode(BY_ASSEMBLY, :label => "Assembly", :entity_kind => "face",
+          feature.colour_mode(BY_ASSEMBLY, :label => "Assembly", :entity_kind => "face", :group => "construction",
                                            :colours => method(:assembly_colour)) { |read| assembly_entries(read) }
         end
 

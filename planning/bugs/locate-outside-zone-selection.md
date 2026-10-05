@@ -1,7 +1,9 @@
 # Faces located from outside their Zone do not reach the selection inspector
 
 DATE: 2026-10-03
-STATUS: Requested. Seen in the host twice on 2026-10-03; not root-caused.
+STATUS: Requested. Seen in the host twice on 2026-10-03; not root-caused. Expected to be superseded by
+[zones-table-first](../features/unscheduled/zones-table-first/README.md), where Locate no longer selects and
+there is no selection inspector; close it when that packet's host gate (ZT-07) confirms.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 

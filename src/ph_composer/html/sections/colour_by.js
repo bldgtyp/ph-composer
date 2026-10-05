@@ -1,49 +1,111 @@
-/* The panel's Colour-by legend: the mode control, one row per colour with its label and count,
- * click a row to select and zoom to what it counts, and Isolate to fade every other row in the
- * viewport (the table is unchanged), with Show all beside the legend while one row stands alone.
+/* The panel's Colour by, as parts a pane places:
  *
- * Nothing here names a mode, a face type or a Zone. The rows, their labels, their colours and their
- * counts all come from the shared service's legend, so a feature that registers a mode reaches this
- * screen without a line added below.
+ * - `HeaderToggle(binding)`, a column header's toggle for the mode that colours by what the column shows. A
+ *   binding names one mode (`{ mode }`) or a group of modes (`{ group }`), which a mode declares when it
+ *   registers. One mode is on at a time: pressing an unpressed toggle turns its mode on and releases any
+ *   other, and pressing the pressed one turns Colour by Off. A group with several modes opens a menu of them.
+ * - The legend strip, in the pane's `tools` region (the end of the work surface's control row): the mode's
+ *   name, then one chip per colour with its count. A chip selects and zooms to what it counts; the eye on it
+ *   fades every other colour in the viewport (the table is unchanged), and Show all puts them back. The strip
+ *   is empty while Colour by is off, and its slot keeps its place, so the table never moves.
+ * - `modes(state)` and `activate(state, name)`, so a screen can offer a mode no column binds (an options
+ *   menu) through the same command.
  *
- * Every control sends a view command: turning a mode on, selecting a row and showing one row on its
- * own all change what the host draws and none of them writes to the Model, so none leaves an Undo
- * entry. Hover-to-highlight is not built: it would send one command per pointer move, and its cost
- * has to be measured on a host first.
+ * Nothing here names a mode, a face type or a Zone. The modes, rows, labels, colours and counts all come from
+ * the shared service's legend, so a feature that registers a mode reaches the panel without a line added here.
+ * Every control sends a view command: none writes to the Model, so none leaves an Undo entry. Hover-to-
+ * highlight is not built: it would send one command per pointer move, and its cost has to be measured first.
  */
 PhComposerUI.define("sections/colour_by", ["panel", "workspace", "request", "snapshot"],
 function (panel, ui, requests, snapshot) {
   "use strict";
-  var OFF = "";
   var screen = null;
 
-  function forSession(session, send) {
+  function forSession(session) {
     if (screen && screen.session === session) return screen;
-    screen = { session: session, view: requests.channel(session, send, "colour_by", "view.invoke") };
+    screen = { session: session, view: requests.channel(session, panel.send, "colour_by", "view.invoke") };
     return screen;
   }
 
-  function rowKey(row) {
-    return { value: row.value === undefined ? null : row.value, state: row.state };
+  function legendOf(state) {
+    return snapshot.value(state, "ph_composer.colour_by.legend") || { mode: null, modes: [], rows: [] };
   }
 
-  function modeControl(state, legend) {
-    var choices = ui.element("select");
-    var off = ui.element("option", "", "Off");
-    off.value = OFF;
-    choices.appendChild(off);
-    legend.modes.forEach(function (mode) {
-      var option = ui.element("option", "", mode.label);
-      option.value = mode.name;
-      choices.appendChild(option);
+  function modes(state) { return legendOf(state).modes; }
+
+  /* Turns `name` on, or Colour by off with null. Answers false while another request is in flight. */
+  function activate(state, name) {
+    var owner = forSession(state.session);
+    owner.view.consume(state);
+    return owner.view.run("ph_composer.colour_by.activate", { mode: name || null });
+  }
+
+  function HeaderToggle(binding) {
+    this.binding = binding;
+    this.node = ui.element("span", "phc-colour-toggle");
+    this.signature = null;
+    this.pressed = false;
+  }
+
+  HeaderToggle.prototype.matching = function (legend) {
+    var binding = this.binding;
+    return legend.modes.filter(function (mode) {
+      return binding.mode ? mode.name === binding.mode : Boolean(binding.group) && mode.group === binding.group;
     });
-    choices.value = legend.mode || OFF;
-    choices.disabled = state.view.busy();
-    choices.setAttribute("aria-label", "Colour by");
-    choices.addEventListener("change", function () {
-      state.view.run("ph_composer.colour_by.activate", { mode: choices.value === OFF ? null : choices.value });
-    });
-    return choices;
+  };
+
+  /* Built when the modes it stands for change, and repainted in place otherwise, so a press keeps its focus
+     through the snapshot that follows. Answers whether the column has a mode to offer. */
+  HeaderToggle.prototype.paint = function (state) {
+    var self = this, legend = legendOf(state), found = this.matching(legend), owner = forSession(state.session);
+    owner.view.consume(state);
+    var signature = found.map(function (mode) { return mode.name + ":" + mode.label; }).join("|");
+    if (signature !== this.signature) {
+      this.signature = signature;
+      this.button = ui.iconButton("", "palette", found.length === 1 ? function () { self.press(); } : null);
+      if (found.length > 1) {
+        this.menu = new ui.Bubble(this.button, "Colour by", { onOpen: function () { self.fill(); } });
+        this.menu.panel.classList.add("phc-action-menu");
+        this.menu.root.classList.add("phc-action-menu-anchor");
+        this.node.replaceChildren(this.menu.root);
+      } else {
+        this.menu = null;
+        this.node.replaceChildren(found.length ? this.button : ui.element("span"));
+      }
+    }
+    this.modes = found;
+    var active = found.filter(function (mode) { return mode.name === legend.mode; })[0];
+    this.pressed = Boolean(active);
+    if (found.length) {
+      var named = active ? active.label : found.map(function (mode) { return mode.label; }).join(" or ");
+      ui.paintIconButton(this.button, "Colour by " + named, "palette");
+      this.button.setAttribute("aria-pressed", String(this.pressed));
+      this.button.disabled = owner.view.busy();
+    }
+    return found.length > 0;
+  };
+
+  HeaderToggle.prototype.press = function () {
+    activate(panel.state, this.pressed ? null : this.modes[0].name);
+  };
+
+  /* A group's menu: one item per mode, the one on marked, and Off while one is. */
+  HeaderToggle.prototype.fill = function () {
+    var self = this, current = legendOf(panel.state).mode;
+    this.menu.content.replaceChildren();
+    function item(text, name, pressed) {
+      var node = ui.button(text, function () { self.menu.close(true); activate(panel.state, name); });
+      // The mode on is marked the way every setting list marks its current choice.
+      node.className = "phc-action-menu-item phc-setting-choice";
+      if (pressed !== undefined) node.setAttribute("aria-pressed", String(pressed));
+      self.menu.content.appendChild(node);
+    }
+    this.modes.forEach(function (mode) { item(mode.label, mode.name, mode.name === current); });
+    if (this.pressed) item("Off", null);
+  };
+
+  function rowKey(row) {
+    return { value: row.value === undefined ? null : row.value, state: row.state };
   }
 
   function swatch(colour) {
@@ -53,85 +115,55 @@ function (panel, ui, requests, snapshot) {
     return node;
   }
 
-  /* The row itself is the Locate control: clicking it selects and zooms to what it
-     counts. Isolate is a separate toggle, because it changes the drawing rather than the
-     selection, and pressing it again puts everything back. */
-  function legendRow(state, row) {
-    var node = ui.element("div", "phc-legend-row");
+  /* The chip itself selects and zooms to what it counts. The eye is a separate toggle, because it changes the
+     drawing rather than the selection, and pressing it again puts everything back. */
+  function chip(owner, row) {
+    var node = ui.element("span", "phc-legend-chip" + (row.isolated ? " is-isolated" : ""));
     var locate = ui.element("button", "phc-legend-locate");
-    var only = ui.element("button", "phc-legend-only", row.isolated ? "Show all" : "Isolate");
     locate.appendChild(swatch(row.colour));
     locate.appendChild(ui.element("span", "phc-legend-label", row.label));
     locate.appendChild(ui.element("span", "phc-legend-count", String(row.count)));
     locate.setAttribute("aria-label", "Select and zoom to " + row.count + " " + row.label);
-    locate.disabled = state.view.busy();
+    locate.disabled = owner.view.busy();
     locate.addEventListener("click", function () {
-      state.view.run("ph_composer.colour_by.select_row", { row: rowKey(row) });
+      owner.view.run("ph_composer.colour_by.select_row", { row: rowKey(row) });
     });
+    var only = ui.iconButton(row.isolated ? "Show every colour again" : "Show only " + row.label + " in the viewport",
+      "eye", function () {
+        owner.view.run("ph_composer.colour_by.isolate", row.isolated ? {} : { row: rowKey(row) });
+      });
+    only.classList.add("phc-legend-only");
     only.setAttribute("aria-pressed", String(Boolean(row.isolated)));
-    only.setAttribute("aria-label", row.isolated ? "Show every colour again" : "Show only " + row.label);
-    only.setAttribute("data-tooltip", row.isolated ? "Show every colour in the viewport again" :
-      "Fade everything else in the viewport, so only " + row.label + " stands out. The table is unchanged.");
-    only.disabled = state.view.busy();
-    only.addEventListener("click", function () {
-      state.view.run("ph_composer.colour_by.isolate", row.isolated ? {} : { row: rowKey(row) });
-    });
+    only.disabled = owner.view.busy();
     node.appendChild(locate);
     node.appendChild(only);
     return node;
   }
 
-  function isolatedNotice(state, row) {
-    var note = ui.element("div", "phc-legend-isolated");
-    var reset = ui.element("button", "", "Show all");
-    note.appendChild(ui.element("span", "", "The viewport shows only " + row.label + "."));
-    reset.setAttribute("aria-label", "Show every colour again");
-    reset.disabled = state.view.busy();
-    reset.addEventListener("click", function () { state.view.run("ph_composer.colour_by.isolate", {}); });
-    note.appendChild(reset);
-    return note;
-  }
-
-  /* Repainted only when what it shows has changed. A snapshot follows every viewport command, and
-     rebuilding these controls each time would close a dropdown the user had open and take the focus
-     out of whatever they were pressing. */
-  function legendOf(state) {
-    return snapshot.value(state, "ph_composer.colour_by.legend") || { mode: null, modes: [], rows: [] };
-  }
-
-  function render(root, state, send) {
-    var legend = legendOf(state);
-    var screenState = forSession(state.session, send);
-    screenState.view.consume(state);
-    ui.memoPaint(root, "legend", [state.session, legend, screenState.view.busy()], function () {
-      var heading = ui.element("div", "phc-zone-heading");
-      var body = ui.element("div", "phc-legend");
-      var isolated = legend.rows.filter(function (row) { return row.isolated; })[0];
-      heading.appendChild(ui.element("h2", "", "Colour by"));
-      legend.rows.forEach(function (row) { body.appendChild(legendRow(screenState, row)); });
-      if (!legend.rows.length) body.appendChild(ui.element("p", "phc-empty", "Nothing to colour yet."));
-      root.className = "phc-colour-by";
-      root.replaceChildren(heading, ui.element("p", "phc-legend-hint", "Choose a row to select and zoom to " +
-        "what it counts."), body);
-      // While one colour stands alone, say so where the eye already is, with the way back beside it.
-      if (isolated) root.insertBefore(isolatedNotice(screenState, isolated), body);
+  /* Repainted only when what it shows has changed. A snapshot follows every viewport command, and rebuilding
+     these controls each time would take the focus out of whatever the user was pressing. */
+  function renderStrip(root, state) {
+    var legend = legendOf(state), owner = forSession(state.session);
+    owner.view.consume(state);
+    ui.memoPaint(root, "legend", [state.session, legend, owner.view.busy()], function () {
+      root.className = "phc-legend-strip";
+      root.replaceChildren();
+      if (!legend.mode) { root.removeAttribute("aria-label"); root.removeAttribute("role"); return; }
+      root.setAttribute("aria-label", "Colour by " + legend.label);
+      root.setAttribute("role", "group");
+      root.appendChild(ui.element("span", "phc-legend-title", legend.label));
+      legend.rows.forEach(function (row) { root.appendChild(chip(owner, row)); });
+      if (!legend.rows.length) root.appendChild(ui.element("span", "phc-legend-empty", "Nothing to colour yet."));
+      if (legend.rows.some(function (row) { return row.isolated; })) {
+        var reset = ui.button("Show all", function () { owner.view.run("ph_composer.colour_by.isolate", {}); });
+        reset.className = "phc-legend-show-all";
+        reset.setAttribute("aria-label", "Show every colour again");
+        reset.disabled = owner.view.busy();
+        root.appendChild(reset);
+      }
     });
   }
 
-  /* The mode is a tool in the work surface's control row; the legend it produces is the inspector's. */
-  function renderMode(root, state, send) {
-    var legend = legendOf(state);
-    var screenState = forSession(state.session, send);
-    screenState.view.consume(state);
-    ui.memoPaint(root, "mode", [state.session, legend.mode, legend.modes, screenState.view.busy()], function () {
-      var label = ui.element("label", "phc-view-control", "Colour by");
-      label.appendChild(modeControl(screenState, legend));
-      root.className = "phc-colour-mode";
-      root.replaceChildren(label);
-    });
-  }
-
-  panel.section("ph_composer.colour_by.mode", renderMode, { region: "tools", order: 20 });
-  panel.section("ph_composer.colour_by", render, { region: "inspector", tier: "ambient",
-    when: function (state) { return Boolean(legendOf(state).mode); } });
+  panel.section("ph_composer.colour_by", renderStrip, { region: "tools", order: 20 });
+  return { HeaderToggle: HeaderToggle, modes: modes, activate: activate };
 });

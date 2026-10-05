@@ -108,23 +108,30 @@ fs.mkdirSync(output, { recursive: true });
   await shot("zone-settings-narrow");
   await page.keyboard.press("Escape");
 
-  // The inspector: always standing on Zones / Faces (a hint at rest), beside the tree on a wide panel and
-  // under it on a narrow one, so opening a tool neither narrows the tree nor moves it down (D2).
+  // No inspector: the table spans the pane at every width, and the Classify palette opens in the selection bar
+  // floating over the table, so opening it neither narrows the table nor moves it down. At a narrow width the
+  // table scrolls sideways inside its mount with the identity columns held, never the page.
   await page.goto(`${BASE}?fixture=authoring`);
   await page.getByRole("heading", { name: "Zones" }).waitFor();
-  for (const [width, beside] of [[1280, true], [900, false], [420, false]]) {
+  for (const width of [1280, 900, 420]) {
     await page.setViewportSize({ width, height: 800 });
-    const table = page.locator("[data-pane=overview] .phc-table-mount"), inspector = page.locator("[data-phc-region=inspector]");
-    assert.equal(await inspector.isVisible(), true, `the inspector column stands at rest at ${width}`);
-    const before = await table.boundingBox();
+    const table = page.locator("[data-pane=overview] .phc-table-mount"), bar = page.locator(".phc-selection-bar");
+    assert.equal(await page.locator("[data-pane=overview] [data-phc-region=inspector]").count(), 0, `no inspector at ${width}`);
+    const before = await table.boundingBox(), pane = await page.locator("[data-pane=overview]").boundingBox();
+    assert(before.width >= pane.width - 2 * 24, `the table spans the pane at ${width}`);
     await page.getByRole("button", { name: "Classify faces", exact: true }).click();
-    await page.getByRole("heading", { name: "Classify faces" }).waitFor();
-    const after = await table.boundingBox(), column = await inspector.boundingBox();
-    assert.equal(after.y, before.y, `the tree stays put at ${width}`);
-    assert.equal(after.width, before.width, `the tree keeps its width at ${width}`);
-    assert.equal(column.x >= after.x + after.width, beside, `inspector ${beside ? "beside" : "under"} the tree at ${width}`);
+    await bar.getByRole("heading", { name: "Classify faces" }).waitFor();
+    const after = await table.boundingBox(), floating = await bar.boundingBox();
+    assert.equal(after.y, before.y, `the table stays put at ${width}`);
+    assert.equal(after.width, before.width, `the table keeps its width at ${width}`);
+    assert(floating.y + floating.height <= after.y + after.height + 40, `the bar floats over the table at ${width}`);
     assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), `no page scroll at ${width}`);
-    await shot(`inspector-classify-${width}`);
+    // At every narrow width Name stays at the left (zones.css); below 500 only Hierarchy scrolls away.
+    if (width <= 900) {
+      assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector(
+        "[data-pane=overview] td.col-name")).position), "sticky", `Name stays at the left at ${width}`);
+    }
+    await shot(`bar-classify-${width}`);
     await page.getByRole("button", { name: "Classify faces", exact: true }).click();
   }
 

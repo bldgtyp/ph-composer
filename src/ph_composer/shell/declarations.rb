@@ -151,8 +151,11 @@ module PhComposer
     # `->(value) { [r, g, b] }`, nil for a value the mode cannot colour, which the service draws as
     # incomplete. `entity_kind` is open prose naming what the mode paints; the service tessellates
     # whatever entity an entry carries.
-    # `sort` is an optional `->(row) { key }` over legend rows.
-    ColourMode = Struct.new(:name, :owner, :label, :entity_kind, :colours, :sort, :projection, keyword_init: true)
+    # `sort` is an optional `->(row) { key }` over legend rows. `group` is an optional name several modes share
+    # so a screen can offer them from one place (a column that shows what they colour by) without naming a
+    # mode another feature owns.
+    ColourMode = Struct.new(:name, :owner, :label, :entity_kind, :colours, :sort, :group, :projection,
+                            keyword_init: true)
 
     # One native menu item: how a feature reaches SketchUp's own menus without `shell/` naming it.
     # `menu` is the submenu's label and items are grouped under it in registration order.

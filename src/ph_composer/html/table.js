@@ -137,8 +137,10 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     var headers = Object.create(null), columnElements = Object.create(null);
     tableColumns.forEach(function (column) {
       var columnElement = element("col", "col-" + column[0]);
-      var th = element("th", "col-" + column[0], column[1]);
+      var th = element("th", "col-" + column[0]);
+      th._label = element("span", "phc-th-label", column[1]);
       th._labelText = column[1];
+      th.appendChild(th._label);
       columnElements[column[0]] = columnElement; columnGroup.appendChild(columnElement);
       th.scope = "col"; headers[column[0]] = th; header.appendChild(th);
     });
@@ -167,8 +169,9 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
   function paintHeaders(cache, options) {
     cache.columns.forEach(function (column) {
       var field = column[0], th = cache.headers[field];
-      if (th._labelText !== column[1]) { th.textContent = column[1]; th._labelText = column[1]; }
+      if (th._labelText !== column[1]) { th._label.textContent = column[1]; th._labelText = column[1]; }
       if (options.header) options.header(th, field);
+      paintHeaderActions(th, options.headerActions ? options.headerActions(field) || [] : []);
       var hidden = Boolean(options.hiddenColumns && options.hiddenColumns[field]);
       th.hidden = hidden; cache.columnElements[field].hidden = hidden;
       cache.columnElements[field].style.display = hidden ? "none" : "";
@@ -179,6 +182,73 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
         paintColumnWidth(cache, field);
       }
     });
+  }
+  /* A row's checkbox, first in its Actions cell, and the header's in the Actions header. `options.check` is
+     { state(row) -> true | false | "mixed" | null (no box), toggle(row, event), header() -> true | false |
+     "mixed", toggleAll(event), label(row), headerLabel(value) optional, any() }. Checking is the caller's view
+     state, so a box stays usable while the table's edits are busy; the caller owns what is checked and the
+     table only paints it. A row whose box is checked takes `is-checked`; while any row is, every row shows its box. */
+  function checkbox(label, onClick) {
+    var box = element("input", "row-check");
+    box.type = "checkbox"; box.setAttribute("type", "checkbox");
+    box.setAttribute("aria-label", label);
+    box.addEventListener("click", function (event) { onClick(event); });
+    return box;
+  }
+  function paintCheck(box, value, label) {
+    box.checked = value === true;
+    box.indeterminate = value === "mixed";
+    box.setAttribute("aria-checked", value === "mixed" ? "mixed" : String(value === true));
+    box.setAttribute("aria-label", label);
+  }
+  function paintRowCheck(cache, entry, row) {
+    var check = cache.options.check, value = check ? check.state(row) : null;
+    if (value === null || value === undefined) {
+      if (entry.check) { entry.check.parentNode.removeChild(entry.check); entry.check = null; }
+      return false;
+    }
+    if (!entry.check) {
+      entry.check = checkbox("", function (event) { cache.options.check.toggle(entry.row, event); });
+      entry.cells.actions.insertBefore(entry.check, entry.cells.actions.firstChild);
+    }
+    paintCheck(entry.check, value, check.label(row));
+    return value === true;
+  }
+  function paintHeaderCheck(cache) {
+    var check = cache.options.check, th = cache.headers.actions;
+    if (!th) return;
+    if (!check) {
+      if (cache.headerCheck) { th.removeChild(cache.headerCheck); cache.headerCheck = null; }
+      return;
+    }
+    if (!cache.headerCheck) {
+      cache.headerCheck = checkbox("", function (event) { cache.options.check.toggleAll(event); });
+      th.insertBefore(cache.headerCheck, th.firstChild);
+    }
+    var value = check.header();
+    paintCheck(cache.headerCheck, value, check.headerLabel ? check.headerLabel(value) :
+      value === true ? "Uncheck every row shown" : "Check every row shown");
+    cache.node.classList.toggle("has-checked", Boolean(check.any()));
+  }
+  /* A column's header actions: `options.headerActions(field)` answers `[{ node, persistent }]`, nodes the caller
+     built and repaints (a menu, a toggle). The table keeps them in order after the label, shows them only
+     while the pointer is over the header or focus is inside it, and keeps a `persistent` one (a pressed
+     toggle, an active filter) visible at rest (table.css). It names no action. */
+  function paintHeaderActions(th, actions) {
+    if (!actions.length && !th._actions) return;
+    if (!th._actions) {
+      th._actions = element("span", "phc-header-actions");
+      th.insertBefore(th._actions, th._label.nextSibling);
+    }
+    actions.forEach(function (action, index) {
+      action.node.classList.add("phc-header-action");
+      action.node.classList.toggle("is-persistent", Boolean(action.persistent));
+      if (th._actions.children[index] !== action.node) {
+        th._actions.insertBefore(action.node, th._actions.children[index] || null);
+      }
+    });
+    while (th._actions.children.length > actions.length) th._actions.removeChild(th._actions.lastChild);
+    th.classList.toggle("has-header-actions", actions.length > 0);
   }
   /* Places the heading for row's group once, before its first row; returns the next body position. */
   function paintGroups(cache, group, retainedGroups, position) {
@@ -282,7 +352,9 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     controls(entry, actions, cache);
     if (options.actionsCell) options.actionsCell(entry.cells.actions, row);
     var selected = options.selected && options.selected(row);
-    entry.node.className = "tier-" + row.depth + (selected ? " host-selected" : "");
+    var checked = paintRowCheck(cache, entry, row);
+    entry.node.className = "tier-" + row.depth + (selected ? " host-selected" : "") +
+      (checked ? " is-checked" : "");
     if (row.depth < 2) entry.needChevron();
     if (entry.target) entry.target.disabled = Boolean(options.disabled);
     if (entry.chevron) {
@@ -326,8 +398,11 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     cache.options = options; cache.records = records; cache.columns = options.columns;
     // A tree's top-level rows head their groups (table.css).
     cache.node.classList.toggle("is-tree", Boolean(options.tree));
+    // Row icons that show only on hover or focus, for a screen whose rows carry them as quiet affordances.
+    cache.node.classList.toggle("reveals-row-actions", Boolean(options.revealRowActions));
     if (options.columnWidths) cache.columnWidths = options.columnWidths;
     paintHeaders(cache, options);
+    paintHeaderCheck(cache);
     cache.empty.hidden = (options.visibleCount === undefined ? rows.length : options.visibleCount) > 0;
     cache.empty.textContent = options.empty || "No records.";
     rows.forEach(function (row) {
@@ -345,7 +420,7 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       }
       position += 1;
     });
-    cache.actionsWidth = 16 + actionCount * 32 + (options.actionsCell ? 40 : 0);
+    cache.actionsWidth = 16 + actionCount * 32 + (options.actionsCell ? 40 : 0) + (options.check ? 28 : 0);
     var actionsVisible = cache.headers.actions && !cache.headers.actions.hidden;
     root.style.setProperty("--row-actions-width", (actionsVisible ? cache.actionsWidth : 0) + "px");
     paintTableWidth(cache);

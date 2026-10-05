@@ -24,9 +24,16 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
   }
   /* `options.guard`, when given, answers why the rows may not be narrowed right now (a draft on a row
      the filter could hide), or null. A refused filter edit keeps its previous text and hands the
-     reason to `options.refused`. */
+     reason to `options.refused`.
+
+     `options.columnSort: true` moves ordering and value filters into the table's column menus
+     (column_menu.js): Order by and the direction toggle are hidden, `sortBy` and `filterColumn` set the
+     state, and `project` applies a column filter through `config.columnMatch(record, filters)` for a
+     top-level record and `config.rowMatch(row, filters)` for a row beneath one. */
   function ViewControls(options, changed) {
     var self = this, filtered = "";
+    this.changed = changed;
+    this.columnFilters = Object.create(null);
     function filterChanged() {
       var reason = options.guard && options.guard();
       if (reason) { self.filter.value = filtered; options.refused(reason); return false; }
@@ -71,6 +78,8 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     }
     paintDirection();
     this.root.appendChild(this.directionToggle);
+    this.columnSort = options.columnSort ? { field: options.initialOrder || "name", direction: "asc" } : null;
+    if (options.columnSort) { this.orderBy.parentNode.hidden = true; this.directionToggle.hidden = true; }
     this.toggleGroup = function (key) { self.collapsed[key] = !self.collapsed[key]; changed(); };
     this.collapseAll = button("Collapse all", function () {
       if (options.expansion) options.expansion.collapseAll();
@@ -86,6 +95,38 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     this.count = element("span", "phc-view-count"); this.count.setAttribute("role", "status");
     this.root.appendChild(this.count);
   }
+  /* A narrowing change asks the guard first; a refused one changes nothing and says why. */
+  ViewControls.prototype.allowed = function () {
+    var reason = this.options.guard && this.options.guard();
+    if (reason) this.options.refused(reason);
+    return !reason;
+  };
+  ViewControls.prototype.sortField = function () {
+    return this.columnSort ? this.columnSort.field : this.orderBy.value;
+  };
+  ViewControls.prototype.sortDirection = function () {
+    return this.columnSort ? this.columnSort.direction : this.direction.value;
+  };
+  /* The direction a column is sorted in, or null when another column orders the rows. */
+  ViewControls.prototype.columnDirection = function (field) {
+    return this.columnSort && this.columnSort.field === field ? this.columnSort.direction : null;
+  };
+  ViewControls.prototype.sortBy = function (field, direction) {
+    this.columnSort = { field: field, direction: direction === "desc" ? "desc" : "asc" };
+    this.changed();
+  };
+  /* The values a column shows, or null when it shows every value. */
+  ViewControls.prototype.columnFilter = function (field) {
+    return this.columnFilters[field] ? this.columnFilters[field].slice() : null;
+  };
+  ViewControls.prototype.filterColumn = function (field, values) {
+    if (!this.allowed()) return false;
+    if (values) this.columnFilters[field] = values.slice();
+    else delete this.columnFilters[field];
+    this.changed();
+    return true;
+  };
+  ViewControls.prototype.filterCount = function () { return Object.keys(this.columnFilters).length; };
   ViewControls.prototype.setFields = function (fields) {
     var signature = JSON.stringify(fields);
     if (signature === this._fieldSignature) return;
@@ -99,6 +140,8 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
   };
   ViewControls.prototype.project = function (records, config) {
     var self = this, query = (this.filter.value || "").trim().toLocaleLowerCase(), groupField = this.groupBy.value;
+    var filters = this.columnFilters, filterCount = this.filterCount();
+    var sortField = this.sortField(), sign = this.sortDirection() === "desc" ? -1 : 1;
     function id(record) { return config.id ? config.id(record) : record.id; }
     function group(record) {
       var raw = config.value(record, groupField), info = config.group(record, groupField);
@@ -110,7 +153,8 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     records.forEach(function (record) {
       var key = id(record);
       matches[key] = (!config.include || config.include(record)) &&
-        (!query || config.search(record).toLocaleLowerCase().indexOf(query) >= 0);
+        (!query || config.search(record).toLocaleLowerCase().indexOf(query) >= 0) &&
+        (!filterCount || !config.columnMatch || config.columnMatch(record, filters));
       retained[key] = !matches[key] && config.retain ? config.retain(record) : false;
       if (!matches[key] && !retained[key]) return;
       count += 1;
@@ -128,11 +172,11 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
           order = Number(ag.blank) - Number(bg.blank) || compareText(ag.label, bg.label);
         if (order) return order;
       }
-      var av = config.value(a, self.orderBy.value), bv = config.value(b, self.orderBy.value);
+      var av = config.value(a, sortField), bv = config.value(b, sortField);
       if (blank(av) !== blank(bv)) return blank(av) ? 1 : -1;
       var difference = blank(av) ? 0 :
         (typeof av === "number" && typeof bv === "number" ? av - bv : compareText(av, bv));
-      return difference * (self.direction.value === "desc" ? -1 : 1) ||
+      return difference * sign ||
         (config.tie ? config.tie(a, b) : compareText(a.name, b.name) || compareText(a.id, b.id));
     });
     this.groups = Object.keys(groups).map(function (key) { return groups[key]; });
@@ -146,7 +190,11 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     function rowId(row) { return row.parent ? rowIds[row.key] : id(row.record); }
     var projection = { records: ordered, visibleCount: count, matchedCount: count - retainedCount,
       retainedCount: retainedCount,
-      hidden: function (row) { var key = rowId(row); return !matches[key] && !retained[key]; },
+      hidden: function (row) {
+        var key = rowId(row);
+        if (!matches[key] && !retained[key]) return true;
+        return Boolean(filterCount && row.parent && config.rowMatch && !config.rowMatch(row, filters));
+      },
       retained: function (row) { return row.depth === 0 ? retained[rowId(row)] : false; },
       group: groupField ? function (row) {
         var key = id(row.record);
@@ -162,9 +210,10 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
     // The row says how many records there are, and how many a filter leaves; the page header counts nothing.
     // `count` may be false (no count) or a function (shown, total, filtered) giving the screen's own words.
     var counted = this.options.count;
+    var narrowed = Boolean(query || filterCount);
     this.count.textContent = counted === false ? "" : typeof counted === "function" ?
-      counted(count, records.length, Boolean(query)) :
-      (query ? count + " of " + records.length : records.length + " total");
+      counted(count, records.length, narrowed, filterCount) :
+      (narrowed ? count + " of " + records.length : records.length + " total");
     return projection;
   };
   return { ViewControls: ViewControls, groupToggle: groupToggle, paintGroupToggle: paintGroupToggle };

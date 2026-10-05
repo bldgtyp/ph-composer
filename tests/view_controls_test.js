@@ -176,3 +176,34 @@ test("the control row counts the records, a filter's share of them, or the scree
   assert.deepStrictEqual([plain.controls.count.textContent, worded.controls.count.textContent],
     ["1 of 3", "1 of 3 parts"]);
 });
+
+test("column sort and value filters replace Order by when a screen opts in, and count as filters", function () {
+  var counts = [];
+  var h = harness({ columnSort: true, count: function (shown, total, filtered, filters) {
+    counts.push([shown, total, filtered, filters]); return "";
+  } });
+  assert.strictEqual(control(h, "Order by").parentNode.hidden, true);
+  h.controls.sortBy("size", "desc");
+  assert.deepStrictEqual([h.controls.sortField(), h.controls.columnDirection("size"),
+    h.controls.columnDirection("name")], ["size", "desc", null]);
+  var settings = config({ columnMatch: function (record, filters) {
+    return filters.level.indexOf(record.level) >= 0;
+  } });
+  assert.deepStrictEqual(names(h.controls.project(RECORDS, settings)), ["Basement", "Attic", "Cellar"]);
+  assert.strictEqual(h.controls.filterColumn("level", ["Lower"]), true);
+  var projection = h.controls.project(RECORDS, settings);
+  assert.deepStrictEqual(RECORDS.filter(function (record) {
+    return !projection.hidden({ record: record, key: record.id });
+  }).map(function (record) { return record.name; }), ["Basement", "Cellar"], "filtering hides and never drops");
+  assert.deepStrictEqual(counts[counts.length - 1], [2, 3, true, 1]);
+  h.controls.filterColumn("level", null);
+  assert.strictEqual(h.controls.filterCount(), 0);
+});
+
+test("a refused column filter changes nothing and says why", function () {
+  var refused = [];
+  var h = harness({ columnSort: true, guard: function () { return "Finish first."; },
+    refused: function (reason) { refused.push(reason); } });
+  assert.strictEqual(h.controls.filterColumn("level", ["Lower"]), false);
+  assert.deepStrictEqual([h.controls.columnFilter("level"), refused, h.changes.length], [null, ["Finish first."], 0]);
+});

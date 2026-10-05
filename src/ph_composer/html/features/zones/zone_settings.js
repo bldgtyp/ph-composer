@@ -1,5 +1,5 @@
 /* Model authoring settings. Each committed field change is one public operation and one Undo step.
-   `guard` names what must finish before the bubble may open, such as an unsaved Zone details draft,
+   `guard` names what must finish before the bubble may open, such as an Attached zone assignment in progress,
    and `refuse` tells the user; a settings change would otherwise advance the revision under it. */
 PhComposerUI.define("features/zones/zone_settings", ["workspace", "request"], function (ui, requests) {
   "use strict";

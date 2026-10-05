@@ -321,3 +321,21 @@ test("a row the caller stops sending is removed", function () {
 
   assert.strictEqual(h.root.querySelectorAll("[data-row-key]").length, 1);
 });
+
+test("header actions are the caller's nodes, kept in place, with persistent ones marked to stay at rest", function () {
+  var h = harness(), menu = h.context.document.createElement("button");
+  var toggle = h.context.document.createElement("button");
+  var actions = { name: [{ node: toggle, persistent: true }, { node: menu }] };
+  var settings = { headerActions: function (field) { return actions[field] || []; } };
+  paint(h, settings);
+  var th = tagged(h, "col-name", "th")[0];
+  assert.deepStrictEqual(th.querySelector(".phc-header-actions").children, [toggle, menu]);
+  assert.strictEqual(th.querySelector(".phc-th-label").textContent, "Name");
+  assert.deepStrictEqual([toggle.classList.contains("is-persistent"), menu.classList.contains("is-persistent")],
+    [true, false]);
+  actions.name = [{ node: menu, persistent: true }];
+  paint(h, settings);
+  assert.deepStrictEqual(th.querySelector(".phc-header-actions").children, [menu], "a withdrawn action goes");
+  assert.strictEqual(menu.classList.contains("is-persistent"), true);
+  assert.strictEqual(tagged(h, "col-size", "th")[0].querySelector(".phc-header-actions"), null);
+});
