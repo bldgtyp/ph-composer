@@ -46,6 +46,12 @@ driven from the background, so the bar's Boundary was set by a scripted DOM chan
 `dialog.execute_script` (labelled as such). Header icons hide until hover, which background control cannot
 produce, so a dev-only style made them visible for targeting and was removed before the at-rest check.
 
+5. After the PR review's two findings: RBZ `53f6ec0560f9…` in a fresh process, same fixture hash. With
+   Wall 3 checked, selecting a Group cleared the checked set (selection count 0 to 1), and after re-checking,
+   clearing SketchUp's selection cleared it again (count 2); a Model edit that refreshed the panel left a
+   manual check in place. The pending-Locate clear is covered offline only: on the host the result returns
+   too fast to press between them.
+
 ## Cases
 
 | Case | Result | Observation |
@@ -79,6 +85,6 @@ produce, so a dev-only style made them visible for targeting and was removed bef
 - A legend chip whose Faces span Zones selects them in SketchUp, but the selection read refuses a selection
   across edit contexts, so nothing is checked (D3 anticipated this for Zone-kind chips; it holds for
   Face-kind chips across Zones too).
-- The checked set follows changes in which Faces are selected. Selecting a Group and then nothing leaves the
-  checked set as it was, because the Faces selected did not change (none before, none after).
+- Resolved after review: the checked set now follows a host count of selection changes, so selecting a
+  Group, or nothing, clears it as the PRD says (build 5 above).
 - The outline has no size cap; not measured on a large Assembly in this fixture.
