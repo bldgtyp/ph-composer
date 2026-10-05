@@ -179,6 +179,21 @@ class ColourByTest < PhComposerTestCase
     refute Registry.current.colour_modes.key?("outside.probe.broken")
   end
 
+  def test_a_mode_group_must_be_a_name
+    probe = Module.new do
+      define_singleton_method(:name) { "Probe" }
+      define_singleton_method(:install) do |registry|
+        registry.feature("outside.probe", :contract_version => 1)
+                .colour_mode("outside.probe.grouped", :label => "Grouped", :entity_kind => "side", :group => " ",
+                                                      :colours => ColourBy::Palette.ramp) { |_model| [] }
+      end
+    end
+
+    error = assert_raises(PhComposer::RegistrationError) { Registry.install([probe]) }
+
+    assert_includes error.diagnostics.map(&:code), "registration.schema_invalid"
+  end
+
   def test_activating_an_unregistered_mode_refuses_and_leaves_the_service_off
     service = ColourBy.for(@session)
 
@@ -666,6 +681,9 @@ class ColourByTest < PhComposerTestCase
                     "count" => 1, "state" => "unclassified", "isolated" => false }], value.fetch("rows")
     assert_nil value.fetch("isolated")
     assert_includes value.fetch("modes").map { |mode| mode.fetch("name") }, "ph_composer.zones.by_zone"
+    groups = value.fetch("modes").to_h { |mode| [mode.fetch("name"), mode.fetch("group")] }
+    assert_equal ["construction", nil], groups.values_at("ph_composer.zones.faces.by_assembly",
+                                                         "ph_composer.zones.by_zone")
   end
 
   def test_the_mode_the_user_last_turned_on_is_remembered_after_it_is_turned_off

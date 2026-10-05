@@ -72,8 +72,9 @@ Copy datasheet links unchecked by default. Ordinary reuse never creates another 
 The Assemblies inventory shows one row per assembly with its attributes, thermal performance,
 usage and validation state. The Builder edits the drawing through an always-visible toolbar and
 anchored property bubbles. Total thickness and U-value stay visible in the header. Both
-inventories share filter, Group by, Order by and sort direction controls; filtering retains local
-drafts and never changes the model or the export scope.
+inventories share filter, Group by, Order by and sort direction controls (Zones / Faces sorts and
+filters from its column headers instead); filtering retains local drafts and never changes the model
+or the export scope.
 
 ## Zones
 
@@ -100,8 +101,11 @@ Make Zone runs Suggest by default in the same Undo step. The tab's gear control 
 and roof/floor tilt thresholds in the Model, initially 60 and 130 degrees. Settings changes can be
 undone independently.
 An Attached zone, such as a garage or attic, is a named boundary condition with its temperature
-reduction factor. Colour by shows face type, boundary condition, Zone, Building-Segment or Level on
-the model without changing its materials, and the Zones / Faces screen lists each Zone with its classified faces.
+reduction factor. Colour by shows face type, boundary condition, Zone, Building-Segment, Level, Assembly
+or Window Type on the model without changing its materials. The Zones / Faces screen is one table: each
+Zone with its own fields as columns and its faces beneath, with Colour by, sorting and filters in the
+column headers. Faces checked in the table, or selected in SketchUp, are edited together from a bar
+under the table. Locate frames faces and outlines them without changing the selection.
 Assembly assignment is implemented with Assemblies on the Phase 2 branch. A face inside a repeated component is shared by every occurrence, and independent
 classification requires the user to make the parent unique first. PH-Composer never does that
 automatically. Unclassified faces are visible in validation and never silently exported.

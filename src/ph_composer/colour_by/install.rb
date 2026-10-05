@@ -40,7 +40,7 @@ module PhComposer
         "label" => { "type" => %w[string null] },
         "entity_kind" => { "type" => %w[string null] },
         "modes" => { "type" => "array", "items" => { "type" => "object" },
-                     "description" => "Every registered mode: name, label and entity kind." },
+                     "description" => "Every registered mode: name, label, entity kind and group (null when none)." },
         "rows" => { "type" => "array", "items" => { "type" => "object" },
                     "description" => "The active mode's legend: value, label, colour, count and state." }
       }
@@ -138,7 +138,7 @@ module PhComposer
     # Every registered mode, in registration order: what a menu or a panel offers.
     def modes
       Registry.current.colour_modes.values.map do |mode|
-        { "name" => mode.name, "label" => mode.label, "entity_kind" => mode.entity_kind }
+        { "name" => mode.name, "label" => mode.label, "entity_kind" => mode.entity_kind, "group" => mode.group }
       end
     end
 

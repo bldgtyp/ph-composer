@@ -126,8 +126,9 @@ section names a `tier`, one of `tool`, `selection`, `record` or `ambient`, and m
 or else the first that answers true, by tier in that order and then by `order`. A section holds
 while it carries a draft the user must not lose sight of, so a tool started from the viewport
 cannot hide it. With nothing to show the column is away, unless the pane keeps an always-wanted
-`ambient` hint ranked last (Zones / Faces does, at `order: 1000`) so its work surface never changes
-width. If the section that had the focus is
+`ambient` hint ranked last (`order: 1000`) so its work surface never changes width. A pane may
+instead have no inspector and carry its selection's controls in the kit's floating selection bar
+(`selection_bar.js`), as Zones / Faces does. If the section that had the focus is
 hidden, the focus moves to the one now shown. A control that would open another inspector
 section asks `panel.inspectorHeld(pane)` first and says why it cannot.
 
@@ -140,8 +141,8 @@ with `panel.region(pane, "tools")`, taking the pane from its own root. `actions`
 tools, the ones that change the Model, for the page header's toolbar; the work surface places them
 with `panel.region(pane, "actions")`. A pane that offers either must place it; until it does it
 leads the main region. A feature adds an inspector section, a tool or an action to a pane it does
-not own without naming that pane's owner, which is how Colour by (a tool) and Classify faces (an
-action, with its palette in the inspector) share the Zones / Faces pane. A pane whose sections all
+not own without naming that pane's owner, which is how Colour by (a tool, its legend strip in the control row) and Classify faces (an
+action, with its palette in the Zones / Faces selection bar) share that pane. A pane whose sections all
 use `main` is laid out as before.
 
 A feature that owns a tab says so once with `panel.workedOn(prefix, tab)`, where `prefix` is its
@@ -388,6 +389,14 @@ entities or mismatched endpoints draw nothing. Omitting `path` preserves the ori
 visibility contract.
 Visibility affects the drawing; the legend continues to count the mode's complete projection.
 
+A mode may also declare `group:`, a name several modes share, so a screen can offer them from one
+place without naming a mode another feature owns: the Zones / Faces Assembly column binds to
+group `"construction"`, which Zones' Assembly mode and Windows' Window Type mode declare. A group
+name is a public contract between the features that declare it; a feature that renames one changes
+what other screens offer. In the panel, `sections/colour_by.js` `HeaderToggle({ mode })` or
+`HeaderToggle({ group })` binds a column header to a mode or a group, and `modes(state)` lists every
+registered mode for a screen's options menu.
+
 The shared service owns registration, the one `Sketchup::Overlay` a Model gets, the viewport HUD
 legend and cache invalidation. It reads no record and knows no mode, and turning a mode on writes
 nothing to the Model, so it is not a registered action: it is reached through the native Colour by
@@ -448,7 +457,8 @@ nothing here to undo.
 
 ```ruby
 feature.view_command("ph_composer.zones.faces.locate",
-                     description: "Select an explicit set of Faces and bring them into view.",
+                     description: "Bring an explicit set of Faces into view and outline them, " \
+                                  "leaving the selection alone.",
                      params: LOCATE_PARAMS, result: LOCATE_RESULT, refuses: []) do |request|
   Zones::Faces.locate(request)
 end
@@ -632,8 +642,9 @@ what a valid target is, so a rule it adds reaches every caller. The permitted us
 entity's geometry and glue to it. Writes to its records stay with the owner, through its actions.
 Ruby cannot enforce that limit; it is a rule of this contract and is checked in review. The Face
 target `ph_composer.zones.faces.face` is locatable; Window placement locates its host Face this way
-(`features/windows/placement/host.rb`). Zones' select-and-zoom view command,
-`ph_composer.zones.faces.locate`, is a different thing with the same verb.
+(`features/windows/placement/host.rb`). Zones' frame-and-outline view command,
+`ph_composer.zones.faces.locate`, is a different thing with the same verb; its sibling
+`ph_composer.zones.faces.select` replaces the selection.
 
 Identity-changing proposals use a typed `Records::ReferencePlan` of the exact occurrences they
 will replace. This establishes the final identity set, including the untouched original or

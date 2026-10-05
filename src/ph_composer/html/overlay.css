@@ -302,3 +302,15 @@
 .phc-form-dialog p { margin: 0; }
 .phc-form-dialog > .cell-error { margin-top: 10px; color: #8f2f27; }
 .phc-form-dialog > .cell-error:empty { display: none; }
+
+/* The floating selection bar (selection_bar.js): over the bottom of its work surface, centred, above the
+   rows and below bubbles and dialogs. Its owner places it in a positioned element around the work surface. */
+.phc-selection-bar { position: absolute; z-index: 20; left: 0; right: 0; bottom: 36px; width: fit-content;
+  margin: 0 auto; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 2 * var(--page-gutter, 20px));
+  padding: 8px 10px 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface, #fff);
+  box-shadow: 0 6px 24px #0b1f2626, 0 1px 3px #0b1f261a; }
+.phc-selection-bar[hidden] { display: none; }
+.phc-selection-bar-count { flex: 0 0 auto; font-weight: 600; font-size: 13px; white-space: nowrap; }
+.phc-selection-bar-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; min-width: 0; }
+.phc-workspace .phc-selection-bar-clear { flex: 0 0 auto; width: 28px; height: 28px; min-height: 28px;
+  border-color: transparent; background: transparent; }

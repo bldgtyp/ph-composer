@@ -1,4 +1,4 @@
-/* The Overview screen: its heading row, the tree table's mounts and the Zone details form. The table
+/* The Overview screen: its heading row and the tree table's mounts. The table
    itself is styled by table.css, which names no screen. */
 .phc-overview { display: grid; gap: 12px; padding-bottom: 24px; }
 /* The control row spans the work surface, so the pane's tools sit at its far end. */
@@ -10,39 +10,60 @@
 .phc-workspace .phc-classify .phc-zone-heading > button:last-child:not(.phc-help) { width: auto; margin-left: auto; }
 .phc-zone-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0; }
 .phc-zone-setting input[type="number"] { width: 72px; }
+/* The table spans the pane and scrolls sideways at narrow widths with its identity columns (Actions,
+   Hierarchy, Name) held at the left. The narrowest panel lets Hierarchy scroll and keeps Name beside
+   Actions, so every row still says what it is. */
+@media (max-width: 900px) {
+  .phc-overview .phc-table td.col-name { position: sticky; }
+  .phc-overview .phc-table th.col-name { left: calc(var(--col-actions-width) + var(--col-hierarchy-width)); }
+}
+@media (max-width: 500px) {
+  .phc-overview .phc-table th.col-name, .phc-overview .phc-table td.col-name { left: var(--col-actions-width); }
+}
 /* The tree is the pane's work surface, so it takes the height the shell, the header and the control row leave. */
 .phc-table-mount { overflow: auto; max-height: max(240px, calc(100vh - 250px)); border: 1px solid var(--line); border-radius: 6px; }
 .phc-workspace .phc-blocked-reason { color: var(--warning-ink); border-color: transparent; background: transparent; }
 .phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
   color: var(--warning-ink); background: var(--warning-surface); }
-/* Zone details and the Face selection are the inspector's: one field to a line, the label above it. */
-.phc-zone-card { display: grid; gap: 10px; }
-.phc-zone-card label, .phc-selection-field { display: grid; gap: 4px; color: var(--muted); font-size: 11px; }
-.phc-zone-card input, .phc-selection-field select { min-width: 0; width: 100%; color: var(--ink); }
-.phc-selection-controls { display: grid; gap: 10px; }
-.phc-zone-details { display: grid; gap: 10px; }
+/* The selection bar floats over the bottom of the table, positioned in the overview's root, so it never
+   moves a row. The checked Faces' controls read along one line, each label before its control; the Classify
+   palette takes the same line while that tool is on. */
+.phc-overview { position: relative; }
+.phc-selection-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.phc-selection-controls[hidden] { display: none; }
+.phc-selection-field { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+.phc-selection-field select { min-width: 120px; max-width: 200px; color: var(--ink); }
+.phc-selection-bar .phc-classify { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.phc-selection-bar .phc-classify[hidden] { display: none; }
+.phc-selection-bar .phc-palette { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.phc-selection-bar .phc-palette-field { display: inline-flex; align-items: center; gap: 6px; }
+.phc-selection-bar .phc-palette-field h3 { margin: 0; color: var(--muted); font-weight: 500; }
 .phc-selection-assembly { display: grid; gap: 4px; }
 .phc-palette-value { font-weight: 600; }
 .phc-empty { margin: 0; padding: 12px; color: var(--muted); }
 
-/* The Colour-by legend. One row per colour: the row itself selects and zooms to what it counts,
-   and the control beside it sets every other row aside. */
-.phc-colour-by { display: grid; gap: 12px; }
-.phc-legend { display: grid; gap: 2px; }
-.phc-legend-row { display: flex; align-items: center; gap: 8px; }
-.phc-legend-locate { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 4px 8px;
-  border: 1px solid transparent; background: transparent; text-align: left; }
-.phc-legend-locate:hover:enabled { border-color: var(--line); background: var(--interaction-highlight-tint); }
-.phc-legend-swatch { flex: 0 0 14px; width: 14px; height: 14px; border: 1px solid #0003; border-radius: 3px; }
-.phc-legend-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The Colour-by legend strip at the end of the control row: the mode's name, then one chip per colour.
+   It stays on one line and scrolls sideways rather than wrapping, so the table below never moves. A chip
+   selects and zooms to what it counts; its eye, shown on hover or focus, sets every other colour aside. */
+.phc-overview .phc-pane-tools { min-width: 0; flex: 1 1 0; justify-content: flex-end; }
+.phc-legend-strip { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-x: auto; white-space: nowrap;
+  scrollbar-width: thin; }
+.phc-legend-title { flex: 0 0 auto; font-weight: 600; font-size: 12px; }
+.phc-legend-chip { position: relative; display: inline-flex; align-items: center; flex: 0 0 auto; border-radius: 13px;
+  background: #edf1f2; }
+.phc-legend-chip.is-isolated { box-shadow: inset 0 0 0 1px var(--interaction-highlight); }
+.phc-workspace .phc-legend-locate { display: inline-flex; align-items: center; gap: 6px; min-height: 26px;
+  padding: 2px 4px 2px 8px; border: 0; border-radius: 13px; background: transparent; font-size: 12px; }
+.phc-legend-swatch { flex: 0 0 12px; width: 12px; height: 12px; border: 1px solid #0003; border-radius: 3px; }
 .phc-legend-count { color: var(--muted); font-variant-numeric: tabular-nums; }
-.phc-legend-only { flex: 0 0 auto; font-size: 11px; }
-.phc-legend-hint { margin: -6px 0 0; color: var(--muted); font-size: 11px; }
-.phc-legend-isolated { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px;
-  border-radius: 6px; background: var(--interaction-highlight-tint); color: var(--interaction-highlight); font-size: 12px; }
-.phc-inspector-hint .phc-empty { padding: 4px 0; font-size: 12px; line-height: 1.45; }
-.phc-legend-only[aria-pressed="true"] { border-color: var(--interaction-highlight);
-  background: var(--interaction-highlight-tint); color: var(--interaction-highlight); }
+.phc-workspace .phc-legend-only { width: 22px; height: 22px; min-height: 22px; padding: 3px; margin-right: 2px;
+  border-color: transparent; background: transparent; opacity: 0; }
+.phc-legend-only svg { width: 14px; height: 14px; }
+.phc-legend-chip:hover .phc-legend-only, .phc-legend-chip:focus-within .phc-legend-only,
+.phc-legend-only[aria-pressed="true"] { opacity: 1; }
+.phc-workspace .phc-legend-only[aria-pressed="true"] { color: var(--interaction-highlight); }
+.phc-legend-empty { color: var(--muted); font-size: 12px; }
+.phc-workspace .phc-legend-show-all { flex: 0 0 auto; min-height: 26px; font-size: 12px; }
 
 /* The Classify tool's palette. Chips read as choices, and the chosen one is marked the way an
    active row is; a chip the palette cannot set says why on itself. */

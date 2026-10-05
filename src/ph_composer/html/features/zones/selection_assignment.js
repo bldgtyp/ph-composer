@@ -6,13 +6,15 @@ function (panel, snapshot, requests, assignment, assemblies) {
   var SECTION = "ph_composer.zones.faces.selection_assignment";
   var CLOSE = "ph_composer.zones.faces.close_attached_assignment";
 
-  function SelectionAssignment(session, send, guard, refused) {
+  /* `targets`, when given, answers the Faces the Assembly control assigns to (the checked set) instead of
+     SketchUp's selection. */
+  function SelectionAssignment(session, send, guard, refused, targets) {
     this.session = session;
     this.send = send;
     this.guard = guard;
     this.refused = refused || function (reason) { panel.notify(reason, "warning"); };
     this.closeRequest = requests.channel(session, send, "selection_assignment_close", "view.invoke");
-    this.assembly = new assemblies.Picker(session, send, guard, this.refused);
+    this.assembly = new assemblies.Picker(session, send, guard, this.refused, targets);
     this.root = this.assembly.root;
     this.form = null;
     this.token = null;

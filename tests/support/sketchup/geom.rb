@@ -15,6 +15,24 @@ module Geom
       @points.concat(Array(values))
       self
     end
+
+    # The host's center and diagonal length, from the extremes of the points added.
+    def center
+      low, high = extremes
+      Point3d.new((low.x + high.x) / 2.0, (low.y + high.y) / 2.0, (low.z + high.z) / 2.0)
+    end
+
+    def diagonal
+      low, high = extremes
+      (high - low).length
+    end
+
+    private
+
+    def extremes
+      axes = %i[x y z].map { |axis| @points.map(&axis) }
+      [Point3d.new(*axes.map(&:min)), Point3d.new(*axes.map(&:max))]
+    end
   end
 
   class Transformation
@@ -99,5 +117,9 @@ module Geom
     end
   end
 
-  class Vector3d < Point3d; end
+  class Vector3d < Point3d
+    def reverse
+      Vector3d.new(-x, -y, -z)
+    end
+  end
 end

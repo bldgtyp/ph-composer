@@ -286,10 +286,11 @@ module PhComposer
       def check_colour_modes
         @staging.declared_colour_modes.each do |mode|
           next if text?(mode.label) && text?(mode.entity_kind) && mode.colours.respond_to?(:call) &&
-                  mode.projection.respond_to?(:call)
+                  mode.projection.respond_to?(:call) && (mode.group.nil? || text?(mode.group))
 
           add("registration.schema_invalid", mode.owner, mode.name,
-              "#{mode.name} needs a label, an entity kind, a colour function and a projection block.")
+              "#{mode.name} needs a label, an entity kind, a colour function and a projection block; " \
+              "a group, when given, is a name.")
         end
       end
 

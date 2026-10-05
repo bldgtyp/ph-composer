@@ -1,20 +1,26 @@
-/* The Zones / Faces screen: the model tree of Zones with their Faces beneath, the shared view controls
- * above it, and the inspector's Face selection and Zone details beside it.
+/* The Zones / Faces screen: one table spanning the pane, with no inspector. Zones are rows with their Faces
+ * beneath; a Zone's own fields are columns on its row. Colour by, sort and value filters live in the column
+ * headers, the shared view controls above the table hold the text filter, the count, Table options and the
+ * Colour-by legend, and a selection bar floats over the bottom of the table while Faces are checked.
  *
  * The table is the shared record table; this file holds only this screen's vocabulary: its columns,
  * what each cell reads, its row actions and its editable chips. Every write goes through a registered
- * action carrying the values the row was painted from, and Locate goes through the view command,
- * which changes the selection and the camera and writes nothing.
+ * action carrying the values the row was painted from. Select and Locate are separate: a row's checkbox
+ * builds the panel's checked set (checked_faces.js) for a bulk assignment, and Locate goes through the view
+ * command, which frames and outlines Faces and changes neither the selection nor the Model.
  *
  * A Face with no record is a row too, under its Zone's "N unclassified Faces" summary. The Zone's row
  * carries their count and the Suggest classification action that gives them all a record.
  */
 PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request", "snapshot", "units",
-  "unit_preferences", "unit_field", "table", "view_controls", "fields", "face_words",
+  "unit_preferences", "table", "view_controls", "column_menu", "sections/colour_by", "fields", "face_words",
   "features/zones/attached_zone_assignment", "features/zones/zone_settings", "features/zones/selection_assignment",
-  "features/zones/assembly_assignment"],
-function (panel, ui, requests, snapshot, units, preferences, unitFields, tables, viewControls, fields, words,
-          attachedAssignment, ZoneSettings, SelectionAssignment, assemblies) {
+  "features/zones/assembly_assignment", "features/zones/zone_cells", "features/zones/checked_faces",
+  "features/zones/classify", "selection_bar"],
+function (panel, ui, requests, snapshot, units, preferences, tables, viewControls, columnMenus, colourBy, fields,
+          words,
+          attachedAssignment, ZoneSettings, SelectionAssignment, assemblies, ZoneCells, CheckedFaces, classify,
+          selectionBars) {
   "use strict";
   var AREA = fields.AREA_M2;
   // What a chip offers comes from the host, through the same read the Classify palette uses, so this
@@ -34,55 +40,177 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         "cannot be exported as it stands." }
   };
 
-  var DRAFT_OPEN = "Save or cancel the Zone details first.";
   var screen = null;
+  var HELP = "Select Faces in SketchUp, or check their rows, to edit them together in the bar under the table. " +
+    "A column's palette icon colours the Model by that column; its menu sorts and filters.";
 
   /* This screen's own state, rebuilt whenever the panel shows a different Model. */
   function forSession(session, send) {
     if (screen && screen.session === session) return screen;
     if (screen) { screen.disposed = true; screen.edits.reset(); screen.look.reset(); }
-    if (screen && screen.zoneEditor) screen.zoneEditor.dispose();
+    if (screen && screen.zoneCells) screen.zoneCells.dispose();
     if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
     if (screen && screen.settings) screen.settings.dispose();
     if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
-    screen = { session: session, selected: null, expanded: Object.create(null), showAll: Object.create(null),
-      columnWidths: {},
+    if (screen && screen.bar) withdrawBar(screen.bar);
+    screen = { session: session, expanded: Object.create(null), showAll: Object.create(null),
+      columnWidths: {}, menus: Object.create(null), toggles: Object.create(null), hiddenColumns: {},
+      checked: new CheckedFaces(), locating: false,
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
+    screen.zoneCells = new ZoneCells(session, send, refuse);
+    screen.options = tableOptions(screen);
+    screen.help = ui.helpButton("Zones / Faces", HELP);
     screen.settings = new ZoneSettings(session, send, function () { return draftReason(screen); }, refuse);
     screen.selectionAssignment = new SelectionAssignment(session, send, function () {
       return draftReason(screen);
-    }, refuse);
+    }, refuse, function () { return screen.barTargets || []; });
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone, type or boundary", fields: ORDER_FIELDS, initialOrder: "name",
+      columnSort: true,
       count: zoneCount, expansion: expansion(screen), guard: function () { return draftReason(screen); },
       refused: refuse
     }, function () { panel.repaint(); });
     return screen;
   }
 
-  /* One Zone details draft at a time. While the form holds unsaved edits or a Save in flight,
-     anything that would hide it is refused rather than discarding the draft; the user saves or
-     cancels first. Model switch still withdraws the editor, because that draft is for another Model. */
+  /* Work in hand that a filter, a tab change or another assignment must not hide or race. */
   function draftReason(state) {
     if (state && state.attachedDraft) return "Finish the Attached zone assignment first.";
     if (state && state.selectionAssignment && state.selectionAssignment.active()) {
       return "Finish the selected Faces assignment first.";
     }
     if (state && state.settings && state.settings.busy()) return "Wait for the Zone settings change to finish.";
-    var editor = state && state.zoneEditor;
-    return editor && (editor.dirty || editor.pending) ? DRAFT_OPEN : null;
+    return null;
   }
 
   function refuse(reason) {
     panel.notify(reason, "warning");
-    if (screen && screen.zoneEditor) screen.zoneEditor.focus();
   }
 
-  /* The control row's count: Zones, and how many a filter leaves. */
-  function zoneCount(shown, total, filtered) {
+  /* The control row's count: Zones, how many a filter leaves, and how many column filters apply. */
+  function zoneCount(shown, total, filtered, columnFilters) {
     var noun = total === 1 ? " Zone" : " Zones";
-    return filtered ? shown + " of " + total + noun : total + noun;
+    var text = filtered && shown !== total ? shown + " of " + total + noun : total + noun;
+    return columnFilters ? text + " · " + columnFilters + (columnFilters === 1 ? " filter" : " filters") : text;
+  }
+
+  /* What each column's menu offers. A Zone field orders the Zones and a Face field orders the Faces
+     within each Zone; the fields with a value filter are listed with the tier the value is read from. */
+  var SORTED = ["name", "building_segment", "level", "ground_depth_mm", "face_type", "boundary_condition",
+    "area_m2", "assembly_id"];
+  var FILTERED = { building_segment: "zone", level: "zone", face_type: "face", boundary_condition: "face",
+    assembly_id: "face" };
+  var FACE_FIELDS = { face_type: true, boundary_condition: true, assembly_id: true };
+
+  /* A Zone record and a Face both keep their stored values in `values`. */
+  function filterValue(record, field) {
+    var value = record.values[field];
+    return value === null || value === undefined ? "" : String(value);
+  }
+
+  /* A value's words in a filter: a Face with no type or boundary is Unclassified. */
+  function filterLabel(state, field, value) {
+    if (field === "face_type" || field === "boundary_condition") {
+      return value ? chipLabel(field, value) : "Unclassified";
+    }
+    if (field === "assembly_id") {
+      if (!value) return "None";
+      var record = assemblies.choices(state.snapshot, []).filter(function (entry) { return entry.id === value; })[0];
+      return record ? record.name : "Missing Assembly";
+    }
+    return value || "Not set";
+  }
+
+  function faceMatches(face, filters) {
+    return Object.keys(FACE_FIELDS).every(function (field) {
+      return !filters[field] || filters[field].indexOf(filterValue(face, field)) >= 0;
+    });
+  }
+
+  function hasFaceFilter(filters) {
+    return Object.keys(FACE_FIELDS).some(function (field) { return Boolean(filters[field]); });
+  }
+
+  function columnMenu(state, field, label) {
+    var menu = state.menus[field];
+    if (!menu) {
+      menu = state.menus[field] = new columnMenus.ColumnMenu({ label: label,
+        sort: { current: function () { return state.controls.columnDirection(field); },
+          choose: function (direction) { state.controls.sortBy(field, direction); } },
+        filter: FILTERED[field] ? { values: function () { return filterValues(state, field); },
+          shown: function () { return state.controls.columnFilter(field); },
+          set: function (values) { return state.controls.filterColumn(field, values); } } : null });
+    }
+    // The label carries a unit (Ground depth), which a unit switch changes.
+    menu.options.label = label;
+    menu.paint();
+    return menu;
+  }
+
+  /* The values present in a column, in reading order, with the blank last. */
+  function filterValues(state, field) {
+    var seen = Object.create(null), values = [];
+    var records = FILTERED[field] === "zone" ? state.zoneRecords :
+      (state.rows || []).map(function (row) { return row.record.face; }).filter(Boolean);
+    (records || []).forEach(function (record) {
+      var value = filterValue(record, field);
+      if (!seen[value]) { seen[value] = true; values.push(value); }
+    });
+    return values.map(function (value) { return { value: value, label: filterLabel(state, field, value) }; })
+      .sort(function (a, b) { return Number(!a.value) - Number(!b.value) || ui.compareText(a.label, b.label); });
+  }
+
+  /* The Colour-by mode each column shows the values of. These are this feature's own modes; Assembly binds to
+     the "construction" group, so Window Type reaches this column without Zones naming it. */
+  var COLOUR_BY = { name: { mode: "ph_composer.zones.by_zone" },
+    building_segment: { mode: "ph_composer.zones.by_building_segment" }, level: { mode: "ph_composer.zones.by_level" },
+    face_type: { mode: "ph_composer.zones.faces.by_face_type" },
+    boundary_condition: { mode: "ph_composer.zones.faces.by_boundary_condition" },
+    assembly_id: { group: "construction" } };
+
+  function headerActions(state, field, label) {
+    var actions = [];
+    if (COLOUR_BY[field] && !state.hiddenColumns[field]) {
+      var toggle = state.toggles[field] || (state.toggles[field] = new colourBy.HeaderToggle(COLOUR_BY[field]));
+      if (toggle.paint(state.snapshot)) actions.push({ node: toggle.node, persistent: toggle.pressed });
+    }
+    if (SORTED.indexOf(field) < 0) return actions;
+    var menu = columnMenu(state, field, label);
+    return actions.concat([{ node: menu.root, persistent: menu.filtered() }]);
+  }
+
+  /* A mode a visible column offers; every other registered mode is offered in Table options. */
+  function boundToColumn(state, mode) {
+    return Object.keys(COLOUR_BY).some(function (field) {
+      var binding = COLOUR_BY[field];
+      return !state.hiddenColumns[field] && (binding.mode ? binding.mode === mode.name : binding.group === mode.group);
+    });
+  }
+
+  /* Table options: show or hide Ground depth, and Colour by for a mode no visible column offers. */
+  function tableOptions(state) {
+    var menu = new ui.ActionMenu("Table options", { onOpen: function () { fill(); } });
+    function toggle(text, pressed, handler) {
+      var item = menu.add(text, handler);
+      item.classList.add("phc-setting-choice");
+      item.setAttribute("aria-pressed", String(pressed));
+    }
+    function fill() {
+      var legend = snapshot.value(panel.state, "ph_composer.colour_by.legend") || { mode: null };
+      menu.content.replaceChildren();
+      toggle("Ground depth column", !state.hiddenColumns.ground_depth_mm, function () {
+        state.hiddenColumns.ground_depth_mm = !state.hiddenColumns.ground_depth_mm;
+        panel.repaint();
+      });
+      colourBy.modes(panel.state).filter(function (mode) { return !boundToColumn(state, mode); })
+        .forEach(function (mode) {
+          var on = legend.mode === mode.name;
+          toggle("Colour by " + mode.label, on, function () { colourBy.activate(panel.state, on ? null : mode.name); });
+        });
+    }
+    menu.root.classList.add("phc-table-options");
+    return menu;
   }
 
   /* Collapse all and Expand all act on the tree, because this screen groups by the tree rather than
@@ -101,9 +229,10 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function columns(profile) {
-    return [["actions", "Actions"], ["hierarchy", "Hierarchy"], ["name", "Name"],
+    var depth = units.profile(ZoneCells.GROUND_DEPTH, preferences.current());
+    return [["actions", "Actions"], ["hierarchy", "Hierarchy"], ["name", "Name"]].concat(ZoneCells.columns(depth), [
       ["face_type", "Type"], ["boundary_condition", "Boundary"],
-      ["area_m2", units.header("Gross area", AREA, profile)], ["assembly_id", "Assembly"]];
+      ["area_m2", units.header("Gross area", AREA, profile)], ["assembly_id", "Assembly"]]);
   }
 
   /* Zone rows from the Zones read, their Faces from the Faces read, matched by the path that names
@@ -174,6 +303,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   function value(row, field, profile) {
     var face = row.record.face;
     if (field === "name") return row.record.name;
+    if (ZONE_FIELDS[field]) return "";
     if (!face) {
       return field === "area_m2" && !row.record.more ?
         area(totalArea(row.record.every || row.record.faces), profile) : "";
@@ -185,6 +315,8 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     }
     return area(face.area_m2, profile);
   }
+
+  var ZONE_FIELDS = { building_segment: true, level: true, ground_depth_mm: true };
 
   function totalArea(faces) {
     return faces.reduce(function (sum, face) { return sum + face.area_m2; }, 0);
@@ -282,6 +414,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
      control: an `AirBoundary` Face, or one the solver paired, reads what it is and refuses the edit. */
   function cell(td, row, field, text, state) {
     var face = row.record.face, offered, chip;
+    if (state.zoneCells.render(td, row, field)) return true;
     // A Face with no record has nothing to hang an Assembly on yet; its type or boundary comes first.
     if (field === "assembly_id") {
       if (!face || face.state !== "unclassified") return assemblies.cell(td, row, state, draftReason, refuse);
@@ -372,10 +505,58 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
   }
 
   function locate(state, row) {
-    var references = row.record.face ? [row.record.face.reference]
-      : (row.record.every || row.record.faces).map(function (face) { return face.reference; });
-    if (references.length) state.look.run("ph_composer.zones.faces.locate", { faces: references });
+    locateFaces(state, row.record.face ? [row.record.face.reference]
+      : (row.record.every || row.record.faces).map(function (face) { return face.reference; }));
   }
+
+  /* A Locate is never dropped: while the channel waits on an earlier command (a clear the same click's press
+     sent), it goes untracked; the host answers in order. */
+  function locateFaces(state, references) {
+    if (!references.length) return;
+    var params = { faces: references };
+    if (state.look.busy()) state.look.send("ph_composer.zones.faces.locate", params);
+    else state.look.run("ph_composer.zones.faces.locate", params);
+    state.locating = true;
+  }
+
+  /* Locate's outline lasts until the next pointer press in the panel outside a Locate control, Escape, the
+     next Locate or a new selection; the host clears it on the last two, and this sends one clear for the
+     others, only while one is showing. */
+  function clearLocate(state) {
+    if (!state || !state.locating) return;
+    state.locating = false;
+    // While the Locate is still in flight the clear goes after it, untracked, rather than being dropped; the
+    // host answers in order, so the outline that Locate draws is the one this clears.
+    if (state.look.busy()) state.look.send("ph_composer.zones.faces.clear_locate", {});
+    else state.look.run("ph_composer.zones.faces.clear_locate", {});
+  }
+
+  document.addEventListener("pointerdown", function (event) {
+    var target = event.target;
+    if (!screen || !screen.locating) return;
+    for (var node = target; node; node = node.parentNode) {
+      if (node.getAttribute && node.getAttribute("data-row-action") === "locate") return;
+    }
+    clearLocate(screen);
+  }, true);
+
+  /* Escape unwinds one layer on this screen: an open bubble or menu and the Classify tool take theirs first
+     (they mark the event handled, or the tool is on), then the checked set, then Locate's outline. */
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape" || event.defaultPrevented || !screen || !panel.state ||
+        panel.state.ui.activeTab !== "overview") return;
+    if (Array.from(document.querySelectorAll("dialog")).some(function (dialog) { return dialog.open; })) return;
+    // The palette, open or in use, is the layer above the checked set; its own Escape handles the tool.
+    if (classify.showing()) return;
+    if (screen.checked.among(screen.faces || []).length) {
+      event.preventDefault();
+      screen.checked.clear();
+      panel.repaint();
+    } else if (screen.locating) {
+      event.preventDefault();
+      clearLocate(screen);
+    }
+  });
 
   function suggest(state, row) {
     state.edits.run("ph_composer.zones.faces.auto_classify", { zone: row.record.zone.reference });
@@ -447,6 +628,15 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     screenState.attachedRecords = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") ||
       { records: [] }).records;
     if (screenState.attachedDraft) screenState.attachedDraft.consume(state);
+    // A new SketchUp selection replaces the checked set, and the host has already cleared Locate's outline.
+    screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
+    var change = snapshot.value(state, "ph_composer.zones.faces.selection_change");
+    if (screenState.checked.sync(screenState.targets, change && change.generation)) screenState.locating = false;
+    screenState.faces = faces;
+    screenState.barTargets = screenState.checked.among(faces).map(function (face) {
+      return { reference: face.reference, expected_values: face.values };
+    });
+    screenState.limit = tool.gesture_face_limit || Infinity;
     screenState.selectionAssignment.consume(state, screenState.attachedRecords);
     screenState.faceTypes = tool.face_types || [];
     screenState.boundaries = tool.boundary_conditions || [];
@@ -477,68 +667,71 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       root.insertBefore(screenState.controls.root, row);
       root.removeChild(row);
     }
+    if (screenState.options.root.parentNode !== screenState.controls.root) {
+      screenState.controls.root.insertBefore(screenState.options.root, screenState.controls.count.nextSibling);
+      screenState.controls.root.insertBefore(screenState.help, screenState.options.root.nextSibling);
+    }
     if (tools.parentNode !== screenState.controls.root) screenState.controls.root.appendChild(tools);
     var heading = paintHeader(screenState, root.closest("[data-pane]").getAttribute("data-pane"), zones);
     var headingMount = root.querySelector(".phc-heading-mount");
     if (heading.parentNode !== headingMount) headingMount.replaceChildren(heading);
-    // Set before the tree paints, so the inspector never works from an earlier pass if painting fails.
+    // Set before the tree paints, so the selection bar never works from an earlier pass if painting fails.
     screenState.rows = rows;
-    screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
-    // A Zone row the user chose keeps the inspector until the viewport selection next changes.
-    if (screenState.chosenOver !== undefined && screenState.chosenOver !== selectionKey(screenState.targets)) {
-      screenState.chosenOver = undefined;
-    }
+    screenState.zoneCells.refresh(rows.filter(depth(0)), state);
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
   }
 
-  /* The inspector's two sections. Both paint from what the tree's render just worked out, which the
-     panel guarantees by rendering in order. Zone details hold the inspector while they carry a draft. */
-  function renderDetails(root, state) {
-    if (!screen || screen.session !== state.session || !screen.rows) { root.replaceChildren(); return; }
-    paintDetails(root, screen.rows, screen);
+  /* A bar belongs to one Model. The Classify palette it holds goes back to the pane first, because it is that
+     section's own root and must stay in the page, and the bar leaves with the Model it was built for. */
+  function withdrawBar(bar) {
+    var palette = bar.controls.querySelector("[data-section='ph_composer.classify']");
+    if (palette) panel.region("overview", "main").appendChild(palette);
+    if (bar.root.parentNode) bar.root.parentNode.removeChild(bar.root);
   }
 
-  function renderHint(root) {
-    if (root.children.length) return;
-    root.className = "phc-inspector-hint";
-    root.appendChild(ui.element("p", "phc-empty", "Select Faces in SketchUp, or a Zone in the table, to " +
-      "edit them here. Colour by and Classify faces open here too."));
+  /* The selection bar over the table: the checked Faces' Type, Boundary and Assembly while any is checked, and
+     the Classify palette instead while that tool is in use. It renders after every other section, so it reads
+     what the tree and the palette just worked out, and it sits in the overview's own root after the table, so
+     another section in the pane never comes between them. Clearing it unchecks every Face. */
+  function renderBar(root, state) {
+    var overview = document.querySelector("[data-section='ph_composer.overview']");
+    if (!screen || screen.session !== state.session || !overview) return;
+    var bar = screen.bar;
+    if (!bar) {
+      bar = screen.bar = new selectionBars.SelectionBar("Checked Faces", function () {
+        screen.checked.clear(); panel.repaint();
+      });
+      screen.selectionControls = selectionControls(screen);
+      bar.controls.appendChild(screen.selectionControls.root);
+    }
+    if (bar.root.parentNode !== overview) overview.appendChild(bar.root);
+    root.hidden = true;
+    // The palette is the Classify section's own root; it moves into the bar once and stays in the page.
+    var palette = document.querySelector("[data-section='ph_composer.classify']");
+    if (palette && palette.parentNode !== bar.controls) bar.controls.appendChild(palette);
+    var count = screen.barTargets.length, tool = classify.showing();
+    screen.selectionControls.root.hidden = tool;
+    if (palette) palette.hidden = !tool;
+    if (tool) bar.show("", false);
+    else if (count) {
+      bar.show(count + (count === 1 ? " Face selected" : " Faces selected") +
+        (screen.hiddenChecked ? ", " + screen.hiddenChecked + " hidden" : ""), true);
+      screen.selectionControls.paint();
+    } else bar.hide();
+    var mount = overview.querySelector(".phc-table-mount");
+    if (mount) bar.reserve(mount);
   }
 
-  function detailsWanted() {
-    var editor = screen && screen.zoneEditor;
-    return editor ? (editor.dirty || editor.pending ? "hold" : true) : false;
-  }
-
-  function renderSelection(root, state) {
-    if (!screen || screen.session !== state.session) { root.replaceChildren(); return; }
-    var controls = screen.selectionControls || (screen.selectionControls = selectionControls(screen));
-    if (controls.root.parentNode !== root) { root.className = "phc-selection"; root.replaceChildren(controls.root); }
-    controls.paint();
-  }
-
-  function selectionWanted() {
-    return Boolean(screen && screen.targets && screen.targets.length && screen.chosenOver === undefined);
-  }
-
-  /* Which Faces are selected, whatever order the host lists them in. A Face's record id is left out: it
-     appears when the Face is first classified, which is not a change of selection. */
-  function selectionKey(targets) {
-    return targets.map(function (target) {
-      var reference = target.reference || {};
-      return JSON.stringify([reference.zone_id, reference.zone_path, reference.entity_path]);
-    }).sort().join("|");
-  }
-
-  /* What the selected Faces share, one attribute at a time: each choice applies at once to every Face
-     selected, as one Undo step. A value they do not share reads "Mixed". Attached zone needs a record,
-     so it is offered where a record can be chosen: a Face's own row and the right-click menu. */
+  /* What the checked Faces share, one attribute at a time: each choice applies at once to every Face
+     checked, hidden by a filter or not, as one Undo step. A value they do not share reads "Mixed". Attached
+     zone needs a record, so it is offered where a record can be chosen: a Face's own row and the right-click
+     menu. More Faces than one gesture may change disables the controls, with the limit as the reason. */
   function selectionControls(state) {
-    var root = ui.element("div", "phc-selection-controls"), title = ui.element("h2");
-    var heading = ui.element("div", "phc-zone-heading");
+    var root = ui.element("div", "phc-selection-controls");
     var fields = {};
+    var over = ui.element("span", "phc-selection-limit");
     function common(field) {
-      var values = state.targets.map(function (target) { return target.expected_values[field] || ""; });
+      var values = state.barTargets.map(function (target) { return target.expected_values[field] || ""; });
       return values.every(function (value) { return value === values[0]; }) ? values[0] : null;
     }
     function control(field, label) {
@@ -549,11 +742,11 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         if (!chosen) { paint(); return; }
         if (reason) { paint(); refuse(reason); return; }
         var intent = { face_type: { mode: "keep" }, boundary_condition: { mode: "keep" } };
-        var params = { faces: state.targets.map(function (target) { return target.reference; }), intent: intent };
+        var params = { faces: state.barTargets.map(function (target) { return target.reference; }), intent: intent };
         intent[field] = { mode: "set", value: chosen };
         // One Face is guarded by the values it was read with; several rarely share them, so the Model's
         // own checks stand alone.
-        if (state.targets.length === 1) params.expected_values = state.targets[0].expected_values;
+        if (state.barTargets.length === 1) params.expected_values = state.barTargets[0].expected_values;
         state.edits.run("ph_composer.zones.faces.classify", params);
         paint();
       });
@@ -563,8 +756,13 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       fields[field] = select;
     }
     function paint() {
-      var count = state.targets.length;
-      title.textContent = count + (count === 1 ? " Face selected" : " Faces selected");
+      var tooMany = state.barTargets.length > state.limit;
+      over.hidden = !tooMany;
+      if (tooMany && over._limit !== state.limit) {
+        over._limit = state.limit;
+        over.replaceChildren(ui.reasonButton("Assign", "Check at most " + state.limit +
+          " Faces to assign them together."));
+      }
       Object.keys(fields).forEach(function (field) {
         var select = fields[field], shared = common(field);
         var offered = choices(state, field).filter(function (choice) { return choice !== "AttachedZone"; });
@@ -572,7 +770,7 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
           shared && offered.indexOf(shared) < 0 ? chipLabel(field, shared) : "Not set";
         // A value the tree shows as read only (a paired Surface, an Air boundary, an Attached zone) is
         // read only here too: the Face's own row is where it can be changed.
-        var locked = state.targets.some(function (target) {
+        var locked = state.barTargets.some(function (target) {
           var stored = target.expected_values[field];
           return Boolean(stored) && offered.indexOf(stored) < 0;
         });
@@ -587,19 +785,19 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
           select._signature = signature;
         }
         select.value = shared && offered.indexOf(shared) >= 0 ? shared : "";
-        select.disabled = state.edits.busy() || !offered.length || locked;
+        select.disabled = state.edits.busy() || !offered.length || locked || tooMany;
         select.title = locked ? "Set on the Face's own row" : "";
       });
       assembly.hidden = state.selectionAssignment.root.hidden;
+      state.selectionAssignment.assembly.limit(tooMany);
     }
     var assembly = ui.element("label", "phc-selection-field");
-    heading.appendChild(title);
-    root.appendChild(heading);
     control("face_type", "Type");
     control("boundary_condition", "Boundary");
     assembly.appendChild(ui.element("span", "", "Assembly"));
     assembly.appendChild(state.selectionAssignment.root);
     root.appendChild(assembly);
+    root.appendChild(over);
     return { root: root, paint: paint };
   }
 
@@ -617,17 +815,49 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     zoneRows.forEach(function (row) { byId[row.record.id] = row; });
     var projection = state.controls.project(zoneRows.map(function (row) { return row.record; }), {
       id: function (record) { return record.id; },
-      value: function (record, field) { return field === "area_m2" ? totalArea(record.every) : record.name; },
+      value: function (record, field) {
+        if (field === "area_m2") return totalArea(record.every);
+        if (field === "name") return record.name;
+        return FACE_FIELDS[field] ? null : record.zone.values[field];
+      },
       search: function (record) { return searchText(record, state); },
+      // A Zone shows while its own values pass the Zone filters and, under a Face filter, while one of its
+      // Faces passes; a Face row shows while it passes, and a summary row while one of its Faces does.
+      columnMatch: function (record, filters) {
+        var own = Object.keys(filters).every(function (field) {
+          return FACE_FIELDS[field] || filters[field].indexOf(filterValue(record.zone, field)) >= 0;
+        });
+        return own && (!hasFaceFilter(filters) || record.every.some(function (face) {
+          return faceMatches(face, filters);
+        }));
+      },
+      rowMatch: function (row, filters) {
+        if (row.record.face) return faceMatches(row.record.face, filters);
+        return row.record.more ? true : row.record.faces.some(function (face) { return faceMatches(face, filters); });
+      },
       rows: function () { return rows; }
     });
+    var labels = Object.create(null);
+    columns(profile).forEach(function (column) { labels[column[0]] = column[1]; });
+    var shown = ordered(projection.records, byId, rows, state.controls, state);
+    var visible = shown.filter(function (row) { return !projection.hidden(row); });
+    // The Faces the filter shows, whether or not their rows are open or painted (a long unclassified list
+    // paints only its first fifty): what the header box checks, and what "hidden" in the bar is counted against.
+    var filters = state.controls.columnFilters, faceFiltered = hasFaceFilter(filters);
+    var filterFaces = visible.filter(depth(0)).reduce(function (all, row) {
+      return all.concat(row.record.every.filter(function (face) {
+        return !faceFiltered || faceMatches(face, filters);
+      }));
+    }, []);
+    state.hiddenChecked = state.checked.among(state.faces || []).length - state.checked.among(filterFaces).length;
     var parents = Object.create(null);
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     tables.table(mount, rows, {
-      // Sized so the whole table shows beside the inspector at the panel's usual width; the user can still
-      // drag any column wider.
-      defaultWidths: { name: 142, face_type: 126, boundary_condition: 110, area_m2: 92, assembly_id: 156 },
-      tree: true, rows: ordered(projection.records, byId, rows, state.controls), columns: columns(profile),
+      // Sized so the whole table shows at the panel's usual width; a long header label wraps beside its icons,
+      // and the user can still drag any column wider.
+      defaultWidths: { name: 142, building_segment: 120, level: 84, ground_depth_mm: 104, face_type: 126,
+        boundary_condition: 110, area_m2: 92, assembly_id: 156 },
+      tree: true, rows: shown, columns: columns(profile),
       expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
       decorate: function (td, row, field) { flag(td, problem(row.record.face, field)); },
@@ -635,16 +865,20 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
       empty: zoneRows.length ? "No Zones match this filter." : "No Zones yet. Select geometry and choose Make Zone.",
       value: function (row, field) { return value(row, field, profile); },
       cell: function (td, row, field, text) { return cell(td, row, field, text, state); },
-      marker: marker, actions: actions, rowHidden: projection.hidden,
-      selected: function (row) { return state.selected === row.key; },
+      marker: marker, actions: actions, rowHidden: projection.hidden, hiddenColumns: state.hiddenColumns,
+      revealRowActions: true,
+      check: { state: function (row) { return state.checked.state(row); },
+        toggle: function (row, event) { state.checked.toggle(row, event, visible); panel.repaint(); },
+        header: function () { return Boolean(filterFaces.length) && state.checked.stateOf(filterFaces); },
+        toggleAll: function () { state.checked.toggleAll(filterFaces); panel.repaint(); },
+        label: function (row) { return (state.checked.state(row) === true ? "Uncheck " : "Check ") + row.record.name; },
+        headerLabel: function (value) {
+          return (value === true ? "Uncheck" : "Check") + " every Face the filter shows";
+        },
+        any: function () { return state.checked.among(state.faces || []).length > 0; } },
+      headerActions: function (field) { return headerActions(state, field, labels[field]); },
       inspect: function (row) {
-        if (row.record.more) { state.showAll[row.record.more] = true; panel.repaint(); return; }
-        var reason = row.key !== state.selected && draftReason(state);
-        if (reason) return refuse(reason);
-        state.selected = row.key;
-        // An explicit choice of a Zone outranks the Faces selected in the viewport, as they stand now.
-        state.chosenOver = row.depth === 0 && state.targets.length ? selectionKey(state.targets) : undefined;
-        panel.repaint();
+        if (row.record.more) { state.showAll[row.record.more] = true; panel.repaint(); }
       },
       columnResize: function (field, width) {
         if (field === null) state.columnWidths = {};
@@ -652,15 +886,16 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
         else state.columnWidths[field] = width;
       },
       action: function (row, item) {
-        // Locate selects, so the selection takes the inspector back even when it was already these Faces.
-        if (item.id === "locate") { state.chosenOver = undefined; locate(state, row); }
+        if (item.id === "locate") locate(state, row);
         if (item.id === "suggest") suggest(state, row);
       }
     });
   }
 
   function searchText(record, state) {
-    return [record.name, record.unclassified ? "unclassified" : ""].concat(record.faces.map(function (face) {
+    var zone = record.zone.values;
+    var own = [record.name, zone.building_segment || "", zone.level || "", record.unclassified ? "unclassified" : ""];
+    return own.concat(record.faces.map(function (face) {
       var assigned = assemblies.choices(state.snapshot, []).filter(function (record) {
         return record.id === face.values.assembly_id;
       })[0];
@@ -669,20 +904,27 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     })).join(" ");
   }
 
-  /* The Zone order the controls settled on, each Zone followed by its own Face rows in the same order:
-     Order by and its direction apply within a Zone too, so they change something even when the Model has
-     one Zone. A Face's name orders by its place number, not its text: the text starts with the Face's type,
-     and choosing a type in a chip must not move the row out from under the user. A summary row
+  /* The Zone order the controls settled on, each Zone followed by its own Face rows. The sorted column
+     orders a Zone's Faces too where a Face has that value (its area, its type, boundary or Assembly), so a
+     sort changes something even when the Model has one Zone; a Zone field leaves the Faces in place order.
+     A Face's name orders by its place number, not its text: the text starts with the Face's type, and
+     choosing a type in a chip must not move the row out from under the user. A summary row
      ("N unclassified Faces") and "Show all" keep their place after the Faces. */
-  function ordered(records, byId, rows, controls) {
-    var children = Object.create(null), field = controls.orderBy.value;
-    var sign = controls.direction.value === "desc" ? -1 : 1;
+  function ordered(records, byId, rows, controls, state) {
+    var children = Object.create(null), field = controls.sortField();
+    var sign = controls.sortDirection() === "desc" ? -1 : 1;
     rows.forEach(function (row) {
       if (row.parent) (children[row.parent] = children[row.parent] || []).push(row);
     });
-    function faceValue(row) { return field === "area_m2" ? Number(row.record.face.area_m2) || 0 : row.record.place; }
+    function faceValue(row) {
+      var face = row.record.face;
+      if (field === "area_m2") return Number(face.area_m2) || 0;
+      return FACE_FIELDS[field] ? filterLabel(state, field, filterValue(face, field)) : row.record.place;
+    }
     function byFace(a, b) {
-      return (faceValue(a) - faceValue(b)) * sign || a.record.place - b.record.place;
+      var left = faceValue(a), right = faceValue(b);
+      var difference = typeof left === "number" ? left - right : ui.compareText(left, right);
+      return difference * sign || a.record.place - b.record.place;
     }
     function sorted(list) {
       var faces = list.filter(function (row) { return row.record.face; }).sort(byFace);
@@ -696,172 +938,18 @@ function (panel, ui, requests, snapshot, units, preferences, unitFields, tables,
     return records.reduce(function (all, record) { return all.concat(withChildren(byId[record.id])); }, []);
   }
 
-  /* The selected Zone's own fields. They belong to the Zone rather than to any one row, so they are a
-     form in the inspector rather than more columns (UI polish: reveal contextual tools on selection). */
-  function paintDetails(mount, rows, state) {
-    var row = rows.filter(function (candidate) { return candidate.key === state.selected; })[0];
-    if (!row || row.depth !== 0) {
-      disposeZoneEditor(state);
-      mount.replaceChildren();
-      return;
-    }
-    if (state.zoneEditor && state.zoneEditor.key === row.key) {
-      state.zoneEditor.sync(row.record.zone);
-      return;
-    }
-    disposeZoneEditor(state);
-    state.zoneEditor = zoneForm(row.key, row.record.zone, state);
-    var title = ui.element("div", "phc-zone-heading");
-    title.appendChild(ui.element("h2", "", "Zone details"));
-    mount.className = "phc-zone-details";
-    mount.replaceChildren(title, state.zoneEditor.root);
-  }
-
-  function disposeZoneEditor(state) {
-    if (!state.zoneEditor) return;
-    state.zoneEditor.dispose();
-    state.zoneEditor = null;
-  }
-
-  function labelled(text, control) {
-    var node = ui.element("label");
-    node.appendChild(ui.element("span", "", text));
-    node.appendChild(control);
-    return node;
-  }
-
-  function input(name, current) {
-    var node = ui.element("input");
-    node.setAttribute("aria-label", name);
-    node.value = current === null || current === undefined ? "" : String(current);
-    return node;
-  }
-
-  function copyValues(values) {
-    var copy = {};
-    Object.keys(values).forEach(function (key) { copy[key] = values[key]; });
-    return copy;
-  }
-
-  function zoneForm(key, zone, state) {
-    var values = copyValues(zone.values), card = ui.element("form", "phc-zone-card");
-    var name = input("Zone name", values.name), segment = input("Building-Segment", values.building_segment);
-    var level = input("Level", values.level), depthValue = values.ground_depth_mm;
-    var editor;
-    var ground = new unitFields.UnitField({
-      field: { quantity: "length_mm", unit: "mm", label: "Ground depth", scope: "ph_composer.zones.details" },
-      value: depthValue,
-      onCommit: function (committed) { depthValue = committed; }
-    });
-    var save = ui.element("button", "primary", "Save"), cancel = ui.button("Cancel", function () {
-      editor.cancel(); panel.repaint();
-    });
-    // Save and Cancel belong to a draft, so they show once there is one.
-    function paintActions() {
-      var hide = !(editor.dirty || editor.pending), active = document.activeElement;
-      if (hide && (active === save || active === cancel)) name.focus();
-      save.hidden = cancel.hidden = hide;
-    }
-    save.type = "submit";
-    cancel.type = "button";
-    card.appendChild(labelled("Name", name));
-    card.appendChild(labelled("Building-Segment", segment));
-    card.appendChild(labelled("Level", level));
-    card.appendChild(labelled("Ground depth", ground.root));
-    card.appendChild(save);
-    card.appendChild(cancel);
-    editor = {
-      key: key,
-      root: card,
-      reference: zone.reference,
-      stored: zone,
-      expectedValues: copyValues(values),
-      dirty: false,
-      pending: false,
-      disposed: false,
-      setPending: function (pending) {
-        editor.pending = pending;
-        [name, segment, level, save, cancel].forEach(function (control) { control.disabled = pending; });
-        ground.setDisabled(pending);
-        paintActions();
-      },
-      focus: function () { if (!save.disabled) save.focus(); },
-      // The whole form goes back to what the Model last said, and the draft ends.
-      cancel: function () {
-        if (editor.pending) return;
-        editor.dirty = false;
-        editor.skipSync = false;
-        ground.cancel();
-        editor.sync(editor.stored);
-        paintActions();
-      },
-      dispose: function () { editor.disposed = true; ground.dispose(); },
-      accept: function (submitted) {
-        editor.expectedValues = copyValues(submitted);
-        editor.dirty = false;
-        editor.skipSync = true;
-        ground.setValue(submitted.ground_depth_mm);
-        paintActions();
-      },
-      sync: function (authoritative) {
-        editor.stored = authoritative;
-        if (editor.skipSync) {
-          editor.skipSync = false;
-          return;
-        }
-        if (editor.dirty) return;
-        values = copyValues(authoritative.values);
-        editor.reference = authoritative.reference;
-        editor.expectedValues = copyValues(values);
-        name.value = values.name === null || values.name === undefined ? "" : String(values.name);
-        segment.value = values.building_segment === null || values.building_segment === undefined ? "" :
-          String(values.building_segment);
-        level.value = values.level === null || values.level === undefined ? "" : String(values.level);
-        depthValue = values.ground_depth_mm;
-        ground.setValue(depthValue);
-      }
-    };
-    [name, segment, level, ground.input].forEach(function (control) {
-      control.addEventListener("input", function () { editor.dirty = true; paintActions(); });
-    });
-    paintActions();
-    card.addEventListener("submit", function (event) {
-      event.preventDefault();
-      if (!ground.commit().ok) return;
-      var submitted = { name: name.value, building_segment: segment.value, level: level.value || null,
-        ground_depth_mm: depthValue };
-      if (!state.edits.run("ph_composer.zones.update", {
-        reference: editor.reference,
-        values: submitted,
-        expected_values: editor.expectedValues
-      }, {
-        onDone: function () {
-          if (editor.disposed) return;
-          editor.setPending(false);
-          editor.accept(submitted);
-        },
-        onFail: function () {
-          if (!editor.disposed) editor.setPending(false);
-        }
-      })) return;
-      editor.setPending(true);
-    });
-    return editor;
-  }
-
   // First in its pane: the Zone tree is the screen's work surface, and the palette and the legend
   // are controls that act on what it shows.
-  panel.navigationGuard("ph_composer.overview", function () { return draftReason(screen); }, function () {
-    if (screen && screen.zoneEditor) screen.zoneEditor.focus();
-  });
-  panel.section("ph_composer.overview", render, { order: 10 });
+  panel.navigationGuard("ph_composer.overview", function () { return draftReason(screen); });
+  /* Another tab can open this one with Faces checked and, with `locate: true`, framed
+     (`panel.navigate("overview", { check: references, locate: true })`), as the Assemblies tab's "Select
+     faces using" does. Locating here keeps the outline this screen's to clear. */
+  panel.section("ph_composer.overview", render, { order: 10, onNavigate: function (root, intent) {
+    if (!screen || !intent.check) return;
+    screen.checked.replace(intent.check);
+    if (intent.locate) locateFaces(screen, intent.check);
+    panel.repaint();
+  } });
   panel.workedOn("ph_composer.zones", "overview");
-  panel.section("ph_composer.zones.selection", renderSelection, { region: "inspector", tier: "selection",
-    order: 11, when: selectionWanted });
-  panel.section("ph_composer.zones.details", renderDetails, { region: "inspector", tier: "record",
-    order: 12, when: detailsWanted });
-  // Last in line and always wanted, so the inspector column is always there: the tree keeps its width
-  // whether the user selects something, opens Colour by or starts Classify faces.
-  panel.section("ph_composer.zones.hint", renderHint, { region: "inspector", tier: "ambient", order: 1000,
-    when: function () { return true; } });
+  panel.section("ph_composer.zones.selection_bar", renderBar, { order: 1000 });
 });

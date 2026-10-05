@@ -53,6 +53,18 @@ module PhComposer
                                                  "targets" => Shapes.list(Faces::AssemblyRegistration::TARGET) }),
                       :examples => [{}]) { |request| Faces::Selection.read(request) }
         feature.snapshot_section("#{prefix}.selected", :query => "#{prefix}.selection")
+        # Never refuses, so a selection with no Faces in it still reports that the selection changed.
+        feature.query("#{prefix}.selection_generation",
+                      :description => "How many times SketchUp's selection has changed in this session.",
+                      :refuses => [], :params => Shapes::NONE,
+                      :result => Shapes.object({ "generation" => Shapes::COUNT.merge(
+                        "description" => "Advances on every native selection change, whatever it selects."
+                      ) }),
+                      :examples => [{}]) do |request|
+          { "generation" => Faces::Selection.generation(request.session).value }
+        end
+        feature.snapshot_section("#{prefix}.selection_change", :query => "#{prefix}.selection_generation")
+        feature.on_host_event(:selection_changed) { |session| Faces::Selection.generation(session).advance }
         install_attached_assignment(feature, prefix)
       end
 

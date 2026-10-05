@@ -50,13 +50,14 @@ function snapshot() {
   };
 }
 
-/* The Zone details form, which the inspector holds. */
-function zoneCard(p) {
-  return p.query("[data-section='ph_composer.zones.details']").querySelector(".phc-zone-card");
+/* What a Name cell reads: a Zone's name is an editor on its row, a Face's is text. */
+function nameText(td) {
+  var input = td.querySelector("input");
+  return input ? input.value : td.textContent;
 }
 
-/* A control by its accessible name, anywhere in the root's pane: the tree is the work surface, and the
-   Zone details and the Face selection are in the inspector beside it. */
+/* A control by its accessible name, anywhere in the root's pane: the table, its control row and header, and
+   the selection bar over it. */
 function byLabel(root, label) {
   var scope = root.closest("[data-pane]") || root;
   return scope.querySelectorAll("input, select, button").filter(function (node) {
@@ -143,18 +144,18 @@ test("area headers and Zone and Face values follow the display profile together"
   }), "a Face's type and boundary chips are the kit's enum cell");
   function areas() {
     return section.querySelectorAll(".col-area_m2").filter(function (node) { return node.tagName === "td"; })
-      .map(function (node) { return node.textContent; });
+      .map(nameText);
   }
   function header() {
     return section.querySelectorAll(".col-area_m2").filter(function (node) { return node.tagName === "th"; })[0];
   }
 
-  assert.ok(header().textContent.includes("Gross area ft²"));
+  assert.ok(header().querySelector(".phc-th-label").textContent.includes("Gross area ft²"));
   assert.deepStrictEqual(areas(), ["129.17", "10.76", "32.29", "86.11", "86.11"],
     "the Zone over every Face it has, its two recorded Faces, then the unclassified as a group and one by one");
   p.modules.unit_preferences.set("unit_system", "SI");
   p.panel.repaint();
-  assert.ok(header().textContent.includes("Gross area m²"));
+  assert.ok(header().querySelector(".phc-th-label").textContent.includes("Gross area m²"));
   assert.deepStrictEqual(areas(), ["12", "1", "3", "8", "8"]);
   assert.strictEqual(faces[0].area_m2, 1, "display changes leave the canonical snapshot alone");
 });
@@ -219,7 +220,7 @@ test("an unclassified Face is a row under its Zone's summary, and choosing a val
   var section = p.query("[data-section='ph_composer.overview']");
 
   var names = section.querySelectorAll(".col-name").filter(function (node) { return node.tagName === "td"; })
-    .map(function (node) { return node.textContent; });
+    .map(nameText);
   assert.deepStrictEqual(names, ["Zone 1", "Wall 1", "1 unclassified Face", "Face 2"]);
   assert.strictEqual(section.querySelector(".phc-row-marker").textContent, "1", "the Zone still counts them");
 
@@ -285,7 +286,7 @@ test("two Zone occurrences sharing one record id are two rows", function () {
   var section = p.query("[data-section='ph_composer.overview']");
 
   var names = section.querySelectorAll(".col-name").filter(function (node) { return node.tagName === "td"; })
-    .map(function (node) { return node.textContent; });
+    .map(nameText);
   assert.deepStrictEqual(names, ["Zone 1", "Wall 1", "1 unclassified Face", "Face 2", "Zone 1 copy", "Floor 1"],
     "each occurrence keeps its own row and its own Faces");
   assert.strictEqual(section.querySelectorAll(".phc-row-marker")[0].textContent, "shared identity",
@@ -315,7 +316,7 @@ test("classifying one Face leaves its neighbours' rows alone", function () {
     "every row still there keeps its key, the newly classified Face included");
   assert.strictEqual(after.length, before.length - 1, "only the emptied summary row goes");
   var names = section.querySelectorAll(".col-name").filter(function (node) { return node.tagName === "td"; })
-    .map(function (node) { return node.textContent; });
+    .map(nameText);
   assert.deepStrictEqual(names, ["Zone 1", "Wall 1", "Floor 2"],
     "and a Face is numbered among every Face of its Zone, not among the classified ones");
 });
@@ -350,114 +351,84 @@ test("Locate goes to the viewport channel and never to an action", function () {
   assert.strictEqual(p.sent[0].payload.expected_revision, undefined, "a view command guards no revision");
 });
 
-test("Zone details appear for the selected Zone and save against the values last read", function () {
+function enter(control, text) {
+  control.value = text;
+  control.listeners.input({});
+  control.listeners.keydown({ key: "Enter", preventDefault: function () {} });
+}
+
+test("a Zone's fields are cells on its row, and each commit is one update of that value", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   var section = p.query("[data-section='ph_composer.overview']");
-  assert.strictEqual(zoneCard(p), null, "nothing is selected yet");
+  assert.strictEqual(p.query("[data-section='ph_composer.zones.details']"), null, "there is no Zone form");
+  assert.strictEqual(byLabel(section, "Zone 1 Building-Segment").value, "house");
+  assert.strictEqual(byLabel(section, "Wall 1 Level"), undefined, "a Face row leaves the Zone columns blank");
 
-  section.querySelector(".row-target").listeners.click({});
-  byLabel(section, "Zone name").value = "North Zone";
-  zoneCard(p).listeners.submit({ preventDefault: function () {} });
+  enter(byLabel(section, "Zone 1 name"), "North Zone");
 
-  var sent = p.sent[0].payload;
-  assert.strictEqual(sent.name, "ph_composer.zones.update");
-  assert.strictEqual(sent.params.values.name, "North Zone");
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(sent.params.expected_values)), {
-    name: "Zone 1", building_segment: "house", level: null, ground_depth_mm: 0
+  assert.strictEqual(p.sent.length, 1);
+  assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.update");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), {
+    reference: { zone_id: "zon_a", zone_path: [100] },
+    values: { name: "North Zone", building_segment: "house", level: null, ground_depth_mm: 0 },
+    expected_values: { name: "Zone 1", building_segment: "house", level: null, ground_depth_mm: 0 }
   });
 });
 
-test("Zone ground depth follows display units and sends canonical millimetres", function () {
+test("a Zone's Ground depth follows display units and sends canonical millimetres", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   p.modules.unit_preferences.set("unit_system", "IP");
+  p.panel.repaint();
   var section = p.query("[data-section='ph_composer.overview']");
-  section.querySelector(".row-target").listeners.click({});
-  var depth = byLabel(section, "Ground depth");
-  depth.value = "1 ft";
-  depth.listeners.input({});
-  zoneCard(p).listeners.submit({ preventDefault: function () {} });
-
+  assert.ok(section.querySelectorAll(".phc-th-label").some(function (label) {
+    return /^Ground depth in/.test(label.textContent);
+  }));
+  enter(byLabel(section, "Zone 1 ground depth"), "1 ft");
   assert.strictEqual(p.sent[0].payload.params.values.ground_depth_mm, 304.8);
 });
 
-test("a pristine selected Zone follows an authoritative snapshot refresh", function () {
+test("Escape restores a Zone cell, an unchanged commit sends nothing, and an empty Level is no Level", function () {
+  var p = page(), payload = snapshot();
+  payload.sections["ph_composer.zones.overview"].value.zones[0].values.level = "L1";
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']"), segment = byLabel(section, "Zone 1 Building-Segment");
+  segment.value = "annex"; segment.listeners.input({});
+  segment.listeners.keydown({ key: "Escape", preventDefault: function () {} });
+  assert.strictEqual(segment.value, "house");
+  enter(segment, "house");
+  assert.strictEqual(p.sent.length, 0);
+  enter(byLabel(section, "Zone 1 Level"), "");
+  assert.strictEqual(p.sent[0].payload.params.values.level, null);
+});
+
+test("an invalid Ground depth or a blank name sends nothing and says why on the cell", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), depth = byLabel(section, "Zone 1 ground depth");
+  enter(depth, "deep");
+  enter(byLabel(section, "Zone 1 name"), "  ");
+  assert.strictEqual(p.sent.length, 0);
+  assert.strictEqual(depth.getAttribute("aria-invalid"), "true");
+  assert.ok(depth.parentNode.querySelector(".cell-error").textContent);
+});
+
+test("a Zone cell follows the Model, and a refused edit keeps the typed text until Escape", function () {
   var p = page(), payload = snapshot();
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var section = p.query("[data-section='ph_composer.overview']");
-  section.querySelector(".row-target").listeners.click({});
   payload = snapshot();
-  payload.sections["ph_composer.zones.overview"].value.zones[0].values = {
-    name: "north", building_segment: "tower", level: "2", ground_depth_mm: 12
-  };
+  payload.sections["ph_composer.zones.overview"].value.zones[0].values.building_segment = "tower";
   p.panel.receive({ type: "panel.snapshot", payload: payload });
-
-  assert.strictEqual(byLabel(section, "Zone name").value, "north");
-  assert.strictEqual(byLabel(section, "Building-Segment").value, "tower");
-  assert.strictEqual(byLabel(section, "Level").value, "2");
-  assert.strictEqual(byLabel(section, "Ground depth").value, "12");
-});
-
-test("a selected Zone keeps its draft and stale guard through a native unit refresh", function () {
-  var p = page(), initial = snapshot(), refreshed;
-  initial.sections["ph_composer.zones.overview"].value.zones[0].values.name = "east";
-  p.panel.receive({ type: "panel.snapshot", payload: initial });
-  var section = p.query("[data-section='ph_composer.overview']");
-  section.querySelector(".row-target").listeners.click({});
-  var name = byLabel(section, "Zone name"), depth = byLabel(section, "Ground depth");
-  name.value = "Unsaved east draft";
-  name.listeners.input({});
-  depth.value = "12 in";
-  depth.listeners.input({});
-
-  p.modules.unit_preferences.set("unit_system", "SI");
-  p.panel.repaint();
-  refreshed = snapshot();
-  refreshed.sections["ph_composer.zones.overview"].value.zones[0].values.name = "native east";
-  p.panel.receive({ type: "panel.snapshot", payload: refreshed });
-
-  assert.strictEqual(byLabel(section, "Zone name"), name);
-  assert.strictEqual(byLabel(section, "Zone name").value, "Unsaved east draft");
-  assert.strictEqual(byLabel(section, "Ground depth"), depth);
-  assert.strictEqual(byLabel(section, "Ground depth").value, "12 in");
-  zoneCard(p).listeners.submit({ preventDefault: function () {} });
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), {
-    reference: { zone_id: "zon_a", zone_path: [100] },
-    values: { name: "Unsaved east draft", building_segment: "house", level: null, ground_depth_mm: 304.8 },
-    expected_values: { name: "east", building_segment: "house", level: null, ground_depth_mm: 0 }
-  });
-  assert.strictEqual(name.disabled, true);
-  assert.strictEqual(depth.disabled, true);
-  assert.strictEqual(zoneCard(p).querySelectorAll("button").filter(function (node) {
-    return node.textContent === "Save";
-  })[0].disabled, true);
-  refreshed = snapshot();
-  refreshed.sections["ph_composer.zones.overview"].value.zones[0].values = {
-    name: "Unsaved east draft", building_segment: "house", level: null, ground_depth_mm: 304.8
-  };
-  p.panel.receive({ type: "panel.snapshot", payload: refreshed });
+  var segment = byLabel(section, "Zone 1 Building-Segment");
+  assert.strictEqual(segment.value, "tower");
+  enter(segment, "annex");
   p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
-    session: "session-a", outcome: { status: "completed", value: { zone_id: "zon_a" } } } });
-  assert.strictEqual(name.disabled, false);
-  assert.strictEqual(depth.disabled, false);
-  refreshed = snapshot();
-  refreshed.sections["ph_composer.zones.overview"].value.zones[0].values = {
-    name: "canonical east", building_segment: "house", level: null, ground_depth_mm: 305
-  };
-  p.panel.receive({ type: "panel.snapshot", payload: refreshed });
-  assert.strictEqual(name.value, "canonical east");
-  assert.strictEqual(depth.value, "305");
-  name.value = "Saved east draft";
-  name.listeners.input({});
-  zoneCard(p).listeners.submit({ preventDefault: function () {} });
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[1].payload.params.expected_values)), {
-    name: "canonical east", building_segment: "house", level: null, ground_depth_mm: 305
-  });
-  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[1].payload.request_id,
     session: "session-a", outcome: { status: "refused", message: "The Zone changed." } } });
-  assert.strictEqual(name.disabled, false, "a refused save leaves the draft available for correction");
-  assert.strictEqual(depth.disabled, false);
+  assert.strictEqual(segment.value, "annex");
+  segment.listeners.keydown({ key: "Escape", preventDefault: function () {} });
+  assert.strictEqual(segment.value, "tower");
 });
 
 function attachedDialog(p, payload) {
@@ -605,18 +576,6 @@ test("native batch assignment switches to Zones / Faces and freezes heterogeneou
   assert.strictEqual(p.query("dialog"), null, "unchanged handoff snapshot cannot reopen a closed form");
 });
 
-test("native batch handoff waits for dirty Zone details and opens after Cancel", function () {
-  var p = draftPage();
-  type(byLabel(p.section, "Zone name"), "Unsaved draft");
-  p.panel.receive({ type: "panel.snapshot", payload: batchSnapshot() });
-  assert.strictEqual(p.query("dialog"), null);
-  assert.strictEqual(byLabel(p.section, "Zone name").value, "Unsaved draft");
-  assert.match(p.notice().message.textContent, /Save or cancel the Zone details/);
-  p.button("Cancel").listeners.click({});
-  assert.ok(p.query("dialog"));
-  assert.strictEqual(p.sent.length, 0);
-});
-
 test("native batch assignment can select an existing definition and closes its handoff on success", function () {
   var p = page(), payload = batchSnapshot();
   payload.sections["ph_composer.zones.faces.attached_zone.list"] = { status: "completed", value: {
@@ -633,159 +592,6 @@ test("native batch assignment can select an existing definition and closes its h
     outcome: { status: "completed", value: { face_ids: ["fac_a", "fac_b"] } } } });
   assert.strictEqual(p.query("dialog"), null);
   assert.strictEqual(p.sent[1].payload.name, "ph_composer.zones.faces.close_attached_assignment");
-});
-
-/* One Zone details draft at a time. While the form is dirty or its Save is pending, row
-   selection, filtering and tab changes that would hide it are refused with a warning notice. */
-function draftPage(payload) {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: payload || snapshot() });
-  var section = p.query("[data-section='ph_composer.overview']");
-  section.querySelector(".row-target").listeners.click({});
-  p.section = section;
-  p.notice = function () { return p.context.document.querySelector(".phc-floating-notice"); };
-  p.button = function (text) {
-    return section.closest("[data-pane]").querySelectorAll("button").filter(function (node) {
-      return node.textContent === text;
-    })[0];
-  };
-  p.selectedKey = function () {
-    return section.querySelectorAll("[data-row-key]").filter(function (node) {
-      return /host-selected/.test(node.className);
-    }).map(function (node) { return node.getAttribute("data-row-key"); })[0];
-  };
-  return p;
-}
-
-function type(control, text) {
-  control.value = text;
-  control.listeners.input({});
-}
-
-function assertRefused(p, zoneKey, label, draft) {
-  assert.strictEqual(p.selectedKey(), zoneKey, "the selection does not change");
-  assert.strictEqual(p.notice().hidden, false);
-  assert.strictEqual(p.notice().getAttribute("data-tone"), "warning");
-  assert.match(p.notice().message.textContent, /Save or cancel the Zone details/);
-  assert.strictEqual(byLabel(p.section, label).value, draft, "the draft and its controls stay");
-  assert.ok(p.button("Save") && p.button("Cancel"));
-  assert.strictEqual(p.sent.filter(function (m) { return m.type === "action.invoke"; }).length, 0);
-}
-
-test("a Zone details draft refuses the settings gear until it is cancelled", function () {
-  var p = draftPage(), zoneKey = p.selectedKey(), gear = byLabel(p.section, "Zones / Faces settings");
-  type(byLabel(p.section, "Zone name"), "Unsaved name");
-
-  gear.listeners.click({});
-
-  assertRefused(p, zoneKey, "Zone name", "Unsaved name");
-  assert.strictEqual(gear.getAttribute("aria-expanded"), "false", "the settings bubble stays closed");
-  p.button("Cancel").listeners.click({});
-  gear.listeners.click({});
-  assert.strictEqual(gear.getAttribute("aria-expanded"), "true");
-});
-
-test("a Zone details draft refuses selecting one of its Face rows", function () {
-  [["Zone name", "Unsaved name"], ["Building-Segment", "annex"], ["Level", "L3"], ["Ground depth", "250"]]
-    .forEach(function (pair) {
-      var p = draftPage(), zoneKey = p.selectedKey();
-      type(byLabel(p.section, pair[0]), pair[1]);
-
-      p.section.querySelectorAll(".row-target")[1].listeners.click({});
-
-      assertRefused(p, zoneKey, pair[0], pair[1]);
-    });
-});
-
-test("a Zone details draft refuses selecting another Zone row", function () {
-  var payload = snapshot(), overview = payload.sections["ph_composer.zones.overview"].value;
-  overview.zones.push({ id: "zon_b", schema_version: 1, user_data: {}, extension_data: {},
-    reference: { zone_id: "zon_b", zone_path: [300] }, state: "found", face_count: 0,
-    values: { name: "Zone 2", building_segment: "house", level: null, ground_depth_mm: 0 } });
-  var p = draftPage(payload), zoneKey = p.selectedKey();
-  type(byLabel(p.section, "Zone name"), "Unsaved name");
-  var other = p.section.querySelectorAll("[data-row-key]").map(function (node) {
-    return node.getAttribute("data-row-key");
-  }).indexOf(JSON.stringify(["Zone", [300]]));
-
-  p.section.querySelectorAll(".row-target")[other].listeners.click({});
-
-  assertRefused(p, zoneKey, "Zone name", "Unsaved name");
-});
-
-test("a Zone details draft refuses a filter change and a tab change", function () {
-  var p = draftPage(), zoneKey = p.selectedKey(), filter = byLabel(p.section, "Filter Zones");
-  type(byLabel(p.section, "Zone name"), "Unsaved name");
-
-  type(filter, "nothing matches");
-  assert.strictEqual(filter.value, "", "the filter keeps its value");
-  assertRefused(p, zoneKey, "Zone name", "Unsaved name");
-
-  p.query("[data-tab='export']").listeners.click({});
-  assert.strictEqual(p.query("[data-pane='overview']").hidden, false);
-  assertRefused(p, zoneKey, "Zone name", "Unsaved name");
-  var tab = p.query("[data-tab='export']");
-  p.context.document.activeElement = tab; // a real click leaves focus on the tab
-  tab.listeners.click({});
-  assert.ok(p.context.document.activeElement === p.button("Save"), "a refused tab change points at the form");
-});
-
-test("Cancel restores the stored values and unlocks navigation", function () {
-  var p = draftPage();
-  type(byLabel(p.section, "Zone name"), "Unsaved name");
-  type(byLabel(p.section, "Ground depth"), "250");
-
-  p.button("Cancel").listeners.click({});
-
-  assert.strictEqual(byLabel(p.section, "Zone name").value, "Zone 1");
-  assert.strictEqual(byLabel(p.section, "Ground depth").value, "0");
-  p.section.querySelectorAll(".row-target")[1].listeners.click({});
-  assert.notStrictEqual(p.selectedKey(), JSON.stringify(["Zone", [100]]));
-  assert.strictEqual(byLabel(p.section, "Zone name"), undefined, "a Face row has no Zone details");
-  assert.strictEqual(p.sent.length, 0);
-});
-
-test("a pending Save keeps the form and locks navigation; success unlocks it", function () {
-  var p = draftPage(), zoneKey = p.selectedKey();
-  type(byLabel(p.section, "Zone name"), "North Zone");
-  zoneCard(p).listeners.submit({ preventDefault: function () {} });
-  assert.strictEqual(p.sent.length, 1);
-  assert.strictEqual(p.button("Cancel").disabled, true, "an in-flight Save cannot be cancelled");
-
-  p.section.querySelectorAll(".row-target")[1].listeners.click({});
-  assert.strictEqual(p.selectedKey(), zoneKey);
-  assert.ok(p.button("Save"), "the pending request keeps its controls");
-
-  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
-    session: "session-a", outcome: { status: "completed", value: { zone_id: "zon_a" } } } });
-  p.section.querySelectorAll(".row-target")[1].listeners.click({});
-  assert.notStrictEqual(p.selectedKey(), zoneKey);
-  assert.strictEqual(p.sent.length, 1);
-});
-
-test("a refused Save keeps the draft locked and gives focus back to the form", function () {
-  var p = draftPage(), zoneKey = p.selectedKey();
-  type(byLabel(p.section, "Zone name"), "North Zone");
-  zoneCard(p).listeners.submit({ preventDefault: function () {} });
-  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
-    session: "session-a", outcome: { status: "refused", message: "The Zone changed." } } });
-
-  p.section.querySelectorAll(".row-target")[1].listeners.click({});
-
-  assert.strictEqual(p.selectedKey(), zoneKey);
-  assert.strictEqual(byLabel(p.section, "Zone name").value, "North Zone");
-  assert.strictEqual(p.context.document.activeElement, p.button("Save"));
-});
-
-test("switching Models withdraws a dirty Zone details draft", function () {
-  var p = draftPage();
-  type(byLabel(p.section, "Zone name"), "Unsaved name");
-  var other = snapshot(); other.session = "session-b";
-
-  p.panel.receive({ type: "panel.snapshot", payload: other });
-
-  assert.strictEqual(byLabel(p.section, "Zone name"), undefined);
-  assert.strictEqual(p.sent.length, 0);
 });
 
 test("inline create-and-assign reads the factor through the shared unit field", function () {
@@ -945,7 +751,7 @@ test("Expand all and Collapse all reach the unclassified summary, and the filter
   assert.strictEqual(count(), 4, "a Zone with unclassified Faces matches the word");
 });
 
-test("Order by and its direction order a Zone's Faces too, so one Zone still answers them", function () {
+test("column menus sort: a Zone field orders Zones, a Face field orders Faces within their Zone", function () {
   var p = page(), payload = snapshot(), faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
   faces.push({ reference: { zone_id: "zon_a", zone_path: [100], entity_path: [103], entity_id: "fac_c" },
     zone_name: "Zone 1", area_m2: 30, state: "classified", values: { face_type: "Floor", boundary_condition: "Ground" },
@@ -954,34 +760,329 @@ test("Order by and its direction order a Zone's Faces too, so one Zone still ans
   var section = p.query("[data-section='ph_composer.overview']");
   function names() {
     return section.querySelectorAll("td").filter(function (td) { return /col-name/.test(td.className); })
-      .map(function (td) { return td.textContent; });
+      .map(nameText);
   }
+  assert.strictEqual(byLabel(section, "Order by").parentNode.hidden, true, "Order by moves into the column menus");
+  assert.strictEqual(byLabel(section, "Sort descending").hidden, true);
   // By name, Faces keep their place numbers in order, so choosing a type never moves a row; the
   // unclassified summary stays last.
   assert.deepStrictEqual(names(), ["Zone 1", "Wall 1", "Floor 3", "1 unclassified Face", "Face 2"]);
-  byLabel(section, "Sort descending").listeners.click({});
+  menuItem(section, "Name column menu", "Sort Z to A");
   assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"]);
-  var order = byLabel(section, "Order by");
-  order.value = "area_m2";
-  order.listeners.change({});
+  menuItem(section, "Gross area m² column menu", "Sort Z to A");
+  assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"], "largest first");
+  menuItem(section, "Type column menu", "Sort A to Z");
   assert.deepStrictEqual(names(), ["Zone 1", "Floor 3", "Wall 1", "1 unclassified Face", "Face 2"],
-    "largest first");
-  byLabel(section, "Sort ascending").listeners.click({});
-  assert.deepStrictEqual(names(), ["Zone 1", "Wall 1", "Floor 3", "1 unclassified Face", "Face 2"]);
+    "Floor before Wall, within the Zone");
+  var sorted = menuItem(section, "Type column menu");
+  assert.strictEqual(sorted.filter(function (node) { return node.textContent === "Sort A to Z"; })[0]
+    .getAttribute("aria-pressed"), "true", "the menu marks the sort in force");
 });
 
-test("the header groups the authoring tools apart from Colour by, and the inspector column always stands", function () {
+test("a column's value filter hides rows, counts in the control row and shows its glyph at rest", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var trigger = byLabel(section, "Type column menu");
+  assert.strictEqual(trigger.classList.contains("is-persistent"), false, "an idle menu shows only on hover");
+  click(trigger);
+  var boxes = trigger.parentNode.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; });
+  assert.deepStrictEqual(boxes.map(function (box) { return box.parentNode.children[1].textContent; }),
+    ["Wall", "Unclassified"], "the values present, with Unclassified last");
+  boxes[0].checked = false;
+  boxes[0].listeners.change({});
+  var visible = section.querySelectorAll("[data-row-key]").filter(function (node) { return !node.hidden; })
+    .map(function (node) { return JSON.parse(node.getAttribute("data-row-key"))[0]; });
+  assert.deepStrictEqual(visible, ["Zone", "Unclassified", "Face"], "Wall 1 is hidden, the unclassified Face shows");
+  assert.strictEqual(section.querySelector(".phc-view-count").textContent, "1 Zone · 1 filter");
+  var filtered = byLabel(section, "Type: filtered. Column menu");
+  assert.ok(filtered, "the trigger says the column is filtered");
+  assert.strictEqual(filtered.parentNode.classList.contains("is-persistent"), true, "and stays visible at rest");
+  click(filtered);
+  click(filtered.parentNode.querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Clear filter";
+  })[0]);
+  assert.strictEqual(section.querySelector(".phc-view-count").textContent, "1 Zone");
+  assert.strictEqual(p.sent.length, 0, "filtering and sorting never reach the host");
+});
+
+function click(node) { node.listeners.click({ preventDefault: function () {} }); }
+
+/* Opens a column's menu and, given an item's text, presses it; answers the menu's buttons. */
+function menuItem(section, menu, text) {
+  var trigger = byLabel(section, menu);
+  click(trigger);
+  var items = trigger.parentNode.querySelectorAll("button");
+  if (text) click(items.filter(function (node) { return node.textContent === text; })[0]);
+  return items;
+}
+
+test("the header groups the authoring tools, the pane has no inspector, and help sits in the control row", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   var section = p.query("[data-section='ph_composer.overview']");
   var toolbar = section.querySelector("[role='toolbar']");
   assert.strictEqual(toolbar.getAttribute("aria-label"), "Zone and Face tools");
   assert.ok(byLabel(section, "Solve adjacencies for all Zones in this Model").parentNode === toolbar);
-  var inspector = p.query("[data-phc-region='inspector']");
-  assert.strictEqual(inspector.hidden, false,
-    "with nothing selected the column still stands, so the tree keeps its width");
-  assert.strictEqual(p.query("[data-section='ph_composer.zones.hint']").hidden, false);
+  assert.strictEqual(p.query("[data-pane='overview'] [data-phc-region='inspector']"), null, "the table spans the pane");
+  assert.strictEqual(p.query("[data-pane='overview']").classList.contains("has-inspector"), false);
+  var help = section.querySelector(".phc-inventory-controls").querySelector(".phc-help");
+  assert.match(help.getAttribute("aria-label"), /^Zones \/ Faces: Select Faces in SketchUp, or check their rows/);
   var header = section.querySelector(".phc-heading");
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   assert.ok(section.querySelector(".phc-heading") === header, "the header is repainted in place, not rebuilt");
+});
+
+test("Colour by lives in the column headers, Window Type in the Assembly's, the rest in Table options", function () {
+  var p = page(), payload = snapshot();
+  payload.sections["ph_composer.colour_by.legend"] = { status: "completed", value: {
+    mode: "ph_composer.zones.faces.by_boundary_condition", label: "Boundary condition", rows: [], modes: [
+      { name: "ph_composer.zones.by_zone", label: "Zone", group: null },
+      { name: "ph_composer.zones.by_building_segment", label: "Building-Segment", group: null },
+      { name: "ph_composer.zones.by_level", label: "Level", group: null },
+      { name: "ph_composer.zones.faces.by_face_type", label: "Face type", group: null },
+      { name: "ph_composer.zones.faces.by_boundary_condition", label: "Boundary condition", group: null },
+      { name: "ph_composer.zones.faces.by_assembly", label: "Assembly", group: "construction" },
+      { name: "ph_composer.windows.by_type", label: "Window Type", group: "construction" },
+      { name: "outside.probe.by_side", label: "Side", group: null }] } };
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var toggles = section.querySelectorAll(".phc-colour-toggle");
+  assert.strictEqual(toggles.length, 6, "Name, Building-Segment, Level, Type, Boundary and Assembly");
+  var boundary = byLabel(section, "Colour by Boundary condition");
+  assert.strictEqual(boundary.getAttribute("aria-pressed"), "true");
+  assert.strictEqual(boundary.parentNode.classList.contains("is-persistent"), true, "a pressed toggle stays at rest");
+  var assembly = byLabel(section, "Colour by Assembly or Window Type");
+  click(assembly);
+  assert.deepStrictEqual(assembly.parentNode.querySelectorAll(".phc-action-menu-item").map(function (node) {
+    return node.textContent;
+  }), ["Assembly", "Window Type"]);
+  var options = byLabel(section, "Table options");
+  click(options);
+  var items = options.parentNode.querySelectorAll(".phc-action-menu-item");
+  assert.deepStrictEqual(items.map(function (node) { return node.textContent; }),
+    ["Ground depth column", "Colour by Side"], "only a mode no column offers is listed");
+  click(items[1]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), { mode: "outside.probe.by_side" });
+  click(options);
+  click(options.parentNode.querySelectorAll(".phc-action-menu-item")[0]);
+  assert.strictEqual(section.querySelectorAll(".col-ground_depth_mm").filter(function (node) {
+    return node.tagName === "th";
+  })[0].hidden, true, "Ground depth hides from Table options");
+});
+
+/* Three Faces in one Zone, two of them recorded, so a Zone's box can read mixed. */
+function checkPage(selected) {
+  var p = page(), payload = snapshot();
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
+  var third = JSON.parse(JSON.stringify(faces[0]));
+  third.reference.entity_path = [103]; third.reference.entity_id = "fac_c";
+  faces.splice(1, 0, third);
+  payload.sections["ph_composer.zones.faces.selected"] = { status: "completed",
+    value: { faces: [], targets: (selected || []).map(function (index) {
+      return { reference: faces[index].reference, expected_values: faces[index].values };
+    }) } };
+  p.payload = payload;
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  p.section = p.query("[data-section='ph_composer.overview']");
+  p.box = function (label) {
+    return p.section.querySelectorAll("input").filter(function (node) {
+      return /row-check/.test(node.className) && node.getAttribute("aria-label").indexOf(label) >= 0;
+    })[0];
+  };
+  p.state = function (label) { return p.box(label).getAttribute("aria-checked"); };
+  p.header = function () { return p.section.querySelector("th").querySelector(".row-check"); };
+  return p;
+}
+
+test("a Zone's box checks every Face under it and reads mixed when some are; the header follows", function () {
+  var p = checkPage();
+  assert.ok(p.section.querySelector(".phc-table").classList.contains("reveals-row-actions"),
+    "row icons show on hover");
+  click(p.box("Wall 1"));
+  assert.deepStrictEqual([p.state("Zone 1"), p.header().getAttribute("aria-checked")], ["mixed", "mixed"]);
+  assert.ok(p.section.querySelector(".phc-table").classList.contains("has-checked"), "every box shows now");
+  click(p.box("Zone 1"));
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2"), p.state("Face 3"), p.state("Zone 1")],
+    ["true", "true", "true", "true"], "and an unclassified Face can be checked");
+  click(p.header());
+  assert.strictEqual(p.state("Zone 1"), "false", "the header unchecks every row shown");
+  assert.strictEqual(p.sent.length, 0, "checking reaches nothing in SketchUp");
+});
+
+test("Shift-click checks the range between the last box clicked and this one", function () {
+  var p = checkPage();
+  click(p.box("Wall 1"));
+  p.box("Face 3").listeners.click({ shiftKey: true, preventDefault: function () {} });
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2"), p.state("Face 3")], ["true", "true", "true"]);
+});
+
+test("a new SketchUp selection replaces the checked set; the same one leaves the user's checks", function () {
+  var p = checkPage([0]);
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2")], ["true", "false"]);
+  click(p.box("Wall 2"));
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.strictEqual(p.state("Wall 2"), "true", "an unchanged selection keeps what the user checked");
+  p.payload.sections["ph_composer.zones.faces.selected"].value.targets = [];
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2")], ["false", "false"], "an empty selection clears");
+});
+
+test("Locate frames without touching the checked set; a press elsewhere and Escape clear in layers", function () {
+  var p = checkPage([0]);
+  click(rowAction(p.section, "locate"));
+  assert.deepStrictEqual([p.sent[0].type, p.sent[0].payload.name], ["view.invoke", "ph_composer.zones.faces.locate"]);
+  p.panel.receive({ type: "view.result", payload: { request_id: p.sent[0].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { found: 3, missing: 0 } } } });
+  assert.strictEqual(p.state("Wall 1"), "true", "Locate leaves the set alone");
+  function escape() {
+    return dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+  }
+  assert.strictEqual(escape().defaultPrevented, true);
+  assert.strictEqual(p.state("Wall 1"), "false", "Escape clears the checked set first");
+  assert.strictEqual(p.sent.length, 1);
+  escape();
+  assert.strictEqual(p.sent[1].payload.name, "ph_composer.zones.faces.clear_locate", "then Locate's outline");
+  p.panel.receive({ type: "view.result", payload: { request_id: p.sent[1].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: {} } } });
+  click(rowAction(p.section, "locate"));
+  p.panel.receive({ type: "view.result", payload: { request_id: p.sent[2].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { found: 3, missing: 0 } } } });
+  dom.dispatch(p.box("Wall 1"), { type: "pointerdown" });
+  assert.strictEqual(p.sent[3].payload.name, "ph_composer.zones.faces.clear_locate", "a press elsewhere clears it");
+  dom.dispatch(p.box("Wall 1"), { type: "pointerdown" });
+  assert.strictEqual(p.sent.length, 4, "once");
+});
+
+test("another tab can open Zones / Faces with Faces checked", function () {
+  var p = checkPage();
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.navigate("overview", { check: [p.payload.sections["ph_composer.zones.faces.faces"]
+    .value.faces[1].reference] }), true);
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2")], ["false", "true"]);
+});
+
+function bar(p) {
+  return p.query("[data-section='ph_composer.overview']").querySelector(".phc-selection-bar");
+}
+
+test("the bar edits every checked Face in one request, and says how many a filter hides", function () {
+  var p = checkPage();
+  assert.strictEqual(bar(p).hidden, true, "nothing checked, no bar");
+  click(p.box("Wall 1"));
+  click(p.box("Face 3"));
+  assert.strictEqual(bar(p).hidden, false);
+  click(byLabel(p.section, "Type column menu"));
+  var wall = byLabel(p.section, "Type column menu").parentNode.querySelectorAll("input")[0];
+  wall.checked = false; wall.listeners.change({});
+  assert.strictEqual(bar(p).querySelector(".phc-selection-bar-count").textContent, "2 Faces selected, 1 hidden");
+  var boundary = byLabel(bar(p), "Boundary for selected Faces");
+  boundary.value = "Ground"; boundary.listeners.change({});
+  var sent = JSON.parse(JSON.stringify(p.sent[0].payload));
+  assert.strictEqual(sent.name, "ph_composer.zones.faces.classify");
+  assert.deepStrictEqual(sent.params.faces.map(function (face) { return face.entity_path[0]; }), [101, 102],
+    "the hidden Face too, as one Undo step");
+  assert.strictEqual(sent.params.expected_values, undefined);
+  click(bar(p).querySelector(".phc-selection-bar-clear"));
+  assert.deepStrictEqual([bar(p).hidden, p.state("Zone 1")], [true, "false"], "clear unchecks every Face");
+});
+
+test("more Faces than one gesture may change disables the bar's controls and says why", function () {
+  var p = checkPage();
+  p.payload.sections["ph_composer.zones.faces.palette"].value.gesture_face_limit = 1;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  click(p.box("Wall 1"));
+  assert.strictEqual(byLabel(bar(p), "Type for selected Faces").disabled, false);
+  click(p.box("Wall 2"));
+  assert.strictEqual(byLabel(bar(p), "Type for selected Faces").disabled, true);
+  assert.ok(byLabel(bar(p), "Why Assign is unavailable"), "the limit is the reason, beside the controls");
+});
+
+test("while the Classify tool is on, the bar holds its palette instead", function () {
+  var p = checkPage([0]);
+  p.payload.sections["ph_composer.zones.faces.palette"].value.active = true;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  var palette = p.query("[data-section='ph_composer.classify']");
+  assert.ok(bar(p).contains(palette), "the palette sits in the bar");
+  assert.deepStrictEqual([bar(p).hidden, palette.hidden, bar(p).querySelector(".phc-selection-controls").hidden],
+    [false, false, true]);
+  assert.strictEqual(p.query("[data-phc-region='inspector'] [data-section='ph_composer.classify']"), null);
+  p.payload.sections["ph_composer.zones.faces.palette"].value.active = false;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.deepStrictEqual([palette.hidden, bar(p).querySelector(".phc-selection-bar-count").textContent],
+    [true, "1 Face selected"], "and gives it back to the checked Faces when the tool ends");
+});
+
+test("a Model switch takes the old Model's selection bar with it", function () {
+  var p = checkPage([0]);
+  var old = bar(p);
+  assert.strictEqual(old.hidden, false);
+  var other = JSON.parse(JSON.stringify(p.payload));
+  other.session = "session-b"; other.revision = 9;
+  p.panel.receive({ type: "panel.snapshot", payload: other });
+  var bars = p.section.querySelectorAll(".phc-selection-bar");
+  assert.strictEqual(bars.length, 1, "one bar, the new Model's");
+  assert.ok(bars[0] !== old);
+  assert.ok(p.query("[data-section='ph_composer.classify']"), "the palette stays in the page");
+});
+
+test("Escape closes an open, idle Classify palette before it clears the checked set", function () {
+  var p = checkPage([0]);
+  var toggle = p.query("[data-section='ph_composer.classify.toggle']").querySelector("button");
+  click(toggle);
+  assert.strictEqual(toggle.getAttribute("aria-pressed"), "true");
+  dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+  assert.deepStrictEqual([toggle.getAttribute("aria-pressed"), p.state("Wall 1")], ["false", "true"],
+    "the palette is the layer above the checked set");
+  dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+  assert.strictEqual(p.state("Wall 1"), "false");
+  assert.strictEqual(p.sent.length, 0, "an idle palette closes without a host command");
+});
+
+test("past fifty unclassified Faces the header box and the hidden count read every Face the filter shows", function () {
+  var p = page(), payload = snapshot();
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
+  for (var index = 0; index < 60; index += 1) {
+    var extra = JSON.parse(JSON.stringify(faces[1]));
+    extra.reference.entity_path = [200 + index];
+    faces.push(extra);
+  }
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  click(section.querySelector("th").querySelector(".row-check"));
+  assert.strictEqual(bar(p).querySelector(".phc-selection-bar-count").textContent, "62 Faces selected",
+    "every Face, painted or not, and none counted hidden");
+  assert.strictEqual(section.querySelector("th").querySelector(".row-check").getAttribute("aria-checked"), "true");
+});
+
+test("a selection change with no Faces clears the checked set; an unchanged one keeps manual checks", function () {
+  var p = checkPage();
+  p.payload.sections["ph_composer.zones.faces.selection_change"] = { status: "completed", value: { generation: 0 } };
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  click(p.box("Wall 1"));
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.strictEqual(p.state("Wall 1"), "true", "a snapshot with no selection change keeps the user's checks");
+  // A Group is selected: the Faces read refuses, so there are no Face targets, but the selection changed.
+  p.payload.sections["ph_composer.zones.faces.selected"] = { status: "refused", code: "selection.invalid" };
+  p.payload.sections["ph_composer.zones.faces.selection_change"].value.generation = 1;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.strictEqual(p.state("Wall 1"), "false");
+  click(p.box("Wall 2"));
+  p.payload.sections["ph_composer.zones.faces.selection_change"].value.generation = 2;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.strictEqual(p.state("Wall 2"), "false", "clearing SketchUp's selection clears the checked set");
+});
+
+test("a press or Escape while Locate is still in flight clears the outline after it", function () {
+  ["pointer", "escape"].forEach(function (route) {
+    var p = checkPage();
+    click(rowAction(p.section, "locate"));
+    if (route === "pointer") dom.dispatch(p.box("Wall 1"), { type: "pointerdown" });
+    else dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+    assert.deepStrictEqual(p.sent.map(function (message) { return message.payload.name; }),
+      ["ph_composer.zones.faces.locate", "ph_composer.zones.faces.clear_locate"], route);
+    p.panel.receive({ type: "view.result", payload: { request_id: p.sent[0].payload.request_id, session: "session-a",
+      outcome: { status: "completed", value: { found: 1, missing: 0 } } } });
+    assert.strictEqual(p.sent.length, 2, route + ": the clear is not sent twice");
+  });
 });

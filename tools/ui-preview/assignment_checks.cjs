@@ -18,11 +18,12 @@ fs.mkdirSync(output, { recursive: true });
     const picker = page.getByRole("combobox", { name: "Assembly for selected Faces", exact: true });
     const writes = () => page.evaluate(() => window.previewHost.sent.filter(m => m.type === "action.invoke").length);
     const initial = await page.evaluate(() => window.previewHost.faces.slice(0, 2).map(face => ({ ...face.values })));
-    const inspector = page.locator("[data-phc-region=inspector]");
-    await inspector.getByRole("heading", { name: "2 Faces selected", exact: true }).waitFor();
+    const bar = page.locator(".phc-selection-bar");
+    const count = bar.locator(".phc-selection-bar-count");
+    await count.getByText("2 Faces selected", { exact: true }).waitFor();
     assert.equal(await page.getByRole("button", { name: "Apply Assembly to selected Faces" }).count(), 0);
 
-    // A choice assigns at once to every selected Face, and nothing else about them changes.
+    // A choice assigns at once to every checked Face, and nothing else about them changes.
     assert.equal(await writes(), 0);
     await picker.selectOption("asm_a");
     await page.waitForFunction(() => window.previewHost.faces.slice(0, 2).every(f => f.values.assembly_id === "asm_a"));
@@ -30,11 +31,11 @@ fs.mkdirSync(output, { recursive: true });
     assert.deepEqual(await page.evaluate(() => window.previewHost.faces.slice(0, 2).map(face => ({ ...face.values }))),
       initial.map(value => ({ ...value, assembly_id: "asm_a" })));
 
-    // One selected Face: Type and Boundary are set from the same place, one attribute at a time.
+    // A new SketchUp selection replaces the checked set; Type and Boundary are set from the same bar.
     await page.evaluate(() => {
       window.previewHost.selectedFaces = [window.previewHost.faces[0].reference]; window.previewHost.snapshot();
     });
-    await inspector.getByRole("heading", { name: "1 Face selected", exact: true }).waitFor();
+    await count.getByText("1 Face selected", { exact: true }).waitFor();
     await page.getByRole("combobox", { name: "Boundary for selected Faces", exact: true }).selectOption("Ground");
     await page.waitForFunction(() => window.previewHost.faces[0].values.boundary_condition === "Ground");
     assert.equal(await page.evaluate(() => window.previewHost.faces[0].values.assembly_id), "asm_a");
@@ -44,19 +45,23 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await page.evaluate(() => window.previewHost.faces[0].values.assembly_id), undefined);
     assert.equal(await page.evaluate(() => window.previewHost.faces[0].values.boundary_condition), "Ground");
     await page.getByRole("searchbox", { name: "Filter Zones", exact: true }).fill("Incomplete roof");
-    await page.getByText("Attic Zone", { exact: true }).waitFor();
+    await page.getByRole("textbox", { name: "Attic Zone name", exact: true }).waitFor();
     await page.getByRole("searchbox", { name: "Filter Zones", exact: true }).fill("");
 
     await page.locator("[data-tab='assemblies']").click();
     const row = page.locator("[data-row-key='asm_b']");
     await row.locator(".col-face_usage").getByText(/1/).waitFor();
+    // Select faces checks the Assembly's Faces in Zones / Faces and frames them; SketchUp's selection stays.
+    const selectedBefore = await page.evaluate(() => JSON.stringify(window.previewHost.selectedFaces));
     await row.getByRole("button", { name: "Select faces using Incomplete roof", exact: true }).click();
-    assert.equal(await page.evaluate(() => window.previewHost.selectedFaces.length), 1);
+    await count.getByText("1 Face selected", { exact: true }).waitFor();
+    assert.equal(await page.evaluate(() => JSON.stringify(window.previewHost.selectedFaces)), selectedBefore);
     const beforePaint = await writes();
+    await page.locator("[data-tab='assemblies']").click();
     await row.getByRole("button", { name: "Paint Incomplete roof onto faces", exact: true }).click();
-    // Painting takes the inspector: the palette shows over the selection and names the Assembly in hand.
-    await inspector.getByRole("heading", { name: "Classify faces", exact: true }).waitFor();
-    await inspector.locator(".phc-palette-value").getByText("Incomplete roof", { exact: true }).waitFor();
+    // Painting takes the bar: the palette replaces the checked Faces' controls and names the Assembly in hand.
+    await bar.getByRole("heading", { name: "Classify faces", exact: true }).waitFor();
+    await bar.locator(".phc-palette-value").getByText("Incomplete roof", { exact: true }).waitFor();
     assert.equal(await picker.isVisible(), false);
     assert.deepEqual(await page.evaluate(() => window.previewHost.palette.palette), { assembly_id: "asm_b" });
     assert.equal(await writes(), beforePaint);

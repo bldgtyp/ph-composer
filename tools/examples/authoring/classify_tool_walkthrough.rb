@@ -175,11 +175,13 @@ module ClassifyToolWalkthrough
     nil
   end
 
-  # Question 8. Locate every unclassified Face, which is the read D7's legend will make of it.
+  # Question 8. Select every unclassified Face, which is the read D7's legend will make of it. Select,
+  # not Locate: Locate leaves the selection alone, and the question is what a selection outside the
+  # edit context shows.
   def locate_unclassified
     faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     references = faces.select { |face| face.fetch("values").empty? }.map { |face| face.fetch("reference") }
-    found = PhComposer::Zones::Faces::Locate.call(session, references)
+    found = PhComposer::Zones::Faces::Locate.select(session, references)
     { "asked" => references.length, "found" => found.length,
       "selected" => Sketchup.active_model.selection.to_a.length,
       "active_path" => Array(Sketchup.active_model.active_path).map(&:persistent_id) }

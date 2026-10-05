@@ -94,3 +94,45 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table.is-tree tr.tier-0 > td { background-color: #f5f8f9; font-weight: 600; }
 .phc-table.is-tree tbody tr.tier-0:not(:first-child) > td { border-top: 1px solid #d3dce0; }
 .live-panel .phc-table.is-tree .host-selected td, .phc-table.is-tree tr.tier-0:focus-within > td { background-color: #e6f1f3; }
+
+/* Header actions (a column menu, a Colour-by toggle) sit after the label and show while the pointer is over
+   the header or focus is inside it. A persistent one (a pressed toggle, an active filter) is state, so it
+   stays at rest. Opacity, not visibility, keeps them reachable by keyboard. */
+/* The label may wrap so a narrow column keeps its icons in view; the icons never split. */
+.phc-header-actions { display: inline-flex; align-items: center; gap: 0; margin-left: 4px; vertical-align: middle;
+  white-space: nowrap; }
+.phc-header-actions .phc-bubble-anchor { vertical-align: middle; }
+.phc-workspace .phc-table .phc-header-action .phc-icon-button,
+.phc-workspace .phc-table .phc-icon-button.phc-header-action { width: 24px; height: 24px; min-height: 24px; padding: 3px;
+  border-color: transparent; background: transparent; color: var(--muted-strong); }
+.phc-table .phc-header-action svg { width: 16px; height: 16px; }
+.phc-table .phc-header-action { opacity: 0; transition: opacity .12s; }
+.phc-table th:hover .phc-header-action, .phc-table th:focus-within .phc-header-action,
+.phc-table .phc-header-action.is-persistent { opacity: 1; }
+.phc-workspace .phc-table .phc-icon-button.is-filtered { color: var(--interaction-highlight); }
+/* A pressed header toggle keeps the kit's pressed fill at rest, over the quiet header button above. */
+.phc-workspace .phc-table .phc-header-action .phc-icon-button[aria-pressed="true"],
+.phc-workspace .phc-table .phc-icon-button.phc-header-action[aria-pressed="true"] {
+  color: #fff; background: var(--interaction-highlight); border-color: var(--interaction-highlight); }
+
+/* A column menu: the sort pair, then the values the column can show. */
+.phc-workspace .phc-column-menu { width: 220px; }
+.phc-column-filter { display: grid; gap: 2px; margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--line); }
+.phc-column-filter-heading { padding: 0 6px 2px; color: var(--muted); font-size: 11px; }
+.phc-bubble-content label.phc-column-filter-value { flex-direction: row; align-items: center; gap: 8px; padding: 4px 6px;
+  border-radius: 4px; cursor: pointer; }
+.phc-column-filter-value:hover { background: var(--interaction-highlight-tint); }
+.phc-workspace .phc-bubble-content .phc-column-filter-clear { justify-content: flex-start; margin-top: 4px;
+  border-color: transparent; background: transparent; color: var(--interaction-highlight); }
+
+/* A row's checkbox heads its Actions cell. */
+.phc-table .row-check, .phc-table th .row-check { width: 16px; height: 16px; min-height: 0; margin: 0 8px 0 2px;
+  vertical-align: middle; accent-color: var(--interaction-highlight); }
+.live-panel .phc-table tr.is-checked td { background: var(--interaction-highlight-soft); }
+/* A screen that asks for it keeps its row icons quiet: shown while the pointer is over the row or focus is in
+   it. A checked box is state, so it stays, and while any row is checked every row shows its box. */
+.phc-table.reveals-row-actions td .row-icon, .phc-table.reveals-row-actions td .row-check { opacity: 0; }
+.phc-table.reveals-row-actions tr:hover td .row-icon, .phc-table.reveals-row-actions tr:focus-within td .row-icon,
+.phc-table.reveals-row-actions tr:hover td .row-check, .phc-table.reveals-row-actions tr:focus-within td .row-check,
+.phc-table.reveals-row-actions .row-check:checked, .phc-table.reveals-row-actions .row-check:indeterminate,
+.phc-table.reveals-row-actions.has-checked .row-check { opacity: 1; }

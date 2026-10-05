@@ -18,11 +18,12 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     if (clear) select.appendChild(ui.option("__clear__", "Clear Assembly"));
     records.forEach(function (record) { select.appendChild(ui.option(record.id, record.name)); });
   }
-  /* The Assembly for the Faces selected in the viewport. It rests on the Assembly they all share, reads
-     "Mixed" when they differ and "Choose Assembly" when none has one. Choosing one assigns it at once, as
-     one Undo step, to the targets the snapshot named when the choice was made; a refusal says why and
-     returns the control to its resting value. */
-  function Picker(session, send, guard, refused) {
+  /* The Assembly for a set of Faces: those selected in the viewport, or those `targets()` answers (the
+     Zones / Faces checked set). It rests on the Assembly they all share, reads "Mixed" when they differ and
+     "Choose Assembly" when none has one. Choosing one assigns it at once, as one Undo step, to the targets
+     named when the choice was made; a refusal says why and returns the control to its resting value. A Face
+     with no record yet cannot hold an Assembly, so the control waits, and says so, while one is among them. */
+  function Picker(session, send, guard, refused, targets) {
     var self = this;
     this.session = session;
     this.guard = guard;
@@ -36,6 +37,8 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     this.root.appendChild(this.select);
     this.root.appendChild(this.error);
     this.currentTargets = [];
+    this.targetsFrom = targets || null;
+    this.overLimit = false;
     this.resting = "";
     this.select.addEventListener("change", function () {
       var chosen = self.select.value, reason;
@@ -49,8 +52,17 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
   }
   Picker.prototype.active = function () { return this.requests.busy(); };
   Picker.prototype.paint = function () {
+    var unclassified = this.currentTargets.some(function (target) { return !target.expected_values.face_type; });
     this.root.hidden = !this.enabled || !this.currentTargets.length;
-    this.select.disabled = this.disposed || !this.enabled || this.requests.busy() || !this.currentTargets.length;
+    this.select.disabled = this.disposed || !this.enabled || this.requests.busy() || !this.currentTargets.length ||
+      unclassified || this.overLimit;
+    this.select.title = unclassified ? "Classify every checked Face before choosing its Assembly" : "";
+  };
+  /* Disables the control while the set is larger than one assignment may change; the owner says why. */
+  Picker.prototype.limit = function (over) {
+    if (this.overLimit === Boolean(over)) return;
+    this.overLimit = Boolean(over);
+    this.paint();
   };
   Picker.prototype.submit = function (chosen) {
     var self = this;
@@ -70,9 +82,9 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     if (this.disposed) return;
     this.state = state;
     var selection = snapshot.value(state, PREFIX + ".selected");
-    this.enabled = Boolean(snapshot.section(state, PREFIX + ".selected") &&
+    this.enabled = Boolean((this.targetsFrom || snapshot.section(state, PREFIX + ".selected")) &&
       snapshot.value(state, PREFIX + ".assemblies") && snapshot.value(state, PREFIX + ".faces"));
-    this.currentTargets = selection ? selection.targets || [] : [];
+    this.currentTargets = this.targetsFrom ? this.targetsFrom() : selection ? selection.targets || [] : [];
     if (!this.enabled) { this.requests.reset(); this.select.value = ""; this.error.textContent = ""; }
     else this.requests.consume(state);
     var records = choices(state, this.currentTargets.map(function (target) {
@@ -213,8 +225,10 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
       if (usageView && usageView.busy()) return;
       if (!usageView) usageView = requests.channel(state.session, send, "assembly-usage", "view.invoke");
       if (action.id === "select_assembly_faces") {
+        // The Faces are checked in the Zones / Faces table, ready for a bulk assignment, and framed there, so the
+        // outline is that screen's to clear; SketchUp's selection is left alone.
         var references = usage(live, id).faces;
-        if (references.length) usageView.run(PREFIX + ".locate", { faces: references });
+        if (references.length) panel.navigate("overview", { check: clone(references), locate: true });
       } else if (action.id === "paint_assembly") {
         panel.showTab("overview");
         if (panel.state.ui.activeTab !== "overview") return;

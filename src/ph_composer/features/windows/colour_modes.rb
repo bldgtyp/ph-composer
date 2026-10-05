@@ -10,7 +10,7 @@ module PhComposer
       module_function
 
       def install(feature)
-        feature.colour_mode(BY_TYPE, :label => "Window Type", :entity_kind => "window_unit",
+        feature.colour_mode(BY_TYPE, :label => "Window Type", :entity_kind => "window_unit", :group => "construction",
                                      :colours => ColourBy::Palette.ramp) { |read| entries(read) }
       end
 

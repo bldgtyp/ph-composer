@@ -1,7 +1,7 @@
 "use strict";
 
-/* The panel's Colour-by legend: the mode control, the rows it paints from whatever the service
-   reports, and the two commands a row can send. It names no mode, so this fixture invents one. */
+/* The panel's Colour by: the header toggle a column binds to a mode or a group, the legend strip in the
+   control row, and the commands they send. It names no mode, so this fixture invents them. */
 
 var assert = require("assert");
 var test = require("node:test");
@@ -18,9 +18,8 @@ function page() {
   context.window = context;
   dom.attachEvents(context);
   var modules = panelSource.start(context, ["sections/colour_by"]);
-  return { context: context, panel: modules.panel, sent: sent,
-    section: function () { return context.document.querySelector("[data-section='ph_composer.colour_by']"); },
-    mode: function () { return context.document.querySelector("[data-section='ph_composer.colour_by.mode']"); } };
+  return { context: context, panel: modules.panel, sent: sent, colourBy: modules["sections/colour_by"],
+    section: function () { return context.document.querySelector("[data-section='ph_composer.colour_by']"); } };
 }
 
 function snapshot(legend) {
@@ -33,7 +32,9 @@ function snapshot(legend) {
   };
 }
 
-var MODES = [{ name: "outside.probe.by_side", label: "Side", entity_kind: "side" }];
+var MODES = [{ name: "outside.probe.by_side", label: "Side", entity_kind: "side", group: null },
+  { name: "outside.probe.by_kind", label: "Kind", entity_kind: "side", group: "probe" },
+  { name: "outside.probe.by_make", label: "Make", entity_kind: "side", group: "probe" }];
 
 function off() {
   return { mode: null, label: null, entity_kind: null, isolated: null, rows: [], modes: MODES };
@@ -53,99 +54,94 @@ function buttons(p) {
   return p.section().querySelectorAll("button");
 }
 
-test("with Colour by off the mode control offers every registered mode and the inspector shows no legend", function () {
+function params(message) { return JSON.parse(JSON.stringify(message.payload.params)); }
+
+function toggle(p, binding) {
+  var made = new p.colourBy.HeaderToggle(binding);
+  made.paint(p.panel.state);
+  return made;
+}
+
+test("the legend strip is empty while Colour by is off and holds its slot in the control row", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(off()) });
-  var control = p.mode().querySelector("select");
-
-  assert.deepStrictEqual(control.children.map(function (node) { return node.textContent; }), ["Off", "Side"]);
-  assert.strictEqual(control.value, "");
-  assert.strictEqual(p.section().hidden, true, "no mode, no legend");
-  assert.strictEqual(p.section().parentNode.hidden, true, "and an inspector with nothing to show is away");
+  assert.strictEqual(p.section().children.length, 0);
+  assert.strictEqual(p.section().parentNode.getAttribute("data-phc-region"), "tools");
+  assert.strictEqual(p.context.document.querySelector("[data-phc-region='inspector']"), null, "no inspector legend");
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
-  assert.deepStrictEqual([p.section().hidden, p.section().parentNode.hidden], [false, false]);
-  assert.strictEqual(p.mode().parentNode.getAttribute("data-phc-region"), "tools");
+  assert.strictEqual(p.section().querySelector(".phc-legend-title").textContent, "Side");
 });
 
-test("choosing a mode sends the viewport command and never an action", function () {
+test("a column's toggle turns its mode on, and pressing it while pressed turns Colour by off", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(off()) });
-  var control = p.mode().querySelector("select");
-
-  control.value = "outside.probe.by_side";
-  control.listeners.change({});
-
+  var side = toggle(p, { mode: "outside.probe.by_side" }), button = side.node.querySelector("button");
+  assert.deepStrictEqual([button.getAttribute("aria-label"), button.getAttribute("aria-pressed")],
+    ["Colour by Side", "false"]);
+  button.listeners.click({});
   assert.strictEqual(p.sent[0].type, "view.invoke");
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.colour_by.activate");
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { mode: "outside.probe.by_side" });
+  assert.deepStrictEqual([p.sent[0].payload.name, params(p.sent[0])],
+    ["ph_composer.colour_by.activate", { mode: "outside.probe.by_side" }]);
+  p.panel.receive({ type: "view.result", payload: { request_id: p.sent[0].payload.request_id,
+    session: "session-a", outcome: { status: "completed", value: {} } } });
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
+  side.paint(p.panel.state);
+  assert.strictEqual(side.pressed, true);
+  assert.strictEqual(side.node.querySelector("button"), button, "repainted in place, so a press keeps its focus");
+  button.listeners.click({});
+  assert.deepStrictEqual(params(p.sent[1]), { mode: null });
+  assert.strictEqual(toggle(p, { mode: "outside.probe.missing" }).paint(p.panel.state), false,
+    "a column whose mode is not registered offers nothing");
 });
 
-test("Off turns Colour by off rather than naming a mode", function () {
-  var p = page();
-  p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
-  var control = p.mode().querySelector("select");
-
-  assert.strictEqual(control.value, "outside.probe.by_side");
-  control.value = "";
-  control.listeners.change({});
-
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), { mode: null });
+test("a group's toggle offers its modes in a menu, pressed while either is on", function () {
+  var p = page(), legend = off();
+  legend.mode = "outside.probe.by_make";
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(legend) });
+  var group = toggle(p, { group: "probe" }), button = group.node.querySelector("button");
+  assert.strictEqual(group.pressed, true);
+  assert.strictEqual(button.getAttribute("aria-label"), "Colour by Make");
+  button.listeners.click({});
+  var items = group.node.querySelectorAll(".phc-action-menu-item");
+  assert.deepStrictEqual(items.map(function (node) { return [node.textContent, node.getAttribute("aria-pressed")]; }),
+    [["Kind", "false"], ["Make", "true"], ["Off", null]]);
+  items[0].listeners.click({});
+  assert.deepStrictEqual(params(p.sent[0]), { mode: "outside.probe.by_kind" });
 });
 
-test("each row carries its colour, label and count, and clicking one selects and zooms to it", function () {
+test("each chip carries its colour, label and count, and clicking one selects and zooms to it", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
-  var rows = p.section().querySelectorAll(".phc-legend-row");
-
-  assert.strictEqual(rows.length, 2);
+  assert.strictEqual(p.section().querySelectorAll(".phc-legend-chip").length, 2);
   assert.strictEqual(p.section().querySelectorAll(".phc-legend-label")[0].textContent, "Inside");
   assert.strictEqual(p.section().querySelectorAll(".phc-legend-count")[0].textContent, "7");
   assert.strictEqual(p.section().querySelectorAll(".phc-legend-swatch")[0].style.background, "rgb(40,50,60)");
-
   p.section().querySelectorAll(".phc-legend-locate")[0].listeners.click({});
-
-  assert.strictEqual(p.sent[0].payload.name, "ph_composer.colour_by.select_row");
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { row: { value: "inside", state: "classified" } });
+  assert.deepStrictEqual([p.sent[0].payload.name, params(p.sent[0])],
+    ["ph_composer.colour_by.select_row", { row: { value: "inside", state: "classified" } }]);
 });
 
-test("the unclassified row is a row of the legend like any other", function () {
+test("the unclassified chip is a chip of the legend like any other", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
-
   p.section().querySelectorAll(".phc-legend-locate")[1].listeners.click({});
-
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { row: { value: null, state: "unclassified" } });
+  assert.deepStrictEqual(params(p.sent[0]), { row: { value: null, state: "unclassified" } });
 });
 
-test("Isolate sets a row apart, and the same control puts everything back", function () {
+test("a chip's eye sets its colour apart, and the same control or Show all puts everything back", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
   var only = p.section().querySelectorAll(".phc-legend-only")[0];
-
-  assert.strictEqual(only.textContent, "Isolate");
   assert.strictEqual(only.getAttribute("aria-pressed"), "false");
   only.listeners.click({});
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)),
-    { row: { value: "inside", state: "classified" } });
-
+  assert.deepStrictEqual(params(p.sent[0]), { row: { value: "inside", state: "classified" } });
   p.panel.receive({ type: "view.result", payload: { request_id: p.sent[0].payload.request_id,
     session: "session-a", outcome: { status: "completed", value: {} } } });
-  p.panel.receive({ type: "panel.snapshot",
-    payload: snapshot(on({ value: "inside", state: "classified" })) });
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(on({ value: "inside", state: "classified" })) });
   var pressed = p.section().querySelectorAll(".phc-legend-only")[0];
-  assert.strictEqual(pressed.textContent, "Show all");
-  var note = p.section().querySelector(".phc-legend-isolated");
-  assert.ok(note, "while one row stands alone the legend says so, with the way back beside it");
-  note.querySelector("button").listeners.click({});
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[p.sent.length - 1].payload.params)), {});
   assert.strictEqual(pressed.getAttribute("aria-pressed"), "true");
-
-  pressed.listeners.click({});
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[1].payload.params)), {},
-    "no row means show every row again");
+  p.section().querySelector(".phc-legend-show-all").listeners.click({});
+  assert.deepStrictEqual(params(p.sent[1]), {}, "no row means show every colour again");
 });
 
 test("a request in flight leaves every legend control refusing until it settles", function () {
@@ -153,12 +149,9 @@ test("a request in flight leaves every legend control refusing until it settles"
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
   p.section().querySelectorAll(".phc-legend-locate")[0].listeners.click({});
   p.panel.receive({ type: "panel.snapshot", payload: snapshot(on()) });
-
   assert.ok(buttons(p).every(function (node) { return node.disabled; }), "every control waits");
-  assert.strictEqual(p.mode().querySelector("select").disabled, true);
-
+  assert.strictEqual(toggle(p, { mode: "outside.probe.by_side" }).node.querySelector("button").disabled, true);
   p.panel.receive({ type: "view.result", payload: { request_id: p.sent[0].payload.request_id,
     session: "session-a", outcome: { status: "completed", value: { selected: 7 } } } });
-
   assert.ok(buttons(p).every(function (node) { return !node.disabled; }), "and works again afterwards");
 });
