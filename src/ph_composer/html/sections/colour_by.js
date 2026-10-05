@@ -147,7 +147,7 @@ function (panel, ui, requests, snapshot) {
     ui.memoPaint(root, "legend", [state.session, legend, owner.view.busy()], function () {
       root.className = "phc-legend-strip";
       root.replaceChildren();
-      if (!legend.mode) return;
+      if (!legend.mode) { root.removeAttribute("aria-label"); root.removeAttribute("role"); return; }
       root.setAttribute("aria-label", "Colour by " + legend.label);
       root.setAttribute("role", "group");
       root.appendChild(ui.element("span", "phc-legend-title", legend.label));

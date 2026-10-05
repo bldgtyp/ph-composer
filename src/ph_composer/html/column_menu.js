@@ -4,7 +4,8 @@
    `ui.ViewControls` holds, and it names no record or field vocabulary.
 
    options: label (the column's name), sort { current() -> "asc" | "desc" | null, choose(direction) },
-   filter { values() -> [{ value, label }], shown() -> [value] or null for every value, set([value] or null) }. */
+   filter { values() -> [{ value, label }], shown() -> [value] or null for every value, set([value] or null),
+   answering false when the change was refused }. */
 PhComposerUI.define("column_menu", ["dom", "icons", "overlay"], function (dom, icons, overlay) {
   "use strict";
   var element = dom.element, button = dom.button;
@@ -79,8 +80,10 @@ PhComposerUI.define("column_menu", ["dom", "icons", "overlay"], function (dom, i
     var filter = this.options.filter, every = filter.values().map(function (entry) { return entry.value; });
     var shown = (filter.shown() || every).filter(function (entry) { return entry !== value; });
     if (show) shown.push(value);
-    filter.set(every.every(function (entry) { return shown.indexOf(entry) >= 0; }) ? null : shown);
+    var applied = filter.set(every.every(function (entry) { return shown.indexOf(entry) >= 0; }) ? null : shown);
     this.paint();
+    // A refused change (the screen's guard) leaves the boxes as they were, so the menu shows them again.
+    if (applied === false) this.fill();
   };
 
   return { ColumnMenu: ColumnMenu };

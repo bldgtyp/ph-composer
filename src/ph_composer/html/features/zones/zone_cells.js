@@ -44,7 +44,6 @@ function (RecordEdits, fields, units) {
   ZoneCells.prototype.refresh = function (zoneRows, state) { this.edits.refresh(zoneRows, state); };
   /* Paints the cell's editor and answers true when it is a Zone field on a Zone row. */
   ZoneCells.prototype.render = function (td, row, field) { return this.edits.render(td, row, field); };
-  ZoneCells.prototype.busy = function () { return Boolean(this.edits.pending || this.edits.queue.length); };
   ZoneCells.prototype.dispose = function () { this.edits.dispose(); };
   return ZoneCells;
 });

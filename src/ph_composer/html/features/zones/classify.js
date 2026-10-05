@@ -178,7 +178,7 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
   /* Offered only while the tool has the viewport. A permanently mounted control that is almost always
      disabled is furniture, not an affordance; choosing a chip is what starts the tool. */
   function stopButton(state) {
-    // "Stop" beside the heading "Classify faces": the full phrase did not fit the inspector on one line.
+    // "Stop" beside the heading "Classify faces": the full phrase "Stop classifying" is its accessible name.
     var stop = ui.element("button", "", "Stop");
     stop.disabled = state.view.busy();
     stop.title = "Stop classifying";

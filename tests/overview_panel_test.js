@@ -56,8 +56,8 @@ function nameText(td) {
   return input ? input.value : td.textContent;
 }
 
-/* A control by its accessible name, anywhere in the root's pane: the tree is the work surface, and the
-   Zone details and the Face selection are in the inspector beside it. */
+/* A control by its accessible name, anywhere in the root's pane: the table, its control row and header, and
+   the selection bar over it. */
 function byLabel(root, label) {
   var scope = root.closest("[data-pane]") || root;
   return scope.querySelectorAll("input, select, button").filter(function (node) {
@@ -1010,4 +1010,40 @@ test("while the Classify tool is on, the bar holds its palette instead", functio
   p.panel.receive({ type: "panel.snapshot", payload: p.payload });
   assert.deepStrictEqual([palette.hidden, bar(p).querySelector(".phc-selection-bar-count").textContent],
     [true, "1 Face selected"], "and gives it back to the checked Faces when the tool ends");
+});
+
+test("a Model switch takes the old Model's selection bar with it", function () {
+  var p = checkPage([0]);
+  var old = bar(p);
+  assert.strictEqual(old.hidden, false);
+  var other = JSON.parse(JSON.stringify(p.payload));
+  other.session = "session-b"; other.revision = 9;
+  p.panel.receive({ type: "panel.snapshot", payload: other });
+  var bars = p.section.querySelectorAll(".phc-selection-bar");
+  assert.strictEqual(bars.length, 1, "one bar, the new Model's");
+  assert.ok(bars[0] !== old);
+  assert.ok(p.query("[data-section='ph_composer.classify']"), "the palette stays in the page");
+});
+
+test("Escape leaves the checked set alone while the Classify palette is open", function () {
+  var p = checkPage([0]);
+  click(p.query("[data-section='ph_composer.classify.toggle']").querySelector("button"));
+  dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+  assert.strictEqual(p.state("Wall 1"), "true", "the palette is the layer above the checked set");
+});
+
+test("past fifty unclassified Faces the header box and the hidden count read every Face the filter shows", function () {
+  var p = page(), payload = snapshot();
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
+  for (var index = 0; index < 60; index += 1) {
+    var extra = JSON.parse(JSON.stringify(faces[1]));
+    extra.reference.entity_path = [200 + index];
+    faces.push(extra);
+  }
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']");
+  click(section.querySelector("th").querySelector(".row-check"));
+  assert.strictEqual(bar(p).querySelector(".phc-selection-bar-count").textContent, "62 Faces selected",
+    "every Face, painted or not, and none counted hidden");
+  assert.strictEqual(section.querySelector("th").querySelector(".row-check").getAttribute("aria-checked"), "true");
 });

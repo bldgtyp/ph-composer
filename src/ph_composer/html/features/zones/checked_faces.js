@@ -90,6 +90,5 @@ PhComposerUI.define("features/zones/checked_faces", [], function () {
     return true;
   };
 
-  CheckedFaces.facesOf = facesOf;
   return CheckedFaces;
 });

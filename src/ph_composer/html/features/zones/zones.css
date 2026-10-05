@@ -45,7 +45,7 @@
 /* The Colour-by legend strip at the end of the control row: the mode's name, then one chip per colour.
    It stays on one line and scrolls sideways rather than wrapping, so the table below never moves. A chip
    selects and zooms to what it counts; its eye, shown on hover or focus, sets every other colour aside. */
-.phc-pane-tools { min-width: 0; flex: 1 1 0; justify-content: flex-end; }
+.phc-overview .phc-pane-tools { min-width: 0; flex: 1 1 0; justify-content: flex-end; }
 .phc-legend-strip { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-x: auto; white-space: nowrap;
   scrollbar-width: thin; }
 .phc-legend-title { flex: 0 0 auto; font-weight: 600; font-size: 12px; }

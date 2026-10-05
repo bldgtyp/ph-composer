@@ -1,6 +1,6 @@
 # Zones / Faces: table-first layout
 
-In progress. The Zones / Faces screen becomes one full-width table with no inspector column. Zone fields
+Implemented on branch `feature/zones-table-first`; host acceptance outstanding. The Zones / Faces screen becomes one full-width table with no inspector column. Zone fields
 become columns, Colour by moves into the column headers, sort and filter move into column menus,
 Select becomes a checkbox set separate from Locate, and a floating bar over the table edits that
 set and holds the Classify palette.

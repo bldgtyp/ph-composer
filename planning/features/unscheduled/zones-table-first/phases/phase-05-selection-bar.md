@@ -34,9 +34,11 @@ ISSUE: none (local planning draft)
 ## Outcome
 
 Implemented 2026-10-04. `selection_bar.js` is the kit part (`SelectionBar(label, onClear)`, `show(text,
-clearable)`, `hide()`, `reserve(scroll)`), styled in `overlay.css`. Zones / Faces places it in a section of
+clearable)`, `hide()`, `reserve(scroll)`), styled in `overlay.css`. Zones / Faces paints it from a section of
 its own, `ph_composer.zones.selection_bar`, ordered last so it reads what the tree and the palette just
-painted; the bar's layer is a zero-height sibling of the table inside the pane's positioned main region.
+painted, and places it in the overview's own root after the table (`.phc-overview` is positioned), so no
+other section in the pane comes between them. That placement replaced a first attempt in the pane's main
+region, where the development Example parts section sat between the table and the bar.
 The inspector's Face-selection section is gone: its controls moved into the bar and act on the checked
 set (`barTargets`). The Classify palette is now a `main`-region section the bar adopts while
 `classify.showing()`; the toggle no longer asks `panel.inspectorHeld`. The palette read publishes

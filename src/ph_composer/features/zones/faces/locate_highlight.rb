@@ -52,13 +52,14 @@ module PhComposer
         private
 
         # An overlay added through `OverlaysManager#add` starts disabled and never draws until it is
-        # enabled (context/SKETCHUP_HOST_BEHAVIOR.md, "Overlays").
+        # enabled (context/SKETCHUP_HOST_BEHAVIOR.md, "Overlays"). It is enabled once, when it is added,
+        # so a user who unticks it in the Overlays panel keeps that choice until the outline goes.
         def attach_overlay
           model = live_model
-          return unless model
+          return if @overlay || model.nil?
 
-          @overlay ||= Overlay.new(self)
-          model.overlays.add(@overlay) unless model.overlays.include?(@overlay)
+          @overlay = Overlay.new(self)
+          model.overlays.add(@overlay)
           @overlay.enabled = true if @overlay.respond_to?(:enabled=)
         end
 

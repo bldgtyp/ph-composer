@@ -533,6 +533,23 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty(@model.overlays.select { |overlay| overlay.is_a?(outline) })
   end
 
+  # The next Locate replaces the outline rather than adding to it, and a closed session takes the
+  # overlay with it.
+  def test_the_next_locate_replaces_the_outline_and_session_detach_removes_it
+    zone(1_307, 2)
+    references = list_faces.map { |face| face.fetch("reference") }
+    highlight = PhComposer::Zones::Faces.locate_highlight(@session)
+    PhComposer::Zones::Faces::Locate.call(@session, references)
+    both = highlight.segments.length
+    PhComposer::Zones::Faces::Locate.call(@session, references.take(1))
+
+    assert_operator highlight.segments.length, :<, both
+    outline = PhComposer::Zones::Faces::LocateHighlight::Overlay
+    assert_equal 1, @model.overlays.count { |overlay| overlay.is_a?(outline) }
+    @session.detach
+    assert_empty(@model.overlays.select { |overlay| overlay.is_a?(outline) })
+  end
+
   # Locate and Select are view commands, so they answer a client that has `view` access without
   # opening an operation, leaving an Undo entry or moving the revision. Select is the one that selects.
   def test_locate_and_select_are_reachable_from_a_client_and_write_nothing

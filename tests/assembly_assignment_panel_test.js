@@ -110,7 +110,12 @@ test("Zones contributes gross usage and view actions through the generic Assembl
     function (box) { return box.getAttribute("aria-checked") === "true"; }).length > 0, true,
   "with the Assembly's Faces checked");
   assert.deepStrictEqual([o.sent[0].type, o.sent[0].payload.name], ["view.invoke", PREFIX + ".locate"]);
-  assert.deepStrictEqual(o.sent[0].payload.params, { faces: [o.face.reference] });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params)), { faces: [o.face.reference] });
+  o.panel.receive({ type: "view.result", payload: { request_id: o.sent[0].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { found: 1, missing: 0 } } } });
+  dom.dispatch(o.document.body, { type: "keydown", key: "Escape" });
+  dom.dispatch(o.document.body, { type: "keydown", key: "Escape" });
+  assert.strictEqual(o.sent[1].payload.name, PREFIX + ".clear_locate", "the outline is Zones / Faces' to clear");
   delete o.state.sections[PREFIX + ".usage"];
   o.paint();
   assert.ok(!inventory.tableOptions.columns.some(function (column) { return column[0] === "face_usage"; }));

@@ -52,6 +52,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
     if (screen && screen.settings) screen.settings.dispose();
     if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
+    if (screen && screen.bar) withdrawBar(screen.bar);
     screen = { session: session, expanded: Object.create(null), showAll: Object.create(null),
       columnWidths: {}, menus: Object.create(null), toggles: Object.create(null), hiddenColumns: {},
       checked: new CheckedFaces(), locating: false,
@@ -139,8 +140,10 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
           choose: function (direction) { state.controls.sortBy(field, direction); } },
         filter: FILTERED[field] ? { values: function () { return filterValues(state, field); },
           shown: function () { return state.controls.columnFilter(field); },
-          set: function (values) { state.controls.filterColumn(field, values); } } : null });
+          set: function (values) { return state.controls.filterColumn(field, values); } } : null });
     }
+    // The label carries a unit (Ground depth), which a unit switch changes.
+    menu.options.label = label;
     menu.paint();
     return menu;
   }
@@ -501,8 +504,11 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   }
 
   function locate(state, row) {
-    var references = row.record.face ? [row.record.face.reference]
-      : (row.record.every || row.record.faces).map(function (face) { return face.reference; });
+    locateFaces(state, row.record.face ? [row.record.face.reference]
+      : (row.record.every || row.record.faces).map(function (face) { return face.reference; }));
+  }
+
+  function locateFaces(state, references) {
     if (references.length && state.look.run("ph_composer.zones.faces.locate", { faces: references })) {
       state.locating = true;
     }
@@ -532,8 +538,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (event.key !== "Escape" || event.defaultPrevented || !screen || !panel.state ||
         panel.state.ui.activeTab !== "overview") return;
     if (Array.from(document.querySelectorAll("dialog")).some(function (dialog) { return dialog.open; })) return;
-    var tool = snapshot.value(panel.state, "ph_composer.zones.faces.palette");
-    if (tool && tool.active) return;
+    // The palette, open or in use, is the layer above the checked set; its own Escape handles the tool.
+    if (classify.showing()) return;
     if (screen.checked.among(screen.faces || []).length) {
       event.preventDefault();
       screen.checked.clear();
@@ -660,10 +666,18 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var heading = paintHeader(screenState, root.closest("[data-pane]").getAttribute("data-pane"), zones);
     var headingMount = root.querySelector(".phc-heading-mount");
     if (heading.parentNode !== headingMount) headingMount.replaceChildren(heading);
-    // Set before the tree paints, so the inspector never works from an earlier pass if painting fails.
+    // Set before the tree paints, so the selection bar never works from an earlier pass if painting fails.
     screenState.rows = rows;
     screenState.zoneCells.refresh(rows.filter(depth(0)), state);
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
+  }
+
+  /* A bar belongs to one Model. The Classify palette it holds goes back to the pane first, because it is that
+     section's own root and must stay in the page, and the bar leaves with the Model it was built for. */
+  function withdrawBar(bar) {
+    var palette = bar.controls.querySelector("[data-section='ph_composer.classify']");
+    if (palette) panel.region("overview", "main").appendChild(palette);
+    if (bar.root.parentNode) bar.root.parentNode.removeChild(bar.root);
   }
 
   /* The selection bar over the table: the checked Faces' Type, Boundary and Assembly while any is checked, and
@@ -818,12 +832,19 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     columns(profile).forEach(function (column) { labels[column[0]] = column[1]; });
     var shown = ordered(projection.records, byId, rows, state.controls, state);
     var visible = shown.filter(function (row) { return !projection.hidden(row); });
-    var visibleFaces = visible.map(function (row) { return row.record.face; }).filter(Boolean);
-    state.hiddenChecked = state.checked.among(state.faces || []).length - state.checked.among(visibleFaces).length;
+    // The Faces the filter shows, whether or not their rows are open or painted (a long unclassified list
+    // paints only its first fifty): what the header box checks, and what "hidden" in the bar is counted against.
+    var filters = state.controls.columnFilters, faceFiltered = hasFaceFilter(filters);
+    var filterFaces = visible.filter(depth(0)).reduce(function (all, row) {
+      return all.concat(row.record.every.filter(function (face) {
+        return !faceFiltered || faceMatches(face, filters);
+      }));
+    }, []);
+    state.hiddenChecked = state.checked.among(state.faces || []).length - state.checked.among(filterFaces).length;
     var parents = Object.create(null);
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     tables.table(mount, rows, {
-      // Sized so the whole table shows beside the inspector at the panel's usual width; the user can still
+      // Sized so the whole table shows at the panel's usual width; the user can still
       // drag any column wider.
       defaultWidths: { name: 142, building_segment: 120, level: 84, ground_depth_mm: 104, face_type: 126,
         boundary_condition: 110, area_m2: 92, assembly_id: 156 },
@@ -839,9 +860,12 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       revealRowActions: true,
       check: { state: function (row) { return state.checked.state(row); },
         toggle: function (row, event) { state.checked.toggle(row, event, visible); panel.repaint(); },
-        header: function () { return Boolean(visibleFaces.length) && state.checked.stateOf(visibleFaces); },
-        toggleAll: function () { state.checked.toggleAll(visibleFaces); panel.repaint(); },
+        header: function () { return Boolean(filterFaces.length) && state.checked.stateOf(filterFaces); },
+        toggleAll: function () { state.checked.toggleAll(filterFaces); panel.repaint(); },
         label: function (row) { return (state.checked.state(row) === true ? "Uncheck " : "Check ") + row.record.name; },
+        headerLabel: function (value) {
+          return (value === true ? "Uncheck" : "Check") + " every Face the filter shows";
+        },
         any: function () { return state.checked.among(state.faces || []).length > 0; } },
       headerActions: function (field) { return headerActions(state, field, labels[field]); },
       inspect: function (row) {
@@ -908,11 +932,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   // First in its pane: the Zone tree is the screen's work surface, and the palette and the legend
   // are controls that act on what it shows.
   panel.navigationGuard("ph_composer.overview", function () { return draftReason(screen); });
-  /* Another tab can open this one with Faces checked (`panel.navigate("overview", { check: references })`),
-     as the Assemblies tab's "Select faces using" does. */
+  /* Another tab can open this one with Faces checked and, with `locate: true`, framed
+     (`panel.navigate("overview", { check: references, locate: true })`), as the Assemblies tab's "Select
+     faces using" does. Locating here keeps the outline this screen's to clear. */
   panel.section("ph_composer.overview", render, { order: 10, onNavigate: function (root, intent) {
     if (!screen || !intent.check) return;
     screen.checked.replace(intent.check);
+    if (intent.locate) locateFaces(screen, intent.check);
     panel.repaint();
   } });
   panel.workedOn("ph_composer.zones", "overview");

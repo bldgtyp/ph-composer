@@ -20,6 +20,12 @@ for anything an overlay draws.
 5. A Zone field edited in its cell is one Undo step.
 6. A narrow panel scrolls the table sideways with the identity columns sticky.
 
+## Retired case
+
+Native case R05 ("Overview Zone details draft navigation", `planning/native-acceptance/cases.json`) tests
+the Zone details form this packet removed. Retire it in the case ledger as superseded by case 5 above
+rather than rerunning it.
+
 ## Close
 
 On a pass: mark every packet document Complete, close the locate bug as Superseded, archive the

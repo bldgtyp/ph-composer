@@ -185,8 +185,9 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
   }
   /* A row's checkbox, first in its Actions cell, and the header's in the Actions header. `options.check` is
      { state(row) -> true | false | "mixed" | null (no box), toggle(row, event), header() -> true | false |
-     "mixed", toggleAll(event), label(row), any() }; the caller owns what is checked and the table only paints
-     it. A row whose box is checked takes `is-checked`; while any row is, every row shows its box. */
+     "mixed", toggleAll(event), label(row), headerLabel(value) optional, any() }. Checking is the caller's view
+     state, so a box stays usable while the table's edits are busy; the caller owns what is checked and the
+     table only paints it. A row whose box is checked takes `is-checked`; while any row is, every row shows its box. */
   function checkbox(label, onClick) {
     var box = element("input", "row-check");
     box.type = "checkbox"; box.setAttribute("type", "checkbox");
@@ -211,7 +212,6 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       entry.cells.actions.insertBefore(entry.check, entry.cells.actions.firstChild);
     }
     paintCheck(entry.check, value, check.label(row));
-    entry.check.disabled = Boolean(cache.options.disabled);
     return value === true;
   }
   function paintHeaderCheck(cache) {
@@ -226,7 +226,8 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       th.insertBefore(cache.headerCheck, th.firstChild);
     }
     var value = check.header();
-    paintCheck(cache.headerCheck, value, value === true ? "Uncheck every row shown" : "Check every row shown");
+    paintCheck(cache.headerCheck, value, check.headerLabel ? check.headerLabel(value) :
+      value === true ? "Uncheck every row shown" : "Check every row shown");
     cache.node.classList.toggle("has-checked", Boolean(check.any()));
   }
   /* A column's header actions: `options.headerActions(field)` answers `[{ node, persistent }]`, nodes the caller
@@ -352,7 +353,8 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     if (options.actionsCell) options.actionsCell(entry.cells.actions, row);
     var selected = options.selected && options.selected(row);
     var checked = paintRowCheck(cache, entry, row);
-    entry.node.className = "tier-" + row.depth + (selected ? " host-selected" : "") + (checked ? " is-checked" : "");
+    entry.node.className = "tier-" + row.depth + (selected ? " host-selected" : "") +
+      (checked ? " is-checked" : "");
     if (row.depth < 2) entry.needChevron();
     if (entry.target) entry.target.disabled = Boolean(options.disabled);
     if (entry.chevron) {
