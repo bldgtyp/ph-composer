@@ -580,8 +580,14 @@ this foundation when their feature lands.
   send the user to the tab a gap is looked into without naming a feature.
 - A table action may start a group (`starts: true`), set apart by a hairline, for actions that act on
   something other than the row's record.
-- One work surface per pane, with an inspector beside it for what the current tool or selection needs
-  (`panel.section` with `region: "inspector"`). Do not stack a second job under the work surface.
+- One work surface per pane. A pane may place an inspector beside it for what the current tool or
+  selection needs (`panel.section` with `region: "inspector"`), or carry those controls in a selection
+  bar that floats over the bottom of the work surface (`selection_bar.js`), as Zones / Faces does. Do
+  not stack a second job under the work surface.
+- A table column may declare header actions (`options.headerActions(field)`): a column menu
+  (`column_menu.js`) for sort and value filters, and a Colour-by toggle (`sections/colour_by.js`
+  `HeaderToggle`) bound to a mode or to a group modes declare. Header and row icons may show only on
+  hover or focus; a state (a pressed toggle, an active filter, a checked box) stays visible at rest.
 - `ui.ViewControls` for filtering, ordering (with a sort-direction toggle) and grouping; filtering hides rows and never drops
   records, so drafts and expansion survive.
 - `ui.Bubble` for non-modal editors anchored to a control: shared surface and pointer, viewport

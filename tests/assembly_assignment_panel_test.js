@@ -225,7 +225,7 @@ test("the selection bar sets Type and Boundary on every checked Face, one attrib
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent[0].payload.params)), { faces: [o.face.reference],
     intent: { face_type: { mode: "keep" }, boundary_condition: { mode: "set", value: "Ground" } },
     expected_values: o.face.values });
-  var bar = o.query("[data-section='ph_composer.zones.selection_bar']").querySelector(".phc-selection-bar");
+  var bar = o.query("[data-section='ph_composer.overview']").querySelector(".phc-selection-bar");
   assert.strictEqual(bar.hidden, false);
   assert.strictEqual(bar.querySelector(".phc-selection-bar-count").textContent, "1 Face selected");
   o.state.sections[PREFIX + ".selected"].value.targets = []; o.paint();

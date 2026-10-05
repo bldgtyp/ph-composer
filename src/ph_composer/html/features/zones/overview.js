@@ -1,10 +1,13 @@
-/* The Zones / Faces screen: the model tree of Zones with their Faces beneath, the shared view controls
- * above it, and the inspector's Face selection beside it. A Zone's own fields are columns on its row.
+/* The Zones / Faces screen: one table spanning the pane, with no inspector. Zones are rows with their Faces
+ * beneath; a Zone's own fields are columns on its row. Colour by, sort and value filters live in the column
+ * headers, the shared view controls above the table hold the text filter, the count, Table options and the
+ * Colour-by legend, and a selection bar floats over the bottom of the table while Faces are checked.
  *
  * The table is the shared record table; this file holds only this screen's vocabulary: its columns,
  * what each cell reads, its row actions and its editable chips. Every write goes through a registered
- * action carrying the values the row was painted from, and Locate goes through the view command,
- * which changes the selection and the camera and writes nothing.
+ * action carrying the values the row was painted from. Select and Locate are separate: a row's checkbox
+ * builds the panel's checked set (checked_faces.js) for a bulk assignment, and Locate goes through the view
+ * command, which frames and outlines Faces and changes neither the selection nor the Model.
  *
  * A Face with no record is a row too, under its Zone's "N unclassified Faces" summary. The Zone's row
  * carries their count and the Suggest classification action that gives them all a record.
@@ -38,6 +41,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   };
 
   var screen = null;
+  var HELP = "Select Faces in SketchUp, or check their rows, to edit them together in the bar under the table. " +
+    "A column's palette icon colours the Model by that column; its menu sorts and filters.";
 
   /* This screen's own state, rebuilt whenever the panel shows a different Model. */
   function forSession(session, send) {
@@ -54,6 +59,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       look: requests.channel(session, send, "locate", "view.invoke") };
     screen.zoneCells = new ZoneCells(session, send, refuse);
     screen.options = tableOptions(screen);
+    screen.help = ui.helpButton("Zones / Faces", HELP);
     screen.settings = new ZoneSettings(session, send, function () { return draftReason(screen); }, refuse);
     screen.selectionAssignment = new SelectionAssignment(session, send, function () {
       return draftReason(screen);
@@ -648,6 +654,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     }
     if (screenState.options.root.parentNode !== screenState.controls.root) {
       screenState.controls.root.insertBefore(screenState.options.root, screenState.controls.count.nextSibling);
+      screenState.controls.root.insertBefore(screenState.help, screenState.options.root.nextSibling);
     }
     if (tools.parentNode !== screenState.controls.root) screenState.controls.root.appendChild(tools);
     var heading = paintHeader(screenState, root.closest("[data-pane]").getAttribute("data-pane"), zones);
@@ -659,18 +666,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
   }
 
-  function renderHint(root) {
-    if (root.children.length) return;
-    root.className = "phc-inspector-hint";
-    root.appendChild(ui.element("p", "phc-empty", "Select Faces in SketchUp to edit them here. Colour by and " +
-      "Classify faces open here too."));
-  }
-
   /* The selection bar over the table: the checked Faces' Type, Boundary and Assembly while any is checked, and
      the Classify palette instead while that tool is in use. It renders after every other section, so it reads
-     what the tree and the palette just worked out. Clearing it unchecks every Face. */
+     what the tree and the palette just worked out, and it sits in the overview's own root after the table, so
+     another section in the pane never comes between them. Clearing it unchecks every Face. */
   function renderBar(root, state) {
-    if (!screen || screen.session !== state.session) { root.replaceChildren(); return; }
+    var overview = document.querySelector("[data-section='ph_composer.overview']");
+    if (!screen || screen.session !== state.session || !overview) return;
     var bar = screen.bar;
     if (!bar) {
       bar = screen.bar = new selectionBars.SelectionBar("Checked Faces", function () {
@@ -679,7 +681,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       screen.selectionControls = selectionControls(screen);
       bar.controls.appendChild(screen.selectionControls.root);
     }
-    if (bar.root.parentNode !== root) { root.className = "phc-selection-bar-layer"; root.replaceChildren(bar.root); }
+    if (bar.root.parentNode !== overview) overview.appendChild(bar.root);
+    root.hidden = true;
     // The palette is the Classify section's own root; it moves into the bar once and stays in the page.
     var palette = document.querySelector("[data-section='ph_composer.classify']");
     if (palette && palette.parentNode !== bar.controls) bar.controls.appendChild(palette);
@@ -692,7 +695,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         (screen.hiddenChecked ? ", " + screen.hiddenChecked + " hidden" : ""), true);
       screen.selectionControls.paint();
     } else bar.hide();
-    var mount = document.querySelector("[data-section='ph_composer.overview'] .phc-table-mount");
+    var mount = overview.querySelector(".phc-table-mount");
     if (mount) bar.reserve(mount);
   }
 
@@ -914,8 +917,4 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   } });
   panel.workedOn("ph_composer.zones", "overview");
   panel.section("ph_composer.zones.selection_bar", renderBar, { order: 1000 });
-  // Last in line and always wanted, so the inspector column is always there: the tree keeps its width
-  // whether the user selects something, opens Colour by or starts Classify faces.
-  panel.section("ph_composer.zones.hint", renderHint, { region: "inspector", tier: "ambient", order: 1000,
-    when: function () { return true; } });
 });

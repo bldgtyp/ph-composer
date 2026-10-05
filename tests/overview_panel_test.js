@@ -816,17 +816,17 @@ function menuItem(section, menu, text) {
   return items;
 }
 
-test("the header groups the authoring tools apart from Colour by, and the inspector column always stands", function () {
+test("the header groups the authoring tools, the pane has no inspector, and help sits in the control row", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   var section = p.query("[data-section='ph_composer.overview']");
   var toolbar = section.querySelector("[role='toolbar']");
   assert.strictEqual(toolbar.getAttribute("aria-label"), "Zone and Face tools");
   assert.ok(byLabel(section, "Solve adjacencies for all Zones in this Model").parentNode === toolbar);
-  var inspector = p.query("[data-phc-region='inspector']");
-  assert.strictEqual(inspector.hidden, false,
-    "with nothing selected the column still stands, so the tree keeps its width");
-  assert.strictEqual(p.query("[data-section='ph_composer.zones.hint']").hidden, false);
+  assert.strictEqual(p.query("[data-pane='overview'] [data-phc-region='inspector']"), null, "the table spans the pane");
+  assert.strictEqual(p.query("[data-pane='overview']").classList.contains("has-inspector"), false);
+  var help = section.querySelector(".phc-inventory-controls").querySelector(".phc-help");
+  assert.match(help.getAttribute("aria-label"), /^Zones \/ Faces: Select Faces in SketchUp, or check their rows/);
   var header = section.querySelector(".phc-heading");
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   assert.ok(section.querySelector(".phc-heading") === header, "the header is repainted in place, not rebuilt");
@@ -962,7 +962,7 @@ test("another tab can open Zones / Faces with Faces checked", function () {
 });
 
 function bar(p) {
-  return p.query("[data-section='ph_composer.zones.selection_bar']").querySelector(".phc-selection-bar");
+  return p.query("[data-section='ph_composer.overview']").querySelector(".phc-selection-bar");
 }
 
 test("the bar edits every checked Face in one request, and says how many a filter hides", function () {
