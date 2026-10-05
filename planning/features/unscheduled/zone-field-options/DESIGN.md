@@ -142,5 +142,6 @@ A renamed option changes its display text but never its exported identifier.
 - Final `make ci`, required current-host O7/H1–H3 and host portions of O1–O9 passed.
   Installed-build, exact Undo/Redo, save/reopen and copy evidence is recorded in STATUS.md.
 
-No push, PR, merge or release authorization is inferred from the local implementation request.
-The completed packet is archived; remote delivery and post-merge synchronization remain separate.
+Ed subsequently authorized a PR; [draft PR #80](https://github.com/bldgtyp/ph-composer/pull/80) is open.
+The packet remains active pending the final normal source-panel visual observation. Merge/release
+and post-merge synchronization remain separate.

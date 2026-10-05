@@ -4,6 +4,7 @@ DATE: 2026-10-05
 STATUS: Implemented; required functional cases pass; normal source-panel visual observation pending
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
+PR: [#80](https://github.com/bldgtyp/ph-composer/pull/80), draft
 
 Replace free-text Building Segment and Level cells with select chips backed by editable,
 model-owned option lists. Each option has a name and colour. This is a data-model feature,

@@ -69,4 +69,4 @@ review and its reproduced corrections are closed in the
 These results pass the feature's required functional cases. Final normal source-panel visual
 restoration remains pending, so packet archival is held. They do not establish a SketchUp 2023 native
 run, Windows support, merge, release or certification acceptance. Shared Design System synchronization
-from main remains a post-merge action; no remote delivery was requested.
+from main remains a post-merge action. Ed subsequently authorized [draft PR #80](https://github.com/bldgtyp/ph-composer/pull/80); merge and release remain separate.

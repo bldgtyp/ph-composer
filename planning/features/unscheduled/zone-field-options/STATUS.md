@@ -4,6 +4,7 @@ DATE: 2026-10-05
 STATUS: Implemented; offline/review/native functional cases passed; normal-panel visual observation pending
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
+PR: [#80](https://github.com/bldgtyp/ph-composer/pull/80), draft
 
 Ed authorized the whole packet on a new branch and accepted D2–D10 on 2026-10-05.
 Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkpoint `941166a`.
@@ -30,8 +31,9 @@ Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkp
 - Normal restoration: saved source/destination reopened with exact records/defaults/metadata/stamps,
   new sessions, no fixture helper/test styles and no Model writes from reads/opening. The normal
   source Model and panel are left open.
-- Delivery: local branch/commits only. Push, PR, merge and release were not requested. Shared Design
-  System synchronization from main is deferred until merge. Native SketchUp 2023 and Windows proof
+- Delivery: Ed requested a PR on 2026-10-05. Branch pushed and [draft PR #80](https://github.com/bldgtyp/ph-composer/pull/80)
+  opened against main. Merge and release are not authorized. Shared Design System synchronization
+  from main is deferred until merge. Native SketchUp 2023 and Windows proof
   remain separate repository gates. No task memory was changed.
 
 Normal source-panel restoration remains open: native capture is white after two fresh processes,
@@ -39,4 +41,4 @@ while page diagnostics show the correct loaded three-row DOM and exact Model rea
 control also reported window timeouts/no-window errors. A real rendering defect versus capture
 limitation is unresolved. One human visual observation was requested; no shipping defect is claimed.
 The second process removed all temporary diagnostic callbacks. Final archival is pending this
-observation; remote delivery and post-merge synchronization remain separate.
+observation; PR #80 remains draft. Merge/release and post-merge synchronization remain separate.
