@@ -1012,7 +1012,7 @@
       "id": "ZO-H1",
       "label": "Managed Zone option dialogs and assignment",
       "mode": "mixed",
-      "authority": "planning/features/unscheduled/zone-field-options/ACCEPTANCE.md",
+      "authority": "planning/archive/zone-field-options/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/zones/*",
         "src/ph_composer/html/features/zones/*",
@@ -1028,7 +1028,7 @@
       "id": "ZO-H2",
       "label": "Managed Zone migration and reference Undo/Redo",
       "mode": "mixed",
-      "authority": "planning/features/unscheduled/zone-field-options/ACCEPTANCE.md",
+      "authority": "planning/archive/zone-field-options/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/zones/*",
         "src/ph_composer/html/features/zones/*",
@@ -1044,7 +1044,7 @@
       "id": "ZO-H3",
       "label": "Managed Zone custom Colour-by and filtering",
       "mode": "mixed",
-      "authority": "planning/features/unscheduled/zone-field-options/ACCEPTANCE.md",
+      "authority": "planning/archive/zone-field-options/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/zones/*",
         "src/ph_composer/html/features/zones/*",
@@ -1060,7 +1060,7 @@
       "id": "ZO-O7",
       "label": "Managed Zone native copy and recovery",
       "mode": "mixed",
-      "authority": "planning/features/unscheduled/zone-field-options/ACCEPTANCE.md",
+      "authority": "planning/archive/zone-field-options/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/zones/*",
         "src/ph_composer/html/features/zones/*",

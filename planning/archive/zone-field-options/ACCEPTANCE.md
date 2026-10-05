@@ -30,7 +30,7 @@ host/build/fixture identity; a bridge command or installed RBZ does not close a 
 All listed criteria passed through focused offline/public-API checks, actual Ruby extraction and
 HBJSON reload/reference assertions, the full offline gate and required native host observations.
 See [implementation review](evidence/implementation-review.md) and the
-[native case receipt](../../../native-acceptance/evidence/zone-field-options-2026-10-05.md).
+[native case receipt](../../native-acceptance/evidence/zone-field-options-2026-10-05.md).
 
 O1–O6 and O9 combine focused/public checks with native first Make, chips, management, exact
 Undo/Redo, orphan usage, draft refusal/discard and Model activation. O7 includes actual native
@@ -42,5 +42,6 @@ record readback. No aggregate count or browser preview substitutes for those nat
 Native host scope is SketchUp 26.1.188 on macOS; the separate SketchUp 2023, Windows, release and
 certification gates are not closed by this packet.
 
-Final normal source-panel visual restoration remains unknown. Functional case passes above are
-retained; packet archival is held pending the visual observation described in STATUS.md.
+Final normal source-panel visual restoration passed through Ed’s direct confirmation and supplied
+native screenshot on 2026-10-05. The earlier automated white captures remain recorded separately;
+no product rendering defect or shipping fix is asserted.

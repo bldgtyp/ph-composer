@@ -1,10 +1,10 @@
 # Managed Building Segments and Levels
 
 DATE: 2026-10-05
-STATUS: Implemented; required functional cases pass; normal source-panel visual observation pending
+STATUS: Complete implementation and current-host acceptance; PR #80 open, unmerged
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
-PR: [#80](https://github.com/bldgtyp/ph-composer/pull/80), draft
+PR: [#80](https://github.com/bldgtyp/ph-composer/pull/80)
 
 Replace free-text Building Segment and Level cells with select chips backed by editable,
 model-owned option lists. Each option has a name and colour. This is a data-model feature,
@@ -19,7 +19,7 @@ the assignment surface. No extra tab or permanent toolbar controls are proposed.
 
 The request covers the two existing fields' option sets, not arbitrary new columns. Shared
 cross-project templates can follow later. Name and Ground Depth retain text editors; Segment and Level now use managed select chips.
-Required current-host functional cases passed; final normal source-panel visual observation is pending. Its parent intake is [UI refinements](../../../refactor/ui-ux-refinements.md).
+Current-host acceptance passed, including Ed’s final normal source-panel visual confirmation. Its parent intake is [UI refinements](../../refactor/ui-ux-refinements.md).
 
 Implementation design and current source trace: [DESIGN.md](DESIGN.md). The
-[development prototype](../../../../tools/spikes/zone-field-options/README.md) is synthetic and does not change Models.
+[development prototype](../../../tools/spikes/zone-field-options/README.md) is synthetic and does not change Models.

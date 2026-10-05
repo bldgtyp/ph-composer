@@ -114,7 +114,7 @@ mixed contexts, conflicting stamps and shared edges, and discloses unrecoverable
 
 ## UI and export integration
 
-[Interaction prototype](../../../../tools/spikes/zone-field-options/index.html) uses the existing
+[Interaction prototype](../../../tools/spikes/zone-field-options/index.html) uses the existing
 menu/dialog components with synthetic, memory-only data. It demonstrates assignment selects,
 name/hex/picker edits, usage, Add, replacement-based Merge/Delete, default selection and Save/Cancel.
 The shipped component now includes usage, palette, pending/refused/stale states, draft navigation
@@ -142,6 +142,6 @@ A renamed option changes its display text but never its exported identifier.
 - Final `make ci`, required current-host O7/H1–H3 and host portions of O1–O9 passed.
   Installed-build, exact Undo/Redo, save/reopen and copy evidence is recorded in STATUS.md.
 
-Ed subsequently authorized a PR; [draft PR #80](https://github.com/bldgtyp/ph-composer/pull/80) is open.
-The packet remains active pending the final normal source-panel visual observation. Merge/release
+Ed subsequently authorized a PR; [PR #80](https://github.com/bldgtyp/ph-composer/pull/80) is open.
+Ed’s final normal source-panel visual observation passed; the packet is archived. Merge/release
 and post-merge synchronization remain separate.

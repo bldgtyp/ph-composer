@@ -16,4 +16,3 @@ requests. A packet moves into a phase directory when it is scheduled.
 | [legend-hover-highlight](legend-hover-highlight/README.md) | feature | Requested |
 | [zones-entry-points](zones-entry-points/README.md) | feature | Requested |
 | [panel-keyboard-focus](panel-keyboard-focus/README.md) | feature | Requested |
-| [zone-field-options](zone-field-options/README.md) | feature | Scoped draft; managed Segment/Level options, migration and custom colours; not implemented |

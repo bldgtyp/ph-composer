@@ -2,7 +2,7 @@
 
 DATE: 2026-10-05
 SOURCE: Local implementation commit `941166a`, based on `627b4f7`
-STATUS: Coherent code review, final CI and functional native cases passed; final visual restoration pending
+STATUS: Coherent code review, final CI and current-host acceptance passed
 
 ## Review and corrections
 

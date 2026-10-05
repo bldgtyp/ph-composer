@@ -1,10 +1,10 @@
 # Managed Zone options: status
 
 DATE: 2026-10-05
-STATUS: Implemented; offline/review/native functional cases passed; normal-panel visual observation pending
+STATUS: Complete implementation and current-host acceptance; PR #80 open, unmerged
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
-PR: [#80](https://github.com/bldgtyp/ph-composer/pull/80), draft
+PR: [#80](https://github.com/bldgtyp/ph-composer/pull/80)
 
 Ed authorized the whole packet on a new branch and accepted D2–D10 on 2026-10-05.
 Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkpoint `941166a`.
@@ -23,7 +23,7 @@ Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkp
   serialization. [Implementation review](evidence/implementation-review.md).
 - Native: ZO-H1/H2/H3/O7 pass on SketchUp 26.1.188 / Ruby 3.2.2, with native controls and separate
   readback, immutable fixture/build baselines, exact Undo/Redo, within/between-Model copy,
-  split/Restore and fresh normal-process reopen. [Native evidence](../../../native-acceptance/evidence/zone-field-options-2026-10-05.md).
+  split/Restore and fresh normal-process reopen. [Native evidence](../../native-acceptance/evidence/zone-field-options-2026-10-05.md).
 - Build: installed RBZ matches all 387 packaged files, no extras or mismatches; SHA-256
   `0c1241d3d20647f3e4f596919afe02f685238fab17f422c509b699b63c0205ac`.
   Raw logs, Models, captures and immutable receipts are ignored under
@@ -31,14 +31,14 @@ Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkp
 - Normal restoration: saved source/destination reopened with exact records/defaults/metadata/stamps,
   new sessions, no fixture helper/test styles and no Model writes from reads/opening. The normal
   source Model and panel are left open.
-- Delivery: Ed requested a PR on 2026-10-05. Branch pushed and [draft PR #80](https://github.com/bldgtyp/ph-composer/pull/80)
-  opened against main. Merge and release are not authorized. Shared Design System synchronization
+- Delivery: Ed requested a PR on 2026-10-05. Branch pushed and [PR #80](https://github.com/bldgtyp/ph-composer/pull/80)
+  opened against main; final visual hold closed by Ed. Merge and release are not authorized. Shared Design System synchronization
   from main is deferred until merge. Native SketchUp 2023 and Windows proof
   remain separate repository gates. No task memory was changed.
 
-Normal source-panel restoration remains open: native capture is white after two fresh processes,
-while page diagnostics show the correct loaded three-row DOM and exact Model readbacks pass. Native
-control also reported window timeouts/no-window errors. A real rendering defect versus capture
-limitation is unresolved. One human visual observation was requested; no shipping defect is claimed.
-The second process removed all temporary diagnostic callbacks. Final archival is pending this
-observation; PR #80 remains draft. Merge/release and post-merge synchronization remain separate.
+Ed confirmed the three Zone rows render normally and supplied a native screenshot of `source.skp`
+on 2026-10-05. The screenshot shows all three rows with the managed Segment/Level chips and custom
+colours, closing the final normal-panel visual observation. Earlier automated white captures remain
+recorded as unsuccessful observations; no product rendering defect or shipping fix is asserted.
+Ed also reports successful testing in multiple files, without a separate assertion-level matrix.
+The completed packet is archived. Merge/release and post-merge synchronization remain separate.

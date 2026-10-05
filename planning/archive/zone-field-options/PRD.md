@@ -15,12 +15,12 @@ edit their names and set their colours. Names and colours belong to this SKP and
 
 | Source | Observed behavior | Consequence |
 | --- | --- | --- |
-| [Zone schema](../../../../src/ph_composer/features/zones/zone/schema.rb) | Reads v1 text and v2 option assignments; managed records/stamps carry portable choice evidence | Older data remains readable; adoption is explicit |
-| [Zone editors](../../../../src/ph_composer/html/features/zones/zone_cells.js) and [dialog](../../../../src/ph_composer/html/features/zones/option_dialog.js) | Guarded ID selects and one collection draft with Save/Cancel | Ruby validates and commits the complete batch atomically |
-| [Zone creation](../../../../src/ph_composer/features/zones/zone/operations.rb) | First Make seeds the managed Segment/default in the same proposal; Level is null | Reads do not create settings or options |
-| [Colour modes](../../../../src/ph_composer/features/zones/colour_modes.rb) | Managed IDs resolve labels and custom Entry colours | Rendering remains independent of Zone storage |
-| [Option inventory](../../../../src/ph_composer/features/zones/options/inventory.rb) | Includes live Zones, orphan stamps and shared occurrences; writes deduplicate storage | Adoption and removal include recovery references |
-| [Export](../../../../src/ph_composer/features/zones/export.rb) and [translation](../../../../src/ph_composer/python/ph_composer_translation/model_sections.py) | Contributor v2 supplies managed identity/export keys; Python retains v1 support and checks identity collisions | Rename preserves exported identity; real HBJSON reload cases verify grouping and Room metadata |
+| [Zone schema](../../../src/ph_composer/features/zones/zone/schema.rb) | Reads v1 text and v2 option assignments; managed records/stamps carry portable choice evidence | Older data remains readable; adoption is explicit |
+| [Zone editors](../../../src/ph_composer/html/features/zones/zone_cells.js) and [dialog](../../../src/ph_composer/html/features/zones/option_dialog.js) | Guarded ID selects and one collection draft with Save/Cancel | Ruby validates and commits the complete batch atomically |
+| [Zone creation](../../../src/ph_composer/features/zones/zone/operations.rb) | First Make seeds the managed Segment/default in the same proposal; Level is null | Reads do not create settings or options |
+| [Colour modes](../../../src/ph_composer/features/zones/colour_modes.rb) | Managed IDs resolve labels and custom Entry colours | Rendering remains independent of Zone storage |
+| [Option inventory](../../../src/ph_composer/features/zones/options/inventory.rb) | Includes live Zones, orphan stamps and shared occurrences; writes deduplicate storage | Adoption and removal include recovery references |
+| [Export](../../../src/ph_composer/features/zones/export.rb) and [translation](../../../src/ph_composer/python/ph_composer_translation/model_sections.py) | Contributor v2 supplies managed identity/export keys; Python retains v1 support and checks identity collisions | Rename preserves exported identity; real HBJSON reload cases verify grouping and Room metadata |
 
 Implementation is local at `941166a`. Offline and browser evidence is recorded in
 [evidence/implementation-review.md](evidence/implementation-review.md). Required current-host native acceptance passed; see STATUS.md and its linked native receipt.

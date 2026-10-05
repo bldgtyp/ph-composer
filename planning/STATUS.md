@@ -29,7 +29,6 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 | 5 | Window performance overlays | feature, post-MVP | Requested, PRD drafted | none (no remote) | [features/phase-05-post-mvp/window-performance-overlays/](features/phase-05-post-mvp/window-performance-overlays/README.md) |
 | cross | Validation and export | feature | In progress; Phase 1 HBJSON/report scope merged to main; later feature scope remains | none (local planning draft) | [features/cross-phase/validation-and-export/](features/cross-phase/validation-and-export/README.md); [evidence](archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md); authored Assemblies required in normal composition |
 | cross | Units: SI and IP display | feature | In progress | none (local planning draft) | [features/cross-phase/units/](features/cross-phase/units/README.md); Phase 0 shared portion merged through PR #1; feature quantities with their owners |
-| none | Managed Building Segments and Levels | feature | Implemented on codex/zone-field-options; offline/review/native cases pass; normal source-panel visual check pending | [#78](https://github.com/bldgtyp/ph-composer/issues/78); [draft PR #80](https://github.com/bldgtyp/ph-composer/pull/80) | [features/unscheduled/zone-field-options/](features/unscheduled/zone-field-options/README.md) |
 | none | Make Zone entry points | feature | Requested; toolbar button and Classify-tool inline offer, carried from zones-and-adjacency | none (local planning draft) | [features/unscheduled/zones-entry-points/](features/unscheduled/zones-entry-points/README.md) |
 | none | METr export | feature | Deferred; return milestone unscheduled | none (local planning draft) | [features/unscheduled/metr-export/](features/unscheduled/metr-export/README.md); Phase 1 row A15; Ed deferred until further feature development on 2026-09-20 |
 | none | SketchUp 2023 floor verification | feature, host gate | Requested | none (local planning draft) | [features/unscheduled/sketchup-2023-floor/](features/unscheduled/sketchup-2023-floor/README.md); no 2023 host run yet |
@@ -73,3 +72,8 @@ Phase 5. The archive records acceptance, not release or platform support. The in
 eleven findings were each merged on their own branch by 2026-10-02 and
 [archived](archive/phase-02-envelope-review/README.md). Phase 3 remains
 the next planned feature scope and requires its own implementation authorization.
+
+Managed Zone options completed on `codex/zone-field-options` on 2026-10-05; offline, review and
+current-host acceptance passed, including Ed’s final normal-panel visual confirmation.
+[Archived packet](archive/zone-field-options/STATUS.md); [PR #80](https://github.com/bldgtyp/ph-composer/pull/80)
+is open and unmerged. Shared Design System synchronization from main remains post-merge.

@@ -47,13 +47,21 @@ was never stored in membership stamps. The test compares the documented recovera
 The saved destination and source were reopened in fresh normal processes. Exact option records,
 defaults, Zone values, metadata, choice evidence and stamps matched their saved readbacks. Session IDs
 changed, the fixture helper was absent, and reads/opening caused no Model writes. The source also
-retained the post-merge/default/Restore/split state. The source Model and normal panel are left open. A supplementary normal source-panel pixel check
-remains unknown: captures are white after two fresh normal processes, despite a complete loaded DOM
-with the correct three Zone rows. Native control also returned timeout/no-window errors. A human
-visual observation was requested to distinguish a capture limitation from a rendering defect.
+retained the post-merge/default/Restore/split state. The source Model and normal panel are left open. A supplementary normal source-panel pixel check initially
+remained unknown: native captures were white after two fresh normal processes, despite a complete
+loaded DOM and exact persistence readbacks. Native control also returned timeout/no-window errors.
 Temporary read-only diagnostic callbacks were removed by the second clean restart; the private
-`source-reopened-second-normal.json` exactly matches all saved option/Zone/stamp data, has a new
-session and no fixture helper, and remains unmodified. No product rendering defect is claimed.
+`source-reopened-second-normal.json` exactly matches saved option/Zone/stamp data, has a new session
+and no fixture helper, and remains unmodified.
+
+Ed subsequently confirmed “yes, 3 zone rows appear” and supplied a native screenshot of `source.skp`
+on 2026-10-05 at 19:46 local time. It shows Zone 1/2/3, purple Segment choices, grey Not set Level
+and pink assigned Level choices, closing normal source-panel visual restoration. No product rendering
+defect or shipping fix is asserted. The screenshot/observation are preserved as
+`owner-source-panel.png` and `owner-source-panel.json` under the same ignored private evidence root;
+screenshot SHA-256 `801191aa1e7eea20fe355de0255e98ed68940342385e3398d1badd23d6366113`.
+Ed also reports successful testing in multiple files; that report does not add an assertion-level
+case matrix. Earlier unsuccessful automated captures remain historical observations.
 
 Private receipts: `legacy-observed.json`, `destination-observed.json`, `first-make-observed.json`,
 `destination-reopened-normal.json`, `source-reopened-normal.json` and `package-final.json`.
@@ -64,9 +72,8 @@ JavaScript cases**, **191 Python cases**, plus lint, typing, fixtures, manifests
 hostkit and RBZ checks. Full coverage passed at **97.0% Ruby, 96.3% JavaScript and 95.59% Python**.
 Ruby 2.7 focused compatibility and the Chromium 88 runtime check passed. The combined independent
 review and its reproduced corrections are closed in the
-[implementation receipt](../../features/unscheduled/zone-field-options/evidence/implementation-review.md).
+[implementation receipt](../../archive/zone-field-options/evidence/implementation-review.md).
 
-These results pass the feature's required functional cases. Final normal source-panel visual
-restoration remains pending, so packet archival is held. They do not establish a SketchUp 2023 native
+These results close the feature’s current-host cases and normal restoration; the packet is archived. They do not establish a SketchUp 2023 native
 run, Windows support, merge, release or certification acceptance. Shared Design System synchronization
-from main remains a post-merge action. Ed subsequently authorized [draft PR #80](https://github.com/bldgtyp/ph-composer/pull/80); merge and release remain separate.
+from main remains a post-merge action. Ed subsequently authorized [PR #80](https://github.com/bldgtyp/ph-composer/pull/80); merge and release remain separate.
