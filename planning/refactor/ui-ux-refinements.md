@@ -1,7 +1,7 @@
 # UI and UX refinements
 
 DATE: 2026-10-05
-STATUS: Implemented; offline/browser verified; native acceptance gaps recorded; prepared for review
+STATUS: Merged through PR #79; native acceptance follow-ups remain open
 ISSUE: [#77](https://github.com/bldgtyp/ph-composer/issues/77)
 
 Ed requested incremental refinements on one branch, `codex/ui-ux-refinements`.
@@ -333,8 +333,9 @@ commits. Final offline gate passes 1,428 Ruby cases / 14,320 assertions, 459 Jav
 preview host, including automatic matching Colour-by; ignored evidence is under
 `_private/host/ui-ux-refinements/pr-final/`.
 
-Issue #77 tracks these refinements. The PR is a draft pending the remaining native viewport-mask,
-Assembly hatch-edge and gesture/Undo gates recorded above; it is not merge or release approval.
+Issue #77 tracks these refinements. The PR was opened as a draft with the remaining native viewport-mask,
+Assembly hatch-edge and gesture/Undo gates recorded above. The owner later approved merging while
+those checks remain deferred; that approval is not native acceptance or release approval.
 The planning-only managed Segment/Level packet is tracked separately by issue #78 and remains
 unimplemented. Design System sync remains a merge-closeout follow-up.
 
@@ -345,3 +346,14 @@ The first PR #79 matrix run failed on Ruby 3.2.2 and 2.7.2: a comment added afte
 pass was 121 characters against the 120-character limit. Wrapped that comment without changing
 runtime behavior. Full Ruby lint then passed on both local runtimes (440 files each), and the final
 diff check passed. The corrective push reruns the full remote matrix; its result is tracked on PR #79.
+
+
+## Merge handoff
+
+Ed authorized merge after both GitHub CI matrix jobs passed on `f0db4ea`. PR #79 merged into main
+on 2026-10-05 as `3417e918b3bd7773e4ab44d68c6ddf6905f54b1c`, with DCO sign-off preserved.
+The implementation is merged; the native viewport-mask, hatch-edge and gesture/Undo follow-ups
+remain unverified as recorded above. Retain this ledger until those follow-ups are resolved rather
+than archiving it as fully accepted. Managed Building Segment/Level options remain planning-only
+under open issue #78. Local main is synchronized; the merged feature branch is retained.
+Design System artifact sync remains an open merge-closeout follow-up, not a claim of completion.
