@@ -79,7 +79,7 @@ module PhComposer
           radius = [box.diagonal.to_f / 2.0, 1.0].max * FRAME_MARGIN
           direction = camera.direction
           if camera.perspective?
-            vertical = camera.fov.to_f.degrees
+            vertical = camera.fov.to_f * Math::PI / 180.0
             aspect = view.vpwidth.to_f / [view.vpheight.to_f, 1.0].max
             narrowest = [vertical, 2.0 * Math.atan(Math.tan(vertical / 2.0) * aspect)].min
             eye = center.offset(direction.reverse, radius / Math.sin(narrowest / 2.0))

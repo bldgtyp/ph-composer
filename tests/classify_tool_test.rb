@@ -550,6 +550,54 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty(@model.overlays.select { |overlay| overlay.is_a?(outline) })
   end
 
+  # A camera the offline View lacks, recording what Locate sets it to.
+  class FramingCamera
+    attr_reader :eye, :target
+
+    def direction
+      Geom::Vector3d.new(0, 1, 0)
+    end
+
+    def up
+      Geom::Vector3d.new(0, 0, 1)
+    end
+
+    def perspective?
+      true
+    end
+
+    def fov
+      30.0
+    end
+
+    def set(eye, target, _up)
+      @eye = eye
+      @target = target
+    end
+  end
+
+  # Locate frames a Face by its world bounds, so a Zone placed away from the origin is framed where it is,
+  # looking along the camera's own direction and far enough back for the Face to fit.
+  def test_locate_frames_the_faces_world_bounds_along_the_camera_direction
+    zone(1_315, 2)
+    references = list_faces.map { |face| face.fetch("reference") }
+    view = @model.active_view
+    view.camera = FramingCamera.new
+    view.define_singleton_method(:vpwidth) { 1000 }
+    view.define_singleton_method(:vpheight) { 500 }
+    found = PhComposer::Zones::Faces::Locate.call(@session, references.take(1))
+
+    box = Geom::BoundingBox.new
+    found.first.entity.vertices.each { |vertex| box.add(vertex.position.transform(found.first.transform)) }
+    target, eye = view.camera.target, view.camera.eye
+    assert_in_delta box.center.x, target.x, 1e-6
+    assert_in_delta box.center.y, target.y, 1e-6
+    assert_in_delta box.center.x, eye.x, 1e-6, "the eye looks along the camera direction (+y)"
+    assert_operator eye.y, :<, target.y
+    assert_operator target.y - eye.y, :>, box.diagonal / 2.0, "far enough back to fit the Face"
+    assert_empty view.zoomed, "a view with a camera is framed, not zoomed"
+  end
+
   # Locate and Select are view commands, so they answer a client that has `view` access without
   # opening an operation, leaving an Undo entry or moving the revision. Select is the one that selects.
   def test_locate_and_select_are_reachable_from_a_client_and_write_nothing

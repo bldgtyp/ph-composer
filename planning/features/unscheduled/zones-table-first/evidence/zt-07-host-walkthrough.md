@@ -1,7 +1,7 @@
 # ZT-07 host walkthrough
 
 DATE: 2026-10-04
-STATUS: Observed; all six cases pass on the final installed build
+STATUS: Observed; all six cases pass (builds listed below)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -10,11 +10,26 @@ ISSUE: none (local planning draft)
 SketchUp 26.1.188, Ruby 3.2.2, macOS. Synthetic fixture `_private/host/ztf/ztf.skp`, built from
 `blank-template.skp` by `AuthoringWalkthrough.setup/run` (two Zones of six classified Faces each) plus one
 Assembly on one Wall per Zone through the public API; SHA256
-`ee7ab75fb6f1040b66f8a79a7cf82e32845ce6c4fef12837686894dc99888c5c`, kept as `ztf-baseline.skp`. Two
-builds ran: the first (RBZ `aa65486c…`) for cases 1, 2 and 4; after the fixes below, a fresh process on the
-reinstalled build (RBZ `65ed4d8d…`, package comparison `matches: true`) for cases 3, 5 and 6 and the
-pressed-toggle recheck. Panel assets reinstalled again for the last two CSS changes and the dialog reopened.
-Raw captures are in `_private/host/ztf/evidence/`.
+`ee7ab75fb6f1040b66f8a79a7cf82e32845ce6c4fef12837686894dc99888c5c`, kept as `ztf-baseline.skp`.
+
+Builds, in order:
+
+1. RBZ `aa65486c773b…` (`aa65486c272ec2cdef609ca3b25b548897445704988fbbc1cdf750cb50fa3de7`, branch at
+   `f37d9d5`), package comparison `matches: true`: cases 1, 2 and 4, and the first runs of 3 and 5.
+2. RBZ `65ed4d8d51b74c9257e5635bc841769bcc8b39561bbdd5cd086fffa83b7c6318` in a fresh process, package
+   comparison `matches: true`, with the framing and Zone-update fixes: cases 3 and 5.
+3. Two further installs of panel assets only (the header-label wrap, then the sticky Name rule), each
+   followed by closing and reopening the dialog in the same process: the pressed-toggle recheck and case 6.
+   These installs were not hashed.
+
+The committed head `19d1bf6` differs from the last installed tree only by a comment in `locate.rb` and the
+runtime manifest; its RBZ `a662688a773569037ba6dbe0f6e15ce92700d8ffa018715b6c4b8f43d5a02f73` was installed
+afterwards (package comparison `matches: true`) and no case was rerun on it. After that, `Locate.frame`
+gained an offline test, and its field-of-view conversion changed from SketchUp's `Numeric#degrees` to the
+equivalent `* Math::PI / 180`; that change has not run on the host. The walkthrough ran outside
+`tools/hostkit/acceptance_run.py` (no recipe, baseline or receipt), because these cases are not in the case
+ledger; nothing was appended to `planning/native-acceptance/results.jsonl`. Raw captures are in
+`_private/host/ztf/evidence/`.
 
 Control: background computer use for panel clicks, typing and Escape (Escape reached the web view in this
 run); full-screen control for Edit > Undo, which stays disabled while SketchUp is in the background; the
