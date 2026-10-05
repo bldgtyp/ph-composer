@@ -337,3 +337,11 @@ Issue #77 tracks these refinements. The PR is a draft pending the remaining nati
 Assembly hatch-edge and gesture/Undo gates recorded above; it is not merge or release approval.
 The planning-only managed Segment/Level packet is tracked separately by issue #78 and remains
 unimplemented. Design System sync remains a merge-closeout follow-up.
+
+
+### Remote CI follow-up
+
+The first PR #79 matrix run failed on Ruby 3.2.2 and 2.7.2: a comment added after the local lint
+pass was 121 characters against the 120-character limit. Wrapped that comment without changing
+runtime behavior. Full Ruby lint then passed on both local runtimes (440 files each), and the final
+diff check passed. The corrective push reruns the full remote matrix; its result is tracked on PR #79.

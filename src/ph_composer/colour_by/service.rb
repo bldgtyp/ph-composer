@@ -66,8 +66,8 @@ module PhComposer
       # Turns a mode on, remembering it as the one the user last chose. Nothing about the Model
       # changes: no record is written, no material is assigned and no operation opens.
       #
-      # `remember: false` turns a mode on without recording the choice. The Classify tool's empty-palette fallback forces
-      # Colour-by on while it is active, and what the tool forced is not what the user chose, so it
+      # `remember: false` turns a mode on without recording the choice. The Classify tool's
+      # empty-palette fallback forces Colour-by on while active. What it forced is not what the user chose, so it
       # must not displace the remembered mode when the tool ends.
       def activate(name, remember: true)
         declaration = Registry.current.colour_modes[name]
