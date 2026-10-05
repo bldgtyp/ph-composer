@@ -570,6 +570,25 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty view.zoomed, "a view with a camera is framed, not zoomed"
   end
 
+  # The selection-change count advances on every native selection change, whatever it selects, and its
+  # read never refuses, so the panel can tell a selection of a Group from no change at all.
+  def test_the_selection_change_count_advances_on_every_selection_change_and_never_refuses
+    zone(1_320, 2)
+    context = PhComposer::API.connect(:session_id => @session.id)
+    read = lambda do
+      PhComposer::API.query(:context => context, :name => "ph_composer.zones.faces.selection_generation")
+    end
+    counts = [read.call.dig("value", "generation")]
+    2.times do
+      @session.host_event(:selection_changed)
+      counts << read.call.dig("value", "generation")
+    end
+
+    assert_equal "completed", read.call.fetch("status")
+    # Only that it moves is the contract; a suite that installs features more than once subscribes more than once.
+    assert_equal counts.sort.uniq, counts, "the count advances on each selection change"
+  end
+
   # Locate and Select are view commands, so they answer a client that has `view` access without
   # opening an operation, leaving an Undo entry or moving the revision. Select is the one that selects.
   def test_locate_and_select_are_reachable_from_a_client_and_write_nothing

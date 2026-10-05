@@ -171,9 +171,9 @@
       "sha256": "e1ceae6cee7c28fe3b00d227943cf4b714387c19ea1e695fe22749610a97b584"
     },
     "html/features/zones/checked_faces.js": {
-      "bytes": 4061,
+      "bytes": 4509,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "cb5d6a0b9d52f64d04ad74be5491f121e0958eba0a1f55404313a32cf61974aa"
+      "sha256": "5aa9aa152944da6fad0a8a4a71cd08d917398f9ddf4703f7db312cbe67a3ffcb"
     },
     "html/features/zones/classify.js": {
       "bytes": 13799,
@@ -181,9 +181,9 @@
       "sha256": "a4b10771d6112e3c21d45581d007043fa1475060d4ea5b89e7b87728ee662114"
     },
     "html/features/zones/overview.js": {
-      "bytes": 51756,
+      "bytes": 52138,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "e347c235c9381a7537f2c34135c85975221fcb8ec67b71878f28cd087e4b8f4b"
+      "sha256": "2208e865e4eee652bb80de325d760fa880dd5ed6cf72fa877afc7d95023866e2"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 2727,

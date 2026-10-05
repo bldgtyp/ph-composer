@@ -1054,3 +1054,35 @@ test("past fifty unclassified Faces the header box and the hidden count read eve
     "every Face, painted or not, and none counted hidden");
   assert.strictEqual(section.querySelector("th").querySelector(".row-check").getAttribute("aria-checked"), "true");
 });
+
+test("a selection change with no Faces clears the checked set; an unchanged one keeps manual checks", function () {
+  var p = checkPage();
+  p.payload.sections["ph_composer.zones.faces.selection_change"] = { status: "completed", value: { generation: 0 } };
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  click(p.box("Wall 1"));
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.strictEqual(p.state("Wall 1"), "true", "a snapshot with no selection change keeps the user's checks");
+  // A Group is selected: the Faces read refuses, so there are no Face targets, but the selection changed.
+  p.payload.sections["ph_composer.zones.faces.selected"] = { status: "refused", code: "selection.invalid" };
+  p.payload.sections["ph_composer.zones.faces.selection_change"].value.generation = 1;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.strictEqual(p.state("Wall 1"), "false");
+  click(p.box("Wall 2"));
+  p.payload.sections["ph_composer.zones.faces.selection_change"].value.generation = 2;
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.strictEqual(p.state("Wall 2"), "false", "clearing SketchUp's selection clears the checked set");
+});
+
+test("a press or Escape while Locate is still in flight clears the outline after it", function () {
+  ["pointer", "escape"].forEach(function (route) {
+    var p = checkPage();
+    click(rowAction(p.section, "locate"));
+    if (route === "pointer") dom.dispatch(p.box("Wall 1"), { type: "pointerdown" });
+    else dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+    assert.deepStrictEqual(p.sent.map(function (message) { return message.payload.name; }),
+      ["ph_composer.zones.faces.locate", "ph_composer.zones.faces.clear_locate"], route);
+    p.panel.receive({ type: "view.result", payload: { request_id: p.sent[0].payload.request_id, session: "session-a",
+      outcome: { status: "completed", value: { found: 1, missing: 0 } } } });
+    assert.strictEqual(p.sent.length, 2, route + ": the clear is not sent twice");
+  });
+});
