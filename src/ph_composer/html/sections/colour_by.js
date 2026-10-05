@@ -95,7 +95,8 @@ function (panel, ui, requests, snapshot) {
     this.menu.content.replaceChildren();
     function item(text, name, pressed) {
       var node = ui.button(text, function () { self.menu.close(true); activate(panel.state, name); });
-      node.className = "phc-action-menu-item";
+      // The mode on is marked the way every setting list marks its current choice.
+      node.className = "phc-action-menu-item phc-setting-choice";
       if (pressed !== undefined) node.setAttribute("aria-pressed", String(pressed));
       self.menu.content.appendChild(node);
     }

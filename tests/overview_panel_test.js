@@ -370,7 +370,8 @@ test("a Zone's fields are cells on its row, and each commit is one update of tha
   assert.strictEqual(p.sent.length, 1);
   assert.strictEqual(p.sent[0].payload.name, "ph_composer.zones.update");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload.params)), {
-    reference: { zone_id: "zon_a", zone_path: [100] }, values: { name: "North Zone" },
+    reference: { zone_id: "zon_a", zone_path: [100] },
+    values: { name: "North Zone", building_segment: "house", level: null, ground_depth_mm: 0 },
     expected_values: { name: "Zone 1", building_segment: "house", level: null, ground_depth_mm: 0 }
   });
 });

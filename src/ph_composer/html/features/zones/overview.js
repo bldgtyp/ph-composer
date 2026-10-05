@@ -193,6 +193,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var menu = new ui.ActionMenu("Table options", { onOpen: function () { fill(); } });
     function toggle(text, pressed, handler) {
       var item = menu.add(text, handler);
+      item.classList.add("phc-setting-choice");
       item.setAttribute("aria-pressed", String(pressed));
     }
     function fill() {
@@ -844,8 +845,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var parents = Object.create(null);
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     tables.table(mount, rows, {
-      // Sized so the whole table shows at the panel's usual width; the user can still
-      // drag any column wider.
+      // Sized so the whole table shows at the panel's usual width; a long header label wraps beside its icons,
+      // and the user can still drag any column wider.
       defaultWidths: { name: 142, building_segment: 120, level: 84, ground_depth_mm: 104, face_type: 126,
         boundary_condition: 110, area_m2: 92, assembly_id: 156 },
       tree: true, rows: shown, columns: columns(profile),

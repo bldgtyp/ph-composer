@@ -35,7 +35,7 @@ PhComposerUI.define("column_menu", ["dom", "icons", "overlay"], function (dom, i
 
   function item(text, icon, pressed, handler) {
     var node = button(text, handler);
-    node.className = "phc-action-menu-item";
+    node.className = "phc-action-menu-item phc-setting-choice";
     node.replaceChildren(icons.glyph(icon), element("span", "", text));
     if (pressed !== undefined) node.setAttribute("aria-pressed", String(pressed));
     return node;

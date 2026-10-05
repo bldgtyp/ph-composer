@@ -2,22 +2,23 @@
  * Ground depth. Face rows leave these columns blank.
  *
  * The shared inline record drafts do the editing (typing, Enter or leaving applies, Escape restores, a refusal
- * keeps the typed text until Escape). Each committed cell is one `ph_composer.zones.update` carrying that one
- * value and every value the row was painted from, so it is one operation and one Undo step, and a Zone that
- * changed underneath refuses rather than being overwritten.
+ * keeps the typed text until Escape). Each committed cell is one `ph_composer.zones.update` carrying the row's
+ * values with that one replaced, guarded by every value the row was painted from, so it is one operation and
+ * one Undo step, and a Zone that changed underneath refuses rather than being overwritten.
  */
 PhComposerUI.define("features/zones/zone_cells", ["record_edits", "fields", "units"],
 function (RecordEdits, fields, units) {
   "use strict";
   var GROUND_DEPTH = fields.with(fields.LENGTH_MM, { label: "Ground depth", scope: "ph_composer.zones.ground_depth" });
   var COLUMNS = [["building_segment", "Building-Segment"], ["level", "Level"], ["ground_depth_mm", "Ground depth"]];
+  var FIELDS = ["name", "building_segment", "level", "ground_depth_mm"];
   var LABELS = { name: "name", building_segment: "Building-Segment", level: "Level", ground_depth_mm: "ground depth" };
 
   function copy(values) { return JSON.parse(JSON.stringify(values || {})); }
 
   function ZoneCells(session, send, notice) {
     this.edits = new RecordEdits(session, send, notice, {
-      action: "ph_composer.zones.update", fields: ["name", "building_segment", "level", "ground_depth_mm"],
+      action: "ph_composer.zones.update", fields: FIELDS,
       recordLabel: "Zone", requiredFields: ["name"], navigateOnCommit: false,
       quantities: { ground_depth_mm: GROUND_DEPTH },
       eligible: function (row, field) { return Boolean(row.record.zone) && this.fields.indexOf(field) >= 0; },
@@ -25,8 +26,12 @@ function (RecordEdits, fields, units) {
       // A Level left empty is a Zone with no Level, which the Model stores as null.
       normalize: function (field, text) { return field === "level" && text === "" ? null : undefined; },
       label: function (row, field) { return row.record.name + " " + LABELS[field]; },
+      // The update takes every Zone value, so the cell sends the row's values with its own replaced.
       send: function (cell) {
         var zone = cell.row.record.zone, values = {};
+        FIELDS.forEach(function (field) {
+          values[field] = zone.values[field] === undefined ? null : zone.values[field];
+        });
         values[cell.field] = cell.submitted;
         return { action: "ph_composer.zones.update",
           params: { reference: copy(zone.reference), values: values, expected_values: copy(zone.values) } };

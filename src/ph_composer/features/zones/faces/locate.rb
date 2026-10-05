@@ -22,7 +22,7 @@ module PhComposer
         # be as old as the last read it came from.
         def call(session, references)
           found = resolve(session.model, references)
-          zoom(session.model, found.map(&:entity))
+          zoom(session.model, found)
           Faces.locate_highlight(session).show(found)
           found
         end
@@ -37,7 +37,7 @@ module PhComposer
           selection = session.model.selection
           selection.clear
           selection.add(found.map(&:entity)) unless found.empty?
-          zoom(session.model, found.map(&:entity))
+          zoom(session.model, found)
           found
         end
 
@@ -50,14 +50,48 @@ module PhComposer
           end
         end
 
-        def zoom(model, entities)
-          return if entities.empty?
+        # Frames the Faces by their world bounds, keeping the camera's direction. `View#zoom` with a Face
+        # inside a closed Group frames the Face's bounds in its own Group's coordinates, which leaves a Zone
+        # placed away from the origin off screen (context/SKETCHUP_HOST_BEHAVIOR.md); a view without a
+        # camera (the offline stub) still gets `zoom`.
+        def zoom(model, found)
+          return if found.empty?
 
           view = model.respond_to?(:active_view) ? model.active_view : nil
-          view.zoom(entities) if view.respond_to?(:zoom)
+          return unless view
+
+          camera = view.respond_to?(:camera) ? view.camera : nil
+          return view.zoom(found.map(&:entity)) if !camera.respond_to?(:set) && view.respond_to?(:zoom)
+
+          frame(view, camera, world_bounds(found))
         end
 
-        private_class_method :resolve, :zoom
+        def world_bounds(found)
+          found.each_with_object(Geom::BoundingBox.new) do |face, box|
+            face.entity.vertices.each { |vertex| box.add(vertex.position.transform(face.transform)) }
+          end
+        end
+
+        FRAME_MARGIN = 1.2
+
+        def frame(view, camera, box)
+          center = box.center
+          radius = [box.diagonal.to_f / 2.0, 1.0].max * FRAME_MARGIN
+          direction = camera.direction
+          if camera.perspective?
+            vertical = camera.fov.to_f.degrees
+            aspect = view.vpwidth.to_f / [view.vpheight.to_f, 1.0].max
+            narrowest = [vertical, 2.0 * Math.atan(Math.tan(vertical / 2.0) * aspect)].min
+            eye = center.offset(direction.reverse, radius / Math.sin(narrowest / 2.0))
+            camera.set(eye, center, camera.up)
+          else
+            camera.set(center.offset(direction.reverse, radius * 4.0), center, camera.up)
+            camera.height = radius * 2.0
+          end
+          view.invalidate
+        end
+
+        private_class_method :resolve, :zoom, :world_bounds, :frame
       end
     end
   end

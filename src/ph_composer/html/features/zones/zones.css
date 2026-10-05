@@ -11,14 +11,14 @@
 .phc-zone-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0; }
 .phc-zone-setting input[type="number"] { width: 72px; }
 /* The table spans the pane and scrolls sideways at narrow widths with its identity columns (Actions,
-   Hierarchy, Name) held at the left; only the narrowest panel lets Name and Hierarchy scroll too. */
+   Hierarchy, Name) held at the left. The narrowest panel lets Hierarchy scroll and keeps Name beside
+   Actions, so every row still says what it is. */
 @media (max-width: 900px) {
   .phc-overview .phc-table td.col-name { position: sticky; }
   .phc-overview .phc-table th.col-name { left: calc(var(--col-actions-width) + var(--col-hierarchy-width)); }
 }
 @media (max-width: 500px) {
-  .phc-overview .phc-table td.col-name { position: static; }
-  .phc-overview .phc-table th.col-name { left: auto; }
+  .phc-overview .phc-table th.col-name, .phc-overview .phc-table td.col-name { left: var(--col-actions-width); }
 }
 /* The tree is the pane's work surface, so it takes the height the shell, the header and the control row leave. */
 .phc-table-mount { overflow: auto; max-height: max(240px, calc(100vh - 250px)); border: 1px solid var(--line); border-radius: 6px; }

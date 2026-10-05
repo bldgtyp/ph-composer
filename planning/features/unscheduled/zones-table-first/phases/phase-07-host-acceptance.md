@@ -1,7 +1,7 @@
 # ZT-07: host acceptance
 
 DATE: 2026-10-04
-STATUS: Scoped
+STATUS: Implemented on branch; host acceptance passed 2026-10-04
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -31,3 +31,11 @@ rather than rerunning it.
 On a pass: mark every packet document Complete, close the locate bug as Superseded, archive the
 packet to `planning/archive/zones-table-first/` and update the indexes. A step the bridge and native
 controls cannot reach is reported as outstanding and the packet stays `Implemented on branch`.
+
+## Outcome
+
+Run 2026-10-04; every case passes on the final installed build. Evidence:
+[evidence/zt-07-host-walkthrough.md](../evidence/zt-07-host-walkthrough.md). Three defects found on the host
+were fixed during the run (Locate framing, the Zone update shape, narrow and header layout) and rechecked in
+a fresh process. The packet stays `Implemented on branch` until it merges; the close list above (archive,
+bug Superseded, R05 retired) runs then.

@@ -126,8 +126,8 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(after.width, before.width, `the table keeps its width at ${width}`);
     assert(floating.y + floating.height <= after.y + after.height + 40, `the bar floats over the table at ${width}`);
     assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), `no page scroll at ${width}`);
-    // At the narrowest panel Name scrolls too, or the identity columns would leave no room (zones.css).
-    if (width === 900) {
+    // At every narrow width Name stays at the left (zones.css); below 500 only Hierarchy scrolls away.
+    if (width <= 900) {
       assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector(
         "[data-pane=overview] td.col-name")).position), "sticky", `Name stays at the left at ${width}`);
     }

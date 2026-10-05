@@ -98,8 +98,9 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 /* Header actions (a column menu, a Colour-by toggle) sit after the label and show while the pointer is over
    the header or focus is inside it. A persistent one (a pressed toggle, an active filter) is state, so it
    stays at rest. Opacity, not visibility, keeps them reachable by keyboard. */
-.phc-table th.has-header-actions { white-space: nowrap; }
-.phc-header-actions { display: inline-flex; align-items: center; gap: 0; margin-left: 4px; vertical-align: middle; }
+/* The label may wrap so a narrow column keeps its icons in view; the icons never split. */
+.phc-header-actions { display: inline-flex; align-items: center; gap: 0; margin-left: 4px; vertical-align: middle;
+  white-space: nowrap; }
 .phc-header-actions .phc-bubble-anchor { vertical-align: middle; }
 .phc-workspace .phc-table .phc-header-action .phc-icon-button,
 .phc-workspace .phc-table .phc-icon-button.phc-header-action { width: 24px; height: 24px; min-height: 24px; padding: 3px;
@@ -109,6 +110,10 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table th:hover .phc-header-action, .phc-table th:focus-within .phc-header-action,
 .phc-table .phc-header-action.is-persistent { opacity: 1; }
 .phc-workspace .phc-table .phc-icon-button.is-filtered { color: var(--interaction-highlight); }
+/* A pressed header toggle keeps the kit's pressed fill at rest, over the quiet header button above. */
+.phc-workspace .phc-table .phc-header-action .phc-icon-button[aria-pressed="true"],
+.phc-workspace .phc-table .phc-icon-button.phc-header-action[aria-pressed="true"] {
+  color: #fff; background: var(--interaction-highlight); border-color: var(--interaction-highlight); }
 
 /* A column menu: the sort pair, then the values the column can show. */
 .phc-workspace .phc-column-menu { width: 220px; }
