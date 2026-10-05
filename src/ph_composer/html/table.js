@@ -95,7 +95,7 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     handle.setAttribute("aria-label", "Resize " + label + " column");
     handle.setAttribute("aria-valuemin", "64"); handle.setAttribute("aria-valuemax", "480");
     handle.setAttribute("aria-keyshortcuts", "ArrowLeft ArrowRight Enter");
-    handle.title = "Drag to resize. Use Left or Right Arrow; Enter resets.";
+    dom.tooltip(handle, "Drag to resize. Use Left or Right Arrow; Enter resets.");
     function currentWidth() {
       var box = cache.headers[field].getBoundingClientRect();
       return Number(cache.columnWidths[field]) || Number(box.width) || defaultColumnWidth(cache, field);
@@ -138,9 +138,12 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     tableColumns.forEach(function (column) {
       var columnElement = element("col", "col-" + column[0]);
       var th = element("th", "col-" + column[0]);
+      th._heading = element("span", "phc-header-label-row");
       th._label = element("span", "phc-th-label", column[1]);
       th._labelText = column[1];
-      th.appendChild(th._label);
+      dom.tooltip(th._label, column[1]);
+      th._heading.appendChild(th._label);
+      th.appendChild(th._heading);
       columnElements[column[0]] = columnElement; columnGroup.appendChild(columnElement);
       th.scope = "col"; headers[column[0]] = th; header.appendChild(th);
     });
@@ -167,11 +170,17 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     return cache;
   }
   function paintHeaders(cache, options) {
+    cache.node.classList.toggle("has-header-action-row", Boolean(options.headerActions));
     cache.columns.forEach(function (column) {
       var field = column[0], th = cache.headers[field];
-      if (th._labelText !== column[1]) { th._label.textContent = column[1]; th._labelText = column[1]; }
+      if (th._labelText !== column[1]) {
+        th._label.textContent = column[1];
+        dom.tooltip(th._label, column[1]);
+        th._labelText = column[1];
+      }
       if (options.header) options.header(th, field);
-      paintHeaderActions(th, options.headerActions ? options.headerActions(field) || [] : []);
+      paintHeaderActions(th, options.headerActions ? options.headerActions(field) || [] : [],
+        Boolean(options.headerActions));
       var hidden = Boolean(options.hiddenColumns && options.hiddenColumns[field]);
       th.hidden = hidden; cache.columnElements[field].hidden = hidden;
       cache.columnElements[field].style.display = hidden ? "none" : "";
@@ -218,12 +227,12 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     var check = cache.options.check, th = cache.headers.actions;
     if (!th) return;
     if (!check) {
-      if (cache.headerCheck) { th.removeChild(cache.headerCheck); cache.headerCheck = null; }
+      if (cache.headerCheck) { th._heading.removeChild(cache.headerCheck); cache.headerCheck = null; }
       return;
     }
     if (!cache.headerCheck) {
       cache.headerCheck = checkbox("", function (event) { cache.options.check.toggleAll(event); });
-      th.insertBefore(cache.headerCheck, th.firstChild);
+      th._heading.insertBefore(cache.headerCheck, th._label);
     }
     var value = check.header();
     paintCheck(cache.headerCheck, value, check.headerLabel ? check.headerLabel(value) :
@@ -231,14 +240,14 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     cache.node.classList.toggle("has-checked", Boolean(check.any()));
   }
   /* A column's header actions: `options.headerActions(field)` answers `[{ node, persistent }]`, nodes the caller
-     built and repaints (a menu, a toggle). The table keeps them in order after the label, shows them only
+     built and repaints (a menu, a toggle). The table keeps them in a shallow band beneath the label, shows them only
      while the pointer is over the header or focus is inside it, and keeps a `persistent` one (a pressed
      toggle, an active filter) visible at rest (table.css). It names no action. */
-  function paintHeaderActions(th, actions) {
-    if (!actions.length && !th._actions) return;
+  function paintHeaderActions(th, actions, reserveRow) {
+    if (!actions.length && !th._actions && !reserveRow) return;
     if (!th._actions) {
       th._actions = element("span", "phc-header-actions");
-      th.insertBefore(th._actions, th._label.nextSibling);
+      th.insertBefore(th._actions, th._heading.nextSibling);
     }
     actions.forEach(function (action, index) {
       action.node.classList.add("phc-header-action");
@@ -333,7 +342,7 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       if (options.cell && options.cell(td, row, field, text)) return;
       text = text === undefined || text === null ? "-" : String(text);
       if (td.textContent !== text) td.textContent = text;
-      td.title = text;
+      dom.tooltip(td, text);
       if (text === "-") td.setAttribute("aria-label", "Unavailable");
       else td.removeAttribute("aria-label");
       if (options.decorate) options.decorate(td, row, field, text);

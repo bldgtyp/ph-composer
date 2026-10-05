@@ -78,20 +78,26 @@ test("the table Assembly chip takes its Assembly's colour and follows it; None s
   o.paint();
   assert.strictEqual(chip.style["--category-fill"], "#c5e1a5");
   assert.strictEqual(chip.style["--category-ink"], undefined);
+  assert.strictEqual(chip.style["--choice-chevron"], undefined);
   o.state.sections[PREFIX + ".assemblies"].value.assemblies[1].color = "#263238";
   o.paint();
   assert.deepStrictEqual([chip.style["--category-fill"], chip.style["--category-ink"]], ["#263238", "#fff"]);
+  assert.strictEqual(chip.style["--choice-chevron"], "var(--choice-chevron-light)");
   o.face.values.assembly_id = null;
   o.paint();
   assert.deepStrictEqual([chip.style["--category-fill"], chip.style["--category-ink"]], [undefined, undefined]);
+  assert.strictEqual(chip.style["--choice-chevron"], undefined);
 });
-test("the Classify palette offers no Assembly choice and names the one being painted", function () {
-  var o = setup(), palette = o.query("[data-section='ph_composer.classify']");
-  assert.strictEqual(byLabel(o.document.body, "Classify Assembly"), undefined);
-  assert.ok(!text(palette).includes("Assembly"), "nothing about Assemblies until one is being painted");
+test("Assembly paint intent is named in its column header", function () {
+  var o = setup();
+  assert.strictEqual(o.query("[data-section='ph_composer.classify']"), null);
   o.state.sections[PREFIX + ".palette"].value.palette.assembly_id = "asm_a";
+  o.state.sections[PREFIX + ".palette"].value.active = true;
   o.paint();
-  assert.ok(text(palette).includes("Wall"), "the Assembly being painted is named");
+  var glyph = byLabel(o.document.body, "Paint Assembly: Wall. Click to stop painting");
+  assert.ok(glyph);
+  assert.strictEqual(glyph.hidden, false);
+  assert.strictEqual(glyph.tagName, "button", "the header keeps only a stop glyph");
 });
 test("Zones contributes gross usage and view actions through the generic Assembly inventory seam", function () {
   var o = setup(), inventory = o.query("[data-section='assemblies']")._view.inventory;
@@ -251,7 +257,7 @@ test("the bar's Assembly rests on what the checked Faces share, and reads Mixed 
   assert.deepStrictEqual([picker.value, picker.children[0].textContent], ["", "Mixed"]);
   addFace(o, 998, {});
   assert.strictEqual(picker.disabled, true, "an unclassified Face cannot hold an Assembly yet");
-  assert.match(picker.title, /Classify every checked Face/);
+  assert.match(picker.getAttribute("data-tooltip"), /Classify every checked Face/);
 });
 
 test("checked Faces that disagree read Mixed; a value the tree keeps read only is read only here", function () {
@@ -268,12 +274,13 @@ test("checked Faces that disagree read Mixed; a value the tree keeps read only i
   assert.strictEqual(params.expected_values, undefined, "several Faces share no one set of values to guard by");
 });
 
-test("the palette can drop the Assembly it is painting", function () {
+test("the Assembly paint glyph stops the tool without sending a null assignment", function () {
   var o = setup();
   o.state.sections[PREFIX + ".palette"].value.palette.assembly_id = "asm_a";
+  o.state.sections[PREFIX + ".palette"].value.active = true;
   o.paint();
-  click(o.query("[data-section='ph_composer.classify']").querySelectorAll("button").filter(function (node) {
-    return node.textContent === "Stop painting it";
-  })[0]);
-  assert.deepStrictEqual(o.sent[0].payload.params, { field: "assembly_id", value: null });
+  click(byLabel(o.document.body, "Paint Assembly: Wall. Click to stop painting"));
+  assert.strictEqual(o.sent[0].type, "view.invoke");
+  assert.strictEqual(o.sent[0].payload.name, "ph_composer.zones.faces.stop_classifying");
+  assert.deepStrictEqual(o.sent[0].payload.params, {});
 });

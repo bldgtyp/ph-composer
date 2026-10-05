@@ -70,7 +70,7 @@ function (shared, preferences, ui) {
       var candidate = input.value.trim();
       if (commit && (!candidate || self.entries.some(function (entry) { return entry.record.id !== baseline.id &&
         entry.record.name.trim().toLowerCase() === candidate.toLowerCase(); }))) {
-        input.setAttribute("aria-invalid", "true"); input.title = "Enter a unique nonempty name."; input.focus();
+        input.setAttribute("aria-invalid", "true"); ui.tooltip(input, "Enter a unique nonempty name."); input.focus();
         return; }
       var name = input.value.trim();
       if (commit && name !== baseline.name) {
@@ -178,7 +178,7 @@ function (shared, preferences, ui) {
         if (missing.length) {
           var flag = ui.glyph("alert"); flag.classList.add("window-type-flag"); flag.setAttribute("role", "img");
           flag.setAttribute("aria-label", record.name + " is incomplete");
-          flag.title = missing.slice(0, 6).join(" ") + (missing.length > 6 ? " And more." : "");
+          ui.tooltip(flag, missing.slice(0, 6).join(" ") + (missing.length > 6 ? " And more." : ""));
           row.appendChild(flag);
         }
         var actions = el("span", "window-type-row-actions");

@@ -13,6 +13,9 @@ module PhComposer
         BY_FACE_TYPE = "#{PREFIX}.by_face_type"
         BY_BOUNDARY_CONDITION = "#{PREFIX}.by_boundary_condition"
 
+        PAINT_MODES = { "face_type" => BY_FACE_TYPE, "boundary_condition" => BY_BOUNDARY_CONDITION,
+                        "attached_zone_id" => BY_BOUNDARY_CONDITION, "assembly_id" => BY_ASSEMBLY }.freeze
+
         FACE_TYPE_COLOURS = {
           "Wall" => [230, 180, 60], "RoofCeiling" => [128, 20, 20], "Floor" => [128, 128, 128],
           "AirBoundary" => [255, 255, 200]
@@ -27,6 +30,16 @@ module PhComposer
         BOUNDARY_LABELS = { "Adiabatic" => "To neighbour", "AttachedZone" => "Attached zone" }.freeze
 
         module_function
+
+        # A concrete paint choice selects the matching view mode, across panel and native routes.
+        # Remember this view choice so the result remains visible after the user stops painting.
+        def activate_paint(session, field)
+          mode = PAINT_MODES[field]
+          return false unless mode && ColourBy.registered?(mode)
+
+          ColourBy.for(session).activate(mode)
+          true
+        end
 
         def install(feature)
           feature.colour_mode(BY_FACE_TYPE, :label => "Face type", :entity_kind => "face",
@@ -53,7 +66,8 @@ module PhComposer
             ColourBy::Entry.new(:entity => face.entity, :transform => face.transform, :value => id,
                                 :colour => assembly_colour(assembly && assembly.fetch("color")),
                                 :label => assembly ? assembly.fetch("name") : id,
-                                :state => id && !assembly ? :incomplete : nil, :path => face.zone.path + face.path)
+                                :state => id && !assembly ? :incomplete : nil, :path => face.zone.path + face.path,
+                                :hatch_outline => false)
           end
         end
 

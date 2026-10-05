@@ -74,7 +74,7 @@ PhComposerUI.define("features/windows/canvas", ["workspace"], function (ui) {
           var side = sides[view.interior && (i === 1 || i === 3) ? 4 - i : i];
           var frame = svg("polygon", { points: points.map(function (p) { return p.join(","); }).join(" "),
             "class": "window-frame" });
-          frame.appendChild(svg("title", {}, side + " frame")); action(frame, "Select " + cell.name + " " + side +
+          ui.tooltip(frame, side + " frame"); action(frame, "Select " + cell.name + " " + side +
             " frame", function (e) { view.select(cell.id, e); }); group.appendChild(frame);
         });
         // Operation lines are secondary: they run from the glass corners, touching the frame sight lines, to the
@@ -162,7 +162,7 @@ PhComposerUI.define("features/windows/canvas", ["workspace"], function (ui) {
     // clips.
           var cx = horizontal ? margin + offset : ruleX - 18 * type, cy = horizontal ? ruleY + 12 * type : top + offset;
           label = svg("g", { "class": "window-dimension-target is-missing" });
-          label.appendChild(svg("title", {}, "Set " + name));
+          ui.tooltip(label, "Set " + name);
           label.appendChild(svg("rect", { x: cx - 12 * type, y: cy - 9 * type, width: 24 * type, height: 18 * type,
             rx: 9 * type, "class": "window-dimension-missing" }));
           label.appendChild(svg("text", { x: cx, y: cy + 4 * type, "text-anchor": "middle",
@@ -223,7 +223,7 @@ PhComposerUI.define("features/windows/canvas", ["workspace"], function (ui) {
       var plus = svg("g", { "class": "window-insert" + (target.blocked ? " is-blocked" : ""), role: "button",
         "data-insert-edge": target.edge,
         "aria-label": target.blocked ? target.label + ". " + target.blocked : target.label });
-      plus.appendChild(svg("title", {}, target.blocked || target.label));
+      ui.tooltip(plus, target.blocked || target.label);
       plus.appendChild(svg("circle", { cx: px, cy: py, r: 9 * self.type }));
       plus.appendChild(svg("path", { d: "M" + (px - 4 * self.type) + " " + py + "h" + 8 * self.type + "M" + px +
         " " + (py - 4 * self.type) + "v" + 8 * self.type }));

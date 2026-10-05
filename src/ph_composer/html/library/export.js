@@ -91,7 +91,7 @@ PhComposerUI.define("library/export", ["record_form", "request", "workspace"], f
           this.summary.appendChild(ui.element("p", "", kind.record_kind_label + ": " + kind.count));
         }, this);
         omissionLines(this.projection.omissions).forEach(function (line) {
-          var row = ui.element("p", "muted", line.text); row.title = line.detail; this.summary.appendChild(row);
+          var row = ui.element("p", "muted", line.text); ui.tooltip(row, line.detail); this.summary.appendChild(row);
         }, this);
       } else this.error.textContent = preview.message || "The export scope could not be read.";
     }

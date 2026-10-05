@@ -348,7 +348,28 @@ test("the toolbar shows a selection's tools only while a Layer-Segment is select
     assert.ok(bar.querySelectorAll("button").some(function (node) {
       return node.getAttribute("aria-label") === label; }), label + " is an icon named for what it does");
   });
+  ["Insert Layer-Segment right", "Delete segment"].forEach(function (label) {
+    var button = bar.querySelectorAll("button").filter(function (node) {
+      return node.getAttribute("aria-label") === label;
+    })[0];
+    assert.strictEqual(button.getAttribute("data-tooltip"), label, "enabled actions retain their hints");
+  });
   assert.strictEqual(o.editor.root.querySelector(".assembly-back").getAttribute("aria-label"), "Back to Assemblies");
+});
+
+test("blocked segment icons retain their reason in the app tooltip", function () {
+  var o = setup();
+  o.state.sections[MATERIALS].value.records.forEach(function (record) {
+    if (record.id === "mat_b") record.values.category = "Membrane";
+  });
+  o.editor.refresh(o.state, o.record.id);
+  o.editor.select({ layerId: "layer_board", segmentId: "seg_board" });
+  var add = o.editor.root.querySelector("[data-builder-action='segments.add']");
+  var remove = o.editor.root.querySelector("[data-builder-action='segments.remove']");
+  assert.strictEqual(add.disabled, true);
+  assert.strictEqual(add.getAttribute("data-tooltip"), "A membrane Layer has one Layer-Segment");
+  assert.strictEqual(remove.disabled, true);
+  assert.strictEqual(remove.getAttribute("data-tooltip"), "A Layer keeps at least one Layer-Segment");
 });
 
 test("closing a dimension bubble settles an equal retype and never refuses a Builder being torn down", function () {

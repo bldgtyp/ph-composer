@@ -23,6 +23,13 @@ PhComposerUI.define("dom", [], function () {
     return node;
   }
   function option(value, text) { var node = element("option", "", text); node.value = value; return node; }
+  /* One tooltip source: browser title hints would cover the panel's styled tooltip after a long hover. */
+  function tooltip(node, text) {
+    node.removeAttribute("title");
+    if (text) node.setAttribute("data-tooltip", String(text));
+    else node.removeAttribute("data-tooltip");
+    return node;
+  }
   function titleCase(value) {
     if (value === null || value === undefined) return "";
     return String(value).replace(/_/g, " ").replace(/^./, function (letter) { return letter.toUpperCase(); });
@@ -78,5 +85,5 @@ PhComposerUI.define("dom", [], function () {
 
   return { element: element, svg: svg, button: button, option: option, titleCase: titleCase,
     number: number, blank: blank, compareText: compareText, propertyRow: propertyRow, memoPaint: memoPaint,
-    pulse: pulse };
+    pulse: pulse, tooltip: tooltip };
 });

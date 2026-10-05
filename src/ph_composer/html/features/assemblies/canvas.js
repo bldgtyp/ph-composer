@@ -1,4 +1,4 @@
-PhComposerUI.define("features/assemblies/canvas", [], function () {
+PhComposerUI.define("features/assemblies/canvas", ["workspace"], function (ui) {
   "use strict";
 
   var SVG_NS = "http://www.w3.org/2000/svg";
@@ -166,17 +166,15 @@ PhComposerUI.define("features/assemblies/canvas", [], function () {
     });
     if (layout.airBarrier) {
       var air = keyed("line", "air-barrier");
-      var title = air.querySelector("title");
       attribute(air, "class", "assembly-air-barrier is-air-barrier");
       attribute(air, "x1", 0);
       attribute(air, "x2", layout.airBarrier.widthMm);
       attribute(air, "y1", layout.airBarrier.yMm);
       attribute(air, "y2", layout.airBarrier.yMm);
       attribute(air, "data-layer-id", layout.airBarrier.layerId);
-      if (!title) { title = svgNode("title"); air.appendChild(title); }
-      if (title.textContent !== "Air barrier, " + layout.airBarrier.face + " face") {
-        title.textContent = "Air barrier, " + layout.airBarrier.face + " face";
-      }
+      var tooltip = "Air barrier, " + layout.airBarrier.face + " face";
+      air.setAttribute("aria-label", tooltip);
+      ui.tooltip(air, tooltip);
     }
     Object.keys(existing).forEach(function (key) {
       if (!keep[key] && existing[key].parentNode) existing[key].parentNode.removeChild(existing[key]);

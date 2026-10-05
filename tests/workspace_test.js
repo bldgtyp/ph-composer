@@ -279,6 +279,8 @@ test("a submenu opens its parent, closes its siblings, and closes with the paren
 test("a help button names its explanation, and a tooltip follows the pointer and Escape", function () {
   var help = ui.helpButton("Dimension format", "Applies to this editor only.");
   assert.strictEqual(help.getAttribute("aria-label"), "Dimension format: Applies to this editor only.");
+  assert.strictEqual(help.getAttribute("title"), null);
+  assert.strictEqual(help.getAttribute("data-tooltip"), "Applies to this editor only.");
 
   var root = dom.element("div");
   context.document.body.appendChild(root);
@@ -292,9 +294,63 @@ test("a help button names its explanation, and a tooltip follows the pointer and
   assert.strictEqual(tip.hidden, true);
 });
 
+test("tooltip text updates without a browser title, and icon repaint retains its accessible name", function () {
+  var target = dom.element("button", { title: "Native hint" });
+  ui.tooltip(target, "App hint");
+  assert.strictEqual(target.getAttribute("title"), null);
+  assert.strictEqual(target.getAttribute("data-tooltip"), "App hint");
+  ui.tooltip(target, "");
+  assert.strictEqual(target.getAttribute("data-tooltip"), null);
+  ui.paintIconButton(target, "Colour by Level", "palette");
+  assert.strictEqual(target.getAttribute("title"), null);
+  assert.strictEqual(target.getAttribute("data-tooltip"), "Colour by Level");
+  assert.strictEqual(target.getAttribute("aria-label"), "Colour by Level");
+});
+
+test("nested mounts share one tooltip, preserve descriptions, and withdraw a hidden owner's tip", function () {
+  var root = dom.element("div"), mount = dom.element("div");
+  context.document.body.appendChild(root);
+  root.appendChild(mount);
+  ui.attachTooltip(root);
+  ui.attachTooltip(mount);
+  ui.attachTooltip(root);
+  assert.strictEqual(root.querySelectorAll("[role=tooltip]").length, 1);
+  var target = dom.element("button", { "data-tooltip": "Set width", "aria-describedby": "field-error" });
+  mount.appendChild(target);
+  root.listeners.focusin({ target: target });
+  var tip = root.querySelector("[role=tooltip]");
+  assert.strictEqual(target.getAttribute("aria-describedby"), "field-error " + tip.id);
+  root.listeners.mouseover({ target: target });
+  assert.strictEqual(target.getAttribute("aria-describedby"), "field-error " + tip.id, "no repeated id");
+  root.listeners.mouseover({ target: tip });
+  assert.strictEqual(tip.hidden, false, "tooltip stays readable under the pointer");
+  mount.hidden = true;
+  mount._checkTooltip();
+  assert.strictEqual(tip.hidden, true);
+  assert.strictEqual(target.getAttribute("aria-describedby"), "field-error");
+});
+
 test("a popover is placed below its anchor, or above it when it would leave the window", function () {
   var size = { width: 200, height: 100 };
   function place(anchor) { return JSON.parse(JSON.stringify(ui.placeNear(anchor, size, 4, 8))); }
   assert.deepStrictEqual(place({ left: 50, top: 100, bottom: 130 }), { left: 50, top: 134 });
   assert.deepStrictEqual(place({ left: 1200, top: 740, bottom: 770 }), { left: 1072, top: 636 });
+});
+
+test("a header bubble lifts its sticky column until its last open submenu closes", function () {
+  var header = dom.element("th"); context.document.body.appendChild(header);
+  var parent = new ui.Bubble(dom.element("button"), "Type", {});
+  header.appendChild(parent.root);
+  var child = new ui.Bubble(dom.element("button"), "More", { parent: parent });
+  parent.content.appendChild(child.root);
+  assert.strictEqual(header.classList.contains("has-open-bubble"), false);
+  parent.open(false);
+  assert.strictEqual(header.classList.contains("has-open-bubble"), true);
+  child.open(false); child.close(false);
+  assert.strictEqual(header.classList.contains("has-open-bubble"), true,
+    "closing a submenu keeps its still-open column menu above the checked bar");
+  parent.close(false);
+  assert.strictEqual(header.classList.contains("has-open-bubble"), false);
+  assert.strictEqual(child.panel.hidden, true);
+  header.remove();
 });

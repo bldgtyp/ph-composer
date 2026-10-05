@@ -70,12 +70,16 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 /* An enum cell is a pill with a chevron on every screen. A value with a colour of its own sets
    --category-fill on the cell, and --category-ink when that fill is dark; the rest take the neutral fill. */
 .phc-table select.phc-enum-cell { width: calc(100% - 8px); height: 24px; min-height: 24px; margin: 0 4px;
-  padding: 0 6px 0 10px; border: 0; border-radius: 12px; font: inherit; font-size: 12px;
+  padding: 0 30px 0 10px; border: 0; border-radius: 12px; font: inherit; font-size: 12px;
   background-color: var(--category-fill, #edf1f2); color: var(--category-ink, inherit); }
-/* The same pill, read only: a value set elsewhere (a paired Surface). */
-.phc-table .phc-enum-pill { display: inline-block; max-width: 100%; height: 22px; padding: 0 10px; overflow: hidden;
-  border-radius: 11px; font-size: 12px; line-height: 22px; text-overflow: ellipsis; vertical-align: middle;
-  background: var(--category-fill, #edf1f2); }
+/* A value set elsewhere (a paired Surface): retain its category colour, with a quiet hatch and lock
+   instead of the editable chip's chevron. Keep the label at full contrast. */
+.phc-table .phc-enum-pill { display: inline-block; width: 100%; height: 24px; padding: 0 30px 0 10px; overflow: hidden;
+  border-radius: 12px; font-size: 12px; line-height: 24px; text-overflow: ellipsis; vertical-align: middle;
+  cursor: default; background-color: var(--category-fill, #edf1f2);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23132a2b' stroke-opacity='.65' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10' width='14' height='11' rx='2'/%3E%3Cpath d='M8 10V6a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(135deg, #ffffff52 0, #ffffff52 2px, transparent 2px, transparent 6px);
+  background-position: right 8px center, 0 0; background-size: 14px 14px, auto; background-repeat: no-repeat, repeat; }
 .phc-table td.phc-pill-cell { padding: 0 4px; text-align: left; }
 /* The pill covers its cell, so it carries the focus ring and the locked look itself. */
 .phc-workspace .phc-table select.phc-enum-cell:focus-visible { outline: 2px solid var(--interaction-highlight); outline-offset: -2px; }
@@ -95,12 +99,21 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table.is-tree tbody tr.tier-0:not(:first-child) > td { border-top: 1px solid #d3dce0; }
 .live-panel .phc-table.is-tree .host-selected td, .phc-table.is-tree tr.tier-0:focus-within > td { background-color: #e6f1f3; }
 
-/* Header actions (a column menu, a Colour-by toggle) sit after the label and show while the pointer is over
+/* Header actions (a column menu, a Colour-by toggle) sit below the label and show while the pointer is over
    the header or focus is inside it. A persistent one (a pressed toggle, an active filter) is state, so it
    stays at rest. Opacity, not visibility, keeps them reachable by keyboard. */
-/* The label may wrap so a narrow column keeps its icons in view; the icons never split. */
-.phc-header-actions { display: inline-flex; align-items: center; gap: 0; margin-left: 4px; vertical-align: middle;
+/* Two visual rows inside each column header keep its label, actions, resize handle and sticky position
+   together. Every column reserves both bands, even one without actions. Narrowed labels elide, not wrap. */
+.phc-table.has-header-action-row th { height: 62px; padding: 0; text-align: left; vertical-align: top; }
+.phc-table.has-header-action-row th.has-header-actions { min-width: 72px; }
+.has-header-action-row .phc-header-label-row { display: flex; align-items: center; height: 34px; padding: 0 8px;
+  border-bottom: 1px solid #e8edef; box-sizing: border-box; }
+.has-header-action-row .phc-th-label { min-width: 0; overflow: hidden; text-overflow: ellipsis;
   white-space: nowrap; }
+.has-header-action-row .phc-header-label-row .row-check { flex-shrink: 0; }
+.phc-header-actions { display: flex; align-items: center; gap: 4px; height: 28px; padding: 0 8px;
+  box-sizing: border-box; white-space: nowrap; }
+.phc-table:not(.has-header-action-row) .phc-header-actions { display: none; }
 .phc-header-actions .phc-bubble-anchor { vertical-align: middle; }
 .phc-workspace .phc-table .phc-header-action .phc-icon-button,
 .phc-workspace .phc-table .phc-icon-button.phc-header-action { width: 24px; height: 24px; min-height: 24px; padding: 3px;
@@ -136,3 +149,13 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table.reveals-row-actions tr:hover td .row-check, .phc-table.reveals-row-actions tr:focus-within td .row-check,
 .phc-table.reveals-row-actions .row-check:checked, .phc-table.reveals-row-actions .row-check:indeterminate,
 .phc-table.reveals-row-actions.has-checked .row-check { opacity: 1; }
+
+.phc-column-filter-swatch { flex: 0 0 12px; width: 12px; height: 12px; border: 1px solid #0003; border-radius: 3px; }
+
+/* Visibility and the optional secondary action have independent click targets. */
+.phc-column-value-row { display: flex; align-items: center; gap: 4px; }
+.phc-column-value-row > label { flex: 1 1 auto; min-width: 0; }
+.phc-column-value-row > button { flex: 0 0 auto; }
+.phc-column-filter-value > span:last-child { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+/* A fixed bubble still belongs to its sticky header's stacking context. Keep it above floating bars. */
+.phc-table th.has-open-bubble { z-index: 30; }

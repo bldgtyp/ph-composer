@@ -86,8 +86,12 @@ when a pairing goes stale. A copied Zone or a split face keeps its records; an e
 the copy its own identity, and ambiguity is refused rather than guessed.
 
 Make Zone and the Zone attributes are available from the selected geometry's native context menu.
-The Zones / Faces tab also offers Solve for the whole Model; the native command solves selected
-Zones. A Zone's name follows its Group name in Entity Info and Outliner. Clearing that name restores
+The Zones / Faces header has no Make Zone button; use the native context menu to create a Zone.
+The Zones / Faces selection bar offers Solve when at least two Zones are fully checked. A partially
+checked Zone is excluded; fully checked Zones remain included when hidden by a filter. Checking
+all Zones provides the whole-Model workflow. The native command solves selected Zones. A pairing
+that would change an unchecked neighbour is refused with a message naming that Zone.
+A Zone's name follows its Group name in Entity Info and Outliner. Clearing that name restores
 the last valid name.
 
 ## Envelope
@@ -95,7 +99,13 @@ the last valid name.
 The user selects Faces, then sets one face type or boundary condition from the native context menu.
 Existing Attached zones appear there; New attached zone opens a form for the captured selection.
 The Classify tool also paints by click, drag or Shift-click across a connected plane, one Undo
-step per gesture. Suggest classification proposes a face type and boundary condition for each face of a Zone that
+step per gesture. In the Zones / Faces table, Type, Boundary and Assembly column menus show visibility checkboxes
+and separate paint icons beside their values. A paint icon starts that field only, including values
+not yet used in the Model. An active header paint icon names the value and stops painting when
+clicked. Starting paint switches Colour by to the matching field; that view stays active after
+painting stops. Attached zone painting uses Boundary condition Colour by. The Boundary menu also
+offers Attached zone selection and a New attached zone route. Surface remains set by Solve adjacencies.
+Suggest classification proposes a face type and boundary condition for each face of a Zone that
 has no classification record yet, from its geometry.
 Make Zone runs Suggest by default in the same Undo step. The tab's gear control stores the switch
 and roof/floor tilt thresholds in the Model, initially 60 and 130 degrees. Settings changes can be
@@ -104,7 +114,12 @@ An Attached zone, such as a garage or attic, is a named boundary condition with 
 reduction factor. Colour by shows face type, boundary condition, Zone, Building-Segment, Level, Assembly
 or Window Type on the model without changing its materials. The Zones / Faces screen is one table: each
 Zone with its own fields as columns and its faces beneath, with Colour by, sorting and filters in the
-column headers. Faces checked in the table, or selected in SketchUp, are edited together from a bar
+column headers. Each column's Show choices filter the table and fade excluded geometry to grey while
+Colour by is active. Filters combine across columns, and Clear filter restores that column's values.
+The active Colour-by column's choices include colour swatches. Text search remains table-only.
+Zone fields include all geometry in matching Zones. Face fields colour only matching Faces;
+detached Window units have no matching Face and fade under those filters.
+Filtering changes no geometry visibility, materials or saved Scenes. Faces checked in the table, or selected in SketchUp, are edited together from a bar
 under the table. Locate frames faces and outlines them without changing the selection.
 Assembly assignment is implemented with Assemblies on the Phase 2 branch. A face inside a repeated component is shared by every occurrence, and independent
 classification requires the user to make the parent unique first. PH-Composer never does that

@@ -114,7 +114,7 @@ function (panel, snapshot, ui, fields, RecordForm, inventories, forms, Sidebar, 
           if (!allowed() || !info.row || !info.comparisonAvailable) return;
           self.sidebar.copy.open(info.row);
         });
-        badge.className = "library-source-badge"; badge.title = info.label;
+        badge.className = "library-source-badge"; ui.tooltip(badge, info.label);
         badge.setAttribute("aria-label", row.record.values.name + " library source: " + info.label +
           (info.changed ? ", source changed" : ""));
         badge.disabled = !info.row || !info.comparisonAvailable;

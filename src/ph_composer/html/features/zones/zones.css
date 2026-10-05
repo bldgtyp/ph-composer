@@ -3,11 +3,6 @@
 .phc-overview { display: grid; gap: 12px; padding-bottom: 24px; }
 /* The control row spans the work surface, so the pane's tools sit at its far end. */
 .phc-overview > .phc-inventory-controls { margin-right: 0; }
-.phc-zone-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.phc-zone-heading h2 { margin: 0; font-size: 17px; }
-.phc-classify .phc-zone-heading { justify-content: flex-start; gap: 8px; }
-.phc-classify .phc-zone-heading h2 { white-space: nowrap; }
-.phc-workspace .phc-classify .phc-zone-heading > button:last-child:not(.phc-help) { width: auto; margin-left: auto; }
 .phc-zone-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0; }
 .phc-zone-setting input[type="number"] { width: 72px; }
 /* The table spans the pane and scrolls sideways at narrow widths with its identity columns (Actions,
@@ -26,58 +21,21 @@
 .phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
   color: var(--warning-ink); background: var(--warning-surface); }
 /* The selection bar floats over the bottom of the table, positioned in the overview's root, so it never
-   moves a row. The checked Faces' controls read along one line, each label before its control; the Classify
-   palette takes the same line while that tool is on. */
+   moves a row. The checked Faces' controls read along one line, each label before its control. */
 .phc-overview { position: relative; }
-.phc-selection-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
-.phc-selection-controls[hidden] { display: none; }
+.phc-selection-controls, .phc-zone-selection-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.phc-selection-controls[hidden], .phc-zone-selection-controls[hidden] { display: none; }
+.phc-checked-zone-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .phc-selection-field { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
 .phc-selection-field select { min-width: 120px; max-width: 200px; color: var(--ink); }
-.phc-selection-bar .phc-classify { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
-.phc-selection-bar .phc-classify[hidden] { display: none; }
-.phc-selection-bar .phc-palette { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
-.phc-selection-bar .phc-palette-field { display: inline-flex; align-items: center; gap: 6px; }
-.phc-selection-bar .phc-palette-field h3 { margin: 0; color: var(--muted); font-weight: 500; }
 .phc-selection-assembly { display: grid; gap: 4px; }
-.phc-palette-value { font-weight: 600; }
 .phc-empty { margin: 0; padding: 12px; color: var(--muted); }
 
-/* The Colour-by legend strip at the end of the control row: the mode's name, then one chip per colour.
-   It stays on one line and scrolls sideways rather than wrapping, so the table below never moves. A chip
-   selects and zooms to what it counts; its eye, shown on hover or focus, sets every other colour aside. */
-.phc-overview .phc-pane-tools { min-width: 0; flex: 1 1 0; justify-content: flex-end; }
-.phc-legend-strip { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-x: auto; white-space: nowrap;
-  scrollbar-width: thin; }
-.phc-legend-title { flex: 0 0 auto; font-weight: 600; font-size: 12px; }
-.phc-legend-chip { position: relative; display: inline-flex; align-items: center; flex: 0 0 auto; border-radius: 13px;
-  background: #edf1f2; }
-.phc-legend-chip.is-isolated { box-shadow: inset 0 0 0 1px var(--interaction-highlight); }
-.phc-workspace .phc-legend-locate { display: inline-flex; align-items: center; gap: 6px; min-height: 26px;
-  padding: 2px 4px 2px 8px; border: 0; border-radius: 13px; background: transparent; font-size: 12px; }
-.phc-legend-swatch { flex: 0 0 12px; width: 12px; height: 12px; border: 1px solid #0003; border-radius: 3px; }
-.phc-legend-count { color: var(--muted); font-variant-numeric: tabular-nums; }
-.phc-workspace .phc-legend-only { width: 22px; height: 22px; min-height: 22px; padding: 3px; margin-right: 2px;
-  border-color: transparent; background: transparent; opacity: 0; }
-.phc-legend-only svg { width: 14px; height: 14px; }
-.phc-legend-chip:hover .phc-legend-only, .phc-legend-chip:focus-within .phc-legend-only,
-.phc-legend-only[aria-pressed="true"] { opacity: 1; }
-.phc-workspace .phc-legend-only[aria-pressed="true"] { color: var(--interaction-highlight); }
-.phc-legend-empty { color: var(--muted); font-size: 12px; }
-.phc-workspace .phc-legend-show-all { flex: 0 0 auto; min-height: 26px; font-size: 12px; }
 
-/* The Classify tool's palette. Chips read as choices, and the chosen one is marked the way an
-   active row is; a chip the palette cannot set says why on itself. */
-.phc-classify { display: grid; gap: 12px; }
-.phc-classify.is-active h2 { color: var(--interaction-highlight); }
-.phc-palette { display: grid; gap: 10px; }
+
+/* Attached zone paint controls live beneath the column value list. */
 .phc-palette-field h3 { margin: 0 0 4px; font-size: 12px; font-weight: 600; }
 .phc-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-/* A palette chip is the table's pill: its value's fill, compact. The chosen one carries the selection ring
-   over its own colour, so the colour still says what it is. */
-.phc-workspace .phc-chip { min-height: 26px; padding: 2px 12px; border: 1px solid transparent; border-radius: 13px;
-  font-size: 12px; background: var(--category-fill, #edf1f2); }
-.phc-workspace .phc-chip:hover:enabled { background: var(--category-fill, #edf1f2); border-color: var(--line); }
-.phc-workspace .phc-chip[aria-pressed="true"], .phc-workspace .phc-chip[aria-pressed="true"]:hover:enabled {
-  border-color: var(--interaction-highlight); box-shadow: inset 0 0 0 1px var(--interaction-highlight);
-  background: var(--category-fill, var(--interaction-highlight-tint)); color: var(--interaction-highlight);
-  font-weight: 600; }
+.phc-paint-help { font-size: 12px; color: var(--muted); margin: 8px 0 0; white-space: normal; }
+
+.phc-palette-field { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; }

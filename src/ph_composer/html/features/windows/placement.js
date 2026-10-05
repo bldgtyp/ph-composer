@@ -68,15 +68,15 @@ PhComposerUI.define("features/windows/placement", ["request", "snapshot", "works
     this.root.hidden = !this.enabled || !tool.active;
     this.chosen.textContent = tool.active ? "Placing " + (raw ? raw.values.name : "Window Type") : "";
     this.stop.disabled = this.channel.busy();
-    this.anchorButton.setAttribute("aria-label", label); this.anchorButton.title = label;
+    this.anchorButton.setAttribute("aria-label", label); ui.tooltip(this.anchorButton, label);
     this.anchorButton.disabled = !this.enabled || this.channel.busy();
     Object.keys(this.anchors).forEach(function (id) {
       self.anchors[id].setAttribute("aria-pressed", String(id === self.anchorValue));
     });
     if (this.owner.placeButton) {
       this.owner.placeButton.disabled = !this.enabled || this.channel.busy() || !this.available(this.owner.active);
-      this.owner.placeButton.title = this.available(this.owner.active) ? "Place this Window Type in SketchUp" :
-        "Enter every row height and column width before placing.";
+      ui.tooltip(this.owner.placeButton, this.available(this.owner.active) ? "Place this Window Type in SketchUp" :
+        "Enter every row height and column width before placing.");
       this.owner.placeButton.setAttribute("aria-pressed", String(Boolean(tool.active &&
         tool.type_id === this.owner.active)));
     }

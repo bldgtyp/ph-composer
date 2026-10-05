@@ -73,7 +73,7 @@ const port = process.env.UI_PREVIEW_PORT || "8765";
     await page.evaluate(name => {
       previewHost.windows.psi_install_types.records[0].values.name = name; previewHost.snapshot();
     }, "Synthetic thermally broken masonry sill installation detail");
-    await psiDefault.and(page.getByTitle(/masonry sill/)).waitFor();
+    await psiDefault.and(page.locator('[data-tooltip*="masonry sill"]')).waitFor();
     for (const control of [psiDefault, depthDefault]) {
       const box = await control.boundingBox(), chevron = await control.locator(".phc-glyph").boundingBox();
       assert.ok(box.x >= 0 && box.x + box.width <= width && chevron.x + chevron.width <= box.x + box.width,

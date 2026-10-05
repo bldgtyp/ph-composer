@@ -281,11 +281,13 @@ test("Empty cards hide products and missing construction findings identify the a
     { code: "window_type.operation_incomplete", message: "Choose operation and handedness." },
     { code: "window_type.partial_shared_edge", message: "Canonical warning." }];
   o.editor.render(o.state); var card = o.editor.cards.wel_a;
-  assert.ok(card.rows.glazing.flag.title.includes("Ug")); assert.ok(card.rows.glazing.flag.title.includes("g-value"));
-  assert.ok(card.rows.left.flag.title.includes("Product"));
-  assert.ok(card.rows.right.flag.title.includes("Product not found"));
-  assert.ok(card.rows.top.flag.title.includes("Width")); assert.ok(card.rows.top.flag.title.includes("Psi-Install"));
-  assert.ok(card.operationFlag.title.includes("direction"));
+  assert.ok(card.rows.glazing.flag.getAttribute("data-tooltip").includes("Ug"));
+  assert.ok(card.rows.glazing.flag.getAttribute("data-tooltip").includes("g-value"));
+  assert.ok(card.rows.left.flag.getAttribute("data-tooltip").includes("Product"));
+  assert.ok(card.rows.right.flag.getAttribute("data-tooltip").includes("Product not found"));
+  assert.ok(card.rows.top.flag.getAttribute("data-tooltip").includes("Width"));
+  assert.ok(card.rows.top.flag.getAttribute("data-tooltip").includes("Psi-Install"));
+  assert.ok(card.operationFlag.getAttribute("data-tooltip").includes("direction"));
   assert.ok(text(card.findings).includes("Frame widths leave no glazing area"));
   assert.ok(text(card.findings).includes("Canonical warning")); assert.strictEqual(o.sent.length, 0);
 });
@@ -493,7 +495,8 @@ test("an incomplete Window Type carries the amber mark in the rail; no Types nam
   o.editor.render(o.state);
   var flag = o.editor.list.querySelector(".window-type-flag");
   assert.strictEqual(flag.getAttribute("aria-label"), "Three elements is incomplete");
-  assert.strictEqual(flag.title, "Missing g-value. Enter all grid dimensions.", "each thing once");
+  assert.strictEqual(flag.getAttribute("data-tooltip"), "Missing g-value. Enter all grid dimensions.",
+    "each thing once");
   o.state.sections["ph_composer.windows.types"].value.records = [];
   o.editor.render(o.state);
   assert.strictEqual(o.editor.emptyPrompt.hidden, false);

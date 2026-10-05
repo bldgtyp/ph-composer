@@ -77,5 +77,5 @@ test("the summary shows kind labels and one plain line per omitted kind and reas
   assert.deepStrictEqual(lines, ["Material: 2", "Frame (2): source attribution is not exported",
     "Window Type: not a library record; it stays in this Model", "Part: not exported"]);
   lines.forEach(function (line) { assert.ok(!/ph_composer\.|_/.test(line), line); });
-  assert.ok(o.form.summary.children[3].title.includes("outside.reason"));
+  assert.ok(o.form.summary.children[3].getAttribute("data-tooltip").includes("outside.reason"));
 });

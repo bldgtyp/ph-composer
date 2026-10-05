@@ -151,7 +151,7 @@ function (RecordForm, request, snapshot, ui) {
       button.className = "phc-color-swatch";
       button.style.backgroundColor = entry[1];
       button.setAttribute("aria-label", entry[0] + " " + entry[1]);
-      button.title = entry[0];
+      ui.tooltip(button, entry[0]);
       self.swatches.push({ button: button, color: entry[1] });
       self.palette.appendChild(button);
     });

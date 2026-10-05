@@ -198,7 +198,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     choice(null, "Model default", defaultProduct && defaultProduct.values.psi_w_mk);
     this.products.forEach(function (row) { choice(row.id, row.values.name, row.values.psi_w_mk,
       row.libraryDraft ? null : row); });
-    this.apply.title = "Apply " + chosen + " to every perimeter edge";
+    ui.tooltip(this.apply, "Apply " + chosen + " to every perimeter edge");
     if (held && this.current) this.current.focus();
     this.sidebar.refresh(this.state, {}, true);
     this.paintDrawing(record);
@@ -246,7 +246,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
           tabindex: eligible ? "0" : "-1", "aria-label": label,
           "aria-disabled": String(!eligible || self.requests.busy()), "data-install-element": cell.id,
           "data-install-side": side }, ends));
-        target.appendChild(svg("title", {}, label));
+        ui.tooltip(target, label);
         function paint() { self.paintEdge(cell.id, side); }
         target.addEventListener("click", paint);
         target.addEventListener("keydown", function (event) {

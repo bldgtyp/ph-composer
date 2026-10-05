@@ -63,8 +63,8 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
         swatch.style.backgroundColor = material.color || "#ffffff";
         choose.insertBefore(swatch, choose.firstChild);
       }
-      choose.title = material ? "Show " + material.name + " in the Material Library" :
-        "Choose from the Material Library";
+      ui.tooltip(choose, material ? "Show " + material.name + " in the Material Library" :
+        "Choose from the Material Library");
       choose.setAttribute("data-editor-local", "");
       selection.appendChild(choose);
       var membrane = canvas.geometry(values, materials).layers.filter(function (entry) {
@@ -83,8 +83,8 @@ PhComposerUI.define("features/assemblies/inspector", ["features/assemblies/edito
         { layer_id: selected.layer.id, segment_id: selected.segment.id }, only,
         selected.segment.material_id ? "Delete this Layer-Segment and its Material assignment?" : null, "delete");
       // An icon that cannot act says why, where its name would be.
-      if (membrane) add.title = "A membrane Layer has one Layer-Segment";
-      if (only) remove.title = "A Layer keeps at least one Layer-Segment";
+      if (membrane) ui.tooltip(add, "A membrane Layer has one Layer-Segment");
+      if (only) ui.tooltip(remove, "A Layer keeps at least one Layer-Segment");
       var layerTrigger = ui.button("Layer tools");
       var layerMenu = new ui.Bubble(layerTrigger, "Layer tools");
       [["Add outside", "outside"], ["Add inside", "inside"]].forEach(function (item) {

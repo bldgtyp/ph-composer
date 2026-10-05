@@ -207,9 +207,7 @@ function (request, snapshot, tables, faceWords, ui, units, fields) {
       value: function (row, field) { return row.record[field] === undefined ? "" : row.record[field]; },
       decorate: function (cell, row, field) {
         if (field === "name") {
-          cell.title = row.record.audit || row.record.name;
-          if (row.record.audit) cell.setAttribute("data-tooltip", row.record.audit);
-          else cell.removeAttribute("data-tooltip");
+          ui.tooltip(cell, row.record.audit || row.record.name);
         }
       },
       disabled: Boolean(this.owner.guard()), actions: function (row) { return self.actions(row); },

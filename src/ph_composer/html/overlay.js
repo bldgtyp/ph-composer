@@ -1,5 +1,5 @@
 /* Anchored and modal surfaces: the bubble, the action menu, record-form dialogs, floating notices, and the
-   tooltip layer tables attach. Only one top-level bubble is open across the workspace. */
+   shared tooltip layer. Only one top-level bubble is open across the workspace. */
 PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
   "use strict";
   var element = dom.element, button = dom.button, glyph = icons.glyph, iconButton = icons.iconButton;
@@ -69,6 +69,8 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     if (!this.options.parent && activeBubble && activeBubble !== this && activeBubble.close(false) === false) return;
     if (!this.options.parent) activeBubble = this;
     this.panel.hidden = false;
+    var header = this.root.closest("th");
+    if (header) header.classList.add("has-open-bubble");
     this.trigger.setAttribute("aria-expanded", "true");
     this.position();
     // An owner's onOpen can tell a deliberate open (click, keyboard) from a hover or a repaint's reopen.
@@ -162,11 +164,17 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
       if (this.options.refused) this.options.refused(reason);
       return false;
     }
+    var wasOpen = !this.panel.hidden;
     this.cancelHover();
     this.children.forEach(function (child) { child.close(false); });
     this.panel.hidden = true; this.trigger.setAttribute("aria-expanded", "false");
+    var header = this.root.closest("th");
+    if (header && !Array.from(header.querySelectorAll(".phc-bubble")).some(function (bubble) {
+      return !bubble.hidden;
+    })) header.classList.remove("has-open-bubble");
     if (activeBubble === this) activeBubble = null;
     if (focus) this.trigger.focus({ preventScroll: true });
+    if (wasOpen && this.options.onClose) this.options.onClose(this);
     return true;
   };
   Bubble.prototype.deepest = function () {
@@ -336,23 +344,48 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
   }
   function helpButton(label, explanation) {
     var help = button("?"); help.className = "phc-help";
-    help.title = explanation; help.setAttribute("aria-label", label + ": " + explanation);
+    dom.tooltip(help, explanation);
+    help.setAttribute("aria-label", label + ": " + explanation);
     return help;
   }
-  /* Hover and focus tooltips for every [data-tooltip] under root, in one shared tip node. */
+  var tooltipSequence = 0;
+  /* A panel shares one hover/focus tooltip across its tables, toolbars, drawings and dialogs. A standalone
+     table may attach its own layer; attaching beneath an existing layer reuses that owner's listeners. */
   function attachTooltip(root) {
+    var ancestor = root;
+    while (ancestor) {
+      if (ancestor._checkTooltip) { root._checkTooltip = ancestor._checkTooltip; return; }
+      ancestor = ancestor.parentNode;
+    }
     var tip = element("div", "row-tooltip"); tip.hidden = true; tip.setAttribute("role", "tooltip");
+    tip.id = "phc-tooltip-" + (++tooltipSequence);
     var timer;
     var owner;
     root.appendChild(tip);
-    function hide() { tip.hidden = true; owner = null; }
+    function unlink() {
+      if (!owner) return;
+      var other = (owner.getAttribute("aria-describedby") || "").split(/\s+/).filter(function (id) {
+        return id && id !== tip.id;
+      });
+      if (other.length) owner.setAttribute("aria-describedby", other.join(" "));
+      else owner.removeAttribute("aria-describedby");
+    }
+    function hide() { tip.hidden = true; unlink(); owner = null; }
     function later() { clearTimeout(timer); timer = setTimeout(hide, 100); }
     function show(event) {
+      if (tip.contains(event.target)) { clearTimeout(timer); return; }
       var node = event.target;
       while (node && node !== root && !node.getAttribute("data-tooltip")) node = node.parentNode;
-      if (!node || node === root) return;
-      clearTimeout(timer); owner = node;
+      if (!node || node === root) { hide(); return; }
+      clearTimeout(timer);
+      unlink();
+      owner = node;
+      // A native modal's top layer covers body overlays, so its tooltip must live inside that dialog.
+      var layer = node.closest("dialog[open]") || root;
+      if (tip.parentNode !== layer) layer.appendChild(tip);
       tip.textContent = node.getAttribute("data-tooltip"); tip.hidden = false;
+      var described = node.getAttribute("aria-describedby");
+      node.setAttribute("aria-describedby", (described ? described + " " : "") + tip.id);
       var bounds = node.getBoundingClientRect();
       tip.style.left = Math.max(8, Math.min(bounds.left, window.innerWidth - tip.offsetWidth - 8)) + "px";
       tip.style.top = (bounds.bottom + tip.offsetHeight + 8 < window.innerHeight ?
@@ -362,11 +395,16 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     root.addEventListener("mouseout", later); root.addEventListener("focusout", later);
     tip.addEventListener("mouseover", function () { clearTimeout(timer); });
     tip.addEventListener("mouseout", later);
-    root.addEventListener("keydown", function (event) { if (event.key === "Escape") hide(); });
-    root.addEventListener("scroll", hide);
-    root.addEventListener("click", function () { if (owner) hide(); });
+    root.addEventListener("keydown", function (event) { if (event.key === "Escape") hide(); }, true);
+    root.addEventListener("scroll", hide, true);
+    root.addEventListener("click", function () { if (owner) hide(); }, true);
     root._checkTooltip = function () {
       if (owner && (!root.contains(owner) || owner.getAttribute("data-tooltip") !== tip.textContent)) hide();
+      var node = owner;
+      while (node && node !== root) {
+        if (node.hidden || (node.tagName === "DIALOG" && !node.open)) { hide(); break; }
+        node = node.parentNode;
+      }
     };
   }
 

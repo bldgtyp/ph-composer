@@ -141,8 +141,8 @@ with `panel.region(pane, "tools")`, taking the pane from its own root. `actions`
 tools, the ones that change the Model, for the page header's toolbar; the work surface places them
 with `panel.region(pane, "actions")`. A pane that offers either must place it; until it does it
 leads the main region. A feature adds an inspector section, a tool or an action to a pane it does
-not own without naming that pane's owner, which is how Colour by (a tool, its legend strip in the control row) and Classify faces (an
-action, with its palette in the Zones / Faces selection bar) share that pane. A pane whose sections all
+not own without naming that pane's owner, which is how Classify faces (an
+action, with its palette in the Zones / Faces selection bar) shares that pane. A pane whose sections all
 use `main` is laid out as before.
 
 A feature that owns a tab says so once with `panel.workedOn(prefix, tab)`, where `prefix` is its
@@ -152,6 +152,13 @@ without naming a feature: Export does this with the section of each group of fin
 registered prefix that is the owner, or ends at one of its dots, wins; an owner no feature registered
 returns null. It is one tab per feature: a finding one feature reports about a record another tab
 edits still opens the reporting feature's tab.
+
+Shared UI hints use `ui.tooltip(node, text)`: a nonempty string sets `data-tooltip`; an empty
+string clears it. The helper removes native `title` attributes so browser hints cannot obscure
+the panel's styled tooltip. Keep the control's accessible name in `aria-label`; the tooltip
+layer supplies its description while shown. SVG hints follow the same contract instead of
+adding a `title` child. The panel attaches one shared layer across features and modal dialogs;
+a standalone surface can call `ui.attachTooltip(root)`, which reuses an ancestor's layer.
 
 The other two seams add to a screen another module owns:
 
@@ -381,6 +388,10 @@ it back unchanged. When the colour is a property of the record a value names rat
 of the value (an Assembly's own colour), the entry supplies `colour: [r, g, b]` and the service uses
 it ahead of the mode's colour function; Zones' Assembly mode does this, with a colour function that
 answers nil.
+An entry may also supply `hatch_outline: false` to retain its unclassified hatch while leaving
+boundary edges to SketchUp. Omission preserves the solid unclassified boundary. This flag affects
+only the unclassified rendering; classified fills keep their existing colour and geometry.
+The Assembly mode uses it for Faces with no assigned Assembly so native selection edges remain visible.
 
 An entry may supply `path`, the full root-to-entity array of persistent IDs. Supply it when
 the entity belongs to an occurrence inside Groups or Components: the shared renderer then
@@ -388,6 +399,13 @@ checks hidden and tag visibility along that occurrence's entire path. Supplied p
 entities or mismatched endpoints draw nothing. Omitting `path` preserves the original entity-only
 visibility contract.
 Visibility affects the drawing; the legend continues to count the mode's complete projection.
+The view command `ph_composer.colour_by.filter` accepts `paths: null` to colour all geometry,
+`paths: []` to mute all geometry, or full persistent-ID occurrence paths to colour matching geometry
+and mute the rest. Container projections partition their geometry at each Face, so a mask can match
+part of a Group. Paths include descendants and distinguish repeated occurrences. A projection
+without a path is muted under an explicit mask because its occurrence cannot be identified.
+The mask is session state, retained through mode switches and while Colour by is off. This command
+supersedes row isolation and writes no records, visibility flags or Undo entries.
 
 A mode may also declare `group:`, a name several modes share, so a screen can offer them from one
 place without naming a mode another feature owns: the Zones / Faces Assembly column binds to
@@ -395,7 +413,10 @@ group `"construction"`, which Zones' Assembly mode and Windows' Window Type mode
 name is a public contract between the features that declare it; a feature that renames one changes
 what other screens offer. In the panel, `sections/colour_by.js` `HeaderToggle({ mode })` or
 `HeaderToggle({ group })` binds a column header to a mode or a group, and `modes(state)` lists every
-registered mode for a screen's options menu.
+registered mode for a screen's options menu. `colour(state, binding, value)` supplies an active
+mode's swatch for a matching column's Show choices. `filter(state, paths)` coalesces a screen's
+occurrence mask through the public view command. The panel has no legend strip; row selection
+and isolation remain public view commands for scripts.
 
 The shared service owns registration, the one `Sketchup::Overlay` a Model gets, the viewport HUD
 legend and cache invalidation. It reads no record and knows no mode, and turning a mode on writes

@@ -63,7 +63,7 @@
 .phc-workspace .phc-floating-notice[data-tone="error"] .phc-floating-notice-dismiss { color: #7a2418; }
 .row-tooltip {
   position: fixed;
-  z-index: 100;
+  z-index: 1100;
   max-width: min(320px, calc(100vw - 16px));
   padding: 7px 10px;
   background: #233c43;
@@ -314,3 +314,9 @@
 .phc-selection-bar-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; min-width: 0; }
 .phc-workspace .phc-selection-bar-clear { flex: 0 0 auto; width: 28px; height: 28px; min-height: 28px;
   border-color: transparent; background: transparent; }
+@media (max-width: 640px) {
+  .phc-selection-bar { flex-wrap: wrap; }
+  .phc-selection-bar-count { flex: 1 1 0; white-space: normal; }
+  .phc-selection-bar-clear { order: 1; }
+  .phc-selection-bar-controls { order: 2; flex: 1 1 100%; }
+}
