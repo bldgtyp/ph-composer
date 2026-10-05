@@ -24,13 +24,18 @@ module PhComposer
         }
       end
 
-      # Locate changes the selection and the camera and nothing else, which is why it is a view command
-      # rather than an action: registering it as an action would manufacture an Undo entry for a read
-      # (context/AGENT_INTERFACE.md, "explicit selection, reveal and camera operations").
+      # Locate changes the camera and the viewport's outline, and Select the selection and the camera,
+      # and nothing else, which is why they are view commands rather than actions: registering one as an
+      # action would manufacture an Undo entry for a read (context/AGENT_INTERFACE.md, "explicit
+      # selection, reveal and camera operations").
       def locate(request, faces:)
-        references = faces
-        found = Locate.call(request.session, references)
-        { "found" => found.length, "missing" => references.length - found.length }
+        found = Locate.call(request.session, faces)
+        { "found" => found.length, "missing" => faces.length - found.length }
+      end
+
+      def select(request, faces:)
+        found = Locate.select(request.session, faces)
+        { "found" => found.length, "missing" => faces.length - found.length }
       end
 
       # One page of Face occurrences in root-to-Face path order, filtered by Zone id, Zone path or Face

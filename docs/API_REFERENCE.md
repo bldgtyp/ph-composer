@@ -36203,6 +36203,40 @@ Example params:
 }
 ```
 
+### `ph_composer.zones.faces.clear_locate`
+
+Remove the outline the last Locate left in the viewport. Owner: `ph_composer.zones`.
+
+Refuses: only the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.zones.faces.close_attached_assignment`
 
 Close the native assignment handoff. Owner: `ph_composer.zones`.
@@ -36301,7 +36335,7 @@ Example params:
 
 ### `ph_composer.zones.faces.locate`
 
-Select an explicit set of Faces and bring them into view. Owner: `ph_composer.zones`.
+Bring an explicit set of Faces into view and outline them, leaving the selection alone. Owner: `ph_composer.zones`.
 
 Refuses: only the `view_command` common set.
 
@@ -36351,7 +36385,7 @@ Params:
         }
       },
       "minItems": 1,
-      "description": "The Face occurrences to select and bring into view."
+      "description": "The Face occurrences to bring into view and outline."
     }
   }
 }
@@ -36545,6 +36579,108 @@ Example params:
     }
   ],
   "revision": 1
+}
+```
+
+### `ph_composer.zones.faces.select`
+
+Select an explicit set of Faces and bring them into view. Owner: `ph_composer.zones`.
+
+Refuses: only the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "faces"
+  ],
+  "properties": {
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "minItems": 1,
+      "description": "The Face occurrences to select and bring into view."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "found",
+    "missing"
+  ],
+  "properties": {
+    "found": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many references still resolved."
+    },
+    "missing": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many did not, and were skipped."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "faces": [
+    {
+      "zone_id": "zon_Ab12Cd34Ef56",
+      "zone_path": [
+        1201
+      ],
+      "entity_path": [
+        1202
+      ],
+      "entity_id": null
+    }
+  ]
 }
 ```
 

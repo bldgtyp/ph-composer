@@ -442,7 +442,8 @@ nothing here to undo.
 
 ```ruby
 feature.view_command("ph_composer.zones.faces.locate",
-                     description: "Select an explicit set of Faces and bring them into view.",
+                     description: "Bring an explicit set of Faces into view and outline them, " \
+                                  "leaving the selection alone.",
                      params: LOCATE_PARAMS, result: LOCATE_RESULT, refuses: []) do |request|
   Zones::Faces.locate(request)
 end
@@ -626,8 +627,9 @@ what a valid target is, so a rule it adds reaches every caller. The permitted us
 entity's geometry and glue to it. Writes to its records stay with the owner, through its actions.
 Ruby cannot enforce that limit; it is a rule of this contract and is checked in review. The Face
 target `ph_composer.zones.faces.face` is locatable; Window placement locates its host Face this way
-(`features/windows/placement/host.rb`). Zones' select-and-zoom view command,
-`ph_composer.zones.faces.locate`, is a different thing with the same verb.
+(`features/windows/placement/host.rb`). Zones' frame-and-outline view command,
+`ph_composer.zones.faces.locate`, is a different thing with the same verb; its sibling
+`ph_composer.zones.faces.select` replaces the selection.
 
 Identity-changing proposals use a typed `Records::ReferencePlan` of the exact occurrences they
 will replace. This establishes the final identity set, including the untouched original or

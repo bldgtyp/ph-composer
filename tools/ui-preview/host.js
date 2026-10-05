@@ -208,7 +208,7 @@
         if (payload.params.value === null) delete this.palette.palette[payload.params.field];
         else this.palette.palette[payload.params.field] = payload.params.value;
       }
-      if (payload.name === "ph_composer.zones.faces.locate") this.selectedFaces = payload.params.faces;
+      if (payload.name === "ph_composer.zones.faces.select") this.selectedFaces = payload.params.faces;
       if (payload.name === "ph_composer.zones.faces.stop_classifying") this.palette.active = false;
       if (payload.name === "ph_composer.windows.place_tool.choose") {
         this.windows.place_tool = { active: true, type_id: payload.params.type_id,

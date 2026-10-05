@@ -119,3 +119,15 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-column-filter-value:hover { background: var(--interaction-highlight-tint); }
 .phc-workspace .phc-bubble-content .phc-column-filter-clear { justify-content: flex-start; margin-top: 4px;
   border-color: transparent; background: transparent; color: var(--interaction-highlight); }
+
+/* A row's checkbox heads its Actions cell. */
+.phc-table .row-check, .phc-table th .row-check { width: 16px; height: 16px; min-height: 0; margin: 0 8px 0 2px;
+  vertical-align: middle; accent-color: var(--interaction-highlight); }
+.live-panel .phc-table tr.is-checked td { background: var(--interaction-highlight-soft); }
+/* A screen that asks for it keeps its row icons quiet: shown while the pointer is over the row or focus is in
+   it. A checked box is state, so it stays, and while any row is checked every row shows its box. */
+.phc-table.reveals-row-actions td .row-icon, .phc-table.reveals-row-actions td .row-check { opacity: 0; }
+.phc-table.reveals-row-actions tr:hover td .row-icon, .phc-table.reveals-row-actions tr:focus-within td .row-icon,
+.phc-table.reveals-row-actions tr:hover td .row-check, .phc-table.reveals-row-actions tr:focus-within td .row-check,
+.phc-table.reveals-row-actions .row-check:checked, .phc-table.reveals-row-actions .row-check:indeterminate,
+.phc-table.reveals-row-actions.has-checked .row-check { opacity: 1; }

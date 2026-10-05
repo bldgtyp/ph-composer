@@ -12,10 +12,10 @@
 PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request", "snapshot", "units",
   "unit_preferences", "table", "view_controls", "column_menu", "sections/colour_by", "fields", "face_words",
   "features/zones/attached_zone_assignment", "features/zones/zone_settings", "features/zones/selection_assignment",
-  "features/zones/assembly_assignment", "features/zones/zone_cells"],
+  "features/zones/assembly_assignment", "features/zones/zone_cells", "features/zones/checked_faces"],
 function (panel, ui, requests, snapshot, units, preferences, tables, viewControls, columnMenus, colourBy, fields,
           words,
-          attachedAssignment, ZoneSettings, SelectionAssignment, assemblies, ZoneCells) {
+          attachedAssignment, ZoneSettings, SelectionAssignment, assemblies, ZoneCells, CheckedFaces) {
   "use strict";
   var AREA = fields.AREA_M2;
   // What a chip offers comes from the host, through the same read the Classify palette uses, so this
@@ -47,6 +47,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
     screen = { session: session, expanded: Object.create(null), showAll: Object.create(null),
       columnWidths: {}, menus: Object.create(null), toggles: Object.create(null), hiddenColumns: {},
+      checked: new CheckedFaces(), locating: false,
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
     screen.zoneCells = new ZoneCells(session, send, refuse);
@@ -494,8 +495,46 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   function locate(state, row) {
     var references = row.record.face ? [row.record.face.reference]
       : (row.record.every || row.record.faces).map(function (face) { return face.reference; });
-    if (references.length) state.look.run("ph_composer.zones.faces.locate", { faces: references });
+    if (references.length && state.look.run("ph_composer.zones.faces.locate", { faces: references })) {
+      state.locating = true;
+    }
   }
+
+  /* Locate's outline lasts until the next pointer press in the panel outside a Locate control, Escape, the
+     next Locate or a new selection; the host clears it on the last two, and this sends one clear for the
+     others, only while one is showing. */
+  function clearLocate(state) {
+    if (!state || !state.locating || state.look.busy()) return;
+    state.locating = false;
+    state.look.run("ph_composer.zones.faces.clear_locate", {});
+  }
+
+  document.addEventListener("pointerdown", function (event) {
+    var target = event.target;
+    if (!screen || !screen.locating) return;
+    for (var node = target; node; node = node.parentNode) {
+      if (node.getAttribute && node.getAttribute("data-row-action") === "locate") return;
+    }
+    clearLocate(screen);
+  }, true);
+
+  /* Escape unwinds one layer on this screen: an open bubble or menu and the Classify tool take theirs first
+     (they mark the event handled, or the tool is on), then the checked set, then Locate's outline. */
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape" || event.defaultPrevented || !screen || !panel.state ||
+        panel.state.ui.activeTab !== "overview") return;
+    if (Array.from(document.querySelectorAll("dialog")).some(function (dialog) { return dialog.open; })) return;
+    var tool = snapshot.value(panel.state, "ph_composer.zones.faces.palette");
+    if (tool && tool.active) return;
+    if (screen.checked.among(screen.faces || []).length) {
+      event.preventDefault();
+      screen.checked.clear();
+      panel.repaint();
+    } else if (screen.locating) {
+      event.preventDefault();
+      clearLocate(screen);
+    }
+  });
 
   function suggest(state, row) {
     state.edits.run("ph_composer.zones.faces.auto_classify", { zone: row.record.zone.reference });
@@ -608,6 +647,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     screenState.rows = rows;
     screenState.targets = (snapshot.value(state, "ph_composer.zones.faces.selected") || {}).targets || [];
     screenState.zoneCells.refresh(rows.filter(depth(0)), state);
+    // A new SketchUp selection replaces the checked set, and the host has already cleared Locate's outline.
+    if (screenState.checked.sync(screenState.targets)) screenState.locating = false;
+    screenState.faces = faces;
     paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
   }
 
@@ -740,6 +782,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     });
     var labels = Object.create(null);
     columns(profile).forEach(function (column) { labels[column[0]] = column[1]; });
+    var shown = ordered(projection.records, byId, rows, state.controls, state);
+    var visible = shown.filter(function (row) { return !projection.hidden(row); });
+    var visibleFaces = visible.map(function (row) { return row.record.face; }).filter(Boolean);
     var parents = Object.create(null);
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     tables.table(mount, rows, {
@@ -747,7 +792,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       // drag any column wider.
       defaultWidths: { name: 142, building_segment: 120, level: 84, ground_depth_mm: 104, face_type: 126,
         boundary_condition: 110, area_m2: 92, assembly_id: 156 },
-      tree: true, rows: ordered(projection.records, byId, rows, state.controls, state), columns: columns(profile),
+      tree: true, rows: shown, columns: columns(profile),
       expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
       decorate: function (td, row, field) { flag(td, problem(row.record.face, field)); },
@@ -756,6 +801,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       value: function (row, field) { return value(row, field, profile); },
       cell: function (td, row, field, text) { return cell(td, row, field, text, state); },
       marker: marker, actions: actions, rowHidden: projection.hidden, hiddenColumns: state.hiddenColumns,
+      revealRowActions: true,
+      check: { state: function (row) { return state.checked.state(row); },
+        toggle: function (row, event) { state.checked.toggle(row, event, visible); panel.repaint(); },
+        header: function () { return Boolean(visibleFaces.length) && state.checked.stateOf(visibleFaces); },
+        toggleAll: function () { state.checked.toggleAll(visibleFaces); panel.repaint(); },
+        label: function (row) { return (state.checked.state(row) === true ? "Uncheck " : "Check ") + row.record.name; },
+        any: function () { return state.checked.among(state.faces || []).length > 0; } },
       headerActions: function (field) { return headerActions(state, field, labels[field]); },
       inspect: function (row) {
         if (row.record.more) { state.showAll[row.record.more] = true; panel.repaint(); }
@@ -821,7 +873,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   // First in its pane: the Zone tree is the screen's work surface, and the palette and the legend
   // are controls that act on what it shows.
   panel.navigationGuard("ph_composer.overview", function () { return draftReason(screen); });
-  panel.section("ph_composer.overview", render, { order: 10 });
+  /* Another tab can open this one with Faces checked (`panel.navigate("overview", { check: references })`),
+     as the Assemblies tab's "Select faces using" does. */
+  panel.section("ph_composer.overview", render, { order: 10, onNavigate: function (root, intent) {
+    if (!screen || !intent.check) return;
+    screen.checked.replace(intent.check);
+    panel.repaint();
+  } });
   panel.workedOn("ph_composer.zones", "overview");
   panel.section("ph_composer.zones.selection", renderSelection, { region: "inspector", tier: "selection",
     order: 11, when: selectionWanted });

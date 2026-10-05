@@ -869,3 +869,94 @@ test("Colour by lives in the column headers, Window Type in the Assembly's, the 
     return node.tagName === "th";
   })[0].hidden, true, "Ground depth hides from Table options");
 });
+
+/* Three Faces in one Zone, two of them recorded, so a Zone's box can read mixed. */
+function checkPage(selected) {
+  var p = page(), payload = snapshot();
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
+  var third = JSON.parse(JSON.stringify(faces[0]));
+  third.reference.entity_path = [103]; third.reference.entity_id = "fac_c";
+  faces.splice(1, 0, third);
+  payload.sections["ph_composer.zones.faces.selected"] = { status: "completed",
+    value: { faces: [], targets: (selected || []).map(function (index) {
+      return { reference: faces[index].reference, expected_values: faces[index].values };
+    }) } };
+  p.payload = payload;
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  p.section = p.query("[data-section='ph_composer.overview']");
+  p.box = function (label) {
+    return p.section.querySelectorAll("input").filter(function (node) {
+      return /row-check/.test(node.className) && node.getAttribute("aria-label").indexOf(label) >= 0;
+    })[0];
+  };
+  p.state = function (label) { return p.box(label).getAttribute("aria-checked"); };
+  p.header = function () { return p.section.querySelector("th").querySelector(".row-check"); };
+  return p;
+}
+
+test("a Zone's box checks every Face under it and reads mixed when some are; the header follows", function () {
+  var p = checkPage();
+  assert.ok(p.section.querySelector(".phc-table").classList.contains("reveals-row-actions"),
+    "row icons show on hover");
+  click(p.box("Wall 1"));
+  assert.deepStrictEqual([p.state("Zone 1"), p.header().getAttribute("aria-checked")], ["mixed", "mixed"]);
+  assert.ok(p.section.querySelector(".phc-table").classList.contains("has-checked"), "every box shows now");
+  click(p.box("Zone 1"));
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2"), p.state("Face 3"), p.state("Zone 1")],
+    ["true", "true", "true", "true"], "and an unclassified Face can be checked");
+  click(p.header());
+  assert.strictEqual(p.state("Zone 1"), "false", "the header unchecks every row shown");
+  assert.strictEqual(p.sent.length, 0, "checking reaches nothing in SketchUp");
+});
+
+test("Shift-click checks the range between the last box clicked and this one", function () {
+  var p = checkPage();
+  click(p.box("Wall 1"));
+  p.box("Face 3").listeners.click({ shiftKey: true, preventDefault: function () {} });
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2"), p.state("Face 3")], ["true", "true", "true"]);
+});
+
+test("a new SketchUp selection replaces the checked set; the same one leaves the user's checks", function () {
+  var p = checkPage([0]);
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2")], ["true", "false"]);
+  click(p.box("Wall 2"));
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.strictEqual(p.state("Wall 2"), "true", "an unchanged selection keeps what the user checked");
+  p.payload.sections["ph_composer.zones.faces.selected"].value.targets = [];
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2")], ["false", "false"], "an empty selection clears");
+});
+
+test("Locate frames without touching the checked set; a press elsewhere and Escape clear in layers", function () {
+  var p = checkPage([0]);
+  click(rowAction(p.section, "locate"));
+  assert.deepStrictEqual([p.sent[0].type, p.sent[0].payload.name], ["view.invoke", "ph_composer.zones.faces.locate"]);
+  p.panel.receive({ type: "view.result", payload: { request_id: p.sent[0].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { found: 3, missing: 0 } } } });
+  assert.strictEqual(p.state("Wall 1"), "true", "Locate leaves the set alone");
+  function escape() {
+    return dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+  }
+  assert.strictEqual(escape().defaultPrevented, true);
+  assert.strictEqual(p.state("Wall 1"), "false", "Escape clears the checked set first");
+  assert.strictEqual(p.sent.length, 1);
+  escape();
+  assert.strictEqual(p.sent[1].payload.name, "ph_composer.zones.faces.clear_locate", "then Locate's outline");
+  p.panel.receive({ type: "view.result", payload: { request_id: p.sent[1].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: {} } } });
+  click(rowAction(p.section, "locate"));
+  p.panel.receive({ type: "view.result", payload: { request_id: p.sent[2].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { found: 3, missing: 0 } } } });
+  dom.dispatch(p.box("Wall 1"), { type: "pointerdown" });
+  assert.strictEqual(p.sent[3].payload.name, "ph_composer.zones.faces.clear_locate", "a press elsewhere clears it");
+  dom.dispatch(p.box("Wall 1"), { type: "pointerdown" });
+  assert.strictEqual(p.sent.length, 4, "once");
+});
+
+test("another tab can open Zones / Faces with Faces checked", function () {
+  var p = checkPage();
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.navigate("overview", { check: [p.payload.sections["ph_composer.zones.faces.faces"]
+    .value.faces[1].reference] }), true);
+  assert.deepStrictEqual([p.state("Wall 1"), p.state("Wall 2")], ["false", "true"]);
+});

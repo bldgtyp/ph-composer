@@ -1,7 +1,7 @@
 # ZT-04: the checked set and Locate
 
 DATE: 2026-10-04
-STATUS: Scoped
+STATUS: Implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -42,3 +42,21 @@ locate), `context/AGENT_INTERFACE.md`, `context/EXTENSIBILITY.md` (the view-comm
 ## Acceptance
 
 `make ci` passes. Checking rows changes nothing in SketchUp; selecting in SketchUp checks the rows.
+
+## Outcome
+
+Implemented 2026-10-04. Host: `features/zones/faces/locate_highlight.rb` (`Faces.locate_highlight(session)`,
+one overlay `ph_composer.zones.locate`, outline segments from `ColourBy::Tessellation.call`, lifted on draw);
+`Locate.call` zooms and outlines without selecting, `Locate.select` keeps the old behaviour; new view
+commands `ph_composer.zones.faces.clear_locate` and `ph_composer.zones.faces.select`, declared with Locate
+in `declare_locate`, which also subscribes the outline's clear to `selection_changed`. The Q8 walkthrough
+(`classify_tool_walkthrough.rb`) now calls `Locate.select`, since its question is about the selection.
+Panel: the shared table takes `options.check` (a row checkbox at the head of the Actions cell, a header
+box, `is-checked` rows, `has-checked` on the table) and `revealRowActions`; the checked set is
+`features/zones/checked_faces.js`, keyed by occurrence. Escape and the pointer-press clear are document
+listeners in `overview.js`; the overview section's `onNavigate` takes `{ check }`, which the Assemblies
+tab's "Select faces using" now sends before locating. The preview host maps `.select`, not `.locate`, to
+its selection. `export.rb`'s finding locate is unchanged in code and now frames without selecting.
+`context/EXTENSIBILITY.md` updated; `context/AGENT_INTERFACE.md` needed no change (explicit selection
+remains, through `select`). Tests in `tests/classify_tool_test.rb`, `tests/overview_panel_test.js` and
+`tests/assembly_assignment_panel_test.js`. `make ci` passes.

@@ -494,32 +494,61 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty @notices.select { |_message, tone| tone == :error }
   end
 
-  # Locate answers with what it could resolve and selects exactly that, skipping a reference the
-  # Model no longer has rather than refusing the rest.
-  def test_locate_selects_the_faces_it_resolves_and_skips_one_that_is_gone
+  # Locate answers with what it could resolve, frames and outlines exactly that, and leaves the
+  # selection alone, skipping a reference the Model no longer has rather than refusing the rest.
+  def test_locate_outlines_the_faces_it_resolves_leaves_the_selection_and_skips_one_that_is_gone
     zone(1_300, 2)
     references = list_faces.map { |face| face.fetch("reference") }
     stale = references.last.merge("entity_path" => [9_999])
+    @model.selection.add(@faces.fetch(1))
 
     found = PhComposer::Zones::Faces::Locate.call(@session, [references.first, stale])
 
     assert_equal 1, found.length
-    assert_equal [@faces.fetch(0)], @model.selection.to_a
+    assert_equal [@faces.fetch(1)], @model.selection.to_a, "Locate never changes the selection"
+    highlight = PhComposer::Zones::Faces.locate_highlight(@session)
+    assert highlight.active?
+    outline = PhComposer::Zones::Faces::LocateHighlight::Overlay
+    assert_equal 1, @model.overlays.count { |overlay| overlay.is_a?(outline) }
   end
 
-  # Locate's user route. It is a view command, so it answers a client that has `view` access without
-  # opening an operation, leaving an Undo entry or moving the revision.
-  def test_locate_is_reachable_from_a_client_and_writes_nothing
+  # The outline lasts until the next selection change or an explicit clear, and a clear removes the
+  # overlay with it.
+  def test_the_locate_outline_clears_on_a_selection_change_and_on_clear_locate
+    zone(1_305, 2)
+    references = list_faces.map { |face| face.fetch("reference") }
+    highlight = PhComposer::Zones::Faces.locate_highlight(@session)
+    PhComposer::Zones::Faces::Locate.call(@session, references)
+    @session.host_event(:selection_changed)
+    refute highlight.active?
+
+    PhComposer::Zones::Faces::Locate.call(@session, references)
+    context = PhComposer::API.connect(:session_id => @session.id)
+    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.zones.faces.clear_locate",
+                                   :params => {})
+
+    assert_equal "completed", outcome.fetch("status")
+    refute highlight.active?
+    outline = PhComposer::Zones::Faces::LocateHighlight::Overlay
+    assert_empty(@model.overlays.select { |overlay| overlay.is_a?(outline) })
+  end
+
+  # Locate and Select are view commands, so they answer a client that has `view` access without
+  # opening an operation, leaving an Undo entry or moving the revision. Select is the one that selects.
+  def test_locate_and_select_are_reachable_from_a_client_and_write_nothing
     zone(1_310, 2)
     references = list_faces.map { |face| face.fetch("reference") }
     context = PhComposer::API.connect(:session_id => @session.id)
     revision = @session.revision
 
-    outcome = PhComposer::API.view(:context => context, :name => "ph_composer.zones.faces.locate",
+    located = PhComposer::API.view(:context => context, :name => "ph_composer.zones.faces.locate",
                                    :params => { "faces" => references })
+    assert_equal({ "found" => 2, "missing" => 0 }, located.fetch("value"))
+    assert_empty @model.selection.to_a
+    selected = PhComposer::API.view(:context => context, :name => "ph_composer.zones.faces.select",
+                                    :params => { "faces" => references })
 
-    assert_equal "completed", outcome.fetch("status")
-    assert_equal({ "found" => 2, "missing" => 0 }, outcome.fetch("value"))
+    assert_equal "completed", selected.fetch("status")
     assert_equal @faces, @model.selection.to_a
     assert_equal revision, @session.revision
   end

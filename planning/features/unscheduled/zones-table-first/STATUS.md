@@ -15,14 +15,14 @@ In progress on `feature/zones-table-first`. Ed accepted the proposed answers to 
 | ZT-01 Zone columns | Implemented on branch; `make ci` passes |
 | ZT-02 Header actions and column menus | Implemented on branch; `make ci` passes |
 | ZT-03 Colour by in headers | Implemented on branch; `make ci` passes |
-| ZT-04 Checked set and Locate | Scoped |
+| ZT-04 Checked set and Locate | Implemented on branch; `make ci` passes |
 | ZT-05 Selection bar | Scoped |
 | ZT-06 No inspector, contracts | Scoped |
 | ZT-07 Host acceptance | Scoped |
 
 ## Next step
 
-ZT-04, [phases/phase-04-checked-set-and-locate.md](phases/phase-04-checked-set-and-locate.md).
+ZT-05, [phases/phase-05-selection-bar.md](phases/phase-05-selection-bar.md).
 
 ## Blockers
 

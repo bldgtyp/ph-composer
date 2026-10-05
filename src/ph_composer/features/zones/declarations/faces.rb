@@ -141,6 +141,9 @@ module PhComposer
           "boundary_conditions" => Shapes.list({ "type" => "string" })
         }).freeze
         LOCATE_PARAMS = Shapes.object({
+          "faces" => FACES.merge("description" => "The Face occurrences to bring into view and outline.")
+        }).freeze
+        SELECT_PARAMS = Shapes.object({
           "faces" => FACES.merge("description" => "The Face occurrences to select and bring into view.")
         }).freeze
         LOCATE_RESULT = Shapes.object({
@@ -221,6 +224,7 @@ module PhComposer
           end
           declare_writes(feature)
           declare_viewport(feature)
+          declare_locate(feature)
           declare_attached_zones(feature)
           feature.snapshot_section("#{PREFIX}.faces", :query => "#{PREFIX}.all")
           ExportProjection.install(feature)
@@ -263,8 +267,8 @@ module PhComposer
           end
         end
 
-        # What reaches the viewport rather than the Model: the Classify tool's palette, the tool itself,
-        # and Locate. None of them writes a record, so none is an action.
+        # What reaches the viewport rather than the Model: the Classify tool's palette and the tool itself.
+        # Neither writes a record, so neither is an action.
         def declare_viewport(feature)
           feature.query("#{PREFIX}.classify_tool", :description => "The Classify tool's palette and whether it runs.",
                                                    :refuses => [],
@@ -293,12 +297,33 @@ module PhComposer
             Faces.classify_tool(request.session).stop
             Faces.tool_state(request.session)
           end
+        end
+
+        # Locate, its outline and Select: they reach the camera, the viewport's outline and the selection,
+        # never a record, so none is an action. A new selection ends the outline.
+        def declare_locate(feature)
+          feature.on_host_event(:selection_changed) { |session| Faces.locate_highlight(session).clear }
           feature.view_command("#{PREFIX}.locate",
-                               :description => "Select an explicit set of Faces and bring them into view.",
+                               :description => "Bring an explicit set of Faces into view and outline them, " \
+                                               "leaving the selection alone.",
                                :refuses => [],
                                :params => LOCATE_PARAMS, :result => LOCATE_RESULT,
                                :examples => [{ "faces" => [EXAMPLE_FACE] }]) do |request|
             Faces.locate(request, :faces => request.params.fetch("faces"))
+          end
+          feature.view_command("#{PREFIX}.clear_locate",
+                               :description => "Remove the outline the last Locate left in the viewport.",
+                               :refuses => [],
+                               :params => Shapes::NONE, :result => Shapes::NONE, :examples => [{}]) do |request|
+            Faces.locate_highlight(request.session).clear
+            {}
+          end
+          feature.view_command("#{PREFIX}.select",
+                               :description => "Select an explicit set of Faces and bring them into view.",
+                               :refuses => [],
+                               :params => SELECT_PARAMS, :result => LOCATE_RESULT,
+                               :examples => [{ "faces" => [EXAMPLE_FACE] }]) do |request|
+            Faces.select(request, :faces => request.params.fetch("faces"))
           end
         end
 

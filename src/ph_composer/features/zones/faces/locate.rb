@@ -3,48 +3,61 @@
 module PhComposer
   module Zones
     module Faces
-      # Locate: select an explicit set of Face references and bring them into view. Other features use
-      # it. It changes the selection and the camera and nothing else, so it writes no record, opens no
-      # Model operation and leaves no Undo entry.
+      # Locate and Select, the two ways a caller reaches an explicit set of Face references in the
+      # viewport. Other features use both.
       #
-      # That is also why it is not a registered action: registering it as one would manufacture an Undo
-      # entry for a read. It is a view command instead (Declarations::ViewCommand), registered as
-      # `ph_composer.zones.faces.locate`, so the faces table, a script and any client with `view`
-      # access reach it the same way. That seam is the write channel for viewport state.
+      # Locate brings the Faces into view and outlines them (LocateHighlight). It leaves SketchUp's
+      # selection alone, so a set the panel has checked, or a selection the user made, survives it.
+      # Select replaces the selection with the Faces and brings them into view, for a caller that wants
+      # the native selection itself (an agent handing the user a set to act on).
+      #
+      # Neither writes a record, opens a Model operation or leaves an Undo entry, which is why they are
+      # view commands (Declarations::ViewCommand), `ph_composer.zones.faces.locate` and `.select`,
+      # rather than registered actions: an action would manufacture an Undo entry for a read.
       module Locate
         module_function
 
-        # Answers the references it could resolve. A reference that no longer resolves is skipped
+        # Answers the occurrences it could resolve. A reference that no longer resolves is skipped
         # rather than refusing the rest: Locate is a way of finding things, and the caller's list may
         # be as old as the last read it came from.
         def call(session, references)
-          model = session.model
-          index = Zones::Index.new(model)
-          found = Array(references).filter_map do |reference|
-            Zones::Occurrences.resolve_face(model, reference, :allow_unassigned => true, :index => index)
-          rescue CodedError
-            nil
-          end
-          select(model, found.map(&:entity))
+          found = resolve(session.model, references)
+          zoom(session.model, found.map(&:entity))
+          Faces.locate_highlight(session).show(found)
           found
         end
 
         # Whether SketchUp shows a selection made outside the active edit context is not measured, and
-        # the host gate asks it (tools/examples/authoring/classify_tool_walkthrough.rb). Locate does
+        # the host gate asks it (tools/examples/authoring/classify_tool_walkthrough.rb). Select does
         # not open the context itself: changing `active_path` advances the session revision
         # (context/CONTRACTS.md, "Revisions, transactions and host execution") and would cancel a
         # pending gesture, which is too much for a read.
-        def select(model, entities)
-          selection = model.selection
+        def select(session, references)
+          found = resolve(session.model, references)
+          selection = session.model.selection
           selection.clear
+          selection.add(found.map(&:entity)) unless found.empty?
+          zoom(session.model, found.map(&:entity))
+          found
+        end
+
+        def resolve(model, references)
+          index = Zones::Index.new(model)
+          Array(references).filter_map do |reference|
+            Zones::Occurrences.resolve_face(model, reference, :allow_unassigned => true, :index => index)
+          rescue CodedError
+            nil
+          end
+        end
+
+        def zoom(model, entities)
           return if entities.empty?
 
-          selection.add(entities)
           view = model.respond_to?(:active_view) ? model.active_view : nil
           view.zoom(entities) if view.respond_to?(:zoom)
         end
 
-        private_class_method :select
+        private_class_method :resolve, :zoom
       end
     end
   end

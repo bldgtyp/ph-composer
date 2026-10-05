@@ -213,8 +213,11 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
       if (usageView && usageView.busy()) return;
       if (!usageView) usageView = requests.channel(state.session, send, "assembly-usage", "view.invoke");
       if (action.id === "select_assembly_faces") {
+        // The Faces are checked in the Zones / Faces table, ready for a bulk assignment, and framed; SketchUp's
+        // selection is left alone.
         var references = usage(live, id).faces;
-        if (references.length) usageView.run(PREFIX + ".locate", { faces: references });
+        if (!references.length || !panel.navigate("overview", { check: clone(references) })) return;
+        usageView.run(PREFIX + ".locate", { faces: references });
       } else if (action.id === "paint_assembly") {
         panel.showTab("overview");
         if (panel.state.ui.activeTab !== "overview") return;

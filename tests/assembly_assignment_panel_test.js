@@ -102,8 +102,14 @@ test("Zones contributes gross usage and view actions through the generic Assembl
   var action = inventory.tableOptions.actions({ record: inventory.records[0] }).filter(function (item) {
     return item.id === "select_assembly_faces";
   })[0];
+  o.state.sections[PREFIX + ".selected"].value.targets = [];
+  o.paint();
   inventory.tableOptions.action({ record: inventory.records[0] }, action);
-  assert.strictEqual(o.sent[0].type, "view.invoke");
+  assert.strictEqual(o.panel.state.ui.activeTab, "overview", "Select faces opens Zones / Faces");
+  assert.strictEqual(o.query("[data-section='ph_composer.overview']").querySelectorAll(".row-check").filter(
+    function (box) { return box.getAttribute("aria-checked") === "true"; }).length > 0, true,
+  "with the Assembly's Faces checked");
+  assert.deepStrictEqual([o.sent[0].type, o.sent[0].payload.name], ["view.invoke", PREFIX + ".locate"]);
   assert.deepStrictEqual(o.sent[0].payload.params, { faces: [o.face.reference] });
   delete o.state.sections[PREFIX + ".usage"];
   o.paint();
