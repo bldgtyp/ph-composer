@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require_relative "support/framing_camera"
 
 # The shared Colour-by service. The registry seam, the mode projections the two shipping features
 # register, what the overlay batches and what invalidates the cache.
@@ -72,6 +73,23 @@ class ColourByTest < PhComposerTestCase
     assert_equal 2, outcome.dig("value", "selected")
     assert_equal 2, @model.selection.to_a.length
     refute @model.modified?
+  end
+
+  # The row is framed where its Faces are in the world: inside a Zone Group placed away from the origin,
+  # not by the Group's own coordinates, which `View#zoom` would use.
+  def test_a_legend_row_is_framed_by_its_faces_world_bounds
+    group = zone_group(1_705, %w[Wall Wall])
+    group.transformation = Geom::Transformation.translation([100, 0, 0])
+    activate("ph_composer.zones.faces.by_face_type")
+    view = FramingCamera.attach(@model.active_view)
+    context = PhComposer::API.connect(:session_id => @session.id)
+
+    PhComposer::API.view(:context => context, :name => "ph_composer.colour_by.select_row",
+                         :params => { "row" => { "value" => "Wall", "state" => "classified" } })
+
+    assert_in_delta 101.0, view.camera.target.x, 1e-6, "the centre of the Faces at x 100 to 102"
+    assert_operator view.camera.eye.y, :<, view.camera.target.y, "looking along the camera's direction"
+    assert_empty view.zoomed
   end
 
   def test_a_legend_row_that_is_no_longer_drawn_refuses_by_name

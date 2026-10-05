@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require_relative "support/framing_camera"
 
 # The Classify tool, which is the gesture rather than the operation.
 #
@@ -550,41 +551,12 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty(@model.overlays.select { |overlay| overlay.is_a?(outline) })
   end
 
-  # A camera the offline View lacks, recording what Locate sets it to.
-  class FramingCamera
-    attr_reader :eye, :target
-
-    def direction
-      Geom::Vector3d.new(0, 1, 0)
-    end
-
-    def up
-      Geom::Vector3d.new(0, 0, 1)
-    end
-
-    def perspective?
-      true
-    end
-
-    def fov
-      30.0
-    end
-
-    def set(eye, target, _up)
-      @eye = eye
-      @target = target
-    end
-  end
-
   # Locate frames a Face by its world bounds, so a Zone placed away from the origin is framed where it is,
   # looking along the camera's own direction and far enough back for the Face to fit.
   def test_locate_frames_the_faces_world_bounds_along_the_camera_direction
     zone(1_315, 2)
     references = list_faces.map { |face| face.fetch("reference") }
-    view = @model.active_view
-    view.camera = FramingCamera.new
-    view.define_singleton_method(:vpwidth) { 1000 }
-    view.define_singleton_method(:vpheight) { 500 }
+    view = FramingCamera.attach(@model.active_view)
     found = PhComposer::Zones::Faces::Locate.call(@session, references.take(1))
 
     box = Geom::BoundingBox.new

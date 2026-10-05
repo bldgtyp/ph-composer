@@ -128,14 +128,18 @@ module PhComposer
         # The cache holds live entities from the last rebuild. One can be erased by something that
         # raised no event this service subscribes to, and `Selection#add` on an erased entity raises,
         # which would reach the client as a bare failure rather than as an answer.
-        entities = @entities.fetch([value, state.to_sym], [])
-                            .select { |entity| entity.respond_to?(:valid?) ? entity.valid? : true }
-        raise UserError, "That legend row is no longer part of this drawing." if entities.empty? || model.nil?
+        placed = @entities.fetch([value, state.to_sym], [])
+                          .select { |entity, _transform| entity.respond_to?(:valid?) ? entity.valid? : true }
+        raise UserError, "That legend row is no longer part of this drawing." if placed.empty? || model.nil?
 
+        entities = placed.map(&:first)
         model.selection.clear
         model.selection.add(entities)
         view = model.respond_to?(:active_view) ? model.active_view : nil
-        view.zoom(entities) if view.respond_to?(:zoom)
+        # Framed by where the entities are in the world, from the transforms the entries carried: a Face
+        # inside a closed Zone Group is framed where it is, not by its Group's own coordinates.
+        points = placed.flat_map { |entity, transform| Tessellation.call(entity, transform).first }
+        ViewFraming.call(view, points, entities)
         entities.length
       end
 
@@ -222,7 +226,7 @@ module PhComposer
         row = rows[[entry.value, state]] ||= Row.new(:value => entry.value, :label => label_for(entry),
                                                      :colour => colour, :count => 0, :state => state)
         row.count += 1
-        entities[[entry.value, state]] << entry.entity
+        entities[[entry.value, state]] << [entry.entity, entry.transform]
         return unless @visibility.visible?(entry.path, entry.entity)
 
         triangles, segments = Tessellation.call(entry.entity, entry.transform)
