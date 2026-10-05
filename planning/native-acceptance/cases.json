@@ -1007,6 +1007,70 @@
         "tests/inventory_sections_test.js"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "ZO-H1",
+      "label": "Managed Zone option dialogs and assignment",
+      "mode": "mixed",
+      "authority": "planning/features/unscheduled/zone-field-options/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/html/features/zones/*",
+        "src/ph_composer/html/column_menu.js",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/session/*",
+        "tools/spikes/zone-field-options/*",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "ZO-H2",
+      "label": "Managed Zone migration and reference Undo/Redo",
+      "mode": "mixed",
+      "authority": "planning/features/unscheduled/zone-field-options/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/html/features/zones/*",
+        "src/ph_composer/html/column_menu.js",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/session/*",
+        "tools/spikes/zone-field-options/*",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "ZO-H3",
+      "label": "Managed Zone custom Colour-by and filtering",
+      "mode": "mixed",
+      "authority": "planning/features/unscheduled/zone-field-options/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/html/features/zones/*",
+        "src/ph_composer/html/column_menu.js",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/session/*",
+        "tools/spikes/zone-field-options/*",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "ZO-O7",
+      "label": "Managed Zone native copy and recovery",
+      "mode": "mixed",
+      "authority": "planning/features/unscheduled/zone-field-options/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/html/features/zones/*",
+        "src/ph_composer/html/column_menu.js",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/session/*",
+        "tools/spikes/zone-field-options/*",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
     }
   ]
 }

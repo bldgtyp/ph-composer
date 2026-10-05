@@ -1,7 +1,7 @@
-# Managed Zone field options: product draft
+# Managed Zone field options: product requirements
 
 DATE: 2026-10-05
-STATUS: Scoped draft
+STATUS: Complete local implementation and current-host acceptance; unmerged
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 
@@ -11,18 +11,20 @@ Free-text fields let a user create separate categories accidentally, such as `Le
 `level 1`. Both fields should instead select a defined option. Users must be able to add options,
 edit their names and set their colours. Names and colours belong to this SKP and must survive reopening.
 
-## Current implementation evidence
+## Implementation evidence
 
 | Source | Observed behavior | Consequence |
 | --- | --- | --- |
-| [Zone schema](../../../../src/ph_composer/features/zones/zone/schema.rb) | Version 1 stores required nonempty `building_segment` text and nullable `level` text; membership stamps copy both | Converting cells alone does not establish option identity; migration and recovery are affected |
-| [Zone editors](../../../../src/ph_composer/html/features/zones/zone_cells.js) | Inline text drafts submit full Zone values with expected-value guards; empty Level becomes null | Preserve guarded updates, draft ownership and Undo semantics |
-| [Zone creation](../../../../src/ph_composer/features/zones/zone/operations.rb) and [default](../../../../src/ph_composer/features/zones/zone/occurrences.rb) | Segment defaults to the Model filename/title, or Building; Level defaults to null | New-model defaults need a managed counterpart |
-| [Colour modes](../../../../src/ph_composer/features/zones/colour_modes.rb) | Segment and Level colours come from a categorical ramp over string values | Custom colours need a record-backed projection; the shared Entry already accepts a colour |
-| [Recovery](../../../../src/ph_composer/features/zones/zone/repair.rb) | Orphan Face stamps recover Segment and Level, and detect conflicting values | Option deletion/migration must include recoverable Zones, not just live Groups |
-| [Export](../../../../src/ph_composer/features/zones/export.rb) and [translation](../../../../src/ph_composer/python/ph_composer_translation/model_sections.py) | Export carries names; Python groups Segments by exact text and hashes the name into its identifier | Rename and merge affect downstream grouping and identity unless designed explicitly |
+| [Zone schema](../../../../src/ph_composer/features/zones/zone/schema.rb) | Reads v1 text and v2 option assignments; managed records/stamps carry portable choice evidence | Older data remains readable; adoption is explicit |
+| [Zone editors](../../../../src/ph_composer/html/features/zones/zone_cells.js) and [dialog](../../../../src/ph_composer/html/features/zones/option_dialog.js) | Guarded ID selects and one collection draft with Save/Cancel | Ruby validates and commits the complete batch atomically |
+| [Zone creation](../../../../src/ph_composer/features/zones/zone/operations.rb) | First Make seeds the managed Segment/default in the same proposal; Level is null | Reads do not create settings or options |
+| [Colour modes](../../../../src/ph_composer/features/zones/colour_modes.rb) | Managed IDs resolve labels and custom Entry colours | Rendering remains independent of Zone storage |
+| [Option inventory](../../../../src/ph_composer/features/zones/options/inventory.rb) | Includes live Zones, orphan stamps and shared occurrences; writes deduplicate storage | Adoption and removal include recovery references |
+| [Export](../../../../src/ph_composer/features/zones/export.rb) and [translation](../../../../src/ph_composer/python/ph_composer_translation/model_sections.py) | Contributor v2 supplies managed identity/export keys; Python retains v1 support and checks identity collisions | Rename preserves exported identity; real HBJSON reload cases verify grouping and Room metadata |
 
-These are live-source observations, not confirmation that the proposed feature exists.
+Implementation is local at `941166a`. Offline and browser evidence is recorded in
+[evidence/implementation-review.md](evidence/implementation-review.md). Required current-host native acceptance passed; see STATUS.md and its linked native receipt.
+This is not a release or broader host-support claim.
 
 ## User stories
 
@@ -33,7 +35,7 @@ These are live-source observations, not confirmation that the proposed feature e
 - Merge accidental duplicates deliberately, with affected usage visible before saving.
 - Open an older Model without silent data changes or guessed category merges.
 
-## Recommended interaction
+## Accepted interaction
 
 Each Zone cell uses the existing select-chip pattern, with an inset chevron, option name and a
 readable tint derived from its stored colour. Picking an existing value commits one guarded Undo step.
@@ -58,17 +60,17 @@ reference into existence. A default Segment cannot be removed without choosing i
 
 ## Duplicate names and old values
 
-Recommend unique comparison keys within each collection: trim, collapse repeated whitespace,
+Use unique comparison keys within each collection: trim, collapse repeated whitespace,
 compare without case, and treat spaces/hyphens/underscores alike. Preserve the chosen display spelling.
 Reject equivalent new names with a message naming the existing choice. This prevents the example
-above, while stable IDs keep identity separate from spelling. The separator policy remains proposed.
+above, while stable IDs keep identity separate from spelling. Ed accepted the separator policy in D4.
 
 For an older Model, show an adoption preview listing every distinct stored value, affected Zones,
 and suggested equivalent-name clusters. Preserve distinct categories unless the user explicitly
 merges them. A collision cluster must be resolved before completing managed adoption; do not silently
-choose a spelling or colour. Opening, inspecting and cancelling the preview write nothing. The pre-adoption assignment UI
-and supported legacy writer policy are part of D10: keep older data readable, prevent creation of
-new uncontrolled categories, and explain when adoption is required for management. Do not silently
+choose a spelling or colour. Opening, inspecting and cancelling the preview write nothing. The accepted D10 adapter resolves older string writes only to existing unambiguous options.
+Legacy category changes and management require adoption; unchanged v1 categories can accompany
+Name/Ground depth edits. Unknown names refuse without creating options. Do not silently
 fall back to a free-text editor that bypasses these rules.
 
 ## Scope and limits

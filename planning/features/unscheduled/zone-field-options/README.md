@@ -1,7 +1,7 @@
 # Managed Building Segments and Levels
 
 DATE: 2026-10-05
-STATUS: Implemented on local branch; offline/native verification in progress
+STATUS: Implemented; required functional cases pass; normal source-panel visual observation pending
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 
@@ -18,7 +18,7 @@ the assignment surface. No extra tab or permanent toolbar controls are proposed.
 
 The request covers the two existing fields' option sets, not arbitrary new columns. Shared
 cross-project templates can follow later. Name and Ground Depth retain text editors; Segment and Level now use managed select chips.
-Required native acceptance remains open. Its parent intake is [UI refinements](../../../refactor/ui-ux-refinements.md).
+Required current-host functional cases passed; final normal source-panel visual observation is pending. Its parent intake is [UI refinements](../../../refactor/ui-ux-refinements.md).
 
 Implementation design and current source trace: [DESIGN.md](DESIGN.md). The
 [development prototype](../../../../tools/spikes/zone-field-options/README.md) is synthetic and does not change Models.

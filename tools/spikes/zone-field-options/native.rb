@@ -38,14 +38,14 @@ module ZoneOptionsNative
 
   def setup
     model = Sketchup.active_model
-    raise "Use an empty synthetic Model" unless model.entities.empty?
+    raise "Use an empty synthetic Model" unless model.entities.length.zero?
 
     model.start_operation("Synthetic legacy option fixture", true)
     2.times do |index|
       group = model.entities.add_group
       x = index * 150
       group.entities.add_face([x, 0, 0], [x + 100, 0, 0], [x + 100, 100, 0], [x, 100, 0])
-      record = { "id" => PhComposer::Records::Identity.fresh("zon"), "schema_version" => 1,
+      record = { "id" => PhComposer::Records::Identity.mint("zon"), "schema_version" => 1,
                  "name" => "Zone #{index + 1}", "building_segment" => "Synthetic Building",
                  "level" => index.zero? ? "Level 1" : "Level 2", "ground_depth_mm" => 0.0,
                  "user_data" => { "fixture" => { "note" => "retain #{index}" } }, "extension_data" => {} }

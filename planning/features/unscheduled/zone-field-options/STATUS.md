@@ -1,33 +1,42 @@
 # Managed Zone options: status
 
 DATE: 2026-10-05
-STATUS: Implemented locally; integration verification and native acceptance in progress
+STATUS: Implemented; offline/review/native functional cases passed; normal-panel visual observation pending
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 
-Ed authorized the whole packet on a new branch and confirmed D2–D10 on 2026-10-05.
-Work is on `codex/zone-field-options`, based on `627b4f7`; all current changes belong to this task.
+Ed authorized the whole packet on a new branch and accepted D2–D10 on 2026-10-05.
+Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkpoint `941166a`.
 
 ## Current execution receipt
 
-- Completed implementation: model-owned choices/default, v1/v2 Zone/stamp handling, portable
-  evidence, explicit adoption, collection validation, atomic management and reference inventory;
-  select chips/dialogs, ID filters/colour projections; v2 export with supported legacy reads.
-- Source/build: local working diff; API reference/extraction golden regenerated for the declared
-  schema/contributor changes. No new build installed; SketchUp was inspected at its Welcome screen,
-  with no open working document and no running bridge. Native fixture helper is prepared.
-- Verification: full coverage passed: 1,448 Ruby cases / 14,706 assertions (97.0%), JavaScript
-  96.3%, Python 95.59%. Twenty focused option cases passed including
-  cross-Model explicit adoption, managed Restore, public commands and rollback. 82 focused JS cases
-  and Chrome previews at 1280/900/420/280 px passed. 191 Python cases passed with real HBJSON reload
-  identity/reference assertions. Ruby 2.7 focused checks and Chromium 88 runtime checks passed. Final lint/`make ci` remain pending.
-- Review: accepted design review; one stronger `simplify` review of the combined implementation
-  closed after independently reproducing and verifying two corrections: typed portable-extension
-  reference validation and consistent adoption-survivor serialization. Native acceptance O7/H1–H3 and required host portions of O1–O9 remain NOT RUN.
-- Decisions: D2–D10 accepted; no further owner choice pending. Local branch/commit work authorized;
-  push, PR, merge and public release have not been requested.
-- Exact next action: finish deterministic gates, commit the
-  intended implementation checkpoint, install that reviewed build and execute the synthetic
-  native acceptance batch with independent action/readback and immutable evidence.
+- Scope: model-owned choices/default, versioned Zone/stamp compatibility, explicit adoption,
+  portable recovery, atomic management/reference retargeting, chip/dialog presentation, ID filters,
+  custom colours and stable export identities are implemented and verified.
+- Verification: final `make ci` passed: 1,449 Ruby cases / 14,715 assertions, 474 JS cases and
+  191 Python cases, with lint, typing, fixtures, manifests, runtime pins, hostkit and RBZ checks.
+  Coverage: Ruby 97.0%, JS 96.3%, Python 95.59%. Ruby 2.7 focused and Chromium 88 runtime checks pass.
+  Real Chrome panel previews at 1280/900/420/280 px pass.
+- Review: the coherent stronger independent architecture/UI `simplify` review is closed, including
+  independently reproduced corrections to portable typed-reference validation and adoption-survivor
+  serialization. [Implementation review](evidence/implementation-review.md).
+- Native: ZO-H1/H2/H3/O7 pass on SketchUp 26.1.188 / Ruby 3.2.2, with native controls and separate
+  readback, immutable fixture/build baselines, exact Undo/Redo, within/between-Model copy,
+  split/Restore and fresh normal-process reopen. [Native evidence](../../../native-acceptance/evidence/zone-field-options-2026-10-05.md).
+- Build: installed RBZ matches all 387 packaged files, no extras or mismatches; SHA-256
+  `0c1241d3d20647f3e4f596919afe02f685238fab17f422c509b699b63c0205ac`.
+  Raw logs, Models, captures and immutable receipts are ignored under
+  `_private/host/zone-field-options-20261005/`.
+- Normal restoration: saved source/destination reopened with exact records/defaults/metadata/stamps,
+  new sessions, no fixture helper/test styles and no Model writes from reads/opening. The normal
+  source Model and panel are left open.
+- Delivery: local branch/commits only. Push, PR, merge and release were not requested. Shared Design
+  System synchronization from main is deferred until merge. Native SketchUp 2023 and Windows proof
+  remain separate repository gates. No task memory was changed.
 
-Do not archive or claim completion before required host/final gates pass. No task memory was changed.
+Normal source-panel restoration remains open: native capture is white after two fresh processes,
+while page diagnostics show the correct loaded three-row DOM and exact Model readbacks pass. Native
+control also reported window timeouts/no-window errors. A real rendering defect versus capture
+limitation is unresolved. One human visual observation was requested; no shipping defect is claimed.
+The second process removed all temporary diagnostic callbacks. Final archival is pending this
+observation; remote delivery and post-merge synchronization remain separate.

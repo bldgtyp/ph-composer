@@ -3,7 +3,10 @@
 DATE: 2026-10-05
 BRANCH: `codex/zone-field-options`
 BASE: `627b4f7`
-SCOPE: Proposal and development-only synthetic interaction study
+SCOPE: Historical proposal and development-only synthetic interaction study
+
+This records the initial design checkpoint. Later implementation, verification and shared-kit
+changes are recorded in [STATUS.md](../STATUS.md) and [implementation review](implementation-review.md).
 
 ## Current-source trace
 

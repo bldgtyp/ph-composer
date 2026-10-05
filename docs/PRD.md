@@ -119,8 +119,8 @@ Building Segment and Level use Model-owned choices with editable names and colou
 menus open the management dialog; Save applies a complete draft and Cancel discards it. Rename
 keeps assignments. Merge/removal replaces used choices explicitly, including recoverable Zone
 members; Level may be cleared to Not set. Older Models show an adoption preview before category
-management, with explicit choices for equivalent names and copied definitions. Native acceptance
-of this addition is in progress on its feature branch.
+management, with explicit choices for equivalent names and copied definitions. Required current-host functional cases
+passed on its local feature branch; final normal source-panel visual restoration is pending. It has not merged.
 
 ## Current capability and release boundary
 

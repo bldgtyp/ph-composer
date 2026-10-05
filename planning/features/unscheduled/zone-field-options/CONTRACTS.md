@@ -1,7 +1,7 @@
-# Managed Zone options: proposed contracts
+# Managed Zone options: implementation contracts
 
 DATE: 2026-10-05
-STATUS: Proposed; no implemented contract changes
+STATUS: Complete local implementation and current-host acceptance; unmerged
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 
@@ -13,23 +13,26 @@ no generic custom-field framework is required. The shared chip, dialog, picker a
 are UI/rendering primitives; they do not read Zone stores or decide domain rules.
 
 Each option has stable identity, schema version, nonempty display name and validated `#RRGGBB`
-colour, plus normal user/extension metadata. Segment records also need an immutable export identity.
-A model-owned setting selects the default Segment. The exact declarations remain to be designed.
+colour, plus normal user/extension metadata. Segment records carry immutable `export_identifier`,
+unique across the final Segment collection.
+`ph_composer.zones.option_settings` selects the default Segment and retains source-model identity.
+The declarations are in `options/definitions.rb`: Segment `bsg_`, Level `lvl_`, settings `zop_`.
 Options are local editable records, not a provider dependency.
 
-Recommend a versioned Zone schema referencing `building_segment_id` and nullable `level_id`, with
-resolved names/colours exposed for presentation. Avoid competing authoritative string and ID fields.
+Zone schema v2 references `building_segment_id` and nullable `level_id`;
+resolved names/colours are exposed for presentation. Avoid competing authoritative string and ID fields.
 Queries remain read-only. Required references must resolve before assignment or export. IDs remain
 unchanged through rename/colour edits. Normalized name uniqueness is enforced by Ruby public writes,
 not just the HtmlDialog. Missing choices produce actionable findings and replacement routes.
 
 ## Public operations and consistency
 
-Declare list/detail/usage reads and guarded create/update/merge/remove writes. A management batch
+The `ph_composer.zones.options.*` namespace declares all/list/detail/usage and adoption-preview
+reads, and guarded create/update/merge/remove/manage/adopt writes. A management batch
 validates the complete resulting collections before any write: names, colour, default, references,
 shared storage, and Model/session revision. Revalidate server-side, return declared refusals and
 preserve drafts on refusal. Do not implement the dialog as a series of partially committing writes.
-Expose the same public operations to the panel and scripts; regenerate API reference/examples.
+The panel and scripts share these public operations; API reference/examples are regenerated.
 
 Rename and colour edits update one option, leaving assignments intact. Merge/removal uses registered
 reference discovery and retargeting. Discover live Zones and recoverable orphan membership stamps.
@@ -39,29 +42,29 @@ one occurrence cannot acquire an independent assignment without the existing uni
 
 ## Migration, recovery and copy
 
-Current Zone schema/stamps are version 1 and contain strings. The current
-[record engine](../../../../src/ph_composer/core/records/engine.rb) has `propose_migration` for
-structured extension namespaces; it does not provide a base Zone-record migration.
-[RecordKind](../../../../src/ph_composer/core/records/record_kind.rb) validates one declared schema
-version, and the separate Zone validator currently accepts only version 1. Design an explicit
-Zones adoption operation using ordinary transaction ownership, with deliberate v1/v2 read handling.
-Do not treat extension-payload migration as an already implemented Zone upgrade. Version handling,
-older-reader refusal and rollback are acceptance requirements.
+Zone schema/stamps v1 contain category strings; v2 references managed IDs and carries
+`choice_evidence`. The Zone validator explicitly accepts these versions and refuses others.
+The record engine's extension migration does not perform this base-record conversion: the
+Zones-owned `adopt` action uses normal proposal/transaction ownership. Older-reader refusal,
+rollback and preservation remain acceptance requirements.
 
 The preview must inventory live Zone values and orphan stamps, not just table-visible rows. Preserve
 null Level and nonempty required Segment semantics. Apply choice creation, Zone conversion, stamp
 conversion and defaults atomically. No records are dropped because a label is unfamiliar. Conflicting
 stamps or equivalent names require explicit resolution. Undo restores the complete original state.
 
-Define versioned recovery stamps and the portable evidence needed for Zone copy/paste between Models.
-A destination may lack the source's model-owned choices. Missing references must remain visible and
-repairable; reads may not invent records. Determine whether existing native copy/reference hooks can
-carry choice definitions or whether an explicit adoption action is needed. Do not broaden unrelated
-copy policy or introduce a global observer migration shortcut.
+Versioned `choice_evidence` travels on Zone Groups and member stamps, including detached choice
+records and source-model identity. Reads do not import choices. Explicit destination adoption maps
+to existing local choices or creates records; copy identity repair remains a separate action.
+Adopted Segment export-key collisions require survivor mapping, not silent re-keying.
 
-Preserve older public callers deliberately: choose a documented adapter that resolves only existing
-unambiguous names, or a versioned refusal/upgrade path. An old arbitrary string write must not bypass
-the managed-list rules. The owner decision is required before implementation.
+Portable option extension copying allocates destination identities first, remaps declared references
+with source-origin-scoped Segment/Level maps, and checks installed copy rules plus all destination
+references through the projected engine. Missing destination references refuse before writes.
+Mapping to an existing survivor retains that survivor's record and metadata.
+
+The accepted older-call adapter resolves only existing unambiguous names for managed Zones. Unknown
+names refuse; v1 category changes require explicit adoption. An old string write cannot create choices.
 
 ## Colour, filtering and export
 
@@ -71,9 +74,9 @@ HUD colours agree; native selection edges, viewport masks and missing-value trea
 current rules. Filters store option IDs and survive rename/colour changes; merge/removal reconciles
 held filters without leaving an invisible stale restriction.
 
-Version the export contributor/translation boundary as needed. Resolve human-readable names for
+The Zone export contributor is version 2; Python accepts supported v1/v2 sections. Resolve human-readable names for
 existing HBJSON `ph_composer.level` and `ph_composer.building_segment` metadata. Group Segments by
 stable managed identity, not display spelling. Existing `_segment_identifier(name)` hashes must be
-preserved as adopted Segments' immutable export identity; newly created Segments need a stable key
-independent of name. A rename changes display text without changing the exported Segment identifier.
-Retain supported legacy bundle reads and prove the actual HBJSON grouping/references through round trips.
+preserved as adopted Segments' immutable export identity; newly created Segments receive a key at creation that remains stable through later name edits. A rename changes display text without changing the exported Segment identifier.
+Supported legacy bundle reads and actual HBJSON grouping/references are covered by round-trip tests.
+See [implementation review](evidence/implementation-review.md); required current-host native gates passed.

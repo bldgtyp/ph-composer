@@ -243,9 +243,10 @@ Ed requested select chips backed by user-managed names and colours on 2026-10-05
 presentation edit: current strings drive Zone stamps/recovery, Colour-by grouping and Python's
 Building Segment export identity. The request is scoped in the separate
 [managed Zone options packet](../features/unscheduled/zone-field-options/README.md). Respective
-column-menu Manage actions opening one reused dialog are recommended; stable IDs, adoption and
-compatibility remain proposed until approved. This intake changed documentation only. Current
-Segment/Level text editors and data contracts remain unchanged.
+column-menu Manage actions open one reused dialog. Ed accepted D2–D10 and implementation on
+2026-10-05; managed identities, explicit adoption, select chips, custom colours and stable export
+identities are implemented and current-host verified on the local feature branch. This intake
+remains the request record; the packet holds implementation and acceptance.
 
 
 ## Column-scoped Face painting

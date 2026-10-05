@@ -372,7 +372,7 @@ recovery evidence, not assignment authority. V2 read rows expose resolved presen
 separately as `display`. Missing/foreign choices require explicit destination adoption.
 
 The `ph_composer.zones.options.*` operations publish collection reads, usage, guarded definition
-writes, complete-draft management and read-only adoption preview/apply. Management validates the
+writes, complete-draft management, read-only adoption preview and atomic adoption. Management validates the
 whole final collection and default, retargets live and recovery references, and commits one native
 Undo step. Name/colour changes preserve assignment and export identities. Used deletion requires a
 survivor, or explicit null Level clearing. Stamps have a detached reference projection whose diagnostic
