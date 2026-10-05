@@ -1,6 +1,7 @@
 "use strict";
 const assert = require("assert"), fs = require("fs"), os = require("os"), path = require("path");
 const { chromium } = require("playwright");
+const port = process.env.UI_PREVIEW_PORT || "8765";
 (async function () {
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "phc-window-libraries-"));
@@ -8,7 +9,7 @@ const { chromium } = require("playwright");
   for (const width of [1280, 900, 420, 280]) {
     const page = await browser.newPage({ viewport: { width, height: 900 } }), errors = [];
     page.on("pageerror", error => errors.push(error.stack));
-    await page.goto("http://127.0.0.1:8765/tools/ui-preview/?fixture=windows");
+    await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=windows`);
     await page.getByRole("button", { name: "Window Types", exact: true }).click();
     const pane = page.locator("[data-pane=windows]");
     const writes = () => page.evaluate(() => previewHost.sent.filter(item => item.type === "action.invoke").length);
