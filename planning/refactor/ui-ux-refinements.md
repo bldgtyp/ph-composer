@@ -355,5 +355,7 @@ on 2026-10-05 as `3417e918b3bd7773e4ab44d68c6ddf6905f54b1c`, with DCO sign-off p
 The implementation is merged; the native viewport-mask, hatch-edge and gesture/Undo follow-ups
 remain unverified as recorded above. Retain this ledger until those follow-ups are resolved rather
 than archiving it as fully accepted. Managed Building Segment/Level options remain planning-only
-under open issue #78. Local main is synchronized; the merged feature branch is retained.
+under open issue #78. Local main is synchronized. On 2026-10-05, the merged feature branch was
+removed locally after verifying its tip was an ancestor of origin/main; the remote branch was
+already deleted. Both local and remote branch inventories now contain only main.
 Design System artifact sync remains an open merge-closeout follow-up, not a claim of completion.
