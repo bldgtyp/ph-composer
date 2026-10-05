@@ -11,7 +11,10 @@ module PhComposer
     # `path`, when supplied, is the full root-to-entity persistent-id path. It preserves ancestor
     # visibility for a flattened projection, including distinct occurrences of shared storage.
     # Without it the service can check only the entity and its descendants, as before.
-    Entry = Struct.new(:entity, :transform, :value, :label, :state, :path, keyword_init: true)
+    # `colour`, when supplied, is the entry's own `[r, g, b]`, for a mode whose colour is a property of the
+    # record it groups by (an Assembly's colour) rather than a function of the value. `value` then stays a
+    # plain legend key: the legend's select and isolate commands take a string or null.
+    Entry = Struct.new(:entity, :transform, :value, :label, :state, :path, :colour, keyword_init: true)
 
     # One legend row: a colour, what it means, how many entities carry it, and which of the three
     # states it is in (`classified`, `incomplete` or `unclassified`).
@@ -251,7 +254,7 @@ module PhComposer
         return [:incomplete, Palette::INCOMPLETE] if entry.state == :incomplete
         return [:unclassified, Palette::UNCLASSIFIED] if entry.value.nil?
 
-        colour = declaration.colours.call(entry.value)
+        colour = entry.colour || declaration.colours.call(entry.value)
         colour ? [:classified, colour] : [:incomplete, Palette::INCOMPLETE]
       end
 

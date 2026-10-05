@@ -38,27 +38,33 @@ module PhComposer
             entries(read.model, "boundary_condition", BOUNDARY_LABELS)
           end
           feature.colour_mode(BY_ASSEMBLY, :label => "Assembly", :entity_kind => "face", :group => "construction",
-                                           :colours => method(:assembly_colour)) { |read| assembly_entries(read) }
+                                           :colours => method(:no_value_colour)) { |read| assembly_entries(read) }
         end
 
-        # One dependency read per projection, never per Face. Entries carry detached colour values,
-        # so the shared service's colour callback needs no Model, feature access or cached Index.
+        # One dependency read per projection, never per Face. The value is the Assembly id, the legend's key;
+        # each entry carries its Assembly's colour, read here, so the shared service needs no Model, feature
+        # access or cached Index to colour it.
         def assembly_entries(read)
           rows = read.query("#{PREFIX}.assembly_choices").fetch("assemblies").to_h { |row| [row.fetch("id"), row] }
           Zones::Index.new(read.model).all_faces.map do |face|
             record = FACE_STORE.read(face.entity)
             id = record && record["assembly_id"]
             assembly = rows[id]
-            value = id && { "id" => id, "color" => assembly && assembly.fetch("color") }
-            ColourBy::Entry.new(:entity => face.entity, :transform => face.transform, :value => value,
+            ColourBy::Entry.new(:entity => face.entity, :transform => face.transform, :value => id,
+                                :colour => assembly_colour(assembly && assembly.fetch("color")),
                                 :label => assembly ? assembly.fetch("name") : id,
                                 :state => id && !assembly ? :incomplete : nil, :path => face.zone.path + face.path)
           end
         end
 
-        def assembly_colour(value)
-          color = value && value["color"]
+        # "#RRGGBB" as [r, g, b], or nil for an Assembly with no colour, which the service paints incomplete.
+        def assembly_colour(color)
           color && color.delete_prefix("#").scan(/../).map { |component| component.to_i(16) }
+        end
+
+        # An Assembly's colour belongs to its record, so it comes on each entry; the id alone has none.
+        def no_value_colour(_value)
+          nil
         end
 
         # One entry per Face of every Zone, whether or not it carries a record. A Face with no record is
