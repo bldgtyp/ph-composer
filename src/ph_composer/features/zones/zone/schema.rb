@@ -27,19 +27,44 @@ module PhComposer
       }
     }.freeze
 
+    MANAGED_VALUES = {
+      "type" => "object", "additionalProperties" => false,
+      "required" => %w[name building_segment_id level_id ground_depth_mm],
+      "properties" => {
+        "name" => { "type" => "string", "minLength" => 1 },
+        "building_segment_id" => { "type" => "string", "minLength" => 1 },
+        "level_id" => { "type" => %w[string null] },
+        "ground_depth_mm" => { "type" => "number", "x-unit" => "mm" }
+      }
+    }.freeze
+    # Public inputs describe both supported versions; the owner checks complete version shapes.
+    INPUT_VALUES = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[name ground_depth_mm],
+      "properties" => ZONE_VALUES.fetch("properties").merge(MANAGED_VALUES.fetch("properties"))
+    }.freeze
+
     module Schema
       module_function
 
       def problems(record)
         return ["Zone record must be a JSON object"] unless record.is_a?(Hash)
 
-        allowed = %w[id schema_version name building_segment level ground_depth_mm user_data extension_data]
+        version = record["schema_version"]
+        schema = version == 2 ? MANAGED_VALUES : ZONE_VALUES
+        allowed = %w[id schema_version user_data extension_data] + schema.fetch("properties").keys
+        allowed << "choice_evidence" if version == 2
         found = (record.keys - allowed).map { |key| "Zone record has unknown field #{key}" }
         found << "Zone id is invalid" unless ID_PATTERN.match?(record["id"].to_s)
-        found << "Zone schema_version must be 1" unless record["schema_version"] == 1
-        values = record.reject { |key, _value| %w[id schema_version user_data extension_data].include?(key) }
-        found.concat(JsonSchema.validate(values, ZONE_VALUES))
+        found << "Zone schema_version must be 1 or 2" unless [1, 2].include?(version)
+        values = record.reject { |key, _value|
+          %w[id schema_version user_data extension_data choice_evidence].include?(key)
+        }
+        found.concat(JsonSchema.validate(values, schema))
         found.concat(metadata_problems(record))
+        if version == 2
+          found.concat(evidence_problems(record["choice_evidence"]))
+          found << "Zone choice evidence does not match its assignments" unless evidence_matches?(record)
+        end
         found
       end
 
@@ -54,23 +79,56 @@ module PhComposer
       def view(record)
         {
           "id" => record.fetch("id"), "schema_version" => record.fetch("schema_version"),
-          "values" => record.reject { |key, _value| %w[id schema_version user_data extension_data].include?(key) },
+          "values" => record.reject { |key, _value|
+                        %w[id schema_version user_data extension_data choice_evidence].include?(key)
+                      },
           "user_data" => DeepCopy.call(record.fetch("user_data", {})),
           "extension_data" => DeepCopy.call(record.fetch("extension_data", {}))
         }
       end
 
       def stamp(record)
-        {
-          "schema_version" => 1, "zone_id" => record.fetch("id"),
-          "building_segment" => record.fetch("building_segment"), "level" => record.fetch("level")
-        }
+        if record.fetch("schema_version") == 2
+          { "schema_version" => 2, "zone_id" => record.fetch("id"),
+            "building_segment_id" => record.fetch("building_segment_id"), "level_id" => record.fetch("level_id"),
+            "choice_evidence" => DeepCopy.call(record.fetch("choice_evidence")) }
+        else
+          { "schema_version" => 1, "zone_id" => record.fetch("id"),
+            "building_segment" => record.fetch("building_segment"), "level" => record.fetch("level") }
+        end
       end
 
-      # Whether `value` is a membership stamp as `stamp` writes it.
       def stamp?(value)
-        value.is_a?(Hash) && ID_PATTERN.match?(value["zone_id"].to_s) &&
-          value["building_segment"].is_a?(String) && [String, NilClass].include?(value["level"].class)
+        return false unless value.is_a?(Hash) && ID_PATTERN.match?(value["zone_id"].to_s)
+
+        if value["schema_version"] == 2
+          value.keys.sort == %w[building_segment_id choice_evidence level_id schema_version zone_id].sort &&
+            value["building_segment_id"].is_a?(String) && [String, NilClass].include?(value["level_id"].class) &&
+            evidence_problems(value["choice_evidence"]).empty? && evidence_matches?(value)
+        else
+          value["schema_version"] == 1 && value["building_segment"].is_a?(String) &&
+            !value["building_segment"].strip.empty? && [String, NilClass].include?(value["level"].class)
+        end
+      end
+
+      def evidence_matches?(record)
+        evidence = record["choice_evidence"]
+        return false unless evidence.is_a?(Hash) && evidence["building_segment"].is_a?(Hash) &&
+                            (evidence["level"].nil? || evidence["level"].is_a?(Hash))
+
+        evidence.dig("building_segment", "id") == record["building_segment_id"] &&
+          evidence.dig("level", "id") == record["level_id"]
+      end
+
+      def evidence_problems(evidence)
+        return ["Zone choice evidence is missing or invalid"] unless evidence.is_a?(Hash) &&
+                                                                     evidence.keys.sort == %w[building_segment level
+                                                                                              source_model_id].sort &&
+                                                                     evidence["source_model_id"].is_a?(String)
+
+        found = Options::SEGMENTS.problems(evidence["building_segment"])
+        found.concat(Options::LEVELS.problems(evidence["level"])) if evidence["level"]
+        found
       end
 
       def metadata_problems(record)

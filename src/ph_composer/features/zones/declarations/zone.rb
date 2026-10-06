@@ -7,7 +7,8 @@ module PhComposer
     module ZoneRegistration
       TARGET = Records::ReferenceTarget.new(
         :id => REFERENCE_KIND, :label => "Zone", :records => Zones.method(:reference_entries),
-        :validate => Schema.method(:problems), :schema_version => 1, :values => ZONE_VALUES,
+        :validate => Schema.method(:problems), :schema_version => 2, :values => INPUT_VALUES,
+        :references => Options::CHOICE_REFERENCES,
         :occurrence => ZONE_REFERENCE
       )
       EXAMPLE_REFERENCE = { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201] }.freeze
@@ -26,22 +27,27 @@ module PhComposer
       ).freeze
       UPDATE_PARAMS = Shapes.object({
         "reference" => ZONE_REFERENCE.merge("description" => "The Zone occurrence to edit, as list returns it."),
-        "values" => ZONE_VALUES.merge("description" => "The Zone's complete new values."),
-        "expected_values" => ZONE_VALUES.merge("description" => "The values last read; a change refuses.")
+        "values" => INPUT_VALUES.merge("description" => "The Zone's complete new values."),
+        "expected_values" => INPUT_VALUES.merge("description" => "The values last read; a change refuses.")
       }).freeze
-      ZONE_ROW = Shapes.with(TARGET.descriptor.view_schema,
-                             "reference" => ZONE_REFERENCE,
-                             "state" => { "type" => "string",
-                                          "enum" => %w[found ambiguous shared_definition wrong_hierarchy] },
-                             "face_count" => Shapes::COUNT)
+      DISPLAY = Shapes.object({
+        "building_segment" => { "type" => %w[string null] }, "level" => { "type" => %w[string null] },
+        "building_segment_colour" => { "type" => %w[string null] }, "level_colour" => { "type" => %w[string null] }
+      }, :optional => %w[building_segment level building_segment_colour level_colour])
+      ZONE_ROW = Shapes.with(TARGET.descriptor.view_schema, "display" => DISPLAY,
+                                                            "reference" => ZONE_REFERENCE,
+                                                            "state" => { "type" => "string",
+                                                                         "enum" => %w[found ambiguous shared_definition
+                                                                                      wrong_hierarchy] },
+                                                            "face_count" => Shapes::COUNT)
       # A row as `list` returns it: whole, or with `fields` only its identity, state and those values.
       PROJECTED_ZONE_ROW = ZONE_ROW.merge(
         "required" => %w[id reference state values],
         "properties" => ZONE_ROW.fetch("properties")
-                                .merge("values" => ZONE_VALUES.reject { |key, _value| key == "required" }),
+                                .merge("values" => INPUT_VALUES.reject { |key, _value| key == "required" }),
         "description" => "Whole without fields; with fields, id, reference, state and the named values only."
       )
-      VALUE_KEYS = ZONE_VALUES.fetch("properties").keys.freeze
+      VALUE_KEYS = INPUT_VALUES.fetch("properties").keys.freeze
       LIST_PARAMS = Shapes.object({
         "ids" => { "type" => "array", "items" => Shapes::ID, "maxItems" => Pages::MAXIMUM_LIMIT,
                    "description" => "Only occurrences of these Zone ids." },
@@ -57,8 +63,9 @@ module PhComposer
         "entity_ids" => { "type" => "array", "items" => { "type" => "integer" } }, "member_count" => Shapes::COUNT,
         "refusal" => { "type" => %w[string null], "enum" => [nil, "mixed_context", "stamps_conflict", "shared_edge"],
                        "description" => "Why Restore would refuse, or null when it can run." },
+        "choice_record" => { "type" => "object" },
         "unrecoverable" => Shapes.list({ "type" => "string" }, :description => "Zone fields Restore cannot recover.")
-      }, :description => "An exploded Zone whose stamped members Restore can regroup.")
+      }, :optional => ["choice_record"], :description => "An exploded Zone whose stamped members Restore can regroup.")
       ALL_RESULT = Shapes.object({
         "zones" => Shapes.list(ZONE_ROW, :description => "Every Zone occurrence, copies and nested Zones included."),
         "make_zone" => MAKE_TARGET.merge("type" => %w[object null],
@@ -93,7 +100,7 @@ module PhComposer
         end
         feature.action("#{FEATURE_ID}.make",
                        :description => "Make one Zone from explicit entities in one edit context.",
-                       :refuses => Refuses::ZONE_TARGET - %w[target.changed] + %w[target.edit_path_changed],
+                       :refuses => (Options::Registration::REFUSALS + %w[target.edit_path_changed]).uniq,
                        :params => MAKE_PARAMS, :result => ZONE_ID_RESULT, :undo_name => "Make Zone",
                        :examples => [{ "parent_path" => [], "entity_ids" => [1201] }],
                        :side_effects => "Groups loose geometry when needed and writes a Zone " \
@@ -103,7 +110,7 @@ module PhComposer
                      :entity_ids => request.params.fetch("entity_ids"), :name => request.params["name"])
         end
         feature.action("#{FEATURE_ID}.update", :description => "Update one explicit Zone occurrence.",
-                                               :refuses => Refuses::ZONE_TARGET,
+                                               :refuses => Options::Registration::REFUSALS,
                                                :params => UPDATE_PARAMS, :result => ZONE_ID_RESULT,
                                                :undo_name => "Edit Zone",
                                                :examples => [{ "reference" => EXAMPLE_REFERENCE,

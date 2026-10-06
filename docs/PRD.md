@@ -113,6 +113,15 @@ model viewer, review conversation or automatic model-version service. Local clim
 manual entry and EPW-derived monthly climate are post-MVP scope. No HBJSON-to-SketchUp reconstruction. Optional
 linked evidence is in proposed scope and adds none of those services.
 
+## Managed Zone options
+
+Building Segment and Level use Model-owned choices with editable names and colours. Their column
+menus open the management dialog; Save applies a complete draft and Cancel discards it. Rename
+keeps assignments. Merge/removal replaces used choices explicitly, including recoverable Zone
+members; Level may be cleared to Not set. Older Models show an adoption preview before category
+management, with explicit choices for equivalent names and copied definitions. Required current-host functional cases
+and final normal source-panel visual restoration passed on its feature branch. It has not merged.
+
 ## Current capability and release boundary
 
 The foundation merged through PR #1: records and public operations, sessions, panel/UI kit and

@@ -32,6 +32,9 @@ module PhComposer
 
     def restore(request, proposal, parent_path:, zone_id:)
       record, offer = Repair.restore_plan(request.model, parent_path, zone_id)
+      if record.fetch("schema_version") == 2 && Options::Adoption.needs_adoption?(request.engine, record)
+        Options.refuse("zone.options_adoption_required", "Adopt the recoverable choices before Restore")
+      end
       parent_path = Occurrences.integer_path(parent_path)
       step = MakeZoneStep.new(:parent_path => parent_path, :entity_ids => offer.fetch("entity_ids"),
                               :record => record)
@@ -57,7 +60,7 @@ module PhComposer
       zones = zones.sort_by(&:path)
       page, next_cursor = Pages.slice(request, "#{FEATURE_ID}.list", zones, :key => :path.to_proc)
       rows = page.map do |zone|
-        row = zone_view(zone, duplicates.include?(zone.record.fetch("id")))
+        row = zone_view(zone, duplicates.include?(zone.record.fetch("id")), request.engine)
         params.key?("fields") ? project_row(row, params["fields"]) : row
       end
       overview(request.model, rows).merge("next_cursor" => next_cursor, "total" => zones.length)
@@ -67,7 +70,9 @@ module PhComposer
     def all(request)
       zones = Occurrences.zones(request.model)
       duplicates = duplicate_ids(zones)
-      overview(request.model, zones.map { |zone| zone_view(zone, duplicates.include?(zone.record.fetch("id"))) })
+      overview(request.model, zones.map { |zone|
+                                zone_view(zone, duplicates.include?(zone.record.fetch("id")), request.engine)
+                              })
     end
 
     def overview(model, rows)
@@ -95,11 +100,13 @@ module PhComposer
       end
 
       name ||= default_name(request.model)
+      segment = Options.ensure_default(request, proposal)
       record = {
-        "id" => zone_id, "schema_version" => 1, "name" => name,
-        "building_segment" => Occurrences.default_segment(request.model), "level" => nil,
+        "id" => zone_id, "schema_version" => 2, "name" => name,
+        "building_segment_id" => segment.fetch("id"), "level_id" => nil,
         "ground_depth_mm" => 0.0, "user_data" => {}, "extension_data" => {}
       }
+      record["choice_evidence"] = Options.evidence(request.engine, record, proposal)
       Schema.validate!(record)
       step = MakeZoneStep.new(:parent_path => parent_path, :entity_ids => entity_ids, :record => record)
       proposal.add_step(step, :scopes => [Operations::EntityScope.new(parent_path)])
@@ -115,7 +122,11 @@ module PhComposer
     def update(request, proposal, reference:, values:, expected_values:)
       occurrence = Occurrences.resolve_zone(request.model, reference, :mutable => true)
       before = occurrence.record
-      expected = expected_values
+      if before.fetch("schema_version") == 2 && Options::Adoption.needs_adoption?(request.engine, before)
+        Options.refuse("zone.options_adoption_required", "Adopt copied Zone choices before editing")
+      end
+      expected = Options.adapt_values(request.engine, before, expected_values)
+      values = Options.adapt_values(request.engine, before, values)
       changed = expected.keys.reject { |key| before[key] == expected[key] }
       unless changed.empty?
         raise CodedError.new("target.changed", "The Zone changed since it was read (#{changed.join(', ')}).")
@@ -123,6 +134,7 @@ module PhComposer
 
       after = DeepCopy.call(before)
       values.each { |key, value| after[key] = DeepCopy.call(value) }
+      after["choice_evidence"] = Options.evidence(request.engine, after) if after.fetch("schema_version") == 2
       Schema.validate!(after)
       return { "zone_id" => before.fetch("id") } if before == after
 
@@ -132,8 +144,9 @@ module PhComposer
       { "zone_id" => after.fetch("id") }
     end
 
-    def zone_view(zone, ambiguous)
+    def zone_view(zone, ambiguous, engine)
       Schema.view(zone.record).merge(
+        "display" => Options.display(engine, zone.record),
         "reference" => zone.reference,
         "state" => zone_state(zone, ambiguous),
         "face_count" => Occurrences.faces(zone).length

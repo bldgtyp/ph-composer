@@ -348,7 +348,7 @@ module PhComposer
       def raise_target(code, message)
         raise CodedError.new(code, message)
       end
-      private_class_method :resolve_face_path, :shared_storage?, :walk_zones, :walk_faces, :raise_target,
+      private_class_method :resolve_face_path, :walk_zones, :walk_faces, :raise_target,
                            :zone_for_path, :cutting_component?, :contents, :writable_zone!, :unlocked_zone!,
                            :stamped_for!
     end

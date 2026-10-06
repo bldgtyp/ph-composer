@@ -20,11 +20,30 @@ module PhComposer
         end
         feature.colour_mode(BY_BUILDING_SEGMENT, :label => "Building-Segment", :entity_kind => "zone",
                                                  :colours => ColourBy::Palette.ramp) do |read|
-          entries(read.model) { |record| [record.fetch("building_segment"), record.fetch("building_segment")] }
+          option_entries(read, "building_segment")
         end
         feature.colour_mode(BY_LEVEL, :label => "Level", :entity_kind => "zone",
                                       :colours => ColourBy::Palette.ramp) do |read|
-          entries(read.model) { |record| [record["level"], record["level"]] }
+          option_entries(read, "level")
+        end
+      end
+
+      def option_entries(read, field)
+        Occurrences.zones(read.model).map do |zone|
+          record = zone.record
+          if record.fetch("schema_version") == 1
+            value = record[field]
+            label = value
+            colour = nil
+          else
+            value = record["#{field}_id"]
+            display = Options.display(read.engine, record)
+            label = display[field]
+            hex = display["#{field}_colour"]
+            colour = hex && hex.delete_prefix("#").scan(/../).map { |pair| pair.to_i(16) }
+          end
+          ColourBy::Entry.new(:entity => zone.entity, :transform => zone.transform, :value => value,
+                              :label => label, :colour => colour, :path => zone.path)
         end
       end
 

@@ -9,6 +9,7 @@ The module imports no Ladybug Tools package until translation begins.
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -60,6 +61,8 @@ class ZoneRecord:
     building_segment: str
     level: str | None
     face_ids: tuple[str, ...]
+    building_segment_id: str | None = None
+    building_segment_export_identifier: str | None = None
 
 
 @dataclass
@@ -157,7 +160,7 @@ class FaceSection(Section[FaceSpec, FaceSpec]):
 
 class ZoneSection(Section[ZoneRecord, TranslatedZone]):
     id = ZONE_SECTION_ID
-    versions = frozenset({1})
+    versions = frozenset({1, 2})
     object_type = TranslatedZone
     requires = (FACES, CONSTRUCTIONS)
     attaches = Attachment(MODEL)
@@ -166,13 +169,32 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
         identifier = as_text(raw.get("id"), "zone id")
         name = as_text(raw.get("name"), f"zone {identifier} name")
         segment = as_text(raw.get("building_segment"), f"zone {identifier} building_segment")
+        segment_id = None
+        export_identifier = None
+        if "building_segment_id" in raw or "building_segment_export_identifier" in raw:
+            segment_id = as_text(raw.get("building_segment_id"), f"zone {identifier} building_segment_id")
+            export_identifier = as_text(
+                raw.get("building_segment_export_identifier"), f"zone {identifier} building_segment_export_identifier"
+            )
+            if len(export_identifier) > 100 or re.fullmatch(r"bseg_[A-Za-z0-9_]+", export_identifier) is None:
+                raise RecordError(
+                    f"zone {identifier} building_segment_export_identifier must be a valid bseg_ identifier"
+                )
         level = raw.get("level")
         if level is not None and not isinstance(level, str):
             raise RecordError(f"zone {identifier} level must be text or null")
         face_ids = raw.get("face_ids")
         if isinstance(face_ids, (str, bytes)) or not isinstance(face_ids, Sequence) or not face_ids:
             raise RecordError(f"zone {identifier} face_ids must be a non-empty list")
-        return ZoneRecord(identifier, name, segment, level, tuple(as_text(value, "face id") for value in face_ids))
+        return ZoneRecord(
+            identifier,
+            name,
+            segment,
+            level,
+            tuple(as_text(value, "face id") for value in face_ids),
+            segment_id,
+            export_identifier,
+        )
 
     def translate(self, record: ZoneRecord, inputs: Inputs) -> TranslatedZone:
         hb_face = stack.load("honeybee.face")
@@ -230,12 +252,40 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
     def attach(self, host: Any, objects: Sequence[TranslatedZone]) -> None:
         """Puts every Room in the Model, after giving Rooms of one building segment one shared segment and
         pairing each Surface Face with its counterpart."""
-        segments: dict[str, Any] = {}
+        # Validate the complete inventory before sharing any Segment: the PH stack serializes
+        # model Segments by export identifier, so a collision would silently collapse categories.
+        identities: dict[tuple[str, str], tuple[str, str]] = {}
+        export_owners: dict[str, tuple[str, str]] = {}
         for zone in objects:
+            source = zone.source
+            identity = (
+                ("managed", source.building_segment_id)
+                if source.building_segment_id
+                else ("legacy", source.building_segment)
+            )
+            export_identifier = source.building_segment_export_identifier or _segment_identifier(
+                source.building_segment
+            )
+            definition = (export_identifier, source.building_segment)
+            if identity in identities and identities[identity] != definition:
+                raise RecordError(f"Building Segment {identity[1]} has conflicting export identifiers or names")
+            if export_identifier in export_owners and export_owners[export_identifier] != identity:
+                raise RecordError(
+                    f"Building Segment export identifier {export_identifier} belongs to distinct categories"
+                )
+            identities[identity] = definition
+            export_owners[export_identifier] = identity
+        segments: dict[tuple[str, str], Any] = {}
+        for zone in objects:
+            source = zone.source
+            identity = (
+                ("managed", source.building_segment_id)
+                if source.building_segment_id
+                else ("legacy", source.building_segment)
+            )
             ph = zone.room.properties.ph
-            segment = segments.setdefault(zone.source.building_segment, ph.ph_bldg_segment)
-            segment.identifier = _segment_identifier(zone.source.building_segment)
-            segment.display_name = zone.source.building_segment
+            segment = segments.setdefault(identity, ph.ph_bldg_segment)
+            segment.identifier, segment.display_name = identities[identity]
             ph.ph_bldg_segment = segment
         emitted = {identifier: face for zone in objects for identifier, face in zone.faces.items()}
         specifications = {identifier: spec for zone in objects for identifier, spec in zone.specifications.items()}

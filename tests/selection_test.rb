@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require_relative "support/zone_options"
 
 class SelectionTest < PhComposerTestCase
+  include ZoneOptionsSupport
   API = PhComposer::API
   ZONES = PhComposer::Zones
   FACES = ZONES::Faces
@@ -14,8 +16,11 @@ class SelectionTest < PhComposerTestCase
     @session = PhComposer::Sessions.for(@model)
     @context = API.connect(:session_id => @session.id)
     @sequence = 0
+    @level_id = create_zone_option("level", "L2")
+    create_zone_option("level", "L3")
     @groups = [make_zone(100), make_zone(200)]
     select(*@groups)
+    @operation_count = @model.operations.length
   end
 
   def test_zone_query_is_detached_and_batch_changes_one_attribute_with_one_undo
@@ -30,14 +35,16 @@ class SelectionTest < PhComposerTestCase
     result = update(rows, "level", "L2", read.fetch("revision"))
 
     assert_equal %w[completed committed], result.values_at("status", "effect")
-    assert_equal %w[L2 L2], @groups.map { |group| ZONES::ZONE_STORE.read(group).fetch("level") }
+    assert_equal [@level_id, @level_id], @groups.map { |group| ZONES::ZONE_STORE.read(group).fetch("level_id") }
     assert_equal before.first.fetch("user_data"), ZONES::ZONE_STORE.read(@groups.first).fetch("user_data")
     assert_equal ["Edit Selected Zones", true, :committed], @model.operations.last
-    assert_equal 3, @model.operations.length
+    assert_equal @operation_count + 1, @model.operations.length
     assert @model.undo
-    assert @model.entities.grep(Sketchup::Group).all? { |group| ZONES::ZONE_STORE.read(group).fetch("level").nil? }
+    assert @model.entities.grep(Sketchup::Group).all? { |group| ZONES::ZONE_STORE.read(group).fetch("level_id").nil? }
     assert @model.redo
-    assert @model.entities.grep(Sketchup::Group).all? { |group| ZONES::ZONE_STORE.read(group).fetch("level") == "L2" }
+    assert @model.entities.grep(Sketchup::Group).all? { |group|
+             ZONES::ZONE_STORE.read(group).fetch("level_id") == @level_id
+           }
     rows.first.fetch("values")["name"] = "detached"
     refute_equal "detached", ZONES::ZONE_STORE.read(@model.entities.grep(Sketchup::Group).first).fetch("name")
   end
@@ -62,8 +69,8 @@ class SelectionTest < PhComposerTestCase
     result = update(rows, "level", "L2", @session.revision)
 
     assert_equal %w[refused target.changed none], result.values_at("status", "code", "effect")
-    assert_equal [nil, nil], @groups.map { |group| ZONES::ZONE_STORE.read(group).fetch("level") }
-    assert_equal 2, @model.operations.length
+    assert_equal [nil, nil], @groups.map { |group| ZONES::ZONE_STORE.read(group).fetch("level_id") }
+    assert_equal @operation_count, @model.operations.length
   end
 
   def test_duplicate_or_invalid_field_value_refuses_the_entire_batch
@@ -73,7 +80,7 @@ class SelectionTest < PhComposerTestCase
 
     assert_equal %w[refused params.invalid none], duplicate.values_at("status", "code", "effect")
     assert_equal %w[refused validation.failed none], invalid.values_at("status", "code", "effect")
-    assert_equal 2, @model.operations.length
+    assert_equal @operation_count, @model.operations.length
   end
 
   def test_mixed_locked_shared_and_ambiguous_selected_zone_sets_refuse
@@ -94,20 +101,24 @@ class SelectionTest < PhComposerTestCase
     @model.active_path = [instances.first]
     select(@groups.first)
     assert_equal "target.ambiguous", query("ph_composer.zones.selection").fetch("code")
-    assert_equal 2, @model.operations.length
+    assert_equal @operation_count, @model.operations.length
   end
 
   def test_inputbox_cancel_writes_nothing_and_stale_revision_refuses
     client = ZONES::Selection.client(@session)
     assert_nil client.edit("level")
-    assert_equal [["Level"], [""], "Selected Zones"], UI.inputboxes.last
-    assert_equal 2, @model.operations.length
+    assert_equal [["Level"], [""], ["L2|L3"], "Selected Zones"], UI.inputboxes.last
+    assert_equal @operation_count, @model.operations.length
     UI.inputbox_result = ["L3"]
     read = query("ph_composer.zones.selection")
     @session.host_event(:transaction_committed)
-    result = API.stub(:query, read) { client.edit("level") }
+    original_query = API.method(:query)
+    stale_query = lambda do |**args|
+      args.fetch(:name).end_with?("options.all") ? original_query.call(**args) : read
+    end
+    result = API.stub(:query, stale_query) { client.edit("level") }
     assert_equal "revision.stale", result.fetch("code")
-    assert_equal 2, @model.operations.length
+    assert_equal @operation_count, @model.operations.length
   end
 
   def test_inputbox_captures_all_values_and_revision_before_dialog
@@ -118,7 +129,7 @@ class SelectionTest < PhComposerTestCase
     assert_equal [-250.0, -250.0], @groups.map { |group| ZONES::ZONE_STORE.read(group).fetch("ground_depth_mm") }
     UI.inputbox_result = ["bad"]
     assert_equal "refused", client.edit("ground_depth_mm").fetch("status")
-    assert_equal 3, @model.operations.length
+    assert_equal @operation_count + 1, @model.operations.length
   end
 
   def test_solve_client_passes_selected_occurrences_and_captured_revision
@@ -144,7 +155,7 @@ class SelectionTest < PhComposerTestCase
     assert_nil FACES::FACE_STORE.read(@groups.first.entities.to_a.last)
     refute FACES.classify_tool(@session).active?
     assert_nil @model.active_tool
-    assert_equal 3, @model.operations.length
+    assert_equal @operation_count + 1, @model.operations.length
     assert @model.undo
     assert @model.entities.grep(Sketchup::Group).first.entities.all? { |face| FACES::FACE_STORE.read(face).nil? }
     assert @model.redo
@@ -167,7 +178,7 @@ class SelectionTest < PhComposerTestCase
     inside_zone
     @groups.first.locked = true
     assert_equal "target.locked", query("ph_composer.zones.faces.selection").fetch("code")
-    assert_equal 2, @model.operations.length
+    assert_equal @operation_count, @model.operations.length
   end
 
   def test_dynamic_attached_menu_uses_current_records_and_exit_only_while_active
@@ -214,7 +225,7 @@ class SelectionTest < PhComposerTestCase
     stale = API.view(:context => @context, :name => "ph_composer.zones.faces.open_attached_assignment",
                      :params => { "faces" => read.dig("value", "faces"), "revision" => -1 })
     assert_equal "revision.stale", stale.fetch("code")
-    assert_equal 2, @model.operations.length
+    assert_equal @operation_count, @model.operations.length
   end
 
   private

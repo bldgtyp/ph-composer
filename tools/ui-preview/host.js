@@ -38,6 +38,9 @@
     this.sequence = 0;
     this.parts = (settings.parts || []).map(function (part) { return JSON.parse(JSON.stringify(part)); });
     this.zones = JSON.parse(JSON.stringify(settings.zones || []));
+    this.zoneOptions = JSON.parse(JSON.stringify(settings.zoneOptions || {
+      building_segments: [], levels: [], default_segment_id: null, adoption: { required: false, sources: [] }
+    }));
     this.faces = JSON.parse(JSON.stringify(settings.faces || []));
     this.selectedFaces = JSON.parse(JSON.stringify(settings.selectedFaces || []));
     this.makeZone = settings.makeZone || null;
@@ -73,6 +76,7 @@
           value: JSON.parse(JSON.stringify(this.zoneSettings)) },
         [PARTS]: { status: "completed", code: "ok", revision: this.revision,
           value: { records: records, units: { length_mm: "mm" }, next_cursor: null, total: records.length } },
+        ["ph_composer.zones.options"]: { status: "completed", value: JSON.parse(JSON.stringify(this.zoneOptions)) },
         [ZONES]: { status: "completed", code: "ok", revision: this.revision,
           value: { zones: JSON.parse(JSON.stringify(this.zones)), make_zone: this.makeZone,
             units: { ground_depth_mm: "mm" } } },
@@ -415,7 +419,8 @@
       host.snapshot();
       host.publish("action.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
     }
-    if (payload.name.indexOf("ph_composer.windows.") === 0 ||
+    if (payload.name.indexOf("ph_composer.zones.options.") === 0 ||
+        payload.name.indexOf("ph_composer.windows.") === 0 ||
         payload.name.indexOf("ph_composer.assemblies.") === 0 ||
         payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) this.window.setTimeout(apply, 0);
     else apply();
@@ -433,6 +438,7 @@
     if (payload.name === "ph_composer.library.copy") return this.libraryCopy(payload);
     if (payload.name.indexOf("ph_composer.assemblies.") === 0 ||
         payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) return this.inventoryAction(payload);
+    if (payload.name === "ph_composer.zones.options.manage") return this.manageZoneOptions(payload.params);
     var resultValue = {};
     if (payload.name === "ph_composer.zones.faces.assign_assembly") {
       var targets = payload.params.targets, affected = targets.map(function (target) {
@@ -509,6 +515,44 @@
     this.revision += 1;
     return { status: "completed", code: "ok", message: "Done.", effect: "committed", revision: this.revision,
       value: resultValue, affected: [], findings: [], detail: null };
+  };
+
+  /* Synthetic UI-only choice management. Production reference/adoption behavior belongs to Ruby. */
+  Host.prototype.manageZoneOptions = function (params) {
+    var host = this, key = params.collection === "level" ? "levels" : "building_segments";
+    var before = this.zoneOptions[key].map(function (entry) {
+      return { id: entry.id, name: entry.values.name, colour: entry.values.colour };
+    });
+    if (JSON.stringify(params.expected_options) !== JSON.stringify(before) ||
+        params.expected_default_segment_id !== this.zoneOptions.default_segment_id) {
+      return refused("target.changed", "The options changed.", this.revision);
+    }
+    var created = {}, records = params.options.map(function (choice) {
+      var previous = host.zoneOptions[key].filter(function (entry) { return entry.id === choice.id; })[0];
+      var id = choice.id;
+      if (id.indexOf("new:") === 0) { id = (params.collection === "level" ? "lvl_" : "bsg_") + ++host.sequence;
+        created[choice.id] = id; }
+      return { id: id, schema_version: 1, values: { name: choice.name, colour: choice.colour,
+        export_identifier: previous ? previous.values.export_identifier : "segment_" + id },
+        usage: { live: 0, recoverable: previous ? previous.usage.recoverable : 0 } };
+    });
+    var replacements = {};
+    Object.keys(params.replacements).forEach(function (id) {
+      replacements[id] = created[params.replacements[id]] || params.replacements[id];
+    });
+    var field = params.collection + "_id";
+    this.zones.forEach(function (zone) {
+      if (Object.prototype.hasOwnProperty.call(replacements, zone.values[field])) {
+        zone.values[field] = replacements[zone.values[field]];
+      }
+      var used = records.filter(function (entry) { return entry.id === zone.values[field]; })[0];
+      if (used) used.usage.live++;
+    });
+    this.zoneOptions[key] = records;
+    this.zoneOptions.default_segment_id = created[params.default_segment_id] || params.default_segment_id;
+    this.revision++;
+    return { status: "completed", code: "ok", effect: "committed", revision: this.revision,
+      value: { replacement_ids: replacements, created_ids: created } };
   };
 
   /* Definition fixture actions preserve transport and draft semantics; no PH calculation runs here. */

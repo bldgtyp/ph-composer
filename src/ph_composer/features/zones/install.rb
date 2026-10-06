@@ -12,6 +12,7 @@
 #
 # Pure geometry and pair validation stay apart from the SketchUp write steps.
 require_relative "zone/schema"
+require_relative "options/definitions"
 require_relative "zone/names"
 require_relative "zone/occurrences"
 require_relative "zone/index"
@@ -45,6 +46,7 @@ require_relative "zone/selection"
 require_relative "faces/selection"
 require_relative "export"
 require_relative "colour_modes"
+require_relative "refuses"
 require_relative "declarations/shapes"
 require_relative "declarations/zone"
 require_relative "declarations/assembly_assignment"
@@ -52,6 +54,11 @@ require_relative "declarations/faces"
 require_relative "declarations/adjacency"
 require_relative "declarations/repair"
 require_relative "declarations/selection"
+require_relative "options/inventory"
+require_relative "options/adoption"
+require_relative "options/operations"
+require_relative "options/registration"
+require_relative "options/commands"
 require_relative "codes"
 require_relative "refuses"
 
@@ -62,6 +69,8 @@ module PhComposer
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION,
                                              :requires => ["ph_composer.assemblies"])
+      Options::Registration.install(feature)
+      Options::CommandRegistration.install(feature)
       ZoneRegistration.install(feature)
       Names.install(feature)
       ZoneMenu.install(feature)

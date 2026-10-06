@@ -56,44 +56,44 @@ PhComposerUI.define("column_menu", ["dom", "icons", "overlay"], function (dom, i
         self.bubble.close(true); sort.choose("desc");
       }));
     }
-    if (!options.filter) return;
-    var values = options.filter.values(), shown = options.filter.shown();
-    if (!values.length) return;
-    var group = element("div", "phc-column-filter");
-    group.setAttribute("role", "group"); group.setAttribute("aria-label", "Show");
-    group.appendChild(element("span", "phc-column-filter-heading", "Show"));
-    values.forEach(function (entry) {
-      var label = element("label", "phc-column-filter-value"), box = element("input");
-      box.type = "checkbox"; box.setAttribute("type", "checkbox");
-      box.checked = !shown || shown.indexOf(entry.value) >= 0;
-      box.addEventListener("change", function () { self.toggle(entry.value, box.checked); });
-      label.appendChild(box);
-      if (entry.colour) {
-        var swatch = element("span", "phc-column-filter-swatch");
-        swatch.style.background = "rgb(" + entry.colour.join(",") + ")";
-        swatch.setAttribute("aria-hidden", "true");
-        label.appendChild(swatch);
-      }
-      label.appendChild(element("span", "", entry.label));
-      var row = element("div", "phc-column-value-row");
-      row.appendChild(label);
-      var action = options.valueAction && options.valueAction(entry);
-      if (action) {
-        var trigger = icons.iconButton(action.label, action.icon, function () {
-          if (!trigger.disabled) action.run(self.trigger);
-        });
-        trigger.disabled = Boolean(action.disabled);
-        trigger.setAttribute("aria-pressed", String(Boolean(action.pressed)));
-        row.appendChild(trigger);
-      }
-      group.appendChild(row);
-    });
-    content.appendChild(group);
-    var clear = button("Clear filter", function () { options.filter.set(null); self.paint(); self.fill(); });
-    clear.className = "phc-column-filter-clear";
-    clear.disabled = !shown;
-    this.clear = clear;
-    content.appendChild(clear);
+    var values = options.filter ? options.filter.values() : [], shown = options.filter ? options.filter.shown() : null;
+    if (values.length) {
+      var group = element("div", "phc-column-filter");
+      group.setAttribute("role", "group"); group.setAttribute("aria-label", "Show");
+      group.appendChild(element("span", "phc-column-filter-heading", "Show"));
+      values.forEach(function (entry) {
+        var label = element("label", "phc-column-filter-value"), box = element("input");
+        box.type = "checkbox"; box.setAttribute("type", "checkbox");
+        box.checked = !shown || shown.indexOf(entry.value) >= 0;
+        box.addEventListener("change", function () { self.toggle(entry.value, box.checked); });
+        label.appendChild(box);
+        if (entry.colour) {
+          var swatch = element("span", "phc-column-filter-swatch");
+          swatch.style.background = "rgb(" + entry.colour.join(",") + ")";
+          swatch.setAttribute("aria-hidden", "true");
+          label.appendChild(swatch);
+        }
+        label.appendChild(element("span", "", entry.label));
+        var row = element("div", "phc-column-value-row");
+        row.appendChild(label);
+        var action = options.valueAction && options.valueAction(entry);
+        if (action) {
+          var trigger = icons.iconButton(action.label, action.icon, function () {
+            if (!trigger.disabled) action.run(self.trigger);
+          });
+          trigger.disabled = Boolean(action.disabled);
+          trigger.setAttribute("aria-pressed", String(Boolean(action.pressed)));
+          row.appendChild(trigger);
+        }
+        group.appendChild(row);
+      });
+      content.appendChild(group);
+      var clear = button("Clear filter", function () { options.filter.set(null); self.paint(); self.fill(); });
+      clear.className = "phc-column-filter-clear";
+      clear.disabled = !shown;
+      this.clear = clear;
+      content.appendChild(clear);
+    }
     if (options.extra) options.extra(content, self.trigger,
       function () { self.bubble.close(false); }, function () { self.bubble.open(); });
   };

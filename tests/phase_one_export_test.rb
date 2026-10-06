@@ -55,6 +55,36 @@ class PhaseOneExportTest < PhComposerTestCase
     write_or_compare(FIXTURE, extraction.document)
   end
 
+  def test_managed_extraction_resolves_names_and_preserves_adopted_segment_export_identity_through_rename
+    seed_two_boxes
+    sources = PhComposer::API.query(:context => @context, :name => "ph_composer.zones.options.adoption_preview")
+                             .dig("value", "sources")
+    original_segment = sources.find { |source| source.fetch("collection") == "building_segment" }
+    adopted = invoke("ph_composer.zones.options.adopt", "mappings" => sources.map { |source|
+      { "source" => source.fetch("key"), "target_id" => nil,
+        "name" => source.fetch("name"), "colour" => source.fetch("colour") }
+    })
+    assert_equal "completed", adopted.fetch("status"), adopted.inspect
+    options = PhComposer::API.query(:context => @context, :name => "ph_composer.zones.options.all").fetch("value")
+    segment = options.fetch("building_segments").first
+    renamed = invoke("ph_composer.zones.options.update", {
+      "collection" => "building_segment", "id" => segment.fetch("id"),
+      "values" => { "name" => "Renamed", "colour" => "#123456" },
+      "expected_values" => segment.fetch("values").slice("name", "colour")
+    })
+    assert_equal "completed", renamed.fetch("status"), renamed.inspect
+    extraction = PhComposer::Export::Collection.build(@model, :run_id => "managed", :contributors => contributor_names)
+    section = extraction.document.fetch("sections").fetch(PhComposer::Zones::ExportProjection::SECTION)
+    assert_equal 2, section.fetch("version")
+    records = section.fetch("records")
+    assert_equal [segment.fetch("id")], records.map { |record| record.fetch("building_segment_id") }.uniq
+    assert_equal [original_segment.fetch("export_identifier")], records.map { |record|
+      record.fetch("building_segment_export_identifier")
+    }.uniq
+    assert_equal ["Renamed"], records.map { |record| record.fetch("building_segment") }.uniq
+    assert records.all? { |record| record.fetch("face_ids").length == 6 }
+  end
+
   def test_stale_surface_geometry_is_accounted_without_repair
     zones = seed_two_boxes
     invoke("ph_composer.zones.solve_adjacency", "zones" => zones)

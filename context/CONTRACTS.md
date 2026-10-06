@@ -357,6 +357,43 @@ regenerates the primary from the authored Type, creating a new one when the inde
 missing or differently stamped, and never adopts an arbitrary matching copy.
 Definition names are presentation.
 
+## Managed Zone field options
+
+Zones owns Building Segment (`ph_composer.zones.building_segment`, `bsg_`) and Level
+(`ph_composer.zones.level`, `lvl_`) records. Each has a name and validated six-digit hex colour;
+Segment has an immutable, collection-unique export identifier. Names compare without case after
+trimming and collapsing whitespace, hyphens and underscores. Model-owned option settings hold
+`default_segment_id` and source-model identity; reads never seed records.
+
+Zone schema 2 stores `building_segment_id` and nullable `level_id`. Version 1 remains readable.
+Unknown versions refuse. The `choice_evidence` capsule on Zones and membership stamps carries
+versioned option definitions and source identity for native clipboard recovery; it is detached
+recovery evidence, not assignment authority. V2 read rows expose resolved presentation names/colours
+separately as `display`. Missing/foreign choices require explicit destination adoption. In a managed Model, export preflight also blocks legacy Zones pending adoption. A wholly legacy Model retains its compatible export path.
+
+The `ph_composer.zones.options.*` operations publish collection reads, usage, guarded definition
+writes, complete-draft management, read-only adoption preview and atomic adoption. Management validates the
+whole final collection and default, retargets live and recovery references, and commits one native
+Undo step. Name/colour changes preserve assignment and export identities. Used deletion requires a
+survivor, or explicit null Level clearing. Stamps have a detached reference projection whose diagnostic
+`id` is `zone_id`, keyed by exact root-to-member path; synthetic IDs never enter stored stamps.
+
+Adoption inventories all stamps, including those hidden from Restore by a live Zone ID. Equivalent
+legacy names require explicit survivor mapping via `target_source` or an existing destination ID.
+It converts choices, Zones, stamps and defaults atomically, preserving geometry identities and
+metadata. Adopted Segment export identifiers keep the legacy `bseg_` + 16-character SHA-256 name
+hash; conflicting foreign export keys require a survivor and never silently re-key.
+
+Older string writers can resolve existing unambiguous choices on managed Zones; unknown names
+refuse. Before adoption, ordinary name/depth edits preserve legacy fields, but category edits and
+Make requiring new defaults request adoption. The published descriptor names current schema 2;
+owner validation handles both versions without adding generic base-record migration machinery.
+
+Zone export section 2 emits resolved names plus managed Segment ID/export key. Python supports
+sections 1/2 and legacy records, groups managed Rooms by identity, and refuses conflicting exported
+identifiers before attachment. Room `ph_composer` metadata retains the resolved names. Native-host
+and distribution acceptance remain separate from these implemented branch contracts.
+
 ## Zones geometry rules
 
 **Cutting components.** A ComponentInstance whose definition cuts an opening owns its contents.

@@ -160,7 +160,7 @@ class ApiClientTest < PhComposerTestCase
   def edit_zone(context, classified)
     zone = API.query(:context => context, :name => "ph_composer.zones.list")["value"]["zones"].first
     edit = { "reference" => zone["reference"], "expected_values" => zone["values"],
-             "values" => zone["values"].merge("level" => "L1") }
+             "values" => zone["values"].merge("name" => "North Zone") }
     preview = API.preview(:context => context, :name => "ph_composer.zones.update", :params => edit)
     updated = API.invoke(:context => context, :name => "ph_composer.zones.update", :params => edit,
                          :request => { "sequence" => 3, "expected_revision" => classified["revision"],

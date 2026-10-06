@@ -59,20 +59,16 @@ module PhComposer
 
         changes = targets.map do |target|
           zone = resolve(request.model, target.fetch("reference"), index)
-          before = zone.record
-          unless Schema.view(before).fetch("values") == target.fetch("expected_values")
-            raise CodedError.new("target.changed", "A Zone changed since the selection was read.")
+          before = Schema.view(zone.record).fetch("values")
+          if %w[building_segment level].include?(field) && zone.record.fetch("schema_version") == 2
+            key = "#{field}_id"
+            values = before.merge(key => (value && Options.existing_name(request.engine, field, value)))
+          else
+            values = before.merge(field => DeepCopy.call(value))
           end
-
-          after = DeepCopy.call(before).merge(field => DeepCopy.call(value))
-          Schema.validate!(after)
-          [zone, before, after]
-        end
-        changes.each do |zone, before, after|
-          next if before == after
-
-          proposal.add_step(UpdateZoneStep.new(:reference => zone.reference, :before => before, :after => after),
-                            :scopes => [Operations::EntityScope.new(zone.path[0...-1])])
+          Zones.update(request, proposal, :reference => zone.reference, :values => values,
+                                          :expected_values => target.fetch("expected_values"))
+          [zone, before, values]
         end
         { "zone_ids" => changes.map { |zone, _before, _after| zone.record.fetch("id") } }
       end
@@ -111,8 +107,25 @@ module PhComposer
           return show(read) unless read["status"] == "completed"
 
           rows = read.fetch("value").fetch("zones")
-          values = rows.map { |row| row.fetch("values").fetch(field) }.uniq
-          entered = UI.inputbox([FIELDS.fetch(field)], [values.length == 1 ? values.first.to_s : ""], "Selected Zones")
+          options = %w[building_segment level].include?(field) ? API.query(:context => @context,
+                                                                           :name => "#{Options::PREFIX}.all") : nil
+          if options && options.dig("value", "adoption", "required")
+            return show("status" => "refused",
+                        "message" => "Adopt Zone options from the column menu first. Nothing was written.")
+          end
+
+          collection = field == "level" ? "levels" : "building_segments"
+          choices = options && options.dig("value", collection).map { |choice| choice.dig("values", "name") }
+          choices.sort! if choices
+          values = rows.map { |row|
+            stored = row.fetch("values")
+            stored[field] || (options && options.dig("value", collection).find { |choice|
+              choice.fetch("id") == stored["#{field}_id"]
+            }&.dig("values", "name"))
+          }.uniq
+          defaults = [values.length == 1 ? values.first.to_s : ""]
+          entered = choices ? UI.inputbox([FIELDS.fetch(field)], defaults, [choices.join("|")], "Selected Zones") :
+                              UI.inputbox([FIELDS.fetch(field)], defaults, "Selected Zones")
           return unless entered
 
           value = entered.first

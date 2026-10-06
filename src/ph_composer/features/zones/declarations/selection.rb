@@ -3,8 +3,8 @@
 module PhComposer
   module Zones
     module SelectionRegistration
-      TARGET = Shapes.object({ "reference" => ZONE_REFERENCE, "expected_values" => ZONE_VALUES }).freeze
-      ROW = Shapes.object({ "reference" => ZONE_REFERENCE, "values" => ZONE_VALUES }).freeze
+      TARGET = Shapes.object({ "reference" => ZONE_REFERENCE, "expected_values" => INPUT_VALUES }).freeze
+      ROW = Shapes.object({ "reference" => ZONE_REFERENCE, "values" => INPUT_VALUES }).freeze
       UPDATE = Shapes.object({
         "targets" => Shapes.list(TARGET).merge("minItems" => 1, "description" => "Each Zone occurrence to change, " \
                                                                                  "with the values last read; a " \
@@ -28,7 +28,7 @@ module PhComposer
                       :examples => [{}]) { |request| Selection.read(request) }
         feature.action("#{FEATURE_ID}.update_field",
                        :description => "Set one attribute on explicit Zone occurrences.",
-                       :refuses => Refuses::ZONE_TARGET,
+                       :refuses => Options::Registration::REFUSALS,
                        :params => UPDATE, :result => Shapes.object({ "zone_ids" => Shapes.list(Shapes::ID) }),
                        :undo_name => "Edit Selected Zones",
                        :side_effects => "Updates each Zone and its membership stamps.",

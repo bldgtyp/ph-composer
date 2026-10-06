@@ -1,7 +1,7 @@
-# Managed Zone options: acceptance draft
+# Managed Zone options: acceptance
 
 DATE: 2026-10-05
-STATUS: NOT RUN; feature unimplemented
+STATUS: O1–O9 and H1–H3 passed within this packet; current macOS host
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 
@@ -24,3 +24,24 @@ Use synthetic fixtures: repeated/shared Zone occurrences, orphan/conflicting sta
 legacy near-duplicate labels, non-ASCII names, unset Levels and long display names. Measure actual
 references and export objects, not raw string occurrence counts. Required native evidence includes
 host/build/fixture identity; a bridge command or installed RBZ does not close a native case.
+
+## Acceptance outcome
+
+All listed criteria passed through focused offline/public-API checks, actual Ruby extraction and
+HBJSON reload/reference assertions, the full offline gate and required native host observations.
+See [implementation review](evidence/implementation-review.md) and the
+[native case receipt](../../native-acceptance/evidence/zone-field-options-2026-10-05.md).
+
+O1–O6 and O9 combine focused/public checks with native first Make, chips, management, exact
+Undo/Redo, orphan usage, draft refusal/discard and Model activation. O7 includes actual native
+Copy/Paste, unique-storage repair, Explode/Restore, Line split/repair and normal reopen. O8 proves
+identity/name/metadata/reference behavior through Ruby extraction and real HBJSON reloads, including
+adopted Segment rename, explicit merge and collision refusal. H1–H3 have native pixels and separate
+record readback. No aggregate count or browser preview substitutes for those native assertions.
+
+Native host scope is SketchUp 26.1.188 on macOS; the separate SketchUp 2023, Windows, release and
+certification gates are not closed by this packet.
+
+Final normal source-panel visual restoration passed through Ed’s direct confirmation and supplied
+native screenshot on 2026-10-05. The earlier automated white captures remain recorded separately;
+no product rendering defect or shipping fix is asserted.
