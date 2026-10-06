@@ -77,5 +77,5 @@ Managed Zone options completed on `codex/zone-field-options` on 2026-10-05; offl
 current-host acceptance passed, including Ed’s final normal-panel visual confirmation.
 [Archived packet](archive/zone-field-options/STATUS.md); [PR #80](https://github.com/bldgtyp/ph-composer/pull/80)
 merged at `81f5426` after the inline corrections and dual-Ruby GitHub CI passed. The private Design
-System reading-aid synchronization remains a documentation follow-up; no editable source is present
-in the workspace.
+System reading aid was synchronized to `main@4f51621` on 2026-10-05, with current styles and fifteen
+static component renditions; see the [sync receipt](refactor/ui-ux-refinements.md#design-system-sync-receipt).

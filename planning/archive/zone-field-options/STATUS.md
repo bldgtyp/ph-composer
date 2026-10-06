@@ -37,17 +37,18 @@ PR #80 merged on 2026-10-05 at `81f5426` after both GitHub Ruby matrix jobs pass
   threads are resolved. Both GitHub `make ci` jobs (Ruby 2.7.2 and 3.2.2) passed on `ddc295e`;
   [PR #80](https://github.com/bldgtyp/ph-composer/pull/80) merged at `81f5426`. Local main is synchronized.
   Release, SketchUp 2023 native proof and Windows support remain separate gates. No task memory changed.
-- Design System reading aid: its private published artifact was not synchronized. No editable artifact
-  source is present in this workspace; the repository stylesheets remain authoritative. This is a
-  deferred documentation follow-up, not a merge or runtime gate.
+- Design System reading aid: the existing private artifact was synchronized to `main@4f51621` on
+  2026-10-05. Its six embedded stylesheets match the repository sources, and the repaired gallery
+  renders static component previews. Repository stylesheets remain authoritative; see the
+  [sync receipt](../../refactor/ui-ux-refinements.md#design-system-sync-receipt).
 
 Ed confirmed the three Zone rows render normally and supplied a native screenshot of `source.skp`
 on 2026-10-05. The screenshot shows all three rows with the managed Segment/Level chips and custom
 colours, closing the final normal-panel visual observation. Earlier automated white captures remain
 recorded as unsuccessful observations; no product rendering defect or shipping fix is asserted.
 Ed also reports successful testing in multiple files, without a separate assertion-level matrix.
-The completed packet is archived and merged. Release and the private Design System reading-aid
-follow-up remain separate.
+The completed packet is archived and merged; the private Design System reading-aid follow-up is
+closed. Release remains a separate gate.
 
 PR #80 review corrections: [receipt](evidence/pr80-review-corrections.md). All four findings are addressed;
 local full gate, current-host public preflight probe and required remote dual-Ruby checks passed;

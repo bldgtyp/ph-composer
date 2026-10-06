@@ -355,8 +355,42 @@ Ed authorized merge after both GitHub CI matrix jobs passed on `f0db4ea`. PR #79
 on 2026-10-05 as `3417e918b3bd7773e4ab44d68c6ddf6905f54b1c`, with DCO sign-off preserved.
 The implementation is merged; the native viewport-mask, hatch-edge and gesture/Undo follow-ups
 remain unverified as recorded above. Retain this ledger until those follow-ups are resolved rather
-than archiving it as fully accepted. Managed Building Segment/Level options remain planning-only
-under open issue #78. Local main is synchronized. On 2026-10-05, the merged feature branch was
-removed locally after verifying its tip was an ancestor of origin/main; the remote branch was
-already deleted. Both local and remote branch inventories now contain only main.
-Design System artifact sync remains an open merge-closeout follow-up, not a claim of completion.
+than archiving it as fully accepted. Managed Building-Segment/Level options subsequently merged in
+[PR #80](https://github.com/bldgtyp/ph-composer/pull/80); their accepted packet is
+[archived](../archive/zone-field-options/STATUS.md). Local main is synchronized. On 2026-10-05,
+the merged UI-refinement feature branch was removed locally after verifying its tip was an ancestor
+of origin/main; the remote branch was already deleted. At that checkpoint, both branch inventories
+contained only main.
+Design System artifact sync is closed by the receipt below.
+
+## Design System sync receipt
+
+On 2026-10-05 the existing private
+[PH-Composer Design System](https://claude.ai/artifact/77GLrkZxtkxo9TksTbvodL) was updated in place
+as version 8 from `main@4f516212ac7eef973f61cb8efe819c874a89867f`. Its identity and private access
+were retained. The repository stylesheets remain authoritative.
+
+- Rebuilt `components/bundle.css` from `base.css`, `overlay.css`, `shell.css`, `table.css`,
+  `library/library.css` and `features/zones/zones.css`. Independent comparison of the published
+  file against all six repository sources passed, ignoring only whitespace at section edges.
+- Reconciled colour, type, spacing, radius and shadow references, distinguishing actual CSS
+  variables from descriptive aliases. Workspace type is 13px; standalone body type is 14px.
+- Refreshed the ten existing static parts and added SelectionBar, ColumnMenu, ChoiceChip,
+  Tooltip and ManagedOptionsDialog. The table now depicts synthetic Zone/Face rows with managed
+  Segment/Level chips, two header bands and checked-row states; the inspector example is generic.
+- Corrected the source-specific chevron guidance: Segment/Level colours change label contrast
+  but retain the default chevron; dark Assembly chips use a light label and light chevron.
+  Tooltip markup follows the shared kit's `row-tooltip`, role and description association.
+- Repaired the gallery's missing `components/bundle.js` contract with a six-line static adapter.
+  It imports no kit scripts and dispatches no host actions. The artifact authoring check rendered
+  all fifteen cards through the gallery runtime; independent published-page inspection confirmed
+  the missing-bundle warning is gone and the choice-chip, column-menu, table, selection-bar,
+  managed-option dialog and tooltip previews render.
+
+The source extract, manifest, published CSS comparison and browser capture are ignored under
+`_private/design-system-sync-20261005/`. The extract's SHA-256 is
+`24207ffb84e42480f87263990072dbf187b7a00e0a8295e9d7b5de8af3dcacb9`.
+These are static reading aids; live kit behavior, host actions and Undo do not execute in them.
+Builder drawing styles remain excluded. No shipping source changed, so the closeout uses a
+focused documentation consistency check rather than repeating the unchanged offline or host gates.
+PR #79's native viewport-mask, hatch-edge and gesture/Undo follow-ups remain as recorded above.
