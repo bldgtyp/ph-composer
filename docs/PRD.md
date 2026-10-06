@@ -120,7 +120,7 @@ menus open the management dialog; Save applies a complete draft and Cancel disca
 keeps assignments. Merge/removal replaces used choices explicitly, including recoverable Zone
 members; Level may be cleared to Not set. Older Models show an adoption preview before category
 management, with explicit choices for equivalent names and copied definitions. Required current-host functional cases
-and final normal source-panel visual restoration passed on its feature branch. It has not merged.
+and final normal source-panel visual restoration passed. The addition merged through PR #80.
 
 ## Current capability and release boundary
 

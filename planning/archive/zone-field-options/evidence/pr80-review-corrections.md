@@ -1,7 +1,7 @@
 # PR #80 inline review corrections
 
 DATE: 2026-10-05
-STATUS: Corrections verified locally and on the current host; merge authorized, remote checks pending
+STATUS: Corrections verified locally/on host; dual-Ruby remote CI passed; PR #80 merged
 
 Four inline findings were addressed:
 
@@ -23,3 +23,7 @@ A private copy of the synthetic legacy baseline was used. Public `API.export_pre
 Raw receipts/logs remain ignored under `_private/host/zone-field-options-20261005/`: `pr80-package.json`, `pr80-legacy-preflight.json`, `pr80-mixed-preflight.json`, `pr80-adopted-preflight.json` and `pr80-ci.log`. Earlier native UI/Undo/copy/split/Restore evidence remains historical evidence for those unchanged semantics. Broad ledger dependency fingerprints screen possible rechecks; this delta probe does not claim a rerun of every original native case.
 
 The private test Model was saved. Final normal composition restoration uses a fresh process opening the unchanged saved source Model without the fixture helper. Exact option/Zone/stamp readbacks match the earlier normal source receipt; a new session, absent fixture helper and unmodified Model are confirmed in `pr80-source-normal.json`.
+
+## Merge receipt
+
+All four inline threads are resolved. Both jobs in [GitHub CI run 37391572994](https://github.com/bldgtyp/ph-composer/actions/runs/37391572994) passed on `ddc295ec9bc0af43e1a61d67434f47ecda1458cc`. PR #80 merged at `81f542604d01ec87a4191e594283b0ad5513f430` on 2026-10-05 local time. The merged tree matches the tested head exactly; the squash commit carries DCO sign-off. Subsequent closeout changes update documentation only.

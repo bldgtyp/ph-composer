@@ -1,7 +1,7 @@
 # Managed Zone options: implementation contracts
 
 DATE: 2026-10-05
-STATUS: Complete local implementation and current-host acceptance; unmerged
+STATUS: Merged to main through PR #80; current-host acceptance complete
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 

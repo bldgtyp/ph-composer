@@ -245,7 +245,7 @@ Building Segment export identity. The request is scoped in the separate
 [managed Zone options packet](../archive/zone-field-options/README.md). Respective
 column-menu Manage actions open one reused dialog. Ed accepted D2–D10 and implementation on
 2026-10-05; managed identities, explicit adoption, select chips, custom colours and stable export
-identities are implemented and current-host verified on the local feature branch. This intake
+identities are implemented and current-host verified, merged through PR #80. This intake
 remains the request record; the archived packet holds implementation and acceptance.
 
 

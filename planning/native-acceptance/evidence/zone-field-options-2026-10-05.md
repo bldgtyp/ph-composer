@@ -77,3 +77,7 @@ review and its reproduced corrections are closed in the
 These results close the feature’s current-host cases and normal restoration; the packet is archived. They do not establish a SketchUp 2023 native
 run, Windows support, merge, release or certification acceptance. Shared Design System synchronization
 from main remains a post-merge action. Ed subsequently authorized [PR #80](https://github.com/bldgtyp/ph-composer/pull/80); merge and release remain separate.
+
+## Subsequent PR review and merge
+
+PR #80’s four inline findings were addressed and resolved. See the [correction receipt](../../archive/zone-field-options/evidence/pr80-review-corrections.md) for failing/passing regressions, the final installed-host public preflight probe and normal source restoration. Both remote Ruby jobs passed on `ddc295e`; PR #80 merged at `81f5426`. The original receipts above retain their original build identity and observations.

@@ -1,7 +1,7 @@
 # Managed Building Segments and Levels
 
 DATE: 2026-10-05
-STATUS: Complete implementation and current-host acceptance; PR #80 open, unmerged
+STATUS: Merged to main through PR #80; current-host acceptance complete
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 PR: [#80](https://github.com/bldgtyp/ph-composer/pull/80)

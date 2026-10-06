@@ -1,7 +1,7 @@
 # Managed Zone options: implementation design
 
 DATE: 2026-10-05
-STATUS: Complete local implementation and current-host acceptance; unmerged
+STATUS: Merged to main through PR #80; current-host acceptance complete
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 
 Ed accepted D2–D10 and the older-call/destination-adoption policies on 2026-10-05.

@@ -1,13 +1,14 @@
 # Managed Zone options: status
 
 DATE: 2026-10-05
-STATUS: Complete implementation and current-host acceptance; PR #80 open, unmerged
+STATUS: Merged to main through PR #80; current-host acceptance complete
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#78](https://github.com/bldgtyp/ph-composer/issues/78)
 PR: [#80](https://github.com/bldgtyp/ph-composer/pull/80)
 
 Ed authorized the whole packet on a new branch and accepted D2–D10 on 2026-10-05.
-Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkpoint `941166a`.
+Implementation was on `codex/zone-field-options`, based on `627b4f7`; checkpoint `941166a`.
+PR #80 merged on 2026-10-05 at `81f5426` after both GitHub Ruby matrix jobs passed on `ddc295e`.
 
 ## Current execution receipt
 
@@ -21,28 +22,34 @@ Work is on `codex/zone-field-options`, based on `627b4f7`; implementation checkp
 - Review: the coherent stronger independent architecture/UI `simplify` review is closed, including
   independently reproduced corrections to portable typed-reference validation and adoption-survivor
   serialization. [Implementation review](evidence/implementation-review.md).
-- Native: ZO-H1/H2/H3/O7 pass on SketchUp 26.1.188 / Ruby 3.2.2, with native controls and separate
+- Native: original ZO-H1/H2/H3/O7 observations passed on SketchUp 26.1.188 / Ruby 3.2.2, with native controls and separate
   readback, immutable fixture/build baselines, exact Undo/Redo, within/between-Model copy,
   split/Restore and fresh normal-process reopen. [Native evidence](../../native-acceptance/evidence/zone-field-options-2026-10-05.md).
 - Build: installed RBZ matches all 387 packaged files, no extras or mismatches; SHA-256
-  `0c1241d3d20647f3e4f596919afe02f685238fab17f422c509b699b63c0205ac`.
+  `97d30a432c31ac7132d853e52fe94bade8f8cbddb130ccbc86aac49c5be95f2c`.
   Raw logs, Models, captures and immutable receipts are ignored under
   `_private/host/zone-field-options-20261005/`.
 - Normal restoration: saved source/destination reopened with exact records/defaults/metadata/stamps,
   new sessions, no fixture helper/test styles and no Model writes from reads/opening. The normal
-  source Model and panel are left open.
-- Delivery: Ed requested a PR on 2026-10-05. Branch pushed and [PR #80](https://github.com/bldgtyp/ph-composer/pull/80)
-  opened against main; final visual hold closed by Ed. Ed subsequently authorized addressing the inline review and merging once resolved; release is not authorized. Shared Design System synchronization
-  from main is deferred until merge. Native SketchUp 2023 and Windows proof
-  remain separate repository gates. No task memory was changed.
+  source Model is left open; the panel is closed. The final corrected build’s normal source readback
+  matches exact option/Zone/stamp data with no fixture helper or Model writes.
+- Delivery: Ed authorized addressing the inline findings and merging once resolved. All four
+  threads are resolved. Both GitHub `make ci` jobs (Ruby 2.7.2 and 3.2.2) passed on `ddc295e`;
+  [PR #80](https://github.com/bldgtyp/ph-composer/pull/80) merged at `81f5426`. Local main is synchronized.
+  Release, SketchUp 2023 native proof and Windows support remain separate gates. No task memory changed.
+- Design System reading aid: its private published artifact was not synchronized. No editable artifact
+  source is present in this workspace; the repository stylesheets remain authoritative. This is a
+  deferred documentation follow-up, not a merge or runtime gate.
 
 Ed confirmed the three Zone rows render normally and supplied a native screenshot of `source.skp`
 on 2026-10-05. The screenshot shows all three rows with the managed Segment/Level chips and custom
 colours, closing the final normal-panel visual observation. Earlier automated white captures remain
 recorded as unsuccessful observations; no product rendering defect or shipping fix is asserted.
 Ed also reports successful testing in multiple files, without a separate assertion-level matrix.
-The completed packet is archived. Merge/release and post-merge synchronization remain separate.
+The completed packet is archived and merged. Release and the private Design System reading-aid
+follow-up remain separate.
 
 PR #80 review corrections: [receipt](evidence/pr80-review-corrections.md). All four findings are addressed;
-local full gate and current-host public preflight probe pass. Required remote dual-Ruby checks and
-verified merge are pending. Historical native/package evidence above is retained for its original build.
+local full gate, current-host public preflight probe and required remote dual-Ruby checks passed;
+merge is verified. Original native receipts retain their original package identity; the final
+corrected build’s package and normal-restoration evidence are in the correction receipt.

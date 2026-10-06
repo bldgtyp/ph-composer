@@ -76,4 +76,6 @@ the next planned feature scope and requires its own implementation authorization
 Managed Zone options completed on `codex/zone-field-options` on 2026-10-05; offline, review and
 current-host acceptance passed, including Ed’s final normal-panel visual confirmation.
 [Archived packet](archive/zone-field-options/STATUS.md); [PR #80](https://github.com/bldgtyp/ph-composer/pull/80)
-is open and unmerged. Shared Design System synchronization from main remains post-merge.
+merged at `81f5426` after the inline corrections and dual-Ruby GitHub CI passed. The private Design
+System reading-aid synchronization remains a documentation follow-up; no editable source is present
+in the workspace.
