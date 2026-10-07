@@ -19,7 +19,7 @@ the assignment surface. No extra tab or permanent toolbar controls are proposed.
 
 The request covers the two existing fields' option sets, not arbitrary new columns. Shared
 cross-project templates can follow later. Name and Ground Depth retain text editors; Segment and Level now use managed select chips.
-Current-host acceptance passed, including Ed’s final normal source-panel visual confirmation. Its parent intake is [UI refinements](../../refactor/ui-ux-refinements.md).
+Current-host acceptance passed, including Ed’s final normal source-panel visual confirmation. Its parent intake is [UI refinements](../ui-ux-refinements.md).
 
 Implementation design and current source trace: [DESIGN.md](DESIGN.md). The
 [development prototype](../../../tools/spikes/zone-field-options/README.md) is synthetic and does not change Models.

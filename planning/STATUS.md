@@ -1,6 +1,6 @@
 # Planning Status
 
-DATE: 2026-10-01
+DATE: 2026-10-07
 STATUS: Active index of tracked planning work.
 AUTHOR: Ed May, BLDGTYP
 
@@ -40,7 +40,6 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 | n/a | The Ruby suite errors without a UTF-8 locale | bug | Requested; reproduced 2026-10-03 (five tests read source with no encoding) | none (local planning draft) | [bugs/ci-needs-utf8-locale.md](bugs/ci-needs-utf8-locale.md) |
 | n/a | Native acceptance tooling | workflow | Implemented; historical evidence indexed, observed-result validation and dependency screening | none (local tooling work) | [native-acceptance/](native-acceptance/README.md); tools and skills remain development-only |
 | n/a | UI baseline from the predecessor's six screens | reference | Scoped | none (no remote) | [ui-baseline/](ui-baseline/README.md) |
-| n/a | UI and UX refinements | refactor | Merged through PR #79 after owner approval and green Ruby 2.7.2/3.2.2 CI; native viewport-mask, hatch-edge and gesture/Undo follow-ups remain open; not released | [#77](https://github.com/bldgtyp/ph-composer/issues/77), [PR #79](https://github.com/bldgtyp/ph-composer/pull/79) | [refactor/ui-ux-refinements.md](refactor/ui-ux-refinements.md) |
 | n/a | PHX dependency packaging | external follow-up | Deferred; Phase 0 runtime route proved | [PH-Tools/PHX#157](https://github.com/PH-Tools/PHX/issues/157) | [B1 disposition](archive/phase-00-foundation/evidence/spike-phx.md); METr integration deferred; retain pinned-wheel evidence for resumption |
 | n/a | Cross-cutting decisions | decision register | D1-D12 confirmed; contributor architecture and external-agent priority recorded | none (no remote) | [DECISIONS.md](DECISIONS.md); [contributor architecture](../context/EXTENSIBILITY.md); [agent interface](../context/AGENT_INTERFACE.md) |
 
@@ -50,6 +49,11 @@ States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·
 
 
 ## Recently merged
+
+UI and UX refinements are [complete and archived](archive/ui-ux-refinements.md#current-native-acceptance).
+Implementation merged through PR #79/#80, Design System sync is complete, and all six bounded
+current-host cases passed on 2026-10-07; [native evidence](native-acceptance/evidence/ui-ux-refinements-2026-10-07.md).
+Release and platform gates remain separate.
 
 Zones / Faces table-first layout merged to main on 2026-10-04 through
 [PR #73](https://github.com/bldgtyp/ph-composer/pull/73) (merge commit `5ef2d7d`), host-accepted and
@@ -76,4 +80,4 @@ current-host acceptance passed, including Ed’s final normal-panel visual confi
 [Archived packet](archive/zone-field-options/STATUS.md); [PR #80](https://github.com/bldgtyp/ph-composer/pull/80)
 merged at `81f5426` after the inline corrections and dual-Ruby GitHub CI passed. The private Design
 System reading aid was synchronized to `main@4f51621` on 2026-10-05, with current styles and fifteen
-static component renditions; see the [sync receipt](refactor/ui-ux-refinements.md#design-system-sync-receipt).
+static component renditions; see the [sync receipt](archive/ui-ux-refinements.md#design-system-sync-receipt).

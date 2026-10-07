@@ -1071,6 +1071,126 @@
         "tools/hostkit/host_bridge*"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "UXR-SOLVE",
+      "label": "UI refinement: Checked-Zone Solve eligibility and Undo/Redo",
+      "mode": "native",
+      "authority": "planning/archive/ui-ux-refinements.md",
+      "paths": [
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/features/zones/faces/*",
+        "src/ph_composer/html/*",
+        "context/TECH_STACK.md",
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "UXR-FILTER",
+      "label": "UI refinement: Column filter rendering, retention and no Undo",
+      "mode": "native",
+      "authority": "planning/archive/ui-ux-refinements.md",
+      "paths": [
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/features/zones/faces/*",
+        "src/ph_composer/html/*",
+        "context/TECH_STACK.md",
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "UXR-HATCH",
+      "label": "UI refinement: Assembly None hatch and native selection edges",
+      "mode": "native",
+      "authority": "planning/archive/ui-ux-refinements.md",
+      "paths": [
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/features/zones/faces/*",
+        "src/ph_composer/html/*",
+        "context/TECH_STACK.md",
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "UXR-PAINT",
+      "label": "UI refinement: Column paint gestures, Undo and native narrow layout",
+      "mode": "native",
+      "authority": "planning/archive/ui-ux-refinements.md",
+      "paths": [
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/features/zones/faces/*",
+        "src/ph_composer/html/*",
+        "context/TECH_STACK.md",
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "UXR-COLOUR",
+      "label": "UI refinement: Matching Colour-by and manual override while painting",
+      "mode": "native",
+      "authority": "planning/archive/ui-ux-refinements.md",
+      "paths": [
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/features/zones/faces/*",
+        "src/ph_composer/html/*",
+        "context/TECH_STACK.md",
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "UXR-FILTER-OCC",
+      "label": "UI refinement: Nested and shared occurrence masks",
+      "mode": "native",
+      "authority": "planning/archive/ui-ux-refinements.md",
+      "paths": [
+        "src/ph_composer.rb",
+        "src/ph_composer/core/*",
+        "src/ph_composer/session/*",
+        "src/ph_composer/shell/*",
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/features/zones/*",
+        "src/ph_composer/features/zones/faces/*",
+        "src/ph_composer/html/*",
+        "context/TECH_STACK.md",
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "tools/hostkit/host_bridge*"
+      ],
+      "native_control_required": true
     }
   ]
 }
