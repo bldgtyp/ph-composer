@@ -7,6 +7,7 @@ require_relative "support/assembly_record_fixtures"
 class LibraryCoordinatorTest < PhComposerTestCase
   include LibraryProviderFixtures
   include AssemblyRecordFixtures
+
   API = PhComposer::API
   PREFIX = "ph_composer.library"
   MATERIALS = "ph_composer.assemblies.materials"

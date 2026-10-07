@@ -7,6 +7,7 @@ require_relative "../src/ph_composer/features/windows/units/generated_geometry"
 
 class WindowGeneratedGeometryTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
 
   def test_all_empty_generation_retains_dimensions_without_inventing_pane_bounds

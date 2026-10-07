@@ -5,6 +5,7 @@ require_relative "support/assembly_record_fixtures"
 
 class AssemblyRecordsOperationsTest < PhComposerTestCase
   include AssemblyRecordFixtures
+
   API = PhComposer::API
 
   def setup

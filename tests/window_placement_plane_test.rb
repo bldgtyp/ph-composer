@@ -8,6 +8,7 @@ require "rbconfig"
 
 class WindowPlacementPlaneTest < PhComposerTestCase
   include WindowRecordFixtures
+
   Plane = PhComposer::Windows::Placement::Plane
   Plans = PhComposer::Windows::Units::DefinitionPlan
   Anchors = PhComposer::Windows::Units::Anchors

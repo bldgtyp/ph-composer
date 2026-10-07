@@ -7,6 +7,7 @@ require_relative "../src/ph_composer/features/windows/placement/host"
 
 class WindowPlacementHostTest < PhComposerTestCase
   include AssemblyAssignmentFixtures
+
   W = PhComposer::Windows
   HOSTS = W::Placement::Hosts
 

@@ -7,6 +7,7 @@ require_relative "../src/ph_composer/features/windows/units/identity_step"
 
 class WindowUnitSwapStepTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
   P = PhComposer::Windows::Placement
 

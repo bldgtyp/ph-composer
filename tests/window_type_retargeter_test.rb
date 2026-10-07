@@ -7,6 +7,7 @@ require_relative "support/assembly_assignment_fixtures"
 class WindowTypeRetargeterTest < PhComposerTestCase
   include WindowRecordFixtures
   include AssemblyAssignmentFixtures
+
   U = PhComposer::Windows::Units
   PREFIX = "ph_composer.windows.types"
 

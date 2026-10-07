@@ -6,6 +6,7 @@ require_relative "support/construction_export_fixtures"
 class PhaseOneExportTest < PhComposerTestCase
   include ConstructionExportFixtures
   include FixtureFiles
+
   FIXTURE = File.join(TESTS_ROOT, "fixtures", "phase_one", "two_zones_extraction.json")
 
   def setup

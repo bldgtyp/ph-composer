@@ -7,6 +7,7 @@ require_relative "support/library_provider_fixtures"
 class WindowLibraryKindsTest < PhComposerTestCase
   include WindowRecordFixtures
   include LibraryProviderFixtures
+
   API = PhComposer::API
   L = "ph_composer.library"
 

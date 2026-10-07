@@ -9,6 +9,7 @@ require_relative "../tools/api_reference/api_reference"
 # than kept by hand.
 class ApiReferenceTest < PhComposerTestCase
   include FixtureFiles
+
   API = PhComposer::API
   REFERENCE = File.expand_path("../docs/API_REFERENCE.md", __dir__)
   ANY_OBJECT = { "type" => "object" }.freeze

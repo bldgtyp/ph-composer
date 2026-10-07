@@ -9,6 +9,7 @@ require "rbconfig"
 
 class WindowUnitWorldGeometryTest < PhComposerTestCase
   include WindowRecordFixtures
+
   Geometry = PhComposer::Windows::Units::WorldGeometry
   Plans = PhComposer::Windows::Units::DefinitionPlan
   Anchors = PhComposer::Windows::Units::Anchors

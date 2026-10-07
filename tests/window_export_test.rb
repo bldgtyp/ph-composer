@@ -6,6 +6,7 @@ require_relative "../src/ph_composer/features/windows/export"
 
 class WindowExportTest < PhComposerTestCase
   include WindowRecordFixtures
+
   X = PhComposer::Windows::ExportProjection
   U = PhComposer::Windows::Units
 

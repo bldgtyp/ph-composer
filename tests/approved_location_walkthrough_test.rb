@@ -9,6 +9,7 @@ require "tmpdir"
 # user's native dialog; everything after it is the public API, and its proof carries no path.
 class ApprovedLocationWalkthroughTest < PhComposerTestCase
   include AssemblyRecordFixtures
+
   Locations = PhComposer::ApprovedLocations
 
   def test_the_walkthrough_exports_reads_back_and_is_refused_once_revoked

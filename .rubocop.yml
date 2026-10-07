@@ -26,7 +26,10 @@ Style/Semicolon:
 Layout:
   Enabled: true
 
-# Cops RuboCop 1.50 still marks pending; the whole department includes them.
+# Explicit opt-ins for pending Layout cops; the whole department includes them.
+Layout/EmptyLinesAfterModuleInclusion:
+  Enabled: true
+
 Layout/LineContinuationLeadingSpace:
   Enabled: true
 
@@ -43,6 +46,8 @@ Layout/SpaceBeforeBrackets:
 Layout/LineLength:
   Enabled: true
   Max: 120
+  # The upgrade's new qualified-name exemption must not relax the existing ceiling.
+  AllowQualifiedName: false
 
 # Keys align with the first key, for `:key => value` and `key: value` alike, including a trailing
 # hash argument without braces. Where that first key would push a line past 120, it starts its own

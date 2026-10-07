@@ -8,6 +8,7 @@ require_relative "../src/ph_composer/features/windows/units/identity_plan"
 
 class WindowUnitIdentityPlanTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
 
   def occurrence(path, overrides = {})

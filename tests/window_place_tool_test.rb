@@ -7,6 +7,7 @@ require_relative "support/assembly_assignment_fixtures"
 class WindowPlaceToolTest < PhComposerTestCase
   include WindowRecordFixtures
   include AssemblyAssignmentFixtures
+
   PREFIX = "ph_composer.windows.place_tool"
 
   def setup

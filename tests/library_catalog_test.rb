@@ -5,6 +5,7 @@ require_relative "support/library_provider_fixtures"
 
 class LibraryCatalogTest < PhComposerTestCase
   include LibraryProviderFixtures
+
   Provider = PhComposer::Library::Provider
 
   class SyntheticProvider

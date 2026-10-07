@@ -6,6 +6,7 @@ require_relative "../src/ph_composer/features/windows/units/place_step"
 
 class WindowUnitPlaceStepTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
   P = PhComposer::Windows::Placement
 

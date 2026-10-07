@@ -7,6 +7,7 @@ require_relative "../src/ph_composer/features/windows/units/reset_step"
 
 class WindowUnitReadContextTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
 
   Engine = Struct.new(:model) do
