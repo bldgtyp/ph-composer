@@ -1,46 +1,117 @@
 # Units: status
 
-DATE: 2026-09-30
-STATUS: In progress. Phase 0 shared portion merged through PR #1 (P0-E); feature quantities remain with their owners.
-AUTHOR: Ed May, BLDGTYP, with Claude
+DATE: 2026-10-07
+STATUS: In progress. Shared infrastructure and Assembly/Window editor follow-ups merged; Spaces and later feature scope remain.
+AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
 ## State
 
-PRD drafted 2026-09-18 from the predecessor's `planning/phases/U1_units.md`, its delivery packet
-at `planning/archive/units/` and its follow-ups file. Ed confirmed I1 through I15 and the Phase 0
-scope split on 2026-09-18. Q1/Q4 are resolved. Q2/Q3 remain with piping and equipment; their
-answers do not block the foundation.
+Code and planning audit on `main` at `7fbd8fd`, 2026-10-07; final consistency check at `da88d06`
+(intervening changes are planning-only and leave the audited source unchanged). The original PRD was drafted on
+2026-09-18; Ed confirmed I1 through I15 and the shared-infrastructure-only Phase 0 scope that
+day. Q1/Q4 are settled. Q2/Q3 remain with piping and equipment.
+
+The foundation is already delivered. Phase 2 also delivered U1-F3 and U1-F4; they are no longer
+implementation tasks. This packet stays active for the feature-owned work below. The audit
+changes documentation only and grants no implementation authorization.
+
+## Implemented and merged
+
+Source paths below are relative to `src/ph_composer/`.
+
+| Capability | Current implementation | Evidence |
+| --- | --- | --- |
+| Shared parser, formatter and quantity registry | `html/units.js`, `unit_tables.js`, `unit_numbers.js`, `length_expression.js`; 18 panel quantities, mixed-unit length expressions, regional numbers and finite/range checks | `tests/units_test.js`, `tests/support/units_vectors.json`; [P0-E evidence](../../../archive/phase-00-foundation/evidence/phase-04-panel-units.md) |
+| Unit-bearing fields and dimension selectors | `html/unit_field.js`, `unit_preferences.js`; the first input/paste freezes a draft's unit profile, while clean fields repaint | `tests/unit_field_test.js`; P0-E evidence |
+| Local SI/IP and per-scope formats | `shell/preferences.rb`, `html/panel.js`; `Sketchup.write_default`, separate SI/IP formats, SI first-use default, regional format supplied in snapshots | `tests/preferences_test.rb`, `tests/panel_app_test.js`; P0-E restart and no-Model-write observations |
+| Table-cell drafts | `html/record_edits.js` and `inventory_grid.js`; shared parsing, frozen draft units, guarded writes and refusal retention | `tests/record_edits_units_test.js`; the first-table deferral is delivered, except saved layout |
+| U1-F3: Assembly dimension drafts | `html/features/assemblies/editor.js` uses `UnitField` for thickness and segment-width editors; the owner retains request guards and pending state | `tests/assembly_builder_test.js`; [Builder evidence](../../../archive/phase-02-envelope/evidence/p2-04-assembly-builder.md), Phase 2 E04 |
+| U1-F4: Window dimension form | `html/features/windows/cards.js` uses one `editQuantity`/`UnitField` path for row/column dimensions and other numeric edits | `tests/window_editor_test.js`; [Builder evidence](../../../archive/phase-02-envelope/evidence/p2-11-window-type-builder.md), Phase 2 E11 |
+| Report units and SI exports | `export/task.rb` captures the preference when the task is created and passes it to `export/report.rb`; feature report contributors convert canonical values through `core/units.rb`. HBJSON remains SI | `tests/export_test.rb`, `tests/export_tasks_test.rb`; existing [Phase 2 export acceptance](../../../archive/phase-02-envelope/ACCEPTANCE.md) |
+
+Phase 0 merged through PR #1. Phase 2 merged through PR #15 (`c687a73`, an ancestor of the
+audited head). Its [acceptance register](../../../archive/phase-02-envelope/ACCEPTANCE.md) records
+E03/E04/E11 as passed with qualified retained native and current checks; the individual Builder
+journals contain earlier open checkpoints. Use the register and its
+[consolidation](../../../archive/phase-02-envelope/evidence/p2-17-acceptance.md#register-consolidation-at-f4f6576)
+for the final award, not those historical checkpoint headings.
+
+The Ruby units module intentionally carries only eight report quantities, not all 18 panel
+quantities. `tests/units_test.rb` filters shared vectors to the registered Ruby quantities.
+Missing unused Ruby rows are not a blanket mirror defect; add them when a feature needs them.
+
+## Items left to do
+
+| Item | Remaining work | Owner / entry |
+| --- | --- | --- |
+| Ruby `volume` and `airflow` | Add report definitions and extend the existing shared-vector agreement test. Both quantities already exist in JavaScript and the vectors | [P3a-01](../../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md); planned, not authorized |
+| Saved table layout | Add persisted column order/widths through the host preference store and verify restoration/reset. Shared table resizing exists, but widths are currently in-memory and no layout preference key/API exists | [P3a-07](../../phase-03a-spaces/phases/p3a-07-spaces-tab.md), D3a-11; planned, decision open, not authorized |
+| U1-F1: large Spaces table | Measure a unit switch on the new 300-Space fixture, record median and measurement conditions, then decide whether to optimize. The predecessor's 513 ms is not a PH-Composer measurement | P3a-07; planned, not authorized |
+| Repaint budget | Agree and record the refresh budget used by P3a-07 before deciding whether optimization is needed. That stage refers to a budget in this packet, but no numeric budget has been set here | Spaces planning; open criterion, not an implementation defect |
+| Piping / Q2 | Confirm nominal pipe-size selection versus converted diameter; reuse length quantities for insulation/run length and add descriptors, vectors and feature-screen checks | [Hot water piping](../../phase-04-mechanical/hot-water-piping/STATUS.md); requested, interview pending |
+| Ducting | Confirm duct dimension/insulation descriptors and displays; reuse registered length/airflow quantities where applicable and verify the owning screen/export boundary | [ERV ducting](../../phase-04-mechanical/erv-ducting/STATUS.md); requested, interview pending |
+| Equipment / Q3 | Confirm power/energy displays and capacities; add missing volume-in-litres, capacity and ventilator-efficiency conversions as required. W/kWh unchanged and kBtu/h capacity remain proposals | [Equipment](../../phase-04-mechanical/equipment/STATUS.md); requested, family interviews pending |
+| Climate | Confirm radiation quantities and add their conversions/vectors; reuse temperature and length primitives for matching fields | [Climate data](../../phase-05-post-mvp/climate-data/STATUS.md); requested, post-MVP |
+
+Thermal-bridge run length and psi already have generic quantities (`length`, `linear_psi`);
+[Phase 3b](../../phase-03b-thermal-bridges/STATUS.md) still owns its field wiring and acceptance.
+No piping, ducting, equipment, climate or Spaces feature source is implemented at the audited
+head. The PRD's new-quantity table is a proposal, not a list of all-new registry rows: several
+fields reuse existing quantities. Add only missing conversions, and Ruby report rows as needed.
 
 ## Next step
 
-Reuse the merged shared modules. The first Phase 1 table owns deferred table-layout preferences
-and cell drafts. Keep F3 with Assemblies, F4 with Window Types and F1 with Spaces if measurements
-justify it. Resolve new quantity rows through their owning feature interviews.
+Ed requested `implement-loop` for this packet on 2026-10-07. The planning revisions are now
+on `codex/units`. The requested implementation is authorized within this packet; the remaining
+owner allocations and open product decisions still need a scope choice. The standalone Ruby
+volume/airflow groundwork is the recommended extraction; no owner feature stage has started.
 
-Phase 2 planning (2026-09-30) places U1-F3 in
-[P2-04](../../../archive/phase-02-envelope/phases/p2-04-assembly-builder.md) and U1-F4 in
-[P2-11](../../../archive/phase-02-envelope/phases/p2-11-window-type-builder.md). The table-layout
-preferences deferred from Phase 1 stay deferred; no Phase 2 screen needs a saved layout.
-
-Phase 3 planning (2026-10-03) allocates the Ruby `volume` and `airflow` quantity rows to
-[P3a-01](../../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md); the panel
-table already has both. U1-F1 is measured in
-[P3a-07](../../phase-03a-spaces/phases/p3a-07-spaces-tab.md) before any optimization,
-and the Spaces table takes the saved column layout there. Neither is authorized.
+Resume with the owning [Spaces entry gates](../../phase-03a-spaces/STATUS.md), its open decisions
+and explicit implementation go. Deliver its two Ruby rows at P3a-01; saved layout and the U1-F1
+measurement/decision stay at P3a-07. Mechanical and climate choices wait for their interviews.
+Do not redo the foundation transplant or the completed F3/F4 work.
 
 ## Blockers
 
-- The owning packets for the new quantities (piping, ducting, equipment, climate) are drafts, so
-  their registry rows are provisional.
-- No issue created yet; D8 now confirms the existing `bldgtyp/ph-composer` development home.
+- The remaining feature scope has open decisions and requires its own implementation authorization.
+- No issue is recorded for this cross-phase packet. The remote exists; lack of a remote is not a current blocker.
 
 ## Verification
 
-The Phase 0 portion merged through PR #1 (P0-E): the six shared unit
-modules, the length-expression reader, the Ruby mirror and the shared vectors, with the A1 to A15
-allocation in [the P0-E evidence](../../../archive/phase-00-foundation/evidence/phase-04-panel-units.md).
-New quantity rows and the feature follow-ups remain with their owners.
+### Current execution receipt
+
+- Branch: `codex/units`, based on `da88d06`; all five revised planning files carried from `main`.
+- Completed: packet orientation, owner-entry-gate check and focused planning consistency review.
+- Checks this run: `git diff --check` passed; local Markdown file links in the five revised
+  planning files resolve. No code, build, offline suite or host check ran in this intake.
+- Pending: scope choice between extracting standalone Ruby volume/airflow groundwork and
+  continuing through the existing feature owners. Q2/Q3, saved layout and the repaint budget
+  remain open; no completed gate is repeated or deferred work awarded acceptance.
+- Next action: record the scope choice and its acceptance checks before changing code.
+
+### Retained audit evidence
+
+Focused checks run during this audit, all passing:
+
+| Check | Result |
+| --- | --- |
+| JavaScript units, unit fields, table drafts, Assembly Builder, Window editor and panel tests | 116 tests, zero failures or skips; repository memory guard and 60-second per-test timeout |
+| Ruby units and preferences, pinned Ruby 3.2.2 | 11 runs, 73 assertions, zero failures/errors/skips |
+| Ruby export and export tasks, pinned Ruby 3.2.2 | 33 runs, 271 assertions, zero failures/errors/skips |
+
+Source tracing confirms report preference capture; this audit did not execute a live switch
+during an export or a new SI/IP HBJSON equivalence comparison. Existing phase evidence is
+retained with its original scope/provenance. No new native host, browser, Ruby 2.7, full CI,
+coverage or performance gate ran for these documentation-only changes.
+
+The predecessor's A1 to A15 remain the acceptance shape, allocated to their delivery owners.
+[P0-E](../../../archive/phase-00-foundation/evidence/phase-04-panel-units.md#units-acceptance-allocation-a1-to-a15)
+proves the shared subset; Phase 2 adds feature evidence. There is no consolidated PH-Composer
+award for every inherited check across all future screens. Each remaining owner must record
+its applicable parsing, draft, persistence, report/export and host checks, reusing unchanged
+evidence where justified. Spaces performance is NOT RUN. SketchUp 2023, Windows and public
+release gates remain separate.
 
 ## Ledger
 
@@ -48,5 +119,7 @@ New quantity rows and the feature follow-ups remain with their owners.
 | --- | --- |
 | 2026-09-18 | PRD drafted from the predecessor's U1 record. |
 | 2026-09-18 | Ed confirmed inherited behavior and the shared-infrastructure-only Phase 0 scope. No implementation authorized. |
-| 2026-09-18 | Phase 0 portion implemented on branch in P0-E. Builder names became dimension scopes a screen names; table-layout preferences defer to the first table screen. |
+| 2026-09-18 | Shared portion implemented in P0-E; dimension scopes replace builder names. Table drafts/layout deferred to the first table screen. Foundation subsequently merged through PR #1. |
+| 2026-10-01 | Phase 2 accepted and merged through PR #15, delivering U1-F3 and U1-F4 with their feature screens. |
 | 2026-10-03 | Phase 3 planning: Ruby volume and airflow rows allocated to P3a-01; U1-F1 measurement and saved layout to P3a-07. |
+| 2026-10-07 | Reconciled source/tests and archived awards: closed F3/F4 implementation work, distinguished table drafts from saved layout, and recorded remaining owners, unset repaint budget and verification limits. |

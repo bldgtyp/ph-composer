@@ -1,20 +1,25 @@
 # Units: SI and IP display
 
-A carry-over packet. The predecessor delivered app-wide SI and IP display with alternate-unit
-input as its U1 phase, merged on 2026-09-15 after a 20-round interview. PH-Composer takes that
-contract whole and extends the quantity table to the features the predecessor never built.
+A cross-phase packet. The shared SI/IP parser, fields and preferences are implemented and merged,
+as are the Assembly and Window dimension-editor follow-ups. Remaining work belongs to Spaces,
+mechanical features and post-MVP climate data. See [STATUS.md](STATUS.md) for the 2026-10-07
+code audit, evidence and remaining-work list.
+
+The predecessor delivered SI/IP display with alternate-unit input as its U1 phase, merged on
+2026-09-15 after a 20-round interview. Its fifteen decisions remain settled; its acceptance
+record is prior evidence, not a blanket acceptance award for PH-Composer.
 
 ## Read order
 
-1. [PRD.md](PRD.md): the inherited contract, the port disposition, the quantities the new
-   features add, and four decisions for the interview.
-2. [STATUS.md](STATUS.md).
+1. [STATUS.md](STATUS.md): implemented scope, verification and items left to do.
+2. [PRD.md](PRD.md): the inherited contract, historical port disposition and provisional
+   feature quantities. Q1/Q4 are settled; Q2/Q3 remain with their owners.
 
-The Phase 0 portion is planned in [the panel/Units stage](../../../archive/phase-00-foundation/phases/phase-04-panel-units.md).
-Ed confirmed that the shared unit files and applicable tests move with the
-foundation transplant. Assembly and Window editor follow-ups stay with their features; Spaces
-owns repaint optimization if measurements justify it. New quantities stay with their owning
-features. The fifteen inherited behavior decisions remain unchanged.
+The shared portion landed with [Phase 0](../../../archive/phase-00-foundation/phases/phase-04-panel-units.md).
+U1-F3 and U1-F4 landed with [Phase 2](../../../archive/phase-02-envelope/ACCEPTANCE.md).
+Spaces owns Ruby volume/airflow report quantities, saved table layout and the U1-F1 repaint
+measurement. Optimization follows only if measurements justify it. New quantities stay with
+their owning features; this audit does not authorize their implementation.
 
 ## Scope
 
