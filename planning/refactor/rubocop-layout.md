@@ -1,8 +1,8 @@
 # Enable RuboCop's Layout department
 
 DATE: 2026-10-07
-STATUS: Merged to main 2026-10-02 (PR #32); dual-Ruby `make ci` passes. No host gate (no behaviour
-change). RuboCop upgrade verified on `codex/rubocop-upgrade` 2026-10-07; not merged.
+STATUS: Layout pass merged to main 2026-10-02 (PR #32); tooling upgrade merged 2026-10-07 (PR #81).
+Local and remote dual-Ruby `make ci` pass. No host gate (no shipping behaviour change).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -153,6 +153,13 @@ noise, not an offence. The separate upgrade is recorded below and in `planning/S
   unchanged from the main build because the upgrade changes no shipped files.
 - Review: one bounded independent tooling/configuration review found no code/lock issues; its
   stale lint-status observation is corrected. The explicit qualified-name delta review is clear.
-- Delivery: the tooling follow-up is complete and verified locally; the next delivery step is
-  branch publication and PR review. Remote CI and merge remain unrecorded. The original Layout
-  pass remains merged through PR #32; this receipt does not reopen it or close other refactor work.
+- Delivery: merged to main on 2026-10-07 through
+  [PR #81](https://github.com/bldgtyp/ph-composer/pull/81) at
+  `e361774b75c748c5884d46ac730a0edfbfd9f755`, with DCO sign-off preserved. Both remote Ruby CI
+  jobs passed on `435279f41ec3ffb68619d22f5a1e230b0bae4a7d` in
+  [run 37633118768](https://github.com/bldgtyp/ph-composer/actions/runs/37633118768).
+  The merged tree matches the tested PR head exactly. Ed authorized merge without another dedicated
+  code-review step. The merged feature branch was removed locally and remotely; main is synchronized.
+  The private `pr81-merge.json` receipt records the merge and successful checks. This closes the
+  tooling follow-up; the original Layout pass remains merged through PR #32, and other refactor
+  work retains its own gates.
