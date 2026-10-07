@@ -136,39 +136,31 @@ module PhComposer
     # its schemas and examples are deep-frozen copies and the declaration itself is frozen.
     def freeze_operation(operation)
       %i[params result examples refuses].each do |part|
-        operation[part] = deep_freeze(DeepCopy.call(operation[part]))
+        operation[part] = DeepCopy.frozen(operation[part])
       end
       operation.freeze
-    end
-
-    def deep_freeze(value)
-      case value
-      when Hash then value.each_value { |item| deep_freeze(item) }
-      when Array then value.each { |item| deep_freeze(item) }
-      end
-      value.freeze
     end
 
     def freeze_library_provider(item)
       item.name = item.name.dup.freeze
       item.owner = item.owner.dup.freeze
-      item.kinds = deep_freeze(DeepCopy.call(item.kinds))
+      item.kinds = DeepCopy.frozen(item.kinds)
       item.freeze
     end
 
     def freeze_library_kind(item)
       adapter = item.adapter.dup
       adapter.wire_kind = adapter.wire_kind.dup.freeze
-      adapter.wire_schema = deep_freeze(DeepCopy.call(adapter.wire_schema))
-      adapter.mapped_schema = deep_freeze(DeepCopy.call(adapter.mapped_schema))
-      adapter.fingerprint_fields = deep_freeze(DeepCopy.call(adapter.fingerprint_fields))
+      adapter.wire_schema = DeepCopy.frozen(adapter.wire_schema)
+      adapter.mapped_schema = DeepCopy.frozen(adapter.mapped_schema)
+      adapter.fingerprint_fields = DeepCopy.frozen(adapter.fingerprint_fields)
       %i[local_read create replace assign].each do |method|
         callback = adapter[method]
         next unless callback
 
         callback = callback.dup
-        callback.params = deep_freeze(DeepCopy.call(callback.params))
-        callback.result = deep_freeze(DeepCopy.call(callback.result))
+        callback.params = DeepCopy.frozen(callback.params)
+        callback.result = DeepCopy.frozen(callback.result)
         adapter[method] = callback.freeze
       end
       item.adapter = adapter.freeze
