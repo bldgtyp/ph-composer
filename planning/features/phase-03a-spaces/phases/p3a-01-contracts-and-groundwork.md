@@ -42,9 +42,8 @@ Paths are relative to `src/ph_composer/`.
    the rule applies to Groups only. A Zone Group nested in a Zone keeps its existing treatment.
    Cutting components keep D2-5's.
 5. **Ruby units (H2).** Reuse the standalone `volume` (m3) and `airflow` (m3/h) groundwork
-   implemented on `codex/units`, tracked by the [units receipt](../../cross-phase/units/STATUS.md).
-   Confirm it has merged before starting this stage. The existing agreement and formatting tests
-   cover the quantity ids, factors and rounding in `html/unit_tables.js`; do not add a second table
+   merged through PR #84, tracked by the [units receipt](../../cross-phase/units/STATUS.md).
+   The existing agreement and formatting tests cover the quantity ids, factors and rounding in `html/unit_tables.js`; do not add a second table
    or duplicate test.
 6. **Section-read cycle refusal (H3).** In `shell/registry_validation.rb`, refuse at registration
    a cycle among declared contributor section reads, with a `registration.` code and every

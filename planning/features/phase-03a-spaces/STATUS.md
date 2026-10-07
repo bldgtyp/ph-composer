@@ -105,7 +105,7 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | Restore Zone reads Space stamps | zones Q14 | P3a-04 | Scoped |
 | Where Zones appear, re-ruled | zones Q13 | P3a-07 through D3a-6 | Scoped |
 | Unit-switch repaint cost on a large table | units U1-F1 | P3a-07, measure first | Scoped |
-| Ruby `volume` and `airflow` quantities | [units packet](../cross-phase/units/STATUS.md), standalone extraction confirmed 2026-10-07 | P3a-01 reuses groundwork | Complete on `codex/units`, both Ruby offline gates passed; not merged. Spaces integration is not implemented |
+| Ruby `volume` and `airflow` quantities | [units packet](../cross-phase/units/STATUS.md), standalone extraction confirmed 2026-10-07 | P3a-01 reuses groundwork | Merged through PR #84, both Ruby offline and remote CI gates passed. Spaces integration is not implemented |
 
 ## Deferred out of this plan
 

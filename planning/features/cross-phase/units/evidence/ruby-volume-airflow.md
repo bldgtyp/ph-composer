@@ -1,7 +1,7 @@
 # Standalone Ruby volume and airflow groundwork
 
 DATE: 2026-10-07
-STATUS: Complete on branch; not merged
+STATUS: Merged through PR #84 on 2026-10-07
 
 ## Scope and identity
 
@@ -54,5 +54,11 @@ Windows and public release gates remain open. The cross-phase units packet stays
 
 Whitespace checks and local Markdown file-link validation passed for the final changed documents.
 Delivery: pushed on `codex/units` as [PR #84](https://github.com/bldgtyp/ph-composer/pull/84),
-open and not merged. No installation or deployment was performed. Source and test blob identities
+merged to `main` at `2195f54` on 2026-10-07. No installation or deployment was performed. Source and test blob identities
 above are unchanged by the delivery documentation update.
+
+Final delivery verification: both remote `make ci` jobs passed on head `e4e914a`, including the
+added acceptance-ledger cleanup. Its eight focused tests, Ruff lint/format, mypy and full ledger
+validation passed; one bounded independent review found no actionable issues. Merge `2195f54`
+is on `origin/main` and has the exact same tree as that reviewed head. The completed branch
+was removed locally and remotely. The units packet remains active for feature-owned follow-ups.

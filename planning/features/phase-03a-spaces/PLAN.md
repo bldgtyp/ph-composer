@@ -38,7 +38,7 @@ Paths are relative to `src/ph_composer/`. This is a planning baseline at `70c340
 | Python `Section`, `Requirement`, `Attachment(ROOM)`, coordinator | One Spaces section attaching to the Zone's Room | Nothing in the coordinator |
 | Eight pinned wheels, honeybee-ph 1.33.65 among them | `Space`, `SpaceVolume`, `SpaceFloor`, `SpaceFloorSegment` | Confirmation by running. No new wheel expected |
 | `html/` table, `inventory_grid`, `record_edits`, subtabs, unit field, overlay | The Spaces table, range edit and paste, the balance subtab | The Spaces pane, a cell context menu for Select by |
-| `html/unit_tables.js` `volume` and `airflow` | Display of m3, ft3, m3/h, cfm | Standalone Ruby rows on `codex/units`, reused at P3a-01 |
+| `html/unit_tables.js` `volume` and `airflow` | Display of m3, ft3, m3/h, cfm | Standalone Ruby rows merged through PR #84, reused at P3a-01 |
 
 ## Stages
 

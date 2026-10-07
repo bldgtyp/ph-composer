@@ -1,7 +1,7 @@
 # Units: status
 
 DATE: 2026-10-07
-STATUS: In progress. Shared infrastructure and Assembly/Window follow-ups merged; Ruby volume/airflow complete on branch; feature scope remains.
+STATUS: In progress. Shared infrastructure and Assembly/Window follow-ups merged; Ruby volume/airflow merged through PR #84; feature scope remains.
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: none (local planning draft)
 
@@ -41,9 +41,10 @@ The audit baseline carried eight Ruby report quantities. The standalone groundwo
 `volume` and `airflow`, bringing Ruby to ten report quantities, not all 18 panel quantities. `tests/units_test.rb` filters shared vectors to the registered Ruby quantities.
 Missing unused Ruby rows are not a blanket mirror defect; add them when a feature needs them.
 
-## Standalone branch slice
+## Standalone groundwork
 
-Ruby `volume` and `airflow` groundwork is complete on `codex/units`, not merged. Ed confirmed
+Ruby `volume` and `airflow` groundwork merged through [PR #84](https://github.com/bldgtyp/ph-composer/pull/84)
+on 2026-10-07 at `2195f54`. Ed confirmed
 this extraction on 2026-10-07. [Evidence](evidence/ruby-volume-airflow.md) records source identities,
 checks, review and limits. P3a-01 reuses it; no Spaces stage gate is closed by this slice.
 
@@ -89,7 +90,9 @@ foundation transplant or the completed F3/F4 work.
 
 ### Current execution receipt
 
-- Branch: `codex/units`, based on `da88d06`; revised planning committed as `6d68801`.
+- Delivery identity: PR #84 merged at `2195f54`, from reviewed/tested head `e4e914a`.
+  The completed `codex/units` branch was removed locally and remotely after exact-tree verification.
+  Planning intake `6d68801` and implementation `a961601` are retained as source provenance.
 - Completed: Ruby `volume` (m³/ft³) and `airflow` (m³/h/cfm) report definitions; existing shared
   vector test extended to check SI identity, and formatting cases added for both quantities.
 - Focused checks: Ruby 2.7.2 and 3.2.2 units tests passed (4 runs, 54 assertions each);
@@ -101,7 +104,10 @@ foundation transplant or the completed F3/F4 work.
 - Passed: Ruby coverage 97.0% (minimum 93%); `make ci` on Ruby 3.2.2 and 2.7.2, with no
   lint/test skips. [Slice evidence](evidence/ruby-volume-airflow.md) records source identities,
   final results and limits. Whitespace and local Markdown file-link checks passed.
-- Delivery: pushed as [PR #84](https://github.com/bldgtyp/ph-composer/pull/84), open and not merged.
+- Delivery: [PR #84](https://github.com/bldgtyp/ph-composer/pull/84) merged to `main` on 2026-10-07.
+  Both remote Ruby CI jobs passed on exact head `e4e914a`; all source commits and the squash
+  commit carry DCO sign-offs. The added ledger cleanup passed eight focused tests, lint/format,
+  mypy and ledger validation; one bounded independent review found no actionable issues.
   This authorized extraction is complete; no new host gate applies.
   Future owner decisions, feature integration and host gates remain open.
 - Next action: resume through owner entry gates when authorized. Preserve this active packet;
@@ -143,3 +149,4 @@ release gates remain separate.
 | 2026-10-07 | Ed confirmed extracting standalone Ruby volume/airflow groundwork; feature UI/layout/performance remain with their owners. |
 | 2026-10-07 | Standalone Ruby volume/airflow groundwork complete on `codex/units`: both Ruby full offline gates, 97.0% Ruby coverage and local table-diff review passed; no host-dependent change or feature-stage acceptance. |
 | 2026-10-07 | Published the units planning revisions and standalone groundwork as PR #84; retained the active packet and feature-owner gates. |
+| 2026-10-07 | PR #84 merged at `2195f54` after both exact-head Ruby CI jobs passed. Branch removed locally/remotely after verifying its tree matches the merge; feature follow-ups remain active. |

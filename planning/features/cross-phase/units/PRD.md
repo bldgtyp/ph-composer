@@ -96,8 +96,8 @@ refer to the interview log in the predecessor's `U1_units.md`.
 
 The current panel registry has 18 quantity ids. Ruby carries ten report quantities:
 length, length_mm, area, volume, u_value, thermal_resistance, conductivity, linear_psi,
-heat_loss_rate and airflow. The standalone volume/airflow groundwork is implemented on
-`codex/units`; P3a-01 reuses it, with feature integration and acceptance still owned by Spaces. The
+heat_loss_rate and airflow. The standalone volume/airflow groundwork is merged through
+PR #84; P3a-01 reuses it, with feature integration and acceptance still owned by Spaces. The
 inherited unchanged-display rule for counts/angles adds no named quantity registry rows.
 
 | Quantity | SI | IP |
