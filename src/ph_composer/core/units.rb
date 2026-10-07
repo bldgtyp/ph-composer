@@ -12,6 +12,7 @@ module PhComposer
     JOULES_PER_BTU = 1055.05585262
     F_PER_K = 1.8
     FT2_PER_M2 = 1.0 / (METRES_PER_FOOT**2)
+    FT3_PER_M3 = FT2_PER_M2 / METRES_PER_FOOT
     BTU_H_PER_W = 3600.0 / JOULES_PER_BTU
     U_FACTOR = BTU_H_PER_W / FT2_PER_M2 / F_PER_K
     LENGTH_METRES = { "mm" => 0.001, "m" => 1.0, "in" => INCH_TO_M, "ft" => METRES_PER_FOOT }.freeze
@@ -33,6 +34,9 @@ module PhComposer
       "area" => {
         :si_label => "m²", :ip_label => "ft²", :si_precision => 2, :ip_precision => 2, :factor => FT2_PER_M2
       },
+      "volume" => {
+        :si_label => "m³", :ip_label => "ft³", :si_precision => 2, :ip_precision => 2, :factor => FT3_PER_M3
+      },
       "u_value" => {
         :si_label => "W/(m² K)", :ip_label => "Btu/(h ft² °F)", :si_precision => 3, :ip_precision => 3,
         :factor => U_FACTOR
@@ -46,6 +50,10 @@ module PhComposer
       "heat_loss_rate" => {
         :si_label => "W/K", :ip_label => "Btu/(h °F)", :si_precision => 3, :ip_precision => 3,
         :factor => BTU_H_PER_W / F_PER_K
+      },
+      "airflow" => {
+        :si_label => "m³/h", :ip_label => "cfm", :si_precision => 1, :ip_precision => 1,
+        :factor => FT3_PER_M3 / 60
       }
     }.freeze
 

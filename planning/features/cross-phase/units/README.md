@@ -17,8 +17,8 @@ record is prior evidence, not a blanket acceptance award for PH-Composer.
 
 The shared portion landed with [Phase 0](../../../archive/phase-00-foundation/phases/phase-04-panel-units.md).
 U1-F3 and U1-F4 landed with [Phase 2](../../../archive/phase-02-envelope/ACCEPTANCE.md).
-Spaces owns Ruby volume/airflow report quantities, saved table layout and the U1-F1 repaint
-measurement. Optimization follows only if measurements justify it. New quantities stay with
+Standalone Ruby volume/airflow groundwork is implemented on `codex/units` for Spaces to
+reuse. Spaces retains saved table layout, feature integration and the U1-F1 repaint measurement. Optimization follows only if measurements justify it. New quantities stay with
 their owning features; this audit does not authorize their implementation.
 
 ## Scope

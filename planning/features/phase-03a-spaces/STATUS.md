@@ -1,7 +1,7 @@
 # Phase 3a: Spaces, tracking ledger
 
-DATE: 2026-10-03
-STATUS: Scoped. Planned as P3a-01 to P3a-12. Nothing is authorized or implemented.
+DATE: 2026-10-07
+STATUS: Scoped. No Spaces stage authorized or implemented. Standalone Ruby units groundwork is tracked separately.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -105,7 +105,7 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | Restore Zone reads Space stamps | zones Q14 | P3a-04 | Scoped |
 | Where Zones appear, re-ruled | zones Q13 | P3a-07 through D3a-6 | Scoped |
 | Unit-switch repaint cost on a large table | units U1-F1 | P3a-07, measure first | Scoped |
-| Ruby `volume` and `airflow` quantities | units packet, "new quantity rows with their owners" | P3a-01 | Scoped |
+| Ruby `volume` and `airflow` quantities | [units packet](../cross-phase/units/STATUS.md), standalone extraction confirmed 2026-10-07 | P3a-01 reuses groundwork | Complete on `codex/units`, both Ruby offline gates passed; not merged. Spaces integration is not implemented |
 
 ## Deferred out of this plan
 
@@ -121,8 +121,10 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 
 ## Verification
 
-None. Nothing is implemented. The findings in DECISIONS Part 1 were read from source and not
-reproduced.
+No Spaces stage verification. The standalone Ruby units slice is tracked in the
+[units execution receipt](../cross-phase/units/STATUS.md#current-execution-receipt). It does not
+close S01 or the Spaces entry gates. The findings in DECISIONS Part 1 were read from source
+and not reproduced.
 
 ## How to update this file
 
@@ -147,3 +149,4 @@ reproduced.
 | 2026-09-30 | Phase directory created as a router when feature packets were regrouped by phase. |
 | 2026-10-03 | Spaces planned in detail: the coordinating packet, twelve stage documents, twenty-two findings and twelve decisions for Ed. The translation-section dependency question is closed by the merged `Requirement` and `Attachment(ROOM)` (F18). No implementation authorized. |
 | 2026-10-03 | Ed split Phase 3 into two flat packets, `phase-03a-spaces/` and `phase-03b-thermal-bridges/`. The Spaces feature packet (PRD, README, STATUS) merged into this folder; stages P3-01 to P3-12 became P3a-01 to P3a-12 and decisions D3-1 to D3-12 became D3a-1 to D3a-12. S ids, F ids and H numbers are unchanged. R05 item 4 moved to Phase 3b. |
+| 2026-10-07 | Ed authorized extracting Ruby volume/airflow groundwork into the units branch. P3a-01 reuses it; all Spaces stage gates remain open. |

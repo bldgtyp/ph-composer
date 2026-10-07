@@ -38,7 +38,7 @@ Paths are relative to `src/ph_composer/`. This is a planning baseline at `70c340
 | Python `Section`, `Requirement`, `Attachment(ROOM)`, coordinator | One Spaces section attaching to the Zone's Room | Nothing in the coordinator |
 | Eight pinned wheels, honeybee-ph 1.33.65 among them | `Space`, `SpaceVolume`, `SpaceFloor`, `SpaceFloorSegment` | Confirmation by running. No new wheel expected |
 | `html/` table, `inventory_grid`, `record_edits`, subtabs, unit field, overlay | The Spaces table, range edit and paste, the balance subtab | The Spaces pane, a cell context menu for Select by |
-| `html/unit_tables.js` `volume` and `airflow` | Display of m3, ft3, m3/h, cfm | The Ruby `core/units.rb` rows |
+| `html/unit_tables.js` `volume` and `airflow` | Display of m3, ft3, m3/h, cfm | Standalone Ruby rows on `codex/units`, reused at P3a-01 |
 
 ## Stages
 
@@ -47,7 +47,7 @@ source, tests to write first, the host gate and the done condition.
 
 | Stage | Delivers | Depends on | Code owner | Host gate |
 | --- | --- | --- | --- | --- |
-| [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts confirmed; the Zones nested-container rule; Ruby volume and airflow units; R05 items 1 and 2 | Entry gates, D3a-1 | shared, zones, export | A stamped Group inside a Zone is skipped by the walk, Suggest and Solve; no regression in Zones / Faces or export |
+| [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts confirmed; the Zones nested-container rule; reuse Ruby volume and airflow units; R05 items 1 and 2 | Entry gates, D3a-1 | shared, zones, export | A stamped Group inside a Zone is skipped by the walk, Suggest and Solve; no regression in Zones / Faces or export |
 | [P3a-02](phases/p3a-02-space-records-and-operations.md) | The three records, scan, index, metrics, findings and public operations, panel closed | P3a-01, D3a-2 | spaces | Panel-closed script, Undo/Redo, reopen |
 | [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | The edit-context writer, the deferred-work primitive, Volume protection, exit and pre-save protection, the Spaces reconciler, recovery states | P3a-02, D3a-4 | session, spaces | The native-edit matrix in a fresh process |
 | [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | `duplicate_identity` and Make independent; Move Space to Zone; Restore Zone reading Space stamps | P3a-03, D3a-3 | spaces, zones | Copy and repair; move under a rotated wrapper; one Undo each |

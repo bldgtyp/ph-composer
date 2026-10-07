@@ -467,7 +467,9 @@ eslint. The 2023 host's CEF version is confirmed when a 2023 host is available.
   id; a scope never chosen takes the system default (mm in SI, decimal inches in IP).
 - Ruby never formats a unit-bearing value for the panel. It sends message parts with canonical
   values and the panel formats them. The Export report captures the preference once when the run
-  starts; HBJSON stays SI.
+  starts; HBJSON stays SI. Ruby report quantities include `volume` (canonical m³, displayed as
+  ft³ in IP, two decimals) and `airflow` (canonical m³/h, displayed as cfm in IP, one decimal),
+  agreeing with the panel through `tests/support/units_vectors.json`.
 
 ## Rules for later features
 

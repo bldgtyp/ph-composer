@@ -14,6 +14,9 @@ class UnitsTest < PhComposerTestCase
       actual = Units.to_display(row.fetch("canonical_value"), :quantity => row.fetch("quantity"), :system => "IP",
                                                               :unit => row.fetch("canonical_unit"))
       assert_in_delta row.fetch("expected_ip_value"), actual, row.fetch("tolerance"), row.fetch("quantity")
+      assert_equal row.fetch("canonical_value"),
+                   Units.to_display(row.fetch("canonical_value"), :quantity => row.fetch("quantity"), :system => "SI",
+                                                                  :unit => row.fetch("canonical_unit"))
     end
   end
 
@@ -22,11 +25,13 @@ class UnitsTest < PhComposerTestCase
       [0.5, "length", "0.5 m", "1.64 ft"],
       [25.4, "length_mm", "25.4 mm", "1 in"],
       [1, "area", "1 m²", "10.76 ft²"],
+      [1, "volume", "1 m³", "35.31 ft³"],
       [1, "u_value", "1 W/(m² K)", "0.176 Btu/(h ft² °F)"],
       [1, "thermal_resistance", "1 m² K/W", "5.68 h ft² °F/Btu"],
       [1, "conductivity", "1 W/(m K)", "0.578 Btu/(h ft °F)"],
       [0.1, "linear_psi", "0.1 W/(m K)", "0.058 Btu/(h ft °F)"],
-      [1, "heat_loss_rate", "1 W/K", "1.896 Btu/(h °F)"]
+      [1, "heat_loss_rate", "1 W/K", "1.896 Btu/(h °F)"],
+      [100, "airflow", "100 m³/h", "58.9 cfm"]
     ].each do |value, quantity, si, ip|
       assert_equal si, Units.format(value, :quantity => quantity, :system => "SI")
       assert_equal ip, Units.format(value, :quantity => quantity, :system => "IP")
