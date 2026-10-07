@@ -105,6 +105,38 @@ class AcceptanceLedgerTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "scope decision"):
             ledger.validate_result(self.root, self.cases, self.result)
 
+    def test_archived_evidence_resolves_without_rewriting_observed_or_historical_results(self) -> None:
+        archived = self.root / "archive/evidence.md"
+        archived.parent.mkdir()
+        (self.root / "evidence.md").rename(archived)
+        (self.root / ledger.EVIDENCE_LOCATIONS).write_text(json.dumps({"evidence.md": "archive/evidence.md"}))
+        for kind in ("observed", "historical_summary"):
+            with self.subTest(kind=kind):
+                self.result["evidence_kind"] = kind
+                original = json.dumps(self.result) + "\n"
+                (self.root / ledger.RESULTS).write_text(original)
+                self.assertEqual(["archive/evidence.md"], ledger.read_results(self.root, self.cases)[0]["evidence"])
+                self.assertEqual(["archive/evidence.md"], ledger.status(self.root, self.cases, [])[0]["evidence"])
+                self.assertEqual(original, (self.root / ledger.RESULTS).read_text())
+        self.result["evidence_kind"] = "observed"
+        with self.assertRaisesRegex(ValueError, "existing"):
+            ledger.validate_result(self.root, self.cases, self.result)
+
+    def test_unsafe_or_missing_archive_locations_refuse(self) -> None:
+        invalid_locations: list[Any] = [
+            [],
+            {"../evidence.md": "evidence.md"},
+            {"evidence.md": "/outside.md"},
+            {"evidence.md": "../outside.md"},
+            {"evidence.md": None},
+            {"evidence.md": "missing.md"},
+        ]
+        for locations in invalid_locations:
+            with self.subTest(locations=locations):
+                (self.root / ledger.EVIDENCE_LOCATIONS).write_text(json.dumps(locations))
+                with self.assertRaises(ValueError):
+                    ledger.read_results(self.root, self.cases)
+
 
 if __name__ == "__main__":
     unittest.main()

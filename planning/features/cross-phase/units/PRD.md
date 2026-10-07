@@ -1,16 +1,18 @@
 # Units: SI and IP display
 
-DATE: 2026-09-18
-STATUS: Scoped. Phase 0 inheritance and scope confirmed; later quantity choices remain with their owners.
-AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+DATE: 2026-10-07
+STATUS: In progress. Shared infrastructure and Assembly/Window follow-ups merged; remaining feature quantities and Spaces work planned.
+AUTHOR: Ed May, BLDGTYP, with Codex
+ISSUE: none (local planning draft)
 
 ## Problem
 
 Phius consultants in the United States read and enter most values in IP. METr, honeybee-ph and
 every PH-Composer record are SI. The predecessor solved this once, across every screen, and
 the solution has no designPH dependency. PH-Composer should not redo the interview or the
-code. It should port both and add the quantities that piping, ducting, equipment and climate bring.
+code. The shared port and the Assembly/Window editor follow-ups are now implemented and merged.
+The remaining extension of this contract belongs to Spaces, piping, ducting, equipment and
+climate. [STATUS.md](STATUS.md) records the audited implementation, evidence and items left to do.
 
 ## The rule this packet serves
 
@@ -19,22 +21,24 @@ all real work are SI, with the unit in the key name (`thickness_mm`, `u_w_m2k`).
 and entry conversion in the panel and nowhere else. It is recorded in
 [`context/TECH_STACK.md`](../../../../context/TECH_STACK.md) under "Display units".
 
-## Port disposition
+## Historical port disposition
 
-Sizes are from the predecessor at `f358ebf`.
+Sizes and proposed dispositions below describe the predecessor at `f358ebf` and the original
+2026-09-18 scope. They are not an outstanding transplant checklist. The shared port landed in
+Phase 0; Phase 1/2 added table editing and feature screens. See STATUS for current source paths.
 
 | Predecessor part | LOC | Disposition | Note |
 | --- | --- | --- | --- |
 | `core/units.rb` | 90 | Port | Host conversion between SketchUp inches and SI geometry |
 | `html/units.js` | 226 | Port | The one parser and formatter. No second parser, no second unit table |
 | `html/length_expression.js` | n/a | Port dependency | Required parser helper at the frozen source commit; include alongside the six originally listed unit modules |
-| `html/unit_tables.js` | 163 | Adapt | Quantity registry. Gains the rows in "New quantities" |
+| `html/unit_tables.js` | 163 | Adapt | Quantity registry. Remaining feature rows require owner confirmation; existing primitives are reused |
 | `html/unit_numbers.js` | 82 | Port | Regional decimal and grouping formats |
-| `html/unit_field.js` | 139 | Adapt | The unit field control. Takes on follow-up U1-F3 |
+| `html/unit_field.js` | 139 | Adapt | Shared unit field delivered; Assembly editor adopted it for U1-F3 in Phase 2 |
 | `html/unit_preferences.js` | 149 | Port | Global preference and per-builder format memory |
 | `Assemblies::MessageParts` pattern | n/a | Port | Ruby sends canonical values in message parts. The panel formats them |
 | Unit tests and numerical vectors | n/a | Port | `unit_field_test.js` and the known-value vectors for U, R, conductivity, psi, H |
-| Plan contracts C1 to C8 | n/a | Port | From the predecessor's `planning/archive/units/PLAN.md`. Copied into this packet's PLAN.md when written |
+| Plan contracts C1 to C8 | n/a | Port | From the predecessor's `planning/archive/units/PLAN.md`; implemented durable display rules now live in `context/TECH_STACK.md`. This packet has no PLAN.md |
 | designPH and foreign-source unit adapters | n/a | Drop | No designPH data is read |
 | Follow-up U1-F2, host coverage for designPH Window reviews | n/a | Drop | The reviews it covers no longer exist |
 | Follow-up U1-F5, column insertion with Psi-install assignments | n/a | Drop here | A window-types behavior, not a units one |
@@ -88,7 +92,13 @@ refer to the interview log in the predecessor's `U1_units.md`.
 
 ## Quantity table
 
-### Carried from the predecessor
+### Carried from the predecessor and implemented in the panel
+
+The current panel registry has 18 quantity ids. Ruby carries ten report quantities:
+length, length_mm, area, volume, u_value, thermal_resistance, conductivity, linear_psi,
+heat_loss_rate and airflow. The standalone volume/airflow groundwork is implemented on
+`codex/units`; P3a-01 reuses it, with feature integration and acceptance still owned by Spaces. The
+inherited unchanged-display rule for counts/angles adds no named quantity registry rows.
 
 | Quantity | SI | IP |
 | --- | --- | --- |
@@ -102,12 +112,19 @@ refer to the interview log in the predecessor's `U1_units.md`.
 | Density, specific heat | kg/m³, J/(kg K) | lb/ft³, Btu/(lb °F) |
 | Airflow | m³/h | cfm |
 | Temperature, temperature difference | °C, K | °F, °F difference |
+| Air permeance | L/(s m²) at 75 Pa | cfm/ft² at 1.57 psf |
+| Equivalent air-layer thickness, vapor diffusion resistance | sd in m, μ | perm, perm-in (reciprocal conversions) |
 | Ratios, fractions, counts, angles | unchanged | unchanged |
 
 ### New quantities
 
-The predecessor left these to their owning features, which it never built. The owning packet
-confirms each row. The IP column is a proposal until then.
+The predecessor left these to their owning features, which it never built. None of these
+feature integrations is implemented in PH-Composer yet. The owning packet confirms each row;
+the IP column is a proposal until then. Length, airflow, heat-loss rate, temperature and
+unitless fields reuse existing primitives where they match. A tank stored in litres cannot
+use the existing m³/ft³ volume pair unchanged. Capacity, ventilator efficiency and radiation
+also need new conversions if the proposals are accepted. Add descriptors and known-value
+tests for reused quantities as well as for genuinely new rows.
 
 | Quantity | Owning packet | Stored as | Proposed IP display |
 | --- | --- | --- | --- |
@@ -129,13 +146,16 @@ confirms each row. The IP column is a proposal until then.
 
 ## Follow-ups carried from the predecessor
 
-| ID | Item | Proposal |
+| ID | Item | Current disposition, audited 2026-10-07 |
 | --- | --- | --- |
-| U1-F1 | A switch on a 300-Space table repaints every cell, a median 513 ms | Spaces owns this optimization if measurements justify it; outside Phase 0 |
-| U1-F3 | Assembly Builder thickness drafts keep their own draft logic outside the unit field | Assemblies owns moving these drafts onto the unit field; outside Phase 0 |
-| U1-F4 | The window editor form branches between a plain input and a unit field | Window Types owns the dimension-form cleanup; outside Phase 0 |
+| U1-F1 | The predecessor measured a median 513 ms on its 300-Space table | Open: P3a-07 measures the new table and decides whether to optimize. No PH-Composer measurement or numeric refresh budget exists yet |
+| U1-F3 | Assembly Builder thickness drafts kept their own draft logic outside the unit field | Delivered in P2-04, merged through PR #15. Current thickness/width editors use `UnitField`; owner logic retains pending-operation and stale-value guards |
+| U1-F4 | The predecessor window editor branched between a plain input and a unit field | Delivered in P2-11, merged through PR #15. Current numeric dimension bubbles share `editQuantity`/`UnitField` |
 
-## Decisions for the interview
+The other inherited deferral, table editing, is partially closed: shared cell drafts and
+resizing exist. Persisted column order/widths still belong to P3a-07 and its open D3a-11 decision.
+
+## Decision disposition
 
 | # | Question | Recommendation |
 | --- | --- | --- |
@@ -144,25 +164,30 @@ confirms each row. The IP column is a proposal until then.
 | Q3 | Power and energy in IP: W and kWh, or Btu-based? | W and kWh. US equipment data sheets and Phius targets both use them. Capacity alone shows as kBtu/h |
 | Q4 | Do the three follow-ups ride with the transplant or wait? | Confirmed by Ed: F3 with Assemblies, F4 with Window Types, F1 with Spaces if measurements justify it |
 
-Ed confirmed the Phase 0 split on 2026-09-18. Phase 0 owns the shared parser, quantity registry,
-unit-field control and preferences, with applicable inherited tests. New equipment, piping,
-ducting and climate quantities remain with their owning features. Q2 and Q3 remain proposals for
-those feature interviews and do not block the foundation. No feature editor lands in Phase 0.
+Ed confirmed the Phase 0 split on 2026-09-18. Phase 0 delivered the shared parser, quantity
+registry, unit-field control and preferences, with applicable inherited tests. Phase 2 delivered
+the Assembly/Window editor follow-ups. New equipment, piping, ducting and climate quantities
+remain with their owning features. Q2 and Q3 remain proposals for those feature interviews.
+The existing foundation does not need another interview or port.
 
 ## Non-goals
 
-No change to SketchUp's model units. No IP values in any file. No unit conversion in Ruby for
-display. No general physical-quantity algebra.
+No change to SketchUp's model units. No IP authoring quantities in records, library files,
+wire formats or HBJSON; human-readable reports may show IP. Ruby sends canonical panel values; Ruby report
+formatting converts them through `core/units.rb`. No general physical-quantity algebra.
 
 ## Acceptance shape
 
 The predecessor's fifteen acceptance checks, A1 to A15 in `planning/archive/units/ACCEPTANCE.md`,
-rerun on the transplanted code with the designPH-specific parts of A14 removed. Each new quantity
-adds one known-value vector.
+are allocated to PH-Composer's delivery owners with the designPH-specific parts of A14 removed.
+Each new quantity adds one known-value vector; each new feature verifies its actual field and
+export/report boundary even when it reuses an existing quantity.
 
-Map these checks to their delivery owners: Phase 0 verifies shared infrastructure using synthetic
-controls; feature-screen checks run with the corresponding feature. Do not claim all fifteen
-checks passed when only the foundation subset has run.
+Phase 0 verified shared infrastructure using synthetic controls; Phase 2 supplies accepted
+Assembly/Window evidence. Feature-screen checks run with the corresponding feature. Reuse
+unchanged passing evidence with its provenance instead of repeating closed gates. Do not claim
+all fifteen checks passed across future screens, or use the predecessor's timing as a current
+measurement. STATUS records current focused checks and the remaining owner gates.
 
 ## Prior art and evidence
 

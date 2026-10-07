@@ -303,10 +303,15 @@ packets retain their original evidence identities. No main-repository push, PR o
 
 ## Archive handoff verification
 
-Phase and four feature packets are archived flat by their existing slugs. The original
-`planning/features/phase-02-envelope/evidence` path is a repository symlink to archived evidence,
-so append-only ledger references retain their original identities without rewriting history.
+Phase and four feature packets are archived flat by their existing slugs. At the archive handoff,
+the original evidence directory was retained as a symlink to archived evidence, so append-only
+ledger references retained their original identities without rewriting history.
 Catalog authorities, Markdown references, planning index, roadmap, product scope and contributor
 map are reconciled. Every tracked Markdown file's local target and every catalog authority
 exists; the ledger validates and its five focused tests pass. Source/host gates are retained
 because this closeout changes documentation/locations only, not shipping code or dependencies.
+
+On 2026-10-07, the leftover redirect folder and symlink were removed. The ledger's
+[archive-location map](../../../native-acceptance/evidence-locations.json) resolves the original
+four evidence paths for seven historical rows. Recorded result bytes and acceptance claims are
+unchanged; new observations use current file locations.

@@ -10,6 +10,20 @@ source dependency patterns. [`results.jsonl`](results.jsonl) is an append-only r
 and closure remain in [the owning acceptance register](../archive/phase-01-faces-and-zones/ACCEPTANCE.md). Add finer case IDs
 when a gate needs independent reruns; a partial subcase does not close its parent.
 
+[`evidence-locations.json`](evidence-locations.json) maps original evidence paths to their current
+archive locations. Ledger reads and status output resolve these exact paths without changing
+recorded observations, timestamps, build provenance or the result index. New observations must
+cite existing files directly. Missing or unsafe archive locations fail validation.
+
+On 2026-10-07, the leftover Phase 2 redirect folder and evidence symlink were removed. Four path
+mappings preserve the seven original result rows that referenced that folder. Phase 2 remains
+[accepted and archived](../archive/phase-02-envelope/STATUS.md); this cleanup grants no new acceptance.
+
+Cleanup verification: all 70 result rows validate, the result index is byte-for-byte unchanged,
+and all local targets in 351 tracked Markdown files exist. Eight focused ledger tests and the
+bounded tooling/documentation review passed. Every `make ci` target passed, with Python checks
+and packaging resumed after correcting a test type annotation. No shipping behavior changed.
+
 The Phase 1 packet is archived and stays unchanged. Later reruns record synthetic summaries under
 [`evidence/`](evidence/). Completed run handoffs are disposable instructions; their outcomes and
 limitations belong in the evidence summary and result index. The three completed 2026-09-30

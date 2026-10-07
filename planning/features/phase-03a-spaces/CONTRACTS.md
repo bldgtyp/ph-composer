@@ -135,7 +135,7 @@ Each is shared, names no feature, and lands in the stage listed with its own tes
 | # | Addition | Where | Stage |
 | --- | --- | --- | --- |
 | H1 | The nested-container rule: a stamped Group inside a Zone is skipped by the Face walk, the export snapshot, Suggest, the Shift-click flood and Solve | `features/zones/zone/occurrences.rb`, `export/geometry_snapshot.rb`, `features/zones/adjacency/` | P3a-01 |
-| H2 | `volume` and `airflow` quantities in Ruby | `core/units.rb` | P3a-01 |
+| H2 | `volume` and `airflow` quantities in Ruby | `core/units.rb` | Standalone units groundwork on `codex/units`; P3a-01 reuses it |
 | H3 | Section-read cycle refusal at registration (R05 item 2) | `shell/registry_validation.rb` | P3a-01 |
 | H4 | An empty Room is refused or omitted with a declared code (R05 item 1) | `python/ph_composer_translation/model_sections.py`, `features/zones/export.rb` | P3a-01 |
 | H5 | The edit-context writer: the only `model.active_path` assignment, with `enter`, `enter_root` and a close boundary, and the test that refuses any other assignment | `session/` | P3a-03 |
