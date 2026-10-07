@@ -40,7 +40,7 @@ PR #80 merged on 2026-10-05 at `81f5426` after both GitHub Ruby matrix jobs pass
 - Design System reading aid: the existing private artifact was synchronized to `main@4f51621` on
   2026-10-05. Its six embedded stylesheets match the repository sources, and the repaired gallery
   renders static component previews. Repository stylesheets remain authoritative; see the
-  [sync receipt](../../refactor/ui-ux-refinements.md#design-system-sync-receipt).
+  [sync receipt](../ui-ux-refinements.md#design-system-sync-receipt).
 
 Ed confirmed the three Zone rows render normally and supplied a native screenshot of `source.skp`
 on 2026-10-05. The screenshot shows all three rows with the managed Segment/Level chips and custom

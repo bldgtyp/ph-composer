@@ -1,10 +1,15 @@
 # UI and UX refinements
 
-DATE: 2026-10-05
-STATUS: Merged through PR #79; native acceptance follow-ups remain open
+DATE: 2026-10-07
+STATUS: Complete; implementation merged through PR #79/#80 and current-host acceptance passed
 ISSUE: [#77](https://github.com/bldgtyp/ph-composer/issues/77)
 
 Ed requested incremental refinements on one branch, `codex/ui-ux-refinements`.
+
+All accepted refinement behaviors are implemented and merged. The remaining current-host checks
+closed on 2026-10-07; see the [current acceptance receipt](#current-native-acceptance).
+Earlier pending statements below retain their historical checkpoint context. SketchUp 2023,
+Windows support and release remain separate gates.
 
 ## Zones / Faces column headers
 
@@ -242,7 +247,7 @@ column-filter native acceptance remains open.
 Ed requested select chips backed by user-managed names and colours on 2026-10-05. This exceeds a
 presentation edit: current strings drive Zone stamps/recovery, Colour-by grouping and Python's
 Building Segment export identity. The request is scoped in the separate
-[managed Zone options packet](../archive/zone-field-options/README.md). Respective
+[managed Zone options packet](zone-field-options/README.md). Respective
 column-menu Manage actions open one reused dialog. Ed accepted D2–D10 and implementation on
 2026-10-05; managed identities, explicit adoption, select chips, custom colours and stable export
 identities are implemented and current-host verified, merged through PR #80. This intake
@@ -337,8 +342,9 @@ preview host, including automatic matching Colour-by; ignored evidence is under
 Issue #77 tracks these refinements. The PR was opened as a draft with the remaining native viewport-mask,
 Assembly hatch-edge and gesture/Undo gates recorded above. The owner later approved merging while
 those checks remain deferred; that approval is not native acceptance or release approval.
-The planning-only managed Segment/Level packet is tracked separately by issue #78 and remains
-unimplemented. Design System sync remains a merge-closeout follow-up.
+At this draft handoff, the managed Segment/Level packet in issue #78 was still planning-only,
+and Design System sync was a merge-closeout follow-up. Both subsequently completed, as recorded
+in the merge handoff and sync receipt below.
 
 
 ### Remote CI follow-up
@@ -353,11 +359,11 @@ diff check passed. The corrective push reruns the full remote matrix; its result
 
 Ed authorized merge after both GitHub CI matrix jobs passed on `f0db4ea`. PR #79 merged into main
 on 2026-10-05 as `3417e918b3bd7773e4ab44d68c6ddf6905f54b1c`, with DCO sign-off preserved.
-The implementation is merged; the native viewport-mask, hatch-edge and gesture/Undo follow-ups
-remain unverified as recorded above. Retain this ledger until those follow-ups are resolved rather
-than archiving it as fully accepted. Managed Building-Segment/Level options subsequently merged in
+At merge, the native viewport-mask, hatch-edge and gesture/Undo follow-ups remained unverified;
+merge approval did not close them. They subsequently passed in the current receipt below.
+Managed Building-Segment/Level options subsequently merged in
 [PR #80](https://github.com/bldgtyp/ph-composer/pull/80); their accepted packet is
-[archived](../archive/zone-field-options/STATUS.md). Local main is synchronized. On 2026-10-05,
+[archived](zone-field-options/STATUS.md). Local main is synchronized. On 2026-10-05,
 the merged UI-refinement feature branch was removed locally after verifying its tip was an ancestor
 of origin/main; the remote branch was already deleted. At that checkpoint, both branch inventories
 contained only main.
@@ -393,4 +399,27 @@ The source extract, manifest, published CSS comparison and browser capture are i
 These are static reading aids; live kit behavior, host actions and Undo do not execute in them.
 Builder drawing styles remain excluded. No shipping source changed, so the closeout uses a
 focused documentation consistency check rather than repeating the unchanged offline or host gates.
-PR #79's native viewport-mask, hatch-edge and gesture/Undo follow-ups remain as recorded above.
+At this sync checkpoint, PR #79's native follow-ups remained open. They subsequently passed below.
+
+## Current native acceptance
+
+On 2026-10-07 all six bounded native refinement cases passed on SketchUp 26.1.188 / Ruby 3.2.2:
+checked-Zone Solve eligibility and exact Undo/Redo; column-mask wash, combined empty scope,
+mode/off retention, clearing and no Undo entry; Assembly None hatch with visible native blue
+selection edges; actual Type/Boundary/Assembly paint gestures and exact Undo/Redo; matching
+Colour-by and retained manual override; and distinct nested/shared occurrence masks without
+Model writes. Native 420 px and minimum 360 px panels kept selection controls and column menus
+within the window. The [assertion evidence](../native-acceptance/evidence/ui-ux-refinements-2026-10-07.md)
+records provenance, native versus setup controls, and the wheel-scroll limitation.
+
+The installed RBZ matched all 387 packaged files, with no extras or mismatches, before and after:
+`97d30a432c31ac7132d853e52fe94bade8f8cbddb130ccbc86aac49c5be95f2c`.
+Two immutable pre-action baselines and hashed observation receipts remain under ignored
+`_private/host/ui-ux-acceptance-20261007/`. Normal panel restoration passed with fixture helpers
+removed, exact record readback, paint idle, Colour-by off, mask null and the clean synthetic Model
+at edit depth 0. The panel is left open.
+
+No shipping code changed. `make rbz-check`, installed-package comparison and deterministic evidence
+comparisons passed; earlier passing offline/browser/review gates remain applicable. The refinement's
+implementation, merge, Design System sync and current-host acceptance are complete. This does not
+establish SketchUp 2023 native proof, Windows support, public distribution or release acceptance.
