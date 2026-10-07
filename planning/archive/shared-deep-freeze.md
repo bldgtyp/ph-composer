@@ -60,6 +60,11 @@ Any time after the RuboCop `Layout` pull request, so the two diffs do not confli
   is needed. No shipped panel or Python assets changed, so no runtime manifest refresh is needed.
 - Pending acceptance: none within this packet. SketchUp compatibility-floor host proof, Windows,
   public distribution and certification remain separate repository gates.
-- Delivery: one signed-off local commit on the requested branch. Push, PR and merge have not been
-  requested. Next authorized action: none; merge is needed before the Spaces shared-file dependency
+- Delivery: signed-off work on the requested branch. Push and PR creation authorized on
+  2026-10-07; merge has not been requested. Merge is needed before the Spaces shared-file dependency
   can close.
+- Delivery blocker: three pushes failed with GitHub `Internal Server Error` on 2026-10-07,
+  11:15 to 11:16 EDT. GitHub's [status](https://www.githubstatus.com/) reports an active major
+  outage affecting Git operations, pull requests and Actions; repository push permission is
+  confirmed, and the remote branch remains absent. PR text is prepared locally. Next: retry the
+  push after recovery, create the PR against `main` and attach it to this chat.

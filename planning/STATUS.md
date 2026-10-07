@@ -52,7 +52,9 @@ States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·
 One shared deep-freeze helper is [complete and archived](archive/shared-deep-freeze.md) on
 `codex/shared-deep-freeze`, based on `main@9202e5e`. All ten copy-then-freeze call sites use
 `DeepCopy.frozen`; both private helpers are removed. Coverage, bounded review and `make ci` on
-Ruby 2.7.2 and 3.2.2 passed on 2026-10-07. Not pushed, merged or released.
+Ruby 2.7.2 and 3.2.2 passed on 2026-10-07. Push and PR creation authorized; not merged or released.
+Delivery is blocked by GitHub's active outage: three pushes failed on 2026-10-07 at 11:15 to
+11:16 EDT; the remote branch and PR have not been created.
 
 ## Recently merged
 
