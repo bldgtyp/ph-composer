@@ -1,14 +1,15 @@
 # Enable RuboCop's Layout department
 
 DATE: 2026-10-07
-STATUS: Layout pass merged to main 2026-10-02 (PR #32); tooling upgrade merged 2026-10-07 (PR #81).
+STATUS: Archived 2026-10-07. Layout pass merged to main 2026-10-02 (PR #32); tooling upgrade merged
+2026-10-07 (PR #81).
 Local and remote dual-Ruby `make ci` pass. No host gate (no shipping behaviour change).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 ## Decision
 
-The Phase 2 review ([R11](../archive/phase-02-envelope-review/R11-readability-and-lint.md)) found
+The Phase 2 review ([R11](phase-02-envelope-review/R11-readability-and-lint.md)) found
 mechanically wrapped lines and two continuation styles in Ruby, all passing lint because
 `.rubocop.yml` enables five cops and no `Layout` cop. Offered a minimal layout set, Ed chose the full
 `Layout` department on 2026-10-01, with two conditions:
@@ -124,7 +125,7 @@ passes. Commits 2, 3 and 5 are listed in `.git-blame-ignore-revs`.
 
 **Historical follow-up.** `make lint-ruby` printed a `rubocop-ast` deprecation trace (`EnsureNode#body`, from
 `Layout/IndentationWidth`): the locked `rubocop-ast` is newer than RuboCop 1.50.2 expects. It is
-noise, not an offence. The separate upgrade is recorded below and in `planning/STATUS.md`.
+noise, not an offence. The completed upgrade is recorded below and in `planning/archive/README.md`.
 
 ## RuboCop upgrade execution receipt
 

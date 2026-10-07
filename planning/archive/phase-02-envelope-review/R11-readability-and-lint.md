@@ -110,8 +110,8 @@ frozen-string comment, `Style/Semicolon`, line length 120, method length 40, cla
 **Decided 2026-10-01 by Ed.** Enable RuboCop's full `Layout` department, not the minimal set this
 review recommended. Do it after PR #15 merges, on its own pull request, once the other refactor work
 is done, so formatting changes stay separate from feature changes. The work is recorded in
-[planning/refactor/rubocop-layout.md](../../refactor/rubocop-layout.md) with a row in
-`planning/STATUS.md`. Items 1 and 2 above are therefore not fixed in this packet: the formatting
+[planning/archive/rubocop-layout.md](../rubocop-layout.md) with its completed outcome in
+`planning/archive/README.md`. Items 1 and 2 above are therefore not fixed in this packet: the formatting
 pass fixes them. Do not hand-reformat files in the review refactors beyond the lines a change already
 touches.
 

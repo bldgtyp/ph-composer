@@ -1,6 +1,6 @@
 # A deliberately small rule set, carried from the predecessor's 2026-09-15 review. Every department
 # is off except Layout; the other cops below are the ones enabled, and widening the list is a separate
-# decision. Ed enabled the whole Layout department on 2026-10-01 (planning/refactor/rubocop-layout.md).
+# decision. Ed enabled the whole Layout department on 2026-10-01 (planning/archive/rubocop-layout.md).
 # There is no burn-down register: this repository starts at the ceilings, so every file is held.
 
 AllCops:

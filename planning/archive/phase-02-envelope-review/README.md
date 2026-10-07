@@ -121,7 +121,7 @@ moved files are free now and should be done completely rather than staged.
 
    R05, R06 and R07 land before Phase 3's first stage.
 2. **Last: the formatting-only pull request** in
-   [planning/refactor/rubocop-layout.md](../../refactor/rubocop-layout.md). Merged
+   [planning/archive/rubocop-layout.md](../rubocop-layout.md). Merged
    2026-10-02 as PR #32.
 3. **R11's carried host gate.** Passed 2026-10-02 (ledger case `R11H`). With the formatting pull
    request merged, the packet archives.
@@ -141,7 +141,7 @@ Ed answered all eight on 2026-10-01. The owning finding file holds the full reco
 | 4 | Session and machine state commands: new verb and grant, or widen the documented `view` contract? | New verb and grant | R03 B | 2026-10-01: new verb and grant (working name `setup`), as recommended. `view` returns to viewport only |
 | 5 | Library export and setup for scripted callers: design authorized paths now, or document as dialog-only and refuse scripted calls cleanly? | Refuse cleanly now; design with the access grant | R03 A | 2026-10-01: refuse cleanly now, as recommended, on condition the later agent work is recorded. Recorded in [agent-authorized-file-access](../agent-authorized-file-access/README.md) |
 | 6 | Rename finding codes and unit-bearing display fields now? | Yes, before any release | R04, R09 | 2026-10-01: yes, both, in one pass before any release, as recommended |
-| 7 | Enable a minimal `Layout` cop set? | Yes | R11 | 2026-10-01: not as recommended. Ed chose the full `Layout` department, after PR #15 merges, on its own pull request once the other refactor work is done. Recorded in [planning/refactor/rubocop-layout.md](../../refactor/rubocop-layout.md) |
+| 7 | Enable a minimal `Layout` cop set? | Yes | R11 | 2026-10-01: not as recommended. Ed chose the full `Layout` department, after PR #15 merges, on its own pull request once the other refactor work is done. Recorded in [planning/archive/rubocop-layout.md](../rubocop-layout.md) |
 | 8 | Merge PR #15 before or after the review findings? | Merge after R01 and the small reproduced defects; do R05, R06, R07 on a follow-up branch before Phase 3 | all | 2026-10-01: merge PR #15 now, as is. Every finding then lands on its own new branch. No fixes are added to the Phase 2 branch first |
 
 ## Evidence retained

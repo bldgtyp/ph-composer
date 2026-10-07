@@ -1,7 +1,7 @@
 # Formatting-only commits that `git blame` should skip. Use with
 # `git config blame.ignoreRevsFile .git-blame-ignore-revs`; GitHub reads this file by default.
 
-# RuboCop Layout safe auto-correct (planning/refactor/rubocop-layout.md)
+# RuboCop Layout safe auto-correct (planning/archive/rubocop-layout.md)
 71ed0bdd23c4c45868f1f01c04f409c9c6553c63
 
 # Hand repairs of the lines the auto-correct pushed past 120 columns; the same parse trees
