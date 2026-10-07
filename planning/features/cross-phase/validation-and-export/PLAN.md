@@ -1,7 +1,7 @@
 # Validation and export: implementation plan
 
-DATE: 2026-09-30
-STATUS: Phase 1 scope implemented and verified on branch; METr remains deferred.
+DATE: 2026-10-07
+STATUS: Phase 1 and Phase 2 scope merged and accepted; later scope remains and METr is deferred.
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md) owns the proposed workflow and the accepted D2 failure policy. The
@@ -10,8 +10,10 @@ the accepted METr deferral are in [Phase 1 decisions](../../../archive/phase-01-
 
 ## Phase 2 allocation
 
-Added 2026-09-30. The [Phase 2 packet](../../../archive/phase-02-envelope/README.md) changes this feature's
-contracts in two stages and adds nothing to `export/` orchestration:
+Original allocation, added 2026-09-30 and completed through PR #15 on 2026-10-01. The
+[archived Phase 2 packet](../../../archive/phase-02-envelope/README.md) records the implemented
+changes and [qualified acceptance](../../../archive/phase-02-envelope/STATUS.md). The allocation
+changed this feature's contracts in two stages and added nothing to `export/` orchestration:
 
 | Change | Stage |
 | --- | --- |

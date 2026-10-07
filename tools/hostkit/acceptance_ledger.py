@@ -17,6 +17,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 CATALOG = Path("planning/native-acceptance/cases.json")
 RESULTS = Path("planning/native-acceptance/results.jsonl")
+EVIDENCE_LOCATIONS = Path("planning/native-acceptance/evidence-locations.json")
 
 
 def read_catalog(root: Path) -> dict[str, dict[str, Any]]:
@@ -128,10 +129,29 @@ def validate_result(
             raise ValueError("this case requires native interaction, not bridge-only simulation")
 
 
+def read_evidence_locations(root: Path) -> dict[str, str]:
+    """Resolve archived evidence without rewriting the append-only result index."""
+    path = root / EVIDENCE_LOCATIONS
+    if not path.exists():
+        return {}
+    locations = json.loads(path.read_text())
+    if not isinstance(locations, dict):
+        raise ValueError("evidence locations must be a path mapping")
+    for original, archived in locations.items():
+        for name in (original, archived):
+            if not isinstance(name, str) or not name or Path(name).is_absolute() or ".." in Path(name).parts:
+                raise ValueError("evidence locations must be repository-relative paths")
+        if not (root / archived).is_file():
+            raise ValueError("missing archived evidence")
+    return locations
+
+
 def read_results(root: Path, cases: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    locations = read_evidence_locations(root)
     results = []
     for line in (root / RESULTS).read_text().splitlines():
         result = json.loads(line)
+        result["evidence"] = [locations.get(path, path) for path in result.get("evidence", [])]
         if result["case_id"] not in cases or result.get("schema_version") != 1:
             raise ValueError("unknown result case or schema")
         if result.get("evidence_kind") == "observed":
