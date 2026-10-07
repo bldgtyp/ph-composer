@@ -8,6 +8,7 @@ require_relative "../src/ph_composer/features/windows/units/identity_step"
 
 class WindowUnitRemoveStepTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
 
   def setup

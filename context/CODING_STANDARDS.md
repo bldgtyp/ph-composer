@@ -142,8 +142,8 @@ amount of context a reader must retain alongside size and complexity measurement
 The lint configuration sets the 120 ceiling in all three languages and carries method and class
 size limits as review signals. Ruby layout is RuboCop's whole `Layout` department: keys and
 continued arguments align with the first one, a first element on its own line is indented one step,
-a continued chain or operation aligns with its first operand, and a guard clause is followed by a
-blank line. `.rubocop.yml` records each chosen style; break a long line at an argument or operator
-boundary, never mid-expression. A justified local exception records why the longer unit is easier
-to understand; it does not disable unrelated checks. Do not weaken an existing gate
-opportunistically to pass a feature change.
+a continued chain or operation aligns with its first operand, and guard clauses and module inclusion
+groups are followed by a blank line. `.rubocop.yml` records each chosen style; break a long line at
+an argument or operator boundary, never mid-expression. A justified local exception records why the
+longer unit is easier to understand; it does not disable unrelated checks. Do not weaken an existing
+gate opportunistically to pass a feature change.

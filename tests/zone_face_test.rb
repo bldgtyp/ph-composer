@@ -5,6 +5,7 @@ require_relative "support/zone_options"
 
 class ZoneFaceTest < PhComposerTestCase
   include ZoneOptionsSupport
+
   API = PhComposer::API
 
   def setup

@@ -5,6 +5,7 @@ require_relative "support/library_provider_fixtures"
 
 class LibrarySetupTest < PhComposerTestCase
   include LibraryProviderFixtures
+
   Setup = PhComposer::Library::Setup
 
   def test_setup_persists_one_base64_json_machine_value_and_public_projections_have_no_path

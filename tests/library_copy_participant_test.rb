@@ -5,6 +5,7 @@ require_relative "support/library_provider_fixtures"
 
 class LibraryCopyParticipantTest < PhComposerTestCase
   include LibraryProviderFixtures
+
   LIBRARY = PhComposer::Library
   API = PhComposer::API
   ACTION = "probe.library_copy.apply"

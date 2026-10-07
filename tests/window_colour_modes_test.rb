@@ -8,6 +8,7 @@ require_relative "../src/ph_composer/features/windows/colour_modes"
 class WindowColourModesTest < PhComposerTestCase
   include WindowRecordFixtures
   include AssemblyAssignmentFixtures
+
   U = PhComposer::Windows::Units
 
   def setup

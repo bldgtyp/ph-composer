@@ -5,6 +5,7 @@ require_relative "support/window_record_fixtures"
 
 class WindowRecordsOperationsTest < PhComposerTestCase
   include WindowRecordFixtures
+
   API = PhComposer::API
 
   def setup

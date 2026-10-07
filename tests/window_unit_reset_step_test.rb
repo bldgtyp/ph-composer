@@ -8,6 +8,7 @@ require_relative "../src/ph_composer/features/windows/units/reset_step"
 
 class WindowUnitResetStepTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
   P = PhComposer::Windows::Placement
 

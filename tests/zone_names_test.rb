@@ -5,6 +5,7 @@ require_relative "support/zone_options"
 
 class ZoneNamesTest < PhComposerTestCase
   include ZoneOptionsSupport
+
   API = PhComposer::API
   ZONES = PhComposer::Zones
 

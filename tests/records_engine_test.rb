@@ -393,7 +393,7 @@ class RecordsEngineTest < PhComposerTestCase
       "unreadable" => { "payload" => {} }
     }
     part = seed_part("extension_data" => statuses.transform_keys { |key| "test.fixture.review.#{key}" }
-                                                .merge("test.fixture.review" => statuses["outdated"]))
+                                                 .merge("test.fixture.review" => statuses["outdated"]))
 
     view = @engine.view("test.fixture.part", @engine.find("test.fixture.part", part)).fetch("extension_status")
 

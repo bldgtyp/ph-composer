@@ -1,8 +1,8 @@
 # Enable RuboCop's Layout department
 
-DATE: 2026-10-01
+DATE: 2026-10-07
 STATUS: Merged to main 2026-10-02 (PR #32); dual-Ruby `make ci` passes. No host gate (no behaviour
-change)
+change). RuboCop upgrade verified on `codex/rubocop-upgrade` 2026-10-07; not merged.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -122,7 +122,37 @@ unchanged. The check is a scratch script; it is not committed. `make ci` passes 
 2.7.2, with the same test counts (1,380 Ruby runs) and no golden or fixture change; `rbz-check`
 passes. Commits 2, 3 and 5 are listed in `.git-blame-ignore-revs`.
 
-**Follow-up.** `make lint-ruby` prints a `rubocop-ast` deprecation trace (`EnsureNode#body`, from
+**Historical follow-up.** `make lint-ruby` printed a `rubocop-ast` deprecation trace (`EnsureNode#body`, from
 `Layout/IndentationWidth`): the locked `rubocop-ast` is newer than RuboCop 1.50.2 expects. It is
-noise, not an offence. Upgrading RuboCop is a separate change; recorded in `planning/STATUS.md`.
+noise, not an offence. The separate upgrade is recorded below and in `planning/STATUS.md`.
 
+## RuboCop upgrade execution receipt
+
+2026-10-07, branch `codex/rubocop-upgrade`, based on `main@31ee379`.
+
+- Scope: pin RuboCop 1.91.0, retain Bundler 2.4.10 and all compatible existing transitive pins.
+  The lock adds `language_server-protocol` and `lint_roller`, and removes RuboCop's former `rexml`
+  dependency. This changes development tooling only; no shipping source or fixture changed.
+- Rules: retain Ruby 2.7, the 120-column and existing size ceilings, all prior enabled cops and
+  disabled departments. Set the new `AllowQualifiedName` exemption to false to retain the line
+  ceiling. Enable the new `Layout/EmptyLinesAfterModuleInclusion` explicitly to
+  retain the whole-department policy. Add its 40 blank lines and repair two continuation alignments,
+  all in tests. Normalized Ruby parse trees match the base in all 42 changed Ruby files.
+- Focused checks: the two alignment-affected test files pass 42 cases / 246 assertions. The
+  uncached 1.50.2 baseline reproduces the `EnsureNode#body` trace; uncached dual-Ruby 1.91.0 lint
+  passes 449 files with no offenses or stderr, including the final qualified-name setting.
+  No behavior or complexity change requires new tests or a new coverage measurement.
+  No native-host or browser gate applies.
+- Full gate: `make ci` passes on Ruby 3.2.2 and 2.7.2: each runs 1,451 Ruby cases / 14,745 assertions,
+  475 JavaScript cases, 191 Python cases and all remaining gates. Logs are retained under ignored
+  `_private/tooling/rubocop-upgrade-20261007/`, alongside the baseline trace and final lint reports.
+  The summary wrapper failed after the gate because `status` is read-only in zsh; it was corrected
+  for the Ruby 2.7.2 run. The final configuration delta was covered by the uncached lint recheck.
+  Ruby 2.7.2's wrapper exits successfully. RBZ verification covers all 387 files; the package's
+  SHA-256 remains `97d30a432c31ac7132d853e52fe94bade8f8cbddb130ccbc86aac49c5be95f2c`,
+  unchanged from the main build because the upgrade changes no shipped files.
+- Review: one bounded independent tooling/configuration review found no code/lock issues; its
+  stale lint-status observation is corrected. The explicit qualified-name delta review is clear.
+- Delivery: the tooling follow-up is complete and verified locally; the next delivery step is
+  branch publication and PR review. Remote CI and merge remain unrecorded. The original Layout
+  pass remains merged through PR #32; this receipt does not reopen it or close other refactor work.

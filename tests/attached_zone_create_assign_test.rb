@@ -241,7 +241,7 @@ class AttachedZoneCreateAssignTest < PhComposerTestCase
     zones = API.query(:context => @context, :name => "ph_composer.zones.list").dig("value", "zones")
     invoke_named("ph_composer.zones.solve_adjacency", {
       "zones" => zones.select { |zone| [800, 810].include?(zone.dig("reference", "zone_path", 0)) }
-                     .map { |zone| zone.fetch("reference") }
+                      .map { |zone| zone.fetch("reference") }
     })
     paired = faces.select { |face| [800, 810].include?(face.dig("reference", "zone_path", 0)) }
     assert_equal %w[Surface Surface], paired.map { |face| face.dig("values", "boundary_condition") }

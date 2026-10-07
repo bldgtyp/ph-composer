@@ -6,6 +6,7 @@ require "tmpdir"
 
 class LibraryExportTest < PhComposerTestCase
   include AssemblyRecordFixtures
+
   API = PhComposer::API
   LIBRARY = PhComposer::Library
   MATERIAL_KIND = "ph_composer.assemblies.material"

@@ -7,6 +7,7 @@ require_relative "../src/ph_composer/features/windows/units/definition_geometry"
 
 class WindowDefinitionGeometryTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
 
   def setup

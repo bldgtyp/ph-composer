@@ -7,6 +7,7 @@ require_relative "../src/ph_composer/features/windows/units/mutation_scope"
 
 class WindowUnitMutationScopeTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
 
   def setup

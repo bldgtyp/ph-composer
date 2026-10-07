@@ -6,6 +6,7 @@ require_relative "../src/ph_composer/features/windows/units/definition_writer"
 
 class WindowDefinitionWriterTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
   Writer = U::DefinitionWriter
 

@@ -6,6 +6,7 @@ require_relative "../src/ph_composer/library/callback_invoker"
 
 class MaterialLibraryKindTest < PhComposerTestCase
   include AssemblyRecordFixtures
+
   Kind = PhComposer::Assemblies::Materials::Schema::KIND
   Mapping = PhComposer::Assemblies::MaterialsLibrary
 

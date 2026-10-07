@@ -6,6 +6,7 @@ require_relative "../src/ph_composer/features/windows/units/restore_step"
 
 class WindowUnitRestoreStepTest < PhComposerTestCase
   include WindowRecordFixtures
+
   U = PhComposer::Windows::Units
   P = PhComposer::Windows::Placement
 

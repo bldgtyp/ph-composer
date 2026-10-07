@@ -6,7 +6,7 @@
 source "https://rubygems.org"
 
 # Pinned, not floated: one `Gemfile.lock` has to resolve and run on both ends of the supported
-# span, 2.7.2 (what SketchUp 2023 embeds) and 3.2.2 (the current proving host). 1.50.2 installs
-# and runs on 2.7.2 and accepts `TargetRubyVersion: 2.7`; its lock is bundler 2.4.10, which 2.7
-# can read. Both were checked on 2026-09-16 before the pin was written.
-gem "rubocop", "1.50.2"
+# span, 2.7.2 (what SketchUp 2023 embeds) and 3.2.2 (the current proving host). RuboCop 1.91.0
+# supports Ruby 2.7 and `TargetRubyVersion: 2.7`; bundler 2.4.10 keeps the lock readable on
+# both runtimes. The upgrade's dual-Ruby checks are recorded in planning/refactor/rubocop-layout.md.
+gem "rubocop", "1.91.0"
