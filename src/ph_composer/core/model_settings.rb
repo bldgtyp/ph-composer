@@ -8,11 +8,11 @@ module PhComposer
 
     def initialize(dictionary:, defaults:, schema:, label:, step_name:, affected:, &problems)
       @store = Records::EntityStore.new(dictionary)
-      @defaults = deep_freeze(DeepCopy.call(defaults))
-      @schema = deep_freeze(DeepCopy.call(schema))
+      @defaults = DeepCopy.frozen(defaults)
+      @schema = DeepCopy.frozen(schema)
       @label = label.dup.freeze
       @step_name = step_name.dup.freeze
-      @affected = deep_freeze(DeepCopy.call(affected))
+      @affected = DeepCopy.frozen(affected)
       @problems = problems
       validate!(@defaults)
     end
@@ -60,14 +60,6 @@ module PhComposer
     def problems(values)
       found = JsonSchema.validate(values, schema)
       found.empty? ? Array(@problems&.call(values)) : found
-    end
-
-    def deep_freeze(value)
-      case value
-      when Hash then value.each_value { |item| deep_freeze(item) }
-      when Array then value.each { |item| deep_freeze(item) }
-      end
-      value.freeze
     end
 
     # Defaults are a read projection, never the stored pre-image: absent data must remain absent

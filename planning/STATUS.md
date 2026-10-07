@@ -35,7 +35,6 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 | none | Windows support verification | feature, host gate | Requested | none (local planning draft) | [features/unscheduled/windows-support/](features/unscheduled/windows-support/README.md); first release candidate is macOS-only |
 | none | Legend hover-to-highlight | feature | Requested | none (local planning draft) | [features/unscheduled/legend-hover-highlight/](features/unscheduled/legend-hover-highlight/README.md); fourth Q18 legend affordance, deferred from Phase 1 D7 on cost |
 | none | Panel keyboard focus and announcements | feature | Requested; seven items carried from the UI and UX refinement on 2026-10-03 | none (local planning draft) | [features/unscheduled/panel-keyboard-focus/](features/unscheduled/panel-keyboard-focus/README.md) |
-| n/a | One shared deep-freeze helper | refactor | Requested; a follow-up from R11 on 2026-10-02 | none (local planning draft) | [refactor/shared-deep-freeze.md](refactor/shared-deep-freeze.md); after the `Layout` pull request |
 | n/a | Runtime page test fails under CPU load | bug | Requested; reproduced and root-caused 2026-10-02 (a fixed 5 ms wait) | none (local planning draft) | [bugs/runtime-probe-test-flake.md](bugs/runtime-probe-test-flake.md) |
 | n/a | The Ruby suite errors without a UTF-8 locale | bug | Requested; reproduced 2026-10-03 (five tests read source with no encoding) | none (local planning draft) | [bugs/ci-needs-utf8-locale.md](bugs/ci-needs-utf8-locale.md) |
 | n/a | Native acceptance tooling | workflow | Implemented; historical evidence indexed, observed-result validation and dependency screening | none (local tooling work) | [native-acceptance/](native-acceptance/README.md); tools and skills remain development-only |
@@ -47,6 +46,13 @@ States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·
 `Implemented on branch` · `Merged to main` · `Complete` · `Deferred` ·
 `Superseded`
 
+
+## Completed on branch
+
+One shared deep-freeze helper is [complete and archived](archive/shared-deep-freeze.md) on
+`codex/shared-deep-freeze`, based on `main@9202e5e`. All ten copy-then-freeze call sites use
+`DeepCopy.frozen`; both private helpers are removed. Coverage, bounded review and `make ci` on
+Ruby 2.7.2 and 3.2.2 passed on 2026-10-07. Not pushed, merged or released.
 
 ## Recently merged
 

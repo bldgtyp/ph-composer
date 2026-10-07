@@ -252,7 +252,8 @@ case `R11H`. Five UI findings, none a failure, are recorded in
 **Follow-ups, not in this change.** Each is recorded where it will be done:
 
 - The third deep-freeze (`DeepCopy.frozen` beside `ModelSettings` and `Registry`):
-  [planning/refactor/shared-deep-freeze.md](../../refactor/shared-deep-freeze.md).
+  [shared-deep-freeze](../shared-deep-freeze.md), complete on `codex/shared-deep-freeze`
+  on 2026-10-07; not merged.
 - The UI polish reference's stale Window placement entry: folded into
   [library-product-tab-headers](../library-product-tab-headers/README.md), the next
   change that opens that reference.

@@ -48,7 +48,7 @@ its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
 | D3a-2 to D3a-12 answered, each before the stage it blocks | Open |
 | A phase issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Open. Create on Ed's say |
 | Ed authorizes implementation, stage by stage or for a run of stages | Open |
-| Phase 2 review refactors that touch the same shared files are merged or parked | Check at P3a-01: [shared-deep-freeze](../../refactor/shared-deep-freeze.md) is `Requested` |
+| Phase 2 review refactors that touch the same shared files are merged or parked | Open: [shared-deep-freeze](../../archive/shared-deep-freeze.md) is complete and verified on `codex/shared-deep-freeze`; awaiting merge |
 
 ## Stage ledger
 
