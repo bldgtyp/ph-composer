@@ -53,4 +53,6 @@ saved layout and repaint measurement remain with their owners. SketchUp 2023 hos
 Windows and public release gates remain open. The cross-phase units packet stays active.
 
 Whitespace checks and local Markdown file-link validation passed for the final changed documents.
-Delivery is local on `codex/units`; no push, PR, merge, installation or deployment was performed.
+Delivery: pushed on `codex/units` as [PR #84](https://github.com/bldgtyp/ph-composer/pull/84),
+open and not merged. No installation or deployment was performed. Source and test blob identities
+above are unchanged by the delivery documentation update.

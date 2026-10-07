@@ -101,7 +101,8 @@ foundation transplant or the completed F3/F4 work.
 - Passed: Ruby coverage 97.0% (minimum 93%); `make ci` on Ruby 3.2.2 and 2.7.2, with no
   lint/test skips. [Slice evidence](evidence/ruby-volume-airflow.md) records source identities,
   final results and limits. Whitespace and local Markdown file-link checks passed.
-- Delivery: local branch only. This authorized extraction is complete; no new host gate applies.
+- Delivery: pushed as [PR #84](https://github.com/bldgtyp/ph-composer/pull/84), open and not merged.
+  This authorized extraction is complete; no new host gate applies.
   Future owner decisions, feature integration and host gates remain open.
 - Next action: resume through owner entry gates when authorized. Preserve this active packet;
   neither the cross-phase scope nor P3a-01 is complete.
@@ -141,3 +142,4 @@ release gates remain separate.
 | 2026-10-07 | Reconciled source/tests and archived awards: closed F3/F4 implementation work, distinguished table drafts from saved layout, and recorded remaining owners, unset repaint budget and verification limits. |
 | 2026-10-07 | Ed confirmed extracting standalone Ruby volume/airflow groundwork; feature UI/layout/performance remain with their owners. |
 | 2026-10-07 | Standalone Ruby volume/airflow groundwork complete on `codex/units`: both Ruby full offline gates, 97.0% Ruby coverage and local table-diff review passed; no host-dependent change or feature-stage acceptance. |
+| 2026-10-07 | Published the units planning revisions and standalone groundwork as PR #84; retained the active packet and feature-owner gates. |
