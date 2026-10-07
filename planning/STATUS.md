@@ -47,16 +47,12 @@ States: `Requested` · `Scoped` · `In progress` · `Blocked` · `In review` ·
 `Superseded`
 
 
-## Completed on branch
-
-One shared deep-freeze helper is [complete and archived](archive/shared-deep-freeze.md) on
-`codex/shared-deep-freeze`, based on `main@9202e5e`. All ten copy-then-freeze call sites use
-`DeepCopy.frozen`; both private helpers are removed. Coverage, bounded review and `make ci` on
-Ruby 2.7.2 and 3.2.2 passed on 2026-10-07. Pushed with
-[PR #83](https://github.com/bldgtyp/ph-composer/pull/83) open against `main`; remote CI had not
-reported checks at PR creation. Not merged or released.
-
 ## Recently merged
+
+One shared deep-freeze helper [merged through PR #83](https://github.com/bldgtyp/ph-composer/pull/83)
+on 2026-10-07 as `7fbd8fd` and is [archived](archive/shared-deep-freeze.md). All ten settings and
+registry copy-then-freeze call sites use `DeepCopy.frozen`; both private helpers are removed.
+Coverage, bounded review and local/remote `make ci` on Ruby 2.7.2 and 3.2.2 passed. Not released.
 
 UI and UX refinements are [complete and archived](archive/ui-ux-refinements.md#current-native-acceptance).
 Implementation merged through PR #79/#80, Design System sync is complete, and all six bounded
