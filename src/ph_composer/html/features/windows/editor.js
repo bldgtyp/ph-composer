@@ -87,8 +87,7 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     var self = this;
     var result = this.requests.run(action, params || {}, { onDone: done, onFail: function (outcome) {
       if (self.renameNodes) self.renameNodes.forEach(function (node) { node.disabled = false; });
-      if (self.dimensionField) { self.dimensionField.error.textContent = outcome.message || "Review and retry.";
-        self.dimensionField.error.hidden = false; }
+      if (self.valueEditor) self.valueEditor.refuse(outcome.message || "Review and retry.");
     } });
     if (result) this.paintPending();
     return result;
@@ -404,8 +403,8 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
       }, this)) { this.requests.reset(); this.formDraft.cancel(false); }
     }
     if (!this.enabled) {
-      this.requests.reset(); if (this.dimensionField) { this.dimensionField.editing = false;
-        this.dimensionField.dispose(); this.dimensionField = null; }
+      this.requests.reset(); if (this.valueEditor) this.valueEditor.dispose();
+      this.dimensionField = null;
       if (this.bubble) this.bubble.close(false);
     }
     if (!this.record()) this.active = this.entries.length ? this.entries[0].record.id : null;
@@ -421,7 +420,7 @@ PhComposerUI.define("features/windows/editor", ["panel", "request", "snapshot", 
     this.disposed = true; this.enabled = false; this.requests.reset(); this.tabs.dispose();
     if (this.cancelRename) this.cancelRename();
     if (this.formDraft) this.formDraft.cancel(false);
-    this.installEditor.dispose(); if (this.dimensionField) this.dimensionField.dispose();
+    this.installEditor.dispose(); if (this.valueEditor) this.valueEditor.dispose();
     this.placement.dispose(); this.schedule.dispose();
     if (this.bubble) this.bubble.close(false);
     Object.keys(this.sidebars).forEach(function (kind) { this.sidebars[kind].dispose(); }, this);

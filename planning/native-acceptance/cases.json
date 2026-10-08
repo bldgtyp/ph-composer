@@ -1220,6 +1220,20 @@
         "tests/fixtures/assemblies/display_findings.json"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "GH47",
+      "label": "Shared value bubble in Window dimensions and installation defaults",
+      "mode": "mixed",
+      "authority": "planning/archive/single-value-bubble.md",
+      "paths": [
+        "src/ph_composer/html/unit_field.js",
+        "src/ph_composer/html/overlay.js",
+        "src/ph_composer/html/features/windows/*",
+        "src/ph_composer/features/windows/*",
+        "src/ph_composer/session/*"
+      ],
+      "native_control_required": true
     }
   ]
 }

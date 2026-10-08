@@ -127,44 +127,18 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     var self = this;
     // Short visible labels keep the action bar on one line; the accessible names say "Default".
     this.defaultPsi = new ui.Bubble(settingControl("Psi-Install"), "Default Psi-Install");
-    this.depthBubble = new ui.Bubble(settingControl("Depth"), "Default install depth", {
-      guard: function () { return self.depthBlocked(); } });
-    this.depth = new unitFields.UnitField({ field: DEPTH,
-      onCancel: function () { self.settingsExpected = null; self.closeDepth(true); } });
-    this.depth.input.setAttribute("aria-label", "Default install depth");
+    this.depthEditor = new unitFields.ValueBubble({ trigger: settingControl("Depth"), title: "Default install depth",
+      field: DEPTH, busy: function () { return self.requests.busy(); },
+      active: function () { return !self.disposed && self.enabled && Boolean(self.settings); },
+      apply: function (value) { return self.saveDefaults(self.settings.default_psi_install_id || null, value); },
+      onCancel: function () { self.settingsExpected = null; },
+      onClose: function () { self.settingsExpected = null; } });
+    this.depthBubble = this.depthEditor.bubble; this.depth = this.depthEditor.field;
     this.depth.input.addEventListener("input", function () { self.captureSettings(); });
-    // Enter returns focus to the trigger; leaving the field leaves focus where the user put it.
-    this.depth.commit = function () { self.commitDepth(true); };
-    this.depth.input.addEventListener("blur", function () {
-      if (self.depth.input.isConnected) self.commitDepth(false);
-    });
-    this.depthBubble.content.appendChild(this.depth.root);
     this.defaults = [this.defaultPsi.root, this.depthBubble.root];
-  };
-  /* Leaving the bubble applies the draft; an invalid entry, or one still being applied, keeps it open. */
-  Inventory.prototype.depthBlocked = function () {
-    if (this.disposed || !this.enabled || !this.settings) return null;
-    if (this.depth.editing && !this.requests.busy()) this.commitDepth(false);
-    return this.depth.editing || this.requests.busy() ? "Wait for the install depth." : null;
   };
   Inventory.prototype.closeDepth = function (focus) {
     if (!this.depthBubble.panel.hidden) this.depthBubble.close(focus);
-  };
-  Inventory.prototype.commitDepth = function (focus) {
-    var field = this.depth; if (this.disposed || this.requests.busy()) return;
-    if (!field.editing || field.input.value === field.seed) {
-      field.editing = false; field.repaint(); this.settingsExpected = null; this.closeDepth(focus); return;
-    }
-    var parsed = field.parse();
-    if (!parsed.ok) {
-      field.error.textContent = parsed.message; field.error.hidden = false;
-      field.input.setAttribute("aria-invalid", "true"); return;
-    }
-    if (parsed.value === this.settings.default_install_depth_m) {
-      field.editing = false; field.repaint(); this.settingsExpected = null; this.closeDepth(focus); return;
-    }
-    // Disabled until the outcome, so nothing typed during the round trip is lost to the repaint.
-    if (this.saveDefaults(this.settings.default_psi_install_id || null, parsed.value)) field.setDisabled(true);
   };
   Inventory.prototype.choosePsi = function (id) {
     this.defaultPsi.close(true);
@@ -237,19 +211,18 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
     var kept = refused && this.depth.editing;
     if (outcome && !kept) {
       // Return focus to the trigger unless the user has already moved it somewhere else.
-      this.depth.editing = false;
-      this.closeDepth(!focus || focus === document.body || this.depthBubble.panel.contains(focus));
+      this.depthEditor.accept(this.settings.default_install_depth_m,
+        !focus || focus === document.body || this.depthBubble.panel.contains(focus));
     }
     if (kept) {
-      this.depth.error.textContent = snapshot.message(outcome, "The install depth was not applied.");
-      this.depth.error.hidden = false;
+      this.depthEditor.refuse(snapshot.message(outcome, "The install depth was not applied."));
     } else if (refused) panel.notify(snapshot.message(outcome, "The default was not applied."), "warning");
     this.paintDefaults(); renderInventory();
     if (kept) this.depth.input.focus();
   };
   Inventory.prototype.dispose = function () {
     this.disposed = true; this.enabled = false; this.requests.reset(); this.form.dispose(); this.inventory.dispose();
-    this.color.dispose(); if (this.depth) this.depth.dispose();
+    this.color.dispose(); if (this.depthEditor) this.depthEditor.dispose();
     this.sidebar.dispose();
   };
   return { Inventory: Inventory, definitions: definitions, quantities: quantities };

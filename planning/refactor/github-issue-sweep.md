@@ -25,14 +25,14 @@ Required remote CI covers Ruby 2.7.2 and 3.2.2. Rank reflects importance, effort
 | 5 | [#43](https://github.com/bldgtyp/ph-composer/issues/43) | Library picker hierarchy | Merged in PR #90 as `d5e7843`; branches cleaned |
 | 6 | [#41](https://github.com/bldgtyp/ph-composer/issues/41) | Export result vocabulary | Merged in PR #91 as `dd4aa89`; branches cleaned |
 | 7 | [#54](https://github.com/bldgtyp/ph-composer/issues/54) | Catalog note codes | Merged in PR #92 as `aec762b`; branches cleaned |
-| 8 | [#52](https://github.com/bldgtyp/ph-composer/issues/52) | Foundation refusal meanings | Full offline gate, coverage and review passed; PR pending |
-| 9 | [#47](https://github.com/bldgtyp/ph-composer/issues/47) | Shared single-value editor | Queued |
+| 8 | [#52](https://github.com/bldgtyp/ph-composer/issues/52) | Foundation refusal meanings | Merged in PR #93 as `a4c45b5`; branches cleaned |
+| 9 | [#47](https://github.com/bldgtyp/ph-composer/issues/47) | Shared single-value editor | Offline, browser, native and review passed; PR pending |
 | 10 | [#51](https://github.com/bldgtyp/ph-composer/issues/51) | Callback refusal declarations | Queued |
 
-Source: `codex/issue-52-refusal-discovery`, based on `main@aec762b`.
+Source: `codex/issue-47-single-value-bubble`, based on `main@a4c45b5`.
 Evidence: [preview validation](../archive/preview-user-error.md),
 [product-use side order](../archive/product-use-side-order.md).
-Human actions: none identified. Next: deliver #52 through PR, dual-Ruby CI and merge/cleanup, then #47.
+Human actions: none identified. Next: deliver #47 through PR, dual-Ruby CI, merge/cleanup and static reference sync, then #51.
 Release, SketchUp 2023 native proof, Windows support and certification remain separate gates.
 
 ### Issue #42 checkpoint
@@ -43,3 +43,9 @@ inheritance labels, first-use navigation and snapshot data. JS lint and coverage
 final `make ci` and independent architecture/UI review passed with no findings. No human or native gate is specified for #42.
 
 Issue #44 acceptance and unchanged-check reuse: [receipt](../archive/windows-preview-repaint-wait.md).
+
+### Issue #47 checkpoint
+
+[Shared value-bubble receipt](../archive/single-value-bubble.md) records unchanged existing
+regressions, callback/disposal tests, full gates, all browser widths and fresh native GH47 acceptance.
+Both original feature owners retain guarded commands. No manual host action remains.
