@@ -6,4 +6,4 @@ The current refactor adds the contextual Layer gear and retains Move outward/inw
 inert grip.
 
 Read [PRD.md](PRD.md), then [STATUS.md](STATUS.md). The related refactor is
-[assemblies-ui-ux-refactor.md](../../../assemblies-ui-ux-refactor.md).
+[assemblies-ui-ux-refactor.md](../../../archive/assemblies-ui-ux-refactor.md).

@@ -1,7 +1,7 @@
 # Assemblies UI and UX refactor
 
 DATE: 2026-10-07
-STATUS: Implemented and verified; [PR #85](https://github.com/bldgtyp/ph-composer/pull/85) open for review
+STATUS: Implementation and review fixes verified; [PR #85](https://github.com/bldgtyp/ph-composer/pull/85) awaiting merge
 ISSUE: none (local planning draft)
 
 Ed requested incremental Assemblies refinements from notes and screenshots. Evaluate each from
@@ -324,7 +324,7 @@ and accepted moves, even when its displayed Layer number changes.
 Actual six-dot drag reordering is deferred under the agreed larger-feature scope rule. The current
 `layers.move` operation swaps adjacent Layers; an arbitrary drop needs one atomic reorder operation
 and native Undo/Redo acceptance. Its separate packet is
-[Assembly Layer drag reordering](features/unscheduled/assemblies-layer-drag-reorder/README.md).
+[Assembly Layer drag reordering](../features/unscheduled/assemblies-layer-drag-reorder/README.md).
 No inert grip or new Model operation ships in this slice.
 
 Verification:
@@ -446,3 +446,34 @@ Verification:
 
 The UI-polish reference records the reduced toolbar pattern; no shared token or kit component
 changed. No commit, merge or release is claimed.
+
+## PR review: preserve a draft when thickness becomes inapplicable
+
+[Inline P2 review](https://github.com/bldgtyp/ph-composer/pull/85#discussion_r4213468511) reproduced
+an external Material category snapshot making the edited Layer a membrane. The previous rendering
+branch stopped registering its thickness dimension, so refresh disposed the field and removed the
+unfinished draft and navigation guard. The new deterministic regression failed before the fix with
+the dimension owner missing.
+
+The drawing now retains an existing dirty thickness dimension through that applicability change.
+It shows the unchanged draft read-only with a membrane reason and requires explicit cancellation.
+Enter and blur cannot write, and Back stays guarded. Escape repaints the clean membrane label,
+returns focus there and releases the guard. Clean membrane Layers still have no numeric editor.
+Reversing the category change before cancellation preserves the draft but does not permit silent
+acceptance. No shared kit or Model contract changed.
+
+Verification:
+
+- All 45 focused Builder/canvas tests passed, including category reversal, no Enter/blur write,
+  guarded Back, cancellation focus, clean membrane behavior and restored original thickness.
+- The real browser category-snapshot regression passed and captures the visible draft/refusal at
+  `/tmp/phc-membrane-ui/assembly-thickness-draft-became-membrane.png`. It checks Back, Enter, Escape,
+  numeric editing exclusion and reopening after the original category is restored.
+- One bounded independent UI/architecture review found no actionable issues in applicability,
+  accepted/refused outcomes, repaint/disposal, guard or focus behavior. JavaScript line coverage:
+  96.2% of 11199 lines in 80 files. No repository complexity metric was available.
+- Final `make ci` passed without skips: 1451 Ruby runs / 14761 assertions, 490 JavaScript tests,
+  191 Python tests, hostkit and RBZ checks. The complete `make ui-checks` browser suite passed.
+  Existing native visual evidence remains applicable to unchanged clean screens; this
+  external-category transition was browser-verified, with no new native snapshot/mutation gesture
+  claimed. GitHub checks for the fix and merge remain pending.

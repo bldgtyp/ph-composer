@@ -110,6 +110,10 @@ Paths under **Local** are in this repository at `src/ph_composer/html/`. The UI 
   Mount the feature-owned menu outside the scrollport, retain stable Layer identity
   across repaint/reordering, and return focus on Escape. Actual drag grips require an implemented
   reorder gesture and atomic Model operation; never show an inert grip as decoration.
+- Assembly thickness applicability: if a Material category snapshot makes a Layer a membrane during
+  an unfinished thickness edit, retain the draft visibly with a reason and require Escape to cancel.
+  Keep Enter/blur writes and navigation blocked. A clean membrane has no numeric editor; cancellation
+  returns focus to its membrane label. Restoring the original category must not silently accept the draft.
 - Library tabs: `library/section.js` and `features/windows/inventory.js`. One page heading for every tab, holding the active tab's "+ New" beside Export library; each tab body opens with the shared action bar (view controls, then tab settings) and keeps it to one line at 1280 px. Tab settings sit at the end of the action bar through the kit `Inventory`'s `settings` option, as compact controls that open a choice list (the current choice `aria-pressed`) or a single-value bubble; the Psi-Install Types Model defaults are the example. Record forms use `formDialog`; a record's uses open in a bubble anchored to its row action.
 - Window Types: `features/windows/editor.js`, `features/windows/canvas.js`, `features/windows/windows.css`. Use for the page-header action hierarchy, title and metrics, floating notices, contextual drawing tools, selection treatment, edge inserts, single-value dimension bubbles and the adapted collapsible sidebar. Its drawing toolbar groups by job, each group one outline: View (viewing side, zoom, fit), Window Type (flip, eyedropper, Undo help), Assign (the library's product kind and, for frames, the side), and the selected elements' edits at the right while something is selected. Choices between named states in a toolbar are `select.phc-choice-pill`.
 

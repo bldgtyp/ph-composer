@@ -41,9 +41,9 @@
       "sha256": "26dd9be61afef5f1ea60d36b85486f4b832dea81ad8ad75bcad8f5591f489813"
     },
     "html/features/assemblies/editor.js": {
-      "bytes": 21161,
+      "bytes": 21770,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "aef9bfa05dfdc553b3c8f1b2626b682e46d9557cd0661f8e2fc45ab523ae013b"
+      "sha256": "37948e7c85b233b7580756997a903a53ce2454b0a00606da212ad39e2b877ade"
     },
     "html/features/assemblies/editor_shared.js": {
       "bytes": 2713,
@@ -86,9 +86,9 @@
       "sha256": "90594517a600e0e3e0eefdea286c026e4ad953c8e1271f9b0ddc52b4b983e717"
     },
     "html/features/assemblies/stage.js": {
-      "bytes": 17708,
+      "bytes": 18171,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "9fdda51301d98dfcccaeb0f0a6104da83df87b12cdb6e80b6af32f62f733574a"
+      "sha256": "5e69846e295fd29c4f6aa70a0deb0f0bd800545b97bbdde32c59116917467241"
     },
     "html/features/windows/audit.js": {
       "bytes": 3740,

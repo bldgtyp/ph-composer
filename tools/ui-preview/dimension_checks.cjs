@@ -48,6 +48,36 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal((await thinField.boundingBox()).x, thinBox.x, "validation does not shift the input");
     await page.screenshot({ path: path.join(output, "assembly-inline-thin-layer-invalid.png") });
     await thinField.press("Escape");
+    await thinTrigger.click(); await thinField.fill("25");
+    const beforeCategory = await page.evaluate(() => previewHost.sent.filter(m => m.type === "action.invoke").length);
+    const originalCategory = await page.evaluate(() => {
+      const layer = previewHost.assemblies.records[0].values.layers[0];
+      const material = previewHost.materials.records.find(record => record.id === layer.segments[0].material_id);
+      const category = material.values.category; material.values.category = "membrane";
+      previewHost.snapshot(); return category;
+    });
+    await thinField.waitFor({ state: "visible" });
+    assert.equal(await thinField.inputValue(), "25", "category snapshots retain the unfinished draft");
+    assert.equal(await thinField.getAttribute("aria-invalid"), "true");
+    assert.equal(await thinField.evaluate(node => node.readOnly), true);
+    await thinField.press("Enter");
+    await editor.getByRole("button", { name: "Back to Assemblies", exact: true }).click();
+    assert.equal(await editor.isVisible(), true, "Back remains guarded until the draft is cancelled");
+    assert.equal(await thinField.inputValue(), "25");
+    assert.equal(await page.evaluate(() => previewHost.sent.filter(m => m.type === "action.invoke").length), beforeCategory);
+    await page.screenshot({ path: path.join(output, "assembly-thickness-draft-became-membrane.png") });
+    await thinField.press("Escape"); await thinField.waitFor({ state: "hidden" });
+    assert.equal(await thinTrigger.textContent(), "Membrane");
+    assert.equal(await thinTrigger.evaluate(node => document.activeElement === node), true);
+    await thinTrigger.click(); assert.equal(await thinField.isVisible(), false, "clean membranes cannot edit thickness");
+    await editor.getByRole("button", { name: "Back to Assemblies", exact: true }).click();
+    await page.evaluate(category => {
+      const layer = previewHost.assemblies.records[0].values.layers[0];
+      previewHost.materials.records.find(record => record.id === layer.segments[0].material_id).values.category = category;
+      previewHost.snapshot();
+    }, originalCategory);
+    await page.getByRole("button", { name: "Open Wall", exact: true }).click();
+    await thinTrigger.click(); assert.equal(await thinField.inputValue(), "12"); await thinField.press("Escape");
     await editor.locator("[data-segment-id='seg_wool_0'].assembly-hit-target").click();
     const field = editor.getByRole("textbox", { name: "Layer-Segment width", exact: true });
     async function openWidth(segment) {

@@ -168,9 +168,15 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
         { label: spec.label });
       entry.field = new unitFields.UnitField({ field: descriptor, value: spec.value,
         onCancel: function () {
+          var returnFocus = entry.returnFocus !== false;
           entry.expected = null; entry.requiresCancel = false;
-          self.endInlineDimension(key, entry.returnFocus !== false);
+          self.endInlineDimension(key, returnFocus);
           entry.returnFocus = null; self.paintPending();
+          if (entry.spec.unavailableReason && !self.painting) {
+            self.repaint();
+            var trigger = self.main.querySelector("[data-layer-thickness='" + entry.spec.params.layer_id + "']");
+            if (returnFocus && trigger) trigger.focus({ preventScroll: true });
+          }
         } });
       entry.field.input.setAttribute("data-builder-dimension", key);
       entry.field.input.addEventListener("input", function () {
@@ -218,6 +224,11 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     if (entry.field.editing && entry.expected && JSON.stringify(entry.expected) !== JSON.stringify(this.expected())) {
       entry.requiresCancel = true;
       this.dimensionError(entry, "Changed in the Model. Escape to cancel and re-edit.");
+    }
+    entry.field.input.readOnly = Boolean(spec.unavailableReason);
+    if (spec.unavailableReason && entry.field.editing && entry.field.input.value !== entry.field.seed) {
+      entry.requiresCancel = true;
+      this.dimensionError(entry, spec.unavailableReason);
     }
     return entry;
   };

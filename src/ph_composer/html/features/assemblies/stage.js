@@ -166,17 +166,22 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         var button = ui.dimensionValue({ text: entry.isMembrane ? "Membrane" :
           shared.format(entry.layer.thickness_mm, shared.DIMENSION), label: "Layer " + (index + 1) + " thickness" });
         button.setAttribute("data-layer-thickness", entry.layer.id);
-        if (entry.isMembrane) {
+        var key = "thickness:" + entry.layer.id, previous = self.dimensions[key], dimension;
+        // A category snapshot can remove numeric applicability, but only the user may cancel a draft.
+        if (!entry.isMembrane || previous && previous.field.editing &&
+            previous.field.input.value !== previous.field.seed) {
+          dimension = self.dimension(key, { value: entry.layer.thickness_mm,
+            label: "Layer " + (index + 1) + " thickness", action: "layers.update",
+            params: { layer_id: entry.layer.id }, field: "thickness_mm", unavailableReason: entry.isMembrane ?
+              "This Layer became a membrane. Escape to cancel this thickness draft." : null });
+        }
+        if (entry.isMembrane && (!dimension || !dimension.field.editing)) {
           ui.tooltip(button, "Select this membrane Layer for Layer tools");
           button.addEventListener("click", function () {
             self.select({ layerId: entry.layer.id, segmentId: entry.layer.segments[0].id });
           });
           cell.appendChild(button);
         } else {
-          var key = "thickness:" + entry.layer.id;
-          var dimension = self.dimension(key, { value: entry.layer.thickness_mm,
-            label: "Layer " + (index + 1) + " thickness", action: "layers.update",
-            params: { layer_id: entry.layer.id }, field: "thickness_mm" });
           cell.appendChild(dimensionInline(self, button, dimension, true));
         }
         cell.appendChild(gear);

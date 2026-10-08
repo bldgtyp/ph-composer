@@ -534,6 +534,34 @@ test("a membrane thickness label selects its Layer for tools without a numeric e
   assert.strictEqual(o.editor.dimensions["thickness:layer_board"], undefined);
   assert.ok(o.editor.main.querySelector("[aria-label='Interior face air barrier']"));
 });
+test("a Material becoming a membrane retains a thickness draft until explicit cancellation", function () {
+  var o = setup(), key = "thickness:layer_board", entry = o.editor.dimensions[key];
+  click(entry.inlineControl.trigger); typed(entry.field, "25");
+  var material = o.state.sections[MATERIALS].value.records.filter(function (row) { return row.id === "mat_b"; })[0];
+  material.values.category = "membrane";
+  o.editor.refresh(o.state, o.record.id);
+  assert.strictEqual(o.editor.dimensions[key], entry, "the snapshot must retain the draft owner");
+  assert.strictEqual(entry.root.hidden, false); assert.strictEqual(entry.field.input.value, "25");
+  assert.strictEqual(entry.field.input.readOnly, true); assert.strictEqual(entry.field.error.hidden, false);
+  assert.ok(/membrane/.test(entry.field.error.textContent));
+  assert.ok(o.editor.guard()); assert.strictEqual(o.editor.close(), false);
+  dom.dispatch(entry.field.input, { type: "keydown", key: "Enter" });
+  entry.field.input.listeners.blur({});
+  assert.strictEqual(o.sent.length, 0, "a newly inapplicable thickness cannot be committed");
+  material.values.category = "insulation"; o.editor.refresh(o.state, o.record.id);
+  assert.strictEqual(entry.field.input.value, "25"); assert.strictEqual(entry.field.input.readOnly, false);
+  assert.strictEqual(o.editor.commitDimension(key), false, "restoring applicability still requires cancellation");
+  assert.ok(o.editor.guard()); assert.strictEqual(o.sent.length, 0);
+  material.values.category = "membrane"; o.editor.refresh(o.state, o.record.id);
+  dom.dispatch(entry.field.input, { type: "keydown", key: "Escape" });
+  assert.strictEqual(o.editor.dimensions[key], undefined);
+  assert.strictEqual(o.editor.guard(), null);
+  var trigger = o.editor.main.querySelector("[data-layer-thickness='layer_board']");
+  assert.strictEqual(trigger.textContent, "Membrane"); assert.strictEqual(o.document.activeElement, trigger);
+  click(trigger); assert.strictEqual(o.editor.dimensions[key], undefined, "clean membranes have no numeric editor");
+  material.values.category = "insulation"; o.editor.refresh(o.state, o.record.id);
+  assert.strictEqual(o.editor.dimensions[key].field.input.value, "12"); assert.strictEqual(o.sent.length, 0);
+});
 test("drawing Layer tools target the hovered Layer without changing segment selection", function () {
   var o = setup(); o.editor.select({ layerId: "layer_studs", segmentId: "seg_wool" });
   assert.strictEqual(o.editor.main.querySelector(".assembly-toolbar")
