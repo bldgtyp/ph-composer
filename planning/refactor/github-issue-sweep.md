@@ -21,18 +21,18 @@ Required remote CI covers Ruby 2.7.2 and 3.2.2. Rank reflects importance, effort
 | 1 | [#53](https://github.com/bldgtyp/ph-composer/issues/53) | Preview validation refusal | Merged in PR #86 as `80bc4aa`; branches cleaned |
 | 2 | [#42](https://github.com/bldgtyp/ph-composer/issues/42) | Product-side reading order | Merged in PR #87 as `5931c89`; branches cleaned |
 | 3 | [#44](https://github.com/bldgtyp/ph-composer/issues/44) | Preview check reliability | Merged in PR #88 as `139ccee`; branches cleaned |
-| 4 | [#48](https://github.com/bldgtyp/ph-composer/issues/48) | Tab action guidance | Documentation correction and consistency review complete |
-| 5 | [#43](https://github.com/bldgtyp/ph-composer/issues/43) | Library picker hierarchy | Queued; native look required |
+| 4 | [#48](https://github.com/bldgtyp/ph-composer/issues/48) | Tab action guidance | Merged in PR #89 as `727c2ba`; branches cleaned |
+| 5 | [#43](https://github.com/bldgtyp/ph-composer/issues/43) | Library picker hierarchy | Native/readback acceptance passed; evidence PR pending |
 | 6 | [#41](https://github.com/bldgtyp/ph-composer/issues/41) | Export result vocabulary | Queued; native look required |
 | 7 | [#54](https://github.com/bldgtyp/ph-composer/issues/54) | Catalog note codes | Queued |
 | 8 | [#52](https://github.com/bldgtyp/ph-composer/issues/52) | Foundation refusal meanings | Queued |
 | 9 | [#47](https://github.com/bldgtyp/ph-composer/issues/47) | Shared single-value editor | Queued |
 | 10 | [#51](https://github.com/bldgtyp/ph-composer/issues/51) | Callback refusal declarations | Queued |
 
-Source: `codex/issue-48-tab-action-guidance`, based on `main@139ccee`.
+Source: `codex/issue-43-library-picker-actions`, based on `main@727c2ba`.
 Evidence: [preview validation](../archive/preview-user-error.md),
 [product-use side order](../archive/product-use-side-order.md).
-Human actions: none identified. Next: deliver #48 through signed commit, PR, green CI and merge/cleanup, then #43.
+Human actions: none identified. Next: deliver #43 through signed evidence commit, PR, green CI and merge/cleanup, then #41.
 Release, SketchUp 2023 native proof, Windows support and certification remain separate gates.
 
 ### Issue #42 checkpoint

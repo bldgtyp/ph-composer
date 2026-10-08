@@ -6,7 +6,7 @@ ISSUE: none (local tooling work)
 
 [`cases.json`](cases.json) holds case identities, owning authorities, deferred scope and conservative
 source dependency patterns. [`results.jsonl`](results.jsonl) is an append-only result index with
-15 historical evidence pointers and 55 observed results. Historical pointers are not reconstructed host runs. Detailed case requirements
+15 historical evidence pointers and 56 observed results. Historical pointers are not reconstructed host runs. Detailed case requirements
 and closure remain in [the owning acceptance register](../archive/phase-01-faces-and-zones/ACCEPTANCE.md). Add finer case IDs
 when a gate needs independent reruns; a partial subcase does not close its parent.
 
@@ -38,6 +38,7 @@ not make them disposable.
 
 | Summary | Purpose |
 | --- | --- |
+| [Libraries picker actions](evidence/library-picker-actions-2026-10-07.md) | Equal file/folder actions, unreadable setup and fresh normal restoration with preserved preferences |
 | [UI refinement closeout](evidence/ui-ux-refinements-2026-10-07.md) | Checked-Zone Solve, viewport masks including nested/shared occurrences, Assembly hatch/selection edges, native paint/Undo, matching Colour-by and narrow layout |
 | [Managed Zone options](evidence/zone-field-options-2026-10-05.md) | Managed choices/dialogs, exact Undo/Redo, ID filters/custom hues, native copy/split/Restore, explicit destination adoption and normal reopen |
 | [R06 after PR #7](evidence/r06-rerun-2026-09-30.md) | Panel-closed API evidence and the control fallback cited by the native-control reference |

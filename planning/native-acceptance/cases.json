@@ -1191,6 +1191,21 @@
         "tools/hostkit/host_bridge*"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "GH43",
+      "label": "Libraries picker actions in readable/unreadable setup and normal restoration",
+      "mode": "mixed",
+      "authority": "planning/archive/library-picker-actions.md",
+      "paths": [
+        "src/ph_composer/html/library/*",
+        "src/ph_composer/html/overlay.js",
+        "src/ph_composer/html/base.css",
+        "src/ph_composer/library/setup*.rb",
+        "src/ph_composer/shell/panel*",
+        "tests/library_setup_test.js"
+      ],
+      "native_control_required": true
     }
   ]
 }
