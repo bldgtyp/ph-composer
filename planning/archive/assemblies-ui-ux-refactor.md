@@ -1,7 +1,7 @@
 # Assemblies UI and UX refactor
 
 DATE: 2026-10-07
-STATUS: Implementation and review fixes verified; [PR #85](https://github.com/bldgtyp/ph-composer/pull/85) awaiting merge
+STATUS: Merged through [PR #85](https://github.com/bldgtyp/ph-composer/pull/85) as `deecba1`; not released
 ISSUE: none (local planning draft)
 
 Ed requested incremental Assemblies refinements from notes and screenshots. Evaluate each from
@@ -14,8 +14,13 @@ fresh-process lifecycle, SketchUp 2023 floor and release acceptance are not clai
 reordering remains requested in its separate packet. The dated sections below preserve each
 slice's evidence and local delivery state at the time it was completed.
 
-Delivery: implementation committed with DCO sign-off and pushed to
-`codex/assemblies-ui-ux-refactor`; PR #85 targets `main`. Merge and release remain pending.
+Delivery: implementation and review fix committed with DCO sign-off and squash-merged to `main`
+through PR #85 as `deecba1`. Both GitHub Ruby 2.7.2 and 3.2.2 CI jobs passed on reviewed head
+`a18f876`; the merged tree matched that head exactly. The resolved inline thread and archived
+packet complete this refactor. Its feature branch was removed locally and remotely; only `main`
+remains. Release remains separate. The private Design System reading aid was not re-synced:
+these additions are drawing-specific, and that artifact excludes Builder drawing styles. Source
+styles and the updated UI-polish reference remain authoritative.
 
 ## Toolbar layout
 
@@ -476,4 +481,5 @@ Verification:
   191 Python tests, hostkit and RBZ checks. The complete `make ui-checks` browser suite passed.
   Existing native visual evidence remains applicable to unchanged clean screens; this
   external-category transition was browser-verified, with no new native snapshot/mutation gesture
-  claimed. GitHub checks for the fix and merge remain pending.
+  claimed. Both GitHub Ruby 2.7.2 and 3.2.2 jobs passed on the exact fix head; the review thread
+  was resolved and PR #85 merged as `deecba1`. No release or broader native acceptance is claimed.
