@@ -50,7 +50,8 @@ module PhComposer
       library.destination_invalid library.export_write_failed library.file_malformed library.file_too_large
       library.file_unreadable library.format_invalid library.kind_unavailable library.local_choice_required
       library.mutation_owner library.provider_ambiguous library.provider_failed library.provider_invalid
-      library.provider_unavailable library.review_required library.row_unavailable library.schema_unsupported
+      library.provider_unavailable library.review_required library.row_semantic_invalid library.row_unavailable
+      library.schema_unsupported
       library.setup_invalid library.setup_too_large library.setup_unavailable library.setup_unreadable
       library.update_destination_invalid library.update_destination_required
       runtime.asset_refused runtime.boot_timeout runtime.boot_failed runtime.translation_failed runtime.stopped

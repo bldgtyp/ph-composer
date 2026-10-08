@@ -1,7 +1,7 @@
 # Export result vocabulary
 
 DATE: 2026-10-07
-STATUS: Complete; verified locally and in current host; remote delivery pending
+STATUS: Complete; merged; branches cleaned
 ISSUE: [#41](https://github.com/bldgtyp/ph-composer/issues/41)
 
 Translation messages name authored Materials and Assemblies. A missing or invalid segment Material
@@ -22,4 +22,4 @@ blocking policy and calculations remain unchanged. Names are plain text in the s
 - Native: normal installed runtime, native Save and actual Export pane passed;
   [receipt](../native-acceptance/evidence/export-result-vocabulary-2026-10-07.md).
   Synthetic fixture saved clean; panel closed. No human action needed.
-- Next: PR, dual-Ruby CI, merge and verified branch cleanup, then #54.
+- Delivery: [PR #91](https://github.com/bldgtyp/ph-composer/pull/91) merged as `dd4aa89` after both Ruby CI jobs passed. Local/remote branches removed and absence verified.

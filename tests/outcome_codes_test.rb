@@ -56,6 +56,16 @@ class OutcomeCodesTest < PhComposerTestCase
     assert_empty unknown.uniq, "List the code in context/CONTRACTS.md or declare it with feature.code"
   end
 
+  def test_every_raised_literal_code_can_be_declared_as_an_operation_refusal
+    known = table_codes + declared.keys
+    files = Dir.glob(File.join(SOURCE_ROOT, "ph_composer", "**", "*.{rb,py}"))
+    unknown = files.flat_map do |path|
+      File.read(path).scan(/(?:CodedError|Error|Blocked)\.new\(\s*"([^"#]+)"/).flatten.grep(CODE)
+          .reject { |code| known.include?(code) }.map { |code| "#{path}: #{code}" }
+    end
+    assert_empty unknown.uniq, "Raised codes need a legal refuses declaration, not only a catalog-note mention"
+  end
+
   # The schedule labels Unit conditions by code; a label for a code nothing declares is stale.
   def test_the_window_schedule_labels_only_declared_codes
     source = File.read(File.join(SOURCE_ROOT, "ph_composer", "html", "features", "windows", "schedule.js"))

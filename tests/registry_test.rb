@@ -178,8 +178,9 @@ class RegistryTest < PhComposerTestCase
                                           :refuses => refuses) { {} }
       end
     end
-    Registry.install([declare.call(%w[probe.refused target.not_found])])
-    assert_equal %w[probe.refused target.not_found], Registry.current.queries.fetch("probe.refuses.read").refuses
+    Registry.install([declare.call(%w[probe.refused target.not_found library.row_semantic_invalid])])
+    assert_equal %w[probe.refused target.not_found library.row_semantic_invalid],
+                 Registry.current.queries.fetch("probe.refuses.read").refuses
 
     { "an undeclared code" => %w[probe.unheard], "a repeat" => %w[target.not_found target.not_found],
       "a common code" => %w[session.busy], "a dispatch-only code" => %w[access.user_required] }

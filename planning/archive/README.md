@@ -9,7 +9,8 @@ reached.
 
 | Slug | Date | Outcome | Issue or PR |
 | --- | --- | --- | --- |
-| [export-result-vocabulary](export-result-vocabulary.md) | 2026-10-07 | Export findings name authored Materials, Assemblies and Layers; focused/full gates, coverage, review and native export pass; remote delivery pending | [#41](https://github.com/bldgtyp/ph-composer/issues/41) |
+| [catalog-note-contract](catalog-note-contract.md) | 2026-10-07 | Raised catalog semantic code is legally declarable; admission remains unchanged; focused checks and review pass, full gates pending | [#54](https://github.com/bldgtyp/ph-composer/issues/54) |
+| [export-result-vocabulary](export-result-vocabulary.md) | 2026-10-07 | Export findings name authored Materials, Assemblies and Layers; focused/full gates, coverage, review and native export pass; PR #91 merged as `dd4aa89`, branches cleaned | [#41](https://github.com/bldgtyp/ph-composer/issues/41) |
 | [library-picker-actions](library-picker-actions.md) | 2026-10-07 | Existing equal file/folder routes accepted in readable/unreadable native dialogs; fresh normal restoration preserves preferences; nine setup tests and focused review pass; PR #90 merged as `d5e7843`, branches cleaned | [#43](https://github.com/bldgtyp/ph-composer/issues/43) |
 | [tab-action-guidance](tab-action-guidance.md) | 2026-10-07 | Layout rule matches Library heading and inventory contracts; Assemblies/Window Type patterns checked, no screen changes; focused consistency review passed; PR #89 merged as `727c2ba`, branches cleaned | [#48](https://github.com/bldgtyp/ph-composer/issues/48) |
 | [windows-preview-repaint-wait](windows-preview-repaint-wait.md) | 2026-10-07 | Existing repaint wait accepted in 20 consecutive four-width browser runs; unchanged offline gate reused, focused consistency review passed; PR #88 merged as `139ccee`, branches cleaned | [#44](https://github.com/bldgtyp/ph-composer/issues/44) |
