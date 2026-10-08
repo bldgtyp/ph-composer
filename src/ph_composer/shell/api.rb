@@ -34,6 +34,8 @@ module PhComposer
         "contract_versions" => [Declarations::CONTRACT_VERSION],
         "capabilities" => CallerRegistry::CAPABILITIES,
         "common_refusals" => Refusals::COMMON,
+        "refusal_documentation" =>
+          "https://github.com/bldgtyp/ph-composer/blob/main/context/CONTRACTS.md#outcomes-and-codes",
         "tasks" => { "export" => { "preflight" => "export_preflight", "start" => "start_export",
                                    "status" => "export_status", "cancel" => "cancel_export",
                                    "latest" => "latest_export", "retention_limit" => Export::Tasks::LIMIT,
@@ -188,7 +190,7 @@ module PhComposer
     # context/CONTRACTS.md, "Outcomes and codes".
     def refusal(registry, code)
       declared = registry.codes[code]
-      return { "code" => code, "owner" => "foundation" } unless declared
+      return { "code" => code, "owner" => "foundation", "description" => nil } unless declared
 
       { "code" => code, "owner" => declared.owner, "description" => declared.description }
     end
