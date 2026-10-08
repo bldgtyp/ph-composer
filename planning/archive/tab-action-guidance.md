@@ -1,7 +1,7 @@
 # Tab action guidance
 
 DATE: 2026-10-07
-STATUS: Complete; consistency review passed; remote delivery pending
+STATUS: Merged to main through PR #89
 ISSUE: [#48](https://github.com/bldgtyp/ph-composer/issues/48)
 
 UI polish Layout rule 2 now puts the active tab's primary New action in the shared page
@@ -21,4 +21,6 @@ No screen, kit component, style or behavior changed.
 - Verification: documentation-only; no code or host gate required. Prior unchanged offline
   verification and remote dual-Ruby CI remain applicable; this PR also runs mandatory GitHub CI.
 - Design System: no kit or style change, so no artifact sync required.
-- Next: signed commit, PR, green CI, merge and branch cleanup, then #43.
+- Delivery: [PR #89](https://github.com/bldgtyp/ph-composer/pull/89) merged at `727c2ba`
+  after dual-Ruby CI passed on `e4a99cd`; local main synchronized and both branches cleaned.
+- Next: issue #43 in the sequential queue.
