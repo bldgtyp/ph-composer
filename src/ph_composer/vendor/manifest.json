@@ -476,9 +476,9 @@
       "sha256": "aba52de9721b43927f7df6083ab69b255f89b1213806a95b655556f20e72edab"
     },
     "python/ph_composer_translation/constructions.py": {
-      "bytes": 7039,
+      "bytes": 7160,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "d264c841e780cec8f4be100814545aa4b9336bf5731c27b7fcda04d140ca750e"
+      "sha256": "cd4316358d9c9ace1860b1222fb51496676137b9cc4918194799b4498ccca067"
     },
     "python/ph_composer_translation/contract/__init__.py": {
       "bytes": 1494,
@@ -486,9 +486,9 @@
       "sha256": "f12db5332999d60bff17b39be4d9c53f7f57b86aa3e2d60a0bd90f9a3aee905c"
     },
     "python/ph_composer_translation/contract/assembly_records.py": {
-      "bytes": 6369,
+      "bytes": 6729,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "ccdf74668bbfbe19fd018dbccd764b0db735f0b4ab62fd555634162e5001ce78"
+      "sha256": "2451ce5cb669e84ad1df8a4a0b5232e0b3e850a933916b74bef85c96293daa5a"
     },
     "python/ph_composer_translation/contract/window_records.py": {
       "bytes": 5933,

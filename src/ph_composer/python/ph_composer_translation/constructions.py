@@ -87,7 +87,9 @@ class ConstructionSection(Section[AssemblyRecord, TranslatedConstruction]):
                 self.id,
                 identifier,
                 "Missing thermal mass properties use 600 kg/m3 density and 1000 J/kgK specific heat "
-                f"for Materials {', '.join(value.defaulted_material_ids)}.",
+                "for Materials "
+                + ", ".join(f'"{value.source.materials[id].name}"' for id in value.defaulted_material_ids)
+                + f' in Assembly "{value.source.name}".',
                 False,
             )
             for identifier, value in objects.items()

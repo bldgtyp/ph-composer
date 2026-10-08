@@ -1,7 +1,7 @@
 # Libraries picker actions
 
 DATE: 2026-10-07
-STATUS: Complete; current-host acceptance passed; remote delivery pending
+STATUS: Complete; merged; branches cleaned
 ISSUE: [#43](https://github.com/bldgtyp/ph-composer/issues/43)
 
 Keep the implemented equal file/folder route cards without apply glyphs, and Done for the
@@ -18,4 +18,4 @@ accepted Library pattern. The old issue's action-row implementation has already 
   [evidence](../native-acceptance/evidence/library-picker-actions-2026-10-07.md). Installed package
   matches 390 files; original preferences preserved and fixture unmodified; no human action needed.
 - Acceptance scope: the issue's current-host look; no new release/platform claim.
-- Next: signed evidence commit, PR, dual-Ruby CI, merge and verified branch cleanup, then #41.
+- Delivery: [PR #90](https://github.com/bldgtyp/ph-composer/pull/90) merged as `d5e7843` after both Ruby CI jobs passed. Local/remote branches removed and absence verified.
