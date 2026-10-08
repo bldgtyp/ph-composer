@@ -33,6 +33,31 @@ module PhComposer
 
       private
 
+      # Operations and local library callbacks publish the same checked code vocabulary. A callback's
+      # owner is the library kind owner, and only the common codes all its callers share are excluded.
+      def check_refusal_list(subject, refuses, common, label = "refuses")
+        unless refuses.is_a?(Array) && refuses.all?(String)
+          problem(subject, "needs #{label}, a list of codes")
+          return
+        end
+        owners = (@live.codes.values + @staging.declared_codes).to_h { |code| [code.code, code.owner] }
+        requires = @staging.declared_features.find { |feature| feature.id == subject.owner }&.requires || []
+        refuses.tally.each do |code, count|
+          owner = owners[code]
+          if count > 1
+            problem(subject, "#{label} lists #{code} more than once")
+          elsif common.include?(code)
+            problem(subject, "#{label} lists #{code}, which every operation of its kind answers")
+          elsif Refusals::DISPATCH_ONLY.include?(code)
+            problem(subject, "#{label} lists #{code}, which only dispatch gives")
+          elsif !Declarations::FOUNDATION_CODES.include?(code) && owner.nil?
+            problem(subject, "#{label} lists #{code}, which no feature declares and context/CONTRACTS.md does not list")
+          elsif owner && owner != subject.owner && !requires.include?(owner)
+            problem(subject, "#{label} lists #{code}, which belongs to #{owner}; #{subject.owner} must require it")
+          end
+        end
+      end
+
       def check_features
         features = @staging.declared_features
         features.each do |feature|
@@ -432,36 +457,9 @@ module PhComposer
         end
       end
 
-      # An operation's `refuses` names codes a caller can look up: each is listed in context/CONTRACTS.md
-      # or declared by the operation's own feature or one it requires, appears once, and is neither in
-      # the common sets the operation's kind answers nor a code only dispatch gives, so the list says
-      # only what is particular to this operation.
       def check_refusals
-        owners = (@live.codes.values + @staging.declared_codes).to_h { |code| [code.code, code.owner] }
         @staging.declared_operations.each do |operation|
-          refuses = operation.refuses
-          unless refuses.is_a?(Array) && refuses.all?(String)
-            problem(operation, "needs refuses, a list of codes")
-            next
-          end
-          common = Refusals.common(operation)
-          requires = @staging.declared_features.find { |feature| feature.id == operation.owner }&.requires || []
-          refuses.tally.each do |code, count|
-            owner = owners[code]
-            if count > 1
-              problem(operation, "refuses lists #{code} more than once")
-            elsif common.include?(code)
-              problem(operation, "refuses lists #{code}, which every operation of its kind answers")
-            elsif Refusals::DISPATCH_ONLY.include?(code)
-              problem(operation, "refuses lists #{code}, which only dispatch gives")
-            elsif !Declarations::FOUNDATION_CODES.include?(code) && owner.nil?
-              problem(operation, "refuses lists #{code}, which no feature declares and context/CONTRACTS.md " \
-                                 "does not list")
-            elsif owner && owner != operation.owner && !requires.include?(owner)
-              problem(operation, "refuses lists #{code}, which belongs to #{owner}; #{operation.owner} must " \
-                                 "require it")
-            end
-          end
+          check_refusal_list(operation, operation.refuses, Refusals.common(operation))
         end
       end
     end
@@ -559,6 +557,7 @@ module PhComposer
         problem(item, "#{part} params must be an object") unless callback.params.is_a?(Hash) &&
                                                                  callback.params["type"] == "object"
         problem(item, "#{part} needs a callable handler") unless callback.handler.respond_to?(:call)
+        check_refusal_list(item, callback.refuses, Refusals::ANY_OPERATION, "#{part}.refuses")
       end
 
       def check_library_providers

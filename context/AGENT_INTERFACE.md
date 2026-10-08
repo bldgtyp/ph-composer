@@ -56,6 +56,9 @@ names the common sets it also answers as `common_refusal_sets`, which `discover`
 are declared text; foundation descriptions are null, and discovery's `refusal_documentation` URL
 points to the public [Outcomes and codes](CONTRACTS.md#outcomes-and-codes) authority.
 A client plans recovery from these lists rather than learning codes by trying.
+Library copy includes the local read, create, replace and assignment refusals of installed kind
+adapters; the in-file query includes their local-read refusals. The lists reflect the current
+composition, so an outside kind's declared codes are discoverable without changes to the shell.
 
 Do not make a client infer action names or capabilities from private file paths or the current UI.
 Reject incompatible API versions explicitly and document deprecations. New features register

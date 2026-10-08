@@ -289,10 +289,11 @@ locator or participant counts, because it reaches the caller unchanged. Registra
 operation without `refuses:`, a code nothing declares, another feature's code unless the operation's
 feature requires it, a repeat, and a code its common sets already hold. The offline suite installs a `Refusals.audit` that fails any test whose operation refuses
 with a code outside its list and common sets, so coverage keeps the lists complete: a missing code
-is declared, never suppressed. A library kind's callbacks run inside `ph_composer.library.copy` and
-`ph_composer.library.in_file`, whose lists the foundation owns, so a callback refuses with a shared or
-library code (`validation.failed`, `target.*`, `library.*`) rather than one under its own noun until
-adapters can declare their own.
+is declared, never suppressed. A library kind's local callbacks declare their own `refuses:` lists.
+The effective list for `ph_composer.library.copy` includes every installed kind's `local_read`,
+`create`, `replace` and optional `assign` refusals; `ph_composer.library.in_file` includes only
+`local_read` refusals. Discovery, generated references and the audit use the same projection.
+The coordinator lists its own failures and names no receiving feature.
 
 A composition-root registration or generated build inventory is permitted. Requiring a new
 feature branch inside shell, session, export orchestration or UI-kit internals is a contract
@@ -318,8 +319,12 @@ contract, wire and fingerprint versions are 1. Fingerprint fields are unique map
 property names in canonical order. Pure mapping and reverse mapping use detached values; the
 fingerprint returns a lowercase SHA-256 hex string and excludes provenance and local identities.
 
-Local operations are `Declarations::LibraryCallback` values with `params`, `result` schemas and
-`handler(request, proposal)`. The request's engine is projected through the caller's proposal
+Local operations are `Declarations::LibraryCallback` values with `params`, `result` schemas,
+`refuses:` and `handler(request, proposal)`. Use an empty refusal list when the callback has no
+specific refusal. Registration validates these lists like operations: declared own-noun codes,
+shared foundation codes, or another owner's codes with an explicit dependency. Do not repeat
+the common codes all operation kinds share or dispatch-only codes. Published lists are detached
+and frozen. The request's engine is projected through the caller's proposal
 (`engine.projected`): every engine read sees the records the proposal has staged. Local reads
 receive no mutable proposal and cannot stage writes. They return detached
 projections with `id`, semantic `mapped` values, raw authored `expected_values` and optional

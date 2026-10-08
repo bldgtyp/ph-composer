@@ -188,7 +188,7 @@ module PhComposer
 
     # Pure wire methods use detached values. Local callbacks will run under this declaration's
     # owner, validating these schemas and sharing the caller's proposal; registration never runs them.
-    LibraryCallback = Struct.new(:params, :result, :handler, keyword_init: true)
+    LibraryCallback = Struct.new(:params, :result, :refuses, :handler, keyword_init: true)
     LibraryAdapter = Struct.new(:wire_kind, :wire_version, :fingerprint_version, :wire_schema,
                                 :mapped_schema, :fingerprint_fields,
                                 :map, :reverse, :fingerprint, :local_read, :create, :replace, :assign,

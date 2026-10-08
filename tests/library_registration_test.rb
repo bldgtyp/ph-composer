@@ -9,7 +9,7 @@ class LibraryRegistrationTest < PhComposerTestCase
 
   def callback
     D::LibraryCallback.new(:params => { "type" => "object", "properties" => { "id" => { "type" => "string" } } },
-                           :result => { "type" => "object" }, :handler => ->(*_arguments) { {} })
+                           :result => { "type" => "object" }, :refuses => [], :handler => ->(*_arguments) { {} })
   end
 
   def adapter(wire_kind = "widgets")
@@ -112,12 +112,15 @@ class LibraryRegistrationTest < PhComposerTestCase
     value.mapped_schema["properties"].clear
     value.fingerprint_fields << "extra"
     value.create.params["properties"]["id"]["type"] = "number"
+    value.create.refuses << "record.unreadable"
     kinds << "other"
     assert_equal "widgets", published.adapter.wire_kind
     assert_equal "string", published.adapter.wire_schema.dig("properties", "name", "type")
     assert_equal ["name"], published.adapter.mapped_schema.fetch("properties").keys
     assert_equal ["name"], published.adapter.fingerprint_fields
     assert_equal "string", published.adapter.create.params.dig("properties", "id", "type")
+    assert_empty published.adapter.create.refuses
+    assert published.adapter.create.refuses.frozen?
     assert_equal ["widgets"], provider.kinds
     assert published.frozen?
     assert published.adapter.frozen?
@@ -126,6 +129,36 @@ class LibraryRegistrationTest < PhComposerTestCase
     assert provider.frozen?
     assert_same value.map, published.adapter.map
     refute value.map.frozen?, "Publishing metadata must not freeze contributor callable state"
+  end
+
+  def test_callback_refusal_lists_reject_invalid_unknown_common_dispatch_and_duplicate_codes
+    [nil, "record.unreadable", [1], ["widget.unknown"], ["params.invalid"], ["request.unknown_operation"],
+     %w[record.unreadable record.unreadable]].each do |codes|
+      value = adapter
+      value.create.refuses = codes
+      diagnostics = refused(feature("test.library", value))
+      assert diagnostics.any? { |item| item.message.include?("create.refuses") }, diagnostics.inspect
+      refute Registry.current.library_kinds.key?("test.library.wire")
+    end
+  end
+
+  def test_callback_foreign_noun_requires_owner_and_accepts_dependency_in_either_batch_order
+    owner = feature("test.owner", nil) { |scope| scope.code("widget.blocked", :description => "Widget blocked.") }
+    value = adapter
+    value.create.refuses = ["widget.blocked".dup]
+    diagnostics = refused(owner, feature("test.library", value))
+    assert diagnostics.any? { |item| item.message.include?("test.library must require it") }
+    refute Registry.installed?("test.owner"), "Invalid callbacks must refuse the complete batch"
+    [true, false].each do |owner_first|
+      Registry.reset
+      consumer = feature("test.library", value, :requires => ["test.owner"])
+      Registry.install(owner_first ? [owner, consumer] : [consumer, owner])
+      published = Registry.current.library_kinds.fetch("test.library.wire").adapter.create.refuses
+      assert_equal ["widget.blocked"], published
+      assert published.first.frozen?
+    end
+    value.create.refuses.first.replace("changed")
+    assert_equal ["widget.blocked"], Registry.current.library_kinds.fetch("test.library.wire").adapter.create.refuses
   end
 
   def test_duplicate_declaration_ids_and_wire_kinds_refuse_the_complete_batch

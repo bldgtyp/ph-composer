@@ -161,6 +161,7 @@ module PhComposer
         callback = callback.dup
         callback.params = DeepCopy.frozen(callback.params)
         callback.result = DeepCopy.frozen(callback.result)
+        callback.refuses = DeepCopy.frozen(callback.refuses)
         adapter[method] = callback.freeze
       end
       item.adapter = adapter.freeze

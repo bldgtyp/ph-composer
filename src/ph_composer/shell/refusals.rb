@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../library/refuses"
+
 module PhComposer
   # What an operation can refuse with (context/CONTRACTS.md, "Outcomes and codes"). Each operation
   # declares `refuses`, the codes its handler and the dependencies it calls can answer with an outcome
@@ -38,6 +40,12 @@ module PhComposer
     def report(declaration, outcome)
       audit&.call(declaration, outcome["code"]) if declaration && outcome && outcome["status"] != "completed"
       outcome
+    end
+
+    # Discovery, generated references and the offline audit use this one projection. The library
+    # service contributes installed callback codes without naming any receiving feature.
+    def declared(declaration, registry = Registry.current)
+      (declaration.refuses + Library::Refuses.callback_codes(registry, declaration.name)).uniq - common(declaration)
     end
 
     # The names of the COMMON sets one operation answers.
