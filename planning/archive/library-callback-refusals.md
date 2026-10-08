@@ -1,7 +1,7 @@
 # Library callback refusal declarations
 
 DATE: 2026-10-07
-STATUS: Implemented and verified; full offline gate, coverage and review passed; remote delivery pending
+STATUS: Complete; merged, all scoped gates passed, branches cleaned
 ISSUE: [#51](https://github.com/bldgtyp/ph-composer/issues/51)
 
 An outside Widget kind reproduced the contract gap: its callback refused with its declared
@@ -42,4 +42,6 @@ Contributor and agent contracts describe the completed seam and remove the forme
 - Final `make ci` passed: 1,461 Ruby tests / 18,085 assertions, 496 JS tests, 195 Python tests,
   generated references, hostkit, lint, runtime checks and a verified 390-file RBZ.
 - Coverage passed: Ruby 97.0%, JS 96.3%, Python 95.60%.
-- Next: PR, green dual-Ruby remote CI, merge and verified branch cleanup.
+- [PR #95](https://github.com/bldgtyp/ph-composer/pull/95) merged as `5f69340` after both
+  Ruby 2.7.2 and 3.2.2 remote CI jobs passed. Merge ancestry and removal of local/remote issue
+  branches verified. Issue #51 is closed; the GitHub open-issue query is empty.
