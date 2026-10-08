@@ -22,6 +22,28 @@ vm.createContext(context);
 var modules = panelSource.start(context, ["workspace", "record_form"]);
 var ui = modules.workspace;
 
+test("a detached drawing trigger stays in its scrollport and keeps Bubble activation and dismissal", function () {
+  var scroll = dom.element("div"), trigger = dom.element("button"), child = dom.element("span");
+  context.document.body.appendChild(scroll); scroll.appendChild(trigger); trigger.appendChild(child);
+  var bubble = new ui.Bubble(trigger, "Drawing width", { detachedTrigger: true });
+  context.document.body.appendChild(bubble.root);
+  assert.strictEqual(trigger.parentNode, scroll);
+  assert.strictEqual(bubble.root.contains(trigger), false);
+  trigger.listeners.click({});
+  assert.strictEqual(bubble.panel.hidden, false);
+  context.document.dispatchEvent({ type: "mousedown", target: child });
+  assert.strictEqual(bubble.panel.hidden, false, "pressing the trigger cannot close before its click toggles");
+  trigger.listeners.click({}); assert.strictEqual(bubble.panel.hidden, true);
+  trigger.listeners.keydown({ key: "ArrowDown", preventDefault: function () {} });
+  assert.strictEqual(bubble.panel.hidden, false);
+  trigger.listeners.keydown({ key: "Escape", preventDefault: function () {} });
+  assert.strictEqual(bubble.panel.hidden, true);
+  assert.strictEqual(context.document.activeElement, trigger);
+  bubble.open(false);
+  context.document.dispatchEvent({ type: "mousedown", target: context.document.body });
+  assert.strictEqual(bubble.panel.hidden, true, "outside pointer input still dismisses the editor");
+});
+
 test("a bubble with no room below it opens above its trigger", function () {
   var trigger = dom.element("button");
   context.document.body.appendChild(trigger);

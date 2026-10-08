@@ -70,6 +70,13 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     this.root.appendChild(this.removal);
     this.root.addEventListener("keydown", function (event) {
       if (event.defaultPrevented || event.key !== "Escape" || self.busy()) return;
+      var open = Object.keys(self.dimensions).filter(function (key) {
+        return self.dimensions[key].inlineOpen;
+      })[0];
+      if (open) {
+        event.preventDefault(); self.dimensions[open].returnFocus = true;
+        self.dimensions[open].field.cancel(); return;
+      }
       if (self.hasDimensionDraft() || self.hasRecordDraft()) return;
       if (self.selection) { event.preventDefault(); self.select(null); }
     });
@@ -146,6 +153,13 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     entry.field.error.hidden = false;
     entry.field.input.setAttribute("aria-invalid", "true");
   };
+  Editor.prototype.endInlineDimension = function (key, focus) {
+    var entry = this.dimensions[key];
+    if (!entry || !entry.inlineControl) return;
+    entry.inlineOpen = false;
+    entry.inlineControl.show(false, focus && !this.painting);
+    if (focus && this.painting) this.inlineFocusKey = key;
+  };
   Editor.prototype.dimension = function (key, spec) {
     var self = this, entry = this.dimensions[key];
     if (!entry) {
@@ -153,7 +167,11 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
       var descriptor = Object.assign({}, spec.optional ? shared.OPTIONAL_DIMENSION : shared.DIMENSION,
         { label: spec.label });
       entry.field = new unitFields.UnitField({ field: descriptor, value: spec.value,
-        onCancel: function () { entry.expected = null; entry.requiresCancel = false; self.paintPending(); } });
+        onCancel: function () {
+          entry.expected = null; entry.requiresCancel = false;
+          self.endInlineDimension(key, entry.returnFocus !== false);
+          entry.returnFocus = null; self.paintPending();
+        } });
       entry.field.input.setAttribute("data-builder-dimension", key);
       entry.field.input.addEventListener("input", function () {
         if (!entry.expected) entry.expected = self.expected();
@@ -162,9 +180,13 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
       // Enter is the owner's: caught while it travels down to the input, before UnitField's own listener on
       // the input runs (on the host floor's Chromium a capture listener on the target itself would not be).
       entry.field.root.addEventListener("keydown", function (event) {
+        if (entry.inlineControl && event.key === "Escape" && event.target === entry.field.input) {
+          event.preventDefault(); event.stopPropagation(); entry.returnFocus = true; entry.field.cancel(); return;
+        }
         if (event.key !== "Enter" || event.target !== entry.field.input) return;
         event.preventDefault();
         event.stopPropagation();
+        entry.returnFocus = true;
         self.commitDimension(key);
       }, true);
       // Leaving the field applies the draft, as Enter does. A blur during a repaint is the page moving the
@@ -172,7 +194,10 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
       // Switching to SketchUp mid-word blurs the input too; that is not leaving the field.
       entry.field.input.addEventListener("blur", function () {
         var windowActive = !document.hasFocus || document.hasFocus();
-        if (!self.painting && windowActive && entry.field.input.isConnected) self.commitDimension(key);
+        if (!self.painting && windowActive && entry.field.input.isConnected && !self.busy()) {
+          entry.returnFocus = false;
+          self.commitDimension(key);
+        }
       });
       entry.root = el("div", "assembly-dimension-editor");
       entry.root.appendChild(entry.field.root);
@@ -198,9 +223,10 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
   };
   Editor.prototype.commitDimension = function (key) {
     var entry = this.dimensions[key];
-    if (!entry || this.disposed || !this.enabled || this.busy() || !entry.field.editing || entry.requiresCancel) {
+    if (!entry || this.disposed || !this.enabled || this.busy() || entry.requiresCancel) {
       return false;
     }
+    if (!entry.field.editing) { this.endInlineDimension(key, entry.returnFocus); return false; }
     if (entry.field.input.value === entry.field.seed) { entry.field.cancel(); return false; }
     if (entry.expected && JSON.stringify(entry.expected) !== JSON.stringify(this.expected())) {
       this.dimensionError(entry, "Changed in the Model. Escape to cancel and re-edit.");
@@ -318,11 +344,10 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     var focusedHit = focus && focus.classList.contains("assembly-hit-target") ? {
       layerId: focus.getAttribute("data-layer-id"), segmentId: focus.getAttribute("data-segment-id") } : null;
     var bubbleTitle = ui.Bubble.activeTitle(this.main);
-    // A dimension's bubble reopens by its dimension, not its title: a Layer inserted above by Undo or another
-    // client renumbers the titles.
-    var openDimension = Array.prototype.filter.call(this.main.querySelectorAll(".phc-bubble"), function (panel) {
-      return !panel.hidden && panel.getAttribute("data-dimension-key");
-    }).map(function (panel) { return panel.getAttribute("data-dimension-key"); })[0];
+    var layerToolsKey = Array.prototype.filter.call(this.main.querySelectorAll("[data-layer-tools-key]"),
+      function (panel) { return !panel.hidden; }).map(function (panel) {
+      return panel.getAttribute("data-layer-tools-key");
+    })[0];
     this.painting = true;
     ui.Bubble.closeActive(this.main);
     Object.keys(this.dimensions).forEach(function (key) { this.dimensions[key].live = false; }, this);
@@ -340,9 +365,8 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     var scroll = this.main.querySelector(".assembly-stage-scroll");
     if (scroll && position) { scroll.scrollTop = position.top; scroll.scrollLeft = position.left; }
     if (bubbleTitle) this.main.querySelectorAll(".phc-bubble").forEach(function (panel) {
-      var dimension = panel.getAttribute("data-dimension-key");
-      var same = openDimension ? dimension === openDimension :
-        !dimension && panel.getAttribute("aria-label") === bubbleTitle;
+      var same = layerToolsKey ? panel.getAttribute("data-layer-tools-key") === layerToolsKey :
+        panel.getAttribute("aria-label") === bubbleTitle;
       if (same) panel._bubble.open(false);
     });
     // After an insert the control that made it is gone; the new Layer-Segment takes the focus, so Escape and
@@ -358,6 +382,11 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
           hit.getAttribute("data-segment-id") === focusedHit.segmentId;
       })[0];
       if (restored) restored.focus({ preventScroll: true });
+    }
+    if (this.inlineFocusKey && !this.busy()) {
+      var returned = this.dimensions[this.inlineFocusKey];
+      this.inlineFocusKey = null;
+      if (returned && returned.inlineControl) returned.inlineControl.trigger.focus({ preventScroll: true });
     }
     return true;
   };

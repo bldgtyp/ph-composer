@@ -26,9 +26,7 @@ PhComposerUI.define("features/windows/cards", ["panel", "unit_field", "units", "
   methods.openBubble = function (trigger, title) {
     if (this.bubble) { this.bubble.close(false);
       if (this.bubble.root.parentNode) this.bubble.root.parentNode.removeChild(this.bubble.root); }
-    var parent = trigger.parentNode, sibling = trigger.nextSibling;
-    var bubble = new ui.Bubble(trigger, title, { ownTrigger: true }); this.bubble = bubble;
-    if (parent) parent.insertBefore(trigger, sibling || null);
+    var bubble = new ui.Bubble(trigger, title, { ownTrigger: true, detachedTrigger: true }); this.bubble = bubble;
     // Keep SVG triggers in the drawing. The editor itself lives outside the scrollport.
     this.root.appendChild(bubble.root);
     return bubble;

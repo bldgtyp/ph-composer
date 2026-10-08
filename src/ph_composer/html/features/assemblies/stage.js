@@ -1,8 +1,8 @@
 /* Crisp keyed cross-section, accessible hit targets, dimension lines on both axes, and the edge insert control.
-   Each dimension opens a single-value bubble whose field is the shared UnitField. */
+   Each dimension edits in place using the shared UnitField. */
 PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", "features/assemblies/editor_shared",
-  "face_words", "workspace"],
-  function (canvas, shared, words, ui) {
+  "features/assemblies/layer_tools", "face_words", "workspace"],
+  function (canvas, shared, layerTools, words, ui) {
     "use strict";
     var el = ui.element;
     // How near an edge, in screen pixels, the pointer must be before its insert control shows.
@@ -37,6 +37,11 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
     /* One insert control for the whole drawing, moved to the edge the pointer is near and hidden otherwise,
        so a single control shows at a time. It sits above every hit target. */
     function insertControl(owner, drawing, layout, values) {
+      var activeHit = null, activeEdge = null;
+      var highlight = el("div", "assembly-edge-highlight");
+      highlight.hidden = true;
+      highlight.setAttribute("aria-hidden", "true");
+      drawing.appendChild(highlight);
       var control = ui.button("", function () {
         var target = control._target;
         if (!target) return;
@@ -48,11 +53,21 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
       control.setAttribute("data-editor-local", "");
       control.innerHTML = ui.svgIcon("add", 14);
       var topIsExterior = values.orientation !== "last_layer_outside";
-      function hide() { control.hidden = true; control._target = null; }
+      function hide() {
+        if (activeHit) activeHit.removeAttribute("data-hover-edge");
+        activeHit = null;
+        activeEdge = null;
+        highlight.hidden = true;
+        control.hidden = true;
+        control._target = null;
+      }
       drawing.addEventListener("mousemove", function (event) {
+        if (owner.busy() || owner.dragging || owner.hasDimensionDraft()) { hide(); return; }
+        // The control, its SVG and its paths belong to the active edge. Hiding it here lets the
+        // segment underneath receive the next event and reveal it again, creating a flashing loop.
+        if (control.contains(event.target)) return;
         var hit = event.target && event.target.closest ? event.target.closest(".assembly-hit-target") : null;
-        if (event.target === control) return;
-        if (!hit || owner.busy() || owner.dragging || owner.hasDimensionDraft()) { hide(); return; }
+        if (!hit) { hide(); return; }
         var entry = layout.segments.filter(function (candidate) {
           return candidate.layer.id === hit.getAttribute("data-layer-id") &&
             candidate.segment.id === hit.getAttribute("data-segment-id");
@@ -67,14 +82,30 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         var edge = Object.keys(distance).filter(function (key) { return distance[key] <= reach[key]; })
           .sort(function (a, b) { return distance[a] - distance[b]; })[0];
         if (!edge) { hide(); return; }
+        if (activeHit === hit && activeEdge === edge) return;
+        if (activeHit) activeHit.removeAttribute("data-hover-edge");
+        activeHit = hit;
+        activeEdge = edge;
+        hit.setAttribute("data-hover-edge", edge);
         var target = insertTargets(entry, values, topIsExterior)[edge], zoom = owner.zoom;
+        var horizontal = edge === "top" || edge === "bottom";
+        // A Layer insertion acts across the whole Layer; a Layer-Segment insertion acts on one side.
+        var layerWidth = layout.segments.filter(function (candidate) { return candidate.layer === entry.layer; })
+          .reduce(function (width, candidate) { return Math.max(width, candidate.xMm + candidate.widthMm); }, 0);
         var cx = edge === "left" ? entry.xMm : edge === "right" ? entry.xMm + entry.widthMm :
-          entry.xMm + entry.widthMm / 2;
+          layerWidth / 2;
         var cy = edge === "top" ? entry.yMm : edge === "bottom" ? entry.yMm + entry.heightMm :
           entry.yMm + entry.heightMm / 2;
         control._target = target;
         control.style.left = cx * zoom + "px";
         control.style.top = cy * zoom + "px";
+        highlight.style.left = (horizontal ? 0 : cx * zoom) + "px";
+        highlight.style.top = (horizontal ? cy * zoom : entry.yMm * zoom) + "px";
+        highlight.style.width = (horizontal ? layerWidth * zoom : 5) + "px";
+        highlight.style.height = (horizontal ? 5 : entry.heightMm * zoom) + "px";
+        highlight.classList.toggle("is-horizontal", horizontal);
+        highlight.classList.toggle("is-blocked", Boolean(target.blocked));
+        highlight.hidden = false;
         control.classList.toggle("is-blocked", Boolean(target.blocked));
         control.setAttribute("aria-label", target.blocked ? target.label + ". " + target.blocked : target.label);
         control.setAttribute("data-insert-edge", edge);
@@ -84,22 +115,18 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
       drawing.addEventListener("mouseleave", hide);
       return control;
     }
-    /* A value on the drawing that opens its single-value bubble: the button, then the bubble with the field.
-       Enter or leaving the field applies; Escape restores the value, and Escape again closes the bubble. */
-    function dimensionBubble(owner, button, title, key, dimension, extra, hover) {
-      var bubble = new ui.Bubble(button, title, { hover: Boolean(hover), onOpen: function (opened) {
-        // A hover or a repaint's reopen shows the bubble without taking the focus or the typing; a click
-        // focuses the field, and selects its text unless a draft is already there.
-        if (!opened.openedWithFocus) return;
-        dimension.field.input.focus({ preventScroll: true });
-        if (!dimension.field.editing) dimension.field.input.select();
-      }, guard: function () { return owner.painting ? null : owner.settleDimension(key); }, refused: owner.notice });
-      bubble.panel.setAttribute("data-dimension-key", key);
-      // Its close stays live while the draft it applied is pending, so the click that applied it also closes it.
-      bubble.closeButton.setAttribute("data-editor-local", "");
-      bubble.content.appendChild(dimension.root);
-      if (extra) extra(bubble);
-      return bubble;
+    /* The input occupies the value's own slot; units and draft ownership stay with the Builder. */
+    function dimensionInline(owner, button, dimension, compact) {
+      var control = ui.inlineDimension({ trigger: button, editor: dimension.root,
+        input: dimension.field.input, compact: compact, active: dimension.inlineOpen,
+        begin: function () {
+          if (!owner.allowed()) return false;
+          ui.Bubble.closeActive(owner.main);
+          dimension.inlineOpen = true;
+          return true;
+        } });
+      dimension.inlineControl = control;
+      return control.root;
     }
     function stage(record, materials) {
       var self = this, values = record.values, thermal = (record.display || {}).thermal || {};
@@ -108,55 +135,51 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         // Less room for the scroll area's padding and a scrollbar, so a drawing that fits is not cut at its right.
         this.zoom = canvas.fitZoom(layout.widthMm, (this.main.clientWidth || window.innerWidth - 320) - 12);
       }
-      root.appendChild(boundary(thermal, values.orientation !== "last_layer_outside", values));
       var scroll = el("div", "assembly-stage-scroll"), drawingStage = el("div", "assembly-stage");
-      var dimensions = el("div", "assembly-dimensions"), drawing = el("div", "assembly-drawing");
+      // A balanced frame centers the geometry itself, with room for thickness dimensions at its left.
+      // Keep labels and width dimensions in this frame so they follow the drawing when it grows or scrolls.
+      var frame = el("div", "assembly-canvas-frame");
+      frame.style.width = layout.widthMm * this.zoom + "px";
+      frame.appendChild(boundary(thermal, values.orientation !== "last_layer_outside", values));
+      var dimensions = el("div", "assembly-dimensions"), drawing = el("div", "assembly-drawing"), menus = [];
+      var layerCells = {};
+      var thicknessRules = ui.svg("svg", { width: 104, height: layout.heightMm * this.zoom,
+        "class": "assembly-dimension-graphic", "aria-hidden": "true" });
+      thicknessRules.appendChild(ui.dimensionRule({ axis: "vertical", from: 0,
+        to: layout.heightMm * this.zoom, at: 90, extension: 101,
+        points: layout.layers.map(function (entry) { return entry.yMm * self.zoom; })
+          .concat([layout.heightMm * this.zoom]) }));
+      dimensions.appendChild(thicknessRules);
       layout.layers.forEach(function (entry, index) {
         var cell = el("div", "assembly-dimension");
         cell.style.height = entry.heightMm * self.zoom + "px";
-        var button = ui.button(entry.isMembrane ? "Membrane" :
-          shared.format(entry.layer.thickness_mm, shared.DIMENSION));
+        cell.setAttribute("data-layer-row", entry.layer.id);
+        layerCells[entry.layer.id] = cell;
+        var gear = ui.iconButton("Layer " + (index + 1) + " tools", "settings");
+        gear.classList.add("assembly-layer-gear");
+        gear.setAttribute("data-layer-tools-trigger", entry.layer.id);
+        var tools = layerTools.menu(self, record, entry.layer, entry.isMembrane, gear,
+          "Layer " + (index + 1) + " tools", { detachedTrigger: true,
+            onOpen: function () { cell.classList.add("has-open-tools"); },
+            onClose: function () { cell.classList.remove("has-open-tools"); } });
+        menus.push(tools.root);
+        var button = ui.dimensionValue({ text: entry.isMembrane ? "Membrane" :
+          shared.format(entry.layer.thickness_mm, shared.DIMENSION), label: "Layer " + (index + 1) + " thickness" });
         button.setAttribute("data-layer-thickness", entry.layer.id);
-        button.setAttribute("aria-label", "Layer " + (index + 1) + " thickness");
-        var key = "thickness:" + entry.layer.id;
-        var dimension = self.dimension(key, { value: entry.layer.thickness_mm,
-          label: "Layer " + (index + 1) + " thickness", action: "layers.update",
-          params: { layer_id: entry.layer.id }, field: "thickness_mm" });
-        var bubble = dimensionBubble(self, button, "Layer " + (index + 1) + " thickness", key, dimension,
-          function (owner) {
-          var barrier = values.air_barrier, choices = el("div", "assembly-bubble-choices");
-          choices.appendChild(el("small", "muted", "Air barrier"));
-          [["none", "None"], ["exterior", "Exterior face"], ["interior", "Interior face"]].forEach(function (item) {
-            var choice = ui.button(item[1], function () {
-              var params = { layer_id: item[0] === "none" ? null : entry.layer.id };
-              if (item[0] !== "none") params.face = item[0];
-              self.action("layers.set_air_barrier", params);
-            });
-            choice.className = "phc-setting-choice";
-            choice.setAttribute("aria-label", item[0] === "none" ? "No air barrier" :
-              item[1] + " air barrier");
-            choice.setAttribute("aria-pressed", String(item[0] === "none" ? !barrier :
-              barrier && barrier.layer_id === entry.layer.id && barrier.face === item[0]));
-            choices.appendChild(choice);
+        if (entry.isMembrane) {
+          ui.tooltip(button, "Select this membrane Layer for Layer tools");
+          button.addEventListener("click", function () {
+            self.select({ layerId: entry.layer.id, segmentId: entry.layer.segments[0].id });
           });
-          owner.content.appendChild(choices);
-          if (entry.isMembrane) owner.content.appendChild(el("p", "muted",
-            "Membranes carry no thermal resistance and are excluded from total thickness."));
-          // The Layer's one destructive action, last, confirmed when it takes Material assignments with it.
-          var only = values.layers.length === 1;
-          var assigned = entry.layer.segments.some(function (segment) { return Boolean(segment.material_id); });
-          var remove = ui.button("Delete Layer", function () {
-            owner.close(false);
-            self.remove("layers.remove", { layer_id: entry.layer.id }, "Delete Layer", assigned ?
-              "Delete this Layer and all its Layer-Segments, including their Material assignments?" : null);
-          });
-          remove.className = "phc-danger-action";
-          remove.setAttribute("data-builder-action", "layers.remove");
-          remove.disabled = only;
-          ui.tooltip(remove, only ? "An Assembly keeps at least one Layer" : "");
-          owner.content.appendChild(remove);
-        }, true);
-        cell.appendChild(bubble.root);
+          cell.appendChild(button);
+        } else {
+          var key = "thickness:" + entry.layer.id;
+          var dimension = self.dimension(key, { value: entry.layer.thickness_mm,
+            label: "Layer " + (index + 1) + " thickness", action: "layers.update",
+            params: { layer_id: entry.layer.id }, field: "thickness_mm" });
+          cell.appendChild(dimensionInline(self, button, dimension, true));
+        }
+        cell.appendChild(gear);
         dimensions.appendChild(cell);
       });
       canvas.render(this.svg, layout, materials, { zoom: this.zoom,
@@ -189,6 +212,35 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         drawing.appendChild(hit);
       });
       drawing.appendChild(insertControl(this, drawing, layout, values));
+      // One hover row spans the Layer and its dimension gutter. Keep its gear reachable while
+      // crossing whitespace, segment seams or the icon's SVG descendants. Focus/menu state stays in CSS.
+      var activeLayer = null;
+      function showLayer(id) {
+        if (activeLayer === id) return;
+        if (activeLayer && layerCells[activeLayer]) layerCells[activeLayer].classList.remove("is-layer-hovered");
+        activeLayer = id;
+        if (id && layerCells[id]) layerCells[id].classList.add("is-layer-hovered");
+      }
+      frame.addEventListener("mousemove", function (event) {
+        if (self.busy() || self.dragging) { showLayer(null); return; }
+        var row = event.target && event.target.closest ? event.target.closest("[data-layer-row]") : null;
+        var direct = event.target && event.target.closest ? event.target.closest("button, input") : null;
+        if (row && direct && drawingStage.contains(row)) { showLayer(row.getAttribute("data-layer-row")); return; }
+        // Thin Layers have a taller icon than their rendered band. Retain the revealed row while
+        // crossing the corridor from its label to that icon, including its protruding top/bottom.
+        if (activeLayer) {
+          var activeCell = layerCells[activeLayer], gearBox = activeCell.lastChild.getBoundingClientRect();
+          var cellBox = activeCell.getBoundingClientRect();
+          if (event.clientX >= gearBox.left && event.clientX <= cellBox.right - 22 &&
+              event.clientY >= gearBox.top && event.clientY <= gearBox.bottom) return;
+        }
+        var box = drawing.getBoundingClientRect(), y = (event.clientY - box.top) / self.zoom;
+        var entry = layout.layers.filter(function (candidate) {
+          return y >= candidate.yMm && y < candidate.yMm + candidate.heightMm;
+        })[0];
+        showLayer(entry && entry.layer.id);
+      });
+      frame.addEventListener("mouseleave", function () { showLayer(null); });
       var selected = shared.selected(record, this.selection), widthRow = null;
       var selectedEntry = selected && layout.segments.filter(function (entry) {
         return entry.segment.id === selected.segment.id && entry.layer.id === selected.layer.id;
@@ -203,11 +255,15 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         var line = el("div", "assembly-width-dimension" + (span < NARROW_PX ? " is-narrow" : ""));
         line.style.left = selectedEntry.xMm * this.zoom + "px";
         line.style.width = span + "px";
-        var label = ui.button(shared.format(selected.segment.width_mm, shared.DIMENSION));
-        label.setAttribute("aria-label", "Layer " + (selected.layerIndex + 1) + " · Layer-Segment " +
-          (selected.segmentIndex + 1) + " width");
+        var widthRules = ui.svg("svg", { width: span, height: 40,
+          "class": "assembly-dimension-graphic", "aria-hidden": "true" });
+        widthRules.appendChild(ui.dimensionRule({ axis: "horizontal", from: 0, to: span,
+          at: 14, extension: 3, points: [0, span] }));
+        line.appendChild(widthRules);
+        var label = ui.dimensionValue({ text: shared.format(selected.segment.width_mm, shared.DIMENSION),
+          label: "Layer " + (selected.layerIndex + 1) + " · Layer-Segment " + (selected.segmentIndex + 1) + " width" });
         label.setAttribute("data-segment-width", selected.segment.id);
-        line.appendChild(dimensionBubble(this, label, "Layer-Segment width", widthKey, width).root);
+        line.appendChild(dimensionInline(this, label, width, false));
         widthRow = el("div", "assembly-width-row");
         var track = el("div", "assembly-width-track");
         track.style.width = layout.widthMm * this.zoom + "px";
@@ -216,10 +272,12 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
       }
       drawingStage.appendChild(dimensions);
       drawingStage.appendChild(drawing);
-      scroll.appendChild(drawingStage);
-      if (widthRow) scroll.appendChild(widthRow);
-      root.insertBefore(scroll, root.children[1] || null);
-      root.appendChild(boundary(thermal, values.orientation === "last_layer_outside", values));
+      frame.appendChild(drawingStage);
+      if (widthRow) frame.appendChild(widthRow);
+      frame.appendChild(boundary(thermal, values.orientation === "last_layer_outside", values));
+      scroll.appendChild(frame);
+      root.appendChild(scroll);
+      menus.forEach(function (menu) { root.appendChild(menu); });
       return root;
     }
     return { stage: stage };

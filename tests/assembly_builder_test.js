@@ -59,10 +59,10 @@ test("Canvas reference retains mixed widths, steel metadata and keyed selection 
   assert.strictEqual(svg.querySelector("[data-segment-id='seg_steel']"), shape);
   assert.strictEqual(o.sent.length, 0);
 });
-test("toolbar gestures carry explicit nested IDs and snapshot expected_values in one action", function () {
+test("drawing insertion carries explicit nested IDs and snapshot expected_values in one action", function () {
   var o = setup();
   o.editor.select({ layerId: "layer_studs", segmentId: "seg_steel" });
-  click(o.editor.root.querySelector("[data-builder-action='segments.add']"));
+  click(hover(o, "layer_studs", "seg_steel", 198, 50));
   assert.strictEqual(o.sent.length, 1);
   assert.strictEqual(o.sent[0].type, "action.invoke");
   assert.strictEqual(o.sent[0].payload.name, ASSEMBLIES + ".segments.add");
@@ -242,6 +242,37 @@ test("an edge insert shows one control near the edge, named by its result, and s
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.editor.selection)),
     { layerId: "layer_new", segmentId: "seg_new" });
 });
+test("the insert icon's descendants retain the edge cue, and leaving clears only transient hover", function () {
+  var o = setup(), control = hover(o, "layer_studs", "seg_wool", 198, 50);
+  var drawing = o.editor.root.querySelector(".assembly-drawing");
+  var highlight = drawing.querySelector(".assembly-edge-highlight");
+  var hit = drawing.querySelector("[data-hover-edge='right']");
+  var icon = o.document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  var path = o.document.createElementNS("http://www.w3.org/2000/svg", "path");
+  icon.appendChild(path);
+  control.appendChild(icon);
+  var target = control._target;
+  drawing.listeners.mousemove({ target: path, clientX: 200, clientY: 50 });
+  assert.strictEqual(control.hidden, false);
+  assert.strictEqual(control._target, target, "the icon preserves the intended insertion");
+  assert.strictEqual(highlight.hidden, false);
+  assert.strictEqual(hit.getAttribute("data-hover-edge"), "right");
+  assert.strictEqual(o.sent.length, 0, "hover sends no action");
+  drawing.listeners.mousemove({ target: drawing, clientX: 400, clientY: 400 });
+  assert.strictEqual(control.hidden, true);
+  assert.strictEqual(highlight.hidden, true);
+  assert.strictEqual(hit.getAttribute("data-hover-edge"), null);
+});
+test("a Layer edge cue spans the Layer and its insert control stays at the same midpoint across segments", function () {
+  var o = setup(), control = hover(o, "layer_studs", "seg_wool", 100, 2);
+  var highlight = o.editor.root.querySelector(".assembly-edge-highlight");
+  var midpoint = control.style.left;
+  assert.strictEqual(highlight.style.left, "0px");
+  assert.strictEqual(highlight.style.width, 600 * o.editor.zoom + "px");
+  control = hover(o, "layer_studs", "seg_steel", 100, 2);
+  assert.strictEqual(control.style.left, midpoint, "a Layer action has one stable control position");
+  assert.strictEqual(highlight.hidden, false);
+});
 test("a membrane's side edges explain why they add nothing, and a second click lets a selection go", function () {
   var o = setup();
   o.state.sections[MATERIALS].value.records.forEach(function (record) {
@@ -269,7 +300,7 @@ test("the selected Layer-Segment's width is a dimension line under exactly that 
   assert.ok(line.classList.contains("is-narrow"), "a narrow segment puts its label beside the line");
   assert.ok(o.editor.root.querySelector("[data-segment-width='seg_steel']"));
 });
-test("withdrawal resets a pending Builder and retained toolbar/sidebar callbacks cannot write", function () {
+test("withdrawal resets a pending Builder and retained menu/sidebar callbacks cannot write", function () {
   var o = setup(), add = o.editor.root.querySelector("[data-builder-action='layers.add']");
   var entry = o.editor.sidebar.entries.mat_a;
   o.editor.action("layers.add", {});
@@ -292,7 +323,9 @@ test("assigned removal confirms consequences, Cancel writes nothing, and confirm
   click(o.editor.removal.querySelector(".phc-dialog-close"));
   assert.strictEqual(o.editor.removal.hidden, true);
   assert.strictEqual(o.sent.length, 0);
-  click(o.editor.root.querySelector("[data-builder-action='layers.remove']"));
+  click(o.editor.main.querySelector("[data-layer-tools-trigger='layer_studs']"));
+  click(o.editor.main.querySelector("[data-layer-tools-key='drawing:layer_studs']")
+    .querySelector("[data-builder-action='layers.remove']"));
   var expected = JSON.parse(JSON.stringify(o.record.values.layers));
   o.record.values.layers[1].thickness_mm = 180;
   click(o.editor.removal.querySelector(".primary"));
@@ -336,7 +369,14 @@ test("outside drag only suppresses its trailing pointer click and permits keyboa
 test("the toolbar shows a selection's tools only while a Layer-Segment is selected", function () {
   var o = setup(), bar = o.editor.root.querySelector(".assembly-toolbar");
   var selection = bar.querySelector(".assembly-selection-tools");
-  assert.strictEqual(selection.querySelectorAll("button").length, 0);
+  assert.strictEqual(selection.querySelectorAll("button").length, 1, "Material Library stays available");
+  assert.strictEqual(bar.children[0], selection, "selection context precedes drawing controls");
+  o.editor.sidebar.collapsed = true;
+  var writes = o.sent.length;
+  click(selection.querySelector("button"));
+  assert.strictEqual(o.editor.sidebar.collapsed, false);
+  assert.strictEqual(o.document.activeElement, o.editor.sidebar.search);
+  assert.strictEqual(o.sent.length, writes, "opening the library does not write to the Model");
   assert.strictEqual(selection.children[0].textContent, "Select a Layer-Segment");
   assert.strictEqual(o.editor.root.querySelectorAll("[data-builder-action='segments.add']").length, 0);
   ["segments.mirror", "layers.flip", "layers.flip_orientation"].forEach(function (action) {
@@ -344,11 +384,13 @@ test("the toolbar shows a selection's tools only while a Layer-Segment is select
   });
   o.editor.select({ layerId: "layer_studs", segmentId: "seg_steel" });
   bar = o.editor.root.querySelector(".assembly-toolbar");
-  ["Insert Layer-Segment right", "Delete segment", "Segment properties"].forEach(function (label) {
+  assert.strictEqual(bar.querySelectorAll("[data-builder-action='segments.add']").length, 0,
+    "segment insertion is offered on the drawing edge");
+  ["Delete segment", "Segment properties"].forEach(function (label) {
     assert.ok(bar.querySelectorAll("button").some(function (node) {
       return node.getAttribute("aria-label") === label; }), label + " is an icon named for what it does");
   });
-  ["Insert Layer-Segment right", "Delete segment"].forEach(function (label) {
+  ["Delete segment"].forEach(function (label) {
     var button = bar.querySelectorAll("button").filter(function (node) {
       return node.getAttribute("aria-label") === label;
     })[0];
@@ -357,17 +399,14 @@ test("the toolbar shows a selection's tools only while a Layer-Segment is select
   assert.strictEqual(o.editor.root.querySelector(".assembly-back").getAttribute("aria-label"), "Back to Assemblies");
 });
 
-test("blocked segment icons retain their reason in the app tooltip", function () {
+test("the last segment's disabled delete icon retains its reason in the app tooltip", function () {
   var o = setup();
   o.state.sections[MATERIALS].value.records.forEach(function (record) {
     if (record.id === "mat_b") record.values.category = "Membrane";
   });
   o.editor.refresh(o.state, o.record.id);
   o.editor.select({ layerId: "layer_board", segmentId: "seg_board" });
-  var add = o.editor.root.querySelector("[data-builder-action='segments.add']");
   var remove = o.editor.root.querySelector("[data-builder-action='segments.remove']");
-  assert.strictEqual(add.disabled, true);
-  assert.strictEqual(add.getAttribute("data-tooltip"), "A membrane Layer has one Layer-Segment");
   assert.strictEqual(remove.disabled, true);
   assert.strictEqual(remove.getAttribute("data-tooltip"), "A Layer keeps at least one Layer-Segment");
 });
@@ -402,10 +441,11 @@ test("Enter in a dimension, sent through the tree, is the Builder's and sends on
   assert.strictEqual(o.sent[0].payload.params.thickness_mm, 150);
   assert.strictEqual(entry.field.editing, true, "UnitField's own Enter never ran, so the draft waits for the Model");
 });
-test("the thickness bubble offers Delete Layer last and confirms assigned Materials", function () {
-  var o = setup(), removes = o.editor.root.querySelectorAll("[data-builder-action='layers.remove']");
-  var board = removes.filter(function (node) { return node.className === "phc-danger-action"; })[0];
-  assert.ok(board, "each Layer's thickness bubble ends with its delete");
+test("Layer tools retains Delete Layer and confirms assigned Materials", function () {
+  var o = setup();
+  o.editor.select({ layerId: "layer_board", segmentId: "seg_board" });
+  var board = o.editor.root.querySelector("[data-builder-action='layers.remove']");
+  assert.ok(board, "Layer tools keeps the destructive action");
   click(board);
   assert.strictEqual(o.sent.length, 0, "a Layer holding a Material asks first");
   assert.strictEqual(o.editor.removal.hidden, false);
@@ -424,15 +464,111 @@ test("the segment bubble shows its Material's values read only, and the header e
   assert.ok(text(about).includes("Surface films (ISO 6946)"));
   assert.ok(text(about).includes("Rse"));
 });
-test("a thickness bubble opened by hover leaves the focus alone; opened by a click it focuses its field", function () {
-  var o = setup(), field = o.editor.dimensions["thickness:layer_studs"].field;
-  var panel = o.editor.root.querySelectorAll(".phc-bubble").filter(function (node) {
-    return node.getAttribute("data-dimension-key") === "thickness:layer_studs";
-  })[0];
-  assert.strictEqual(panel._bubble.options.hover, true, "thickness opens on hover, as it did before");
-  panel._bubble.open(false);
-  assert.ok(o.document.activeElement !== field.input, "a hover open takes no focus");
-  panel._bubble.close(false);
-  panel._bubble.open();
-  assert.ok(o.document.activeElement === field.input);
+test("dimensions edit in place; Escape restores and closes without changing selection", function () {
+  var o = setup(), entry = o.editor.dimensions["thickness:layer_studs"];
+  o.editor.select({ layerId: "layer_studs", segmentId: "seg_wool" });
+  click(entry.inlineControl.trigger);
+  assert.strictEqual(entry.root.hidden, false);
+  assert.strictEqual(o.document.activeElement, entry.field.input);
+  assert.strictEqual(entry.inlineControl.trigger.hidden, true);
+  typed(entry.field, "180");
+  dom.dispatch(entry.field.input, { type: "keydown", key: "Escape" });
+  assert.strictEqual(entry.root.hidden, true);
+  assert.strictEqual(entry.field.input.value, "140");
+  assert.strictEqual(o.document.activeElement, entry.inlineControl.trigger);
+  assert.strictEqual(o.editor.selection.segmentId, "seg_wool");
+  assert.strictEqual(o.sent.length, 0);
+});
+test("inline acceptance closes the field and returns Enter focus to its value", function () {
+  var o = setup(), key = "thickness:layer_studs", entry = o.editor.dimensions[key];
+  click(entry.inlineControl.trigger); typed(entry.field, "160");
+  dom.dispatch(entry.field.input, { type: "keydown", key: "Enter" });
+  assert.strictEqual(entry.inlineOpen, true, "the draft stays until the Model accepts");
+  o.record.values.layers[1].thickness_mm = 160; result(o);
+  assert.strictEqual(entry.root.hidden, true);
+  assert.strictEqual(o.document.activeElement, entry.inlineControl.trigger);
+  assert.strictEqual(o.sent.length, 1);
+});
+test("an invalid inline blur retains the field and Layer tools owns air-barrier choices", function () {
+  var o = setup(), entry = o.editor.dimensions["thickness:layer_studs"];
+  click(entry.inlineControl.trigger); typed(entry.field, "bad"); entry.field.input.listeners.blur({});
+  assert.strictEqual(entry.root.hidden, false); assert.strictEqual(entry.field.error.hidden, false);
+  assert.strictEqual(o.sent.length, 0);
+  entry.field.cancel(); o.editor.select({ layerId: "layer_studs", segmentId: "seg_wool" });
+  click(o.editor.main.querySelector("[data-layer-tools-trigger='layer_studs']"));
+  click(o.editor.main.querySelector("[data-layer-tools-key='drawing:layer_studs']")
+    .querySelector("[aria-label='Exterior face air barrier']"));
+  assert.strictEqual(o.sent[0].payload.name, ASSEMBLIES + ".layers.set_air_barrier");
+  assert.strictEqual(o.sent[0].payload.params.layer_id, "layer_studs");
+  assert.strictEqual(o.sent[0].payload.params.face, "exterior");
+});
+test("an inline draft survives repaint and retains a refusal until Escape", function () {
+  var o = setup(), entry = o.editor.dimensions["thickness:layer_studs"];
+  click(entry.inlineControl.trigger); typed(entry.field, "180");
+  o.editor.setZoom(0.8);
+  assert.strictEqual(entry.inlineOpen, true); assert.strictEqual(entry.root.hidden, false);
+  assert.strictEqual(entry.field.input.value, "180");
+  assert.strictEqual(o.document.activeElement, entry.field.input);
+  dom.dispatch(entry.field.input, { type: "keydown", key: "Enter" }); result(o, "refused");
+  assert.strictEqual(entry.inlineOpen, true); assert.strictEqual(entry.root.hidden, false);
+  assert.strictEqual(entry.field.input.value, "180"); assert.strictEqual(entry.field.error.hidden, false);
+  dom.dispatch(entry.field.input, { type: "keydown", key: "Enter" });
+  assert.strictEqual(o.sent.length, 1, "refused drafts cannot resend without canceling");
+  dom.dispatch(entry.field.input, { type: "keydown", key: "Escape" });
+  assert.strictEqual(entry.root.hidden, true); assert.strictEqual(entry.field.input.value, "140");
+});
+test("inline blur acceptance closes without taking focus from the next control", function () {
+  var o = setup(), entry = o.editor.dimensions["thickness:layer_studs"], external = dom.element("button");
+  o.document.body.appendChild(external);
+  click(entry.inlineControl.trigger); typed(entry.field, "180"); external.focus();
+  entry.field.input.listeners.blur({});
+  o.record.values.layers[1].thickness_mm = 180; result(o);
+  assert.strictEqual(entry.root.hidden, true); assert.strictEqual(o.document.activeElement, external);
+  assert.strictEqual(o.sent.length, 1);
+});
+test("a membrane thickness label selects its Layer for tools without a numeric editor", function () {
+  var o = setup(); o.state.sections[MATERIALS].value.records[1].values.category = "membrane";
+  o.editor.refresh(o.state, o.record.id);
+  click(o.editor.main.querySelector("[data-layer-thickness='layer_board']"));
+  assert.strictEqual(o.editor.selection.layerId, "layer_board");
+  assert.strictEqual(o.editor.dimensions["thickness:layer_board"], undefined);
+  assert.ok(o.editor.main.querySelector("[aria-label='Interior face air barrier']"));
+});
+test("drawing Layer tools target the hovered Layer without changing segment selection", function () {
+  var o = setup(); o.editor.select({ layerId: "layer_studs", segmentId: "seg_wool" });
+  assert.strictEqual(o.editor.main.querySelector(".assembly-toolbar")
+    .querySelectorAll("[data-layer-tools-key]").length, 0, "Layer tools lives beside thickness, not in the toolbar");
+  assert.strictEqual(o.editor.main.querySelector(".assembly-toolbar")
+    .querySelectorAll("[data-builder-action='layers.add']").length, 0, "Layer insertion lives in the drawing");
+  var trigger = o.editor.main.querySelector("[data-layer-tools-trigger='layer_board']");
+  click(trigger);
+  assert.strictEqual(trigger.getAttribute("aria-expanded"), "true");
+  assert.strictEqual(o.editor.selection.segmentId, "seg_wool");
+  assert.strictEqual(o.sent.length, 0);
+  var menu = o.editor.main.querySelector("[data-layer-tools-key='drawing:layer_board']");
+  click(menu.querySelector("[aria-label='Interior face air barrier']"));
+  assert.strictEqual(o.sent[0].payload.name, ASSEMBLIES + ".layers.set_air_barrier");
+  assert.strictEqual(o.sent[0].payload.params.layer_id, "layer_board");
+  assert.strictEqual(o.sent[0].payload.params.face, "interior");
+});
+test("a Layer menu remains keyed to its Layer when a move renumbers the drawing", function () {
+  var o = setup(), trigger = o.editor.main.querySelector("[data-layer-tools-trigger='layer_board']");
+  click(trigger);
+  var menu = o.editor.main.querySelector("[data-layer-tools-key='drawing:layer_board']");
+  click(menu.querySelector("[data-builder-action='layers.move']"));
+  assert.strictEqual(o.sent[0].payload.params.layer_id, "layer_board");
+  o.record.values.layers.reverse(); result(o);
+  menu = o.editor.main.querySelector("[data-layer-tools-key='drawing:layer_board']");
+  assert.strictEqual(menu.hidden, false); assert.strictEqual(menu.getAttribute("aria-label"), "Layer 2 tools");
+  assert.strictEqual(o.editor.main.querySelector("[data-layer-tools-key='drawing:layer_studs']").hidden, true);
+});
+test("Layer tools refuse opening over a dimension draft and protect the last Layer", function () {
+  var o = setup(), entry = o.editor.dimensions["thickness:layer_studs"];
+  typed(entry.field, "160");
+  var trigger = o.editor.main.querySelector("[data-layer-tools-trigger='layer_board']"); click(trigger);
+  assert.strictEqual(trigger.getAttribute("aria-expanded"), "false"); assert.strictEqual(o.sent.length, 0);
+  entry.field.cancel(); o.record.values.layers = o.record.values.layers.slice(0, 1);
+  o.editor.refresh(o.state, o.record.id);
+  var menu = o.editor.main.querySelector("[data-layer-tools-key='drawing:layer_board']");
+  assert.strictEqual(menu.querySelector("[data-builder-action='layers.remove']").disabled, true);
 });

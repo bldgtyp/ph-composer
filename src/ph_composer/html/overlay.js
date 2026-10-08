@@ -21,7 +21,9 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     var close = button("×", function () { self.close(true); }); close.setAttribute("aria-label", "Close " + title);
     header.appendChild(close); this.panel.appendChild(header); this.heading = header; this.closeButton = close;
     this.content = element("div", "phc-bubble-content"); this.panel.appendChild(this.content);
-    this.root.appendChild(trigger); this.root.appendChild(this.panel);
+    // Drawing labels stay in their SVG/scrollport; their editor mounts outside that region.
+    if (!this.options.detachedTrigger) this.root.appendChild(trigger);
+    this.root.appendChild(this.panel);
     if (!this.options.ownTrigger) {
       trigger.addEventListener("click", function () { self.toggle(); });
       trigger.addEventListener("keydown", function (event) {
@@ -39,18 +41,25 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
             !document.body.classList.contains("is-dragging")) self.open(false);
         }, 450);
       });
-      trigger.addEventListener("mouseleave", function () { self.cancelHover(); });
-      this.root.addEventListener("mouseleave", function () {
+      function closeAfterLeave() {
         if (window.setTimeout) window.setTimeout(function () {
-          if (!self.root.matches(":hover") && !self.panel.contains(document.activeElement)) self.close(false);
+          if (!self.root.matches(":hover") && !trigger.matches(":hover") &&
+            !self.panel.contains(document.activeElement)) self.close(false);
         }, 220);
+      }
+      trigger.addEventListener("mouseleave", function () {
+        self.cancelHover();
+        if (self.options.detachedTrigger) closeAfterLeave();
       });
+      this.root.addEventListener("mouseleave", closeAfterLeave);
     }
-    this.root.addEventListener("keydown", function (event) {
+    function closeOnEscape(event) {
       if (event.key === "Escape" && !self.panel.hidden && !event.defaultPrevented) {
         event.preventDefault(); self.close(true);
       }
-    });
+    }
+    this.root.addEventListener("keydown", closeOnEscape);
+    if (this.options.detachedTrigger) trigger.addEventListener("keydown", closeOnEscape);
   }
   Bubble.prototype.cancelHover = function () {
     if (this.hoverTimer != null) window.clearTimeout(this.hoverTimer);
@@ -190,7 +199,8 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
   };
   if (document.addEventListener) {
     document.addEventListener("mousedown", function (event) {
-      if (activeBubble && !activeBubble.root.contains(event.target)) activeBubble.close(false);
+      if (activeBubble && !activeBubble.root.contains(event.target) &&
+        !activeBubble.trigger.contains(event.target)) activeBubble.close(false);
     });
     document.addEventListener("scroll", function (event) {
       if (activeBubble && !activeBubble.panel.contains(event.target)) activeBubble.close(false);
