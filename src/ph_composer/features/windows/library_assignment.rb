@@ -23,7 +23,8 @@ module PhComposer
         result = Shapes.object({ "assigned" => { "type" => "boolean" } })
         Declarations::LibraryCallback.new(
           :params => Shapes.object({ "target" => target_schema(collection), "local_id" => Shapes::TEXT }),
-          :result => result, :handler => lambda do |request, proposal|
+          :result => result, :refuses => collection == "psi_install_types" ? Refuses::EDIT : Refuses::TYPE_EDIT,
+          :handler => lambda do |request, proposal|
             target = request.params.fetch("target")
             id = request.params.fetch("local_id")
             if collection == "psi_install_types"

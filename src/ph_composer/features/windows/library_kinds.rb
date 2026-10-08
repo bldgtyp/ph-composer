@@ -63,8 +63,9 @@ module PhComposer
           end
         end
 
-        def callback(params, result, &handler)
-          Declarations::LibraryCallback.new(:params => params, :result => result, :handler => handler)
+        def callback(params, result, refuses:, &handler)
+          Declarations::LibraryCallback.new(:params => params, :result => result, :refuses => refuses,
+                                            :handler => handler)
         end
 
         def local_read
@@ -73,7 +74,8 @@ module PhComposer
           row = Shapes.object({ "id" => Shapes::TEXT, "mapped" => schema, "expected_values" => expected,
                                 "source" => kind.values_schema.fetch("properties").fetch("source") },
                               :optional => ["source"])
-          callback(Shapes::NONE, Shapes.list(row)) do |request, _proposal|
+          callback(Shapes::NONE, Shapes.list(row),
+                   :refuses => %w[record.unreadable library.row_semantic_invalid]) do |request, _proposal|
             Definitions.records(request, kind).map do |record|
               projection = { "id" => record.fetch("id"), "mapped" => map(record),
                              "expected_values" => DeepCopy.call(record.slice(*fields)) }
@@ -88,7 +90,7 @@ module PhComposer
           params.fetch("properties").delete("user_data")
           params.fetch("properties").fetch("values").fetch("properties")["source"] =
             kind.values_schema.fetch("properties").fetch("source")
-          callback(params, Shapes::RESULT) do |request, proposal|
+          callback(params, Shapes::RESULT, :refuses => Refuses::EDIT) do |request, proposal|
             Products::Operations.update(request, proposal, @collection,
                                         :id => request.params.fetch("id"),
                                         :values => request.params.fetch("values"),
@@ -101,7 +103,7 @@ module PhComposer
             :wire_kind => @collection, :wire_version => 1, :fingerprint_version => 1, :wire_schema => wire_schema,
             :mapped_schema => schema, :fingerprint_fields => fields, :map => method(:map), :reverse => method(:reverse),
             :fingerprint => method(:fingerprint), :local_read => local_read,
-            :create => callback(Shapes.create(kind), Shapes::RESULT) do |request, proposal|
+            :create => callback(Shapes.create(kind), Shapes::RESULT, :refuses => Refuses::WRITE) do |request, proposal|
               Products::Operations.create(request, proposal, @collection, :values => request.params.fetch("values"),
                                                                           :user_data => request.params["user_data"])
             end,

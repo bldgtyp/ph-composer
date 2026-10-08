@@ -9,7 +9,8 @@ reached.
 
 | Slug | Date | Outcome | Issue or PR |
 | --- | --- | --- | --- |
-| [single-value-bubble](single-value-bubble.md) | 2026-10-07 | Shared UnitField/Bubble lifecycle; offline, browser, fresh native and review pass; remote delivery pending | [#47](https://github.com/bldgtyp/ph-composer/issues/47) |
+| [library-callback-refusals](library-callback-refusals.md) | 2026-10-07 | Kind-owned callback refusal lists, registration validation and shared discovery/reference/audit projection; full offline gate, coverage and review pass; remote delivery pending | [#51](https://github.com/bldgtyp/ph-composer/issues/51) |
+| [single-value-bubble](single-value-bubble.md) | 2026-10-07 | Shared UnitField/Bubble lifecycle; offline, browser, fresh native and review pass; PR #94 merged, branches cleaned and private DesignSystem synced | [#47](https://github.com/bldgtyp/ph-composer/issues/47) |
 | [refusal-discovery](refusal-discovery.md) | 2026-10-07 | Uniform refusal metadata and public discovery pointer; merged PR #93, all gates pass | [#52](https://github.com/bldgtyp/ph-composer/issues/52) |
 | [catalog-note-contract](catalog-note-contract.md) | 2026-10-07 | Raised catalog semantic code is legally declarable; admission remains unchanged; full offline gate, coverage and review pass; PR #92 merged as `aec762b`, branches cleaned | [#54](https://github.com/bldgtyp/ph-composer/issues/54) |
 | [export-result-vocabulary](export-result-vocabulary.md) | 2026-10-07 | Export findings name authored Materials, Assemblies and Layers; focused/full gates, coverage, review and native export pass; PR #91 merged as `dd4aa89`, branches cleaned | [#41](https://github.com/bldgtyp/ph-composer/issues/41) |

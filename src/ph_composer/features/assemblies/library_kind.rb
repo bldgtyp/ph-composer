@@ -49,8 +49,9 @@ module PhComposer
         shape
       end
 
-      def callback(params, result, &handler)
-        Declarations::LibraryCallback.new(:params => params, :result => result, :handler => handler)
+      def callback(params, result, refuses:, &handler)
+        Declarations::LibraryCallback.new(:params => params, :result => result, :refuses => refuses,
+                                          :handler => handler)
       end
 
       def local_read
@@ -59,7 +60,8 @@ module PhComposer
         row = Shapes.object({ "id" => Shapes::TEXT, "mapped" => schema, "expected_values" => expected,
                               "source" => Materials::Schema::KIND.values_schema.fetch("properties").fetch("source") },
                             :optional => ["source"])
-        callback(Shapes::NONE, Shapes.list(row)) do |request, _proposal|
+        callback(Shapes::NONE, Shapes.list(row),
+                 :refuses => %w[record.unreadable library.row_semantic_invalid]) do |request, _proposal|
           Definitions.records(request, MATERIAL_KIND).map do |record|
             projection = { "id" => record.fetch("id"), "mapped" => map(record),
                            "expected_values" => DeepCopy.call(record.slice(*FIELDS)) }
@@ -74,7 +76,7 @@ module PhComposer
         params.fetch("properties").delete("user_data")
         params.fetch("properties").fetch("values").fetch("properties")["source"] =
           Materials::Schema::KIND.values_schema.fetch("properties").fetch("source")
-        callback(params, Shapes::RESULT) do |request, proposal|
+        callback(params, Shapes::RESULT, :refuses => Refuses::EDIT) do |request, proposal|
           id = request.params.fetch("id")
           record = request.engine.find(MATERIAL_KIND, id)
           values = request.params.fetch("values")
@@ -97,7 +99,7 @@ module PhComposer
           :mapped_schema => schema, :fingerprint_fields => FIELDS, :map => method(:map), :reverse => method(:reverse),
           :fingerprint => method(:fingerprint), :local_read => local_read,
           :create => callback(Shapes.create(Materials::Schema::KIND, :labelled => Materials::Schema::LABELLED_FIELDS),
-                              Shapes::RESULT) do |request, proposal|
+                              Shapes::RESULT, :refuses => Refuses::CREATE) do |request, proposal|
                        Materials::Operations.create(request, proposal, :values => request.params.fetch("values"),
                                                                        :user_data => request.params["user_data"])
                      end,
@@ -114,7 +116,7 @@ module PhComposer
           key == "material_id"
         end)
         params = Shapes.object({ "target" => target, "local_id" => Shapes::TEXT })
-        callback(params, Shapes::RESULT) do |request, proposal|
+        callback(params, Shapes::RESULT, :refuses => Refuses::EDIT) do |request, proposal|
           gesture = request.params.fetch("target").merge("material_id" => request.params.fetch("local_id"))
           Assembly::Operations.gesture(request, proposal,
                                        :id => gesture.fetch("id"),

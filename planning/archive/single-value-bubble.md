@@ -1,7 +1,7 @@
 # Shared single-value bubble
 
 DATE: 2026-10-07
-STATUS: Complete; offline, browser, native and review gates passed; remote delivery pending
+STATUS: Complete; merged, all scoped gates and reference sync passed
 ISSUE: [#47](https://github.com/bldgtyp/ph-composer/issues/47)
 
 `unit_field.ValueBubble`, beside UnitField, owns the shared field/bubble lifecycle. It handles Enter,
@@ -23,6 +23,10 @@ No styles, module graph or public data changed. The contributor contract is in E
 - [GH47 native evidence](../native-acceptance/evidence/single-value-bubble-2026-10-07.md):
   fresh normal SketchUp 26.1.188; both editors commit, retain invalid drafts and cancel;
   native Undo restores values. Installed package matches all 390 files. Model saved clean.
-- DesignSystem artifact: authenticated existing private artifact inspected. Static documentation
-  sync to merged main is the next closeout action; CSS and rendered markup are unchanged.
-- Human actions: none required. Next: PR, dual-Ruby CI, merge/cleanup and reference sync, then #51.
+- [PR #94](https://github.com/bldgtyp/ph-composer/pull/94) merged as `c82a945` after dual-Ruby
+  remote CI passed. Merge ancestry and removal of both issue branches verified.
+- [Private DesignSystem artifact](https://claude.ai/artifact/77GLrkZxtkxo9TksTbvodL): the static
+  README records `main@c82a945`, the helper contract, owner guards and first-Escape behavior.
+  Persistence was verified after reload. CSS, tokens and fifteen gallery parts are unchanged.
+  Private source and screenshot receipts: `_private/design-system-sync-issue47/`.
+- Human actions: none required. Issue #51 is the final queue item.

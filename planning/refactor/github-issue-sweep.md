@@ -26,13 +26,14 @@ Required remote CI covers Ruby 2.7.2 and 3.2.2. Rank reflects importance, effort
 | 6 | [#41](https://github.com/bldgtyp/ph-composer/issues/41) | Export result vocabulary | Merged in PR #91 as `dd4aa89`; branches cleaned |
 | 7 | [#54](https://github.com/bldgtyp/ph-composer/issues/54) | Catalog note codes | Merged in PR #92 as `aec762b`; branches cleaned |
 | 8 | [#52](https://github.com/bldgtyp/ph-composer/issues/52) | Foundation refusal meanings | Merged in PR #93 as `a4c45b5`; branches cleaned |
-| 9 | [#47](https://github.com/bldgtyp/ph-composer/issues/47) | Shared single-value editor | Offline, browser, native and review passed; PR pending |
-| 10 | [#51](https://github.com/bldgtyp/ph-composer/issues/51) | Callback refusal declarations | Queued |
+| 9 | [#47](https://github.com/bldgtyp/ph-composer/issues/47) | Shared single-value editor | Merged in PR #94 as `c82a945`; branches cleaned; DesignSystem synced |
+| 10 | [#51](https://github.com/bldgtyp/ph-composer/issues/51) | Callback refusal declarations | Full offline gate, coverage and review passed; remote delivery pending |
 
-Source: `codex/issue-47-single-value-bubble`, based on `main@a4c45b5`.
+Source: `codex/issue-51-library-callback-refusals`, based on `main@c82a945`.
 Evidence: [preview validation](../archive/preview-user-error.md),
 [product-use side order](../archive/product-use-side-order.md).
-Human actions: none identified. Next: deliver #47 through PR, dual-Ruby CI, merge/cleanup and static reference sync, then #51.
+Human actions: none required. Next: deliver the final issue #51 through review, full gates,
+PR, dual-Ruby CI and verified merge/cleanup.
 Release, SketchUp 2023 native proof, Windows support and certification remain separate gates.
 
 ### Issue #42 checkpoint
@@ -49,3 +50,6 @@ Issue #44 acceptance and unchanged-check reuse: [receipt](../archive/windows-pre
 [Shared value-bubble receipt](../archive/single-value-bubble.md) records unchanged existing
 regressions, callback/disposal tests, full gates, all browser widths and fresh native GH47 acceptance.
 Both original feature owners retain guarded commands. No manual host action remains.
+PR #94 merged after both remote Ruby jobs passed. The private static DesignSystem README was
+synced to `main@c82a945` and verified after reload; CSS, tokens and the fifteen gallery parts
+remain unchanged. The artifact remains private.

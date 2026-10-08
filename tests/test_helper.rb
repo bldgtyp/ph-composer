@@ -32,7 +32,7 @@ class PhComposerTestCase < Minitest::Test
     PhComposer::Preferences.apple_locale_reader = -> {}
     @undeclared_refusals = []
     PhComposer::Refusals.audit = lambda do |declaration, code|
-      next if Array(declaration.refuses).include?(code) || PhComposer::Refusals.common(declaration).include?(code)
+      next if (PhComposer::Refusals.declared(declaration) + PhComposer::Refusals.common(declaration)).include?(code)
 
       @undeclared_refusals << "#{declaration.name} refused with #{code}"
     end

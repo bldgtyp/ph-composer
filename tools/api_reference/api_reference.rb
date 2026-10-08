@@ -79,7 +79,7 @@ module PhComposerTools
     def operations(registry, title, key, capability)
       declarations = registry.public_send(key).values.sort_by(&:name)
       "## #{title}\n\nCalled with a context granted `#{capability}`.\n\n" +
-        declarations.map { |declaration| operation_section(declaration) }.join("\n")
+        declarations.map { |declaration| operation_section(declaration, registry) }.join("\n")
     end
 
     # The codes every operation of a kind can answer, printed once instead of under each operation.
@@ -123,7 +123,7 @@ module PhComposerTools
         "\"Outcomes and codes\".\n\n#{sections.join("\n")}"
     end
 
-    def operation_section(declaration)
+    def operation_section(declaration, registry)
       lines = ["### `#{declaration.name}`", "", "#{declaration.description} Owner: `#{declaration.owner}`.", ""]
       if declaration.respond_to?(:side_effects)
         lines << "Undo step: #{declaration.undo_name}. #{declaration.side_effects}"
@@ -141,7 +141,7 @@ module PhComposerTools
                  end
         lines << ""
       end
-      lines << refuses_line(declaration)
+      lines << refuses_line(declaration, registry)
       lines << ""
       lines.concat(json_block("Params", declaration.params))
       lines.concat(json_block("Result", declaration.result))
@@ -149,10 +149,10 @@ module PhComposerTools
       lines.join("\n")
     end
 
-    def refuses_line(declaration)
+    def refuses_line(declaration, registry)
       sets = PhComposer::Refusals.common_sets(declaration).map { |set| "`#{set}`" }.join(" and ")
       noun = sets.include?(" and ") ? "sets" : "set"
-      codes = declaration.refuses.sort
+      codes = PhComposer::Refusals.declared(declaration, registry).sort
       return "Refuses: only the #{sets} common #{noun}." if codes.empty?
 
       "Refuses: #{codes.map { |code| "`#{code}`" }.join(', ')}, and the #{sets} common #{noun}."
