@@ -369,3 +369,24 @@ test("running Export remains visible until cancelled and a Model switch drops it
   p.receive("panel.snapshot", snapshot("session-b", 1));
   assert.strictEqual(p.query("[data-section='export']").querySelector(".phc-export-status").textContent, "");
 });
+
+
+test("last-export findings name Materials, Assemblies and Layers without internal validation text", function () {
+  var p = page(), findings = require("./fixtures/assemblies/display_findings.json");
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  p.panel.showTab("export");
+  var requests = p.sent.slice(-2);
+  p.receive("export.result", { request_id: requests[0].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { findings: [], repairs: [] } } });
+  p.receive("export.result", { request_id: requests[1].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { task_id: "last", outcome: { status: "completed",
+      message: "Export complete.", value: { result: { findings: findings } } } } } });
+  var rows = p.query("[data-section='export']").querySelectorAll(".phc-export-finding");
+  assert.deepStrictEqual(rows.map(function (row) { return row.textContent; }),
+    findings.map(function (finding) { return finding.message; }));
+  assert.match(rows[0].textContent, /Two wool thicknesses.*Layer 1/);
+  assert.match(rows[1].textContent, /Synthetic defaults.*Default mass/);
+  rows.forEach(function (row) {
+    assert.doesNotMatch(row.textContent, /mat_|segment material id must be non-empty text/);
+  });
+});

@@ -80,11 +80,15 @@ class SegmentRecord:
     steel_stud_spacing_mm: float | None
 
     @classmethod
-    def read(cls, raw: Mapping[str, object]) -> SegmentRecord:
+    def read(cls, raw: Mapping[str, object], location: str = "Layer") -> SegmentRecord:
+        try:
+            material_id = as_text(raw.get("material_id"), "segment material id")
+        except RecordError as error:
+            raise RecordError(f"{location}: choose a Material for each Layer-Segment.") from error
         return cls(
             as_text(raw.get("id"), "segment id"),
             positive(raw.get("width_mm"), "segment width"),
-            as_text(raw.get("material_id"), "segment material id"),
+            material_id,
             optional_number(raw.get("steel_stud_spacing_mm"), "steel stud spacing"),
         )
 
@@ -96,8 +100,8 @@ class LayerRecord:
     segments: tuple[SegmentRecord, ...]
 
     @classmethod
-    def read(cls, raw: Mapping[str, object]) -> LayerRecord:
-        segments = tuple(SegmentRecord.read(row) for row in rows(raw.get("segments"), "segments"))
+    def read(cls, raw: Mapping[str, object], location: str = "Layer") -> LayerRecord:
+        segments = tuple(SegmentRecord.read(row, location) for row in rows(raw.get("segments"), "segments"))
         if not segments:
             raise RecordError("a Layer needs a Layer-Segment")
         if sum(segment.steel_stud_spacing_mm is not None for segment in segments) > 1:
@@ -115,6 +119,7 @@ class AssemblyRecord:
     @classmethod
     def read(cls, raw: Mapping[str, object]) -> AssemblyRecord:
         identifier = as_text(raw.get("id"), "assembly id")
+        name = as_text(raw.get("name"), "assembly name")
         orientation = raw.get("orientation")
         if orientation not in ("first_layer_outside", "last_layer_outside"):
             raise RecordError(f"assembly {identifier} has invalid orientation")
@@ -122,7 +127,10 @@ class AssemblyRecord:
             material.id: material
             for material in (MaterialRecord.read(row) for row in rows(raw.get("materials"), "materials"))
         }
-        layers = tuple(LayerRecord.read(row) for row in rows(raw.get("layers"), "layers"))
+        layers = tuple(
+            LayerRecord.read(row, f'Assembly "{name}", Layer {index + 1}')
+            for index, row in enumerate(rows(raw.get("layers"), "layers"))
+        )
         if not layers:
             raise RecordError(f"assembly {identifier} has no thermal layers")
         segment_ids = [segment.id for layer in layers for segment in layer.segments]
@@ -148,7 +156,7 @@ class AssemblyRecord:
             raise RecordError(f"assembly {identifier} has no thermal layers")
         return cls(
             identifier,
-            as_text(raw.get("name"), "assembly name"),
+            name,
             tuple(reversed(layers)) if orientation == "last_layer_outside" else layers,
             materials,
         )

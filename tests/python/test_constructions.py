@@ -299,3 +299,19 @@ def test_authored_emissivity_controls_single_grid_cells_and_base_host_after_roun
                 for cell in material.properties.ph.divisions.cells:
                     assert cell.material.thermal_absorptance == expected
                     assert cell.material.to_dict()["thermal_absorptance"] == expected
+
+
+@pytest.mark.parametrize("missing", [None, "", " ", 42])
+def test_export_findings_name_materials_and_the_unassigned_assembly_layer(missing: object) -> None:
+    payload = document()
+    records = payload["sections"][ConstructionSection.id]["records"]
+    payload["sections"][ConstructionSection.id]["records"] = [
+        row for row in records if row["id"] in {"asm_Single000001", "asm_Default00001"}
+    ]
+    unassigned = next(row for row in records if row["id"] == "asm_Single000001")
+    unassigned["layers"][0]["segments"][0]["material_id"] = missing
+    result = translate(payload, (ConstructionSection(),))
+    expected = json.loads((ROOT / "display_findings.json").read_text())
+    assert [finding.to_json() for finding in result.findings] == expected
+    assert set(result.objects(ConstructionSection.id)) == {"asm_Default00001"}
+    assert result.publishable  # The incomplete unused definition still costs only itself.

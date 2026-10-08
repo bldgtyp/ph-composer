@@ -41,6 +41,8 @@ class AssembliesExportTest < PhComposerTestCase
     defaults = findings.find { |finding| finding.fetch("code") == "material.thermal_mass_defaulted" }
     assert_includes defaults.fetch("message"), "600"
     assert_includes defaults.fetch("message"), "1000"
+    assert_includes defaults.fetch("message"), "Synthetic defaults"
+    refute_includes defaults.fetch("message"), "mat_"
     assert_empty result.fetch("value").fetch("repairs")
     expected = JSON.parse(File.read(File.join(ROOT, "expected.json")))
     unavailable = findings.select do |finding|

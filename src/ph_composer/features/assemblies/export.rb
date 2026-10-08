@@ -54,7 +54,9 @@ module PhComposer
         findings = findings.map do |finding|
           message = finding.fetch("message")
           if finding.fetch("code") == "material.thermal_mass_defaulted"
-            message = "Missing thermal mass properties use 600 kg/m3 density and 1000 J/kgK specific heat."
+            name = by_id.fetch(finding.fetch("material_id")).fetch("name")
+            message = "Missing thermal mass properties use 600 kg/m3 density and 1000 J/kgK specific heat " \
+                      "for Material \"#{name}\"."
           end
           preflight_row(finding.fetch("code"), finding["assembly_id"] || finding["material_id"], message, false)
         end

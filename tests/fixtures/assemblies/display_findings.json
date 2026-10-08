@@ -1,0 +1,16 @@
+[
+  {
+    "code": "object.unavailable",
+    "section": "ph_composer.assemblies.export.constructions",
+    "object_id": "asm_Single000001",
+    "message": "Assembly \"Two wool thicknesses\", Layer 1: choose a Material for each Layer-Segment.",
+    "blocks_export": false
+  },
+  {
+    "code": "material.thermal_mass_defaulted",
+    "section": "ph_composer.assemblies.export.constructions",
+    "object_id": "asm_Default00001",
+    "message": "Missing thermal mass properties use 600 kg/m3 density and 1000 J/kgK specific heat for Materials \"Synthetic defaults\" in Assembly \"Default mass\".",
+    "blocks_export": false
+  }
+]
