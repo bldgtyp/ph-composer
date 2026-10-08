@@ -1,7 +1,7 @@
 # Product-use side order
 
 DATE: 2026-10-07
-STATUS: Complete; verified locally; remote delivery pending
+STATUS: Merged to main through PR #87
 ISSUE: [#42](https://github.com/bldgtyp/ph-composer/issues/42)
 
 Each element's product uses read clockwise: Top, Right, Bottom, Left, using the
@@ -16,4 +16,7 @@ Model-default rows, first-use navigation and source snapshot order are unchanged
   Manifest refreshed. Ruby/Python behavior unchanged; prior coverage remains applicable.
 - Review: coherent independent architecture/UI review passed with no findings.
 - Acceptance: issue's offline test requirement complete; no changed native contract.
-- Next: signed commit, PR, green dual-Ruby remote CI, merge and verified branch cleanup.
+- Delivery: [PR #87](https://github.com/bldgtyp/ph-composer/pull/87) merged at `5931c89`
+  after dual-Ruby CI passed on `69410f7`. Main synchronized; local branch removed after
+  remote merge verification; GitHub automatically removed the remote branch.
+- Next: issue #44 in the sequential delivery queue.
