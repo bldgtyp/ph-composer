@@ -1,7 +1,7 @@
 # Preview validation refusals
 
 DATE: 2026-10-07
-STATUS: Complete; local verification and review passed; remote delivery pending
+STATUS: Merged to main through PR #86
 ISSUE: [#53](https://github.com/bldgtyp/ph-composer/issues/53)
 
 A plain `UserError` from an action now answers `refused` / `validation.failed` in both
@@ -17,4 +17,7 @@ The regression first reproduced `failed` / `operation.failed` before the fix.
   Final `make ci` passed, including lint, fixtures, manifests, pins, hostkit, typing and RBZ.
 - Review: independent architecture/simplify review passed with no findings.
 - Acceptance: offline dispatch behavior; no changed host or UI contract.
-- Next: signed commit, PR, dual-Ruby CI, merge and branch cleanup.
+- Delivery: [PR #86](https://github.com/bldgtyp/ph-composer/pull/86) merged at `80bc4aa`
+  after both remote Ruby gates passed on `e071ed7`. Local main synchronized; local branch removed
+  after remote merge verification. GitHub automatically removed the remote branch.
+- Next: complete issue #42 in the sequential delivery queue.

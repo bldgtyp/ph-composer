@@ -126,9 +126,9 @@
       "sha256": "63b8d32eb8abdd9f5b6e48fabb3bb91e1f6b51101052a9a388c4dce3ee42faa8"
     },
     "html/features/windows/inventory.js": {
-      "bytes": 15908,
+      "bytes": 16093,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "2b8db5585f2704977112bdcc648740450cd41fb7a1273333d8418af6ed1369c5"
+      "sha256": "6eb80cd2a2cb7bdd8b2a5d95698f7e85ffddd589033a38d9fcbc62e7349a76f7"
     },
     "html/features/windows/library.js": {
       "bytes": 2831,
