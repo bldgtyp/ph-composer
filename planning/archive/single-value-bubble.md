@@ -4,7 +4,7 @@ DATE: 2026-10-07
 STATUS: Complete; offline, browser, native and review gates passed; remote delivery pending
 ISSUE: [#47](https://github.com/bldgtyp/ph-composer/issues/47)
 
-`ui.ValueBubble`, beside UnitField, owns the shared field/bubble lifecycle. It handles Enter,
+`unit_field.ValueBubble`, beside UnitField, owns the shared field/bubble lifecycle. It handles Enter,
 blur and outside close, parsing, retained invalid/refused drafts, accepted values, focus and disposal.
 Feature owners supply the descriptor, value, apply callback and authoritative busy/active guards.
 Window dimensions use a disposable instance; installation defaults reuse one persistent instance.
